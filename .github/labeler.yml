@@ -1,0 +1,12 @@
+app:
+    - "**/./src/*"
+
+Infrastructure:
+    - "**/terraform/*"
+    - "**/terraform/**/*"
+    - ".github/*"
+    - ".github/**/*"
+    - "docker"
+
+Documentation:
+    - "README.md"
