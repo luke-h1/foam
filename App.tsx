@@ -1,10 +1,10 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { Text } from 'react-native';
+import HomeStackNavigator from './src/navigation/Home/HomeStack';
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Text>yo</Text>
+      <HomeStackNavigator />
     </NavigationContainer>
   );
 }
