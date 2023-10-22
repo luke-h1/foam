@@ -50,6 +50,9 @@ jobs:
       - name: set yarn version
         run: yarn set version berry
         
+      - name: install yarn
+        run: corepack enable
+
       - name: Install dependencies
         run: yarn
 
