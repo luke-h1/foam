@@ -1,21 +1,17 @@
 import { ChatBadge, EmoteType, BadgeTypes } from '../types';
 
-interface BadgeInfoFFZ {
-  id: string;
+export interface BadgeInfoFFZ {
+  id: number;
   title: string;
   color: string;
   urls: string[][];
 }
 
-interface FFZEmote {
+export interface FFZEmote {
   name: string;
   height: number;
   width: number;
-  urls: {
-    '1': string;
-    '2': string;
-    '4': string;
-  }[];
+  urls: { [key: string]: string }[];
 }
 
 const ffzSerializer = {
