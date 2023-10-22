@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { WebView, WebViewNavigation } from 'react-native-webview';
+import { WebView } from 'react-native-webview';
 
 const LoginScreen = () => {
   const ref = useRef<WebView | null>(null);

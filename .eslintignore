@@ -1,0 +1,13 @@
+node_modules
+.github
+.next
+.vercel
+public
+build
+.next/
+build/
+coverage/
+node_modules/
+*.min.css
+*.min.js
+@sanity
