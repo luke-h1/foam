@@ -21,6 +21,9 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.15",
     "@shopify/flash-list": "1.4.3",
+    "@tamagui/config": "^1.74.21",
+    "@tamagui/core": "^1.74.21",
+    "@tamagui/react-native-media-driver": "^1.74.21",
     "axios": "^1.5.1",
     "expo": "~49.0.13",
     "expo-app-loading": "^2.1.1",
@@ -39,7 +42,8 @@
     "react-native-safe-area-context": "4.6.3",
     "react-native-screens": "~3.22.0",
     "react-native-video": "^5.2.1",
-    "react-native-webview": "13.2.2"
+    "react-native-webview": "13.2.2",
+    "tamagui": "^1.74.21"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
