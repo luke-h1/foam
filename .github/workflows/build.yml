@@ -1,0 +1,69 @@
+name: Build
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+env:
+  NODE_VERSION: 18.18.0
+
+jobs:
+  build:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+    name: Build    
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Install moreutils
+        run: sudo apt install moreutils
+        
+      # https://github.com/actions/virtual-environments/issues/1187
+      - name: tune linux network
+        run: sudo ethtool -K eth0 tx off rx off            
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: get yarn cache directory
+        id: cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+        shell: bash
+        working-directory: ./
+
+      - name: setup yarn cache
+        uses: actions/cache@v3
+        id: yarn-cache
+        with:
+            path: ${{ steps.cache.outputs.dir }}
+            key: yarn-${{ hashFiles('**/yarn.lock') }}
+            restore-keys: |
+                yarn-
+
+      - name: set yarn version
+        run: yarn set version berry
+        
+      - name: Install dependencies
+        run: yarn
+
+      - name: format:check
+        run: yarn format:check
+
+      - name: lint
+        run: yarn lint
+
+      - name: jest
+        run: yarn test
+
+      - name: tsc
+        run: yarn tsc
+
+      - name: build
+        run: yarn build
