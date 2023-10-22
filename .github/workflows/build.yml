@@ -47,9 +47,6 @@ jobs:
             restore-keys: |
                 yarn-
 
-      - name: set yarn version
-        run: yarn set version berry
-        
       - name: install yarn
         run: corepack enable
 
