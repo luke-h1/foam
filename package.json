@@ -14,7 +14,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "format:check": "prettier --list-different \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "prepare": "husky install",
-    "clean": "npm cache clean --force && watchman watch-del-all"
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",
@@ -25,7 +25,6 @@
     "@react-navigation/native-stack": "^6.9.15",
     "@react-navigation/stack": "^6.3.20",
     "@shopify/flash-list": "1.4.3",
-    "@shopify/restyle": "^2.1.0",
     "axios": "^1.5.1",
     "expo": "~49.0.13",
     "expo-app-loading": "^2.1.1",
@@ -47,8 +46,7 @@
     "react-native-screens": "~3.22.0",
     "react-native-svg": "^13.14.0",
     "react-native-video": "^5.2.1",
-    "react-native-webview": "13.2.2",
-    "tamagui": "^1.74.21"
+    "react-native-webview": "13.2.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
