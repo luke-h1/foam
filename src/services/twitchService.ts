@@ -115,8 +115,6 @@ const twitchService = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getGlobalBadges: async (headers: AxiosHeaders) => {},
 
-  getUserInfo: async (headers: AxiosHeaders) => {},
-
   /**
    *
    * @returns a token for an anonymous user
@@ -248,10 +246,15 @@ const twitchService = {
    * @param headers
    * @returns TwitchUser object containing the user info associated with the given userLogin or id
    */
-  getUser: async (userLogin?: string, id?: string) => {
-    const url = id ? `/users?id=${id}` : `/users?login=${userLogin}`;
+  getUser: async (token: string) => {
+    // const url = id ? `/users?id=${id}` : `/users?login=${userLogin}`;
 
-    const res = await twitchApi.get<TwitchUser>(url);
+    const res = await twitchApi.get<TwitchUser>('/users', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+      },
+    });
 
     if (res.status === 200) {
       if (!res.data) {

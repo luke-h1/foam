@@ -2,7 +2,7 @@ import { Orientation } from 'expo-screen-orientation';
 
 import { isLandscape } from '../isLandscape';
 
-describe('isLandscape()', () => {
+describe('isLandscape', () => {
   test('should return true when device is in landscape mode (left)', () => {
     expect(isLandscape(Orientation.LANDSCAPE_LEFT)).toBeTruthy();
   });
