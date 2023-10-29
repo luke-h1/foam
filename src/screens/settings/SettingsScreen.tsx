@@ -1,9 +1,18 @@
-import { Text, View } from 'react-native';
+import { Button, Text, View } from 'react-native';
+import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 
-const SettingsScreen = () => (
-  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-    <Text>settings</Text>
-  </View>
-);
+const SettingsModal = ({
+  navigation,
+}: RootStackScreenProps<RootRoutes.SettingsModal>) => {
+  return (
+    <View>
+      <Text>settings</Text>
+      <Button
+        onPress={() => navigation.navigate(RootRoutes.Login)}
+        title="sign in"
+      />
+    </View>
+  );
+};
 
-export default SettingsScreen;
+export default SettingsModal;
