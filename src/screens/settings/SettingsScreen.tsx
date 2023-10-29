@@ -5,7 +5,7 @@ const SettingsModal = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.SettingsModal>) => {
   return (
-    <View>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>settings</Text>
       <Button
         onPress={() => navigation.navigate(RootRoutes.Login)}
