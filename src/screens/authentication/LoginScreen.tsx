@@ -28,13 +28,11 @@ const LoginScreen = ({
         'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users',
       ],
       redirectUri: makeRedirectUri(),
-      prompt: Prompt.Login,
       responseType: 'token',
       extraParams: {
         // @ts-expect-error - Twitch requires force_verify to be a boolean whereas
         // the types are Record<string, string>
-        force_verify: true,
-        response_type: 'code',
+        force_verify: false,
       },
     },
     discovery,
@@ -46,6 +44,7 @@ const LoginScreen = ({
         return;
       }
 
+      console.log(response)
       setToken(response.authentication);
       navigation.navigate(RootRoutes.Home);
     }

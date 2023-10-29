@@ -163,17 +163,20 @@ const twitchService = {
    * @param cursor
    * @returns an object that contains the top 20 streams and a cursor for further requests
    */
-  getTopStreams: async (headers: AxiosHeaders, cursor?: string) => {
+  getTopStreams: async (token: string, cursor?: string) => {
     const url = cursor ? `/streams?after=${cursor}` : '/streams';
-    const res = await twitchApi.get<Stream[]>(url, {
-      headers,
-    });
 
-    if (res.status === 200) {
-      return res.data;
+    try {
+      return twitchApi.get<Stream[]>(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        }
+      });
+    } catch (e) {
+      console.error(e)
     }
 
-    throw new Error('Failed to get top streams');
   },
 
   /**
