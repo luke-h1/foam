@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 import { SvgProps } from 'react-native-svg';
 import RightArrowIcon from '../../../../assets/images/arrow_right.svg';
 import Box from '../../Box';
-import Pressabble, { PressableProps } from '../../Pressable';
+import Pressable, { PressableProps } from '../../Pressable';
 import SVGIcon from '../../SVGIcon';
 import Text from '../../Text';
 
@@ -21,7 +21,7 @@ const MediumBottomModalItem = ({
   const ICON_SIZE = 25;
 
   return (
-    <Pressabble
+    <Pressable
       backgroundColor="gray6"
       padding="sToMtoM"
       flexDirection="row"
@@ -51,7 +51,7 @@ const MediumBottomModalItem = ({
           color="secondaryText"
         />
       )}
-    </Pressabble>
+    </Pressable>
   );
 };
 export default MediumBottomModalItem;

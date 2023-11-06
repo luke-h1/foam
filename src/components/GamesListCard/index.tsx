@@ -2,7 +2,7 @@ import React from 'react';
 import Box from '../Box';
 import Chip, { ChipColors } from '../Chip';
 import Image from '../Image';
-import Pressabble, { PressableProps } from '../Pressable';
+import Pressable, { PressableProps } from '../Pressable';
 import Text from '../Text';
 
 interface GameListCardProps extends PressableProps {
@@ -21,7 +21,7 @@ const GameListCard = ({ game, size, ...props }: GameListCardProps) => {
     case 'small': {
       const IMAGE_WIDTH = 55;
       return (
-        <Pressabble {...props}>
+        <Pressable {...props}>
           <Box flexDirection="row" marginBottom="m">
             <Image
               source={{ uri: 'https://picsum.photos/200/300' }}
@@ -56,14 +56,14 @@ const GameListCard = ({ game, size, ...props }: GameListCardProps) => {
               </Box>
             </Box>
           </Box>
-        </Pressabble>
+        </Pressable>
       );
     }
 
     case 'medium': {
       const IMAGE_WIDTH = 105;
       return (
-        <Pressabble {...props}>
+        <Pressable {...props}>
           <Box width={IMAGE_WIDTH} paddingVertical="sToM" marginRight="sToM">
             <Image
               source={{ uri: 'https://picsum.photos/200/300' }}
@@ -75,7 +75,7 @@ const GameListCard = ({ game, size, ...props }: GameListCardProps) => {
               Game Name
             </Text>
           </Box>
-        </Pressabble>
+        </Pressable>
       );
     }
 
@@ -83,7 +83,7 @@ const GameListCard = ({ game, size, ...props }: GameListCardProps) => {
       const IMAGE_WIDTH = 140;
 
       return (
-        <Pressabble {...props}>
+        <Pressable {...props}>
           <Box width={IMAGE_WIDTH} paddingVertical="sToM" marginRight="sToM">
             <Image
               source={{ uri: 'https://picsum.photos/200/300' }}
@@ -115,7 +115,7 @@ const GameListCard = ({ game, size, ...props }: GameListCardProps) => {
               )}
             </Box>
           </Box>
-        </Pressabble>
+        </Pressable>
       );
     }
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import Box from './Box';
 import Image from './Image';
-import Pressabble, { PressableProps } from './Pressable';
+import Pressable, { PressableProps } from './Pressable';
 import Text from './Text';
 
 const IMAGE_ASPECT_RATIO = 320 / 180;
@@ -18,7 +18,7 @@ const ExtraSmallStreamListCard = ({
   ...props
 }: ExtraSmallStreamListCardProps) => {
   return (
-    <Pressabble {...props}>
+    <Pressable {...props}>
       <Box paddingVertical="sToM" paddingRight="xs" flexDirection="row">
         <Box
           position="relative"
@@ -54,7 +54,7 @@ const ExtraSmallStreamListCard = ({
           </Text>
         </Box>
       </Box>
-    </Pressabble>
+    </Pressable>
   );
 };
 export default ExtraSmallStreamListCard;

@@ -18,7 +18,7 @@ import { ViewProps, ViewStyle } from 'react-native';
 import { SvgProps } from 'react-native-svg';
 import { Theme } from '../styles/theme';
 
-interface SvgIconProps
+export interface SvgIconProps
   extends ColorProps<Theme>,
     SpacingProps<Theme>,
     LayoutProps<Theme>,

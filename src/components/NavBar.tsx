@@ -7,7 +7,7 @@ import BottomModalItem, { BottomModalItemSizes } from './BottomModalItem';
 import Box from './Box';
 import Button, { ButtonColors, ButtonSizes } from './Button';
 import Image from './Image';
-import Pressabble from './Pressable';
+import Pressable from './Pressable';
 // import SVGIcon from './SVGIcon';
 
 const NavBar = () => {
@@ -17,14 +17,14 @@ const NavBar = () => {
     <>
       <Box padding="sToM" flexDirection="row" justifyContent="space-between">
         <Box flexDirection="row" alignItems="center">
-          <Pressabble onPress={() => bottomSheetModalRef.current?.present()}>
+          <Pressable onPress={() => bottomSheetModalRef.current?.present()}>
             <Image
               source={{ uri: 'https://picsum.photos/200/300' }}
               width={28}
               height={28}
               borderRadius="xl"
             />
-          </Pressabble>
+          </Pressable>
           {/* <SVGIcon
             icon={Notification2}
             width={26}

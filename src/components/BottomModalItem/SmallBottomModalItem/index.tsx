@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { SvgProps } from 'react-native-svg';
 import { Theme } from '../../../styles/theme';
-import Pressabble, { PressableProps } from '../../Pressable';
+import Pressable, { PressableProps } from '../../Pressable';
 import SVGIcon from '../../SVGIcon';
 import Text from '../../Text';
 
@@ -20,7 +20,7 @@ const SmallBottomModalItem = ({
   const ICON_SIZE = 22;
 
   return (
-    <Pressabble
+    <Pressable
       backgroundColor="gray6"
       paddingVertical="s"
       paddingHorizontal="m"
@@ -40,7 +40,7 @@ const SmallBottomModalItem = ({
       <Text fontFamily="Roobert-Medium" fontSize={16} color={color}>
         {children}
       </Text>
-    </Pressabble>
+    </Pressable>
   );
 };
 export default SmallBottomModalItem;

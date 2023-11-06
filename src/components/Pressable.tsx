@@ -21,10 +21,10 @@ export type PressableProps = SpacingProps<Theme> &
   BorderProps<Theme> &
   Omit<RNPressableProps, 'height' | 'width' | 'borderRadius'>;
 
-const Pressabble = createRestyleComponent<PressableProps, Theme>(
+const Pressable = createRestyleComponent<PressableProps, Theme>(
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   [spacing, backgroundColor, border, layout],
   RNPressable,
 );
-export default Pressabble;
+export default Pressable;
