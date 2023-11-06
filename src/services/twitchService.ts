@@ -171,12 +171,12 @@ const twitchService = {
         headers: {
           Authorization: `Bearer ${token}`,
           'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        }
+        },
       });
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-
+    return null;
   },
 
   /**

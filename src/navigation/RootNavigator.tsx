@@ -1,3 +1,4 @@
+import React from 'react';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import AuthLoadingScreen from '../screens/authentication/AuthLoading';
 import LoginScreen from '../screens/authentication/LoginScreen';

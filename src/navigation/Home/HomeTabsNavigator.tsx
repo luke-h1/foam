@@ -1,4 +1,5 @@
 import { Entypo } from '@expo/vector-icons';
+import React from 'react';
 import { Text, View } from 'react-native';
 import BrowseScreen from '../../screens/BrowseScreen';
 import FollowingScreen from '../../screens/FollowingScreen';

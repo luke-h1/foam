@@ -87,7 +87,7 @@
     "react/jsx-wrap-multilines": ["error", { "prop": "ignore" }],
     "react/prop-types": "off",
     "import/no-extraneous-dependencies": "off",
-    "react/react-in-jsx-scope": "off",
+    "react/react-in-jsx-scope": "error",
     "react/require-default-props": "off",
     "react/state-in-constructor": "off",
     "react/no-unescaped-entities": [

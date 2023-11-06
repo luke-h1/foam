@@ -1,5 +1,5 @@
 import { LayoutProps, SpacingProps } from '@shopify/restyle';
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { Theme } from '../styles/theme';
 import Box from './Box';
 import TextInput, { TextInputProps } from './TextInput';

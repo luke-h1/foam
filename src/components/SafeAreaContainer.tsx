@@ -1,5 +1,5 @@
 import { useTheme } from '@shopify/restyle';
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import {
   SafeAreaView,
   SafeAreaViewProps,

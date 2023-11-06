@@ -15,7 +15,7 @@ import {
   typography,
   useRestyle,
 } from '@shopify/restyle';
-import { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import {
   TextInputProps as RNTextInputProps,
   TextInput as RNTextInput,

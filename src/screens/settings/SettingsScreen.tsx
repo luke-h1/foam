@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, Text, View } from 'react-native';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 

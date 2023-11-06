@@ -1,6 +1,6 @@
-import { Prompt, makeRedirectUri, useAuthRequest } from 'expo-auth-session';
+import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Button, Text } from 'react-native';
 import { useAuthContext } from '../../context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
@@ -44,7 +44,7 @@ const LoginScreen = ({
         return;
       }
 
-      console.log(response)
+      console.log(response);
       setToken(response.authentication);
       navigation.navigate(RootRoutes.Home);
     }

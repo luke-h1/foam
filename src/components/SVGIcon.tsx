@@ -13,7 +13,7 @@ import {
   createRestyleComponent,
   ColorProps,
 } from '@shopify/restyle';
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { ViewProps, ViewStyle } from 'react-native';
 import { SvgProps } from 'react-native-svg';
 import { Theme } from '../styles/theme';
@@ -40,7 +40,9 @@ const SVGIcon = ({
   width: receivedWidth = DEFAULT_SVG_ICON_SIZE,
   ...props
 }: SvgIconProps) => {
+  // @ts-expect-error restyle issues
   const height = useResponsiveProp(receivedHeight);
+  // @ts-expect-error restyle issues
   const width = useResponsiveProp(receivedWidth);
 
   const restyleFunctions = composeRestyleFunctions<Theme, RestyleProps>([
@@ -59,6 +61,7 @@ const SVGIcon = ({
     Icon,
   );
 
+  // @ts-expect-error restyle issues
   return <Component {...{ width, height, ...rootProps }} />;
 };
 
