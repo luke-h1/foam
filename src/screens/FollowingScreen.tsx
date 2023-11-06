@@ -1,4 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
+import React from 'react';
 import { Button, Text, View } from 'react-native';
 import { useAuthContext } from '../context/AuthContext';
 import twitchService from '../services/twitchService';
@@ -17,11 +18,14 @@ const FollowingScreen = () => {
         onPress={() => Clipboard.setStringAsync(token?.accessToken as string)}
       />
 
-      <Button title='make api call' onPress={async () => {
-        const res = await twitchService.getTopStreams(token?.accessToken as string);
-        console.log(res);
-      }}
-      
+      <Button
+        title="make api call"
+        onPress={async () => {
+          const res = await twitchService.getTopStreams(
+            token?.accessToken as string,
+          );
+          console.log(res);
+        }}
       />
     </View>
   );

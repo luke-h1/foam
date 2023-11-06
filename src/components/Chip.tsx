@@ -14,13 +14,13 @@ import {
   spacing,
   useRestyle,
 } from '@shopify/restyle';
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import { Pressable, PressableProps } from 'react-native';
 import { Theme } from '../styles/theme';
 import Box from './Box';
 import Text from './Text';
 
-enum ChipColors {
+export enum ChipColors {
   Primary = 'primary',
   PrimaryOutline = 'primaryOutline',
   PrimaryText = 'primaryText',
