@@ -17,7 +17,7 @@ import {
   OpacityProps,
   SpacingProps,
 } from '@shopify/restyle';
-import { FC, ReactNode } from 'react';
+import React, { FC, ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -48,7 +48,7 @@ type RestyleProps = SpacingProps<Theme> &
   OpacityProps<Theme> &
   BackgroundColorProps<Theme>;
 
-enum ButtonColors {
+export enum ButtonColors {
   Primary = 'primary',
   PrimaryOutline = 'primaryOutline',
   PrimaryText = 'primaryText',

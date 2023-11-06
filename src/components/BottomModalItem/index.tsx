@@ -8,12 +8,12 @@ import LargeBottomModalItem from './LargeBottomModalItem';
 import MediumBottomModalItem from './MediumBottomModalItem';
 import SmallBottomModalItem from './SmallBottomModalItem';
 
-enum BottomModalItemColors {
+export enum BottomModalItemColors {
   Default = 'Default',
   Red = 'Red',
 }
 
-enum BottomModalItemSizes {
+export enum BottomModalItemSizes {
   Small = 'Small',
   Medium = 'Medium',
   Large = 'Large',
