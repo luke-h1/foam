@@ -20,7 +20,7 @@ interface StreamListCardProps extends PressableProps {
   };
 }
 
-const StreamList = ({
+const StreamListCard = ({
   stream,
   size,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -280,4 +280,4 @@ const StreamList = ({
     }
   }
 };
-export default StreamList;
+export default StreamListCard;
