@@ -1,3 +1,4 @@
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { NavigationContainer } from '@react-navigation/native';
 import { ThemeProvider } from '@shopify/restyle';
 import React, { useMemo } from 'react';
@@ -12,11 +13,13 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <NavigationContainer>
-        <AuthContextProvider>
-          <RootNavigator />
-        </AuthContextProvider>
-      </NavigationContainer>
+      <BottomSheetModalProvider>
+        <NavigationContainer>
+          <AuthContextProvider>
+            <RootNavigator />
+          </AuthContextProvider>
+        </NavigationContainer>
+      </BottomSheetModalProvider>
     </ThemeProvider>
   );
 }

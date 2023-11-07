@@ -37,7 +37,7 @@ const StreamList = ({
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   return (
-    <Box flex={1} paddingLeft="sToM" marginTop="s">
+    <Box flex={1} paddingLeft="sToM">
       {title && (
         <Text variant="title" marginBottom="sToM">
           {title}

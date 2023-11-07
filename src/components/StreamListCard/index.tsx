@@ -29,9 +29,9 @@ const StreamListCard = ({
   ...props
 }: StreamListCardProps) => {
   const tags = ['tag1', 'tag2', 'tag3', 'tag4', 'tag5'];
-  if (!stream) {
-    return null;
-  }
+  // if (!stream) {
+  //   return null;
+  // }
 
   switch (size) {
     case 'small': {

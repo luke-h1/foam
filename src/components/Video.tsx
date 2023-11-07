@@ -64,6 +64,7 @@ const Video = ({
           <Component
             ref={video}
             isLooping
+            
             onPlaybackStatusUpdate={status =>
               setStatus(status as AVPlaybackStatusSuccess)
             }
