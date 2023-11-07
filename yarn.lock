@@ -6892,6 +6892,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-av@npm:~13.4.1":
+  version: 13.4.1
+  resolution: "expo-av@npm:13.4.1"
+  peerDependencies:
+    expo: "*"
+  checksum: 0fdcda51b44d69e78b9d770f35703be1f6b650e0ed70e74ec5902872496a1900f08081558c3a970aadec90457f5c49cbc3645744e22ba6ec3aac8eb07cce48de
+  languageName: node
+  linkType: hard
+
 "expo-clipboard@npm:~4.3.1":
   version: 4.3.1
   resolution: "expo-clipboard@npm:4.3.1"
@@ -7392,6 +7401,7 @@ __metadata:
     expo: ~49.0.13
     expo-app-loading: ^2.1.1
     expo-auth-session: ~5.0.2
+    expo-av: ~13.4.1
     expo-clipboard: ~4.3.1
     expo-font: ~11.4.0
     expo-image: ~1.3.4
