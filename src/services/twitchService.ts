@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable */
 import axios, { AxiosHeaders } from 'axios';
 import { twitchApi } from './Client';
 import twitchSerializer from './serializers/twitch';
@@ -163,6 +164,7 @@ const twitchService = {
    * @param cursor
    * @returns an object that contains the top 20 streams and a cursor for further requests
    */
+  // @ts-ignore
   getTopStreams: async (token: string, cursor?: string) => {
     const url = cursor ? `/streams?after=${cursor}` : '/streams';
 
@@ -171,12 +173,11 @@ const twitchService = {
         headers: {
           Authorization: `Bearer ${token}`,
           'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        }
+        },
       });
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-
   },
 
   /**

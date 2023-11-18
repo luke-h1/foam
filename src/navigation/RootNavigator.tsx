@@ -1,7 +1,6 @@
-import WelcomeScreen from '../screens/WelcomeScreen';
 import AuthLoadingScreen from '../screens/authentication/AuthLoading';
 import LoginScreen from '../screens/authentication/LoginScreen';
-import SettingsModal from '../screens/settings/SettingsScreen';
+import SettingsModal from '../screens/settings/SettingsModal';
 import HomeTabsNavigator from './Home/HomeTabsNavigator';
 import { RootRoutes, RootStack } from './RootStack';
 
@@ -17,7 +16,6 @@ const RootNavigator = () => {
         name={RootRoutes.AuthLoading}
         component={AuthLoadingScreen}
       />
-      <RootStack.Screen name={RootRoutes.Welcome} component={WelcomeScreen} />
       <RootStack.Screen
         name={RootRoutes.Home}
         component={HomeTabsNavigator}

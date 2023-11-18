@@ -11,7 +11,7 @@ const AuthLoadingScreen = ({
     setTimeout(() => {
       setLoading(false);
       navigation.replace(RootRoutes.Home);
-    }, 2000);
+    }, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

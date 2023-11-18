@@ -14,7 +14,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "format:check": "prettier --list-different \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "prepare": "husky install",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules ios android .expo && yarn install"
   },
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",
@@ -26,10 +26,12 @@
     "@react-navigation/stack": "^6.3.20",
     "@shopify/flash-list": "1.4.3",
     "axios": "^1.5.1",
+    "clsx": "^2.0.0",
     "expo": "~49.0.13",
     "expo-app-loading": "^2.1.1",
     "expo-auth-session": "~5.0.2",
     "expo-clipboard": "~4.3.1",
+    "expo-constants": "^14.4.2",
     "expo-font": "~11.4.0",
     "expo-image": "~1.3.4",
     "expo-linking": "~5.0.2",
