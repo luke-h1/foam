@@ -1,4 +1,5 @@
-import { Prompt, makeRedirectUri, useAuthRequest } from 'expo-auth-session';
+/* eslint-disable no-console */
+import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
 import { View, Button, Text } from 'react-native';
@@ -41,10 +42,11 @@ const LoginScreen = ({
   useEffect(() => {
     if (response?.type === 'success') {
       if (!response.authentication) {
+        console.log('no authentication');
         return;
       }
 
-      console.log(response)
+      console.log(response);
       setToken(response.authentication);
       navigation.navigate(RootRoutes.Home);
     }

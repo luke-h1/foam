@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-restricted-syntax */
 import { sevenTvApi } from './Client';
 import seventvSerializer from './serializers/seventv';
@@ -86,7 +87,8 @@ const seventvService = {
   /**
    * @returns a map of user IDS to a list of their 7TV badges
    */
-  // eslint-disable-next-line consistent-return
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   getBadges: async () => {
     const res = await sevenTvApi.get<BadgeResponse>(
       '/badges?user_identifier=twitch_id',
