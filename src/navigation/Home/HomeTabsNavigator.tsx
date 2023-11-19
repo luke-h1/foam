@@ -1,45 +1,31 @@
 /* eslint-disable react/no-unstable-nested-components */
 import { AntDesign, Feather } from '@expo/vector-icons';
-// import BrowseScreen from '../../screens/BrowseScreen';
+import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
+import Header from '../../components/Header';
 import { useAuthContext } from '../../context/AuthContext';
 import FollowingScreen from '../../screens/FollowingScreen';
 import SearchScreen from '../../screens/SearchScreen';
 import TopScreen from '../../screens/TopScreen';
 import colors from '../../styles/colors';
-import { RootRoutes, RootStackScreenProps } from '../RootStack';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
 
-const HomeTabsNavigator = ({
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  navigation,
-}: RootStackScreenProps<RootRoutes.Home>) => {
+const HomeTabsNavigator = () => {
   const { auth } = useAuthContext();
   return (
     <HomeTabs.Navigator
-      initialRouteName={HomeTabsRoutes.Following}
+      initialRouteName={
+        auth?.isAuth ? HomeTabsRoutes.Following : HomeTabsRoutes.Top
+      }
       screenOptions={{
         headerTitleAlign: 'left',
-        headerShown: false,
+        // headerShown: false,
         tabBarActiveTintColor: colors.purple,
         tabBarStyle: {
           backgroundColor: colors.primary,
         },
-        // eslint-disable-next-line react/no-unstable-nested-components
-        // headerRight: () => (
-        //   <View>
-        //     <Header title={navigation.} />
-        //     {/* <Text>
-        //       <Entypo
-        //         name="cog"
-        //         size={24}
-        //         color="black"
-        //         onPress={() => {
-        //           navigation.navigate(RootRoutes.SettingsModal);
-        //         }}
-        //       />
-        //     </Text> */}
-        //   </View>
-        // ),
+        headerStyle: {
+          backgroundColor: colors.black,
+        },
       }}
     >
       {auth?.isAuth && (
@@ -50,6 +36,9 @@ const HomeTabsNavigator = ({
             tabBarIcon: () => (
               <Feather name="heart" size={24} color={colors.gray} />
             ),
+            header(props: BottomTabHeaderProps) {
+              return <Header {...props} title="Following" />;
+            },
           }}
         />
       )}
@@ -58,9 +47,15 @@ const HomeTabsNavigator = ({
         name={HomeTabsRoutes.Top}
         component={TopScreen}
         options={{
+          headerStyle: {
+            backgroundColor: colors.black,
+          },
           tabBarIcon: () => (
             <AntDesign name="totop" size={24} color={colors.gray} />
           ),
+          header(props: BottomTabHeaderProps) {
+            return <Header {...props} title="Top" />;
+          },
         }}
       />
       {/* <HomeTabs.Screen name={HomeTabsRoutes.Browse} component={BrowseScreen} /> */}
@@ -71,6 +66,9 @@ const HomeTabsNavigator = ({
           tabBarIcon: () => (
             <Feather name="search" size={24} color={colors.gray} />
           ),
+          header(props: BottomTabHeaderProps) {
+            return <Header {...props} title="Search" />;
+          },
         }}
       />
     </HomeTabs.Navigator>

@@ -13,15 +13,13 @@ import {
   HomeTabsRoutes,
   HomeTabsScreenProps,
 } from '../../navigation/Home/HomeTabs';
+import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = ({
   navigation,
-}: CompositeScreenProps<
-  HomeTabsScreenProps<HomeTabsRoutes.Following>,
-  BottomTabScreenProps<HomeTabsParamList>
->) => {
+}: RootStackScreenProps<RootRoutes.Login>) => {
   const { login } = useAuthContext();
 
   const discovery = {
@@ -51,8 +49,7 @@ const LoginScreen = ({
   useEffect(() => {
     if (response?.type === 'success') {
       login(response);
-
-      navigation.navigate(HomeTabsRoutes.Top);
+      navigation.navigate(RootRoutes.Home);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);

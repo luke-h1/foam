@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
   FlatList,
@@ -10,26 +8,15 @@ import {
   View,
 } from 'react-native';
 import CategoryList from '../components/CategoryList';
-import Header from '../components/Header';
 import StreamListItem from '../components/StreamListItem';
 import Title from '../components/Title';
 import { useAuthContext } from '../context/AuthContext';
-import {
-  HomeTabsParamList,
-  HomeTabsRoutes,
-  HomeTabsScreenProps,
-} from '../navigation/Home/HomeTabs';
 import twitchService, { Category, Stream } from '../services/twitchService';
 import colors from '../styles/colors';
 import getTokens from '../utils/getTokens';
 import { statusBarHeight } from './FollowingScreen';
 
-const TopScreen = ({
-  navigation,
-}: CompositeScreenProps<
-  HomeTabsScreenProps<HomeTabsRoutes.Top>,
-  BottomTabScreenProps<HomeTabsParamList>
->) => {
+const TopScreen = () => {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [showStreams, setShowStreams] = useState(true);
@@ -39,12 +26,12 @@ const TopScreen = ({
   const fetchTopStreams = async () => {
     const { anonToken, token } = await getTokens();
     if (auth?.isAuth) {
-      const res = await twitchService.getTopStreams(undefined, token as string);
+      const res = await twitchService.getTopStreams(token as string, undefined);
       setStreams(res);
     } else {
       const res = await twitchService.getTopStreams(
-        undefined,
         anonToken as string,
+        undefined,
       );
       setStreams(res);
     }
@@ -71,8 +58,7 @@ const TopScreen = ({
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
-        {/* @ts-ignore */}
-        <Header title="Top" navigation={navigation} />
+        {/* <Header title="Top" navigation={navigation} route={route} /> */}
         <View style={styles.nav}>
           <TouchableOpacity
             onPress={() => {

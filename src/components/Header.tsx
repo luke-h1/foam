@@ -1,36 +1,41 @@
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useAuthContext } from '../context/AuthContext';
+import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import {
-  HomeTabsRoutes,
-  HomeTabsScreenProps,
-} from '../navigation/Home/HomeTabs';
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useAuthContext } from '../context/AuthContext';
 import { RootRoutes } from '../navigation/RootStack';
 import colors from '../styles/colors';
 import Title from './Title';
 
-interface Props extends HomeTabsScreenProps<HomeTabsRoutes.Top> {
+type BaseProps = {
   title: string;
   showAvatar?: boolean;
-}
+};
+// progress, styleInterpolator
+type Props = BottomTabHeaderProps & BaseProps;
 
-const Header = ({ title, navigation, showAvatar = true }: Props) => {
+export default function Header({
+  title,
+  navigation,
+  showAvatar = true,
+}: Props) {
   const { user } = useAuthContext();
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Title>{title}</Title>
       {showAvatar && (
         <View style={styles.right}>
           {!user ? (
             <TouchableOpacity
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
               onPress={() => navigation.navigate(RootRoutes.SettingsModal)}
               style={styles.avatar}
             />
           ) : (
             <TouchableOpacity
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
               onPress={() => navigation.navigate(RootRoutes.SettingsModal)}
             >
               <Image
@@ -41,11 +46,9 @@ const Header = ({ title, navigation, showAvatar = true }: Props) => {
           )}
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
-};
-
-export default Header;
+}
 
 const styles = StyleSheet.create({
   title: {
@@ -57,9 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 14,
-    paddingRight: 14,
-    marginBottom: 15,
+    backgroundColor: colors.primary,
   },
   avatar: {
     backgroundColor: colors.tag,

@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
+/* eslint-disable no-console */
+
 import Constants from 'expo-constants';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -10,15 +9,10 @@ import {
   View,
   Platform,
 } from 'react-native';
-import Header from '../components/Header';
 import StreamList from '../components/StreamList';
 import Title from '../components/Title';
 import { useAuthContext } from '../context/AuthContext';
-import {
-  HomeTabsParamList,
-  HomeTabsRoutes,
-  HomeTabsScreenProps,
-} from '../navigation/Home/HomeTabs';
+
 import twitchService, { Stream } from '../services/twitchService';
 import colors from '../styles/colors';
 
@@ -28,12 +22,7 @@ export interface Section {
   isTitle?: boolean;
 }
 
-const FollowingScreen = ({
-  navigation,
-}: CompositeScreenProps<
-  HomeTabsScreenProps<HomeTabsRoutes.Following>,
-  BottomTabScreenProps<HomeTabsParamList>
->) => {
+const FollowingScreen = () => {
   const { user } = useAuthContext();
   const [streams, setStreams] = useState<Stream[]>([]);
 
@@ -107,8 +96,6 @@ const FollowingScreen = ({
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
-        {/* @ts-ignore */}
-        <Header title="Following" navigation={navigation} />
         <View>
           <FlatList<Section>
             data={data}

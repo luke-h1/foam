@@ -26,6 +26,9 @@ export type RootStackParamList = {
   [RootRoutes.Login]: undefined;
 };
 
+// key of RootRoutes
+export type RootRoutesParams = keyof RootStackParamList;
+
 export type RootStackNavigationProp = NavigationProp<RootStackParamList>;
 
 export const RootStack = createStackNavigator<RootStackParamList>();
