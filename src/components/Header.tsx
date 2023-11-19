@@ -1,4 +1,5 @@
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useAuthContext } from '../context/AuthContext';
 import {
   HomeTabsRoutes,
   HomeTabsScreenProps,
@@ -13,17 +14,31 @@ interface Props extends HomeTabsScreenProps<HomeTabsRoutes.Top> {
 }
 
 const Header = ({ title, navigation, showAvatar = true }: Props) => {
+  const { user } = useAuthContext();
   return (
     <View style={styles.container}>
       <Title>{title}</Title>
       {showAvatar && (
         <View style={styles.right}>
-          <TouchableOpacity
-            style={styles.avatar}
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            onPress={() => navigation.navigate(RootRoutes.SettingsModal)}
-          />
+          {!user ? (
+            <TouchableOpacity
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              onPress={() => navigation.navigate(RootRoutes.SettingsModal)}
+              style={styles.avatar}
+            />
+          ) : (
+            <TouchableOpacity
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              onPress={() => navigation.navigate(RootRoutes.SettingsModal)}
+            >
+              <Image
+                style={styles.avatar}
+                source={{ uri: user?.profile_image_url }}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </View>
