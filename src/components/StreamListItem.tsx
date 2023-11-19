@@ -1,30 +1,46 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useEffect, useState } from 'react';
+import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { useAuthContext } from '../context/AuthContext';
+import twitchService, { Stream, UserResponse } from '../services/twitchService';
 import colors from '../styles/colors';
+import elapsedStreamTime from '../utils/elapsedStreamTime';
+import viewFormatter from '../utils/viewFormatter';
 
-const StreamListItem = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const tags = [
-    'gaming',
-    'chatting',
-    'english',
-    'dutch',
-    'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-    'Evil',
-    'Evil',
-    'Unhygienic',
-    'Unholy',
-    'English',
-    'Geriatric',
-  ];
+interface Props {
+  stream: Stream;
+}
+
+const StreamListItem = ({ stream }: Props) => {
+  const { auth } = useAuthContext();
+  const [userImage, setUserImage] = useState<UserResponse>();
+
+  // const getUserProfilePictures = async () => {
+  //   const res = await twitchService.getUser(
+  //     stream.user_login,
+  //     (auth?.anonToken as string) ?? (auth?.token?.accessToken as string),
+  //   );
+
+  //   setUsers(res);
+  // };
+
+  // useEffect(() => {
+  //   getUserProfilePictures();
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [stream]);
 
   return (
     <View style={styles.streamContainer}>
       <View style={styles.streamColumn}>
         <Image
+          style={styles.streamImage}
           source={{
-            uri: 'https://fastly.picsum.photos/id/840/200/300.jpg?hmac=Z8Mc1xk7GaQHQ1hkPTK4cY0dYIxDKGBCHrgyaDqE0u0',
-            width: 320,
-            height: 220,
+            height: 300,
+            width: 300,
+            uri: stream.thumbnail_url
+              .replace('{width}', '1920')
+              .replace('{height}', '1080'),
           }}
         />
 
@@ -32,27 +48,59 @@ const StreamListItem = () => {
           <View style={styles.streamHeader}>
             <Image
               style={styles.streamAvatar}
-              source={{ uri: 'https://picsum.photos/200/300' }}
+              source={{
+                uri: userImage?.profile_image_url,
+                width: 20,
+                height: 20,
+              }}
             />
             <Text style={styles.streamUsername} numberOfLines={1}>
-              username
+              {stream.user_name}
             </Text>
           </View>
           <Text style={styles.streamDescription} numberOfLines={1}>
-            🔥CLICK🔥LIVE🔥ASAP🔥DRAMA🔥JUICE🔥VIDEOS🔥REACT🔥GAMES🔥HIGH
-            IQ🔥WISDOM🔥GIVEN🔥FOR🔥FREE🔥FROM🔥JUICE WARLORD🔥POG
+            {stream.title}
           </Text>
           <Text style={styles.streamCategory} numberOfLines={1}>
-            Just Chatting
+            {stream.game_name}
+          </Text>
+          <View
+            style={{
+              // drop any children onto next line
+              marginTop: 1,
+              // flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: colors.red,
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                marginRight: 5,
+              }}
+            />
+            <Text style={{ color: colors.gray }}>
+              {elapsedStreamTime(stream.started_at)}
+            </Text>
+          </View>
+          <Text style={styles.viewCount}>
+            {viewFormatter(stream.viewer_count, 1)} viewers
           </Text>
         </View>
         <View style={styles.tagRow}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>yo yo yo</Text>
-          </View>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>hi</Text>
-          </View>
+          <FlatList
+            data={stream.tags}
+            renderItem={({ item }) => (
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{item}</Text>
+              </View>
+            )}
+            keyExtractor={item => item}
+            horizontal
+          />
         </View>
       </View>
     </View>
@@ -62,6 +110,12 @@ const StreamListItem = () => {
 export default StreamListItem;
 
 const styles = StyleSheet.create({
+  viewCount: {
+    color: colors.gray,
+    marginTop: 4,
+    fontSize: 12,
+    marginBottom: 8,
+  },
   streamContainer: {
     flexDirection: 'row',
     flex: 1,
@@ -73,7 +127,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   streamRow: {
-    height: 66,
+    // height: 66,
     justifyContent: 'space-between',
   },
   streamHeader: {
@@ -99,7 +153,7 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
   tagRow: {
-    marginTop: 8,
+    marginTop: 17,
     flexDirection: 'row',
   },
   tag: {
@@ -112,5 +166,10 @@ const styles = StyleSheet.create({
   tagText: {
     color: colors.black,
     fontSize: 13,
+  },
+  streamImage: {
+    width: 360,
+    height: 200,
+    borderRadius: 10,
   },
 });

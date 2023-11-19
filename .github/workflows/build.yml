@@ -64,3 +64,17 @@ jobs:
 
       - name: tsc
         run: yarn tsc
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          eas-cache: true
+          expo-cache: true
+          token: ${{ secrets.FOAM_RELEASE_TOKEN }}
+
+      - name: 🚀 Create preview
+        uses: expo/expo-github-action/preview@v8
+        with:
+          command: eas update --auto
+          github-token: ${{ secrets.FOAM_GITHUB_TOKEN }}

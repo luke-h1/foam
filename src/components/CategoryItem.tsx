@@ -1,27 +1,31 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { Category } from '../services/twitchService';
 import colors from '../styles/colors';
 
-export interface Category {
-  name: string;
-  source: string;
+interface Props {
+  category: Category;
 }
 
-interface Props extends Category {}
-
-const CategoryItem = ({ name, source }: Props) => {
+const CategoryItem = ({ category }: Props) => {
   return (
     <TouchableOpacity style={styles.category}>
-      {/* @ts-expect-error */}
-      <Image style={styles.image} source={source} />
+      <Image
+        style={styles.image}
+        source={{
+          // eslint-disable-next-line camelcase
+          uri: category.box_art_url
+            .replace('{width}', '98')
+            .replace('{height}', '130'),
+          width: 98,
+          height: 130,
+        }}
+      />
       <Text style={styles.categoryName} numberOfLines={1}>
-        {name}
+        {category.name}
       </Text>
-      <View style={styles.categoryStatus}>
-        <View style={styles.redCircle} />
-        <Text style={styles.info}>51.9k</Text>
-      </View>
+      <View style={styles.categoryStatus} />
     </TouchableOpacity>
   );
 };

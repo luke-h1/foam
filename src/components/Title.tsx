@@ -4,10 +4,15 @@ import colors from '../styles/colors';
 
 interface Props {
   children: ReactNode;
+  underline?: boolean;
 }
 
-const Title = ({ children }: Props) => {
-  return <Text style={styles.container}>{children}</Text>;
+const Title = ({ children, underline }: Props) => {
+  return (
+    <Text style={[styles.container, underline ? styles.underline : undefined]}>
+      {children}
+    </Text>
+  );
 };
 
 export default Title;
@@ -22,5 +27,10 @@ const styles = StyleSheet.create({
     paddingBottom: 9,
     paddingLeft: 0,
     paddingRight: 0,
+  },
+  underline: {
+    textDecorationLine: 'underline',
+    textDecorationColor: colors.purple,
+    textDecorationStyle: 'double',
   },
 });
