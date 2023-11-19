@@ -216,8 +216,7 @@ const twitchService = {
    * @returns an object that contains the top 20 streams and a cursor for further requests
    * @requires a non-anon token
    */
-  // @ts-ignore
-  getTopStreams: async (cursor?: string, token: string) => {
+  getTopStreams: async (token: string, cursor?: string) => {
     const url = cursor ? `/streams?after=${cursor}` : '/streams';
 
     const res = await twitchApi.get<{ data: Stream[] }>(url, {

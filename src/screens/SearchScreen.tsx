@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable no-console */
 import { Feather, Entypo } from '@expo/vector-icons';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CompositeScreenProps } from '@react-navigation/native';
 import { useState } from 'react';
 import {
   FlatList,
@@ -14,14 +12,8 @@ import {
   View,
 } from 'react-native';
 import DismissableKeyboard from '../components/DismissableKeyboard';
-import Header from '../components/Header';
 import Title from '../components/Title';
 import useDebouncedCallback from '../hooks/useDebouncedCallback';
-import {
-  HomeTabsParamList,
-  HomeTabsRoutes,
-  HomeTabsScreenProps,
-} from '../navigation/Home/HomeTabs';
 import twitchService, {
   SearchChannelResponse,
 } from '../services/twitchService';
@@ -29,12 +21,8 @@ import colors from '../styles/colors';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import { statusBarHeight } from './FollowingScreen';
 
-const SearchScreen = ({
-  navigation,
-}: CompositeScreenProps<
-  HomeTabsScreenProps<HomeTabsRoutes.Search>,
-  BottomTabScreenProps<HomeTabsParamList>
->) => {
+const SearchScreen = () => {
+  const [query, setQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
@@ -67,28 +55,31 @@ const SearchScreen = ({
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
-        {/* @ts-ignore */}
-        <Header title="Search" navigation={navigation} />
+        {/* <Header title="Search" navigation={navigation} route={route} /> */}
       </View>
-      <View style={{ flexDirection: 'row' }}>
-        <Feather
-          name="search"
-          size={24}
-          color={colors.gray}
-          style={{ marginLeft: 16, alignSelf: 'center' }}
-        />
+      <View style={{ flexDirection: 'row', padding: 5 }}>
         <DismissableKeyboard>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <SafeAreaView>
+            <SafeAreaView style={{ flexDirection: 'row' }}>
               <TextInput
                 style={styles.input}
                 placeholder="Find a channel"
                 placeholderTextColor={colors.gray}
-                onChangeText={text => search(text.toLowerCase())}
+                onChangeText={text => {
+                  setQuery(text);
+                  search(text);
+                }}
               />
             </SafeAreaView>
           </ScrollView>
         </DismissableKeyboard>
+        <Feather
+          name="search"
+          size={24}
+          color={colors.gray}
+          style={{ alignSelf: 'center', marginRight: 15 }}
+          onPress={() => search(query)}
+        />
       </View>
       <View>
         <Title>Channels</Title>
@@ -111,11 +102,9 @@ const SearchScreen = ({
               <Text style={{ marginLeft: 8, color: colors.gray }}>
                 {item.display_name}
               </Text>
-              {/* drop onto next line */}
               {item.is_live && (
                 <View
                   style={{
-                    // drop any children onto next line
                     marginLeft: 8,
                     flex: 1,
                     flexDirection: 'row',

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
   AntDesign,
   Entypo,
@@ -7,7 +6,6 @@ import {
   Feather,
 } from '@expo/vector-icons';
 import { SafeAreaView, StyleSheet } from 'react-native';
-import Header from '../../components/Header';
 import SettingsItem, { ContentItem } from '../../components/SettingsItem';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 import colors from '../../styles/colors';
@@ -96,8 +94,6 @@ const SettingsModal = ({
 
   return (
     <SafeAreaView style={styles.wrapper}>
-      {/* @ts-ignore */}
-      <Header title="Settings" showAvatar={false} navigation={navigation} />
       <SettingsItem contents={settingItems} />
     </SafeAreaView>
   );

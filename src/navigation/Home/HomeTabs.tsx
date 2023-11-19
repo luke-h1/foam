@@ -3,7 +3,6 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { NavigationProp } from '@react-navigation/native';
-
 // eslint-disable-next-line no-shadow
 export enum HomeTabsRoutes {
   Following = 'Following',
