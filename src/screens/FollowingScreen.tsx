@@ -2,7 +2,7 @@
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -19,6 +19,7 @@ import {
   HomeTabsRoutes,
   HomeTabsScreenProps,
 } from '../navigation/Home/HomeTabs';
+import twitchService, { Stream } from '../services/twitchService';
 import colors from '../styles/colors';
 
 export interface Section {
@@ -33,13 +34,30 @@ const FollowingScreen = ({
   HomeTabsScreenProps<HomeTabsRoutes.Following>,
   BottomTabScreenProps<HomeTabsParamList>
 >) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { token } = useAuthContext();
+  const { user } = useAuthContext();
+  const [streams, setStreams] = useState<Stream[]>([]);
+
+  const fetchFollowedStreams = async () => {
+    try {
+      console.log('user is', user);
+      console.log('user id', user?.id);
+      const res = await twitchService.getFollowedStreams(user?.id as string);
+      console.log(res);
+      setStreams(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchFollowedStreams();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data, stickyHeaderIndicies } = useMemo(() => {
     // eslint-disable-next-line no-shadow
     const data: Section[] = [
-      { key: 'C2', render: () => <StreamList key="1" /> },
+      { key: 'C2', render: () => <StreamList key="1" streams={streams} /> },
 
       // {
       //   key: 'FOLLOWED_CATEGORIES',
@@ -84,7 +102,7 @@ const FollowingScreen = ({
       data,
       stickyHeaderIndicies,
     };
-  }, []);
+  }, [streams]);
 
   return (
     <SafeAreaView style={styles.wrapper}>

@@ -1,25 +1,34 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-console */
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { CompositeScreenProps } from '@react-navigation/native';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { View, Button, Text } from 'react-native';
+import { View, Button } from 'react-native';
 import { useAuthContext } from '../../context/AuthContext';
-import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
-import twitchService from '../../services/twitchService';
+import {
+  HomeTabs,
+  HomeTabsParamList,
+  HomeTabsRoutes,
+  HomeTabsScreenProps,
+} from '../../navigation/Home/HomeTabs';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = ({
   navigation,
-}: RootStackScreenProps<RootRoutes.Login>) => {
-  const { setToken, token } = useAuthContext();
-  const [valid, setValid] = useState(token?.accessToken ?? false);
+}: CompositeScreenProps<
+  HomeTabsScreenProps<HomeTabsRoutes.Following>,
+  BottomTabScreenProps<HomeTabsParamList>
+>) => {
+  const { login } = useAuthContext();
 
   const discovery = {
     authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
     tokenEndpoint: 'https://id.twitch.tv/oauth2/token',
     revocationEndpoint: 'https://id.twitch.tv/oauth2/revoke',
-  };
+  } as const;
 
   const [request, response, promptAsync] = useAuthRequest(
     {
@@ -33,7 +42,7 @@ const LoginScreen = ({
       extraParams: {
         // @ts-expect-error - Twitch requires force_verify to be a boolean whereas
         // the types are Record<string, string>
-        force_verify: false,
+        force_verify: true,
       },
     },
     discovery,
@@ -41,42 +50,22 @@ const LoginScreen = ({
 
   useEffect(() => {
     if (response?.type === 'success') {
-      if (!response.authentication) {
-        console.log('no authentication');
-        return;
-      }
+      login(response);
 
-      console.log(response);
-      setToken(response.authentication);
-      navigation.navigate(RootRoutes.Home);
+      navigation.navigate(HomeTabsRoutes.Top);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      {!token?.accessToken && (
-        <Button
-          title="login"
-          disabled={!request}
-          onPress={() => {
-            promptAsync();
-          }}
-        />
-      )}
-      {token && (
-        <View>
-          <Text>{JSON.stringify(token, null, 2)}</Text>
-          <Button
-            onPress={async () => {
-              const res = await twitchService.validateToken(token.accessToken);
-              setValid(res);
-            }}
-            title="validate token"
-          />
-          {valid ? <Text>Valid token</Text> : <Text>invalid token</Text>}
-        </View>
-      )}
+      <Button
+        title="login"
+        disabled={!request}
+        onPress={() => {
+          promptAsync();
+        }}
+      />
     </View>
   );
 };

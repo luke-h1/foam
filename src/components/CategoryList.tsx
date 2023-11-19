@@ -1,32 +1,25 @@
-import { FlatList, StyleSheet } from 'react-native';
-import apex from '../../assets/data/category_apex.jpg';
-import csgo from '../../assets/data/category_csgo.jpg';
-import fallguys from '../../assets/data/category_fallguys.jpg';
-import fortnite from '../../assets/data/category_fortnite.jpg';
-import lol from '../../assets/data/category_lol.jpg';
-import valorant from '../../assets/data/category_valorant.jpg';
-import CategoryItem, { Category } from './CategoryItem';
+import { FlatList, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
+import { Category } from '../services/twitchService';
+import CategoryItem from './CategoryItem';
 
-const data: Category[] = [
-  { name: 'League of Legends', source: lol },
-  { name: 'VALORANT', source: valorant },
-  { name: 'Counter-Strike: Global Offensive', source: csgo },
-  { name: 'Fortnite', source: fortnite },
-  { name: 'Fall Guys', source: fallguys },
-  { name: 'Apex Legends', source: apex },
-];
+interface Props {
+  categories: Category[];
+}
 
-const CategoryList = () => {
+const CategoryList = ({ categories }: Props) => {
   return (
-    <FlatList<Category>
-      style={styles.list}
-      numColumns={3}
-      data={data}
-      // eslint-disable-next-line no-shadow
-      renderItem={data => (
-        <CategoryItem name={data.item.name} source={data.item.source} />
-      )}
-    />
+    <KeyboardAvoidingView>
+      <View>
+        <FlatList<Category>
+          style={styles.list}
+          numColumns={3}
+          data={categories}
+          // eslint-disable-next-line no-shadow
+          renderItem={data => <CategoryItem category={data.item} />}
+          keyExtractor={item => item.id}
+        />
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -39,7 +32,7 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
     paddingRight: 0,
     paddingTop: 24,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
 });
 

@@ -90,6 +90,7 @@
     "react/react-in-jsx-scope": "off",
     "react/require-default-props": "off",
     "react/state-in-constructor": "off",
+    "camelcase": "off",
     "react/no-unescaped-entities": [
       "error",
       {

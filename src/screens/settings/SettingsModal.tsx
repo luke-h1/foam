@@ -29,6 +29,7 @@ const SettingsModal = ({
           showRightArrow: true,
           iconRight: <AntDesign name="right" size={16} color={colors.gray} />,
           showSeperator: true,
+          onPress: () => navigation.navigate(RootRoutes.Login),
         },
       ],
     },

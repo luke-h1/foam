@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import AuthLoadingScreen from '../screens/authentication/AuthLoading';
 import LoginScreen from '../screens/authentication/LoginScreen';
 import SettingsModal from '../screens/settings/SettingsModal';
@@ -25,6 +26,7 @@ const RootNavigator = () => {
         name={RootRoutes.SettingsModal}
         component={SettingsModal}
       />
+      {/* @ts-ignore */}
       <RootStack.Screen name={RootRoutes.Login} component={LoginScreen} />
     </RootStack.Navigator>
   );

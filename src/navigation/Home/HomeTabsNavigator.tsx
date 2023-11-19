@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unstable-nested-components */
 import { AntDesign, Feather } from '@expo/vector-icons';
 // import BrowseScreen from '../../screens/BrowseScreen';
+import { useAuthContext } from '../../context/AuthContext';
 import FollowingScreen from '../../screens/FollowingScreen';
 import SearchScreen from '../../screens/SearchScreen';
 import TopScreen from '../../screens/TopScreen';
@@ -12,6 +13,7 @@ const HomeTabsNavigator = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   navigation,
 }: RootStackScreenProps<RootRoutes.Home>) => {
+  const { auth } = useAuthContext();
   return (
     <HomeTabs.Navigator
       initialRouteName={HomeTabsRoutes.Following}
@@ -40,15 +42,18 @@ const HomeTabsNavigator = ({
         // ),
       }}
     >
-      <HomeTabs.Screen
-        name={HomeTabsRoutes.Following}
-        component={FollowingScreen}
-        options={{
-          tabBarIcon: () => (
-            <Feather name="heart" size={24} color={colors.gray} />
-          ),
-        }}
-      />
+      {auth?.isAuth && (
+        <HomeTabs.Screen
+          name={HomeTabsRoutes.Following}
+          component={FollowingScreen}
+          options={{
+            tabBarIcon: () => (
+              <Feather name="heart" size={24} color={colors.gray} />
+            ),
+          }}
+        />
+      )}
+
       <HomeTabs.Screen
         name={HomeTabsRoutes.Top}
         component={TopScreen}

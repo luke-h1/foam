@@ -1,14 +1,19 @@
-import { StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
+import { Stream } from '../services/twitchService';
 import StreamListItem from './StreamListItem';
 
-const StreamList = () => {
+interface Props {
+  streams: Stream[];
+}
+
+const StreamList = ({ streams }: Props) => {
   return (
     <View style={styles.list}>
-      <StreamListItem />
-      <StreamListItem />
-      <StreamListItem />
-      <StreamListItem />
-      <StreamListItem />
+      <FlatList
+        data={streams}
+        renderItem={({ item }) => <StreamListItem stream={item} />}
+        keyExtractor={item => item.id}
+      />
     </View>
   );
 };

@@ -1,0 +1,100 @@
+name: Release app
+on:
+    workflow_dispatch:
+env:
+  NODE_VERSION: 18.18.0
+  FOAM_RELEASE_TOKEN: ${{ secrets.FOAM_RELEASE_TOKEN }}
+
+jobs:
+  release:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}-release
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check for FOAM_RELEASE_TOKEN
+        run: |
+          if [ -z "${{ secrets.FOAM_RELEASE_TOKEN }}" ]; then
+            echo "You must provide an FOAM_RELEASE_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: Install moreutils
+        run: sudo apt install moreutils
+        
+      # https://github.com/actions/virtual-environments/issues/1187
+      - name: tune linux network
+        run: sudo ethtool -K eth0 tx off rx off            
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: get yarn cache directory
+        id: cache
+        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
+        shell: bash
+        working-directory: ./
+
+      - name: setup yarn cache
+        uses: actions/cache@v3
+        id: yarn-cache
+        with:
+            path: ${{ steps.cache.outputs.dir }}
+            key: yarn-${{ hashFiles('**/yarn.lock') }}
+            restore-keys: |
+                yarn-
+
+      - name: install yarn
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: format:check
+        run: yarn format:check
+
+      - name: lint
+        run: yarn lint
+
+      - name: jest
+        run: yarn test
+
+      - name: tsc
+        run: yarn tsc
+
+    # PUBLISH
+      - name: new version
+        run: |
+            git config user.name "${{ github.actor }}"
+            git config user.email "${{ github.actor }}@users.noreply.github.com"
+            npx lerna publish --yes --conventional-commits --force-publish --no-push --create-release github
+            git push -u origin main --force --no-verify --follow-tags
+
+      - name: get release version
+        id: get_release_version
+        run: echo "release_version=$(cat lerna.json | jq -r '.version')" >> $GITHUB_ENV
+        shell: bash
+        working-directory: ./
+      
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.FOAM_RELEASE_TOKEN }}
+
+      - name: 🚀 Build app version ${{ github.env.get_release_version.outputs.release_version}}
+        run: eas build --non-interactive
+
+      - name: 🚀 Submit app version ${{ github.env.get_release_version.outputs.release_version}} to play store
+        run: eas submit --latest -p android
+
+      - name: Submit app version ${{ github.env.get_release_version.outputs.release_version}} to app store
+        run: eas submit --latest -p ios

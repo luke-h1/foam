@@ -1,6 +1,6 @@
 {
   "name": "foam",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
@@ -14,7 +14,8 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "format:check": "prettier --list-different \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "prepare": "husky install",
-    "clean": "rm -rf node_modules ios android .expo && yarn install"
+    "clean": "rm -rf node_modules ios android .expo && yarn install",
+    "version": "printf 'export const version = \"%s\";\n' \"$(node -p \"require('./package.json').version\")\" > src/version.ts && git add ."
   },
   "dependencies": {
     "@expo/vector-icons": "^13.0.0",
@@ -32,15 +33,18 @@
     "expo-auth-session": "~5.0.2",
     "expo-clipboard": "~4.3.1",
     "expo-constants": "^14.4.2",
+    "expo-dev-client": "~2.4.12",
     "expo-font": "~11.4.0",
     "expo-image": "~1.3.4",
     "expo-linking": "~5.0.2",
     "expo-screen-orientation": "~6.0.6",
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
+    "lerna": "^7.4.2",
     "react": "18.2.0",
     "react-native": "0.72.6",
     "react-native-app-auth": "^7.1.0",
+    "react-native-fast-image": "^8.6.3",
     "react-native-gesture-handler": "~2.12.0",
     "react-native-reanimated": "~3.3.0",
     "react-native-reanimated-carousel": "^3.5.1",
