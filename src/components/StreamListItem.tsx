@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
-import FastImage from 'react-native-fast-image';
 import { useAuthContext } from '../context/AuthContext';
 import twitchService, { Stream, UserResponse } from '../services/twitchService';
 import colors from '../styles/colors';

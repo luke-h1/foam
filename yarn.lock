@@ -9841,7 +9841,6 @@ __metadata:
     react: 18.2.0
     react-native: 0.72.6
     react-native-app-auth: ^7.1.0
-    react-native-fast-image: ^8.6.3
     react-native-gesture-handler: ~2.12.0
     react-native-reanimated: ~3.3.0
     react-native-reanimated-carousel: ^3.5.1
@@ -15952,16 +15951,6 @@ __metadata:
   version: 0.0.2
   resolution: "react-native-base64@npm:0.0.2"
   checksum: 696f6cad0e3ce26437275bcd791becaf597300d351a3ab2d7084fd42a177731bb9ab1e490534397ed35de4cd2a5a4385ee8d49bf5846069101b5ada98f132d23
-  languageName: node
-  linkType: hard
-
-"react-native-fast-image@npm:^8.6.3":
-  version: 8.6.3
-  resolution: "react-native-fast-image@npm:8.6.3"
-  peerDependencies:
-    react: ^17 || ^18
-    react-native: ">=0.60.0"
-  checksum: 29289cb6b2eae0983c8922b22e2d9de3be07322bb7991c5def19f95eadefaedb0e308ff0b38cc1d0444e8bd4fe94a7621a99a2d3d9298100bcb60b3144677234
   languageName: node
   linkType: hard
 
