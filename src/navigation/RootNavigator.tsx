@@ -21,7 +21,7 @@ const RootNavigator = () => {
         component={AuthLoadingScreen}
       />
       <RootStack.Screen name={RootRoutes.Home} component={HomeTabsNavigator} />
-      <RootStack.Group screenOptions={{ presentation: 'modal' }}>
+      <RootStack.Group screenOptions={{ presentation: 'transparentModal' }}>
         <RootStack.Screen
           name={RootRoutes.SettingsModal}
           component={SettingsModal}

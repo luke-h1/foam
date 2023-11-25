@@ -5,8 +5,9 @@ import {
   MaterialIcons,
   Feather,
 } from '@expo/vector-icons';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { Image, SafeAreaView, StyleSheet } from 'react-native';
 import SettingsItem, { ContentItem } from '../../components/SettingsItem';
+import { useAuthContext } from '../../context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 import colors from '../../styles/colors';
 import { statusBarHeight } from '../FollowingScreen';
@@ -14,23 +15,35 @@ import { statusBarHeight } from '../FollowingScreen';
 const SettingsModal = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.SettingsModal>) => {
-  const settingItems: ContentItem[] = [
+  const { user } = useAuthContext();
+
+  const authenticatedSettingItems: ContentItem[] = [
     {
       id: '1',
       ctaTitle: 'Profile',
       items: [
         {
-          content:
-            'Log in to be able to chat, view followed streams and much more :)',
-          title: 'Anonymous',
-          iconLeft: <AntDesign name="user" size={24} color={colors.gray} />,
+          content: user?.display_name as string,
+          title: 'Profile',
+          iconLeft: (
+            <Image
+              source={{ uri: user?.profile_image_url }}
+              style={{ width: 30, height: 30, borderRadius: 8 }}
+            />
+          ),
           showRightArrow: true,
           iconRight: <AntDesign name="right" size={16} color={colors.gray} />,
           showSeperator: true,
-          onPress: () => navigation.navigate(RootRoutes.Login),
+          onPress: () => {
+            // eslint-disable-next-line no-console
+            console.log('show modal here');
+          },
         },
       ],
     },
+  ];
+
+  const commonSettingItems: ContentItem[] = [
     {
       id: '2',
       ctaTitle: 'Options',
@@ -90,6 +103,30 @@ const SettingsModal = ({
         },
       ],
     },
+  ];
+
+  const unauthenticatedSettingItems: ContentItem[] = [
+    {
+      id: '1',
+      ctaTitle: 'Profile',
+      items: [
+        {
+          content:
+            'Log in to be able to chat, view followed streams and much more :)',
+          title: 'Anonymous',
+          iconLeft: <AntDesign name="user" size={24} color={colors.gray} />,
+          showRightArrow: true,
+          iconRight: <AntDesign name="right" size={16} color={colors.gray} />,
+          showSeperator: true,
+          onPress: () => navigation.navigate(RootRoutes.Login),
+        },
+      ],
+    },
+  ];
+
+  const settingItems: ContentItem[] = [
+    ...(user ? authenticatedSettingItems : unauthenticatedSettingItems),
+    ...commonSettingItems,
   ];
 
   return (

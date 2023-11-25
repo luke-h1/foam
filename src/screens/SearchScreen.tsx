@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { Feather, Entypo } from '@expo/vector-icons';
-import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -21,20 +22,36 @@ import colors from '../styles/colors';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import { statusBarHeight } from './FollowingScreen';
 
+interface SearchHistoryItem {
+  query: string;
+}
+
 const SearchScreen = () => {
   const [query, setQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
+  const [showDismiss, setShowDismiss] = useState<boolean>(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
-  const previousSearches = [
-    'psp1g',
-    'poke',
-    'xqc',
-    'brittt',
-    'deme',
-    'nadia',
-  ] as const;
+  const fetchSearchHistory = async () => {
+    const res = await AsyncStorage.getItem('previousSearches');
+    console.log('res search is', res);
+    setSearchHistory(JSON.parse(res as string));
+    console.log('searchHistory is', searchHistory);
+  };
+
+  useEffect(() => {
+    fetchSearchHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchSearchHistory();
+    }, 350);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
 
   const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
@@ -46,17 +63,29 @@ const SearchScreen = () => {
     const results = await twitchService.searchChannels(value);
 
     setSearchResults(results);
+    setShowDismiss(true);
 
-    console.log('---------------------------------');
-    console.log('results.data is:', results);
-    console.log('---------------------------------');
+    // update search history in async storage
+    const prevSearches = await AsyncStorage.getItem('previousSearches');
+
+    const searchItem: SearchHistoryItem = {
+      query: value,
+    };
+
+    const newPrevSearches = Array.from(
+      new Set(prevSearches ? JSON.parse(prevSearches) : []).add(searchItem),
+    );
+
+    await AsyncStorage.setItem(
+      'previousSearches',
+      JSON.stringify(newPrevSearches),
+    );
+    const res = await AsyncStorage.getItem('previousSearches');
+    setSearchHistory(JSON.parse(res as string));
   }, 400);
 
   return (
     <SafeAreaView style={styles.wrapper}>
-      <View style={styles.container}>
-        {/* <Header title="Search" navigation={navigation} route={route} /> */}
-      </View>
       <View style={{ flexDirection: 'row', padding: 5 }}>
         <DismissableKeyboard>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -65,24 +94,40 @@ const SearchScreen = () => {
                 style={styles.input}
                 placeholder="Find a channel"
                 placeholderTextColor={colors.gray}
-                onChangeText={text => {
+                verticalAlign="middle"
+                onChangeText={async text => {
                   setQuery(text);
-                  search(text);
+                  await search(text);
+                  setShowDismiss(true);
                 }}
               />
             </SafeAreaView>
           </ScrollView>
         </DismissableKeyboard>
-        <Feather
-          name="search"
-          size={24}
-          color={colors.gray}
-          style={{ alignSelf: 'center', marginRight: 15 }}
-          onPress={() => search(query)}
-        />
+        {showDismiss ? (
+          <Entypo
+            name="cross"
+            size={24}
+            style={[{ alignSelf: 'center', marginRight: 15 }, styles.icon]}
+            color={colors.gray}
+            onPress={() => {
+              setQuery('');
+              setSearchResults([]);
+              setShowDismiss(false);
+            }}
+          />
+        ) : (
+          <Feather
+            name="search"
+            size={24}
+            color={colors.gray}
+            style={{ alignSelf: 'center', marginRight: 15 }}
+            onPress={() => search(query)}
+          />
+        )}
       </View>
       <View>
-        <Title>Channels</Title>
+        {searchResults.length > 0 && <Title>Channels</Title>}
         <FlatList
           data={searchResults}
           renderItem={({ item }) => (
@@ -129,24 +174,29 @@ const SearchScreen = () => {
           )}
         />
       </View>
-      {!searchResults.length && (
-        <View style={styles.previousSearches}>
-          <FlatList<string>
-            data={previousSearches}
-            renderItem={({ item }) => (
-              <View style={{ flex: 1, flexDirection: 'row', marginBottom: 14 }}>
-                <Entypo
-                  name="back-in-time"
-                  size={24}
-                  color={colors.gray}
-                  style={{ alignSelf: 'center', marginRight: 8 }}
-                />
-                <Text style={styles.previousSearch}>{item}</Text>
-              </View>
-            )}
-            keyExtractor={item => item}
+
+      {searchHistory && (
+        <ScrollView style={styles.previousSearches}>
+          <FlatList<SearchHistoryItem>
+            data={searchHistory}
+            renderItem={({ item }) => {
+              return (
+                <View
+                  style={{ flex: 1, flexDirection: 'row', marginBottom: 14 }}
+                >
+                  <Entypo
+                    name="back-in-time"
+                    size={24}
+                    color={colors.gray}
+                    style={{ alignSelf: 'center', marginRight: 8 }}
+                  />
+                  <Text style={styles.previousSearch}>{item.query}</Text>
+                </View>
+              );
+            }}
+            keyExtractor={item => item.query}
           />
-        </View>
+        </ScrollView>
       )}
     </SafeAreaView>
   );

@@ -30,6 +30,7 @@ interface Props {
 const SettingsItem = ({ contents }: Props) => {
   return (
     <View>
+      <Title>Settings</Title>
       <FlatList
         data={contents}
         renderItem={({ item }) => (
