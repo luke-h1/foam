@@ -1,0 +1,63 @@
+name: Build and test
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        type: choice
+        description: Build profile to use
+        options:
+          - preview
+          - development
+          - production
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: "ios"
+            # At the moment we need to use macos-12 instead of macos-11 (macos-latest)
+            os: "macos-12"
+          - platform: "android"
+            os: "ubuntu-latest"
+ 
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check for FOAM_RELEASE_TOKEN
+        run: |
+          if [ -z "${{ secrets.FOAM_RELEASE_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v7
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.FOAM_RELEASE_TOKEN }}
+
+      - name: Setup EAS local builds
+        run: npm i -g eas-cli-local-build-plugin
+
+      - name: Build for ${{ matrix.platform }} with profile ${{ github.event.inputs.profile }}
+        run: |
+          eas build --local \
+            --non-interactive \
+            --output=./out \
+            --platform=${{ matrix.platform }} \
+            --profile=${{ github.event.inputs.profile }}
+
+      # Upload the app binaries to the artifact section of the workflow
+      # They can optionally be downloaded by the user later on or for example added to a release
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: foam-${{ matrix.platform }}
+          path: out
