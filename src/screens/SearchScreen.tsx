@@ -37,9 +37,7 @@ const SearchScreen = () => {
 
   const fetchSearchHistory = async () => {
     const res = await AsyncStorage.getItem('previousSearches');
-    console.log('res search is', res);
     setSearchHistory(JSON.parse(res as string));
-    console.log('searchHistory is', searchHistory);
   };
 
   useEffect(() => {
@@ -66,9 +64,7 @@ const SearchScreen = () => {
     setSearchResults(results);
     setShowDismiss(true);
 
-    // update search history in async storage
     const prevSearches = await AsyncStorage.getItem('previousSearches');
-
     const searchItem: SearchHistoryItem = {
       query: value,
       date: new Date(),

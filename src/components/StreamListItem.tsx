@@ -119,14 +119,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flex: 1,
     marginBottom: 24,
-    marginRight: 24,
+    // marginRight: 24,
   },
   streamColumn: {
-    marginLeft: 11,
     flex: 1,
   },
   streamRow: {
-    // height: 66,
     justifyContent: 'space-between',
   },
   streamHeader: {
@@ -160,7 +158,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     paddingHorizontal: 8,
     borderRadius: 10,
-    marginRight: 10,
+    marginRight: 6,
   },
   tagText: {
     color: colors.black,
@@ -169,6 +167,6 @@ const styles = StyleSheet.create({
   streamImage: {
     width: 360,
     height: 200,
-    borderRadius: 10,
+    borderRadius: 7,
   },
 });

@@ -11,9 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import StreamList from '../components/StreamList';
-import Title from '../components/Title';
 import { useAuthContext } from '../context/AuthContext';
-
 import twitchService, { Stream } from '../services/twitchService';
 import colors from '../styles/colors';
 
@@ -68,11 +66,11 @@ const FollowingScreen = () => {
       //   key: 'C3',
       //   render: () => <View />,
       // },
-      {
-        key: 'OFFLINE_CHANNELS',
-        render: () => <Title>Offline Channels</Title>,
-        isTitle: true,
-      },
+      // {
+      //   key: 'OFFLINE_CHANNELS',
+      //   render: () => <Title>Offline Channels</Title>,
+      //   isTitle: true,
+      // },
       // {
       //   key: 'C4',
       //   render: () => <View />,

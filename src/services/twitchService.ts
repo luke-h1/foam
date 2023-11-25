@@ -265,6 +265,28 @@ const twitchService = {
 
     return res.data;
   },
+  // responsds with 410 GONE
+  /* 
+    {
+        "error": "Gone",
+        "status": 410,
+        "message": "This API is not available."
+    }
+  */
+  // getFollowedChannels: async (userId: string) => {
+  //   console.log('user id is', userId)
+  //   const { token } = await getTokens();
+  //   console.log('token is', token);
+  //   const res = await twitchApi.get(`/users/follows?from_id=${userId}`, {
+  //     headers: {
+  //       'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+  //       // Authorization: `Bearer ${token}`,
+  //     },
+  //   })
+  //   console.log('[twitchService]: getFollowedChannels', res.data);
+
+  //   return res.data;
+  // },
 
   // returns a channel object containing the channel info associated with the given userId
   getChannel: async (userId: string, headers: AxiosHeaders) => {
