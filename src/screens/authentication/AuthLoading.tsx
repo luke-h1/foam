@@ -1,25 +1,36 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
+import colors from '../../styles/colors';
 
 const AuthLoadingScreen = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.AuthLoading>) => {
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     setTimeout(() => {
-      setLoading(false);
-      navigation.replace(RootRoutes.Home);
-    }, 1);
+      navigation.navigate(RootRoutes.Home);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Loading screen</Text>
-      {loading && <ActivityIndicator size="large" />}
+    <View style={styles.container}>
+      <Text style={styles.text}>Loading...</Text>
+      <ActivityIndicator size="large" />
     </View>
   );
 };
 export default AuthLoadingScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+  },
+  text: {
+    color: colors.gray,
+  },
+});

@@ -122,6 +122,6 @@ const styles = StyleSheet.create({
     paddingTop: statusBarHeight,
   },
   container: {
-    paddingLeft: 14,
+    // paddingLeft: 14,
   },
 });

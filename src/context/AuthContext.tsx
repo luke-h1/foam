@@ -23,7 +23,9 @@ interface AuthContextState {
   auth?: Auth;
   user?: UserInfoResponse;
   login: (response: AuthSessionResult | null) => Promise<null | undefined>;
+  logout: () => Promise<void>;
   getToken: (key: StorageKey) => Promise<string | null>;
+  ready: boolean;
 }
 
 export const AuthContext = createContext<AuthContextState | undefined>(
@@ -62,8 +64,6 @@ export const AuthContextProvider = ({ children }: Props) => {
 
   useEffect(() => {
     const getTokens = async () => {
-      // eslint-disable-next-line no-shadow
-
       // eslint-disable-next-line no-shadow
       const [anonToken, authToken] = await Promise.all([
         await AsyncStorage.getItem(StorageKeys.anonToken),
@@ -218,6 +218,24 @@ export const AuthContextProvider = ({ children }: Props) => {
     return null;
   };
 
+  const logout = async () => {
+    console.log('[authContext] logout');
+    setState({
+      ready: true,
+      auth: {
+        isAuth: false,
+        isAnonAuth: false,
+        token: undefined,
+      },
+    });
+
+    setUser(undefined);
+    AsyncStorage.removeItem(StorageKeys.authToken);
+    twitchApi.defaults.headers.common.Authorization = undefined;
+
+    await getAnonToken();
+  };
+
   useEffect(() => {
     if (!state.auth?.token) {
       console.info('no token, getting anon token');
@@ -242,10 +260,12 @@ export const AuthContextProvider = ({ children }: Props) => {
       auth: state.auth,
       user,
       login,
+      logout,
       getToken,
+      ready: state.ready,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.auth, user]);
+  }, [user]);
 
   return state.ready ? (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>

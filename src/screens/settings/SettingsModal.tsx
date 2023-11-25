@@ -5,7 +5,16 @@ import {
   MaterialIcons,
   Feather,
 } from '@expo/vector-icons';
-import { Image, SafeAreaView, StyleSheet } from 'react-native';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useMemo, useRef } from 'react';
+import {
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  Button,
+} from 'react-native';
 import SettingsItem, { ContentItem } from '../../components/SettingsItem';
 import { useAuthContext } from '../../context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
@@ -15,7 +24,7 @@ import { statusBarHeight } from '../FollowingScreen';
 const SettingsModal = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.SettingsModal>) => {
-  const { user } = useAuthContext();
+  const { user, logout } = useAuthContext();
 
   const authenticatedSettingItems: ContentItem[] = [
     {
@@ -37,6 +46,7 @@ const SettingsModal = ({
           onPress: () => {
             // eslint-disable-next-line no-console
             console.log('show modal here');
+            bottomSheetModalRef.current?.present();
           },
         },
       ],
@@ -129,9 +139,38 @@ const SettingsModal = ({
     ...commonSettingItems,
   ];
 
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  // variables
+  const snapPoints = useMemo(() => ['25%', '50%'], []);
+
+  // callbacks
+
   return (
     <SafeAreaView style={styles.wrapper}>
       <SettingsItem contents={settingItems} />
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={1}
+        snapPoints={snapPoints}
+        handleStyle={{ backgroundColor: colors.primary, opacity: 0.95 }}
+        handleIndicatorStyle={{ backgroundColor: colors.gray }}
+      >
+        <View style={{ flex: 1, backgroundColor: colors.primary }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: colors.gray }}>
+              <Button
+                title="Log out"
+                onPress={async () => {
+                  bottomSheetModalRef.current?.dismiss();
+                  await logout();
+                  navigation.navigate(RootRoutes.Home);
+                }}
+              />
+            </Text>
+          </View>
+        </View>
+      </BottomSheetModal>
     </SafeAreaView>
   );
 };

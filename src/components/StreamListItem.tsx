@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
-import { useAuthContext } from '../context/AuthContext';
-import twitchService, { Stream, UserResponse } from '../services/twitchService';
+import twitchService, { Stream } from '../services/twitchService';
 import colors from '../styles/colors';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import viewFormatter from '../utils/viewFormatter';
@@ -12,22 +10,17 @@ interface Props {
 }
 
 const StreamListItem = ({ stream }: Props) => {
-  const { auth } = useAuthContext();
-  const [userImage, setUserImage] = useState<UserResponse>();
+  const [broadcasterImage, setBroadcasterImage] = useState<string>();
 
-  // const getUserProfilePictures = async () => {
-  //   const res = await twitchService.getUser(
-  //     stream.user_login,
-  //     (auth?.anonToken as string) ?? (auth?.token?.accessToken as string),
-  //   );
+  const getUserProfilePictures = async () => {
+    const res = await twitchService.getUserImage(stream.user_login);
+    setBroadcasterImage(res);
+  };
 
-  //   setUsers(res);
-  // };
-
-  // useEffect(() => {
-  //   getUserProfilePictures();
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [stream]);
+  useEffect(() => {
+    getUserProfilePictures();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stream]);
 
   return (
     <View style={styles.streamContainer}>
@@ -48,7 +41,7 @@ const StreamListItem = ({ stream }: Props) => {
             <Image
               style={styles.streamAvatar}
               source={{
-                uri: userImage?.profile_image_url,
+                uri: broadcasterImage ?? stream.thumbnail_url,
                 width: 20,
                 height: 20,
               }}
@@ -112,14 +105,16 @@ const styles = StyleSheet.create({
   viewCount: {
     color: colors.gray,
     marginTop: 4,
-    fontSize: 12,
-    marginBottom: 8,
   },
   streamContainer: {
     flexDirection: 'row',
     flex: 1,
-    marginBottom: 24,
-    // marginRight: 24,
+    marginBottom: 20,
+    marginTop: 20,
+    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: 14,
   },
   streamColumn: {
     flex: 1,
@@ -141,7 +136,7 @@ const styles = StyleSheet.create({
   },
   streamUsername: {
     color: colors.black,
-    marginLeft: 5,
+    marginLeft: 3,
   },
   streamDescription: {
     color: colors.black,
@@ -150,7 +145,7 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
   tagRow: {
-    marginTop: 17,
+    marginTop: 13,
     flexDirection: 'row',
   },
   tag: {
@@ -158,7 +153,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     paddingHorizontal: 8,
     borderRadius: 10,
-    marginRight: 6,
+    marginRight: 5,
   },
   tagText: {
     color: colors.black,
@@ -167,6 +162,5 @@ const styles = StyleSheet.create({
   streamImage: {
     width: 360,
     height: 200,
-    borderRadius: 7,
   },
 });

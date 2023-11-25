@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable */
-import axios, { AxiosHeaders } from 'axios';
+import axios, { AxiosHeaders, AxiosResponse } from 'axios';
 import { twitchApi } from './Client';
 import twitchSerializer from './serializers/twitch';
 import { EmoteTypes } from './serializers/types';
@@ -216,13 +216,13 @@ const twitchService = {
    * @returns an object that contains the top 20 streams and a cursor for further requests
    * @requires a non-anon token
    */
-  getTopStreams: async (token: string, cursor?: string) => {
+  getTopStreams: async (cursor?: string) => {
     const url = cursor ? `/streams?after=${cursor}` : '/streams';
 
     const res = await twitchApi.get<{ data: Stream[] }>(url, {
       headers: {
         'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${token}`,
+        // Authorization: `Bearer ${token}`,
       },
     });
 
@@ -312,15 +312,14 @@ const twitchService = {
     return res.data.data;
   },
 
-  getUser: async (userId: string, token: string) => {
-    const res = await twitchApi.get<UserResponse>(`/users?login=${userId}`, {
+  getUserImage: async (userId: string): Promise<string> => {
+    const res = await twitchApi.get(`/users?login=${userId}`, {
       headers: {
         'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${token}`,
       },
     });
 
-    return res.data;
+    return res.data.data[0].profile_image_url;
   },
   getFollowedStreams: async (userId: string) => {
     console.log('headers are', twitchApi.defaults.headers);

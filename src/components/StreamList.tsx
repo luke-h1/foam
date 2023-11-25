@@ -23,8 +23,5 @@ export default StreamList;
 const styles = StyleSheet.create({
   list: {
     paddingTop: 8,
-    paddingLeft: 0,
-    paddingRight: 0,
-    paddingBottom: 24,
   },
 });

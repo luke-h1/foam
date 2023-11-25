@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import {
   FlatList,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -22,20 +23,12 @@ const TopScreen = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showStreams, setShowStreams] = useState(true);
   const [showCategories, setShowCategories] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { auth } = useAuthContext();
 
   const fetchTopStreams = async () => {
-    const { anonToken, token } = await getTokens();
-    if (auth?.isAuth) {
-      const res = await twitchService.getTopStreams(token as string, undefined);
-      setStreams(res);
-    } else {
-      const res = await twitchService.getTopStreams(
-        anonToken as string,
-        undefined,
-      );
-      setStreams(res);
-    }
+    const res = await twitchService.getTopStreams(undefined);
+    setStreams(res);
   };
 
   const fetchTopCategories = async () => {
@@ -56,42 +49,59 @@ const TopScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchTopStreams();
+    fetchTopCategories();
+    setRefreshing(false);
+  };
+
   return (
     <SafeAreaView style={styles.wrapper}>
-      <ScrollView style={styles.container}>
-        {/* <Header title="Top" navigation={navigation} route={route} /> */}
-        <View style={styles.nav}>
-          <TouchableOpacity
-            onPress={() => {
-              setShowStreams(true);
-              setShowCategories(false);
-            }}
-          >
-            <Title underline={showStreams}>Streams</Title>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setShowCategories(true);
-              setShowStreams(false);
-            }}
-          >
-            <Title underline={showCategories}>Categories</Title>
-          </TouchableOpacity>
-        </View>
-        {showStreams && (
-          <View>
-            <FlatList<Stream>
-              data={streams}
-              renderItem={({ item }) => <StreamListItem stream={item} />}
-              keyExtractor={item => item.id}
-            />
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.gray}
+            colors={[colors.gray]}
+          />
+        }
+      >
+        <>
+          <View style={styles.nav}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowStreams(true);
+                setShowCategories(false);
+              }}
+            >
+              <Title underline={showStreams}>Streams</Title>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setShowCategories(true);
+                setShowStreams(false);
+              }}
+            >
+              <Title underline={showCategories}>Categories</Title>
+            </TouchableOpacity>
           </View>
-        )}
-        {showCategories && (
-          <View style={styles.grid}>
-            <CategoryList categories={categories} />
-          </View>
-        )}
+          {showStreams && (
+            <View>
+              <FlatList<Stream>
+                data={streams}
+                renderItem={({ item }) => <StreamListItem stream={item} />}
+                keyExtractor={item => item.id}
+              />
+            </View>
+          )}
+          {showCategories && (
+            <View style={styles.grid}>
+              <CategoryList categories={categories} />
+            </View>
+          )}
+        </>
       </ScrollView>
     </SafeAreaView>
   );
@@ -108,9 +118,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     flex: 1,
     paddingTop: statusBarHeight,
-  },
-  container: {
-    paddingLeft: 14,
   },
   grid: {
     margin: 16,
