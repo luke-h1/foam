@@ -23,6 +23,7 @@ import elapsedStreamTime from '../utils/elapsedStreamTime';
 import { statusBarHeight } from './FollowingScreen';
 
 interface SearchHistoryItem {
+  date: Date;
   query: string;
 }
 
@@ -70,6 +71,7 @@ const SearchScreen = () => {
 
     const searchItem: SearchHistoryItem = {
       query: value,
+      date: new Date(),
     };
 
     const newPrevSearches = Array.from(
@@ -141,8 +143,17 @@ const SearchScreen = () => {
               }}
             >
               <Image
-                source={{ uri: item.thumbnail_url, width: 40, height: 40 }}
-                style={{ borderRadius: 20, marginRight: 5 }}
+                source={{
+                  uri: item.thumbnail_url
+                    .replace('{width}', '40')
+                    .replace('{height}', '40'),
+                }}
+                style={{
+                  borderRadius: 20,
+                  marginRight: 5,
+                  width: 40,
+                  height: 40,
+                }}
               />
               <Text style={{ marginLeft: 8, color: colors.gray }}>
                 {item.display_name}
@@ -194,7 +205,7 @@ const SearchScreen = () => {
                 </View>
               );
             }}
-            keyExtractor={item => item.query}
+            keyExtractor={item => item.date.toString()}
           />
         </ScrollView>
       )}

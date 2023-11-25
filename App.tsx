@@ -16,6 +16,7 @@ export default function App() {
 
     LogBox.ignoreAllLogs();
     activateKeepAwakeAsync();
+    // eslint-disable-next-line no-console
     // AsyncStorage.clear().then(() => console.log('AsyncStorage cleared')).catch(e => console.error(e))
   }
   return (
