@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
   Platform,
+  ScrollView,
 } from 'react-native';
 import StreamList from '../components/StreamList';
 import Title from '../components/Title';
@@ -96,7 +97,7 @@ const FollowingScreen = () => {
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={styles.container}>
-        <View>
+        <ScrollView>
           <FlatList<Section>
             data={data}
             renderItem={({ item }) => item.render()}
@@ -105,7 +106,7 @@ const FollowingScreen = () => {
             onRefresh={() => {}}
             refreshing={false}
           />
-        </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );

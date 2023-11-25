@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -57,7 +58,7 @@ const TopScreen = () => {
 
   return (
     <SafeAreaView style={styles.wrapper}>
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         {/* <Header title="Top" navigation={navigation} route={route} /> */}
         <View style={styles.nav}>
           <TouchableOpacity
@@ -84,10 +85,6 @@ const TopScreen = () => {
               renderItem={({ item }) => <StreamListItem stream={item} />}
               keyExtractor={item => item.id}
             />
-            {/* {streams &&
-              streams.map(stream => (
-                <StreamItem stream={stream} key={stream.id} />
-              ))} */}
           </View>
         )}
         {showCategories && (
@@ -95,7 +92,7 @@ const TopScreen = () => {
             <CategoryList categories={categories} />
           </View>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
