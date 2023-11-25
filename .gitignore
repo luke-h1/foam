@@ -36,3 +36,4 @@ yarn-error.*
 .env
 !.env.example
 ios
+android
