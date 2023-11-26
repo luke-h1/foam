@@ -1,7 +1,9 @@
+import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import twitchService, { Stream } from '../services/twitchService';
 import colors from '../styles/colors';
+import { blurhash } from '../utils/blurhash';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import viewFormatter from '../utils/viewFormatter';
 
@@ -34,6 +36,9 @@ const StreamListItem = ({ stream }: Props) => {
               .replace('{width}', '1920')
               .replace('{height}', '1080'),
           }}
+          placeholder={blurhash}
+          contentFit="cover"
+          transition={0}
         />
 
         <View style={styles.streamRow}>
@@ -45,6 +50,9 @@ const StreamListItem = ({ stream }: Props) => {
                 width: 20,
                 height: 20,
               }}
+              placeholder={blurhash}
+              contentFit="cover"
+              transition={0}
             />
             <Text style={styles.streamUsername} numberOfLines={1}>
               {stream.user_name}

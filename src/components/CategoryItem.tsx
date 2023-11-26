@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, Text, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { Category } from '../services/twitchService';
 import colors from '../styles/colors';
+import { blurhash } from '../utils/blurhash';
 
 interface Props {
   category: Category;
@@ -21,6 +23,9 @@ const CategoryItem = ({ category }: Props) => {
           width: 98,
           height: 130,
         }}
+        placeholder={blurhash}
+        contentFit="cover"
+        transition={0}
       />
       <Text style={styles.categoryName} numberOfLines={1}>
         {category.name}

@@ -1,14 +1,10 @@
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
-import {
-  Image,
-  SafeAreaView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Image } from 'expo-image';
+import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useAuthContext } from '../context/AuthContext';
 import { RootRoutes } from '../navigation/RootStack';
 import colors from '../styles/colors';
+import { blurhash } from '../utils/blurhash';
 import Title from './Title';
 
 type BaseProps = {
@@ -41,6 +37,9 @@ export default function Header({
               <Image
                 style={styles.avatar}
                 source={{ uri: user?.profile_image_url }}
+                placeholder={blurhash}
+                contentFit="cover"
+                transition={0}
               />
             </TouchableOpacity>
           )}

@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 import { Feather, Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
   FlatList,
-  Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -19,6 +19,7 @@ import twitchService, {
   SearchChannelResponse,
 } from '../services/twitchService';
 import colors from '../styles/colors';
+import { blurhash } from '../utils/blurhash';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import { statusBarHeight } from './FollowingScreen';
 
@@ -150,6 +151,9 @@ const SearchScreen = () => {
                   width: 40,
                   height: 40,
                 }}
+                placeholder={blurhash}
+                contentFit="cover"
+                transition={0}
               />
               <Text style={{ marginLeft: 8, color: colors.gray }}>
                 {item.display_name}
