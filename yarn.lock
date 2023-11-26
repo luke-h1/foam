@@ -8944,12 +8944,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-image@npm:~1.3.4":
-  version: 1.3.4
-  resolution: "expo-image@npm:1.3.4"
+"expo-image@npm:~1.3.5":
+  version: 1.3.5
+  resolution: "expo-image@npm:1.3.5"
   peerDependencies:
     expo: "*"
-  checksum: 0b523680ea97282f4852e2244b381f1665bcaaafbd9475f1aec506b82d73223f1e8b799e8031fae7acc1f2133e90b163d151457e79a3e8dfcbcbf026e627d779
+  checksum: 54949e3c92f55e91531d593c35cfc462f4bd320b8aa5860e63825b85a46872fe0f4d82f31c2a82f04b999ec7e1edc1bb89c8163ff73cc520df8940254c390ede
   languageName: node
   linkType: hard
 
@@ -9498,7 +9498,7 @@ __metadata:
     expo-constants: ^14.4.2
     expo-dev-client: ~2.4.12
     expo-font: ~11.4.0
-    expo-image: ~1.3.4
+    expo-image: ~1.3.5
     expo-linking: ~5.0.2
     expo-screen-orientation: ~6.0.6
     expo-splash-screen: ~0.20.5

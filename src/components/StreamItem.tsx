@@ -1,6 +1,8 @@
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Stream } from '../services/twitchService';
 import colors from '../styles/colors';
+import { blurhash } from '../utils/blurhash';
 
 interface Props {
   stream: Stream;
@@ -18,6 +20,9 @@ const StreamItem = ({ stream }: Props) => {
             width: 300,
             height: 100,
           }}
+          placeholder={blurhash}
+          contentFit="cover"
+          transition={0}
         />
       </View>
       <View style={styles.liveInfo}>
