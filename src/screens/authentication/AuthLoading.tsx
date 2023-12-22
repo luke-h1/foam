@@ -6,10 +6,11 @@ import colors from '../../styles/colors';
 const AuthLoadingScreen = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.AuthLoading>) => {
+  const { navigate } = navigation;
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     setTimeout(() => {
-      navigation.navigate(RootRoutes.Home);
+      navigate(RootRoutes.Home);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

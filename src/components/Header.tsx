@@ -1,17 +1,15 @@
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
-import { Image } from 'expo-image';
 import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useAuthContext } from '../context/AuthContext';
 import { RootRoutes } from '../navigation/RootStack';
 import colors from '../styles/colors';
-import { blurhash } from '../utils/blurhash';
+import Image from './Image';
 import Title from './Title';
 
 type BaseProps = {
   title: string;
   showAvatar?: boolean;
 };
-// progress, styleInterpolator
 type Props = BottomTabHeaderProps & BaseProps;
 
 export default function Header({
@@ -20,6 +18,7 @@ export default function Header({
   showAvatar = true,
 }: Props) {
   const { user } = useAuthContext();
+  const { navigate } = navigation;
   return (
     <SafeAreaView style={styles.container}>
       <Title>{title}</Title>
@@ -27,19 +26,16 @@ export default function Header({
         <View style={styles.right}>
           {!user ? (
             <TouchableOpacity
-              onPress={() => navigation.navigate(RootRoutes.SettingsModal)}
+              onPress={() => navigate(RootRoutes.SettingsModal)}
               style={styles.avatar}
             />
           ) : (
             <TouchableOpacity
-              onPress={() => navigation.navigate(RootRoutes.SettingsModal)}
+              onPress={() => navigate(RootRoutes.SettingsModal)}
             >
               <Image
                 style={styles.avatar}
                 source={{ uri: user?.profile_image_url }}
-                placeholder={blurhash}
-                contentFit="cover"
-                transition={0}
               />
             </TouchableOpacity>
           )}

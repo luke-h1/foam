@@ -21,6 +21,7 @@ const LoginScreen = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.Login>) => {
   const { login } = useAuthContext();
+  const { navigate } = navigation;
 
   const discovery = {
     authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
@@ -49,7 +50,7 @@ const LoginScreen = ({
   useEffect(() => {
     if (response?.type === 'success') {
       login(response);
-      navigation.navigate(RootRoutes.Home);
+      navigate(RootRoutes.Home);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);

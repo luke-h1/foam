@@ -6,14 +6,13 @@ import {
   Feather,
 } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Image } from 'expo-image';
 import { useMemo, useRef } from 'react';
 import { SafeAreaView, StyleSheet, Text, View, Button } from 'react-native';
+import Image from '../../components/Image';
 import SettingsItem, { ContentItem } from '../../components/SettingsItem';
 import { useAuthContext } from '../../context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 import colors from '../../styles/colors';
-import { blurhash } from '../../utils/blurhash';
 import { statusBarHeight } from '../FollowingScreen';
 
 const SettingsModal = ({
@@ -33,9 +32,6 @@ const SettingsModal = ({
             <Image
               source={{ uri: user?.profile_image_url }}
               style={{ width: 30, height: 30, borderRadius: 8 }}
-              placeholder={blurhash}
-              contentFit="cover"
-              transition={0}
             />
           ),
           showRightArrow: true,

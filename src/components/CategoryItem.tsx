@@ -1,18 +1,34 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Image } from 'expo-image';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { StyleSheet, Text, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { CategoryRoutes } from '../navigation/Category/CategoryStack';
+import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
+import { RootRoutes } from '../navigation/RootStack';
 import { Category } from '../services/twitchService';
 import colors from '../styles/colors';
-import { blurhash } from '../utils/blurhash';
+import Image from './Image';
 
 interface Props {
   category: Category;
 }
 
 const CategoryItem = ({ category }: Props) => {
+  const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
+
   return (
-    <TouchableOpacity style={styles.category}>
+    <TouchableOpacity
+      style={styles.category}
+      onPress={() =>
+        // @ts-ignore
+        navigate(RootRoutes.Category, {
+          screen: CategoryRoutes.Category,
+          params: {
+            id: category.id,
+          },
+        })
+      }
+    >
       <Image
         style={styles.image}
         source={{
@@ -23,9 +39,6 @@ const CategoryItem = ({ category }: Props) => {
           width: 98,
           height: 130,
         }}
-        placeholder={blurhash}
-        contentFit="cover"
-        transition={0}
       />
       <Text style={styles.categoryName} numberOfLines={1}>
         {category.name}

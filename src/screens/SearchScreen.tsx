@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { Feather, Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Image } from 'expo-image';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
   FlatList,
@@ -10,16 +10,19 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import DismissableKeyboard from '../components/DismissableKeyboard';
+import Image from '../components/Image';
 import Title from '../components/Title';
 import useDebouncedCallback from '../hooks/useDebouncedCallback';
+import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
+import { StreamRoutes } from '../navigation/Stream/StreamStack';
 import twitchService, {
   SearchChannelResponse,
 } from '../services/twitchService';
 import colors from '../styles/colors';
-import { blurhash } from '../utils/blurhash';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import { statusBarHeight } from './FollowingScreen';
 
@@ -40,6 +43,8 @@ const SearchScreen = () => {
     const res = await AsyncStorage.getItem('previousSearches');
     setSearchHistory(JSON.parse(res as string));
   };
+
+  const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
 
   useEffect(() => {
     fetchSearchHistory();
@@ -83,6 +88,13 @@ const SearchScreen = () => {
     setSearchHistory(JSON.parse(res as string));
   }, 400);
 
+  // eslint-disable-next-line no-shadow
+  const handleQuery = async (query: string) => {
+    setQuery(query);
+    await search(query);
+    setShowDismiss(true);
+  };
+
   return (
     <SafeAreaView style={styles.wrapper}>
       <View style={{ flexDirection: 'row', padding: 5 }}>
@@ -95,9 +107,7 @@ const SearchScreen = () => {
                 placeholderTextColor={colors.gray}
                 verticalAlign="middle"
                 onChangeText={async text => {
-                  setQuery(text);
-                  await search(text);
-                  setShowDismiss(true);
+                  await handleQuery(text);
                 }}
               />
             </SafeAreaView>
@@ -130,7 +140,17 @@ const SearchScreen = () => {
         <FlatList
           data={searchResults}
           renderItem={({ item }) => (
-            <View
+            <TouchableOpacity
+              onPress={() => {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                navigate(StreamRoutes.LiveStream, {
+                  screen: StreamRoutes.LiveStream,
+                  params: {
+                    id: item.broadcaster_login,
+                  },
+                });
+              }}
               style={{
                 flexDirection: 'row',
                 marginBottom: 14,
@@ -151,9 +171,6 @@ const SearchScreen = () => {
                   width: 40,
                   height: 40,
                 }}
-                placeholder={blurhash}
-                contentFit="cover"
-                transition={0}
               />
               <Text style={{ marginLeft: 8, color: colors.gray }}>
                 {item.display_name}
@@ -181,7 +198,7 @@ const SearchScreen = () => {
                   </Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
           )}
         />
       </View>
@@ -192,8 +209,11 @@ const SearchScreen = () => {
             data={searchHistory}
             renderItem={({ item }) => {
               return (
-                <View
+                <TouchableOpacity
                   style={{ flex: 1, flexDirection: 'row', marginBottom: 14 }}
+                  onPress={() => {
+                    handleQuery(item.query);
+                  }}
                 >
                   <Entypo
                     name="back-in-time"
@@ -202,7 +222,7 @@ const SearchScreen = () => {
                     style={{ alignSelf: 'center', marginRight: 8 }}
                   />
                   <Text style={styles.previousSearch}>{item.query}</Text>
-                </View>
+                </TouchableOpacity>
               );
             }}
             keyExtractor={item => item.date.toString()}

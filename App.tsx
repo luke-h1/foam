@@ -6,6 +6,7 @@ import React from 'react';
 import { connectToDevTools } from 'react-devtools-core';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import { AuthContextProvider } from './src/context/AuthContext';
 import RootNavigator from './src/navigation/RootNavigator';
 
