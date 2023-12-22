@@ -5,8 +5,10 @@ import AuthLoadingScreen from '../screens/authentication/AuthLoading';
 import LoginScreen from '../screens/authentication/LoginScreen';
 import SettingsModal from '../screens/settings/SettingsModal';
 import colors from '../styles/colors';
+import CategoryStackNavigator from './Category/CategoryStackNavigator';
 import HomeTabsNavigator from './Home/HomeTabsNavigator';
 import { RootRoutes, RootStack } from './RootStack';
+import StreamNavigator from './Stream/StreamStackNavigator';
 
 const RootNavigator = () => {
   return (
@@ -38,6 +40,14 @@ const RootNavigator = () => {
         />
       </RootStack.Group>
       <RootStack.Screen name={RootRoutes.Login} component={LoginScreen} />
+      <RootStack.Screen
+        name={RootRoutes.LiveStream}
+        component={StreamNavigator}
+      />
+      <RootStack.Screen
+        name={RootRoutes.Category}
+        component={CategoryStackNavigator}
+      />
     </RootStack.Navigator>
   );
 };

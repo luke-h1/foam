@@ -251,11 +251,16 @@ const twitchService = {
   },
 
   // Returns a Stream object containing the stream info associated with the given userLogin
-  getStream: async (userLogin: string, headers: AxiosHeaders) => {
-    const res = await twitchApi.get<Stream>(
+  getStream: async (userLogin: string) => {
+    /**
+     * This is typed as a Stream[] because the Twitch API returns an array of 1 single Stream
+     */
+    const res = await twitchApi.get<{ data?: Stream[] }>(
       `/streams?user_login=${userLogin}`,
       {
-        headers,
+        headers: {
+          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        },
       },
     );
 
@@ -263,7 +268,7 @@ const twitchService = {
       return null; // user is offline
     }
 
-    return res.data;
+    return res.data.data?.[0];
   },
   // responsds with 410 GONE
   /* 
@@ -289,10 +294,14 @@ const twitchService = {
   // },
 
   // returns a channel object containing the channel info associated with the given userId
-  getChannel: async (userId: string, headers: AxiosHeaders) => {
+  getChannel: async (userId: string) => {
     const res = await twitchApi.get<Channel[]>(
       `/channels?broadcaster_id=${userId}`,
-      { headers },
+      {
+        headers: {
+          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        },
+      },
     );
 
     if (res.status === 200) {
@@ -350,6 +359,18 @@ const twitchService = {
         Authorization: `Bearer ${token}`,
       },
     });
+    return res.data.data[0];
+  },
+  getUser: async (userId: string) => {
+    const res = await twitchApi.get<{ data: UserResponse[] }>(
+      `/users?login=${userId}`,
+      {
+        headers: {
+          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        },
+      },
+    );
+
     return res.data.data[0];
   },
 

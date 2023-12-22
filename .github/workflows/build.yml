@@ -12,9 +12,13 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-
-    name: Build    
+        
+    name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      
     timeout-minutes: 20
     steps:
       - name: Install moreutils
@@ -29,8 +33,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
       - name: get yarn cache directory
         id: cache
@@ -46,12 +53,19 @@ jobs:
             key: yarn-${{ hashFiles('**/yarn.lock') }}
             restore-keys: |
                 yarn-
+                  
+      - uses: actions/labeler@v4
+        with:
+          sync-labels: true
 
       - name: install yarn
         run: corepack enable
 
       - name: Install dependencies
         run: yarn
+
+      - name: Check commit message
+        run: yarn commitlint --from=HEAD^1
 
       - name: format:check
         run: yarn format:check
@@ -65,16 +79,23 @@ jobs:
       - name: tsc
         run: yarn tsc
 
-      - name: 🏗 Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          eas-cache: true
-          expo-cache: true
-          token: ${{ secrets.FOAM_RELEASE_TOKEN }}
+      # - name: Setup Expo
+      #   uses: expo/expo-github-action@v7
+      #   with:
+      #     expo-version: latest
+      #     eas-version: latest
+      #     token: ${{ secrets.FOAM_RELEASE_TOKEN }}
 
-      - name: 🚀 Create preview
-        uses: expo/expo-github-action/preview@v8
-        with:
-          command: eas update --auto
-          github-token: ${{ secrets.FOAM_GITHUB_TOKEN }}
+      # - name: Setup EAS
+      #   uses: expo/expo-github-action@v8
+      #   with:
+      #     eas-version: latest
+      #     token: ${{ secrets.FOAM_RELEASE_TOKEN }}
+
+      # - name: Create preview
+      #   uses: expo/expo-github-action/preview@v8
+      #   with:
+      #     command: eas update --branch preview --message "test"
+      #     comment: true
+      #     github-token: ${{ secrets.FOAM_GITHUB_TOKEN }}
+      #     qr-target: expo-go

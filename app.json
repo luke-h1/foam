@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.foam"
@@ -33,6 +31,23 @@
       "eas": {
         "projectId": "950a1e2f-6b25-4be7-adb2-3c16287a2b5e"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e"
     }
-  }
+  },
+
+  "plugins": [
+    [
+      "expo-build-properties",
+      {
+        "ios": {
+          "flipper": true
+        }
+      }
+    ]
+  ]
 }

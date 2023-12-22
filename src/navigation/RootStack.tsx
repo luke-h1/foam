@@ -16,6 +16,8 @@ export enum RootRoutes {
   Home = 'Home',
   SettingsModal = 'SettingsModal',
   Login = 'Login',
+  LiveStream = 'LiveStream',
+  Category = 'Category',
 }
 
 export type RootStackParamList = {
@@ -24,9 +26,10 @@ export type RootStackParamList = {
   [RootRoutes.Home]: undefined;
   [RootRoutes.SettingsModal]: undefined;
   [RootRoutes.Login]: undefined;
+  [RootRoutes.LiveStream]: undefined;
+  [RootRoutes.Category]: undefined;
 };
 
-// key of RootRoutes
 export type RootRoutesParams = keyof RootStackParamList;
 
 export type RootStackNavigationProp = NavigationProp<RootStackParamList>;

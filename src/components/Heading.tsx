@@ -4,12 +4,20 @@ import colors from '../styles/colors';
 
 interface Props {
   children: ReactNode;
+  fontSize?: number;
+  paddingBottom?: number;
+  color?: string;
 }
 
-const Heading = ({ children }: Props) => {
+const Heading = ({
+  children,
+  fontSize = 30,
+  paddingBottom = 20,
+  color = colors.black,
+}: Props) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.headingText}>{children}</Text>
+      <Text style={[{ fontSize, paddingBottom, color }]}>{children}</Text>
     </View>
   );
 };
@@ -20,10 +28,5 @@ const styles = StyleSheet.create({
     paddingTop: 25,
     paddingLeft: 0,
     paddingRight: 0,
-    paddingBottom: 20,
-  },
-  headingText: {
-    color: colors.black,
-    fontSize: 30,
   },
 });

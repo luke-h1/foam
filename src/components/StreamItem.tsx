@@ -1,57 +1,63 @@
-import { Image } from 'expo-image';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Stream } from '../services/twitchService';
 import colors from '../styles/colors';
-import { blurhash } from '../utils/blurhash';
+import Image from './Image';
 
 interface Props {
   stream: Stream;
 }
 
+// not used at the moment
 const StreamItem = ({ stream }: Props) => {
   return (
-    <View style={styles.channelBox}>
-      <View style={styles.liveScreen}>
-        <Image
-          source={{
-            uri: stream.thumbnail_url
-              .replace('{width}', '1920')
-              .replace('{height}', '1080'),
-            width: 300,
-            height: 100,
-          }}
-          placeholder={blurhash}
-          contentFit="cover"
-          transition={0}
-        />
-      </View>
-      <View style={styles.liveInfo}>
-        <View style={styles.user}>
-          <View style={styles.userPp}>
-            <Image
-              source={{ uri: stream.thumbnail_url }}
-              style={styles.userPp}
-            />
-          </View>
-          <Text style={styles.userName}>{stream.user_name}</Text>
-        </View>
-        <Text style={styles.titleGame}>{stream.title}</Text>
-        <Text style={styles.titleGame}>{stream.game_name}</Text>
-
-        <View style={styles.tagRow}>
-          <FlatList
-            data={stream.tags}
-            renderItem={({ item }) => (
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>{item}</Text>
-              </View>
-            )}
-            keyExtractor={item => item}
-            horizontal
+    // eslint-disable-next-line no-console
+    <TouchableOpacity onPress={() => console.log('HAIIII')}>
+      <View style={styles.channelBox}>
+        <View style={styles.liveScreen}>
+          <Image
+            source={{
+              uri: stream.thumbnail_url
+                .replace('{width}', '1920')
+                .replace('{height}', '1080'),
+              width: 300,
+              height: 100,
+            }}
           />
         </View>
+        <View style={styles.liveInfo}>
+          <View style={styles.user}>
+            <View style={styles.userPp}>
+              <Image
+                source={{ uri: stream.thumbnail_url }}
+                style={styles.userPp}
+              />
+            </View>
+            <Text style={styles.userName}>{stream.user_name}</Text>
+          </View>
+          <Text style={styles.titleGame}>{stream.title}</Text>
+          <Text style={styles.titleGame}>{stream.game_name}</Text>
+
+          <View style={styles.tagRow}>
+            <FlatList
+              data={stream.tags}
+              renderItem={({ item }) => (
+                <View style={styles.tag}>
+                  <Text style={styles.tagText}>{item}</Text>
+                </View>
+              )}
+              keyExtractor={item => item}
+              horizontal
+            />
+          </View>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 export default StreamItem;

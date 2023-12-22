@@ -34,13 +34,10 @@ const TopScreen = () => {
   const fetchTopCategories = async () => {
     const { anonToken, token } = await getTokens();
 
-    if (auth?.isAuth) {
-      const res = await twitchService.getTopCategories(token as string);
-      setCategories(res);
-    } else {
-      const res = await twitchService.getTopCategories(anonToken as string);
-      setCategories(res);
-    }
+    const res = await twitchService.getTopCategories(
+      auth?.isAuth ? (token as string) : (anonToken as string),
+    );
+    setCategories(res);
   };
 
   useEffect(() => {

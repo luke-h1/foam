@@ -58,7 +58,6 @@ const HomeTabsNavigator = () => {
           },
         }}
       />
-      {/* <HomeTabs.Screen name={HomeTabsRoutes.Browse} component={BrowseScreen} /> */}
       <HomeTabs.Screen
         name={HomeTabsRoutes.Search}
         component={SearchScreen}
