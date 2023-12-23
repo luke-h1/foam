@@ -82,6 +82,7 @@ jobs:
   preview:
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -133,24 +134,3 @@ jobs:
           command: eas update --auto --branch=pr-${{ github.event.number }}
           github-token: ${{ secrets.FOAM_GITHUB_TOKEN }}
           qr-target: expo-go
-
-      # - name: Setup Expo
-      #   uses: expo/expo-github-action@v7
-      #   with:
-      #     expo-version: latest
-      #     eas-version: latest
-      #     token: ${{ secrets.FOAM_RELEASE_TOKEN }}
-
-      # - name: Setup EAS
-      #   uses: expo/expo-github-action@v8
-      #   with:
-      #     eas-version: latest
-      #     token: ${{ secrets.FOAM_RELEASE_TOKEN }}
-
-      # - name: Create preview
-      #   uses: expo/expo-github-action/preview@v8
-      #   with:
-      #     command: eas update --branch preview --message "test"
-      #     comment: true
-      #     github-token: ${{ secrets.FOAM_GITHUB_TOKEN }}
-      #     qr-target: expo-go
