@@ -1,6 +1,28 @@
 name: Release app
 on:
     workflow_dispatch:
+      inputs:
+        platform:
+          description: Platform to build for (all/android/ios)
+          type: choice
+          required: true
+          default: all
+          options:
+            - all
+            - android
+            - ios
+        profile:
+          description: EAS build profile (development/production)
+          type: choice
+          required: true
+          default: development
+          options:
+            - development
+            - production
+        submit:
+          description: Auto submit to the store? (production only)
+          type: boolean
+          required: false
 env:
   NODE_VERSION: 18.18.0
   FOAM_RELEASE_TOKEN: ${{ secrets.FOAM_RELEASE_TOKEN }}
@@ -70,7 +92,6 @@ jobs:
       - name: tsc
         run: yarn tsc
 
-    # PUBLISH
       - name: new version
         run: |
             git config user.name "${{ github.actor }}"
@@ -83,18 +104,22 @@ jobs:
         run: echo "release_version=$(cat lerna.json | jq -r '.version')" >> $GITHUB_ENV
         shell: bash
         working-directory: ./
-      
+
+  release-apps:
+    runs-on: ubuntu-latest
+    steps:
       - name: 🏗 Setup EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.FOAM_RELEASE_TOKEN }}
 
-      - name: 🚀 Build app version ${{ github.env.get_release_version.outputs.release_version}}
-        run: eas build --non-interactive
+      - name: 🚀 Build mobile
+        if: ${{ !github.event.inputs.submit || github.event.inputs.profile != 'production' }}
+        working-directory: apps/mobile
+        run: eas build --non-interactive --wait --platform=${{ github.event.inputs.platform }} --profile=${{ github.event.inputs.profile }}
 
-      - name: 🚀 Submit app version ${{ github.env.get_release_version.outputs.release_version}} to play store
-        run: eas submit --latest -p android
-
-      - name: Submit app version ${{ github.env.get_release_version.outputs.release_version}} to app store
-        run: eas submit --latest -p ios
+      - name: 🚀 Build & submit mobile
+        if: ${{ github.event.inputs.submit && github.event.inputs.profile != 'production' }}
+        working-directory: apps/mobile
+        run: eas build --non-interactive --wait --auto-submit --platform=${{ github.event.inputs.platform }} --profile=${{ github.event.inputs.profile }}
