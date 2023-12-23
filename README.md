@@ -13,10 +13,8 @@ TBA
 
 
 ## Applications
-* @foam/mobile - [apps/mobile](apps/mobile)
+* foam - React Native app targeting IOS and Android
 
-
-This repository is managed as a monorepo. It uses PNPM and PNPM workspaces to do this
 
 ## Getting started 
 You will need the following in order to run the project locally:
@@ -25,8 +23,7 @@ You will need the following in order to run the project locally:
 * [NVM](https://github.com/nvm-sh/nvm)
 * [Xcode](https://developer.apple.com/xcode/)
 * [Android Studio](https://developer.android.com/studio)
-* [PNPM](https://pnpm.io/)
-
+* [Yarn](https://yarnpkg.com/)
 
 Once you have the above installed, you can run the following commands to get started:
 
@@ -36,7 +33,7 @@ Install correct node version
  nvm install
 ```
 
-Install correct PNPM version
+Install correct yarn version
 
 ```bash
 corepack enable
@@ -45,7 +42,7 @@ corepack enable
 Install dependencies
 
 ```bash
-pnpm i
+yarn
 ```
 
 ### How to run the android app 
@@ -54,7 +51,7 @@ pnpm i
 
 ```bash
 cd apps/mobile
-pnpm prebuild:android && pnpm run android
+yarn prebuild:android && yarn android
 ```
 
 ### How to run the iOS app
@@ -63,5 +60,5 @@ pnpm prebuild:android && pnpm run android
 
 ```bash
 cd apps/mobile
-pnpm prebuild:ios && pnpm run ios
+yarn prebuild:ios && yarn ios
 ```
