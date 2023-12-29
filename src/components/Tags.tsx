@@ -1,51 +1,33 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList } from 'react-native';
+import { Text, View, XStack } from 'tamagui';
 import colors from '../styles/colors';
 
 interface Props {
   tags: string[];
-  marginTop?: number;
-  marginBottom?: number;
 }
 
-const Tags = ({ tags, marginTop = 13, marginBottom }: Props) => {
+const Tags = ({ tags }: Props) => {
   return (
-    <View
-      style={[
-        styles.tagRow,
-        {
-          marginTop,
-          marginBottom,
-        },
-      ]}
-    >
+    <XStack marginTop={4} marginBottom={2}>
       <FlatList
         data={tags}
+        showsHorizontalScrollIndicator
         renderItem={({ item }) => (
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{item}</Text>
+          <View
+            backgroundColor={colors.tag}
+            paddingHorizontal={8}
+            borderRadius={10}
+            marginRight={5}
+          >
+            <Text color="#fff" numberOfLines={1}>
+              {item}
+            </Text>
           </View>
         )}
-        keyExtractor={item => item}
+        keyExtractor={(item, index) => index.toString()}
         horizontal
       />
-    </View>
+    </XStack>
   );
 };
 export default Tags;
-
-const styles = StyleSheet.create({
-  tagRow: {
-    flexDirection: 'row',
-  },
-  tag: {
-    backgroundColor: colors.tag,
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    marginRight: 5,
-  },
-  tagText: {
-    color: colors.black,
-    fontSize: 13,
-  },
-});

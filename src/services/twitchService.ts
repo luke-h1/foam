@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable */
-import axios, { AxiosHeaders, AxiosResponse } from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import { twitchApi } from './Client';
-import twitchSerializer from './serializers/twitch';
+import twitchSerializer, { TwitchEmote } from './serializers/twitch';
 import { EmoteTypes } from './serializers/types';
-import getTokens from '../utils/getTokens';
 
 export interface UserInfoResponse {
   broadcaster_type: string;
@@ -38,18 +34,10 @@ export interface Stream {
   is_mature: boolean;
 }
 
-interface Channel {
+export interface Channel {
   broadcasterId: string;
   broadcasterLogin: string;
   broadcasterName: string;
-}
-
-interface ChannelQuery {
-  broadcasterLogin: string;
-  displayName: string;
-  id: string;
-  isLive: boolean;
-  startedAt: string;
 }
 
 export interface UserResponse {
@@ -87,13 +75,17 @@ export interface SearchChannelResponse {
   started_at: string;
 }
 
+export interface DefaultTokenResponse {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
 const twitchService = {
-  getRefreshToken: async (refreshToken: string) => {
+  getRefreshToken: async (refreshToken: string): Promise<string> => {
     const res = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
-
-    console.log('[getRefreshToken]:', res.data);
 
     return res.data;
   },
@@ -104,17 +96,21 @@ const twitchService = {
     });
 
     // TODO: type this once auth is sorted
-    const emotes = res.data.map((emote: any) => {
+    const emotes = res.data.map((emote: TwitchEmote) => {
       return twitchSerializer.fromTwitchEmote(emote, EmoteTypes.TwitchGlobal);
     });
 
     return emotes;
   },
+
+  // ---------------------------------------------------------------------
+  // NEEDS TO BE re-checked
   getChannelEmotes: async (id: string, headers: AxiosHeaders) => {
     const res = await twitchApi.get(`/chat/emotes?broadcaster_id=${id}`, {
       headers,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return res.data.map((emote: any) => {
       switch (emote.type) {
         case 'bitstier':
@@ -148,6 +144,7 @@ const twitchService = {
       headers,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return res.data.map((emote: any) => {
       switch (emote.type) {
         case 'globals':
@@ -173,20 +170,17 @@ const twitchService = {
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getGlobalBadges: async (headers: AxiosHeaders) => {},
+  // ---------------------------------------------------------------------
+  // NEEDS TO BE re-checked end
 
   /**
    *
    * @returns a token for an anonymous user
    */
-  getDefaultToken: async (): Promise<{
-    access_token: string;
-    expires_in: number;
-    token_type: string;
-  }> => {
+  getDefaultToken: async (): Promise<DefaultTokenResponse> => {
     const res = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
     );
-    console.log('[twitchService.getDefaultToken]:', res.data);
     return res.data;
   },
 
@@ -216,10 +210,10 @@ const twitchService = {
    * @returns an object that contains the top 20 streams and a cursor for further requests
    * @requires a non-anon token
    */
-  getTopStreams: async (cursor?: string) => {
+  getTopStreams: async (cursor?: string): Promise<Stream[]> => {
     const url = cursor ? `/streams?after=${cursor}` : '/streams';
 
-    const res = await twitchApi.get<{ data: Stream[] }>(url, {
+    const res = await twitchApi.get(url, {
       headers: {
         'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
         // Authorization: `Bearer ${token}`,
@@ -234,22 +228,19 @@ const twitchService = {
     gameId: string,
     headers: AxiosHeaders,
     cursor?: string,
-  ) => {
+  ): Promise<Stream[]> => {
     const url = cursor
       ? `/streams?game_id=${gameId}&after=${cursor}`
       : `/streams?game_id=${gameId}`;
 
-    const res = await twitchApi.get<Stream[]>(url, {
+    const res = await twitchApi.get(url, {
       headers,
     });
 
-    if (res.status === 200) {
-      return res.data;
-    }
-
-    throw new Error('Failed to get streams under category');
+    return res.data;
   },
 
+  // Returns a Stream object containing the stream info associated with the given userLogin
   // Returns a Stream object containing the stream info associated with the given userLogin
   getStream: async (userLogin: string) => {
     /**
@@ -265,8 +256,13 @@ const twitchService = {
     );
 
     if (!res.data) {
+      // eslint-disable-next-line no-console
+      console.log('[twitchService]: getStream', res.data);
       return null; // user is offline
     }
+
+    // eslint-disable-next-line no-console
+    console.log('[twitchService]: getStream', res.data);
 
     return res.data.data?.[0];
   },
@@ -304,18 +300,13 @@ const twitchService = {
       },
     );
 
-    if (res.status === 200) {
-      return res.data[0];
-    }
-
-    throw new Error('Failed to get channel');
+    return res.data[0];
   },
 
-  getTopCategories: async (token: string) => {
+  getTopCategories: async () => {
     const res = await twitchApi.get<{ data: Category[] }>('/games/top', {
       headers: {
         'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        Authorization: `Bearer ${token}`,
       },
     });
     return res.data.data;
@@ -330,30 +321,17 @@ const twitchService = {
 
     return res.data.data[0].profile_image_url;
   },
-  getFollowedStreams: async (userId: string) => {
-    console.log('headers are', twitchApi.defaults.headers);
-    const { anonToken, token } = await getTokens();
-    console.log('anontoken is', anonToken);
-
-    console.log('user_id', userId);
-
-    if (!userId) {
-      throw new Error('User id is not defined');
-    }
-
-    const res = await twitchApi.get<{ data: Stream[] }>(
-      `/streams/followed?user_id=${userId}`,
-      {
-        headers: {
-          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        },
+  getFollowedStreams: async (userId: string): Promise<Stream[]> => {
+    const res = await twitchApi.get(`/streams/followed?user_id=${userId}`, {
+      headers: {
+        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
       },
-    );
-    return res.data;
+    });
+    return res.data.data;
   },
 
-  getUserInfo: async (token: string) => {
-    const res = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
+  getUserInfo: async (token: string): Promise<UserInfoResponse> => {
+    const res = await twitchApi.get('/users', {
       headers: {
         'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
         Authorization: `Bearer ${token}`,
@@ -361,50 +339,40 @@ const twitchService = {
     });
     return res.data.data[0];
   },
-  getUser: async (userId: string) => {
-    const res = await twitchApi.get<{ data: UserResponse[] }>(
-      `/users?login=${userId}`,
-      {
-        headers: {
-          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        },
+  getUser: async (userId: string): Promise<UserResponse> => {
+    const res = await twitchApi.get(`/users?login=${userId}`, {
+      headers: {
+        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
       },
-    );
+    });
 
     return res.data.data[0];
   },
 
-  searchChannels: async (query: string) => {
-    const res = await twitchApi.get<{ data: SearchChannelResponse[] }>(
-      `/search/channels?query=${query}`,
-      {
-        headers: {
-          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        },
+  searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
+    const res = await twitchApi.get(`/search/channels?query=${query}`, {
+      headers: {
+        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
       },
-    );
+    });
 
     return res.data.data;
   },
 
   // ----------------- NOT IMPLEMENTED ----------------- //
-  getCategory: async (gameId: string) => {},
-  searchCategories: async (
-    headers: AxiosHeaders,
-    query: string,
-    cursor?: string,
-  ) => {},
+  // getCategory: async (gameId: string) => {},
+  // searchCategories: async (query: string, cursor?: string) => {},
 
-  getSubscriberCount: async (userId: string) => {},
+  // getSubscriberCount: async (userId: string) => {},
 
-  getUserBlockedList: async (
-    id: string,
-    headers: AxiosHeaders,
-    cursor?: string,
-  ) => {},
+  // getUserBlockedList: async (
+  //   id: string,
+  //   headers: AxiosHeaders,
+  //   cursor?: string,
+  // ) => {},
 
-  blockUser: async (userId: string) => {},
-  unBlockUser: async (userId: string) => {},
+  // blockUser: async (userId: string) => {},
+  // unBlockUser: async (userId: string) => {},
 };
 
 export default twitchService;

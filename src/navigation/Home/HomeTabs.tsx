@@ -8,13 +8,13 @@ import {
 } from '@react-navigation/native';
 import { CategoryStackParamList } from '../Category/CategoryStack';
 import { StreamStackParamList } from '../Stream/StreamStack';
+
 // eslint-disable-next-line no-shadow
 export enum HomeTabsRoutes {
   Following = 'Following',
   Top = 'Top',
   Browse = 'Browse',
   Search = 'Search',
-  SettingsModal = 'SettingsModal',
   LiveStream = 'LiveStream',
   Category = 'Category',
 }
@@ -24,8 +24,6 @@ export type HomeTabsParamList = {
   [HomeTabsRoutes.Top]: undefined;
   [HomeTabsRoutes.Browse]: undefined;
   [HomeTabsRoutes.Search]: undefined;
-  [HomeTabsRoutes.SettingsModal]: undefined;
-
   [HomeTabsRoutes.LiveStream]: NavigatorScreenParams<StreamStackParamList>;
   [HomeTabsRoutes.Category]: NavigatorScreenParams<CategoryStackParamList>;
 };

@@ -7,15 +7,14 @@ import {
   FlatList,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { H5, Stack } from 'tamagui';
 import DismissableKeyboard from '../components/DismissableKeyboard';
 import Image from '../components/Image';
-import Title from '../components/Title';
 import useDebouncedCallback from '../hooks/useDebouncedCallback';
 import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
 import { StreamRoutes } from '../navigation/Stream/StreamStack';
@@ -96,13 +95,30 @@ const SearchScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.wrapper}>
-      <View style={{ flexDirection: 'row', padding: 5 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        paddingTop: statusBarHeight,
+      }}
+    >
+      <Stack flexDirection="row" padding={2}>
         <DismissableKeyboard>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+            }}
+          >
             <SafeAreaView style={{ flexDirection: 'row' }}>
               <TextInput
-                style={styles.input}
+                style={{
+                  borderRadius: 4,
+                  width: '90%',
+                  alignSelf: 'center',
+                  height: 40,
+                  margin: 12,
+                  borderWidth: 1,
+                  padding: 10,
+                }}
                 placeholder="Find a channel"
                 placeholderTextColor={colors.gray}
                 verticalAlign="middle"
@@ -117,8 +133,10 @@ const SearchScreen = () => {
           <Entypo
             name="cross"
             size={24}
-            style={[{ alignSelf: 'center', marginRight: 15 }, styles.icon]}
-            color={colors.gray}
+            style={[
+              { alignSelf: 'center', marginRight: 15, color: colors.gray },
+            ]}
+            color={colors.white}
             onPress={() => {
               setQuery('');
               setSearchResults([]);
@@ -129,82 +147,89 @@ const SearchScreen = () => {
           <Feather
             name="search"
             size={24}
-            color={colors.gray}
+            color={colors.white}
             style={{ alignSelf: 'center', marginRight: 15 }}
             onPress={() => search(query)}
           />
         )}
-      </View>
-      <View>
-        {searchResults.length > 0 && <Title>Channels</Title>}
-        <FlatList
-          data={searchResults}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                navigate(StreamRoutes.LiveStream, {
-                  screen: StreamRoutes.LiveStream,
-                  params: {
-                    id: item.broadcaster_login,
-                  },
-                });
-              }}
-              style={{
-                flexDirection: 'row',
-                marginBottom: 14,
-                marginLeft: 14,
-                alignContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Image
-                source={{
-                  uri: item.thumbnail_url
-                    .replace('{width}', '40')
-                    .replace('{height}', '40'),
-                }}
-                style={{
-                  borderRadius: 20,
-                  marginRight: 5,
-                  width: 40,
-                  height: 40,
-                }}
-              />
-              <Text style={{ marginLeft: 8, color: colors.gray }}>
-                {item.display_name}
-              </Text>
-              {item.is_live && (
-                <View
+      </Stack>
+      <Stack marginBottom={14} marginLeft={14}>
+        {searchResults.length > 0 && (
+          <>
+            <H5 style={{ marginLeft: 15, marginBottom: 15 }}>Channels</H5>
+            <FlatList
+              data={searchResults}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    navigate(StreamRoutes.LiveStream, {
+                      screen: StreamRoutes.LiveStream,
+                      params: {
+                        id: item.broadcaster_login,
+                      },
+                    });
+                  }}
                   style={{
-                    marginLeft: 8,
-                    flex: 1,
                     flexDirection: 'row',
+                    marginBottom: 14,
+                    marginLeft: 14,
+                    alignContent: 'center',
                     alignItems: 'center',
                   }}
                 >
-                  <View
+                  <Image
+                    source={{
+                      uri: item.thumbnail_url
+                        .replace('{width}', '40')
+                        .replace('{height}', '40'),
+                    }}
                     style={{
-                      backgroundColor: colors.red,
-                      width: 8,
-                      height: 8,
-                      borderRadius: 4,
+                      borderRadius: 20,
                       marginRight: 5,
+                      width: 40,
+                      height: 40,
                     }}
                   />
-                  <Text style={{ color: colors.gray }}>
-                    {elapsedStreamTime(item.started_at)}
-                  </Text>
-                </View>
+                  <Text style={{ marginLeft: 8 }}>{item.display_name}</Text>
+                  {item.is_live && (
+                    <View
+                      style={{
+                        marginLeft: 8,
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <View
+                        style={{
+                          backgroundColor: colors.red,
+                          width: 8,
+                          height: 8,
+                          borderRadius: 4,
+                          marginRight: 5,
+                        }}
+                      />
+                      <Text style={{ color: colors.gray }}>
+                        {elapsedStreamTime(item.started_at)}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
-          )}
-        />
-      </View>
+            />
+          </>
+        )}
+      </Stack>
 
       {searchHistory && (
-        <ScrollView style={styles.previousSearches}>
+        <ScrollView
+          style={{
+            marginTop: 16,
+            marginLeft: 16,
+          }}
+        >
           <FlatList<SearchHistoryItem>
             data={searchHistory}
             renderItem={({ item }) => {
@@ -221,7 +246,14 @@ const SearchScreen = () => {
                     color={colors.gray}
                     style={{ alignSelf: 'center', marginRight: 8 }}
                   />
-                  <Text style={styles.previousSearch}>{item.query}</Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {item.query}
+                  </Text>
                 </TouchableOpacity>
               );
             }}
@@ -232,43 +264,5 @@ const SearchScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  icon: {
-    alignSelf: 'center',
-    marginRight: 8,
-  },
-  input: {
-    borderRadius: 4,
-    borderColor: colors.gray,
-    width: '90%',
-    alignSelf: 'center',
-    color: colors.gray,
-    height: 40,
-    margin: 12,
-    borderWidth: 1,
-    padding: 10,
-  },
-  wrapper: {
-    backgroundColor: colors.primary,
-    flex: 1,
-    paddingTop: statusBarHeight,
-  },
-  container: {
-    paddingLeft: 14,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-  },
-  previousSearches: {
-    marginTop: 16,
-    marginLeft: 16,
-  },
-  previousSearch: {
-    color: colors.gray,
-    fontSize: 16,
-    marginBottom: 8,
-  },
-});
 
 export default SearchScreen;

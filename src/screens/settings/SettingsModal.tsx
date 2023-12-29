@@ -7,7 +7,8 @@ import {
 } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
-import { SafeAreaView, StyleSheet, Text, View, Button } from 'react-native';
+import { SafeAreaView, Button } from 'react-native';
+import { Stack, Text } from 'tamagui';
 import Image from '../../components/Image';
 import SettingsItem, { ContentItem } from '../../components/SettingsItem';
 import { useAuthContext } from '../../context/AuthContext';
@@ -31,15 +32,13 @@ const SettingsModal = ({
           iconLeft: (
             <Image
               source={{ uri: user?.profile_image_url }}
-              style={{ width: 30, height: 30, borderRadius: 8 }}
+              style={{ width: 30, height: 32, borderRadius: 145 }}
             />
           ),
           showRightArrow: true,
-          iconRight: <AntDesign name="right" size={16} color={colors.gray} />,
+          iconRight: <AntDesign name="right" size={16} color={colors.black} />,
           showSeperator: true,
           onPress: () => {
-            // eslint-disable-next-line no-console
-            console.log('show modal here');
             bottomSheetModalRef.current?.present();
           },
         },
@@ -122,7 +121,9 @@ const SettingsModal = ({
           showRightArrow: true,
           iconRight: <AntDesign name="right" size={16} color={colors.gray} />,
           showSeperator: true,
-          onPress: () => navigation.navigate(RootRoutes.Login),
+          onPress: () => {
+            navigation.navigate(RootRoutes.Login);
+          },
         },
       ],
     },
@@ -134,25 +135,26 @@ const SettingsModal = ({
   ];
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-
-  // variables
   const snapPoints = useMemo(() => ['25%', '50%'], []);
 
-  // callbacks
-
   return (
-    <SafeAreaView style={styles.wrapper}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        paddingTop: statusBarHeight,
+      }}
+    >
       <SettingsItem contents={settingItems} />
       <BottomSheetModal
         ref={bottomSheetModalRef}
         index={1}
         snapPoints={snapPoints}
-        handleStyle={{ backgroundColor: colors.primary, opacity: 0.95 }}
+        handleStyle={{ opacity: 0.95 }}
         handleIndicatorStyle={{ backgroundColor: colors.gray }}
       >
-        <View style={{ flex: 1, backgroundColor: colors.primary }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.gray }}>
+        <Stack style={{ flex: 1 }}>
+          <Stack style={{ flex: 1 }}>
+            <Text>
               <Button
                 title="Log out"
                 onPress={async () => {
@@ -162,36 +164,11 @@ const SettingsModal = ({
                 }}
               />
             </Text>
-          </View>
-        </View>
+          </Stack>
+        </Stack>
       </BottomSheetModal>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  copy: {
-    marginLeft: 12,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    textAlign: 'left',
-    width: '85%',
-    textAlignVertical: 'center',
-    flexWrap: 'wrap',
-  },
-  settingsItem: {
-    display: 'flex',
-    alignContent: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  wrapper: {
-    backgroundColor: colors.primary,
-    flex: 1,
-    paddingTop: statusBarHeight,
-  },
-});
 
 export default SettingsModal;

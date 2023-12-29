@@ -1,25 +1,10 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable no-shadow */
-/* eslint-disable no-console */
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Button,
-  Dimensions,
-  FlatList,
-  KeyboardAvoidingView,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import { Dimensions, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import Heading from '../../components/Heading';
+import { H5 } from 'tamagui';
 import Image from '../../components/Image';
 import Tags from '../../components/Tags';
-import { useAuthContext } from '../../context/AuthContext';
-import tmiClient from '../../lib/tmi';
 import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
 import twitchService, {
   Stream,
@@ -30,72 +15,16 @@ import viewFormatter from '../../utils/viewFormatter';
 
 const LiveStreamScreen = () => {
   const route = useRoute<RouteProp<StreamStackParamList>>();
-  const navigation = useNavigation();
   const [liveStream, setLiveStream] = useState<Stream | null>();
   const [videoUrl, setVideoUrl] = useState('');
   const [broadcasterImage, setBroadcasterImage] = useState<string>();
   const [offlineUser, setOfflineUser] = useState<UserInfoResponse>();
-  const { auth, user } = useAuthContext();
   const isOffline = offlineUser !== undefined;
-  const [messages, setMessages] = useState<string[]>([]);
-  const [message, setMessage] = useState<string>();
-  const messageRef = useRef<FlatList<string>>(null);
-  const [scrollPaused, setScrollPaused] = useState(false);
 
   const getUserProfilePicture = async (id: string) => {
     const res = await twitchService.getUserImage(id);
     setBroadcasterImage(res);
   };
-
-  const client = tmiClient(route.params.id, auth?.token?.accessToken, user?.id);
-
-  const join = async () => {
-    try {
-      await client.connect();
-      await client.join(route.params.id);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const disconnectBeforeLeaving = async () => {
-    try {
-      client.disconnect();
-      client.removeAllListeners();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    navigation.addListener('blur', disconnectBeforeLeaving);
-  }, [navigation]);
-  // Adding side effect on component mount to disconnect from chat when leaving the screen
-
-  // client.on('message', (channel, tags, message, self) => {
-  //   // "Alca: Hello, World!"
-  //   console.log('------------------------------------');
-  //   console.log(`${tags['display-name']}: ${message}`);
-  //   console.log('------------------------------------');
-  // });
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  client.on('message', (channel, tags, message, self) => {
-    if (self) {
-      return;
-    }
-    setMessages(prev => [...prev, `${tags['display-name']}: ${message}`]);
-  });
-
-  const renderChatMessage = (message: string) => {
-    return (
-      <Text style={{ color: colors.gray, textAlign: 'left' }}>{message}</Text>
-    );
-  };
-
-  client.on('disconnected', reason => {
-    console.log(`Disconnected: ${reason}`);
-  });
 
   const fetchStream = async () => {
     const stream = await twitchService.getStream(route.params.id);
@@ -105,24 +34,20 @@ const LiveStreamScreen = () => {
     }
     setLiveStream(stream);
     getUserProfilePicture(route.params.id);
+    // todo - set controls to false and fire JS messages to the iframe to pause and play the video
     setVideoUrl(
       `https://player.twitch.tv?channel=${stream?.user_login}&muted=false&controls=true&parent=foam`,
     );
   };
 
-  useMemo(() => {
-    join();
-  }, [liveStream]);
+  const fetchDetails = async () => {
+    await Promise.all([fetchStream(), getUserProfilePicture(route.params.id)]);
+  };
 
   useEffect(() => {
-    fetchStream();
+    fetchDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    getUserProfilePicture(route.params.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveStream]);
 
   return (
     <SafeAreaView style={styles.wrapper}>
@@ -151,26 +76,15 @@ const LiveStreamScreen = () => {
               source={{ uri: videoUrl }}
               style={[styles.video]}
               javaScriptEnabled
+              originWhitelist={['https://']}
               allowsInlineMediaPlayback
-              scalesPageToFit
               javaScriptCanOpenWindowsAutomatically
-              mediaPlaybackRequiresUserAction={false}
-              injectedJavaScript={`
-                document.getElementsByTagName("video")[0].addEventListener("pause", () => VideoPause.postMessage("video paused"));
-                document.getElementsByTagName("video")[0].addEventListener("playing", () => VideoPlaying.postMessage("video playing"));
-                `}
-              bounces={false}
-              onMessage={event => {
-                console.log('Event is', event.nativeEvent.data);
+              // injectedJavaScript={`
+              //   document.getElementsByTagName("video")[0].addEventListener("pause", () => VideoPause.postMessage("video paused"));
+              //   document.getElementsByTagName("video")[0].addEventListener("playing", () => VideoPlaying.postMessage("video playing"));
+              //   `}
 
-                if (event.nativeEvent.data === 'video paused') {
-                  console.log('Video paused');
-                  console.log('setting paused to true');
-                } else if (event.nativeEvent.data === 'video playing') {
-                  console.log('Video playing');
-                  console.log('setting paused to false');
-                }
-              }}
+              // ensure it doesn' ttake up the whole screen if chat is open
             />
           </View>
         )}
@@ -193,9 +107,9 @@ const LiveStreamScreen = () => {
               aria-label={`Go to ${liveStream?.user_name}'s profile`}
             />
 
-            <Heading fontSize={20} paddingBottom={7}>
+            <H5 fontSize={20} paddingBottom={7}>
               {isOffline ? offlineUser?.display_name : liveStream?.user_name}
-            </Heading>
+            </H5>
           </View>
 
           <Text style={{ color: colors.gray, marginBottom: 5 }}>
@@ -216,13 +130,13 @@ const LiveStreamScreen = () => {
               </Text>
             </Text>
           ) : null}
-          <Tags tags={liveStream?.tags ?? []} marginTop={8} marginBottom={8} />
+          <Tags tags={liveStream?.tags ?? []} />
         </View>
       </View>
 
       <View style={styles.chat}>
         <Text style={{ color: colors.gray }}>CHAT</Text>
-        <FlatList
+        {/* <FlatList
           data={messages}
           ref={messageRef}
           renderItem={({ item }) => renderChatMessage(item)}
@@ -234,22 +148,18 @@ const LiveStreamScreen = () => {
           onScrollEndDrag={() => {
             setScrollPaused(false);
           }}
-        />
+        /> */}
       </View>
-      <KeyboardAvoidingView>
+      {/* <KeyboardAvoidingView
+        // pinned to bottom of screen
+        style={{ position: 'absolute', bottom: 0, width: '100%' }}
+      >
         <TextInput
           style={styles.input}
-          placeholder="useless placeholder"
-          keyboardType="numeric"
+          placeholder="Send a message"
           onChangeText={text => setMessage(text)}
         />
-        <Button
-          title="Send"
-          onPress={async () => {
-            client.say(route.params.id, message as string);
-          }}
-        />
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingView> */}
     </SafeAreaView>
   );
 };
@@ -261,16 +171,13 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     margin: 12,
-    borderWidth: 1,
+    borderWidth: 0.75,
+    borderRadius: 8,
     padding: 10,
-    color: colors.gray,
-    border: 'solid',
-    borderBottomColor: colors.gray,
   },
   wrapper: {
     flex: 1,
     display: 'flex',
-    backgroundColor: colors.primary,
   },
   video: {
     width,

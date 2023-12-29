@@ -1,9 +1,9 @@
-import { SafeAreaView, Text } from 'react-native';
+import { SafeAreaView } from 'react-native';
+import { Text } from 'tamagui';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,
 } from '../../navigation/Category/CategoryStack';
-import colors from '../../styles/colors';
 
 const CategoryScreen = ({
   route,
@@ -14,11 +14,10 @@ const CategoryScreen = ({
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: colors.primary,
         flexDirection: 'column',
       }}
     >
-      <Text style={{ color: colors.gray }}>Category page {id}</Text>
+      <Text>Category page {id}</Text>
     </SafeAreaView>
   );
 };
