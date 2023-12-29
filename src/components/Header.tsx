@@ -1,29 +1,31 @@
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { H4, Stack } from 'tamagui';
 import { useAuthContext } from '../context/AuthContext';
 import { RootRoutes } from '../navigation/RootStack';
 import colors from '../styles/colors';
 import Image from './Image';
-import Title from './Title';
 
 type BaseProps = {
   title: string;
-  showAvatar?: boolean;
 };
 type Props = BottomTabHeaderProps & BaseProps;
 
-export default function Header({
-  title,
-  navigation,
-  showAvatar = true,
-}: Props) {
+export default function Header({ title, navigation }: Props) {
   const { user } = useAuthContext();
   const { navigate } = navigation;
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Title>{title}</Title>
-      {showAvatar && (
-        <View style={styles.right}>
+    <SafeAreaView>
+      <Stack
+        paddingHorizontal={10}
+        marginBottom={10}
+        display="flex"
+        flexDirection="row"
+        justifyContent="space-between"
+      >
+        <H4>{title}</H4>
+        <Stack flexDirection="row" alignItems="center">
           {!user ? (
             <TouchableOpacity
               onPress={() => navigate(RootRoutes.SettingsModal)}
@@ -34,51 +36,22 @@ export default function Header({
               onPress={() => navigate(RootRoutes.SettingsModal)}
             >
               <Image
-                style={styles.avatar}
                 source={{ uri: user?.profile_image_url }}
+                style={styles.avatar}
               />
             </TouchableOpacity>
           )}
-        </View>
-      )}
+        </Stack>
+      </Stack>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    color: colors.gray,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.primary,
-  },
   avatar: {
     backgroundColor: colors.tag,
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 16,
-  },
-  onlineStatus: {
-    backgroundColor: colors.green,
-    width: 10,
-    height: 10,
-    borderRadius: 10,
-    borderColor: colors.primary,
-    borderStyle: 'solid',
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-  },
-  right: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  button: {
-    marginLeft: 20,
   },
 });

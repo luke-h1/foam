@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { Stack, Text } from 'tamagui';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
-import colors from '../../styles/colors';
 
 const AuthLoadingScreen = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.AuthLoading>) => {
   const { navigate } = navigation;
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     setTimeout(() => {
@@ -16,22 +17,10 @@ const AuthLoadingScreen = ({
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Loading...</Text>
+    <Stack flex={1} justifyContent="center" alignItems="center">
+      <Text>Loading...</Text>
       <ActivityIndicator size="large" />
-    </View>
+    </Stack>
   );
 };
 export default AuthLoadingScreen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-  },
-  text: {
-    color: colors.gray,
-  },
-});

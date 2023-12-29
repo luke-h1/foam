@@ -18,15 +18,15 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      
+
     timeout-minutes: 20
     steps:
       - name: Install moreutils
         run: sudo apt install moreutils
-        
+
       # https://github.com/actions/virtual-environments/issues/1187
       - name: tune linux network
-        run: sudo ethtool -K eth0 tx off rx off            
+        run: sudo ethtool -K eth0 tx off rx off         
 
       - name: Setup node
         uses: actions/setup-node@v3
@@ -53,7 +53,7 @@ jobs:
             key: yarn-${{ hashFiles('**/yarn.lock') }}
             restore-keys: |
                 yarn-
-                  
+
       - uses: actions/labeler@v4
         with:
           sync-labels: true
@@ -83,6 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'pull_request'
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -104,7 +105,7 @@ jobs:
             key: yarn-${{ hashFiles('**/yarn.lock') }}
             restore-keys: |
                 yarn-
-                  
+
       - uses: actions/labeler@v4
         with:
           sync-labels: true
@@ -114,7 +115,7 @@ jobs:
 
       - name: Install dependencies
         run: yarn
-      
+
       - name: Setup Expo
         uses: expo/expo-github-action@v7
         with:
@@ -127,7 +128,7 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.FOAM_RELEASE_TOKEN }}
-      
+
       - name: 🚀 Create preview
         uses: expo/expo-github-action/preview@v8
         with:

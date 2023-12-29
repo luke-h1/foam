@@ -5,7 +5,7 @@ import Header from '../../components/Header';
 import { useAuthContext } from '../../context/AuthContext';
 import FollowingScreen from '../../screens/FollowingScreen';
 import SearchScreen from '../../screens/SearchScreen';
-import TopScreen from '../../screens/TopScreen';
+import TopScreen from '../../screens/Top/TopScreen';
 import colors from '../../styles/colors';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
 
@@ -20,12 +20,6 @@ const HomeTabsNavigator = () => {
         headerTitleAlign: 'left',
         // headerShown: false,
         tabBarActiveTintColor: colors.purple,
-        tabBarStyle: {
-          backgroundColor: colors.primary,
-        },
-        headerStyle: {
-          backgroundColor: colors.black,
-        },
       }}
     >
       {auth?.isAuth && (

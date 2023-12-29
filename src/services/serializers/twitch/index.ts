@@ -1,13 +1,13 @@
 import { BadgeTypes, ChatBadge, EmoteType } from '../types';
 
-interface TwitchEmote {
+export interface TwitchEmote {
   id: string;
   name: string;
   emoteType?: string;
   ownerId?: string;
 }
 
-interface BadgeInfoTwitch {
+export interface BadgeInfoTwitch {
   image_url_1x: string;
   image_url_2x: string;
   image_url_4x: string;
