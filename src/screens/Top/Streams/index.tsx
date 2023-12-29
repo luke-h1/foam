@@ -24,7 +24,7 @@ const TopStreamsScreen = () => {
 
   const { data: streams, isLoading, isError } = useQuery(topStreamQuery);
 
-  if (!streams?.length || isError) {
+  if ((!isLoading && !streams?.length) || isError) {
     return (
       <Stack
         display="flex"
@@ -74,7 +74,7 @@ const TopStreamsScreen = () => {
             paddingHorizontal="$4"
             space
           >
-            {streams.length > 0 && (
+            {streams && streams.length > 0 && (
               <FlatList<Stream>
                 data={streams}
                 renderItem={({ item }) => <StreamCard stream={item} />}

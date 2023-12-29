@@ -36,7 +36,7 @@ const LiveStreamScreen = () => {
     getUserProfilePicture(route.params.id);
     // todo - set controls to false and fire JS messages to the iframe to pause and play the video
     setVideoUrl(
-      `https://player.twitch.tv?channel=${stream?.user_login}&muted=false&controls=true&parent=foam`,
+      `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
     );
   };
 
