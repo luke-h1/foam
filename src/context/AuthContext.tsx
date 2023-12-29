@@ -12,7 +12,7 @@ import React, {
 import { twitchApi } from '../services/Client';
 import twitchService, { UserInfoResponse } from '../services/twitchService';
 
-const StorageKeys = {
+export const StorageKeys = {
   anonToken: 'foam-anonToken',
   authToken: 'foam-authToken',
 } as const;

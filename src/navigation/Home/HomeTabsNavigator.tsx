@@ -14,7 +14,7 @@ const HomeTabsNavigator = () => {
   return (
     <HomeTabs.Navigator
       initialRouteName={
-        auth?.isAuth ? HomeTabsRoutes.Following : HomeTabsRoutes.Top
+        auth?.token ? HomeTabsRoutes.Following : HomeTabsRoutes.Top
       }
       screenOptions={{
         headerTitleAlign: 'left',

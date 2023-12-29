@@ -10,13 +10,15 @@ import {
   HomeTabsParamList,
   HomeTabsRoutes,
 } from '../../navigation/Home/HomeTabs';
+import { RootRoutes } from '../../navigation/RootStack';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = () => {
   const { login } = useAuthContext();
 
-  const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
+  const { navigate, goBack } =
+    useNavigation<NavigationProp<HomeTabsParamList>>();
 
   const discovery = {
     authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
@@ -26,8 +28,8 @@ const LoginScreen = () => {
 
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID as string,
-      clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET as string,
+      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+      clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
       scopes: [
         'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users',
       ],
@@ -42,10 +44,18 @@ const LoginScreen = () => {
     discovery,
   );
 
+  const handleAuth = async () => {
+    login(response);
+    if (response?.type === 'success') {
+      navigate(HomeTabsRoutes.Top);
+    } else {
+      console.log('error');
+    }
+  };
+
   useEffect(() => {
     if (response && response?.type === 'success') {
-      login(response);
-      navigate(HomeTabsRoutes.Top);
+      handleAuth();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
