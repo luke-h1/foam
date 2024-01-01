@@ -51,6 +51,7 @@
           "flipper": true
         }
       }
-    ]
+    ],
+    ["newrelic-react-native-agent"]
   ]
 }

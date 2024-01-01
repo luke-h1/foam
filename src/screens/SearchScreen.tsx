@@ -133,10 +133,7 @@ const SearchScreen = () => {
           <Entypo
             name="cross"
             size={24}
-            style={[
-              { alignSelf: 'center', marginRight: 15, color: colors.gray },
-            ]}
-            color={colors.white}
+            style={[{ alignSelf: 'center', marginRight: 15 }]}
             onPress={() => {
               setQuery('');
               setSearchResults([]);
@@ -147,8 +144,7 @@ const SearchScreen = () => {
           <Feather
             name="search"
             size={24}
-            color={colors.white}
-            style={{ alignSelf: 'center', marginRight: 15 }}
+            style={{ alignSelf: 'center', marginRight: 25 }}
             onPress={() => search(query)}
           />
         )}

@@ -10,6 +10,7 @@ import {
 import { useFonts } from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
+import newRelic from 'newrelic-react-native-agent';
 import React, { useEffect } from 'react';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -66,7 +67,7 @@ export default function App() {
   // deleteTokens();
 
   return (
-    <NavigationContainer>
+    <NavigationContainer onStateChange={newRelic.onStateChange}>
       <QueryClientProvider client={queryClient}>
         <TamaguiProvider
           config={config}
