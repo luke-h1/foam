@@ -10,6 +10,9 @@ export const sevenTvApi = axios.create({
 
 export const twitchApi = axios.create({
   baseURL: 'https://api.twitch.tv/helix',
+  headers: {
+    'Client-ID': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+  },
 });
 
 export const ffzApi = axios.create({

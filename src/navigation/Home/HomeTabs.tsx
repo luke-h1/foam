@@ -2,12 +2,7 @@ import {
   BottomTabScreenProps,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
-import {
-  NavigationProp,
-  NavigatorScreenParams,
-} from '@react-navigation/native';
-import { CategoryStackParamList } from '../Category/CategoryStack';
-import { StreamStackParamList } from '../Stream/StreamStack';
+import { NavigationProp } from '@react-navigation/native';
 
 // eslint-disable-next-line no-shadow
 export enum HomeTabsRoutes {
@@ -15,8 +10,6 @@ export enum HomeTabsRoutes {
   Top = 'Top',
   Browse = 'Browse',
   Search = 'Search',
-  LiveStream = 'LiveStream',
-  Category = 'Category',
 }
 
 export type HomeTabsParamList = {
@@ -24,8 +17,6 @@ export type HomeTabsParamList = {
   [HomeTabsRoutes.Top]: undefined;
   [HomeTabsRoutes.Browse]: undefined;
   [HomeTabsRoutes.Search]: undefined;
-  [HomeTabsRoutes.LiveStream]: NavigatorScreenParams<StreamStackParamList>;
-  [HomeTabsRoutes.Category]: NavigatorScreenParams<CategoryStackParamList>;
 };
 
 export type HomeNavigation = NavigationProp<HomeTabsParamList>;

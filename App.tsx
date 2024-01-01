@@ -12,8 +12,6 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
 import newRelic from 'newrelic-react-native-agent';
 import React, { useEffect } from 'react';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import { connectToDevTools } from 'react-devtools-core';
 import { LogBox, useColorScheme } from 'react-native';
 
@@ -30,6 +28,7 @@ export default function App() {
   const queryClient = new QueryClient();
   useOnAppStateChange();
   const scheme = useColorScheme();
+
   const [loaded] = useFonts({
     Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
     InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
