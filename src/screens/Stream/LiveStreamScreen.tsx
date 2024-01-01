@@ -5,6 +5,7 @@ import { WebView } from 'react-native-webview';
 import { H5 } from 'tamagui';
 import Image from '../../components/Image';
 import Tags from '../../components/Tags';
+import Chat from '../../components/ui/Chat/Chat';
 import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
 import twitchService, {
   Stream,
@@ -40,12 +41,9 @@ const LiveStreamScreen = () => {
     );
   };
 
-  const fetchDetails = async () => {
-    await Promise.all([fetchStream(), getUserProfilePicture(route.params.id)]);
-  };
-
   useEffect(() => {
-    fetchDetails();
+    fetchStream();
+    getUserProfilePicture(route.params.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,12 +77,6 @@ const LiveStreamScreen = () => {
               originWhitelist={['https://']}
               allowsInlineMediaPlayback
               javaScriptCanOpenWindowsAutomatically
-              // injectedJavaScript={`
-              //   document.getElementsByTagName("video")[0].addEventListener("pause", () => VideoPause.postMessage("video paused"));
-              //   document.getElementsByTagName("video")[0].addEventListener("playing", () => VideoPlaying.postMessage("video playing"));
-              //   `}
-
-              // ensure it doesn' ttake up the whole screen if chat is open
             />
           </View>
         )}
@@ -136,30 +128,10 @@ const LiveStreamScreen = () => {
 
       <View style={styles.chat}>
         <Text style={{ color: colors.gray }}>CHAT</Text>
-        {/* <FlatList
-          data={messages}
-          ref={messageRef}
-          renderItem={({ item }) => renderChatMessage(item)}
-          onContentSizeChange={() => {
-            if (!scrollPaused) {
-              messageRef.current?.scrollToEnd({ animated: false });
-            }
-          }}
-          onScrollEndDrag={() => {
-            setScrollPaused(false);
-          }}
-        /> */}
+        {liveStream?.user_name && (
+          <Chat channels={[liveStream?.user_name] as string[]} />
+        )}
       </View>
-      {/* <KeyboardAvoidingView
-        // pinned to bottom of screen
-        style={{ position: 'absolute', bottom: 0, width: '100%' }}
-      >
-        <TextInput
-          style={styles.input}
-          placeholder="Send a message"
-          onChangeText={text => setMessage(text)}
-        />
-      </KeyboardAvoidingView> */}
     </SafeAreaView>
   );
 };

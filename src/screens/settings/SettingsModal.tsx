@@ -8,7 +8,7 @@ import {
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
 import { SafeAreaView, Button } from 'react-native';
-import { Stack, Text } from 'tamagui';
+import { Stack } from 'tamagui';
 import Image from '../../components/Image';
 import SettingsItem, { ContentItem } from '../../components/SettingsItem';
 import { useAuthContext } from '../../context/AuthContext';
@@ -20,6 +20,8 @@ const SettingsModal = ({
   navigation,
 }: RootStackScreenProps<RootRoutes.SettingsModal>) => {
   const { user, logout } = useAuthContext();
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ['25%', '25%'], []);
 
   const authenticatedSettingItems: ContentItem[] = [
     {
@@ -134,9 +136,6 @@ const SettingsModal = ({
     ...commonSettingItems,
   ];
 
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ['25%', '50%'], []);
-
   return (
     <SafeAreaView
       style={{
@@ -152,19 +151,21 @@ const SettingsModal = ({
         handleStyle={{ opacity: 0.95 }}
         handleIndicatorStyle={{ backgroundColor: colors.gray }}
       >
-        <Stack style={{ flex: 1 }}>
-          <Stack style={{ flex: 1 }}>
-            <Text>
-              <Button
-                title="Log out"
-                onPress={async () => {
-                  bottomSheetModalRef.current?.dismiss();
-                  await logout();
-                  navigation.navigate(RootRoutes.Home);
-                }}
-              />
-            </Text>
-          </Stack>
+        <Stack
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          padding={8}
+        >
+          <Feather name="arrow-right-circle" size={24} color="black" />
+          <Button
+            title="Log out"
+            onPress={async () => {
+              bottomSheetModalRef.current?.dismiss();
+              await logout();
+              navigation.navigate(RootRoutes.Home);
+            }}
+          />
         </Stack>
       </BottomSheetModal>
     </SafeAreaView>
