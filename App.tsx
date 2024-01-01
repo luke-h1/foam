@@ -16,6 +16,7 @@ import React, { useEffect } from 'react';
 import { connectToDevTools } from 'react-devtools-core';
 import { LogBox, useColorScheme } from 'react-native';
 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TamaguiProvider } from 'tamagui';
 import { AuthContextProvider } from './src/context/AuthContext';
 import { useOnAppStateChange } from './src/hooks/useOnAppStateChange';
@@ -72,11 +73,13 @@ export default function App() {
           disableInjectCSS
           defaultTheme={scheme === 'dark' ? 'dark' : 'light'}
         >
-          <BottomSheetModalProvider>
-            <AuthContextProvider>
-              <RootNavigator />
-            </AuthContextProvider>
-          </BottomSheetModalProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              <AuthContextProvider>
+                <RootNavigator />
+              </AuthContextProvider>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </TamaguiProvider>
       </QueryClientProvider>
     </NavigationContainer>

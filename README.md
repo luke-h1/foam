@@ -16,6 +16,14 @@ TBA
 
 - foam - React Native app targeting IOS and Android
 
+## Tech stack
+
+- [React Native](https://reactnative.dev/)
+- [React Navigation](https://reactnavigation.org/)
+- [Expo](https://expo.io/)
+- [Tamagui](https://tamagui.dev/)
+- [React query](https://tanstack.com/query/latest/)
+
 ## Getting started
 
 You will need the following in order to run the project locally:

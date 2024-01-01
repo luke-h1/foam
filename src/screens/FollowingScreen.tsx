@@ -56,7 +56,7 @@ const FollowingScreen = () => {
               marginRight: 10,
             }}
           />
-          <Text>No streams found</Text>
+          <Text>No streams are live</Text>
         </Stack>
       </Stack>
     );

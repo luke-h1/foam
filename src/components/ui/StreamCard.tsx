@@ -96,7 +96,7 @@ const StreamCard = ({ stream }: Props) => {
               navigate(StreamRoutes.LiveStream, {
                 screen: StreamRoutes.LiveStream,
                 params: {
-                  id: stream.id,
+                  id: stream.user_login,
                 },
               })
             }
@@ -128,7 +128,7 @@ const StreamCard = ({ stream }: Props) => {
               navigate(StreamRoutes.LiveStream, {
                 screen: StreamRoutes.LiveStream,
                 params: {
-                  id: stream.id,
+                  id: stream.user_login,
                 },
               })
             }
@@ -140,8 +140,7 @@ const StreamCard = ({ stream }: Props) => {
               <Text lineHeight={19}>{stream.game_name}</Text>
             </Stack>
           </Pressable>
-
-          {stream.tags.length > 0 && <Tags tags={stream.tags} />}
+          {stream.tags && stream.tags.length > 0 && <Tags tags={stream.tags} />}
         </Stack>
       </Stack>
     </XStack>
