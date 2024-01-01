@@ -1,11 +1,11 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Pressable } from 'react-native';
 import { H6, Image, Stack, YStack } from 'tamagui';
-import { CategoryRoutes } from '../../navigation/Category/CategoryStack';
 import {
-  HomeTabsParamList,
-  HomeTabsRoutes,
-} from '../../navigation/Home/HomeTabs';
+  CategoryRoutes,
+  CategoryStackParamList,
+} from '../../navigation/Category/CategoryStack';
+
 import { Category } from '../../services/twitchService';
 
 interface Props {
@@ -16,11 +16,13 @@ const IMAGE_HEIGHT = 90;
 const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
 const CategoryCard = ({ category }: Props) => {
-  const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
+  const { navigate } = useNavigation<NavigationProp<CategoryStackParamList>>();
   return (
     <Pressable
       onPress={() =>
-        navigate(HomeTabsRoutes.Category, {
+        navigate(CategoryRoutes.Category, {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           screen: CategoryRoutes.Category,
           params: {
             id: category.id,

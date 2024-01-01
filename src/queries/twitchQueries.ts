@@ -63,6 +63,18 @@ const twitchQueries = {
       queryFn: () => twitchService.getTopStreams(cursor),
     };
   },
+  getCategory(id: string): UseQueryOptions<Category> {
+    return {
+      queryKey: ['category', id],
+      queryFn: () => twitchService.getCategory(id),
+    };
+  },
+  getStreamsByCategory(id: string, cursor?: string): UseQueryOptions<Stream[]> {
+    return {
+      queryKey: ['streamsByCategory', id, cursor],
+      queryFn: () => twitchService.getStreamsByCategory(id, cursor),
+    };
+  },
 } as const;
 
 export default twitchQueries;

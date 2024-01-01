@@ -293,40 +293,23 @@ const twitchService = {
   getChannel: async (userId: string) => {
     const res = await twitchApi.get<Channel[]>(
       `/channels?broadcaster_id=${userId}`,
-      {
-        headers: {
-          'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        },
-      },
     );
 
     return res.data[0];
   },
 
   getTopCategories: async () => {
-    const res = await twitchApi.get<{ data: Category[] }>('/games/top', {
-      headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      },
-    });
+    const res = await twitchApi.get<{ data: Category[] }>('/games/top');
     return res.data.data;
   },
 
   getUserImage: async (userId: string): Promise<string> => {
-    const res = await twitchApi.get(`/users?login=${userId}`, {
-      headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      },
-    });
+    const res = await twitchApi.get(`/users?login=${userId}`);
 
     return res.data.data[0].profile_image_url;
   },
   getFollowedStreams: async (userId: string): Promise<Stream[]> => {
-    const res = await twitchApi.get(`/streams/followed?user_id=${userId}`, {
-      headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      },
-    });
+    const res = await twitchApi.get(`/streams/followed?user_id=${userId}`);
     return res.data.data;
   },
 
@@ -340,27 +323,35 @@ const twitchService = {
     return res.data.data[0];
   },
   getUser: async (userId: string): Promise<UserResponse> => {
-    const res = await twitchApi.get(`/users?login=${userId}`, {
-      headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      },
-    });
+    const res = await twitchApi.get(`/users?login=${userId}`);
 
     return res.data.data[0];
   },
 
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
-    const res = await twitchApi.get(`/search/channels?query=${query}`, {
-      headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      },
-    });
+    const res = await twitchApi.get(`/search/channels?query=${query}`);
+
+    return res.data.data;
+  },
+  getStreamsByCategory: async (
+    gameId: string,
+    cursor?: string,
+  ): Promise<Stream[]> => {
+    const url = cursor
+      ? `/streams?game_id=${gameId}&after=${cursor}`
+      : `/streams?game_id=${gameId}`;
+
+    const res = await twitchApi.get(url);
 
     return res.data.data;
   },
 
+  getCategory: async (id: string): Promise<Category> => {
+    const res = await twitchApi.get(`/games?id=${id}`);
+    return res.data.data[0];
+  },
+
   // ----------------- NOT IMPLEMENTED ----------------- //
-  // getCategory: async (gameId: string) => {},
   // searchCategories: async (query: string, cursor?: string) => {},
 
   // getSubscriberCount: async (userId: string) => {},
