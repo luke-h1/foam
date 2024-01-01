@@ -18,6 +18,7 @@ import { LogBox, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TamaguiProvider } from 'tamagui';
 import { AuthContextProvider } from './src/context/AuthContext';
+import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import { useOnAppStateChange } from './src/hooks/useOnAppStateChange';
 import RootNavigator from './src/navigation/RootNavigator';
 import config from './tamagui.config';
@@ -28,6 +29,7 @@ export default function App() {
   const queryClient = new QueryClient();
   useOnAppStateChange();
   const scheme = useColorScheme();
+  useChangeScreenOrientation();
 
   const [loaded] = useFonts({
     Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
