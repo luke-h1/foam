@@ -20,6 +20,18 @@ const HomeTabsNavigator = () => {
         headerTitleAlign: 'left',
         // headerShown: false,
         tabBarActiveTintColor: colors.purple,
+        tabBarStyle: {
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          marginTop: -20,
+          paddingHorizontal: 20,
+          height: 75,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          paddingVertical: 1,
+          paddingHorizontal: 4,
+        },
       }}
     >
       {auth?.isAuth && (
