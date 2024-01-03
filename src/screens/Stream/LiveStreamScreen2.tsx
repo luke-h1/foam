@@ -9,6 +9,7 @@ import Tags from '../../components/Tags';
 import Chat from '../../components/ui/Chat/Chat';
 import Main from '../../components/ui/Main';
 import SafeAreaContainer from '../../components/ui/SafeAreaContainer';
+import { useMounted } from '../../hooks/useMounted';
 import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
 import twitchService, {
   Stream,
@@ -33,6 +34,7 @@ const LiveStreamScreen2 = () => {
 
   const fetchStream = async () => {
     const stream = await twitchService.getStream(route.params.id);
+
     if (!stream) {
       const res = await twitchService.getUser(route.params.id);
       setOfflineUser(res);
@@ -57,6 +59,12 @@ const LiveStreamScreen2 = () => {
   Dimensions.addEventListener('change', () => {
     setLandscape(Dimensions.get('window').width > 500);
   });
+
+  useEffect(() => {
+    if (Dimensions.get('window').width > 500) {
+      setLandscape(true);
+    }
+  }, []);
 
   return (
     <SafeAreaContainer>
