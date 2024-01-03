@@ -8,7 +8,7 @@ interface Props {
 
 const Tags = ({ tags }: Props) => {
   return (
-    <XStack marginTop={4} marginBottom={2}>
+    <XStack marginTop={4} marginBottom={2} maxWidth={400}>
       <FlatList
         data={tags}
         showsHorizontalScrollIndicator

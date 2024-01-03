@@ -1,21 +1,20 @@
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import { Dimensions, SafeAreaView } from 'react-native';
+import { Dimensions } from 'react-native';
 import WebView from 'react-native-webview';
-import { H5, Stack, Text, View, XStack, YStack } from 'tamagui';
+import { H5, Stack, Text, YStack } from 'tamagui';
 import Image from '../../components/Image';
 import Seperator from '../../components/Seperator';
 import Tags from '../../components/Tags';
 import Chat from '../../components/ui/Chat/Chat';
 import Main from '../../components/ui/Main';
+import SafeAreaContainer from '../../components/ui/SafeAreaContainer';
 import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
 import twitchService, {
   Stream,
   UserInfoResponse,
 } from '../../services/twitchService';
-import SafeAreaContainer from '../../components/ui/SafeAreaContainer';
-
-const isLandscape = Dimensions.get('window').width > 500;
+import truncate from '../../utils/truncate';
 
 const LiveStreamScreen2 = () => {
   const route = useRoute<RouteProp<StreamStackParamList>>();
@@ -55,12 +54,9 @@ const LiveStreamScreen2 = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    Dimensions.addEventListener('change', () => {
-      setLandscape(Dimensions.get('window').width > 500);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [Dimensions]);
+  Dimensions.addEventListener('change', () => {
+    setLandscape(Dimensions.get('window').width > 500);
+  });
 
   return (
     <SafeAreaContainer>
@@ -100,7 +96,8 @@ const LiveStreamScreen2 = () => {
           {/* stream details */}
           <Stack
             flexDirection={landscape ? 'row' : 'column'}
-            alignItems="center"
+            justifyContent="flex-start"
+            alignItems="flex-start"
             padding={4}
           >
             <Image
@@ -110,22 +107,16 @@ const LiveStreamScreen2 = () => {
             <H5 marginLeft={4}>
               {liveStream?.user_name ?? offlineUser?.display_name}
             </H5>
-            <Stack marginLeft={8} marginTop={5}>
-              <Text>{liveStream?.title ?? null}</Text>
-            </Stack>
-            <Stack marginLeft={8}>
-              <Stack flexDirection="row" alignItems="center">
-                {/* <Text>{liveStream?.title ?? null}</Text> */}
-              </Stack>
-              <Text marginTop={4}>{liveStream?.game_name ?? null}</Text>
-            </Stack>
-            <Stack
-              display="flex"
-              flexDirection={landscape ? 'row' : 'column'}
-              alignItems="flex-start"
-              marginLeft={8}
-            >
-              <Tags tags={liveStream?.tags ?? []} />
+            <Stack marginLeft={8} marginTop={5} flexWrap="wrap">
+              {liveStream?.title && (
+                <Text wordWrap="break-word">
+                  {truncate(liveStream?.title, 40)}
+                </Text>
+              )}
+              {liveStream?.game_name && (
+                <Text marginTop={4}>{liveStream?.game_name}</Text>
+              )}
+              {liveStream?.tags && <Tags tags={liveStream?.tags} />}
             </Stack>
           </Stack>
           <Seperator />

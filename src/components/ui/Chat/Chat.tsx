@@ -70,7 +70,7 @@ const Chat = ({ channels }: Props) => {
         <FlatList
           data={messages}
           ref={flatListRef}
-          keyExtractor={index => index.toString()}
+          keyExtractor={index => index.toString() + Math.random()}
           renderScrollComponent={props => <ScrollView {...props} />}
           onScroll={event => {
             // pause scrolling if user scrolls up
