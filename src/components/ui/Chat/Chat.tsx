@@ -65,12 +65,12 @@ const Chat = ({ channels }: Props) => {
   });
 
   return (
-    <SafeAreaView style={{ maxHeight: 'auto' }}>
+    <SafeAreaView style={{ padding: 2, maxHeight: 'auto' }}>
       <Stack>
         <FlatList
           data={messages}
           ref={flatListRef}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={index => index.toString()}
           renderScrollComponent={props => <ScrollView {...props} />}
           onScroll={event => {
             // pause scrolling if user scrolls up
@@ -90,14 +90,14 @@ const Chat = ({ channels }: Props) => {
             }
           }}
           onContentSizeChange={() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
+            flatListRef.current?.scrollToEnd({ animated: true });
           }}
           renderItem={({ item }) => {
             const username = item.split(':')[0];
             const message = item.split(':')[1];
 
             return (
-              <Stack display="flex" marginBottom={4}>
+              <Stack display="flex" marginBottom={4} padding={1}>
                 <Text>
                   {username}: {message}
                 </Text>

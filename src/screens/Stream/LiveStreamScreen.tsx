@@ -13,6 +13,8 @@ import twitchService, {
 } from '../../services/twitchService';
 import colors from '../../styles/colors';
 import viewFormatter from '../../utils/viewFormatter';
+import LiveStreamScreen2 from './LiveStreamScreen2';
+import LiveStreamScreen3 from './LiveStreamScreen3';
 
 const LiveStreamScreen = () => {
   const route = useRoute<RouteProp<StreamStackParamList>>();
@@ -135,7 +137,7 @@ const LiveStreamScreen = () => {
     </SafeAreaView>
   );
 };
-export default LiveStreamScreen;
+export default LiveStreamScreen2;
 
 const { height, width } = Dimensions.get('window');
 
