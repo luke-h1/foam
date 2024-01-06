@@ -1,20 +1,21 @@
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import { Dimensions, SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { WebView } from 'react-native-webview';
-import { H5 } from 'tamagui';
+import { Dimensions } from 'react-native';
+import WebView from 'react-native-webview';
+import { H5, Stack, Text, YStack } from 'tamagui';
 import Image from '../../components/Image';
+import Seperator from '../../components/Seperator';
 import Tags from '../../components/Tags';
 import Chat from '../../components/ui/Chat/Chat';
+import Main from '../../components/ui/Main';
+import SafeAreaContainer from '../../components/ui/SafeAreaContainer';
+import useIsLandscape from '../../hooks/useIsLandscape';
 import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
 import twitchService, {
   Stream,
   UserInfoResponse,
 } from '../../services/twitchService';
-import colors from '../../styles/colors';
-import viewFormatter from '../../utils/viewFormatter';
-import LiveStreamScreen2 from './LiveStreamScreen2';
-import LiveStreamScreen3 from './LiveStreamScreen3';
+import truncate from '../../utils/truncate';
 
 const LiveStreamScreen = () => {
   const route = useRoute<RouteProp<StreamStackParamList>>();
@@ -22,6 +23,7 @@ const LiveStreamScreen = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [broadcasterImage, setBroadcasterImage] = useState<string>();
   const [offlineUser, setOfflineUser] = useState<UserInfoResponse>();
+
   const isOffline = offlineUser !== undefined;
 
   const getUserProfilePicture = async (id: string) => {
@@ -31,6 +33,7 @@ const LiveStreamScreen = () => {
 
   const fetchStream = async () => {
     const stream = await twitchService.getStream(route.params.id);
+
     if (!stream) {
       const res = await twitchService.getUser(route.params.id);
       setOfflineUser(res);
@@ -43,143 +46,90 @@ const LiveStreamScreen = () => {
     );
   };
 
+  const fetchDetails = async () => {
+    await Promise.all([fetchStream(), getUserProfilePicture(route.params.id)]);
+  };
+
   useEffect(() => {
-    fetchStream();
-    getUserProfilePicture(route.params.id);
+    fetchDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const { landscape } = useIsLandscape();
+
   return (
-    <SafeAreaView style={styles.wrapper}>
-      <View
-        style={{
-          aspectRatio: 16 / 9,
-          width: Dimensions.get('window').width,
-        }}
+    <SafeAreaContainer>
+      <Main
+        display="flex"
+        flexDirection={landscape ? 'row' : 'column'}
+        margin={0}
+        padding={0}
       >
-        {isOffline ? (
+        {/* video and video details */}
+        {isOffline && (
           <Image
-            source={{ uri: offlineUser?.offline_image_url }}
+            source={{ uri: offlineUser.offline_image_url }}
             style={{
-              width: Dimensions.get('window').width,
-              height: Dimensions.get('window').height / 3.6,
+              width: 300,
+              height: 300,
             }}
           />
-        ) : (
-          <View
-            style={{
-              aspectRatio: 16 / 9,
-              width: Dimensions.get('window').width,
-            }}
-          >
-            <WebView
-              source={{ uri: videoUrl }}
-              style={[styles.video]}
-              javaScriptEnabled
-              originWhitelist={['https://']}
-              allowsInlineMediaPlayback
-              javaScriptCanOpenWindowsAutomatically
-            />
-          </View>
         )}
-      </View>
-
-      <View style={styles.streamInfo}>
-        <View style={{ flex: 1, flexDirection: 'column' }}>
-          <View
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              marginBottom: 10,
+        <YStack flex={landscape ? 2 : 3}>
+          <WebView
+            source={{ uri: videoUrl }}
+            onHttpError={syntheticEvent => {
+              const { nativeEvent } = syntheticEvent;
+              // eslint-disable-next-line no-console
+              console.warn(
+                'WebView received error status code: ',
+                nativeEvent.statusCode,
+              );
             }}
+            style={{ flex: 1 }}
+            javaScriptEnabled
+            originWhitelist={['https://']}
+            allowsInlineMediaPlayback
+          />
+
+          {/* stream details */}
+          <Stack
+            flexDirection={landscape ? 'row' : 'column'}
+            justifyContent="flex-start"
+            alignItems="flex-start"
+            padding={4}
           >
             <Image
               source={{ uri: broadcasterImage }}
-              style={styles.image}
-              aria-label={`Go to ${liveStream?.user_name}'s profile`}
+              style={{ width: 35, height: 35, borderRadius: 14 }}
             />
-
-            <H5 fontSize={20} paddingBottom={7}>
-              {isOffline ? offlineUser?.display_name : liveStream?.user_name}
+            <H5 marginLeft={4}>
+              {liveStream?.user_name ?? offlineUser?.display_name}
             </H5>
-          </View>
-
-          <Text style={{ color: colors.gray, marginBottom: 5 }}>
-            {liveStream?.title ?? 'Offline'}
-          </Text>
-          {!isOffline ? (
-            <Text style={{ color: colors.gray, alignItems: 'center' }}>
-              Playing{' '}
-              <Text style={{ color: colors.purple }}>
-                {liveStream?.game_name}
-              </Text>{' '}
-              <Text style={{ color: colors.gray }}>
-                for{' '}
-                <Text style={{ color: colors.purple }}>
-                  {viewFormatter(liveStream?.viewer_count as number, 1)}{' '}
+            <Stack marginLeft={8} marginTop={5} flexWrap="wrap">
+              {liveStream?.title && (
+                <Text wordWrap="break-word">
+                  {truncate(liveStream?.title, 40)}
                 </Text>
-                <Text style={{ color: colors.gray }}>viewers</Text>
-              </Text>
-            </Text>
-          ) : null}
-          <Tags tags={liveStream?.tags ?? []} />
-        </View>
-      </View>
-
-      <View style={styles.chat}>
-        <Text style={{ color: colors.gray }}>CHAT</Text>
-        {liveStream?.user_name && (
-          <Chat channels={[liveStream?.user_name] as string[]} />
-        )}
-      </View>
-    </SafeAreaView>
+              )}
+              {liveStream?.game_name && (
+                <Text marginTop={4}>{liveStream?.game_name}</Text>
+              )}
+              {liveStream?.tags && <Tags tags={liveStream?.tags} />}
+            </Stack>
+          </Stack>
+          <Seperator />
+        </YStack>
+        <Stack
+          height={400}
+          flex={landscape ? 1 : 2}
+          maxHeight={Dimensions.get('window').height - 10}
+          width={landscape ? 200 : Dimensions.get('window').width}
+        >
+          {liveStream?.user_name && <Chat channels={[liveStream?.user_name]} />}
+        </Stack>
+      </Main>
+    </SafeAreaContainer>
   );
 };
-export default LiveStreamScreen2;
-
-const { height, width } = Dimensions.get('window');
-
-const styles = StyleSheet.create({
-  input: {
-    height: 40,
-    margin: 12,
-    borderWidth: 0.75,
-    borderRadius: 8,
-    padding: 10,
-  },
-  wrapper: {
-    flex: 1,
-    display: 'flex',
-  },
-  video: {
-    width,
-    height: height / 3.6,
-    color: colors.gray,
-  },
-  chat: {
-    marginTop: 20,
-    padding: 7,
-    maxHeight: 300,
-  },
-  innerChat: {
-    height: height / 2,
-    width: width - 20,
-    borderRadius: 10,
-    padding: 10,
-  },
-  streamInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingLeft: 10,
-    paddingRight: 10,
-  },
-  image: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-});
+export default LiveStreamScreen;
