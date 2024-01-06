@@ -52,11 +52,7 @@ const TopStreamsScreen = () => {
   }
 
   return (
-    <SafeAreaView
-      style={{
-        padding: 2,
-      }}
-    >
+    <SafeAreaView>
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -67,11 +63,11 @@ const TopStreamsScreen = () => {
           />
         }
       >
-        <Stack marginTop={30} />
+        <Stack marginTop={20} />
         <Stack>
           <XStack
             $sm={{ flexDirection: 'column' }}
-            paddingHorizontal="$4"
+            paddingHorizontal="$2"
             space
           >
             {streams && streams.length > 0 && (
