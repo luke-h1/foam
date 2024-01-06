@@ -1,6 +1,4 @@
-import type { Config } from '@jest/types';
-
-export default async (): Promise<Config.InitialOptions> => ({
+const jestConfig = {
   preset: 'jest-expo',
   setupFilesAfterEnv: [
     '@testing-library/jest-native/extend-expect',
@@ -13,4 +11,5 @@ export default async (): Promise<Config.InitialOptions> => ({
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   verbose: true,
   testEnvironment: 'jsdom',
-});
+};
+module.exports = jestConfig;

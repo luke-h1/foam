@@ -50,4 +50,4 @@ if (!__DEV__) {
   NewRelic.setJSAppVersion(version);
 }
 
-registerRootComponent(() => App);
+registerRootComponent(App);
