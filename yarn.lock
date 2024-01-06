@@ -12452,8 +12452,8 @@ __metadata:
   linkType: hard
 
 "expo-updates@npm:~0.18.18":
-  version: 0.18.18
-  resolution: "expo-updates@npm:0.18.18"
+  version: 0.18.19
+  resolution: "expo-updates@npm:0.18.19"
   dependencies:
     "@expo/code-signing-certificates": 0.0.5
     "@expo/config": ~8.1.0
@@ -12470,7 +12470,7 @@ __metadata:
     expo: "*"
   bin:
     expo-updates: bin/cli.js
-  checksum: 79fc7dcaf212041bbc6ab24ad123b7d326c610f01db12ff7c98052b5ad11b83e5e8f5b72ebd0e826759abda0aac8d371eb05fba820d8dfde904a0aec3d1d6ccf
+  checksum: 194a410ca5b8b445ea980fd00528a6c02cd29da6fddb9bef815f668b579a970e7b99aa534b5b95395b4dc34842d152b7a7a7a55db08aa15483f8d73ca9f6370c
   languageName: node
   linkType: hard
 
