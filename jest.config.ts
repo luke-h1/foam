@@ -12,4 +12,5 @@ export default async (): Promise<Config.InitialOptions> => ({
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   verbose: true,
+  testEnvironment: 'jsdom',
 });

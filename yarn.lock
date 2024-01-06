@@ -6841,6 +6841,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@testing-library/react-native@npm:^12.4.3":
+  version: 12.4.3
+  resolution: "@testing-library/react-native@npm:12.4.3"
+  dependencies:
+    jest-matcher-utils: ^29.7.0
+    pretty-format: ^29.7.0
+    redent: ^3.0.0
+  peerDependencies:
+    jest: ">=28.0.0"
+    react: ">=16.8.0"
+    react-native: ">=0.59"
+    react-test-renderer: ">=16.8.0"
+  peerDependenciesMeta:
+    jest:
+      optional: true
+  checksum: bd1c06b200063ffad26245cbc61b7256b5bfcc2c69a32f7e6dc9ff1bf44c3743117d5010b8dbc8f9a1b660c3ee22ccf9ecc320c03db52f9ec75ba7e52c1d8ba3
+  languageName: node
+  linkType: hard
+
 "@tootallnate/once@npm:2":
   version: 2.0.0
   resolution: "@tootallnate/once@npm:2.0.0"
@@ -13229,6 +13248,7 @@ __metadata:
     "@tamagui/themes": 1.74.8
     "@tanstack/react-query": ^5.14.6
     "@testing-library/jest-native": ^5.4.3
+    "@testing-library/react-native": ^12.4.3
     "@types/jest": ^29.5.6
     "@types/react": ~18.2.14
     "@types/react-native-video": ^5.0.17
