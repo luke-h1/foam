@@ -66,31 +66,35 @@ const LiveStreamScreen = () => {
         padding={0}
       >
         {/* video and video details */}
-        {isOffline && (
-          <Image
-            source={{ uri: offlineUser.offline_image_url }}
-            style={{
-              width: 300,
-              height: 300,
-            }}
-          />
-        )}
+
         <YStack flex={landscape ? 2 : 3}>
-          <WebView
-            source={{ uri: videoUrl }}
-            onHttpError={syntheticEvent => {
-              const { nativeEvent } = syntheticEvent;
-              // eslint-disable-next-line no-console
-              console.warn(
-                'WebView received error status code: ',
-                nativeEvent.statusCode,
-              );
-            }}
-            style={{ flex: 1 }}
-            javaScriptEnabled
-            originWhitelist={['https://']}
-            allowsInlineMediaPlayback
-          />
+          {!isOffline ? (
+            <WebView
+              source={{ uri: videoUrl }}
+              onHttpError={syntheticEvent => {
+                const { nativeEvent } = syntheticEvent;
+                // eslint-disable-next-line no-console
+                console.warn(
+                  'WebView received error status code: ',
+                  nativeEvent.statusCode,
+                );
+              }}
+              style={{
+                flex: 1,
+              }}
+              javaScriptEnabled
+              originWhitelist={['https://']}
+              allowsInlineMediaPlayback
+            />
+          ) : (
+            <Image
+              source={{ uri: offlineUser.offline_image_url }}
+              style={{
+                width: 500,
+                height: 200,
+              }}
+            />
+          )}
 
           {/* stream details */}
           <Stack
