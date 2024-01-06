@@ -40,10 +40,7 @@ const useTmiClient = ({
   };
 
   useEffect(() => {
-    // handle hot reloading instantiating multiple clients
     connect();
-
-    logger.info('not connecting as channelId is undefined');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -54,6 +51,7 @@ const useTmiClient = ({
   return {
     tmiClient,
     disconnect,
+    connect,
   };
 };
 export default useTmiClient;

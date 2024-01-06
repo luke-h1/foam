@@ -24,7 +24,7 @@ const Tags = ({ tags }: Props) => {
             </Text>
           </View>
         )}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={index => index.toString()}
         horizontal
       />
     </XStack>

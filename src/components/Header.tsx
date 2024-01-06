@@ -37,7 +37,12 @@ export default function Header({ title, navigation }: Props) {
             >
               <Image
                 source={{ uri: user?.profile_image_url }}
-                style={styles.avatar}
+                style={{
+                  backgroundColor: colors.tag,
+                  width: 30,
+                  height: 30,
+                  borderRadius: 16,
+                }}
               />
             </TouchableOpacity>
           )}

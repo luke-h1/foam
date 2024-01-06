@@ -8,6 +8,7 @@ interface Props {
 
 const Seperator = ({ color = colors.tag, size = 0.5 }: Props) => {
   return (
+    // TODO: convert this to tamagui
     <View
       style={{
         borderTopWidth: size,
