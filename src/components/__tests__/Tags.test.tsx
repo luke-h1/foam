@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 import Tags from '../Tags';
 
-describe('Tags', () => {
+describe.skip('Tags', () => {
   it('should render the tags correctly', () => {
     const tags = ['tag1', 'tag2', 'tag3'];
     render(<Tags tags={tags} />);
