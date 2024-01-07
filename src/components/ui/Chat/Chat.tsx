@@ -97,7 +97,12 @@ const Chat = ({ channels }: Props) => {
             const message = item.split(':')[1];
 
             return (
-              <Stack display="flex" marginBottom={4} padding={1}>
+              <Stack
+                display="flex"
+                marginBottom={4}
+                paddingHorizontal={5}
+                paddingVertical={2}
+              >
                 <Text>
                   {username}: {message}
                 </Text>

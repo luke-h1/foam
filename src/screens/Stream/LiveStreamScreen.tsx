@@ -66,7 +66,6 @@ const LiveStreamScreen = () => {
         padding={0}
       >
         {/* video and video details */}
-
         <YStack flex={landscape ? 2 : 3}>
           {!isOffline ? (
             <WebView
@@ -82,8 +81,6 @@ const LiveStreamScreen = () => {
               style={{
                 flex: 1,
               }}
-              javaScriptEnabled
-              originWhitelist={['https://']}
               allowsInlineMediaPlayback
             />
           ) : (
