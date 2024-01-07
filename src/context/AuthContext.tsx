@@ -100,7 +100,6 @@ export const AuthContextProvider = ({ children }: Props) => {
         });
 
         const userInfo = await twitchService.getUserInfo(authToken);
-
         setUser(userInfo);
         twitchApi.defaults.headers.common.Authorization = `Bearer ${authToken}`;
       }

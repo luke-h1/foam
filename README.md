@@ -55,20 +55,12 @@ Install dependencies
 yarn
 ```
 
-### How to run the android app
+### How to run the app
 
 > **Note:** You will need to have an Android emulator running in order to run the app locally. You will need to use the AVD (android virtual device) manager in Android Studio to create a virtual device if you do not have one already.
-
-```bash
-cd apps/mobile
-yarn prebuild:android && yarn android
-```
-
-### How to run the iOS app
 
 > **Note:** You'll need to have Xcode installed in order to run the iOS app locally.
 
 ```bash
-cd apps/mobile
-yarn prebuild:ios && yarn ios
+npx expo start
 ```
