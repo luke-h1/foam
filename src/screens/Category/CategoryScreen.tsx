@@ -14,8 +14,6 @@ const CategoryScreen = ({
   route,
 }: CategoryStackScreenProps<CategoryRoutes.Category>) => {
   const { id } = route.params;
-  // 1. get the category
-  // 2. get the streams under the catgory
 
   const streamsByCategoryQuery = useMemo(
     () => twitchQueries.getStreamsByCategory(id),

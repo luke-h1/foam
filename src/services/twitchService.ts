@@ -83,6 +83,7 @@ export interface DefaultTokenResponse {
 
 const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<string> => {
+    // todo - don't think this is needed
     const res = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
