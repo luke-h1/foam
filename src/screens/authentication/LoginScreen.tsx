@@ -11,14 +11,14 @@ import {
   HomeTabsRoutes,
 } from '../../navigation/Home/HomeTabs';
 import { RootRoutes } from '../../navigation/RootStack';
+import logger from '../../utils/logger';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen = () => {
   const { login } = useAuthContext();
 
-  const { navigate, goBack } =
-    useNavigation<NavigationProp<HomeTabsParamList>>();
+  const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
 
   const discovery = {
     authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
@@ -29,9 +29,9 @@ const LoginScreen = () => {
   const [request, response, promptAsync] = useAuthRequest(
     {
       clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
+      // clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
       scopes: [
-        'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users',
+        'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',
       ],
       redirectUri: makeRedirectUri(),
       responseType: 'token',
@@ -45,11 +45,11 @@ const LoginScreen = () => {
   );
 
   const handleAuth = async () => {
-    login(response);
+    await login(response);
     if (response?.type === 'success') {
       navigate(HomeTabsRoutes.Top);
     } else {
-      console.log('error');
+      logger.error('Failed to authentice');
     }
   };
 

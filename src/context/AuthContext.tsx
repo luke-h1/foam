@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import React, {
@@ -11,6 +10,7 @@ import React, {
 } from 'react';
 import { twitchApi } from '../services/Client';
 import twitchService, { UserInfoResponse } from '../services/twitchService';
+import logger from '../utils/logger';
 
 export const StorageKeys = {
   anonToken: 'foam-anonToken',
@@ -42,6 +42,7 @@ interface Auth {
   isAnonAuth?: boolean;
   isAuth?: boolean;
 }
+
 interface State {
   auth?: Auth;
   ready: boolean;
@@ -70,6 +71,8 @@ export const AuthContextProvider = ({ children }: Props) => {
         await SecureStore.getItemAsync(StorageKeys.authToken),
       ]);
 
+      // user is not logged in
+      // and they are authenticated anonymously with Twitch
       if (!authToken && !isValidToken(authToken) && anonToken) {
         setAnonToken(JSON.stringify(anonToken));
         setState({
@@ -84,6 +87,7 @@ export const AuthContextProvider = ({ children }: Props) => {
         twitchApi.defaults.headers.common.Authorization = `Bearer ${anonToken}`;
       }
 
+      // User is authenticated with Twitch
       if (authToken && (await isValidToken(authToken))) {
         setAuthToken(authToken as unknown as TokenResponse);
         setState({
@@ -106,18 +110,18 @@ export const AuthContextProvider = ({ children }: Props) => {
   }, [authToken, anonToken]);
 
   const getAnonToken = async () => {
-    const res = await twitchService.getDefaultToken();
+    const { access_token } = await twitchService.getDefaultToken();
     setState({
       ready: true,
       auth: {
-        anonToken: res.access_token,
+        anonToken: access_token,
         isAnonAuth: true,
         isAuth: false,
       },
     });
 
-    SecureStore.setItemAsync(StorageKeys.anonToken, res.access_token);
-    twitchApi.defaults.headers.common.Authorization = `Bearer ${res.access_token}`;
+    SecureStore.setItemAsync(StorageKeys.anonToken, access_token);
+    twitchApi.defaults.headers.common.Authorization = `Bearer ${access_token}`;
   };
 
   // const validateToken = async () => {
@@ -159,7 +163,7 @@ export const AuthContextProvider = ({ children }: Props) => {
   //         token: refreshedToken,
   //       },
   //     });
-  //     console.log('refreshing token');
+  //     logger.info('refreshing token');
   //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //     // @ts-ignore
   //     setUser(await twitchService.getUserInfo(refreshedToken.accessToken));
@@ -193,7 +197,7 @@ export const AuthContextProvider = ({ children }: Props) => {
   };
 
   const login = async (response: AuthSessionResult | null) => {
-    console.log('[authcontext] login');
+    logger.info('[authcontext] login');
     if (response?.type !== 'success') {
       return null;
     }
@@ -211,9 +215,11 @@ export const AuthContextProvider = ({ children }: Props) => {
       },
     });
 
-    setUser(
-      await twitchService.getUserInfo(response.authentication.accessToken),
+    // eslint-disable-next-line no-shadow
+    const user = await twitchService.getUserInfo(
+      response.authentication.accessToken,
     );
+    setUser(user);
 
     twitchApi.defaults.headers.common.Authorization = `Bearer ${response.authentication.accessToken}`;
 
@@ -226,7 +232,7 @@ export const AuthContextProvider = ({ children }: Props) => {
   };
 
   const logout = async () => {
-    console.log('[authContext] logout');
+    logger.info('[authContext] logout');
     setState({
       ready: true,
       auth: {
@@ -242,12 +248,14 @@ export const AuthContextProvider = ({ children }: Props) => {
 
     await getAnonToken();
   };
+
   const runAnonToken = async () => {
     await getAnonToken();
   };
+
   useEffect(() => {
     if (!state.auth?.token) {
-      console.info('no token, getting anon token');
+      logger.info('no token, getting anon token');
 
       runAnonToken();
     }
