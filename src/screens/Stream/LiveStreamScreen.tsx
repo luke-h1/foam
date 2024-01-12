@@ -127,7 +127,7 @@ const LiveStreamScreen = () => {
           maxHeight={Dimensions.get('window').height - 10}
           width={landscape ? 200 : Dimensions.get('window').width}
         >
-          {liveStream?.user_name && <Chat channels={[liveStream?.user_name]} />}
+          <Chat channels={[liveStream?.user_name ?? route.params.id]} />
         </Stack>
       </Main>
     </SafeAreaContainer>
