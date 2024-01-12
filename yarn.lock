@@ -12714,6 +12714,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-haptics@npm:^12.6.0":
+  version: 12.8.1
+  resolution: "expo-haptics@npm:12.8.1"
+  peerDependencies:
+    expo: "*"
+  checksum: 5448146ecd392e7a4ffc4ca5f222adcf673ff5f177e0e1dda98032a35d50578e44aa76e51ddebdc43206e588c91cb328d37dce667d636ca8c809f5e2d140fb55
+  languageName: node
+  linkType: hard
+
 "expo-image@npm:~1.3.5":
   version: 1.3.5
   resolution: "expo-image@npm:1.3.5"
@@ -13495,6 +13504,7 @@ __metadata:
     expo-constants: ~14.4.2
     expo-dev-client: ~2.4.12
     expo-font: ~11.4.0
+    expo-haptics: ^12.6.0
     expo-image: ~1.3.5
     expo-linking: ~5.0.2
     expo-screen-orientation: ~6.0.6

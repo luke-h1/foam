@@ -52,6 +52,7 @@
     "expo-constants": "~14.4.2",
     "expo-dev-client": "~2.4.12",
     "expo-font": "~11.4.0",
+    "expo-haptics": "^12.6.0",
     "expo-image": "~1.3.5",
     "expo-linking": "~5.0.2",
     "expo-screen-orientation": "~6.0.6",
@@ -130,9 +131,6 @@
     ],
     "*.{js,jsx,ts,tsx,css,scss,html}": [
       "prettier --write"
-    ],
-    "package.json": [
-      "node scripts/alphabetizePackageJson.js"
     ]
   },
   "config": {
