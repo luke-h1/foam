@@ -1,3 +1,4 @@
+import { config } from '../../tamagui.config';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare module '*.svg' {
   import React from 'react';
@@ -20,4 +21,11 @@ declare module '*.jpg' {
 declare module '*.m3u' {
   const value: any;
   export = value;
+}
+
+type Conf = typeof config;
+
+declare module 'tamagui' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface TamaguiCustomConfig extends Conf {}
 }

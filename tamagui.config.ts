@@ -77,12 +77,8 @@ const config = createTamagui({
   }),
   settings: {
     fastSchemeChange: true,
+    autocompleteSpecificTokens: true,
   },
 });
 
-type AppConfig = typeof config;
-
-declare module 'tamagui' {
-  interface TamaguiConfig extends AppConfig {}
-}
 export default config;
