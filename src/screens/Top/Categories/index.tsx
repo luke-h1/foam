@@ -7,7 +7,7 @@ import { ScrollView, Spinner, Stack, Text, XStack } from 'tamagui';
 import CategoryCard from '../../../components/ui/CategoryCard';
 import twitchQueries from '../../../queries/twitchQueries';
 import { Category } from '../../../services/twitchService';
-import colors from '../../../styles/colors';
+import { colors } from '../../../styles';
 
 const TopCategoriesScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -35,8 +35,8 @@ const TopCategoriesScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.gray}
-            colors={[colors.gray]}
+            tintColor={colors.gray500}
+            colors={[colors.gray500]}
           />
         }
       >
@@ -60,7 +60,7 @@ const TopCategoriesScreen = () => {
   if (isLoading) {
     return (
       <Stack flex={1} justifyContent="center" alignItems="center">
-        <Spinner color={colors.gray} size="large" />
+        <Spinner color={colors.gray500} size="large" />
       </Stack>
     );
   }
@@ -76,8 +76,8 @@ const TopCategoriesScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.gray}
-            colors={[colors.gray]}
+            tintColor={colors.gray500}
+            colors={[colors.gray500]}
           />
         }
       >

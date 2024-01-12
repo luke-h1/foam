@@ -2,8 +2,9 @@ import { createAnimations } from '@tamagui/animations-react-native';
 import { createInterFont } from '@tamagui/font-inter';
 import { createMedia } from '@tamagui/react-native-media-driver';
 import { shorthands } from '@tamagui/shorthands';
-import { tokens } from '@tamagui/themes';
 import { createTamagui } from 'tamagui';
+import { themes } from './src/styles';
+import { tokens } from './src/styles/tokens';
 
 const animations = createAnimations({
   '100ms': {
@@ -47,40 +48,17 @@ const headingFont = createInterFont();
 const bodyFont = createInterFont();
 
 const config = createTamagui({
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  light: {
-    color: {
-      background: 'gray',
-      text: 'black',
-    },
-  },
-  dark: {
-    color: {
-      background: 'black',
-      text: 'white',
-    },
-  },
-  defaultFont: 'body',
-  animations,
   shouldAddPrefersColorThemes: true,
   themeClassNameOnRoot: true,
+  defaultFont: 'body',
+  animations,
   shorthands,
   fonts: {
     body: bodyFont,
     heading: headingFont,
   },
-  themes: {
-    light: {
-      bg: '#f2f2f2',
-      color: tokens.color.pink5Dark,
-    },
-    dark: {
-      bg: '#111',
-      color: tokens.color.gray10Light,
-    },
-  },
   tokens,
+  themes,
   media: createMedia({
     xs: { maxWidth: 660 },
     sm: { maxWidth: 800 },
@@ -97,12 +75,13 @@ const config = createTamagui({
     hoverNone: { hover: 'none' },
     pointerCoarse: { pointer: 'coarse' },
   }),
+  settings: {
+    fastSchemeChange: true,
+  },
 });
 
 type AppConfig = typeof config;
 
-// Enable auto-completion of props shorthand (ex: jc="center") for Tamagui templates.
-// Docs: https://tamagui.dev/docs/core/configuration
 declare module 'tamagui' {
   interface TamaguiConfig extends AppConfig {}
 }

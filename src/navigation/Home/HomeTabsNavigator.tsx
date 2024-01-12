@@ -6,7 +6,7 @@ import { useAuthContext } from '../../context/AuthContext';
 import FollowingScreen from '../../screens/FollowingScreen';
 import SearchScreen from '../../screens/SearchScreen';
 import TopScreen from '../../screens/Top/TopScreen';
-import colors from '../../styles/colors';
+import { colors } from '../../styles';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
 
 const HomeTabsNavigator = () => {
@@ -19,7 +19,7 @@ const HomeTabsNavigator = () => {
       screenOptions={{
         headerTitleAlign: 'left',
         // headerShown: false,
-        tabBarActiveTintColor: colors.purple,
+        tabBarActiveTintColor: 'purple',
         tabBarStyle: {
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
@@ -40,7 +40,7 @@ const HomeTabsNavigator = () => {
           component={FollowingScreen}
           options={{
             tabBarIcon: () => (
-              <Feather name="heart" size={24} color={colors.gray} />
+              <Feather name="heart" size={24} color={colors.gray500} />
             ),
             header(props: BottomTabHeaderProps) {
               return <Header {...props} title="Following" />;
@@ -57,7 +57,7 @@ const HomeTabsNavigator = () => {
             backgroundColor: colors.black,
           },
           tabBarIcon: () => (
-            <AntDesign name="totop" size={24} color={colors.gray} />
+            <AntDesign name="totop" size={24} color={colors.gray500} />
           ),
           header(props: BottomTabHeaderProps) {
             return <Header {...props} title="Top" />;
@@ -69,7 +69,7 @@ const HomeTabsNavigator = () => {
         component={SearchScreen}
         options={{
           tabBarIcon: () => (
-            <Feather name="search" size={24} color={colors.gray} />
+            <Feather name="search" size={24} color={colors.gray500} />
           ),
           header(props: BottomTabHeaderProps) {
             return <Header {...props} title="Search" />;

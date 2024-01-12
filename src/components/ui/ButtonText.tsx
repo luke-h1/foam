@@ -1,3 +1,3 @@
 import { YStack, styled } from 'tamagui';
 
-export const Button = styled(YStack);
+export const Button = styled(YStack, {});

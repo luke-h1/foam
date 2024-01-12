@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { H4, Stack } from 'tamagui';
 import { useAuthContext } from '../context/AuthContext';
 import { RootRoutes } from '../navigation/RootStack';
-import colors from '../styles/colors';
+import { colors } from '../styles';
 import Image from './Image';
 
 type BaseProps = {
@@ -24,7 +24,7 @@ export default function Header({ title, navigation }: Props) {
         flexDirection="row"
         justifyContent="space-between"
       >
-        <H4>{title}</H4>
+        <H4 color="$color">{title}</H4>
         <Stack flexDirection="row" alignItems="center">
           {!user ? (
             <TouchableOpacity
@@ -38,7 +38,7 @@ export default function Header({ title, navigation }: Props) {
               <Image
                 source={{ uri: user?.profile_image_url }}
                 style={{
-                  backgroundColor: colors.tag,
+                  backgroundColor: '#000',
                   width: 30,
                   height: 30,
                   borderRadius: 16,
@@ -54,7 +54,7 @@ export default function Header({ title, navigation }: Props) {
 
 const styles = StyleSheet.create({
   avatar: {
-    backgroundColor: colors.tag,
+    backgroundColor: colors.gray300,
     width: 30,
     height: 30,
     borderRadius: 16,

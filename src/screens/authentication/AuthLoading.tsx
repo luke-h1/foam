@@ -18,7 +18,7 @@ const AuthLoadingScreen = ({
 
   return (
     <Stack flex={1} justifyContent="center" alignItems="center">
-      <Text>Loading...</Text>
+      <Text color="$color">Loading...</Text>
       <ActivityIndicator size="large" />
     </Stack>
   );

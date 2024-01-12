@@ -17,6 +17,7 @@ const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
 const CategoryCard = ({ category }: Props) => {
   const { navigate } = useNavigation<NavigationProp<CategoryStackParamList>>();
+
   return (
     <Pressable
       onPress={() =>
@@ -54,7 +55,7 @@ const CategoryCard = ({ category }: Props) => {
           flexDirection="row"
           marginTop={4}
         >
-          <H6>{category.name}</H6>
+          <H6 color="$color">{category.name}</H6>
         </Stack>
       </YStack>
     </Pressable>

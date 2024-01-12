@@ -1,6 +1,6 @@
 import { Text, styled } from 'tamagui';
 
 export const Subtitle = styled(Text, {
-  color: '#38434D',
+  color: '$color',
   fontSize: 36,
 });

@@ -39,7 +39,9 @@ const TopScreen = () => {
                 borderTopRightRadius: 2,
               }}
             >
-              <Text>{route.title}</Text>
+              <Text color="$color" fontWeight="bold">
+                {route.title}
+              </Text>
             </TouchableOpacity>
           ))}
         </Stack>

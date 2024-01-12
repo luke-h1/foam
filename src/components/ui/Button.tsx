@@ -6,7 +6,7 @@ const BaseButton = styled(YStack, {
   borderRadius: 24,
   justifyContent: 'center',
   padding: 16,
-  shadowColor: '#000',
+  shadowColor: '$color',
   shadowOffset: {
     height: 2,
     width: 0,

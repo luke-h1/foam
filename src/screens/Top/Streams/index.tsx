@@ -6,7 +6,6 @@ import { ScrollView, Spinner, Stack, Text, XStack } from 'tamagui';
 import StreamCard from '../../../components/ui/StreamCard';
 import twitchQueries from '../../../queries/twitchQueries';
 import { Stream } from '../../../services/twitchService';
-import colors from '../../../styles/colors';
 
 const TopStreamsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -48,7 +47,7 @@ const TopStreamsScreen = () => {
   }
 
   if (refreshing || isLoading) {
-    return <Spinner color={colors.gray} size="large" />;
+    return <Spinner color="$color" size="large" />;
   }
 
   return (
@@ -58,8 +57,8 @@ const TopStreamsScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.gray}
-            colors={[colors.gray]}
+            // tintColor={colors.gray}
+            // colors={[colors.gray]}
           />
         }
       >

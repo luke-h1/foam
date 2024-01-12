@@ -13,7 +13,7 @@ import Image from '../../components/Image';
 import SettingsItem, { ContentItem } from '../../components/SettingsItem';
 import { useAuthContext } from '../../context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
-import colors from '../../styles/colors';
+import { colors } from '../../styles';
 import { statusBarHeight } from '../FollowingScreen';
 
 const SettingsModal = ({
@@ -38,7 +38,9 @@ const SettingsModal = ({
             />
           ),
           showRightArrow: true,
-          iconRight: <AntDesign name="right" size={16} color={colors.black} />,
+          iconRight: (
+            <AntDesign name="right" size={16} color={colors.gray500} />
+          ),
           showSeperator: true,
           onPress: () => {
             bottomSheetModalRef.current?.present();
@@ -54,31 +56,37 @@ const SettingsModal = ({
       ctaTitle: 'Options',
       items: [
         {
-          iconLeft: <Entypo name="cog" size={24} color={colors.gray} />,
+          iconLeft: <Entypo name="cog" size={24} color={colors.gray500} />,
           title: 'General',
           content: 'Theme and other options',
           showRightArrow: true,
-          iconRight: <AntDesign name="right" size={24} color={colors.gray} />,
+          iconRight: (
+            <AntDesign name="right" size={24} color={colors.gray500} />
+          ),
         },
         {
-          iconLeft: <Octicons name="video" size={24} color={colors.gray} />,
+          iconLeft: <Octicons name="video" size={24} color={colors.gray500} />,
           title: 'Video',
           content: 'Overlay and other options',
           showRightArrow: true,
-          iconRight: <AntDesign name="right" size={24} color={colors.gray} />,
+          iconRight: (
+            <AntDesign name="right" size={24} color={colors.gray500} />
+          ),
         },
         {
           iconLeft: (
             <MaterialIcons
               name="chat-bubble-outline"
               size={24}
-              color={colors.gray}
+              color={colors.gray500}
             />
           ),
           title: 'Chat',
           content: 'Sizing, timestamps and other options',
           showRightArrow: true,
-          iconRight: <AntDesign name="right" size={24} color={colors.gray} />,
+          iconRight: (
+            <AntDesign name="right" size={24} color={colors.gray500} />
+          ),
           showSeperator: true,
         },
       ],
@@ -88,20 +96,20 @@ const SettingsModal = ({
       ctaTitle: 'Other',
       items: [
         {
-          iconLeft: <Octicons name="info" size={24} color={colors.gray} />,
+          iconLeft: <Octicons name="info" size={24} color={colors.gray500} />,
           title: 'About Foam',
           content: 'About the app and the developer',
         },
         {
           iconLeft: (
-            <Feather name="external-link" size={24} color={colors.gray} />
+            <Feather name="external-link" size={24} color={colors.gray500} />
           ),
           title: 'Chanelog',
           content: 'What has changed?',
         },
         {
           iconLeft: (
-            <Feather name="external-link" size={24} color={colors.gray} />
+            <Feather name="external-link" size={24} color={colors.gray500} />
           ),
           title: 'FAQ',
           content: 'Frequently asked questions',
@@ -119,9 +127,11 @@ const SettingsModal = ({
           content:
             'Log in to be able to chat, view followed streams and much more :)',
           title: 'Anonymous',
-          iconLeft: <AntDesign name="user" size={24} color={colors.gray} />,
+          iconLeft: <AntDesign name="user" size={24} color={colors.gray500} />,
           showRightArrow: true,
-          iconRight: <AntDesign name="right" size={16} color={colors.gray} />,
+          iconRight: (
+            <AntDesign name="right" size={16} color={colors.gray500} />
+          ),
           showSeperator: true,
           onPress: () => {
             navigation.navigate(RootRoutes.Login);
@@ -149,7 +159,7 @@ const SettingsModal = ({
         index={1}
         snapPoints={snapPoints}
         handleStyle={{ opacity: 0.95 }}
-        handleIndicatorStyle={{ backgroundColor: colors.gray }}
+        handleIndicatorStyle={{ backgroundColor: colors.gray500 }}
       >
         <Stack
           display="flex"

@@ -1,12 +1,12 @@
 import { Stack } from 'tamagui';
-import colors from '../styles/colors';
+import { colors } from '../styles';
 
 interface Props {
   color?: string;
   size?: number;
 }
 
-const Seperator = ({ color = colors.tag, size = 0.5 }: Props) => {
+const Seperator = ({ color = colors.blue400, size = 0.5 }: Props) => {
   return (
     <Stack
       borderTopWidth={size}

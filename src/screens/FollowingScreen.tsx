@@ -9,7 +9,7 @@ import StreamCard from '../components/ui/StreamCard';
 import { useAuthContext } from '../context/AuthContext';
 import twitchQueries from '../queries/twitchQueries';
 import { Stream } from '../services/twitchService';
-import colors from '../styles/colors';
+import { colors } from '../styles';
 
 export interface Section {
   key: string;
@@ -51,7 +51,7 @@ const FollowingScreen = () => {
           <AntDesign
             name="infocirlceo"
             size={24}
-            color="black"
+            color="$color"
             style={{
               marginRight: 10,
             }}
@@ -63,7 +63,7 @@ const FollowingScreen = () => {
   }
 
   if (refreshing || isLoading) {
-    return <Spinner color={colors.gray} size="large" />;
+    return <Spinner color="$color" size="large" />;
   }
 
   return (
@@ -74,8 +74,8 @@ const FollowingScreen = () => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={colors.gray}
-              colors={[colors.gray]}
+              tintColor={colors.gray150}
+              colors={[colors.gray150]}
             />
           }
         >
