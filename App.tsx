@@ -1,7 +1,11 @@
 /* eslint-disable global-require */
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+} from '@react-navigation/native';
 import {
   onlineManager,
   QueryClient,
@@ -16,7 +20,7 @@ import { connectToDevTools } from 'react-devtools-core';
 import { LogBox, useColorScheme } from 'react-native';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { TamaguiProvider } from 'tamagui';
+import { TamaguiProvider, Theme } from 'tamagui';
 import { AuthContextProvider } from './src/context/AuthContext';
 import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import { useOnAppStateChange } from './src/hooks/useOnAppStateChange';
@@ -28,7 +32,7 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const queryClient = new QueryClient();
   useOnAppStateChange();
-  const scheme = useColorScheme();
+  const colorMode = useColorScheme();
   useChangeScreenOrientation();
 
   const [loaded] = useFonts({
@@ -68,20 +72,25 @@ export default function App() {
   // deleteTokens();
 
   return (
-    <NavigationContainer onStateChange={newRelic.onStateChange}>
+    <NavigationContainer
+      onStateChange={newRelic.onStateChange}
+      theme={colorMode === 'dark' ? DarkTheme : DefaultTheme}
+    >
       <QueryClientProvider client={queryClient}>
         <TamaguiProvider
           config={config}
           disableInjectCSS
-          defaultTheme={scheme === 'dark' ? 'dark' : 'light'}
+          defaultTheme={colorMode ?? 'light'}
         >
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheetModalProvider>
-              <AuthContextProvider>
-                <RootNavigator />
-              </AuthContextProvider>
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
+          <Theme name={colorMode}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <BottomSheetModalProvider>
+                <AuthContextProvider>
+                  <RootNavigator />
+                </AuthContextProvider>
+              </BottomSheetModalProvider>
+            </GestureHandlerRootView>
+          </Theme>
         </TamaguiProvider>
       </QueryClientProvider>
     </NavigationContainer>

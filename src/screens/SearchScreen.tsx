@@ -7,12 +7,10 @@ import {
   FlatList,
   SafeAreaView,
   ScrollView,
-  Text,
   TextInput,
   TouchableOpacity,
-  View,
 } from 'react-native';
-import { H5, Stack } from 'tamagui';
+import { H5, Stack, Text, View } from 'tamagui';
 import DismissableKeyboard from '../components/DismissableKeyboard';
 import Image from '../components/Image';
 import useDebouncedCallback from '../hooks/useDebouncedCallback';
@@ -21,7 +19,6 @@ import { StreamRoutes } from '../navigation/Stream/StreamStack';
 import twitchService, {
   SearchChannelResponse,
 } from '../services/twitchService';
-import colors from '../styles/colors';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import { statusBarHeight } from './FollowingScreen';
 
@@ -120,7 +117,7 @@ const SearchScreen = () => {
                   padding: 10,
                 }}
                 placeholder="Find a channel"
-                placeholderTextColor={colors.gray}
+                placeholderTextColor="$text"
                 verticalAlign="middle"
                 onChangeText={async text => {
                   await handleQuery(text);
@@ -152,7 +149,9 @@ const SearchScreen = () => {
       <Stack marginBottom={14} marginLeft={14}>
         {searchResults.length > 0 && (
           <>
-            <H5 style={{ marginLeft: 15, marginBottom: 15 }}>Channels</H5>
+            <H5 style={{ marginLeft: 15, marginBottom: 15 }} color="$color">
+              Channels
+            </H5>
             <FlatList
               data={searchResults}
               renderItem={({ item }) => (
@@ -188,7 +187,9 @@ const SearchScreen = () => {
                       height: 40,
                     }}
                   />
-                  <Text style={{ marginLeft: 8 }}>{item.display_name}</Text>
+                  <Text style={{ marginLeft: 8 }} color="$color">
+                    {item.display_name}
+                  </Text>
                   {item.is_live && (
                     <View
                       style={{
@@ -199,15 +200,15 @@ const SearchScreen = () => {
                       }}
                     >
                       <View
+                        borderColor="$color"
                         style={{
-                          backgroundColor: colors.red,
                           width: 8,
                           height: 8,
                           borderRadius: 4,
                           marginRight: 5,
                         }}
                       />
-                      <Text style={{ color: colors.gray }}>
+                      <Text color="$text">
                         {elapsedStreamTime(item.started_at)}
                       </Text>
                     </View>
@@ -239,10 +240,14 @@ const SearchScreen = () => {
                   <Entypo
                     name="back-in-time"
                     size={24}
-                    color={colors.gray}
-                    style={{ alignSelf: 'center', marginRight: 8 }}
+                    style={{
+                      alignSelf: 'center',
+                      marginRight: 8,
+                      color: '$color',
+                    }}
                   />
                   <Text
+                    color="$color"
                     style={{
                       fontSize: 16,
                       marginBottom: 8,

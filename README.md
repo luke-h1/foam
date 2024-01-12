@@ -8,6 +8,10 @@ The native twitch mobile app does not support emotes, badges and user colors fro
 
 In addition to this, Foam supports many actions to meet feature parity with the native Twitch mobile app, such as participating in polls, redeeming channel points (with a few extra sprinkles such as auto-redeeming points 😉) and refreshing chat when new emote are added to a channel.
 
+## Store links
+
+TBA
+
 ## Features
 
 TBA
@@ -43,7 +47,7 @@ Install correct node version
  nvm install
 ```
 
-Install correct yarn version
+Install correct yarn version (we're going to be migrating to PNPM + PNPM workspaces soon)
 
 ```bash
 corepack enable

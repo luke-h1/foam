@@ -92,7 +92,9 @@ const CategoryScreen = ({
               width={100}
               height={135}
             />
-            <H3 marginLeft={8}>{category?.name}</H3>
+            <H3 marginLeft={8} color="$color">
+              {category?.name}
+            </H3>
           </Stack>
           <Stack marginTop={20}>
             <FlatList

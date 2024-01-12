@@ -70,7 +70,7 @@ const StreamCard = ({ stream }: Props) => {
             paddingHorizontal={4}
             paddingVertical={2}
           >
-            <Text color="white" numberOfLines={1}>
+            <Text numberOfLines={1} color="$color">
               {viewFormatter(stream.viewer_count, 1)}
             </Text>
           </Stack>
@@ -81,7 +81,7 @@ const StreamCard = ({ stream }: Props) => {
             paddingHorizontal={4}
             paddingVertical={2}
           >
-            <Text color="white" numberOfLines={1}>
+            <Text color="$color" numberOfLines={1}>
               {elapsedStreamTime(stream.started_at)}
             </Text>
           </Stack>
@@ -115,7 +115,7 @@ const StreamCard = ({ stream }: Props) => {
                 marginRight={4}
               />
               <Stack>
-                <Text color="black" fontWeight="bold" numberOfLines={1}>
+                <Text color="$color" fontWeight="bold" numberOfLines={1}>
                   {stream.user_name}
                 </Text>
               </Stack>
@@ -134,10 +134,22 @@ const StreamCard = ({ stream }: Props) => {
             }
           >
             <Stack>
-              <Text lineHeight={22} numberOfLines={1} lineBreakMode="clip">
+              <Text
+                lineHeight={22}
+                numberOfLines={1}
+                lineBreakMode="clip"
+                color="$color"
+              >
                 {stream.title}
               </Text>
-              <Text lineHeight={19}>{stream.game_name}</Text>
+              <Text
+                lineHeight={22}
+                numberOfLines={1}
+                lineBreakMode="clip"
+                color="$color"
+              >
+                {stream.game_name}
+              </Text>
             </Stack>
           </Pressable>
           {stream.tags && stream.tags.length > 0 && <Tags tags={stream.tags} />}

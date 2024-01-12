@@ -19389,7 +19389,9 @@
         }
       }
     },
-    "settings": {},
+    "settings": {
+      "fastSchemeChange": true
+    },
     "onlyAllowShorthands": false,
     "fontLanguages": [],
     "animations": {
@@ -19483,21 +19485,9 @@
         "pointer": "coarse"
       }
     },
-    "light": {
-      "color": {
-        "background": "gray",
-        "text": "black"
-      }
-    },
-    "dark": {
-      "color": {
-        "background": "black",
-        "text": "white"
-      }
-    },
-    "defaultFont": "$body",
     "shouldAddPrefersColorThemes": true,
     "themeClassNameOnRoot": true,
+    "defaultFont": "$body",
     "shorthands": {
       "ussel": "userSelect",
       "cur": "cursor",
@@ -19582,1362 +19572,344 @@
       "ox": "overflowX",
       "oy": "overflowY"
     },
-    "themes": {
-      "light": {
-        "bg": "#f2f2f2",
-        "color": "hsl(320, 49.0%, 21.1%)",
-        "id": "light"
-      },
-      "dark": {
-        "bg": "#111",
-        "color": "hsl(0, 0%, 52.3%)",
-        "id": "dark"
-      }
-    },
     "tokens": {
       "color": {
-        "blue1Light": {
+        "lightPrimary": {
           "isVar": true,
-          "key": "$blue1Light",
+          "key": "$lightPrimary",
           "name": "color-1",
-          "val": "hsl(206, 100%, 99.2%)",
+          "val": "#f7f7f8",
           "variable": ""
         },
-        "blue2Light": {
+        "lightBlack": {
           "isVar": true,
-          "key": "$blue2Light",
+          "key": "$lightBlack",
           "name": "color-2",
-          "val": "hsl(210, 100%, 98.0%)",
+          "val": "#000014",
           "variable": ""
         },
-        "blue3Light": {
+        "lightGray": {
           "isVar": true,
-          "key": "$blue3Light",
+          "key": "$lightGray",
           "name": "color-3",
-          "val": "hsl(209, 100%, 96.5%)",
+          "val": "#3a3a44",
           "variable": ""
         },
-        "blue4Light": {
+        "lightTag": {
           "isVar": true,
-          "key": "$blue4Light",
+          "key": "$lightTag",
           "name": "color-4",
-          "val": "hsl(210, 98.8%, 94.0%)",
+          "val": "#323235",
           "variable": ""
         },
-        "blue5Light": {
+        "lightGreen": {
           "isVar": true,
-          "key": "$blue5Light",
+          "key": "$lightGreen",
           "name": "color-5",
-          "val": "hsl(209, 95.0%, 90.1%)",
+          "val": "#14b866",
           "variable": ""
         },
-        "blue6Light": {
+        "lightRed": {
           "isVar": true,
-          "key": "$blue6Light",
+          "key": "$lightRed",
           "name": "color-6",
-          "val": "hsl(209, 81.2%, 84.5%)",
+          "val": "#ec1414",
           "variable": ""
         },
-        "blue7Light": {
+        "lightPurple": {
           "isVar": true,
-          "key": "$blue7Light",
+          "key": "$lightPurple",
           "name": "color-7",
-          "val": "hsl(208, 77.5%, 76.9%)",
+          "val": "#bf94ff",
           "variable": ""
         },
-        "blue8Light": {
+        "darkPrimary": {
           "isVar": true,
-          "key": "$blue8Light",
+          "key": "$darkPrimary",
           "name": "color-8",
-          "val": "hsl(206, 81.9%, 65.3%)",
+          "val": "#000014",
           "variable": ""
         },
-        "blue9Light": {
+        "darkBlack": {
           "isVar": true,
-          "key": "$blue9Light",
+          "key": "$darkBlack",
           "name": "color-9",
-          "val": "hsl(206, 100%, 50.0%)",
+          "val": "#efeff1",
           "variable": ""
         },
-        "blue10Light": {
+        "darkGray": {
           "isVar": true,
-          "key": "$blue10Light",
+          "key": "$darkGray",
           "name": "color-10",
-          "val": "hsl(208, 100%, 47.3%)",
+          "val": "#7f7f8b",
           "variable": ""
         },
-        "blue11Light": {
+        "darkTag": {
           "isVar": true,
-          "key": "$blue11Light",
+          "key": "$darkTag",
           "name": "color-11",
-          "val": "hsl(211, 100%, 43.2%)",
+          "val": "#323235",
           "variable": ""
         },
-        "blue12Light": {
+        "darkGreen": {
           "isVar": true,
-          "key": "$blue12Light",
+          "key": "$darkGreen",
           "name": "color-12",
-          "val": "hsl(211, 100%, 15.0%)",
+          "val": "#14b866",
           "variable": ""
         },
-        "gray1Light": {
+        "darkRed": {
           "isVar": true,
-          "key": "$gray1Light",
+          "key": "$darkRed",
           "name": "color-13",
-          "val": "hsl(0, 0%, 99.0%)",
+          "val": "#ec1414",
           "variable": ""
         },
-        "gray2Light": {
+        "darkPurple": {
           "isVar": true,
-          "key": "$gray2Light",
+          "key": "$darkPurple",
           "name": "color-14",
-          "val": "hsl(0, 0%, 97.3%)",
+          "val": "#bf94ff",
           "variable": ""
-        },
-        "gray3Light": {
-          "isVar": true,
-          "key": "$gray3Light",
-          "name": "color-15",
-          "val": "hsl(0, 0%, 95.1%)",
-          "variable": ""
-        },
-        "gray4Light": {
-          "isVar": true,
-          "key": "$gray4Light",
-          "name": "color-16",
-          "val": "hsl(0, 0%, 93.0%)",
-          "variable": ""
-        },
-        "gray5Light": {
-          "isVar": true,
-          "key": "$gray5Light",
-          "name": "color-17",
-          "val": "hsl(0, 0%, 90.9%)",
-          "variable": ""
-        },
-        "gray6Light": {
-          "isVar": true,
-          "key": "$gray6Light",
-          "name": "color-18",
-          "val": "hsl(0, 0%, 88.7%)",
-          "variable": ""
-        },
-        "gray7Light": {
-          "isVar": true,
-          "key": "$gray7Light",
-          "name": "color-19",
-          "val": "hsl(0, 0%, 85.8%)",
-          "variable": ""
-        },
-        "gray8Light": {
-          "isVar": true,
-          "key": "$gray8Light",
-          "name": "color-20",
-          "val": "hsl(0, 0%, 78.0%)",
-          "variable": ""
-        },
-        "gray9Light": {
-          "isVar": true,
-          "key": "$gray9Light",
-          "name": "color-21",
-          "val": "hsl(0, 0%, 56.1%)",
-          "variable": ""
-        },
-        "gray10Light": {
-          "isVar": true,
-          "key": "$gray10Light",
-          "name": "color-22",
-          "val": "hsl(0, 0%, 52.3%)",
-          "variable": ""
-        },
-        "gray11Light": {
-          "isVar": true,
-          "key": "$gray11Light",
-          "name": "color-23",
-          "val": "hsl(0, 0%, 43.5%)",
-          "variable": ""
-        },
-        "gray12Light": {
-          "isVar": true,
-          "key": "$gray12Light",
-          "name": "color-24",
-          "val": "hsl(0, 0%, 9.0%)",
-          "variable": ""
-        },
-        "green1Light": {
-          "isVar": true,
-          "key": "$green1Light",
-          "name": "color-25",
-          "val": "hsl(136, 50.0%, 98.9%)",
-          "variable": ""
-        },
-        "green2Light": {
-          "isVar": true,
-          "key": "$green2Light",
-          "name": "color-26",
-          "val": "hsl(138, 62.5%, 96.9%)",
-          "variable": ""
-        },
-        "green3Light": {
-          "isVar": true,
-          "key": "$green3Light",
-          "name": "color-27",
-          "val": "hsl(139, 55.2%, 94.5%)",
-          "variable": ""
-        },
-        "green4Light": {
-          "isVar": true,
-          "key": "$green4Light",
-          "name": "color-28",
-          "val": "hsl(140, 48.7%, 91.0%)",
-          "variable": ""
-        },
-        "green5Light": {
-          "isVar": true,
-          "key": "$green5Light",
-          "name": "color-29",
-          "val": "hsl(141, 43.7%, 86.0%)",
-          "variable": ""
-        },
-        "green6Light": {
-          "isVar": true,
-          "key": "$green6Light",
-          "name": "color-30",
-          "val": "hsl(143, 40.3%, 79.0%)",
-          "variable": ""
-        },
-        "green7Light": {
-          "isVar": true,
-          "key": "$green7Light",
-          "name": "color-31",
-          "val": "hsl(146, 38.5%, 69.0%)",
-          "variable": ""
-        },
-        "green8Light": {
-          "isVar": true,
-          "key": "$green8Light",
-          "name": "color-32",
-          "val": "hsl(151, 40.2%, 54.1%)",
-          "variable": ""
-        },
-        "green9Light": {
-          "isVar": true,
-          "key": "$green9Light",
-          "name": "color-33",
-          "val": "hsl(151, 55.0%, 41.5%)",
-          "variable": ""
-        },
-        "green10Light": {
-          "isVar": true,
-          "key": "$green10Light",
-          "name": "color-34",
-          "val": "hsl(152, 57.5%, 37.6%)",
-          "variable": ""
-        },
-        "green11Light": {
-          "isVar": true,
-          "key": "$green11Light",
-          "name": "color-35",
-          "val": "hsl(153, 67.0%, 28.5%)",
-          "variable": ""
-        },
-        "green12Light": {
-          "isVar": true,
-          "key": "$green12Light",
-          "name": "color-36",
-          "val": "hsl(155, 40.0%, 14.0%)",
-          "variable": ""
-        },
-        "orange1Light": {
-          "isVar": true,
-          "key": "$orange1Light",
-          "name": "color-37",
-          "val": "hsl(24, 70.0%, 99.0%)",
-          "variable": ""
-        },
-        "orange2Light": {
-          "isVar": true,
-          "key": "$orange2Light",
-          "name": "color-38",
-          "val": "hsl(24, 83.3%, 97.6%)",
-          "variable": ""
-        },
-        "orange3Light": {
-          "isVar": true,
-          "key": "$orange3Light",
-          "name": "color-39",
-          "val": "hsl(24, 100%, 95.3%)",
-          "variable": ""
-        },
-        "orange4Light": {
-          "isVar": true,
-          "key": "$orange4Light",
-          "name": "color-40",
-          "val": "hsl(25, 100%, 92.2%)",
-          "variable": ""
-        },
-        "orange5Light": {
-          "isVar": true,
-          "key": "$orange5Light",
-          "name": "color-41",
-          "val": "hsl(25, 100%, 88.2%)",
-          "variable": ""
-        },
-        "orange6Light": {
-          "isVar": true,
-          "key": "$orange6Light",
-          "name": "color-42",
-          "val": "hsl(25, 100%, 82.8%)",
-          "variable": ""
-        },
-        "orange7Light": {
-          "isVar": true,
-          "key": "$orange7Light",
-          "name": "color-43",
-          "val": "hsl(24, 100%, 75.3%)",
-          "variable": ""
-        },
-        "orange8Light": {
-          "isVar": true,
-          "key": "$orange8Light",
-          "name": "color-44",
-          "val": "hsl(24, 94.5%, 64.3%)",
-          "variable": ""
-        },
-        "orange9Light": {
-          "isVar": true,
-          "key": "$orange9Light",
-          "name": "color-45",
-          "val": "hsl(24, 94.0%, 50.0%)",
-          "variable": ""
-        },
-        "orange10Light": {
-          "isVar": true,
-          "key": "$orange10Light",
-          "name": "color-46",
-          "val": "hsl(24, 100%, 46.5%)",
-          "variable": ""
-        },
-        "orange11Light": {
-          "isVar": true,
-          "key": "$orange11Light",
-          "name": "color-47",
-          "val": "hsl(24, 100%, 37.0%)",
-          "variable": ""
-        },
-        "orange12Light": {
-          "isVar": true,
-          "key": "$orange12Light",
-          "name": "color-48",
-          "val": "hsl(15, 60.0%, 17.0%)",
-          "variable": ""
-        },
-        "pink1Light": {
-          "isVar": true,
-          "key": "$pink1Light",
-          "name": "color-49",
-          "val": "hsl(322, 100%, 99.4%)",
-          "variable": ""
-        },
-        "pink2Light": {
-          "isVar": true,
-          "key": "$pink2Light",
-          "name": "color-50",
-          "val": "hsl(323, 100%, 98.4%)",
-          "variable": ""
-        },
-        "pink3Light": {
-          "isVar": true,
-          "key": "$pink3Light",
-          "name": "color-51",
-          "val": "hsl(323, 86.3%, 96.5%)",
-          "variable": ""
-        },
-        "pink4Light": {
-          "isVar": true,
-          "key": "$pink4Light",
-          "name": "color-52",
-          "val": "hsl(323, 78.7%, 94.2%)",
-          "variable": ""
-        },
-        "pink5Light": {
-          "isVar": true,
-          "key": "$pink5Light",
-          "name": "color-53",
-          "val": "hsl(323, 72.2%, 91.1%)",
-          "variable": ""
-        },
-        "pink6Light": {
-          "isVar": true,
-          "key": "$pink6Light",
-          "name": "color-54",
-          "val": "hsl(323, 66.3%, 86.6%)",
-          "variable": ""
-        },
-        "pink7Light": {
-          "isVar": true,
-          "key": "$pink7Light",
-          "name": "color-55",
-          "val": "hsl(323, 62.0%, 80.1%)",
-          "variable": ""
-        },
-        "pink8Light": {
-          "isVar": true,
-          "key": "$pink8Light",
-          "name": "color-56",
-          "val": "hsl(323, 60.3%, 72.4%)",
-          "variable": ""
-        },
-        "pink9Light": {
-          "isVar": true,
-          "key": "$pink9Light",
-          "name": "color-57",
-          "val": "hsl(322, 65.0%, 54.5%)",
-          "variable": ""
-        },
-        "pink10Light": {
-          "isVar": true,
-          "key": "$pink10Light",
-          "name": "color-58",
-          "val": "hsl(322, 63.9%, 50.7%)",
-          "variable": ""
-        },
-        "pink11Light": {
-          "isVar": true,
-          "key": "$pink11Light",
-          "name": "color-59",
-          "val": "hsl(322, 75.0%, 46.0%)",
-          "variable": ""
-        },
-        "pink12Light": {
-          "isVar": true,
-          "key": "$pink12Light",
-          "name": "color-60",
-          "val": "hsl(320, 70.0%, 13.5%)",
-          "variable": ""
-        },
-        "purple1Light": {
-          "isVar": true,
-          "key": "$purple1Light",
-          "name": "color-61",
-          "val": "hsl(280, 65.0%, 99.4%)",
-          "variable": ""
-        },
-        "purple2Light": {
-          "isVar": true,
-          "key": "$purple2Light",
-          "name": "color-62",
-          "val": "hsl(276, 100%, 99.0%)",
-          "variable": ""
-        },
-        "purple3Light": {
-          "isVar": true,
-          "key": "$purple3Light",
-          "name": "color-63",
-          "val": "hsl(276, 83.1%, 97.0%)",
-          "variable": ""
-        },
-        "purple4Light": {
-          "isVar": true,
-          "key": "$purple4Light",
-          "name": "color-64",
-          "val": "hsl(275, 76.4%, 94.7%)",
-          "variable": ""
-        },
-        "purple5Light": {
-          "isVar": true,
-          "key": "$purple5Light",
-          "name": "color-65",
-          "val": "hsl(275, 70.8%, 91.8%)",
-          "variable": ""
-        },
-        "purple6Light": {
-          "isVar": true,
-          "key": "$purple6Light",
-          "name": "color-66",
-          "val": "hsl(274, 65.4%, 87.8%)",
-          "variable": ""
-        },
-        "purple7Light": {
-          "isVar": true,
-          "key": "$purple7Light",
-          "name": "color-67",
-          "val": "hsl(273, 61.0%, 81.7%)",
-          "variable": ""
-        },
-        "purple8Light": {
-          "isVar": true,
-          "key": "$purple8Light",
-          "name": "color-68",
-          "val": "hsl(272, 60.0%, 73.5%)",
-          "variable": ""
-        },
-        "purple9Light": {
-          "isVar": true,
-          "key": "$purple9Light",
-          "name": "color-69",
-          "val": "hsl(272, 51.0%, 54.0%)",
-          "variable": ""
-        },
-        "purple10Light": {
-          "isVar": true,
-          "key": "$purple10Light",
-          "name": "color-70",
-          "val": "hsl(272, 46.8%, 50.3%)",
-          "variable": ""
-        },
-        "purple11Light": {
-          "isVar": true,
-          "key": "$purple11Light",
-          "name": "color-71",
-          "val": "hsl(272, 50.0%, 45.8%)",
-          "variable": ""
-        },
-        "purple12Light": {
-          "isVar": true,
-          "key": "$purple12Light",
-          "name": "color-72",
-          "val": "hsl(272, 66.0%, 16.0%)",
-          "variable": ""
-        },
-        "red1Light": {
-          "isVar": true,
-          "key": "$red1Light",
-          "name": "color-73",
-          "val": "hsl(359, 100%, 99.4%)",
-          "variable": ""
-        },
-        "red2Light": {
-          "isVar": true,
-          "key": "$red2Light",
-          "name": "color-74",
-          "val": "hsl(359, 100%, 98.6%)",
-          "variable": ""
-        },
-        "red3Light": {
-          "isVar": true,
-          "key": "$red3Light",
-          "name": "color-75",
-          "val": "hsl(360, 100%, 96.8%)",
-          "variable": ""
-        },
-        "red4Light": {
-          "isVar": true,
-          "key": "$red4Light",
-          "name": "color-76",
-          "val": "hsl(360, 97.9%, 94.8%)",
-          "variable": ""
-        },
-        "red5Light": {
-          "isVar": true,
-          "key": "$red5Light",
-          "name": "color-77",
-          "val": "hsl(360, 90.2%, 91.9%)",
-          "variable": ""
-        },
-        "red6Light": {
-          "isVar": true,
-          "key": "$red6Light",
-          "name": "color-78",
-          "val": "hsl(360, 81.7%, 87.8%)",
-          "variable": ""
-        },
-        "red7Light": {
-          "isVar": true,
-          "key": "$red7Light",
-          "name": "color-79",
-          "val": "hsl(359, 74.2%, 81.7%)",
-          "variable": ""
-        },
-        "red8Light": {
-          "isVar": true,
-          "key": "$red8Light",
-          "name": "color-80",
-          "val": "hsl(359, 69.5%, 74.3%)",
-          "variable": ""
-        },
-        "red9Light": {
-          "isVar": true,
-          "key": "$red9Light",
-          "name": "color-81",
-          "val": "hsl(358, 75.0%, 59.0%)",
-          "variable": ""
-        },
-        "red10Light": {
-          "isVar": true,
-          "key": "$red10Light",
-          "name": "color-82",
-          "val": "hsl(358, 69.4%, 55.2%)",
-          "variable": ""
-        },
-        "red11Light": {
-          "isVar": true,
-          "key": "$red11Light",
-          "name": "color-83",
-          "val": "hsl(358, 65.0%, 48.7%)",
-          "variable": ""
-        },
-        "red12Light": {
-          "isVar": true,
-          "key": "$red12Light",
-          "name": "color-84",
-          "val": "hsl(354, 50.0%, 14.6%)",
-          "variable": ""
-        },
-        "yellow1Light": {
-          "isVar": true,
-          "key": "$yellow1Light",
-          "name": "color-85",
-          "val": "hsl(60, 54.0%, 98.5%)",
-          "variable": ""
-        },
-        "yellow2Light": {
-          "isVar": true,
-          "key": "$yellow2Light",
-          "name": "color-86",
-          "val": "hsl(52, 100%, 95.5%)",
-          "variable": ""
-        },
-        "yellow3Light": {
-          "isVar": true,
-          "key": "$yellow3Light",
-          "name": "color-87",
-          "val": "hsl(55, 100%, 90.9%)",
-          "variable": ""
-        },
-        "yellow4Light": {
-          "isVar": true,
-          "key": "$yellow4Light",
-          "name": "color-88",
-          "val": "hsl(54, 100%, 86.6%)",
-          "variable": ""
-        },
-        "yellow5Light": {
-          "isVar": true,
-          "key": "$yellow5Light",
-          "name": "color-89",
-          "val": "hsl(52, 97.9%, 82.0%)",
-          "variable": ""
-        },
-        "yellow6Light": {
-          "isVar": true,
-          "key": "$yellow6Light",
-          "name": "color-90",
-          "val": "hsl(50, 89.4%, 76.1%)",
-          "variable": ""
-        },
-        "yellow7Light": {
-          "isVar": true,
-          "key": "$yellow7Light",
-          "name": "color-91",
-          "val": "hsl(47, 80.4%, 68.0%)",
-          "variable": ""
-        },
-        "yellow8Light": {
-          "isVar": true,
-          "key": "$yellow8Light",
-          "name": "color-92",
-          "val": "hsl(48, 100%, 46.1%)",
-          "variable": ""
-        },
-        "yellow9Light": {
-          "isVar": true,
-          "key": "$yellow9Light",
-          "name": "color-93",
-          "val": "hsl(53, 92.0%, 50.0%)",
-          "variable": ""
-        },
-        "yellow10Light": {
-          "isVar": true,
-          "key": "$yellow10Light",
-          "name": "color-94",
-          "val": "hsl(50, 100%, 48.5%)",
-          "variable": ""
-        },
-        "yellow11Light": {
-          "isVar": true,
-          "key": "$yellow11Light",
-          "name": "color-95",
-          "val": "hsl(42, 100%, 29.0%)",
-          "variable": ""
-        },
-        "yellow12Light": {
-          "isVar": true,
-          "key": "$yellow12Light",
-          "name": "color-96",
-          "val": "hsl(40, 55.0%, 13.5%)",
-          "variable": ""
-        },
-        "blue1Dark": {
-          "isVar": true,
-          "key": "$blue1Dark",
-          "name": "color-97",
-          "val": "hsl(212, 35.0%, 9.2%)",
-          "variable": ""
-        },
-        "blue2Dark": {
-          "isVar": true,
-          "key": "$blue2Dark",
-          "name": "color-98",
-          "val": "hsl(216, 50.0%, 11.8%)",
-          "variable": ""
-        },
-        "blue3Dark": {
-          "isVar": true,
-          "key": "$blue3Dark",
-          "name": "color-99",
-          "val": "hsl(214, 59.4%, 15.3%)",
-          "variable": ""
-        },
-        "blue4Dark": {
-          "isVar": true,
-          "key": "$blue4Dark",
-          "name": "color-100",
-          "val": "hsl(214, 65.8%, 17.9%)",
-          "variable": ""
-        },
-        "blue5Dark": {
-          "isVar": true,
-          "key": "$blue5Dark",
-          "name": "color-101",
-          "val": "hsl(213, 71.2%, 20.2%)",
-          "variable": ""
-        },
-        "blue6Dark": {
-          "isVar": true,
-          "key": "$blue6Dark",
-          "name": "color-102",
-          "val": "hsl(212, 77.4%, 23.1%)",
-          "variable": ""
-        },
-        "blue7Dark": {
-          "isVar": true,
-          "key": "$blue7Dark",
-          "name": "color-103",
-          "val": "hsl(211, 85.1%, 27.4%)",
-          "variable": ""
-        },
-        "blue8Dark": {
-          "isVar": true,
-          "key": "$blue8Dark",
-          "name": "color-104",
-          "val": "hsl(211, 89.7%, 34.1%)",
-          "variable": ""
-        },
-        "blue9Dark": {
-          "isVar": true,
-          "key": "$blue9Dark",
-          "name": "color-105",
-          "val": "hsl(206, 100%, 50.0%)",
-          "variable": ""
-        },
-        "blue10Dark": {
-          "isVar": true,
-          "key": "$blue10Dark",
-          "name": "color-106",
-          "val": "hsl(209, 100%, 60.6%)",
-          "variable": ""
-        },
-        "blue11Dark": {
-          "isVar": true,
-          "key": "$blue11Dark",
-          "name": "color-107",
-          "val": "hsl(210, 100%, 66.1%)",
-          "variable": ""
-        },
-        "blue12Dark": {
-          "isVar": true,
-          "key": "$blue12Dark",
-          "name": "color-108",
-          "val": "hsl(206, 98.0%, 95.8%)",
-          "variable": ""
-        },
-        "gray1Dark": {
-          "isVar": true,
-          "key": "$gray1Dark",
-          "name": "color-109",
-          "val": "hsl(0, 0%, 8.5%)",
-          "variable": ""
-        },
-        "gray2Dark": {
-          "isVar": true,
-          "key": "$gray2Dark",
-          "name": "color-110",
-          "val": "hsl(0, 0%, 11.0%)",
-          "variable": ""
-        },
-        "gray3Dark": {
-          "isVar": true,
-          "key": "$gray3Dark",
-          "name": "color-111",
-          "val": "hsl(0, 0%, 13.6%)",
-          "variable": ""
-        },
-        "gray4Dark": {
-          "isVar": true,
-          "key": "$gray4Dark",
-          "name": "color-112",
-          "val": "hsl(0, 0%, 15.8%)",
-          "variable": ""
-        },
-        "gray5Dark": {
-          "isVar": true,
-          "key": "$gray5Dark",
-          "name": "color-113",
-          "val": "hsl(0, 0%, 17.9%)",
-          "variable": ""
-        },
-        "gray6Dark": {
-          "isVar": true,
-          "key": "$gray6Dark",
-          "name": "color-114",
-          "val": "hsl(0, 0%, 20.5%)",
-          "variable": ""
-        },
-        "gray7Dark": {
-          "isVar": true,
-          "key": "$gray7Dark",
-          "name": "color-115",
-          "val": "hsl(0, 0%, 24.3%)",
-          "variable": ""
-        },
-        "gray8Dark": {
-          "isVar": true,
-          "key": "$gray8Dark",
-          "name": "color-116",
-          "val": "hsl(0, 0%, 31.2%)",
-          "variable": ""
-        },
-        "gray9Dark": {
-          "isVar": true,
-          "key": "$gray9Dark",
-          "name": "color-117",
-          "val": "hsl(0, 0%, 43.9%)",
-          "variable": ""
-        },
-        "gray10Dark": {
-          "isVar": true,
-          "key": "$gray10Dark",
-          "name": "color-118",
-          "val": "hsl(0, 0%, 49.4%)",
-          "variable": ""
-        },
-        "gray11Dark": {
-          "isVar": true,
-          "key": "$gray11Dark",
-          "name": "color-119",
-          "val": "hsl(0, 0%, 62.8%)",
-          "variable": ""
-        },
-        "gray12Dark": {
-          "isVar": true,
-          "key": "$gray12Dark",
-          "name": "color-120",
-          "val": "hsl(0, 0%, 93.0%)",
-          "variable": ""
-        },
-        "green1Dark": {
-          "isVar": true,
-          "key": "$green1Dark",
-          "name": "color-121",
-          "val": "hsl(146, 30.0%, 7.4%)",
-          "variable": ""
-        },
-        "green2Dark": {
-          "isVar": true,
-          "key": "$green2Dark",
-          "name": "color-122",
-          "val": "hsl(155, 44.2%, 8.4%)",
-          "variable": ""
-        },
-        "green3Dark": {
-          "isVar": true,
-          "key": "$green3Dark",
-          "name": "color-123",
-          "val": "hsl(155, 46.7%, 10.9%)",
-          "variable": ""
-        },
-        "green4Dark": {
-          "isVar": true,
-          "key": "$green4Dark",
-          "name": "color-124",
-          "val": "hsl(154, 48.4%, 12.9%)",
-          "variable": ""
-        },
-        "green5Dark": {
-          "isVar": true,
-          "key": "$green5Dark",
-          "name": "color-125",
-          "val": "hsl(154, 49.7%, 14.9%)",
-          "variable": ""
-        },
-        "green6Dark": {
-          "isVar": true,
-          "key": "$green6Dark",
-          "name": "color-126",
-          "val": "hsl(154, 50.9%, 17.6%)",
-          "variable": ""
-        },
-        "green7Dark": {
-          "isVar": true,
-          "key": "$green7Dark",
-          "name": "color-127",
-          "val": "hsl(153, 51.8%, 21.8%)",
-          "variable": ""
-        },
-        "green8Dark": {
-          "isVar": true,
-          "key": "$green8Dark",
-          "name": "color-128",
-          "val": "hsl(151, 51.7%, 28.4%)",
-          "variable": ""
-        },
-        "green9Dark": {
-          "isVar": true,
-          "key": "$green9Dark",
-          "name": "color-129",
-          "val": "hsl(151, 55.0%, 41.5%)",
-          "variable": ""
-        },
-        "green10Dark": {
-          "isVar": true,
-          "key": "$green10Dark",
-          "name": "color-130",
-          "val": "hsl(151, 49.3%, 46.5%)",
-          "variable": ""
-        },
-        "green11Dark": {
-          "isVar": true,
-          "key": "$green11Dark",
-          "name": "color-131",
-          "val": "hsl(151, 50.0%, 53.2%)",
-          "variable": ""
-        },
-        "green12Dark": {
-          "isVar": true,
-          "key": "$green12Dark",
-          "name": "color-132",
-          "val": "hsl(137, 72.0%, 94.0%)",
-          "variable": ""
-        },
-        "orange1Dark": {
-          "isVar": true,
-          "key": "$orange1Dark",
-          "name": "color-133",
-          "val": "hsl(30, 70.0%, 7.2%)",
-          "variable": ""
-        },
-        "orange2Dark": {
-          "isVar": true,
-          "key": "$orange2Dark",
-          "name": "color-134",
-          "val": "hsl(28, 100%, 8.4%)",
-          "variable": ""
-        },
-        "orange3Dark": {
-          "isVar": true,
-          "key": "$orange3Dark",
-          "name": "color-135",
-          "val": "hsl(26, 91.1%, 11.6%)",
-          "variable": ""
-        },
-        "orange4Dark": {
-          "isVar": true,
-          "key": "$orange4Dark",
-          "name": "color-136",
-          "val": "hsl(25, 88.3%, 14.1%)",
-          "variable": ""
-        },
-        "orange5Dark": {
-          "isVar": true,
-          "key": "$orange5Dark",
-          "name": "color-137",
-          "val": "hsl(24, 87.6%, 16.6%)",
-          "variable": ""
-        },
-        "orange6Dark": {
-          "isVar": true,
-          "key": "$orange6Dark",
-          "name": "color-138",
-          "val": "hsl(24, 88.6%, 19.8%)",
-          "variable": ""
-        },
-        "orange7Dark": {
-          "isVar": true,
-          "key": "$orange7Dark",
-          "name": "color-139",
-          "val": "hsl(24, 92.4%, 24.0%)",
-          "variable": ""
-        },
-        "orange8Dark": {
-          "isVar": true,
-          "key": "$orange8Dark",
-          "name": "color-140",
-          "val": "hsl(25, 100%, 29.0%)",
-          "variable": ""
-        },
-        "orange9Dark": {
-          "isVar": true,
-          "key": "$orange9Dark",
-          "name": "color-141",
-          "val": "hsl(24, 94.0%, 50.0%)",
-          "variable": ""
-        },
-        "orange10Dark": {
-          "isVar": true,
-          "key": "$orange10Dark",
-          "name": "color-142",
-          "val": "hsl(24, 100%, 58.5%)",
-          "variable": ""
-        },
-        "orange11Dark": {
-          "isVar": true,
-          "key": "$orange11Dark",
-          "name": "color-143",
-          "val": "hsl(24, 100%, 62.2%)",
-          "variable": ""
-        },
-        "orange12Dark": {
-          "isVar": true,
-          "key": "$orange12Dark",
-          "name": "color-144",
-          "val": "hsl(24, 97.0%, 93.2%)",
-          "variable": ""
-        },
-        "pink1Dark": {
-          "isVar": true,
-          "key": "$pink1Dark",
-          "name": "color-145",
-          "val": "hsl(318, 25.0%, 9.6%)",
-          "variable": ""
-        },
-        "pink2Dark": {
-          "isVar": true,
-          "key": "$pink2Dark",
-          "name": "color-146",
-          "val": "hsl(319, 32.2%, 11.6%)",
-          "variable": ""
-        },
-        "pink3Dark": {
-          "isVar": true,
-          "key": "$pink3Dark",
-          "name": "color-147",
-          "val": "hsl(319, 41.0%, 16.0%)",
-          "variable": ""
-        },
-        "pink4Dark": {
-          "isVar": true,
-          "key": "$pink4Dark",
-          "name": "color-148",
-          "val": "hsl(320, 45.4%, 18.7%)",
-          "variable": ""
-        },
-        "pink5Dark": {
-          "isVar": true,
-          "key": "$pink5Dark",
-          "name": "color-149",
-          "val": "hsl(320, 49.0%, 21.1%)",
-          "variable": ""
-        },
-        "pink6Dark": {
-          "isVar": true,
-          "key": "$pink6Dark",
-          "name": "color-150",
-          "val": "hsl(321, 53.6%, 24.4%)",
-          "variable": ""
-        },
-        "pink7Dark": {
-          "isVar": true,
-          "key": "$pink7Dark",
-          "name": "color-151",
-          "val": "hsl(321, 61.1%, 29.7%)",
-          "variable": ""
-        },
-        "pink8Dark": {
-          "isVar": true,
-          "key": "$pink8Dark",
-          "name": "color-152",
-          "val": "hsl(322, 74.9%, 37.5%)",
-          "variable": ""
-        },
-        "pink9Dark": {
-          "isVar": true,
-          "key": "$pink9Dark",
-          "name": "color-153",
-          "val": "hsl(322, 65.0%, 54.5%)",
-          "variable": ""
-        },
-        "pink10Dark": {
-          "isVar": true,
-          "key": "$pink10Dark",
-          "name": "color-154",
-          "val": "hsl(323, 72.8%, 59.2%)",
-          "variable": ""
-        },
-        "pink11Dark": {
-          "isVar": true,
-          "key": "$pink11Dark",
-          "name": "color-155",
-          "val": "hsl(325, 90.0%, 66.4%)",
-          "variable": ""
-        },
-        "pink12Dark": {
-          "isVar": true,
-          "key": "$pink12Dark",
-          "name": "color-156",
-          "val": "hsl(322, 90.0%, 95.8%)",
-          "variable": ""
-        },
-        "purple1Dark": {
-          "isVar": true,
-          "key": "$purple1Dark",
-          "name": "color-157",
-          "val": "hsl(284, 20.0%, 9.6%)",
-          "variable": ""
-        },
-        "purple2Dark": {
-          "isVar": true,
-          "key": "$purple2Dark",
-          "name": "color-158",
-          "val": "hsl(283, 30.0%, 11.8%)",
-          "variable": ""
-        },
-        "purple3Dark": {
+        }
+      },
+      "size": {
+        "0": {
           "isVar": true,
-          "key": "$purple3Dark",
-          "name": "color-159",
-          "val": "hsl(281, 37.5%, 16.5%)",
+          "key": "$0",
+          "name": "size-1",
+          "val": 0,
           "variable": ""
         },
-        "purple4Dark": {
+        "1": {
           "isVar": true,
-          "key": "$purple4Dark",
-          "name": "color-160",
-          "val": "hsl(280, 41.2%, 20.0%)",
+          "key": "$1",
+          "name": "size-2",
+          "val": 20,
           "variable": ""
         },
-        "purple5Dark": {
+        "2": {
           "isVar": true,
-          "key": "$purple5Dark",
-          "name": "color-161",
-          "val": "hsl(279, 43.8%, 23.3%)",
+          "key": "$2",
+          "name": "size-3",
+          "val": 28,
           "variable": ""
         },
-        "purple6Dark": {
+        "3": {
           "isVar": true,
-          "key": "$purple6Dark",
-          "name": "color-162",
-          "val": "hsl(277, 46.4%, 27.5%)",
+          "key": "$3",
+          "name": "size-4",
+          "val": 36,
           "variable": ""
         },
-        "purple7Dark": {
+        "4": {
           "isVar": true,
-          "key": "$purple7Dark",
-          "name": "color-163",
-          "val": "hsl(275, 49.3%, 34.6%)",
+          "key": "$4",
+          "name": "size-5",
+          "val": 44,
           "variable": ""
         },
-        "purple8Dark": {
+        "5": {
           "isVar": true,
-          "key": "$purple8Dark",
-          "name": "color-164",
-          "val": "hsl(272, 52.1%, 45.9%)",
+          "key": "$5",
+          "name": "size-6",
+          "val": 52,
           "variable": ""
         },
-        "purple9Dark": {
+        "6": {
           "isVar": true,
-          "key": "$purple9Dark",
-          "name": "color-165",
-          "val": "hsl(272, 51.0%, 54.0%)",
+          "key": "$6",
+          "name": "size-7",
+          "val": 64,
           "variable": ""
         },
-        "purple10Dark": {
+        "7": {
           "isVar": true,
-          "key": "$purple10Dark",
-          "name": "color-166",
-          "val": "hsl(273, 57.3%, 59.1%)",
+          "key": "$7",
+          "name": "size-8",
+          "val": 74,
           "variable": ""
         },
-        "purple11Dark": {
+        "8": {
           "isVar": true,
-          "key": "$purple11Dark",
-          "name": "color-167",
-          "val": "hsl(275, 80.0%, 71.0%)",
+          "key": "$8",
+          "name": "size-9",
+          "val": 84,
           "variable": ""
         },
-        "purple12Dark": {
+        "9": {
           "isVar": true,
-          "key": "$purple12Dark",
-          "name": "color-168",
-          "val": "hsl(279, 75.0%, 95.7%)",
+          "key": "$9",
+          "name": "size-10",
+          "val": 94,
           "variable": ""
         },
-        "red1Dark": {
+        "10": {
           "isVar": true,
-          "key": "$red1Dark",
-          "name": "color-169",
-          "val": "hsl(353, 23.0%, 9.8%)",
+          "key": "$10",
+          "name": "size-11",
+          "val": 104,
           "variable": ""
         },
-        "red2Dark": {
+        "11": {
           "isVar": true,
-          "key": "$red2Dark",
-          "name": "color-170",
-          "val": "hsl(357, 34.4%, 12.0%)",
+          "key": "$11",
+          "name": "size-12",
+          "val": 124,
           "variable": ""
         },
-        "red3Dark": {
+        "12": {
           "isVar": true,
-          "key": "$red3Dark",
-          "name": "color-171",
-          "val": "hsl(356, 43.4%, 16.4%)",
+          "key": "$12",
+          "name": "size-13",
+          "val": 144,
           "variable": ""
         },
-        "red4Dark": {
+        "13": {
           "isVar": true,
-          "key": "$red4Dark",
-          "name": "color-172",
-          "val": "hsl(356, 47.6%, 19.2%)",
+          "key": "$13",
+          "name": "size-14",
+          "val": 164,
           "variable": ""
         },
-        "red5Dark": {
+        "14": {
           "isVar": true,
-          "key": "$red5Dark",
-          "name": "color-173",
-          "val": "hsl(356, 51.1%, 21.9%)",
+          "key": "$14",
+          "name": "size-15",
+          "val": 184,
           "variable": ""
         },
-        "red6Dark": {
+        "15": {
           "isVar": true,
-          "key": "$red6Dark",
-          "name": "color-174",
-          "val": "hsl(356, 55.2%, 25.9%)",
+          "key": "$15",
+          "name": "size-16",
+          "val": 204,
           "variable": ""
         },
-        "red7Dark": {
+        "16": {
           "isVar": true,
-          "key": "$red7Dark",
-          "name": "color-175",
-          "val": "hsl(357, 60.2%, 31.8%)",
+          "key": "$16",
+          "name": "size-17",
+          "val": 224,
           "variable": ""
         },
-        "red8Dark": {
+        "17": {
           "isVar": true,
-          "key": "$red8Dark",
-          "name": "color-176",
-          "val": "hsl(358, 65.0%, 40.4%)",
+          "key": "$17",
+          "name": "size-18",
+          "val": 224,
           "variable": ""
         },
-        "red9Dark": {
+        "18": {
           "isVar": true,
-          "key": "$red9Dark",
-          "name": "color-177",
-          "val": "hsl(358, 75.0%, 59.0%)",
+          "key": "$18",
+          "name": "size-19",
+          "val": 244,
           "variable": ""
         },
-        "red10Dark": {
+        "19": {
           "isVar": true,
-          "key": "$red10Dark",
-          "name": "color-178",
-          "val": "hsl(358, 85.3%, 64.0%)",
+          "key": "$19",
+          "name": "size-20",
+          "val": 264,
           "variable": ""
         },
-        "red11Dark": {
+        "20": {
           "isVar": true,
-          "key": "$red11Dark",
-          "name": "color-179",
-          "val": "hsl(358, 100%, 69.5%)",
+          "key": "$20",
+          "name": "size-21",
+          "val": 284,
           "variable": ""
         },
-        "red12Dark": {
+        "0.25": {
           "isVar": true,
-          "key": "$red12Dark",
-          "name": "color-180",
-          "val": "hsl(351, 89.0%, 96.0%)",
+          "key": "$0.25",
+          "name": "size-22",
+          "val": 2,
           "variable": ""
         },
-        "yellow1Dark": {
+        "0.5": {
           "isVar": true,
-          "key": "$yellow1Dark",
-          "name": "color-181",
-          "val": "hsl(45, 100%, 5.5%)",
+          "key": "$0.5",
+          "name": "size-23",
+          "val": 4,
           "variable": ""
         },
-        "yellow2Dark": {
+        "0.75": {
           "isVar": true,
-          "key": "$yellow2Dark",
-          "name": "color-182",
-          "val": "hsl(46, 100%, 6.7%)",
+          "key": "$0.75",
+          "name": "size-24",
+          "val": 8,
           "variable": ""
         },
-        "yellow3Dark": {
+        "1.5": {
           "isVar": true,
-          "key": "$yellow3Dark",
-          "name": "color-183",
-          "val": "hsl(45, 100%, 8.7%)",
+          "key": "$1.5",
+          "name": "size-25",
+          "val": 24,
           "variable": ""
         },
-        "yellow4Dark": {
+        "2.5": {
           "isVar": true,
-          "key": "$yellow4Dark",
-          "name": "color-184",
-          "val": "hsl(45, 100%, 10.4%)",
+          "key": "$2.5",
+          "name": "size-26",
+          "val": 32,
           "variable": ""
         },
-        "yellow5Dark": {
+        "3.5": {
           "isVar": true,
-          "key": "$yellow5Dark",
-          "name": "color-185",
-          "val": "hsl(47, 100%, 12.1%)",
+          "key": "$3.5",
+          "name": "size-27",
+          "val": 40,
           "variable": ""
         },
-        "yellow6Dark": {
+        "true": {
           "isVar": true,
-          "key": "$yellow6Dark",
-          "name": "color-186",
-          "val": "hsl(49, 100%, 14.3%)",
+          "key": "$true",
+          "name": "size-28",
+          "val": 44,
           "variable": ""
         },
-        "yellow7Dark": {
+        "4.5": {
           "isVar": true,
-          "key": "$yellow7Dark",
-          "name": "color-187",
-          "val": "hsl(49, 90.3%, 18.4%)",
+          "key": "$4.5",
+          "name": "size-29",
+          "val": 48,
           "variable": ""
         },
-        "yellow8Dark": {
+        "5.5": {
           "isVar": true,
-          "key": "$yellow8Dark",
-          "name": "color-188",
-          "val": "hsl(50, 100%, 22.0%)",
+          "key": "$5.5",
+          "name": "size-30",
+          "val": 59,
           "variable": ""
         },
-        "yellow9Dark": {
+        "6.5": {
           "isVar": true,
-          "key": "$yellow9Dark",
-          "name": "color-189",
-          "val": "hsl(53, 92.0%, 50.0%)",
+          "key": "$6.5",
+          "name": "size-31",
+          "val": 69,
           "variable": ""
         },
-        "yellow10Dark": {
+        "7.6": {
           "isVar": true,
-          "key": "$yellow10Dark",
-          "name": "color-190",
-          "val": "hsl(54, 100%, 68.0%)",
+          "key": "$7.6",
+          "name": "size-32",
+          "val": 79,
           "variable": ""
         },
-        "yellow11Dark": {
+        "8.5": {
           "isVar": true,
-          "key": "$yellow11Dark",
-          "name": "color-191",
-          "val": "hsl(48, 100%, 47.0%)",
+          "key": "$8.5",
+          "name": "size-33",
+          "val": 89,
           "variable": ""
         },
-        "yellow12Dark": {
+        "9.5": {
           "isVar": true,
-          "key": "$yellow12Dark",
-          "name": "color-192",
-          "val": "hsl(53, 100%, 91.0%)",
+          "key": "$9.5",
+          "name": "size-34",
+          "val": 99,
           "variable": ""
         }
       },
@@ -21041,6 +20013,246 @@
           "variable": ""
         }
       },
+      "space": {
+        "0": {
+          "isVar": true,
+          "key": "$0",
+          "name": "space-1",
+          "val": 0,
+          "variable": ""
+        },
+        "1": {
+          "isVar": true,
+          "key": "$1",
+          "name": "space-2",
+          "val": 20,
+          "variable": ""
+        },
+        "2": {
+          "isVar": true,
+          "key": "$2",
+          "name": "space-3",
+          "val": 28,
+          "variable": ""
+        },
+        "3": {
+          "isVar": true,
+          "key": "$3",
+          "name": "space-4",
+          "val": 36,
+          "variable": ""
+        },
+        "4": {
+          "isVar": true,
+          "key": "$4",
+          "name": "space-5",
+          "val": 44,
+          "variable": ""
+        },
+        "5": {
+          "isVar": true,
+          "key": "$5",
+          "name": "space-6",
+          "val": 52,
+          "variable": ""
+        },
+        "6": {
+          "isVar": true,
+          "key": "$6",
+          "name": "space-7",
+          "val": 64,
+          "variable": ""
+        },
+        "7": {
+          "isVar": true,
+          "key": "$7",
+          "name": "space-8",
+          "val": 74,
+          "variable": ""
+        },
+        "8": {
+          "isVar": true,
+          "key": "$8",
+          "name": "space-9",
+          "val": 84,
+          "variable": ""
+        },
+        "9": {
+          "isVar": true,
+          "key": "$9",
+          "name": "space-10",
+          "val": 94,
+          "variable": ""
+        },
+        "10": {
+          "isVar": true,
+          "key": "$10",
+          "name": "space-11",
+          "val": 104,
+          "variable": ""
+        },
+        "11": {
+          "isVar": true,
+          "key": "$11",
+          "name": "space-12",
+          "val": 124,
+          "variable": ""
+        },
+        "12": {
+          "isVar": true,
+          "key": "$12",
+          "name": "space-13",
+          "val": 144,
+          "variable": ""
+        },
+        "13": {
+          "isVar": true,
+          "key": "$13",
+          "name": "space-14",
+          "val": 164,
+          "variable": ""
+        },
+        "14": {
+          "isVar": true,
+          "key": "$14",
+          "name": "space-15",
+          "val": 184,
+          "variable": ""
+        },
+        "15": {
+          "isVar": true,
+          "key": "$15",
+          "name": "space-16",
+          "val": 204,
+          "variable": ""
+        },
+        "16": {
+          "isVar": true,
+          "key": "$16",
+          "name": "space-17",
+          "val": 224,
+          "variable": ""
+        },
+        "17": {
+          "isVar": true,
+          "key": "$17",
+          "name": "space-18",
+          "val": 224,
+          "variable": ""
+        },
+        "18": {
+          "isVar": true,
+          "key": "$18",
+          "name": "space-19",
+          "val": 244,
+          "variable": ""
+        },
+        "19": {
+          "isVar": true,
+          "key": "$19",
+          "name": "space-20",
+          "val": 264,
+          "variable": ""
+        },
+        "20": {
+          "isVar": true,
+          "key": "$20",
+          "name": "space-21",
+          "val": 284,
+          "variable": ""
+        },
+        "0.25": {
+          "isVar": true,
+          "key": "$0.25",
+          "name": "space-22",
+          "val": 2,
+          "variable": ""
+        },
+        "0.5": {
+          "isVar": true,
+          "key": "$0.5",
+          "name": "space-23",
+          "val": 4,
+          "variable": ""
+        },
+        "0.75": {
+          "isVar": true,
+          "key": "$0.75",
+          "name": "space-24",
+          "val": 8,
+          "variable": ""
+        },
+        "1.5": {
+          "isVar": true,
+          "key": "$1.5",
+          "name": "space-25",
+          "val": 24,
+          "variable": ""
+        },
+        "2.5": {
+          "isVar": true,
+          "key": "$2.5",
+          "name": "space-26",
+          "val": 32,
+          "variable": ""
+        },
+        "3.5": {
+          "isVar": true,
+          "key": "$3.5",
+          "name": "space-27",
+          "val": 40,
+          "variable": ""
+        },
+        "true": {
+          "isVar": true,
+          "key": "$true",
+          "name": "space-28",
+          "val": 44,
+          "variable": ""
+        },
+        "4.5": {
+          "isVar": true,
+          "key": "$4.5",
+          "name": "space-29",
+          "val": 48,
+          "variable": ""
+        },
+        "5.5": {
+          "isVar": true,
+          "key": "$5.5",
+          "name": "space-30",
+          "val": 59,
+          "variable": ""
+        },
+        "6.5": {
+          "isVar": true,
+          "key": "$6.5",
+          "name": "space-31",
+          "val": 69,
+          "variable": ""
+        },
+        "7.6": {
+          "isVar": true,
+          "key": "$7.6",
+          "name": "space-32",
+          "val": 79,
+          "variable": ""
+        },
+        "8.5": {
+          "isVar": true,
+          "key": "$8.5",
+          "name": "space-33",
+          "val": 89,
+          "variable": ""
+        },
+        "9.5": {
+          "isVar": true,
+          "key": "$9.5",
+          "name": "space-34",
+          "val": 99,
+          "variable": ""
+        }
+      },
       "zIndex": {
         "0": {
           "isVar": true,
@@ -21084,635 +20296,1576 @@
           "val": 500,
           "variable": ""
         }
+      }
+    },
+    "themes": {
+      "dark": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark"
       },
-      "space": {
-        "0": {
-          "isVar": true,
-          "key": "$0",
-          "name": "space-1",
-          "val": 0,
-          "variable": ""
-        },
-        "1": {
-          "isVar": true,
-          "key": "$1",
-          "name": "space-5",
-          "val": 2,
-          "variable": ""
-        },
-        "2": {
-          "isVar": true,
-          "key": "$2",
-          "name": "space-7",
-          "val": 7,
-          "variable": ""
-        },
-        "3": {
-          "isVar": true,
-          "key": "$3",
-          "name": "space-9",
-          "val": 13,
-          "variable": ""
-        },
-        "4": {
-          "isVar": true,
-          "key": "$4",
-          "name": "space-11",
-          "val": 18,
-          "variable": ""
-        },
-        "5": {
-          "isVar": true,
-          "key": "$5",
-          "name": "space-14",
-          "val": 24,
-          "variable": ""
-        },
-        "6": {
-          "isVar": true,
-          "key": "$6",
-          "name": "space-15",
-          "val": 32,
-          "variable": ""
-        },
-        "7": {
-          "isVar": true,
-          "key": "$7",
-          "name": "space-16",
-          "val": 39,
-          "variable": ""
-        },
-        "8": {
-          "isVar": true,
-          "key": "$8",
-          "name": "space-17",
-          "val": 46,
-          "variable": ""
-        },
-        "9": {
-          "isVar": true,
-          "key": "$9",
-          "name": "space-18",
-          "val": 53,
-          "variable": ""
-        },
-        "10": {
-          "isVar": true,
-          "key": "$10",
-          "name": "space-19",
-          "val": 60,
-          "variable": ""
-        },
-        "11": {
-          "isVar": true,
-          "key": "$11",
-          "name": "space-20",
-          "val": 74,
-          "variable": ""
-        },
-        "12": {
-          "isVar": true,
-          "key": "$12",
-          "name": "space-21",
-          "val": 88,
-          "variable": ""
-        },
-        "13": {
-          "isVar": true,
-          "key": "$13",
-          "name": "space-22",
-          "val": 102,
-          "variable": ""
-        },
-        "14": {
-          "isVar": true,
-          "key": "$14",
-          "name": "space-23",
-          "val": 116,
-          "variable": ""
-        },
-        "15": {
-          "isVar": true,
-          "key": "$15",
-          "name": "space-24",
-          "val": 130,
-          "variable": ""
-        },
-        "16": {
-          "isVar": true,
-          "key": "$16",
-          "name": "space-25",
-          "val": 144,
-          "variable": ""
-        },
-        "17": {
-          "isVar": true,
-          "key": "$17",
-          "name": "space-26",
-          "val": 144,
-          "variable": ""
-        },
-        "18": {
-          "isVar": true,
-          "key": "$18",
-          "name": "space-27",
-          "val": 158,
-          "variable": ""
-        },
-        "19": {
-          "isVar": true,
-          "key": "$19",
-          "name": "space-28",
-          "val": 172,
-          "variable": ""
-        },
-        "20": {
-          "isVar": true,
-          "key": "$20",
-          "name": "space-29",
-          "val": 186,
-          "variable": ""
-        },
-        "0.25": {
-          "isVar": true,
-          "key": "$0.25",
-          "name": "space-2",
-          "val": 0.5,
-          "variable": ""
-        },
-        "0.5": {
-          "isVar": true,
-          "key": "$0.5",
-          "name": "space-3",
-          "val": 1,
-          "variable": ""
-        },
-        "0.75": {
-          "isVar": true,
-          "key": "$0.75",
-          "name": "space-4",
-          "val": 1.5,
-          "variable": ""
-        },
-        "1.5": {
-          "isVar": true,
-          "key": "$1.5",
-          "name": "space-6",
-          "val": 4,
-          "variable": ""
-        },
-        "2.5": {
-          "isVar": true,
-          "key": "$2.5",
-          "name": "space-8",
-          "val": 10,
-          "variable": ""
-        },
-        "3.5": {
-          "isVar": true,
-          "key": "$3.5",
-          "name": "space-10",
-          "val": 16,
-          "variable": ""
-        },
-        "true": {
-          "isVar": true,
-          "key": "$true",
-          "name": "space-12",
-          "val": 18,
-          "variable": ""
-        },
-        "4.5": {
-          "isVar": true,
-          "key": "$4.5",
-          "name": "space-13",
-          "val": 21,
-          "variable": ""
-        },
-        "-0.25": {
-          "isVar": true,
-          "key": "$-0.25",
-          "name": "space-30",
-          "val": -0.5,
-          "variable": ""
-        },
-        "-0.5": {
-          "isVar": true,
-          "key": "$-0.5",
-          "name": "space-31",
-          "val": -1,
-          "variable": ""
-        },
-        "-0.75": {
-          "isVar": true,
-          "key": "$-0.75",
-          "name": "space-32",
-          "val": -1.5,
-          "variable": ""
-        },
-        "-1": {
-          "isVar": true,
-          "key": "$-1",
-          "name": "space-33",
-          "val": -2,
-          "variable": ""
-        },
-        "-1.5": {
-          "isVar": true,
-          "key": "$-1.5",
-          "name": "space-34",
-          "val": -4,
-          "variable": ""
-        },
-        "-2": {
-          "isVar": true,
-          "key": "$-2",
-          "name": "space-35",
-          "val": -7,
-          "variable": ""
-        },
-        "-2.5": {
-          "isVar": true,
-          "key": "$-2.5",
-          "name": "space-36",
-          "val": -10,
-          "variable": ""
-        },
-        "-3": {
-          "isVar": true,
-          "key": "$-3",
-          "name": "space-37",
-          "val": -13,
-          "variable": ""
-        },
-        "-3.5": {
-          "isVar": true,
-          "key": "$-3.5",
-          "name": "space-38",
-          "val": -16,
-          "variable": ""
-        },
-        "-4": {
-          "isVar": true,
-          "key": "$-4",
-          "name": "space-39",
-          "val": -18,
-          "variable": ""
-        },
-        "-true": {
-          "isVar": true,
-          "key": "$-true",
-          "name": "space-40",
-          "val": -18,
-          "variable": ""
-        },
-        "-4.5": {
-          "isVar": true,
-          "key": "$-4.5",
-          "name": "space-41",
-          "val": -21,
-          "variable": ""
-        },
-        "-5": {
-          "isVar": true,
-          "key": "$-5",
-          "name": "space-42",
-          "val": -24,
-          "variable": ""
-        },
-        "-6": {
-          "isVar": true,
-          "key": "$-6",
-          "name": "space-43",
-          "val": -32,
-          "variable": ""
-        },
-        "-7": {
-          "isVar": true,
-          "key": "$-7",
-          "name": "space-44",
-          "val": -39,
-          "variable": ""
-        },
-        "-8": {
-          "isVar": true,
-          "key": "$-8",
-          "name": "space-45",
-          "val": -46,
-          "variable": ""
-        },
-        "-9": {
-          "isVar": true,
-          "key": "$-9",
-          "name": "space-46",
-          "val": -53,
-          "variable": ""
-        },
-        "-10": {
-          "isVar": true,
-          "key": "$-10",
-          "name": "space-47",
-          "val": -60,
-          "variable": ""
-        },
-        "-11": {
-          "isVar": true,
-          "key": "$-11",
-          "name": "space-48",
-          "val": -74,
-          "variable": ""
-        },
-        "-12": {
-          "isVar": true,
-          "key": "$-12",
-          "name": "space-49",
-          "val": -88,
-          "variable": ""
-        },
-        "-13": {
-          "isVar": true,
-          "key": "$-13",
-          "name": "space-50",
-          "val": -102,
-          "variable": ""
-        },
-        "-14": {
-          "isVar": true,
-          "key": "$-14",
-          "name": "space-51",
-          "val": -116,
-          "variable": ""
-        },
-        "-15": {
-          "isVar": true,
-          "key": "$-15",
-          "name": "space-52",
-          "val": -130,
-          "variable": ""
-        },
-        "-16": {
-          "isVar": true,
-          "key": "$-16",
-          "name": "space-53",
-          "val": -144,
-          "variable": ""
-        },
-        "-17": {
-          "isVar": true,
-          "key": "$-17",
-          "name": "space-54",
-          "val": -144,
-          "variable": ""
-        },
-        "-18": {
-          "isVar": true,
-          "key": "$-18",
-          "name": "space-55",
-          "val": -158,
-          "variable": ""
-        },
-        "-19": {
-          "isVar": true,
-          "key": "$-19",
-          "name": "space-56",
-          "val": -172,
-          "variable": ""
-        },
-        "-20": {
-          "isVar": true,
-          "key": "$-20",
-          "name": "space-57",
-          "val": -186,
-          "variable": ""
-        }
+      "dark_primary": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_primary"
       },
-      "size": {
-        "0": {
-          "isVar": true,
-          "key": "$0",
-          "name": "size-1",
-          "val": 0,
-          "variable": ""
-        },
-        "1": {
-          "isVar": true,
-          "key": "$1",
-          "name": "size-5",
-          "val": 20,
-          "variable": ""
-        },
-        "2": {
-          "isVar": true,
-          "key": "$2",
-          "name": "size-7",
-          "val": 28,
-          "variable": ""
-        },
-        "3": {
-          "isVar": true,
-          "key": "$3",
-          "name": "size-9",
-          "val": 36,
-          "variable": ""
-        },
-        "4": {
-          "isVar": true,
-          "key": "$4",
-          "name": "size-11",
-          "val": 44,
-          "variable": ""
-        },
-        "5": {
-          "isVar": true,
-          "key": "$5",
-          "name": "size-14",
-          "val": 52,
-          "variable": ""
-        },
-        "6": {
-          "isVar": true,
-          "key": "$6",
-          "name": "size-15",
-          "val": 64,
-          "variable": ""
-        },
-        "7": {
-          "isVar": true,
-          "key": "$7",
-          "name": "size-16",
-          "val": 74,
-          "variable": ""
-        },
-        "8": {
-          "isVar": true,
-          "key": "$8",
-          "name": "size-17",
-          "val": 84,
-          "variable": ""
-        },
-        "9": {
-          "isVar": true,
-          "key": "$9",
-          "name": "size-18",
-          "val": 94,
-          "variable": ""
-        },
-        "10": {
-          "isVar": true,
-          "key": "$10",
-          "name": "size-19",
-          "val": 104,
-          "variable": ""
-        },
-        "11": {
-          "isVar": true,
-          "key": "$11",
-          "name": "size-20",
-          "val": 124,
-          "variable": ""
-        },
-        "12": {
-          "isVar": true,
-          "key": "$12",
-          "name": "size-21",
-          "val": 144,
-          "variable": ""
-        },
-        "13": {
-          "isVar": true,
-          "key": "$13",
-          "name": "size-22",
-          "val": 164,
-          "variable": ""
-        },
-        "14": {
-          "isVar": true,
-          "key": "$14",
-          "name": "size-23",
-          "val": 184,
-          "variable": ""
-        },
-        "15": {
-          "isVar": true,
-          "key": "$15",
-          "name": "size-24",
-          "val": 204,
-          "variable": ""
-        },
-        "16": {
-          "isVar": true,
-          "key": "$16",
-          "name": "size-25",
-          "val": 224,
-          "variable": ""
-        },
-        "17": {
-          "isVar": true,
-          "key": "$17",
-          "name": "size-26",
-          "val": 224,
-          "variable": ""
-        },
-        "18": {
-          "isVar": true,
-          "key": "$18",
-          "name": "size-27",
-          "val": 244,
-          "variable": ""
-        },
-        "19": {
-          "isVar": true,
-          "key": "$19",
-          "name": "size-28",
-          "val": 264,
-          "variable": ""
-        },
-        "20": {
-          "isVar": true,
-          "key": "$20",
-          "name": "size-29",
-          "val": 284,
-          "variable": ""
-        },
-        "0.25": {
-          "isVar": true,
-          "key": "$0.25",
-          "name": "size-2",
-          "val": 2,
-          "variable": ""
-        },
-        "0.5": {
-          "isVar": true,
-          "key": "$0.5",
-          "name": "size-3",
-          "val": 4,
-          "variable": ""
-        },
-        "0.75": {
-          "isVar": true,
-          "key": "$0.75",
-          "name": "size-4",
-          "val": 8,
-          "variable": ""
-        },
-        "1.5": {
-          "isVar": true,
-          "key": "$1.5",
-          "name": "size-6",
-          "val": 24,
-          "variable": ""
-        },
-        "2.5": {
-          "isVar": true,
-          "key": "$2.5",
-          "name": "size-8",
-          "val": 32,
-          "variable": ""
-        },
-        "3.5": {
-          "isVar": true,
-          "key": "$3.5",
-          "name": "size-10",
-          "val": 40,
-          "variable": ""
-        },
-        "true": {
-          "isVar": true,
-          "key": "$true",
-          "name": "size-12",
-          "val": 44,
-          "variable": ""
-        },
-        "4.5": {
-          "isVar": true,
-          "key": "$4.5",
-          "name": "size-13",
-          "val": 48,
-          "variable": ""
-        }
+      "dark_tertiary": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_tertiary"
       },
-      "icon": {
-        "sm": {
-          "isVar": true,
-          "key": "$sm",
-          "name": "icon-1",
-          "val": 16,
-          "variable": ""
-        },
-        "md": {
-          "isVar": true,
-          "key": "$md",
-          "name": "icon-2",
-          "val": 24,
-          "variable": ""
-        },
-        "lg": {
-          "isVar": true,
-          "key": "$lg",
-          "name": "icon-3",
-          "val": 32,
-          "variable": ""
-        }
+      "dark_detrimental": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_detrimental"
+      },
+      "dark_warning": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_warning"
+      },
+      "dark_outline": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_outline"
+      },
+      "light": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light"
+      },
+      "light_primary": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_primary"
+      },
+      "light_secondary": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_secondary"
+      },
+      "light_tertiary": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_tertiary"
+      },
+      "light_detrimental": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_detrimental"
+      },
+      "light_warning": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_warning"
+      },
+      "light_outline": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_outline"
+      },
+      "light_branded": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FC72FF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_branded"
+      },
+      "dark_branded": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FC72FF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_branded"
+      },
+      "dark_secondary": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#131313",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#9B9B9B",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_secondary"
+      },
+      "light_primary_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FC72FF",
+        "backgroundHover": "#FC72FFd9",
+        "backgroundPress": "#FC72FFa6",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_primary_Button"
+      },
+      "dark_primary_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FC72FF",
+        "backgroundHover": "#FC72FFd9",
+        "backgroundPress": "#FC72FFa6",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_primary_Button"
+      },
+      "light_secondary_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#F9F9F9",
+        "backgroundHover": "#F9F9F9d9",
+        "backgroundPress": "#F9F9F9a6",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#000000",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_secondary_Button"
+      },
+      "dark_secondary_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#1B1B1B",
+        "backgroundHover": "#1B1B1Bd9",
+        "backgroundPress": "#1B1B1Ba6",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_secondary_Button"
+      },
+      "light_tertiary_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#2222220D",
+        "backgroundHover": "#F9F9F9",
+        "backgroundPress": "#F9F9F9",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_tertiary_Button"
+      },
+      "dark_tertiary_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FFFFFF1F",
+        "backgroundHover": "#1B1B1B",
+        "backgroundPress": "#1B1B1B",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_tertiary_Button"
+      },
+      "light_outline_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "transparent",
+        "backgroundHover": "transparent",
+        "backgroundPress": "transparent",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "#2222220D",
+        "borderColorHover": "transparent",
+        "color": "#222222",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_outline_Button"
+      },
+      "dark_outline_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "transparent",
+        "backgroundHover": "transparent",
+        "backgroundPress": "transparent",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "#FFFFFF1F",
+        "borderColorHover": "transparent",
+        "color": "#FFFFFF",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_outline_Button"
+      },
+      "light_detrimental_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FA2B391f",
+        "backgroundHover": "#FA2B391f",
+        "backgroundPress": "#FA2B391f",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FF5F52",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_detrimental_Button"
+      },
+      "dark_detrimental_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FA2B391f",
+        "backgroundHover": "#FA2B391f",
+        "backgroundPress": "#FA2B391f",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FF5F52",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_detrimental_Button"
+      },
+      "light_warning_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#FFFFFF",
+        "surface2": "#F9F9F9",
+        "surface3": "#2222220D",
+        "surface4": "#FFFFFFA3",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#D2D9EE80",
+        "neutral1": "#222222",
+        "neutral2": "#7D7D7D",
+        "neutral3": "#CECECE",
+        "accent1": "#FC72FF",
+        "accent2": "#FFEFFF",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#FCF7FF",
+        "DEP_backgroundActionButton": "#FFF1FE",
+        "DEP_backgroundOverlay": "#FFFFFF99",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#FC72FF",
+        "DEP_accentSuccessSoft": "#40B66B3d",
+        "DEP_accentWarningSoft": "#FEB2393d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#FAD8F8",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#393939",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#FEB2393d",
+        "backgroundHover": "#FEB2393d",
+        "backgroundPress": "#FEB2393d",
+        "backgroundFocus": "#F9F9F9",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FEB239",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "light_warning_Button"
+      },
+      "dark_warning_Button": {
+        "sporeWhite": "#FFFFFF",
+        "sporeBlack": "#000000",
+        "surface1": "#131313",
+        "surface2": "#1B1B1B",
+        "surface3": "#FFFFFF1F",
+        "surface4": "#FFFFFF33",
+        "surface5": "#0000000A",
+        "scrim": "#00000099",
+        "DEP_scrimSoft": "#1B223680",
+        "neutral1": "#FFFFFF",
+        "neutral2": "#9B9B9B",
+        "neutral3": "#5E5E5E",
+        "accent1": "#FC72FF",
+        "accent2": "#311C31",
+        "accentSoft": "#FC72FF33",
+        "statusSuccess": "#40B66B",
+        "statusCritical": "#FF5F52",
+        "DEP_backgroundBranded": "#100D1C",
+        "DEP_backgroundActionButton": "#FC72FF1f",
+        "DEP_backgroundOverlay": "#FFFFFF1a",
+        "DEP_accentWarning": "#FEB239",
+        "DEP_accentBranded": "#FC72FF",
+        "DEP_shadowBranded": "#B60ACF",
+        "DEP_accentSuccessSoft": "#2098533d",
+        "DEP_accentWarningSoft": "#EEB3173d",
+        "DEP_accentCriticalSoft": "#FA2B391f",
+        "DEP_blue300": "#869EFF",
+        "DEP_brandedAccentSoft": "#46244F",
+        "DEP_magentaDark": "#FC72FF1f",
+        "DEP_fiatBanner": "#FB36D0",
+        "chain_1": "#e6e6e6",
+        "chain_3": "#A08116",
+        "chain_4": "#FB118E",
+        "chain_5": "#209853",
+        "chain_10": "#FA2B39",
+        "chain_137": "#a26af3",
+        "chain_42161": "#28A0F0",
+        "chain_80001": "#a26af3",
+        "chain_8453": "#2151F5",
+        "chain_56": "#F0B90B",
+        "transparent": "transparent",
+        "background": "#EEB3173d",
+        "backgroundHover": "#EEB3173d",
+        "backgroundPress": "#EEB3173d",
+        "backgroundFocus": "#1B1B1B",
+        "borderColor": "transparent",
+        "borderColorHover": "transparent",
+        "color": "#FEB239",
+        "colorHover": "#FC72FF",
+        "colorPress": "#FC72FF",
+        "colorFocus": "#FC72FF",
+        "shadowColor": "transparent",
+        "shadowColorHover": "transparent",
+        "id": "dark_warning_Button"
       }
     },
     "inverseShorthands": {
@@ -21802,1348 +21955,340 @@
     "getNewCSS": "Function",
     "fontSizeTokens": {},
     "specificTokens": {
-      "$color.blue1Light": {
+      "$color.lightPrimary": {
         "isVar": true,
-        "key": "$blue1Light",
+        "key": "$lightPrimary",
         "name": "color-1",
-        "val": "hsl(206, 100%, 99.2%)",
+        "val": "#f7f7f8",
         "variable": ""
       },
-      "$color.blue2Light": {
+      "$color.lightBlack": {
         "isVar": true,
-        "key": "$blue2Light",
+        "key": "$lightBlack",
         "name": "color-2",
-        "val": "hsl(210, 100%, 98.0%)",
+        "val": "#000014",
         "variable": ""
       },
-      "$color.blue3Light": {
+      "$color.lightGray": {
         "isVar": true,
-        "key": "$blue3Light",
+        "key": "$lightGray",
         "name": "color-3",
-        "val": "hsl(209, 100%, 96.5%)",
+        "val": "#3a3a44",
         "variable": ""
       },
-      "$color.blue4Light": {
+      "$color.lightTag": {
         "isVar": true,
-        "key": "$blue4Light",
+        "key": "$lightTag",
         "name": "color-4",
-        "val": "hsl(210, 98.8%, 94.0%)",
+        "val": "#323235",
         "variable": ""
       },
-      "$color.blue5Light": {
+      "$color.lightGreen": {
         "isVar": true,
-        "key": "$blue5Light",
+        "key": "$lightGreen",
         "name": "color-5",
-        "val": "hsl(209, 95.0%, 90.1%)",
+        "val": "#14b866",
         "variable": ""
       },
-      "$color.blue6Light": {
+      "$color.lightRed": {
         "isVar": true,
-        "key": "$blue6Light",
+        "key": "$lightRed",
         "name": "color-6",
-        "val": "hsl(209, 81.2%, 84.5%)",
+        "val": "#ec1414",
         "variable": ""
       },
-      "$color.blue7Light": {
+      "$color.lightPurple": {
         "isVar": true,
-        "key": "$blue7Light",
+        "key": "$lightPurple",
         "name": "color-7",
-        "val": "hsl(208, 77.5%, 76.9%)",
+        "val": "#bf94ff",
         "variable": ""
       },
-      "$color.blue8Light": {
+      "$color.darkPrimary": {
         "isVar": true,
-        "key": "$blue8Light",
+        "key": "$darkPrimary",
         "name": "color-8",
-        "val": "hsl(206, 81.9%, 65.3%)",
+        "val": "#000014",
         "variable": ""
       },
-      "$color.blue9Light": {
+      "$color.darkBlack": {
         "isVar": true,
-        "key": "$blue9Light",
+        "key": "$darkBlack",
         "name": "color-9",
-        "val": "hsl(206, 100%, 50.0%)",
+        "val": "#efeff1",
         "variable": ""
       },
-      "$color.blue10Light": {
+      "$color.darkGray": {
         "isVar": true,
-        "key": "$blue10Light",
+        "key": "$darkGray",
         "name": "color-10",
-        "val": "hsl(208, 100%, 47.3%)",
+        "val": "#7f7f8b",
         "variable": ""
       },
-      "$color.blue11Light": {
+      "$color.darkTag": {
         "isVar": true,
-        "key": "$blue11Light",
+        "key": "$darkTag",
         "name": "color-11",
-        "val": "hsl(211, 100%, 43.2%)",
+        "val": "#323235",
         "variable": ""
       },
-      "$color.blue12Light": {
+      "$color.darkGreen": {
         "isVar": true,
-        "key": "$blue12Light",
+        "key": "$darkGreen",
         "name": "color-12",
-        "val": "hsl(211, 100%, 15.0%)",
+        "val": "#14b866",
         "variable": ""
       },
-      "$color.gray1Light": {
+      "$color.darkRed": {
         "isVar": true,
-        "key": "$gray1Light",
+        "key": "$darkRed",
         "name": "color-13",
-        "val": "hsl(0, 0%, 99.0%)",
+        "val": "#ec1414",
         "variable": ""
       },
-      "$color.gray2Light": {
+      "$color.darkPurple": {
         "isVar": true,
-        "key": "$gray2Light",
+        "key": "$darkPurple",
         "name": "color-14",
-        "val": "hsl(0, 0%, 97.3%)",
+        "val": "#bf94ff",
         "variable": ""
       },
-      "$color.gray3Light": {
+      "$size.0": {
         "isVar": true,
-        "key": "$gray3Light",
-        "name": "color-15",
-        "val": "hsl(0, 0%, 95.1%)",
+        "key": "$0",
+        "name": "size-1",
+        "val": 0,
         "variable": ""
       },
-      "$color.gray4Light": {
+      "$size.1": {
         "isVar": true,
-        "key": "$gray4Light",
-        "name": "color-16",
-        "val": "hsl(0, 0%, 93.0%)",
+        "key": "$1",
+        "name": "size-2",
+        "val": 20,
         "variable": ""
       },
-      "$color.gray5Light": {
+      "$size.2": {
         "isVar": true,
-        "key": "$gray5Light",
-        "name": "color-17",
-        "val": "hsl(0, 0%, 90.9%)",
+        "key": "$2",
+        "name": "size-3",
+        "val": 28,
         "variable": ""
       },
-      "$color.gray6Light": {
+      "$size.3": {
         "isVar": true,
-        "key": "$gray6Light",
-        "name": "color-18",
-        "val": "hsl(0, 0%, 88.7%)",
+        "key": "$3",
+        "name": "size-4",
+        "val": 36,
         "variable": ""
       },
-      "$color.gray7Light": {
+      "$size.4": {
         "isVar": true,
-        "key": "$gray7Light",
-        "name": "color-19",
-        "val": "hsl(0, 0%, 85.8%)",
+        "key": "$4",
+        "name": "size-5",
+        "val": 44,
         "variable": ""
       },
-      "$color.gray8Light": {
+      "$size.5": {
         "isVar": true,
-        "key": "$gray8Light",
-        "name": "color-20",
-        "val": "hsl(0, 0%, 78.0%)",
+        "key": "$5",
+        "name": "size-6",
+        "val": 52,
         "variable": ""
       },
-      "$color.gray9Light": {
+      "$size.6": {
         "isVar": true,
-        "key": "$gray9Light",
-        "name": "color-21",
-        "val": "hsl(0, 0%, 56.1%)",
+        "key": "$6",
+        "name": "size-7",
+        "val": 64,
         "variable": ""
       },
-      "$color.gray10Light": {
+      "$size.7": {
         "isVar": true,
-        "key": "$gray10Light",
-        "name": "color-22",
-        "val": "hsl(0, 0%, 52.3%)",
+        "key": "$7",
+        "name": "size-8",
+        "val": 74,
         "variable": ""
       },
-      "$color.gray11Light": {
+      "$size.8": {
         "isVar": true,
-        "key": "$gray11Light",
-        "name": "color-23",
-        "val": "hsl(0, 0%, 43.5%)",
+        "key": "$8",
+        "name": "size-9",
+        "val": 84,
         "variable": ""
       },
-      "$color.gray12Light": {
+      "$size.9": {
         "isVar": true,
-        "key": "$gray12Light",
-        "name": "color-24",
-        "val": "hsl(0, 0%, 9.0%)",
+        "key": "$9",
+        "name": "size-10",
+        "val": 94,
         "variable": ""
       },
-      "$color.green1Light": {
+      "$size.10": {
         "isVar": true,
-        "key": "$green1Light",
-        "name": "color-25",
-        "val": "hsl(136, 50.0%, 98.9%)",
+        "key": "$10",
+        "name": "size-11",
+        "val": 104,
         "variable": ""
       },
-      "$color.green2Light": {
+      "$size.11": {
         "isVar": true,
-        "key": "$green2Light",
-        "name": "color-26",
-        "val": "hsl(138, 62.5%, 96.9%)",
+        "key": "$11",
+        "name": "size-12",
+        "val": 124,
         "variable": ""
       },
-      "$color.green3Light": {
+      "$size.12": {
         "isVar": true,
-        "key": "$green3Light",
-        "name": "color-27",
-        "val": "hsl(139, 55.2%, 94.5%)",
+        "key": "$12",
+        "name": "size-13",
+        "val": 144,
         "variable": ""
       },
-      "$color.green4Light": {
+      "$size.13": {
         "isVar": true,
-        "key": "$green4Light",
-        "name": "color-28",
-        "val": "hsl(140, 48.7%, 91.0%)",
+        "key": "$13",
+        "name": "size-14",
+        "val": 164,
         "variable": ""
       },
-      "$color.green5Light": {
+      "$size.14": {
         "isVar": true,
-        "key": "$green5Light",
-        "name": "color-29",
-        "val": "hsl(141, 43.7%, 86.0%)",
+        "key": "$14",
+        "name": "size-15",
+        "val": 184,
         "variable": ""
       },
-      "$color.green6Light": {
+      "$size.15": {
         "isVar": true,
-        "key": "$green6Light",
-        "name": "color-30",
-        "val": "hsl(143, 40.3%, 79.0%)",
+        "key": "$15",
+        "name": "size-16",
+        "val": 204,
         "variable": ""
       },
-      "$color.green7Light": {
+      "$size.16": {
         "isVar": true,
-        "key": "$green7Light",
-        "name": "color-31",
-        "val": "hsl(146, 38.5%, 69.0%)",
+        "key": "$16",
+        "name": "size-17",
+        "val": 224,
         "variable": ""
       },
-      "$color.green8Light": {
+      "$size.17": {
         "isVar": true,
-        "key": "$green8Light",
-        "name": "color-32",
-        "val": "hsl(151, 40.2%, 54.1%)",
+        "key": "$17",
+        "name": "size-18",
+        "val": 224,
         "variable": ""
       },
-      "$color.green9Light": {
+      "$size.18": {
         "isVar": true,
-        "key": "$green9Light",
-        "name": "color-33",
-        "val": "hsl(151, 55.0%, 41.5%)",
+        "key": "$18",
+        "name": "size-19",
+        "val": 244,
         "variable": ""
       },
-      "$color.green10Light": {
+      "$size.19": {
         "isVar": true,
-        "key": "$green10Light",
-        "name": "color-34",
-        "val": "hsl(152, 57.5%, 37.6%)",
+        "key": "$19",
+        "name": "size-20",
+        "val": 264,
         "variable": ""
       },
-      "$color.green11Light": {
+      "$size.20": {
         "isVar": true,
-        "key": "$green11Light",
-        "name": "color-35",
-        "val": "hsl(153, 67.0%, 28.5%)",
+        "key": "$20",
+        "name": "size-21",
+        "val": 284,
         "variable": ""
       },
-      "$color.green12Light": {
+      "$size.0.25": {
         "isVar": true,
-        "key": "$green12Light",
-        "name": "color-36",
-        "val": "hsl(155, 40.0%, 14.0%)",
+        "key": "$0.25",
+        "name": "size-22",
+        "val": 2,
         "variable": ""
       },
-      "$color.orange1Light": {
+      "$size.0.5": {
         "isVar": true,
-        "key": "$orange1Light",
-        "name": "color-37",
-        "val": "hsl(24, 70.0%, 99.0%)",
+        "key": "$0.5",
+        "name": "size-23",
+        "val": 4,
         "variable": ""
       },
-      "$color.orange2Light": {
+      "$size.0.75": {
         "isVar": true,
-        "key": "$orange2Light",
-        "name": "color-38",
-        "val": "hsl(24, 83.3%, 97.6%)",
+        "key": "$0.75",
+        "name": "size-24",
+        "val": 8,
         "variable": ""
       },
-      "$color.orange3Light": {
+      "$size.1.5": {
         "isVar": true,
-        "key": "$orange3Light",
-        "name": "color-39",
-        "val": "hsl(24, 100%, 95.3%)",
+        "key": "$1.5",
+        "name": "size-25",
+        "val": 24,
         "variable": ""
       },
-      "$color.orange4Light": {
+      "$size.2.5": {
         "isVar": true,
-        "key": "$orange4Light",
-        "name": "color-40",
-        "val": "hsl(25, 100%, 92.2%)",
+        "key": "$2.5",
+        "name": "size-26",
+        "val": 32,
         "variable": ""
       },
-      "$color.orange5Light": {
+      "$size.3.5": {
         "isVar": true,
-        "key": "$orange5Light",
-        "name": "color-41",
-        "val": "hsl(25, 100%, 88.2%)",
+        "key": "$3.5",
+        "name": "size-27",
+        "val": 40,
         "variable": ""
       },
-      "$color.orange6Light": {
+      "$size.true": {
         "isVar": true,
-        "key": "$orange6Light",
-        "name": "color-42",
-        "val": "hsl(25, 100%, 82.8%)",
+        "key": "$true",
+        "name": "size-28",
+        "val": 44,
         "variable": ""
       },
-      "$color.orange7Light": {
+      "$size.4.5": {
         "isVar": true,
-        "key": "$orange7Light",
-        "name": "color-43",
-        "val": "hsl(24, 100%, 75.3%)",
+        "key": "$4.5",
+        "name": "size-29",
+        "val": 48,
         "variable": ""
       },
-      "$color.orange8Light": {
+      "$size.5.5": {
         "isVar": true,
-        "key": "$orange8Light",
-        "name": "color-44",
-        "val": "hsl(24, 94.5%, 64.3%)",
+        "key": "$5.5",
+        "name": "size-30",
+        "val": 59,
         "variable": ""
       },
-      "$color.orange9Light": {
+      "$size.6.5": {
         "isVar": true,
-        "key": "$orange9Light",
-        "name": "color-45",
-        "val": "hsl(24, 94.0%, 50.0%)",
+        "key": "$6.5",
+        "name": "size-31",
+        "val": 69,
         "variable": ""
       },
-      "$color.orange10Light": {
+      "$size.7.6": {
         "isVar": true,
-        "key": "$orange10Light",
-        "name": "color-46",
-        "val": "hsl(24, 100%, 46.5%)",
+        "key": "$7.6",
+        "name": "size-32",
+        "val": 79,
         "variable": ""
       },
-      "$color.orange11Light": {
+      "$size.8.5": {
         "isVar": true,
-        "key": "$orange11Light",
-        "name": "color-47",
-        "val": "hsl(24, 100%, 37.0%)",
+        "key": "$8.5",
+        "name": "size-33",
+        "val": 89,
         "variable": ""
       },
-      "$color.orange12Light": {
+      "$size.9.5": {
         "isVar": true,
-        "key": "$orange12Light",
-        "name": "color-48",
-        "val": "hsl(15, 60.0%, 17.0%)",
-        "variable": ""
-      },
-      "$color.pink1Light": {
-        "isVar": true,
-        "key": "$pink1Light",
-        "name": "color-49",
-        "val": "hsl(322, 100%, 99.4%)",
-        "variable": ""
-      },
-      "$color.pink2Light": {
-        "isVar": true,
-        "key": "$pink2Light",
-        "name": "color-50",
-        "val": "hsl(323, 100%, 98.4%)",
-        "variable": ""
-      },
-      "$color.pink3Light": {
-        "isVar": true,
-        "key": "$pink3Light",
-        "name": "color-51",
-        "val": "hsl(323, 86.3%, 96.5%)",
-        "variable": ""
-      },
-      "$color.pink4Light": {
-        "isVar": true,
-        "key": "$pink4Light",
-        "name": "color-52",
-        "val": "hsl(323, 78.7%, 94.2%)",
-        "variable": ""
-      },
-      "$color.pink5Light": {
-        "isVar": true,
-        "key": "$pink5Light",
-        "name": "color-53",
-        "val": "hsl(323, 72.2%, 91.1%)",
-        "variable": ""
-      },
-      "$color.pink6Light": {
-        "isVar": true,
-        "key": "$pink6Light",
-        "name": "color-54",
-        "val": "hsl(323, 66.3%, 86.6%)",
-        "variable": ""
-      },
-      "$color.pink7Light": {
-        "isVar": true,
-        "key": "$pink7Light",
-        "name": "color-55",
-        "val": "hsl(323, 62.0%, 80.1%)",
-        "variable": ""
-      },
-      "$color.pink8Light": {
-        "isVar": true,
-        "key": "$pink8Light",
-        "name": "color-56",
-        "val": "hsl(323, 60.3%, 72.4%)",
-        "variable": ""
-      },
-      "$color.pink9Light": {
-        "isVar": true,
-        "key": "$pink9Light",
-        "name": "color-57",
-        "val": "hsl(322, 65.0%, 54.5%)",
-        "variable": ""
-      },
-      "$color.pink10Light": {
-        "isVar": true,
-        "key": "$pink10Light",
-        "name": "color-58",
-        "val": "hsl(322, 63.9%, 50.7%)",
-        "variable": ""
-      },
-      "$color.pink11Light": {
-        "isVar": true,
-        "key": "$pink11Light",
-        "name": "color-59",
-        "val": "hsl(322, 75.0%, 46.0%)",
-        "variable": ""
-      },
-      "$color.pink12Light": {
-        "isVar": true,
-        "key": "$pink12Light",
-        "name": "color-60",
-        "val": "hsl(320, 70.0%, 13.5%)",
-        "variable": ""
-      },
-      "$color.purple1Light": {
-        "isVar": true,
-        "key": "$purple1Light",
-        "name": "color-61",
-        "val": "hsl(280, 65.0%, 99.4%)",
-        "variable": ""
-      },
-      "$color.purple2Light": {
-        "isVar": true,
-        "key": "$purple2Light",
-        "name": "color-62",
-        "val": "hsl(276, 100%, 99.0%)",
-        "variable": ""
-      },
-      "$color.purple3Light": {
-        "isVar": true,
-        "key": "$purple3Light",
-        "name": "color-63",
-        "val": "hsl(276, 83.1%, 97.0%)",
-        "variable": ""
-      },
-      "$color.purple4Light": {
-        "isVar": true,
-        "key": "$purple4Light",
-        "name": "color-64",
-        "val": "hsl(275, 76.4%, 94.7%)",
-        "variable": ""
-      },
-      "$color.purple5Light": {
-        "isVar": true,
-        "key": "$purple5Light",
-        "name": "color-65",
-        "val": "hsl(275, 70.8%, 91.8%)",
-        "variable": ""
-      },
-      "$color.purple6Light": {
-        "isVar": true,
-        "key": "$purple6Light",
-        "name": "color-66",
-        "val": "hsl(274, 65.4%, 87.8%)",
-        "variable": ""
-      },
-      "$color.purple7Light": {
-        "isVar": true,
-        "key": "$purple7Light",
-        "name": "color-67",
-        "val": "hsl(273, 61.0%, 81.7%)",
-        "variable": ""
-      },
-      "$color.purple8Light": {
-        "isVar": true,
-        "key": "$purple8Light",
-        "name": "color-68",
-        "val": "hsl(272, 60.0%, 73.5%)",
-        "variable": ""
-      },
-      "$color.purple9Light": {
-        "isVar": true,
-        "key": "$purple9Light",
-        "name": "color-69",
-        "val": "hsl(272, 51.0%, 54.0%)",
-        "variable": ""
-      },
-      "$color.purple10Light": {
-        "isVar": true,
-        "key": "$purple10Light",
-        "name": "color-70",
-        "val": "hsl(272, 46.8%, 50.3%)",
-        "variable": ""
-      },
-      "$color.purple11Light": {
-        "isVar": true,
-        "key": "$purple11Light",
-        "name": "color-71",
-        "val": "hsl(272, 50.0%, 45.8%)",
-        "variable": ""
-      },
-      "$color.purple12Light": {
-        "isVar": true,
-        "key": "$purple12Light",
-        "name": "color-72",
-        "val": "hsl(272, 66.0%, 16.0%)",
-        "variable": ""
-      },
-      "$color.red1Light": {
-        "isVar": true,
-        "key": "$red1Light",
-        "name": "color-73",
-        "val": "hsl(359, 100%, 99.4%)",
-        "variable": ""
-      },
-      "$color.red2Light": {
-        "isVar": true,
-        "key": "$red2Light",
-        "name": "color-74",
-        "val": "hsl(359, 100%, 98.6%)",
-        "variable": ""
-      },
-      "$color.red3Light": {
-        "isVar": true,
-        "key": "$red3Light",
-        "name": "color-75",
-        "val": "hsl(360, 100%, 96.8%)",
-        "variable": ""
-      },
-      "$color.red4Light": {
-        "isVar": true,
-        "key": "$red4Light",
-        "name": "color-76",
-        "val": "hsl(360, 97.9%, 94.8%)",
-        "variable": ""
-      },
-      "$color.red5Light": {
-        "isVar": true,
-        "key": "$red5Light",
-        "name": "color-77",
-        "val": "hsl(360, 90.2%, 91.9%)",
-        "variable": ""
-      },
-      "$color.red6Light": {
-        "isVar": true,
-        "key": "$red6Light",
-        "name": "color-78",
-        "val": "hsl(360, 81.7%, 87.8%)",
-        "variable": ""
-      },
-      "$color.red7Light": {
-        "isVar": true,
-        "key": "$red7Light",
-        "name": "color-79",
-        "val": "hsl(359, 74.2%, 81.7%)",
-        "variable": ""
-      },
-      "$color.red8Light": {
-        "isVar": true,
-        "key": "$red8Light",
-        "name": "color-80",
-        "val": "hsl(359, 69.5%, 74.3%)",
-        "variable": ""
-      },
-      "$color.red9Light": {
-        "isVar": true,
-        "key": "$red9Light",
-        "name": "color-81",
-        "val": "hsl(358, 75.0%, 59.0%)",
-        "variable": ""
-      },
-      "$color.red10Light": {
-        "isVar": true,
-        "key": "$red10Light",
-        "name": "color-82",
-        "val": "hsl(358, 69.4%, 55.2%)",
-        "variable": ""
-      },
-      "$color.red11Light": {
-        "isVar": true,
-        "key": "$red11Light",
-        "name": "color-83",
-        "val": "hsl(358, 65.0%, 48.7%)",
-        "variable": ""
-      },
-      "$color.red12Light": {
-        "isVar": true,
-        "key": "$red12Light",
-        "name": "color-84",
-        "val": "hsl(354, 50.0%, 14.6%)",
-        "variable": ""
-      },
-      "$color.yellow1Light": {
-        "isVar": true,
-        "key": "$yellow1Light",
-        "name": "color-85",
-        "val": "hsl(60, 54.0%, 98.5%)",
-        "variable": ""
-      },
-      "$color.yellow2Light": {
-        "isVar": true,
-        "key": "$yellow2Light",
-        "name": "color-86",
-        "val": "hsl(52, 100%, 95.5%)",
-        "variable": ""
-      },
-      "$color.yellow3Light": {
-        "isVar": true,
-        "key": "$yellow3Light",
-        "name": "color-87",
-        "val": "hsl(55, 100%, 90.9%)",
-        "variable": ""
-      },
-      "$color.yellow4Light": {
-        "isVar": true,
-        "key": "$yellow4Light",
-        "name": "color-88",
-        "val": "hsl(54, 100%, 86.6%)",
-        "variable": ""
-      },
-      "$color.yellow5Light": {
-        "isVar": true,
-        "key": "$yellow5Light",
-        "name": "color-89",
-        "val": "hsl(52, 97.9%, 82.0%)",
-        "variable": ""
-      },
-      "$color.yellow6Light": {
-        "isVar": true,
-        "key": "$yellow6Light",
-        "name": "color-90",
-        "val": "hsl(50, 89.4%, 76.1%)",
-        "variable": ""
-      },
-      "$color.yellow7Light": {
-        "isVar": true,
-        "key": "$yellow7Light",
-        "name": "color-91",
-        "val": "hsl(47, 80.4%, 68.0%)",
-        "variable": ""
-      },
-      "$color.yellow8Light": {
-        "isVar": true,
-        "key": "$yellow8Light",
-        "name": "color-92",
-        "val": "hsl(48, 100%, 46.1%)",
-        "variable": ""
-      },
-      "$color.yellow9Light": {
-        "isVar": true,
-        "key": "$yellow9Light",
-        "name": "color-93",
-        "val": "hsl(53, 92.0%, 50.0%)",
-        "variable": ""
-      },
-      "$color.yellow10Light": {
-        "isVar": true,
-        "key": "$yellow10Light",
-        "name": "color-94",
-        "val": "hsl(50, 100%, 48.5%)",
-        "variable": ""
-      },
-      "$color.yellow11Light": {
-        "isVar": true,
-        "key": "$yellow11Light",
-        "name": "color-95",
-        "val": "hsl(42, 100%, 29.0%)",
-        "variable": ""
-      },
-      "$color.yellow12Light": {
-        "isVar": true,
-        "key": "$yellow12Light",
-        "name": "color-96",
-        "val": "hsl(40, 55.0%, 13.5%)",
-        "variable": ""
-      },
-      "$color.blue1Dark": {
-        "isVar": true,
-        "key": "$blue1Dark",
-        "name": "color-97",
-        "val": "hsl(212, 35.0%, 9.2%)",
-        "variable": ""
-      },
-      "$color.blue2Dark": {
-        "isVar": true,
-        "key": "$blue2Dark",
-        "name": "color-98",
-        "val": "hsl(216, 50.0%, 11.8%)",
-        "variable": ""
-      },
-      "$color.blue3Dark": {
-        "isVar": true,
-        "key": "$blue3Dark",
-        "name": "color-99",
-        "val": "hsl(214, 59.4%, 15.3%)",
-        "variable": ""
-      },
-      "$color.blue4Dark": {
-        "isVar": true,
-        "key": "$blue4Dark",
-        "name": "color-100",
-        "val": "hsl(214, 65.8%, 17.9%)",
-        "variable": ""
-      },
-      "$color.blue5Dark": {
-        "isVar": true,
-        "key": "$blue5Dark",
-        "name": "color-101",
-        "val": "hsl(213, 71.2%, 20.2%)",
-        "variable": ""
-      },
-      "$color.blue6Dark": {
-        "isVar": true,
-        "key": "$blue6Dark",
-        "name": "color-102",
-        "val": "hsl(212, 77.4%, 23.1%)",
-        "variable": ""
-      },
-      "$color.blue7Dark": {
-        "isVar": true,
-        "key": "$blue7Dark",
-        "name": "color-103",
-        "val": "hsl(211, 85.1%, 27.4%)",
-        "variable": ""
-      },
-      "$color.blue8Dark": {
-        "isVar": true,
-        "key": "$blue8Dark",
-        "name": "color-104",
-        "val": "hsl(211, 89.7%, 34.1%)",
-        "variable": ""
-      },
-      "$color.blue9Dark": {
-        "isVar": true,
-        "key": "$blue9Dark",
-        "name": "color-105",
-        "val": "hsl(206, 100%, 50.0%)",
-        "variable": ""
-      },
-      "$color.blue10Dark": {
-        "isVar": true,
-        "key": "$blue10Dark",
-        "name": "color-106",
-        "val": "hsl(209, 100%, 60.6%)",
-        "variable": ""
-      },
-      "$color.blue11Dark": {
-        "isVar": true,
-        "key": "$blue11Dark",
-        "name": "color-107",
-        "val": "hsl(210, 100%, 66.1%)",
-        "variable": ""
-      },
-      "$color.blue12Dark": {
-        "isVar": true,
-        "key": "$blue12Dark",
-        "name": "color-108",
-        "val": "hsl(206, 98.0%, 95.8%)",
-        "variable": ""
-      },
-      "$color.gray1Dark": {
-        "isVar": true,
-        "key": "$gray1Dark",
-        "name": "color-109",
-        "val": "hsl(0, 0%, 8.5%)",
-        "variable": ""
-      },
-      "$color.gray2Dark": {
-        "isVar": true,
-        "key": "$gray2Dark",
-        "name": "color-110",
-        "val": "hsl(0, 0%, 11.0%)",
-        "variable": ""
-      },
-      "$color.gray3Dark": {
-        "isVar": true,
-        "key": "$gray3Dark",
-        "name": "color-111",
-        "val": "hsl(0, 0%, 13.6%)",
-        "variable": ""
-      },
-      "$color.gray4Dark": {
-        "isVar": true,
-        "key": "$gray4Dark",
-        "name": "color-112",
-        "val": "hsl(0, 0%, 15.8%)",
-        "variable": ""
-      },
-      "$color.gray5Dark": {
-        "isVar": true,
-        "key": "$gray5Dark",
-        "name": "color-113",
-        "val": "hsl(0, 0%, 17.9%)",
-        "variable": ""
-      },
-      "$color.gray6Dark": {
-        "isVar": true,
-        "key": "$gray6Dark",
-        "name": "color-114",
-        "val": "hsl(0, 0%, 20.5%)",
-        "variable": ""
-      },
-      "$color.gray7Dark": {
-        "isVar": true,
-        "key": "$gray7Dark",
-        "name": "color-115",
-        "val": "hsl(0, 0%, 24.3%)",
-        "variable": ""
-      },
-      "$color.gray8Dark": {
-        "isVar": true,
-        "key": "$gray8Dark",
-        "name": "color-116",
-        "val": "hsl(0, 0%, 31.2%)",
-        "variable": ""
-      },
-      "$color.gray9Dark": {
-        "isVar": true,
-        "key": "$gray9Dark",
-        "name": "color-117",
-        "val": "hsl(0, 0%, 43.9%)",
-        "variable": ""
-      },
-      "$color.gray10Dark": {
-        "isVar": true,
-        "key": "$gray10Dark",
-        "name": "color-118",
-        "val": "hsl(0, 0%, 49.4%)",
-        "variable": ""
-      },
-      "$color.gray11Dark": {
-        "isVar": true,
-        "key": "$gray11Dark",
-        "name": "color-119",
-        "val": "hsl(0, 0%, 62.8%)",
-        "variable": ""
-      },
-      "$color.gray12Dark": {
-        "isVar": true,
-        "key": "$gray12Dark",
-        "name": "color-120",
-        "val": "hsl(0, 0%, 93.0%)",
-        "variable": ""
-      },
-      "$color.green1Dark": {
-        "isVar": true,
-        "key": "$green1Dark",
-        "name": "color-121",
-        "val": "hsl(146, 30.0%, 7.4%)",
-        "variable": ""
-      },
-      "$color.green2Dark": {
-        "isVar": true,
-        "key": "$green2Dark",
-        "name": "color-122",
-        "val": "hsl(155, 44.2%, 8.4%)",
-        "variable": ""
-      },
-      "$color.green3Dark": {
-        "isVar": true,
-        "key": "$green3Dark",
-        "name": "color-123",
-        "val": "hsl(155, 46.7%, 10.9%)",
-        "variable": ""
-      },
-      "$color.green4Dark": {
-        "isVar": true,
-        "key": "$green4Dark",
-        "name": "color-124",
-        "val": "hsl(154, 48.4%, 12.9%)",
-        "variable": ""
-      },
-      "$color.green5Dark": {
-        "isVar": true,
-        "key": "$green5Dark",
-        "name": "color-125",
-        "val": "hsl(154, 49.7%, 14.9%)",
-        "variable": ""
-      },
-      "$color.green6Dark": {
-        "isVar": true,
-        "key": "$green6Dark",
-        "name": "color-126",
-        "val": "hsl(154, 50.9%, 17.6%)",
-        "variable": ""
-      },
-      "$color.green7Dark": {
-        "isVar": true,
-        "key": "$green7Dark",
-        "name": "color-127",
-        "val": "hsl(153, 51.8%, 21.8%)",
-        "variable": ""
-      },
-      "$color.green8Dark": {
-        "isVar": true,
-        "key": "$green8Dark",
-        "name": "color-128",
-        "val": "hsl(151, 51.7%, 28.4%)",
-        "variable": ""
-      },
-      "$color.green9Dark": {
-        "isVar": true,
-        "key": "$green9Dark",
-        "name": "color-129",
-        "val": "hsl(151, 55.0%, 41.5%)",
-        "variable": ""
-      },
-      "$color.green10Dark": {
-        "isVar": true,
-        "key": "$green10Dark",
-        "name": "color-130",
-        "val": "hsl(151, 49.3%, 46.5%)",
-        "variable": ""
-      },
-      "$color.green11Dark": {
-        "isVar": true,
-        "key": "$green11Dark",
-        "name": "color-131",
-        "val": "hsl(151, 50.0%, 53.2%)",
-        "variable": ""
-      },
-      "$color.green12Dark": {
-        "isVar": true,
-        "key": "$green12Dark",
-        "name": "color-132",
-        "val": "hsl(137, 72.0%, 94.0%)",
-        "variable": ""
-      },
-      "$color.orange1Dark": {
-        "isVar": true,
-        "key": "$orange1Dark",
-        "name": "color-133",
-        "val": "hsl(30, 70.0%, 7.2%)",
-        "variable": ""
-      },
-      "$color.orange2Dark": {
-        "isVar": true,
-        "key": "$orange2Dark",
-        "name": "color-134",
-        "val": "hsl(28, 100%, 8.4%)",
-        "variable": ""
-      },
-      "$color.orange3Dark": {
-        "isVar": true,
-        "key": "$orange3Dark",
-        "name": "color-135",
-        "val": "hsl(26, 91.1%, 11.6%)",
-        "variable": ""
-      },
-      "$color.orange4Dark": {
-        "isVar": true,
-        "key": "$orange4Dark",
-        "name": "color-136",
-        "val": "hsl(25, 88.3%, 14.1%)",
-        "variable": ""
-      },
-      "$color.orange5Dark": {
-        "isVar": true,
-        "key": "$orange5Dark",
-        "name": "color-137",
-        "val": "hsl(24, 87.6%, 16.6%)",
-        "variable": ""
-      },
-      "$color.orange6Dark": {
-        "isVar": true,
-        "key": "$orange6Dark",
-        "name": "color-138",
-        "val": "hsl(24, 88.6%, 19.8%)",
-        "variable": ""
-      },
-      "$color.orange7Dark": {
-        "isVar": true,
-        "key": "$orange7Dark",
-        "name": "color-139",
-        "val": "hsl(24, 92.4%, 24.0%)",
-        "variable": ""
-      },
-      "$color.orange8Dark": {
-        "isVar": true,
-        "key": "$orange8Dark",
-        "name": "color-140",
-        "val": "hsl(25, 100%, 29.0%)",
-        "variable": ""
-      },
-      "$color.orange9Dark": {
-        "isVar": true,
-        "key": "$orange9Dark",
-        "name": "color-141",
-        "val": "hsl(24, 94.0%, 50.0%)",
-        "variable": ""
-      },
-      "$color.orange10Dark": {
-        "isVar": true,
-        "key": "$orange10Dark",
-        "name": "color-142",
-        "val": "hsl(24, 100%, 58.5%)",
-        "variable": ""
-      },
-      "$color.orange11Dark": {
-        "isVar": true,
-        "key": "$orange11Dark",
-        "name": "color-143",
-        "val": "hsl(24, 100%, 62.2%)",
-        "variable": ""
-      },
-      "$color.orange12Dark": {
-        "isVar": true,
-        "key": "$orange12Dark",
-        "name": "color-144",
-        "val": "hsl(24, 97.0%, 93.2%)",
-        "variable": ""
-      },
-      "$color.pink1Dark": {
-        "isVar": true,
-        "key": "$pink1Dark",
-        "name": "color-145",
-        "val": "hsl(318, 25.0%, 9.6%)",
-        "variable": ""
-      },
-      "$color.pink2Dark": {
-        "isVar": true,
-        "key": "$pink2Dark",
-        "name": "color-146",
-        "val": "hsl(319, 32.2%, 11.6%)",
-        "variable": ""
-      },
-      "$color.pink3Dark": {
-        "isVar": true,
-        "key": "$pink3Dark",
-        "name": "color-147",
-        "val": "hsl(319, 41.0%, 16.0%)",
-        "variable": ""
-      },
-      "$color.pink4Dark": {
-        "isVar": true,
-        "key": "$pink4Dark",
-        "name": "color-148",
-        "val": "hsl(320, 45.4%, 18.7%)",
-        "variable": ""
-      },
-      "$color.pink5Dark": {
-        "isVar": true,
-        "key": "$pink5Dark",
-        "name": "color-149",
-        "val": "hsl(320, 49.0%, 21.1%)",
-        "variable": ""
-      },
-      "$color.pink6Dark": {
-        "isVar": true,
-        "key": "$pink6Dark",
-        "name": "color-150",
-        "val": "hsl(321, 53.6%, 24.4%)",
-        "variable": ""
-      },
-      "$color.pink7Dark": {
-        "isVar": true,
-        "key": "$pink7Dark",
-        "name": "color-151",
-        "val": "hsl(321, 61.1%, 29.7%)",
-        "variable": ""
-      },
-      "$color.pink8Dark": {
-        "isVar": true,
-        "key": "$pink8Dark",
-        "name": "color-152",
-        "val": "hsl(322, 74.9%, 37.5%)",
-        "variable": ""
-      },
-      "$color.pink9Dark": {
-        "isVar": true,
-        "key": "$pink9Dark",
-        "name": "color-153",
-        "val": "hsl(322, 65.0%, 54.5%)",
-        "variable": ""
-      },
-      "$color.pink10Dark": {
-        "isVar": true,
-        "key": "$pink10Dark",
-        "name": "color-154",
-        "val": "hsl(323, 72.8%, 59.2%)",
-        "variable": ""
-      },
-      "$color.pink11Dark": {
-        "isVar": true,
-        "key": "$pink11Dark",
-        "name": "color-155",
-        "val": "hsl(325, 90.0%, 66.4%)",
-        "variable": ""
-      },
-      "$color.pink12Dark": {
-        "isVar": true,
-        "key": "$pink12Dark",
-        "name": "color-156",
-        "val": "hsl(322, 90.0%, 95.8%)",
-        "variable": ""
-      },
-      "$color.purple1Dark": {
-        "isVar": true,
-        "key": "$purple1Dark",
-        "name": "color-157",
-        "val": "hsl(284, 20.0%, 9.6%)",
-        "variable": ""
-      },
-      "$color.purple2Dark": {
-        "isVar": true,
-        "key": "$purple2Dark",
-        "name": "color-158",
-        "val": "hsl(283, 30.0%, 11.8%)",
-        "variable": ""
-      },
-      "$color.purple3Dark": {
-        "isVar": true,
-        "key": "$purple3Dark",
-        "name": "color-159",
-        "val": "hsl(281, 37.5%, 16.5%)",
-        "variable": ""
-      },
-      "$color.purple4Dark": {
-        "isVar": true,
-        "key": "$purple4Dark",
-        "name": "color-160",
-        "val": "hsl(280, 41.2%, 20.0%)",
-        "variable": ""
-      },
-      "$color.purple5Dark": {
-        "isVar": true,
-        "key": "$purple5Dark",
-        "name": "color-161",
-        "val": "hsl(279, 43.8%, 23.3%)",
-        "variable": ""
-      },
-      "$color.purple6Dark": {
-        "isVar": true,
-        "key": "$purple6Dark",
-        "name": "color-162",
-        "val": "hsl(277, 46.4%, 27.5%)",
-        "variable": ""
-      },
-      "$color.purple7Dark": {
-        "isVar": true,
-        "key": "$purple7Dark",
-        "name": "color-163",
-        "val": "hsl(275, 49.3%, 34.6%)",
-        "variable": ""
-      },
-      "$color.purple8Dark": {
-        "isVar": true,
-        "key": "$purple8Dark",
-        "name": "color-164",
-        "val": "hsl(272, 52.1%, 45.9%)",
-        "variable": ""
-      },
-      "$color.purple9Dark": {
-        "isVar": true,
-        "key": "$purple9Dark",
-        "name": "color-165",
-        "val": "hsl(272, 51.0%, 54.0%)",
-        "variable": ""
-      },
-      "$color.purple10Dark": {
-        "isVar": true,
-        "key": "$purple10Dark",
-        "name": "color-166",
-        "val": "hsl(273, 57.3%, 59.1%)",
-        "variable": ""
-      },
-      "$color.purple11Dark": {
-        "isVar": true,
-        "key": "$purple11Dark",
-        "name": "color-167",
-        "val": "hsl(275, 80.0%, 71.0%)",
-        "variable": ""
-      },
-      "$color.purple12Dark": {
-        "isVar": true,
-        "key": "$purple12Dark",
-        "name": "color-168",
-        "val": "hsl(279, 75.0%, 95.7%)",
-        "variable": ""
-      },
-      "$color.red1Dark": {
-        "isVar": true,
-        "key": "$red1Dark",
-        "name": "color-169",
-        "val": "hsl(353, 23.0%, 9.8%)",
-        "variable": ""
-      },
-      "$color.red2Dark": {
-        "isVar": true,
-        "key": "$red2Dark",
-        "name": "color-170",
-        "val": "hsl(357, 34.4%, 12.0%)",
-        "variable": ""
-      },
-      "$color.red3Dark": {
-        "isVar": true,
-        "key": "$red3Dark",
-        "name": "color-171",
-        "val": "hsl(356, 43.4%, 16.4%)",
-        "variable": ""
-      },
-      "$color.red4Dark": {
-        "isVar": true,
-        "key": "$red4Dark",
-        "name": "color-172",
-        "val": "hsl(356, 47.6%, 19.2%)",
-        "variable": ""
-      },
-      "$color.red5Dark": {
-        "isVar": true,
-        "key": "$red5Dark",
-        "name": "color-173",
-        "val": "hsl(356, 51.1%, 21.9%)",
-        "variable": ""
-      },
-      "$color.red6Dark": {
-        "isVar": true,
-        "key": "$red6Dark",
-        "name": "color-174",
-        "val": "hsl(356, 55.2%, 25.9%)",
-        "variable": ""
-      },
-      "$color.red7Dark": {
-        "isVar": true,
-        "key": "$red7Dark",
-        "name": "color-175",
-        "val": "hsl(357, 60.2%, 31.8%)",
-        "variable": ""
-      },
-      "$color.red8Dark": {
-        "isVar": true,
-        "key": "$red8Dark",
-        "name": "color-176",
-        "val": "hsl(358, 65.0%, 40.4%)",
-        "variable": ""
-      },
-      "$color.red9Dark": {
-        "isVar": true,
-        "key": "$red9Dark",
-        "name": "color-177",
-        "val": "hsl(358, 75.0%, 59.0%)",
-        "variable": ""
-      },
-      "$color.red10Dark": {
-        "isVar": true,
-        "key": "$red10Dark",
-        "name": "color-178",
-        "val": "hsl(358, 85.3%, 64.0%)",
-        "variable": ""
-      },
-      "$color.red11Dark": {
-        "isVar": true,
-        "key": "$red11Dark",
-        "name": "color-179",
-        "val": "hsl(358, 100%, 69.5%)",
-        "variable": ""
-      },
-      "$color.red12Dark": {
-        "isVar": true,
-        "key": "$red12Dark",
-        "name": "color-180",
-        "val": "hsl(351, 89.0%, 96.0%)",
-        "variable": ""
-      },
-      "$color.yellow1Dark": {
-        "isVar": true,
-        "key": "$yellow1Dark",
-        "name": "color-181",
-        "val": "hsl(45, 100%, 5.5%)",
-        "variable": ""
-      },
-      "$color.yellow2Dark": {
-        "isVar": true,
-        "key": "$yellow2Dark",
-        "name": "color-182",
-        "val": "hsl(46, 100%, 6.7%)",
-        "variable": ""
-      },
-      "$color.yellow3Dark": {
-        "isVar": true,
-        "key": "$yellow3Dark",
-        "name": "color-183",
-        "val": "hsl(45, 100%, 8.7%)",
-        "variable": ""
-      },
-      "$color.yellow4Dark": {
-        "isVar": true,
-        "key": "$yellow4Dark",
-        "name": "color-184",
-        "val": "hsl(45, 100%, 10.4%)",
-        "variable": ""
-      },
-      "$color.yellow5Dark": {
-        "isVar": true,
-        "key": "$yellow5Dark",
-        "name": "color-185",
-        "val": "hsl(47, 100%, 12.1%)",
-        "variable": ""
-      },
-      "$color.yellow6Dark": {
-        "isVar": true,
-        "key": "$yellow6Dark",
-        "name": "color-186",
-        "val": "hsl(49, 100%, 14.3%)",
-        "variable": ""
-      },
-      "$color.yellow7Dark": {
-        "isVar": true,
-        "key": "$yellow7Dark",
-        "name": "color-187",
-        "val": "hsl(49, 90.3%, 18.4%)",
-        "variable": ""
-      },
-      "$color.yellow8Dark": {
-        "isVar": true,
-        "key": "$yellow8Dark",
-        "name": "color-188",
-        "val": "hsl(50, 100%, 22.0%)",
-        "variable": ""
-      },
-      "$color.yellow9Dark": {
-        "isVar": true,
-        "key": "$yellow9Dark",
-        "name": "color-189",
-        "val": "hsl(53, 92.0%, 50.0%)",
-        "variable": ""
-      },
-      "$color.yellow10Dark": {
-        "isVar": true,
-        "key": "$yellow10Dark",
-        "name": "color-190",
-        "val": "hsl(54, 100%, 68.0%)",
-        "variable": ""
-      },
-      "$color.yellow11Dark": {
-        "isVar": true,
-        "key": "$yellow11Dark",
-        "name": "color-191",
-        "val": "hsl(48, 100%, 47.0%)",
-        "variable": ""
-      },
-      "$color.yellow12Dark": {
-        "isVar": true,
-        "key": "$yellow12Dark",
-        "name": "color-192",
-        "val": "hsl(53, 100%, 91.0%)",
+        "key": "$9.5",
+        "name": "size-34",
+        "val": 99,
         "variable": ""
       },
       "$radius.0": {
@@ -23244,6 +22389,244 @@
         "val": 9,
         "variable": ""
       },
+      "$space.0": {
+        "isVar": true,
+        "key": "$0",
+        "name": "space-1",
+        "val": 0,
+        "variable": ""
+      },
+      "$space.1": {
+        "isVar": true,
+        "key": "$1",
+        "name": "space-2",
+        "val": 20,
+        "variable": ""
+      },
+      "$space.2": {
+        "isVar": true,
+        "key": "$2",
+        "name": "space-3",
+        "val": 28,
+        "variable": ""
+      },
+      "$space.3": {
+        "isVar": true,
+        "key": "$3",
+        "name": "space-4",
+        "val": 36,
+        "variable": ""
+      },
+      "$space.4": {
+        "isVar": true,
+        "key": "$4",
+        "name": "space-5",
+        "val": 44,
+        "variable": ""
+      },
+      "$space.5": {
+        "isVar": true,
+        "key": "$5",
+        "name": "space-6",
+        "val": 52,
+        "variable": ""
+      },
+      "$space.6": {
+        "isVar": true,
+        "key": "$6",
+        "name": "space-7",
+        "val": 64,
+        "variable": ""
+      },
+      "$space.7": {
+        "isVar": true,
+        "key": "$7",
+        "name": "space-8",
+        "val": 74,
+        "variable": ""
+      },
+      "$space.8": {
+        "isVar": true,
+        "key": "$8",
+        "name": "space-9",
+        "val": 84,
+        "variable": ""
+      },
+      "$space.9": {
+        "isVar": true,
+        "key": "$9",
+        "name": "space-10",
+        "val": 94,
+        "variable": ""
+      },
+      "$space.10": {
+        "isVar": true,
+        "key": "$10",
+        "name": "space-11",
+        "val": 104,
+        "variable": ""
+      },
+      "$space.11": {
+        "isVar": true,
+        "key": "$11",
+        "name": "space-12",
+        "val": 124,
+        "variable": ""
+      },
+      "$space.12": {
+        "isVar": true,
+        "key": "$12",
+        "name": "space-13",
+        "val": 144,
+        "variable": ""
+      },
+      "$space.13": {
+        "isVar": true,
+        "key": "$13",
+        "name": "space-14",
+        "val": 164,
+        "variable": ""
+      },
+      "$space.14": {
+        "isVar": true,
+        "key": "$14",
+        "name": "space-15",
+        "val": 184,
+        "variable": ""
+      },
+      "$space.15": {
+        "isVar": true,
+        "key": "$15",
+        "name": "space-16",
+        "val": 204,
+        "variable": ""
+      },
+      "$space.16": {
+        "isVar": true,
+        "key": "$16",
+        "name": "space-17",
+        "val": 224,
+        "variable": ""
+      },
+      "$space.17": {
+        "isVar": true,
+        "key": "$17",
+        "name": "space-18",
+        "val": 224,
+        "variable": ""
+      },
+      "$space.18": {
+        "isVar": true,
+        "key": "$18",
+        "name": "space-19",
+        "val": 244,
+        "variable": ""
+      },
+      "$space.19": {
+        "isVar": true,
+        "key": "$19",
+        "name": "space-20",
+        "val": 264,
+        "variable": ""
+      },
+      "$space.20": {
+        "isVar": true,
+        "key": "$20",
+        "name": "space-21",
+        "val": 284,
+        "variable": ""
+      },
+      "$space.0.25": {
+        "isVar": true,
+        "key": "$0.25",
+        "name": "space-22",
+        "val": 2,
+        "variable": ""
+      },
+      "$space.0.5": {
+        "isVar": true,
+        "key": "$0.5",
+        "name": "space-23",
+        "val": 4,
+        "variable": ""
+      },
+      "$space.0.75": {
+        "isVar": true,
+        "key": "$0.75",
+        "name": "space-24",
+        "val": 8,
+        "variable": ""
+      },
+      "$space.1.5": {
+        "isVar": true,
+        "key": "$1.5",
+        "name": "space-25",
+        "val": 24,
+        "variable": ""
+      },
+      "$space.2.5": {
+        "isVar": true,
+        "key": "$2.5",
+        "name": "space-26",
+        "val": 32,
+        "variable": ""
+      },
+      "$space.3.5": {
+        "isVar": true,
+        "key": "$3.5",
+        "name": "space-27",
+        "val": 40,
+        "variable": ""
+      },
+      "$space.true": {
+        "isVar": true,
+        "key": "$true",
+        "name": "space-28",
+        "val": 44,
+        "variable": ""
+      },
+      "$space.4.5": {
+        "isVar": true,
+        "key": "$4.5",
+        "name": "space-29",
+        "val": 48,
+        "variable": ""
+      },
+      "$space.5.5": {
+        "isVar": true,
+        "key": "$5.5",
+        "name": "space-30",
+        "val": 59,
+        "variable": ""
+      },
+      "$space.6.5": {
+        "isVar": true,
+        "key": "$6.5",
+        "name": "space-31",
+        "val": 69,
+        "variable": ""
+      },
+      "$space.7.6": {
+        "isVar": true,
+        "key": "$7.6",
+        "name": "space-32",
+        "val": 79,
+        "variable": ""
+      },
+      "$space.8.5": {
+        "isVar": true,
+        "key": "$8.5",
+        "name": "space-33",
+        "val": 89,
+        "variable": ""
+      },
+      "$space.9.5": {
+        "isVar": true,
+        "key": "$9.5",
+        "name": "space-34",
+        "val": 99,
+        "variable": ""
+      },
       "$zIndex.0": {
         "isVar": true,
         "key": "$0",
@@ -23284,629 +22667,6 @@
         "key": "$5",
         "name": "zIndex-6",
         "val": 500,
-        "variable": ""
-      },
-      "$space.0": {
-        "isVar": true,
-        "key": "$0",
-        "name": "space-1",
-        "val": 0,
-        "variable": ""
-      },
-      "$space.1": {
-        "isVar": true,
-        "key": "$1",
-        "name": "space-5",
-        "val": 2,
-        "variable": ""
-      },
-      "$space.2": {
-        "isVar": true,
-        "key": "$2",
-        "name": "space-7",
-        "val": 7,
-        "variable": ""
-      },
-      "$space.3": {
-        "isVar": true,
-        "key": "$3",
-        "name": "space-9",
-        "val": 13,
-        "variable": ""
-      },
-      "$space.4": {
-        "isVar": true,
-        "key": "$4",
-        "name": "space-11",
-        "val": 18,
-        "variable": ""
-      },
-      "$space.5": {
-        "isVar": true,
-        "key": "$5",
-        "name": "space-14",
-        "val": 24,
-        "variable": ""
-      },
-      "$space.6": {
-        "isVar": true,
-        "key": "$6",
-        "name": "space-15",
-        "val": 32,
-        "variable": ""
-      },
-      "$space.7": {
-        "isVar": true,
-        "key": "$7",
-        "name": "space-16",
-        "val": 39,
-        "variable": ""
-      },
-      "$space.8": {
-        "isVar": true,
-        "key": "$8",
-        "name": "space-17",
-        "val": 46,
-        "variable": ""
-      },
-      "$space.9": {
-        "isVar": true,
-        "key": "$9",
-        "name": "space-18",
-        "val": 53,
-        "variable": ""
-      },
-      "$space.10": {
-        "isVar": true,
-        "key": "$10",
-        "name": "space-19",
-        "val": 60,
-        "variable": ""
-      },
-      "$space.11": {
-        "isVar": true,
-        "key": "$11",
-        "name": "space-20",
-        "val": 74,
-        "variable": ""
-      },
-      "$space.12": {
-        "isVar": true,
-        "key": "$12",
-        "name": "space-21",
-        "val": 88,
-        "variable": ""
-      },
-      "$space.13": {
-        "isVar": true,
-        "key": "$13",
-        "name": "space-22",
-        "val": 102,
-        "variable": ""
-      },
-      "$space.14": {
-        "isVar": true,
-        "key": "$14",
-        "name": "space-23",
-        "val": 116,
-        "variable": ""
-      },
-      "$space.15": {
-        "isVar": true,
-        "key": "$15",
-        "name": "space-24",
-        "val": 130,
-        "variable": ""
-      },
-      "$space.16": {
-        "isVar": true,
-        "key": "$16",
-        "name": "space-25",
-        "val": 144,
-        "variable": ""
-      },
-      "$space.17": {
-        "isVar": true,
-        "key": "$17",
-        "name": "space-26",
-        "val": 144,
-        "variable": ""
-      },
-      "$space.18": {
-        "isVar": true,
-        "key": "$18",
-        "name": "space-27",
-        "val": 158,
-        "variable": ""
-      },
-      "$space.19": {
-        "isVar": true,
-        "key": "$19",
-        "name": "space-28",
-        "val": 172,
-        "variable": ""
-      },
-      "$space.20": {
-        "isVar": true,
-        "key": "$20",
-        "name": "space-29",
-        "val": 186,
-        "variable": ""
-      },
-      "$space.0.25": {
-        "isVar": true,
-        "key": "$0.25",
-        "name": "space-2",
-        "val": 0.5,
-        "variable": ""
-      },
-      "$space.0.5": {
-        "isVar": true,
-        "key": "$0.5",
-        "name": "space-3",
-        "val": 1,
-        "variable": ""
-      },
-      "$space.0.75": {
-        "isVar": true,
-        "key": "$0.75",
-        "name": "space-4",
-        "val": 1.5,
-        "variable": ""
-      },
-      "$space.1.5": {
-        "isVar": true,
-        "key": "$1.5",
-        "name": "space-6",
-        "val": 4,
-        "variable": ""
-      },
-      "$space.2.5": {
-        "isVar": true,
-        "key": "$2.5",
-        "name": "space-8",
-        "val": 10,
-        "variable": ""
-      },
-      "$space.3.5": {
-        "isVar": true,
-        "key": "$3.5",
-        "name": "space-10",
-        "val": 16,
-        "variable": ""
-      },
-      "$space.true": {
-        "isVar": true,
-        "key": "$true",
-        "name": "space-12",
-        "val": 18,
-        "variable": ""
-      },
-      "$space.4.5": {
-        "isVar": true,
-        "key": "$4.5",
-        "name": "space-13",
-        "val": 21,
-        "variable": ""
-      },
-      "$space.-0.25": {
-        "isVar": true,
-        "key": "$-0.25",
-        "name": "space-30",
-        "val": -0.5,
-        "variable": ""
-      },
-      "$space.-0.5": {
-        "isVar": true,
-        "key": "$-0.5",
-        "name": "space-31",
-        "val": -1,
-        "variable": ""
-      },
-      "$space.-0.75": {
-        "isVar": true,
-        "key": "$-0.75",
-        "name": "space-32",
-        "val": -1.5,
-        "variable": ""
-      },
-      "$space.-1": {
-        "isVar": true,
-        "key": "$-1",
-        "name": "space-33",
-        "val": -2,
-        "variable": ""
-      },
-      "$space.-1.5": {
-        "isVar": true,
-        "key": "$-1.5",
-        "name": "space-34",
-        "val": -4,
-        "variable": ""
-      },
-      "$space.-2": {
-        "isVar": true,
-        "key": "$-2",
-        "name": "space-35",
-        "val": -7,
-        "variable": ""
-      },
-      "$space.-2.5": {
-        "isVar": true,
-        "key": "$-2.5",
-        "name": "space-36",
-        "val": -10,
-        "variable": ""
-      },
-      "$space.-3": {
-        "isVar": true,
-        "key": "$-3",
-        "name": "space-37",
-        "val": -13,
-        "variable": ""
-      },
-      "$space.-3.5": {
-        "isVar": true,
-        "key": "$-3.5",
-        "name": "space-38",
-        "val": -16,
-        "variable": ""
-      },
-      "$space.-4": {
-        "isVar": true,
-        "key": "$-4",
-        "name": "space-39",
-        "val": -18,
-        "variable": ""
-      },
-      "$space.-true": {
-        "isVar": true,
-        "key": "$-true",
-        "name": "space-40",
-        "val": -18,
-        "variable": ""
-      },
-      "$space.-4.5": {
-        "isVar": true,
-        "key": "$-4.5",
-        "name": "space-41",
-        "val": -21,
-        "variable": ""
-      },
-      "$space.-5": {
-        "isVar": true,
-        "key": "$-5",
-        "name": "space-42",
-        "val": -24,
-        "variable": ""
-      },
-      "$space.-6": {
-        "isVar": true,
-        "key": "$-6",
-        "name": "space-43",
-        "val": -32,
-        "variable": ""
-      },
-      "$space.-7": {
-        "isVar": true,
-        "key": "$-7",
-        "name": "space-44",
-        "val": -39,
-        "variable": ""
-      },
-      "$space.-8": {
-        "isVar": true,
-        "key": "$-8",
-        "name": "space-45",
-        "val": -46,
-        "variable": ""
-      },
-      "$space.-9": {
-        "isVar": true,
-        "key": "$-9",
-        "name": "space-46",
-        "val": -53,
-        "variable": ""
-      },
-      "$space.-10": {
-        "isVar": true,
-        "key": "$-10",
-        "name": "space-47",
-        "val": -60,
-        "variable": ""
-      },
-      "$space.-11": {
-        "isVar": true,
-        "key": "$-11",
-        "name": "space-48",
-        "val": -74,
-        "variable": ""
-      },
-      "$space.-12": {
-        "isVar": true,
-        "key": "$-12",
-        "name": "space-49",
-        "val": -88,
-        "variable": ""
-      },
-      "$space.-13": {
-        "isVar": true,
-        "key": "$-13",
-        "name": "space-50",
-        "val": -102,
-        "variable": ""
-      },
-      "$space.-14": {
-        "isVar": true,
-        "key": "$-14",
-        "name": "space-51",
-        "val": -116,
-        "variable": ""
-      },
-      "$space.-15": {
-        "isVar": true,
-        "key": "$-15",
-        "name": "space-52",
-        "val": -130,
-        "variable": ""
-      },
-      "$space.-16": {
-        "isVar": true,
-        "key": "$-16",
-        "name": "space-53",
-        "val": -144,
-        "variable": ""
-      },
-      "$space.-17": {
-        "isVar": true,
-        "key": "$-17",
-        "name": "space-54",
-        "val": -144,
-        "variable": ""
-      },
-      "$space.-18": {
-        "isVar": true,
-        "key": "$-18",
-        "name": "space-55",
-        "val": -158,
-        "variable": ""
-      },
-      "$space.-19": {
-        "isVar": true,
-        "key": "$-19",
-        "name": "space-56",
-        "val": -172,
-        "variable": ""
-      },
-      "$space.-20": {
-        "isVar": true,
-        "key": "$-20",
-        "name": "space-57",
-        "val": -186,
-        "variable": ""
-      },
-      "$size.0": {
-        "isVar": true,
-        "key": "$0",
-        "name": "size-1",
-        "val": 0,
-        "variable": ""
-      },
-      "$size.1": {
-        "isVar": true,
-        "key": "$1",
-        "name": "size-5",
-        "val": 20,
-        "variable": ""
-      },
-      "$size.2": {
-        "isVar": true,
-        "key": "$2",
-        "name": "size-7",
-        "val": 28,
-        "variable": ""
-      },
-      "$size.3": {
-        "isVar": true,
-        "key": "$3",
-        "name": "size-9",
-        "val": 36,
-        "variable": ""
-      },
-      "$size.4": {
-        "isVar": true,
-        "key": "$4",
-        "name": "size-11",
-        "val": 44,
-        "variable": ""
-      },
-      "$size.5": {
-        "isVar": true,
-        "key": "$5",
-        "name": "size-14",
-        "val": 52,
-        "variable": ""
-      },
-      "$size.6": {
-        "isVar": true,
-        "key": "$6",
-        "name": "size-15",
-        "val": 64,
-        "variable": ""
-      },
-      "$size.7": {
-        "isVar": true,
-        "key": "$7",
-        "name": "size-16",
-        "val": 74,
-        "variable": ""
-      },
-      "$size.8": {
-        "isVar": true,
-        "key": "$8",
-        "name": "size-17",
-        "val": 84,
-        "variable": ""
-      },
-      "$size.9": {
-        "isVar": true,
-        "key": "$9",
-        "name": "size-18",
-        "val": 94,
-        "variable": ""
-      },
-      "$size.10": {
-        "isVar": true,
-        "key": "$10",
-        "name": "size-19",
-        "val": 104,
-        "variable": ""
-      },
-      "$size.11": {
-        "isVar": true,
-        "key": "$11",
-        "name": "size-20",
-        "val": 124,
-        "variable": ""
-      },
-      "$size.12": {
-        "isVar": true,
-        "key": "$12",
-        "name": "size-21",
-        "val": 144,
-        "variable": ""
-      },
-      "$size.13": {
-        "isVar": true,
-        "key": "$13",
-        "name": "size-22",
-        "val": 164,
-        "variable": ""
-      },
-      "$size.14": {
-        "isVar": true,
-        "key": "$14",
-        "name": "size-23",
-        "val": 184,
-        "variable": ""
-      },
-      "$size.15": {
-        "isVar": true,
-        "key": "$15",
-        "name": "size-24",
-        "val": 204,
-        "variable": ""
-      },
-      "$size.16": {
-        "isVar": true,
-        "key": "$16",
-        "name": "size-25",
-        "val": 224,
-        "variable": ""
-      },
-      "$size.17": {
-        "isVar": true,
-        "key": "$17",
-        "name": "size-26",
-        "val": 224,
-        "variable": ""
-      },
-      "$size.18": {
-        "isVar": true,
-        "key": "$18",
-        "name": "size-27",
-        "val": 244,
-        "variable": ""
-      },
-      "$size.19": {
-        "isVar": true,
-        "key": "$19",
-        "name": "size-28",
-        "val": 264,
-        "variable": ""
-      },
-      "$size.20": {
-        "isVar": true,
-        "key": "$20",
-        "name": "size-29",
-        "val": 284,
-        "variable": ""
-      },
-      "$size.0.25": {
-        "isVar": true,
-        "key": "$0.25",
-        "name": "size-2",
-        "val": 2,
-        "variable": ""
-      },
-      "$size.0.5": {
-        "isVar": true,
-        "key": "$0.5",
-        "name": "size-3",
-        "val": 4,
-        "variable": ""
-      },
-      "$size.0.75": {
-        "isVar": true,
-        "key": "$0.75",
-        "name": "size-4",
-        "val": 8,
-        "variable": ""
-      },
-      "$size.1.5": {
-        "isVar": true,
-        "key": "$1.5",
-        "name": "size-6",
-        "val": 24,
-        "variable": ""
-      },
-      "$size.2.5": {
-        "isVar": true,
-        "key": "$2.5",
-        "name": "size-8",
-        "val": 32,
-        "variable": ""
-      },
-      "$size.3.5": {
-        "isVar": true,
-        "key": "$3.5",
-        "name": "size-10",
-        "val": 40,
-        "variable": ""
-      },
-      "$size.true": {
-        "isVar": true,
-        "key": "$true",
-        "name": "size-12",
-        "val": 44,
-        "variable": ""
-      },
-      "$size.4.5": {
-        "isVar": true,
-        "key": "$4.5",
-        "name": "size-13",
-        "val": 48,
-        "variable": ""
-      },
-      "$icon.sm": {
-        "isVar": true,
-        "key": "$sm",
-        "name": "icon-1",
-        "val": 16,
-        "variable": ""
-      },
-      "$icon.md": {
-        "isVar": true,
-        "key": "$md",
-        "name": "icon-2",
-        "val": 24,
-        "variable": ""
-      },
-      "$icon.lg": {
-        "isVar": true,
-        "key": "$lg",
-        "name": "icon-3",
-        "val": 32,
         "variable": ""
       }
     }

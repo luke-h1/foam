@@ -103,7 +103,7 @@ const Chat = ({ channels }: Props) => {
                 paddingHorizontal={5}
                 paddingVertical={2}
               >
-                <Text>
+                <Text color="$color">
                   {username}: {message}
                 </Text>
               </Stack>

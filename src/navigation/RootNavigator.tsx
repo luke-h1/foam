@@ -4,7 +4,6 @@ import Header from '../components/Header';
 import AuthLoading from '../screens/authentication/AuthLoading';
 import LoginScreen from '../screens/authentication/LoginScreen';
 import SettingsModal from '../screens/settings/SettingsModal';
-import colors from '../styles/colors';
 import CategoryStackNavigator from './Category/CategoryStackNavigator';
 import HomeTabsNavigator from './Home/HomeTabsNavigator';
 import { RootRoutes, RootStack } from './RootStack';
@@ -26,7 +25,7 @@ const RootNavigator = () => {
         options={{
           headerTitleAlign: 'left',
           headerStyle: {
-            backgroundColor: colors.black,
+            backgroundColor: '$color',
           },
           presentation: 'card',
           header(props) {

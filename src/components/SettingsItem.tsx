@@ -23,12 +23,12 @@ interface Props {
 const SettingsItem = ({ contents }: Props) => {
   return (
     <Stack padding={12}>
-      <H4>Settings</H4>
+      <H4 color="$color">Settings</H4>
       <FlatList
         data={contents}
         renderItem={({ item }) => (
           <Stack style={{ marginBottom: 24 }}>
-            <H6>{item.ctaTitle}</H6>
+            <H6 color="$color">{item.ctaTitle}</H6>
             <FlatList
               data={item.items}
               // eslint-disable-next-line no-shadow
@@ -40,8 +40,8 @@ const SettingsItem = ({ contents }: Props) => {
                   >
                     {item.iconLeft}
                     <View style={styles.copy}>
-                      <Text>{item.title}</Text>
-                      <Text>{item.content}</Text>
+                      <Text color="$color">{item.title}</Text>
+                      <Text color="$color">{item.content}</Text>
                     </View>
                     {item.showRightArrow && item.iconRight}
                   </TouchableOpacity>
