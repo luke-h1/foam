@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { FlatList, SafeAreaView } from 'react-native';
 import { H3, Image, ScrollView, Spinner, Stack, Text } from 'tamagui';
-import Main from '../../components/ui/Main';
-import StreamCard from '../../components/ui/StreamCard';
+import Main from '../../components/Main';
+import StreamCard from '../../components/StreamCard';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,

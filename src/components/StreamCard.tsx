@@ -2,12 +2,12 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 import { Image, Stack, Text, XStack } from 'tamagui';
-import { HomeTabsParamList } from '../../navigation/Home/HomeTabs';
-import { StreamRoutes } from '../../navigation/Stream/StreamStack';
-import twitchService, { Stream } from '../../services/twitchService';
-import elapsedStreamTime from '../../utils/elapsedStreamTime';
-import viewFormatter from '../../utils/viewFormatter';
-import Tags from '../Tags';
+import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
+import { StreamRoutes } from '../navigation/Stream/StreamStack';
+import twitchService, { Stream } from '../services/twitchService';
+import elapsedStreamTime from '../utils/elapsedStreamTime';
+import viewFormatter from '../utils/viewFormatter';
+import Tags from './Tags';
 
 const IMAGE_ASPECT_RATIO = 240 / 165;
 const IMAGE_HEIGHT = 85;

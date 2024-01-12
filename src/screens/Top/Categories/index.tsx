@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView, Spinner, Stack, Text, XStack } from 'tamagui';
-import CategoryCard from '../../../components/ui/CategoryCard';
+import CategoryCard from '../../../components/CategoryCard';
 import twitchQueries from '../../../queries/twitchQueries';
 import { Category } from '../../../services/twitchService';
 import { colors } from '../../../styles';

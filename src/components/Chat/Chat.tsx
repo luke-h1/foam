@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { FlatList, SafeAreaView } from 'react-native';
 import { ScrollView, Stack, Text } from 'tamagui';
 import { ChatUserstate } from 'tmi.js';
-import { useAuthContext } from '../../../context/AuthContext';
-import useTmiClient from '../../../hooks/useTmiClient';
+import { useAuthContext } from '../../context/AuthContext';
+import useTmiClient from '../../hooks/useTmiClient';
 
 interface Props {
   channels: string[];

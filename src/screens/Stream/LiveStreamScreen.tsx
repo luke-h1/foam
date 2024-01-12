@@ -3,12 +3,12 @@ import { useEffect, useState } from 'react';
 import { Dimensions } from 'react-native';
 import WebView from 'react-native-webview';
 import { H5, Stack, Text, YStack } from 'tamagui';
+import Chat from '../../components/Chat/Chat';
 import Image from '../../components/Image';
+import Main from '../../components/Main';
+import SafeAreaContainer from '../../components/SafeAreaContainer';
 import Seperator from '../../components/Seperator';
 import Tags from '../../components/Tags';
-import Chat from '../../components/ui/Chat/Chat';
-import Main from '../../components/ui/Main';
-import SafeAreaContainer from '../../components/ui/SafeAreaContainer';
 import useIsLandscape from '../../hooks/useIsLandscape';
 import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
 import twitchService, {

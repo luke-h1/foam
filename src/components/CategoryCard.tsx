@@ -4,9 +4,9 @@ import { H6, Image, Stack, YStack } from 'tamagui';
 import {
   CategoryRoutes,
   CategoryStackParamList,
-} from '../../navigation/Category/CategoryStack';
+} from '../navigation/Category/CategoryStack';
 
-import { Category } from '../../services/twitchService';
+import { Category } from '../services/twitchService';
 
 interface Props {
   category: Category;

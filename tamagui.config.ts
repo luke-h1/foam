@@ -1,10 +1,17 @@
 import { createAnimations } from '@tamagui/animations-react-native';
 import { createInterFont } from '@tamagui/font-inter';
 import { createMedia } from '@tamagui/react-native-media-driver';
-import { shorthands } from '@tamagui/shorthands';
+import { shorthands as tamaguiShorthands } from '@tamagui/shorthands';
 import { createTamagui } from 'tamagui';
 import { themes } from './src/styles';
 import { tokens } from './src/styles/tokens';
+
+const {
+  // tamagui has this terribly awkward bc that is the same as bg :/, removing it for our purposes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  bc,
+  ...shorthands
+} = tamaguiShorthands;
 
 const animations = createAnimations({
   '100ms': {
@@ -77,7 +84,8 @@ const config = createTamagui({
   }),
   settings: {
     fastSchemeChange: true,
-    autocompleteSpecificTokens: true,
+    allowedStyleValues: 'somewhat-strict-web',
+    autocompleteSpecificTokens: 'except-special',
   },
 });
 

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, SafeAreaView } from 'react-native';
 import { ScrollView, Spinner, Stack, Text, XStack } from 'tamagui';
-import StreamCard from '../../../components/ui/StreamCard';
+import StreamCard from '../../../components/StreamCard';
 import twitchQueries from '../../../queries/twitchQueries';
 import { Stream } from '../../../services/twitchService';
 

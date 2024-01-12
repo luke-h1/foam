@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, SafeAreaView, Platform } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 import { Main, ScrollView, Spinner, Stack, Text } from 'tamagui';
-import StreamCard from '../components/ui/StreamCard';
+import StreamCard from '../components/StreamCard';
 import { useAuthContext } from '../context/AuthContext';
 import twitchQueries from '../queries/twitchQueries';
 import { Stream } from '../services/twitchService';
