@@ -2,6 +2,10 @@
 
 > Foam is a Twitch mobile app that supports emotes, badges and user colors from [7TV](https://chrome.google.com/webstore/detail/7tv/ammjkodgmmoknidbanneddgankgfejfh), [BetterTTV (BTTV)](https://chrome.google.com/webstore/detail/betterttv/ajopnjidmegmdimjlfnijceegpefgped), and [FrankerFaceZ (FFZ)](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) — third-party extensions for Twitch used by millions to aid in making the mobile chat experience more enjoyable.
 
+<br />
+
+This repository is managed currently using yarn v3. We're in the process of migrating to PNPM + PNPM workspaces and a monorepo structure
+
 ## Why Foam?
 
 The native twitch mobile app does not support emotes, badges and user colors from the above third-party extensions, resulting in only emote text names to be rendered rather than their actual image or GIF, resulting in a poor mobile chat experience.
@@ -13,6 +17,10 @@ In addition to this, Foam supports many actions to meet feature parity with the 
 TBA
 
 ## Features
+
+TBA
+
+## Environments
 
 TBA
 
@@ -59,6 +67,12 @@ Install dependencies
 yarn
 ```
 
+Acquire Twitch API credentials
+
+- Create a Twitch account if you do not have one already
+- Go to the [Twitch developer console](https://dev.twitch.tv/console/apps/create) and create a new application
+- Copy the client ID and client secret and paste them into a `.env` file in the root of the project. See `.env.example` for an example of what this file should look like
+
 ### How to run the app
 
 > **Note:** You will need to have an Android emulator running in order to run the app locally. You will need to use the AVD (android virtual device) manager in Android Studio to create a virtual device if you do not have one already.
@@ -68,3 +82,11 @@ yarn
 ```bash
 npx expo start
 ```
+
+## Contributing
+
+We welcome contributions to Foam! Please read our [contributing guide]("./CONTRIBUTING.md") to get started.
+
+## High level design
+
+TBA
