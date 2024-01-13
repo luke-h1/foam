@@ -71,6 +71,10 @@ const StreamCard = ({ stream }: Props) => {
             paddingVertical={2}
           >
             <Text numberOfLines={1} color="$color">
+              {/* red dot */}
+              <Text color="$darkRed" fontSize={12}>
+                ●
+              </Text>{' '}
               {viewFormatter(stream.viewer_count, 1)}
             </Text>
           </Stack>

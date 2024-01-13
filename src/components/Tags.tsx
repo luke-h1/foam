@@ -1,6 +1,5 @@
 import { FlatList } from 'react-native';
 import { Text, View, XStack } from 'tamagui';
-import { colors } from '../styles';
 
 interface Props {
   tags: string[];
@@ -14,7 +13,7 @@ const Tags = ({ tags }: Props) => {
         showsHorizontalScrollIndicator
         renderItem={({ item }) => (
           <View
-            backgroundColor={colors.gray750}
+            backgroundColor="$neutral2"
             paddingHorizontal={8}
             borderRadius={10}
             marginRight={5}

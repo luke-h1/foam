@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import { Feather, Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { X, Search, History } from '@tamagui/lucide-icons';
 import { useEffect, useState } from 'react';
 import {
   FlatList,
@@ -127,8 +127,7 @@ const SearchScreen = () => {
           </ScrollView>
         </DismissableKeyboard>
         {showDismiss ? (
-          <Entypo
-            name="cross"
+          <X
             size={24}
             style={[{ alignSelf: 'center', marginRight: 15 }]}
             onPress={() => {
@@ -138,8 +137,7 @@ const SearchScreen = () => {
             }}
           />
         ) : (
-          <Feather
-            name="search"
+          <Search
             size={24}
             style={{ alignSelf: 'center', marginRight: 25 }}
             onPress={() => search(query)}
@@ -237,13 +235,11 @@ const SearchScreen = () => {
                     handleQuery(item.query);
                   }}
                 >
-                  <Entypo
-                    name="back-in-time"
+                  <History
                     size={24}
                     style={{
                       alignSelf: 'center',
                       marginRight: 8,
-                      color: '$color',
                     }}
                   />
                   <Text

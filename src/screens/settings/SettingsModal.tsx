@@ -1,11 +1,13 @@
-import {
-  AntDesign,
-  Entypo,
-  Octicons,
-  MaterialIcons,
-  Feather,
-} from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import {
+  ArrowRightCircle,
+  Settings,
+  Video,
+  User,
+  Info,
+  ExternalLink,
+  MessageSquare,
+} from '@tamagui/lucide-icons';
 import { useMemo, useRef } from 'react';
 import { SafeAreaView, Button } from 'react-native';
 import { Stack } from 'tamagui';
@@ -38,9 +40,7 @@ const SettingsModal = ({
             />
           ),
           showRightArrow: true,
-          iconRight: (
-            <AntDesign name="right" size={16} color={colors.gray500} />
-          ),
+          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
           showSeperator: true,
           onPress: () => {
             bottomSheetModalRef.current?.present();
@@ -56,37 +56,25 @@ const SettingsModal = ({
       ctaTitle: 'Options',
       items: [
         {
-          iconLeft: <Entypo name="cog" size={24} color={colors.gray500} />,
+          iconLeft: <Settings size={24} color={colors.gray500} />,
           title: 'General',
           content: 'Theme and other options',
           showRightArrow: true,
-          iconRight: (
-            <AntDesign name="right" size={24} color={colors.gray500} />
-          ),
+          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
         },
         {
-          iconLeft: <Octicons name="video" size={24} color={colors.gray500} />,
+          iconLeft: <Video size={24} color={colors.gray500} />,
           title: 'Video',
           content: 'Overlay and other options',
           showRightArrow: true,
-          iconRight: (
-            <AntDesign name="right" size={24} color={colors.gray500} />
-          ),
+          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
         },
         {
-          iconLeft: (
-            <MaterialIcons
-              name="chat-bubble-outline"
-              size={24}
-              color={colors.gray500}
-            />
-          ),
+          iconLeft: <MessageSquare size={24} color={colors.gray500} />,
           title: 'Chat',
           content: 'Sizing, timestamps and other options',
           showRightArrow: true,
-          iconRight: (
-            <AntDesign name="right" size={24} color={colors.gray500} />
-          ),
+          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
           showSeperator: true,
         },
       ],
@@ -96,21 +84,17 @@ const SettingsModal = ({
       ctaTitle: 'Other',
       items: [
         {
-          iconLeft: <Octicons name="info" size={24} color={colors.gray500} />,
+          iconLeft: <Info size={24} color={colors.gray500} />,
           title: 'About Foam',
           content: 'About the app and the developer',
         },
         {
-          iconLeft: (
-            <Feather name="external-link" size={24} color={colors.gray500} />
-          ),
+          iconLeft: <ExternalLink size={24} color={colors.gray500} />,
           title: 'Chanelog',
           content: 'What has changed?',
         },
         {
-          iconLeft: (
-            <Feather name="external-link" size={24} color={colors.gray500} />
-          ),
+          iconLeft: <ExternalLink size={24} color={colors.gray500} />,
           title: 'FAQ',
           content: 'Frequently asked questions',
         },
@@ -127,11 +111,9 @@ const SettingsModal = ({
           content:
             'Log in to be able to chat, view followed streams and much more :)',
           title: 'Anonymous',
-          iconLeft: <AntDesign name="user" size={24} color={colors.gray500} />,
+          iconLeft: <User size={24} color={colors.gray500} />,
           showRightArrow: true,
-          iconRight: (
-            <AntDesign name="right" size={16} color={colors.gray500} />
-          ),
+          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
           showSeperator: true,
           onPress: () => {
             navigation.navigate(RootRoutes.Login);
@@ -167,7 +149,7 @@ const SettingsModal = ({
           alignItems="center"
           padding={8}
         >
-          <Feather name="arrow-right-circle" size={24} color="black" />
+          <ArrowRightCircle size={24} color="black" />
           <Button
             title="Log out"
             onPress={async () => {

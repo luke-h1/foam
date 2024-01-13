@@ -45,7 +45,7 @@ const SettingsItem = ({ contents }: Props) => {
                     </View>
                     {item.showRightArrow && item.iconRight}
                   </TouchableOpacity>
-                  {item.showSeperator && <Seperator />}
+                  {item.showSeperator && <Seperator color="$neutral1" />}
                 </View>
               )}
             />
