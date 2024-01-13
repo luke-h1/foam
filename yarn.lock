@@ -6507,6 +6507,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tamagui/helpers-icon@npm:1.85.0":
+  version: 1.85.0
+  resolution: "@tamagui/helpers-icon@npm:1.85.0"
+  dependencies:
+    "@tamagui/core": 1.85.0
+  peerDependencies:
+    react: "*"
+    react-native-svg: ">=12"
+  checksum: 00c5bf61fc221dcecb77abf7fc5314409d3129df7f7478e2ec3ac56f9b8423fa3e54341da414c993538ed6bb79a0b11a529f48f9131730b350eadf1764b1c8e2
+  languageName: node
+  linkType: hard
+
 "@tamagui/helpers-node@npm:1.85.0":
   version: 1.85.0
   resolution: "@tamagui/helpers-node@npm:1.85.0"
@@ -6598,6 +6610,19 @@ __metadata:
   peerDependencies:
     react: "*"
   checksum: f302bb8625de9ed532bce95042c261f49e1934083be08f8d9d720170b6d506e5f055ea5609b94ac3870e30cdd21e39ad6bcfabbf2624fb1d6702d17f2966328f
+  languageName: node
+  linkType: hard
+
+"@tamagui/lucide-icons@npm:^1.85.0":
+  version: 1.85.0
+  resolution: "@tamagui/lucide-icons@npm:1.85.0"
+  dependencies:
+    "@tamagui/core": 1.85.0
+    "@tamagui/helpers-icon": 1.85.0
+  peerDependencies:
+    react: "*"
+    react-native-svg: ">=12"
+  checksum: 8c44c4e48bf2fbe74b1fdd9964aec986e53e781ada91c9f614a78a98f4fe86e6f8525498e525a71806cfd8d17ac22e88f9b89fc604e66da9ed2b61715d5db9f9
   languageName: node
   linkType: hard
 
@@ -13944,7 +13969,6 @@ __metadata:
     "@babel/core": ^7.20.0
     "@commitlint/cli": 18.4.4
     "@commitlint/config-conventional": 18.4.4
-    "@expo/vector-icons": ^13.0.0
     "@expo/webpack-config": ^19.0.0
     "@gorhom/bottom-sheet": ^4.5.1
     "@react-native-async-storage/async-storage": 1.18.2
@@ -13959,6 +13983,7 @@ __metadata:
     "@tamagui/animations-moti": ^1.85.0
     "@tamagui/babel-plugin": 1.85.0
     "@tamagui/font-inter": 1.85.0
+    "@tamagui/lucide-icons": ^1.85.0
     "@tamagui/react-native-media-driver": 1.85.0
     "@tamagui/shorthands": 1.85.0
     "@tamagui/themes": 1.85.0
@@ -14026,7 +14051,7 @@ __metadata:
     react-native-reanimated-carousel: ^3.5.1
     react-native-safe-area-context: 4.6.3
     react-native-screens: ~3.22.0
-    react-native-svg: 13.9.0
+    react-native-svg: ^14.1.0
     react-native-tab-view: ^3.5.2
     react-native-video: ^5.2.1
     react-native-web: ~0.19.6
@@ -21947,16 +21972,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-svg@npm:13.9.0":
-  version: 13.9.0
-  resolution: "react-native-svg@npm:13.9.0"
+"react-native-svg@npm:^14.1.0":
+  version: 14.1.0
+  resolution: "react-native-svg@npm:14.1.0"
   dependencies:
     css-select: ^5.1.0
     css-tree: ^1.1.3
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: f4fe1c9e802d7ea86b9efef74313a80fb75d486f40ca79aaa04d42ffd3f6e462a3f37ee54018fae9fd1efdc2d8b005d1e71b02bb266c0ab8baec70d9a5730892
+  checksum: ed94adac9bf3144c5dcbf37a2956ab672d402f11c0ed75cda247d1d9136ce8977f4d01bcfc813ba576bd61ece420d66306c148057e2552828aa8fe9bad173d46
   languageName: node
   linkType: hard
 

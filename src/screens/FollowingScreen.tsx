@@ -1,4 +1,4 @@
-import { AntDesign } from '@expo/vector-icons';
+import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { useMemo, useState } from 'react';
@@ -48,8 +48,7 @@ const FollowingScreen = () => {
         flex={1}
       >
         <Stack display="flex" flexDirection="row" alignItems="center">
-          <AntDesign
-            name="infocirlceo"
+          <Info
             size={24}
             color="$color"
             style={{

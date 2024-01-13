@@ -1,4 +1,4 @@
-import { AntDesign } from '@expo/vector-icons';
+import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
@@ -41,10 +41,9 @@ const TopCategoriesScreen = () => {
         }
       >
         <Stack alignItems="center" flex={1} justifyContent="center">
-          <AntDesign
-            name="infocirlceo"
+          <Info
             size={24}
-            color="black"
+            color="$color"
             style={{
               marginRight: 10,
             }}

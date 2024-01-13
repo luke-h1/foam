@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unstable-nested-components */
-import { AntDesign, Feather } from '@expo/vector-icons';
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
+import { Search, Heart, ArrowUpFromLine } from '@tamagui/lucide-icons';
 import Header from '../../components/Header';
 import { useAuthContext } from '../../context/AuthContext';
 import FollowingScreen from '../../screens/FollowingScreen';
@@ -39,9 +39,7 @@ const HomeTabsNavigator = () => {
           name={HomeTabsRoutes.Following}
           component={FollowingScreen}
           options={{
-            tabBarIcon: () => (
-              <Feather name="heart" size={24} color={colors.gray500} />
-            ),
+            tabBarIcon: () => <Heart size={24} color={colors.gray500} />,
             header(props: BottomTabHeaderProps) {
               return <Header {...props} title="Following" />;
             },
@@ -57,7 +55,7 @@ const HomeTabsNavigator = () => {
             backgroundColor: colors.black,
           },
           tabBarIcon: () => (
-            <AntDesign name="totop" size={24} color={colors.gray500} />
+            <ArrowUpFromLine size={20} color={colors.gray500} />
           ),
           header(props: BottomTabHeaderProps) {
             return <Header {...props} title="Top" />;
@@ -68,9 +66,7 @@ const HomeTabsNavigator = () => {
         name={HomeTabsRoutes.Search}
         component={SearchScreen}
         options={{
-          tabBarIcon: () => (
-            <Feather name="search" size={24} color={colors.gray500} />
-          ),
+          tabBarIcon: () => <Search size={20} color={colors.gray500} />,
           header(props: BottomTabHeaderProps) {
             return <Header {...props} title="Search" />;
           },
