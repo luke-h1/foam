@@ -2,11 +2,14 @@ import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, SafeAreaView } from 'react-native';
-import { ScrollView, Spinner, Stack, XStack } from 'tamagui';
+import { ScrollView, Stack, XStack } from 'tamagui';
+import { Flex } from '../../../components/Flex';
 import StreamCard from '../../../components/StreamCard';
 import { Text } from '../../../components/Text';
+import Spinner from '../../../components/loading/Spinner';
 import twitchQueries from '../../../queries/twitchQueries';
 import { Stream } from '../../../services/twitchService';
+import { iconSizes } from '../../../styles';
 
 const TopStreamsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -47,7 +50,18 @@ const TopStreamsScreen = () => {
   }
 
   if (refreshing || isLoading) {
-    return <Spinner color="$color" size="large" />;
+    return (
+      <Flex
+        centered
+        row
+        flexDirection="row"
+        gap="$spacing4"
+        marginTop="$spacing60"
+        padding="$spacing4"
+      >
+        <Spinner color="$neutral3" size={iconSizes.icon64} />
+      </Flex>
+    );
   }
 
   return (

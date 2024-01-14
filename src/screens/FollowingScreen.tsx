@@ -4,13 +4,15 @@ import Constants from 'expo-constants';
 import { useMemo, useState } from 'react';
 import { FlatList, SafeAreaView, Platform } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
-import { Main, ScrollView, Spinner, Stack } from 'tamagui';
+import { Main, ScrollView, Stack } from 'tamagui';
+import { Flex } from '../components/Flex';
 import StreamCard from '../components/StreamCard';
 import { Text } from '../components/Text';
+import Spinner from '../components/loading/Spinner';
 import { useAuthContext } from '../context/AuthContext';
 import twitchQueries from '../queries/twitchQueries';
 import { Stream } from '../services/twitchService';
-import { colors } from '../styles';
+import { colors, iconSizes } from '../styles';
 
 export interface Section {
   key: string;
@@ -63,7 +65,18 @@ const FollowingScreen = () => {
   }
 
   if (refreshing || isLoading) {
-    return <Spinner color="$color" size="large" />;
+    return (
+      <Flex
+        centered
+        row
+        flexDirection="row"
+        gap="$spacing4"
+        marginTop="$spacing60"
+        padding="$spacing4"
+      >
+        <Spinner color="$neutral3" size={iconSizes.icon64} />
+      </Flex>
+    );
   }
 
   return (

@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { ActivityIndicator } from 'react-native';
 import { Stack } from 'tamagui';
-import { Text } from '../../components/Text';
+import { Flex } from '../../components/Flex';
+import Spinner from '../../components/loading/Spinner';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
+import { iconSizes } from '../../styles';
 
 const AuthLoadingScreen = ({
   navigation,
@@ -19,8 +20,16 @@ const AuthLoadingScreen = ({
 
   return (
     <Stack flex={1} justifyContent="center" alignItems="center">
-      <Text>Loading...</Text>
-      <ActivityIndicator size="large" />
+      <Flex
+        centered
+        row
+        flexDirection="row"
+        gap="$spacing4"
+        marginTop="$spacing60"
+        padding="$spacing4"
+      >
+        <Spinner color="$neutral3" size={iconSizes.icon64} />
+      </Flex>
     </Stack>
   );
 };

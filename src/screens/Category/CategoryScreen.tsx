@@ -1,15 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { FlatList, SafeAreaView } from 'react-native';
-import { Image, ScrollView, Spinner, Stack } from 'tamagui';
+import { Image, ScrollView, Stack } from 'tamagui';
+import { Flex } from '../../components/Flex';
 import Main from '../../components/Main';
 import StreamCard from '../../components/StreamCard';
 import { Text } from '../../components/Text';
+import Spinner from '../../components/loading/Spinner';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,
 } from '../../navigation/Category/CategoryStack';
 import twitchQueries from '../../queries/twitchQueries';
+import { iconSizes } from '../../styles';
 
 const CategoryScreen = ({
   route,
@@ -41,16 +44,16 @@ const CategoryScreen = ({
 
   if (isLoadingCategory || isLoadingStreams) {
     return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          flexDirection: 'column',
-        }}
+      <Flex
+        centered
+        row
+        flexDirection="row"
+        gap="$spacing4"
+        marginTop="$spacing60"
+        padding="$spacing4"
       >
-        <Main>
-          <Spinner size="large" />
-        </Main>
-      </SafeAreaView>
+        <Spinner color="$neutral3" size={iconSizes.icon64} />
+      </Flex>
     );
   }
 

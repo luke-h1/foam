@@ -1,4 +1,5 @@
 import { createTokens } from 'tamagui';
+import { iconSizes } from './iconSizes';
 
 export interface Color {
   primary: string;
@@ -30,6 +31,21 @@ const darkColors: Color = {
   red: '#ec1414',
   purple: '#bf94ff',
 };
+
+const iconSize = {
+  true: iconSizes.icon40,
+  8: iconSizes.icon8,
+  12: iconSizes.icon12,
+  16: iconSizes.icon16,
+  20: iconSizes.icon20,
+  24: iconSizes.icon24,
+  28: iconSizes.icon28,
+  36: iconSizes.icon36,
+  40: iconSizes.icon40,
+  64: iconSizes.icon64,
+};
+
+export type IconSizeTokens = `$icon.${keyof typeof iconSize}`;
 
 export const tokens = createTokens({
   color: {
