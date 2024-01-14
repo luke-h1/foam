@@ -1,9 +1,16 @@
 import { createAnimations } from '@tamagui/animations-react-native';
-import { createInterFont } from '@tamagui/font-inter';
 import { createMedia } from '@tamagui/react-native-media-driver';
 import { shorthands as tamaguiShorthands } from '@tamagui/shorthands';
 import { createTamagui } from 'tamagui';
-import { themes } from './src/styles';
+import {
+  breakpoints,
+  themes,
+  bodyFont,
+  buttonFont,
+  headingFont,
+  subHeadingFont,
+  heightBreakpoints,
+} from './src/styles';
 import { tokens } from './src/styles/tokens';
 
 const {
@@ -51,9 +58,6 @@ const animations = createAnimations({
   },
 });
 
-const headingFont = createInterFont();
-const bodyFont = createInterFont();
-
 const config = createTamagui({
   shouldAddPrefersColorThemes: true,
   themeClassNameOnRoot: true,
@@ -61,26 +65,23 @@ const config = createTamagui({
   animations,
   shorthands,
   fonts: {
-    body: bodyFont,
     heading: headingFont,
+    subHeading: subHeadingFont,
+    body: bodyFont,
+    button: buttonFont,
   },
   tokens,
   themes,
   media: createMedia({
-    xs: { maxWidth: 660 },
-    sm: { maxWidth: 800 },
-    md: { maxWidth: 1020 },
-    lg: { maxWidth: 1280 },
-    xl: { maxWidth: 1420 },
-    xxl: { maxWidth: 1600 },
-    gtXs: { maxWidth: 660 + 1 },
-    gtSm: { minWidth: 800 + 1 },
-    gtMd: { maxWidth: 1020 + 1 },
-    gtLg: { maxWidth: 1280 + 1 },
-    short: { maxHeight: 820 },
-    tall: { minHeight: 820 },
-    hoverNone: { hover: 'none' },
-    pointerCoarse: { pointer: 'coarse' },
+    xxs: { maxWidth: breakpoints.xxs },
+    xs: { maxWidth: breakpoints.xs },
+    sm: { maxWidth: breakpoints.sm },
+    md: { maxWidth: breakpoints.md },
+    lg: { maxWidth: breakpoints.lg },
+    xl: { maxWidth: breakpoints.xl },
+    xxl: { maxWidth: breakpoints.xxl },
+    xxxl: { maxWidth: breakpoints.xxxl },
+    short: { maxHeight: heightBreakpoints.short },
   }),
   settings: {
     fastSchemeChange: true,

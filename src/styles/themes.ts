@@ -13,9 +13,9 @@ export type ThemeNames =
 
 // TODO: systematize hover and focus states. requires consolidating mobile and web design systems (they have different button styles right now)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const hoverColor = (color: any): string => opacify(85, color);
+const hoverColor = (color: string): string => opacify(85, color);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const pressedColor = (color: any): string => opacify(65, color);
+const pressedColor = (color: string): string => opacify(65, color);
 
 // remove $none from theme because it causes issues where $none tokens always resolve to transparent color
 // even if they are technically a gap or other space/size property

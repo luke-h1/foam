@@ -2,13 +2,14 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { Dimensions } from 'react-native';
 import WebView from 'react-native-webview';
-import { H5, Stack, Text, YStack } from 'tamagui';
+import { Stack, YStack } from 'tamagui';
 import Chat from '../../components/Chat/Chat';
 import Image from '../../components/Image';
 import Main from '../../components/Main';
 import SafeAreaContainer from '../../components/SafeAreaContainer';
 import Seperator from '../../components/Seperator';
 import Tags from '../../components/Tags';
+import { Text } from '../../components/Text';
 import useIsLandscape from '../../hooks/useIsLandscape';
 import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
 import twitchService, {
@@ -104,9 +105,9 @@ const LiveStreamScreen = () => {
               source={{ uri: broadcasterImage }}
               style={{ width: 35, height: 35, borderRadius: 14 }}
             />
-            <H5 marginLeft={4}>
+            <Text marginLeft={4}>
               {liveStream?.user_name ?? offlineUser?.display_name}
-            </H5>
+            </Text>
             <Stack marginLeft={8} marginTop={5} flexWrap="wrap">
               {liveStream?.title && (
                 <Text wordWrap="break-word">

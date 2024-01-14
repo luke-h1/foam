@@ -1,4 +1,5 @@
-import { Stack, Text } from 'tamagui';
+import { Stack } from 'tamagui';
+import { Text } from '../Text';
 
 const ChatMessage = () => {
   return (

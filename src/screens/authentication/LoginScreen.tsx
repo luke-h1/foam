@@ -3,14 +3,13 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { View, Button } from 'react-native';
 import { useAuthContext } from '../../context/AuthContext';
 import {
   HomeTabsParamList,
   HomeTabsRoutes,
 } from '../../navigation/Home/HomeTabs';
-import { RootRoutes } from '../../navigation/RootStack';
 import logger from '../../utils/logger';
 
 WebBrowser.maybeCompleteAuthSession();

@@ -1,10 +1,11 @@
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
-import { H4, Stack } from 'tamagui';
+import { Stack } from 'tamagui';
 import { useAuthContext } from '../context/AuthContext';
 import { RootRoutes } from '../navigation/RootStack';
 import { colors } from '../styles';
 import Image from './Image';
+import { Text } from './Text';
 
 type BaseProps = {
   title: string;
@@ -24,7 +25,7 @@ export default function Header({ title, navigation }: Props) {
         flexDirection="row"
         justifyContent="space-between"
       >
-        <H4 color="$color">{title}</H4>
+        <Text variant="heading2">{title}</Text>
         <Stack flexDirection="row" alignItems="center">
           {!user ? (
             <TouchableOpacity

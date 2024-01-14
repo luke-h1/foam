@@ -10,9 +10,10 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import { H5, Stack, Text, View } from 'tamagui';
+import { Stack, View } from 'tamagui';
 import DismissableKeyboard from '../components/DismissableKeyboard';
 import Image from '../components/Image';
+import { Text } from '../components/Text';
 import useDebouncedCallback from '../hooks/useDebouncedCallback';
 import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
 import { StreamRoutes } from '../navigation/Stream/StreamStack';
@@ -115,6 +116,7 @@ const SearchScreen = () => {
                   margin: 12,
                   borderWidth: 1,
                   padding: 10,
+                  color: '$text',
                 }}
                 placeholder="Find a channel"
                 placeholderTextColor="$text"
@@ -147,9 +149,9 @@ const SearchScreen = () => {
       <Stack marginBottom={14} marginLeft={14}>
         {searchResults.length > 0 && (
           <>
-            <H5 style={{ marginLeft: 15, marginBottom: 15 }} color="$color">
+            <Text variant="heading3" marginBottom={5}>
               Channels
-            </H5>
+            </Text>
             <FlatList
               data={searchResults}
               renderItem={({ item }) => (

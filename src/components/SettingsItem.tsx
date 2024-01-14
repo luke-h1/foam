@@ -1,6 +1,7 @@
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { H4, H6, Stack, Text } from 'tamagui';
+import { Stack } from 'tamagui';
 import Seperator from './Seperator';
+import { Text } from './Text';
 
 export interface ContentItem {
   id: string;
@@ -23,12 +24,14 @@ interface Props {
 const SettingsItem = ({ contents }: Props) => {
   return (
     <Stack padding={12}>
-      <H4 color="$color">Settings</H4>
+      <Text variant="heading3">Settings</Text>
       <FlatList
         data={contents}
         renderItem={({ item }) => (
           <Stack style={{ marginBottom: 24 }}>
-            <H6 color="$color">{item.ctaTitle}</H6>
+            <Text variant="body2" marginBottom={4}>
+              {item.ctaTitle}
+            </Text>
             <FlatList
               data={item.items}
               // eslint-disable-next-line no-shadow
@@ -40,8 +43,10 @@ const SettingsItem = ({ contents }: Props) => {
                   >
                     {item.iconLeft}
                     <View style={styles.copy}>
-                      <Text color="$color">{item.title}</Text>
-                      <Text color="$color">{item.content}</Text>
+                      <Text variant="body3" marginBottom={5} marginTop={4}>
+                        {item.title}
+                      </Text>
+                      <Text variant="body3">{item.content}</Text>
                     </View>
                     {item.showRightArrow && item.iconRight}
                   </TouchableOpacity>

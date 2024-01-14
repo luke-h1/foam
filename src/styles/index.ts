@@ -10,3 +10,4 @@ export * from './shadows';
 export * from './imageSizes';
 export * from './iconSizes';
 export * from './themes';
+export * from './fonts';

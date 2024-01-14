@@ -1,12 +1,13 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Pressable } from 'react-native';
-import { H6, Image, Stack, YStack } from 'tamagui';
+import { Image, Stack, YStack } from 'tamagui';
 import {
   CategoryRoutes,
   CategoryStackParamList,
 } from '../navigation/Category/CategoryStack';
 
 import { Category } from '../services/twitchService';
+import { Text } from './Text';
 
 interface Props {
   category: Category;
@@ -55,7 +56,7 @@ const CategoryCard = ({ category }: Props) => {
           flexDirection="row"
           marginTop={4}
         >
-          <H6 color="$color">{category.name}</H6>
+          <Text variant="body2">{category.name}</Text>
         </Stack>
       </YStack>
     </Pressable>
