@@ -1,6 +1,6 @@
+import logger from '@app/utils/logger';
 import { useEffect, useMemo } from 'react';
 import tmijs from 'tmi.js';
-import logger from '../utils/logger';
 
 export interface TmiClientOptions {
   channels: string[];
@@ -16,6 +16,7 @@ const useTmiClient = ({
   username,
 }: TmiClientOptions) => {
   const tmiClient = useMemo(() => {
+    // eslint-disable-next-line import/no-named-as-default-member
     return new tmijs.Client({
       options: {
         clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,

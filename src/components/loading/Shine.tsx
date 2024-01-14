@@ -1,4 +1,7 @@
 // 2 seconds
+import { Flex } from '@app/components/Flex';
+import { useSporeColors } from '@app/hooks/useSporeColors';
+import { opacify } from '@app/styles';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { SetStateAction, useEffect, useState } from 'react';
@@ -10,9 +13,6 @@ import Reanimated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { useSporeColors } from '../../hooks/useSporeColors';
-import { opacify } from '../../styles';
-import { Flex } from '../Flex';
 
 const SHIMMER_DURATION = 2000;
 

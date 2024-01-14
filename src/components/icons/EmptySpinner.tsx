@@ -1,5 +1,5 @@
+import createIcon from '@app/hocs/createIcon';
 import { Circle, Svg } from 'react-native-svg';
-import createIcon from '../../hocs/createIcon';
 
 export const [EmptySpinner, AnimatedEmptySpinner] = createIcon({
   name: 'EmptySpinner',

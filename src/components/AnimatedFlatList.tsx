@@ -1,4 +1,9 @@
-import React, { ElementType, forwardRef, PropsWithChildren } from 'react';
+import React, {
+  ElementType,
+  forwardRef,
+  PropsWithChildren,
+  useMemo,
+} from 'react';
 import { FlatList, FlatListProps, LayoutChangeEvent, View } from 'react-native';
 import Animated, { ILayoutAnimationBuilder } from 'react-native-reanimated';
 
@@ -48,7 +53,7 @@ export const AnimatedFlatList = forwardRef<
   ref,
 ) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const cellRenderer = React.useMemo(
+  const cellRenderer = useMemo(
     () => createCellRenderer(itemLayoutAnimation),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],

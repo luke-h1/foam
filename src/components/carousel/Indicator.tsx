@@ -1,3 +1,4 @@
+import { useDeviceDimensions } from '@app/hooks/useDeviceDimensions';
 import React from 'react';
 import { FlatList } from 'react-native';
 import {
@@ -6,7 +7,6 @@ import {
   SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { useDeviceDimensions } from '../../hooks/useDeviceDimensions';
 import { AnimatedFlex, Flex } from '../Flex';
 
 interface IndicatorProps {

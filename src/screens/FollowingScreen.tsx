@@ -1,18 +1,19 @@
+import { Flex } from '@app/components/Flex';
+import StreamCard from '@app/components/StreamCard';
+import { Text } from '@app/components/Text';
+import Spinner from '@app/components/loading/Spinner';
+import { useAuthContext } from '@app/context/AuthContext';
+import twitchQueries from '@app/queries/twitchQueries';
+import { Stream } from '@app/services/twitchService';
+import { colors, iconSizes } from '@app/styles';
 import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+// eslint-disable-next-line import/no-named-as-default
 import Constants from 'expo-constants';
 import { useMemo, useState } from 'react';
 import { FlatList, SafeAreaView, Platform } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 import { Main, ScrollView, Stack } from 'tamagui';
-import { Flex } from '../components/Flex';
-import StreamCard from '../components/StreamCard';
-import { Text } from '../components/Text';
-import Spinner from '../components/loading/Spinner';
-import { useAuthContext } from '../context/AuthContext';
-import twitchQueries from '../queries/twitchQueries';
-import { Stream } from '../services/twitchService';
-import { colors, iconSizes } from '../styles';
 
 export interface Section {
   key: string;

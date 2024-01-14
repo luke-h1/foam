@@ -1,5 +1,5 @@
+import createIcon from '@app/hocs/createIcon';
 import { Path, Svg } from 'react-native-svg';
-import createIcon from '../../hocs/createIcon';
 
 export const [CircleSpinner, AnimatedCircleSpinner] = createIcon({
   name: 'CircleSpinner',

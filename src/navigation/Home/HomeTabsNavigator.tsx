@@ -1,12 +1,12 @@
 /* eslint-disable react/no-unstable-nested-components */
+import Header from '@app/components/Header';
+import { useAuthContext } from '@app/context/AuthContext';
+import FollowingScreen from '@app/screens/FollowingScreen';
+import SearchScreen from '@app/screens/SearchScreen';
+import TopScreen from '@app/screens/Top/TopScreen';
+import { colors } from '@app/styles';
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import { Search, Heart, ArrowUpFromLine } from '@tamagui/lucide-icons';
-import Header from '../../components/Header';
-import { useAuthContext } from '../../context/AuthContext';
-import FollowingScreen from '../../screens/FollowingScreen';
-import SearchScreen from '../../screens/SearchScreen';
-import TopScreen from '../../screens/Top/TopScreen';
-import { colors } from '../../styles';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
 
 const HomeTabsNavigator = () => {

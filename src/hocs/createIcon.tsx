@@ -1,4 +1,6 @@
 /* eslint-disable react/no-unused-prop-types */
+import { DynamicColor } from '@app/hooks/useSporeColors';
+import { IconSizeTokens } from '@app/styles';
 import type { IconProps as TamaguiIconProps } from '@tamagui/helpers-icon';
 import {
   ForwardRefExoticComponent,
@@ -18,8 +20,6 @@ import {
   ThemeKeys,
   usePropsAndStyle,
 } from 'tamagui';
-import { DynamicColor } from '../hooks/useSporeColors';
-import { IconSizeTokens } from '../styles';
 import { withAnimated } from './withAnimated';
 
 type SvgPropsWithRef = SvgProps & {

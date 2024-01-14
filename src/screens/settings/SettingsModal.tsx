@@ -1,3 +1,8 @@
+import Image from '@app/components/Image';
+import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
+import { useAuthContext } from '@app/context/AuthContext';
+import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
+import { colors } from '@app/styles';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import {
   ArrowRightCircle,
@@ -11,11 +16,6 @@ import {
 import { useMemo, useRef } from 'react';
 import { SafeAreaView, Button } from 'react-native';
 import { Stack } from 'tamagui';
-import Image from '../../components/Image';
-import SettingsItem, { ContentItem } from '../../components/SettingsItem';
-import { useAuthContext } from '../../context/AuthContext';
-import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
-import { colors } from '../../styles';
 import { statusBarHeight } from '../FollowingScreen';
 
 const SettingsModal = ({

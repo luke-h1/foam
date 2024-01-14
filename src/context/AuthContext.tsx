@@ -1,3 +1,6 @@
+import { twitchApi } from '@app/services/Client';
+import twitchService, { UserInfoResponse } from '@app/services/twitchService';
+import logger from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import React, {
@@ -8,9 +11,6 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { twitchApi } from '../services/Client';
-import twitchService, { UserInfoResponse } from '../services/twitchService';
-import logger from '../utils/logger';
 
 export const StorageKeys = {
   anonToken: 'foam-anonToken',

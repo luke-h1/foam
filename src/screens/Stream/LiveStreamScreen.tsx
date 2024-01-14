@@ -1,22 +1,22 @@
+import Chat from '@app/components/Chat/Chat';
+import Image from '@app/components/Image';
+import Main from '@app/components/Main';
+import SafeAreaContainer from '@app/components/SafeAreaContainer';
+import Seperator from '@app/components/Seperator';
+import Tags from '@app/components/Tags';
+import { Text } from '@app/components/Text';
+import useIsLandscape from '@app/hooks/useIsLandscape';
+import { StreamStackParamList } from '@app/navigation/Stream/StreamStack';
+import twitchService, {
+  Stream,
+  UserInfoResponse,
+} from '@app/services/twitchService';
+import truncate from '@app/utils/truncate';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { Dimensions } from 'react-native';
 import WebView from 'react-native-webview';
 import { Stack, YStack } from 'tamagui';
-import Chat from '../../components/Chat/Chat';
-import Image from '../../components/Image';
-import Main from '../../components/Main';
-import SafeAreaContainer from '../../components/SafeAreaContainer';
-import Seperator from '../../components/Seperator';
-import Tags from '../../components/Tags';
-import { Text } from '../../components/Text';
-import useIsLandscape from '../../hooks/useIsLandscape';
-import { StreamStackParamList } from '../../navigation/Stream/StreamStack';
-import twitchService, {
-  Stream,
-  UserInfoResponse,
-} from '../../services/twitchService';
-import truncate from '../../utils/truncate';
 
 const LiveStreamScreen = () => {
   const route = useRoute<RouteProp<StreamStackParamList>>();

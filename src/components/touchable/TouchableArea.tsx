@@ -1,3 +1,5 @@
+import { withAnimated } from '@app/hocs/withAnimated';
+import { defaultHitslopInset } from '@app/styles';
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { useCallback, useMemo, useRef } from 'react';
 import { GestureResponderEvent } from 'react-native';
@@ -9,8 +11,6 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { usePropsAndStyle } from 'tamagui';
-import { withAnimated } from '../../hocs/withAnimated';
-import { defaultHitslopInset } from '../../styles';
 import { AnimatedTouchableBox, TouchableBoxProps } from './TouchableBox';
 
 /**

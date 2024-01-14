@@ -1,12 +1,12 @@
+import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
+import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
+import twitchService, { Stream } from '@app/services/twitchService';
+import elapsedStreamTime from '@app/utils/elapsedStreamTime';
+import viewFormatter from '@app/utils/viewFormatter';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 import { Image, Stack, XStack } from 'tamagui';
-import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
-import { StreamRoutes } from '../navigation/Stream/StreamStack';
-import twitchService, { Stream } from '../services/twitchService';
-import elapsedStreamTime from '../utils/elapsedStreamTime';
-import viewFormatter from '../utils/viewFormatter';
 import Tags from './Tags';
 import { Text } from './Text';
 

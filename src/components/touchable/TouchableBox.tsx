@@ -1,6 +1,6 @@
+import { withAnimated } from '@app/hocs/withAnimated';
 import { TouchableOpacity, TouchableOpacityProps } from 'react-native';
 import { GetProps, Stack } from 'tamagui';
-import { withAnimated } from '../../hocs/withAnimated';
 
 export const TouchableBox = TouchableOpacity;
 

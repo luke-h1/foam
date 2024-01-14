@@ -1,18 +1,18 @@
+import { Flex } from '@app/components/Flex';
+import Main from '@app/components/Main';
+import StreamCard from '@app/components/StreamCard';
+import { Text } from '@app/components/Text';
+import Spinner from '@app/components/loading/Spinner';
+import {
+  CategoryRoutes,
+  CategoryStackScreenProps,
+} from '@app/navigation/Category/CategoryStack';
+import twitchQueries from '@app/queries/twitchQueries';
+import { iconSizes } from '@app/styles';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { FlatList, SafeAreaView } from 'react-native';
 import { Image, ScrollView, Stack } from 'tamagui';
-import { Flex } from '../../components/Flex';
-import Main from '../../components/Main';
-import StreamCard from '../../components/StreamCard';
-import { Text } from '../../components/Text';
-import Spinner from '../../components/loading/Spinner';
-import {
-  CategoryRoutes,
-  CategoryStackScreenProps,
-} from '../../navigation/Category/CategoryStack';
-import twitchQueries from '../../queries/twitchQueries';
-import { iconSizes } from '../../styles';
 
 const CategoryScreen = ({
   route,

@@ -1,4 +1,12 @@
 /* eslint-disable no-console */
+import DismissableKeyboard from '@app/components/DismissableKeyboard';
+import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
+import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
+import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
+import twitchService, {
+  SearchChannelResponse,
+} from '@app/services/twitchService';
+import elapsedStreamTime from '@app/utils/elapsedStreamTime';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { X, Search, History } from '@tamagui/lucide-icons';
@@ -11,16 +19,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Stack, View } from 'tamagui';
-import DismissableKeyboard from '../components/DismissableKeyboard';
 import Image from '../components/Image';
 import { Text } from '../components/Text';
-import useDebouncedCallback from '../hooks/useDebouncedCallback';
-import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
-import { StreamRoutes } from '../navigation/Stream/StreamStack';
-import twitchService, {
-  SearchChannelResponse,
-} from '../services/twitchService';
-import elapsedStreamTime from '../utils/elapsedStreamTime';
 import { statusBarHeight } from './FollowingScreen';
 
 interface SearchHistoryItem {

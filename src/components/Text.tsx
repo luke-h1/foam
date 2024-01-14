@@ -1,8 +1,8 @@
+import { withAnimated } from '@app/hocs/withAnimated';
+import { fonts } from '@app/styles';
 import { ReactNode } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { GetProps, styled, Text as TamaguiText } from 'tamagui';
-import { withAnimated } from '../hocs/withAnimated';
-import { fonts } from '../styles';
 import { Flex } from './Flex';
 import VisuallyHidden from './VisuallyHidden';
 import Skeleton from './loading/Skeleton';

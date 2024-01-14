@@ -1,16 +1,16 @@
+import CategoryCard from '@app/components/CategoryCard';
+import { Flex } from '@app/components/Flex';
+import { Text } from '@app/components/Text';
+import Spinner from '@app/components/loading/Spinner';
+import twitchQueries from '@app/queries/twitchQueries';
+import { Category } from '@app/services/twitchService';
+import { colors, iconSizes } from '@app/styles';
 import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView, Stack, XStack } from 'tamagui';
-import CategoryCard from '../../../components/CategoryCard';
-import { Flex } from '../../../components/Flex';
-import { Text } from '../../../components/Text';
-import Spinner from '../../../components/loading/Spinner';
-import twitchQueries from '../../../queries/twitchQueries';
-import { Category } from '../../../services/twitchService';
-import { colors, iconSizes } from '../../../styles';
 
 const TopCategoriesScreen = () => {
   const [refreshing, setRefreshing] = useState(false);

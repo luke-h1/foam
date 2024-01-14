@@ -1,5 +1,5 @@
+import { withAnimated } from '@app/hocs/withAnimated';
 import { Stack, StackProps, styled } from 'tamagui';
-import { withAnimated } from '../hocs/withAnimated';
 
 export const flexStyles = {
   fill: { flex: 1 },
