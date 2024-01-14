@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-console */
+import { useAuthContext } from '@app/context/AuthContext';
+import {
+  HomeTabsParamList,
+  HomeTabsRoutes,
+} from '@app/navigation/Home/HomeTabs';
+import logger from '@app/utils/logger';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
 import { View, Button } from 'react-native';
-import { useAuthContext } from '../../context/AuthContext';
-import {
-  HomeTabsParamList,
-  HomeTabsRoutes,
-} from '../../navigation/Home/HomeTabs';
-import logger from '../../utils/logger';
 
 WebBrowser.maybeCompleteAuthSession();
 

@@ -1,5 +1,5 @@
+import { colors } from '@app/styles';
 import { Stack } from 'tamagui';
-import { colors } from '../styles';
 
 interface Props {
   color?: string;

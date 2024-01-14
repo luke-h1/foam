@@ -1,3 +1,4 @@
+import { hapticFeedback } from '@app/utils/hapticFeedback';
 import { ImpactFeedbackStyle } from 'expo-haptics';
 import { createContext, ReactNode, useContext } from 'react';
 import {
@@ -15,7 +16,6 @@ import {
   wrapChildrenInText,
   XStack,
 } from 'tamagui';
-import { hapticFeedback } from '../utils/hapticFeedback';
 
 type ButtonSize = 'small' | 'medium' | 'large';
 

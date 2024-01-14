@@ -1,3 +1,5 @@
+import { Flex } from '@app/components/Flex';
+import { useDeviceDimensions } from '@app/hooks/useDeviceDimensions';
 import React, {
   ComponentProps,
   createContext,
@@ -11,8 +13,6 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { useDeviceDimensions } from '../../hooks/useDeviceDimensions';
-import { Flex } from '../Flex';
 import { AnimatedIndicator } from './Indicator';
 
 interface CarouselContextState {

@@ -1,12 +1,12 @@
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { Pressable } from 'react-native';
-import { Image, Stack, YStack } from 'tamagui';
 import {
   CategoryRoutes,
   CategoryStackParamList,
-} from '../navigation/Category/CategoryStack';
+} from '@app/navigation/Category/CategoryStack';
+import { Category } from '@app/services/twitchService';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { Pressable } from 'react-native';
+import { Image, Stack, YStack } from 'tamagui';
 
-import { Category } from '../services/twitchService';
 import { Text } from './Text';
 
 interface Props {

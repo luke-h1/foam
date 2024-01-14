@@ -1,6 +1,6 @@
+import logger from '@app/utils/logger';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useEffect } from 'react';
-import logger from '../utils/logger';
 
 const useChangeScreenOrientation = () => {
   useEffect(() => {

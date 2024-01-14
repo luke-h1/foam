@@ -1,3 +1,5 @@
+import { AnimatedFlex } from '@app/components/Flex';
+import { Icons } from '@app/components/icons';
 import React, { useEffect } from 'react';
 import {
   cancelAnimation,
@@ -8,8 +10,6 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { ColorTokens } from 'tamagui';
-import { AnimatedFlex } from '../Flex';
-import { Icons } from '../icons';
 
 interface SpinnerProps {
   size: number;

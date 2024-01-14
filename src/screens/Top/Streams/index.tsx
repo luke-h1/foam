@@ -1,15 +1,15 @@
+import { Flex } from '@app/components/Flex';
+import StreamCard from '@app/components/StreamCard';
+import { Text } from '@app/components/Text';
+import Spinner from '@app/components/loading/Spinner';
+import twitchQueries from '@app/queries/twitchQueries';
+import { Stream } from '@app/services/twitchService';
+import { iconSizes } from '@app/styles';
 import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, SafeAreaView } from 'react-native';
 import { ScrollView, Stack, XStack } from 'tamagui';
-import { Flex } from '../../../components/Flex';
-import StreamCard from '../../../components/StreamCard';
-import { Text } from '../../../components/Text';
-import Spinner from '../../../components/loading/Spinner';
-import twitchQueries from '../../../queries/twitchQueries';
-import { Stream } from '../../../services/twitchService';
-import { iconSizes } from '../../../styles';
 
 const TopStreamsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);

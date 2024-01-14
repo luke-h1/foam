@@ -1,5 +1,4 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
     "noImplicitAny": true,
@@ -10,7 +9,13 @@
     "resolveJsonModule": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": ["src/*"]
+    }
   },
   "include": ["./src/**/*"],
-  "exclude": ["node_modules", ".expo"]
+  "moduleResolution": "node",
+  "exclude": ["node_modules", ".expo"],
+  "extends": "expo/tsconfig.base"
 }

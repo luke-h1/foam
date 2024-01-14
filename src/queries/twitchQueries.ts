@@ -1,4 +1,3 @@
-import { UseQueryOptions } from '@tanstack/react-query';
 import twitchService, {
   Channel,
   Stream,
@@ -6,7 +5,8 @@ import twitchService, {
   UserInfoResponse,
   UserResponse,
   SearchChannelResponse,
-} from '../services/twitchService';
+} from '@app/services/twitchService';
+import { UseQueryOptions } from '@tanstack/react-query';
 
 const twitchQueries = {
   getStream(userLogin: string): UseQueryOptions<Stream | null | undefined> {

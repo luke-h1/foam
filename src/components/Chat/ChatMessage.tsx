@@ -1,5 +1,5 @@
+import { Text } from '@app/components/Text';
 import { Stack } from 'tamagui';
-import { Text } from '../Text';
 
 const ChatMessage = () => {
   return (

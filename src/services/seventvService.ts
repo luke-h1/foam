@@ -54,7 +54,7 @@ interface BadgeResponse {
     id: string;
     name: string;
     tooltip: string;
-    urls: Array<[string, string]>;
+    urls: [string, string][];
     users: string[];
   }[];
 }
@@ -96,7 +96,7 @@ const seventvService = {
     if (res.status === 200) {
       const { badges } = res.data;
 
-      const result: Record<string, Array<BadgeResponse>> = {};
+      const result: Record<string, BadgeResponse[]> = {};
 
       for (const badge of badges) {
         for (const userId of badge.users) {

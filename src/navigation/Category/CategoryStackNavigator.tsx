@@ -1,4 +1,4 @@
-import CategoryScreen from '../../screens/Category/CategoryScreen';
+import CategoryScreen from '@app/screens/Category/CategoryScreen';
 import { CategoryRoutes, CategoryStack } from './CategoryStack';
 
 const CategoryStackNavigator = () => {

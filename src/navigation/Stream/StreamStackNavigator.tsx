@@ -1,4 +1,4 @@
-import LiveStreamScreen from '../../screens/Stream/LiveStreamScreen';
+import LiveStreamScreen from '@app/screens/Stream/LiveStreamScreen';
 import { StreamRoutes, StreamStack } from './StreamStack';
 
 const StreamStackNavigator = () => {

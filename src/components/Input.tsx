@@ -1,7 +1,7 @@
+import { useSporeColors } from '@app/hooks/useSporeColors';
 import { Ref, forwardRef } from 'react';
 import { TextInput as TextInputBase } from 'react-native';
 import { Input, TamaguiTextElement } from 'tamagui';
-import { useSporeColors } from '../hooks/useSporeColors';
 
 type TextInputProps = TextInputBase['props'];
 

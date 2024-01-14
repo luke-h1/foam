@@ -1,6 +1,6 @@
+import { Flex } from '@app/components/Flex';
 import { useEffect } from 'react';
 import { Stack } from 'tamagui';
-import { Flex } from '../../components/Flex';
 import Spinner from '../../components/loading/Spinner';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 import { iconSizes } from '../../styles';

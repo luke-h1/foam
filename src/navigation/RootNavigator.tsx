@@ -1,9 +1,9 @@
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import AuthLoading from '@app/screens/authentication/AuthLoading';
+import LoginScreen from '@app/screens/authentication/LoginScreen';
+import SettingsModal from '@app/screens/settings/SettingsModal';
 import Header from '../components/Header';
-import AuthLoading from '../screens/authentication/AuthLoading';
-import LoginScreen from '../screens/authentication/LoginScreen';
-import SettingsModal from '../screens/settings/SettingsModal';
 import CategoryStackNavigator from './Category/CategoryStackNavigator';
 import HomeTabsNavigator from './Home/HomeTabsNavigator';
 import { RootRoutes, RootStack } from './RootStack';

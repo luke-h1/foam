@@ -1,9 +1,9 @@
+import { useAuthContext } from '@app/context/AuthContext';
+import { RootRoutes } from '@app/navigation/RootStack';
+import { colors } from '@app/styles';
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Stack } from 'tamagui';
-import { useAuthContext } from '../context/AuthContext';
-import { RootRoutes } from '../navigation/RootStack';
-import { colors } from '../styles';
 import Image from './Image';
 import { Text } from './Text';
 

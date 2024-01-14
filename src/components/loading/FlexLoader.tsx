@@ -1,6 +1,6 @@
+import { Flex, FlexProps } from '@app/components/Flex';
 import React from 'react';
 import { FlatList, ViewProps } from 'react-native';
-import { Flex, FlexProps } from '../Flex';
 
 export type FlexLoaderProps = FlexProps &
   ViewProps & {
