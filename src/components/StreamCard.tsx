@@ -1,13 +1,14 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
-import { Image, Stack, Text, XStack } from 'tamagui';
+import { Image, Stack, XStack } from 'tamagui';
 import { HomeTabsParamList } from '../navigation/Home/HomeTabs';
 import { StreamRoutes } from '../navigation/Stream/StreamStack';
 import twitchService, { Stream } from '../services/twitchService';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import viewFormatter from '../utils/viewFormatter';
 import Tags from './Tags';
+import { Text } from './Text';
 
 const IMAGE_ASPECT_RATIO = 240 / 165;
 const IMAGE_HEIGHT = 85;
@@ -70,11 +71,10 @@ const StreamCard = ({ stream }: Props) => {
             paddingHorizontal={4}
             paddingVertical={2}
           >
-            <Text numberOfLines={1} color="$color">
-              {/* red dot */}
+            <Text numberOfLines={1} color="$color" variant="buttonLabel4">
               <Text color="$darkRed" fontSize={12}>
                 ●
-              </Text>{' '}
+              </Text>
               {viewFormatter(stream.viewer_count, 1)}
             </Text>
           </Stack>
@@ -85,7 +85,7 @@ const StreamCard = ({ stream }: Props) => {
             paddingHorizontal={4}
             paddingVertical={2}
           >
-            <Text color="$color" numberOfLines={1}>
+            <Text numberOfLines={1} variant="body3" color="$color">
               {elapsedStreamTime(stream.started_at)}
             </Text>
           </Stack>
@@ -118,8 +118,8 @@ const StreamCard = ({ stream }: Props) => {
                 borderRadius={12}
                 marginRight={4}
               />
-              <Stack>
-                <Text color="$color" fontWeight="bold" numberOfLines={1}>
+              <Stack alignItems="center">
+                <Text fontWeight="bold" numberOfLines={1} variant="body3">
                   {stream.user_name}
                 </Text>
               </Stack>
@@ -142,7 +142,7 @@ const StreamCard = ({ stream }: Props) => {
                 lineHeight={22}
                 numberOfLines={1}
                 lineBreakMode="clip"
-                color="$color"
+                marginBottom={6}
               >
                 {stream.title}
               </Text>
@@ -150,7 +150,7 @@ const StreamCard = ({ stream }: Props) => {
                 lineHeight={22}
                 numberOfLines={1}
                 lineBreakMode="clip"
-                color="$color"
+                variant="buttonLabel4"
               >
                 {stream.game_name}
               </Text>

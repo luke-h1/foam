@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ActivityIndicator } from 'react-native';
-import { Stack, Text } from 'tamagui';
+import { Stack } from 'tamagui';
+import { Text } from '../../components/Text';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 
 const AuthLoadingScreen = ({
@@ -18,7 +19,7 @@ const AuthLoadingScreen = ({
 
   return (
     <Stack flex={1} justifyContent="center" alignItems="center">
-      <Text color="$color">Loading...</Text>
+      <Text>Loading...</Text>
       <ActivityIndicator size="large" />
     </Stack>
   );

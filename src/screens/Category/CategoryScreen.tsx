@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { FlatList, SafeAreaView } from 'react-native';
-import { H3, Image, ScrollView, Spinner, Stack, Text } from 'tamagui';
+import { Image, ScrollView, Spinner, Stack } from 'tamagui';
 import Main from '../../components/Main';
 import StreamCard from '../../components/StreamCard';
+import { Text } from '../../components/Text';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,
@@ -92,9 +93,9 @@ const CategoryScreen = ({
               width={100}
               height={135}
             />
-            <H3 marginLeft={8} color="$color">
+            <Text marginLeft={8} variant="heading3">
               {category?.name}
-            </H3>
+            </Text>
           </Stack>
           <Stack marginTop={20}>
             <FlatList
