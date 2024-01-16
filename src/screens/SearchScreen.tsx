@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import DismissableKeyboard from '@app/components/DismissableKeyboard';
+import { TextInput } from '@app/components/TextInput';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
 import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
@@ -10,13 +11,13 @@ import elapsedStreamTime from '@app/utils/elapsedStreamTime';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { X, Search, History } from '@tamagui/lucide-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   SafeAreaView,
   ScrollView,
-  TextInput,
   TouchableOpacity,
+  TextInput as NativeTextInput,
 } from 'react-native';
 import { Stack, View } from 'tamagui';
 import Image from '../components/Image';
@@ -30,6 +31,7 @@ interface SearchHistoryItem {
 
 const SearchScreen = () => {
   const [query, setQuery] = useState<string>('');
+  const ref = useRef<NativeTextInput | null>(null);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
@@ -108,16 +110,7 @@ const SearchScreen = () => {
           >
             <SafeAreaView style={{ flexDirection: 'row' }}>
               <TextInput
-                style={{
-                  borderRadius: 4,
-                  width: '90%',
-                  alignSelf: 'center',
-                  height: 40,
-                  margin: 12,
-                  borderWidth: 1,
-                  padding: 10,
-                  color: '$text',
-                }}
+                ref={ref}
                 placeholder="Find a channel"
                 placeholderTextColor="$text"
                 verticalAlign="middle"
@@ -133,9 +126,10 @@ const SearchScreen = () => {
             size={24}
             style={[{ alignSelf: 'center', marginRight: 15 }]}
             onPress={() => {
-              setQuery('');
               setSearchResults([]);
+              setQuery('');
               setShowDismiss(false);
+              ref?.current?.clear();
             }}
           />
         ) : (
