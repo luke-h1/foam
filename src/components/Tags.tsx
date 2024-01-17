@@ -14,12 +14,14 @@ const Tags = ({ tags }: Props) => {
         showsHorizontalScrollIndicator
         renderItem={({ item }) => (
           <View
-            backgroundColor="$color"
+            backgroundColor="$neutral3"
             paddingHorizontal={8}
             borderRadius={10}
             marginRight={5}
           >
-            <Text numberOfLines={1}>{item}</Text>
+            <Text color="$color" loading={!tags} padding={0}>
+              {item}
+            </Text>
           </View>
         )}
         keyExtractor={index => index.toString()}
