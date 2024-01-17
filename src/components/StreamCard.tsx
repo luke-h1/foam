@@ -5,7 +5,7 @@ import elapsedStreamTime from '@app/utils/elapsedStreamTime';
 import viewFormatter from '@app/utils/viewFormatter';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable, useColorScheme } from 'react-native';
 import { Image, Stack, XStack } from 'tamagui';
 import Tags from './Tags';
 import { Text } from './Text';
@@ -31,6 +31,8 @@ const StreamCard = ({ stream }: Props) => {
     getUserProfilePictures();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream]);
+
+  const color = useColorScheme();
 
   return (
     <XStack
@@ -71,10 +73,14 @@ const StreamCard = ({ stream }: Props) => {
             paddingHorizontal={4}
             paddingVertical={2}
           >
-            <Text numberOfLines={1} color="$color" variant="buttonLabel4">
+            <Text
+              numberOfLines={1}
+              variant="buttonLabel4"
+              color={color === 'dark' ? '$color' : '$accent2'}
+            >
               <Text color="$darkRed" fontSize={12}>
                 ●
-              </Text>
+              </Text>{' '}
               {viewFormatter(stream.viewer_count, 1)}
             </Text>
           </Stack>
@@ -85,7 +91,10 @@ const StreamCard = ({ stream }: Props) => {
             paddingHorizontal={4}
             paddingVertical={2}
           >
-            <Text numberOfLines={1} variant="body3" color="$color">
+            <Text
+              numberOfLines={1}
+              color={color === 'dark' ? '$color' : '$accent2'}
+            >
               {elapsedStreamTime(stream.started_at)}
             </Text>
           </Stack>

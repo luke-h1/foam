@@ -114,6 +114,7 @@ const SearchScreen = () => {
                 placeholder="Find a channel"
                 placeholderTextColor="$text"
                 verticalAlign="middle"
+                padding={10}
                 onChangeText={async text => {
                   await handleQuery(text);
                 }}
