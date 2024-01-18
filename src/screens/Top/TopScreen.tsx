@@ -35,8 +35,6 @@ const TopScreen = () => {
                 borderBottomWidth: 1.95,
                 padding: 6,
                 borderBottomColor: index === i ? 'purple' : 'transparent',
-                borderTopLeftRadius: 2,
-                borderTopRightRadius: 2,
               }}
             >
               <Text color="$color" fontWeight="bold">

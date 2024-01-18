@@ -4,13 +4,13 @@ import { Text } from '@app/components/Text';
 import Spinner from '@app/components/loading/Spinner';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Category } from '@app/services/twitchService';
-import { colors, iconSizes } from '@app/styles';
+import { colors, iconSizes, spacing } from '@app/styles';
 import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, Stack, XStack } from 'tamagui';
+import { ScrollView, Stack } from 'tamagui';
 
 const TopCategoriesScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -75,22 +75,17 @@ const TopCategoriesScreen = () => {
   }
 
   return (
-    <SafeAreaView
-      style={{
-        padding: 2,
-      }}
-    >
+    <SafeAreaView>
       <ScrollView
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.gray500}
-            colors={[colors.gray500]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <XStack paddingHorizontal="$2" space>
+        <Stack
+          $sm={{ flexDirection: 'column' }}
+          paddingHorizontal={spacing.spacing8}
+          space
+        >
           {categories.length > 0 && (
             <FlatList<Category>
               data={categories}
@@ -98,7 +93,7 @@ const TopCategoriesScreen = () => {
               keyExtractor={(_item, index) => index.toString()}
             />
           )}
-        </XStack>
+        </Stack>
       </ScrollView>
     </SafeAreaView>
   );

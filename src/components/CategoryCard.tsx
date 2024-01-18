@@ -5,7 +5,7 @@ import {
 import { Category } from '@app/services/twitchService';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Pressable } from 'react-native';
-import { Image, Stack, YStack } from 'tamagui';
+import { Image, Stack } from 'tamagui';
 
 import { Text } from './Text';
 
@@ -32,14 +32,14 @@ const CategoryCard = ({ category }: Props) => {
         })
       }
     >
-      <YStack
+      <Stack
         marginBottom={17}
         display="flex"
         flexDirection="row"
         alignItems="flex-start"
         justifyContent="space-between"
       >
-        <Stack marginRight={16} width={IMAGE_WIDTH} height={IMAGE_HEIGHT}>
+        <Stack marginRight={16}>
           <Image
             source={{
               uri: category.box_art_url
@@ -58,7 +58,7 @@ const CategoryCard = ({ category }: Props) => {
         >
           <Text variant="body2">{category.name}</Text>
         </Stack>
-      </YStack>
+      </Stack>
     </Pressable>
   );
 };

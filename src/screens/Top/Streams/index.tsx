@@ -4,12 +4,12 @@ import { Text } from '@app/components/Text';
 import Spinner from '@app/components/loading/Spinner';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
-import { iconSizes } from '@app/styles';
+import { iconSizes, spacing } from '@app/styles';
 import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, SafeAreaView } from 'react-native';
-import { ScrollView, Stack, XStack } from 'tamagui';
+import { ScrollView, Stack } from 'tamagui';
 
 const TopStreamsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -68,29 +68,21 @@ const TopStreamsScreen = () => {
     <SafeAreaView>
       <ScrollView
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            // tintColor={colors.gray}
-            // colors={[colors.gray]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <Stack marginTop={20} />
-        <Stack>
-          <XStack
-            $sm={{ flexDirection: 'column' }}
-            paddingHorizontal="$2"
-            space
-          >
-            {streams && streams.length > 0 && (
-              <FlatList<Stream>
-                data={streams}
-                renderItem={({ item }) => <StreamCard stream={item} />}
-                keyExtractor={item => item.id}
-              />
-            )}
-          </XStack>
+        <Stack
+          paddingHorizontal={spacing.spacing8}
+          space
+          marginTop={spacing.spacing8}
+        >
+          {streams && streams.length > 0 && (
+            <FlatList<Stream>
+              data={streams}
+              renderItem={({ item }) => <StreamCard stream={item} />}
+              keyExtractor={item => item.id}
+            />
+          )}
         </Stack>
       </ScrollView>
     </SafeAreaView>
