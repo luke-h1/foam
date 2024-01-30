@@ -6,6 +6,7 @@ on:
     branches: [dev, main]
 env:
   NODE_VERSION: 18.18.0
+  PNPM_VERSION: 8.15.1
 
 jobs:
   build:
@@ -28,59 +29,58 @@ jobs:
       - name: tune linux network
         run: sudo ethtool -K eth0 tx off rx off         
 
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
 
-      - name: get yarn cache directory
-        id: cache
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-        shell: bash
-        working-directory: ./
-
-      - name: setup yarn cache
-        uses: actions/cache@v3
-        id: yarn-cache
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
-            path: ${{ steps.cache.outputs.dir }}
-            key: yarn-${{ hashFiles('**/yarn.lock') }}
-            restore-keys: |
-                yarn-
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}
+          path: |
+            node_modules/.cache/turbo
+            apps/*/.turbo
+            packages/*/.turbo
 
       - uses: actions/labeler@v4
         with:
           sync-labels: true
 
-      - name: install yarn
-        run: corepack enable
-
       - name: Install dependencies
-        run: yarn
+        run: pnpm i 
 
       - name: Check commit message
-        run: yarn commitlint --from=HEAD^1
+        run: pnpm commitlint --from=HEAD^1
 
       - name: format:check
-        run: yarn format:check
+        run: pnpm format:check
 
       - name: lint
-        run: yarn lint
+        run: pnpm lint
 
       - name: jest
-        run: yarn test
+        run: pnpm test
 
       - name: tsc
-        run: yarn tsc
+        run: pnpm tsc
 
   preview:
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     needs: build
     if: github.event_name == 'pull_request'
     timeout-minutes: 30
@@ -91,30 +91,34 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
 
-      - name: get yarn cache directory
-        id: cache
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-        shell: bash
-        working-directory: ./
-
-      - name: setup yarn cache
-        uses: actions/cache@v3
-        id: yarn-cache
+      - name: 🏗 Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
-            path: ${{ steps.cache.outputs.dir }}
-            key: yarn-${{ hashFiles('**/yarn.lock') }}
-            restore-keys: |
-                yarn-
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: ♻️ Restore cache
+        uses: actions/cache@v3
+        with:
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}
+          path: |
+            node_modules/.cache/turbo
+            apps/*/.turbo
+            packages/*/.turbo
 
       - uses: actions/labeler@v4
         with:
           sync-labels: true
 
-      - name: install yarn
-        run: corepack enable
-
       - name: Install dependencies
-        run: yarn
+        run: pnpm i 
 
       - name: Setup Expo
         uses: expo/expo-github-action@v7

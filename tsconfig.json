@@ -1,21 +1,23 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
+    "allowJs": true,
+    "alwaysStrict": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
     "noImplicitAny": true,
-    "noImplicitReturns": true,
+    "target": "es2015",
+    "strict": true,
     "strictNullChecks": true,
+    "jsx": "preserve",
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "noFallthroughCasesInSwitch": true,
-    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["src/*"]
-    }
+      "@app/*": ["./apps/mobile/src/*"],
+    },
   },
-  "include": ["./src/**/*"],
-  "moduleResolution": "node",
-  "exclude": ["node_modules", ".expo"],
-  "extends": "expo/tsconfig.base"
+  "exclude": ["node_modules"],
 }
