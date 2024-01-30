@@ -1,23 +1,31 @@
 import { Text } from '@app/components/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import useTmiClient from '@app/hooks/useTmiClient';
+import { parseEmotes } from '@app/lib/chat';
 import { useNavigation } from '@react-navigation/native';
-import { useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { FlatList, SafeAreaView } from 'react-native';
 import { ScrollView, Stack } from 'tamagui';
 import { ChatUserstate } from 'tmi.js';
 
 interface Props {
   channels: string[];
+  twitchChannelId: string;
 }
 
-const Chat = ({ channels }: Props) => {
+interface Message {
+  username: string;
+  content: ReactNode;
+}
+
+const Chat = ({ channels, twitchChannelId }: Props) => {
   const { auth, user } = useAuthContext();
   const navigation = useNavigation();
-  const [messages, setMessages] = useState<string[]>([]);
+  const [notice, setNotice] = useState<string>('');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [scrollPaused, setScrollPaused] = useState(false);
-  const flatListRef = useRef<FlatList<string>>(null);
+  const flatListRef = useRef<FlatList<Message>>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const { disconnect, tmiClient } = useTmiClient({
     channels,
@@ -34,36 +42,50 @@ const Chat = ({ channels }: Props) => {
       },
     },
   });
+
   useEffect(() => {
-    const handleMessage = (
+    const handleMessage = async (
       channel: string,
       tags: ChatUserstate,
       message: string,
       self: boolean,
     ) => {
       if (self) {
-        // Don't listen to my own messages..
+        // Don't listen to my own messages
         return;
       }
+      const [parsedMessage] = await Promise.all([
+        await parseEmotes(message, tags.emotes, {
+          channelId: channel,
+          twitchUserId: twitchChannelId,
+        }),
+        // await parseBadges(tags.badges, { channelId: twitchChannelId }),
+      ]);
 
-      const messageWithUsername = `${tags.username}: ${message}`;
+      const htmlMessage = parsedMessage.toHtml();
 
-      setMessages(prevMessages => {
-        return [...prevMessages, messageWithUsername];
-      });
+      setMessages(prev => [
+        ...prev,
+        {
+          username: tags['display-name'] as string,
+          content: htmlMessage,
+        },
+      ]);
     };
 
     tmiClient.on('message', handleMessage);
+    tmiClient.on('clearchat', () => {
+      setMessages([]);
+      setNotice('Chat cleared by moderator');
+      setTimeout(() => {
+        setNotice('');
+      }, 1500);
+    });
 
-    // Clean up the event listener when the component unmounts
-    return () => {
-      tmiClient.removeListener('message', handleMessage);
-    };
-  }, [tmiClient]);
-
-  navigation.addListener('blur', () => {
-    disconnect();
-  });
+    navigation.addListener('blur', () => {
+      disconnect();
+    });
+  }, []);
 
   return (
     <SafeAreaView style={{ padding: 2, maxHeight: 'auto' }}>
@@ -74,7 +96,6 @@ const Chat = ({ channels }: Props) => {
           keyExtractor={index => index.toString() + Math.random()}
           renderScrollComponent={props => <ScrollView {...props} />}
           onScroll={event => {
-            // pause scrolling if user scrolls up
             if (
               event.nativeEvent.contentOffset.y <
               event.nativeEvent.contentSize.height
@@ -82,21 +103,17 @@ const Chat = ({ channels }: Props) => {
               setScrollPaused(true);
             }
 
-            // resume scrolling if user scrolls to bottom
             if (
-              event.nativeEvent.contentOffset.y >=
+              event.nativeEvent.contentOffset.y >
               event.nativeEvent.contentSize.height
             ) {
               setScrollPaused(false);
             }
           }}
           onContentSizeChange={() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
+            flatListRef.current?.scrollToEnd({ animated: false });
           }}
           renderItem={({ item }) => {
-            const username = item.split(':')[0];
-            const message = item.split(':')[1];
-
             return (
               <Stack
                 display="flex"
@@ -104,9 +121,17 @@ const Chat = ({ channels }: Props) => {
                 paddingHorizontal={5}
                 paddingVertical={2}
               >
-                <Text>
-                  {username}: {message}
-                </Text>
+                {notice && (
+                  <Text color="$accent1" fontSize={17} marginBottom={2}>
+                    {notice}
+                  </Text>
+                )}
+                <Stack flexDirection="row" alignItems="center">
+                  <Text color="azure" fontSize={17} marginRight={2}>
+                    {item.username}:{' '}
+                  </Text>
+                  <Stack>{item.content}</Stack>
+                </Stack>
               </Stack>
             );
           }}

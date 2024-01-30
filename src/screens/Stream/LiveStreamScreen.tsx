@@ -5,58 +5,43 @@ import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import Seperator from '@app/components/Seperator';
 import Tags from '@app/components/Tags';
 import { Text } from '@app/components/Text';
+import Spinner from '@app/components/loading/Spinner';
 import useIsLandscape from '@app/hooks/useIsLandscape';
 import { StreamStackParamList } from '@app/navigation/Stream/StreamStack';
-import twitchService, {
-  Stream,
-  UserInfoResponse,
-} from '@app/services/twitchService';
+import twitchQueries from '@app/queries/twitchQueries';
 import truncate from '@app/utils/truncate';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
-import { Dimensions } from 'react-native';
+import { useQueries } from '@tanstack/react-query';
+import { Dimensions, SafeAreaView } from 'react-native';
 import WebView from 'react-native-webview';
 import { Stack, YStack } from 'tamagui';
 
 const LiveStreamScreen = () => {
   const route = useRoute<RouteProp<StreamStackParamList>>();
-  const [liveStream, setLiveStream] = useState<Stream | null>();
-  const [videoUrl, setVideoUrl] = useState('');
-  const [broadcasterImage, setBroadcasterImage] = useState<string>();
-  const [offlineUser, setOfflineUser] = useState<UserInfoResponse>();
-
-  const isOffline = offlineUser !== undefined;
-
-  const getUserProfilePicture = async (id: string) => {
-    const res = await twitchService.getUserImage(id);
-    setBroadcasterImage(res);
-  };
-
-  const fetchStream = async () => {
-    const stream = await twitchService.getStream(route.params.id);
-
-    if (!stream) {
-      const res = await twitchService.getUser(route.params.id);
-      setOfflineUser(res);
-    }
-    setLiveStream(stream);
-    await getUserProfilePicture(route.params.id);
-    // todo - set controls to false and fire JS messages to the iframe to pause and play the video
-    setVideoUrl(
-      `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
-    );
-  };
-
-  const fetchDetails = async () => {
-    await Promise.all([fetchStream(), getUserProfilePicture(route.params.id)]);
-  };
-
-  useEffect(() => {
-    fetchDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const { landscape } = useIsLandscape();
+
+  const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
+    useQueries({
+      queries: [
+        twitchQueries.getStream(route.params.id),
+        twitchQueries.getUser(route.params.id),
+        twitchQueries.getUserImage(route.params.id),
+      ],
+    });
+
+  const { data: stream, isLoading } = streamQueryResult;
+  const { data: user, isLoading: userIsLoading } = userQueryResult;
+  const { data: userProfilePicture } = userProfilePictureQueryResult;
+
+  if (isLoading || userIsLoading) {
+    return (
+      <SafeAreaView>
+        <Main display="flex" flexDirection="row" flex={1}>
+          <Spinner size={50} />
+        </Main>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaContainer>
@@ -68,9 +53,11 @@ const LiveStreamScreen = () => {
       >
         {/* video and video details */}
         <YStack flex={landscape ? 2 : 3}>
-          {!isOffline ? (
+          {stream ? (
             <WebView
-              source={{ uri: videoUrl }}
+              source={{
+                uri: `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
+              }}
               onHttpError={syntheticEvent => {
                 const { nativeEvent } = syntheticEvent;
                 // eslint-disable-next-line no-console
@@ -86,7 +73,7 @@ const LiveStreamScreen = () => {
             />
           ) : (
             <Image
-              source={{ uri: offlineUser.offline_image_url }}
+              source={{ uri: user?.offline_image_url }}
               style={{
                 width: 500,
                 height: 200,
@@ -102,22 +89,20 @@ const LiveStreamScreen = () => {
             padding={4}
           >
             <Image
-              source={{ uri: broadcasterImage }}
+              source={{ uri: userProfilePicture }}
               style={{ width: 35, height: 35, borderRadius: 14 }}
             />
             <Text marginLeft={4}>
-              {liveStream?.user_name ?? offlineUser?.display_name}
+              {stream?.user_name ?? user?.display_name}
             </Text>
             <Stack marginLeft={8} marginTop={5} flexWrap="wrap">
-              {liveStream?.title && (
-                <Text wordWrap="break-word">
-                  {truncate(liveStream?.title, 40)}
-                </Text>
+              {stream?.title && (
+                <Text wordWrap="break-word">{truncate(stream?.title, 40)}</Text>
               )}
-              {liveStream?.game_name && (
-                <Text marginTop={4}>{liveStream?.game_name}</Text>
+              {stream?.game_name && (
+                <Text marginTop={4}>{stream?.game_name}</Text>
               )}
-              {liveStream?.tags && <Tags tags={liveStream?.tags} />}
+              {stream?.tags && <Tags tags={stream?.tags} />}
             </Stack>
           </Stack>
           <Seperator />
@@ -128,7 +113,19 @@ const LiveStreamScreen = () => {
           maxHeight={Dimensions.get('window').height - 10}
           width={landscape ? 200 : Dimensions.get('window').width}
         >
-          <Chat channels={[liveStream?.user_name ?? route.params.id]} />
+          {stream && stream.user_id ? (
+            <Chat
+              channels={[route.params.id]}
+              twitchChannelId={stream.user_id}
+            />
+          ) : (
+            user && (
+              <Chat
+                channels={[user?.display_name as string]}
+                twitchChannelId={user?.id as string}
+              />
+            )
+          )}
         </Stack>
       </Main>
     </SafeAreaContainer>

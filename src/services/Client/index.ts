@@ -5,7 +5,7 @@ export const bttvApi = axios.create({
 });
 
 export const sevenTvApi = axios.create({
-  baseURL: 'https://api.7tv.app/v2',
+  baseURL: 'https://7tv.io/v3',
 });
 
 export const twitchApi = axios.create({
@@ -15,6 +15,18 @@ export const twitchApi = axios.create({
   },
 });
 
+export const twitchBadgeApi = axios.create({
+  baseURL: 'https://badges.twitch.tv/v1/badges',
+});
+
 export const ffzApi = axios.create({
   baseURL: 'https://api.frankerfacez.com/v1',
+});
+
+export const ffzEmoteApi = axios.create({
+  baseURL: 'https://api.betterttv.net/3/cached/frankerfacez',
+});
+
+export const bttvEmoteApi = axios.create({
+  baseURL: 'https://api.betterttv.net/3/cached',
 });

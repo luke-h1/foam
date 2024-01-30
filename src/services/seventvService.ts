@@ -4,15 +4,6 @@ import { sevenTvApi } from './Client';
 import seventvSerializer from './serializers/seventv';
 import { EmoteTypes } from './serializers/types';
 
-/* 
-  urls is in shape of 
-    "urls": [
-        [
-            "1",
-            "https://cdn.7tv.app/emote/615079ff20eaf897465a7c27/1x.webp"
-        ],
-*/
-
 interface Role {
   id: string;
   name: string;

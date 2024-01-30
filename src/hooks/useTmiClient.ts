@@ -20,6 +20,7 @@ const useTmiClient = ({
     return new tmijs.Client({
       options: {
         clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        debug: false,
       },
       channels,
       identity: {

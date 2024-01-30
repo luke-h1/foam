@@ -11,6 +11,10 @@ export interface FFZEmote {
   name: string;
   height: number;
   width: number;
+  owner: {
+    display_name: string;
+    name: string;
+  };
   urls: { [key: string]: string }[];
 }
 

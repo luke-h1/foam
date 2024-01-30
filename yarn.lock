@@ -7737,6 +7737,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash@npm:^4.14.202":
+  version: 4.14.202
+  resolution: "@types/lodash@npm:4.14.202"
+  checksum: a91acf3564a568c6f199912f3eb2c76c99c5a0d7e219394294213b3f2d54f672619f0fde4da22b29dc5d4c31457cd799acc2e5cb6bd90f9af04a1578483b6ff7
+  languageName: node
+  linkType: hard
+
 "@types/mime@npm:*":
   version: 3.0.4
   resolution: "@types/mime@npm:3.0.4"
@@ -9114,6 +9121,15 @@ __metadata:
   version: 1.0.1
   resolution: "async-limiter@npm:1.0.1"
   checksum: 2b849695b465d93ad44c116220dee29a5aeb63adac16c1088983c339b0de57d76e82533e8e364a93a9f997f28bbfc6a92948cefc120652bd07f3b59f8d75cf2b
+  languageName: node
+  linkType: hard
+
+"async-mutex@npm:^0.4.1":
+  version: 0.4.1
+  resolution: "async-mutex@npm:0.4.1"
+  dependencies:
+    tslib: ^2.4.0
+  checksum: cb529c0d257c8ff8e5b26c81b36127a255e545edee2c42c76247d533b89a7664037d95f33130f964de49b111ad3324ead8dcccd419c47acdfeb7413ed93063a1
   languageName: node
   linkType: hard
 
@@ -14107,11 +14123,13 @@ __metadata:
     "@testing-library/react-native": ^12.4.3
     "@types/dotenv": ^8.2.0
     "@types/jest": ^29.5.11
+    "@types/lodash": ^4.14.202
     "@types/react": ~18.2.14
     "@types/react-native-video": ^5.0.19
     "@types/tmi.js": ^1.8.6
     "@typescript-eslint/eslint-plugin": ^6.18.1
     "@typescript-eslint/parser": ^6.18.1
+    async-mutex: ^0.4.1
     axios: ^1.6.5
     babel-plugin-module-resolver: ^5.0.0
     babel-plugin-transform-inline-environment-variables: ^0.4.4

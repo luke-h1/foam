@@ -83,7 +83,7 @@ export interface DefaultTokenResponse {
 
 const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<string> => {
-    // todo - don't think this is needed
+    // TODO: - Luke, don't think this is needed - can remove
     const res = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
@@ -96,12 +96,19 @@ const twitchService = {
       headers,
     });
 
-    // TODO: type this once auth is sorted
     const emotes = res.data.map((emote: TwitchEmote) => {
       return twitchSerializer.fromTwitchEmote(emote, EmoteTypes.TwitchGlobal);
     });
 
     return emotes;
+  },
+  getChannelBadges: async (id: string) => {
+    const res = await twitchApi.get(`/chat/badges?broadcaster_id=${id}`, {
+      headers: {
+        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+      },
+    });
+    return res.data;
   },
 
   // ---------------------------------------------------------------------
@@ -111,9 +118,8 @@ const twitchService = {
       headers,
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return res.data.map((emote: any) => {
-      switch (emote.type) {
+    return res.data.map((emote: TwitchEmote) => {
+      switch (emote.emoteType) {
         case 'bitstier':
           return twitchSerializer.fromTwitchEmote(
             emote,
@@ -171,11 +177,8 @@ const twitchService = {
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getGlobalBadges: async (headers: AxiosHeaders) => {},
-  // ---------------------------------------------------------------------
-  // NEEDS TO BE re-checked end
 
   /**
-   *
    * @returns a token for an anonymous user
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
@@ -186,7 +189,6 @@ const twitchService = {
   },
 
   /**
-   *
    * @param token
    * @returns a boolean indicating whether the token is valid or not
    */
@@ -242,7 +244,6 @@ const twitchService = {
   },
 
   // Returns a Stream object containing the stream info associated with the given userLogin
-  // Returns a Stream object containing the stream info associated with the given userLogin
   getStream: async (userLogin: string) => {
     /**
      * This is typed as a Stream[] because the Twitch API returns an array of 1 single Stream
@@ -255,15 +256,6 @@ const twitchService = {
         },
       },
     );
-
-    if (!res.data) {
-      // eslint-disable-next-line no-console
-      console.log('[twitchService]: getStream', res.data);
-      return null; // user is offline
-    }
-
-    // eslint-disable-next-line no-console
-    console.log('[twitchService]: getStream', res.data);
 
     return res.data.data?.[0];
   },

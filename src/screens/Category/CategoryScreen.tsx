@@ -9,8 +9,7 @@ import {
 } from '@app/navigation/Category/CategoryStack';
 import twitchQueries from '@app/queries/twitchQueries';
 import { iconSizes } from '@app/styles';
-import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { FlatList, SafeAreaView } from 'react-native';
 import { Image, ScrollView, Stack } from 'tamagui';
 
@@ -19,41 +18,43 @@ const CategoryScreen = ({
 }: CategoryStackScreenProps<CategoryRoutes.Category>) => {
   const { id } = route.params;
 
-  const streamsByCategoryQuery = useMemo(
-    () => twitchQueries.getStreamsByCategory(id),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
-  const categoryQuery = useMemo(
-    () => twitchQueries.getCategory(id),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-
+  const [categoryQueryResult, streamsByCategoryQueryResult] = useQueries({
+    queries: [
+      twitchQueries.getCategory(id),
+      twitchQueries.getStreamsByCategory(id),
+    ],
+  });
   const {
     data: category,
     isLoading: isLoadingCategory,
     isError: isErrorCategory,
-  } = useQuery(categoryQuery);
+  } = categoryQueryResult;
+
   const {
     data: streams,
     isLoading: isLoadingStreams,
     isError: isErrorStreams,
-  } = useQuery(streamsByCategoryQuery);
+  } = streamsByCategoryQueryResult;
 
   if (isLoadingCategory || isLoadingStreams) {
     return (
-      <Flex
-        centered
-        row
-        flexDirection="row"
-        gap="$spacing4"
-        marginTop="$spacing60"
-        padding="$spacing4"
+      <SafeAreaView
+        style={{
+          flex: 1,
+          flexDirection: 'column',
+        }}
       >
-        <Spinner color="$neutral3" size={iconSizes.icon64} />
-      </Flex>
+        <Flex
+          centered
+          row
+          flexDirection="row"
+          gap="$spacing4"
+          marginTop="$spacing60"
+          padding="$spacing4"
+        >
+          <Spinner color="$neutral3" size={iconSizes.icon64} />
+        </Flex>
+      </SafeAreaView>
     );
   }
 
