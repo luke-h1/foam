@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-inner-declarations */
+
 // From https://github.com/tc39/proposal-relative-indexing-method#polyfill
 if (!Array.prototype.at) {
   function at(n) {

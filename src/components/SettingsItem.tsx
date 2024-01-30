@@ -8,7 +8,7 @@ export interface ContentItem {
   ctaTitle: string;
   items: {
     onPress?: () => void;
-    iconLeft: JSX.Element;
+    iconLeft?: JSX.Element;
     title: string;
     content: string;
     iconRight?: JSX.Element;
@@ -23,7 +23,7 @@ interface Props {
 
 const SettingsItem = ({ contents }: Props) => {
   return (
-    <Stack padding={12}>
+    <Stack>
       <Text variant="heading3">Settings</Text>
       <FlatList
         data={contents}

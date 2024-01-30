@@ -113,6 +113,7 @@ const ffzService = {
           name: emote.name,
           urls: emote.urls,
           width: emote.width,
+          owner: emote.owner,
         });
       }
     }

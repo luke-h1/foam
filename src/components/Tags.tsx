@@ -14,12 +14,12 @@ const Tags = ({ tags }: Props) => {
         showsHorizontalScrollIndicator
         renderItem={({ item }) => (
           <View
-            backgroundColor="$neutral3"
-            paddingHorizontal={8}
-            borderRadius={10}
+            borderRadius={5}
+            backgroundColor="$surface4"
             marginRight={5}
+            paddingHorizontal={5}
           >
-            <Text color="$color" loading={!tags} padding={0}>
+            <Text color="$color" loading={!tags} fontSize={14}>
               {item}
             </Text>
           </View>

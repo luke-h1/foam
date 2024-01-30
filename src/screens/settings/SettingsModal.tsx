@@ -2,6 +2,7 @@ import Image from '@app/components/Image';
 import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
 import { useAuthContext } from '@app/context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
+import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import { colors } from '@app/styles';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import {
@@ -36,7 +37,7 @@ const SettingsModal = ({
           iconLeft: (
             <Image
               source={{ uri: user?.profile_image_url }}
-              style={{ width: 30, height: 32, borderRadius: 145 }}
+              style={{ width: 30, height: 32, borderRadius: 14 }}
             />
           ),
           showRightArrow: true,
@@ -128,6 +129,10 @@ const SettingsModal = ({
     ...commonSettingItems,
   ];
 
+  navigation.addListener('blur', () => {
+    bottomSheetModalRef.current?.dismiss();
+  });
+
   return (
     <SafeAreaView
       style={{
@@ -141,7 +146,8 @@ const SettingsModal = ({
         index={1}
         snapPoints={snapPoints}
         handleStyle={{ opacity: 0.95 }}
-        handleIndicatorStyle={{ backgroundColor: colors.gray500 }}
+        backgroundStyle={{ backgroundColor: colors.gray900 }}
+        handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
       >
         <Stack
           display="flex"
@@ -149,13 +155,35 @@ const SettingsModal = ({
           alignItems="center"
           padding={8}
         >
-          <ArrowRightCircle size={24} color="black" />
+          <ArrowRightCircle size={24} color="$color" />
           <Button
             title="Log out"
             onPress={async () => {
               bottomSheetModalRef.current?.dismiss();
               await logout();
               navigation.navigate(RootRoutes.Home);
+            }}
+          />
+        </Stack>
+        <Stack
+          display="flex"
+          flexDirection="row"
+          alignItems="center"
+          padding={8}
+        >
+          <ArrowRightCircle size={24} color="$color" />
+          <Button
+            title="My stream"
+            onPress={async () => {
+              bottomSheetModalRef.current?.dismiss();
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
+              navigation.navigate(StreamRoutes.LiveStream, {
+                screen: StreamRoutes.LiveStream,
+                params: {
+                  id: user?.login,
+                },
+              });
             }}
           />
         </Stack>

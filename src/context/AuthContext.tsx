@@ -248,7 +248,7 @@ export const AuthContextProvider = ({ children }: Props) => {
     await getAnonToken();
   };
 
-  const runAnonToken = async () => {
+  const fetchAnonToken = async () => {
     await getAnonToken();
   };
 
@@ -256,7 +256,7 @@ export const AuthContextProvider = ({ children }: Props) => {
     if (!state.auth?.token) {
       logger.info('no token, getting anon token');
 
-      runAnonToken();
+      fetchAnonToken();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
