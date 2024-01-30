@@ -55,7 +55,7 @@ Install correct node version
  nvm install
 ```
 
-Install correct yarn version (we're going to be migrating to PNPM + PNPM workspaces soon)
+Install correct pnpm version
 
 ```bash
 corepack enable
@@ -64,7 +64,7 @@ corepack enable
 Install dependencies
 
 ```bash
-yarn
+pnpm i 
 ```
 
 Acquire Twitch API credentials
@@ -80,7 +80,7 @@ Acquire Twitch API credentials
 > **Note:** You'll need to have Xcode installed in order to run the iOS app locally.
 
 ```bash
-npx expo start
+cd apps/mobile && npx expo start
 ```
 
 ## Contributing

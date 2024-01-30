@@ -24,7 +24,7 @@ on:
           type: boolean
           required: false
 env:
-  NODE_VERSION: 18.18.0
+  PNPM_VERSION: 8.15.1
   FOAM_RELEASE_TOKEN: ${{ secrets.FOAM_RELEASE_TOKEN }}
 
 jobs:
@@ -51,46 +51,42 @@ jobs:
       - name: tune linux network
         run: sudo ethtool -K eth0 tx off rx off            
 
-      - name: Setup node
+      - name: 🏗 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
+          cache: pnpm
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: get yarn cache directory
-        id: cache
-        run: echo "dir=$(yarn config get cacheFolder)" >> $GITHUB_OUTPUT
-        shell: bash
-        working-directory: ./
-
-      - name: setup yarn cache
+      - name: ♻️ Restore cache
         uses: actions/cache@v3
-        id: yarn-cache
         with:
-            path: ${{ steps.cache.outputs.dir }}
-            key: yarn-${{ hashFiles('**/yarn.lock') }}
-            restore-keys: |
-                yarn-
-
-      - name: install yarn
-        run: corepack enable
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}
+          path: |
+            node_modules/.cache/turbo
+            apps/*/.turbo
+            packages/*/.turbo
 
       - name: Install dependencies
-        run: yarn
+        run: pnpm
 
       - name: format:check
-        run: yarn format:check
+        run: pnpm format:check
 
       - name: lint
-        run: yarn lint
+        run: pnpm lint
 
       - name: jest
-        run: yarn test
+        run: pnpm test
 
       - name: tsc
-        run: yarn tsc
+        run: pnpm tsc
 
       - name: new version
         run: |
@@ -106,7 +102,7 @@ jobs:
         working-directory: ./
 
   release-apps:
-    runs-on: ubuntu-latest
+    runs-on: macos-14-xlarge
     steps:
       - name: 🏗 Setup EAS
         uses: expo/expo-github-action@v8

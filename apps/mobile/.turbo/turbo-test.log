@@ -1,0 +1,27 @@
+
+> foam@0.1.0 test /Users/lukehowsam/foam-2/foam/apps/mobile
+> jest
+
+PASS src/utils/__tests__/truncate.test.ts
+  truncate
+    ✓ should return the original string if its length is less than or equal to the given number (2 ms)
+    ✓ should return a truncated string with "..." at the end if its length is greater than the given number
+
+PASS src/utils/__tests__/viewFormatter.ts
+  viewFormatter
+    ✓ should format the number correctly (2 ms)
+
+PASS src/utils/__tests__/clearElementById.test.ts
+  clearElementById
+    ✓ should clear the innerHTML of the element with the given id (7 ms)
+    ✓ should not throw an error if the element does not exist
+
+PASS src/utils/__tests__/deleteTokens.test.ts
+  deleteTokens
+    ✓ should delete anonToken and authToken (3 ms)
+
+Test Suites: 4 passed, 4 total
+Tests:       6 passed, 6 total
+Snapshots:   0 total
+Time:        1.846 s
+Ran all test suites.
