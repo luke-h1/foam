@@ -8,14 +8,15 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["src/*"]
-    }
+      "@app/*": ["src/*"],
+    },
   },
   "include": ["./src/**/*"],
   "moduleResolution": "node",
-  "exclude": ["node_modules", ".expo"]
+  "exclude": ["node_modules", ".expo"],
 }

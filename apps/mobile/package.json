@@ -1,7 +1,7 @@
 {
   "name": "foam",
   "version": "0.1.0",
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "index.js",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -15,10 +15,11 @@
     "lint:fix": "eslint --fix --ext .ts,.tsx,.js.jsx .",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "format:check": "prettier --list-different \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
-    "clean": "ios android .expo && yarn install",
+    "clean": "rm -rf ios android .expo .turbo",
     "version": "printf 'export const version = \"%s\";\n' \"$(node -p \"require('./package.json').version\")\" > src/version.ts && git add ."
   },
   "dependencies": {
+    "@babel/runtime": "^7.23.9",
     "@expo/webpack-config": "^19.0.0",
     "@gorhom/bottom-sheet": "^4.5.1",
     "@react-native-async-storage/async-storage": "1.18.2",
@@ -42,7 +43,6 @@
     "axios": "^1.6.5",
     "clsx": "^2.1.0",
     "commitlint": "^18.4.4",
-    "dotenv": "^16.3.1",
     "expo": "~49.0.13",
     "expo-app-loading": "^2.1.1",
     "expo-auth-session": "~5.0.2",
@@ -86,7 +86,6 @@
     "@tamagui/babel-plugin": "1.85.0",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^12.4.3",
-    "@types/dotenv": "^8.2.0",
     "@types/jest": "^29.5.11",
     "@types/lodash": "^4.14.202",
     "@types/react": "~18.2.14",

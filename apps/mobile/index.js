@@ -4,7 +4,6 @@ import { Platform } from 'react-native';
 import App from './App';
 import 'expo-dev-client';
 import { version } from './package.json';
-import 'dotenv/config';
 import './src/polyfills';
 
 // eslint-disable-next-line no-undef
