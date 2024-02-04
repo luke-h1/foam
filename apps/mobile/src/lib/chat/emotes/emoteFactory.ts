@@ -74,7 +74,7 @@ export const emoteFactory = async (
       provider: '7tv',
       make: code => {
         // avif no workie
-        return [`${sevenTvEmoteUrl}/${code}/1x.avif`];
+        return [`${sevenTvEmoteUrl}/${code}/1x.webp`];
       },
     },
   ];

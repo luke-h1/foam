@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { Text } from '@app/components/Text';
 import { EmotePositions } from '@app/services/ffzService2';
-import { Image } from 'react-native';
+import { Image } from 'expo-image';
 import { ParseEmoteOptions, Word, emoteFactory } from '../emotes/emoteFactory';
 
 const defaultOptions: ParseEmoteOptions = {
@@ -23,9 +23,17 @@ const toHtml = (words: Word[], size: number) => {
           source={{
             uri: word.emote.url[0],
           }}
-          width={100}
-          height={100}
-          alt={word.text}
+          style={{
+            width: 100,
+            height: 100,
+            resizeMode: 'contain',
+            // gif support
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            animation: word.emote.url[0].includes('.webp')
+              ? 'fade 0.5s infinite'
+              : 'none',
+          }}
         />
       ) : (
         <Text>{word.text}</Text>
@@ -36,11 +44,11 @@ const toHtml = (words: Word[], size: number) => {
       <Image
         source={{
           uri: word.emote.url as unknown as string,
-          cache: 'force-cache',
         }}
-        width={100}
-        height={100}
-        alt={word.text}
+        style={{
+          width: 100,
+          height: 100,
+        }}
       />
     ) : (
       <Text>{word.text}</Text>

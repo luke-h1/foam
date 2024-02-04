@@ -55,6 +55,9 @@
         }
       }
     ],
-    ["newrelic-react-native-agent"]
+    ["newrelic-react-native-agent"],
+    ["./src/plugins/withAnimatedWebPSupport.js"],
+    ["./src/plugins/withFastImageWebPSupportIOS.js"],
+    ["./src/plugins/withFastImageWebPSupportAndroid.js"]
   ]
 }
