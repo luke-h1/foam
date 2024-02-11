@@ -4,13 +4,11 @@
 
 <br />
 
-This repository is managed currently using yarn v3. We're in the process of migrating to PNPM + PNPM workspaces and a monorepo structure
+This repository is managed as a monorepo with PNPM + PNPM workspaces
 
 ## Why Foam?
 
 The native twitch mobile app does not support emotes, badges and user colors from the above third-party extensions, resulting in only emote text names to be rendered rather than their actual image or GIF, resulting in a poor mobile chat experience.
-
-In addition to this, Foam supports many actions to meet feature parity with the native Twitch mobile app, such as participating in polls, redeeming channel points (with a few extra sprinkles such as auto-redeeming points 😉) and refreshing chat when new emote are added to a channel.
 
 ## Store links
 
@@ -44,7 +42,7 @@ You will need the following in order to run the project locally:
 - [NVM](https://github.com/nvm-sh/nvm)
 - [Xcode](https://developer.apple.com/xcode/)
 - [Android Studio](https://developer.android.com/studio)
-- [Yarn](https://yarnpkg.com/)
+- [PNPM](https://pnpm.io/)
 
 Once you have the above installed, you can run the following commands to get started:
 
@@ -64,7 +62,7 @@ corepack enable
 Install dependencies
 
 ```bash
-pnpm i 
+pnpm i
 ```
 
 Acquire Twitch API credentials
