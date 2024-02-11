@@ -30,6 +30,7 @@ const toHtml = (words: Word[], size: number) => {
             // gif support
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
+            // todo - for emotes that are not animated we should not show the animation as it causes flashing of the emeote
             animation: word.emote.url[0].includes('.webp')
               ? 'fade 0.5s infinite'
               : 'none',

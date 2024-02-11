@@ -126,11 +126,19 @@ const Chat = ({ channels, twitchChannelId }: Props) => {
                     {notice}
                   </Text>
                 )}
-                <Stack flexDirection="row" alignItems="center">
+                <Stack
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="flex-start"
+                >
                   <Text color="azure" fontSize={17} marginRight={2}>
                     {item.username}:{' '}
                   </Text>
-                  <Stack>{item.content}</Stack>
+                  <Stack flexShrink={1} flexDirection="row" flexWrap="wrap">
+                    <Text alignItems="flex-start" textAlign="left">
+                      {item.content}
+                    </Text>
+                  </Stack>
                 </Stack>
               </Stack>
             );
