@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.foam",
@@ -26,7 +28,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.foam",
-      "permissions": ["VIBRATE"]
+      "permissions": [
+        "VIBRATE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -44,7 +48,11 @@
     },
     "experiments": {
       "tsconfigPaths": true
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store"
+    ]
   },
   "plugins": [
     [
@@ -55,9 +63,17 @@
         }
       }
     ],
-    ["newrelic-react-native-agent"],
-    ["./src/plugins/withAnimatedWebPSupport.js"],
-    ["./src/plugins/withFastImageWebPSupportIOS.js"],
-    ["./src/plugins/withFastImageWebPSupportAndroid.js"]
+    [
+      "newrelic-react-native-agent"
+    ],
+    [
+      "./src/plugins/withAnimatedWebPSupport.js"
+    ],
+    [
+      "./src/plugins/withFastImageWebPSupportIOS.js"
+    ],
+    [
+      "./src/plugins/withFastImageWebPSupportAndroid.js"
+    ]
   ]
 }
