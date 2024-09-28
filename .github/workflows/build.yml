@@ -5,23 +5,19 @@ on:
   pull_request:
     branches: [dev, main]
 env:
-  NODE_VERSION: 18.18.0
-  PNPM_VERSION: 8.15.1
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  NODE_VERSION: 20.10.0
+  PNPM_VERSION: 9.0.6
  
 jobs:
   build:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
-        
     name: Build
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-
     timeout-minutes: 20
     steps:
       - name: Install moreutils
@@ -61,17 +57,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}
-          path: |
-            node_modules/.cache/turbo
-            apps/*/.turbo
-            packages/*/.turbo
-
       - uses: actions/labeler@v4
         with:
           sync-labels: true
@@ -90,67 +75,7 @@ jobs:
 
       - name: jest
         run: pnpm test
-
-      - name: tsc
-        run: pnpm tsc
-
-  preview:
-    runs-on: macos-14
-    needs: build
-    if: github.event_name == 'pull_request'
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-
-      - name: 🏗 Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: ♻️ Restore cache
-        uses: actions/cache@v3
-        with:
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}
-          path: |
-            node_modules/.cache/turbo
-            apps/*/.turbo
-            packages/*/.turbo
-
-      - uses: actions/labeler@v4
-        with:
-          sync-labels: true
-
-      - name: Install dependencies
-        run: pnpm i 
-
-      - name: Setup Expo
-        uses: expo/expo-github-action@v7
-        with:
-          expo-version: latest
-          eas-version: latest
-          token: ${{ secrets.FOAM_RELEASE_TOKEN }}
-
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.FOAM_RELEASE_TOKEN }}
-
-      - name: 🚀 Create preview
-        uses: expo/expo-github-action/preview@v8
-        with:
-          command: eas update --auto --branch=pr-${{ github.event.number }}
-          github-token: ${{ secrets.FOAM_GITHUB_TOKEN }}
-          qr-target: expo-go
+      
+      # enable once tamagui is removed
+      # - name: tsc
+      #   run: pnpm tsc

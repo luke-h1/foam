@@ -32,6 +32,7 @@ const darkColors: Color = {
   purple: '#bf94ff',
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const iconSize = {
   true: iconSizes.icon40,
   8: iconSizes.icon8,

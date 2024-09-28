@@ -1,10 +1,10 @@
 /* eslint-disable no-shadow */
 /* eslint-disable no-param-reassign */
-const {
+import {
   WarningAggregator,
   withAppDelegate,
   createRunOncePlugin,
-} = require('@expo/config-plugins');
+} from '@expo/config-plugins';
 
 const RNFI_EXPO_WEBP_IMPORT = `#import "AppDelegate.h"
 // expo-config-plugin fast-image webp animated support
@@ -68,7 +68,7 @@ const withFastImageWebPSupportIOS = config => {
   });
 };
 
-module.exports = createRunOncePlugin(
+export default createRunOncePlugin(
   withFastImageWebPSupportIOS,
   'rnfi-expo-animated-webp-support',
   '1.0.0',

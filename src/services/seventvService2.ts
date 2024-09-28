@@ -36,7 +36,7 @@ export interface SeventTvEmote {
     username: string;
     display_name: string;
     avatar_url: string;
-    style: {};
+    style: object;
     roles: string[];
   };
 }
@@ -96,8 +96,6 @@ const seventvService = {
     const release = await mutex.acquire();
 
     try {
-      logger.info('hitting channel', id);
-
       const response = await sevenTvApi.get<SevenTvChannelEmoteResponse>(
         `/users/twitch/${id}`,
       );

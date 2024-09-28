@@ -58,8 +58,8 @@ interface GetRoomInfoResponse {
       '2'?: string;
       '3'?: string;
     };
-    user_badges: {};
-    user_badge_ids: {};
+    user_badges: object;
+    user_badge_ids: object;
     css: null;
   };
   sets: {
