@@ -1,4 +1,5 @@
 /* eslint-disable global-require */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
 import {

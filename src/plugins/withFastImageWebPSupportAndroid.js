@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-shadow */
 const { withAppBuildGradle } = require('@expo/config-plugins');

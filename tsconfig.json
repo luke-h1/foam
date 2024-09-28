@@ -1,23 +1,45 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "allowJs": true,
     "alwaysStrict": true,
     "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "module": "esnext",
+    "moduleResolution": "node",
     "noEmit": true,
     "noImplicitAny": true,
-    "target": "es2015",
+    "noImplicitReturns": true,
     "strict": true,
     "strictNullChecks": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
     "jsx": "preserve",
+    "lib": [
+      "dom",
+      "DOM.iterable",
+      "esnext"
+    ],
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "sourceMap": true,
+    "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["./apps/mobile/src/*"],
-    },
+      "@app/*": [
+        "./src/*"
+      ]
+    }
   },
-  "exclude": ["node_modules"],
+  "include": [
+    "src",
+    "test"
+  ],
+  "moduleResolution": "node",
+  "exclude": [
+    "node_modules",
+    ".expo"
+  ],
+  "extends": "expo/tsconfig.base"
 }

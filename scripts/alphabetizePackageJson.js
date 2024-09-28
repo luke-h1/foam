@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const path = require('path');
 
-const packageJsonPaths = ['package.json', './apps/mobile/package.json'];
+const packageJsonPaths = ['package.json'];
 
 packageJsonPaths.forEach(packageJsonPath => {
   const fullPath = path.join(__dirname, '..', packageJsonPath);
@@ -23,6 +24,9 @@ packageJsonPaths.forEach(packageJsonPath => {
         packageJson.devDependencies = sortObjectKeys(
           packageJson.devDependencies,
         );
+      }
+      if (packageJson.scripts) {
+        packageJson.scripts = sortObjectKeys(packageJson.scripts);
       }
 
       fs.writeFile(
