@@ -25,7 +25,7 @@ You will need the following in order to run the project locally:
 - [Node.js](https://nodejs.org/en/)
 - [NVM](https://github.com/nvm-sh/nvm)
 - [Xcode](https://developer.apple.com/xcode/)
-- [Android Studio](https://developer.android.com/studio) - optional
+- [Android Studio](https://developer.android.com/studio)
 - [PNPM](https://pnpm.io/)
 
 Once you have the above installed, you can run the following commands to get started:
@@ -54,19 +54,24 @@ pnpm i
 Acquire Twitch API credentials
 
 - Create a Twitch account if you do not have one already
+- Enable 2FA on your account otherwise you'll not be able to create apps via the dev console
 - Go to the [Twitch developer console](https://dev.twitch.tv/console/apps/create) and create a new application. Your OAUTH redirect settings should look like the following:
 
 <img src='.github/docs/twitch-settings.png' alt='Twitch app settings' />
 
 - Copy the client ID and client secret and paste them into a `.env` file in the root of the project. See `.env.example` for an example of what this file should look like
 
-### How to run the app
+If you're on Linux or windows, you'll need to setup Android studio and install a device to run the app.
 
-> **Note:** You will need to have an Android emulator running in order to run the app locally. You will need to use the AVD (android virtual device) manager in Android Studio to create a virtual device if you do not have one already.
+If you're on Mac you can just use the iOS simulator (via Xcode) to run the app
 
-> **Note:** You'll need to have Xcode installed in order to run the iOS app locally.
+You'll need to start the proxy server before you start up the app to proxy authentication requests to Twitch. This is due to a new requirement where Twitch do not let you proxy non `http` URLs. You can do this by running `pnpm run start:proxy` in a separate terminal window. Locally this is just a simple Express server. In production, we'll most likely use a serverless function to get around this issue.
 
-> **Note:** You'll need to start the proxy server to proxy authentication requests to Twitch. You can do this by running `pnpm run start:proxy` in a separate terminal window.
+Start the app
+
+```bash
+pnpm start
+```
 
 ## Contributing
 
