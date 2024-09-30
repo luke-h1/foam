@@ -1,14 +1,10 @@
 # foam
 
-> Foam is a Twitch mobile app that supports emotes, badges and user colors from [7TV](https://chrome.google.com/webstore/detail/7tv/ammjkodgmmoknidbanneddgankgfejfh), [BetterTTV (BTTV)](https://chrome.google.com/webstore/detail/betterttv/ajopnjidmegmdimjlfnijceegpefgped), and [FrankerFaceZ (FFZ)](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) — third-party extensions for Twitch used by millions to aid in making the mobile chat experience more enjoyable.
+## Why?
 
-<br />
+To improve my React native skills and learn various other tech
 
-This repository is managed as a monorepo with PNPM + PNPM workspaces
-
-## Why Foam?
-
-The native twitch mobile app does not support emotes, badges and user colors from the above third-party extensions, resulting in only emote text names to be rendered rather than their actual image or GIF, resulting in a poor mobile chat experience.
+The native Twitch app experience doesn't quite line up with the desktop experience and it lacks support for third-party extensions that many people use to express themselves in chat. This project aims to be a mobile alternative that supports these extensions and provides a cleaner and more intutive UI.
 
 ## Store links
 
@@ -22,17 +18,6 @@ TBA
 
 TBA
 
-## Applications
-
-- foam - React Native app targeting IOS and Android
-
-## Tech stack
-
-- [React Native](https://reactnative.dev/)
-- [React Navigation](https://reactnavigation.org/)
-- [Expo](https://expo.io/)
-- [React query](https://tanstack.com/query/latest/)
-
 ## Getting started
 
 You will need the following in order to run the project locally:
@@ -40,22 +25,24 @@ You will need the following in order to run the project locally:
 - [Node.js](https://nodejs.org/en/)
 - [NVM](https://github.com/nvm-sh/nvm)
 - [Xcode](https://developer.apple.com/xcode/)
-- [Android Studio](https://developer.android.com/studio)
+- [Android Studio](https://developer.android.com/studio) - optional
 - [PNPM](https://pnpm.io/)
 
 Once you have the above installed, you can run the following commands to get started:
 
-Install correct node version
+Install correct node and package manager versions
 
 ```bash
  nvm use
  nvm install
+ corepack enable
 ```
 
-Install correct pnpm version
+If for whatever reason `corepack enable` doesn't work you can run the following script to install the right version of PNPM:
 
 ```bash
-corepack enable
+PNPM_VERSION=$(node -e "console.log(require('./package.json').engines.pnpm)")
+curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=$PNPM_VERSION sh -
 ```
 
 Install dependencies
@@ -94,7 +81,3 @@ If you encounter a problem with this project, please open an issue. Be sure to i
 - Node version
 - OS
 - Brief but thorough reproduction steps of the issue
-
-## High level design
-
-TBA
