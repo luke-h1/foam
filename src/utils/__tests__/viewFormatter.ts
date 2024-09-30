@@ -1,7 +1,7 @@
 import viewFormatter from '../viewFormatter';
 
 describe('viewFormatter', () => {
-  it('should format the number correctly', () => {
+  test('should format the number correctly', () => {
     expect(viewFormatter(1, 1)).toBe('1');
     expect(viewFormatter(1000, 1)).toBe('1K');
     expect(viewFormatter(1500, 1)).toBe('1.5K');

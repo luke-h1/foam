@@ -1,11 +1,9 @@
-import { Text } from '@app/components/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import useTmiClient from '@app/hooks/useTmiClient';
 import { parseEmotes } from '@app/lib/chat';
 import { useNavigation } from '@react-navigation/native';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { FlatList, SafeAreaView } from 'react-native';
-import { ScrollView, Stack } from 'tamagui';
+import { FlatList, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { ChatUserstate } from 'tmi.js';
 
 interface Props {
@@ -85,11 +83,12 @@ const Chat = ({ channels, twitchChannelId }: Props) => {
     navigation.addListener('blur', () => {
       disconnect();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <SafeAreaView style={{ padding: 2, maxHeight: 'auto' }}>
-      <Stack>
+      <View>
         <FlatList
           data={messages}
           ref={flatListRef}
@@ -115,36 +114,38 @@ const Chat = ({ channels, twitchChannelId }: Props) => {
           }}
           renderItem={({ item }) => {
             return (
-              <Stack
-                display="flex"
-                marginBottom={4}
-                paddingHorizontal={5}
-                paddingVertical={2}
+              <View
+                style={{
+                  display: 'flex',
+                  marginBottom: 4,
+                  paddingHorizontal: 5,
+                  paddingVertical: 2,
+                }}
               >
-                {notice && (
-                  <Text color="$accent1" fontSize={17} marginBottom={2}>
-                    {notice}
-                  </Text>
-                )}
-                <Stack
-                  flexDirection="row"
-                  alignItems="center"
-                  justifyContent="flex-start"
+                {notice && <Text>{notice}</Text>}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                  }}
                 >
-                  <Text color="azure" fontSize={17} marginRight={2}>
-                    {item.username}:{' '}
-                  </Text>
-                  <Stack flexShrink={1} flexDirection="row" flexWrap="wrap">
-                    <Text alignItems="flex-start" textAlign="left">
-                      {item.content}
-                    </Text>
-                  </Stack>
-                </Stack>
-              </Stack>
+                  <Text>{item.username}: </Text>
+                  <View
+                    style={{
+                      flexShrink: 1,
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <Text>{item.content}</Text>
+                  </View>
+                </View>
+              </View>
             );
           }}
         />
-      </Stack>
+      </View>
     </SafeAreaView>
   );
 };

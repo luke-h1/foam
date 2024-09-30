@@ -1,11 +1,14 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { RootRoutes } from '@app/navigation/RootStack';
-import { colors } from '@app/styles';
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
-import { Stack } from 'tamagui';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Image from './Image';
-import { Text } from './Text';
 
 type BaseProps = {
   title: string;
@@ -18,15 +21,22 @@ export default function Header({ title, navigation }: Props) {
 
   return (
     <SafeAreaView>
-      <Stack
-        paddingHorizontal={10}
-        marginBottom={10}
-        display="flex"
-        flexDirection="row"
-        justifyContent="space-between"
+      <View
+        style={{
+          paddingHorizontal: 10,
+          marginBottom: 10,
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+        }}
       >
-        <Text variant="heading2">{title}</Text>
-        <Stack flexDirection="row" alignItems="center">
+        <Text>{title}</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
           {!user ? (
             <TouchableOpacity
               onPress={() => navigate(RootRoutes.SettingsModal)}
@@ -47,15 +57,15 @@ export default function Header({ title, navigation }: Props) {
               />
             </TouchableOpacity>
           )}
-        </Stack>
-      </Stack>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   avatar: {
-    backgroundColor: colors.gray300,
+    backgroundColor: 'gray',
     width: 30,
     height: 30,
     borderRadius: 16,

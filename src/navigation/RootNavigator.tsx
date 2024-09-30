@@ -1,5 +1,3 @@
-/* eslint-disable react/no-unstable-nested-components */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import AuthLoading from '@app/screens/authentication/AuthLoading';
 import LoginScreen from '@app/screens/authentication/LoginScreen';
 import SettingsModal from '@app/screens/settings/SettingsModal';
@@ -28,6 +26,7 @@ const RootNavigator = () => {
             backgroundColor: '$color',
           },
           presentation: 'card',
+          // eslint-disable-next-line react/no-unstable-nested-components
           header(props) {
             // @ts-expect-error ts-migrate(2339) FIXME: need to fix this
             return <Header {...props} title="Settings" />;

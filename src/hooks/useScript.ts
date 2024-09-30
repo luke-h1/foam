@@ -28,6 +28,7 @@ const useScript = (src: string) => {
       // eslint-disable-next-line no-shadow
       setState(state => ({
         ...state,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         loading: script!.getAttribute('data-loading') === 'true',
       }));
     } else {

@@ -1,4 +1,3 @@
-import logger from '@app/utils/logger';
 import { twitchBadgeApi } from './Client';
 
 export interface BadgeVersion {
@@ -41,26 +40,23 @@ const emptyResponse: BadgesResponse = {
 
 const twitchBadgeService = {
   fetchGlobalBadges: async () => {
-    const errorMessage = 'Failed to fetch global badges';
-
     try {
       const response =
         await twitchBadgeApi.get<BadgesResponse>('/global/display');
       return response.data;
-    } catch (e) {
-      logger.error(errorMessage, e);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return emptyResponse;
     }
   },
   fetchChannelBadges: async (id: string) => {
-    const errorMessage = 'Failed to fetch channel badges';
     try {
       const response = await twitchBadgeApi.get<BadgesResponse>(
         `/channels/${id}/display`,
       );
       return response.data;
-    } catch (e) {
-      logger.error(errorMessage, e);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return emptyResponse;
     }
   },

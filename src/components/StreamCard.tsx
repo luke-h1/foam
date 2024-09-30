@@ -5,10 +5,8 @@ import elapsedStreamTime from '@app/utils/elapsedStreamTime';
 import viewFormatter from '@app/utils/viewFormatter';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
-import { Pressable, useColorScheme } from 'react-native';
-import { Image, Stack, XStack } from 'tamagui';
+import { Image, Pressable, Text, View } from 'react-native';
 import Tags from './Tags';
-import { Text } from './Text';
 
 const IMAGE_ASPECT_RATIO = 240 / 165;
 const IMAGE_HEIGHT = 85;
@@ -32,15 +30,15 @@ const StreamCard = ({ stream }: Props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream]);
 
-  const color = useColorScheme();
-
   return (
-    <XStack
-      marginBottom={17}
-      display="flex"
-      flexDirection="row"
-      alignItems="flex-start"
-      justifyContent="space-between"
+    <View
+      style={{
+        marginBottom: 17,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+      }}
     >
       <Pressable
         onPress={() =>
@@ -54,7 +52,13 @@ const StreamCard = ({ stream }: Props) => {
           })
         }
       >
-        <Stack width={IMAGE_WIDTH} height={IMAGE_HEIGHT} marginRight={16}>
+        <View
+          style={{
+            width: IMAGE_WIDTH,
+            height: IMAGE_WIDTH,
+            marginRight: 16,
+          }}
+        >
           <Image
             source={{
               uri: stream.thumbnail_url
@@ -64,44 +68,49 @@ const StreamCard = ({ stream }: Props) => {
             width={IMAGE_WIDTH}
             height={IMAGE_HEIGHT}
           />
-          <Stack
-            position="absolute"
-            left={2}
-            bottom={4}
-            backgroundColor="rgba(0,0,0,0.5)"
-            borderRadius={4}
-            paddingHorizontal={4}
-            paddingVertical={2}
+          <View
+            style={{
+              position: 'absolute',
+              left: 2,
+              bottom: 4,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              borderRadius: 4,
+              paddingHorizontal: 4,
+              paddingVertical: 2,
+            }}
           >
-            <Text
-              numberOfLines={1}
-              variant="buttonLabel4"
-              color={color === 'dark' ? '$color' : '$accent2'}
-            >
-              <Text color="$darkRed" fontSize={12}>
-                ●
-              </Text>{' '}
-              {viewFormatter(stream.viewer_count, 1)}
+            <Text numberOfLines={1}>
+              <Text>●</Text> {viewFormatter(stream.viewer_count, 1)}
             </Text>
-          </Stack>
-          <Stack
-            position="absolute"
-            backgroundColor="rgba(0,0,0,0.5)"
-            borderRadius={4}
-            paddingHorizontal={4}
-            paddingVertical={2}
+          </View>
+          <View
+            style={{
+              position: 'absolute',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              borderRadius: 4,
+              paddingHorizontal: 4,
+              paddingVertical: 2,
+            }}
           >
-            <Text
-              numberOfLines={1}
-              color={color === 'dark' ? '$color' : '$accent2'}
-            >
+            <Text numberOfLines={1}>
               {elapsedStreamTime(stream.started_at)}
             </Text>
-          </Stack>
-        </Stack>
+          </View>
+        </View>
       </Pressable>
-      <Stack justifyContent="space-between" flexDirection="row">
-        <Stack flex={1} flexDirection="column" justifyContent="space-between">
+      <View
+        style={{
+          justifyContent: 'space-between',
+          flexDirection: 'row',
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
           <Pressable
             onPress={() =>
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -114,25 +123,31 @@ const StreamCard = ({ stream }: Props) => {
               })
             }
           >
-            <Stack
-              flexDirection="row"
-              alignItems="center"
-              marginBottom={4}
-              marginTop={4}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 4,
+                marginTop: 4,
+              }}
             >
               <Image
+                style={{
+                  width: 22,
+                  aspectRatio: 1,
+                  borderRadius: 12,
+                  marginRight: 4,
+                }}
                 source={{ uri: broadcasterImage }}
-                width={22}
-                aspectRatio={1}
-                borderRadius={12}
-                marginRight={4}
               />
-              <Stack alignItems="center">
-                <Text fontWeight="bold" numberOfLines={1} variant="body3">
-                  {stream.user_name}
-                </Text>
-              </Stack>
-            </Stack>
+              <View
+                style={{
+                  alignItems: 'center',
+                }}
+              >
+                <Text numberOfLines={1}>{stream.user_name}</Text>
+              </View>
+            </View>
           </Pressable>
           <Pressable
             onPress={() =>
@@ -146,29 +161,19 @@ const StreamCard = ({ stream }: Props) => {
               })
             }
           >
-            <Stack>
-              <Text
-                lineHeight={22}
-                numberOfLines={1}
-                lineBreakMode="clip"
-                marginBottom={6}
-              >
+            <View>
+              <Text numberOfLines={1} lineBreakMode="clip">
                 {stream.title}
               </Text>
-              <Text
-                lineHeight={22}
-                numberOfLines={1}
-                lineBreakMode="clip"
-                variant="buttonLabel4"
-              >
+              <Text numberOfLines={1} lineBreakMode="clip">
                 {stream.game_name}
               </Text>
-            </Stack>
+            </View>
           </Pressable>
           {stream.tags && stream.tags.length > 0 && <Tags tags={stream.tags} />}
-        </Stack>
-      </Stack>
-    </XStack>
+        </View>
+      </View>
+    </View>
   );
 };
 export default StreamCard;

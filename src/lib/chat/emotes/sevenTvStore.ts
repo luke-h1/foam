@@ -1,6 +1,5 @@
 import { ChannelEmotes, EmoteIDs } from '@app/services/ffzService2';
 import seventvService2 from '@app/services/seventvService2';
-import logger from '@app/utils/logger';
 import { GLOBAL_CHANNEL_KEY } from '../config';
 
 const emotes: ChannelEmotes = new Map();
@@ -28,7 +27,6 @@ export const getSevenTvEmotes = async (
   }
 
   if (!storedGlobalEmotes || !storedChannelEmotes) {
-    logger.error('Could not retrieve stored 7TV emotes');
     return new Map();
   }
   return new Map([...storedGlobalEmotes, ...storedChannelEmotes]);

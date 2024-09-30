@@ -1,4 +1,3 @@
-import logger from '@app/utils/logger';
 import { Mutex } from 'async-mutex';
 import { ffzEmoteApi } from './Client';
 
@@ -33,30 +32,28 @@ const mutex = new Mutex();
 
 const ffzService2 = {
   getGlobalEmotes: async () => {
-    const errorMessage = 'Failed to fetch global FFZ emotes';
     const release = await mutex.acquire();
 
     try {
       const response =
         await ffzEmoteApi.get<FfzEmotesResponse[]>('/emotes/global');
       return response.data;
-    } catch (e) {
-      logger.error(errorMessage, e);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return [];
     } finally {
       release();
     }
   },
   getChannelEmotes: async (channelId: string) => {
-    const errorMessage = 'Failed to fetch channel FFZ emotes';
     const release = await mutex.acquire();
     try {
       const response = await ffzEmoteApi.get<FfzEmotesResponse[]>(
         `/users/twitch/${channelId}`,
       );
       return response.data;
-    } catch (e) {
-      logger.error(errorMessage, e);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return [];
     } finally {
       release();

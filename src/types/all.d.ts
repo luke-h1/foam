@@ -1,4 +1,3 @@
-import { config } from '../../tamagui.config';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare module '*.svg' {
   import React from 'react';
@@ -24,11 +23,6 @@ declare module '*.m3u' {
 }
 
 type Conf = typeof config;
-
-declare module 'tamagui' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  type TamaguiCustomConfig = Conf;
-}
 
 declare module 'react-devtools-core' {
   export function connectToDevTools(options?: {

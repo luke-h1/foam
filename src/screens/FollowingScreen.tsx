@@ -1,19 +1,20 @@
-import { Flex } from '@app/components/Flex';
 import StreamCard from '@app/components/StreamCard';
-import { Text } from '@app/components/Text';
-import Spinner from '@app/components/loading/Spinner';
 import { useAuthContext } from '@app/context/AuthContext';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
-import { colors, iconSizes } from '@app/styles';
-import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 // eslint-disable-next-line import/no-named-as-default
 import Constants from 'expo-constants';
 import { useMemo, useState } from 'react';
-import { FlatList, SafeAreaView, Platform } from 'react-native';
+import {
+  FlatList,
+  SafeAreaView,
+  Platform,
+  View,
+  Text,
+  ScrollView,
+} from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
-import { Main, ScrollView, Stack } from 'tamagui';
 
 export interface Section {
   key: string;
@@ -23,7 +24,7 @@ export interface Section {
 
 const FollowingScreen = () => {
   const { user } = useAuthContext();
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
   const onRefresh = async () => {
@@ -45,66 +46,60 @@ const FollowingScreen = () => {
 
   if ((!isLoading && !streams?.length) || isError) {
     return (
-      <Stack
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        flex={1}
+      <View
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flex: 1,
+        }}
       >
-        <Stack display="flex" flexDirection="row" alignItems="center">
-          <Info
-            size={24}
-            color="$color"
-            style={{
-              marginRight: 10,
-            }}
-          />
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
           <Text>No streams are live</Text>
-        </Stack>
-      </Stack>
+        </View>
+      </View>
     );
   }
 
   if (refreshing || isLoading) {
-    return (
-      <Flex
-        centered
-        row
-        flexDirection="row"
-        gap="$spacing4"
-        marginTop="$spacing60"
-        padding="$spacing4"
-      >
-        <Spinner color="$neutral3" size={iconSizes.icon64} />
-      </Flex>
-    );
+    return <View>loading...</View>;
   }
 
   return (
-    <Stack>
+    <View>
       <SafeAreaView>
         <ScrollView
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={colors.gray150}
-              colors={[colors.gray150]}
+              // tintColor={colors.gray150}
+              // colors={[colors.gray150]}
             />
           }
         >
-          <Main padding={4}>
-            <Stack>
+          <View
+            style={{
+              padding: 4,
+            }}
+          >
+            <View>
               <FlatList<Stream>
                 data={streams}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => <StreamCard stream={item} />}
               />
-            </Stack>
-          </Main>
+            </View>
+          </View>
         </ScrollView>
       </SafeAreaView>
-    </Stack>
+    </View>
   );
 };
 

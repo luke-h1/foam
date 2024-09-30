@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import DismissableKeyboard from '@app/components/DismissableKeyboard';
-import { TextInput } from '@app/components/TextInput';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
 import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
@@ -10,7 +9,6 @@ import twitchService, {
 import elapsedStreamTime from '@app/utils/elapsedStreamTime';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { X, Search, History } from '@tamagui/lucide-icons';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -18,10 +16,12 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput as NativeTextInput,
+  View,
+  TextInput,
+  Text,
 } from 'react-native';
-import { Stack, View } from 'tamagui';
+import Feather from 'react-native-vector-icons/Feather';
 import Image from '../components/Image';
-import { Text } from '../components/Text';
 import { statusBarHeight } from './FollowingScreen';
 
 interface SearchHistoryItem {
@@ -35,12 +35,13 @@ const SearchScreen = () => {
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
+
   const [showDismiss, setShowDismiss] = useState<boolean>(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
   const fetchSearchHistory = async () => {
-    const res = await AsyncStorage.getItem('previousSearches');
-    setSearchHistory(JSON.parse(res as string));
+    const history = await AsyncStorage.getItem('previousSearches');
+    setSearchHistory(JSON.parse(history as string));
   };
 
   const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
@@ -101,7 +102,12 @@ const SearchScreen = () => {
         paddingTop: statusBarHeight,
       }}
     >
-      <Stack flexDirection="row" padding={2}>
+      <View
+        style={{
+          flexDirection: 'row',
+          padding: 2,
+        }}
+      >
         <DismissableKeyboard>
           <ScrollView
             contentContainerStyle={{
@@ -114,7 +120,9 @@ const SearchScreen = () => {
                 placeholder="Find a channel"
                 placeholderTextColor="$text"
                 verticalAlign="middle"
-                padding={10}
+                style={{
+                  padding: 10,
+                }}
                 onChangeText={async text => {
                   await handleQuery(text);
                 }}
@@ -123,7 +131,8 @@ const SearchScreen = () => {
           </ScrollView>
         </DismissableKeyboard>
         {showDismiss ? (
-          <X
+          <Feather
+            name="cross"
             size={24}
             style={[{ alignSelf: 'center', marginRight: 15 }]}
             onPress={() => {
@@ -134,17 +143,27 @@ const SearchScreen = () => {
             }}
           />
         ) : (
-          <Search
+          <Feather
+            name="search"
             size={24}
             style={{ alignSelf: 'center', marginRight: 25 }}
             onPress={() => search(query)}
           />
         )}
-      </Stack>
-      <Stack marginBottom={14} marginLeft={14}>
+      </View>
+      <View
+        style={{
+          marginBottom: 14,
+          marginLeft: 14,
+        }}
+      >
         {searchResults.length > 0 && (
           <>
-            <Text variant="heading3" marginBottom={5}>
+            <Text
+              style={{
+                marginBottom: 5,
+              }}
+            >
               Channels
             </Text>
             <FlatList
@@ -182,9 +201,7 @@ const SearchScreen = () => {
                       height: 40,
                     }}
                   />
-                  <Text style={{ marginLeft: 8 }} color="$color">
-                    {item.display_name}
-                  </Text>
+                  <Text style={{ marginLeft: 8 }}>{item.display_name}</Text>
                   {item.is_live && (
                     <View
                       style={{
@@ -195,7 +212,6 @@ const SearchScreen = () => {
                       }}
                     >
                       <View
-                        borderColor="$color"
                         style={{
                           width: 8,
                           height: 8,
@@ -203,9 +219,7 @@ const SearchScreen = () => {
                           marginRight: 5,
                         }}
                       />
-                      <Text color="$text">
-                        {elapsedStreamTime(item.started_at)}
-                      </Text>
+                      <Text>{elapsedStreamTime(item.started_at)}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -213,7 +227,7 @@ const SearchScreen = () => {
             />
           </>
         )}
-      </Stack>
+      </View>
 
       {searchHistory && (
         <ScrollView
@@ -232,15 +246,14 @@ const SearchScreen = () => {
                     handleQuery(item.query);
                   }}
                 >
-                  <History
+                  {/* <History
                     size={24}
                     style={{
                       alignSelf: 'center',
                       marginRight: 8,
                     }}
-                  />
+                  /> */}
                   <Text
-                    color="$color"
                     style={{
                       fontSize: 16,
                       marginBottom: 8,

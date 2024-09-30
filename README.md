@@ -31,7 +31,6 @@ TBA
 - [React Native](https://reactnative.dev/)
 - [React Navigation](https://reactnavigation.org/)
 - [Expo](https://expo.io/)
-- [Tamagui](https://tamagui.dev/)
 - [React query](https://tanstack.com/query/latest/)
 
 ## Getting started
