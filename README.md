@@ -67,7 +67,10 @@ pnpm i
 Acquire Twitch API credentials
 
 - Create a Twitch account if you do not have one already
-- Go to the [Twitch developer console](https://dev.twitch.tv/console/apps/create) and create a new application
+- Go to the [Twitch developer console](https://dev.twitch.tv/console/apps/create) and create a new application. Your OAUTH redirect settings should look like the following:
+
+<img src='.github/docs/twitch-settings.png' alt='Twitch app settings' />
+
 - Copy the client ID and client secret and paste them into a `.env` file in the root of the project. See `.env.example` for an example of what this file should look like
 
 ### How to run the app
@@ -76,9 +79,7 @@ Acquire Twitch API credentials
 
 > **Note:** You'll need to have Xcode installed in order to run the iOS app locally.
 
-```bash
-cd apps/mobile && npx expo start
-```
+> **Note:** You'll need to start the proxy server to proxy authentication requests to Twitch. You can do this by running `pnpm run start:proxy` in a separate terminal window.
 
 ## Contributing
 
