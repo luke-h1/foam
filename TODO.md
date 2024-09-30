@@ -1,2 +1,0 @@
-- fix oauth authentication issue with twitch - tldr use a proxy (https://github.com/EvanBacon/expo-router-auth-proxy-example)
-- use implicit auth flow instead of auth code grant credentials - it wasn't possible to do this last year
