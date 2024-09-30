@@ -76,6 +76,5 @@ jobs:
       - name: jest
         run: pnpm test
       
-      # enable once tamagui is removed
-      # - name: tsc
-      #   run: pnpm tsc
+      - name: tsc
+        run: pnpm tsc

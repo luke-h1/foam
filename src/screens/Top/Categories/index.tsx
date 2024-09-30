@@ -1,16 +1,11 @@
 import CategoryCard from '@app/components/CategoryCard';
-import { Flex } from '@app/components/Flex';
-import { Text } from '@app/components/Text';
-import Spinner from '@app/components/loading/Spinner';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Category } from '@app/services/twitchService';
-import { colors, iconSizes, spacing } from '@app/styles';
-import { Info } from '@tamagui/lucide-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, RefreshControl } from 'react-native';
+import { FlatList, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, Stack } from 'tamagui';
+import Feather from 'react-native-vector-icons/Feather';
 
 const TopCategoriesScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -38,13 +33,20 @@ const TopCategoriesScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.gray500}
-            colors={[colors.gray500]}
+            // tintColor={colors.gray500}
+            // colors={[colors.gray500]}
           />
         }
       >
-        <Stack alignItems="center" flex={1} justifyContent="center">
-          <Info
+        <View
+          style={{
+            alignItems: 'center',
+            flex: 1,
+            justifyContent: 'center',
+          }}
+        >
+          <Feather
+            name="info"
             size={24}
             color="$color"
             style={{
@@ -54,23 +56,20 @@ const TopCategoriesScreen = () => {
           <Text>
             {isError ? 'error fetching categories' : 'No categories found'}
           </Text>
-        </Stack>
+        </View>
       </ScrollView>
     );
   }
 
   if (isLoading || refreshing) {
     return (
-      <Flex
-        centered
-        row
-        flexDirection="row"
-        gap="$spacing4"
-        marginTop="$spacing60"
-        padding="$spacing4"
+      <View
+        style={{
+          flexDirection: 'row',
+        }}
       >
-        <Spinner color="$neutral3" size={iconSizes.icon64} />
-      </Flex>
+        Loading...
+      </View>
     );
   }
 
@@ -81,11 +80,7 @@ const TopCategoriesScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <Stack
-          $sm={{ flexDirection: 'column' }}
-          paddingHorizontal={spacing.spacing8}
-          space
-        >
+        <View>
           {categories.length > 0 && (
             <FlatList<Category>
               data={categories}
@@ -93,7 +88,7 @@ const TopCategoriesScreen = () => {
               keyExtractor={(_item, index) => index.toString()}
             />
           )}
-        </Stack>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

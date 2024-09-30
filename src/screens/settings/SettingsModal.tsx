@@ -3,20 +3,10 @@ import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
 import { useAuthContext } from '@app/context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
-import { colors } from '@app/styles';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import {
-  ArrowRightCircle,
-  Settings,
-  Video,
-  User,
-  Info,
-  ExternalLink,
-  MessageSquare,
-} from '@tamagui/lucide-icons';
 import { useMemo, useRef } from 'react';
-import { SafeAreaView, Button } from 'react-native';
-import { Stack } from 'tamagui';
+import { SafeAreaView, Button, View } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import { statusBarHeight } from '../FollowingScreen';
 
 const SettingsModal = ({
@@ -41,7 +31,7 @@ const SettingsModal = ({
             />
           ),
           showRightArrow: true,
-          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
+          iconRight: <Feather size={20} name="icon-right" />,
           showSeperator: true,
           onPress: () => {
             bottomSheetModalRef.current?.present();
@@ -57,25 +47,25 @@ const SettingsModal = ({
       ctaTitle: 'Options',
       items: [
         {
-          iconLeft: <Settings size={24} color={colors.gray500} />,
+          iconLeft: <Feather size={24} name="settings" />,
           title: 'General',
           content: 'Theme and other options',
           showRightArrow: true,
-          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
+          iconRight: <Feather size={20} name="arrow-right" />,
         },
         {
-          iconLeft: <Video size={24} color={colors.gray500} />,
+          iconLeft: <Feather size={24} name="video" />,
           title: 'Video',
           content: 'Overlay and other options',
           showRightArrow: true,
-          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
+          iconRight: <Feather size={20} name="arrow-right" />,
         },
         {
-          iconLeft: <MessageSquare size={24} color={colors.gray500} />,
+          iconLeft: <Feather size={24} name="message" />,
           title: 'Chat',
           content: 'Sizing, timestamps and other options',
           showRightArrow: true,
-          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
+          iconRight: <Feather size={20} name="arrow-right" />,
           showSeperator: true,
         },
       ],
@@ -85,17 +75,17 @@ const SettingsModal = ({
       ctaTitle: 'Other',
       items: [
         {
-          iconLeft: <Info size={24} color={colors.gray500} />,
+          iconLeft: <Feather size={24} name="info" />,
           title: 'About Foam',
           content: 'About the app and the developer',
         },
         {
-          iconLeft: <ExternalLink size={24} color={colors.gray500} />,
+          iconLeft: <Feather size={24} name="link" />,
           title: 'Chanelog',
           content: 'What has changed?',
         },
         {
-          iconLeft: <ExternalLink size={24} color={colors.gray500} />,
+          iconLeft: <Feather size={24} name="link" />,
           title: 'FAQ',
           content: 'Frequently asked questions',
         },
@@ -112,9 +102,9 @@ const SettingsModal = ({
           content:
             'Log in to be able to chat, view followed streams and much more :)',
           title: 'Anonymous',
-          iconLeft: <User size={24} color={colors.gray500} />,
+          iconLeft: <Feather size={24} name="user" />,
           showRightArrow: true,
-          iconRight: <ArrowRightCircle size={20} color={colors.gray500} />,
+          iconRight: <Feather size={20} name="arrow-right" />,
           showSeperator: true,
           onPress: () => {
             navigation.navigate(RootRoutes.Login);
@@ -146,16 +136,18 @@ const SettingsModal = ({
         index={1}
         snapPoints={snapPoints}
         handleStyle={{ opacity: 0.95 }}
-        backgroundStyle={{ backgroundColor: colors.gray900 }}
-        handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
+        // backgroundStyle={{ backgroundColor: colors.gray900 }}
+        // handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
       >
-        <Stack
-          display="flex"
-          flexDirection="row"
-          alignItems="center"
-          padding={8}
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 8,
+          }}
         >
-          <ArrowRightCircle size={24} color="$color" />
+          <Feather size={24} color="$color" name="arrow-right" />
           <Button
             title="Log out"
             onPress={async () => {
@@ -164,14 +156,16 @@ const SettingsModal = ({
               navigation.navigate(RootRoutes.Home);
             }}
           />
-        </Stack>
-        <Stack
-          display="flex"
-          flexDirection="row"
-          alignItems="center"
-          padding={8}
+        </View>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 8,
+          }}
         >
-          <ArrowRightCircle size={24} color="$color" />
+          <Feather size={24} color="$color" name="arrow-right" />
           <Button
             title="My stream"
             onPress={async () => {
@@ -186,7 +180,7 @@ const SettingsModal = ({
               });
             }}
           />
-        </Stack>
+        </View>
       </BottomSheetModal>
     </SafeAreaView>
   );

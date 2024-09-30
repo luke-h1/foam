@@ -1,11 +1,10 @@
-import { Text } from '@app/components/Text';
-import { Stack } from 'tamagui';
+import { Text, View } from 'react-native';
 
 const ChatMessage = () => {
   return (
-    <Stack>
-      <Text>chat message</Text>
-    </Stack>
+    <View>
+      <Text>TODO: chat message</Text>
+    </View>
   );
 };
 export default ChatMessage;

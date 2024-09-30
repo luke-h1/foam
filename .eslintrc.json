@@ -5,19 +5,16 @@
     "airbnb",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/typescript",
+    "plugin:@typescript-eslint/strict",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
     "prettier",
-    "prettier/prettier",
-    "universe/native"
+    "prettier/prettier"
   ],
   "settings": {
     "import/resolver": {
       "typescript": {
-        "project": ["./tsconfig.json"]
-      },
-      "node": {
-        "extensions": [".js", ".jsx", ".ts", ".tsx", ".d.ts", ".json"]
+        "project": ["tsconfig.json"]
       }
     },
     "react": {
@@ -42,7 +39,12 @@
         "tsx": "never"
       }
     ],
-    "import/no-unresolved": ["error"],
+    "import/no-unresolved": [
+      "error",
+      {
+        "ignore": ["^(part|all):"]
+      }
+    ],
     "import/order": [
       "error",
       {
@@ -51,6 +53,12 @@
           "parent",
           "sibling",
           "index"
+        ],
+        "pathGroups": [
+          {
+            "pattern": "@frontend/**",
+            "group": "internal"
+          }
         ],
         "alphabetize": {
           "order": "asc"
@@ -80,6 +88,9 @@
     "react/jsx-one-expression-per-line": "off",
     "@typescript-eslint/ban-types": "off",
     "no-case-declarations": "error",
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/method-signature-style": ["error", "property"],
+    "@next/next/no-img-element": "off",
     "react/jsx-props-no-spreading": "off",
     "jsx-a11y/anchor-is-valid": "off",
     "react/jsx-wrap-multilines": ["error", { "prop": "ignore" }],
@@ -88,7 +99,6 @@
     "react/react-in-jsx-scope": "off",
     "react/require-default-props": "off",
     "react/state-in-constructor": "off",
-    "camelcase": "off",
     "react/no-unescaped-entities": [
       "error",
       {

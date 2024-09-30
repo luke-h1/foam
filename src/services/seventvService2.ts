@@ -1,4 +1,3 @@
-import logger from '@app/utils/logger';
 import { Mutex } from 'async-mutex';
 import { sevenTvApi } from './Client';
 
@@ -76,23 +75,20 @@ const mutex = new Mutex();
 
 const seventvService = {
   getGlobalEmotes: async () => {
-    const errorMessage = 'Failed to fetch global 7TV emotes';
-
     const release = await mutex.acquire();
 
     try {
       const { data } =
         await sevenTvApi.get<SevenTvGlobalEmoteResponse>('/emote-sets/global');
       return data.emotes;
-    } catch (e) {
-      logger.error(e, errorMessage);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return [];
     } finally {
       release();
     }
   },
   getChannelEmotes: async (id: string) => {
-    const errorMessage = 'Failed to fetch channel 7TV emotes';
     const release = await mutex.acquire();
 
     try {
@@ -100,8 +96,8 @@ const seventvService = {
         `/users/twitch/${id}`,
       );
       return response.data.emote_set.emotes;
-    } catch (e) {
-      logger.error(e, errorMessage);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       return [];
     } finally {
       release();

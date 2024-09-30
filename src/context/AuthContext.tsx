@@ -1,6 +1,5 @@
 import { twitchApi } from '@app/services/Client';
 import twitchService, { UserInfoResponse } from '@app/services/twitchService';
-import logger from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import React, {
@@ -109,10 +108,12 @@ export const AuthContextProvider = ({ children }: Props) => {
   }, [authToken, anonToken]);
 
   const getAnonToken = async () => {
+    // eslint-disable-next-line camelcase
     const { access_token } = await twitchService.getDefaultToken();
     setState({
       ready: true,
       auth: {
+        // eslint-disable-next-line camelcase
         anonToken: access_token,
         isAnonAuth: true,
         isAuth: false,
@@ -120,83 +121,15 @@ export const AuthContextProvider = ({ children }: Props) => {
     });
 
     SecureStore.setItemAsync(StorageKeys.anonToken, access_token);
+    // eslint-disable-next-line camelcase
     twitchApi.defaults.headers.common.Authorization = `Bearer ${access_token}`;
   };
-
-  // const validateToken = async () => {
-  //   if (!state.auth?.token) {
-  //     return;
-  //   }
-
-  //   const isValid = await twitchService.validateToken(
-  //     state.auth.token.accessToken,
-  //   );
-
-  //   if (!isValid) {
-  //     // token is invalid, remove it and get anon token
-  //     setState({
-  //       ready: false,
-  //       auth: {
-  //         isAuth: false,
-  //         token: undefined,
-  //       },
-  //     });
-  //     getAnonToken();
-  //   }
-
-  //   // token needs to be refreshed as it has expired
-  //   if (
-  //     state.auth.token &&
-  //     (state.auth.token.expiresIn as number) < Date.now()
-  //   ) {
-  //     const refreshedToken = await twitchService.getRefreshToken(
-  //       state.auth.token.refreshToken as string,
-  //     );
-  //     setState({
-  //       ready: true,
-  //       auth: {
-  //         isAuth: true,
-  //         isAnonAuth: false,
-  //         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //         // @ts-ignore
-  //         token: refreshedToken,
-  //       },
-  //     });
-  //     logger.info('refreshing token');
-  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //     // @ts-ignore
-  //     setUser(await twitchService.getUserInfo(refreshedToken.accessToken));
-
-  //     SecureStore.setItemAsync(StorageKeys.authToken, refreshedToken);
-  //     twitchApi.defaults.headers.common.Authorization = `Bearer ${state.auth.token.accessToken}`;
-  //   }
-
-  //   // token is valid and not expired
-  //   setState({
-  //     ready: true,
-  //     auth: {
-  //       isAuth: true,
-  //       isAnonAuth: false,
-  //       token: state.auth.token,
-  //     },
-  //   });
-
-  //   setUser(await twitchService.getUserInfo(state.auth.token.accessToken));
-
-  //   await SecureStore.setItemAsync(
-  //     StorageKeys.authToken,
-  //     state.auth.token.accessToken,
-  //   );
-  //   setAuthToken(state.auth.token);
-  //   twitchApi.defaults.headers.common.Authorization = `Bearer ${state.auth.token.accessToken}`;
-  // };
 
   const getToken = async (key: StorageKey) => {
     return SecureStore.getItemAsync(key);
   };
 
   const login = async (response: AuthSessionResult | null) => {
-    logger.info('[authcontext] login');
     if (response?.type !== 'success') {
       return null;
     }
@@ -231,7 +164,6 @@ export const AuthContextProvider = ({ children }: Props) => {
   };
 
   const logout = async () => {
-    logger.info('[authContext] logout');
     setState({
       ready: true,
       auth: {
@@ -248,16 +180,12 @@ export const AuthContextProvider = ({ children }: Props) => {
     await getAnonToken();
   };
 
-  const fetchAnonToken = async () => {
-    await getAnonToken();
-  };
-
   useEffect(() => {
-    if (!state.auth?.token) {
-      logger.info('no token, getting anon token');
-
-      fetchAnonToken();
-    }
+    (async () => {
+      if (!state.auth?.token) {
+        await getAnonToken();
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

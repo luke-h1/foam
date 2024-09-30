@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-import { Text } from '@app/components/Text';
 import { EmotePositions } from '@app/services/ffzService2';
 import { Image } from 'expo-image';
+import { Text } from 'react-native';
 import { ParseEmoteOptions, Word, emoteFactory } from '../emotes/emoteFactory';
 
 const defaultOptions: ParseEmoteOptions = {

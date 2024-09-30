@@ -1,4 +1,3 @@
-import logger from '@app/utils/logger';
 import { useEffect, useMemo } from 'react';
 import tmijs from 'tmi.js';
 
@@ -26,11 +25,6 @@ const useTmiClient = ({
       identity: {
         username,
         password: token,
-      },
-      logger: {
-        info: (message: string) => logger.info(message),
-        warn: (message: string) => logger.warn(message),
-        error: (message: string) => logger.error(message),
       },
       ...tmiOptions,
     });

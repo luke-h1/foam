@@ -2,7 +2,6 @@ import ffzService2, {
   ChannelEmotes,
   EmoteIDs,
 } from '@app/services/ffzService2';
-import logger from '@app/utils/logger';
 import { GENERIC_CHANNEL_KEY, GLOBAL_CHANNEL_KEY } from '../config';
 
 const emotes: ChannelEmotes = new Map();
@@ -31,7 +30,6 @@ export const getFfzEmotes = async (channelId: string): Promise<EmoteIDs> => {
   storedChannelEmotes = emotes.get(channelId);
 
   if (!storedGlobalEmotes || !storedChannelEmotes) {
-    logger.error('Could not retrieve stored FFZ emotes');
     return new Map();
   }
 

@@ -1,4 +1,5 @@
-import axios, { AxiosHeaders } from 'axios';
+/* eslint-disable */
+import axios, { AxiosError, AxiosHeaders } from 'axios';
 import { twitchApi } from './Client';
 import twitchSerializer, { TwitchEmote } from './serializers/twitch';
 import { EmoteTypes } from './serializers/types';
@@ -182,10 +183,10 @@ const twitchService = {
    * @returns a token for an anonymous user
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
-    const res = await axios.post(
-      `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=client_credentials`,
+    const { data } = await axios.get(
+      'http://localhost:6500/api/proxy/default-token',
     );
-    return res.data;
+    return data;
   },
 
   /**

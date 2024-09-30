@@ -1,18 +1,19 @@
-import { colors } from '@app/styles';
-import { Stack } from 'tamagui';
+import { View } from 'react-native';
 
 interface Props {
   color?: string;
   size?: number;
 }
 
-const Seperator = ({ color = colors.blue400, size = 0.5 }: Props) => {
+const Seperator = ({ color = 'blue', size = 0.5 }: Props) => {
   return (
-    <Stack
-      borderTopWidth={size}
-      borderColor={color}
-      marginTop={14}
-      marginBottom={4}
+    <View
+      style={{
+        borderTopWidth: size,
+        borderColor: color,
+        marginTop: 14,
+        marginBottom: 4,
+      }}
     />
   );
 };

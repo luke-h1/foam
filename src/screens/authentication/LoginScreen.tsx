@@ -1,13 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-console */
 import { useAuthContext } from '@app/context/AuthContext';
 import {
   HomeTabsParamList,
   HomeTabsRoutes,
 } from '@app/navigation/Home/HomeTabs';
-import logger from '@app/utils/logger';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { makeRedirectUri, useAuthRequest } from 'expo-auth-session';
+import { useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
 import { View, Button } from 'react-native';
@@ -25,15 +22,18 @@ const LoginScreen = () => {
     revocationEndpoint: 'https://id.twitch.tv/oauth2/revoke',
   } as const;
 
+  const proxyUrl = 'http://localhost:6500/api/proxy'; // TODO: change this to env vars once we release
+
   const [request, response, promptAsync] = useAuthRequest(
     {
       clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      // clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
+      clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
       scopes: [
         'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',
       ],
-      redirectUri: makeRedirectUri(),
+      redirectUri: proxyUrl,
       responseType: 'token',
+      usePKCE: true,
       extraParams: {
         // @ts-expect-error - Twitch requires force_verify to be a boolean whereas
         // the types are Record<string, string>
@@ -47,8 +47,6 @@ const LoginScreen = () => {
     await login(response);
     if (response?.type === 'success') {
       navigate(HomeTabsRoutes.Top);
-    } else {
-      logger.error('Failed to authentice');
     }
   };
 
@@ -56,6 +54,8 @@ const LoginScreen = () => {
     if (response && response?.type === 'success') {
       handleAuth();
     }
+    // eslint-disable-next-line no-console
+    console.info('response', response);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 

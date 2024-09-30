@@ -3,7 +3,7 @@ import { StorageKeys } from '../../context/AuthContext';
 import { deleteTokens } from '../deleteTokens';
 
 describe('deleteTokens', () => {
-  it('should delete anonToken and authToken', async () => {
+  test('should delete anonToken and authToken', async () => {
     const mockDeleteItemAsync = jest
       .spyOn(SecureStore, 'deleteItemAsync')
       .mockImplementation(() => Promise.resolve());

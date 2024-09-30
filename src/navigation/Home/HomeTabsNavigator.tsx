@@ -4,9 +4,8 @@ import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import SearchScreen from '@app/screens/SearchScreen';
 import TopScreen from '@app/screens/Top/TopScreen';
-import { colors } from '@app/styles';
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
-import { Search, Heart, ArrowUpFromLine } from '@tamagui/lucide-icons';
+import Feather from 'react-native-vector-icons/Feather';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
 
 const HomeTabsNavigator = () => {
@@ -39,7 +38,7 @@ const HomeTabsNavigator = () => {
           name={HomeTabsRoutes.Following}
           component={FollowingScreen}
           options={{
-            tabBarIcon: () => <Heart size={24} color={colors.gray500} />,
+            tabBarIcon: () => <Feather size={24} color="red" name="heart" />,
             header(props: BottomTabHeaderProps) {
               return <Header {...props} title="Following" />;
             },
@@ -52,11 +51,9 @@ const HomeTabsNavigator = () => {
         component={TopScreen}
         options={{
           headerStyle: {
-            backgroundColor: colors.black,
+            // backgroundColor: colors.black,
           },
-          tabBarIcon: () => (
-            <ArrowUpFromLine size={20} color={colors.gray500} />
-          ),
+          tabBarIcon: () => <Feather size={20} name="arrow-up" />,
           header(props: BottomTabHeaderProps) {
             return <Header {...props} title="Top" />;
           },
@@ -66,7 +63,7 @@ const HomeTabsNavigator = () => {
         name={HomeTabsRoutes.Search}
         component={SearchScreen}
         options={{
-          tabBarIcon: () => <Search size={20} color={colors.gray500} />,
+          tabBarIcon: () => <Feather size={20} name="search" />,
           header(props: BottomTabHeaderProps) {
             return <Header {...props} title="Search" />;
           },

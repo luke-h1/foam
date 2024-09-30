@@ -1,9 +1,6 @@
-import { Flex } from '@app/components/Flex';
 import { useEffect } from 'react';
-import { Stack } from 'tamagui';
-import Spinner from '../../components/loading/Spinner';
+import { Text, View } from 'react-native';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
-import { iconSizes } from '../../styles';
 
 const AuthLoadingScreen = ({
   navigation,
@@ -19,18 +16,17 @@ const AuthLoadingScreen = ({
   }, []);
 
   return (
-    <Stack flex={1} justifyContent="center" alignItems="center">
-      <Flex
-        centered
-        row
-        flexDirection="row"
-        gap="$spacing4"
-        marginTop="$spacing60"
-        padding="$spacing4"
-      >
-        <Spinner color="$neutral3" size={iconSizes.icon64} />
-      </Flex>
-    </Stack>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <View>
+        <Text>Loading...</Text>
+      </View>
+    </View>
   );
 };
 export default AuthLoadingScreen;

@@ -4,7 +4,6 @@ import {
   createStackNavigator,
 } from '@react-navigation/stack';
 
-/* eslint-disable no-shadow */
 export enum StreamRoutes {
   LiveStream = 'LiveStream',
   StreamerProfile = 'StreamerProfile',

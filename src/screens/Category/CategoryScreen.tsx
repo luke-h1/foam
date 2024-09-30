@@ -1,17 +1,12 @@
-import { Flex } from '@app/components/Flex';
-import Main from '@app/components/Main';
 import StreamCard from '@app/components/StreamCard';
-import { Text } from '@app/components/Text';
-import Spinner from '@app/components/loading/Spinner';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,
 } from '@app/navigation/Category/CategoryStack';
 import twitchQueries from '@app/queries/twitchQueries';
-import { iconSizes } from '@app/styles';
 import { useQueries } from '@tanstack/react-query';
-import { FlatList, SafeAreaView } from 'react-native';
-import { Image, ScrollView, Stack } from 'tamagui';
+import { Image } from 'expo-image';
+import { FlatList, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 const CategoryScreen = ({
   route,
@@ -44,16 +39,7 @@ const CategoryScreen = ({
           flexDirection: 'column',
         }}
       >
-        <Flex
-          centered
-          row
-          flexDirection="row"
-          gap="$spacing4"
-          marginTop="$spacing60"
-          padding="$spacing4"
-        >
-          <Spinner color="$neutral3" size={iconSizes.icon64} />
-        </Flex>
+        <View>Loading...</View>
       </SafeAreaView>
     );
   }
@@ -66,9 +52,7 @@ const CategoryScreen = ({
           flexDirection: 'column',
         }}
       >
-        <Main>
-          <Text>Something went wrong</Text>
-        </Main>
+        <View>Something went wrong :(</View>
       </SafeAreaView>
     );
   }
@@ -81,12 +65,14 @@ const CategoryScreen = ({
       }}
     >
       <ScrollView>
-        <Main>
-          <Stack
-            display="flex"
-            flexDirection="row"
-            alignItems="stretch"
-            marginBottom={10}
+        <View>
+          <View
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'stretch',
+              marginBottom: 10,
+            }}
           >
             <Image
               source={{
@@ -94,21 +80,21 @@ const CategoryScreen = ({
                   .replace('{width}', '100')
                   .replace('{height}', '135'),
               }}
-              width={100}
-              height={135}
+              style={{
+                width: 100,
+                height: 135,
+              }}
             />
-            <Text marginLeft={8} variant="heading3">
-              {category?.name}
-            </Text>
-          </Stack>
-          <Stack marginTop={20}>
+            <Text>{category?.name}</Text>
+          </View>
+          <View>
             <FlatList
               data={streams}
               renderItem={({ item }) => <StreamCard stream={item} />}
               keyExtractor={item => item.id}
             />
-          </Stack>
-        </Main>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
