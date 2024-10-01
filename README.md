@@ -1,88 +1,50 @@
-# foam
+# Welcome to your Expo app 👋
 
-## Why?
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-To improve my React native skills and learn various other tech
+## Get started
 
-The native Twitch app experience doesn't quite line up with the desktop experience and it lacks support for third-party extensions that many people use to express themselves in chat. This project aims to be a mobile alternative that supports these extensions and provides a cleaner and more intutive UI.
+1. Install dependencies
 
-## Store links
+   ```bash
+   npm install
+   ```
 
-TBA
+2. Start the app
 
-## Features
+   ```bash
+    npx expo start
+   ```
 
-TBA
+In the output, you'll find options to open the app in a
 
-## Environments
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-TBA
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Getting started
+## Get a fresh project
 
-You will need the following in order to run the project locally:
-
-- [Node.js](https://nodejs.org/en/)
-- [NVM](https://github.com/nvm-sh/nvm)
-- [Xcode](https://developer.apple.com/xcode/)
-- [Android Studio](https://developer.android.com/studio)
-- [PNPM](https://pnpm.io/)
-
-Once you have the above installed, you can run the following commands to get started:
-
-Install correct node and package manager versions
+When you're ready, run:
 
 ```bash
- nvm use
- nvm install
- corepack enable
+npm run reset-project
 ```
 
-If for whatever reason `corepack enable` doesn't work you can run the following script to install the right version of PNPM:
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-```bash
-PNPM_VERSION=$(node -e "console.log(require('./package.json').engines.pnpm)")
-curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=$PNPM_VERSION sh -
-```
+## Learn more
 
-Install dependencies
+To learn more about developing your project with Expo, look at the following resources:
 
-```bash
-pnpm i
-```
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-Acquire Twitch API credentials
+## Join the community
 
-- Create a Twitch account if you do not have one already
-- Enable 2FA on your account otherwise you'll not be able to create apps via the dev console
-- Go to the [Twitch developer console](https://dev.twitch.tv/console/apps/create) and create a new application. Your OAUTH redirect settings should look like the following:
+Join our community of developers creating universal apps.
 
-<img src='.github/docs/twitch-settings.png' alt='Twitch app settings' />
-
-- Copy the client ID and client secret and paste them into a `.env` file in the root of the project. See `.env.example` for an example of what this file should look like
-
-If you're on Linux or windows, you'll need to setup Android studio and install a device to run the app.
-
-If you're on Mac you can just use the iOS simulator (via Xcode) to run the app
-
-You'll need to start the proxy server before you start up the app to proxy authentication requests to Twitch. This is due to a new requirement where Twitch do not let you proxy non `http` URLs. You can do this by running `pnpm run start:proxy` in a separate terminal window. Locally this is just a simple Express server. In production, we'll most likely use a serverless function to get around this issue.
-
-Start the app
-
-```bash
-pnpm start
-```
-
-## Contributing
-
-### Commiting code
-
-This project follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. [Husky](https://github.com/typicode/husky) is used to execute scrips according to git hooks in order to test if a developer is following the various linting rules and conventional commits. Run `yarn commit` to start an interactive commit.
-
-### Bug reports
-
-If you encounter a problem with this project, please open an issue. Be sure to include:
-
-- Node version
-- OS
-- Brief but thorough reproduction steps of the issue
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

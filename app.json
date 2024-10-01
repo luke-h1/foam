@@ -4,76 +4,31 @@
     "slug": "foam",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "scheme": "foam",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.foam",
-      "config": {
-        "usesNonExemptEncryption": false
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.foam",
-      "permissions": [
-        "VIBRATE"
-      ]
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "950a1e2f-6b25-4be7-adb2-3c16287a2b5e"
-      }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e"
-    },
+    "plugins": ["expo-router"],
     "experiments": {
-      "tsconfigPaths": true
-    },
-    "plugins": [
-      "expo-font",
-      "expo-secure-store"
-    ]
-  },
-  "plugins": [
-    [
-      "expo-build-properties",
-      {
-        "ios": {
-          "flipper": true
-        }
-      }
-    ],
-    [
-      "newrelic-react-native-agent"
-    ],
-    [
-      "./src/plugins/withAnimatedWebPSupport.js"
-    ],
-    [
-      "./src/plugins/withFastImageWebPSupportIOS.js"
-    ],
-    [
-      "./src/plugins/withFastImageWebPSupportAndroid.js"
-    ]
-  ]
+      "typedRoutes": true
+    }
+  }
 }
