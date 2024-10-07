@@ -8,12 +8,13 @@ import {
 } from '@tanstack/react-query';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
-import { connectToDevTools } from 'react-devtools-core';
+import React from 'react';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AuthContextProvider from './src/context/AuthContext';
 import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import useOnAppStateChange from './src/hooks/useOnAppStateChange';
+import RootNavigator from './src/navigation/RootNavigator';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,11 +25,6 @@ export default function App() {
   useChangeScreenOrientation();
 
   if (__DEV__) {
-    connectToDevTools({
-      host: 'localhost',
-      port: 8097,
-    });
-
     LogBox.ignoreAllLogs();
     activateKeepAwakeAsync();
   }
@@ -43,7 +39,7 @@ export default function App() {
   });
 
   /**
-   * Dev util to clear auth on simulators
+   * Dev util to clear authentication tokens on simulators
    */
   // deleteTokens();
 
