@@ -1,9 +1,4 @@
-import {
-  render,
-  fireEvent,
-  renderHook,
-  screen,
-} from '@testing-library/react-native';
+import { render, fireEvent, screen } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import Button from '../Button/Button';
