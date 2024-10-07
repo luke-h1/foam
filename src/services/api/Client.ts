@@ -207,4 +207,8 @@ export default class Client {
   public setToken(token: string): void {
     this.axios.defaults.headers.Authorization = `Bearer ${token}`;
   }
+
+  public removeToken(): void {
+    delete this.axios.defaults.headers.Authorization;
+  }
 }
