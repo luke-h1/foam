@@ -11,6 +11,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { connectToDevTools } from 'react-devtools-core';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
+import useOnAppStateChange from './src/hooks/useOnAppStateChange';
 
 SplashScreen.preventAutoHideAsync();
 
