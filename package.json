@@ -4,13 +4,21 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "alphabetize": "node scripts/alphabetizePackageJson.js",
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
+    "commit": "cz",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
+    "format:check": "prettier --list-different \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
+    "lint": "eslint --fix --ext .ts,.tsx,.js,.jsx .",
     "android": "expo start --android",
+    "prebuild:android": "pnpx expo prebuild -p android",
+    "prebuild:ios": "pnpx expo prebuild -p ios",
+    "preinstall": "pnpm check:node",
+    "prepare": "husky",
+    "start:proxy": "node proxy.js",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "jest --watchAll",
-    "lint": "expo lint"
+    "test": "jest --watchAll"
   },
   "jest": {
     "preset": "jest-expo"

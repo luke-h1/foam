@@ -8,6 +8,11 @@ export const twitchApi = new Client({
   },
 });
 
+// proxy API
+export const proxyApi = new Client({
+  baseURL: process.env.EXPO_PUBLIC_PROXY_URL,
+});
+
 // emotes + badge APIs
 
 // bttv emote API (un-cached)

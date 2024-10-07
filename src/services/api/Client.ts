@@ -1,5 +1,4 @@
 import Axios, {
-  AxiosHeaders,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
