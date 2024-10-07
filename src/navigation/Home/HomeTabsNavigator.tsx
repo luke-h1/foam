@@ -1,12 +1,11 @@
 /* eslint-disable react/no-unstable-nested-components */
+import TabBarLabel from '@app/components/TabBarLabel';
 import { useAuthContext } from '@app/context/AuthContext';
 import theme from '@app/styles/theme';
-import { Text } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import FollowingNavigator from './Following/FollowingNavigator';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
 import TopNavigator from './Top/TopNavigator';
-import TabBarLabel from '@app/components/TabBarLabel';
 
 export default function HomeTabsNavigator() {
   const { auth } = useAuthContext();
@@ -14,12 +13,20 @@ export default function HomeTabsNavigator() {
   return (
     <HomeTabs.Navigator
       screenOptions={{
-        tabBarActiveTintColor: theme.color.white,
-        tabBarInactiveTintColor: '#d9d9d9',
+        headerTitleAlign: 'left',
+        // headerShown: false,
+        tabBarActiveTintColor: 'purple',
         tabBarStyle: {
-          borderTopColor: '#66666666',
-          backgroundColor: 'transparent',
-          elevation: 0,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          marginTop: -20,
+          paddingHorizontal: 20,
+          height: 75,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          paddingVertical: 1,
+          paddingHorizontal: 4,
         },
       }}
       initialRouteName={
@@ -39,6 +46,7 @@ export default function HomeTabsNavigator() {
         name={HomeTabsRoutes.TopStack}
         component={TopNavigator}
         options={{
+          headerShown: false,
           // eslint-disable-next-line react/no-unstable-nested-components
           tabBarIcon: () => <Icon size={24} name="user" />,
 

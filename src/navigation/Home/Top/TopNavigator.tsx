@@ -1,5 +1,4 @@
-import TopScreen from '@app/screens/home/TopScreen';
-import { View } from 'react-native';
+import TopScreen from '@app/screens/home/Top/TopScreen';
 import { TopRoutes, TopStack } from './TopStack';
 
 export default function TopNavigator() {

@@ -1,13 +1,12 @@
 const jestConfig = {
   preset: 'jest-expo',
-  setupFilesAfterEnv: ['./test/setupFilesAfterEnv.js'],
-  setupFiles: ['./src/test/setupTests.ts'],
   moduleNameMapper: {
-    '\\.svg': '<rootDir>/src/test/__mocks__/svgMock.js',
     '^@app/(.*)$': '<rootDir>/src/$1',
   },
+  setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
+  testEnvironment: 'jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   verbose: true,
-  testEnvironment: 'jsdom',
+  transformIgnorePatterns: [],
 };
 module.exports = jestConfig;
