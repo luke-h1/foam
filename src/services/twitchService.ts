@@ -92,7 +92,7 @@ const twitchService = {
   getTopStreams: async (cursor?: string): Promise<Stream[]> => {
     const url = cursor ? `/streams?after=${cursor}` : '/streams';
     const { data } = await twitchApi.get<{ data: Stream[] }>(url);
-    return data;
+    return data ?? [];
   },
 
   /**

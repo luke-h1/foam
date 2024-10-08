@@ -1,3 +1,4 @@
+import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import { useState } from 'react';
 import {
   View,
@@ -11,7 +12,6 @@ import {
 import { TabView, SceneMap } from 'react-native-tab-view';
 import TopCategoriesScreen from './TopCategoriesScreen';
 import TopStreamsScreen from './TopStreamsScreen';
-import SafeAreaContainer from '@app/components/SafeAreaContainer';
 
 export default function TopScreen() {
   const layout = useWindowDimensions();
