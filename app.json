@@ -1,4 +1,6 @@
 {
+  "name": "Foam",
+  "displayNmame": "Foam",
   "expo": {
     "name": "foam",
     "slug": "foam",
@@ -12,9 +14,8 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "jsEngine": "hermes",
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.foam",
@@ -28,9 +29,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.foam",
-      "permissions": [
-        "VIBRATE"
-      ]
+      "permissions": ["VIBRATE"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -44,36 +43,29 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e"
+      "fallbackToCacheTimeout": 0
     },
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": [
-      "expo-font",
-      "expo-secure-store"
-    ]
+    "plugins": ["expo-font", "expo-secure-store"]
   },
   "plugins": [
     [
       "expo-build-properties",
       {
         "ios": {
-          "flipper": true
+          "flipper": true,
+          "newArchEnabled": false
+        },
+        "android": {
+          "newArchEnabled": false
         }
       }
     ],
-    [
-      "newrelic-react-native-agent"
-    ],
-    [
-      "./src/plugins/withAnimatedWebPSupport.js"
-    ],
-    [
-      "./src/plugins/withFastImageWebPSupportIOS.js"
-    ],
-    [
-      "./src/plugins/withFastImageWebPSupportAndroid.js"
-    ]
+    ["newrelic-react-native-agent"],
+    ["./src/plugins/withAnimatedWebPSupport.js"],
+    ["./src/plugins/withFastImageWebPSupportIOS.js"],
+    ["./src/plugins/withFastImageWebPSupportAndroid.js"]
   ]
 }

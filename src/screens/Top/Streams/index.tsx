@@ -1,30 +1,25 @@
+/* eslint-disable no-underscore-dangle */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import StreamCard from '@app/components/StreamCard';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import {
-  FlatList,
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, Text, View } from 'react-native';
 
 const TopStreamsScreen = () => {
-  const [refreshing, setRefreshing] = useState(false);
-  const queryClient = useQueryClient();
+  const [refreshing, _setRefreshing] = useState(false);
+  const _queryClient = useQueryClient();
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await queryClient.refetchQueries({
-      queryKey: topStreamQuery.queryKey,
-    });
+  // const onRefresh = async () => {
+  //   setRefreshing(true);
+  //   await queryClient.refetchQueries({
+  //     queryKey: topStreamQuery.queryKey,
+  //   });
 
-    setRefreshing(false);
-  };
+  //   setRefreshing(false);
+  // };
 
   const { data: streams, isLoading, isError } = useQuery(topStreamQuery);
 
@@ -60,23 +55,15 @@ const TopStreamsScreen = () => {
   }
 
   return (
-    <SafeAreaView>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View>
-          {streams && streams.length > 0 && (
-            <FlatList<Stream>
-              data={streams}
-              renderItem={({ item }) => <StreamCard stream={item} />}
-              keyExtractor={item => item.id}
-            />
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <View>
+      {streams && streams.length > 0 && (
+        <FlatList<Stream>
+          data={streams}
+          renderItem={({ item }) => <StreamCard stream={item} />}
+          keyExtractor={item => item.id}
+        />
+      )}
+    </View>
   );
 };
 export default TopStreamsScreen;
