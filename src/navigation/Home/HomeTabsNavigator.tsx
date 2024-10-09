@@ -1,10 +1,9 @@
 /* eslint-disable react/no-unstable-nested-components */
-import TabBarLabel from '@app/components/TabBarLabel';
 import { useAuthContext } from '@app/context/AuthContext';
-import Icon from 'react-native-vector-icons/AntDesign';
-import FollowingNavigator from './Following/FollowingNavigator';
+import FollowingScreen from '@app/screens/home/FollowingScreen';
+import TopScreen from '@app/screens/home/Top/TopScreen';
+import Icon from 'react-native-vector-icons/Feather';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
-import TopNavigator from './Top/TopNavigator';
 
 export default function HomeTabsNavigator() {
   const { auth } = useAuthContext();
@@ -16,26 +15,27 @@ export default function HomeTabsNavigator() {
         tabBarActiveTintColor: 'purple',
       }}
       initialRouteName={
-        auth?.token ? HomeTabsRoutes.FollowingStack : HomeTabsRoutes.TopStack
+        auth?.isAuth ? HomeTabsRoutes.Following : HomeTabsRoutes.Top
       }
     >
-      {auth?.token ? (
+      {auth?.isAuth ? (
         <HomeTabs.Screen
-          name={HomeTabsRoutes.FollowingStack}
-          component={FollowingNavigator}
+          name={HomeTabsRoutes.Following}
+          component={FollowingScreen}
+          options={{
+            tabBarIcon: () => <Icon size={24} color="red" name="heart" />,
+          }}
         />
       ) : null}
 
       <HomeTabs.Screen
-        name={HomeTabsRoutes.TopStack}
-        component={TopNavigator}
+        name={HomeTabsRoutes.Top}
+        component={TopScreen}
         options={{
-          headerShown: false,
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: () => <Icon size={24} name="user" />,
-
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarLabel: () => <TabBarLabel>Top</TabBarLabel>,
+          headerStyle: {
+            // backgroundColor: colors.black,
+          },
+          tabBarIcon: () => <Icon size={20} name="arrow-up" />,
         }}
       />
     </HomeTabs.Navigator>

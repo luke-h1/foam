@@ -1,3 +1,5 @@
+import { twitchApi } from '@app/services/api';
+import twitchService, { UserInfoResponse } from '@app/services/twitchService';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import React, {
@@ -8,17 +10,30 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { twitchApi } from '../services/api';
-import twitchService, { UserInfoResponse } from '../services/twitchService';
-
-const prefix = 'foam-app';
 
 export const StorageKeys = {
-  anonToken: `${prefix}-anon-token`,
-  authToken: `${prefix}-auth-token`,
+  anonToken: 'foam-anonToken',
+  authToken: 'foam-authToken',
 } as const;
 
 type StorageKey = keyof typeof StorageKeys;
+
+interface AuthContextState {
+  auth?: Auth;
+  user?: UserInfoResponse;
+  login: (response: AuthSessionResult | null) => Promise<null | undefined>;
+  logout: () => Promise<void>;
+  getToken: (key: StorageKey) => Promise<string | null>;
+  ready: boolean;
+}
+
+export const AuthContext = createContext<AuthContextState | undefined>(
+  undefined,
+);
+
+interface Props {
+  children?: ReactNode;
+}
 
 interface Auth {
   token?: TokenResponse;
@@ -27,31 +42,12 @@ interface Auth {
   isAuth?: boolean;
 }
 
-interface AuthContextState {
-  auth?: Auth;
-  user?: UserInfoResponse;
-  login: (response: AuthSessionResult | null) => Promise<null>;
-  logout: () => Promise<void>;
-  getToken: (key: StorageKey) => Promise<string | null>;
-  ready: boolean;
-}
-
 interface State {
   auth?: Auth;
   ready: boolean;
 }
 
-export const AuthContext = createContext<AuthContextState | undefined>(
-  undefined,
-);
-
-interface AuthContextProviderProps {
-  children: ReactNode;
-}
-
-export default function AuthContextProvider({
-  children,
-}: AuthContextProviderProps) {
+export const AuthContextProvider = ({ children }: Props) => {
   const [state, setState] = useState<State>({
     ready: false,
   });
@@ -65,6 +61,10 @@ export default function AuthContextProvider({
     }
     return twitchService.validateToken(token);
   };
+
+  useEffect(() => {
+    console.info(JSON.stringify(state, null, 2));
+  }, [state]);
 
   useEffect(() => {
     const getTokens = async () => {
@@ -102,7 +102,7 @@ export default function AuthContextProvider({
           },
         });
 
-        const userInfo = await twitchService.getUserInfo();
+        const userInfo = await twitchService.getUserInfo(authToken);
         setUser(userInfo);
         twitchApi.setToken(authToken);
       }
@@ -152,7 +152,9 @@ export default function AuthContextProvider({
     });
 
     // eslint-disable-next-line no-shadow
-    const user = await twitchService.getUserInfo();
+    const user = await twitchService.getUserInfo(
+      response.authentication.accessToken,
+    );
     setUser(user);
 
     twitchApi.setToken(response.authentication.accessToken);
@@ -178,6 +180,7 @@ export default function AuthContextProvider({
     setUser(undefined);
     await SecureStore.deleteItemAsync(StorageKeys.authToken);
     twitchApi.removeToken();
+
     await getAnonToken();
   };
 
@@ -205,7 +208,7 @@ export default function AuthContextProvider({
   return state.ready ? (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
   ) : null;
-}
+};
 
 export function useAuthContext() {
   const context = useContext(AuthContext);

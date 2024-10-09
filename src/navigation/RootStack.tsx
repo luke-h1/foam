@@ -17,7 +17,7 @@ export enum RootRoutes {
 export type RootStackParamList = {
   [RootRoutes.Welcome]: undefined;
   [RootRoutes.AuthLoading]: undefined;
-  [RootRoutes.Home]: NavigatorScreenParams<HomeTabsParamList>;
+  [RootRoutes.Home]: undefined;
 };
 
 export type RootRouteParams = keyof RootStackParamList;

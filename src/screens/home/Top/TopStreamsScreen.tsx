@@ -1,26 +1,27 @@
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import StreamCard from '@app/components/StreamCard';
 import twitchQueries from '@app/queries/twitchQueries';
-import { Stream } from '@app/services/twitchService';
+import twitchService, { Stream } from '@app/services/twitchService';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 
 export default function TopStreamsScreen() {
-  const {
-    data: streams,
-    isLoading,
-    isError,
-  } = useQuery({
-    ...twitchQueries.getTopStreams,
-    refetchOnMount: true,
-  });
+  // const {
+  //   data: streams,
+  //   isLoading,
+  //   isError,
+  // } = useQuery({
+  //   ...twitchQueries.getTopStreams,
+  // });
+  const [streams, setStreams] = useState<Stream[]>([]);
 
-  if (isLoading) {
-    return <Text>Loading..</Text>;
-  }
-  if (isError) {
-    return null;
-  }
+  useEffect(() => {
+    (async () => {
+      const result = await twitchService.getTopStreams();
+      setStreams(result);
+    })();
+  }, []);
 
   return (
     <SafeAreaContainer>

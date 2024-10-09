@@ -9,13 +9,12 @@ import {
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
 import React from 'react';
-import { LogBox, SafeAreaView } from 'react-native';
+import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import AuthContextProvider from './src/context/AuthContext';
+import { AuthContextProvider } from './src/context/AuthContext';
 import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import useOnAppStateChange from './src/hooks/useOnAppStateChange';
 import RootNavigator from './src/navigation/RootNavigator';
-import { deleteTokens } from './src/util/deleteTokens';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,10 +24,10 @@ export default function App() {
   useOnAppStateChange();
   useChangeScreenOrientation();
 
-  // if (__DEV__) {
-  //   LogBox.ignoreAllLogs();
-  //   activateKeepAwakeAsync();
-  // }
+  if (__DEV__) {
+    LogBox.ignoreAllLogs();
+    activateKeepAwakeAsync();
+  }
 
   /**
    * supports auto refetch on reconnect for react-query

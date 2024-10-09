@@ -92,7 +92,7 @@ const twitchService = {
   getTopStreams: async (cursor?: string): Promise<Stream[]> => {
     const url = cursor ? `/streams?after=${cursor}` : '/streams';
     const { data } = await twitchApi.get<{ data: Stream[] }>(url);
-    return data ?? [];
+    return data;
   },
 
   /**
@@ -158,8 +158,12 @@ const twitchService = {
   /**
    * Gets currently logged in user's info
    */
-  getUserInfo: async (): Promise<UserInfoResponse> => {
-    const response = await twitchApi.get<UserInfoResponse[]>('/users');
+  getUserInfo: async (token: string): Promise<UserInfoResponse> => {
+    const response = await twitchApi.get<UserInfoResponse[]>('/users', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response[0];
   },
   getUser: async (userId: string): Promise<UserInfoResponse> => {

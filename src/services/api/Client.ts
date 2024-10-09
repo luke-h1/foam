@@ -68,7 +68,8 @@ export default class Client {
       return response.data;
     } catch (error) {
       if (isAxiosError(error)) {
-        console.info('error', error.code);
+        console.error('error', error.code);
+        console.error('error', error.message);
         return error.response?.data;
       }
       throw error;

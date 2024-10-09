@@ -9,13 +9,17 @@ import {
 import { FollowingStackParamList } from './Following/FollowingStack';
 
 export enum HomeTabsRoutes {
-  FollowingStack = 'FollowingStack',
-  TopStack = 'TopStack',
+  Following = 'Following',
+  Top = 'Top',
+  Browse = 'Browse',
+  Search = 'Search',
 }
 
 export type HomeTabsParamList = {
-  [HomeTabsRoutes.FollowingStack]: NavigatorScreenParams<FollowingStackParamList>;
-  [HomeTabsRoutes.TopStack]: undefined;
+  [HomeTabsRoutes.Following]: undefined;
+  [HomeTabsRoutes.Top]: undefined;
+  [HomeTabsRoutes.Browse]: undefined;
+  [HomeTabsRoutes.Search]: undefined;
 };
 
 export type HomeNavigation = NavigationProp<HomeTabsParamList>;
