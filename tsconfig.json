@@ -22,11 +22,19 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["./src/*"]
+      "@app/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["src", "test", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "include": [
+    "src",
+    "test"
+  ],
   "moduleResolution": "node",
-  "exclude": ["node_modules", ".expo"],
+  "exclude": [
+    "node_modules",
+    ".expo"
+  ],
   "extends": "expo/tsconfig.base"
 }

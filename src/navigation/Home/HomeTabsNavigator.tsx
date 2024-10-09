@@ -15,9 +15,11 @@ export default function HomeTabsNavigator() {
         // headerShown: false,
         tabBarActiveTintColor: 'purple',
       }}
-      initialRouteName={HomeTabsRoutes.TopStack}
+      initialRouteName={
+        auth?.token ? HomeTabsRoutes.FollowingStack : HomeTabsRoutes.TopStack
+      }
     >
-      {auth && auth.isAuth ? (
+      {auth?.token ? (
         <HomeTabs.Screen
           name={HomeTabsRoutes.FollowingStack}
           component={FollowingNavigator}

@@ -9,12 +9,14 @@ import {
 import { HomeTabsParamList } from './Home/HomeTabs';
 
 export enum RootRoutes {
+  AuthLoading = 'AuthLoading',
   Welcome = 'Welcome',
   Home = 'Home',
 }
 
 export type RootStackParamList = {
   [RootRoutes.Welcome]: undefined;
+  [RootRoutes.AuthLoading]: undefined;
   [RootRoutes.Home]: NavigatorScreenParams<HomeTabsParamList>;
 };
 

@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "alphabetize": "node scripts/alphabetizePackageJson.js",
-    "start": "expo start -c ",
+    "start": "expo start --clear",
     "commit": "cz",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",
     "format:check": "prettier --list-different \"src/**/*.{js,jsx,ts,tsx,css,scss,html}\"",

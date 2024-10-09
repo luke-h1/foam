@@ -5,5 +5,6 @@ export const deleteTokens = async () => {
   await Promise.all([
     SecureStore.deleteItemAsync(StorageKeys.anonToken),
     SecureStore.deleteItemAsync(StorageKeys.authToken),
-  ]);
+    // eslint-disable-next-line no-console
+  ]).then(() => console.info('tokens cleared'));
 };

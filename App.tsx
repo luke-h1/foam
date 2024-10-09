@@ -15,6 +15,7 @@ import AuthContextProvider from './src/context/AuthContext';
 import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import useOnAppStateChange from './src/hooks/useOnAppStateChange';
 import RootNavigator from './src/navigation/RootNavigator';
+import { deleteTokens } from './src/util/deleteTokens';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,10 +25,10 @@ export default function App() {
   useOnAppStateChange();
   useChangeScreenOrientation();
 
-  if (__DEV__) {
-    LogBox.ignoreAllLogs();
-    activateKeepAwakeAsync();
-  }
+  // if (__DEV__) {
+  //   LogBox.ignoreAllLogs();
+  //   activateKeepAwakeAsync();
+  // }
 
   /**
    * supports auto refetch on reconnect for react-query

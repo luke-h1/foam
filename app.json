@@ -5,33 +5,60 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "foam",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.lhowsam.foam"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.foam",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.foam",
+      "permissions": ["VIBRATE"]
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": [
-      "expo-router"
-    ],
+    "extra": {
+      "eas": {
+        "projectId": "950a1e2f-6b25-4be7-adb2-3c16287a2b5e"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e"
+    },
     "experiments": {
-      "typedRoutes": true
-    }
-  }
+      "tsconfigPaths": true
+    },
+    "plugins": ["expo-font", "expo-secure-store"]
+  },
+  "plugins": [
+    [
+      "expo-build-properties",
+      {
+        "ios": {
+          "flipper": true
+        }
+      }
+    ],
+    ["newrelic-react-native-agent"],
+    ["./src/plugins/withAnimatedWebpSupport.js"],
+    ["./src/plugins/withFastImageWebpSupportIOS.js"],
+    ["./src/plugins/withFastImageWebpSupportAndroid.js"]
+  ]
 }

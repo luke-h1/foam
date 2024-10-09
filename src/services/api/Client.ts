@@ -68,6 +68,7 @@ export default class Client {
       return response.data;
     } catch (error) {
       if (isAxiosError(error)) {
+        console.info('error', error.code);
         return error.response?.data;
       }
       throw error;
@@ -86,9 +87,7 @@ export default class Client {
 
   public get<TValue = unknown>(
     url: string,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -112,9 +111,7 @@ export default class Client {
   public post<TValue = unknown>(
     url: string,
     data: unknown,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -139,9 +136,7 @@ export default class Client {
   public put<TValue = unknown>(
     url: string,
     data: unknown,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({ ...config, url, data, method: 'PUT' });
   }
@@ -161,9 +156,7 @@ export default class Client {
   public patch<TValue = unknown>(
     url: string,
     data: unknown,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -185,9 +178,7 @@ export default class Client {
 
   public delete<TValue = unknown>(
     url: string,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -205,10 +196,10 @@ export default class Client {
   }
 
   public setToken(token: string): void {
-    this.axios.defaults.headers.Authorization = `Bearer ${token}`;
+    this.axios.defaults.headers.common.Authorization = `Bearer ${token}`;
   }
 
   public removeToken(): void {
-    delete this.axios.defaults.headers.Authorization;
+    this.axios.defaults.headers.common.Authorization = undefined;
   }
 }

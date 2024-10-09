@@ -3,7 +3,6 @@ import StreamCard from '@app/components/StreamCard';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import { FlatList, Text, View } from 'react-native';
 
 export default function TopStreamsScreen() {
@@ -16,10 +15,8 @@ export default function TopStreamsScreen() {
     refetchOnMount: true,
   });
 
-  console.log('streams', streams?.length);
-
   if (isLoading) {
-    return null;
+    return <Text>Loading..</Text>;
   }
   if (isError) {
     return null;
