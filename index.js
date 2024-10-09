@@ -1,39 +1,36 @@
 import { registerRootComponent } from 'expo';
-import NewRelic from 'newrelic-react-native-agent';
-import { Platform } from 'react-native';
 import App from './App';
 import 'expo-dev-client';
-import { version } from './package.json';
 
 // eslint-disable-next-line no-undef
-if (!__DEV__) {
-  const {
-    EXPO_PUBLIC_NEW_RELIC_IOS_APP_TOKEN,
-    EXPO_PUBLIC_NEW_RELIC_ANDROID_APP_TOKEN,
-  } = process.env;
+// if (!__DEV__) {
+//   const {
+//     EXPO_PUBLIC_NEW_RELIC_IOS_APP_TOKEN,
+//     EXPO_PUBLIC_NEW_RELIC_ANDROID_APP_TOKEN,
+//   } = process.env;
 
-  const appToken =
-    Platform.OS === 'ios'
-      ? EXPO_PUBLIC_NEW_RELIC_IOS_APP_TOKEN
-      : EXPO_PUBLIC_NEW_RELIC_ANDROID_APP_TOKEN;
+//   const appToken =
+//     Platform.OS === 'ios'
+//       ? EXPO_PUBLIC_NEW_RELIC_IOS_APP_TOKEN
+//       : EXPO_PUBLIC_NEW_RELIC_ANDROID_APP_TOKEN;
 
-  const agentConfiguration = {
-    analyticsEventEnabled: true,
-    crashReportingEnabled: true,
-    interactionTracingEnabled: true,
-    networkRequestEnabled: true,
-    networkErrorRequestEnabled: true,
-    httpRequestBodyCaptureEnabled: true,
-    loggingEnabled: true,
-    logLevel: NewRelic.LogLevel.INFO,
-    webViewInstrumentation: true,
-  };
+//   const agentConfiguration = {
+//     analyticsEventEnabled: true,
+//     crashReportingEnabled: true,
+//     interactionTracingEnabled: true,
+//     networkRequestEnabled: true,
+//     networkErrorRequestEnabled: true,
+//     httpRequestBodyCaptureEnabled: true,
+//     loggingEnabled: true,
+//     logLevel: NewRelic.LogLevel.INFO,
+//     webViewInstrumentation: true,
+//   };
 
-  agentConfiguration.loggingEnabled = true;
-  agentConfiguration.logLevel = NewRelic.LogLevel.VERBOSE;
+//   agentConfiguration.loggingEnabled = true;
+//   agentConfiguration.logLevel = NewRelic.LogLevel.VERBOSE;
 
-  NewRelic.startAgent(appToken, agentConfiguration);
-  NewRelic.setJSAppVersion(version);
-}
+//   NewRelic.startAgent(appToken, agentConfiguration);
+//   NewRelic.setJSAppVersion(version);
+// }
 
 registerRootComponent(App);

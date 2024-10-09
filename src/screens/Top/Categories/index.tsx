@@ -3,8 +3,7 @@ import twitchQueries from '@app/queries/twitchQueries';
 import { Category } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlatList, Text, View } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 
 const TopCategoriesScreen = () => {
@@ -18,6 +17,7 @@ const TopCategoriesScreen = () => {
   );
 
   const { data: categories, isLoading, isError } = useQuery(topCategoriesQuery);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.refetchQueries({
@@ -28,36 +28,36 @@ const TopCategoriesScreen = () => {
 
   if (!categories || isError) {
     return (
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            // tintColor={colors.gray500}
-            // colors={[colors.gray500]}
-          />
-        }
+      // <ScrollView
+      //   refreshControl={
+      //     <RefreshControl
+      //       refreshing={refreshing}
+      //       onRefresh={onRefresh}
+      //       // tintColor={colors.gray500}
+      //       // colors={[colors.gray500]}
+      //     />
+      //   }
+      // >
+      <View
+        style={{
+          alignItems: 'center',
+          flex: 1,
+          justifyContent: 'center',
+        }}
       >
-        <View
+        <Feather
+          name="info"
+          size={24}
+          color="$color"
           style={{
-            alignItems: 'center',
-            flex: 1,
-            justifyContent: 'center',
+            marginRight: 10,
           }}
-        >
-          <Feather
-            name="info"
-            size={24}
-            color="$color"
-            style={{
-              marginRight: 10,
-            }}
-          />
-          <Text>
-            {isError ? 'error fetching categories' : 'No categories found'}
-          </Text>
-        </View>
-      </ScrollView>
+        />
+        <Text>
+          {isError ? 'error fetching categories' : 'No categories found'}
+        </Text>
+      </View>
+      // </ScrollView>
     );
   }
 
@@ -68,29 +68,17 @@ const TopCategoriesScreen = () => {
           flexDirection: 'row',
         }}
       >
-        Loading...
+        <Text>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
-        <View>
-          {categories.length > 0 && (
-            <FlatList<Category>
-              data={categories}
-              renderItem={({ item }) => <CategoryCard category={item} />}
-              keyExtractor={(_item, index) => index.toString()}
-            />
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <FlatList<Category>
+      data={categories}
+      renderItem={({ item }) => <CategoryCard category={item} />}
+      keyExtractor={(_item, index) => index.toString()}
+    />
   );
 };
 export default TopCategoriesScreen;

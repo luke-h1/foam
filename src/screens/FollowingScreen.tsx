@@ -6,15 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 // eslint-disable-next-line import/no-named-as-default
 import Constants from 'expo-constants';
 import { useMemo, useState } from 'react';
-import {
-  FlatList,
-  SafeAreaView,
-  Platform,
-  View,
-  Text,
-  ScrollView,
-} from 'react-native';
-import { RefreshControl } from 'react-native-gesture-handler';
+import { FlatList, Platform, View, Text } from 'react-native';
 
 export interface Section {
   key: string;
@@ -27,6 +19,7 @@ const FollowingScreen = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.refetchQueries({
@@ -73,32 +66,19 @@ const FollowingScreen = () => {
 
   return (
     <View>
-      <SafeAreaView>
-        <ScrollView
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              // tintColor={colors.gray150}
-              // colors={[colors.gray150]}
-            />
-          }
-        >
-          <View
-            style={{
-              padding: 4,
-            }}
-          >
-            <View>
-              <FlatList<Stream>
-                data={streams}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => <StreamCard stream={item} />}
-              />
-            </View>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
+      <View
+        style={{
+          padding: 4,
+        }}
+      >
+        <View>
+          <FlatList<Stream>
+            data={streams}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => <StreamCard stream={item} />}
+          />
+        </View>
+      </View>
     </View>
   );
 };

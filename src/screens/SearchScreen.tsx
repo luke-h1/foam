@@ -12,7 +12,6 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput as NativeTextInput,
@@ -96,7 +95,7 @@ const SearchScreen = () => {
   };
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flex: 1,
         paddingTop: statusBarHeight,
@@ -114,20 +113,18 @@ const SearchScreen = () => {
               flexGrow: 1,
             }}
           >
-            <SafeAreaView style={{ flexDirection: 'row' }}>
-              <TextInput
-                ref={ref}
-                placeholder="Find a channel"
-                placeholderTextColor="$text"
-                verticalAlign="middle"
-                style={{
-                  padding: 10,
-                }}
-                onChangeText={async text => {
-                  await handleQuery(text);
-                }}
-              />
-            </SafeAreaView>
+            <TextInput
+              ref={ref}
+              placeholder="Find a channel"
+              placeholderTextColor="$text"
+              verticalAlign="middle"
+              style={{
+                padding: 10,
+              }}
+              onChangeText={async text => {
+                await handleQuery(text);
+              }}
+            />
           </ScrollView>
         </DismissableKeyboard>
         {showDismiss ? (
@@ -230,45 +227,38 @@ const SearchScreen = () => {
       </View>
 
       {searchHistory && (
-        <ScrollView
-          style={{
-            marginTop: 16,
-            marginLeft: 16,
-          }}
-        >
-          <FlatList<SearchHistoryItem>
-            data={searchHistory}
-            renderItem={({ item }) => {
-              return (
-                <TouchableOpacity
-                  style={{ flex: 1, flexDirection: 'row', marginBottom: 14 }}
-                  onPress={() => {
-                    handleQuery(item.query);
-                  }}
-                >
-                  {/* <History
+        <FlatList<SearchHistoryItem>
+          data={searchHistory}
+          renderItem={({ item }) => {
+            return (
+              <TouchableOpacity
+                style={{ flex: 1, flexDirection: 'row', marginBottom: 14 }}
+                onPress={() => {
+                  handleQuery(item.query);
+                }}
+              >
+                {/* <History
                     size={24}
                     style={{
                       alignSelf: 'center',
                       marginRight: 8,
                     }}
                   /> */}
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      marginBottom: 8,
-                    }}
-                  >
-                    {item.query}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-            keyExtractor={item => item.date.toString()}
-          />
-        </ScrollView>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    marginBottom: 8,
+                  }}
+                >
+                  {item.query}
+                </Text>
+              </TouchableOpacity>
+            );
+          }}
+          keyExtractor={item => item.date.toString()}
+        />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

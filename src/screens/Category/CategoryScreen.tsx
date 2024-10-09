@@ -6,7 +6,7 @@ import {
 import twitchQueries from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { FlatList, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { FlatList, SafeAreaView, Text, View } from 'react-native';
 
 const CategoryScreen = ({
   route,
@@ -45,58 +45,40 @@ const CategoryScreen = ({
   }
 
   if (isErrorCategory || isErrorStreams) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          flexDirection: 'column',
-        }}
-      >
-        <View>Something went wrong :(</View>
-      </SafeAreaView>
-    );
+    return <View>Something went wrong :(</View>;
   }
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        flexDirection: 'column',
-      }}
-    >
-      <ScrollView>
-        <View>
-          <View
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'stretch',
-              marginBottom: 10,
-            }}
-          >
-            <Image
-              source={{
-                uri: category?.box_art_url
-                  .replace('{width}', '100')
-                  .replace('{height}', '135'),
-              }}
-              style={{
-                width: 100,
-                height: 135,
-              }}
-            />
-            <Text>{category?.name}</Text>
-          </View>
-          <View>
-            <FlatList
-              data={streams}
-              renderItem={({ item }) => <StreamCard stream={item} />}
-              keyExtractor={item => item.id}
-            />
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <View>
+      <View
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'stretch',
+          marginBottom: 10,
+        }}
+      >
+        <Image
+          source={{
+            uri: category?.box_art_url
+              .replace('{width}', '100')
+              .replace('{height}', '135'),
+          }}
+          style={{
+            width: 100,
+            height: 135,
+          }}
+        />
+        <Text>{category?.name}</Text>
+      </View>
+      <View>
+        <FlatList
+          data={streams}
+          renderItem={({ item }) => <StreamCard stream={item} />}
+          keyExtractor={item => item.id}
+        />
+      </View>
+    </View>
   );
 };
 export default CategoryScreen;

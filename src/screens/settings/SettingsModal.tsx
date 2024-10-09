@@ -5,9 +5,8 @@ import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
-import { SafeAreaView, Button, View } from 'react-native';
+import { Button, View } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import { statusBarHeight } from '../FollowingScreen';
 
 const SettingsModal = ({
   navigation,
@@ -124,12 +123,7 @@ const SettingsModal = ({
   });
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        paddingTop: statusBarHeight,
-      }}
-    >
+    <View>
       <SettingsItem contents={settingItems} />
       <BottomSheetModal
         ref={bottomSheetModalRef}
@@ -182,7 +176,7 @@ const SettingsModal = ({
           />
         </View>
       </BottomSheetModal>
-    </SafeAreaView>
+    </View>
   );
 };
 

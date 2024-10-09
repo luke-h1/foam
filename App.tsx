@@ -1,3 +1,4 @@
+import 'expo-dev-client';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
 import { NavigationContainer } from '@react-navigation/native';
@@ -8,11 +9,9 @@ import {
 } from '@tanstack/react-query';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
-import newRelic from 'newrelic-react-native-agent';
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - no types for react-devtools-core
-import { connectToDevTools } from 'react-devtools-core';
 import { LogBox } from 'react-native';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -20,6 +19,7 @@ import { AuthContextProvider } from './src/context/AuthContext';
 import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import { useOnAppStateChange } from './src/hooks/useOnAppStateChange';
 import RootNavigator from './src/navigation/RootNavigator';
+// import { deleteTokens } from './src/utils/deleteTokens';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,11 +29,6 @@ export default function App() {
   useChangeScreenOrientation();
 
   if (__DEV__) {
-    connectToDevTools({
-      host: 'localhost',
-      port: 8097,
-    });
-
     LogBox.ignoreAllLogs();
     activateKeepAwakeAsync();
   }
@@ -50,7 +45,7 @@ export default function App() {
   // deleteTokens();
 
   return (
-    <NavigationContainer onStateChange={newRelic.onStateChange}>
+    <NavigationContainer>
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetModalProvider>
