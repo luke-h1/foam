@@ -14,3 +14,7 @@ web-build/
 .DS_Store
 .env
 !.env.eample
+
+
+ios
+android
