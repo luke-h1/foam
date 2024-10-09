@@ -19,11 +19,13 @@ import { AuthContextProvider } from './src/context/AuthContext';
 import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import { useOnAppStateChange } from './src/hooks/useOnAppStateChange';
 import RootNavigator from './src/navigation/RootNavigator';
-// import { deleteTokens } from './src/utils/deleteTokens';
+import { deleteTokens } from './src/utils/deleteTokens';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const shouldDelete = false;
+
   const queryClient = new QueryClient();
   useOnAppStateChange();
   useChangeScreenOrientation();
@@ -42,7 +44,9 @@ export default function App() {
     });
   });
 
-  // deleteTokens();
+  if (shouldDelete) {
+    deleteTokens();
+  }
 
   return (
     <NavigationContainer>
