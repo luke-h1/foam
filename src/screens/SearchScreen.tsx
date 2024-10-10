@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import DismissableKeyboard from '@app/components/DismissableKeyboard';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
 import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
@@ -7,6 +6,7 @@ import twitchService, {
   SearchChannelResponse,
 } from '@app/services/twitchService';
 import elapsedStreamTime from '@app/utils/elapsedStreamTime';
+import { statusBarHeight } from '@app/utils/statusBarHeight';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
@@ -18,17 +18,21 @@ import {
   View,
   TextInput,
   Text,
+  StyleSheet,
+  ViewStyle,
+  ImageStyle,
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import Image from '../components/Image';
-import { statusBarHeight } from './FollowingScreen';
 
 interface SearchHistoryItem {
   date: Date;
   query: string;
 }
 
-const SearchScreen = () => {
+// TODO: seperate out into a search component
+
+export default function SearchScreen() {
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
@@ -83,8 +87,9 @@ const SearchScreen = () => {
       'previousSearches',
       JSON.stringify(newPrevSearches),
     );
-    const res = await AsyncStorage.getItem('previousSearches');
-    setSearchHistory(JSON.parse(res as string));
+    const previousSearchResults =
+      await AsyncStorage.getItem('previousSearches');
+    setSearchHistory(JSON.parse(previousSearchResults as string));
   }, 400);
 
   // eslint-disable-next-line no-shadow
@@ -95,18 +100,8 @@ const SearchScreen = () => {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingTop: statusBarHeight,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          padding: 2,
-        }}
-      >
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
         <DismissableKeyboard>
           <ScrollView
             contentContainerStyle={{
@@ -131,7 +126,7 @@ const SearchScreen = () => {
           <Feather
             name="cross"
             size={24}
-            style={[{ alignSelf: 'center', marginRight: 15 }]}
+            style={styles.icon}
             onPress={() => {
               setSearchResults([]);
               setQuery('');
@@ -143,17 +138,12 @@ const SearchScreen = () => {
           <Feather
             name="search"
             size={24}
-            style={{ alignSelf: 'center', marginRight: 25 }}
+            style={styles.icon}
             onPress={() => search(query)}
           />
         )}
       </View>
-      <View
-        style={{
-          marginBottom: 14,
-          marginLeft: 14,
-        }}
-      >
+      <View style={styles.searchResultsWrapper}>
         {searchResults.length > 0 && (
           <>
             <Text
@@ -169,7 +159,7 @@ const SearchScreen = () => {
                 <TouchableOpacity
                   onPress={() => {
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
+                    // @ts-ignore FIX ME - navigation
                     navigate(StreamRoutes.LiveStream, {
                       screen: StreamRoutes.LiveStream,
                       params: {
@@ -177,13 +167,7 @@ const SearchScreen = () => {
                       },
                     });
                   }}
-                  style={{
-                    flexDirection: 'row',
-                    marginBottom: 14,
-                    marginLeft: 14,
-                    alignContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  style={styles.list}
                 >
                   <Image
                     source={{
@@ -191,12 +175,7 @@ const SearchScreen = () => {
                         .replace('{width}', '40')
                         .replace('{height}', '40'),
                     }}
-                    style={{
-                      borderRadius: 20,
-                      marginRight: 5,
-                      width: 40,
-                      height: 40,
-                    }}
+                    style={styles.avatar}
                   />
                   <Text style={{ marginLeft: 8 }}>{item.display_name}</Text>
                   {item.is_live && (
@@ -208,14 +187,7 @@ const SearchScreen = () => {
                         alignItems: 'center',
                       }}
                     >
-                      <View
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: 4,
-                          marginRight: 5,
-                        }}
-                      />
+                      <View style={styles.elapsed} />
                       <Text>{elapsedStreamTime(item.started_at)}</Text>
                     </View>
                   )}
@@ -226,13 +198,14 @@ const SearchScreen = () => {
         )}
       </View>
 
+      {/* TODO: create a search history component */}
       {searchHistory && (
         <FlatList<SearchHistoryItem>
           data={searchHistory}
           renderItem={({ item }) => {
             return (
               <TouchableOpacity
-                style={{ flex: 1, flexDirection: 'row', marginBottom: 14 }}
+                style={styles.history}
                 onPress={() => {
                   handleQuery(item.query);
                 }}
@@ -260,6 +233,58 @@ const SearchScreen = () => {
       )}
     </View>
   );
-};
+}
 
-export default SearchScreen;
+const styles = StyleSheet.create<{
+  wrapper: ViewStyle;
+  container: ViewStyle;
+  icon: ViewStyle;
+  searchResultsWrapper: ViewStyle;
+  list: ViewStyle;
+  avatar: ImageStyle;
+  elapsed: ViewStyle;
+  history: ViewStyle;
+}>({
+  wrapper: {
+    flex: 1,
+    paddingTop: statusBarHeight,
+  },
+  container: {
+    flexDirection: 'row',
+    padding: 2,
+  },
+  icon: {
+    alignSelf: 'center',
+    marginRight: 15,
+  },
+  searchResultsWrapper: {
+    marginBottom: 14,
+    marginLeft: 14,
+  },
+  list: {
+    flexDirection: 'row',
+    marginBottom: 14,
+    marginLeft: 14,
+    alignContent: 'center',
+    alignItems: 'center',
+  },
+  avatar: {
+    borderRadius: 20,
+    marginRight: 1,
+    width: 40,
+    height: 40,
+  },
+  elapsed: {
+    width: 10,
+    height: 10,
+    borderRadius: 25,
+    backgroundColor: 'red',
+    marginRight: 4,
+  },
+  history: {
+    flex: 1,
+    flexDirection: 'row',
+    marginBottom: 12,
+    paddingLeft: 14,
+  },
+});

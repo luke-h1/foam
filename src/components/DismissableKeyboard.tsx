@@ -5,11 +5,10 @@ interface Props {
   children: ReactNode;
 }
 
-const DismissableKeyboard = ({ children }: Props) => {
+export default function DismissableKeyboard({ children }: Props) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       {children}
     </TouchableWithoutFeedback>
   );
-};
-export default DismissableKeyboard;
+}

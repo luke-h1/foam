@@ -25,8 +25,8 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const shouldDelete = false;
-
   const queryClient = new QueryClient();
+
   useOnAppStateChange();
   useChangeScreenOrientation();
 
@@ -36,7 +36,7 @@ export default function App() {
   }
 
   /**
-   * supports auto refetch on reconnect for react-query
+   * support auto refetch on network reconnect for react-query
    */
   onlineManager.setEventListener(setOnline => {
     return NetInfo.addEventListener(state => {

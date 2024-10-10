@@ -1,4 +1,4 @@
-export default function viewFormatter(num: number, digits: number) {
+export default function viewFormatter(num: number, digits: number): string {
   const lookup = [
     { value: 1, symbol: '' },
     { value: 1e3, symbol: 'K' },

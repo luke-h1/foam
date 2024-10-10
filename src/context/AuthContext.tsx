@@ -175,6 +175,8 @@ export const AuthContextProvider = ({ children }: Props) => {
 
     setUser(undefined);
     await SecureStore.deleteItemAsync(StorageKeys.authToken);
+
+    // TODO: tighten access to axios internals here
     twitchApi.defaults.headers.common.Authorization = undefined;
 
     await getAnonToken();

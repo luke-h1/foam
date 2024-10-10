@@ -4,7 +4,7 @@ interface Props {
   tags: string[];
 }
 
-const Tags = ({ tags }: Props) => {
+export default function Tags({ tags }: Props) {
   return (
     <View
       style={{
@@ -33,5 +33,4 @@ const Tags = ({ tags }: Props) => {
       />
     </View>
   );
-};
-export default Tags;
+}

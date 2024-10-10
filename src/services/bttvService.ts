@@ -54,31 +54,27 @@ interface BttvBadgeResponse {
   };
 }
 
-type BttvBadge = BttvBadgeResponse['badge'] & {
-  providerId: string;
-};
-
 const bttvService = {
   getGlobalEmotes: async (): Promise<BttvEmote[]> => {
-    const res = await bttvApi.get<BttvGlobalEmoteResponse[]>(
+    const response = await bttvApi.get<BttvGlobalEmoteResponse[]>(
       '/3/cached/emotes/global',
     );
 
-    return res.data.map(emote =>
+    return response.data.map(emote =>
       bttvSerializer.fromBttvEmote(emote, EmoteTypes.BTTVGlobal),
     );
   },
   getChannelEmotes: async (id: string): Promise<BttvEmote[] | Error> => {
-    const res = await bttvApi.get<BttvSingleGlobalEmoteResponse>(
+    const response = await bttvApi.get<BttvSingleGlobalEmoteResponse>(
       `/3/cached/users/twitch/${id}`,
     );
 
     const emotesToUrl: BttvEmote[] = [];
 
-    const channelEmotes = res.data.channelEmotes.map(emote =>
+    const channelEmotes = response.data.channelEmotes.map(emote =>
       bttvSerializer.fromBttvEmote(emote, EmoteTypes.BTTVChannel),
     );
-    const sharedEmotes = res.data.sharedEmotes.map(emote =>
+    const sharedEmotes = response.data.sharedEmotes.map(emote =>
       bttvSerializer.fromBttvEmote(emote, EmoteTypes.BTTVShared),
     );
 
@@ -86,9 +82,9 @@ const bttvService = {
 
     return emotesToUrl;
   },
-  getBadges: async () => {
-    const res = await bttvApi.get<BttvBadgeResponse[]>('/3/cached/badges');
-  },
+  // getBadges: async () => {
+  //   const res = await bttvApi.get<BttvBadgeResponse[]>('/3/cached/badges');
+  // },
 };
 
 export default bttvService;

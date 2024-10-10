@@ -3,10 +3,8 @@ import { useAuthContext } from '@app/context/AuthContext';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-// eslint-disable-next-line import/no-named-as-default
-import Constants from 'expo-constants';
 import { useMemo, useState } from 'react';
-import { FlatList, Platform, View, Text } from 'react-native';
+import { FlatList, View, Text } from 'react-native';
 
 export interface Section {
   key: string;
@@ -14,7 +12,7 @@ export interface Section {
   isTitle?: boolean;
 }
 
-const FollowingScreen = () => {
+export default function FollowingScreen() {
   const { user } = useAuthContext();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
@@ -61,7 +59,11 @@ const FollowingScreen = () => {
   }
 
   if (refreshing || isLoading) {
-    return <View>loading...</View>;
+    return (
+      <View>
+        <Text>loading...</Text>
+      </View>
+    );
   }
 
   return (
@@ -81,9 +83,4 @@ const FollowingScreen = () => {
       </View>
     </View>
   );
-};
-
-export default FollowingScreen;
-
-export const statusBarHeight =
-  Platform.OS === 'android' ? Constants.statusBarHeight : 0;
+}

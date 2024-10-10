@@ -8,9 +8,9 @@ import { useQueries } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { FlatList, SafeAreaView, Text, View } from 'react-native';
 
-const CategoryScreen = ({
+export default function CategoryScreen({
   route,
-}: CategoryStackScreenProps<CategoryRoutes.Category>) => {
+}: CategoryStackScreenProps<CategoryRoutes.Category>) {
   const { id } = route.params;
 
   const [categoryQueryResult, streamsByCategoryQueryResult] = useQueries({
@@ -39,13 +39,19 @@ const CategoryScreen = ({
           flexDirection: 'column',
         }}
       >
-        <View>Loading...</View>
+        <View>
+          <Text>Loading...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isErrorCategory || isErrorStreams) {
-    return <View>Something went wrong :(</View>;
+    return (
+      <View>
+        <Text>Something went wrong</Text>
+      </View>
+    );
   }
 
   return (
@@ -80,5 +86,4 @@ const CategoryScreen = ({
       </View>
     </View>
   );
-};
-export default CategoryScreen;
+}

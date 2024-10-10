@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 
-const TopCategoriesScreen = () => {
+export default function CategoriesSecreen() {
   const [refreshing, setRefreshing] = useState(false);
   const queryClient = useQueryClient();
 
@@ -48,7 +48,7 @@ const TopCategoriesScreen = () => {
         <Feather
           name="info"
           size={24}
-          color="$color"
+          color="black"
           style={{
             marginRight: 10,
           }}
@@ -80,5 +80,4 @@ const TopCategoriesScreen = () => {
       keyExtractor={(_item, index) => index.toString()}
     />
   );
-};
-export default TopCategoriesScreen;
+}

@@ -1,7 +1,7 @@
 import LiveStreamScreen from '@app/screens/Stream/LiveStreamScreen';
 import { StreamRoutes, StreamStack } from './StreamStack';
 
-const StreamStackNavigator = () => {
+export default function StreamStackNavigator() {
   return (
     <StreamStack.Navigator
       screenOptions={{
@@ -14,6 +14,4 @@ const StreamStackNavigator = () => {
       />
     </StreamStack.Navigator>
   );
-};
-
-export default StreamStackNavigator;
+}

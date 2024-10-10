@@ -8,9 +8,9 @@ import { useMemo, useRef } from 'react';
 import { Button, View } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 
-const SettingsModal = ({
+export default function SettingsModal({
   navigation,
-}: RootStackScreenProps<RootRoutes.SettingsModal>) => {
+}: RootStackScreenProps<RootRoutes.SettingsModal>) {
   const { user, logout } = useAuthContext();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['25%', '25%'], []);
@@ -178,6 +178,4 @@ const SettingsModal = ({
       </BottomSheetModal>
     </View>
   );
-};
-
-export default SettingsModal;
+}

@@ -2,10 +2,13 @@ import { RootStackScreenProps, RootRoutes } from '@app/navigation/RootStack';
 import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 
-const AuthLoadingScreen = ({
+export default function AuthLoadingScreen({
   navigation,
-}: RootStackScreenProps<RootRoutes.AuthLoading>) => {
+}: RootStackScreenProps<RootRoutes.AuthLoading>) {
   const { navigate } = navigation;
+
+  // TODO: actually acquire auth tokens here
+  // TODO: move this to different stack
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -28,5 +31,4 @@ const AuthLoadingScreen = ({
       </View>
     </View>
   );
-};
-export default AuthLoadingScreen;
+}

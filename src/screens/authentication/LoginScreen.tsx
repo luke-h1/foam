@@ -11,7 +11,7 @@ import { View, Button } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const LoginScreen = () => {
+export default function LoginScreen() {
   const { login } = useAuthContext();
 
   const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
@@ -22,7 +22,7 @@ const LoginScreen = () => {
     revocationEndpoint: 'https://id.twitch.tv/oauth2/revoke',
   } as const;
 
-  const proxyUrl = 'http://localhost:6500/api/proxy'; // TODO: change this to env vars once we release
+  const proxyUrl = 'http://localhost:6500/api/proxy'; // TODO: don't hardcode this once we're ready to publish
 
   const [request, response, promptAsync] = useAuthRequest(
     {
@@ -35,8 +35,8 @@ const LoginScreen = () => {
       responseType: 'token',
       usePKCE: true,
       extraParams: {
-        // @ts-expect-error - Twitch requires force_verify to be a boolean whereas
-        // the types are Record<string, string>
+        // @ts-expect-error - Twitch requires force_verify to be a boolean but
+        // the react-native types are Record<string, string>
         force_verify: true,
       },
     },
@@ -48,6 +48,7 @@ const LoginScreen = () => {
     if (response?.type === 'success') {
       navigate(HomeTabsRoutes.Top);
     }
+    // TODO: alert user
   };
 
   useEffect(() => {
@@ -61,15 +62,7 @@ const LoginScreen = () => {
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Button
-        title="login"
-        disabled={!request}
-        onPress={() => {
-          promptAsync();
-        }}
-      />
+      <Button title="login" disabled={!request} onPress={() => promptAsync()} />
     </View>
   );
-};
-
-export default LoginScreen;
+}

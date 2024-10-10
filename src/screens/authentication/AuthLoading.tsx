@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 
-const AuthLoadingScreen = ({
+export default function AuthLoadingScreen({
   navigation,
-}: RootStackScreenProps<RootRoutes.AuthLoading>) => {
+}: RootStackScreenProps<RootRoutes.AuthLoading>) {
   const { navigate } = navigation;
 
   useEffect(() => {
@@ -28,5 +28,4 @@ const AuthLoadingScreen = ({
       </View>
     </View>
   );
-};
-export default AuthLoadingScreen;
+}
