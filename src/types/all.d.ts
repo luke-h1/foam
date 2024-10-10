@@ -22,8 +22,6 @@ declare module '*.m3u' {
   export = value;
 }
 
-type Conf = typeof config;
-
 declare module 'react-devtools-core' {
   export function connectToDevTools(options?: {
     host?: string;

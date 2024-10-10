@@ -15,6 +15,7 @@ export enum RootRoutes {
   Category = 'Category',
 }
 
+// TODO: rework this into seperate navigators
 export type RootStackParamList = {
   [RootRoutes.AuthLoading]: undefined;
   [RootRoutes.Welcome]: undefined;

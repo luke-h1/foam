@@ -8,7 +8,7 @@ import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import Feather from 'react-native-vector-icons/Feather';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
 
-const HomeTabsNavigator = () => {
+export default function HomeTabsNavigator() {
   const { auth } = useAuthContext();
   return (
     <HomeTabs.Navigator
@@ -71,6 +71,4 @@ const HomeTabsNavigator = () => {
       />
     </HomeTabs.Navigator>
   );
-};
-
-export default HomeTabsNavigator;
+}

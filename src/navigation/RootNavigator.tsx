@@ -7,7 +7,7 @@ import HomeTabsNavigator from './Home/HomeTabsNavigator';
 import { RootRoutes, RootStack } from './RootStack';
 import StreamNavigator from './Stream/StreamStackNavigator';
 
-const RootNavigator = () => {
+export default function RootNavigator() {
   return (
     <RootStack.Navigator
       initialRouteName={RootRoutes.AuthLoading}
@@ -44,5 +44,4 @@ const RootNavigator = () => {
       />
     </RootStack.Navigator>
   );
-};
-export default RootNavigator;
+}

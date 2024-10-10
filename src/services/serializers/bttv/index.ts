@@ -2,7 +2,7 @@
  * Serializer for emotes and chat badges from bttv service which transforms emote/badge to a common format
  */
 
-import { zeroWidthEmotes } from '@app/constants';
+import { zeroWidthEmotes } from '@app/utils/zeroWidthEmotes';
 import { BadgeTypes, ChatBadge, EmoteType } from '../types';
 
 interface BttvEmote {

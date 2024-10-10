@@ -25,7 +25,7 @@ interface Props {
   contents: ContentItem[];
 }
 
-const SettingsItem = ({ contents }: Props) => {
+export default function SettingsItem({ contents }: Props) {
   return (
     <View>
       <Text>Settings</Text>
@@ -66,7 +66,7 @@ const SettingsItem = ({ contents }: Props) => {
       />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   item: {
@@ -90,5 +90,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
-export default SettingsItem;

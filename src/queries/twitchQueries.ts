@@ -9,19 +9,19 @@ import twitchService, {
 import { UseQueryOptions } from '@tanstack/react-query';
 
 const twitchQueries = {
-  getStream(userLogin: string): UseQueryOptions<Stream | null | undefined> {
+  getStream(userLogin: string): UseQueryOptions<Stream> {
     return {
       queryKey: ['stream', userLogin],
       queryFn: () => twitchService.getStream(userLogin),
     };
   },
-  getChannel(userId: string): UseQueryOptions<Channel | undefined> {
+  getChannel(userId: string): UseQueryOptions<Channel> {
     return {
       queryKey: ['channel', userId],
       queryFn: () => twitchService.getChannel(userId),
     };
   },
-  getTopCategories(): UseQueryOptions<Category[] | undefined> {
+  getTopCategories(): UseQueryOptions<Category[]> {
     return {
       queryKey: ['topCategories'],
       queryFn: () => twitchService.getTopCategories(),

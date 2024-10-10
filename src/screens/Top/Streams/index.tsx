@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 
-const TopStreamsScreen = () => {
+export default function TopStreamsScreen() {
   const [refreshing, _setRefreshing] = useState(false);
   const _queryClient = useQueryClient();
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
@@ -55,7 +55,8 @@ const TopStreamsScreen = () => {
   }
 
   return (
-    <View>
+    // eslint-disable-next-line react/jsx-no-useless-fragment
+    <>
       {streams && streams.length > 0 && (
         <FlatList<Stream>
           data={streams}
@@ -63,7 +64,6 @@ const TopStreamsScreen = () => {
           keyExtractor={item => item.id}
         />
       )}
-    </View>
+    </>
   );
-};
-export default TopStreamsScreen;
+}

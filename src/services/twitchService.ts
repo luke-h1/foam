@@ -258,7 +258,7 @@ const twitchService = {
       },
     );
 
-    return res.data.data?.[0];
+    return res.data.data?.[0] as Stream;
   },
   // responsds with 410 GONE
   /* 

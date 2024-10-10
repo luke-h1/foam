@@ -16,7 +16,7 @@ interface Props {
   stream: Stream;
 }
 
-const StreamCard = ({ stream }: Props) => {
+export default function StreamCard({ stream }: Props) {
   const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
   const [broadcasterImage, setBroadcasterImage] = useState<string>();
 
@@ -175,5 +175,4 @@ const StreamCard = ({ stream }: Props) => {
       </View>
     </View>
   );
-};
-export default StreamCard;
+}
