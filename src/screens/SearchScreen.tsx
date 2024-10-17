@@ -145,7 +145,6 @@ export default function SearchScreen() {
             AsyncStorage.removeItem('previousSearches');
           }}
           onSelectItem={q => {
-            setQuery(q);
             handleQuery(q);
           }}
           onClearItem={id => {
