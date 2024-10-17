@@ -1,5 +1,5 @@
 import { Mutex } from 'async-mutex';
-import { bttvEmoteApi } from './Client';
+import { bttvCachedApi } from './Client';
 
 export interface BttvEmote {
   id: string;
@@ -35,7 +35,7 @@ const bttvService2 = {
 
     try {
       const response =
-        await bttvEmoteApi.get<BttvGlobalEmotesResponse[]>('/emotes/global');
+        await bttvCachedApi.get<BttvGlobalEmotesResponse[]>('/emotes/global');
       return response.data;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {
@@ -52,7 +52,7 @@ const bttvService2 = {
     const release = await mutex.acquire();
 
     try {
-      const { data } = await bttvEmoteApi.get<BttvChannelEmotesResponse>(
+      const { data } = await bttvCachedApi.get<BttvChannelEmotesResponse>(
         `/users/twitch/${channelId}`,
       );
 

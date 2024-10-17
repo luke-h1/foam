@@ -1,14 +1,12 @@
 /* eslint-disable react/no-unstable-nested-components */
-import Header from '@app/components/Header';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
-import SearchScreen from '@app/screens/SearchScreen';
-import TopScreen from '@app/screens/Top/TopScreen';
-import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs';
 import Feather from 'react-native-vector-icons/Feather';
 import { HomeTabs, HomeTabsRoutes } from './HomeTabs';
+import SearchStackNavigator from './Search/SearchStackNavigator';
+import TopStackNavigator from './Top/TopStackNavigator';
 
-const HomeTabsNavigator = () => {
+export default function HomeTabsNavigator() {
   const { auth } = useAuthContext();
   return (
     <HomeTabs.Navigator
@@ -17,7 +15,6 @@ const HomeTabsNavigator = () => {
       }
       screenOptions={{
         headerTitleAlign: 'left',
-        // headerShown: false,
         tabBarActiveTintColor: 'purple',
         tabBarStyle: {
           borderTopLeftRadius: 20,
@@ -38,39 +35,34 @@ const HomeTabsNavigator = () => {
           name={HomeTabsRoutes.Following}
           component={FollowingScreen}
           options={{
-            tabBarIcon: () => <Feather size={24} color="red" name="heart" />,
-            header(props: BottomTabHeaderProps) {
-              return <Header {...props} title="Following" />;
-            },
+            tabBarIcon: () => <Feather size={24} color="black" name="heart" />,
           }}
         />
       )}
 
       <HomeTabs.Screen
         name={HomeTabsRoutes.Top}
-        component={TopScreen}
+        component={TopStackNavigator}
         options={{
-          headerStyle: {
-            // backgroundColor: colors.black,
-          },
           tabBarIcon: () => <Feather size={20} name="arrow-up" />,
-          header(props: BottomTabHeaderProps) {
-            return <Header {...props} title="Top" />;
-          },
         }}
       />
+
       <HomeTabs.Screen
         name={HomeTabsRoutes.Search}
-        component={SearchScreen}
+        component={SearchStackNavigator}
         options={{
           tabBarIcon: () => <Feather size={20} name="search" />,
-          header(props: BottomTabHeaderProps) {
-            return <Header {...props} title="Search" />;
-          },
         }}
       />
+
+      {/* <HomeTabs.Screen
+        name={HomeTabsRoutes.Account}
+        component={AccountStackNavigator}
+        options={{
+          tabBarIcon: () => <Feather size={20} name="user" />,
+        }}
+      /> */}
     </HomeTabs.Navigator>
   );
-};
-
-export default HomeTabsNavigator;
+}

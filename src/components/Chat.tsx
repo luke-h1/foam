@@ -16,7 +16,7 @@ interface Message {
   content: ReactNode;
 }
 
-const Chat = ({ channels, twitchChannelId }: Props) => {
+export default function Chat({ channels, twitchChannelId }: Props) {
   const { auth, user } = useAuthContext();
   const navigation = useNavigation();
   const [notice, setNotice] = useState<string>('');
@@ -148,5 +148,4 @@ const Chat = ({ channels, twitchChannelId }: Props) => {
       </View>
     </SafeAreaView>
   );
-};
-export default Chat;
+}

@@ -5,7 +5,14 @@ import {
 import { Category } from '@app/services/twitchService';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { Pressable, View, Text } from 'react-native';
+import {
+  Pressable,
+  View,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  ImageStyle,
+} from 'react-native';
 
 interface Props {
   category: Category;
@@ -15,7 +22,7 @@ const IMAGE_ASPECT_RATIO = 110 / 155;
 const IMAGE_HEIGHT = 90;
 const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
-const CategoryCard = ({ category }: Props) => {
+export default function CategoryCard({ category }: Props) {
   const { navigate } = useNavigation<NavigationProp<CategoryStackParamList>>();
 
   return (
@@ -31,30 +38,15 @@ const CategoryCard = ({ category }: Props) => {
         })
       }
     >
-      <View
-        style={{
-          marginBottom: 17,
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-        }}
-      >
-        <View
-          style={{
-            marginRight: 16,
-          }}
-        >
+      <View style={styles.container}>
+        <View style={styles.wrapper}>
           <Image
             source={{
               uri: category.box_art_url
                 .replace('{width}', '200')
                 .replace('{height}', '250'),
             }}
-            style={{
-              width: IMAGE_WIDTH,
-              height: IMAGE_HEIGHT,
-            }}
+            style={styles.image}
           />
         </View>
         <View
@@ -70,5 +62,26 @@ const CategoryCard = ({ category }: Props) => {
       </View>
     </Pressable>
   );
-};
-export default CategoryCard;
+}
+
+const styles = StyleSheet.create<{
+  container: ViewStyle;
+  image: ImageStyle;
+  wrapper: ViewStyle;
+}>({
+  container: {
+    marginBottom: 17,
+    marginLeft: 16,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  image: {
+    width: IMAGE_WIDTH,
+    height: IMAGE_HEIGHT,
+  },
+  wrapper: {
+    marginRight: 16,
+  },
+});

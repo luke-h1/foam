@@ -1,4 +1,4 @@
-import Chat from '@app/components/Chat/Chat';
+import Chat from '@app/components/Chat';
 import Image from '@app/components/Image';
 import Seperator from '@app/components/Seperator';
 import Tags from '@app/components/Tags';
@@ -11,7 +11,7 @@ import { useQueries } from '@tanstack/react-query';
 import { Dimensions, SafeAreaView, Text, View } from 'react-native';
 import WebView from 'react-native-webview';
 
-const LiveStreamScreen = () => {
+export default function LiveStreamScreen() {
   const route = useRoute<RouteProp<StreamStackParamList>>();
   const { landscape } = useIsLandscape();
 
@@ -78,6 +78,7 @@ const LiveStreamScreen = () => {
             allowsInlineMediaPlayback
           />
         ) : (
+          // user is offline
           <Image
             source={{ uri: user?.offline_image_url }}
             style={{
@@ -144,5 +145,4 @@ const LiveStreamScreen = () => {
       </View>
     </View>
   );
-};
-export default LiveStreamScreen;
+}

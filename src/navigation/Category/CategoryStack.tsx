@@ -4,7 +4,6 @@ import {
   createStackNavigator,
 } from '@react-navigation/stack';
 
-// eslint-disable-next-line no-shadow
 export enum CategoryRoutes {
   Category = 'Category',
 }
@@ -12,7 +11,6 @@ export enum CategoryRoutes {
 export type CategoryStackParamList = {
   // FIX ME TO USE NAVIGATION SCREEN PARAMS
   // i.e.
-  // [HomeTabsRoutes.LiveStream]: NavigatorScreenParams<StreamStackParamList>;
   // [HomeTabsRoutes.Category]: NavigatorScreenParams<CategoryStackParamList>;
   [CategoryRoutes.Category]: { id: string };
 };

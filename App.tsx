@@ -9,12 +9,17 @@ import {
 } from '@tanstack/react-query';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - no types for react-devtools-core
-import { LogBox } from 'react-native';
+import { LogBox, useColorScheme } from 'react-native';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
 import { AuthContextProvider } from './src/context/AuthContext';
 import useChangeScreenOrientation from './src/hooks/useChangeScreenOrientation';
 import { useOnAppStateChange } from './src/hooks/useOnAppStateChange';
@@ -25,8 +30,9 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const shouldDelete = false;
-
   const queryClient = new QueryClient();
+  const colorScheme = useColorScheme() || 'light';
+
   useOnAppStateChange();
   useChangeScreenOrientation();
 
@@ -36,7 +42,7 @@ export default function App() {
   }
 
   /**
-   * supports auto refetch on reconnect for react-query
+   * support auto refetch on network reconnect for react-query
    */
   onlineManager.setEventListener(setOnline => {
     return NetInfo.addEventListener(state => {
@@ -47,18 +53,20 @@ export default function App() {
   if (shouldDelete) {
     deleteTokens();
   }
-
   return (
-    <NavigationContainer>
-      <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <BottomSheetModalProvider>
-            <AuthContextProvider>
-              <RootNavigator />
-            </AuthContextProvider>
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </QueryClientProvider>
-    </NavigationContainer>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <NavigationContainer>
+        <QueryClientProvider client={queryClient}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+            <BottomSheetModalProvider>
+              <AuthContextProvider>
+                <RootNavigator />
+              </AuthContextProvider>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </QueryClientProvider>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

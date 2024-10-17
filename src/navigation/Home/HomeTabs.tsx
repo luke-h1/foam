@@ -10,6 +10,7 @@ export enum HomeTabsRoutes {
   Top = 'Top',
   Browse = 'Browse',
   Search = 'Search',
+  Account = 'Account',
 }
 
 export type HomeTabsParamList = {
@@ -17,6 +18,7 @@ export type HomeTabsParamList = {
   [HomeTabsRoutes.Top]: undefined;
   [HomeTabsRoutes.Browse]: undefined;
   [HomeTabsRoutes.Search]: undefined;
+  [HomeTabsRoutes.Account]: undefined;
 };
 
 export type HomeNavigation = NavigationProp<HomeTabsParamList>;

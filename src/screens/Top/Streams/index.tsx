@@ -1,13 +1,13 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import StreamCard from '@app/components/StreamCard';
+import LiveStreamCard from '@app/components/LiveStreamCard';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, Text, View } from 'react-native';
 
-const TopStreamsScreen = () => {
+export default function TopStreamsScreen() {
   const [refreshing, _setRefreshing] = useState(false);
   const _queryClient = useQueryClient();
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
@@ -55,15 +55,15 @@ const TopStreamsScreen = () => {
   }
 
   return (
-    <View>
+    // eslint-disable-next-line react/jsx-no-useless-fragment
+    <>
       {streams && streams.length > 0 && (
         <FlatList<Stream>
           data={streams}
-          renderItem={({ item }) => <StreamCard stream={item} />}
+          renderItem={({ item }) => <LiveStreamCard stream={item} />}
           keyExtractor={item => item.id}
         />
       )}
-    </View>
+    </>
   );
-};
-export default TopStreamsScreen;
+}

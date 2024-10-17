@@ -4,12 +4,13 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   View,
+  StyleSheet,
 } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import TopCategoriesScreen from './Categories';
 import TopStreamsScreen from './Streams';
 
-const TopScreen = () => {
+export default function TopScreen() {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
 
@@ -30,22 +31,15 @@ const TopScreen = () => {
       onIndexChange={setIndex}
       initialLayout={{ width: layout.width, height: layout.height }}
       renderTabBar={props => (
-        <View
-          style={{
-            flexDirection: 'row',
-            paddingHorizontal: 5,
-          }}
-        >
+        <View style={styles.tabBarContainer}>
           {props.navigationState.routes.map((route, i) => (
             <TouchableOpacity
               key={route.key}
               onPress={() => props.jumpTo(route.key)}
-              style={{
-                marginTop: 5,
-                borderBottomWidth: 1.95,
-                padding: 6,
-                borderBottomColor: index === i ? 'purple' : 'transparent',
-              }}
+              style={[
+                styles.tab,
+                { borderBottomColor: index === i ? 'purple' : 'transparent' },
+              ]}
             >
               <Text>{route.title}</Text>
             </TouchableOpacity>
@@ -54,5 +48,19 @@ const TopScreen = () => {
       )}
     />
   );
-};
-export default TopScreen;
+}
+
+const styles = StyleSheet.create({
+  tabBarContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 15,
+  },
+  tab: {
+    marginTop: 2,
+    borderBottomWidth: 2.15,
+    padding: 4,
+    marginHorizontal: 10,
+  },
+});

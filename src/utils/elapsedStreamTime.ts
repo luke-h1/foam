@@ -1,23 +1,24 @@
-const elapsedStreamTime = (startTime: string) => {
-  const currentDate = new Date();
-  const startDate = new Date(startTime);
+import { differenceInMinutes } from 'date-fns';
 
-  // Calculate the difference in milliseconds
-  const differenceMs = currentDate.getTime() - startDate.getTime();
+export default function elapsedStreamTime(start: string) {
+  const now = new Date();
 
-  // Calculate hours, minutes, and seconds
-  const hours = Math.floor(differenceMs / (1000 * 60 * 60));
-  const minutes = Math.floor((differenceMs % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((differenceMs % (1000 * 60)) / 1000);
+  // Get the difference in minutes
+  const diffInMinutes = differenceInMinutes(now, start);
 
-  if (!hours) {
-    return `${minutes}m`;
-  }
+  // Convert the difference to hours and minutes
+  const hours = Math.floor(diffInMinutes / 60);
+  const minutes = diffInMinutes % 60;
 
-  if (!minutes) {
-    return `${seconds}s`;
-  }
+  // Format hours and minutes with leading zeros if less than 10
+  const formattedHours = hours > 0 ? String(hours).padStart(2, '0') : '';
+  const formattedMinutes = String(minutes).padStart(2, '0');
 
-  return `${hours}h`;
-};
-export default elapsedStreamTime;
+  // Display the result
+  const result =
+    hours > 0
+      ? `${formattedHours}h ${formattedMinutes}m`
+      : `${formattedMinutes}m`;
+
+  return result;
+}

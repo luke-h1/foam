@@ -1,19 +1,26 @@
 import Image from '@app/components/Image';
+import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
+import ThemedText from '@app/components/ThemedText';
 import { useAuthContext } from '@app/context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
+
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
+import theme from '@app/styles/theme';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
-import { Button, View } from 'react-native';
+import { Button, StyleSheet, View, ViewStyle } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 
-const SettingsModal = ({
+export default function SettingsModal({
   navigation,
-}: RootStackScreenProps<RootRoutes.SettingsModal>) => {
+}: RootStackScreenProps<RootRoutes.Settings>) {
   const { user, logout } = useAuthContext();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['25%', '25%'], []);
+
+  const ICON_LEFT_SIZE = 22;
+  const ICON_RIGHT_SIZE = 20;
 
   const authenticatedSettingItems: ContentItem[] = [
     {
@@ -21,7 +28,7 @@ const SettingsModal = ({
       ctaTitle: 'Profile',
       items: [
         {
-          content: user?.display_name as string,
+          content: user?.display_name ?? 'Anonymous',
           title: 'Profile',
           iconLeft: (
             <Image
@@ -30,7 +37,7 @@ const SettingsModal = ({
             />
           ),
           showRightArrow: true,
-          iconRight: <Feather size={20} name="icon-right" />,
+          iconRight: <Feather size={ICON_RIGHT_SIZE} name="icon-right" />,
           showSeperator: true,
           onPress: () => {
             bottomSheetModalRef.current?.present();
@@ -46,25 +53,25 @@ const SettingsModal = ({
       ctaTitle: 'Options',
       items: [
         {
-          iconLeft: <Feather size={24} name="settings" />,
+          iconLeft: <Feather size={ICON_LEFT_SIZE} name="settings" />,
           title: 'General',
           content: 'Theme and other options',
           showRightArrow: true,
-          iconRight: <Feather size={20} name="arrow-right" />,
+          iconRight: <Feather size={ICON_RIGHT_SIZE} name="arrow-right" />,
         },
         {
-          iconLeft: <Feather size={24} name="video" />,
+          iconLeft: <Feather size={ICON_LEFT_SIZE} name="video" />,
           title: 'Video',
           content: 'Overlay and other options',
           showRightArrow: true,
-          iconRight: <Feather size={20} name="arrow-right" />,
+          iconRight: <Feather size={ICON_RIGHT_SIZE} name="arrow-right" />,
         },
         {
-          iconLeft: <Feather size={24} name="message" />,
+          iconLeft: <Feather size={ICON_LEFT_SIZE} name="layers" />,
           title: 'Chat',
           content: 'Sizing, timestamps and other options',
           showRightArrow: true,
-          iconRight: <Feather size={20} name="arrow-right" />,
+          iconRight: <Feather size={ICON_RIGHT_SIZE} name="arrow-right" />,
           showSeperator: true,
         },
       ],
@@ -74,17 +81,17 @@ const SettingsModal = ({
       ctaTitle: 'Other',
       items: [
         {
-          iconLeft: <Feather size={24} name="info" />,
+          iconLeft: <Feather size={ICON_LEFT_SIZE} name="info" />,
           title: 'About Foam',
           content: 'About the app and the developer',
         },
         {
-          iconLeft: <Feather size={24} name="link" />,
+          iconLeft: <Feather size={ICON_LEFT_SIZE} name="link" />,
           title: 'Chanelog',
           content: 'What has changed?',
         },
         {
-          iconLeft: <Feather size={24} name="link" />,
+          iconLeft: <Feather size={ICON_LEFT_SIZE} name="link" />,
           title: 'FAQ',
           content: 'Frequently asked questions',
         },
@@ -101,13 +108,10 @@ const SettingsModal = ({
           content:
             'Log in to be able to chat, view followed streams and much more :)',
           title: 'Anonymous',
-          iconLeft: <Feather size={24} name="user" />,
+          iconLeft: <Feather size={ICON_LEFT_SIZE} name="user" />,
           showRightArrow: true,
-          iconRight: <Feather size={20} name="arrow-right" />,
+          iconRight: <Feather size={ICON_RIGHT_SIZE} name="arrow-right" />,
           showSeperator: true,
-          onPress: () => {
-            navigation.navigate(RootRoutes.Login);
-          },
         },
       ],
     },
@@ -123,7 +127,15 @@ const SettingsModal = ({
   });
 
   return (
-    <View>
+    <SafeAreaContainer>
+      <ThemedText
+        fontSize={theme.fontSize.lg}
+        style={{
+          padding: 6,
+        }}
+      >
+        Settings
+      </ThemedText>
       <SettingsItem contents={settingItems} />
       <BottomSheetModal
         ref={bottomSheetModalRef}
@@ -133,33 +145,22 @@ const SettingsModal = ({
         // backgroundStyle={{ backgroundColor: colors.gray900 }}
         // handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
       >
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            padding: 8,
-          }}
-        >
-          <Feather size={24} color="$color" name="arrow-right" />
+        <View style={styles.container}>
+          <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
           <Button
             title="Log out"
             onPress={async () => {
               bottomSheetModalRef.current?.dismiss();
               await logout();
-              navigation.navigate(RootRoutes.Home);
+              // navigation.navigate(RootRoutes.Home, {
+              //   screen: HomeTabsRoutes.Top,
+              // });
+              navigation.goBack();
             }}
           />
         </View>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            padding: 8,
-          }}
-        >
-          <Feather size={24} color="$color" name="arrow-right" />
+        <View style={styles.container}>
+          <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
           <Button
             title="My stream"
             onPress={async () => {
@@ -176,8 +177,17 @@ const SettingsModal = ({
           />
         </View>
       </BottomSheetModal>
-    </View>
+    </SafeAreaContainer>
   );
-};
+}
 
-export default SettingsModal;
+const styles = StyleSheet.create<{
+  container: ViewStyle;
+}>({
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+  },
+});

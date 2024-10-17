@@ -5,6 +5,7 @@ import { GLOBAL_CHANNEL_KEY } from '../config';
 
 const emotes: ChannelEmotes = new Map();
 
+// TODO: rework from map to object
 export const getBttvEmotes = async (channelId: string): Promise<EmoteIDs> => {
   // eslint-disable-next-line no-param-reassign
   let storedGlobalEmotes = emotes.get(GLOBAL_CHANNEL_KEY);

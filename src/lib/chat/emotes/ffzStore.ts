@@ -14,6 +14,8 @@ export const getFfzEmotes = async (channelId: string): Promise<EmoteIDs> => {
     const globalEmotes = await ffzService2.getGlobalEmotes();
     emotes.set(
       GLOBAL_CHANNEL_KEY,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore $TSFixMe
       new Map(globalEmotes.map(emote => [emote.code, emote.id.toString()])),
     );
   }
@@ -22,6 +24,8 @@ export const getFfzEmotes = async (channelId: string): Promise<EmoteIDs> => {
     const channelEmotes = await ffzService2.getChannelEmotes(channelId);
     emotes.set(
       channelId,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore $TSFixMe
       new Map(channelEmotes.map(emote => [emote.code, emote.id.toString()])),
     );
   }

@@ -5,7 +5,7 @@ interface Props {
   size?: number;
 }
 
-const Seperator = ({ color = 'blue', size = 0.5 }: Props) => {
+export default function Seperator({ color = 'blue', size = 0.5 }: Props) {
   return (
     <View
       style={{
@@ -16,5 +16,4 @@ const Seperator = ({ color = 'blue', size = 0.5 }: Props) => {
       }}
     />
   );
-};
-export default Seperator;
+}

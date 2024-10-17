@@ -14,9 +14,19 @@ const main = async () => {
   });
 
   app.get('/api/proxy', async (req, res) => {
-    const redirectUri = `foam://?${new URL(req.url, 'http://a').searchParams}`;
+    const redirectUri = `foam://?${new URL(req.url, 'http://foam').searchParams}`;
 
-    console.info('redirecting to', redirectUri);
+    console.info('redirecting to app:', redirectUri);
+
+    return res.status(302).redirect(redirectUri);
+  });
+
+  app.get('/api/proxy-expo-go', async (req, res) => {
+    // This is fragile and won't work in many cases. It's just an example. Physical devices, and android emulators will need the full IP address instead of localhost.
+    // This also assumes the dev server is running on port 8081.
+    const redirectUri = `exp://localhost:8081/--/?${new URL(req.url, 'http://foam').searchParams}`;
+
+    console.info('redirecting to app:', redirectUri);
 
     return res.status(302).redirect(redirectUri);
   });
@@ -40,6 +50,25 @@ const main = async () => {
 
     console.log('default token', data);
     return res.status(200).json(data);
+  });
+
+  app.get('/api/pending', async (req, res) => {
+    // return res.status(200).
+    // send html
+    return res.status(200).send(`
+      <html>
+        <head>
+          <title>Redirecting...</title>
+        </head>
+        <body>
+          <h1>Redirecting...</h1>
+          <script>
+            setTimeout(() => {
+              window.location.href = 'foam://?${new URL(req.url, 'http://foam').searchParams}';
+            }, 1000);
+          </script>
+        </body>
+      `);
   });
 
   const PORT = process.env.PORT || 6500;

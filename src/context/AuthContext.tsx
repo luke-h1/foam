@@ -16,14 +16,12 @@ export const StorageKeys = {
   authToken: 'foam-authToken',
 } as const;
 
-type StorageKey = keyof typeof StorageKeys;
-
 interface AuthContextState {
   auth?: Auth;
   user?: UserInfoResponse;
   login: (response: AuthSessionResult | null) => Promise<null | undefined>;
   logout: () => Promise<void>;
-  getToken: (key: StorageKey) => Promise<string | null>;
+  getAnonToken: () => Promise<void>;
   ready: boolean;
 }
 
@@ -125,10 +123,6 @@ export const AuthContextProvider = ({ children }: Props) => {
     twitchApi.defaults.headers.common.Authorization = `Bearer ${access_token}`;
   };
 
-  const getToken = async (key: StorageKey) => {
-    return SecureStore.getItemAsync(key);
-  };
-
   const login = async (response: AuthSessionResult | null) => {
     if (response?.type !== 'success') {
       return null;
@@ -175,6 +169,8 @@ export const AuthContextProvider = ({ children }: Props) => {
 
     setUser(undefined);
     await SecureStore.deleteItemAsync(StorageKeys.authToken);
+
+    // TODO: tighten access to axios internals here
     twitchApi.defaults.headers.common.Authorization = undefined;
 
     await getAnonToken();
@@ -195,7 +191,7 @@ export const AuthContextProvider = ({ children }: Props) => {
       user,
       login,
       logout,
-      getToken,
+      getAnonToken,
       ready: state.ready,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -214,4 +210,43 @@ export function useAuthContext() {
   }
 
   return context;
+}
+
+interface AuthContextTestProviderProps {
+  children: ReactNode;
+  user?: UserInfoResponse;
+}
+
+export function AuthContextTestProvider({
+  children,
+  user,
+}: AuthContextTestProviderProps) {
+  // eslint-disable-next-line react/jsx-no-constructed-context-values
+  const state: AuthContextState = {
+    getAnonToken: () => Promise.resolve(),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    login: _result => Promise.resolve(null),
+    logout: () => Promise.resolve(),
+    ready: true,
+    auth: {
+      anonToken: '123',
+      isAnonAuth: true,
+      isAuth: false,
+      token: undefined,
+    },
+    user: user ?? {
+      id: '1',
+      broadcaster_type: '',
+      created_at: '2020',
+      description: 'test',
+      display_name: 'test_user',
+      login: 'test user',
+      offline_image_url: 'https://placekitten.com/200/200',
+      profile_image_url: 'https://placekitten.com/200/200',
+      type: 'user',
+      view_count: 0,
+    },
+  };
+
+  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }

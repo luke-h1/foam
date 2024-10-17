@@ -1,13 +1,13 @@
 import AuthLoading from '@app/screens/authentication/AuthLoading';
-import LoginScreen from '@app/screens/authentication/LoginScreen';
-import SettingsModal from '@app/screens/settings/SettingsModal';
-import Header from '../components/Header';
+import React from 'react';
+import { TouchableOpacity } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import CategoryStackNavigator from './Category/CategoryStackNavigator';
 import HomeTabsNavigator from './Home/HomeTabsNavigator';
 import { RootRoutes, RootStack } from './RootStack';
-import StreamNavigator from './Stream/StreamStackNavigator';
+import SettingsStackNavigator from './Settings/SettingsStackNavigator';
 
-const RootNavigator = () => {
+export default function RootNavigator() {
   return (
     <RootStack.Navigator
       initialRouteName={RootRoutes.AuthLoading}
@@ -15,34 +15,49 @@ const RootNavigator = () => {
         headerShown: false,
       }}
     >
-      <RootStack.Screen name={RootRoutes.AuthLoading} component={AuthLoading} />
-      <RootStack.Screen name={RootRoutes.Home} component={HomeTabsNavigator} />
       <RootStack.Screen
+        name={RootRoutes.AuthLoading}
+        component={AuthLoading}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <RootStack.Screen
+        name={RootRoutes.Home}
+        component={HomeTabsNavigator}
+        options={({ navigation }) => ({
+          headerShown: true,
+          // headerTitle: 'Home',
+          headerTitle: '',
+          headerLeft: () => null, // Hide the back button
+          // eslint-disable-next-line react/no-unstable-nested-components
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate(RootRoutes.Settings)}
+              style={{ marginRight: 10 }}
+            >
+              <Feather name="settings" size={22} color="black" />
+            </TouchableOpacity>
+          ),
+        })}
+      />
+
+      <RootStack.Screen
+        name={RootRoutes.Settings}
+        component={SettingsStackNavigator}
+      />
+
+      {/* <RootStack.Screen
         name={RootRoutes.SettingsModal}
         component={SettingsModal}
         options={{
-          headerTitleAlign: 'left',
-          headerStyle: {
-            backgroundColor: '$color',
-          },
-          presentation: 'card',
-          // eslint-disable-next-line react/no-unstable-nested-components
-          header(props) {
-            // @ts-expect-error ts-migrate(2339) FIXME: need to fix this
-            return <Header {...props} title="Settings" />;
-          },
+          presentation: 'modal',
         }}
-      />
-      <RootStack.Screen name={RootRoutes.Login} component={LoginScreen} />
-      <RootStack.Screen
-        name={RootRoutes.LiveStream}
-        component={StreamNavigator}
-      />
+      /> */}
       <RootStack.Screen
         name={RootRoutes.Category}
         component={CategoryStackNavigator}
       />
     </RootStack.Navigator>
   );
-};
-export default RootNavigator;
+}
