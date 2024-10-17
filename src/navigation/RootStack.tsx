@@ -1,28 +1,31 @@
-import { NavigationProp } from '@react-navigation/native';
+import {
+  NavigationProp,
+  NavigatorScreenParams,
+} from '@react-navigation/native';
 import {
   createStackNavigator,
   StackScreenProps,
 } from '@react-navigation/stack';
+import { CategoryStackParamList } from './Category/CategoryStack';
+import { HomeTabsParamList } from './Home/HomeTabs';
 
 // eslint-disable-next-line no-shadow
 export enum RootRoutes {
   AuthLoading = 'AuthLoading',
   Welcome = 'Welcome',
   Home = 'Home',
-  SettingsModal = 'SettingsModal',
-  Login = 'Login',
-  LiveStream = 'LiveStream',
   Category = 'Category',
+  // SettingsModal = 'SettingsModal',
+  Settings = 'Settings',
 }
 
+// TODO: rework this into seperate navigators
 export type RootStackParamList = {
   [RootRoutes.AuthLoading]: undefined;
   [RootRoutes.Welcome]: undefined;
-  [RootRoutes.Home]: undefined;
-  [RootRoutes.SettingsModal]: undefined;
-  [RootRoutes.Login]: undefined;
-  [RootRoutes.LiveStream]: undefined;
-  [RootRoutes.Category]: undefined;
+  [RootRoutes.Home]: NavigatorScreenParams<HomeTabsParamList>;
+  [RootRoutes.Category]: NavigatorScreenParams<CategoryStackParamList>;
+  [RootRoutes.Settings]: undefined;
 };
 
 export type RootRoutesParams = keyof RootStackParamList;

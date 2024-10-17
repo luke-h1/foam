@@ -1,11 +1,15 @@
+import theme from '@app/styles/theme';
 import {
   FlatList,
   TouchableOpacity,
   View,
   StyleSheet,
-  Text,
+  ViewStyle,
+  TextStyle,
 } from 'react-native';
 import Seperator from './Seperator';
+import ThemedText from './ThemedText';
+import ThemedView from './ThemedView';
 
 export interface ContentItem {
   id: string;
@@ -25,15 +29,16 @@ interface Props {
   contents: ContentItem[];
 }
 
-const SettingsItem = ({ contents }: Props) => {
+export default function SettingsItem({ contents }: Props) {
   return (
-    <View>
-      <Text>Settings</Text>
+    <ThemedView style={styles.settingsContainer}>
       <FlatList
         data={contents}
         renderItem={({ item }) => (
-          <View style={{ marginBottom: 24 }}>
-            <Text>{item.ctaTitle}</Text>
+          <View>
+            <ThemedText fontWeight="bold" style={{ marginBottom: 15 }}>
+              {item.ctaTitle}
+            </ThemedText>
             <FlatList
               data={item.items}
               // eslint-disable-next-line no-shadow
@@ -45,32 +50,40 @@ const SettingsItem = ({ contents }: Props) => {
                   >
                     {item.iconLeft}
                     <View style={styles.copy}>
-                      <Text
-                        style={{
-                          marginBottom: 5,
-                          marginTop: 4,
-                        }}
-                      >
-                        {item.title}
-                      </Text>
-                      <Text>{item.content}</Text>
+                      <ThemedText>{item.title}</ThemedText>
+                      <ThemedText fontSize={13}>{item.content}</ThemedText>
                     </View>
                     {item.showRightArrow && item.iconRight}
                   </TouchableOpacity>
-                  {item.showSeperator && <Seperator color="$neutral1" />}
+                  {item.showSeperator && (
+                    <Seperator color={theme.color.black} />
+                  )}
                 </View>
               )}
             />
           </View>
         )}
       />
-    </View>
+    </ThemedView>
   );
-};
+}
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<{
+  settingsContainer: ViewStyle;
+  item: ViewStyle;
+  copy: TextStyle;
+  settingsItem: ViewStyle;
+}>({
+  settingsContainer: {
+    padding: theme.spacing.md,
+    display: 'flex',
+    flex: 1,
+    alignItems: 'flex-start',
+  },
   item: {
-    marginBottom: 24,
+    marginBottom: 30,
+    display: 'flex',
+    alignContent: 'flex-start',
   },
   copy: {
     marginLeft: 12,
@@ -90,5 +103,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
-export default SettingsItem;

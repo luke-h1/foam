@@ -3,25 +3,24 @@ import twitchService, {
   Stream,
   Category,
   UserInfoResponse,
-  UserResponse,
   SearchChannelResponse,
 } from '@app/services/twitchService';
 import { UseQueryOptions } from '@tanstack/react-query';
 
 const twitchQueries = {
-  getStream(userLogin: string): UseQueryOptions<Stream | null | undefined> {
+  getStream(userLogin: string): UseQueryOptions<Stream> {
     return {
       queryKey: ['stream', userLogin],
       queryFn: () => twitchService.getStream(userLogin),
     };
   },
-  getChannel(userId: string): UseQueryOptions<Channel | undefined> {
+  getChannel(userId: string): UseQueryOptions<Channel> {
     return {
       queryKey: ['channel', userId],
       queryFn: () => twitchService.getChannel(userId),
     };
   },
-  getTopCategories(): UseQueryOptions<Category[] | undefined> {
+  getTopCategories(): UseQueryOptions<Category[]> {
     return {
       queryKey: ['topCategories'],
       queryFn: () => twitchService.getTopCategories(),
@@ -45,7 +44,7 @@ const twitchQueries = {
       queryFn: () => twitchService.getUserInfo(token),
     };
   },
-  getUser(userId: string): UseQueryOptions<UserResponse> {
+  getUser(userId: string): UseQueryOptions<UserInfoResponse> {
     return {
       queryKey: ['user', userId],
       queryFn: () => twitchService.getUser(userId),

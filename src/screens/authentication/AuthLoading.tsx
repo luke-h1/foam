@@ -1,32 +1,32 @@
+import { useAuthContext } from '@app/context/AuthContext';
+import { HomeTabsRoutes } from '@app/navigation/Home/HomeTabs';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 
-const AuthLoadingScreen = ({
+export default function AuthLoadingScreen({
   navigation,
-}: RootStackScreenProps<RootRoutes.AuthLoading>) => {
+}: RootStackScreenProps<RootRoutes.AuthLoading>) {
   const { navigate } = navigation;
 
+  const { auth, getAnonToken } = useAuthContext();
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    setTimeout(() => {
-      navigate(RootRoutes.Home);
-    });
+    (async () => {
+      if (!auth?.anonToken || !auth.token?.accessToken) {
+        await getAnonToken()
+          .then(() => {
+            navigate(RootRoutes.Home, {
+              screen: HomeTabsRoutes.Top,
+            });
+          })
+          .catch(e => {
+            // eslint-disable-next-line no-console
+            console.error('e', e);
+          });
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    </View>
-  );
-};
-export default AuthLoadingScreen;
+  return null;
+}

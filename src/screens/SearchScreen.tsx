@@ -1,12 +1,14 @@
-/* eslint-disable no-console */
 import DismissableKeyboard from '@app/components/DismissableKeyboard';
+import LiveStreamMiniCard from '@app/components/LiveStreamMiniCard';
+import SearchHistory from '@app/components/SearchHistoryItem';
+import SearchInput from '@app/components/form/SearchInput';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
 import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import twitchService, {
   SearchChannelResponse,
 } from '@app/services/twitchService';
-import elapsedStreamTime from '@app/utils/elapsedStreamTime';
+import { statusBarHeight } from '@app/utils/statusBarHeight';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
@@ -16,27 +18,20 @@ import {
   TouchableOpacity,
   TextInput as NativeTextInput,
   View,
-  TextInput,
   Text,
+  StyleSheet,
+  ViewStyle,
+  ImageStyle,
 } from 'react-native';
-import Feather from 'react-native-vector-icons/Feather';
-import Image from '../components/Image';
-import { statusBarHeight } from './FollowingScreen';
 
-interface SearchHistoryItem {
-  date: Date;
-  query: string;
-}
-
-const SearchScreen = () => {
+export default function SearchScreen() {
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
 
-  const [showDismiss, setShowDismiss] = useState<boolean>(false);
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   const fetchSearchHistory = async () => {
     const history = await AsyncStorage.getItem('previousSearches');
@@ -65,95 +60,50 @@ const SearchScreen = () => {
     }
 
     const results = await twitchService.searchChannels(value);
-
     setSearchResults(results);
-    setShowDismiss(true);
 
     const prevSearches = await AsyncStorage.getItem('previousSearches');
-    const searchItem: SearchHistoryItem = {
-      query: value,
-      date: new Date(),
-    };
 
     const newPrevSearches = Array.from(
-      new Set(prevSearches ? JSON.parse(prevSearches) : []).add(searchItem),
+      new Set(prevSearches ? JSON.parse(prevSearches) : []).add(value),
     );
 
     await AsyncStorage.setItem(
       'previousSearches',
       JSON.stringify(newPrevSearches),
     );
-    const res = await AsyncStorage.getItem('previousSearches');
-    setSearchHistory(JSON.parse(res as string));
+    const previousSearchResults =
+      await AsyncStorage.getItem('previousSearches');
+    setSearchHistory(JSON.parse(previousSearchResults as string));
   }, 400);
 
   // eslint-disable-next-line no-shadow
   const handleQuery = async (query: string) => {
     setQuery(query);
     await search(query);
-    setShowDismiss(true);
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingTop: statusBarHeight,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          padding: 2,
-        }}
-      >
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
         <DismissableKeyboard>
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
             }}
           >
-            <TextInput
+            <SearchInput
               ref={ref}
               placeholder="Find a channel"
-              placeholderTextColor="$text"
-              verticalAlign="middle"
-              style={{
-                padding: 10,
-              }}
+              value={query}
               onChangeText={async text => {
                 await handleQuery(text);
               }}
             />
           </ScrollView>
         </DismissableKeyboard>
-        {showDismiss ? (
-          <Feather
-            name="cross"
-            size={24}
-            style={[{ alignSelf: 'center', marginRight: 15 }]}
-            onPress={() => {
-              setSearchResults([]);
-              setQuery('');
-              setShowDismiss(false);
-              ref?.current?.clear();
-            }}
-          />
-        ) : (
-          <Feather
-            name="search"
-            size={24}
-            style={{ alignSelf: 'center', marginRight: 25 }}
-            onPress={() => search(query)}
-          />
-        )}
       </View>
-      <View
-        style={{
-          marginBottom: 14,
-          marginLeft: 14,
-        }}
-      >
+      <View style={styles.searchResultsWrapper}>
         {searchResults.length > 0 && (
           <>
             <Text
@@ -169,7 +119,7 @@ const SearchScreen = () => {
                 <TouchableOpacity
                   onPress={() => {
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
+                    // @ts-ignore FIX ME - navigation
                     navigate(StreamRoutes.LiveStream, {
                       screen: StreamRoutes.LiveStream,
                       params: {
@@ -177,48 +127,9 @@ const SearchScreen = () => {
                       },
                     });
                   }}
-                  style={{
-                    flexDirection: 'row',
-                    marginBottom: 14,
-                    marginLeft: 14,
-                    alignContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  style={styles.list}
                 >
-                  <Image
-                    source={{
-                      uri: item.thumbnail_url
-                        .replace('{width}', '40')
-                        .replace('{height}', '40'),
-                    }}
-                    style={{
-                      borderRadius: 20,
-                      marginRight: 5,
-                      width: 40,
-                      height: 40,
-                    }}
-                  />
-                  <Text style={{ marginLeft: 8 }}>{item.display_name}</Text>
-                  {item.is_live && (
-                    <View
-                      style={{
-                        marginLeft: 8,
-                        flex: 1,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: 4,
-                          marginRight: 5,
-                        }}
-                      />
-                      <Text>{elapsedStreamTime(item.started_at)}</Text>
-                    </View>
-                  )}
+                  <LiveStreamMiniCard stream={item} />
                 </TouchableOpacity>
               )}
             />
@@ -227,39 +138,80 @@ const SearchScreen = () => {
       </View>
 
       {searchHistory && (
-        <FlatList<SearchHistoryItem>
-          data={searchHistory}
-          renderItem={({ item }) => {
-            return (
-              <TouchableOpacity
-                style={{ flex: 1, flexDirection: 'row', marginBottom: 14 }}
-                onPress={() => {
-                  handleQuery(item.query);
-                }}
-              >
-                {/* <History
-                    size={24}
-                    style={{
-                      alignSelf: 'center',
-                      marginRight: 8,
-                    }}
-                  /> */}
-                <Text
-                  style={{
-                    fontSize: 16,
-                    marginBottom: 8,
-                  }}
-                >
-                  {item.query}
-                </Text>
-              </TouchableOpacity>
+        <SearchHistory
+          results={searchHistory}
+          onClearAll={() => {
+            setSearchHistory([]);
+            AsyncStorage.removeItem('previousSearches');
+          }}
+          onSelectItem={q => {
+            setQuery(q);
+            handleQuery(q);
+          }}
+          onClearItem={id => {
+            const newHistory = searchHistory.filter(item => item !== id);
+            setSearchHistory(newHistory);
+            AsyncStorage.setItem(
+              'previousSearches',
+              JSON.stringify(newHistory),
             );
           }}
-          keyExtractor={item => item.date.toString()}
         />
       )}
     </View>
   );
-};
+}
 
-export default SearchScreen;
+const styles = StyleSheet.create<{
+  wrapper: ViewStyle;
+  container: ViewStyle;
+  icon: ViewStyle;
+  searchResultsWrapper: ViewStyle;
+  list: ViewStyle;
+  avatar: ImageStyle;
+  elapsed: ViewStyle;
+  history: ViewStyle;
+}>({
+  wrapper: {
+    flex: 1,
+    paddingTop: statusBarHeight,
+  },
+  container: {
+    flexDirection: 'row',
+    padding: 2,
+  },
+  icon: {
+    alignSelf: 'center',
+    marginRight: 15,
+  },
+  searchResultsWrapper: {
+    marginBottom: 14,
+    marginLeft: 14,
+  },
+  list: {
+    flexDirection: 'row',
+    marginBottom: 14,
+    marginLeft: 14,
+    alignContent: 'center',
+    alignItems: 'center',
+  },
+  avatar: {
+    borderRadius: 20,
+    marginRight: 1,
+    width: 40,
+    height: 40,
+  },
+  elapsed: {
+    width: 10,
+    height: 10,
+    borderRadius: 25,
+    backgroundColor: 'red',
+    marginRight: 4,
+  },
+  history: {
+    flex: 1,
+    flexDirection: 'row',
+    marginBottom: 12,
+    paddingLeft: 14,
+  },
+});

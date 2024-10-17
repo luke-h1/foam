@@ -1,0 +1,496 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LiveStreamCard renders correctly 1`] = `
+<RNGestureHandlerButton
+  collapsable={false}
+  delayLongPress={600}
+  enabled={true}
+  exclusive={true}
+  handlerTag={1}
+  handlerType="NativeViewGestureHandler"
+  onGestureEvent={[Function]}
+  onGestureHandlerEvent={[Function]}
+  onGestureHandlerStateChange={[Function]}
+  onHandlerStateChange={[Function]}
+  rippleColor={0}
+  touchSoundDisabled={false}
+>
+  <View
+    accessible={true}
+    collapsable={false}
+    style={
+      {
+        "opacity": 1,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "backgroundColor": "#FCFBFE",
+          },
+          [
+            {
+              "borderRadius": 6,
+              "flex": 1,
+              "marginBottom": 12,
+              "marginHorizontal": 8,
+              "padding": 4,
+            },
+            {
+              "shadowColor": "#adb5bd",
+              "shadowOffset": {
+                "height": 0,
+                "width": 0,
+              },
+              "shadowOpacity": 0.4,
+              "shadowRadius": 2,
+            },
+          ],
+        ]
+      }
+    >
+      <View
+        style={
+          {
+            "flex": 1,
+            "flexDirection": "row",
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "rgba(255,255,255,0.15)",
+              },
+              [
+                {
+                  "height": 100,
+                  "width": 130,
+                },
+                {
+                  "borderRadius": 6,
+                  "marginRight": 12,
+                  "overflow": "hidden",
+                },
+                undefined,
+              ],
+            ]
+          }
+        >
+          <ViewManagerAdapter_ExpoImage
+            bottom={0}
+            containerViewRef={"[React.ref]"}
+            contentFit="cover"
+            contentPosition={
+              {
+                "left": "50%",
+                "top": "50%",
+              }
+            }
+            height={100}
+            left={0}
+            nativeViewRef={"[React.ref]"}
+            onError={[Function]}
+            onLoad={[Function]}
+            onLoadStart={[Function]}
+            onProgress={[Function]}
+            placeholder={[]}
+            position="absolute"
+            right={0}
+            source={
+              [
+                {
+                  "uri": "https://example.com/thumbnail.jpg",
+                },
+              ]
+            }
+            style={
+              {
+                "bottom": 0,
+                "height": 100,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+                "width": 130,
+              }
+            }
+            testID="LiveStreamImage-image"
+            top={0}
+            transition={
+              {
+                "duration": 300,
+              }
+            }
+            width={130}
+          />
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "rgba(0, 0, 0, 0.5)",
+                "bottom": 0,
+                "justifyContent": "center",
+                "paddingHorizontal": 5,
+                "paddingVertical": 2,
+                "position": "absolute",
+                "width": "100%",
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "white",
+                  "fontSize": 12,
+                }
+              }
+            >
+              00m
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "flex-start",
+            }
+          }
+        >
+          <Text
+            style={
+              [
+                {
+                  "color": "#000",
+                  "fontFamily": "FreightSansProLight-Regular",
+                  "fontSize": 13,
+                  "marginBottom": 0,
+                },
+                undefined,
+              ]
+            }
+          >
+            Test Stream Title
+          </Text>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexDirection": "column",
+                "marginTop": 12,
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "marginTop": 5,
+                }
+              }
+            >
+              <ViewManagerAdapter_ExpoImage
+                borderRadius={13}
+                containerViewRef={"[React.ref]"}
+                contentFit="cover"
+                contentPosition={
+                  {
+                    "left": "50%",
+                    "top": "50%",
+                  }
+                }
+                height={20}
+                marginRight={5}
+                nativeViewRef={"[React.ref]"}
+                onError={[Function]}
+                onLoad={[Function]}
+                onLoadStart={[Function]}
+                onProgress={[Function]}
+                placeholder={[]}
+                source={
+                  [
+                    {
+                      "uri": undefined,
+                    },
+                  ]
+                }
+                style={
+                  {
+                    "borderRadius": 13,
+                    "height": 20,
+                    "marginRight": 5,
+                    "width": 20,
+                  }
+                }
+                testID="LiveStreamCard-avatar"
+                transition={null}
+                width={20}
+              />
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#000",
+                      "fontFamily": "FreightSansProBold-Regular",
+                      "fontSize": 14,
+                      "marginBottom": 0,
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                Test user
+              </Text>
+            </View>
+            <Text
+              style={
+                [
+                  {
+                    "color": "#000",
+                    "fontFamily": "FreightSansProLight-Regular",
+                    "fontSize": 13,
+                    "marginBottom": 0,
+                  },
+                  undefined,
+                ]
+              }
+            >
+              10,000
+               
+              viewers
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginTop": 4,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "marginBottom": 16,
+              "position": "relative",
+            }
+          }
+        >
+          <RCTScrollView
+            data={
+              [
+                "stream",
+                "live",
+                "2024",
+                "foam",
+              ]
+            }
+            getItem={[Function]}
+            getItemCount={[Function]}
+            horizontal={true}
+            keyExtractor={[Function]}
+            onContentSizeChange={[Function]}
+            onLayout={[Function]}
+            onMomentumScrollBegin={[Function]}
+            onMomentumScrollEnd={[Function]}
+            onScroll={[Function]}
+            onScrollBeginDrag={[Function]}
+            onScrollEndDrag={[Function]}
+            removeClippedSubviews={false}
+            renderItem={[Function]}
+            scrollEventThrottle={0.0001}
+            showsHorizontalScrollIndicator={false}
+            stickyHeaderIndices={[]}
+            viewabilityConfigCallbackPairs={[]}
+          >
+            <View>
+              <View
+                onFocusCapture={[Function]}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "flexDirection": "row",
+                    },
+                    null,
+                  ]
+                }
+              >
+                <View
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#fff",
+                      },
+                      {
+                        "borderRadius": 20,
+                        "marginRight": 8,
+                        "paddingHorizontal": 8,
+                        "paddingVertical": 4,
+                      },
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#000",
+                          "fontFamily": "FreightSansProBook-Regular",
+                          "fontSize": 14,
+                          "marginBottom": 0,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    stream
+                  </Text>
+                </View>
+              </View>
+              <View
+                onFocusCapture={[Function]}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "flexDirection": "row",
+                    },
+                    null,
+                  ]
+                }
+              >
+                <View
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#fff",
+                      },
+                      {
+                        "borderRadius": 20,
+                        "marginRight": 8,
+                        "paddingHorizontal": 8,
+                        "paddingVertical": 4,
+                      },
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#000",
+                          "fontFamily": "FreightSansProBook-Regular",
+                          "fontSize": 14,
+                          "marginBottom": 0,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    live
+                  </Text>
+                </View>
+              </View>
+              <View
+                onFocusCapture={[Function]}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "flexDirection": "row",
+                    },
+                    null,
+                  ]
+                }
+              >
+                <View
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#fff",
+                      },
+                      {
+                        "borderRadius": 20,
+                        "marginRight": 8,
+                        "paddingHorizontal": 8,
+                        "paddingVertical": 4,
+                      },
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#000",
+                          "fontFamily": "FreightSansProBook-Regular",
+                          "fontSize": 14,
+                          "marginBottom": 0,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    2024
+                  </Text>
+                </View>
+              </View>
+              <View
+                onFocusCapture={[Function]}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "flexDirection": "row",
+                    },
+                    null,
+                  ]
+                }
+              >
+                <View
+                  style={
+                    [
+                      {
+                        "backgroundColor": "#fff",
+                      },
+                      {
+                        "borderRadius": 20,
+                        "marginRight": 8,
+                        "paddingHorizontal": 8,
+                        "paddingVertical": 4,
+                      },
+                    ]
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#000",
+                          "fontFamily": "FreightSansProBook-Regular",
+                          "fontSize": 14,
+                          "marginBottom": 0,
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    foam
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </RCTScrollView>
+        </View>
+      </View>
+    </View>
+  </View>
+</RNGestureHandlerButton>
+`;

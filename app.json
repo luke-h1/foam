@@ -1,6 +1,4 @@
 {
-  "name": "Foam",
-  "displayNmame": "Foam",
   "expo": {
     "name": "foam",
     "slug": "foam",
@@ -47,10 +45,10 @@
     },
     "experiments": {
       "tsconfigPaths": true
-    },
-    "plugins": ["expo-font", "expo-secure-store"]
+    }
   },
   "plugins": [
+    ["expo-font", "expo-secure-store"],
     [
       "expo-build-properties",
       {

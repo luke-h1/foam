@@ -1,32 +1,23 @@
+import { HomeTabsRoutes } from '@app/navigation/Home/HomeTabs';
 import { RootStackScreenProps, RootRoutes } from '@app/navigation/RootStack';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
 
-const AuthLoadingScreen = ({
+export default function AuthLoadingScreen({
   navigation,
-}: RootStackScreenProps<RootRoutes.AuthLoading>) => {
+}: RootStackScreenProps<RootRoutes.AuthLoading>) {
   const { navigate } = navigation;
+
+  // TODO: actually acquire auth tokens here
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     setTimeout(() => {
-      navigate(RootRoutes.Home);
+      navigate(RootRoutes.Home, {
+        screen: HomeTabsRoutes.Top,
+      });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    </View>
-  );
-};
-export default AuthLoadingScreen;
+  return null;
+}

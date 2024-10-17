@@ -5,7 +5,7 @@ interface Props {
   children: ReactNode;
 }
 
-const SafeAreaContainer = ({ children }: Props) => {
+export default function SafeAreaContainer({ children }: Props) {
   return (
     <SafeAreaView
       edges={['top', 'bottom', 'left', 'right']}
@@ -16,5 +16,4 @@ const SafeAreaContainer = ({ children }: Props) => {
       {children}
     </SafeAreaView>
   );
-};
-export default SafeAreaContainer;
+}

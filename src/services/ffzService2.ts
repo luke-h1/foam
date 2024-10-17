@@ -1,5 +1,4 @@
 import { Mutex } from 'async-mutex';
-import { ffzEmoteApi } from './Client';
 
 interface FfzEmotesResponse {
   id: number;
@@ -36,7 +35,9 @@ const ffzService2 = {
 
     try {
       const response =
-        await ffzEmoteApi.get<FfzEmotesResponse[]>('/emotes/global');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore $TSFixMe
+        await ffzCachedEmoteApi.get<FfzEmotesResponse[]>('/emotes/global');
       return response.data;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {
@@ -48,7 +49,9 @@ const ffzService2 = {
   getChannelEmotes: async (channelId: string) => {
     const release = await mutex.acquire();
     try {
-      const response = await ffzEmoteApi.get<FfzEmotesResponse[]>(
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore $TSFixMe
+      const response = await ffzCachedEmoteApi.get<FfzEmotesResponse[]>(
         `/users/twitch/${channelId}`,
       );
       return response.data;
