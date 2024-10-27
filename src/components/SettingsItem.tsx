@@ -10,22 +10,24 @@ import {
 import Seperator from './Seperator';
 import Text from './Text';
 
-export interface ContentItem {
+interface ContentItem {
+  onPress?: () => void;
+  iconLeft?: JSX.Element;
+  title: string;
+  content: string;
+  iconRight?: JSX.Element;
+  showRightArrow?: boolean;
+  showSeperator?: boolean;
+}
+
+export interface Contents {
   id: string;
   ctaTitle: string;
-  items: {
-    onPress?: () => void;
-    iconLeft?: JSX.Element;
-    title: string;
-    content: string;
-    iconRight?: JSX.Element;
-    showRightArrow?: boolean;
-    showSeperator?: boolean;
-  }[];
+  items: ContentItem[];
 }
 
 interface Props {
-  contents: ContentItem[];
+  contents: Contents[];
 }
 
 export default function SettingsItem({ contents }: Props) {
