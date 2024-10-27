@@ -129,7 +129,7 @@ export default function CategoryScreen({
             },
           ]}
         >
-          <View style={[styles.header, headerStyle]}>
+          <Animated.View style={[styles.header, headerStyle]}>
             <View style={styles.headerContent}>
               <Image
                 source={{
@@ -143,7 +143,7 @@ export default function CategoryScreen({
                 {category?.name}
               </Text>
             </View>
-          </View>
+          </Animated.View>
           <View style={styles.content}>
             <FlatList<Stream>
               data={streams}

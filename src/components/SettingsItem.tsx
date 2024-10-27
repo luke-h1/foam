@@ -10,7 +10,7 @@ import {
 import Seperator from './Seperator';
 import Text from './Text';
 
-interface ContentItem {
+export interface ContentItem {
   onPress?: () => void;
   iconLeft?: JSX.Element;
   title: string;
@@ -20,14 +20,14 @@ interface ContentItem {
   showSeperator?: boolean;
 }
 
-export interface Contents {
+export interface Content {
   id: string;
   ctaTitle: string;
   items: ContentItem[];
 }
 
 interface Props {
-  contents: Contents[];
+  contents: Content[];
 }
 
 export default function SettingsItem({ contents }: Props) {

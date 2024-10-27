@@ -1,6 +1,6 @@
 import Image from '@app/components/Image';
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
-import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
+import SettingsItem, { Content } from '@app/components/SettingsItem';
 import Text from '@app/components/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
@@ -20,7 +20,7 @@ export default function SettingsModal({
   const ICON_LEFT_SIZE = 22;
   const ICON_RIGHT_SIZE = 20;
 
-  const authenticatedSettingItems: ContentItem[] = [
+  const authenticatedSettingItems: Content[] = [
     {
       id: '1',
       ctaTitle: 'Profile',
@@ -45,7 +45,7 @@ export default function SettingsModal({
     },
   ];
 
-  const commonSettingItems: ContentItem[] = [
+  const commonSettingItems: Content[] = [
     {
       id: '2',
       ctaTitle: 'Options',
@@ -97,7 +97,7 @@ export default function SettingsModal({
     },
   ];
 
-  const unauthenticatedSettingItems: ContentItem[] = [
+  const unauthenticatedSettingItems: Content[] = [
     {
       id: '1',
       ctaTitle: 'Profile',
@@ -115,7 +115,7 @@ export default function SettingsModal({
     },
   ];
 
-  const settingItems: ContentItem[] = [
+  const settingItems: Content[] = [
     ...(user ? authenticatedSettingItems : unauthenticatedSettingItems),
     ...commonSettingItems,
   ];
