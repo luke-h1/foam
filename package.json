@@ -54,7 +54,7 @@
     "clsx": "^2.1.0",
     "commitlint": "^18.4.4",
     "date-fns": "^4.1.0",
-    "expo": "~51.0.37",
+    "expo": "~51.0.38",
     "expo-app-loading": "^2.1.1",
     "expo-auth-session": "~5.5.2",
     "expo-av": "~14.0.7",

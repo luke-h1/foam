@@ -12,11 +12,11 @@ export default function BuildDetails() {
 
   return (
     <View style={styles.container}>
-      <Text fontSize={12}>v{Application.nativeApplicationVersion}</Text>
-      <Text fontSize={12}>({Application.nativeBuildVersion})</Text>
-      <Text fontSize={12}>pkg:{pkg.version}</Text>
+      <Text size="xxs">v{Application.nativeApplicationVersion}</Text>
+      <Text size="xxs">({Application.nativeBuildVersion})</Text>
+      <Text size="xxs">pkg:{pkg.version}</Text>
       {updatedId ? (
-        <Text fontSize={12} style={{ color: theme.color.grey }}>
+        <Text size="xxs" style={{ color: theme.color.grey }}>
           {updatedId}
         </Text>
       ) : null}

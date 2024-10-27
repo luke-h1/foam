@@ -8,7 +8,7 @@ import {
   Button as BaseButton,
 } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import ThemedText from './ThemedText';
+import Text from './Text';
 
 const buttonTextSize = 22;
 
@@ -30,14 +30,9 @@ export default function Button({ onPress, title, isLoading, ...rest }: Props) {
       {isLoading ? (
         <ActivityIndicator color={theme.color.white} testID="button-loading" />
       ) : (
-        <ThemedText
-          fontSize={buttonTextSize}
-          fontWeight="medium"
-          style={styles.text}
-          {...rest}
-        >
+        <Text size="md" weight="medium" style={styles.text} {...rest}>
           {title}
-        </ThemedText>
+        </Text>
       )}
     </TouchableOpacity>
   );

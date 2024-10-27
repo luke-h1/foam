@@ -8,8 +8,7 @@ import {
   TextStyle,
 } from 'react-native';
 import Seperator from './Seperator';
-import ThemedText from './ThemedText';
-import ThemedView from './ThemedView';
+import Text from './Text';
 
 export interface ContentItem {
   id: string;
@@ -31,14 +30,14 @@ interface Props {
 
 export default function SettingsItem({ contents }: Props) {
   return (
-    <ThemedView style={styles.settingsContainer}>
+    <View style={styles.settingsContainer}>
       <FlatList
         data={contents}
         renderItem={({ item }) => (
           <View>
-            <ThemedText fontWeight="bold" style={{ marginBottom: 15 }}>
+            <Text weight="bold" style={{ marginBottom: 15 }}>
               {item.ctaTitle}
-            </ThemedText>
+            </Text>
             <FlatList
               data={item.items}
               // eslint-disable-next-line no-shadow
@@ -50,8 +49,8 @@ export default function SettingsItem({ contents }: Props) {
                   >
                     {item.iconLeft}
                     <View style={styles.copy}>
-                      <ThemedText>{item.title}</ThemedText>
-                      <ThemedText fontSize={13}>{item.content}</ThemedText>
+                      <Text>{item.title}</Text>
+                      <Text size="sm">{item.content}</Text>
                     </View>
                     {item.showRightArrow && item.iconRight}
                   </TouchableOpacity>
@@ -64,7 +63,7 @@ export default function SettingsItem({ contents }: Props) {
           </View>
         )}
       />
-    </ThemedView>
+    </View>
   );
 }
 

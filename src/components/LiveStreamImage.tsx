@@ -11,7 +11,6 @@ import {
   TextStyle,
 } from 'react-native';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
-import ThemedView from './ThemedView';
 
 interface Props {
   thumbnail?: string;
@@ -70,11 +69,7 @@ export default function LiveStreamImage({
   );
 
   return (
-    <ThemedView
-      light="rgba(255,255,255,0.15)"
-      dark="rgba(0,0,0,0.15)"
-      style={[imageSize, styles.imageContainer, style]}
-    >
+    <View style={[imageSize, styles.imageContainer, style]}>
       {thumbnail ? (
         <Image
           testID="LiveStreamImage-image"
@@ -96,7 +91,7 @@ export default function LiveStreamImage({
           </Text>
         </View>
       )}
-    </ThemedView>
+    </View>
   );
 }
 

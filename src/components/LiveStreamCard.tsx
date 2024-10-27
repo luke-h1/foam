@@ -7,8 +7,7 @@ import { StyleSheet, View, ViewStyle } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import LiveStreamImage from './LiveStreamImage';
 import Tags from './Tags';
-import ThemedText from './ThemedText';
-import ThemedView from './ThemedView';
+import Text from './Text';
 
 interface Props {
   stream: Stream;
@@ -30,11 +29,7 @@ export default function LiveStreamCard({ stream }: Props) {
 
   return (
     <TouchableOpacity activeOpacity={0.8}>
-      <ThemedView
-        style={[styles.streamCard, shadow]}
-        dark="rgba(255,255,255,0.15)"
-        light={theme.color.lightGrey}
-      >
+      <View style={[styles.streamCard, shadow]}>
         <View style={styles.streamHeadline}>
           <LiveStreamImage
             animated
@@ -43,9 +38,9 @@ export default function LiveStreamCard({ stream }: Props) {
             size="large"
           />
           <View style={styles.streamDetail}>
-            <ThemedText fontSize={13} fontWeight="light">
+            <Text size="sm" weight="light">
               {stream.title}
-            </ThemedText>
+            </Text>
             <View style={styles.streamMetadata}>
               <View style={styles.userInfo}>
                 <Image
@@ -53,14 +48,14 @@ export default function LiveStreamCard({ stream }: Props) {
                   style={styles.avatar}
                   testID="LiveStreamCard-avatar"
                 />
-                <ThemedText fontSize={14} fontWeight="bold">
+                <Text size="sm" weight="bold">
                   {stream.user_name}
-                </ThemedText>
+                </Text>
               </View>
-              <ThemedText fontSize={13} fontWeight="light">
+              <Text size="sm" weight="light">
                 {new Intl.NumberFormat('en-US').format(stream.viewer_count)}{' '}
                 viewers
-              </ThemedText>
+              </Text>
             </View>
           </View>
         </View>
@@ -68,7 +63,7 @@ export default function LiveStreamCard({ stream }: Props) {
         <View style={{ marginTop: theme.spacing.xs }}>
           <Tags tags={stream.tags} />
         </View>
-      </ThemedView>
+      </View>
     </TouchableOpacity>
   );
 }

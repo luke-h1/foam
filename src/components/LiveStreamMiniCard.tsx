@@ -2,7 +2,7 @@ import { SearchChannelResponse } from '@app/services/twitchService';
 import theme from '@app/styles/theme';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import LiveStreamImage from './LiveStreamImage';
-import ThemedText from './ThemedText';
+import Text from './Text';
 
 interface Props {
   stream: SearchChannelResponse;
@@ -18,12 +18,12 @@ export default function LiveStreamMiniCard({ stream }: Props) {
         size="small"
       />
       <View style={styles.streamerDetails}>
-        <ThemedText fontSize={18} fontWeight="bold">
+        <Text size="sm" weight="bold">
           {stream.title ?? stream.broadcaster_login}
-        </ThemedText>
-        <ThemedText fontSize={16} fontWeight="medium">
+        </Text>
+        <Text size="sm" weight="medium">
           {stream.game_name}
-        </ThemedText>
+        </Text>
       </View>
     </View>
   );

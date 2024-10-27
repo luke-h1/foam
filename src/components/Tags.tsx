@@ -1,8 +1,7 @@
 import theme from '@app/styles/theme';
 import React from 'react';
 import { FlatList, StyleSheet, View, ViewStyle } from 'react-native';
-import ThemedText from './ThemedText';
-import ThemedView from './ThemedView';
+import Text from './Text';
 
 interface Props {
   tags: string[];
@@ -23,13 +22,9 @@ export default function Tags({ tags }: Props) {
         showsHorizontalScrollIndicator={false}
         keyExtractor={item => item}
         renderItem={({ item }) => (
-          <ThemedView
-            style={styles.tag}
-            dark={theme.color.darkBlue}
-            light={theme.color.white}
-          >
-            <ThemedText fontSize={14}>{item}</ThemedText>
-          </ThemedView>
+          <View style={styles.tag}>
+            <Text size="sm">{item}</Text>
+          </View>
         )}
       />
       {/* sep */}

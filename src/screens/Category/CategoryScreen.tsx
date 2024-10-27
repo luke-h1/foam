@@ -1,6 +1,5 @@
 import LiveStreamCard from '@app/components/LiveStreamCard';
-import ThemedText from '@app/components/ThemedText';
-import ThemedView from '@app/components/ThemedView';
+import Text from '@app/components/Text';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,
@@ -16,7 +15,6 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
   TextStyle,
   View,
   ViewStyle,
@@ -119,11 +117,7 @@ export default function CategoryScreen({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ThemedView
-        style={styles.container}
-        dark={theme.color.darkBlue}
-        light={theme.color.white}
-      >
+      <View style={styles.container}>
         <AnimatedScrollView
           style={styles.container}
           onScroll={scrollHandler}
@@ -135,7 +129,7 @@ export default function CategoryScreen({
             },
           ]}
         >
-          <ThemedView animated style={[styles.header, headerStyle]}>
+          <View style={[styles.header, headerStyle]}>
             <View style={styles.headerContent}>
               <Image
                 source={{
@@ -145,24 +139,20 @@ export default function CategoryScreen({
                 }}
                 style={styles.categoryLogo}
               />
-              <ThemedText
-                fontWeight="bold"
-                fontSize={24}
-                style={styles.categoryTitle}
-              >
+              <Text size="lg" style={styles.categoryTitle}>
                 {category?.name}
-              </ThemedText>
+              </Text>
             </View>
-          </ThemedView>
-          <ThemedView style={styles.content}>
+          </View>
+          <View style={styles.content}>
             <FlatList<Stream>
               data={streams}
               keyExtractor={item => item.id}
               renderItem={({ item }) => <LiveStreamCard stream={item} />}
             />
-          </ThemedView>
+          </View>
         </AnimatedScrollView>
-      </ThemedView>
+      </View>
     </SafeAreaView>
   );
 }

@@ -19,7 +19,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { $styles } from '../theme';
+import { styles as themeStyles } from '../theme';
 
 export const DEFAULT_BOTTOM_OFFSET = 50;
 
@@ -291,7 +291,7 @@ export function Screen(props: ScreenProps): JSX.Element {
         behavior={isIos ? 'padding' : 'height'}
         keyboardVerticalOffset={keyboardOffset}
         {...KeyboardAvoidingViewProps}
-        style={[$styles.flex1, KeyboardAvoidingViewProps?.style]}
+        style={[themeStyles.flex1, KeyboardAvoidingViewProps?.style]}
       >
         {isNonScrolling(preset) ? (
           <ScreenWithoutScrolling {...props} />

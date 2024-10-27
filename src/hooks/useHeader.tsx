@@ -1,3 +1,4 @@
+import Header, { HeaderProps } from '@app/components/Header';
 import { useNavigation } from '@react-navigation/native';
 import React, { useLayoutEffect } from 'react';
 
