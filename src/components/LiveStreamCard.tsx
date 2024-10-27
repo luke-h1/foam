@@ -38,7 +38,7 @@ export default function LiveStreamCard({ stream }: Props) {
             size="large"
           />
           <View style={styles.streamDetail}>
-            <Text size="sm" weight="light">
+            <Text size="xxs" weight="light">
               {stream.title}
             </Text>
             <View style={styles.streamMetadata}>
@@ -48,11 +48,11 @@ export default function LiveStreamCard({ stream }: Props) {
                   style={styles.avatar}
                   testID="LiveStreamCard-avatar"
                 />
-                <Text size="sm" weight="bold">
+                <Text size="xs" weight="bold">
                   {stream.user_name}
                 </Text>
               </View>
-              <Text size="sm" weight="light">
+              <Text size="xxs" weight="light">
                 {new Intl.NumberFormat('en-US').format(stream.viewer_count)}{' '}
                 viewers
               </Text>

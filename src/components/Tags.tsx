@@ -23,11 +23,10 @@ export default function Tags({ tags }: Props) {
         keyExtractor={item => item}
         renderItem={({ item }) => (
           <View style={styles.tag}>
-            <Text size="sm">{item}</Text>
+            <Text size="xs">{item}</Text>
           </View>
         )}
       />
-      {/* sep */}
     </View>
   );
 }
@@ -45,5 +44,6 @@ const styles = StyleSheet.create<{
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     marginRight: theme.spacing.sm,
+    backgroundColor: theme.color.lightGrey, // Added background color
   },
 });
