@@ -15,7 +15,6 @@ import {
   ViewStyle,
   StyleSheet,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import Text, { TextProps } from './Text';
 
@@ -102,21 +101,15 @@ export default function Header(props: HeaderProps) {
     leftIcon,
     leftIconColor,
     leftText,
-    leftTx,
-    leftTxOptions,
     onLeftPress,
     onRightPress,
     RightActionComponent,
     rightIcon,
     rightIconColor,
     rightText,
-    rightTx,
-    rightTxOptions,
     safeAreaEdges = ['top'],
     title,
     titleMode = 'center',
-    titleTx,
-    titleTxOptions,
     titleContainerStyle: titleContainerStyleOverride,
     style: styleOverride,
     titleStyle: titleStyleOverride,
@@ -134,7 +127,41 @@ export default function Header(props: HeaderProps) {
         containerStyleOverride,
       ]}
     >
-      <View style={[themeStyles.row, styles.wrapper, styleOverride]} />
+      <View style={[themeStyles.row, styles.wrapper, styleOverride]}>
+        <HeaderAction
+          text={leftText}
+          icon={leftIcon}
+          iconColor={leftIconColor}
+          onPress={onLeftPress}
+          backgroundColor={backgroundColor}
+          ActionComponent={LeftActionComponent}
+        />
+        {!!title && (
+          <View
+            style={[
+              titleMode === 'center' && themed(titleWrapperCenter),
+              titleMode === 'flex' && styles.titleWrapperFlex,
+              titleContainerStyleOverride,
+            ]}
+            pointerEvents="none"
+          >
+            <Text
+              weight="medium"
+              size="md"
+              text={title}
+              style={[styles.title, titleStyleOverride]}
+            />
+          </View>
+        )}
+        <HeaderAction
+          text={rightText}
+          icon={rightIcon}
+          iconColor={rightIconColor}
+          onPress={onRightPress}
+          backgroundColor={backgroundColor}
+          ActionComponent={RightActionComponent}
+        />
+      </View>
     </View>
   );
 }
@@ -165,7 +192,7 @@ function HeaderAction({
   if (text) {
     return (
       <TouchableOpacity
-        style={themed([actionIconContainer, { backgroundColor }])}
+        style={themed([actionTextContainer, { backgroundColor }])}
         onPress={onPress}
         disabled={!onPress}
         activeOpacity={0.8}

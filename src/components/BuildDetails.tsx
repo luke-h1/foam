@@ -3,7 +3,7 @@ import * as Application from 'expo-application';
 import { useUpdates } from 'expo-updates';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import pkg from '../../package.json';
-import ThemedText from './ThemedText';
+import Text from './Text';
 
 export default function BuildDetails() {
   const updates = useUpdates();
@@ -12,15 +12,13 @@ export default function BuildDetails() {
 
   return (
     <View style={styles.container}>
-      <ThemedText fontSize={12}>
-        v{Application.nativeApplicationVersion}
-      </ThemedText>
-      <ThemedText fontSize={12}>({Application.nativeBuildVersion})</ThemedText>
-      <ThemedText fontSize={12}>pkg:{pkg.version}</ThemedText>
+      <Text fontSize={12}>v{Application.nativeApplicationVersion}</Text>
+      <Text fontSize={12}>({Application.nativeBuildVersion})</Text>
+      <Text fontSize={12}>pkg:{pkg.version}</Text>
       {updatedId ? (
-        <ThemedText fontSize={12} style={{ color: theme.color.grey }}>
+        <Text fontSize={12} style={{ color: theme.color.grey }}>
           {updatedId}
-        </ThemedText>
+        </Text>
       ) : null}
     </View>
   );
