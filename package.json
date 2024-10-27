@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.23.9",
+    "@expo-google-fonts/space-grotesk": "^0.2.3",
     "@expo/webpack-config": "^19.0.0",
     "@gorhom/bottom-sheet": "^4.5.1",
     "@react-native-async-storage/async-storage": "1.23.1",
@@ -70,6 +71,7 @@
     "expo-secure-store": "~13.0.2",
     "expo-splash-screen": "~0.27.6",
     "expo-status-bar": "~1.12.1",
+    "expo-system-ui": "^3.0.7",
     "expo-updates": "~0.25.27",
     "express": "^4.21.0",
     "lodash": "^4.17.21",
@@ -81,6 +83,7 @@
     "react-dom": "18.2.0",
     "react-native": "0.74.5",
     "react-native-gesture-handler": "~2.16.2",
+    "react-native-keyboard-controller": "^1.14.2",
     "react-native-orientation-locker": "^1.6.0",
     "react-native-pager-view": "6.3.0",
     "react-native-paper": "^5.12.5",

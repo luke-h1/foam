@@ -5,7 +5,7 @@ import React, { useLayoutEffect } from 'react';
 /**
  * A hook to set the header for a screen.
  */
-export function useHeader(headingProps: HeadingProps, deps: any[] = []) {
+export function useHeader(headingProps: HeadingProps, deps: unknown[] = []) {
   const navigation = useNavigation();
 
   useLayoutEffect(() => {
@@ -13,5 +13,6 @@ export function useHeader(headingProps: HeadingProps, deps: any[] = []) {
       headerShown: true,
       header: () => <Heading {...headingProps} />,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }

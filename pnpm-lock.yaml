@@ -14,6 +14,9 @@ importers:
       '@babel/runtime':
         specifier: ^7.23.9
         version: 7.25.6
+      '@expo-google-fonts/space-grotesk':
+        specifier: ^0.2.3
+        version: 0.2.3
       '@expo/webpack-config':
         specifier: ^19.0.0
         version: 19.0.1(@swc/core@1.7.26(@swc/helpers@0.5.13))(encoding@0.1.13)(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13))
@@ -122,6 +125,9 @@ importers:
       expo-status-bar:
         specifier: ~1.12.1
         version: 1.12.1
+      expo-system-ui:
+        specifier: ^3.0.7
+        version: 3.0.7(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13))
       expo-updates:
         specifier: ~0.25.27
         version: 0.25.27(encoding@0.1.13)(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13))
@@ -155,6 +161,9 @@ importers:
       react-native-gesture-handler:
         specifier: ~2.16.2
         version: 2.16.2(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
+      react-native-keyboard-controller:
+        specifier: ^1.14.2
+        version: 1.14.2(react-native-reanimated@3.10.1(@babel/core@7.25.2)(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0))(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
       react-native-orientation-locker:
         specifier: ^1.6.0
         version: 1.7.0(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
@@ -1255,6 +1264,9 @@ packages:
   '@eslint/js@8.57.0':
     resolution: {integrity: sha512-Ys+3g2TaW7gADOJzPt83SJtCDhMjndcDMFVQ/Tj9iA1BfJzFKD9mAUXT3OenpuPHbI6P/myECxRJrofUsDx/5g==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  '@expo-google-fonts/space-grotesk@0.2.3':
+    resolution: {integrity: sha512-UYEMIrzegR02pauH7gVMI7j6cUroTtJug6dH/aQFjMNz0UwZe6GUcrEtJDmsUHJjEZdxbYgHhaiIwswWVo0CMA==}
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
@@ -4517,6 +4529,11 @@ packages:
   expo-structured-headers@3.8.0:
     resolution: {integrity: sha512-R+gFGn0x5CWl4OVlk2j1bJTJIz4KO8mPoCHpRHmfqMjmrMvrOM0qQSY3V5NHXwp1yT/L2v8aUmFQsBRIdvi1XA==}
 
+  expo-system-ui@3.0.7:
+    resolution: {integrity: sha512-KAs72F5JKhdIfPR9ZNVlRubTPK9uUuevPy5oYEp12xNEzSQcjZKvypH5NpwJuNWkXzrp3n3vZ+3pXsudA7J3KA==}
+    peerDependencies:
+      expo: '*'
+
   expo-updates-interface@0.16.2:
     resolution: {integrity: sha512-929XBU70q5ELxkKADj1xL0UIm3HvhYhNAOZv5DSk7rrKvLo7QDdPyl+JVnwZm9LrkNbH4wuE2rLoKu1KMgZ+9A==}
     peerDependencies:
@@ -7595,6 +7612,13 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  react-native-keyboard-controller@1.14.2:
+    resolution: {integrity: sha512-1AgJo9byz9mJFnXH5WX4sGX88S9gh6lIREuurB96uoXdR7Xa17XCYd+JsrQx9pHcnK7Cz3mWcNh3IIwaHFvZKA==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+      react-native-reanimated: '>=3.0.0'
 
   react-native-orientation-locker@1.7.0:
     resolution: {integrity: sha512-2PhG4UyRJktb3KCTISStuu8/q+Q3q3oPesGg9DhdY0b6Cu/ZzxkCvkbJte2TPWRYkS0JpClimvqVaonulGvDrA==}
@@ -10712,6 +10736,8 @@ snapshots:
       - supports-color
 
   '@eslint/js@8.57.0': {}
+
+  '@expo-google-fonts/space-grotesk@0.2.3': {}
 
   '@expo/bunyan@4.0.1':
     dependencies:
@@ -15417,6 +15443,14 @@ snapshots:
 
   expo-structured-headers@3.8.0: {}
 
+  expo-system-ui@3.0.7(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13)):
+    dependencies:
+      '@react-native/normalize-colors': 0.74.85
+      debug: 4.3.7
+      expo: 51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13)
+    transitivePeerDependencies:
+      - supports-color
+
   expo-updates-interface@0.16.2(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13)):
     dependencies:
       expo: 51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13)
@@ -19210,6 +19244,12 @@ snapshots:
       prop-types: 15.8.1
       react: 18.2.0
       react-native: 0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0)
+
+  react-native-keyboard-controller@1.14.2(react-native-reanimated@3.10.1(@babel/core@7.25.2)(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0))(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0):
+    dependencies:
+      react: 18.2.0
+      react-native: 0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0)
+      react-native-reanimated: 3.10.1(@babel/core@7.25.2)(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
 
   react-native-orientation-locker@1.7.0(react-native@0.74.5(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(@types/react@18.2.79)(encoding@0.1.13)(react@18.2.0))(react@18.2.0):
     dependencies:
