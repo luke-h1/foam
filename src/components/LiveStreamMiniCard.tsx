@@ -1,5 +1,6 @@
+import { useAppTheme } from '@app/context/ThemeContext';
 import { SearchChannelResponse } from '@app/services/twitchService';
-import theme from '@app/styles/theme';
+import { ThemedStyle } from '@app/theme';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import LiveStreamImage from './LiveStreamImage';
 import Text from './Text';
@@ -9,8 +10,10 @@ interface Props {
 }
 
 export default function LiveStreamMiniCard({ stream }: Props) {
+  const { themed } = useAppTheme();
+
   return (
-    <View style={styles.streamer}>
+    <View style={themed(streamer)}>
       <LiveStreamImage
         thumbnail={stream.thumbnail_url}
         animated
@@ -29,14 +32,14 @@ export default function LiveStreamMiniCard({ stream }: Props) {
   );
 }
 
+const streamer: ThemedStyle<ViewStyle> = theme => ({
+  flexDirection: 'row',
+  marginBottom: theme.spacing.md,
+});
+
 const styles = StyleSheet.create<{
-  streamer: ViewStyle;
   streamerDetails: ViewStyle;
 }>({
-  streamer: {
-    flexDirection: 'row',
-    marginBottom: theme.spacing.md,
-  },
   streamerDetails: {
     flex: 1,
     justifyContent: 'center',

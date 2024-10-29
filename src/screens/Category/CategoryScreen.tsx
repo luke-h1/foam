@@ -1,12 +1,13 @@
 import LiveStreamCard from '@app/components/LiveStreamCard';
 import Text from '@app/components/Text';
+import { useAppTheme } from '@app/context/ThemeContext';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,
 } from '@app/navigation/Category/CategoryStack';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
-import theme from '@app/styles/theme';
+import { ThemedStyle } from '@app/theme';
 import { useQueries } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import {
@@ -33,6 +34,7 @@ export default function CategoryScreen({
 }: CategoryStackScreenProps<CategoryRoutes.Category>) {
   const { id } = route.params;
   const insets = useSafeAreaInsets();
+  const { theme, themed } = useAppTheme();
 
   // Animated header on scroll
   const transitionY = useSharedValue<number>(0);
@@ -116,7 +118,7 @@ export default function CategoryScreen({
   const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={themed($safeArea)}>
       <View style={styles.container}>
         <AnimatedScrollView
           style={styles.container}
@@ -157,6 +159,11 @@ export default function CategoryScreen({
   );
 }
 
+const $safeArea: ThemedStyle<ViewStyle> = theme => ({
+  flex: 1,
+  backgroundColor: theme.colors.text,
+});
+
 const styles = StyleSheet.create<{
   safeArea: ViewStyle;
   container: ViewStyle;
@@ -167,10 +174,6 @@ const styles = StyleSheet.create<{
   categoryTitle: TextStyle;
   content: ViewStyle;
 }>({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.color.white, // Adjust the background color as needed
-  },
   container: {
     flex: 1,
   },
