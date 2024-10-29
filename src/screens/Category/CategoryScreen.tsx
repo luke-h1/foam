@@ -125,14 +125,14 @@ export default function CategoryScreen({
           onScroll={scrollHandler}
           scrollEventThrottle={8}
           contentContainerStyle={[
-            styles.contentContainer,
+            themed($contentContainer),
             {
               paddingBottom: insets.bottom + theme.spacing.xl,
             },
           ]}
         >
-          <Animated.View style={[styles.header, headerStyle]}>
-            <View style={styles.headerContent}>
+          <Animated.View style={headerStyle}>
+            <View style={themed($headerContent)}>
               <Image
                 source={{
                   uri: category?.box_art_url
@@ -141,12 +141,12 @@ export default function CategoryScreen({
                 }}
                 style={styles.categoryLogo}
               />
-              <Text size="lg" style={styles.categoryTitle}>
+              <Text size="lg" style={themed($categoryTitle)}>
                 {category?.name}
               </Text>
             </View>
           </Animated.View>
-          <View style={styles.content}>
+          <View style={themed($content)}>
             <FlatList<Stream>
               data={streams}
               keyExtractor={item => item.id}
@@ -164,44 +164,40 @@ const $safeArea: ThemedStyle<ViewStyle> = theme => ({
   backgroundColor: theme.colors.text,
 });
 
+const $headerContent: ThemedStyle<ViewStyle> = theme => ({
+  flexDirection: 'row',
+  alignItems: 'flex-start',
+  justifyContent: 'flex-start',
+  paddingLeft: theme.spacing.lg,
+  display: 'flex',
+});
+
+const $contentContainer: ThemedStyle<ViewStyle> = theme => ({
+  borderBottomRightRadius: theme.spacing.md,
+  borderBottomLeftRadius: theme.spacing.md,
+});
+
+const $categoryTitle: ThemedStyle<TextStyle> = theme => ({
+  textAlign: 'center',
+  marginLeft: theme.spacing.md,
+  fontSize: 17,
+  fontWeight: 'bold',
+});
+
+const $content: ThemedStyle<ViewStyle> = theme => ({
+  paddingTop: theme.spacing.lg,
+});
+
 const styles = StyleSheet.create<{
-  safeArea: ViewStyle;
   container: ViewStyle;
-  contentContainer: ViewStyle;
-  header: ViewStyle;
-  headerContent: ViewStyle;
   categoryLogo: ImageStyle;
-  categoryTitle: TextStyle;
-  content: ViewStyle;
 }>({
   container: {
     flex: 1,
-  },
-  header: {},
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    paddingLeft: theme.spacing.lg,
-    display: 'flex',
-  },
-  contentContainer: {
-    borderBottomRightRadius: theme.borderradii.lg,
-    borderBottomLeftRadius: theme.borderradii.lg,
-  },
-  categoryTitle: {
-    textAlign: 'center',
-    marginLeft: theme.spacing.md,
-    fontSize: theme.fontSize.sm,
-    fontWeight: 'bold',
   },
   categoryLogo: {
     width: 100,
     height: 150,
     borderRadius: 10,
-  },
-  content: {
-    paddingTop: theme.spacing.lg,
-    // paddingHorizontal: theme.spacing.lg,
   },
 });
