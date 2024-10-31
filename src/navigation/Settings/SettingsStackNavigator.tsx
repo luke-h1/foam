@@ -4,7 +4,7 @@ import { SettingsRoutes, SettingsStack } from './SettingsStack';
 
 export default function SettingsStackNavigator() {
   return (
-    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
+    <SettingsStack.Navigator>
       <SettingsStack.Screen
         name={SettingsRoutes.Settings}
         component={SettingsScreen}

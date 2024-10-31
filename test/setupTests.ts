@@ -2,6 +2,17 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 import * as ReactNative from 'react-native';
 import mockFile from './mockFile';
 
+import 'react-native-gesture-handler/jestSetup';
+
+jest.mock('react-native-reanimated', () => {
+  // eslint-disable-next-line global-require, @typescript-eslint/no-require-imports
+  const Reanimated = require('react-native-reanimated/mock');
+
+  Reanimated.default.call = () => {};
+  return Reanimated;
+});
+jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+
 jest.doMock('react-native', () => {
   return Object.setPrototypeOf(
     {
@@ -33,14 +44,6 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
-
-jest.mock('@react-native-async-storage/async-storage', () => {
-  return {
-    getItem: async (...args: unknown[]) => args,
-    setItem: async (...args: unknown[]) => args,
-    removeItem: async (...args: unknown[]) => args,
-  };
-});
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),

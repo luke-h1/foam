@@ -6,28 +6,21 @@ import CategoryStackNavigator from './Category/CategoryStackNavigator';
 import HomeTabsNavigator from './Home/HomeTabsNavigator';
 import { RootRoutes, RootStack } from './RootStack';
 import SettingsStackNavigator from './Settings/SettingsStackNavigator';
+import StreamStackNavigator from './Stream/StreamStackNavigator';
 
 export default function RootNavigator() {
   return (
     <RootStack.Navigator
-      initialRouteName={RootRoutes.AuthLoading}
       screenOptions={{
         headerShown: false,
       }}
     >
-      <RootStack.Screen
-        name={RootRoutes.AuthLoading}
-        component={AuthLoading}
-        options={{
-          headerShown: false,
-        }}
-      />
+      <RootStack.Screen name={RootRoutes.AuthLoading} component={AuthLoading} />
       <RootStack.Screen
         name={RootRoutes.Home}
         component={HomeTabsNavigator}
         options={({ navigation }) => ({
           headerShown: true,
-          // headerTitle: 'Home',
           headerTitle: '',
           headerLeft: () => null, // Hide the back button
           // eslint-disable-next-line react/no-unstable-nested-components
@@ -47,16 +40,14 @@ export default function RootNavigator() {
         component={SettingsStackNavigator}
       />
 
-      {/* <RootStack.Screen
-        name={RootRoutes.SettingsModal}
-        component={SettingsModal}
-        options={{
-          presentation: 'modal',
-        }}
-      /> */}
       <RootStack.Screen
         name={RootRoutes.Category}
         component={CategoryStackNavigator}
+      />
+
+      <RootStack.Screen
+        name={RootRoutes.Stream}
+        component={StreamStackNavigator}
       />
     </RootStack.Navigator>
   );

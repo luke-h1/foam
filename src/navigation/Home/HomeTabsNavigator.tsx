@@ -14,7 +14,7 @@ export default function HomeTabsNavigator() {
         auth?.token ? HomeTabsRoutes.Following : HomeTabsRoutes.Top
       }
       screenOptions={{
-        headerTitleAlign: 'left',
+        headerShown: false,
         tabBarActiveTintColor: 'purple',
         tabBarStyle: {
           borderTopLeftRadius: 20,

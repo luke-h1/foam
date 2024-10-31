@@ -1,6 +1,6 @@
 import theme from '@app/styles/theme';
 import React from 'react';
-import { FlatList, StyleSheet, View, ViewStyle } from 'react-native';
+import { FlatList, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
 import ThemedText from './ThemedText';
 import ThemedView from './ThemedView';
 
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function Tags({ tags }: Props) {
-  if (!tags.length) {
+  if (!tags) {
     return null;
   }
 
@@ -28,11 +28,12 @@ export default function Tags({ tags }: Props) {
             dark={theme.color.darkBlue}
             light={theme.color.white}
           >
-            <ThemedText fontSize={14}>{item}</ThemedText>
+            <ThemedText fontSize={14} style={styles.tagText}>
+              {item}
+            </ThemedText>
           </ThemedView>
         )}
       />
-      {/* sep */}
     </View>
   );
 }
@@ -40,6 +41,7 @@ export default function Tags({ tags }: Props) {
 const styles = StyleSheet.create<{
   container: ViewStyle;
   tag: ViewStyle;
+  tagText: TextStyle;
 }>({
   container: {
     marginBottom: theme.spacing.lg,
@@ -50,5 +52,8 @@ const styles = StyleSheet.create<{
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     marginRight: theme.spacing.sm,
+    borderWidth: 0.2,
+    backgroundColor: theme.color.lightGrey,
   },
+  tagText: {},
 });

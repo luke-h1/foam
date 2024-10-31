@@ -125,6 +125,9 @@ importers:
       expo-updates:
         specifier: ~0.25.27
         version: 0.25.27(encoding@0.1.13)(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13))
+      expo-video:
+        specifier: ^1.2.7
+        version: 1.2.7(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13))
       express:
         specifier: ^4.21.0
         version: 4.21.0
@@ -258,6 +261,9 @@ importers:
       conventional-changelog-angular-all:
         specifier: 1.7.0
         version: 1.7.0
+      core-js:
+        specifier: ^3.39.0
+        version: 3.39.0
       cz-conventional-changelog:
         specifier: ^3.3.0
         version: 3.3.0(@types/node@20.11.17)(typescript@5.3.3)
@@ -2518,6 +2524,7 @@ packages:
   '@xmldom/xmldom@0.7.13':
     resolution: {integrity: sha512-lm2GW5PkosIzccsaZIz7tp8cPADSIlIHWDFTR1N0SzfinhhYgeIQjFMz4rYzanCScr3DqQLeomUDArp6MWKm+g==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version is no longer supported, please update to at least 0.8.*
 
   '@xmldom/xmldom@0.8.10':
     resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
@@ -3531,6 +3538,9 @@ packages:
   core-js-compat@3.38.1:
     resolution: {integrity: sha512-JRH6gfXxGmrzF3tZ57lFx97YARxCXPaMzPo6jELZhv88pBH5VXpQ+y0znKGlFnzuaihqhLbefxSJxWJMPtfDzw==}
 
+  core-js@3.39.0:
+    resolution: {integrity: sha512-raM0ew0/jJUqkJ0E6e8UDtl+y/7ktFivgWvqw8dNSQeNWoSDLvQ1H/RN3aPXB9tBd4/FhyR4RDPGhsNIMsAn7g==}
+
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -4525,6 +4535,11 @@ packages:
   expo-updates@0.25.27:
     resolution: {integrity: sha512-1hyYZqBEXcAiEuSRPJ6dINTndGlWi6/bwlyYGjSnyoYfu/vzZQrJ+XA8JUP4EvJ3b0g8a0UOIjlDJ9ke9kMcfg==}
     hasBin: true
+    peerDependencies:
+      expo: '*'
+
+  expo-video@1.2.7:
+    resolution: {integrity: sha512-bX5NFDQvAzkN5rHX8RNGX+I+y28I+652/LqKgo23kGSw5Lcq3h1/anazZa22HEQdXNJKFFbweB1C0o949dyi1w==}
     peerDependencies:
       expo: '*'
 
@@ -14076,6 +14091,8 @@ snapshots:
     dependencies:
       browserslist: 4.24.0
 
+  core-js@3.39.0: {}
+
   core-util-is@1.0.3: {}
 
   cosmiconfig-typescript-loader@5.0.0(@types/node@20.11.17)(cosmiconfig@8.3.6(typescript@5.3.3))(typescript@5.3.3):
@@ -15442,6 +15459,10 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  expo-video@1.2.7(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13)):
+    dependencies:
+      expo: 51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13)
 
   expo-web-browser@13.0.3(expo@51.0.37(@babel/core@7.25.2)(@babel/preset-env@7.25.4(@babel/core@7.25.2))(encoding@0.1.13)):
     dependencies:
