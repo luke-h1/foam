@@ -1,16 +1,22 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import LiveStreamCard from '@app/components/LiveStreamCard';
+import SafeAreaContainer from '@app/components/SafeAreaContainer';
+import useHeader from '@app/hooks/useHeader';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, SafeAreaView, Text, View } from 'react-native';
 
 export default function TopStreamsScreen() {
   const [refreshing, _setRefreshing] = useState(false);
   const _queryClient = useQueryClient();
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
+
+  // useHeader({
+  //   title: 'Top Streams',
+  // });
 
   // const onRefresh = async () => {
   //   setRefreshing(true);
@@ -57,13 +63,21 @@ export default function TopStreamsScreen() {
   return (
     // eslint-disable-next-line react/jsx-no-useless-fragment
     <>
-      {streams && streams.length > 0 && (
-        <FlatList<Stream>
-          data={streams}
-          renderItem={({ item }) => <LiveStreamCard stream={item} />}
-          keyExtractor={item => item.id}
-        />
-      )}
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        {streams && streams.length > 0 && (
+          <FlatList<Stream>
+            data={streams}
+            renderItem={({ item }) => <LiveStreamCard stream={item} />}
+            keyExtractor={item => item.id}
+          />
+        )}
+      </SafeAreaView>
     </>
   );
 }

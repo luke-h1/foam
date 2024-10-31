@@ -18,10 +18,10 @@ export default function LiveStreamMiniCard({ stream }: Props) {
         size="small"
       />
       <View style={styles.streamerDetails}>
-        <ThemedText fontSize={18} fontWeight="bold">
+        <ThemedText fontSize={theme.fontSize.sm} fontWeight="bold">
           {stream.title ?? stream.broadcaster_login}
         </ThemedText>
-        <ThemedText fontSize={16} fontWeight="medium">
+        <ThemedText fontSize={theme.fontSize.xs} fontWeight="medium">
           {stream.game_name}
         </ThemedText>
       </View>

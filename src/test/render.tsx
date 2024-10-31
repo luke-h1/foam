@@ -1,3 +1,6 @@
+import { AuthContextTestProvider } from '@app/context/AuthContext';
+import RootNavigator from '@app/navigation/RootNavigator';
+import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   render as baseRender,
@@ -16,7 +19,15 @@ const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   });
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthContextTestProvider>
+        <NavigationContainer>
+          <RootNavigator />
+          {/* todo - auth context test provider */}
+          {children}
+        </NavigationContainer>
+      </AuthContextTestProvider>
+    </QueryClientProvider>
   );
 };
 

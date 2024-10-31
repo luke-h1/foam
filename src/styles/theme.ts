@@ -13,7 +13,9 @@ const theme = {
     lightGrey: '#FCFBFE',
   },
   fontSize: {
-    sm: 16,
+    xss: 8,
+    xs: 12,
+    sm: 14,
     md: 18,
     lg: 24,
     xl: 32,

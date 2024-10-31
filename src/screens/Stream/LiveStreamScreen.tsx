@@ -1,19 +1,25 @@
-import Chat from '@app/components/Chat';
-import Image from '@app/components/Image';
-import Seperator from '@app/components/Seperator';
-import Tags from '@app/components/Tags';
-import useIsLandscape from '@app/hooks/useIsLandscape';
+/* eslint-disable no-shadow */
 import { StreamStackParamList } from '@app/navigation/Stream/StreamStack';
 import twitchQueries from '@app/queries/twitchQueries';
-import truncate from '@app/utils/truncate';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useQueries } from '@tanstack/react-query';
-import { Dimensions, SafeAreaView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  SafeAreaView,
+  Dimensions,
+  ScrollView,
+  Text,
+  Image,
+} from 'react-native';
 import WebView from 'react-native-webview';
 
 export default function LiveStreamScreen() {
   const route = useRoute<RouteProp<StreamStackParamList>>();
-  const { landscape } = useIsLandscape();
+  const navigation = useNavigation();
+
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
@@ -27,6 +33,16 @@ export default function LiveStreamScreen() {
   const { data: stream, isLoading } = streamQueryResult;
   const { data: user, isLoading: userIsLoading } = userQueryResult;
   const { data: userProfilePicture } = userProfilePictureQueryResult;
+
+  const { width } = Dimensions.get('window');
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      setIsPlaying(false);
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   if (isLoading || userIsLoading) {
     return (
@@ -45,24 +61,14 @@ export default function LiveStreamScreen() {
   }
 
   return (
-    <View
-      style={{
-        display: 'flex',
-        flexDirection: landscape ? 'row' : 'column',
-        margin: 0,
-        padding: 0,
-      }}
-    >
-      {/* video and video details */}
-      <View
-        style={{
-          flex: landscape ? 2 : 3,
-        }}
-      >
-        {stream ? (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {stream && isPlaying && (
           <WebView
             source={{
-              uri: `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
+              uri: isPlaying
+                ? `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`
+                : '',
             }}
             onHttpError={syntheticEvent => {
               const { nativeEvent } = syntheticEvent;
@@ -72,77 +78,87 @@ export default function LiveStreamScreen() {
                 nativeEvent.statusCode,
               );
             }}
-            style={{
-              flex: 1,
-            }}
+            style={[
+              styles.webView,
+              {
+                width,
+                height: width * (9 / 16),
+              },
+            ]}
             allowsInlineMediaPlayback
-          />
-        ) : (
-          // user is offline
-          <Image
-            source={{ uri: user?.offline_image_url }}
-            style={{
-              width: 500,
-              height: 200,
-            }}
           />
         )}
 
-        {/* stream details */}
-        <View
-          style={{
-            flexDirection: landscape ? 'row' : 'column',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            padding: 4,
-          }}
-        >
-          <Image
-            source={{ uri: userProfilePicture }}
-            style={{ width: 35, height: 35, borderRadius: 14 }}
-          />
-          <Text>{stream?.user_name ?? user?.display_name}</Text>
-          <View
-            style={{
-              marginLeft: 8,
-              marginTop: 5,
-              flexWrap: 'wrap',
-            }}
-          >
-            {stream?.title && <Text>{truncate(stream?.title, 40)}</Text>}
-            {stream?.game_name && (
-              <Text
-                style={{
-                  marginTop: 4,
-                }}
-              >
-                {stream?.game_name}
+        <View style={styles.videoDetails}>
+          <View style={styles.videoTitleContainer}>
+            <Text style={styles.videoTitle}>{stream?.title}</Text>
+          </View>
+          <View style={styles.videoMetadata}>
+            <View style={styles.userInfo}>
+              <Image
+                source={{ uri: userProfilePicture }}
+                style={styles.avatar}
+              />
+              <Text style={styles.videoUser}>{user?.display_name}</Text>
+            </View>
+            {stream?.viewer_count && (
+              <Text style={styles.videoViews}>
+                {new Intl.NumberFormat('en-US').format(stream?.viewer_count)}{' '}
+                viewers
               </Text>
             )}
-            {stream?.tags && <Tags tags={stream?.tags} />}
           </View>
         </View>
-        <Seperator />
-      </View>
-      <View
-        style={{
-          height: 400,
-          flex: landscape ? 1 : 2,
-          maxHeight: Dimensions.get('window').height - 10,
-          width: landscape ? 200 : Dimensions.get('window').width,
-        }}
-      >
-        {stream && stream.user_id ? (
-          <Chat channels={[route.params.id]} twitchChannelId={stream.user_id} />
-        ) : (
-          user && (
-            <Chat
-              channels={[user?.display_name as string]}
-              twitchChannelId={user?.id as string}
-            />
-          )
-        )}
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollViewContent: {
+    alignItems: 'center',
+  },
+  webView: {
+    overflow: 'hidden',
+  },
+  videoDetails: {
+    padding: 10,
+    width: '100%',
+  },
+  videoTitleContainer: {
+    marginBottom: 10,
+  },
+  videoTitle: {
+    fontSize: 14,
+  },
+  videoMetadata: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  videoUser: {
+    fontSize: 12,
+  },
+  videoViews: {
+    fontSize: 16,
+    color: '#888',
+  },
+  controlsContainer: {
+    padding: 10,
+  },
+});

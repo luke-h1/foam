@@ -1,6 +1,9 @@
 import useThemeColor from '@app/hooks/useThemeColor';
+import { RootRoutes, RootStackParamList } from '@app/navigation/RootStack';
+import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import twitchService, { Stream } from '@app/services/twitchService';
 import theme from '@app/styles/theme';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { Image, ImageStyle } from 'expo-image';
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
@@ -18,6 +21,8 @@ export default function LiveStreamCard({ stream }: Props) {
   const shadow = useThemeColor({ light: theme.dropShadow, dark: undefined });
   const [broadcasterImage, setBroadcasterImage] = useState<string>();
 
+  const { navigate } = useNavigation<NavigationProp<RootStackParamList>>();
+
   const getUserProfilePictures = async () => {
     const res = await twitchService.getUserImage(stream.user_login);
     setBroadcasterImage(res);
@@ -29,7 +34,17 @@ export default function LiveStreamCard({ stream }: Props) {
   }, [stream]);
 
   return (
-    <TouchableOpacity activeOpacity={0.8}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => {
+        navigate(RootRoutes.Stream, {
+          screen: StreamRoutes.LiveStream,
+          params: {
+            id: stream.user_login,
+          },
+        });
+      }}
+    >
       <ThemedView
         style={[styles.streamCard, shadow]}
         dark="rgba(255,255,255,0.15)"

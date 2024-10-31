@@ -131,7 +131,7 @@ export default function SettingsModal({
       <ThemedText
         fontSize={theme.fontSize.lg}
         style={{
-          padding: 6,
+          padding: 2,
         }}
       >
         Settings
@@ -188,6 +188,6 @@ const styles = StyleSheet.create<{
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
+    padding: 1,
   },
 });
