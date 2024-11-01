@@ -11,6 +11,7 @@ jest.mock('react-native-reanimated', () => {
   Reanimated.default.call = () => {};
   return Reanimated;
 });
+
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 
 jest.doMock('react-native', () => {
