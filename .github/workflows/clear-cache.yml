@@ -1,6 +1,8 @@
 name: Clear github-actions cache
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *'
 
 permissions:
   actions: write
