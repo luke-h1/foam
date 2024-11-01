@@ -6,7 +6,7 @@ on:
     branches: [dev, main]
 env:
   NODE_VERSION: 20.10.0
-  PNPM_VERSION: 9.0.6
+  PNPM_VERSION: 9.12.3
  
 jobs:
   build:
