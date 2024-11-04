@@ -56,17 +56,20 @@ export default class Client {
     },
   ): Promise<TValue> {
     try {
-      // Check for cookie in config and set it
-      const response = await this.axios(config);
+      const response = await this.axios({
+        ...config,
+        headers: {
+          ...this.axios.defaults.headers.common,
+          ...config.headers,
+        },
+      });
 
       if ('rawResponse' in config && config.rawResponse) {
         return omit(response, ['config', 'request']) as TValue;
       }
-
       return response.data;
     } catch (error) {
       if (isAxiosError(error)) {
-        // TODO: send error to new-relic/sentry
         return error.response?.data;
       }
       throw error;
@@ -85,9 +88,7 @@ export default class Client {
 
   public get<TValue = unknown>(
     url: string,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -111,9 +112,7 @@ export default class Client {
   public post<TValue = unknown>(
     url: string,
     data: unknown,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -138,9 +137,7 @@ export default class Client {
   public put<TValue = unknown>(
     url: string,
     data: unknown,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({ ...config, url, data, method: 'PUT' });
   }
@@ -160,9 +157,7 @@ export default class Client {
   public patch<TValue = unknown>(
     url: string,
     data: unknown,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -184,9 +179,7 @@ export default class Client {
 
   public delete<TValue = unknown>(
     url: string,
-    config: RequestConfig = {
-      withCredentials: true,
-    },
+    config: RequestConfig = {},
   ): Promise<TValue> {
     return this.request({
       ...config,
@@ -203,11 +196,15 @@ export default class Client {
     return this.axios.defaults.baseURL ?? '';
   }
 
-  public setToken(value: string): void {
-    this.axios.defaults.headers.common.Authorization = `Bearer ${value}`;
+  public setAuthToken(token: string) {
+    this.axios.defaults.headers.Authorization = `Bearer ${token}`;
   }
 
-  public removeToken(): void {
-    this.axios.defaults.headers.common.Authorization = undefined;
+  public removeAuthToken() {
+    delete this.axios.defaults.headers.Authorization;
+  }
+
+  public getAuthToken() {
+    return this.axios.defaults.headers.Authorization;
   }
 }

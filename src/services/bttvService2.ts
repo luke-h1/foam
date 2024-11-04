@@ -1,5 +1,5 @@
 import { Mutex } from 'async-mutex';
-import { bttvCachedApi } from './Client';
+import { bttvCachedApi } from './api';
 
 export interface BttvEmote {
   id: string;

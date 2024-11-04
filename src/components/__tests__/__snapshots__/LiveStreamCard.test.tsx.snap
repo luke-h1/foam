@@ -192,7 +192,19 @@ exports[`LiveStreamCard renders correctly 1`] = `
                             "flex": 1,
                           }
                         }
-                      />
+                      >
+                        <View
+                          style={
+                            {
+                              "flex": 1,
+                            }
+                          }
+                        >
+                          <Text>
+                            Loading...
+                          </Text>
+                        </View>
+                      </View>
                     </View>
                   </View>
                 </View>

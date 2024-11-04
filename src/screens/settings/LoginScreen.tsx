@@ -31,7 +31,7 @@ export default function LoginScreen() {
     // This changes because we have a naive proxy that hardcodes the redirect URL.
     Platform.select({
       native: isExpoGo
-        ? `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy-expo-go`
+        ? `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy/expo-go`
         : `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy`,
       // This can basically be any web URL.
       default: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/auth/pending`,
