@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-syntax */
-import { ffzApi } from './Client';
+import { ffzApi } from './api';
 import ffzSerializer, { FFZEmote } from './serializers/ffz';
 import { ChatBadge, EmoteTypes } from './serializers/types';
 

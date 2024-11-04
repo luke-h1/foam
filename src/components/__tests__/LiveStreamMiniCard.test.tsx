@@ -3,6 +3,14 @@ import render from '@app/test/render';
 import { screen } from '@testing-library/react-native';
 import LiveStreamMiniCard from '../LiveStreamMiniCard';
 
+// Mock the useNavigation hook
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => ({
+    navigate: jest.fn(),
+  }),
+}));
+
 const mockStream: SearchChannelResponse = {
   id: '1',
   game_id: '456',

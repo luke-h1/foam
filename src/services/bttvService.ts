@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { bttvApi } from './Client';
+import { bttvApi } from './api';
 import bttvSerializer from './serializers/bttv';
 import { EmoteType, EmoteTypes } from './serializers/types';
 

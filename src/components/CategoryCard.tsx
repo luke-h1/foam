@@ -12,6 +12,7 @@ import {
   StyleSheet,
   ViewStyle,
   ImageStyle,
+  TextStyle,
 } from 'react-native';
 
 interface Props {
@@ -29,8 +30,7 @@ export default function CategoryCard({ category }: Props) {
     <Pressable
       onPress={() =>
         navigate(CategoryRoutes.Category, {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
+          // @ts-expect-error - fix types
           screen: CategoryRoutes.Category,
           params: {
             id: category.id,
@@ -57,7 +57,7 @@ export default function CategoryCard({ category }: Props) {
             marginTop: 4,
           }}
         >
-          <Text>{category.name}</Text>
+          <Text style={styles.text}>{category.name}</Text>
         </View>
       </View>
     </Pressable>
@@ -68,6 +68,7 @@ const styles = StyleSheet.create<{
   container: ViewStyle;
   image: ImageStyle;
   wrapper: ViewStyle;
+  text: TextStyle;
 }>({
   container: {
     marginBottom: 17,
@@ -80,8 +81,12 @@ const styles = StyleSheet.create<{
   image: {
     width: IMAGE_WIDTH,
     height: IMAGE_HEIGHT,
+    borderRadius: 8,
   },
   wrapper: {
     marginRight: 16,
+  },
+  text: {
+    fontSize: 16,
   },
 });

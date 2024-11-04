@@ -1,9 +1,9 @@
 /* eslint-disable no-shadow */
+import Chat from '@app/components/Chat';
 import { StreamStackParamList } from '@app/navigation/Stream/StreamStack';
 import twitchQueries from '@app/queries/twitchQueries';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import { useQueries } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -17,9 +17,6 @@ import WebView from 'react-native-webview';
 
 export default function LiveStreamScreen() {
   const route = useRoute<RouteProp<StreamStackParamList>>();
-  const navigation = useNavigation();
-
-  const [isPlaying, setIsPlaying] = useState(true);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
@@ -35,14 +32,6 @@ export default function LiveStreamScreen() {
   const { data: userProfilePicture } = userProfilePictureQueryResult;
 
   const { width } = Dimensions.get('window');
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', () => {
-      setIsPlaying(false);
-    });
-
-    return unsubscribe;
-  }, [navigation]);
 
   if (isLoading || userIsLoading) {
     return (
@@ -60,35 +49,34 @@ export default function LiveStreamScreen() {
     );
   }
 
+  if (!stream) {
+    return null;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {stream && isPlaying && (
-          <WebView
-            source={{
-              uri: isPlaying
-                ? `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`
-                : '',
-            }}
-            onHttpError={syntheticEvent => {
-              const { nativeEvent } = syntheticEvent;
-              // eslint-disable-next-line no-console
-              console.warn(
-                'WebView received error status code: ',
-                nativeEvent.statusCode,
-              );
-            }}
-            style={[
-              styles.webView,
-              {
-                width,
-                height: width * (9 / 16),
-              },
-            ]}
-            allowsInlineMediaPlayback
-          />
-        )}
-
+        <WebView
+          source={{
+            uri: `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
+          }}
+          onHttpError={syntheticEvent => {
+            const { nativeEvent } = syntheticEvent;
+            // eslint-disable-next-line no-console
+            console.warn(
+              'WebView received error status code: ',
+              nativeEvent.statusCode,
+            );
+          }}
+          style={[
+            styles.webView,
+            {
+              width, // Adjust width based on screen size
+              height: width * (9 / 16), // Maintain 16:9 aspect ratio
+            },
+          ]}
+          allowsInlineMediaPlayback
+        />
         <View style={styles.videoDetails}>
           <View style={styles.videoTitleContainer}>
             <Text style={styles.videoTitle}>{stream?.title}</Text>
@@ -101,13 +89,19 @@ export default function LiveStreamScreen() {
               />
               <Text style={styles.videoUser}>{user?.display_name}</Text>
             </View>
-            {stream?.viewer_count && (
-              <Text style={styles.videoViews}>
-                {new Intl.NumberFormat('en-US').format(stream?.viewer_count)}{' '}
-                viewers
-              </Text>
-            )}
+            <Text style={styles.videoViews}>
+              {new Intl.NumberFormat('en-US').format(
+                stream?.viewer_count as number,
+              )}{' '}
+              viewers
+            </Text>
           </View>
+        </View>
+        <View style={styles.chatContainer}>
+          <Chat
+            channelName={user?.display_name as string}
+            channelId={user?.id as string}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -133,7 +127,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   videoTitle: {
-    fontSize: 14,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   videoMetadata: {
     flexDirection: 'row',
@@ -152,11 +147,16 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   videoUser: {
-    fontSize: 12,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   videoViews: {
     fontSize: 16,
     color: '#888',
+  },
+  chatContainer: {
+    padding: 2,
+    // maxHeight: 300, // Restrict the height of the chat container
   },
   controlsContainer: {
     padding: 10,

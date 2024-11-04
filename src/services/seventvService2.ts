@@ -1,5 +1,5 @@
 import { Mutex } from 'async-mutex';
-import { sevenTvApi } from './Client';
+import { sevenTvApi } from './api';
 
 export interface SeventTvFile {
   name: string;

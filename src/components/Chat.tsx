@@ -1,47 +1,61 @@
+/* eslint-disable */
 import { useAuthContext } from '@app/context/AuthContext';
 import useTmiClient from '@app/hooks/useTmiClient';
-import { parseEmotes } from '@app/lib/chat';
 import { useNavigation } from '@react-navigation/native';
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { FlatList, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef, useState, memo } from 'react';
+import {
+  FlatList,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+  StyleSheet,
+} from 'react-native';
 import { ChatUserstate } from 'tmi.js';
 
-interface Props {
-  channels: string[];
-  twitchChannelId: string;
+interface ChatProps {
+  channelId: string;
+  channelName: string;
 }
 
-interface Message {
+interface ChatMessage {
   username: string;
-  content: ReactNode;
+  content: string;
 }
 
-export default function Chat({ channels, twitchChannelId }: Props) {
+const MAX_MESSAGES = 100; // Maximum number of messages to retain
+
+const ChatMessageItem = memo(({ username, content }: ChatMessage) => (
+  <View style={styles.messageContainer}>
+    <View style={styles.messageContent}>
+      <Text style={styles.username}>{username}: </Text>
+      <Text style={styles.message}>{content}</Text>
+    </View>
+  </View>
+));
+ChatMessageItem.displayName = 'ChatMessageItem';
+
+export default function Chat({ channelId, channelName }: ChatProps) {
   const { auth, user } = useAuthContext();
   const navigation = useNavigation();
-  const [notice, setNotice] = useState<string>('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [scrollPaused, setScrollPaused] = useState(false);
-  const flatListRef = useRef<FlatList<Message>>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-
-  const { disconnect, tmiClient } = useTmiClient({
-    channels,
-    tmiOptions: {
+  const flatListRef = useRef<FlatList<ChatMessage>>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const tmiClientRef = useRef(
+    useTmiClient({
       options: {
         clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
       },
+      channels: [channelName],
       identity: {
         username: user?.display_name,
-        password: auth?.anonToken ?? auth?.token?.accessToken,
+        password: auth?.anonToken || auth?.token?.accessToken,
       },
-      connection: {
-        timeout: 5000,
-      },
-    },
-  });
+    }),
+  );
 
   useEffect(() => {
+    const tmiClient = tmiClientRef.current;
+
     const handleMessage = async (
       channel: string,
       tags: ChatUserstate,
@@ -52,100 +66,130 @@ export default function Chat({ channels, twitchChannelId }: Props) {
         // Don't listen to my own messages
         return;
       }
-      const [parsedMessage] = await Promise.all([
-        await parseEmotes(message, tags.emotes, {
-          channelId: channel,
-          twitchUserId: twitchChannelId,
-        }),
-        // await parseBadges(tags.badges, { channelId: twitchChannelId }),
-      ]);
 
-      const htmlMessage = parsedMessage.toHtml();
+      if (messages.length >= MAX_MESSAGES) {
+        setMessages(prev => prev.slice(1));
+      }
 
-      setMessages(prev => [
-        ...prev,
-        {
-          username: tags['display-name'] as string,
-          content: htmlMessage,
-        },
-      ]);
+      setMessages(prev => {
+        const newMessages = [
+          ...prev,
+          {
+            username: tags['display-name'] as string,
+            content: message,
+          },
+        ];
+
+        return newMessages;
+      });
     };
 
+    tmiClient.connect();
     tmiClient.on('message', handleMessage);
     tmiClient.on('clearchat', () => {
       setMessages([]);
-      setNotice('Chat cleared by moderator');
-      setTimeout(() => {
-        setNotice('');
-      }, 1500);
     });
 
     navigation.addListener('blur', () => {
-      disconnect();
+      tmiClient.disconnect();
     });
+
+    return () => {
+      tmiClient.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
+
   return (
-    <SafeAreaView style={{ padding: 2, maxHeight: 'auto' }}>
-      <View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.chatWrapper}>
+        <Text style={styles.header}>Chat</Text>
+      </View>
+      <View style={styles.chatContainer}>
         <FlatList
           data={messages}
           ref={flatListRef}
-          keyExtractor={index => index.toString() + Math.random()}
+          keyExtractor={(_, index) => index.toString()}
           renderScrollComponent={props => <ScrollView {...props} />}
           onScroll={event => {
             if (
               event.nativeEvent.contentOffset.y <
               event.nativeEvent.contentSize.height
             ) {
-              setScrollPaused(true);
+              // setScrollPaused(true);
             }
 
             if (
               event.nativeEvent.contentOffset.y >
               event.nativeEvent.contentSize.height
             ) {
-              setScrollPaused(false);
+              // setScrollPaused(false);
             }
           }}
           onContentSizeChange={() => {
-            flatListRef.current?.scrollToEnd({ animated: false });
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 300);
           }}
-          renderItem={({ item }) => {
-            return (
-              <View
-                style={{
-                  display: 'flex',
-                  marginBottom: 4,
-                  paddingHorizontal: 5,
-                  paddingVertical: 2,
-                }}
-              >
-                {notice && <Text>{notice}</Text>}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'flex-start',
-                  }}
-                >
-                  <Text>{item.username}: </Text>
-                  <View
-                    style={{
-                      flexShrink: 1,
-                      flexDirection: 'row',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <Text>{item.content}</Text>
-                  </View>
-                </View>
-              </View>
-            );
-          }}
+          renderItem={({ item }) => (
+            <ChatMessageItem username={item.username} content={item.content} />
+          )}
+          contentContainerStyle={styles.contentContainer}
         />
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  chatWrapper: {
+    padding: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#ccc',
+  },
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    margin: 4,
+  },
+  chatContainer: {
+    borderTopLeftRadius: 1,
+    borderTopWidth: 2,
+    flex: 1,
+    justifyContent: 'flex-start', // Ensure messages start at the top
+    maxHeight: 350,
+  },
+  contentContainer: {
+    padding: 8,
+    flexGrow: 1,
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    alignItems: 'flex-start',
+  },
+  messageContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    textAlign: 'left',
+    alignItems: 'flex-start',
+  },
+  username: {
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  message: {
+    flex: 1,
+  },
+});

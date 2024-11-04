@@ -1,6 +1,6 @@
 /* eslint-disable consistent-return */
 /* eslint-disable no-restricted-syntax */
-import { sevenTvApi } from './Client';
+import { sevenTvApi } from './api';
 import seventvSerializer from './serializers/seventv';
 import { EmoteTypes } from './serializers/types';
 

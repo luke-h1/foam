@@ -21,17 +21,21 @@ const main = async () => {
     return res.status(302).redirect(redirectUri);
   });
 
-  app.get('/api/proxy-expo-go', async (req, res) => {
-    // This is fragile and won't work in many cases. It's just an example. Physical devices, and android emulators will need the full IP address instead of localhost.
-    // This also assumes the dev server is running on port 8081.
-    const redirectUri = `exp://localhost:8081/--/?${new URL(req.url, 'http://foam').searchParams}`;
-
-    console.info('redirecting to app:', redirectUri);
-
-    return res.status(302).redirect(redirectUri);
-  });
-
   app.get('/api/proxy/default-token', async (req, res) => {
+    const isExpoGo = req.query.isExpoGo === 'true';
+    console.log('req.query', req.query);
+
+    if (isExpoGo) {
+      console.log('request for default token from Expo Go');
+      // This is fragile and won't work in many cases. It's just an example. Physical devices, and android emulators will need the full IP address instead of localhost.
+      // This also assumes the dev server is running on port 8081.
+      const redirectUri = `exp://localhost:8081/--/?${new URL(req.url, 'http://foam').searchParams}`;
+
+      console.info('redirecting to app:', redirectUri);
+
+      return res.status(302).redirect(redirectUri);
+    }
+
     console.info('request for default token');
     const { data } = await axios.post(
       'https://id.twitch.tv/oauth2/token',

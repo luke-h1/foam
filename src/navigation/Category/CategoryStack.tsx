@@ -12,7 +12,9 @@ export type CategoryStackParamList = {
   // FIX ME TO USE NAVIGATION SCREEN PARAMS
   // i.e.
   // [HomeTabsRoutes.Category]: NavigatorScreenParams<CategoryStackParamList>;
-  [CategoryRoutes.Category]: { id: string };
+  [CategoryRoutes.Category]: {
+    id: string;
+  };
 };
 
 export type CategoryRouteParams = keyof CategoryStackParamList;

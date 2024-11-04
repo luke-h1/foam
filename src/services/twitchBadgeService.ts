@@ -1,4 +1,4 @@
-import { twitchBadgeApi } from './Client';
+import { twitchBadgeApi } from './api';
 
 export interface BadgeVersion {
   image_url_1x: string;

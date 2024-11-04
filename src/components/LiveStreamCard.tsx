@@ -1,9 +1,9 @@
 import useThemeColor from '@app/hooks/useThemeColor';
-import { RootRoutes, RootStackParamList } from '@app/navigation/RootStack';
+import { RootStackParamList, RootRoutes } from '@app/navigation/RootStack';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import twitchService, { Stream } from '@app/services/twitchService';
 import theme from '@app/styles/theme';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { Image, ImageStyle } from 'expo-image';
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
@@ -35,7 +35,6 @@ export default function LiveStreamCard({ stream }: Props) {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
       onPress={() => {
         navigate(RootRoutes.Stream, {
           screen: StreamRoutes.LiveStream,
