@@ -84,7 +84,7 @@ export default forwardRef(SearchInput);
 const styles = StyleSheet.create<{
   container: ViewStyle;
   input: TextStyle;
-  searchIcon: ViewStyle;
+  searchIcon: TextStyle;
   clearIcon: ViewStyle;
 }>({
   container: {

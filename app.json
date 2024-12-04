@@ -2,6 +2,7 @@
   "expo": {
     "name": "foam",
     "slug": "foam",
+    "newArchEnabled": true,
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -53,12 +54,9 @@
       "expo-build-properties",
       {
         "ios": {
-          "flipper": true,
-          "newArchEnabled": false
+          "flipper": true
         },
-        "android": {
-          "newArchEnabled": false
-        }
+        "android": {}
       }
     ],
     ["newrelic-react-native-agent"],

@@ -9,7 +9,7 @@ import twitchService, {
   SearchChannelResponse,
 } from '@app/services/twitchService';
 import { statusBarHeight } from '@app/utils/statusBarHeight';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '@app/utils/storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -24,6 +24,13 @@ import {
   ImageStyle,
 } from 'react-native';
 
+const previousSearchesKey = 'previousSearches' as const;
+
+interface SearchHistoryItem {
+  query: string;
+  date: string;
+}
+
 export default function SearchScreen() {
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
@@ -31,11 +38,15 @@ export default function SearchScreen() {
     [],
   );
 
-  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
   const fetchSearchHistory = async () => {
-    const history = await AsyncStorage.getItem('previousSearches');
-    setSearchHistory(JSON.parse(history as string));
+    const history = storage.getString(previousSearchesKey) ?? '[]';
+    const parsedHistory: SearchHistoryItem[] = JSON.parse(history);
+    parsedHistory.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+    setSearchHistory(parsedHistory);
   };
 
   const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
@@ -62,18 +73,31 @@ export default function SearchScreen() {
     const results = await twitchService.searchChannels(value);
     setSearchResults(results);
 
-    const prevSearches = await AsyncStorage.getItem('previousSearches');
+    const prevSearches = storage.getString(previousSearchesKey);
+    const parsedPrevSearches: SearchHistoryItem[] = prevSearches
+      ? JSON.parse(prevSearches)
+      : [];
 
-    const newPrevSearches = Array.from(
-      new Set(prevSearches ? JSON.parse(prevSearches) : []).add(value),
+    // Check if the query already exists in the history
+    const existingIndex = parsedPrevSearches.findIndex(
+      item => item.query === value,
     );
 
-    await AsyncStorage.setItem(
-      'previousSearches',
-      JSON.stringify(newPrevSearches),
-    );
-    const previousSearchResults =
-      await AsyncStorage.getItem('previousSearches');
+    if (existingIndex !== -1) {
+      // Update the date of the existing query
+      parsedPrevSearches[existingIndex].date = new Date().toISOString();
+    } else {
+      // Add the new query to the history
+      parsedPrevSearches.push({
+        query: value,
+        date: new Date().toISOString(),
+      });
+    }
+
+    storage.set(previousSearchesKey, JSON.stringify(parsedPrevSearches));
+
+    const previousSearchResults = storage.getString(previousSearchesKey);
+
     setSearchHistory(JSON.parse(previousSearchResults as string));
   }, 400);
 
@@ -139,21 +163,18 @@ export default function SearchScreen() {
 
       {searchHistory && (
         <SearchHistory
-          results={searchHistory}
+          results={searchHistory.map(item => item.query)}
           onClearAll={() => {
             setSearchHistory([]);
-            AsyncStorage.removeItem('previousSearches');
+            storage.delete(previousSearchesKey);
           }}
           onSelectItem={q => {
             handleQuery(q);
           }}
           onClearItem={id => {
-            const newHistory = searchHistory.filter(item => item !== id);
+            const newHistory = searchHistory.filter(item => item.query !== id);
             setSearchHistory(newHistory);
-            AsyncStorage.setItem(
-              'previousSearches',
-              JSON.stringify(newHistory),
-            );
+            storage.set(previousSearchesKey, JSON.stringify(newHistory));
           }}
         />
       )}

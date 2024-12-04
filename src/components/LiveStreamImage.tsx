@@ -2,14 +2,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import theme from '@app/styles/theme';
 import { Image } from 'expo-image';
-import {
-  ImageStyle,
-  StyleSheet,
-  View,
-  ViewStyle,
-  Text,
-  TextStyle,
-} from 'react-native';
+import { StyleSheet, View, ViewStyle, Text } from 'react-native';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
 import ThemedView from './ThemedView';
 
@@ -100,21 +93,7 @@ export default function LiveStreamImage({
   );
 }
 
-const styles = StyleSheet.create<{
-  fallbackImage: ViewStyle;
-  imageContainer: ViewStyle;
-  imageSizeLarge: ImageStyle;
-  imageSizeExtraLarge: ImageStyle;
-  imageSizeMedium: ImageStyle;
-  imageSizeSmall: ImageStyle;
-  logoSizeLarge: ImageStyle;
-  logoSizeExtraLarge: ImageStyle;
-  logoSizeMedium: ImageStyle;
-  logoSizeSmall: ImageStyle;
-  profileImage: ImageStyle;
-  elapsedTimeContainer: ViewStyle;
-  elapsedTimeText: TextStyle;
-}>({
+const styles = StyleSheet.create({
   imageContainer: {
     marginRight: theme.spacing.md,
     borderRadius: theme.borderradii.sm,

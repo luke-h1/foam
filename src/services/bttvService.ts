@@ -1,90 +1,53 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  BttvChannelEmotesResponse,
+  BttvGlobalEmotesResponse,
+  EmotesList,
+} from '../utils/third-party/types';
 import { bttvApi } from './api';
-import bttvSerializer from './serializers/bttv';
-import { EmoteType, EmoteTypes } from './serializers/types';
-
-interface BttvEmote {
-  name: string;
-  width?: number;
-  height?: number;
-  zeroWidth: boolean;
-  url: string;
-  type: EmoteType;
-  ownerId?: string;
-}
-
-export interface ChatBadge {
-  name: string;
-  url: string;
-  type: EmoteType;
-  color?: string;
-}
-
-interface BttvGlobalEmoteResponse {
-  id: string;
-  code: string;
-  imageType: string;
-  animated: boolean;
-  userId: string;
-  modifier: boolean;
-}
-
-type IdCodePair = {
-  id: string;
-  code: string;
-};
-
-interface BttvSingleGlobalEmoteResponse {
-  id: string;
-  bots: string[];
-  avatar: string;
-  channelEmotes: IdCodePair[];
-  sharedEmotes: IdCodePair[];
-}
-
-interface BttvBadgeResponse {
-  id: string;
-  name: string;
-  displayName: string;
-  providerId: string;
-  badge: {
-    type: number;
-    description: string;
-    svg: string;
-  };
-}
 
 const bttvService = {
-  getGlobalEmotes: async (): Promise<BttvEmote[]> => {
-    const response = await bttvApi.get<BttvGlobalEmoteResponse[]>(
-      '/3/cached/emotes/global',
-    );
+  getChannelEmotes: async (channelId: string | null): Promise<EmotesList> => {
+    if (!channelId) {
+      return [];
+    }
 
-    return response.data.map(emote =>
-      bttvSerializer.fromBttvEmote(emote, EmoteTypes.BTTVGlobal),
-    );
+    try {
+      const { data } = await bttvApi.get<BttvChannelEmotesResponse>(
+        `/cached/users/twitch/${channelId}`,
+      );
+
+      const result = [...data.channelEmotes, ...data.sharedemotes].map(
+        emote => ({
+          id: emote.id,
+          code: emote.code,
+          channelId,
+        }),
+      );
+
+      return result;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return [];
+    }
   },
-  getChannelEmotes: async (id: string): Promise<BttvEmote[] | Error> => {
-    const response = await bttvApi.get<BttvSingleGlobalEmoteResponse>(
-      `/3/cached/users/twitch/${id}`,
-    );
+  getGlobalEmotes: async (): Promise<EmotesList> => {
+    try {
+      const { data } = await bttvApi.get<BttvGlobalEmotesResponse>(
+        '/cached/emotes/global',
+      );
 
-    const emotesToUrl: BttvEmote[] = [];
+      const result = data.map(c => ({
+        id: c.id,
+        code: c.code,
+        channelId: null,
+      }));
 
-    const channelEmotes = response.data.channelEmotes.map(emote =>
-      bttvSerializer.fromBttvEmote(emote, EmoteTypes.BTTVChannel),
-    );
-    const sharedEmotes = response.data.sharedEmotes.map(emote =>
-      bttvSerializer.fromBttvEmote(emote, EmoteTypes.BTTVShared),
-    );
-
-    emotesToUrl.push(...channelEmotes, ...sharedEmotes);
-
-    return emotesToUrl;
+      return result;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return [];
+    }
   },
-  // getBadges: async () => {
-  //   const res = await bttvApi.get<BttvBadgeResponse[]>('/3/cached/badges');
-  // },
-};
+} as const;
 
 export default bttvService;

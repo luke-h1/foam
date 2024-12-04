@@ -27,30 +27,30 @@ export default function LiveStreamScreen() {
       ],
     });
 
-  const { data: stream, isLoading } = streamQueryResult;
-  const { data: user, isLoading: userIsLoading } = userQueryResult;
+  const { data: stream, isLoading: isStreamLoading } = streamQueryResult;
+  const { data: user, isLoading: isUserLoading } = userQueryResult;
   const { data: userProfilePicture } = userProfilePictureQueryResult;
 
   const { width } = Dimensions.get('window');
 
-  if (isLoading || userIsLoading) {
+  if (isStreamLoading || isUserLoading) {
     return (
-      <SafeAreaView>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            flex: 1,
-          }}
-        >
-          <Text>loading...</Text>
+      <SafeAreaView style={styles.loadingContainer}>
+        <View style={styles.loadingView}>
+          <Text>Loading...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   if (!stream) {
-    return null;
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <View style={styles.loadingView}>
+          <Text>No stream available</Text>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -59,14 +59,6 @@ export default function LiveStreamScreen() {
         <WebView
           source={{
             uri: `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
-          }}
-          onHttpError={syntheticEvent => {
-            const { nativeEvent } = syntheticEvent;
-            // eslint-disable-next-line no-console
-            console.warn(
-              'WebView received error status code: ',
-              nativeEvent.statusCode,
-            );
           }}
           style={[
             styles.webView,
@@ -99,8 +91,8 @@ export default function LiveStreamScreen() {
         </View>
         <View style={styles.chatContainer}>
           <Chat
-            channelName={user?.display_name as string}
             channelId={user?.id as string}
+            channelName={stream?.user_login as string}
           />
         </View>
       </ScrollView>
@@ -112,6 +104,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingView: {
+    display: 'flex',
+    flexDirection: 'row',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollViewContent: {
     alignItems: 'center',
@@ -156,7 +160,7 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     padding: 2,
-    // maxHeight: 300, // Restrict the height of the chat container
+    maxHeight: 300, // Restrict the height of the chat container
   },
   controlsContainer: {
     padding: 10,

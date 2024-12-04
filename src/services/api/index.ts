@@ -9,6 +9,7 @@ export const twitchApi = new Client({
   },
 });
 
+// twitch badge API
 export const twitchBadgeApi = axios.create({
   baseURL: 'https://badges.twitch.tv/v1/badges',
 });
