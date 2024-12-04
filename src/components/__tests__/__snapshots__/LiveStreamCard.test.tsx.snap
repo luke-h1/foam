@@ -52,11 +52,17 @@ exports[`LiveStreamCard renders correctly 1`] = `
             }
             onGestureCancel={[Function]}
             pointerEvents="box-none"
-            sheetAllowedDetents="large"
+            sheetAllowedDetents={
+              [
+                1,
+              ]
+            }
             sheetCornerRadius={-1}
+            sheetElevation={24}
             sheetExpandsWhenScrolledToEdge={true}
             sheetGrabberVisible={false}
-            sheetLargestUndimmedDetent="all"
+            sheetInitialDetent={0}
+            sheetLargestUndimmedDetent={-1}
             style={
               {
                 "bottom": 0,
@@ -64,6 +70,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
                 "position": "absolute",
                 "right": 0,
                 "top": 0,
+                "zIndex": undefined,
               }
             }
           >
@@ -142,6 +149,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
               >
                 <View
                   collapsable={false}
+                  enabled={false}
                   handlerTag={1}
                   handlerType="PanGestureHandler"
                   needsOffscreenAlphaCompositing={false}
@@ -236,11 +244,20 @@ exports[`LiveStreamCard renders correctly 1`] = `
     exclusive={true}
     handlerTag={2}
     handlerType="NativeViewGestureHandler"
+    innerRef={null}
     onGestureEvent={[Function]}
     onGestureHandlerEvent={[Function]}
     onGestureHandlerStateChange={[Function]}
     onHandlerStateChange={[Function]}
     rippleColor={0}
+    style={
+      [
+        undefined,
+        {
+          "cursor": undefined,
+        },
+      ]
+    }
     touchSoundDisabled={false}
   >
     <View

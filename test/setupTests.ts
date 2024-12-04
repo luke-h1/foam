@@ -1,6 +1,9 @@
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
 import mockFile from './mockFile';
+import 'cross-fetch/polyfill';
+import 'core-js';
+import '@testing-library/jest-native/extend-expect';
 
 import 'react-native-gesture-handler/jestSetup';
 
@@ -12,7 +15,19 @@ jest.mock('react-native-reanimated', () => {
   return Reanimated;
 });
 
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+jest.mock('react-native-webview', () => {
+  const MockWebView = jest.requireActual('react-native').View;
+
+  return {
+    __esModule: true,
+    WebView: MockWebView,
+    default: MockWebView,
+  };
+});
+
+jest.mock('expo-font');
+
+// jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 
 jest.doMock('react-native', () => {
   return Object.setPrototypeOf(

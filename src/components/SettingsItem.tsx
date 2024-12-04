@@ -5,7 +5,6 @@ import {
   View,
   StyleSheet,
   ViewStyle,
-  TextStyle,
 } from 'react-native';
 import Seperator from './Seperator';
 import ThemedText from './ThemedText';
@@ -71,7 +70,7 @@ export default function SettingsItem({ contents }: Props) {
 const styles = StyleSheet.create<{
   settingsContainer: ViewStyle;
   item: ViewStyle;
-  copy: TextStyle;
+  copy: ViewStyle;
   settingsItem: ViewStyle;
 }>({
   settingsContainer: {
@@ -91,9 +90,7 @@ const styles = StyleSheet.create<{
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    textAlign: 'left',
     width: '85%',
-    textAlignVertical: 'center',
     flexWrap: 'wrap',
   },
   settingsItem: {

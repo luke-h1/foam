@@ -53,6 +53,7 @@ export default function App() {
   if (shouldDelete) {
     deleteTokens();
   }
+
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <NavigationContainer>

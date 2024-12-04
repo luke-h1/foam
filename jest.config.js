@@ -1,10 +1,7 @@
 const jestConfig = {
   preset: 'jest-expo',
-  setupFilesAfterEnv: ['./test/setupFilesAfterEnv.js'],
-  setupFiles: [
-    './test/setupTests.ts',
-    './node_modules/react-native-gesture-handler/jestSetup.js',
-  ],
+  setupFilesAfterEnv: ['./test/setupTests.ts'],
+  setupFiles: ['./node_modules/react-native-gesture-handler/jestSetup.js'],
   moduleNameMapper: {
     '\\.svg': '<rootDir>/src/test/__mocks__/svgMock.js',
     '^@app/(.*)$': '<rootDir>/src/$1',

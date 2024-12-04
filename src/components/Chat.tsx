@@ -1,91 +1,93 @@
-/* eslint-disable */
+// eslint-disable-next-line import/no-cycle
+import ChatMessage from '@app/components/ChatMessage';
 import { useAuthContext } from '@app/context/AuthContext';
+import { useMounted } from '@app/hooks/useMounted';
 import useTmiClient from '@app/hooks/useTmiClient';
+import { parseBadges } from '@app/utils/third-party/badges';
+import { parseEmotes } from '@app/utils/third-party/emotes';
 import { useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
 import { useEffect, useRef, useState, memo } from 'react';
-import {
-  FlatList,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  View,
-  StyleSheet,
-} from 'react-native';
-import { ChatUserstate } from 'tmi.js';
+import { Dimensions, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+
+export interface CommonMessage {
+  user: {
+    name: string;
+    color: string;
+  };
+  message: JSX.Element[];
+  badges: string;
+}
 
 interface ChatProps {
   channelId: string;
   channelName: string;
 }
 
-interface ChatMessage {
-  username: string;
-  content: string;
-}
-
-const MAX_MESSAGES = 100; // Maximum number of messages to retain
-
-const ChatMessageItem = memo(({ username, content }: ChatMessage) => (
-  <View style={styles.messageContainer}>
-    <View style={styles.messageContent}>
-      <Text style={styles.username}>{username}: </Text>
-      <Text style={styles.message}>{content}</Text>
-    </View>
-  </View>
-));
-ChatMessageItem.displayName = 'ChatMessageItem';
-
-export default function Chat({ channelId, channelName }: ChatProps) {
+const Chat = memo(({ channelId, channelName }: ChatProps) => {
   const { auth, user } = useAuthContext();
   const navigation = useNavigation();
-  const flatListRef = useRef<FlatList<ChatMessage>>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const tmiClientRef = useRef(
-    useTmiClient({
-      options: {
-        clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      },
-      channels: [channelName],
-      identity: {
-        username: user?.display_name,
-        password: auth?.anonToken || auth?.token?.accessToken,
-      },
-    }),
-  );
+  const flashListRef = useRef<FlashList<CommonMessage>>(null);
+  const { onMounted } = useMounted();
 
-  useEffect(() => {
-    const tmiClient = tmiClientRef.current;
+  const [messages, setMessages] = useState<CommonMessage[]>([]);
 
-    const handleMessage = async (
-      channel: string,
-      tags: ChatUserstate,
-      message: string,
-      self: boolean,
-    ) => {
-      if (self) {
-        // Don't listen to my own messages
-        return;
-      }
+  const tmiClient = useTmiClient({
+    options: {
+      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+    },
+    channels: [channelName],
+    identity: {
+      username: user?.display_name,
+      password: auth?.anonToken || auth?.token?.accessToken,
+    },
+    connection: {
+      reconnect: !__DEV__,
+    },
+  });
 
-      if (messages.length >= MAX_MESSAGES) {
-        setMessages(prev => prev.slice(1));
-      }
-
-      setMessages(prev => {
-        const newMessages = [
-          ...prev,
-          {
-            username: tags['display-name'] as string,
-            content: message,
-          },
-        ];
-
-        return newMessages;
-      });
+  const connectToChat = () => {
+    const options = {
+      channelId,
     };
 
     tmiClient.connect();
-    tmiClient.on('message', handleMessage);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    tmiClient.on('message', async (channel, tags, text, _self) => {
+      const displayName = tags['display-name'];
+
+      /* 
+      twitch badges only. 3rd party badges are not included (7tv, ffz, bttv). 
+      We need to fetch them separately and cache them.
+
+      format: {"rplace-2023": "1"}
+      {"artist-badge": "1", "subscriber": "42", "vip": "1"}
+      */
+
+      // console.log('badges ->', tags.badges);
+
+      const badges = await parseBadges(tags.badges, tags.username, options);
+      const htmlBadges = badges.toHTML();
+
+      const message = await parseEmotes(text, tags.emotes, options);
+      const htmlMessage = message.toHTML();
+
+      setMessages(prevMessages => {
+        return [
+          ...prevMessages,
+          {
+            badges: htmlBadges,
+            user: {
+              name: displayName || '',
+              color: tags.color || '',
+            },
+            message: htmlMessage,
+          },
+        ];
+      });
+    });
+
     tmiClient.on('clearchat', () => {
       setMessages([]);
     });
@@ -93,6 +95,10 @@ export default function Chat({ channelId, channelName }: ChatProps) {
     navigation.addListener('blur', () => {
       tmiClient.disconnect();
     });
+  };
+
+  useEffect(() => {
+    connectToChat();
 
     return () => {
       tmiClient.disconnect();
@@ -100,9 +106,9 @@ export default function Chat({ channelId, channelName }: ChatProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true });
+  onMounted(() => {
+    if (flashListRef.current) {
+      flashListRef.current.scrollToEnd({ animated: true });
     }
   }, [messages]);
 
@@ -110,86 +116,46 @@ export default function Chat({ channelId, channelName }: ChatProps) {
     <SafeAreaView style={styles.container}>
       <View style={styles.chatWrapper}>
         <Text style={styles.header}>Chat</Text>
-      </View>
-      <View style={styles.chatContainer}>
-        <FlatList
-          data={messages}
-          ref={flatListRef}
+        <FlashList
+          data={messages || []}
+          ref={flashListRef}
+          estimatedItemSize={1000}
+          scrollEnabled
           keyExtractor={(_, index) => index.toString()}
-          renderScrollComponent={props => <ScrollView {...props} />}
-          onScroll={event => {
-            if (
-              event.nativeEvent.contentOffset.y <
-              event.nativeEvent.contentSize.height
-            ) {
-              // setScrollPaused(true);
-            }
-
-            if (
-              event.nativeEvent.contentOffset.y >
-              event.nativeEvent.contentSize.height
-            ) {
-              // setScrollPaused(false);
-            }
-          }}
+          // eslint-disable-next-line react/no-unstable-nested-components
+          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          renderItem={({ item }) => <ChatMessage item={item} />}
+          pagingEnabled
           onContentSizeChange={() => {
-            setTimeout(() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-            }, 300);
+            if (messages.length > 0) {
+              flashListRef.current?.scrollToEnd({ animated: true });
+            }
           }}
-          renderItem={({ item }) => (
-            <ChatMessageItem username={item.username} content={item.content} />
-          )}
-          contentContainerStyle={styles.contentContainer}
         />
       </View>
     </SafeAreaView>
   );
-}
+});
+Chat.displayName = 'Chat';
+
+export default Chat;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'flex-start',
+    width: Dimensions.get('window').width,
   },
   chatWrapper: {
-    padding: 9,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-    backgroundColor: '#ccc',
+    width: '100%',
+    height: '100%',
   },
   header: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#000',
     margin: 4,
-  },
-  chatContainer: {
-    borderTopLeftRadius: 1,
-    borderTopWidth: 2,
-    flex: 1,
-    justifyContent: 'flex-start', // Ensure messages start at the top
-    maxHeight: 350,
-  },
-  contentContainer: {
-    padding: 8,
-    flexGrow: 1,
-  },
-  messageContainer: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    alignItems: 'flex-start',
-  },
-  messageContent: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    textAlign: 'left',
-    alignItems: 'flex-start',
-  },
-  username: {
-    fontWeight: 'bold',
-    marginRight: 5,
-  },
-  message: {
-    flex: 1,
   },
 });

@@ -66,123 +66,38 @@ export interface DefaultTokenResponse {
   token_type: string;
 }
 
+interface Emote {
+  format: string[];
+  id: string;
+  images: {
+    url_1x: string;
+    url_2x: string;
+    url_4x: string;
+    name: string;
+    scale: ['1.0', '2.0', '3.0'];
+    theme_mode: ['light', 'dark'];
+  }[];
+}
+
 const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<string> => {
     const { data } = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
-
     return data;
   },
 
-  // getGlobalEmotes: async (headers: AxiosHeaders) => {
-  //   const data = await twitchApi.get<Emote>('/chat/emotes/global', {
-  //     headers,
-  //   });
-
-  //   const emotes = data.map((emote: TwitchEmote) => {
-  //     return twitchSerializer.fromTwitchEmote(emote, EmoteTypes.TwitchGlobal);
-  //   });
-
-  //   return emotes;
-  // },
-  // getChannelBadges: async (id: string) => {
-  //   const { data } = await twitchApi.get(`/chat/badges?broadcaster_id=${id}`, {
-  //     headers: {
-  //       'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-  //     },
-  //   });
-  //   return data;
-  // },
-
-  // // ---------------------------------------------------------------------
-  // // NEEDS TO BE re-checked and moved to emoteService
-  // getChannelEmotes: async (id: string, headers: AxiosHeaders) => {
-  //   const { data } = await twitchApi.get(`/chat/emotes?broadcaster_id=${id}`, {
-  //     headers,
-  //   });
-
-  //   return data.map((emote: TwitchEmote) => {
-  //     switch (emote.emoteType) {
-  //       case 'bitstier':
-  //         return twitchSerializer.fromTwitchEmote(
-  //           emote,
-  //           EmoteTypes.TwitchBitsTier,
-  //         );
-
-  //       case 'follower':
-  //         return twitchSerializer.fromTwitchEmote(
-  //           emote,
-  //           EmoteTypes.TwitchFollower,
-  //         );
-
-  //       case 'subscriptions':
-  //         return twitchSerializer.fromTwitchEmote(
-  //           emote,
-  //           EmoteTypes.TwitchChannel,
-  //         );
-
-  //       default:
-  //         return twitchSerializer.fromTwitchEmote(
-  //           emote,
-  //           EmoteTypes.TwitchChannel,
-  //         );
-  //     }
-  //   });
-  // },
-  // getEmoteSets: async (setId: string, headers?: AxiosHeaders) => {
-  //   const { data } = await twitchApi.get(
-  //     `/chat/emotes/set?emote_set_id=${setId}`,
-  //     {
-  //       headers,
-  //     },
-  //   );
-
-  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   return data.map((emote: any) => {
-  //     switch (emote.type) {
-  //       case 'globals':
-  //       case 'smilies':
-  //         return twitchSerializer.fromTwitchEmote(
-  //           emote,
-  //           EmoteTypes.TwitchGlobal,
-  //         );
-
-  //       case 'subscriptions':
-  //         return twitchSerializer.fromTwitchEmote(
-  //           emote,
-  //           EmoteTypes.TwitchSubscriber,
-  //         );
-
-  //       default:
-  //         return twitchSerializer.fromTwitchEmote(
-  //           emote,
-  //           EmoteTypes.TwitchUnlocked,
-  //         );
-  //     }
-  //   });
-  // },
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getGlobalBadges: async (headers: AxiosHeaders) => {},
+  listGlobalEmotes: async () => {
+    const { data } = await twitchApi.get<{ data: Emote[] }>(
+      `/chat/emotes/global`,
+    );
+    return data;
+  },
 
   /**
    * @returns a token for an anonymous user
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
-    // const isExpoGo =
-    //   Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-
-    // const { data } = await axios.get(
-    //   `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy/default-token`,
-    //   {
-    //     params: {
-    //       isExpoGo,
-    //     },
-    //   },
-    // );
-    // console.log('data', data);
-    // return data;
-
     const { data } = await axios.post(
       'https://id.twitch.tv/oauth2/token',
       null,
@@ -220,7 +135,6 @@ const twitchService = {
 
   /**
    *
-   * @param headers
    * @param cursor
    * @returns an object that contains the top 20 streams and a cursor for further requests
    * @requires a non-anon token
@@ -281,7 +195,7 @@ const twitchService = {
   },
 
   getUserImage: async (userId: string): Promise<string> => {
-    // TODO: work out the proper response type here
+    // TODO: work out the full response type here
     const result = await twitchApi.get<{
       data: { profile_image_url: string }[];
     }>('/users', {

@@ -77,7 +77,14 @@ export const AuthContextProvider = ({ children }: Props) => {
           SecureStore.getItemAsync(StorageKeys.authToken),
         ]);
 
-        if (storedAuthToken && (await isValidToken(storedAuthToken))) {
+        if (storedAuthToken) {
+          const isValid = await isValidToken(storedAuthToken);
+
+          if (!isValid) {
+            await SecureStore.deleteItemAsync(StorageKeys.authToken);
+            return;
+          }
+
           setAuthToken(JSON.parse(storedAuthToken) as TokenResponse);
           const userInfo = await twitchService.getUserInfo(storedAuthToken);
           setUser(userInfo);
@@ -89,10 +96,12 @@ export const AuthContextProvider = ({ children }: Props) => {
               isAuth: true,
             },
           });
+
           twitchApi.setAuthToken(storedAuthToken);
+          SecureStore.setItemAsync(StorageKeys.authToken, storedAuthToken);
           navigate(RootRoutes.Home, {
             screen: HomeTabsRoutes.Top,
-          }); // Navigate to the appropriate screen
+          });
         } else if (storedAnonToken && (await isValidToken(storedAnonToken))) {
           setAnonToken(storedAnonToken);
           setState({
@@ -105,9 +114,8 @@ export const AuthContextProvider = ({ children }: Props) => {
           });
           // twitchApi.defaults.headers.common.Authorization = `Bearer ${storedAnonToken}`;
           twitchApi.setAuthToken(storedAnonToken);
-        } else {
-          await getAnonToken();
         }
+        await getAnonToken();
       } catch (error) {
         console.error('Error getting tokens:', error);
       }
