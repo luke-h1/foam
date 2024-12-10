@@ -10,6 +10,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Edge } from 'react-native-safe-area-context';
+import Icon, { IconTypes } from './Icon';
 import SafeAreaViewFixed from './SafeAreaViewFixed';
 import { Text, TextProps } from './Text';
 
