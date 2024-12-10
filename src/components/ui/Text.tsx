@@ -57,7 +57,6 @@ export const Text = forwardRef<RNText, TextProps>(function Text(props, ref) {
   const preset: Presets = props.preset ?? 'default';
 
   const $styles: StyleProp<TextStyle> | undefined = [
-    $rtlStyle,
     $presets[preset],
     weight && $fontWeightStyles[weight],
     size && $sizeStyles[size],
@@ -155,5 +154,68 @@ const $presets = {
     $baseStyle,
     $sizeStyles.xl,
     $fontWeightStyles.bold,
+  ] satisfies StyleProp<TextStyle>,
+
+  infoText: [
+    $baseStyle,
+    $sizeStyles.xs,
+    $fontWeightStyles.book,
+    { lineHeight: 22 },
+  ] satisfies StyleProp<TextStyle>,
+
+  formLabel: [
+    $baseStyle,
+    $fontWeightStyles.medium,
+  ] satisfies StyleProp<TextStyle>,
+
+  formHelper: [
+    $baseStyle,
+    $sizeStyles.sm,
+    $fontWeightStyles.book,
+  ] satisfies StyleProp<TextStyle>,
+
+  link: [
+    $baseSecondaryStyle,
+    $sizeStyles.xxs,
+    $secondaryFontWeightStyles.medium,
+  ] satisfies StyleProp<TextStyle>,
+
+  primaryLabel: [
+    $baseSecondaryStyle,
+    $sizeStyles.xxs,
+    $secondaryFontWeightStyles.medium,
+    { color: colors.palette.primary500, textTransform: 'uppercase' },
+  ] satisfies StyleProp<TextStyle>,
+
+  eventTitle: [
+    $baseSecondaryStyle,
+    $sizeStyles.xxs,
+    $secondaryFontWeightStyles.medium,
+  ] satisfies StyleProp<TextStyle>,
+
+  tag: [
+    $baseSecondaryStyle,
+    $sizeStyles.xs,
+    $secondaryFontWeightStyles.medium,
+  ] satisfies StyleProp<TextStyle>,
+
+  navHeader: [
+    $baseSecondaryStyle,
+    $sizeStyles.sm,
+    $secondaryFontWeightStyles.medium,
+  ] satisfies StyleProp<TextStyle>,
+
+  listHeading: [
+    $baseSecondaryStyle,
+    $sizeStyles.sm,
+    $secondaryFontWeightStyles.bold,
+    { letterSpacing: letterSpacing(8) },
+  ] satisfies StyleProp<TextStyle>,
+
+  label: [
+    $baseSecondaryStyle,
+    $sizeStyles.xxs,
+    $secondaryFontWeightStyles.medium,
+    { letterSpacing: letterSpacing(8), textTransform: 'uppercase' },
   ] satisfies StyleProp<TextStyle>,
 };
