@@ -1,3 +1,4 @@
+import Screen from '@app/components/ui/Screen';
 import { useState } from 'react';
 import {
   Text,
@@ -25,28 +26,30 @@ export default function TopScreen() {
   });
 
   return (
-    <TabView
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{ width: layout.width, height: layout.height }}
-      renderTabBar={props => (
-        <View style={styles.tabBarContainer}>
-          {props.navigationState.routes.map((route, i) => (
-            <TouchableOpacity
-              key={route.key}
-              onPress={() => props.jumpTo(route.key)}
-              style={[
-                styles.tab,
-                { borderBottomColor: index === i ? 'purple' : 'transparent' },
-              ]}
-            >
-              <Text>{route.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-    />
+    <Screen>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width, height: layout.height }}
+        renderTabBar={props => (
+          <View style={styles.tabBarContainer}>
+            {props.navigationState.routes.map((route, i) => (
+              <TouchableOpacity
+                key={route.key}
+                onPress={() => props.jumpTo(route.key)}
+                style={[
+                  styles.tab,
+                  { borderBottomColor: index === i ? 'purple' : 'transparent' },
+                ]}
+              >
+                <Text>{route.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      />
+    </Screen>
   );
 }
 

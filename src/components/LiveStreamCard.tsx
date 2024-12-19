@@ -1,8 +1,8 @@
-import useThemeColor from '@app/hooks/useThemeColor';
 import { RootStackParamList, RootRoutes } from '@app/navigation/RootStack';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import twitchService, { Stream } from '@app/services/twitchService';
-import theme from '@app/styles/theme';
+import { spacing } from '@app/styles';
+import { radii } from '@app/styles/radii';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { Image, ImageStyle } from 'expo-image';
 import { useState, useEffect } from 'react';
@@ -10,15 +10,13 @@ import { StyleSheet, View, ViewStyle } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import LiveStreamImage from './LiveStreamImage';
 import Tags from './Tags';
-import ThemedText from './ThemedText';
-import ThemedView from './ThemedView';
+import { Text } from './ui/Text';
 
 interface Props {
   stream: Stream;
 }
 
 export default function LiveStreamCard({ stream }: Props) {
-  const shadow = useThemeColor({ light: theme.dropShadow, dark: undefined });
   const [broadcasterImage, setBroadcasterImage] = useState<string>();
 
   const { navigate } = useNavigation<NavigationProp<RootStackParamList>>();
@@ -44,11 +42,7 @@ export default function LiveStreamCard({ stream }: Props) {
         });
       }}
     >
-      <ThemedView
-        style={[styles.streamCard, shadow]}
-        dark="rgba(255,255,255,0.15)"
-        light={theme.color.lightGrey}
-      >
+      <Text>
         <View style={styles.streamHeadline}>
           <LiveStreamImage
             animated
@@ -57,9 +51,7 @@ export default function LiveStreamCard({ stream }: Props) {
             size="large"
           />
           <View style={styles.streamDetail}>
-            <ThemedText fontSize={13} fontWeight="light">
-              {stream.title}
-            </ThemedText>
+            <Text>{stream.title}</Text>
             <View style={styles.streamMetadata}>
               <View style={styles.userInfo}>
                 <Image
@@ -67,22 +59,20 @@ export default function LiveStreamCard({ stream }: Props) {
                   style={styles.avatar}
                   testID="LiveStreamCard-avatar"
                 />
-                <ThemedText fontSize={14} fontWeight="bold">
-                  {stream.user_name}
-                </ThemedText>
+                <Text>{stream.user_name}</Text>
               </View>
-              <ThemedText fontSize={13} fontWeight="light">
+              <Text>
                 {new Intl.NumberFormat('en-US').format(stream.viewer_count)}{' '}
                 viewers
-              </ThemedText>
+              </Text>
             </View>
           </View>
         </View>
+      </Text>
 
-        <View style={{ marginTop: theme.spacing.xs }}>
-          <Tags tags={stream.tags} />
-        </View>
-      </ThemedView>
+      <View style={{ marginTop: spacing.extraSmall }}>
+        <Tags tags={stream.tags} />
+      </View>
     </TouchableOpacity>
   );
 }
@@ -97,10 +87,10 @@ const styles = StyleSheet.create<{
 }>({
   streamCard: {
     flex: 1,
-    padding: theme.spacing.xs,
-    marginHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderradii.sm,
-    marginBottom: theme.spacing.md,
+    padding: spacing.extraSmall,
+    marginHorizontal: spacing.small,
+    borderRadius: radii.sm,
+    marginBottom: spacing.medium,
   },
   streamDetail: {
     flex: 1,
@@ -111,7 +101,7 @@ const styles = StyleSheet.create<{
     flexDirection: 'row',
   },
   streamMetadata: {
-    marginTop: theme.spacing.md,
+    marginTop: spacing.medium,
     flex: 1,
     flexDirection: 'column',
   },

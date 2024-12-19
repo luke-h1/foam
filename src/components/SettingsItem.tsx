@@ -1,4 +1,4 @@
-import theme from '@app/styles/theme';
+import { colors, spacing } from '@app/styles';
 import {
   FlatList,
   TouchableOpacity,
@@ -7,8 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import Seperator from './Seperator';
-import ThemedText from './ThemedText';
-import ThemedView from './ThemedView';
+import { Text } from './ui/Text';
 
 export interface ContentItem {
   id: string;
@@ -30,14 +29,12 @@ interface Props {
 
 export default function SettingsItem({ contents }: Props) {
   return (
-    <ThemedView style={styles.settingsContainer}>
+    <View style={styles.settingsContainer}>
       <FlatList
         data={contents}
         renderItem={({ item }) => (
           <View>
-            <ThemedText fontWeight="bold" style={{ marginBottom: 15 }}>
-              {item.ctaTitle}
-            </ThemedText>
+            <Text style={{ marginBottom: 15 }}>{item.ctaTitle}</Text>
             <FlatList
               data={item.items}
               // eslint-disable-next-line no-shadow
@@ -49,21 +46,19 @@ export default function SettingsItem({ contents }: Props) {
                   >
                     {item.iconLeft}
                     <View style={styles.copy}>
-                      <ThemedText>{item.title}</ThemedText>
-                      <ThemedText fontSize={13}>{item.content}</ThemedText>
+                      <Text>{item.title}</Text>
+                      <Text>{item.content}</Text>
                     </View>
                     {item.showRightArrow && item.iconRight}
                   </TouchableOpacity>
-                  {item.showSeperator && (
-                    <Seperator color={theme.color.black} />
-                  )}
+                  {item.showSeperator && <Seperator color={colors.tint} />}
                 </View>
               )}
             />
           </View>
         )}
       />
-    </ThemedView>
+    </View>
   );
 }
 
@@ -74,7 +69,7 @@ const styles = StyleSheet.create<{
   settingsItem: ViewStyle;
 }>({
   settingsContainer: {
-    padding: theme.spacing.md,
+    padding: spacing.medium,
     display: 'flex',
     flex: 1,
     alignItems: 'flex-start',

@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import LiveStreamCard from '@app/components/LiveStreamCard';
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
+import Screen from '@app/components/ui/Screen';
+import Spinner from '@app/components/ui/Spinner';
 import useHeader from '@app/hooks/useHeader';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
@@ -14,9 +16,9 @@ export default function TopStreamsScreen() {
   const _queryClient = useQueryClient();
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
 
-  // useHeader({
-  //   title: 'Top Streams',
-  // });
+  useHeader({
+    title: 'Top Streams',
+  });
 
   // const onRefresh = async () => {
   //   setRefreshing(true);
@@ -53,16 +55,12 @@ export default function TopStreamsScreen() {
   }
 
   if (refreshing || isLoading) {
-    return (
-      <View>
-        <Text>loading...</Text>
-      </View>
-    );
+    return <Spinner />;
   }
 
   return (
     // eslint-disable-next-line react/jsx-no-useless-fragment
-    <>
+    <Screen>
       <SafeAreaView
         style={{
           flex: 1,
@@ -78,6 +76,6 @@ export default function TopStreamsScreen() {
           />
         )}
       </SafeAreaView>
-    </>
+    </Screen>
   );
 }

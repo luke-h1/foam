@@ -1,15 +1,20 @@
 import DismissableKeyboard from '@app/components/DismissableKeyboard';
 import LiveStreamMiniCard from '@app/components/LiveStreamMiniCard';
 import SearchHistory from '@app/components/SearchHistoryItem';
-import SearchInput from '@app/components/form/SearchInput';
+import { PressableArea } from '@app/components/form/PressableArea';
+import Screen from '@app/components/ui/Screen';
+import { TextField } from '@app/components/ui/TextField';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
+import useHeader from '@app/hooks/useHeader';
 import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import twitchService, {
   SearchChannelResponse,
 } from '@app/services/twitchService';
+import { colors } from '@app/styles';
 import { statusBarHeight } from '@app/utils/statusBarHeight';
 import { storage } from '@app/utils/storage';
+import Entypo from '@expo/vector-icons/build/Entypo';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -23,6 +28,7 @@ import {
   ViewStyle,
   ImageStyle,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 
 const previousSearchesKey = 'previousSearches' as const;
 
@@ -37,6 +43,10 @@ export default function SearchScreen() {
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
+
+  useHeader({
+    title: 'Search',
+  });
 
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
@@ -108,7 +118,11 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.wrapper}>
+    <Screen
+      style={styles.wrapper}
+      safeAreaEdges={['top', 'bottom', 'left']}
+      preset="scroll"
+    >
       <View style={styles.container}>
         <DismissableKeyboard>
           <ScrollView
@@ -116,13 +130,32 @@ export default function SearchScreen() {
               flexGrow: 1,
             }}
           >
-            <SearchInput
+            <TextField
               ref={ref}
               placeholder="Find a channel"
               value={query}
-              onChangeText={async text => {
-                await handleQuery(text);
-              }}
+              onChangeText={async text => handleQuery(text)}
+              // eslint-disable-next-line react/no-unstable-nested-components
+              RightAccessory={() =>
+                query ? (
+                  <PressableArea
+                    onPress={() => {
+                      setQuery?.('');
+                      setSearchResults([]);
+                    }}
+                    // style={styles.clearIcon}
+                    hitSlop={30}
+                  >
+                    <Entypo
+                      name="circle-with-cross"
+                      size={24}
+                      color={colors.textDim}
+                    />
+                  </PressableArea>
+                ) : (
+                  <Feather name="search" color={colors.textDim} size={24} />
+                )
+              }
             />
           </ScrollView>
         </DismissableKeyboard>
@@ -178,7 +211,7 @@ export default function SearchScreen() {
           }}
         />
       )}
-    </View>
+    </Screen>
   );
 }
 

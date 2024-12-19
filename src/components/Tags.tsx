@@ -1,8 +1,8 @@
-import theme from '@app/styles/theme';
+import { colors, spacing } from '@app/styles';
+import { radii } from '@app/styles/radii';
 import React from 'react';
 import { FlatList, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
-import ThemedText from './ThemedText';
-import ThemedView from './ThemedView';
+import { Text } from './ui/Text';
 
 interface Props {
   tags: string[];
@@ -23,15 +23,9 @@ export default function Tags({ tags }: Props) {
         showsHorizontalScrollIndicator={false}
         keyExtractor={item => item}
         renderItem={({ item }) => (
-          <ThemedView
-            style={styles.tag}
-            dark={theme.color.darkBlue}
-            light={theme.color.white}
-          >
-            <ThemedText fontSize={14} style={styles.tagText}>
-              {item}
-            </ThemedText>
-          </ThemedView>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>{item}</Text>
+          </View>
         )}
       />
     </View>
@@ -44,16 +38,16 @@ const styles = StyleSheet.create<{
   tagText: TextStyle;
 }>({
   container: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: spacing.large,
     position: 'relative',
   },
   tag: {
-    borderRadius: theme.borderradii.lg,
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    marginRight: theme.spacing.sm,
+    borderRadius: radii.lg,
+    paddingVertical: spacing.extraSmall,
+    paddingHorizontal: spacing.small,
+    marginRight: spacing.small,
     borderWidth: 0.2,
-    backgroundColor: theme.color.lightGrey,
+    backgroundColor: colors.textDim,
   },
   tagText: {},
 });
