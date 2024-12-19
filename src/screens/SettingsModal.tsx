@@ -1,10 +1,9 @@
 import Image from '@app/components/Image';
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
-import { Text } from '@app/components/ui/Text';
+import Screen from '@app/components/ui/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
 import useAppNavigation from '@app/hooks/useAppNavigation';
-import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
 import { Button, StyleSheet, View, ViewStyle } from 'react-native';
@@ -125,56 +124,55 @@ export default function SettingsModal() {
   });
 
   return (
-    <SafeAreaContainer>
-      <Text
-        style={{
-          padding: 2,
-        }}
-      >
-        Settings
-      </Text>
-      <SettingsItem contents={settingItems} />
-      <BottomSheetModal
-        ref={bottomSheetModalRef}
-        index={1}
-        snapPoints={snapPoints}
-        handleStyle={{ opacity: 0.95 }}
-        // backgroundStyle={{ backgroundColor: colors.gray900 }}
-        // handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
-      >
-        <View style={styles.container}>
-          <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
-          <Button
-            title="Log out"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              await logout();
-              // navigation.navigate(RootRoutes.Home, {
-              //   screen: HomeTabsRoutes.Top,
-              // });
-              navigation.goBack();
-            }}
-          />
-        </View>
-        <View style={styles.container}>
-          <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
-          <Button
-            title="My stream"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              navigation.navigate(StreamRoutes.LiveStream, {
-                screen: StreamRoutes.LiveStream,
-                params: {
-                  id: user?.login,
-                },
-              });
-            }}
-          />
-        </View>
-      </BottomSheetModal>
-    </SafeAreaContainer>
+    <Screen>
+      <SafeAreaContainer>
+        <SettingsItem contents={settingItems} />
+        <BottomSheetModal
+          ref={bottomSheetModalRef}
+          index={1}
+          snapPoints={snapPoints}
+          handleStyle={{ opacity: 0.95 }}
+          // backgroundStyle={{ backgroundColor: colors.gray900 }}
+          // handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
+        >
+          <View style={styles.container}>
+            <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
+            <Button
+              title="Log out"
+              onPress={async () => {
+                bottomSheetModalRef.current?.dismiss();
+                await logout();
+
+                navigation.navigate('Tabs', {
+                  screen: 'Following',
+                });
+              }}
+            />
+          </View>
+          <View style={styles.container}>
+            <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
+            <Button
+              title="My stream"
+              onPress={async () => {
+                bottomSheetModalRef.current?.dismiss();
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                // navigation.navigate(StreamRoutes.LiveStream, {
+                //   screen: StreamRoutes.LiveStream,
+                //   params: {
+                //     id: user?.login,
+                //   },
+                // });
+
+                navigation.navigate('LiveStream', {
+                  id: user?.login as string,
+                });
+              }}
+            />
+          </View>
+        </BottomSheetModal>
+      </SafeAreaContainer>
+    </Screen>
   );
 }
 

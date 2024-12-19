@@ -25,6 +25,8 @@ import { ErrorBoundary } from './screens/ErrorScreen/ErrorBoundary';
 import { customFontsToLoad } from './styles';
 import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
@@ -106,17 +108,21 @@ export default function App(props: AppProps) {
         onReset={() => setRecoveredFromError(true)}
       >
         <QueryClientProvider client={queryClient}>
-          <AppNavigator
-            initialState={
-              recoveredFromError
-                ? { index: 0, routes: [] }
-                : initialNavigationState
-            }
-            onStateChange={onNavigationStateChange}
-          >
-            <CustomToast />
-            <OTAUpdates />
-          </AppNavigator>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              <AppNavigator
+                initialState={
+                  recoveredFromError
+                    ? { index: 0, routes: [] }
+                    : initialNavigationState
+                }
+                onStateChange={onNavigationStateChange}
+              >
+                <CustomToast />
+                <OTAUpdates />
+              </AppNavigator>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

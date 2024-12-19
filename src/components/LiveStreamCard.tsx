@@ -42,11 +42,7 @@ export default function LiveStreamCard({ stream }: Props) {
         });
       }}
     >
-      <Text
-      // style={[styles.streamCard]}
-      // dark="rgba(255,255,255,0.15)"
-      // light={colors.textDim}
-      >
+      <Text>
         <View style={styles.streamHeadline}>
           <LiveStreamImage
             animated

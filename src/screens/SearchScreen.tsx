@@ -2,8 +2,10 @@ import DismissableKeyboard from '@app/components/DismissableKeyboard';
 import LiveStreamMiniCard from '@app/components/LiveStreamMiniCard';
 import SearchHistory from '@app/components/SearchHistoryItem';
 import { PressableArea } from '@app/components/form/PressableArea';
+import Screen from '@app/components/ui/Screen';
 import { TextField } from '@app/components/ui/TextField';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
+import useHeader from '@app/hooks/useHeader';
 import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import twitchService, {
@@ -41,6 +43,10 @@ export default function SearchScreen() {
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
+
+  useHeader({
+    title: 'Search',
+  });
 
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
@@ -112,7 +118,11 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.wrapper}>
+    <Screen
+      style={styles.wrapper}
+      safeAreaEdges={['top', 'bottom', 'left']}
+      preset="scroll"
+    >
       <View style={styles.container}>
         <DismissableKeyboard>
           <ScrollView
@@ -129,7 +139,10 @@ export default function SearchScreen() {
               RightAccessory={() =>
                 query ? (
                   <PressableArea
-                    onPress={() => setQuery?.('')}
+                    onPress={() => {
+                      setQuery?.('');
+                      setSearchResults([]);
+                    }}
                     // style={styles.clearIcon}
                     hitSlop={30}
                   >
@@ -140,12 +153,7 @@ export default function SearchScreen() {
                     />
                   </PressableArea>
                 ) : (
-                  <Feather
-                    name="search"
-                    color={colors.textDim}
-                    size={24}
-                    onPress={() => setQuery('')}
-                  />
+                  <Feather name="search" color={colors.textDim} size={24} />
                 )
               }
             />
@@ -203,7 +211,7 @@ export default function SearchScreen() {
           }}
         />
       )}
-    </View>
+    </Screen>
   );
 }
 

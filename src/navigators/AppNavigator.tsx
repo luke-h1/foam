@@ -1,8 +1,3 @@
-/**
- * The app navigator is used for the primary navigation flows of your app.
- * Usually this will contain an auth flow (registration, login etc.)
- * and a "main" flow which the user will use once logged in
- */
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import AuthLoadingScreen from '@app/screens/AuthLoadingScreen';
 import LiveStreamScreen from '@app/screens/Stream/LiveStreamScreen';
@@ -61,6 +56,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
   const { auth } = useAuthContext();
+
   return (
     <Stack.Navigator
       screenOptions={{
