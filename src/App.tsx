@@ -107,8 +107,8 @@ export default function App(props: AppProps) {
         catchErrors={Config.catchErrors}
         onReset={() => setRecoveredFromError(true)}
       >
-        <QueryClientProvider client={queryClient}>
-          <AuthContextProvider>
+        <AuthContextProvider>
+          <QueryClientProvider client={queryClient}>
             <AppNavigator
               initialState={
                 recoveredFromError
@@ -119,8 +119,8 @@ export default function App(props: AppProps) {
             />
             <CustomToast />
             <OTAUpdates />
-          </AuthContextProvider>
-        </QueryClientProvider>
+          </QueryClientProvider>
+        </AuthContextProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );
