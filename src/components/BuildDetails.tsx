@@ -15,9 +15,7 @@ export default function BuildDetails() {
       <Text>v{Application.nativeApplicationVersion}</Text>
       <Text>({Application.nativeBuildVersion})</Text>
       <Text>pkg:{pkg.version}</Text>
-      {updatedId ? (
-        <Text style={{ color: colors.text }}>{updatedId}</Text>
-      ) : null}
+      {updatedId ? <Text>{updatedId}</Text> : null}
     </View>
   );
 }

@@ -92,7 +92,6 @@ export default function TabNavigator() {
     >
       {screens.map(screen => {
         if (screen.requiresAuth && auth && !auth?.isAuth) {
-          console.warn('User is not authenticated');
           return null;
         }
         return (
