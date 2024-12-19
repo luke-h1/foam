@@ -1,9 +1,7 @@
 import Icon, { IconTypes } from '@app/components/ui/Icon';
-import { Text } from '@app/components/ui/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import SearchScreen from '@app/screens/SearchScreen';
-import TopScreen from '@app/screens/Top/TopScreen';
 import { colors, layout, spacing, typography } from '@app/styles';
 import {
   BottomTabScreenProps,
@@ -11,13 +9,14 @@ import {
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import React, { ComponentType, FC } from 'react';
-import { TextStyle, View, ViewStyle } from 'react-native';
+import { TextStyle, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
+import TopStackNavigator from './TopStackNavigator';
 
 export type TabParamList = {
   Following: undefined;
-  TopStack: undefined;
+  Top: undefined;
   Search: undefined;
   Settings: undefined;
 };
@@ -32,10 +31,9 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
-  | FC<TabScreenProps<'TopStack'>>
+  | FC<TabScreenProps<'Top'>>
   | FC<TabScreenProps<'Search'>>
-  | FC<TabScreenProps<'Settings'>>
-  | ComponentType;
+  | FC<TabScreenProps<'Settings'>>;
 
 interface Screen {
   name: keyof TabParamList;
@@ -52,8 +50,8 @@ const screens: Screen[] = [
     requiresAuth: true,
   },
   {
-    name: 'TopStack',
-    component: TopScreen,
+    name: 'Top',
+    component: TopStackNavigator,
     icon: 'arrowUp',
     requiresAuth: false,
   },
@@ -63,16 +61,16 @@ const screens: Screen[] = [
     icon: 'check',
     requiresAuth: false,
   },
-  {
-    name: 'Settings',
-    component: () => (
-      <View>
-        <Text>Settings</Text>
-      </View>
-    ),
-    icon: 'arrow',
-    requiresAuth: false,
-  },
+  // {
+  //   name: 'Settings',
+  //   component: () => (
+  //     <View>
+  //       <Text>Settings</Text>
+  //     </View>
+  //   ),
+  //   icon: 'arrow',
+  //   requiresAuth: false,
+  // },
 ];
 
 export default function TabNavigator() {

@@ -3,6 +3,7 @@ import AuthLoadingScreen from '@app/screens/AuthLoadingScreen';
 import LiveStreamScreen from '@app/screens/Stream/LiveStreamScreen';
 import StreamerProfileScreen from '@app/screens/Stream/StreamerProfileScreen';
 import CategoriesSecreen from '@app/screens/Top/Categories';
+import TopStreamsScreen from '@app/screens/Top/Streams';
 import { colors } from '@app/styles';
 import {
   DarkTheme,
@@ -40,6 +41,10 @@ export type AppStackParamList = {
   LiveStream: { id: string };
   StreamerProfile: { id: string };
   Categories: undefined;
+
+  // Top
+  TopStreams: undefined;
+  Topcategories: undefined;
 };
 
 /**
@@ -66,7 +71,7 @@ const AppStack = () => {
       initialRouteName="Tabs"
     >
       <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
-      <Stack.Screen name="Tabs" component={TabNavigator} />
+      <Stack.Screen name="Tabs" component={TabNavigator} options={{}} />
       {/* <Stack.Screen name="Stream" component={StreamStackNavigator} /> */}
 
       {/* streams */}
@@ -75,6 +80,10 @@ const AppStack = () => {
 
       {/* categories */}
       <Stack.Screen name="Categories" component={CategoriesSecreen} />
+
+      {/* top */}
+      <Stack.Screen name="TopStreams" component={TopStreamsScreen} />
+      <Stack.Screen name="TopCategories" component={CategoriesSecreen} />
     </Stack.Navigator>
   );
 };

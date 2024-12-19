@@ -1,4 +1,5 @@
 import Screen from '@app/components/ui/Screen';
+import useHeader from '@app/hooks/useHeader';
 import { useState } from 'react';
 import {
   Text,
@@ -19,6 +20,14 @@ export default function TopScreen() {
     { key: 'streams', title: 'Streams' },
     { key: 'categories', title: 'Categories' },
   ]);
+  const [currentTitle, setCurrentTitle] = useState<string>('Top Streams');
+
+  useHeader(
+    {
+      title: currentTitle,
+    },
+    [currentTitle],
+  );
 
   const renderScene = SceneMap<keyof typeof routes>({
     streams: TopStreamsScreen,
@@ -26,7 +35,7 @@ export default function TopScreen() {
   });
 
   return (
-    <Screen>
+    <Screen safeAreaEdges={['top']} preset="scroll">
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -37,7 +46,10 @@ export default function TopScreen() {
             {props.navigationState.routes.map((route, i) => (
               <TouchableOpacity
                 key={route.key}
-                onPress={() => props.jumpTo(route.key)}
+                onPress={() => {
+                  props.jumpTo(route.key);
+                  setCurrentTitle(route.title);
+                }}
                 style={[
                   styles.tab,
                   { borderBottomColor: index === i ? 'purple' : 'transparent' },

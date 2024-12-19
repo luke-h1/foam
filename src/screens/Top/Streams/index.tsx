@@ -2,23 +2,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import LiveStreamCard from '@app/components/LiveStreamCard';
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
+import EmptyState from '@app/components/ui/EmptyState';
 import Screen from '@app/components/ui/Screen';
 import Spinner from '@app/components/ui/Spinner';
 import useHeader from '@app/hooks/useHeader';
 import twitchQueries from '@app/queries/twitchQueries';
-import { Stream } from '@app/services/twitchService';
+import twitchService, { Stream } from '@app/services/twitchService';
+import { colors } from '@app/styles';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FlatList, SafeAreaView, Text, View } from 'react-native';
 
 export default function TopStreamsScreen() {
   const [refreshing, _setRefreshing] = useState(false);
-  const _queryClient = useQueryClient();
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
-
-  useHeader({
-    title: 'Top Streams',
-  });
 
   // const onRefresh = async () => {
   //   setRefreshing(true);
@@ -31,51 +28,19 @@ export default function TopStreamsScreen() {
 
   const { data: streams, isLoading, isError } = useQuery(topStreamQuery);
 
-  if ((!isLoading && !streams?.length) || isError) {
-    return (
-      <View
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flex: 1,
-        }}
-      >
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        >
-          <Text>No streams found</Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (refreshing || isLoading) {
+  if (refreshing) {
     return <Spinner />;
   }
 
-  return (
-    // eslint-disable-next-line react/jsx-no-useless-fragment
-    <Screen>
-      <SafeAreaView
-        style={{
-          flex: 1,
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        {streams && streams.length > 0 && (
-          <FlatList<Stream>
-            data={streams}
-            renderItem={({ item }) => <LiveStreamCard stream={item} />}
-            keyExtractor={item => item.id}
-          />
-        )}
-      </SafeAreaView>
-    </Screen>
-  );
+  if (streams && streams.length > 0) {
+    return (
+      <FlatList<Stream>
+        data={streams}
+        renderItem={({ item }) => <LiveStreamCard stream={item} />}
+        keyExtractor={item => item.id}
+      />
+    );
+  }
+
+  return <EmptyState />;
 }

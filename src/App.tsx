@@ -1,4 +1,5 @@
 import 'expo-dev-client';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
 import {
   onlineManager,
@@ -9,6 +10,7 @@ import { useFonts } from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import React, { useLayoutEffect, useState } from 'react';
 import { LogBox } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -25,8 +27,6 @@ import { ErrorBoundary } from './screens/ErrorScreen/ErrorBoundary';
 import { customFontsToLoad } from './styles';
 import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 

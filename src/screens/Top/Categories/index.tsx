@@ -1,5 +1,4 @@
 import CategoryCard from '@app/components/CategoryCard';
-import Screen from '@app/components/ui/Screen';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Category } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -75,12 +74,10 @@ export default function CategoriesSecreen() {
   }
 
   return (
-    <Screen>
-      <FlatList<Category>
-        data={categories}
-        renderItem={({ item }) => <CategoryCard category={item} />}
-        keyExtractor={(_item, index) => index.toString()}
-      />
-    </Screen>
+    <FlatList<Category>
+      data={categories}
+      renderItem={({ item }) => <CategoryCard category={item} />}
+      keyExtractor={(_item, index) => index.toString()}
+    />
   );
 }
