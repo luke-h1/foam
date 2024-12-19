@@ -1,3 +1,5 @@
+/* eslint-disable no-shadow */
+import { spacing } from '@app/styles';
 import {
   Image,
   ImageProps,
@@ -7,8 +9,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { ButtonProps } from './Button';
-import { TextProps } from './Text';
+import Button, { ButtonProps } from './Button';
+import { Text, TextProps } from './Text';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const empty = require('../../../assets/sad-face.png');
@@ -101,3 +103,108 @@ interface EmptyStateProps {
    */
   ButtonProps?: ButtonProps;
 }
+
+/**
+ * A component to use when there is no data to display. It can be utilized to direct the user what to do next.
+ * @param {EmptyStateProps} props - The props for the `EmptyState` component.
+ * @returns {JSX.Element} The rendered `EmptyState` component.
+ */
+
+export default function EmptyState(props: EmptyStateProps) {
+  // eslint-disable-next-line react/destructuring-assignment
+  const preset = EmptyStatePresets[props.preset ?? 'generic'];
+
+  const {
+    button = preset.button,
+    buttonOnPress,
+    content = preset.content,
+    heading = preset.heading,
+    imageSource = preset.imageSource,
+    style: $containerStyleOverride,
+    buttonStyle: $buttonStyleOverride,
+    buttonTextStyle: $buttonTextStyleOverride,
+    contentStyle: $contentStyleOverride,
+    headingStyle: $headingStyleOverride,
+    imageStyle: $imageStyleOverride,
+    ButtonProps,
+    ContentTextProps,
+    HeadingTextProps,
+    ImageProps,
+  } = props;
+
+  const isImagePresent = !!imageSource;
+  const isHeadingPresent = !!heading;
+  const isContentPresent = !!content;
+  const isButtonPresent = !!button;
+
+  const $containerStyles = [$containerStyleOverride];
+  const $imageStyles = [
+    $image,
+    (isHeadingPresent || isContentPresent || isButtonPresent) && {
+      marginBottom: spacing.micro,
+    },
+    $imageStyleOverride,
+    ImageProps?.style,
+  ];
+  const $headingStyles = [
+    $heading,
+    isImagePresent && { marginTop: spacing.micro },
+    (isContentPresent || isButtonPresent) && { marginBottom: spacing.micro },
+    $headingStyleOverride,
+    HeadingTextProps?.style,
+  ];
+  const $contentStyles = [
+    $content,
+    (isImagePresent || isHeadingPresent) && { marginTop: spacing.micro },
+    isButtonPresent && { marginBottom: spacing.micro },
+    $contentStyleOverride,
+    ContentTextProps?.style,
+  ];
+  const $buttonStyles = [
+    (isImagePresent || isHeadingPresent || isContentPresent) && {
+      marginTop: spacing.extraLarge,
+    },
+    $buttonStyleOverride,
+    ButtonProps?.style,
+  ];
+
+  return (
+    <View style={$containerStyles}>
+      {isImagePresent && (
+        <Image source={imageSource} {...ImageProps} style={$imageStyles} />
+      )}
+
+      {isHeadingPresent && (
+        <Text
+          preset="subheading"
+          text={heading}
+          {...HeadingTextProps}
+          style={$headingStyles}
+        />
+      )}
+      {isContentPresent && (
+        <Text text={content} {...ContentTextProps} style={$contentStyles} />
+      )}
+
+      {isButtonPresent && (
+        <Button
+          onPress={buttonOnPress}
+          text={button}
+          textStyle={$buttonTextStyleOverride}
+          {...ButtonProps}
+          style={$buttonStyles}
+        />
+      )}
+    </View>
+  );
+}
+
+const $image: ImageStyle = { alignSelf: 'center' };
+const $heading: TextStyle = {
+  textAlign: 'center',
+  paddingHorizontal: spacing.large,
+};
+const $content: TextStyle = {
+  textAlign: 'center',
+  paddingHorizontal: spacing.large,
+};
