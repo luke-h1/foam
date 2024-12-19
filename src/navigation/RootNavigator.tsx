@@ -16,6 +16,7 @@ export default function RootNavigator() {
       }}
     >
       <RootStack.Screen name={RootRoutes.AuthLoading} component={AuthLoading} />
+
       <RootStack.Screen
         name={RootRoutes.Home}
         component={HomeTabsNavigator}

@@ -3,7 +3,11 @@
  * Usually this will contain an auth flow (registration, login etc.)
  * and a "main" flow which the user will use once logged in
  */
+import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import AuthLoadingScreen from '@app/screens/AuthLoadingScreen';
+import LiveStreamScreen from '@app/screens/Stream/LiveStreamScreen';
+import StreamerProfileScreen from '@app/screens/Stream/StreamerProfileScreen';
+import CategoriesSecreen from '@app/screens/Top/Categories';
 import { colors } from '@app/styles';
 import {
   DarkTheme,
@@ -17,6 +21,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import Config from '../config';
+
 import TabNavigator, { TabParamList } from './TabNavigator';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
 
@@ -34,6 +39,12 @@ import { navigationRef, useBackButtonHandler } from './navigationUtilities';
 export type AppStackParamList = {
   AuthLoading: undefined;
   Tabs: NavigatorScreenParams<TabParamList>;
+  // Stream: NavigatorScreenParams<StreamStackParamList>;
+
+  // streams
+  LiveStream: { id: string };
+  StreamerProfile: { id: string };
+  Categories: undefined;
 };
 
 /**
@@ -49,17 +60,25 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
+  const { auth } = useAuthContext();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
         navigationBarColor: colors.background,
       }}
-      initialRouteName="AuthLoading"
+      initialRouteName="Tabs"
     >
       <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
-
       <Stack.Screen name="Tabs" component={TabNavigator} />
+      {/* <Stack.Screen name="Stream" component={StreamStackNavigator} /> */}
+
+      {/* streams */}
+      <Stack.Screen name="LiveStream" component={LiveStreamScreen} />
+      <Stack.Screen name="StreamerProfile" component={StreamerProfileScreen} />
+
+      {/* categories */}
+      <Stack.Screen name="Categories" component={CategoriesSecreen} />
     </Stack.Navigator>
   );
 };
@@ -89,7 +108,9 @@ export const AppNavigator = (props: NavigationProps) => {
 
   return (
     <NavigationContainer ref={navigationRef} theme={navTheme} {...props}>
-      <AppStack />
+      <AuthContextProvider>
+        <AppStack />
+      </AuthContextProvider>
     </NavigationContainer>
   );
 };

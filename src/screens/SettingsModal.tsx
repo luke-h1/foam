@@ -3,20 +3,19 @@ import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
 import { Text } from '@app/components/ui/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
-
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
 import { Button, StyleSheet, View, ViewStyle } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 
-export default function SettingsModal({
-  navigation,
-}: RootStackScreenProps<RootRoutes.Settings>) {
+export default function SettingsModal() {
   const { user, logout } = useAuthContext();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['25%', '25%'], []);
+
+  const navigation = useAppNavigation();
 
   const ICON_LEFT_SIZE = 22;
   const ICON_RIGHT_SIZE = 20;

@@ -1,4 +1,5 @@
 import Icon, { IconTypes } from '@app/components/ui/Icon';
+import { Text } from '@app/components/ui/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import SearchScreen from '@app/screens/SearchScreen';
@@ -10,7 +11,7 @@ import {
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import React, { ComponentType, FC } from 'react';
-import { TextStyle, ViewStyle } from 'react-native';
+import { TextStyle, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 
@@ -51,21 +52,25 @@ const screens: Screen[] = [
     requiresAuth: true,
   },
   {
+    name: 'TopStack',
+    component: TopScreen,
+    icon: 'arrowUp',
+    requiresAuth: false,
+  },
+  {
     name: 'Search',
     component: SearchScreen,
     icon: 'check',
     requiresAuth: false,
   },
-  // {
-  //   name: 'Settings',
-  //   component: ,
-  //   icon: 'arrow',
-  //   requiresAuth: false,
-  // },
   {
-    name: 'TopStack',
-    component: TopScreen,
-    icon: 'arrowUp',
+    name: 'Settings',
+    component: () => (
+      <View>
+        <Text>Settings</Text>
+      </View>
+    ),
+    icon: 'arrow',
     requiresAuth: false,
   },
 ];
@@ -88,10 +93,10 @@ export default function TabNavigator() {
       }}
     >
       {screens.map(screen => {
-        if (screen.requiresAuth && !auth?.isAuth) {
+        if (screen.requiresAuth && auth && !auth?.isAuth) {
+          console.warn('User is not authenticated');
           return null;
         }
-
         return (
           <Tab.Screen
             key={screen.name}
