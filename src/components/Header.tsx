@@ -1,6 +1,6 @@
-import theme from '@app/styles/theme';
+import { spacing } from '@app/styles';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import ThemedText from './ThemedText';
+import { Text } from './ui/Text';
 
 export interface HeaderProps {
   title: string;
@@ -11,18 +11,8 @@ export default function Heading({ title, description }: HeaderProps) {
   return (
     <View style={styles.heading}>
       <View>
-        <ThemedText
-          marginBottom={theme.spacing.sm}
-          fontSize={theme.fontSize.lg}
-          fontWeight="bold"
-        >
-          {title}
-        </ThemedText>
-        {description && (
-          <ThemedText fontSize={theme.fontSize.md} fontWeight="bold">
-            {description}
-          </ThemedText>
-        )}
+        <Text>{title}</Text>
+        {description && <Text>{description}</Text>}
       </View>
     </View>
   );
@@ -35,6 +25,6 @@ const styles = StyleSheet.create<{
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.medium,
   },
 });

@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import LiveStreamCard from '@app/components/LiveStreamCard';
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
+import Screen from '@app/components/ui/Screen';
 import useHeader from '@app/hooks/useHeader';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
@@ -62,7 +63,7 @@ export default function TopStreamsScreen() {
 
   return (
     // eslint-disable-next-line react/jsx-no-useless-fragment
-    <>
+    <Screen>
       <SafeAreaView
         style={{
           flex: 1,
@@ -78,6 +79,6 @@ export default function TopStreamsScreen() {
           />
         )}
       </SafeAreaView>
-    </>
+    </Screen>
   );
 }

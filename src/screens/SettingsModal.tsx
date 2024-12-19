@@ -1,12 +1,11 @@
 import Image from '@app/components/Image';
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
-import ThemedText from '@app/components/ThemedText';
+import { Text } from '@app/components/ui/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
 
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
-import theme from '@app/styles/theme';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
 import { Button, StyleSheet, View, ViewStyle } from 'react-native';
@@ -128,14 +127,13 @@ export default function SettingsModal({
 
   return (
     <SafeAreaContainer>
-      <ThemedText
-        fontSize={theme.fontSize.lg}
+      <Text
         style={{
           padding: 2,
         }}
       >
         Settings
-      </ThemedText>
+      </Text>
       <SettingsItem contents={settingItems} />
       <BottomSheetModal
         ref={bottomSheetModalRef}

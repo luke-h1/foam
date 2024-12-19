@@ -1,13 +1,10 @@
 import LiveStreamCard from '@app/components/LiveStreamCard';
-import ThemedText from '@app/components/ThemedText';
-import ThemedView from '@app/components/ThemedView';
 import {
   CategoryRoutes,
   CategoryStackScreenProps,
 } from '@app/navigation/Category/CategoryStack';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
-import theme from '@app/styles/theme';
 import { useQueries } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import {
@@ -28,13 +25,11 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CategoryScreen({
   route,
 }: CategoryStackScreenProps<CategoryRoutes.Category>) {
   const { id } = route.params;
-  const insets = useSafeAreaInsets();
 
   // Animated header on scroll
   const transitionY = useSharedValue<number>(0);
@@ -119,11 +114,7 @@ export default function CategoryScreen({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ThemedView
-        style={styles.container}
-        dark={theme.color.darkBlue}
-        light={theme.color.white}
-      >
+      <View style={styles.container}>
         <AnimatedScrollView
           style={styles.container}
           onScroll={scrollHandler}
@@ -131,11 +122,11 @@ export default function CategoryScreen({
           contentContainerStyle={[
             styles.contentContainer,
             {
-              paddingBottom: insets.bottom + theme.spacing.xl,
+              // paddingBottom: insets.bottom + theme.spacing.xl,
             },
           ]}
         >
-          <ThemedView animated style={[styles.header, headerStyle]}>
+          <View style={[styles.header, headerStyle]}>
             <View style={styles.headerContent}>
               <Image
                 source={{
@@ -145,24 +136,18 @@ export default function CategoryScreen({
                 }}
                 style={styles.categoryLogo}
               />
-              <ThemedText
-                fontWeight="bold"
-                fontSize={24}
-                style={styles.categoryTitle}
-              >
-                {category?.name}
-              </ThemedText>
+              <Text style={styles.categoryTitle}>{category?.name}</Text>
             </View>
-          </ThemedView>
-          <ThemedView style={styles.content}>
+          </View>
+          <View style={styles.content}>
             <FlatList<Stream>
               data={streams}
               keyExtractor={item => item.id}
               renderItem={({ item }) => <LiveStreamCard stream={item} />}
             />
-          </ThemedView>
+          </View>
         </AnimatedScrollView>
-      </ThemedView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -179,7 +164,7 @@ const styles = StyleSheet.create<{
 }>({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.color.white, // Adjust the background color as needed
+    // backgroundColor: theme.color.white, // Adjust the background color as needed
   },
   container: {
     flex: 1,
@@ -189,17 +174,17 @@ const styles = StyleSheet.create<{
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
-    paddingLeft: theme.spacing.lg,
+    // paddingLeft: theme.spacing.lg,
     display: 'flex',
   },
   contentContainer: {
-    borderBottomRightRadius: theme.borderradii.lg,
-    borderBottomLeftRadius: theme.borderradii.lg,
+    // borderBottomRightRadius: theme.borderradii.lg,
+    // borderBottomLeftRadius: theme.borderradii.lg,
   },
   categoryTitle: {
     textAlign: 'center',
-    marginLeft: theme.spacing.md,
-    fontSize: theme.fontSize.sm,
+    // marginLeft: theme.spacing.md,
+    // fontSize: theme.fontSize.sm,
     fontWeight: 'bold',
   },
   categoryLogo: {
@@ -208,7 +193,7 @@ const styles = StyleSheet.create<{
     borderRadius: 10,
   },
   content: {
-    paddingTop: theme.spacing.lg,
+    // paddingTop: theme.spacing.lg,
     // paddingHorizontal: theme.spacing.lg,
   },
 });

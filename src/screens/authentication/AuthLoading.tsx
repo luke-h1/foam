@@ -4,10 +4,8 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 
-export default function AuthLoadingScreen({
-  navigation,
-}: RootStackScreenProps<RootRoutes.AuthLoading>) {
-  const { navigate } = navigation;
+export default function AuthLoadingScreen() {
+  const {} = useAppNavigation();
 
   const { getAnonToken } = useAuthContext();
 

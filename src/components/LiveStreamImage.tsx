@@ -1,10 +1,10 @@
 /* eslint-disable global-require */
 /* eslint-disable @typescript-eslint/no-require-imports */
-import theme from '@app/styles/theme';
+import { colors, spacing } from '@app/styles';
+import { radii } from '@app/styles/radii';
 import { Image } from 'expo-image';
 import { StyleSheet, View, ViewStyle, Text } from 'react-native';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
-import ThemedView from './ThemedView';
 
 interface Props {
   thumbnail?: string;
@@ -28,8 +28,10 @@ export default function LiveStreamImage({
 
       case 'large':
         return styles.imageSizeLarge;
+
       case 'xlarge':
         return styles.imageSizeExtraLarge;
+
       case 'medium':
       default:
         return styles.imageSizeMedium;
@@ -63,11 +65,7 @@ export default function LiveStreamImage({
   );
 
   return (
-    <ThemedView
-      light="rgba(255,255,255,0.15)"
-      dark="rgba(0,0,0,0.15)"
-      style={[imageSize, styles.imageContainer, style]}
-    >
+    <View style={[imageSize, styles.imageContainer, style]}>
       {thumbnail ? (
         <Image
           testID="LiveStreamImage-image"
@@ -89,14 +87,14 @@ export default function LiveStreamImage({
           </Text>
         </View>
       )}
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   imageContainer: {
-    marginRight: theme.spacing.md,
-    borderRadius: theme.borderradii.sm,
+    marginRight: spacing.medium,
+    borderRadius: radii.sm,
     overflow: 'hidden',
   },
   profileImage: {
@@ -121,7 +119,7 @@ const styles = StyleSheet.create({
     height: 200,
   },
   fallbackImage: {
-    backgroundColor: theme.color.darkBlue,
+    backgroundColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },

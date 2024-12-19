@@ -2,7 +2,7 @@
 import { registerRootComponent } from 'expo';
 import NewRelic from 'newrelic-react-native-agent';
 import { Platform } from 'react-native';
-import App from './App';
+import App from './src/App';
 import 'expo-dev-client';
 import { version } from './package.json' assert { type: 'json' };
 import './src/polyfills';
@@ -38,7 +38,7 @@ if (!__DEV__) {
     // Optional:Specifies the log level. Omit this field for the default log level.
     // Options include: ERROR (least verbose), WARNING, INFO, VERBOSE, AUDIT (most verbose).
     logLevel: NewRelic.LogLevel.INFO,
-    // iOS Specificl
+    // iOS Specific
     // Optional:Enable/Disable automatic instrumentation of WebViews
     webViewInstrumentation: true,
   };

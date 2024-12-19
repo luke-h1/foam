@@ -1,17 +1,11 @@
 import { RootRoutes, RootStackParamList } from '@app/navigation/RootStack';
 import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
 import { SearchChannelResponse } from '@app/services/twitchService';
-import theme from '@app/styles/theme';
+import { spacing } from '@app/styles';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ViewStyle,
-} from 'react-native';
+import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 import LiveStreamImage from './LiveStreamImage';
-import ThemedText from './ThemedText';
+import { Text } from './ui/Text';
 
 interface Props {
   stream: SearchChannelResponse;
@@ -40,9 +34,7 @@ export default function LiveStreamMiniCard({ stream }: Props) {
         />
         <View style={styles.streamerDetails}>
           <Text>{stream.display_name}</Text>
-          <ThemedText fontSize={theme.fontSize.xs} fontWeight="medium">
-            {stream.game_name}
-          </ThemedText>
+          <Text>{stream.game_name}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -55,7 +47,7 @@ const styles = StyleSheet.create<{
 }>({
   streamer: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.medium,
   },
   streamerDetails: {
     justifyContent: 'center',

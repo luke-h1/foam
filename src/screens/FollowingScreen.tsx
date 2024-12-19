@@ -1,4 +1,5 @@
 import LiveStreamCard from '@app/components/LiveStreamCard';
+import Screen from '@app/components/ui/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
@@ -67,7 +68,7 @@ export default function FollowingScreen() {
   }
 
   return (
-    <View>
+    <Screen>
       <View
         style={{
           padding: 4,
@@ -81,6 +82,6 @@ export default function FollowingScreen() {
           />
         </View>
       </View>
-    </View>
+    </Screen>
   );
 }
