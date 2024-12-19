@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import * as Updates from 'expo-updates';
-import { reportCrash } from '@app/utils/reportCrash';
 import useAppState from '@app/hooks/useAppState';
+import { reportCrash } from '@app/utils/reportCrash';
+import * as Updates from 'expo-updates';
+import { useState } from 'react';
+import Modal from './Modal';
 
 export default function OTAUpdates() {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -40,5 +41,23 @@ export default function OTAUpdates() {
 
   return (
     <Modal
-  )
+      title="Update available"
+      subtitle="New update available. Install to get the latest features. Blame Luke for any bugs ;)"
+      confirmOnPress={{
+        cta: async () => {
+          setUpdating(true);
+          await fetchAndRestartApp();
+        },
+        label: updating ? 'Updating...' : 'Update',
+        disabled: updating,
+      }}
+      cancelOnPress={{
+        cta: () => {
+          setModalVisible(false);
+        },
+        label: 'Maybe Later',
+      }}
+      isVisible={modalVisible}
+    />
+  );
 }
