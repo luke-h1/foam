@@ -1,9 +1,9 @@
-import theme from '@app/styles/theme';
+import { colors, spacing } from '@app/styles';
 import * as Application from 'expo-application';
 import { useUpdates } from 'expo-updates';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import pkg from '../../package.json';
-import ThemedText from './ThemedText';
+import { Text } from './ui/Text';
 
 export default function BuildDetails() {
   const updates = useUpdates();
@@ -12,16 +12,10 @@ export default function BuildDetails() {
 
   return (
     <View style={styles.container}>
-      <ThemedText fontSize={12}>
-        v{Application.nativeApplicationVersion}
-      </ThemedText>
-      <ThemedText fontSize={12}>({Application.nativeBuildVersion})</ThemedText>
-      <ThemedText fontSize={12}>pkg:{pkg.version}</ThemedText>
-      {updatedId ? (
-        <ThemedText fontSize={12} style={{ color: theme.color.grey }}>
-          {updatedId}
-        </ThemedText>
-      ) : null}
+      <Text>v{Application.nativeApplicationVersion}</Text>
+      <Text>({Application.nativeBuildVersion})</Text>
+      <Text>pkg:{pkg.version}</Text>
+      {updatedId ? <Text>{updatedId}</Text> : null}
     </View>
   );
 }
@@ -32,7 +26,7 @@ const styles = StyleSheet.create<{
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.sm,
+    paddingTop: spacing.medium,
+    paddingBottom: spacing.small,
   },
 });

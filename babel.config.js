@@ -3,8 +3,9 @@ module.exports = api => {
   return {
     presets: [['babel-preset-expo', { jsxRuntime: 'automatic' }]],
     plugins: [
-      'react-native-reanimated/plugin',
       'transform-inline-environment-variables',
+      // ORDER MATTERS - this must be always at the end
+      'react-native-reanimated/plugin',
     ],
   };
 };

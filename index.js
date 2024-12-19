@@ -1,5 +1,5 @@
 import { registerRootComponent } from 'expo';
-import App from './App';
+import App from './src/App';
 import 'expo-dev-client';
 
 // eslint-disable-next-line no-undef

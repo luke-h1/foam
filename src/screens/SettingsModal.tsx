@@ -1,23 +1,20 @@
 import Image from '@app/components/Image';
 import SafeAreaContainer from '@app/components/SafeAreaContainer';
 import SettingsItem, { ContentItem } from '@app/components/SettingsItem';
-import ThemedText from '@app/components/ThemedText';
+import Screen from '@app/components/ui/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
-import { RootRoutes, RootStackScreenProps } from '@app/navigation/RootStack';
-
-import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
-import theme from '@app/styles/theme';
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useMemo, useRef } from 'react';
 import { Button, StyleSheet, View, ViewStyle } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 
-export default function SettingsModal({
-  navigation,
-}: RootStackScreenProps<RootRoutes.Settings>) {
+export default function SettingsModal() {
   const { user, logout } = useAuthContext();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['25%', '25%'], []);
+
+  const navigation = useAppNavigation();
 
   const ICON_LEFT_SIZE = 22;
   const ICON_RIGHT_SIZE = 20;
@@ -127,57 +124,55 @@ export default function SettingsModal({
   });
 
   return (
-    <SafeAreaContainer>
-      <ThemedText
-        fontSize={theme.fontSize.lg}
-        style={{
-          padding: 2,
-        }}
-      >
-        Settings
-      </ThemedText>
-      <SettingsItem contents={settingItems} />
-      <BottomSheetModal
-        ref={bottomSheetModalRef}
-        index={1}
-        snapPoints={snapPoints}
-        handleStyle={{ opacity: 0.95 }}
-        // backgroundStyle={{ backgroundColor: colors.gray900 }}
-        // handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
-      >
-        <View style={styles.container}>
-          <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
-          <Button
-            title="Log out"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              await logout();
-              // navigation.navigate(RootRoutes.Home, {
-              //   screen: HomeTabsRoutes.Top,
-              // });
-              navigation.goBack();
-            }}
-          />
-        </View>
-        <View style={styles.container}>
-          <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
-          <Button
-            title="My stream"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              navigation.navigate(StreamRoutes.LiveStream, {
-                screen: StreamRoutes.LiveStream,
-                params: {
-                  id: user?.login,
-                },
-              });
-            }}
-          />
-        </View>
-      </BottomSheetModal>
-    </SafeAreaContainer>
+    <Screen>
+      <SafeAreaContainer>
+        <SettingsItem contents={settingItems} />
+        <BottomSheetModal
+          ref={bottomSheetModalRef}
+          index={1}
+          snapPoints={snapPoints}
+          handleStyle={{ opacity: 0.95 }}
+          // backgroundStyle={{ backgroundColor: colors.gray900 }}
+          // handleIndicatorStyle={{ backgroundColor: colors.gray400 }}
+        >
+          <View style={styles.container}>
+            <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
+            <Button
+              title="Log out"
+              onPress={async () => {
+                bottomSheetModalRef.current?.dismiss();
+                await logout();
+
+                navigation.navigate('Tabs', {
+                  screen: 'Following',
+                });
+              }}
+            />
+          </View>
+          <View style={styles.container}>
+            <Feather size={ICON_LEFT_SIZE} color="$color" name="arrow-right" />
+            <Button
+              title="My stream"
+              onPress={async () => {
+                bottomSheetModalRef.current?.dismiss();
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                // navigation.navigate(StreamRoutes.LiveStream, {
+                //   screen: StreamRoutes.LiveStream,
+                //   params: {
+                //     id: user?.login,
+                //   },
+                // });
+
+                navigation.navigate('LiveStream', {
+                  id: user?.login as string,
+                });
+              }}
+            />
+          </View>
+        </BottomSheetModal>
+      </SafeAreaContainer>
+    </Screen>
   );
 }
 
