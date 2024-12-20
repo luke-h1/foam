@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 export enum ErrorType {
   /**
    * An error that would normally cause a red screen in dev

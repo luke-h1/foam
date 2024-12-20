@@ -1,9 +1,7 @@
-import { RootStackParamList, RootRoutes } from '@app/navigation/RootStack';
-import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import twitchService, { Stream } from '@app/services/twitchService';
 import { spacing } from '@app/styles';
 import { radii } from '@app/styles/radii';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { Image, ImageStyle } from 'expo-image';
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
@@ -18,8 +16,7 @@ interface Props {
 
 export default function LiveStreamCard({ stream }: Props) {
   const [broadcasterImage, setBroadcasterImage] = useState<string>();
-
-  const { navigate } = useNavigation<NavigationProp<RootStackParamList>>();
+  const { navigate } = useAppNavigation();
 
   const getUserProfilePictures = async () => {
     const res = await twitchService.getUserImage(stream.user_login);
@@ -34,19 +31,12 @@ export default function LiveStreamCard({ stream }: Props) {
   return (
     <TouchableOpacity
       onPress={() => {
-        navigate(RootRoutes.Stream, {
-          screen: StreamRoutes.LiveStream,
-          params: {
-            id: stream.user_login,
-          },
+        navigate('LiveStream', {
+          id: stream.user_login,
         });
       }}
     >
-      <Text
-      // style={[styles.streamCard]}
-      // dark="rgba(255,255,255,0.15)"
-      // light={colors.textDim}
-      >
+      <Text>
         <View style={styles.streamHeadline}>
           <LiveStreamImage
             animated

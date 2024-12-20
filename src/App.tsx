@@ -1,4 +1,5 @@
 import 'expo-dev-client';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
 import {
   onlineManager,
@@ -7,27 +8,25 @@ import {
 } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
-import * as SplashScreen from 'expo-splash-screen';
 import React, { useLayoutEffect, useState } from 'react';
 import { LogBox } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 import CustomToast from './components/CustomToast';
 import OTAUpdates from './components/OTAUpdates';
+import AppLoading from './components/ui/AppLoading';
 import Config from './config';
-import { AuthContextProvider } from './context/AuthContext';
 import useChangeScreenOrientation from './hooks/useChangeScreenOrientation';
 import { useOnAppStateChange } from './hooks/useOnAppStateChange';
 import { AppNavigator } from './navigators/AppNavigator';
 import { useNavigationPersistence } from './navigators/navigationUtilities';
 import { ErrorBoundary } from './screens/ErrorScreen/ErrorBoundary';
 import { customFontsToLoad } from './styles';
+import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
-import { storage } from './utils/storage';
-
-SplashScreen.preventAutoHideAsync();
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
@@ -36,6 +35,8 @@ interface AppProps {
 }
 
 export default function App(props: AppProps) {
+  const { hideSplashScreen } = props;
+
   const queryClient = new QueryClient();
   const shouldDelete = false;
 
@@ -59,8 +60,6 @@ export default function App(props: AppProps) {
   if (shouldDelete) {
     deleteTokens();
   }
-
-  const { hideSplashScreen } = props;
 
   const {
     initialNavigationState,
@@ -95,9 +94,10 @@ export default function App(props: AppProps) {
    * In Android: https://stackoverflow.com/a/45838109/204044
    * You can replace with your own loading component
    */
-  if (!isNavigationStateRestored || !areFontsLoaded) {
+
+  if (!areFontsLoaded || !isNavigationStateRestored) {
     // TODO: return loading component instead
-    return null;
+    return <AppLoading />;
   }
 
   // otherwise, we're ready to render the app
@@ -108,18 +108,21 @@ export default function App(props: AppProps) {
         onReset={() => setRecoveredFromError(true)}
       >
         <QueryClientProvider client={queryClient}>
-          <AuthContextProvider>
-            <AppNavigator
-              initialState={
-                recoveredFromError
-                  ? { index: 0, routes: [] }
-                  : initialNavigationState
-              }
-              onStateChange={onNavigationStateChange}
-            />
-            <CustomToast />
-            <OTAUpdates />
-          </AuthContextProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              <AppNavigator
+                initialState={
+                  recoveredFromError
+                    ? { index: 0, routes: [] }
+                    : initialNavigationState
+                }
+                onStateChange={onNavigationStateChange}
+              >
+                <CustomToast />
+                <OTAUpdates />
+              </AppNavigator>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

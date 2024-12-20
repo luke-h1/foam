@@ -6,6 +6,7 @@ import App from './src/App';
 import 'expo-dev-client';
 import { version } from './package.json' assert { type: 'json' };
 import './src/polyfills';
+import * as SplashScreen from 'expo-splash-screen';
 
 // eslint-disable-next-line no-undef
 if (!__DEV__) {
@@ -50,4 +51,10 @@ if (!__DEV__) {
   NewRelic.setJSAppVersion(version);
 }
 
-registerRootComponent(App);
+SplashScreen.preventAutoHideAsync();
+
+function FoamApp() {
+  return <App hideSplashScreen={SplashScreen.hideAsync} />;
+}
+
+registerRootComponent(FoamApp);

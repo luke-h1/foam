@@ -3,13 +3,13 @@ import { Entypo } from '@expo/vector-icons';
 import React from 'react';
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { Text } from './ui/Text';
 
 interface Props {
   results: string[];

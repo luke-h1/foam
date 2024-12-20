@@ -1,6 +1,8 @@
 import LiveStreamCard from '@app/components/LiveStreamCard';
 import Screen from '@app/components/ui/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
+import useHeader from '@app/hooks/useHeader';
+import BackButton from '@app/navigators/BackButton';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +19,11 @@ export default function FollowingScreen() {
   const { user } = useAuthContext();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
+
+  useHeader({
+    title: 'Following',
+    LeftActionComponent: <BackButton />,
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onRefresh = async () => {

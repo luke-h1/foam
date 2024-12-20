@@ -1,5 +1,6 @@
+import { colors, spacing } from '@app/styles';
 import React from 'react';
-import { Modal as RNModal, View } from 'react-native';
+import { Modal as RNModal, TextStyle, View, ViewStyle } from 'react-native';
 import Button, { ButtonProps } from './ui/Button';
 import { Text } from './ui/Text';
 
@@ -45,3 +46,35 @@ export default function Modal({
     </RNModal>
   );
 }
+
+const $wrapper: ViewStyle = {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const $card: ViewStyle = {
+  backgroundColor: colors.palette.neutral100,
+  borderRadius: spacing.medium,
+  paddingHorizontal: spacing.large,
+  paddingVertical: spacing.extraLarge,
+  width: '80%',
+};
+
+const $textColor: TextStyle = {
+  color: colors.palette.neutral800,
+};
+
+const $subtitle: TextStyle = {
+  ...$textColor,
+  marginTop: spacing.medium,
+};
+
+const $confirmButton: ViewStyle = {
+  marginTop: spacing.large,
+};
+
+const $cancelButton: ViewStyle = {
+  alignSelf: 'center',
+  marginTop: spacing.extraLarge,
+};

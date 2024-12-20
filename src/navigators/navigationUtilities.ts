@@ -1,14 +1,27 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { useMounted } from '@app/hooks/useMounted';
 import {
   PartialState,
   NavigationState,
   NavigationAction,
   createNavigationContainerRef,
 } from '@react-navigation/native';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform } from 'react-native';
 import Config, { type PersistNavigationConfig } from '../config';
+
+function useIsMounted() {
+  const isMounted = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  return useCallback(() => isMounted.current, []);
+}
 
 export const RootNavigation = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -127,7 +140,7 @@ function navigationRestoredDefaultState(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useNavigationPersistence(storage: any, persistenceKey: string) {
   const [initialNavigationState, setInitialNavigationState] = useState();
-  const { isMounted } = useMounted();
+  const isMounted = useIsMounted();
 
   const initNavState = navigationRestoredDefaultState(Config.persistNavigation);
   const [isRestored, setIsRestored] = useState(initNavState);
@@ -163,7 +176,7 @@ export function useNavigationPersistence(storage: any, persistenceKey: string) {
         setInitialNavigationState(state);
       }
     } finally {
-      if (isMounted) {
+      if (isMounted()) {
         setIsRestored(true);
       }
     }

@@ -1,18 +1,17 @@
 import { useAuthContext } from '@app/context/AuthContext';
-import { HomeTabsRoutes } from '@app/navigation/Home/HomeTabs';
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import { useEffect } from 'react';
 import { Text, View } from 'react-native';
-import { RootRoutes, RootStackScreenProps } from '../../navigation/RootStack';
 
 export default function AuthLoadingScreen() {
-  const {} = useAppNavigation();
+  const { navigate } = useAppNavigation();
 
   const { getAnonToken } = useAuthContext();
 
   useEffect(() => {
     getAnonToken().then(() => {
-      navigate(RootRoutes.Home, {
-        screen: HomeTabsRoutes.Top,
+      navigate('Tabs', {
+        screen: 'TopStack',
       });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

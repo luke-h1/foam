@@ -2,7 +2,6 @@ import Icon, { IconTypes } from '@app/components/ui/Icon';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import SearchScreen from '@app/screens/SearchScreen';
-import TopScreen from '@app/screens/Top/TopScreen';
 import { colors, layout, spacing, typography } from '@app/styles';
 import {
   BottomTabScreenProps,
@@ -13,10 +12,11 @@ import React, { ComponentType, FC } from 'react';
 import { TextStyle, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
+import TopStackNavigator from './TopStackNavigator';
 
 export type TabParamList = {
   Following: undefined;
-  TopStack: undefined;
+  Top: undefined;
   Search: undefined;
   Settings: undefined;
 };
@@ -31,10 +31,9 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
-  | FC<TabScreenProps<'TopStack'>>
+  | FC<TabScreenProps<'Top'>>
   | FC<TabScreenProps<'Search'>>
-  | FC<TabScreenProps<'Settings'>>
-  | ComponentType;
+  | FC<TabScreenProps<'Settings'>>;
 
 interface Screen {
   name: keyof TabParamList;
@@ -51,6 +50,12 @@ const screens: Screen[] = [
     requiresAuth: true,
   },
   {
+    name: 'Top',
+    component: TopStackNavigator,
+    icon: 'arrowUp',
+    requiresAuth: false,
+  },
+  {
     name: 'Search',
     component: SearchScreen,
     icon: 'check',
@@ -58,16 +63,14 @@ const screens: Screen[] = [
   },
   // {
   //   name: 'Settings',
-  //   component: ,
+  //   component: () => (
+  //     <View>
+  //       <Text>Settings</Text>
+  //     </View>
+  //   ),
   //   icon: 'arrow',
   //   requiresAuth: false,
   // },
-  {
-    name: 'TopStack',
-    component: TopScreen,
-    icon: 'arrowUp',
-    requiresAuth: false,
-  },
 ];
 
 export default function TabNavigator() {
@@ -88,10 +91,9 @@ export default function TabNavigator() {
       }}
     >
       {screens.map(screen => {
-        if (screen.requiresAuth && !auth?.isAuth) {
+        if (screen.requiresAuth && auth && !auth?.isAuth) {
           return null;
         }
-
         return (
           <Tab.Screen
             key={screen.name}

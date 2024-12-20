@@ -1,4 +1,5 @@
 /* eslint-disable */
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import { HomeTabsRoutes } from '@app/navigation/Home/HomeTabs';
 import { RootRoutes, RootStackParamList } from '@app/navigation/RootStack';
 import { twitchApi } from '@app/services/api';
@@ -58,7 +59,6 @@ export const AuthContextProvider = ({ children }: Props) => {
     undefined,
   );
   const [anonToken, setAnonToken] = useState<string | undefined>(undefined);
-  const navigation = useNavigation<NavigationProp<RootRoutes>>();
 
   const isValidToken = async (token: string | null) => {
     if (!token) {
@@ -67,7 +67,7 @@ export const AuthContextProvider = ({ children }: Props) => {
     return twitchService.validateToken(token);
   };
 
-  const { navigate } = useNavigation<NavigationProp<RootStackParamList>>();
+  const { navigate } = useAppNavigation();
 
   useEffect(() => {
     const getTokens = async () => {
@@ -99,8 +99,8 @@ export const AuthContextProvider = ({ children }: Props) => {
 
           twitchApi.setAuthToken(storedAuthToken);
           SecureStore.setItemAsync(StorageKeys.authToken, storedAuthToken);
-          navigate(RootRoutes.Home, {
-            screen: HomeTabsRoutes.Top,
+          navigate('Tabs', {
+            screen: 'TopStack',
           });
         } else if (storedAnonToken && (await isValidToken(storedAnonToken))) {
           setAnonToken(storedAnonToken);
@@ -178,9 +178,9 @@ export const AuthContextProvider = ({ children }: Props) => {
       JSON.stringify(response.authentication),
     );
 
-    navigate(RootRoutes.Home, {
-      screen: HomeTabsRoutes.Top,
-    }); // Navigate to the appropriate screen
+    navigate('Tabs', {
+      screen: 'Following',
+    });
 
     return null;
   };
