@@ -1,15 +1,15 @@
-import theme from '@app/styles/theme';
+import { colors, spacing } from '@app/styles';
 import { Entypo } from '@expo/vector-icons';
 import React from 'react';
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { Text } from './ui/Text';
 
 interface Props {
   results: string[];
@@ -46,7 +46,7 @@ export default function SearchHistory({
               <Text style={styles.itemText}>{item}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onClearItem(item)}>
-              <Entypo name="cross" size={24} color={theme.color.grey} />
+              <Entypo name="cross" size={24} color={colors.tint} />
             </TouchableOpacity>
           </View>
         )}
@@ -65,34 +65,30 @@ const styles = StyleSheet.create<{
   itemText: TextStyle;
 }>({
   container: {
-    margin: theme.spacing.md,
+    margin: spacing.medium,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: spacing.small,
   },
   title: {
-    fontSize: theme.fontSize.lg,
     fontWeight: 'bold',
   },
   clearAll: {
-    color: theme.color.red,
-    fontSize: theme.fontSize.md,
+    color: colors.error,
   },
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: spacing.small,
     borderBottomWidth: 1,
-    borderBottomColor: theme.color.lightGrey,
+    borderBottomColor: colors.textDim,
   },
   item: {
     flex: 1,
   },
-  itemText: {
-    fontSize: theme.fontSize.md,
-  },
+  itemText: {},
 });

@@ -1,4 +1,4 @@
-import Button from '@app/components/Button';
+import Button from '@app/components/ui/Button';
 import { useAuthContext } from '@app/context/AuthContext';
 import {
   HomeTabsParamList,
@@ -69,7 +69,6 @@ export default function LoginScreen() {
       navigate(HomeTabsRoutes.Top);
     }
     Alert.alert('Authentication', 'login successful');
-    // TODO: alert user
   };
 
   useEffect(() => {
@@ -85,7 +84,7 @@ export default function LoginScreen() {
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <KeyboardAvoidingView>
         <Button
-          title="login"
+          text="Login with Twitch"
           disabled={!request}
           onPress={() => promptAsync()}
         />

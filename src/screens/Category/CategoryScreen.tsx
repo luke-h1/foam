@@ -1,22 +1,22 @@
 import LiveStreamCard from '@app/components/LiveStreamCard';
-import ThemedText from '@app/components/ThemedText';
-import ThemedView from '@app/components/ThemedView';
-import {
-  CategoryRoutes,
-  CategoryStackScreenProps,
-} from '@app/navigation/Category/CategoryStack';
+import EmptyState from '@app/components/ui/EmptyState';
+import Screen from '@app/components/ui/Screen';
+import Spinner from '@app/components/ui/Spinner';
+import { Text } from '@app/components/ui/Text';
+import useHeader from '@app/hooks/useHeader';
+import { AppStackParamList } from '@app/navigators';
+import BackButton from '@app/navigators/BackButton';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
-import theme from '@app/styles/theme';
+import { spacing } from '@app/styles';
+import { StackScreenProps } from '@react-navigation/stack';
 import { useQueries } from '@tanstack/react-query';
 import { Image } from 'expo-image';
+import { FC } from 'react';
 import {
   FlatList,
   ImageStyle,
-  SafeAreaView,
   ScrollView,
-  StyleSheet,
-  Text,
   TextStyle,
   View,
   ViewStyle,
@@ -28,19 +28,20 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function CategoryScreen({
-  route,
-}: CategoryStackScreenProps<CategoryRoutes.Category>) {
-  const { id } = route.params;
-  const insets = useSafeAreaInsets();
-
-  // Animated header on scroll
+const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
+  route: { params },
+}) => {
+  const { id } = params;
   const transitionY = useSharedValue<number>(0);
 
   const scrollHandler = useAnimatedScrollHandler(event => {
     transitionY.value = event.contentOffset.y;
+  });
+
+  useHeader({
+    title: 'Categories',
+    LeftActionComponent: <BackButton />,
   });
 
   const headerStyle = useAnimatedStyle(() => {
@@ -73,6 +74,7 @@ export default function CategoryScreen({
       twitchQueries.getStreamsByCategory(id),
     ],
   });
+
   const {
     data: category,
     isLoading: isLoadingCategory,
@@ -86,129 +88,78 @@ export default function CategoryScreen({
   } = streamsByCategoryQueryResult;
 
   if (isLoadingCategory || isLoadingStreams) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          flexDirection: 'column',
-        }}
-      >
-        <View>
-          <Text>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <Spinner />;
   }
 
   if (isErrorCategory || isErrorStreams) {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-          flexDirection: 'column',
-        }}
-      >
-        <View>
-          <Text>Something went wrong</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <EmptyState />;
   }
 
   const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView
-        style={styles.container}
-        dark={theme.color.darkBlue}
-        light={theme.color.white}
-      >
+    <Screen preset="scroll">
+      <View style={$container}>
         <AnimatedScrollView
-          style={styles.container}
+          style={$container}
           onScroll={scrollHandler}
           scrollEventThrottle={8}
           contentContainerStyle={[
-            styles.contentContainer,
             {
-              paddingBottom: insets.bottom + theme.spacing.xl,
+              // paddingBottom: insets.bottom + theme.spacing.xl,
             },
           ]}
         >
-          <ThemedView animated style={[styles.header, headerStyle]}>
-            <View style={styles.headerContent}>
+          <View style={headerStyle}>
+            <View style={$headerContent}>
               <Image
                 source={{
                   uri: category?.box_art_url
                     .replace('{width}', '600')
                     .replace('{height}', '1080'),
                 }}
-                style={styles.categoryLogo}
+                style={$categoryLogo}
               />
-              <ThemedText
-                fontWeight="bold"
-                fontSize={24}
-                style={styles.categoryTitle}
-              >
-                {category?.name}
-              </ThemedText>
+              <Text style={$categoryTitle}>{category?.name}</Text>
             </View>
-          </ThemedView>
-          <ThemedView style={styles.content}>
+          </View>
+          <View style={$content}>
             <FlatList<Stream>
               data={streams}
               keyExtractor={item => item.id}
               renderItem={({ item }) => <LiveStreamCard stream={item} />}
             />
-          </ThemedView>
+          </View>
         </AnimatedScrollView>
-      </ThemedView>
-    </SafeAreaView>
+      </View>
+    </Screen>
   );
-}
+};
 
-const styles = StyleSheet.create<{
-  safeArea: ViewStyle;
-  container: ViewStyle;
-  contentContainer: ViewStyle;
-  header: ViewStyle;
-  headerContent: ViewStyle;
-  categoryLogo: ImageStyle;
-  categoryTitle: TextStyle;
-  content: ViewStyle;
-}>({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.color.white, // Adjust the background color as needed
-  },
-  container: {
-    flex: 1,
-  },
-  header: {},
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    paddingLeft: theme.spacing.lg,
-    display: 'flex',
-  },
-  contentContainer: {
-    borderBottomRightRadius: theme.borderradii.lg,
-    borderBottomLeftRadius: theme.borderradii.lg,
-  },
-  categoryTitle: {
-    textAlign: 'center',
-    marginLeft: theme.spacing.md,
-    fontSize: theme.fontSize.sm,
-    fontWeight: 'bold',
-  },
-  categoryLogo: {
-    width: 100,
-    height: 150,
-    borderRadius: 10,
-  },
-  content: {
-    paddingTop: theme.spacing.lg,
-    // paddingHorizontal: theme.spacing.lg,
-  },
-});
+export default CategoryScreen;
+
+const $container: ViewStyle = {
+  flex: 1,
+};
+
+const $headerContent: ViewStyle = {
+  flexDirection: 'row',
+  alignItems: 'flex-start',
+  justifyContent: 'flex-start',
+  paddingLeft: spacing.large,
+  display: 'flex',
+};
+const $categoryLogo: ImageStyle = {
+  width: 100,
+  height: 150,
+  borderRadius: 10,
+};
+const $categoryTitle: TextStyle = {
+  textAlign: 'center',
+  marginLeft: spacing.medium,
+  fontWeight: 'bold',
+};
+const $content: ViewStyle = {
+  paddingTop: spacing.large,
+  paddingHorizontal: spacing.large,
+};

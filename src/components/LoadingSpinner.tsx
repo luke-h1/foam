@@ -1,4 +1,4 @@
-import theme from '@app/styles/theme';
+import { spacing } from '@app/styles';
 import { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 
@@ -33,6 +33,6 @@ const styles = StyleSheet.create<{
 }>({
   loadingSpinner: {
     flex: 1,
-    marginBottom: theme.spacing.md,
+    marginBottom: spacing.medium,
   },
 });

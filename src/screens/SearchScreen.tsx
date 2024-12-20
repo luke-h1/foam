@@ -1,16 +1,21 @@
 import DismissableKeyboard from '@app/components/DismissableKeyboard';
 import LiveStreamMiniCard from '@app/components/LiveStreamMiniCard';
 import SearchHistory from '@app/components/SearchHistoryItem';
-import SearchInput from '@app/components/form/SearchInput';
+import { PressableArea } from '@app/components/form/PressableArea';
+import Screen from '@app/components/ui/Screen';
+import { Text } from '@app/components/ui/Text';
+import { TextField } from '@app/components/ui/TextField';
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
-import { HomeTabsParamList } from '@app/navigation/Home/HomeTabs';
-import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
+import useHeader from '@app/hooks/useHeader';
+import BackButton from '@app/navigators/BackButton';
 import twitchService, {
   SearchChannelResponse,
 } from '@app/services/twitchService';
+import { colors, spacing } from '@app/styles';
 import { statusBarHeight } from '@app/utils/statusBarHeight';
 import { storage } from '@app/utils/storage';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import Entypo from '@expo/vector-icons/build/Entypo';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -18,11 +23,11 @@ import {
   TouchableOpacity,
   TextInput as NativeTextInput,
   View,
-  Text,
   StyleSheet,
   ViewStyle,
   ImageStyle,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 
 const previousSearchesKey = 'previousSearches' as const;
 
@@ -32,11 +37,17 @@ interface SearchHistoryItem {
 }
 
 export default function SearchScreen() {
+  const { navigate } = useAppNavigation();
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
+
+  useHeader({
+    title: 'Search',
+    LeftActionComponent: <BackButton />,
+  });
 
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
@@ -48,8 +59,6 @@ export default function SearchScreen() {
     );
     setSearchHistory(parsedHistory);
   };
-
-  const { navigate } = useNavigation<NavigationProp<HomeTabsParamList>>();
 
   useEffect(() => {
     fetchSearchHistory();
@@ -108,7 +117,14 @@ export default function SearchScreen() {
   };
 
   return (
-    <View style={styles.wrapper}>
+    <Screen
+      style={styles.wrapper}
+      safeAreaEdges={['top', 'bottom', 'left']}
+      preset="scroll"
+      contentContainerStyle={{
+        padding: spacing.micro,
+      }}
+    >
       <View style={styles.container}>
         <DismissableKeyboard>
           <ScrollView
@@ -116,19 +132,50 @@ export default function SearchScreen() {
               flexGrow: 1,
             }}
           >
-            <SearchInput
+            <TextField
               ref={ref}
               placeholder="Find a channel"
               value={query}
-              onChangeText={async text => {
-                await handleQuery(text);
-              }}
+              autoComplete="off"
+              onChangeText={async text => handleQuery(text)}
+              // eslint-disable-next-line react/no-unstable-nested-components
+              RightAccessory={() =>
+                query ? (
+                  <PressableArea
+                    onPress={() => {
+                      setQuery?.('');
+                      setSearchResults([]);
+                      fetchSearchHistory();
+                    }}
+                    hitSlop={30}
+                  >
+                    <Entypo
+                      name="circle-with-cross"
+                      size={24}
+                      style={{
+                        marginRight: 3,
+                      }}
+                      color={colors.border}
+                    />
+                  </PressableArea>
+                ) : (
+                  <Feather
+                    name="search"
+                    color={colors.border}
+                    size={24}
+                    style={{
+                      marginRight: 3,
+                    }}
+                  />
+                )
+              }
             />
           </ScrollView>
         </DismissableKeyboard>
       </View>
+
       <View style={styles.searchResultsWrapper}>
-        {searchResults.length > 0 && (
+        {searchResults.length > 0 && !!searchHistory.length && (
           <>
             <Text
               style={{
@@ -142,13 +189,8 @@ export default function SearchScreen() {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => {
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore FIX ME - navigation
-                    navigate(StreamRoutes.LiveStream, {
-                      screen: StreamRoutes.LiveStream,
-                      params: {
-                        id: item.broadcaster_login,
-                      },
+                    navigate('LiveStream', {
+                      id: item.broadcaster_login,
                     });
                   }}
                   style={styles.list}
@@ -161,7 +203,7 @@ export default function SearchScreen() {
         )}
       </View>
 
-      {searchHistory && (
+      {searchHistory && !!searchResults && (
         <SearchHistory
           results={searchHistory.map(item => item.query)}
           onClearAll={() => {
@@ -178,7 +220,7 @@ export default function SearchScreen() {
           }}
         />
       )}
-    </View>
+    </Screen>
   );
 }
 
