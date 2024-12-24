@@ -1,11 +1,12 @@
 import CategoryCard from '@app/components/CategoryCard';
 import EmptyState from '@app/components/ui/EmptyState';
+import Screen from '@app/components/ui/Screen';
 import Spinner from '@app/components/ui/Spinner';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Category } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, RefreshControl } from 'react-native';
 
 export default function CategoriesSecreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -18,7 +19,7 @@ export default function CategoriesSecreen() {
   );
 
   const { data: categories, isLoading, isError } = useQuery(topCategoriesQuery);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.refetchQueries({
@@ -41,10 +42,21 @@ export default function CategoriesSecreen() {
   }
 
   return (
-    <FlatList<Category>
-      data={categories}
-      renderItem={({ item }) => <CategoryCard category={item} />}
-      keyExtractor={(_item, index) => index.toString()}
-    />
+    <Screen
+      preset="scroll"
+      ScrollViewProps={{
+        refreshControl: (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        ),
+      }}
+    >
+      <FlatList<Category>
+        data={categories}
+        renderItem={({ item }) => <CategoryCard category={item} />}
+        keyExtractor={(_item, index) => index.toString()}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+      />
+    </Screen>
   );
 }

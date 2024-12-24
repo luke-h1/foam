@@ -12,10 +12,11 @@ import { spacing } from '@app/styles';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useQueries } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import {
   FlatList,
   ImageStyle,
+  RefreshControl,
   ScrollView,
   TextStyle,
   View,
@@ -34,6 +35,7 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
 }) => {
   const { id } = params;
   const transitionY = useSharedValue<number>(0);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const scrollHandler = useAnimatedScrollHandler(event => {
     transitionY.value = event.contentOffset.y;
@@ -88,7 +90,7 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
     refetch: refetchStreamsByCategory,
   } = streamsByCategoryQueryResult;
 
-  if (isLoadingCategory || isLoadingStreams) {
+  if (isLoadingCategory || isLoadingStreams || refreshing) {
     return <Spinner />;
   }
 
@@ -104,8 +106,21 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
 
   const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetchStreamsByCategory();
+    setRefreshing(false);
+  };
+
   return (
-    <Screen preset="scroll">
+    <Screen
+      preset="scroll"
+      ScrollViewProps={{
+        refreshControl: (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        ),
+      }}
+    >
       <View style={$container}>
         <AnimatedScrollView
           style={$container}

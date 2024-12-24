@@ -46,5 +46,4 @@ const $circle: ViewStyle = {
   borderRadius: 20,
   borderWidth: 5,
   borderColor: colors.palette.primary500,
-  borderTopColor: 'transparent',
 };
