@@ -65,7 +65,13 @@ If you're on Linux or windows, you'll need to setup Android studio and install a
 
 If you're on Mac you can just use the iOS simulator (via Xcode) to run the app
 
-You'll need to start the proxy server before you start up the app to proxy authentication requests to Twitch. This is due to a new requirement where Twitch do not let you proxy non `http` URLs. You can do this by running `pnpm run start:proxy` in a separate terminal window. Locally this is just a simple Express server. In production, we'll most likely use a serverless function to get around this issue.
+You will then need to start the proxy server before you start up the app to proxy authentication requests to Twitch. This is due to a new requirement where Twitch do not let you proxy non `http` URLs. Locally this is just a simple Express server. In production, we'll most likely use a serverless function to get around this issue.
+
+Start the proxy server
+
+```bash
+pnpm start:proxy
+```
 
 Start the app
 

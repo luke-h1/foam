@@ -65,3 +65,6 @@ xcuserdata
 # VSCode
 .history/
 .turbo
+
+# test
+coverage

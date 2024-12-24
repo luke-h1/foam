@@ -1,11 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const expoPreset = require('jest-expo/jest-preset');
-
 const jestConfig = {
-  ...expoPreset,
-  // preset: 'react-native',
   preset: 'jest-expo',
-
   setupFilesAfterEnv: ['./test/setupTests.ts'],
   setupFiles: ['./node_modules/react-native-gesture-handler/jestSetup.js'],
   transform: {
@@ -22,5 +16,10 @@ const jestConfig = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: true,
   testEnvironment: 'jsdom',
+  coverageThreshold: {
+    global: {
+      lines: 60, // TODO: increase this to 70%
+    },
+  },
 };
 module.exports = jestConfig;
