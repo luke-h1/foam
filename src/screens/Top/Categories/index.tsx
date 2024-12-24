@@ -1,10 +1,11 @@
 import CategoryCard from '@app/components/CategoryCard';
+import EmptyState from '@app/components/ui/EmptyState';
+import Spinner from '@app/components/ui/Spinner';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Category } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
-import Feather from 'react-native-vector-icons/Feather';
+import { FlatList } from 'react-native';
 
 export default function CategoriesSecreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -27,50 +28,11 @@ export default function CategoriesSecreen() {
   };
 
   if (!categories || isError) {
-    return (
-      // <ScrollView
-      //   refreshControl={
-      //     <RefreshControl
-      //       refreshing={refreshing}
-      //       onRefresh={onRefresh}
-      //       // tintColor={colors.gray500}
-      //       // colors={[colors.gray500]}
-      //     />
-      //   }
-      // >
-      <View
-        style={{
-          alignItems: 'center',
-          flex: 1,
-          justifyContent: 'center',
-        }}
-      >
-        <Feather
-          name="info"
-          size={24}
-          color="black"
-          style={{
-            marginRight: 10,
-          }}
-        />
-        <Text>
-          {isError ? 'error fetching categories' : 'No categories found'}
-        </Text>
-      </View>
-      // </ScrollView>
-    );
+    return <EmptyState />;
   }
 
   if (isLoading || refreshing) {
-    return (
-      <View
-        style={{
-          flexDirection: 'row',
-        }}
-      >
-        <Text>Loading...</Text>
-      </View>
-    );
+    return <Spinner />;
   }
 
   return (

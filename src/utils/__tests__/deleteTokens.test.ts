@@ -1,5 +1,5 @@
+import { storageKeys } from '@app/context/AuthContext';
 import * as SecureStore from 'expo-secure-store';
-import { StorageKeys } from '../../context/AuthContext';
 import { deleteTokens } from '../deleteTokens';
 
 describe('deleteTokens', () => {
@@ -10,8 +10,8 @@ describe('deleteTokens', () => {
 
     await deleteTokens();
 
-    expect(mockDeleteItemAsync).toHaveBeenCalledWith(StorageKeys.anonToken);
-    expect(mockDeleteItemAsync).toHaveBeenCalledWith(StorageKeys.authToken);
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith(storageKeys.anon);
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith(storageKeys.user);
 
     mockDeleteItemAsync.mockRestore();
   });

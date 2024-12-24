@@ -28,6 +28,7 @@
     "node": true
   },
   "rules": {
+    "import/no-cycle": "off",
     "import/extensions": [
       "error",
       "ignorePackages",

@@ -1,10 +1,8 @@
-/* eslint-disable global-require */
-/* eslint-disable @typescript-eslint/no-require-imports */
-import theme from '@app/styles/theme';
+import { colors, spacing } from '@app/styles';
+import { radii } from '@app/styles/radii';
 import { Image } from 'expo-image';
-import { StyleSheet, View, ViewStyle, Text } from 'react-native';
+import { View, ViewStyle, Text, ImageStyle, TextStyle } from 'react-native';
 import elapsedStreamTime from '../utils/elapsedStreamTime';
-import ThemedView from './ThemedView';
 
 interface Props {
   thumbnail?: string;
@@ -24,50 +22,49 @@ export default function LiveStreamImage({
   const imageSize = (() => {
     switch (size) {
       case 'small':
-        return styles.imageSizeSmall;
+        return $imageSizeSmall;
 
       case 'large':
-        return styles.imageSizeLarge;
+        return $imageSizeLarge;
+
       case 'xlarge':
-        return styles.imageSizeExtraLarge;
+        return $imageSizeExtraLarge;
+
       case 'medium':
       default:
-        return styles.imageSizeMedium;
+        return $imageSizeMedium;
     }
   })();
-
-  const imageStyles = [styles.profileImage, imageSize];
 
   const logoSize = (() => {
     switch (size) {
       case 'small':
-        return styles.logoSizeSmall;
+        return $logoSizeSmall;
       case 'large':
-        return styles.logoSizeLarge;
+        return $logoSizeLarge;
       case 'xlarge':
-        return styles.logoSizeExtraLarge;
+        return $logoSizeExtraLarge;
       case 'medium':
       default:
-        return styles.logoSizeMedium;
+        return $logoSizeMedium;
     }
   })();
 
+  const imageStyles = [$profileImage, imageSize];
+
   const placeholder = (
-    <View style={[imageStyles, styles.fallbackImage]}>
+    <View style={[imageStyles, $fallbackImage]}>
       <Image
+        // eslint-disable-next-line global-require, @typescript-eslint/no-require-imports
         source={require('../../assets/foam.png')}
-        style={logoSize}
+        style={logoSize as ImageStyle}
         testID="LiveStreamImage-placeholder"
       />
     </View>
   );
 
   return (
-    <ThemedView
-      light="rgba(255,255,255,0.15)"
-      dark="rgba(0,0,0,0.15)"
-      style={[imageSize, styles.imageContainer, style]}
-    >
+    <View style={[imageSize, $imageContainer, style]}>
       {thumbnail ? (
         <Image
           testID="LiveStreamImage-image"
@@ -76,83 +73,90 @@ export default function LiveStreamImage({
               .replace('{width}', '2560')
               .replace('{height}', '1080'),
           }}
-          style={imageStyles}
+          style={imageStyles as ImageStyle[]}
           transition={animated ? 300 : 0}
         />
       ) : (
         placeholder
       )}
       {startedAt && (
-        <View style={styles.elapsedTimeContainer}>
-          <Text style={styles.elapsedTimeText}>
-            {elapsedStreamTime(startedAt)}
-          </Text>
+        <View style={$elapsedTimeContainer}>
+          <Text style={$elapsedTimeText}>{elapsedStreamTime(startedAt)}</Text>
         </View>
       )}
-    </ThemedView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  imageContainer: {
-    marginRight: theme.spacing.md,
-    borderRadius: theme.borderradii.sm,
-    overflow: 'hidden',
-  },
-  profileImage: {
-    width: 50,
-    height: 70,
-    ...StyleSheet.absoluteFillObject,
-  },
-  imageSizeSmall: {
-    width: 55,
-    height: 55,
-  },
-  imageSizeMedium: {
-    width: 60,
-    height: 60,
-  },
-  imageSizeLarge: {
-    width: 130,
-    height: 100,
-  },
-  imageSizeExtraLarge: {
-    width: 200,
-    height: 200,
-  },
-  fallbackImage: {
-    backgroundColor: theme.color.darkBlue,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoSizeSmall: {
-    width: 20,
-    height: 20,
-  },
-  logoSizeMedium: {
-    width: 30,
-    height: 30,
-  },
-  logoSizeExtraLarge: {
-    width: 100,
-    height: 100,
-  },
-  logoSizeLarge: {
-    width: 50,
-    height: 50,
-  },
-  elapsedTimeContainer: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black background
-    paddingVertical: 2,
-    paddingHorizontal: 5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  elapsedTimeText: {
-    color: 'white',
-    fontSize: 12,
-  },
-});
+const $imageContainer: ViewStyle = {
+  marginRight: spacing.medium,
+  borderRadius: radii.sm,
+  overflow: 'hidden',
+};
+
+const $profileImage: ViewStyle = {
+  width: 50,
+  height: 70,
+};
+
+const $imageSizeSmall: ViewStyle = {
+  width: 55,
+  height: 55,
+};
+
+const $imageSizeMedium: ViewStyle = {
+  width: 60,
+  height: 60,
+};
+
+const $imageSizeLarge: ViewStyle = {
+  width: 130,
+  height: 100,
+};
+
+const $imageSizeExtraLarge: ViewStyle = {
+  width: 200,
+  height: 200,
+};
+
+const $fallbackImage: ViewStyle = {
+  backgroundColor: colors.border,
+  justifyContent: 'center',
+  alignItems: 'center',
+};
+
+const $logoSizeSmall: ViewStyle = {
+  width: 20,
+  height: 20,
+};
+
+const $logoSizeMedium: ViewStyle = {
+  width: 30,
+  height: 30,
+};
+
+const $logoSizeExtraLarge: ViewStyle = {
+  width: 100,
+  height: 100,
+};
+
+const $logoSizeLarge: ViewStyle = {
+  width: 50,
+  height: 50,
+};
+
+const $elapsedTimeContainer: ViewStyle = {
+  position: 'absolute',
+  bottom: 0,
+  width: '100%',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  paddingVertical: 2,
+  paddingHorizontal: 5,
+  justifyContent: 'center',
+  alignItems: 'center',
+};
+
+const $elapsedTimeText: TextStyle = {
+  color: 'white',
+  fontSize: 12,
+};
