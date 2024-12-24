@@ -41,6 +41,10 @@ export default function FollowingScreen() {
 
   const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
 
+  if (refreshing || isLoading) {
+    return <Spinner />;
+  }
+
   if ((!isLoading && !streams) || isError) {
     return (
       <ScrollView
@@ -49,13 +53,12 @@ export default function FollowingScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <EmptyState buttonOnPress={() => onRefresh()} />
+        <EmptyState
+          buttonOnPress={() => onRefresh()}
+          heading="Failed to fetch followed streams"
+        />
       </ScrollView>
     );
-  }
-
-  if (refreshing || isLoading) {
-    return <Spinner />;
   }
 
   return (

@@ -28,7 +28,12 @@ export default function CategoriesSecreen() {
   };
 
   if (!categories || isError) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        content="No categories found"
+        buttonOnPress={() => onRefresh()}
+      />
+    );
   }
 
   if (isLoading || refreshing) {
