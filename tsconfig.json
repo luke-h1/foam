@@ -14,11 +14,7 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "jsx": "preserve",
-    "lib": [
-      "dom",
-      "DOM.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "DOM.iterable", "esnext"],
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -27,19 +23,11 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": [
-        "./src/*"
-      ]
+      "@app/*": ["./src/*"]
     }
   },
-  "include": [
-    "src",
-    "test"
-  ],
+  "include": ["src", "test", "App.js"],
   "moduleResolution": "node",
-  "exclude": [
-    "node_modules",
-    ".expo"
-  ],
+  "exclude": ["node_modules", ".expo"],
   "extends": "expo/tsconfig.base"
 }

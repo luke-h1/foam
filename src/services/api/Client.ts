@@ -69,6 +69,8 @@ export default class Client {
       }
       return response.data;
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('axiosError', error);
       if (isAxiosError(error)) {
         return error.response?.data;
       }
@@ -197,7 +199,8 @@ export default class Client {
   }
 
   public setAuthToken(token: string) {
-    this.axios.defaults.headers.Authorization = `Bearer ${token}`;
+    // eslint-disable-next-line dot-notation
+    this.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 
   public removeAuthToken() {

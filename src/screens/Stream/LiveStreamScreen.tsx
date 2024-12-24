@@ -1,67 +1,61 @@
 /* eslint-disable no-shadow */
 import Chat from '@app/components/Chat';
-import { StreamStackParamList } from '@app/navigation/Stream/StreamStack';
+import EmptyState from '@app/components/ui/EmptyState';
+import Spinner from '@app/components/ui/Spinner';
+import { Text } from '@app/components/ui/Text';
+import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import twitchQueries from '@app/queries/twitchQueries';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { colors } from '@app/styles';
 import { useQueries } from '@tanstack/react-query';
+import { FC } from 'react';
 import {
-  StyleSheet,
   View,
   SafeAreaView,
   Dimensions,
   ScrollView,
-  Text,
   Image,
+  ViewStyle,
+  TextStyle,
+  ImageStyle,
 } from 'react-native';
 import WebView from 'react-native-webview';
 
-export default function LiveStreamScreen() {
-  const route = useRoute<RouteProp<StreamStackParamList>>();
-
+const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
+  route: { params },
+}) => {
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
       queries: [
-        twitchQueries.getStream(route.params.id),
-        twitchQueries.getUser(route.params.id),
-        twitchQueries.getUserImage(route.params.id),
+        twitchQueries.getStream(params.id),
+        twitchQueries.getUser(params.id),
+        twitchQueries.getUserImage(params.id),
       ],
     });
 
   const { data: stream, isLoading: isStreamLoading } = streamQueryResult;
   const { data: user, isLoading: isUserLoading } = userQueryResult;
-  const { data: userProfilePicture } = userProfilePictureQueryResult;
+  const { data: userProfilePicture, isLoading: isUserProfilePictureLoading } =
+    userProfilePictureQueryResult;
 
   const { width } = Dimensions.get('window');
 
-  if (isStreamLoading || isUserLoading) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <View style={styles.loadingView}>
-          <Text>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
+  if (isStreamLoading || isUserLoading || isUserProfilePictureLoading) {
+    return <Spinner />;
   }
 
   if (!stream) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <View style={styles.loadingView}>
-          <Text>No stream available</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <EmptyState />;
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <SafeAreaView style={$container}>
+      <ScrollView contentContainerStyle={$scrollViewContent}>
         <WebView
           source={{
             uri: `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
           }}
           style={[
-            styles.webView,
+            $webView,
             {
               width, // Adjust width based on screen size
               height: width * (9 / 16), // Maintain 16:9 aspect ratio
@@ -69,19 +63,16 @@ export default function LiveStreamScreen() {
           ]}
           allowsInlineMediaPlayback
         />
-        <View style={styles.videoDetails}>
-          <View style={styles.videoTitleContainer}>
-            <Text style={styles.videoTitle}>{stream?.title}</Text>
+        <View style={$videoDetails}>
+          <View style={$videoTitleContainer}>
+            <Text style={$videoTitle}>{stream?.title}</Text>
           </View>
-          <View style={styles.videoMetadata}>
-            <View style={styles.userInfo}>
-              <Image
-                source={{ uri: userProfilePicture }}
-                style={styles.avatar}
-              />
-              <Text style={styles.videoUser}>{user?.display_name}</Text>
+          <View style={$videoMetadata}>
+            <View style={$userInfo}>
+              <Image source={{ uri: userProfilePicture }} style={$avatar} />
+              <Text style={$videoUser}>{user?.display_name}</Text>
             </View>
-            <Text style={styles.videoViews}>
+            <Text style={$videoViews}>
               {new Intl.NumberFormat('en-US').format(
                 stream?.viewer_count as number,
               )}{' '}
@@ -89,7 +80,7 @@ export default function LiveStreamScreen() {
             </Text>
           </View>
         </View>
-        <View style={styles.chatContainer}>
+        <View style={$chatContainer}>
           <Chat
             channelId={user?.id as string}
             channelName={stream?.user_login as string}
@@ -98,71 +89,67 @@ export default function LiveStreamScreen() {
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+export default LiveStreamScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingView: {
-    display: 'flex',
-    flexDirection: 'row',
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollViewContent: {
-    alignItems: 'center',
-  },
-  webView: {
-    overflow: 'hidden',
-  },
-  videoDetails: {
-    padding: 10,
-    width: '100%',
-  },
-  videoTitleContainer: {
-    marginBottom: 10,
-  },
-  videoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  videoMetadata: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  videoUser: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  videoViews: {
-    fontSize: 16,
-    color: '#888',
-  },
-  chatContainer: {
-    padding: 2,
-    maxHeight: 300, // Restrict the height of the chat container
-  },
-  controlsContainer: {
-    padding: 10,
-  },
-});
+const $container: ViewStyle = {
+  flex: 1,
+  backgroundColor: colors.background,
+};
+
+const $scrollViewContent: ViewStyle = {
+  alignItems: 'center',
+};
+
+const $webView: ViewStyle = {
+  overflow: 'hidden',
+};
+
+const $videoDetails: ViewStyle = {
+  padding: 10,
+  width: '100%',
+};
+
+const $videoTitleContainer: ViewStyle = {
+  marginBottom: 10,
+};
+
+const $videoTitle: TextStyle = {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: colors.text,
+};
+
+const $videoMetadata: ViewStyle = {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 10,
+};
+
+const $userInfo: ViewStyle = {
+  flexDirection: 'row',
+  alignItems: 'center',
+};
+
+const $avatar: ImageStyle = {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  marginRight: 10,
+};
+
+const $videoUser: TextStyle = {
+  fontSize: 16,
+  fontWeight: 'bold',
+};
+
+const $videoViews: TextStyle = {
+  fontSize: 16,
+  color: colors.textDim,
+};
+
+const $chatContainer: ViewStyle = {
+  padding: 2,
+  maxHeight: 300, // Restrict the height of the chat container
+};

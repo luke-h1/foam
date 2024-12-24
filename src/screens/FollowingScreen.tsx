@@ -1,10 +1,14 @@
 import LiveStreamCard from '@app/components/LiveStreamCard';
+import EmptyState from '@app/components/ui/EmptyState';
+import Screen from '@app/components/ui/Screen';
+import Spinner from '@app/components/ui/Spinner';
 import { useAuthContext } from '@app/context/AuthContext';
+import useHeader from '@app/hooks/useHeader';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, View, Text } from 'react-native';
+import { FlatList, View, RefreshControl, ScrollView } from 'react-native';
 
 export interface Section {
   key: string;
@@ -17,57 +21,45 @@ export default function FollowingScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  useHeader({
+    title: 'Following',
+  });
+
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.refetchQueries({
       queryKey: followingStreamsQuery.queryKey,
     });
-
     setRefreshing(false);
   };
 
   const followingStreamsQuery = useMemo(
     () => twitchQueries.getFollowedStreams(user?.id as string),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [user],
   );
 
   const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
 
   if ((!isLoading && !streams) || isError) {
     return (
-      <View
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flex: 1,
-        }}
+      <ScrollView
+        contentContainerStyle={{ flex: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        >
-          <Text>No streams are live</Text>
-        </View>
-      </View>
+        <EmptyState buttonOnPress={() => onRefresh()} />
+      </ScrollView>
     );
   }
 
   if (refreshing || isLoading) {
-    return (
-      <View>
-        <Text>loading...</Text>
-      </View>
-    );
+    return <Spinner />;
   }
 
   return (
-    <View>
+    <Screen>
       <View
         style={{
           padding: 4,
@@ -78,9 +70,12 @@ export default function FollowingScreen() {
             data={streams}
             keyExtractor={item => item.id}
             renderItem={({ item }) => <LiveStreamCard stream={item} />}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
           />
         </View>
       </View>
-    </View>
+    </Screen>
   );
 }

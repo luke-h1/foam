@@ -1,14 +1,57 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable global-require */
+/* eslint-disable @typescript-eslint/no-require-imports */
+import 'react-native-gesture-handler/jestSetup';
+import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
 import mockFile from './mockFile';
 import 'cross-fetch/polyfill';
 import 'core-js';
 import '@testing-library/jest-native/extend-expect';
+import '@app/hooks/useAppNavigation';
 
-import 'react-native-gesture-handler/jestSetup';
+jest.mock('expo-font');
+jest.mock('expo-asset');
+jest.mock('react-native-vector-icons', () => {
+  return {
+    __esModule: true,
+    ...jest.requireActual('react-native-vector-icons'),
+  };
+});
+
+jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => {
+  const { EventEmitter } = require('events');
+  return {
+    __esModule: true,
+    default: EventEmitter,
+  };
+});
+
+// include this section and the NativeAnimatedHelper section for mocking react-native-reanimated
+jest.mock('react-native-reanimated', () => {
+  const Reanimated = require('react-native-reanimated/mock');
+
+  // The mock for `call` immediately calls the callback which is incorrect
+  // So we override it with a no-op
+  Reanimated.default.call = () => {};
+
+  return Reanimated;
+});
+
+// jest.mock('@app/hooks/useAppNavigation', () => {
+//   const mockNavigation: Partial<NativeStackNavigationProp<AppStackParamList>> =
+//     {
+//       navigate: jest.fn(),
+//       goBack: jest.fn(),
+//       ...jest.requireActual('@reac')
+//     };
+
+//   return () => mockNavigation as NativeStackNavigationProp<AppStackParamList>;
+// });
 
 jest.mock('react-native-reanimated', () => {
-  // eslint-disable-next-line global-require, @typescript-eslint/no-require-imports
   const Reanimated = require('react-native-reanimated/mock');
 
   Reanimated.default.call = () => {};
@@ -25,10 +68,6 @@ jest.mock('react-native-webview', () => {
   };
 });
 
-jest.mock('expo-font');
-
-// jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
-
 jest.doMock('react-native', () => {
   return Object.setPrototypeOf(
     {
@@ -38,13 +77,12 @@ jest.doMock('react-native', () => {
       },
       Image: {
         ...ReactNative.Image,
-        resolveAssetSource: jest.fn(_source => mockFile), // eslint-disable-line @typescript-eslint/no-unused-vars
+        resolveAssetSource: jest.fn(_source => mockFile),
         getSize: jest.fn(
           (
-            uri: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+            uri: string,
             success: (width: number, height: number) => void,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            failure?: (_error: any) => void, // eslint-disable-line @typescript-eslint/no-unused-vars
+            failure?: (_error: any) => void,
           ) => success(100, 100),
         ),
       },
@@ -53,12 +91,6 @@ jest.doMock('react-native', () => {
   );
 });
 
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useRoute: jest.fn(),
-  useNavigation: jest.fn(),
-}));
-
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
 jest.mock('expo-secure-store', () => ({
@@ -66,3 +98,22 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
   deleteItemAsync: jest.fn(),
 }));
+
+// jest.mock('expo-modules-core', () => ({
+//   requireNativeModule: jest.fn().mockImplementation(moduleName => {
+//     if (moduleName === 'ExpoPlatformInfo') {
+//       return {
+//         getIsReducedMotionEnabled: () => false,
+//       };
+//     }
+//     if (moduleName === 'BottomSheet') {
+//       return {
+//         dismissAll: () => {},
+//       };
+//     }
+//     console.log('moduleName ->', moduleName);
+//   }),
+//   requireNativeViewManager: jest.fn().mockImplementation(moduleName => {
+//     return () => null;
+//   }),
+// }));

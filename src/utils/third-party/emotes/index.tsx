@@ -1,5 +1,7 @@
 import Image from '@app/components/Image';
-import { View, Text } from 'react-native';
+import { Text } from '@app/components/ui/Text';
+import { colors } from '@app/styles';
+import { View } from 'react-native';
 import {
   EmotePositions,
   EmotesParser,
@@ -71,7 +73,7 @@ export const parseEmotes = async (
       return parsedMessage.map((message, index) => {
         if (!message.emote?.images) {
           const isMention = message.content.startsWith('@');
-          const mentionColor = isMention ? '#FF4500' : '#000';
+          const mentionColor = isMention ? colors.error : colors.text;
 
           return (
             <Text

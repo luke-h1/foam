@@ -1,22 +1,18 @@
-/* eslint-disable no-underscore-dangle */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import LiveStreamCard from '@app/components/LiveStreamCard';
-import SafeAreaContainer from '@app/components/SafeAreaContainer';
-import useHeader from '@app/hooks/useHeader';
+import EmptyState from '@app/components/ui/EmptyState';
+import Screen from '@app/components/ui/Screen';
+import Spinner from '@app/components/ui/Spinner';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { spacing } from '@app/styles';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, SafeAreaView, Text, View } from 'react-native';
+import { FlatList, ViewStyle } from 'react-native';
 
 export default function TopStreamsScreen() {
-  const [refreshing, _setRefreshing] = useState(false);
-  const _queryClient = useQueryClient();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [refreshing, _setRefreshing] = useState<boolean>(false);
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
-
-  // useHeader({
-  //   title: 'Top Streams',
-  // });
 
   // const onRefresh = async () => {
   //   setRefreshing(true);
@@ -27,57 +23,27 @@ export default function TopStreamsScreen() {
   //   setRefreshing(false);
   // };
 
-  const { data: streams, isLoading, isError } = useQuery(topStreamQuery);
-
-  if ((!isLoading && !streams?.length) || isError) {
-    return (
-      <View
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flex: 1,
-        }}
-      >
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}
-        >
-          <Text>No streams found</Text>
-        </View>
-      </View>
-    );
-  }
+  const { data: streams, isLoading } = useQuery(topStreamQuery);
 
   if (refreshing || isLoading) {
+    return <Spinner />;
+  }
+
+  if (streams && streams.length > 0) {
     return (
-      <View>
-        <Text>loading...</Text>
-      </View>
+      <Screen preset="scroll" style={$wrapper}>
+        <FlatList<Stream>
+          data={streams}
+          renderItem={({ item }) => <LiveStreamCard stream={item} />}
+          keyExtractor={item => item.id}
+        />
+      </Screen>
     );
   }
 
-  return (
-    // eslint-disable-next-line react/jsx-no-useless-fragment
-    <>
-      <SafeAreaView
-        style={{
-          flex: 1,
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        {streams && streams.length > 0 && (
-          <FlatList<Stream>
-            data={streams}
-            renderItem={({ item }) => <LiveStreamCard stream={item} />}
-            keyExtractor={item => item.id}
-          />
-        )}
-      </SafeAreaView>
-    </>
-  );
+  return <EmptyState />;
 }
+
+const $wrapper: ViewStyle = {
+  padding: spacing.medium,
+};

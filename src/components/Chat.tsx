@@ -1,14 +1,22 @@
 // eslint-disable-next-line import/no-cycle
 import ChatMessage from '@app/components/ChatMessage';
 import { useAuthContext } from '@app/context/AuthContext';
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import { useMounted } from '@app/hooks/useMounted';
 import useTmiClient from '@app/hooks/useTmiClient';
+import { colors } from '@app/styles';
 import { parseBadges } from '@app/utils/third-party/badges';
 import { parseEmotes } from '@app/utils/third-party/emotes';
-import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { useEffect, useRef, useState, memo } from 'react';
-import { Dimensions, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import {
+  Dimensions,
+  SafeAreaView,
+  Text,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 export interface CommonMessage {
   user: {
@@ -25,8 +33,8 @@ interface ChatProps {
 }
 
 const Chat = memo(({ channelId, channelName }: ChatProps) => {
-  const { auth, user } = useAuthContext();
-  const navigation = useNavigation();
+  const { authState, user } = useAuthContext();
+  const navigation = useAppNavigation();
   const flashListRef = useRef<FlashList<CommonMessage>>(null);
   const { onMounted } = useMounted();
 
@@ -39,7 +47,7 @@ const Chat = memo(({ channelId, channelName }: ChatProps) => {
     channels: [channelName],
     identity: {
       username: user?.display_name,
-      password: auth?.anonToken || auth?.token?.accessToken,
+      password: authState?.token.accessToken,
     },
     connection: {
       reconnect: !__DEV__,
@@ -113,9 +121,9 @@ const Chat = memo(({ channelId, channelName }: ChatProps) => {
   }, [messages]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.chatWrapper}>
-        <Text style={styles.header}>Chat</Text>
+    <SafeAreaView style={$container}>
+      <View style={$chatWrapper}>
+        <Text style={$header}>Chat</Text>
         <FlashList
           data={messages || []}
           ref={flashListRef}
@@ -123,12 +131,12 @@ const Chat = memo(({ channelId, channelName }: ChatProps) => {
           scrollEnabled
           keyExtractor={(_, index) => index.toString()}
           // eslint-disable-next-line react/no-unstable-nested-components
-          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          ItemSeparatorComponent={() => <View style={{ marginBottom: 5 }} />}
           renderItem={({ item }) => <ChatMessage item={item} />}
           pagingEnabled
           onContentSizeChange={() => {
             if (messages.length > 0) {
-              flashListRef.current?.scrollToEnd({ animated: true });
+              flashListRef.current?.scrollToEnd();
             }
           }}
         />
@@ -140,22 +148,22 @@ Chat.displayName = 'Chat';
 
 export default Chat;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    width: Dimensions.get('window').width,
-  },
-  chatWrapper: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    width: '100%',
-    height: '100%',
-  },
-  header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
-    margin: 4,
-  },
-});
+const $container: ViewStyle = {
+  flex: 1,
+  justifyContent: 'flex-start',
+  width: Dimensions.get('window').width,
+};
+
+const $chatWrapper: ViewStyle = {
+  borderBottomWidth: 1,
+  borderBottomColor: colors.separator,
+  width: '100%',
+  height: '100%',
+};
+
+const $header: TextStyle = {
+  fontSize: 20,
+  fontWeight: 'bold',
+  color: colors.textDim,
+  margin: 4,
+};

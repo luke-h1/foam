@@ -1,27 +1,21 @@
-import useThemeColor from '@app/hooks/useThemeColor';
-import { RootStackParamList, RootRoutes } from '@app/navigation/RootStack';
-import { StreamRoutes } from '@app/navigation/Stream/StreamStack';
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import twitchService, { Stream } from '@app/services/twitchService';
-import theme from '@app/styles/theme';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { spacing } from '@app/styles';
 import { Image, ImageStyle } from 'expo-image';
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { View, ViewStyle } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import LiveStreamImage from './LiveStreamImage';
 import Tags from './Tags';
-import ThemedText from './ThemedText';
-import ThemedView from './ThemedView';
+import { Text } from './ui/Text';
 
 interface Props {
   stream: Stream;
 }
 
 export default function LiveStreamCard({ stream }: Props) {
-  const shadow = useThemeColor({ light: theme.dropShadow, dark: undefined });
   const [broadcasterImage, setBroadcasterImage] = useState<string>();
-
-  const { navigate } = useNavigation<NavigationProp<RootStackParamList>>();
+  const { navigate } = useAppNavigation();
 
   const getUserProfilePictures = async () => {
     const res = await twitchService.getUserImage(stream.user_login);
@@ -36,94 +30,73 @@ export default function LiveStreamCard({ stream }: Props) {
   return (
     <TouchableOpacity
       onPress={() => {
-        navigate(RootRoutes.Stream, {
-          screen: StreamRoutes.LiveStream,
+        navigate('Streams', {
+          screen: 'LiveStream',
           params: {
             id: stream.user_login,
           },
         });
       }}
     >
-      <ThemedView
-        style={[styles.streamCard, shadow]}
-        dark="rgba(255,255,255,0.15)"
-        light={theme.color.lightGrey}
-      >
-        <View style={styles.streamHeadline}>
+      <Text>
+        <View style={$streamHeadline}>
           <LiveStreamImage
             animated
             thumbnail={stream.thumbnail_url}
             startedAt={stream.started_at}
             size="large"
           />
-          <View style={styles.streamDetail}>
-            <ThemedText fontSize={13} fontWeight="light">
-              {stream.title}
-            </ThemedText>
-            <View style={styles.streamMetadata}>
-              <View style={styles.userInfo}>
+          <View style={$streamDetail}>
+            <Text preset="eventTitle">{stream.title}</Text>
+            <View style={$streamMetadata}>
+              <View style={$userInfo}>
                 <Image
                   source={{ uri: broadcasterImage }}
-                  style={styles.avatar}
+                  style={$avatar}
                   testID="LiveStreamCard-avatar"
                 />
-                <ThemedText fontSize={14} fontWeight="bold">
-                  {stream.user_name}
-                </ThemedText>
+                <Text preset="tag">{stream.user_name}</Text>
               </View>
-              <ThemedText fontSize={13} fontWeight="light">
+              <Text preset="eventTitle">
                 {new Intl.NumberFormat('en-US').format(stream.viewer_count)}{' '}
                 viewers
-              </ThemedText>
+              </Text>
             </View>
           </View>
         </View>
+      </Text>
 
-        <View style={{ marginTop: theme.spacing.xs }}>
-          <Tags tags={stream.tags} />
-        </View>
-      </ThemedView>
+      <View style={{ marginTop: spacing.extraSmall }}>
+        <Tags tags={stream.tags} />
+      </View>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create<{
-  streamCard: ViewStyle;
-  streamHeadline: ViewStyle;
-  streamDetail: ViewStyle;
-  streamMetadata: ViewStyle;
-  userInfo: ViewStyle;
-  avatar: ImageStyle;
-}>({
-  streamCard: {
-    flex: 1,
-    padding: theme.spacing.xs,
-    marginHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderradii.sm,
-    marginBottom: theme.spacing.md,
-  },
-  streamDetail: {
-    flex: 1,
-    justifyContent: 'flex-start',
-  },
-  streamHeadline: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  streamMetadata: {
-    marginTop: theme.spacing.md,
-    flex: 1,
-    flexDirection: 'column',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  avatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 13,
-    marginRight: 5,
-  },
-});
+const $streamDetail: ViewStyle = {
+  flex: 1,
+  justifyContent: 'flex-start',
+};
+
+const $streamHeadline: ViewStyle = {
+  flex: 1,
+  flexDirection: 'row',
+};
+
+const $streamMetadata: ViewStyle = {
+  marginTop: spacing.medium,
+  flex: 1,
+  flexDirection: 'column',
+};
+const $userInfo: ViewStyle = {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 5,
+  marginBottom: 5,
+};
+const $avatar: ImageStyle = {
+  width: 20,
+  height: 20,
+  borderRadius: 13,
+  marginRight: 5,
+};

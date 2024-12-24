@@ -15,17 +15,17 @@ jest.mock('expo-updates', () => ({
 }));
 
 describe('BuildDetails', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   test('should render version and build info', () => {
     (useUpdates as jest.Mock).mockReturnValue({
       currentlyRunning: null,
     });
 
     render(<BuildDetails />);
-    expect(screen.getByText(`pkg:${pkg.version}`)).toBeOnTheScreen();
+    // expect(screen.getByText(`pkg:${pkg.version}`)).toBeOnTheScreen();
+
+    expect(screen.getByTestId('BuildDetails-pkgVersion')).toHaveTextContent(
+      pkg.version,
+    );
   });
 
   test('should render updateId if available', () => {

@@ -1,15 +1,14 @@
-import theme from '@app/styles/theme';
+import { colors, spacing } from '@app/styles';
 import { Entypo } from '@expo/vector-icons';
 import React from 'react';
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity,
-  StyleSheet,
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { Text } from './ui/Text';
 
 interface Props {
   results: string[];
@@ -25,28 +24,25 @@ export default function SearchHistory({
   onSelectItem,
 }: Props) {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Search History</Text>
+    <View style={$container}>
+      <View style={$header}>
+        <Text style={$title}>Search History</Text>
         {results.length > 0 && (
           <TouchableOpacity onPress={onClearAll}>
-            <Text style={styles.clearAll}>Clear All</Text>
+            <Text style={$clearAll}>Clear All</Text>
           </TouchableOpacity>
         )}
       </View>
-      <FlatList
+      <FlatList<string>
         data={results}
         keyExtractor={item => item}
         renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <TouchableOpacity
-              style={styles.item}
-              onPress={() => onSelectItem(item)}
-            >
-              <Text style={styles.itemText}>{item}</Text>
+          <View style={$itemContainer}>
+            <TouchableOpacity style={$item} onPress={() => onSelectItem(item)}>
+              <Text>{item}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onClearItem(item)}>
-              <Entypo name="cross" size={24} color={theme.color.grey} />
+              <Entypo name="cross" size={24} color={colors.tint} />
             </TouchableOpacity>
           </View>
         )}
@@ -55,44 +51,32 @@ export default function SearchHistory({
   );
 }
 
-const styles = StyleSheet.create<{
-  container: ViewStyle;
-  header: ViewStyle;
-  title: TextStyle;
-  clearAll: TextStyle;
-  itemContainer: ViewStyle;
-  item: ViewStyle;
-  itemText: TextStyle;
-}>({
-  container: {
-    margin: theme.spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  title: {
-    fontSize: theme.fontSize.lg,
-    fontWeight: 'bold',
-  },
-  clearAll: {
-    color: theme.color.red,
-    fontSize: theme.fontSize.md,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.color.lightGrey,
-  },
-  item: {
-    flex: 1,
-  },
-  itemText: {
-    fontSize: theme.fontSize.md,
-  },
-});
+const $container: ViewStyle = {
+  margin: spacing.medium,
+};
+const $header: ViewStyle = {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: spacing.small,
+};
+const $title: TextStyle = {
+  fontWeight: 'bold',
+};
+
+const $clearAll: TextStyle = {
+  color: colors.error,
+};
+
+const $itemContainer: ViewStyle = {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingVertical: spacing.small,
+  borderBottomWidth: 1,
+  borderBottomColor: colors.textDim,
+};
+
+const $item: ViewStyle = {
+  flex: 1,
+};

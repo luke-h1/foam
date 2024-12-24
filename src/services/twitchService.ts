@@ -79,11 +79,20 @@ interface Emote {
   }[];
 }
 
+interface RefreshToken {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  scope: string;
+  token_type: string;
+}
+
 const twitchService = {
-  getRefreshToken: async (refreshToken: string): Promise<string> => {
+  getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     const { data } = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
+
     return data;
   },
 
@@ -208,7 +217,7 @@ const twitchService = {
   },
   getFollowedStreams: async (userId: string): Promise<Stream[]> => {
     const result = await twitchApi.get<{ data: Stream[] }>(
-      `/streams/followed`,
+      '/streams/followed',
       {
         params: {
           user_id: userId,

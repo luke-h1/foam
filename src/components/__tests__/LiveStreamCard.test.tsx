@@ -1,5 +1,6 @@
 import _twitchService, { Stream } from '@app/services/twitchService';
 import render from '@app/test/render';
+import { NavigationContainer } from '@react-navigation/native';
 import { screen } from '@testing-library/react-native';
 import LiveStreamCard from '../LiveStreamCard';
 
@@ -23,18 +24,6 @@ const mockStream: Stream = {
 
 jest.mock('@app/services/twitchService');
 
-const mockedNavigate = jest.fn();
-
-jest.mock('@react-navigation/native', () => {
-  const actualNav = jest.requireActual('@react-navigation/native');
-  return {
-    ...actualNav,
-    useNavigation: () => ({
-      navigate: mockedNavigate,
-    }),
-  };
-});
-
 const twitchService = jest.mocked(_twitchService);
 
 describe('LiveStreamCard', () => {
@@ -45,7 +34,9 @@ describe('LiveStreamCard', () => {
   });
 
   test('renders correctly', () => {
-    render(<LiveStreamCard stream={mockStream} />);
+    render(<LiveStreamCard stream={mockStream} />, {
+      wrapper: NavigationContainer,
+    });
 
     expect(screen.getByText('Test Stream Title')).toBeOnTheScreen();
     expect(screen.getByText('Test user')).toBeOnTheScreen();
