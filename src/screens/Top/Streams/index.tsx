@@ -14,16 +14,11 @@ export default function TopStreamsScreen() {
   const [refreshing, _setRefreshing] = useState<boolean>(false);
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
 
-  // const onRefresh = async () => {
-  //   setRefreshing(true);
-  //   await queryClient.refetchQueries({
-  //     queryKey: topStreamQuery.queryKey,
-  //   });
-
-  //   setRefreshing(false);
-  // };
-
-  const { data: streams, isLoading } = useQuery(topStreamQuery);
+  const {
+    data: streams,
+    isLoading,
+    refetch: topStreamRefetch,
+  } = useQuery(topStreamQuery);
 
   if (refreshing || isLoading) {
     return <Spinner />;
@@ -41,7 +36,14 @@ export default function TopStreamsScreen() {
     );
   }
 
-  return <EmptyState />;
+  return (
+    <EmptyState
+      content="No Top Streams found"
+      buttonOnPress={async () => {
+        await topStreamRefetch();
+      }}
+    />
+  );
 }
 
 const $wrapper: ViewStyle = {

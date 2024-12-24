@@ -85,6 +85,7 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
     data: streams,
     isLoading: isLoadingStreams,
     isError: isErrorStreams,
+    refetch: refetchStreamsByCategory,
   } = streamsByCategoryQueryResult;
 
   if (isLoadingCategory || isLoadingStreams) {
@@ -92,7 +93,13 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
   }
 
   if (isErrorCategory || isErrorStreams) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        content="Failed to fetch categories"
+        heading="No Categories"
+        buttonOnPress={() => refetchStreamsByCategory()}
+      />
+    );
   }
 
   const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
@@ -104,11 +111,6 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
           style={$container}
           onScroll={scrollHandler}
           scrollEventThrottle={8}
-          contentContainerStyle={[
-            {
-              // paddingBottom: insets.bottom + theme.spacing.xl,
-            },
-          ]}
         >
           <View style={headerStyle}>
             <View style={$headerContent}>

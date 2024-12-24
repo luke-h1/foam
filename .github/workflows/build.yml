@@ -77,7 +77,7 @@ jobs:
 
       - name: Coverage
         uses: ArtiomTr/jest-coverage-report-action@v2
-        id: ccoverage
+        id: coverage
         with:
           skip-step: install
           package-manager: pnpm

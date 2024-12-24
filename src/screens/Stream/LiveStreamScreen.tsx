@@ -32,10 +32,21 @@ const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
       ],
     });
 
-  const { data: stream, isLoading: isStreamLoading } = streamQueryResult;
-  const { data: user, isLoading: isUserLoading } = userQueryResult;
-  const { data: userProfilePicture, isLoading: isUserProfilePictureLoading } =
-    userProfilePictureQueryResult;
+  const {
+    data: stream,
+    isLoading: isStreamLoading,
+    refetch: refetchStream,
+  } = streamQueryResult;
+  const {
+    data: user,
+    isLoading: isUserLoading,
+    refetch: refetchUser,
+  } = userQueryResult;
+  const {
+    data: userProfilePicture,
+    isLoading: isUserProfilePictureLoading,
+    refetch: refetchUserProfilePicture,
+  } = userProfilePictureQueryResult;
 
   const { width } = Dimensions.get('window');
 
@@ -43,8 +54,22 @@ const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     return <Spinner />;
   }
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchStream(),
+      refetchUser(),
+      refetchUserProfilePicture(),
+    ]);
+  };
+
   if (!stream) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        content="Failed to fetch stream."
+        heading="No Stream found"
+        buttonOnPress={() => handleRefresh()}
+      />
+    );
   }
 
   return (
