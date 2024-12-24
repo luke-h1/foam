@@ -15,8 +15,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       pull-requests: write
+      checks: write
     timeout-minutes: 20
     steps:
       - name: Install moreutils
@@ -74,6 +74,19 @@ jobs:
 
       - name: jest
         run: pnpm test
-      
+
+      - name: Coverage
+        uses: ArtiomTr/jest-coverage-report-action@v2
+        id: ccoverage
+        with:
+          skip-step: install
+          package-manager: pnpm
+          test-script: pnpm test:coverage
+          output: report-markdown
+
+      - name: Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          message: ${{ steps.coverage.outputs.report }}      
       - name: tsc
         run: pnpm tsc
