@@ -1,9 +1,9 @@
 name: Build
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
   pull_request:
-    branches: [dev, main]
+    branches: [main]
 env:
   NODE_VERSION: 20.10.0
   PNPM_VERSION: 9.0.6
@@ -61,7 +61,7 @@ jobs:
           sync-labels: true
 
       - name: Install dependencies
-        run: pnpm i 
+        run: pnpm i
 
       - name: Check commit message
         run: pnpm commitlint --from=HEAD^1
@@ -87,6 +87,6 @@ jobs:
       - name: Comment
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          message: ${{ steps.coverage.outputs.report }}      
+          message: ${{ steps.coverage.outputs.report }}
       - name: tsc
         run: pnpm tsc

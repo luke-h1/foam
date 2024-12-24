@@ -4,14 +4,13 @@ import Screen from '@app/components/ui/Screen';
 import Spinner from '@app/components/ui/Spinner';
 import twitchQueries from '@app/queries/twitchQueries';
 import { Stream } from '@app/services/twitchService';
-import { spacing } from '@app/styles';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { FlatList, ViewStyle } from 'react-native';
+import { FlatList, RefreshControl } from 'react-native';
 
 export default function TopStreamsScreen() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [refreshing, _setRefreshing] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const topStreamQuery = useMemo(() => twitchQueries.getTopStreams(), []);
 
   const {
@@ -24,13 +23,28 @@ export default function TopStreamsScreen() {
     return <Spinner />;
   }
 
-  if (streams && streams.length > 0) {
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await topStreamRefetch();
+    setRefreshing(false);
+  };
+
+  if (streams) {
     return (
-      <Screen preset="scroll" style={$wrapper}>
+      <Screen
+        preset="scroll"
+        ScrollViewProps={{
+          refreshControl: (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          ),
+        }}
+      >
         <FlatList<Stream>
           data={streams}
           renderItem={({ item }) => <LiveStreamCard stream={item} />}
           keyExtractor={item => item.id}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
         />
       </Screen>
     );
@@ -45,7 +59,3 @@ export default function TopStreamsScreen() {
     />
   );
 }
-
-const $wrapper: ViewStyle = {
-  padding: spacing.medium,
-};

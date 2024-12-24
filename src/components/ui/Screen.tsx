@@ -1,4 +1,4 @@
-import { colors } from '@app/styles';
+import { colors, spacing } from '@app/styles';
 import { useScrollToTop } from '@react-navigation/native';
 import { StatusBar, StatusBarProps } from 'expo-status-bar';
 import React, { ReactNode, useRef, useState } from 'react';
@@ -265,6 +265,7 @@ const $safeAreaStyle: ViewStyle = {
   flex: 1,
   height: '100%',
   width: '100%',
+  padding: spacing.small,
 };
 
 const $keyboardAvoidingViewStyle: ViewStyle = {
