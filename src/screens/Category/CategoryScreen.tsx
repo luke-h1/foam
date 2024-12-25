@@ -7,176 +7,196 @@ import useHeader from '@app/hooks/useHeader';
 import { AppStackParamList } from '@app/navigators';
 import BackButton from '@app/navigators/BackButton';
 import twitchQueries from '@app/queries/twitchQueries';
-import { Stream } from '@app/services/twitchService';
+import twitchService, { Stream } from '@app/services/twitchService';
 import { spacing } from '@app/styles';
 import { StackScreenProps } from '@react-navigation/stack';
-import { useQueries } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { FC, useState } from 'react';
+import { FC, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   ImageStyle,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   RefreshControl,
-  ScrollView,
   TextStyle,
   View,
   ViewStyle,
+  TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
 
 const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
   route: { params },
 }) => {
   const { id } = params;
-  const transitionY = useSharedValue<number>(0);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [previousCursor, setPreviousCursor] = useState<string | undefined>(
+    undefined,
+  );
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
+  const flatListRef = useRef<FlatList<Stream>>(null);
 
-  const scrollHandler = useAnimatedScrollHandler(event => {
-    transitionY.value = event.contentOffset.y;
-  });
+  const categoryQuery = useMemo(() => twitchQueries.getCategory(id), [id]);
 
   useHeader({
     title: 'Categories',
     LeftActionComponent: <BackButton />,
   });
 
-  const headerStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateY: interpolate(
-            transitionY.value,
-            [-120, 0, 150],
-            [-90, 0, 120],
-            Extrapolation.CLAMP,
-          ),
-        },
-        {
-          scale: interpolate(
-            transitionY.value,
-            [-120, 0],
-            [1.4, 1],
-            Extrapolation.CLAMP,
-          ),
-        },
-      ],
-      opacity: interpolate(transitionY.value, [0, 100], [1, 0.6]),
-    };
-  });
-
-  const [categoryQueryResult, streamsByCategoryQueryResult] = useQueries({
-    queries: [
-      twitchQueries.getCategory(id),
-      twitchQueries.getStreamsByCategory(id),
-    ],
-  });
-
   const {
     data: category,
-    isLoading: isLoadingCategory,
-    isError: isErrorCategory,
-  } = categoryQueryResult;
+    isLoading: isCategoryLoading,
+    isError: isCategoryError,
+  } = useQuery(categoryQuery);
 
   const {
     data: streams,
+    fetchNextPage,
+    refetch,
+    hasNextPage,
     isLoading: isLoadingStreams,
     isError: isErrorStreams,
-    refetch: refetchStreamsByCategory,
-  } = streamsByCategoryQueryResult;
+  } = useInfiniteQuery({
+    queryKey: ['StreamsByCategory', id],
+    queryFn: ({ pageParam }: { pageParam?: string }) =>
+      twitchService.getStreamsByCategory(id, pageParam),
+    initialPageParam: cursor,
+    getNextPageParam: lastPage => lastPage.pagination.cursor,
+    getPreviousPageParam: () => previousCursor,
+  });
 
-  if (isLoadingCategory || isLoadingStreams || refreshing) {
+  if (isCategoryLoading || isLoadingStreams || refreshing) {
     return <Spinner />;
   }
 
-  if (isErrorCategory || isErrorStreams) {
+  if (isCategoryError || isErrorStreams) {
     return (
       <EmptyState
         content="Failed to fetch categories"
         heading="No Categories"
-        buttonOnPress={() => refetchStreamsByCategory()}
+        buttonOnPress={() => refetch()}
       />
     );
   }
 
-  const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
-
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetchStreamsByCategory();
+    await refetch();
     setRefreshing(false);
   };
 
+  const allStreams = streams?.pages.flatMap(page => page.data) ?? [];
+
+  if (allStreams.length === 0) {
+    return (
+      <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+    );
+  }
+
+  const handleLoadMore = async () => {
+    if (hasNextPage) {
+      setPreviousCursor(cursor);
+      const nextCursor =
+        streams?.pages[streams.pages.length - 1].pagination.cursor;
+      setCursor(nextCursor);
+      await fetchNextPage();
+    }
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    if (offsetY > 300) {
+      setShowScrollToTop(true);
+    } else {
+      setShowScrollToTop(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    flatListRef.current?.scrollToOffset({ animated: true, offset: 0 });
+  };
+
+  const renderHeader = () => (
+    <View style={$headerContent}>
+      <Image
+        source={{
+          uri: category?.box_art_url
+            .replace('{width}', '600')
+            .replace('{height}', '1080'),
+        }}
+        style={$categoryLogo}
+      />
+      <Text style={$categoryTitle}>{category?.name}</Text>
+    </View>
+  );
+
   return (
-    <Screen
-      preset="scroll"
-      ScrollViewProps={{
-        refreshControl: (
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        ),
-      }}
-    >
-      <View style={$container}>
-        <AnimatedScrollView
-          style={$container}
-          onScroll={scrollHandler}
-          scrollEventThrottle={8}
+    <Screen style={{ flex: 1 }}>
+      <FlatList<Stream>
+        ref={flatListRef}
+        data={allStreams}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => <LiveStreamCard stream={item} />}
+        ListHeaderComponent={renderHeader}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.2}
+        refreshing={refreshing}
+        onScroll={handleScroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="white"
+            colors={['white']}
+          />
+        }
+      />
+      {showScrollToTop && (
+        <TouchableOpacity
+          style={styles.scrollToTopButton}
+          onPress={scrollToTop}
         >
-          <View style={headerStyle}>
-            <View style={$headerContent}>
-              <Image
-                source={{
-                  uri: category?.box_art_url
-                    .replace('{width}', '600')
-                    .replace('{height}', '1080'),
-                }}
-                style={$categoryLogo}
-              />
-              <Text style={$categoryTitle}>{category?.name}</Text>
-            </View>
-          </View>
-          <View style={$content}>
-            <FlatList<Stream>
-              data={streams}
-              keyExtractor={item => item.id}
-              renderItem={({ item }) => <LiveStreamCard stream={item} />}
-            />
-          </View>
-        </AnimatedScrollView>
-      </View>
+          <Text style={styles.scrollToTopText}>TOP</Text>
+        </TouchableOpacity>
+      )}
     </Screen>
   );
 };
 
 export default CategoryScreen;
 
-const $container: ViewStyle = {
-  flex: 1,
-};
-
 const $headerContent: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'flex-start',
   justifyContent: 'flex-start',
-  paddingLeft: spacing.large,
   display: 'flex',
+  marginBottom: spacing.large,
 };
 const $categoryLogo: ImageStyle = {
-  width: 100,
-  height: 150,
-  borderRadius: 10,
+  width: 105,
+  height: 140,
+  borderRadius: 12,
+  resizeMode: 'cover',
 };
 const $categoryTitle: TextStyle = {
   textAlign: 'center',
   marginLeft: spacing.medium,
   fontWeight: 'bold',
 };
-const $content: ViewStyle = {
-  paddingTop: spacing.large,
-  paddingHorizontal: spacing.large,
-};
+
+const styles = StyleSheet.create({
+  scrollToTopButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 25,
+    padding: 10,
+  },
+  scrollToTopText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+});

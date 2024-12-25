@@ -5,6 +5,7 @@ import {
   NavigationAction,
   createNavigationContainerRef,
 } from '@react-navigation/native';
+import newRelic from 'newrelic-react-native-agent';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform } from 'react-native';
 import Config, { type PersistNavigationConfig } from '../config';
@@ -165,6 +166,9 @@ export function useNavigationPersistence(storage: any, persistenceKey: string) {
 
         // persist state to storage
         storage.save(persistenceKey, state);
+
+        // log to new relic
+        newRelic.onStateChange(state);
       }
     }
   };

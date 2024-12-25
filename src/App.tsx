@@ -109,11 +109,11 @@ export default function App(props: AppProps) {
 
   // otherwise, we're ready to render the app
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <ErrorBoundary
-        catchErrors={Config.catchErrors}
-        onReset={() => setRecoveredFromError(true)}
-      >
+    <ErrorBoundary
+      catchErrors={Config.catchErrors}
+      onReset={() => setRecoveredFromError(true)}
+    >
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={$bottomSheetContainer}>
             <BottomSheetModalProvider>
@@ -131,8 +131,8 @@ export default function App(props: AppProps) {
             </BottomSheetModalProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
-      </ErrorBoundary>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
 

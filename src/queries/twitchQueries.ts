@@ -4,6 +4,7 @@ import twitchService, {
   Category,
   UserInfoResponse,
   SearchChannelResponse,
+  PaginatedList,
 } from '@app/services/twitchService';
 import { UseQueryOptions } from '@tanstack/react-query';
 
@@ -20,7 +21,7 @@ const twitchQueries = {
       queryFn: () => twitchService.getChannel(userId),
     };
   },
-  getTopCategories(): UseQueryOptions<Category[]> {
+  getTopCategories(): UseQueryOptions<PaginatedList<Category>> {
     return {
       queryKey: ['topCategories'],
       queryFn: () => twitchService.getTopCategories(),
@@ -56,7 +57,7 @@ const twitchQueries = {
       queryFn: () => twitchService.searchChannels(query),
     };
   },
-  getTopStreams(cursor?: string): UseQueryOptions<Stream[]> {
+  getTopStreams(cursor?: string): UseQueryOptions<PaginatedList<Stream>> {
     return {
       queryKey: ['topStreams', cursor],
       queryFn: () => twitchService.getTopStreams(cursor),
@@ -68,7 +69,10 @@ const twitchQueries = {
       queryFn: () => twitchService.getCategory(id),
     };
   },
-  getStreamsByCategory(id: string, cursor?: string): UseQueryOptions<Stream[]> {
+  getStreamsByCategory(
+    id: string,
+    cursor?: string,
+  ): UseQueryOptions<PaginatedList<Stream>> {
     return {
       queryKey: ['streamsByCategory', id, cursor],
       queryFn: () => twitchService.getStreamsByCategory(id, cursor),
