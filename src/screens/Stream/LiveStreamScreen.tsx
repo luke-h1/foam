@@ -100,7 +100,7 @@ const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             <Text style={$videoViews}>
               {new Intl.NumberFormat('en-US').format(
                 stream?.viewer_count as number,
-              )}{' '}
+              )}
               viewers
             </Text>
           </View>

@@ -1,6 +1,13 @@
 import axios, { AxiosHeaders } from 'axios';
 import { twitchApi } from './api';
 
+export interface PaginatedList<T> {
+  data: T[];
+  pagination: {
+    cursor: string;
+  };
+}
+
 export interface UserInfoResponse {
   broadcaster_type: string;
   created_at: string;
@@ -148,37 +155,40 @@ const twitchService = {
    * @returns an object that contains the top 20 streams and a cursor for further requests
    * @requires a non-anon token
    */
-  getTopStreams: async (cursor?: string): Promise<Stream[]> => {
-    const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
+  getTopStreams: async (cursor?: string): Promise<PaginatedList<Stream>> => {
+    const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
       headers: {
         'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        // Authorization: `Bearer ${token}`,
       },
       params: {
         after: cursor,
       },
     });
-    return result.data;
+
+    return result;
   },
 
   getStreamsUnderCategory: async (
     gameId: string,
     headers: AxiosHeaders,
     cursor?: string,
-  ): Promise<Stream[]> => {
-    return twitchApi.get<Stream[]>('/streams', {
+  ): Promise<PaginatedList<Stream>> => {
+    const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
       headers,
       params: {
         game_id: gameId,
         after: cursor,
       },
     });
+
+    return result;
   },
 
   getStream: async (userLogin: string) => {
     const result = await twitchApi.get<{ data: Stream[] }>(`/streams`, {
       params: {
         user_login: userLogin,
+        first: 15,
       },
       headers: {
         'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
@@ -198,9 +208,17 @@ const twitchService = {
     return result[0];
   },
 
-  getTopCategories: async () => {
-    const { data } = await twitchApi.get<{ data: Category[] }>('/games/top');
-    return data;
+  getTopCategories: async (
+    cursor?: string,
+    beforeCursor?: string,
+  ): Promise<PaginatedList<Category>> => {
+    const result = await twitchApi.get<PaginatedList<Category>>('/games/top', {
+      params: {
+        before: beforeCursor,
+        after: cursor,
+      },
+    });
+    return result;
   },
 
   getUserImage: async (userId: string): Promise<string> => {
@@ -261,15 +279,17 @@ const twitchService = {
   getStreamsByCategory: async (
     gameId: string,
     cursor?: string,
-  ): Promise<Stream[]> => {
-    const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
+  ): Promise<PaginatedList<Stream>> => {
+    const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
       params: {
         game_id: gameId,
         after: cursor,
       },
     });
+    console.log('called');
+    console.log('result ->', result);
 
-    return result.data;
+    return result;
   },
 
   getCategory: async (id: string): Promise<Category> => {

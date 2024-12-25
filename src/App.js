@@ -1,12 +1,10 @@
-/* eslint-disable */
 import { registerRootComponent } from 'expo';
-import NewRelic from 'newrelic-react-native-agent';
-import { Platform } from 'react-native';
-import App from './src/App';
-import 'expo-dev-client';
-import { version } from './package.json' assert { type: 'json' };
-import './src/polyfills';
 import * as SplashScreen from 'expo-splash-screen';
+import newRelic from 'newrelic-react-native-agent';
+import { Platform } from 'react-native';
+import { version } from '../package.json';
+import App from './App';
+import 'expo-dev-client';
 
 // eslint-disable-next-line no-undef
 if (!__DEV__) {
@@ -38,22 +36,23 @@ if (!__DEV__) {
     loggingEnabled: true,
     // Optional:Specifies the log level. Omit this field for the default log level.
     // Options include: ERROR (least verbose), WARNING, INFO, VERBOSE, AUDIT (most verbose).
-    logLevel: NewRelic.LogLevel.INFO,
+    logLevel: newRelic.LogLevel.INFO,
     // iOS Specific
     // Optional:Enable/Disable automatic instrumentation of WebViews
     webViewInstrumentation: true,
   };
 
   agentConfiguration.loggingEnabled = true;
-  agentConfiguration.logLevel = NewRelic.LogLevel.VERBOSE;
+  agentConfiguration.logLevel = newRelic.LogLevel.VERBOSE;
 
-  NewRelic.startAgent(appToken, agentConfiguration);
-  NewRelic.setJSAppVersion(version);
+  newRelic.startAgent(appToken, agentConfiguration);
+  newRelic.setJSAppVersion(version);
 }
 
 SplashScreen.preventAutoHideAsync();
 
 function FoamApp() {
+  // eslint-disable-next-line react/jsx-filename-extension
   return <App hideSplashScreen={SplashScreen.hideAsync} />;
 }
 
