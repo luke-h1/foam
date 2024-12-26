@@ -1,5 +1,4 @@
 import DismissableKeyboard from '@app/components/DismissableKeyboard';
-import LiveStreamMiniCard from '@app/components/LiveStreamMiniCard';
 import SearchHistory from '@app/components/SearchHistoryItem';
 import { PressableArea } from '@app/components/form/PressableArea';
 import Screen from '@app/components/ui/Screen';
@@ -9,6 +8,7 @@ import useAppNavigation from '@app/hooks/useAppNavigation';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
 import useHeader from '@app/hooks/useHeader';
 import BackButton from '@app/navigators/BackButton';
+import StreamerCard from '@app/screens/SearchScreen/components/StreamerCard';
 import twitchService, {
   SearchChannelResponse,
 } from '@app/services/twitchService';
@@ -135,6 +135,7 @@ export default function SearchScreen() {
               placeholder="Find a channel"
               value={query}
               autoComplete="off"
+              autoCorrect={false}
               onChangeText={async text => handleQuery(text)}
               // eslint-disable-next-line react/no-unstable-nested-components
               RightAccessory={() =>
@@ -196,7 +197,7 @@ export default function SearchScreen() {
                   }}
                   style={$list}
                 >
-                  <LiveStreamMiniCard stream={item} />
+                  <StreamerCard stream={item} />
                 </TouchableOpacity>
               )}
             />

@@ -1,13 +1,7 @@
 import useAppNavigation from '@app/hooks/useAppNavigation';
 import { Category } from '@app/services/twitchService';
 import { Image } from 'expo-image';
-import {
-  Pressable,
-  View,
-  ViewStyle,
-  ImageStyle,
-  TextStyle,
-} from 'react-native';
+import { Pressable, View, ViewStyle, ImageStyle } from 'react-native';
 import { Text } from './ui/Text';
 
 interface Props {
@@ -15,7 +9,7 @@ interface Props {
 }
 
 const IMAGE_ASPECT_RATIO = 110 / 155;
-const IMAGE_HEIGHT = 90;
+const IMAGE_HEIGHT = 150;
 const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
 export default function CategoryCard({ category }: Props) {
@@ -27,52 +21,33 @@ export default function CategoryCard({ category }: Props) {
           id: category.id,
         });
       }}
+      style={$container}
     >
-      <View style={$container}>
-        <View style={$wrapper}>
-          <Image
-            source={{
-              uri: category.box_art_url
-                .replace('{width}', '200')
-                .replace('{height}', '250'),
-            }}
-            style={$image}
-          />
-        </View>
-        <View
-          style={{
-            justifyContent: 'space-between',
-            flex: 1,
-            flexDirection: 'row',
-            marginTop: 4,
+      <View style={$wrapper}>
+        <Image
+          source={{
+            uri: category.box_art_url
+              .replace('{width}', '200')
+              .replace('{height}', '250'),
           }}
-        >
-          <Text style={$text}>{category.name}</Text>
-        </View>
+          style={$image}
+        />
       </View>
+      <Text preset="formHelper">{category.name}</Text>
     </Pressable>
   );
 }
 
 const $container: ViewStyle = {
-  marginBottom: 17,
-  marginLeft: 16,
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'flex-start',
-  justifyContent: 'space-between',
+  flex: 1,
+  alignItems: 'center',
 };
 
 const $image: ImageStyle = {
   width: IMAGE_WIDTH,
   height: IMAGE_HEIGHT,
-  borderRadius: 8,
 };
 
 const $wrapper: ViewStyle = {
-  marginRight: 16,
-};
-
-const $text: TextStyle = {
-  fontSize: 16,
+  marginBottom: 8,
 };

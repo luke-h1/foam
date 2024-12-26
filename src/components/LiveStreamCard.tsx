@@ -1,9 +1,10 @@
 import useAppNavigation from '@app/hooks/useAppNavigation';
 import twitchService, { Stream } from '@app/services/twitchService';
 import { spacing } from '@app/styles';
+import elapsedStreamTime from '@app/utils/elapsedStreamTime';
 import { Image, ImageStyle } from 'expo-image';
 import { useState, useEffect } from 'react';
-import { View, ViewStyle } from 'react-native';
+import { View, ViewStyle, TextStyle } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import LiveStreamImage from './LiveStreamImage';
 import Tags from './Tags';
@@ -38,33 +39,38 @@ export default function LiveStreamCard({ stream }: Props) {
         });
       }}
     >
-      <Text>
-        <View style={$streamHeadline}>
+      <View style={$streamHeadline}>
+        <View style={$imageContainer}>
           <LiveStreamImage
             animated
             thumbnail={stream.thumbnail_url}
-            startedAt={stream.started_at}
             size="large"
           />
-          <View style={$streamDetail}>
-            <Text preset="eventTitle">{stream.title}</Text>
-            <View style={$streamMetadata}>
-              <View style={$userInfo}>
-                <Image
-                  source={{ uri: broadcasterImage }}
-                  style={$avatar}
-                  testID="LiveStreamCard-avatar"
-                />
-                <Text preset="tag">{stream.user_name}</Text>
-              </View>
-              <Text preset="eventTitle">
-                {new Intl.NumberFormat('en-US').format(stream.viewer_count)}{' '}
-                viewers
-              </Text>
-            </View>
+          <View style={$overlay}>
+            <View style={$redDot} />
+            <Text style={$liveText}>
+              {elapsedStreamTime(stream.started_at)}
+            </Text>
           </View>
         </View>
-      </Text>
+        <View style={$streamDetail}>
+          <Text preset="streamTitle">{stream.title}</Text>
+          <View style={$streamMetadata}>
+            <View style={$userInfo}>
+              <Image
+                source={{ uri: broadcasterImage }}
+                style={$avatar}
+                testID="LiveStreamCard-avatar"
+              />
+              <Text preset="tag">{stream.user_name}</Text>
+            </View>
+            <Text preset="streamTitle">
+              {new Intl.NumberFormat('en-US').format(stream.viewer_count)}{' '}
+              viewers
+            </Text>
+          </View>
+        </View>
+      </View>
 
       <View style={{ marginTop: spacing.extraSmall }}>
         <Tags tags={stream.tags} />
@@ -88,15 +94,47 @@ const $streamMetadata: ViewStyle = {
   flex: 1,
   flexDirection: 'column',
 };
+
 const $userInfo: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'center',
   marginTop: 5,
   marginBottom: 5,
 };
+
 const $avatar: ImageStyle = {
   width: 20,
   height: 20,
   borderRadius: 13,
   marginRight: 5,
+};
+
+const $imageContainer: ViewStyle = {
+  position: 'relative',
+};
+
+const $overlay: ViewStyle = {
+  position: 'absolute',
+  top: 3,
+  left: 3,
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 5,
+};
+
+const $redDot: ViewStyle = {
+  width: 8,
+  height: 8,
+  borderRadius: 4,
+  backgroundColor: 'red',
+  marginRight: 5,
+};
+
+const $liveText: TextStyle = {
+  color: 'white',
+  fontSize: 12,
+  fontWeight: 'bold',
 };

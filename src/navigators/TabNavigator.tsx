@@ -1,7 +1,7 @@
 import Icon from '@app/components/ui/Icon';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
-import SearchScreen from '@app/screens/SearchScreen';
+import SearchScreen from '@app/screens/SearchScreen/SearchScreen';
 import SettingsScreen from '@app/screens/SettingsScreen';
 import { colors, layout, spacing, typography } from '@app/styles';
 import {

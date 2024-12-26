@@ -212,13 +212,12 @@ const twitchService = {
     cursor?: string,
     beforeCursor?: string,
   ): Promise<PaginatedList<Category>> => {
-    const result = await twitchApi.get<PaginatedList<Category>>('/games/top', {
+    return twitchApi.get<PaginatedList<Category>>('/games/top', {
       params: {
         before: beforeCursor,
         after: cursor,
       },
     });
-    return result;
   },
 
   getUserImage: async (userId: string): Promise<string> => {
@@ -280,16 +279,12 @@ const twitchService = {
     gameId: string,
     cursor?: string,
   ): Promise<PaginatedList<Stream>> => {
-    const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
+    return twitchApi.get<PaginatedList<Stream>>('/streams', {
       params: {
         game_id: gameId,
         after: cursor,
       },
     });
-    console.log('called');
-    console.log('result ->', result);
-
-    return result;
   },
 
   getCategory: async (id: string): Promise<Category> => {
@@ -301,8 +296,14 @@ const twitchService = {
     return result.data[0];
   },
 
-  // ----------------- NOT IMPLEMENTED ----------------- //
-  // searchCategories: async (query: string, cursor?: string) => {},
+  searchCategories: async (query: string, cursor?: string) => {
+    return twitchApi.get<PaginatedList<Category>>('/search/categories', {
+      params: {
+        query,
+        after: cursor,
+      },
+    });
+  },
 
   // getSubscriberCount: async (userId: string) => {},
 

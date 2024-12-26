@@ -1,14 +1,12 @@
 import { colors, spacing } from '@app/styles';
 import { radii } from '@app/styles/radii';
 import { Image } from 'expo-image';
-import { View, ViewStyle, Text, ImageStyle, TextStyle } from 'react-native';
-import elapsedStreamTime from '../utils/elapsedStreamTime';
+import { View, ViewStyle, ImageStyle } from 'react-native';
 
 interface Props {
   thumbnail?: string;
   size?: 'medium' | 'large' | 'xlarge' | 'small';
   style?: ViewStyle;
-  startedAt: string;
   animated?: boolean;
 }
 
@@ -17,7 +15,6 @@ export default function LiveStreamImage({
   size,
   style,
   thumbnail,
-  startedAt,
 }: Props) {
   const imageSize = (() => {
     switch (size) {
@@ -79,11 +76,6 @@ export default function LiveStreamImage({
       ) : (
         placeholder
       )}
-      {startedAt && (
-        <View style={$elapsedTimeContainer}>
-          <Text style={$elapsedTimeText}>{elapsedStreamTime(startedAt)}</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -143,20 +135,4 @@ const $logoSizeExtraLarge: ViewStyle = {
 const $logoSizeLarge: ViewStyle = {
   width: 50,
   height: 50,
-};
-
-const $elapsedTimeContainer: ViewStyle = {
-  position: 'absolute',
-  bottom: 0,
-  width: '100%',
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  paddingVertical: 2,
-  paddingHorizontal: 5,
-  justifyContent: 'center',
-  alignItems: 'center',
-};
-
-const $elapsedTimeText: TextStyle = {
-  color: 'white',
-  fontSize: 12,
 };

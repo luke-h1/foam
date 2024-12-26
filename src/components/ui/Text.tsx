@@ -187,7 +187,7 @@ const $presets = {
     { color: colors.palette.primary500, textTransform: 'uppercase' },
   ] satisfies StyleProp<TextStyle>,
 
-  eventTitle: [
+  streamTitle: [
     $baseSecondaryStyle,
     $sizeStyles.xxs,
     $secondaryFontWeightStyles.medium,
