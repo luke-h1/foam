@@ -33,33 +33,18 @@ exports[`LiveStreamCard renders correctly 1`] = `
       }
     }
   >
-    <Text
+    <View
       style={
-        [
-          [
-            {
-              "fontSize": 16,
-              "lineHeight": 17.6,
-            },
-            {
-              "fontFamily": "gothamSsmBook",
-            },
-            {
-              "color": "#F8F7F7",
-              "lineHeight": 22,
-            },
-          ],
-          undefined,
-          undefined,
-          undefined,
-        ]
+        {
+          "flex": 1,
+          "flexDirection": "row",
+        }
       }
     >
       <View
         style={
           {
-            "flex": 1,
-            "flexDirection": "row",
+            "position": "relative",
           }
         }
       >
@@ -116,42 +101,196 @@ exports[`LiveStreamCard renders correctly 1`] = `
             }
             width={130}
           />
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "rgba(0, 0, 0, 0.5)",
-                "bottom": 0,
-                "justifyContent": "center",
-                "paddingHorizontal": 5,
-                "paddingVertical": 2,
-                "position": "absolute",
-                "width": "100%",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "white",
-                  "fontSize": 12,
-                }
-              }
-            >
-              00m
-            </Text>
-          </View>
         </View>
         <View
           style={
             {
-              "flex": 1,
-              "justifyContent": "flex-start",
+              "alignItems": "center",
+              "backgroundColor": "rgba(0, 0, 0, 0.5)",
+              "borderRadius": 5,
+              "flexDirection": "row",
+              "left": 3,
+              "paddingHorizontal": 8,
+              "paddingVertical": 4,
+              "position": "absolute",
+              "top": 3,
             }
           }
         >
+          <View
+            style={
+              {
+                "backgroundColor": "red",
+                "borderRadius": 4,
+                "height": 8,
+                "marginRight": 5,
+                "width": 8,
+              }
+            }
+          />
           <Text
-            preset="eventTitle"
+            style={
+              [
+                [
+                  {
+                    "fontSize": 16,
+                    "lineHeight": 17.6,
+                  },
+                  {
+                    "fontFamily": "gothamSsmBook",
+                  },
+                  {
+                    "color": "#F8F7F7",
+                    "lineHeight": 22,
+                  },
+                ],
+                undefined,
+                undefined,
+                {
+                  "color": "white",
+                  "fontSize": 12,
+                  "fontWeight": "bold",
+                },
+              ]
+            }
+          >
+            00m
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+            "justifyContent": "flex-start",
+          }
+        }
+      >
+        <Text
+          preset="streamTitle"
+          style={
+            [
+              [
+                [
+                  {
+                    "fontSize": 16,
+                    "lineHeight": 17.6,
+                  },
+                  {
+                    "fontFamily": "gothamRoundedBook",
+                  },
+                  {
+                    "color": "#F8F7F7",
+                  },
+                ],
+                {
+                  "fontSize": 12,
+                  "lineHeight": 13.2,
+                },
+                {
+                  "fontFamily": "gothamRoundedMedium",
+                },
+              ],
+              undefined,
+              undefined,
+              undefined,
+            ]
+          }
+        >
+          Test Stream Title
+        </Text>
+        <View
+          style={
+            {
+              "flex": 1,
+              "flexDirection": "column",
+              "marginTop": 16,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "marginBottom": 5,
+                "marginTop": 5,
+              }
+            }
+          >
+            <ViewManagerAdapter_ExpoImage
+              borderRadius={13}
+              containerViewRef={"[React.ref]"}
+              contentFit="cover"
+              contentPosition={
+                {
+                  "left": "50%",
+                  "top": "50%",
+                }
+              }
+              height={20}
+              marginRight={5}
+              nativeViewRef={"[React.ref]"}
+              onError={[Function]}
+              onLoad={[Function]}
+              onLoadStart={[Function]}
+              onProgress={[Function]}
+              placeholder={[]}
+              source={
+                [
+                  {
+                    "uri": undefined,
+                  },
+                ]
+              }
+              style={
+                {
+                  "borderRadius": 13,
+                  "height": 20,
+                  "marginRight": 5,
+                  "width": 20,
+                }
+              }
+              testID="LiveStreamCard-avatar"
+              transition={null}
+              width={20}
+            />
+            <Text
+              preset="tag"
+              style={
+                [
+                  [
+                    [
+                      {
+                        "fontSize": 16,
+                        "lineHeight": 17.6,
+                      },
+                      {
+                        "fontFamily": "gothamRoundedBook",
+                      },
+                      {
+                        "color": "#F8F7F7",
+                      },
+                    ],
+                    {
+                      "fontSize": 14,
+                      "lineHeight": 15.4,
+                    },
+                    {
+                      "fontFamily": "gothamRoundedMedium",
+                    },
+                  ],
+                  undefined,
+                  undefined,
+                  undefined,
+                ]
+              }
+            >
+              Test user
+            </Text>
+          </View>
+          <Text
+            preset="streamTitle"
             style={
               [
                 [
@@ -181,137 +320,13 @@ exports[`LiveStreamCard renders correctly 1`] = `
               ]
             }
           >
-            Test Stream Title
+            10,000
+             
+            viewers
           </Text>
-          <View
-            style={
-              {
-                "flex": 1,
-                "flexDirection": "column",
-                "marginTop": 16,
-              }
-            }
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "marginBottom": 5,
-                  "marginTop": 5,
-                }
-              }
-            >
-              <ViewManagerAdapter_ExpoImage
-                borderRadius={13}
-                containerViewRef={"[React.ref]"}
-                contentFit="cover"
-                contentPosition={
-                  {
-                    "left": "50%",
-                    "top": "50%",
-                  }
-                }
-                height={20}
-                marginRight={5}
-                nativeViewRef={"[React.ref]"}
-                onError={[Function]}
-                onLoad={[Function]}
-                onLoadStart={[Function]}
-                onProgress={[Function]}
-                placeholder={[]}
-                source={
-                  [
-                    {
-                      "uri": undefined,
-                    },
-                  ]
-                }
-                style={
-                  {
-                    "borderRadius": 13,
-                    "height": 20,
-                    "marginRight": 5,
-                    "width": 20,
-                  }
-                }
-                testID="LiveStreamCard-avatar"
-                transition={null}
-                width={20}
-              />
-              <Text
-                preset="tag"
-                style={
-                  [
-                    [
-                      [
-                        {
-                          "fontSize": 16,
-                          "lineHeight": 17.6,
-                        },
-                        {
-                          "fontFamily": "gothamRoundedBook",
-                        },
-                        {
-                          "color": "#F8F7F7",
-                        },
-                      ],
-                      {
-                        "fontSize": 14,
-                        "lineHeight": 15.4,
-                      },
-                      {
-                        "fontFamily": "gothamRoundedMedium",
-                      },
-                    ],
-                    undefined,
-                    undefined,
-                    undefined,
-                  ]
-                }
-              >
-                Test user
-              </Text>
-            </View>
-            <Text
-              preset="eventTitle"
-              style={
-                [
-                  [
-                    [
-                      {
-                        "fontSize": 16,
-                        "lineHeight": 17.6,
-                      },
-                      {
-                        "fontFamily": "gothamRoundedBook",
-                      },
-                      {
-                        "color": "#F8F7F7",
-                      },
-                    ],
-                    {
-                      "fontSize": 12,
-                      "lineHeight": 13.2,
-                    },
-                    {
-                      "fontFamily": "gothamRoundedMedium",
-                    },
-                  ],
-                  undefined,
-                  undefined,
-                  undefined,
-                ]
-              }
-            >
-              10,000
-               
-              viewers
-            </Text>
-          </View>
         </View>
       </View>
-    </Text>
+    </View>
     <View
       style={
         {

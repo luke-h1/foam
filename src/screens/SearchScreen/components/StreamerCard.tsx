@@ -2,14 +2,14 @@ import useAppNavigation from '@app/hooks/useAppNavigation';
 import { SearchChannelResponse } from '@app/services/twitchService';
 import { spacing } from '@app/styles';
 import { TouchableOpacity, View, ViewStyle } from 'react-native';
-import LiveStreamImage from './LiveStreamImage';
-import { Text } from './ui/Text';
+import LiveStreamImage from '../../../components/LiveStreamImage';
+import { Text } from '../../../components/ui/Text';
 
 interface Props {
   stream: SearchChannelResponse;
 }
 
-export default function LiveStreamMiniCard({ stream }: Props) {
+export default function StreamerCard({ stream }: Props) {
   const { navigate } = useAppNavigation();
 
   return (
@@ -27,7 +27,6 @@ export default function LiveStreamMiniCard({ stream }: Props) {
         <LiveStreamImage
           thumbnail={stream.thumbnail_url}
           animated
-          startedAt={stream.started_at}
           size="small"
         />
         <View style={$streamerDetails}>

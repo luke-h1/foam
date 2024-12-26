@@ -1,4 +1,4 @@
-import LiveStreamCard from '@app/components/LiveStreamCard';
+import StreamStackCard from '@app/components/StreamStackCard';
 import EmptyState from '@app/components/ui/EmptyState';
 import Screen from '@app/components/ui/Screen';
 import Spinner from '@app/components/ui/Spinner';
@@ -40,16 +40,19 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
 
   const categoryQuery = useMemo(() => twitchQueries.getCategory(id), [id]);
 
-  useHeader({
-    title: 'Categories',
-    LeftActionComponent: <BackButton />,
-  });
-
   const {
     data: category,
     isLoading: isCategoryLoading,
     isError: isCategoryError,
   } = useQuery(categoryQuery);
+
+  useHeader(
+    {
+      title: category?.name ?? 'Categories',
+      LeftActionComponent: <BackButton />,
+    },
+    [category],
+  );
 
   const {
     data: streams,
@@ -138,7 +141,7 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
         ref={flatListRef}
         data={allStreams}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <LiveStreamCard stream={item} />}
+        renderItem={({ item }) => <StreamStackCard stream={item} />}
         ListHeaderComponent={renderHeader}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.2}

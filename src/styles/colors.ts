@@ -26,6 +26,12 @@ const palette = {
   secondary700: '#4CB8B0',
   secondary800: '#3FA39B',
 
+  accent100: '#FFEED4',
+  accent200: '#FFE1B2',
+  accent300: '#FDD495',
+  accent400: '#FBC878',
+  accent500: '#FFBB50',
+
   bold100: '#FAE8E4',
   bold200: '#F2D2CB',
   bold300: '#F1A493',

@@ -11,6 +11,8 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   RefreshControl,
+  View,
+  StyleSheet,
 } from 'react-native';
 
 export default function TopCategoriesScreen() {
@@ -87,8 +89,13 @@ export default function TopCategoriesScreen() {
       <FlatList<Category>
         data={allCategories}
         ref={flatListRef}
-        renderItem={({ item }) => <CategoryCard category={item} />}
+        renderItem={({ item }) => (
+          <View style={styles.categoryCardContainer}>
+            <CategoryCard category={item} />
+          </View>
+        )}
         keyExtractor={(_item, index) => index.toString()}
+        numColumns={3}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={1.5}
         onRefresh={onRefresh}
@@ -107,3 +114,10 @@ export default function TopCategoriesScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  categoryCardContainer: {
+    flex: 1,
+    margin: 5,
+  },
+});
