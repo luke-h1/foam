@@ -6,6 +6,7 @@ import { initalTestAuthContextProps } from '@app/context/AuthContext.test';
 import AuthLoadingScreen from '@app/screens/Auth/AuthLoading';
 import LoginScreen from '@app/screens/Auth/LoginScreen';
 import CategoryScreen from '@app/screens/Category/CategoryScreen';
+import ChangelogScreen from '@app/screens/ChangelogScreen';
 import { colors } from '@app/styles';
 import {
   DarkTheme,
@@ -56,6 +57,9 @@ export type AppStackParamList = {
 
   // login screen
   Login: undefined;
+
+  // changelog
+  Changelog: undefined;
 };
 
 /**
@@ -95,6 +99,9 @@ const AppStack = () => {
 
       {/* Auth */}
       <Stack.Screen name="Login" component={LoginScreen} />
+
+      {/* Changelog */}
+      <Stack.Screen name="Changelog" component={ChangelogScreen} />
     </Stack.Navigator>
   );
 };

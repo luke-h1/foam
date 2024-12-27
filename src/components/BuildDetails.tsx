@@ -16,9 +16,11 @@ export default function BuildDetails() {
         v{Application.nativeApplicationVersion}
       </Text>
       <Text testID="BuildDetails-nativeBuildVersion">
-        ({Application.nativeBuildVersion})
+        Native build version: {Application.nativeBuildVersion}
       </Text>
-      <Text testID="BuildDetails-pkgVersion">pkg:{pkg.version}</Text>
+      <Text testID="BuildDetails-pkgVersion">
+        package version:{pkg.version}
+      </Text>
       {updatedId ? (
         <Text testID="BuildDetails-updatedId">{updatedId}</Text>
       ) : null}
@@ -28,7 +30,7 @@ export default function BuildDetails() {
 
 const $container: ViewStyle = {
   justifyContent: 'center',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   paddingTop: spacing.medium,
   paddingBottom: spacing.small,
 };

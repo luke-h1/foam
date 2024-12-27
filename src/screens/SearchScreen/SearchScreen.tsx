@@ -7,13 +7,11 @@ import { TextField } from '@app/components/ui/TextField';
 import useAppNavigation from '@app/hooks/useAppNavigation';
 import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
 import useHeader from '@app/hooks/useHeader';
-import BackButton from '@app/navigators/BackButton';
 import StreamerCard from '@app/screens/SearchScreen/components/StreamerCard';
 import twitchService, {
   SearchChannelResponse,
 } from '@app/services/twitchService';
 import { colors, spacing } from '@app/styles';
-import { statusBarHeight } from '@app/utils/statusBarHeight';
 import { storage } from '@app/utils/storage';
 import Entypo from '@expo/vector-icons/build/Entypo';
 import { useEffect, useRef, useState } from 'react';
@@ -38,16 +36,14 @@ export default function SearchScreen() {
   const { navigate } = useAppNavigation();
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
 
   useHeader({
     title: 'Search',
-    LeftActionComponent: <BackButton />,
   });
-
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
   const fetchSearchHistory = async () => {
     const history = storage.getString(previousSearchesKey) ?? '[]';
@@ -115,14 +111,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <Screen
-      style={$wrapper}
-      safeAreaEdges={['top', 'bottom', 'left']}
-      preset="scroll"
-      contentContainerStyle={{
-        padding: spacing.micro,
-      }}
-    >
+    <Screen safeAreaEdges={['top', 'bottom', 'left']} preset="scroll">
       <View style={$container}>
         <DismissableKeyboard>
           <ScrollView
@@ -150,9 +139,9 @@ export default function SearchScreen() {
                   >
                     <Entypo
                       name="circle-with-cross"
-                      size={24}
+                      size={22}
                       style={{
-                        marginRight: 3,
+                        marginRight: 6,
                       }}
                       color={colors.border}
                     />
@@ -161,9 +150,9 @@ export default function SearchScreen() {
                   <Feather
                     name="search"
                     color={colors.border}
-                    size={24}
+                    size={22}
                     style={{
-                      marginRight: 3,
+                      marginRight: 6,
                     }}
                   />
                 )
@@ -174,7 +163,7 @@ export default function SearchScreen() {
       </View>
 
       <View style={$searchResultsWrapper}>
-        {searchResults.length > 0 && !!searchHistory.length && (
+        {searchResults.length > 0 && (
           <>
             <Text
               style={{
@@ -205,7 +194,7 @@ export default function SearchScreen() {
         )}
       </View>
 
-      {searchHistory && !!searchResults && (
+      {searchHistory && (
         <SearchHistory
           results={searchHistory.map(item => item.query)}
           onClearAll={() => {
@@ -226,25 +215,19 @@ export default function SearchScreen() {
   );
 }
 
-const $wrapper: ViewStyle = {
-  flex: 1,
-  paddingTop: statusBarHeight,
-};
-
 const $container: ViewStyle = {
   flexDirection: 'row',
   padding: 2,
 };
 
 const $searchResultsWrapper: ViewStyle = {
-  marginBottom: 14,
-  marginLeft: 14,
+  marginTop: spacing.medium,
+  marginLeft: spacing.medium,
 };
 
 const $list: ViewStyle = {
   flexDirection: 'row',
-  marginBottom: 14,
-  marginLeft: 14,
+  padding: 6,
   alignContent: 'center',
   alignItems: 'center',
 };

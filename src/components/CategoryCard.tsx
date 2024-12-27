@@ -1,7 +1,14 @@
 import useAppNavigation from '@app/hooks/useAppNavigation';
 import { Category } from '@app/services/twitchService';
+import { spacing } from '@app/styles';
 import { Image } from 'expo-image';
-import { Pressable, View, ViewStyle, ImageStyle } from 'react-native';
+import {
+  Pressable,
+  View,
+  ViewStyle,
+  ImageStyle,
+  TextStyle,
+} from 'react-native';
 import { Text } from './ui/Text';
 
 interface Props {
@@ -32,11 +39,17 @@ export default function CategoryCard({ category }: Props) {
           }}
           style={$image}
         />
+        <Text preset="infoText" style={$title}>
+          {category.name}
+        </Text>
       </View>
-      <Text preset="formHelper">{category.name}</Text>
     </Pressable>
   );
 }
+
+const $title: TextStyle = {
+  marginTop: spacing.small,
+};
 
 const $container: ViewStyle = {
   flex: 1,

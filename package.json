@@ -85,6 +85,7 @@
     "react-native": "0.76.2",
     "react-native-fast-image": "^8.6.3",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-marked": "^6.0.5",
     "react-native-mmkv": "^3.1.0",
     "react-native-orientation-locker": "^1.6.0",
     "react-native-pager-view": "6.4.1",
