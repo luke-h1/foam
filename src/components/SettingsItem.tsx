@@ -59,7 +59,7 @@ export default function SettingsItem({ contents }: Props) {
 }
 
 const $settingsContainer: ViewStyle = {
-  padding: spacing.medium,
+  padding: spacing.micro,
   display: 'flex',
   flex: 1,
   alignItems: 'flex-start',

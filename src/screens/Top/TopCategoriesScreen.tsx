@@ -12,7 +12,7 @@ import {
   NativeSyntheticEvent,
   RefreshControl,
   View,
-  StyleSheet,
+  ViewStyle,
 } from 'react-native';
 
 export default function TopCategoriesScreen() {
@@ -90,7 +90,7 @@ export default function TopCategoriesScreen() {
         data={allCategories}
         ref={flatListRef}
         renderItem={({ item }) => (
-          <View style={styles.categoryCardContainer}>
+          <View style={$categoryCardContainer}>
             <CategoryCard category={item} />
           </View>
         )}
@@ -115,9 +115,7 @@ export default function TopCategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  categoryCardContainer: {
-    flex: 1,
-    margin: 5,
-  },
-});
+const $categoryCardContainer: ViewStyle = {
+  flex: 1,
+  margin: 5,
+};

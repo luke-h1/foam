@@ -10,8 +10,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import TopCategoriesScreen from './Categories';
-import TopStreamsScreen from './Streams';
+import TopCategoriesScreen from './TopCategoriesScreen';
+import TopStreamsScreen from './TopStreamsScreen';
 
 export default function TopScreen() {
   const layout = useWindowDimensions();

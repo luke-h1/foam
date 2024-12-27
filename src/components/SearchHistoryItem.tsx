@@ -26,7 +26,7 @@ export default function SearchHistory({
   return (
     <View style={$container}>
       <View style={$header}>
-        <Text style={$title}>Search History</Text>
+        <Text preset="formLabel">Search History</Text>
         {results.length > 0 && (
           <TouchableOpacity onPress={onClearAll}>
             <Text style={$clearAll}>Clear All</Text>
@@ -39,7 +39,7 @@ export default function SearchHistory({
         renderItem={({ item }) => (
           <View style={$itemContainer}>
             <TouchableOpacity style={$item} onPress={() => onSelectItem(item)}>
-              <Text>{item}</Text>
+              <Text preset="tag">{item}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onClearItem(item)}>
               <Entypo name="cross" size={24} color={colors.tint} />
@@ -52,16 +52,13 @@ export default function SearchHistory({
 }
 
 const $container: ViewStyle = {
-  margin: spacing.medium,
+  margin: spacing.medium - 5,
 };
 const $header: ViewStyle = {
   flexDirection: 'row',
   justifyContent: 'space-between',
   alignItems: 'center',
   marginBottom: spacing.small,
-};
-const $title: TextStyle = {
-  fontWeight: 'bold',
 };
 
 const $clearAll: TextStyle = {
@@ -70,10 +67,9 @@ const $clearAll: TextStyle = {
 
 const $itemContainer: ViewStyle = {
   flexDirection: 'row',
-  justifyContent: 'space-between',
   alignItems: 'center',
   paddingVertical: spacing.small,
-  borderBottomWidth: 1,
+  borderBottomWidth: 0.25,
   borderBottomColor: colors.textDim,
 };
 

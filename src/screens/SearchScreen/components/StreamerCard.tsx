@@ -1,6 +1,6 @@
 import useAppNavigation from '@app/hooks/useAppNavigation';
 import { SearchChannelResponse } from '@app/services/twitchService';
-import { spacing } from '@app/styles';
+import { colors, spacing } from '@app/styles';
 import { TouchableOpacity, View, ViewStyle } from 'react-native';
 import LiveStreamImage from '../../../components/LiveStreamImage';
 import { Text } from '../../../components/ui/Text';
@@ -29,9 +29,14 @@ export default function StreamerCard({ stream }: Props) {
           animated
           size="small"
         />
-        <View style={$streamerDetails}>
-          <Text>{stream.display_name}</Text>
-          <Text>{stream.game_name}</Text>
+        <View>
+          <Text preset="formLabel">{stream.display_name}</Text>
+          <Text
+            preset="tag"
+            style={{ color: colors.border, marginTop: spacing.small }}
+          >
+            {stream.game_name}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -40,9 +45,5 @@ export default function StreamerCard({ stream }: Props) {
 
 const $streamer: ViewStyle = {
   flexDirection: 'row',
-  marginBottom: spacing.medium,
-};
-
-const $streamerDetails: ViewStyle = {
-  justifyContent: 'center',
+  marginBottom: spacing.small,
 };

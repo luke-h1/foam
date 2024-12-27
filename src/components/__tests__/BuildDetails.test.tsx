@@ -21,7 +21,6 @@ describe('BuildDetails', () => {
     });
 
     render(<BuildDetails />);
-    // expect(screen.getByText(`pkg:${pkg.version}`)).toBeOnTheScreen();
 
     expect(screen.getByTestId('BuildDetails-pkgVersion')).toHaveTextContent(
       pkg.version,

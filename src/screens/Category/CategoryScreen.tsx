@@ -1,3 +1,4 @@
+import ScrollToTop from '@app/components/ScrollToTop';
 import StreamStackCard from '@app/components/StreamStackCard';
 import EmptyState from '@app/components/ui/EmptyState';
 import Screen from '@app/components/ui/Screen';
@@ -22,8 +23,6 @@ import {
   TextStyle,
   View,
   ViewStyle,
-  TouchableOpacity,
-  StyleSheet,
 } from 'react-native';
 
 const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
@@ -156,14 +155,7 @@ const CategoryScreen: FC<StackScreenProps<AppStackParamList, 'Category'>> = ({
           />
         }
       />
-      {showScrollToTop && (
-        <TouchableOpacity
-          style={styles.scrollToTopButton}
-          onPress={scrollToTop}
-        >
-          <Text style={styles.scrollToTopText}>TOP</Text>
-        </TouchableOpacity>
-      )}
+      {showScrollToTop && <ScrollToTop onPress={scrollToTop} />}
     </Screen>
   );
 };
@@ -188,18 +180,3 @@ const $categoryTitle: TextStyle = {
   marginLeft: spacing.medium,
   fontWeight: 'bold',
 };
-
-const styles = StyleSheet.create({
-  scrollToTopButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 25,
-    padding: 10,
-  },
-  scrollToTopText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});

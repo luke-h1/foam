@@ -1,6 +1,6 @@
-import TopCategoriesScreen from '@app/screens/Top/Categories';
-import TopStreamsScreen from '@app/screens/Top/Streams';
+import TopCategoriesScreen from '@app/screens/Top/TopCategoriesScreen';
 import TopScreen from '@app/screens/Top/TopScreen';
+import TopStreamsScreen from '@app/screens/Top/TopStreamsScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 
