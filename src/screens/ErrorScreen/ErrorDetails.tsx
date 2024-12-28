@@ -1,11 +1,11 @@
 import Button from '@app/components/ui/Button';
-import Icon from '@app/components/ui/Icon';
 import Screen from '@app/components/ui/Screen';
 import { Text } from '@app/components/ui/Text';
 import { colors, spacing } from '@app/styles';
 import { openLinkInBrowser } from '@app/utils/openLinkInBrowser';
 import React, { ErrorInfo } from 'react';
 import { ScrollView, TextStyle, View, ViewStyle } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 export interface ErrorDetailsProps {
   error: Error | null;
@@ -35,7 +35,7 @@ export default function ErrorDetails(props: ErrorDetailsProps) {
       contentContainerStyle={$contentContainer}
     >
       <View style={$topSection}>
-        <Icon icon="ladybug" size={64} />
+        <MaterialIcons name="error" />
         <Text
           style={$heading}
           preset="subheading"

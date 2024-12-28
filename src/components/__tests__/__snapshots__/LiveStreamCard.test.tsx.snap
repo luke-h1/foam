@@ -167,7 +167,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
         }
       >
         <Text
-          preset="streamTitle"
+          preset="formLabel"
           style={
             [
               [
@@ -177,18 +177,15 @@ exports[`LiveStreamCard renders correctly 1`] = `
                     "lineHeight": 17.6,
                   },
                   {
-                    "fontFamily": "gothamRoundedBook",
+                    "fontFamily": "gothamSsmBook",
                   },
                   {
                     "color": "#F8F7F7",
+                    "lineHeight": 22,
                   },
                 ],
                 {
-                  "fontSize": 12,
-                  "lineHeight": 13.2,
-                },
-                {
-                  "fontFamily": "gothamRoundedMedium",
+                  "fontFamily": "gothamSsmMedium",
                 },
               ],
               undefined,
