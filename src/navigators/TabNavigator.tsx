@@ -3,15 +3,13 @@ import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import SearchScreen from '@app/screens/SearchScreen/SearchScreen';
 import SettingsScreen from '@app/screens/SettingsScreen';
-import { colors, layout, spacing, typography } from '@app/styles';
+import { colors, spacing } from '@app/styles';
 import {
   BottomTabScreenProps,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import React, { ComponentType, FC } from 'react';
-import { TextStyle, ViewStyle } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import TopStackNavigator from './TopStackNavigator';
 
@@ -71,20 +69,27 @@ const screens: Screen[] = [
 ];
 
 export default function TabNavigator() {
-  const { bottom } = useSafeAreaInsets();
   const { user } = useAuthContext();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#123C4F',
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          height: 90,
+          marginTop: -20,
+          paddingHorizontal: spacing.micro,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          paddingVertical: spacing.micro,
+          paddingHorizontal: spacing.extraSmall,
+        },
         tabBarHideOnKeyboard: true,
-        tabBarStyle: [$tabBar, { height: bottom + layout.tabBarHeight }],
-        tabBarActiveTintColor: colors.text,
-        tabBarInactiveTintColor: colors.text,
-        tabBarLabelStyle: $tabBarLabel,
-        tabBarItemStyle: $tabBarItem,
-        tabBarAllowFontScaling: false,
+        tabBarActiveTintColor: colors.tint,
       }}
     >
       {screens.map(screen => {
@@ -111,19 +116,3 @@ export default function TabNavigator() {
     </Tab.Navigator>
   );
 }
-
-const $tabBar: ViewStyle = {
-  backgroundColor: colors.background,
-  borderTopColor: colors.transparent,
-};
-
-const $tabBarItem: ViewStyle = {
-  paddingTop: spacing.medium,
-};
-
-const $tabBarLabel: TextStyle = {
-  fontSize: 12,
-  fontFamily: typography.primary.medium,
-  lineHeight: 16,
-  flex: 1,
-};
