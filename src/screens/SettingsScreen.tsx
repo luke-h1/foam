@@ -44,7 +44,6 @@ export default function SettingsScreen() {
             />
           ),
           showRightArrow: true,
-          iconRight: <Icon icon="icon-right" />,
           showSeperator: true,
           onPress: () => {
             bottomSheetModalRef.current?.present();
@@ -168,6 +167,54 @@ export default function SettingsScreen() {
             }}
           />
         </BottomSheetView>
+        <BottomSheetView style={$container}>
+          <Icon icon="arrow-right" />
+          <Button
+            title="My stream"
+            onPress={async () => {
+              bottomSheetModalRef.current?.dismiss();
+              await logout();
+              navigation.navigate('Streams', {
+                screen: 'LiveStream',
+                params: {
+                  id: user?.login as string,
+                },
+              });
+            }}
+          />
+        </BottomSheetView>
+        <BottomSheetView style={$container}>
+          <Icon icon="arrow-right" />
+          <Button
+            title="My Profile"
+            onPress={async () => {
+              bottomSheetModalRef.current?.dismiss();
+              await logout();
+              navigation.navigate('Streams', {
+                screen: 'StreamerProfile',
+                params: {
+                  id: user?.login as string,
+                },
+              });
+            }}
+          />
+        </BottomSheetView>
+        <BottomSheetView style={$container}>
+          <Icon icon="arrow-right" />
+          <Button
+            title="Blocked"
+            onPress={async () => {
+              bottomSheetModalRef.current?.dismiss();
+              await logout();
+              navigation.navigate('Streams', {
+                screen: 'StreamerProfile',
+                params: {
+                  id: user?.login as string,
+                },
+              });
+            }}
+          />
+        </BottomSheetView>
       </BottomSheetModal>
       <Modal
         visible={isModalVisible}
@@ -198,7 +245,7 @@ const $container: ViewStyle = {
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
-  padding: 8,
+  padding: 4,
 };
 
 const $modalContainer: ViewStyle = {
