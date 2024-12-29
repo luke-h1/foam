@@ -79,6 +79,13 @@ Start the app
 pnpm start
 ```
 
+Create a development build (if needed)
+
+```bash
+pnpm run prebuild:ios
+pnpm run prebuild:android
+```
+
 ## Contributing
 
 ### Commiting code
