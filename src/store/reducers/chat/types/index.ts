@@ -53,7 +53,7 @@ export interface RoomStateTags {
 }
 
 export interface Channel {
-  id?: string;
+  id: string;
   name: string;
   messages: Messages[];
   recentMessages: FetchResult<string[]>;
