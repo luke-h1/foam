@@ -139,3 +139,16 @@ const chatSlice = createSlice({
     },
   },
 });
+
+export const {
+  channelAdded,
+  channelRemoved,
+  channelResourcesLoaded,
+  channelsInitialized,
+  chatConnected,
+  chatDisconnected,
+  chatRegistered,
+  currentChannelChanged,
+} = chatSlice.actions;
+
+export default chatSlice.reducer;

@@ -1,5 +1,6 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import { logMiddleware } from './middleware/logMiddleware';
+import chatReducer from './reducers/chat/chatReducer';
 
 export const store = configureStore({
   reducer: {
