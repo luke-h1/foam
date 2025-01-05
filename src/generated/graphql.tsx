@@ -1,42 +1,56 @@
 import gql from 'graphql-tag';
 import * as Urql from 'urql';
+
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type Exact<T extends { [key: string]: unknown }> = {
+  [K in keyof T]: T[K];
+};
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>;
+};
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T,
+> = { [_ in K]?: never };
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
+    };
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
-  ActiveEmoteFlagModel: { input: any; output: any; }
-  ArbitraryMap: { input: any; output: any; }
-  AuditLogChangeFormat: { input: any; output: any; }
-  AuditLogKind: { input: any; output: any; }
-  BanEffect: { input: any; output: any; }
-  ConnectionPlatform: { input: any; output: any; }
-  CosmeticKind: { input: any; output: any; }
-  CosmeticPaintCanvasRepeat: { input: any; output: any; }
-  CosmeticPaintFunction: { input: any; output: any; }
-  CosmeticPaintShape: { input: any; output: any; }
-  CosmeticPaintTextTransform: { input: any; output: any; }
-  DateTime: { input: any; output: any; }
-  EmoteFlagsModel: { input: any; output: any; }
-  EmoteLifecycleModel: { input: any; output: any; }
-  EmoteSetFlagModel: { input: any; output: any; }
-  EmoteVersionState: { input: any; output: any; }
-  Id: { input: any; output: any; }
-  ImageFormat: { input: any; output: any; }
-  ObjectID: { input: any; output: any; }
-  StringMap: { input: any; output: any; }
-  UserEditorModelPermission: { input: any; output: any; }
-  UserTypeModel: { input: any; output: any; }
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
+  ActiveEmoteFlagModel: { input: any; output: any };
+  ArbitraryMap: { input: any; output: any };
+  AuditLogChangeFormat: { input: any; output: any };
+  AuditLogKind: { input: any; output: any };
+  BanEffect: { input: any; output: any };
+  ConnectionPlatform: { input: any; output: any };
+  CosmeticKind: { input: any; output: any };
+  CosmeticPaintCanvasRepeat: { input: any; output: any };
+  CosmeticPaintFunction: { input: any; output: any };
+  CosmeticPaintShape: { input: any; output: any };
+  CosmeticPaintTextTransform: { input: any; output: any };
+  DateTime: { input: any; output: any };
+  EmoteFlagsModel: { input: any; output: any };
+  EmoteLifecycleModel: { input: any; output: any };
+  EmoteSetFlagModel: { input: any; output: any };
+  EmoteVersionState: { input: any; output: any };
+  Id: { input: any; output: any };
+  ImageFormat: { input: any; output: any };
+  ObjectID: { input: any; output: any };
+  StringMap: { input: any; output: any };
+  UserEditorModelPermission: { input: any; output: any };
+  UserTypeModel: { input: any; output: any };
 };
 
 export type ActiveEmote = {
@@ -106,7 +120,6 @@ export type CosmeticOps = {
   id: Scalars['ObjectID']['output'];
   updatePaint: CosmeticPaint;
 };
-
 
 export type CosmeticOpsUpdatePaintArgs = {
   definition: CosmeticPaintInput;
@@ -287,11 +300,9 @@ export type Emote = {
   versions: Array<EmoteVersion>;
 };
 
-
 export type EmoteActivityArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
-
 
 export type EmoteChannelsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -312,12 +323,10 @@ export type EmoteOps = {
   update: Emote;
 };
 
-
 export type EmoteOpsMergeArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
   target_id: Scalars['ObjectID']['input'];
 };
-
 
 export type EmoteOpsUpdateArgs = {
   params: EmoteUpdate;
@@ -347,7 +356,7 @@ export enum EmoteSearchCategory {
   Top = 'TOP',
   TrendingDay = 'TRENDING_DAY',
   TrendingMonth = 'TRENDING_MONTH',
-  TrendingWeek = 'TRENDING_WEEK'
+  TrendingWeek = 'TRENDING_WEEK',
 }
 
 export type EmoteSearchFilter = {
@@ -383,14 +392,13 @@ export type EmoteSet = {
   tags: Array<Scalars['String']['output']>;
 };
 
-
 export type EmoteSetEmotesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   origins?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export enum EmoteSetName {
-  Global = 'GLOBAL'
+  Global = 'GLOBAL',
 }
 
 export type EmoteSetOps = {
@@ -401,13 +409,11 @@ export type EmoteSetOps = {
   update: EmoteSet;
 };
 
-
 export type EmoteSetOpsEmotesArgs = {
   action: ListItemAction;
   id: Scalars['ObjectID']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
 };
-
 
 export type EmoteSetOpsUpdateArgs = {
   data: UpdateEmoteSetInput;
@@ -468,7 +474,6 @@ export type ImageHost = {
   url: Scalars['String']['output'];
 };
 
-
 export type ImageHostFilesArgs = {
   formats?: InputMaybe<Array<Scalars['ImageFormat']['input']>>;
 };
@@ -492,14 +497,14 @@ export type InboxMessage = {
 export enum ListItemAction {
   Add = 'ADD',
   Remove = 'REMOVE',
-  Update = 'UPDATE'
+  Update = 'UPDATE',
 }
 
 export enum MessageKind {
   EmoteComment = 'EMOTE_COMMENT',
   Inbox = 'INBOX',
   ModRequest = 'MOD_REQUEST',
-  News = 'NEWS'
+  News = 'NEWS',
 }
 
 export type ModRequestMessage = {
@@ -544,11 +549,9 @@ export type Mutation = {
   user: UserOps;
 };
 
-
 export type MutationCosmeticsArgs = {
   id: Scalars['ObjectID']['input'];
 };
-
 
 export type MutationCreateBanArgs = {
   anonymous?: InputMaybe<Scalars['Boolean']['input']>;
@@ -558,37 +561,30 @@ export type MutationCreateBanArgs = {
   victim_id: Scalars['ObjectID']['input'];
 };
 
-
 export type MutationCreateCosmeticPaintArgs = {
   definition: CosmeticPaintInput;
 };
-
 
 export type MutationCreateEmoteSetArgs = {
   data: CreateEmoteSetInput;
   user_id: Scalars['ObjectID']['input'];
 };
 
-
 export type MutationCreateReportArgs = {
   data: CreateReportInput;
 };
-
 
 export type MutationCreateRoleArgs = {
   data: CreateRoleInput;
 };
 
-
 export type MutationDeleteRoleArgs = {
   role_id: Scalars['ObjectID']['input'];
 };
 
-
 export type MutationDismissVoidTargetModRequestsArgs = {
   object: Scalars['Int']['input'];
 };
-
 
 export type MutationEditBanArgs = {
   ban_id: Scalars['ObjectID']['input'];
@@ -597,28 +593,23 @@ export type MutationEditBanArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
-
 export type MutationEditReportArgs = {
   data: EditReportInput;
   report_id: Scalars['ObjectID']['input'];
 };
-
 
 export type MutationEditRoleArgs = {
   data: EditRoleInput;
   role_id: Scalars['ObjectID']['input'];
 };
 
-
 export type MutationEmoteArgs = {
   id: Scalars['ObjectID']['input'];
 };
 
-
 export type MutationEmoteSetArgs = {
   id: Scalars['ObjectID']['input'];
 };
-
 
 export type MutationReadMessagesArgs = {
   approved: Scalars['Boolean']['input'];
@@ -626,12 +617,10 @@ export type MutationReadMessagesArgs = {
   read: Scalars['Boolean']['input'];
 };
 
-
 export type MutationReprocessCosmeticImageArgs = {
   badge_ids?: InputMaybe<Array<Scalars['ObjectID']['input']>>;
   paint_ids?: InputMaybe<Array<Scalars['ObjectID']['input']>>;
 };
-
 
 export type MutationSendInboxMessageArgs = {
   anonymous?: InputMaybe<Scalars['Boolean']['input']>;
@@ -640,7 +629,6 @@ export type MutationSendInboxMessageArgs = {
   recipients: Array<Scalars['ObjectID']['input']>;
   subject: Scalars['String']['input'];
 };
-
 
 export type MutationUserArgs = {
   id: Scalars['ObjectID']['input'];
@@ -670,26 +658,21 @@ export type Query = {
   usersByID: Array<UserPartial>;
 };
 
-
 export type QueryCosmeticsArgs = {
   list?: InputMaybe<Array<Scalars['ObjectID']['input']>>;
 };
-
 
 export type QueryEmoteArgs = {
   id: Scalars['ObjectID']['input'];
 };
 
-
 export type QueryEmoteSetArgs = {
   id: Scalars['ObjectID']['input'];
 };
 
-
 export type QueryEmoteSetsByIdArgs = {
   list: Array<Scalars['ObjectID']['input']>;
 };
-
 
 export type QueryEmotesArgs = {
   filter?: InputMaybe<EmoteSearchFilter>;
@@ -699,11 +682,9 @@ export type QueryEmotesArgs = {
   sort?: InputMaybe<Sort>;
 };
 
-
 export type QueryEmotesByIdArgs = {
   list: Array<Scalars['ObjectID']['input']>;
 };
-
 
 export type QueryModRequestsArgs = {
   country?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -712,16 +693,13 @@ export type QueryModRequestsArgs = {
   wish?: InputMaybe<Scalars['String']['input']>;
 };
 
-
 export type QueryNamedEmoteSetArgs = {
   name: EmoteSetName;
 };
 
-
 export type QueryReportArgs = {
   id: Scalars['ObjectID']['input'];
 };
-
 
 export type QueryReportsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -729,29 +707,24 @@ export type QueryReportsArgs = {
   status?: InputMaybe<ReportStatus>;
 };
 
-
 export type QueryRoleArgs = {
   id: Scalars['ObjectID']['input'];
 };
 
-
 export type QueryUserArgs = {
   id: Scalars['ObjectID']['input'];
 };
-
 
 export type QueryUserByConnectionArgs = {
   id: Scalars['String']['input'];
   platform: Scalars['ConnectionPlatform']['input'];
 };
 
-
 export type QueryUsersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
 };
-
 
 export type QueryUsersByIdArgs = {
   list: Array<Scalars['ObjectID']['input']>;
@@ -776,7 +749,7 @@ export type Report = {
 export enum ReportStatus {
   Assigned = 'ASSIGNED',
   Closed = 'CLOSED',
-  Open = 'OPEN'
+  Open = 'OPEN',
 }
 
 export type Role = {
@@ -792,7 +765,6 @@ export type Role = {
   position: Scalars['Int']['output'];
 };
 
-
 export type RoleMembersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -805,7 +777,7 @@ export type Sort = {
 
 export enum SortOrder {
   Ascending = 'ASCENDING',
-  Descending = 'DESCENDING'
+  Descending = 'DESCENDING',
 }
 
 export type SubscriptionPeriodCreate = {
@@ -824,7 +796,7 @@ export type SubscriptionPeriodCreateInvoiceData = {
 
 export enum SubscriptionPeriodKind {
   Monthly = 'monthly',
-  Yearly = 'yearly'
+  Yearly = 'yearly',
 }
 
 export type UpdateEmoteSetInput = {
@@ -855,11 +827,9 @@ export type User = {
   username: Scalars['String']['output'];
 };
 
-
 export type UserActivityArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
-
 
 export type UserEmote_SetsArgs = {
   entitled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -921,33 +891,27 @@ export type UserOps = {
   roles: Array<Scalars['ObjectID']['output']>;
 };
 
-
 export type UserOpsConnectionsArgs = {
   data: UserConnectionUpdate;
   id: Scalars['String']['input'];
 };
 
-
 export type UserOpsCosmeticsArgs = {
   update: UserCosmeticUpdate;
 };
 
-
 export type UserOpsCreateSubscriptionPeriodArgs = {
   create: SubscriptionPeriodCreate;
 };
-
 
 export type UserOpsEditorsArgs = {
   data: UserEditorUpdate;
   editor_id: Scalars['ObjectID']['input'];
 };
 
-
 export type UserOpsMergeArgs = {
   id: Scalars['ObjectID']['input'];
 };
-
 
 export type UserOpsRolesArgs = {
   action: ListItemAction;
@@ -968,7 +932,6 @@ export type UserPartial = {
   type: Scalars['UserTypeModel']['output'];
   username: Scalars['String']['output'];
 };
-
 
 export type UserPartialEmote_SetsArgs = {
   entitled?: InputMaybe<Scalars['Boolean']['input']>;
@@ -994,22 +957,31 @@ export type _Service = {
   sdl?: Maybe<Scalars['String']['output']>;
 };
 
-export type CosmeticsQueryVariables = Exact<{ [key: string]: never; }>;
+export type CosmeticsQueryVariables = Exact<{ [key: string]: never }>;
 
-
-export type CosmeticsQuery = { __typename?: 'Query', cosmetics: { __typename?: 'CosmeticsQuery', paints: Array<{ __typename?: 'CosmeticPaint', id: any }> } };
-
+export type CosmeticsQuery = {
+  __typename?: 'Query';
+  cosmetics: {
+    __typename?: 'CosmeticsQuery';
+    paints: Array<{ __typename?: 'CosmeticPaint'; id: any }>;
+  };
+};
 
 export const CosmeticsDocument = gql`
-    query Cosmetics {
-  cosmetics {
-    paints {
-      id
+  query Cosmetics {
+    cosmetics {
+      paints {
+        id
+      }
     }
   }
-}
-    `;
+`;
 
-export function useCosmeticsQuery(options?: Omit<Urql.UseQueryArgs<CosmeticsQueryVariables>, 'query'>) {
-  return Urql.useQuery<CosmeticsQuery, CosmeticsQueryVariables>({ query: CosmeticsDocument, ...options });
-};
+export function useCosmeticsQuery(
+  options?: Omit<Urql.UseQueryArgs<CosmeticsQueryVariables>, 'query'>,
+) {
+  return Urql.useQuery<CosmeticsQuery, CosmeticsQueryVariables>({
+    query: CosmeticsDocument,
+    ...options,
+  });
+}

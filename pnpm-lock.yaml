@@ -245,6 +245,9 @@ importers:
       url-regex-safe:
         specifier: ^4.0.0
         version: 4.0.0
+      urql:
+        specifier: ^4.2.1
+        version: 4.2.1(@urql/core@5.0.8(graphql@16.10.0))(react@18.3.1)
     devDependencies:
       '@babel/core':
         specifier: ^7.20.0
@@ -10112,6 +10115,12 @@ packages:
 
   urlpattern-polyfill@10.0.0:
     resolution: {integrity: sha512-H/A06tKD7sS1O1X2SshBVeA5FLycRpjqiBeqGKmBwBDBy28EnRjORxTNe269KSSr5un5qyWi1iL61wLxpd+ZOg==}
+
+  urql@4.2.1:
+    resolution: {integrity: sha512-Y/cVi1rsR96kbF3VX6YgfHw1V3kJ287nR1TqpjGzVPyAmXuwRvBvABI+sHY2WOquWCNh+kvFapM/LLYeiC3wig==}
+    peerDependencies:
+      '@urql/core': ^5.0.0
+      react: '>= 16.8.0'
 
   use-latest-callback@0.1.9:
     resolution: {integrity: sha512-CL/29uS74AwreI/f2oz2hLTW7ZqVeV5+gxFeGudzQrgkCytrHw33G4KbnQOrRlAEzzAFXi7dDLMC9zhWcVpzmw==}
@@ -23319,6 +23328,12 @@ snapshots:
       tlds: 1.255.0
 
   urlpattern-polyfill@10.0.0: {}
+
+  urql@4.2.1(@urql/core@5.0.8(graphql@16.10.0))(react@18.3.1):
+    dependencies:
+      '@urql/core': 5.0.8(graphql@16.10.0)
+      react: 18.3.1
+      wonka: 6.3.4
 
   use-latest-callback@0.1.9(react@18.3.1):
     dependencies:

@@ -113,7 +113,8 @@
     "redux": "^5.0.1",
     "redux-devtools-extension": "^2.13.9",
     "tmi.js": "^1.8.5",
-    "url-regex-safe": "^4.0.0"
+    "url-regex-safe": "^4.0.0",
+    "urql": "^4.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
