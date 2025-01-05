@@ -1,9 +1,9 @@
 import { RootState } from '@app/store';
 import { badgesSelector } from '@app/store/selectors/badges';
-import parseBadgesTag from './parseBadgesTag';
-import createMessageBadges from './createMessageBadges';
 import { emotesSelector } from '@app/store/selectors/emote';
+import createMessageBadges from './createMessageBadges';
 import createMessageParts from './createMessageParts';
+import parseBadgesTag from './parseBadgesTag';
 
 function parsePrivMsgBody(content: string): [body: string, isAction: boolean] {
   if (!content) {
