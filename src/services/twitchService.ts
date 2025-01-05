@@ -1,5 +1,6 @@
 import axios, { AxiosHeaders } from 'axios';
 import { twitchApi } from './api';
+import { components } from './types/generated/twitch.generated';
 
 export interface PaginatedList<T> {
   data: T[];
@@ -93,6 +94,29 @@ interface RefreshToken {
   scope: string;
   token_type: string;
 }
+
+// emote_type: 'globals' | 'smilies' | 'limitedtime' | 'subscriptions' | 'follower' | 'twofactor';
+export type TwitchEmote = components['schemas']['Emote'];
+
+export type TwitchEmoteSetsResponse =
+  components['schemas']['GetEmoteSetsResponse'];
+
+export type TwitchBadgesResponse =
+  components['schemas']['GetGlobalChatBadgesResponse'];
+
+export type TwitchBadgeVersion =
+  components['schemas']['ChatBadge']['versions'][number];
+
+export type TwitchUser = components['schemas']['User'];
+export type TwitchGetUsersResponse =
+  components['schemas']['GetUsersResponse']['data'];
+
+export type TwitchUserBlockListsResponse =
+  components['schemas']['GetUserBlockListResponse'];
+export type TwitchClipsResponse = components['schemas']['GetClipsResponse'];
+export type TwitchVideosResponse = components['schemas']['GetVideosResponse'];
+
+type GetUsersParams = ({ id: string } | { login: string })[];
 
 const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
@@ -304,15 +328,82 @@ const twitchService = {
       },
     });
   },
+  listUsers: async (
+    params: GetUsersParams,
+  ): Promise<TwitchGetUsersResponse> => {
+    const q = params
+      .map((item: { id?: string; login?: string }) =>
+        item.id ? `id=${item.id}` : `login=${item.login}`,
+      )
+      .join('&');
+
+    return twitchApi.get<TwitchGetUsersResponse>(`/users?${q}`);
+  },
+  listUserBlockList: async (
+    broadcasterId: string,
+  ): Promise<TwitchUserBlockListsResponse> => {
+    return twitchApi.get<TwitchUserBlockListsResponse>('/users/blocks', {
+      params: {
+        broadcaster_id: broadcasterId,
+      },
+    });
+  },
+  listEmoteSets: async (ids: string[]): Promise<TwitchEmoteSetsResponse> => {
+    const IDS_LIMIT_BY_REQUEST = 25;
+    const requests: Promise<TwitchEmoteSetsResponse>[] = [];
+
+    for (let i = 0; i < ids.length; i += IDS_LIMIT_BY_REQUEST) {
+      const idsSlice = ids.slice(i, i + IDS_LIMIT_BY_REQUEST);
+      requests.push(
+        twitchApi.get<TwitchEmoteSetsResponse>('/chat/emotes/set', {
+          params: { emote_set_id: idsSlice },
+        }),
+      );
+    }
+
+    const responses = await Promise.all(requests);
+
+    const data = ([] as TwitchEmoteSetsResponse['data']).concat(
+      ...responses.map(r => r.data),
+    );
+
+    return {
+      data,
+      template: responses[0].template,
+    };
+  },
+
+  listGlobalBadges: async (): Promise<TwitchBadgesResponse> => {
+    return twitchApi.get<TwitchBadgesResponse>('/chat/badges/global');
+  },
+
+  listChannelBadges: async (
+    broadcasterId: string,
+  ): Promise<TwitchBadgesResponse> => {
+    return twitchApi.get<TwitchBadgesResponse>('/chat/badges', {
+      params: {
+        broadcaster_id: broadcasterId,
+      },
+    });
+  },
+
+  listClips: async (clipId: string): Promise<TwitchClipsResponse> => {
+    return twitchApi.get<TwitchClipsResponse>('/clips', {
+      params: {
+        id: clipId,
+      },
+    });
+  },
+
+  listVideos: async (videoId: string): Promise<TwitchVideosResponse> => {
+    return twitchApi.get<TwitchVideosResponse>('/videos', {
+      params: {
+        id: videoId,
+      },
+    });
+  },
 
   // getSubscriberCount: async (userId: string) => {},
-
-  // getUserBlockedList: async (
-  //   id: string,
-  //   headers: AxiosHeaders,
-  //   cursor?: string,
-  // ) => {},
-
   // blockUser: async (userId: string) => {},
   // unBlockUser: async (userId: string) => {},
 };
