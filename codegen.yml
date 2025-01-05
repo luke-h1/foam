@@ -1,0 +1,9 @@
+overwrite: true
+schema: 'https://7tv.io/v3/gql'
+documents: 'src/graphql/**/*.graphql'
+generates:
+  src/generated/graphql.tsx:
+    plugins:
+      - 'typescript'
+      - 'typescript-operations'
+      - 'typescript-urql'

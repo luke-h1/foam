@@ -19,12 +19,7 @@ export const bttvApi = axios.create({
   baseURL: 'https://api.betterttv.net',
 });
 
-// cached bttv emote API
-export const bttvCachedApi = axios.create({
-  baseURL: 'https://api.betterttv.net/3/cached',
-});
-
-// Seven TV API
+// Seven TV V3 API
 export const sevenTvApi = axios.create({
   baseURL: 'https://7tv.io/v3',
 });
@@ -32,9 +27,4 @@ export const sevenTvApi = axios.create({
 // FrankerzFaceZ API
 export const ffzApi = axios.create({
   baseURL: 'https://api.frankerfacez.com/v1',
-});
-
-// FrankerzFaceZ cached emote API
-export const ffzEmoteApi = axios.create({
-  baseURL: 'https://api.betterttv.net/3/cached/frankerfacez',
 });

@@ -4,7 +4,7 @@ import { twitchApi } from './api';
 export interface PaginatedList<T> {
   data: T[];
   pagination: {
-    cursor: string;
+    cursor?: string;
   };
 }
 
