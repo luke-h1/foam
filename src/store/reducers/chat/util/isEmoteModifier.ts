@@ -19,12 +19,14 @@ const isStvEmoteModifier = (emote: StvEmote): false | string => {
  * accept a range of inputs
  */
 
-export function isEmoteModifier(
+// @ts-expect-error function overload not exported
+function isEmoteModifier(
   code: string,
   type: MessagePartType.BTTV_EMOTE | MessagePartType.FFZ_EMOTE,
 ): false | string;
 
-export function isEmoteModifier(
+// @ts-expect-error function overload not exported
+function isEmoteModifier(
   emote: StvEmote,
   type: MessagePartType.STV_EMOTE,
 ): false | string;

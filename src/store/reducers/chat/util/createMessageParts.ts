@@ -1,10 +1,11 @@
 import urlRegex from 'url-regex-safe';
+import { AllEmotes } from '../types/emote';
+import isEmoteModifier from './isEmoteModifier';
 import {
   MessagePart,
   MessagePartEmoteModifier,
   MessagePartType,
 } from './messages/types/messages';
-import { AllEmotes } from '../types/emote';
 
 const MENTION_REGEX = /^(@([\p{Letter}\p{Number}_]+))(.*)/u;
 const LINK_REGEX = urlRegex({ strict: false });
@@ -175,6 +176,7 @@ export default function createMessageParts(
           emotes.stvGlobal?.entries[stvEmoteId];
 
         const isModifier = !!isEmoteModifier(
+          // @ts-expect-error - undefined not assignable to str
           stvEmote,
           MessagePartType.STV_EMOTE,
         );
@@ -267,4 +269,5 @@ export default function createMessageParts(
       offset += getCodePointsCount(word) + 1;
     }
   });
+  return messageParts;
 }

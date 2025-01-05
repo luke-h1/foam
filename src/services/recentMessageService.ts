@@ -5,7 +5,8 @@ export type RecentMessagesResponse = {
   error: null;
 };
 
-// TODO: build and deploy this and our own API
+// TODO: build and deploy this and our own API - https://github.com/robotty/recent-messages2
+// OR: re-write in a lang of our choice - i.e. c#
 const recentMessageService = {
   listRecentMessages: async (
     channelName: string,
