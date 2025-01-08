@@ -74,6 +74,15 @@ export const AuthContextProvider = ({
 
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
 
+  /**
+   * TODO @luke-h1 - fetch the following when authenticated and store in state:
+   *   authStatus?: AuthStatus; type AuthStatus = "uninitialized" | "success" | "error";
+
+        globalUserState?: GlobalUserStateTags;
+        blockedUsers: string[];
+   * 
+   */
+
   // const isValidToken = async (token: string) => {
   //   return twitchService.validateToken(token);
   // };
