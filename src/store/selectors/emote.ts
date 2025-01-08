@@ -4,6 +4,7 @@ import { StvEmote } from '@app/services/stvService';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '..';
 import { HtmlEmote, AllEmotes } from '../reducers/chat/types/emote';
+import createHtmlEmote from '../reducers/chat/util/createHtmlEmote';
 import { MessagePartType } from '../reducers/chat/util/messages/types/messages';
 
 export type EmotesCategory = {
@@ -25,10 +26,13 @@ const createEmoteCategories = (emotes: AllEmotes) => {
   } = emotes;
 
   const createBttvHtmlEmote = (emote: BttvEmote) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     createHtmlEmote(emotes, MessagePartType.BTTV_EMOTE, emote.id)!;
   const createFfzHtmlEmote = (emote: FfzEmote) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     createHtmlEmote(emotes, MessagePartType.FFZ_EMOTE, `${emote.id}`)!;
   const createStvHtmlEmote = (emote: StvEmote) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     createHtmlEmote(emotes, MessagePartType.STV_EMOTE, emote.id)!;
 
   if (bttvChannel) {
@@ -77,10 +81,11 @@ const createEmoteCategories = (emotes: AllEmotes) => {
     const user: HtmlEmote[] = [];
     const global: HtmlEmote[] = [];
 
-    for (const emote of Object.values(twitch.entries)) {
+    Object.values(twitch.entries).forEach(emote => {
       // skip duplicated variations of smile emotes
-      if (emote.owner_id === 'twitch') continue;
+      if (emote.owner_id === 'twitch') return;
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const htmlEmote = createHtmlEmote(
         emotes,
         MessagePartType.TWITCH_EMOTE,
@@ -92,8 +97,7 @@ const createEmoteCategories = (emotes: AllEmotes) => {
       } else {
         user.push(htmlEmote);
       }
-    }
-
+    });
     result.push({ title: 'Twitch User Emotes', items: user });
     result.push({ title: 'Twitch Global Emotes', items: global });
   }
@@ -111,10 +115,13 @@ export const emotesSelector = createSelector(
   (state: RootState) => state.chat.emotes.stv.data,
   (state: RootState) => state.chat.emotes.emoji.data,
   (state: RootState) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     state.chat.channels.entities[state.chat.currentChannel!]?.emotes.bttv.data,
   (state: RootState) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     state.chat.channels.entities[state.chat.currentChannel!]?.emotes.ffz.data,
   (state: RootState) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     state.chat.channels.entities[state.chat.currentChannel!]?.emotes.stv.data,
   (
     twitch,
