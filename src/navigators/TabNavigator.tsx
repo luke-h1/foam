@@ -1,4 +1,5 @@
 import Icon from '@app/components/ui/Icon';
+import { Text } from '@app/components/ui/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import SearchScreen from '@app/screens/SearchScreen/SearchScreen';
@@ -76,20 +77,20 @@ export default function TabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#123C4F',
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
+          backgroundColor: colors.background,
           height: 90,
           marginTop: -20,
           paddingHorizontal: spacing.micro,
         },
         tabBarItemStyle: {
           justifyContent: 'center',
-          paddingVertical: spacing.micro,
-          paddingHorizontal: spacing.extraSmall,
         },
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: colors.tint,
+        // eslint-disable-next-line react/no-unstable-nested-components
+        tabBarLabel: ({ children }) => {
+          return <Text size="xxs">{children}</Text>;
+        },
       }}
     >
       {screens.map(screen => {

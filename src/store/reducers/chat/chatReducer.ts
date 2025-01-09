@@ -1,9 +1,11 @@
 /* eslint-disable no-param-reassign */
+import { storage } from '@app/utils/storage';
 import {
   createEntityAdapter,
   createSlice,
   PayloadAction,
 } from '@reduxjs/toolkit';
+import { registerChatThunks } from './chatThunks';
 import {
   CHANNEL_INITIAL_STATE,
   CHANNEL_RECENT_INPUTS_LIMIT,
@@ -17,19 +19,15 @@ import {
   RoomStateTags,
   UserStateTags,
 } from './types';
-import getInitialOptions from './util/options/getInitialOptions';
-import {
-  createBadges,
-  createCard,
-  createParts,
-  createParts,
-} from './util/createMessages';
+import { createBadges, createCard, createParts } from './util/createMessages';
 import {
   MessageType,
   MessageTypeNotice,
   MessageTypePrivate,
   MessageTypeUserNotice,
 } from './util/messages/types/messages';
+import getInitialOptions from './util/options/getInitialOptions';
+import { Options } from './util/options/options';
 
 const channelsAdapter = createEntityAdapter<Channel>({
   // @ts-expect-error - work out why selectId doesn't exist but it does in the docs??
@@ -320,7 +318,53 @@ const chatSlice = createSlice({
     },
 
     // options
+    optionChanged: {
+      reducer: (
+        state,
+        {
+          payload: { section, name, value },
+        }: PayloadAction<OptionChangedPayload>,
+      ) => {
+        if (section === 'ui' && name === 'messagesLimit') {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const channel of Object.values(state.channels.entities)) {
+            // eslint-disable-next-line no-continue
+            if (!channel) continue;
+            const exceededMessages =
+              channel.messages.length - (value as unknown as number);
+            if (exceededMessages > 0) {
+              channel.messages = channel.messages.slice(exceededMessages);
+            }
+          }
+        }
+      },
+      prepare: (payload: OptionChangedPayload) => {
+        if (payload.section === 'ui' && payload.name === 'messagesLimit') {
+          payload.value = Number.parseInt(
+            payload.value as unknown as string,
+            10,
+          );
+        }
+        // const options = storageService.getSync<Options>('options');
+        const options = JSON.parse(
+          storage.getString('options') as string,
+        ) as Options;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if (options && !options[payload.section])
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          options[payload.section] = {} as unknown;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (options?.[payload.section] as any)[payload.name] = payload.value;
+
+        storage.set('options', JSON.stringify(options, null, 2));
+        return { payload };
+      },
+    },
   },
+  extraReducers: registerChatThunks,
 });
 
 export const {

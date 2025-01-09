@@ -26,6 +26,7 @@ export default function Tags({ tags, limit = 10 }: Props) {
         renderItem={({ item }) => (
           <View style={$tag}>
             <Text
+              size="xxs"
               preset="tag"
               style={{
                 color: colors.text,

@@ -54,7 +54,9 @@ export default function LiveStreamCard({ stream }: Props) {
           </View>
         </View>
         <View style={$streamDetail}>
-          <Text preset="formLabel">{stream.title}</Text>
+          <Text preset="formLabel" size="xs">
+            {stream.title}
+          </Text>
           <View style={$streamMetadata}>
             <View style={$userInfo}>
               <Image
