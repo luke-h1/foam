@@ -376,6 +376,13 @@ export const {
   chatDisconnected,
   chatRegistered,
   currentChannelChanged,
+  clearChatReceived,
+  clearMsgReceived,
+  globalUserStateReceived,
+  messageReceived,
+  optionChanged,
+  roomStateReceived,
+  userStateReceived,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

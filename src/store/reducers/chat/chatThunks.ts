@@ -1,14 +1,45 @@
 /* eslint-disable no-param-reassign */
+import bttvService from '@app/services/bttvService';
+import chatterinoService from '@app/services/chatterinoService';
+import ffzService from '@app/services/ffzService';
+import recentMessageService from '@app/services/recentMessageService';
+import stvService from '@app/services/stvService';
+import twitchService from '@app/services/twitchService';
+import { AppThunk, RootState } from '@app/store';
 import {
   ActionReducerMapBuilder,
   AsyncThunkPayloadCreator,
   createAsyncThunk,
 } from '@reduxjs/toolkit';
+import { PrivateMessage, UserNotice } from '@twurple/chat';
+import { MessageTypes } from 'ircv3';
+import { messageReceived } from './chatReducer';
+import {
+  parseBttvChannelEmotes,
+  parseBttvGlobalBadges,
+  parseBttvGlobalEmotes,
+} from './parsers/bttvParser';
+import { parseChatterinoBadges } from './parsers/chatterinoParser';
+import {
+  parseFfzApGlobalBadges,
+  parseFfzChannelEmotes,
+  parseFfzEmoji,
+  parseFfzGlobalBadges,
+  parseFfzGlobalEmotes,
+} from './parsers/ffzParser';
+import {
+  parseStvChannelEmotes,
+  parseStvGlobalEmotes,
+} from './parsers/stvParser';
+import { parseTwitchBadges, parseTwitchEmotes } from './parsers/twitchParser';
 import { Channel, ChatState, FetchResult } from './types';
-import recentMessageService from '@app/services/recentMessageService';
-import { RootState } from '@app/store';
-import { useAuthContext } from '@app/context/AuthContext';
-import twitchService from '@app/services/twitchService';
+import {
+  createNotice,
+  createOwnMessage,
+  createPrivateMessage,
+  createUserNotice,
+} from './util/createMessages';
+import { writeEmotesUsageStatistics } from './util/emoteUsageStatistics';
 
 const builderFns: ((builder: ActionReducerMapBuilder<ChatState>) => void)[] =
   [];
@@ -209,9 +240,192 @@ export const fetchAndMergeTwitchEmotes = (() => {
 
   return thunk;
 })();
-function parseTwitchEmotes(response: {
-  data: import('../../../services/types/generated/twitch.generated').components['schemas']['Emote'][];
-  template: string;
-}): any {
-  throw new Error('Function not implemented.');
-}
+
+/**
+ * Bttv global emotes
+ */
+export const fetchBttvGlobalEmotes = createGlobalChatThunk({
+  name: 'fetchBttvGlobalEmotes',
+  path: state => state.emotes.bttv,
+  payloadCreator: () =>
+    bttvService.listGlobalEmotes().then(parseBttvGlobalEmotes),
+});
+
+/**
+ * FFZ global emotes
+ */
+export const fetchFfzGlobalEmotes = createGlobalChatThunk({
+  name: 'fetchFfzGlobalEmotes',
+  path: state => state.emotes.ffz,
+  payloadCreator: () =>
+    ffzService.listGlobalEmotes().then(parseFfzGlobalEmotes),
+});
+
+/**
+ * 7tv global emotes
+ */
+export const fetchStvGlobalEmotes = createGlobalChatThunk({
+  name: 'fetchStvGlobalEmotes',
+  path: state => state.emotes.stv,
+  payloadCreator: () =>
+    stvService.listGlobalEmotes().then(parseStvGlobalEmotes),
+});
+
+/**
+ * FFZ emoji
+ */
+export const fetchFfzEmoji = createGlobalChatThunk({
+  name: 'fetchFfzEmoji',
+  path: state => state.emotes.emoji,
+  payloadCreator: () => ffzService.listEmoji().then(parseFfzEmoji),
+});
+
+/**
+ * Global Twitch badges
+ */
+export const fetchTwitchGlobalBadges = createGlobalChatThunk({
+  name: 'fetchTwitchGlobalBadges',
+  path: state => state.badges.twitch,
+  payloadCreator: async (_, { getState }) => {
+    const response = await twitchService.listGlobalBadges();
+    return parseTwitchBadges(response);
+  },
+});
+
+/**
+ * BTTV global badges
+ */
+export const fetchBttvGlobalBadges = createGlobalChatThunk({
+  name: 'fetchBttvGlobalBadges',
+  path: state => state.badges.bttv,
+  payloadCreator: () =>
+    bttvService.listGlobalBadges().then(parseBttvGlobalBadges),
+});
+
+/**
+ * FFZ global badges
+ */
+export const fetchFfzGlobalBadges = createGlobalChatThunk({
+  name: 'fetchFfzGlobalBadges',
+  path: state => state.badges.ffz,
+  payloadCreator: () =>
+    ffzService.listGlobalBadges().then(parseFfzGlobalBadges),
+});
+
+/**
+ * FFZ AP global badges
+ */
+export const fetchFfzApGlobalBadges = createGlobalChatThunk({
+  name: 'fetchFfzApGlobalBadges',
+  path: state => state.badges.ffzAp,
+  payloadCreator: () =>
+    ffzService.listApGlobalBadges().then(parseFfzApGlobalBadges),
+});
+
+// export const fetchStvGlobalBadges = createGlobalChatThunk({
+//   name: "fetchStvGlobalBadges",
+//   path: (state) => state.badges.stv,
+//   payloadCreator: () =>
+//     stvService.listCosmetics().then((r) => parseStvCosmetics(r).badges),
+// });
+
+/**
+ * Chatterino badges
+ */
+export const fetchChatterinoGlobalBadges = createGlobalChatThunk({
+  name: 'fetchChatterinoGlobalBadges',
+  path: state => state.badges.chatterino,
+  payloadCreator: () =>
+    chatterinoService.listGlobalBadges().then(parseChatterinoBadges),
+});
+
+/**
+ * BTTV channel emotes
+ */
+export const fetchBttvChannelEmotes = createChannelChatThunk({
+  name: 'fetchBttvChannelEmotes',
+  path: channel => channel.emotes.bttv,
+  payloadCreator: ({ channelId, channelName }) =>
+    bttvService
+      .listChannelEmotes(channelId)
+      .then(data => ({ data: parseBttvChannelEmotes(data), channelName })),
+});
+
+/**
+ * FFZ channel emotes
+ */
+export const fetchFfzChannelEmotes = createChannelChatThunk({
+  name: 'fetchFfzChannelEmotes',
+  path: channel => channel.emotes.ffz,
+  payloadCreator: ({ channelId, channelName }) =>
+    ffzService
+      .listChannelEmotes(channelId)
+      .then(data => ({ data: parseFfzChannelEmotes(data), channelName })),
+});
+
+/**
+ * STV channel emotes
+ */
+export const fetchStvChannelEmotes = createChannelChatThunk({
+  name: 'fetchStvChannelEmotes',
+  path: channel => channel.emotes.stv,
+  payloadCreator: ({ channelId, channelName }) =>
+    stvService
+      .listChannelEmotes(channelId)
+      .then(data => ({ data: parseStvChannelEmotes(data), channelName })),
+});
+
+/**
+ * Twitch channel badges
+ */
+export const fetchTwitchChannelBadges = createChannelChatThunk({
+  name: 'fetchTwitchChannelBadges',
+  path: channel => channel.badges.twitch,
+  payloadCreator: ({ channelId, channelName }) => {
+    return twitchService
+      .listChannelBadges(channelId)
+      .then(data => ({ data: parseTwitchBadges(data), channelName }));
+  },
+});
+
+/**
+ * Messages
+ */
+export const privateMessageReceived =
+  (msg: PrivateMessage): AppThunk =>
+  (dispatch, getState) => {
+    const state = getState();
+    // sound on mention
+    const message = createPrivateMessage(state)(msg);
+    if (!message) return;
+    // if (message.isHighlighted) playSound('tink');
+    dispatch(messageReceived(message));
+  };
+
+export const userNoticeReceived =
+  (msg: UserNotice): AppThunk =>
+  (dispatch, getState) => {
+    const state = getState();
+    dispatch(messageReceived(createUserNotice(msg, state)));
+  };
+
+export const noticeReceived =
+  (msg: MessageTypes.Commands.Notice): AppThunk =>
+  dispatch => {
+    dispatch(messageReceived(createNotice(msg)));
+  };
+
+export const messageSended =
+  ({
+    channelName,
+    message,
+  }: {
+    channelName: string;
+    message: string;
+  }): AppThunk =>
+  (dispatch, getState) => {
+    const state = getState();
+    const m = createOwnMessage(channelName, message, state);
+    writeEmotesUsageStatistics(m.parts);
+    dispatch(messageReceived(m));
+  };
