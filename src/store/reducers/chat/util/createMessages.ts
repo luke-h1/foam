@@ -4,13 +4,15 @@ import { showCardsSelector } from '@app/store/selectors/cards';
 import { emotesSelector } from '@app/store/selectors/emote';
 import { nanoid } from '@reduxjs/toolkit';
 import { PrivateMessage, UserNotice } from '@twurple/chat';
-import { Message, MessageTypes } from 'ircv3';
+import { Message, MessageTypes, parseMessage } from 'ircv3';
 import createMessageBadges from './createMessageBadges';
 import createMessageCard from './createMessageCard';
 import createMessageParts from './createMessageParts';
 import getIrcChannelName from './getIrcChannelName';
 import {
+  IRCV3_KNOWN_COMMANDS,
   MessagePart,
+  Messages,
   MessageType,
   MessageTypeNotice,
   MessageTypePrivate,
@@ -184,13 +186,13 @@ export function createOwnMessage(
 
   // todo @luke-h1 - figure out what we're doing with this state - keep in ctx or move to redux?
   const user = {
-    id: '1',
-    login: '123',
-    displayName: '123',
-    color: '#000',
+    id: '1137109694',
+    login: 'kv_i1',
+    displayName: 'kv_i1',
+    color: '#8A2BE2',
   };
   const parts = createParts(state)(body, '', true);
-  const badges = myBadgesSelector(state);
+  // const badges = myBadgesSelector(state);
   const card = createCard(state)(parts);
 
   return {
@@ -204,7 +206,7 @@ export function createOwnMessage(
       displayName: user.displayName,
       color: user.color,
     },
-    badges,
+    badges: [],
     parts,
     body,
     card,
@@ -219,3 +221,27 @@ export function createOwnMessage(
     _tags: {},
   };
 }
+
+export const createHistoryMessages = (
+  messages: string[],
+  state: RootState,
+): Messages[] => {
+  const createPrivateMessageWithState = createPrivateMessage(state);
+  const result: Messages[] = [];
+
+  messages.forEach(message => {
+    // @ts-expect-error ircv3 type
+    const msg = parseMessage(message, undefined, IRCV3_KNOWN_COMMANDS, false);
+
+    if (msg.command === 'PRIVMSG') {
+      const m = createPrivateMessageWithState(msg as unknown as PrivateMessage);
+
+      if (m) {
+        m.isHistory = true;
+        m.id = `${m.id}-history`;
+        result.push(m);
+      }
+    }
+  });
+  return result;
+};
