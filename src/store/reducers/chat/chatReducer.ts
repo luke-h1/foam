@@ -4,9 +4,32 @@ import {
   createSlice,
   PayloadAction,
 } from '@reduxjs/toolkit';
-import { Channel, ChatState, LocalStorageChannels } from './types';
+import {
+  CHANNEL_INITIAL_STATE,
+  CHANNEL_RECENT_INPUTS_LIMIT,
+  CHANNEL_USERS_LIMIT,
+} from './config';
+import {
+  Channel,
+  ChatState,
+  GlobalUserStateTags,
+  LocalStorageChannels,
+  RoomStateTags,
+  UserStateTags,
+} from './types';
 import getInitialOptions from './util/options/getInitialOptions';
-import { CHANNEL_INITIAL_STATE } from './config';
+import {
+  createBadges,
+  createCard,
+  createParts,
+  createParts,
+} from './util/createMessages';
+import {
+  MessageType,
+  MessageTypeNotice,
+  MessageTypePrivate,
+  MessageTypeUserNotice,
+} from './util/messages/types/messages';
 
 const channelsAdapter = createEntityAdapter<Channel>({
   // @ts-expect-error - work out why selectId doesn't exist but it does in the docs??
@@ -136,7 +159,167 @@ const chatSlice = createSlice({
       channel.ready = true;
 
       const dummyState = { chat: state };
+
+      const createdBadges = createBadges(dummyState);
+      const createdParts = createParts(dummyState);
+      const createdCard = createCard(dummyState);
+      const blockedUsers = [''];
+
+      const filteredMessages = channel.messages.filter(
+        msg =>
+          !(
+            msg.type === MessageType.PRIVATE_MESSAGE &&
+            blockedUsers.includes(msg.user.login)
+          ),
+      );
+
+      if (channel.messages.length % 2 !== filteredMessages.length % 2) {
+        channel.isFirstMessageAltBg = !channel.isFirstMessageAltBg;
+      }
+      if (channel.messages.length !== filteredMessages.length) {
+        channel.messages = filteredMessages;
+      }
+
+      // eslint-disable-next-line no-restricted-syntax
+      for (const message of channel.messages) {
+        if (
+          message.type !== MessageType.PRIVATE_MESSAGE &&
+          message.type !== MessageType.USER_NOTICE
+        ) {
+          // eslint-disable-next-line no-continue
+          continue;
+        }
+        // eslint-disable-next-line no-underscore-dangle
+        message.parts = createdParts(message.body, message._tags.emotes);
+        // eslint-disable-next-line no-underscore-dangle
+        message.badges = createdBadges(message.user.id, message._tags.badges);
+        if (message.type === MessageType.PRIVATE_MESSAGE) {
+          message.card = createdCard(message.parts);
+        }
+      }
     },
+    globalUserStateReceived: (
+      state,
+      { payload }: PayloadAction<GlobalUserStateTags>,
+    ) => {
+      // state.me.globalUserState = payload
+      console.log('globalUserStateReceived');
+    },
+    userStateReceived: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{ channelName: string; userState: UserStateTags }>,
+    ) => {
+      const channel = state.channels.entities[payload.channelName];
+      if (!channel) {
+        return;
+      }
+      channel.userState = payload.userState;
+    },
+    roomStateReceived: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{ channelName: string; roomState: RoomStateTags }>,
+    ) => {
+      const channel = state.channels.entities[payload.channelName];
+      if (!channel) {
+        return;
+      }
+      channel.roomState = payload.roomState;
+      channel.id = payload.roomState.roomId;
+    },
+
+    // chat messages
+    messageReceived: (
+      state,
+      {
+        payload,
+      }: PayloadAction<
+        MessageTypePrivate | MessageTypeUserNotice | MessageTypeNotice
+      >,
+    ) => {
+      const channel = state.channels.entities[payload.channelName];
+      if (!channel) {
+        return;
+      }
+      channel.messages.push(payload);
+      const { messagesLimit } = state.options.ui;
+      if (channel.messages.length > messagesLimit) {
+        channel.isFirstMessageAltBg = !channel.isFirstMessageAltBg;
+        channel.messages.shift();
+      }
+      // users
+      if (
+        payload.type === MessageType.PRIVATE_MESSAGE &&
+        !channel.users.includes(payload.user.login)
+      ) {
+        channel.users.push(payload.user.login);
+        if (channel.users.length > CHANNEL_USERS_LIMIT) {
+          channel.users.shift();
+        }
+      }
+      // recentInputs
+      if (payload.type === MessageType.PRIVATE_MESSAGE && payload.isSelf) {
+        // prevent adding the same message
+        if (
+          channel.recentInputs[channel.recentInputs.length - 1] !== payload.body
+        ) {
+          channel.recentInputs.push(payload.body);
+          if (channel.recentInputs.length > CHANNEL_RECENT_INPUTS_LIMIT) {
+            channel.recentInputs.shift();
+          }
+        }
+      }
+    },
+    clearChatReceived: (
+      state,
+      { payload }: PayloadAction<{ channelName: string; login?: string }>,
+    ) => {
+      const channel = state.channels.entities[payload.channelName];
+      if (!channel) {
+        return;
+      }
+      if (payload.login) {
+        // /ban or /timeout is used
+        // eslint-disable-next-line no-restricted-syntax
+        for (const message of channel.messages) {
+          if (
+            message.type === MessageType.PRIVATE_MESSAGE &&
+            message.user.login === payload.login
+          ) {
+            message.isDeleted = true;
+          }
+        }
+      } else {
+        // /clear
+        // eslint-disable-next-line no-restricted-syntax
+        for (const message of channel.messages) {
+          if (message.type === MessageType.PRIVATE_MESSAGE) {
+            message.isHistory = true;
+          }
+        }
+      }
+    },
+    clearMsgReceived: (
+      state,
+      { payload }: PayloadAction<{ channelName: string; messageId: string }>,
+    ) => {
+      const channel = state.channels.entities[payload.channelName];
+      if (!channel) {
+        return;
+      }
+      const message = channel.messages.find(
+        m =>
+          m.type === MessageType.PRIVATE_MESSAGE && m.id === payload.messageId,
+      );
+      if (message) {
+        (message as MessageTypePrivate).isDeleted = true;
+      }
+    },
+
+    // options
   },
 });
 
