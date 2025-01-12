@@ -24,6 +24,7 @@ export default function Badges({ badges }: Props) {
     <View>
       {htmlBadges.map(({ title, alt, src, srcSet, bgColor }) => (
         <Image
+          key={title}
           src={src}
           accessibilityLabel={alt}
           srcSet={srcSet}
