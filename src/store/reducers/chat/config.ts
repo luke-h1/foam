@@ -7,6 +7,7 @@ export const CHANNEL_USERS_LIMIT = 500;
 export const CHANNEL_RECENT_INPUTS_LIMIT = 50;
 
 export const CHANNEL_INITIAL_STATE: OmitStrict<Channel, 'name'> = {
+  id: '',
   messages: [],
   recentMessages: { status: 'idle' },
   ready: false,

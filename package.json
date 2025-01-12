@@ -110,6 +110,7 @@
     "react-native-web": "~0.19.6",
     "react-native-webview": "13.12.2",
     "react-redux": "^9.2.0",
+    "react-use": "^17.6.0",
     "redux": "^5.0.1",
     "redux-devtools-extension": "^2.13.9",
     "tmi.js": "^1.8.5",

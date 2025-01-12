@@ -27,7 +27,7 @@ export interface TwitchToken {
   tokenType: string;
 }
 
-interface AuthState {
+export interface AuthState {
   isLoggedIn: boolean;
   isAnonAuth: boolean;
   token: TwitchToken;
