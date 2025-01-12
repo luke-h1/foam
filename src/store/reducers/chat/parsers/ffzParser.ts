@@ -16,14 +16,12 @@ export const parseFfzGlobalEmotes = ({
 }: FfzGlobalEmotesResponse): Emote<FfzEmote> => {
   const result: Emote<FfzEmote> = { entries: {}, names: {} };
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const setId of defaultSets) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const emote of sets[setId].emoticons) {
+  defaultSets.forEach(setId => {
+    sets[setId].emoticons.forEach(emote => {
       result.entries[emote.id] = emote;
       result.names[emote.name] = emote.id.toString();
-    }
-  }
+    });
+  });
   return result;
 };
 
@@ -33,11 +31,10 @@ export const parseFfzChannelEmotes = ({
 }: FfzChannelEmotesResponse): Emote<FfzEmote> => {
   const result: Emote<FfzEmote> = { entries: {}, names: {} };
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const emote of sets[room.set].emoticons) {
-    result.entries[emote.id] = emote;
-    result.names[emote.name] = emote.id.toString();
-  }
+  sets[room.set].emoticons.forEach(emoji => {
+    result.entries[emoji.id] = emoji;
+    result.names[emoji.name] = emoji.id.toString();
+  });
 
   return result;
 };
@@ -48,7 +45,6 @@ const codePointsToString = (codePoints: string): string => {
   );
 };
 
-// https://github.com/FrankerFaceZ/FrankerFaceZ/blob/master/src/modules/chat/emoji.js#L305
 // eslint-disable-next-line no-bitwise
 const hasInTwitter = (has: number) => 0b0010 & has;
 
@@ -66,20 +62,19 @@ export const parseFfzEmoji = ({
     result.names[char] = codePoints;
 
     if (Array.isArray(name)) {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const n of name) result.names[`:${n}:`] = codePoints;
-      // for (const n of name) names.push(n);
+      name.forEach(n => {
+        result.names[`:${n}:`] = codePoints;
+      });
     } else {
       result.names[`:${name}:`] = codePoints;
       // names.push(name);
     }
   };
 
-  // @ts-expect-error - symbol iterator
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [category, sort, name, , codePoints, , has, variants] of emojis) {
-    // eslint-disable-next-line no-continue
-    if (!hasInTwitter(has)) continue;
+  emojis.forEach(emoji => {
+    const { category, sort, name, codePoints, has, variants } = emoji;
+
+    if (!hasInTwitter(has)) return;
 
     const char = codePointsToString(codePoints);
 
@@ -91,14 +86,13 @@ export const parseFfzEmoji = ({
       char,
       name,
       codePoints,
-      // @ts-expect-error - codePoints inferred as any
-      // eslint-disable-next-line no-shadow
-      variants: variants ? variants.map(([codePoints]) => codePoints) : [],
+      variants: variants ? variants.map(variant => variant.codePoints) : [],
     };
 
     if (Array.isArray(variants)) {
-      // eslint-disable-next-line no-restricted-syntax, no-shadow
-      for (const [codePoints, , , , , name] of variants) {
+      variants.forEach(variant => {
+        // eslint-disable-next-line no-shadow
+        const { codePoints, name } = variant;
         // eslint-disable-next-line no-shadow
         const char = codePointsToString(codePoints);
 
@@ -112,10 +106,9 @@ export const parseFfzEmoji = ({
           codePoints,
           variants: [],
         };
-      }
+      });
     }
-  }
-
+  });
   return result;
 };
 
@@ -125,21 +118,18 @@ export const parseFfzGlobalBadges = ({
 }: FfzGlobalBadgesResponse): Badge<FfzBadge> => {
   const result: Badge<FfzBadge> = { entries: {}, users: {} };
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const badge of badges) {
+  badges.forEach(badge => {
     result.entries[badge.id] = badge;
-  }
+  });
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const [badgeId, userIds] of Object.entries(users)) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const userId of userIds) {
+  Object.entries(users).forEach(([badgeId, userIds]) => {
+    userIds.forEach(userId => {
       if (!result.users[userId]) {
         result.users[userId] = [];
       }
       result.users[userId].push(badgeId);
-    }
-  }
+    });
+  });
   return result;
 };
 
@@ -151,11 +141,10 @@ export const parseFfzApGlobalBadges = (
 ): Badge<FfzApBadge> => {
   const result: Badge<FfzApBadge> = { entries: {}, users: {} };
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const badge of data) {
+  data.forEach(badge => {
     result.entries[badge.id] = badge;
     result.users[badge.id] = [badge.id.toString()];
-  }
+  });
 
   return result;
 };

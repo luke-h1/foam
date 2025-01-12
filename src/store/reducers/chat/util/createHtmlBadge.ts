@@ -10,9 +10,10 @@ import {
 
 export default function createHtmlBadge(
   badges: AllBadges,
-  // @ts-expect-error - Type 'MessageBadge' must have a '[Symbol.iterator]()' method that returns an iterator.ts(2488)
-  [type, id, version]: MessageBadge,
+  badge: MessageBadge,
 ): HtmlBadge | null {
+  const { type, id, version } = badge;
+
   switch (type) {
     case MessageBadgeType.TWITCH: {
       const badgeVersion =

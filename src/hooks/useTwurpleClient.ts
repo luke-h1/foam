@@ -34,7 +34,7 @@ import {
   UserState,
 } from '@twurple/chat';
 import { MessageTypes } from 'ircv3';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export default function useTwurpleClient() {
   const dispatch = useAppDispatch();
@@ -47,142 +47,162 @@ export default function useTwurpleClient() {
 
   channelNamesRef.current = channelNames;
 
+  const handleConnect = useCallback(() => {
+    dispatch(chatConnected());
+  }, [dispatch]);
+
+  const handleDisconnect = useCallback(
+    (manually: boolean, reason: string) => {
+      dispatch(chatDisconnected());
+      console.warn(`Disconnected. ${reason}`);
+    },
+    [dispatch],
+  );
+
+  const handleRegister = useCallback(() => {
+    channelNamesRef.current.forEach(channel =>
+      chatRef.current
+        ?.join(channel)
+        .catch(e =>
+          dispatch(messageReceived(createCustomNotice(channel, e.message))),
+        ),
+    );
+    dispatch(chatRegistered());
+  }, [dispatch]);
+
+  const handleAuthenticationFailure = useCallback(
+    (message: string, retryCount: number) => {
+      console.warn(message, retryCount);
+    },
+    [],
+  );
+
+  const handleGlobalUserState = useCallback(
+    (msg: GlobalUserState) => {
+      dispatch(globalUserStateReceived(parseGlobalUserState(msg)));
+    },
+    [dispatch],
+  );
+
+  const handleUserState = useCallback(
+    (msg: UserState) => {
+      const userState = parseUserState(msg);
+      const channelName = getIrcChannelName(msg);
+      dispatch(userStateReceived({ channelName, userState }));
+    },
+    [dispatch],
+  );
+
+  const handleRoomState = useCallback(
+    (msg: RoomState) => {
+      const roomState = parseRoomState(msg);
+      const channelName = getIrcChannelName(msg);
+      dispatch(roomStateReceived({ channelName, roomState }));
+    },
+    [dispatch],
+  );
+
+  const handleBan = useCallback(
+    (channelName: string, login: string) => {
+      const messageBody = `${login} has been permanently banned.`;
+      dispatch(clearChatReceived({ channelName, login }));
+      dispatch(createCustomNotice(channelName, messageBody));
+    },
+    [dispatch],
+  );
+
+  const handleTimeout = useCallback(
+    (channelName: string, login: string, duration: number) => {
+      const durationText = toDaysMinutesSeconds(duration);
+      const messageBody = `${login} has been timed out for ${durationText}.`;
+      dispatch(clearChatReceived({ channelName, login }));
+      dispatch(createCustomNotice(channelName, messageBody));
+    },
+    [dispatch],
+  );
+
+  const handleChatClear = useCallback(
+    (channelName: string) => {
+      dispatch(clearChatReceived({ channelName }));
+    },
+    [dispatch],
+  );
+
+  const handleMessageRemove = useCallback(
+    (channelName: string, messageId: string) => {
+      dispatch(clearMsgReceived({ channelName, messageId }));
+    },
+    [dispatch],
+  );
+
+  const handlePrivateMessage = useCallback(
+    (msg: PrivateMessage) => {
+      dispatch(privateMessageReceived(msg));
+    },
+    [dispatch],
+  );
+
+  const handleUserNotice = useCallback(
+    (msg: UserNotice) => {
+      dispatch(userNoticeReceived(msg));
+    },
+    [dispatch],
+  );
+
+  const handleNotice = useCallback(
+    (msg: MessageTypes.Commands.Notice) => {
+      dispatch(noticeReceived(msg));
+    },
+    [dispatch],
+  );
+
   useEffect(() => {
     const chat = new ChatClient({
       authProvider: new StaticAuthProvider(
         process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-        authState?.token.accessToken ?? '',
+        authState?.token.accessToken,
       ),
     });
 
     chatRef.current = chat;
 
-    chat.onConnect(() => {
-      dispatch(chatConnected());
-    });
+    chat.onConnect(handleConnect);
+    chat.onDisconnect(handleDisconnect);
+    chat.onRegister(handleRegister);
+    chat.onAuthenticationFailure(handleAuthenticationFailure);
+    chat.onTypedMessage(GlobalUserState, handleGlobalUserState);
+    chat.onTypedMessage(UserState, handleUserState);
+    chat.onTypedMessage(RoomState, handleRoomState);
+    chat.onBan(handleBan);
+    chat.onTimeout(handleTimeout);
+    chat.onChatClear(handleChatClear);
+    chat.onMessageRemove(handleMessageRemove);
+    chat.onTypedMessage(PrivateMessage, handlePrivateMessage);
+    chat.onTypedMessage(UserNotice, handleUserNotice);
+    chat.onTypedMessage(MessageTypes.Commands.Notice, handleNotice);
 
-    chat.onDisconnect((manually, reason) => {
-      dispatch(chatDisconnected());
-      console.warn(`Disconnected. ${reason}`);
-    });
+    (async () => {
+      await chat.connect();
+    })();
 
-    chat.onRegister(() => {
-      channelNamesRef.current.forEach(channel =>
-        chat
-          .join(channel)
-          .catch(e =>
-            dispatch(messageReceived(createCustomNotice(channel, e.message))),
-          ),
-      );
-      dispatch(chatRegistered());
-    });
-
-    chat.onAuthenticationFailure((message, retryCount) => {
-      // eslint-disable-next-line no-console
-      console.warn(message, retryCount);
-    });
-
-    chat.onTypedMessage(GlobalUserState, msg => {
-      dispatch(globalUserStateReceived(parseGlobalUserState(msg)));
-    });
-
-    chat.onTypedMessage(UserState, msg => {
-      const userState = parseUserState(msg);
-      const channelName = getIrcChannelName(msg);
-      dispatch(userStateReceived({ channelName, userState }));
-    });
-
-    chat.onTypedMessage(RoomState, msg => {
-      const roomState = parseRoomState(msg);
-      const channelName = getIrcChannelName(msg);
-      dispatch(roomStateReceived({ channelName, roomState }));
-    });
-
-    // ban
-    chat.onBan((channelName, login) => {
-      const messageBody = `${login} has been permanently banned.`;
-      dispatch(clearChatReceived({ channelName, login }));
-      dispatch(createCustomNotice(channelName, messageBody));
-    });
-
-    chat.onTimeout((channelName, login, duration) => {
-      const durationText = toDaysMinutesSeconds(duration);
-      const messageBody = `${login} has been timed out for ${durationText}.`;
-      dispatch(clearChatReceived({ channelName, login }));
-      dispatch(createCustomNotice(channelName, messageBody));
-    });
-
-    chat.onChatClear(channelName => {
-      dispatch(clearChatReceived({ channelName }));
-    });
-
-    // ClearMsg
-    chat.onMessageRemove((channelName, messageId) => {
-      dispatch(clearMsgReceived({ channelName, messageId }));
-    });
-
-    // chat.onHost((channel, target, viewers) => {});
-    // chat.onUnhost((channel) => {});
-
-    // chat.onJoin(() => {});
-    // chat.onJoinFailure(() => {});
-    // chat.onPart(() => {});
-
-    chat.onTypedMessage(PrivateMessage, msg => {
-      dispatch(privateMessageReceived(msg));
-    });
-
-    chat.onTypedMessage(UserNotice, msg => {
-      dispatch(userNoticeReceived(msg));
-    });
-
-    chat.onTypedMessage(MessageTypes.Commands.Notice, msg => {
-      dispatch(noticeReceived(msg));
-    });
-
-    // Privmsg
-    // chat.onHosted((channel, byChannel, auto, viewers) => {});
-    // chat.onMessage((channel, user, message, msg) => {});
-    // chat.onAction((channel, user, message, msg) => {});
-
-    // RoomState
-    // this.onSlow
-    // this.onFollowersOnly
-
-    // UserNotice
-    // this.onSub
-    // this.onResub
-    // this.onSubGift
-    // this.onCommunitySub
-    // this.onPrimePaidUpgrade
-    // this.onGiftPaidUpgrade
-    // this.onStandardPayForward
-    // this.onCommunityPayForward
-    // this.onPrimeCommunityGift
-    // this.onRaid
-    // this.onRaidCancel
-    // this.onRitual
-    // this.onBitsBadgeUpgrade
-    // this.onSubExtend
-    // this.onRewardGift
-    // this.onAnnouncement
-
-    // Whisper
-    // this.onWhisper
-
-    // Notice
-    // this.onEmoteOnly
-    // this.onHostsRemaining
-    // this.onR9k
-    // this.onSubsOnly
-    // this.onNoPermission
-    // this.onMessageRatelimit
-    // this.onMessageFailed
-
-    chat.connect();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authState]);
+    return () => {};
+  }, [
+    authState?.token.accessToken,
+    handleConnect,
+    handleDisconnect,
+    handleRegister,
+    handleAuthenticationFailure,
+    handleGlobalUserState,
+    handleUserState,
+    handleRoomState,
+    handleBan,
+    handleTimeout,
+    handleChatClear,
+    handleMessageRemove,
+    handlePrivateMessage,
+    handleUserNotice,
+    handleNotice,
+  ]);
 
   return chatRef;
 }

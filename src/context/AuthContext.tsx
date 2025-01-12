@@ -83,16 +83,19 @@ export const AuthContextProvider = ({
    * 
    */
 
-  // const isValidToken = async (token: string) => {
-  //   return twitchService.validateToken(token);
-  // };
+  const isValidToken = async (token: string) => {
+    return twitchService.validateToken(token);
+  };
 
   const isExpiredToken = (token: TwitchToken) => {
     /* 
     If the current date and time is before the token's expiration date and time, return true, indicating that the token is still valid. Otherwise, it returns false, indicating that the token has expired.
     we pre-empt this in order to not call the Twitch API with an invalid token
     */
-    return new Date() < new Date(token.expiresIn * 1000);
+    return (
+      new Date() < new Date(token.expiresIn * 1000) ||
+      isValidToken(token.accessToken)
+    );
   };
 
   const fetchAnonToken = async () => {
@@ -154,10 +157,12 @@ export const AuthContextProvider = ({
       doAnonAuth();
     }
     // we have a token, check it's validity
+    // eslint-disable-next-line no-shadow
     const isValidToken = isExpiredUserToken(token);
 
     if (!isValidToken) {
       // token isn't valid, do anon auth
+      SecureStore.deleteItemAsync(storageKeys.anon);
       doAnonAuth();
     }
 

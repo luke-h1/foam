@@ -45,7 +45,7 @@ export default function App(props: AppProps) {
       },
     },
   });
-  const shouldDelete = __DEV__;
+  const shouldDelete = true;
 
   useOnAppStateChange();
   useChangeScreenOrientation();

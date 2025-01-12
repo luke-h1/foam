@@ -1,5 +1,6 @@
 import { Text } from '@app/components/ui/Text';
 import { useAuthContext } from '@app/context/AuthContext';
+import useAppNavigation from '@app/hooks/useAppNavigation';
 import useHeader from '@app/hooks/useHeader';
 import BackButton from '@app/navigators/BackButton';
 import React, { useState } from 'react';

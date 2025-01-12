@@ -24,7 +24,7 @@ const ChatMessage = memo(({ item }: ChatMessage) => {
             ]}
           >
             {badges}
-            {user.name}:{' '}
+            {user.name}
           </Text>
           {message}
         </View>

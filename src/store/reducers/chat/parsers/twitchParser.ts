@@ -63,7 +63,7 @@ export const parseTwitchClip = ({
 
   return {
     id,
-    src: x1,
+    src: x2,
     srcSet: `${x1} 1x, ${x2} x2`,
     title,
     description: `Clipped by ${creatorName}`,
@@ -95,7 +95,7 @@ export const parseTwitchVideo = ({
 
   return {
     id,
-    src: x1,
+    src: x2,
     srcSet: `${x1} 1x, ${x2} 2x, ${x4} 4x`,
     title,
     description: `${date} · ${userName}`,

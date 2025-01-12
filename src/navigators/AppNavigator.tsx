@@ -7,6 +7,7 @@ import AuthLoadingScreen from '@app/screens/Auth/AuthLoading';
 import LoginScreen from '@app/screens/Auth/LoginScreen';
 import CategoryScreen from '@app/screens/Category/CategoryScreen';
 import ChangelogScreen from '@app/screens/ChangelogScreen';
+import { store } from '@app/store';
 import { colors } from '@app/styles';
 import {
   DarkTheme,
@@ -19,6 +20,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import { PropsWithChildren, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
+import { Provider } from 'react-redux';
 import Config from '../config';
 
 import StreamStackNavigator, {
@@ -146,7 +148,9 @@ export const AppNavigator = (props: NavigationProps) => {
   return (
     <NavigationContainer ref={navigationRef} theme={navTheme} {...props}>
       <AuthContextComponent>
-        <AppStack />
+        <Provider store={store}>
+          <AppStack />
+        </Provider>
       </AuthContextComponent>
     </NavigationContainer>
   );

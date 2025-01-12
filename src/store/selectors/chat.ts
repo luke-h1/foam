@@ -96,3 +96,7 @@ export const currentChannelUsersSelector = (state: RootState) =>
 export const currentChannelRecentInputsSelector = (state: RootState) =>
   state.chat.channels.entities[state.chat.currentChannel as string]
     ?.recentInputs || [];
+
+export const currentChannelMessagesSelector = (state: RootState) =>
+  state.chat.channels.entities[state.chat.currentChannel as string]?.messages ||
+  [];

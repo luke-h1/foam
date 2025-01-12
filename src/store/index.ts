@@ -1,13 +1,17 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import { logMiddleware } from './middleware/logMiddleware';
+import { twitchApi } from './query/twitch';
 import chatReducer from './reducers/chat/chatReducer';
 
 export const store = configureStore({
   reducer: {
     chat: chatReducer,
+    [twitchApi.reducerPath]: twitchApi.reducer,
   },
   middleware: getDefaultMiddleware =>
-    getDefaultMiddleware().concat(logMiddleware),
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }).concat(logMiddleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
