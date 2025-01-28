@@ -13,46 +13,54 @@ export function ChatMessage({ item }: Props) {
   const { styles, theme } = useStyles(stylesheet);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.htmlContainer}>
+    <View style={styles.htmlContainer}>
+      <View style={styles.badgesContainer}>
+        <View
+          style={{
+            flexDirection: 'row',
+          }}
+        >
+          <RenderHtml
+            contentWidth={width}
+            source={{
+              html: item.htmlBadges,
+            }}
+          />
+          <Typography
+            style={{
+              color: item.tags.color,
+              marginLeft: 4,
+            }}
+          >
+            {item.tags.username}:
+          </Typography>
+        </View>
+
         <RenderHtml
           contentWidth={width}
+          baseStyle={{
+            color: theme.colors.text,
+          }}
           source={{
-            html: item.htmlBadges,
+            html: item.htmlMessage,
           }}
         />
       </View>
-      <Typography
-        style={{
-          color: item.tags.color,
-        }}
-      >
-        {item.tags.username}
-      </Typography>
-      <View style={{ marginRight: 2 }} />
-      <RenderHtml
-        contentWidth={width}
-        baseStyle={{
-          color: theme.colors.text,
-        }}
-        source={{
-          html: item.htmlMessage,
-        }}
-      />
     </View>
   );
 }
 
-const stylesheet = createStyleSheet(() => ({
-  container: {
-    flex: 1,
+const stylesheet = createStyleSheet(theme => ({
+  badgesContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   htmlContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     marginRight: 2,
+    marginVertical: theme.spacing.md,
   },
 }));
 
