@@ -230,7 +230,7 @@ const stylesheet = createStyleSheet(theme => ({
     width: 300,
     padding: 20,
     borderRadius: 10,
-    alignItems: 'center',
     backgroundColor: theme.colors.surface,
+    alignItems: 'flex-start',
   },
 }));
