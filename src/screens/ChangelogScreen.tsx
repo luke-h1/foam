@@ -1,6 +1,5 @@
-import Screen from '@app/components/ui/Screen';
-import { Text } from '@app/components/ui/Text';
-import useHeader from '@app/hooks/useHeader';
+import { Screen, Typography } from '@app/components';
+import { useHeader } from '@app/hooks';
 import { useNavigation } from '@react-navigation/native';
 
 // todo - in the future, read from github md
@@ -40,7 +39,7 @@ All notable changes to this project will be documented in this file.
 - Core functionality including user login, content browsing, and settings.
 `;
 
-export default function ChangelogScreen() {
+export function ChangelogScreen() {
   const { goBack } = useNavigation();
   useHeader({
     title: 'Changelog',
@@ -50,7 +49,7 @@ export default function ChangelogScreen() {
 
   return (
     <Screen preset="scroll">
-      <Text>{mockChangelog}</Text>
+      <Typography>{mockChangelog}</Typography>
     </Screen>
   );
 }

@@ -1,13 +1,11 @@
+import { AuthContextProvider } from '@app/context';
 import {
-  AuthContextProvider,
-  AuthContextTestProvider,
-} from '@app/context/AuthContext';
-import { initalTestAuthContextProps } from '@app/context/AuthContext.test';
-import AuthLoadingScreen from '@app/screens/Auth/AuthLoading';
-import LoginScreen from '@app/screens/Auth/LoginScreen';
-import CategoryScreen from '@app/screens/Category/CategoryScreen';
-import ChangelogScreen from '@app/screens/ChangelogScreen';
-import { colors } from '@app/styles';
+  AuthLoadingScreen,
+  CategoryScreen,
+  ChangelogScreen,
+  LoginScreen,
+  StorybookScreen,
+} from '@app/screens';
 import {
   DarkTheme,
   DefaultTheme,
@@ -18,15 +16,17 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import { PropsWithChildren, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
-import Config from '../config';
+import { Platform, useColorScheme } from 'react-native';
 
-import StreamStackNavigator, {
+import {
+  StreamStackNavigator,
   StreamStackParamList,
 } from './StreamStackNavigator';
-import TabNavigator, { TabParamList } from './TabNavigator';
-import TopStackNavigator, { TopStackParamList } from './TopStackNavigator';
+import { TabNavigator, TabParamList } from './TabNavigator';
+import { TopStackNavigator, TopStackParamList } from './TopStackNavigator';
+import { BaseConfig } from './config';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
+// import { initalTestAuthContextProps } from '@app/context/__tests__/AuthContext.test.tsx';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator as
@@ -60,13 +60,16 @@ export type AppStackParamList = {
 
   // changelog
   Changelog: undefined;
+
+  // sb
+  Storybook: undefined;
 };
 
 /**
  * This is a list of all the route names that will exit the app if the back button
  * is pressed while in that screen. Only affects Android.
  */
-const { exitRoutes } = Config;
+const { exitRoutes } = BaseConfig;
 
 export type AppStackScreenProps<T extends keyof AppStackParamList> =
   StackScreenProps<AppStackParamList, T>;
@@ -79,7 +82,7 @@ const AppStack = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        navigationBarColor: colors.background,
+        // navigationBarColor: colors.background,
       }}
       initialRouteName="Tabs"
     >
@@ -102,6 +105,10 @@ const AppStack = () => {
 
       {/* Changelog */}
       <Stack.Screen name="Changelog" component={ChangelogScreen} />
+
+      {Platform.OS === 'web' && (
+        <Stack.Screen name="Storybook" component={StorybookScreen} />
+      )}
     </Stack.Navigator>
   );
 };
@@ -111,15 +118,15 @@ type NavigationProps = Partial<
 >;
 
 const AuthContextComponent = ({ children }: PropsWithChildren) => {
-  const isTest = process.env.NODE_ENV === 'test';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
-  if (isTest) {
-    return (
-      <AuthContextTestProvider {...initalTestAuthContextProps}>
-        {children}
-      </AuthContextTestProvider>
-    );
-  }
+  // if (isTest) {
+  //   return (
+  //     <AuthContextTestProvider {...initalTestAuthContextProps}>
+  //       {children}
+  //     </AuthContextTestProvider>
+  //   );
+  // }
 
   return <AuthContextProvider>{children}</AuthContextProvider>;
 };
@@ -136,7 +143,6 @@ export const AppNavigator = (props: NavigationProps) => {
       ...theme,
       colors: {
         ...theme.colors,
-        background: colors.background,
       },
     };
 

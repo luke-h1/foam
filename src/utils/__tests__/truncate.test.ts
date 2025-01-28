@@ -1,4 +1,4 @@
-import truncate from '../truncate';
+import { truncate } from '../string';
 
 describe('truncate', () => {
   test('should return the original string if tests length is less than or equal to the given number', () => {

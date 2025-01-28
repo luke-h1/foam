@@ -1,10 +1,8 @@
-import Button from '@app/components/ui/Button';
-import Screen from '@app/components/ui/Screen';
-import { Text } from '@app/components/ui/Text';
-import { colors, spacing } from '@app/styles';
-import { openLinkInBrowser } from '@app/utils/openLinkInBrowser';
-import React, { ErrorInfo } from 'react';
-import { ScrollView, TextStyle, View, ViewStyle } from 'react-native';
+import { Button, Screen, Typography } from '@app/components';
+import { openLinkInBrowser } from '@app/utils';
+import React, { type ErrorInfo, useState } from 'react';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 export interface ErrorDetailsProps {
@@ -13,11 +11,11 @@ export interface ErrorDetailsProps {
   onReset: () => void;
 }
 
-export default function ErrorDetails(props: ErrorDetailsProps) {
+export function ErrorDetails(props: ErrorDetailsProps) {
+  const { styles } = useStyles(stylesheet);
   const { error, errorInfo, onReset } = props;
+  const [showStackTrace, setShowStackTrace] = useState(false);
   const errorTitle = `${error}`.trim();
-
-  // issue body = first 10 lines of the error stack
 
   const stackTrace = errorInfo?.componentStack
     ?.split('\n')
@@ -32,88 +30,82 @@ export default function ErrorDetails(props: ErrorDetailsProps) {
     <Screen
       preset="fixed"
       safeAreaEdges={['top', 'bottom']}
-      contentContainerStyle={$contentContainer}
+      contentContainerStyle={styles.contentContainer}
     >
-      <View style={$topSection}>
+      <View style={styles.topSection}>
         <MaterialIcons name="error" />
-        <Text
-          style={$heading}
-          preset="subheading"
-          text="Something went wrong"
-        />
-        <Text text="Try resetting or restarting the app & see if that helps. If not, feel free to file an issue on GitHub and we'll take a look. Bonus points: Find the bug and open a PR!" />
+        <Typography style={styles.heading}>Something went wrong</Typography>
+        <Typography>
+          Try resetting or restarting the app & see if that helps. If not, feel
+          free to file an issue on GitHub and we'll take a look
+        </Typography>
       </View>
       <Button
-        preset="default"
-        style={$githubButton}
-        shadowStyle={$button}
-        text="Go To GitHub"
+        style={styles.resetButton}
         onPress={() => openLinkInBrowser(githubURL)}
-      />
-      <ScrollView
-        style={$errorSection}
-        contentContainerStyle={$errorSectionContentContainer}
       >
-        <Text weight="bold" text={`${error}`.trim()} />
-        <Text
-          selectable
-          style={$errorBacktrace}
-          text={`${errorInfo?.componentStack}`.trim()}
-        />
-      </ScrollView>
-      <Button
-        style={$resetButton}
-        shadowStyle={$button}
-        onPress={onReset}
-        text="Reset"
-      />
+        GitHub
+      </Button>
+      <TouchableOpacity onPress={() => setShowStackTrace(!showStackTrace)}>
+        <Typography style={styles.toggleStackTrace}>
+          {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
+        </Typography>
+      </TouchableOpacity>
+      {showStackTrace && (
+        <ScrollView
+          style={styles.errorSection}
+          contentContainerStyle={styles.errorSectionContentContainer}
+        >
+          <Typography weight="bold">{error?.message.trim()}</Typography>
+          <Typography selectable style={styles.errorBackTrace}>
+            {errorInfo?.componentStack?.trim()}
+          </Typography>
+        </ScrollView>
+      )}
+      <Button style={styles.resetButton} onPress={onReset}>
+        Reset
+      </Button>
     </Screen>
   );
 }
 
-const $contentContainer: ViewStyle = {
-  alignItems: 'center',
-  paddingHorizontal: spacing.large,
-  paddingVertical: spacing.medium,
-  flex: 1,
-};
-
-const $topSection: ViewStyle = {
-  alignItems: 'center',
-  marginBottom: spacing.large,
-};
-
-const $heading: TextStyle = {
-  marginBottom: spacing.medium,
-};
-
-const $errorSection: ViewStyle = {
-  flex: 2,
-  backgroundColor: colors.separator,
-  marginBottom: spacing.medium,
-  marginTop: spacing.large,
-  borderRadius: 6,
-};
-
-const $errorSectionContentContainer: ViewStyle = {
-  padding: spacing.medium,
-};
-
-const $errorBacktrace: TextStyle = {
-  marginTop: spacing.medium,
-  color: colors.textDim,
-};
-
-const $button: ViewStyle = {
-  backgroundColor: colors.error,
-};
-
-const $resetButton: ViewStyle = {
-  ...$button,
-  paddingHorizontal: spacing.huge,
-};
-
-const $githubButton: ViewStyle = {
-  ...$button,
-  paddingHorizontal: spacing.huge,
-};
+const stylesheet = createStyleSheet(theme => ({
+  contentContainer: {
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    flex: 1,
+  },
+  topSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  heading: {
+    marginBottom: theme.spacing.md,
+  },
+  toggleStackTrace: {
+    color: 'blue',
+    marginVertical: theme.spacing.md,
+  },
+  errorSection: {
+    flex: 2,
+    backgroundColor: theme.colors.borderFaint,
+    marginBottom: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+    borderRadius: 6,
+  },
+  errorSectionContentContainer: {
+    padding: theme.spacing.md,
+  },
+  errorBackTrace: {
+    marginTop: theme.spacing.md,
+    color: theme.colors.overlay,
+  },
+  button: {
+    backgroundColor: theme.colors.cherry,
+  },
+  resetButton: {
+    backgroundColor: theme.colors.cherry,
+    paddingHorizontal: theme.spacing.lg,
+  },
+}));

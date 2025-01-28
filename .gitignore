@@ -68,3 +68,12 @@ xcuserdata
 
 # test
 coverage
+
+# Bun
+bun.lockb
+
+# google services android
+google-services-*.json
+
+# google services IOS
+GoogleService-*-*.plist

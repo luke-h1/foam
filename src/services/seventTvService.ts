@@ -45,7 +45,7 @@ export interface GetEmoteResponse {
   createdAt: number;
 }
 
-const sevenTvService = {
+export const sevenTvService = {
   getChannelEmotes: async (channelId: string | null): Promise<EmotesList> => {
     if (!channelId) {
       return [];
@@ -92,5 +92,3 @@ const sevenTvService = {
     return data;
   },
 } as const;
-
-export default sevenTvService;

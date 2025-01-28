@@ -1,4 +1,4 @@
-import _bttvBadgeService from '@app/services/bttvBadgeService';
+import { bttvBadgeService as _bttvBadgeService } from '@app/services/bttvBadgeService';
 import { BttvBadgesResponse } from '../../types';
 import { bttvBadgesParser } from '../bttv-badges';
 

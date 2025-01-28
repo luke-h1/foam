@@ -7,7 +7,7 @@ interface UseAppStateReturn {
   callback: () => void;
 }
 
-export default function useAppState({
+export function useAppState({
   callback,
   match,
   nextAppState,

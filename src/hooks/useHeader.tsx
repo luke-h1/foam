@@ -1,8 +1,8 @@
-import { Header, HeaderProps } from '@app/components/ui/Header';
+import { Header, HeaderProps } from '@app/components/Header/Header';
 import { useNavigation } from '@react-navigation/native';
 import { useLayoutEffect } from 'react';
 
-export default function useHeader(
+export function useHeader(
   headerProps: HeaderProps,
   deps: Parameters<typeof useLayoutEffect>[1] = [],
 ) {

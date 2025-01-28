@@ -1,18 +1,32 @@
-import Image from '@app/components/Image';
+import { Image } from 'expo-image';
 import { View } from 'react-native';
 import { Badges } from 'tmi.js';
 import { BadgesParser, ParserOptions, ParsedBadges } from '../types';
 import { loadOptions } from '../util/load-options';
+import { bttvBadgesParser } from './bttv-badges';
+import { ffzBadgesParser } from './ffz-badges';
 import { twitchBadgesParser } from './twitch-badges';
 
-const badgeParsers: BadgesParser[] = [twitchBadgesParser];
+const badgeParsers: BadgesParser[] = [
+  twitchBadgesParser,
+  ffzBadgesParser,
+  bttvBadgesParser,
+];
 
 export const parseBadges = async (
   badges: Badges | undefined,
   username: string | null = null,
   _options: Partial<ParserOptions> | null = null,
 ) => {
-  const options = loadOptions(_options);
+  const options = loadOptions({
+    ..._options,
+    providers: {
+      bttv: true,
+      ffz: true,
+      seventv: true,
+      twitch: true,
+    },
+  });
   const parsedBadges = replaceBadges(
     (
       await Promise.all(
@@ -46,6 +60,8 @@ export const parseBadges = async (
       parsedBadges
         .map(badge => {
           const height = [18, 20, 22][scale];
+
+          // @ts-expect-error object is possibly undefined
           const offset = [4, 5, 6][scale] * -1;
 
           // eslint-disable-next-line no-console

@@ -1,4 +1,4 @@
-import twitchBadgeService from '../../../services/twitchBadgeService';
+import { twitchBadgeService } from '@app/services';
 import type {
   TwitchBadgesList,
   ParsedBadges,
@@ -7,26 +7,28 @@ import type {
 } from '../types';
 
 let badgesList: TwitchBadgesList = [];
+const badgeCache: { [key: string]: TwitchBadgesList } = {};
 
 const load: BadgesLoader = async (channelId, force = false) => {
-  const hasLoaded = badgesList.find(x => x.channelId === channelId);
-  if (hasLoaded && !force) {
+  const cacheKey = channelId || 'global';
+
+  if (badgeCache[cacheKey] && !force) {
+    badgesList = badgeCache?.[cacheKey] as TwitchBadgesList;
     return;
   }
-  badgesList = [
-    ...badgesList,
-    ...(
-      await Promise.all([
-        twitchBadgeService.getChannelBadges(channelId),
-        twitchBadgeService.getGlobalBadges(),
-      ])
-    ).flat(),
-  ];
+
+  const [channelBadges, globalBadges] = await Promise.all([
+    channelId ? twitchBadgeService.getChannelBadges(channelId) : [],
+    twitchBadgeService.getGlobalBadges(),
+  ]);
+
+  badgesList = [...channelBadges, ...globalBadges];
+  badgeCache[cacheKey] = badgesList;
 };
 
 export const twitchBadgesParser: BadgesParser = {
   provider: 'twitch',
-  parse: async (badges, username, channelId) => {
+  parse: async (badges, _username, channelId) => {
     await load(channelId);
     return Object.keys(badges)
       .map(badgeId => {

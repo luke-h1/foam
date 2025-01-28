@@ -1,4 +1,4 @@
-import _bttvService from '@app/services/bttvService';
+import { bttvService as _bttvService } from '@app/services';
 import { EmotesList } from '../../types';
 import { bttvMessageParser } from '../bttv-emotes';
 
@@ -72,19 +72,19 @@ describe('bttvMessageParser', () => {
         emote: {
           images: [
             {
-              height: 28,
+              height: 22,
               url: 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/1x',
-              width: 28,
+              width: 22,
             },
             {
-              height: 56,
+              height: 44,
               url: 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/2x',
-              width: 56,
+              width: 44,
             },
             {
-              height: 84,
+              height: 66,
               url: 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/3x',
-              width: 84,
+              width: 66,
             },
           ],
           isZeroWidth: false,
@@ -100,19 +100,19 @@ describe('bttvMessageParser', () => {
         emote: {
           images: [
             {
-              height: 28,
+              height: 22,
               url: 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/1x',
-              width: 28,
+              width: 22,
             },
             {
-              height: 56,
+              height: 44,
               url: 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/2x',
-              width: 56,
+              width: 44,
             },
             {
-              height: 84,
+              height: 66,
               url: 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/3x',
-              width: 84,
+              width: 66,
             },
           ],
           isZeroWidth: false,

@@ -1,7 +1,7 @@
 import { FfzBadgesResponse } from '../utils/third-party/types';
 import { ffzApi } from './api';
 
-const ffzBadgeService = {
+export const ffzBadgeService = {
   getBadges: async () => {
     try {
       const { data } = await ffzApi.get<FfzBadgesResponse>('/badges');
@@ -16,5 +16,3 @@ const ffzBadgeService = {
     }
   },
 } as const;
-
-export default ffzBadgeService;

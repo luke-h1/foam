@@ -1,7 +1,7 @@
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useEffect } from 'react';
 
-const useChangeScreenOrientation = () => {
+export const useChangeScreenOrientation = () => {
   useEffect(() => {
     async function changeScreenOrientation() {
       await ScreenOrientation.unlockAsync();
@@ -24,5 +24,3 @@ const useChangeScreenOrientation = () => {
     changeScreenOrientation();
   }, []);
 };
-
-export default useChangeScreenOrientation;

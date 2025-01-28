@@ -11,6 +11,7 @@ import 'cross-fetch/polyfill';
 import 'core-js';
 import '@testing-library/jest-native/extend-expect';
 import '@app/hooks/useAppNavigation';
+import '../src/styles/unistyles';
 
 jest.mock('expo-font');
 jest.mock('expo-asset');
@@ -79,11 +80,8 @@ jest.doMock('react-native', () => {
         ...ReactNative.Image,
         resolveAssetSource: jest.fn(_source => mockFile),
         getSize: jest.fn(
-          (
-            uri: string,
-            success: (width: number, height: number) => void,
-            failure?: (_error: any) => void,
-          ) => success(100, 100),
+          (_uri: string, success: (width: number, height: number) => void) =>
+            success(100, 100),
         ),
       },
     },

@@ -9,7 +9,7 @@ const authProvider = new RefreshingAuthProvider({
 
 export const twurple = new ApiClient({ authProvider });
 
-authProvider.onRefresh(async (userId, newToken) => {
+authProvider.onRefresh(async (_userId, newToken) => {
   SecureStore.setItemAsync('twurpleToken', JSON.stringify(newToken));
 });
 

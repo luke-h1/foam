@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Dimensions } from 'react-native';
 
-const useIsLandscape = () => {
+export const useIsLandscape = () => {
   const [landscape, setLandscape] = useState(false);
 
-  Dimensions.addEventListener('change', () => {
+  Dimensions.addEventListener('change', _ => {
     setLandscape(Dimensions.get('window').width > 500);
   });
 
@@ -18,4 +18,3 @@ const useIsLandscape = () => {
     landscape,
   };
 };
-export default useIsLandscape;

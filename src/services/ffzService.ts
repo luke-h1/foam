@@ -6,7 +6,7 @@ import {
 } from '../utils/third-party/types';
 import { ffzApi } from './api';
 
-const ffzService = {
+export const ffzService = {
   getChannelEmotes: async (channelId: string | null): Promise<EmotesList> => {
     if (!channelId) {
       return [];
@@ -65,5 +65,3 @@ const ffzService = {
     }
   },
 } as const;
-
-export default ffzService;

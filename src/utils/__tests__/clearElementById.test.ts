@@ -1,4 +1,4 @@
-import clearElementById from '../clearElementById';
+import { clearElementById } from '../clearElementById';
 
 describe('clearElementById', () => {
   test('should clear the innerHTML of the element with the given id', () => {

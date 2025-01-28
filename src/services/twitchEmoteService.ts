@@ -19,7 +19,7 @@ const formatBadgesResponse = (badges: HelixChatBadgeSet[]) => {
   }));
 };
 
-const twitchEmoteService = {
+export const twitchEmoteService = {
   listChannelBadges: async (
     channelId: string | null,
   ): Promise<TwitchBadgesResponse> => {
@@ -40,5 +40,3 @@ const twitchEmoteService = {
     return body as TwitchBadgesResponse;
   },
 } as const;
-
-export default twitchEmoteService;

@@ -1,69 +1,124 @@
-import { ExpoConfig, ConfigContext } from '@expo/config';
-import { version } from './package.json';
+import type { ExpoConfig } from '@expo/config';
+import type { AppIconBadgeConfig } from 'app-icon-badge/types';
 
-const BUILD_NUMBER = 1;
+import fs from 'fs';
+import path from 'path';
 
-export default ({ config }: ConfigContext): ExpoConfig => ({
-  ...config,
-  name: 'Foam',
-  slug: 'Foam',
-  scheme: 'foam',
-  version,
-  userInterfaceStyle: 'automatic',
+// @todo luke-h1:
+// get Apple + google play test track set up
+// setup prod images ✅
+// setup different icons / splash screen for different envs - https://github.com/obytes/app-icon-badge
+
+interface AppVariantConfig {
+  name: string;
+  androidPackageName: string;
+  splashImage: string;
+  splashBackgroundColor: string;
+  iosBundleIdentifier: string;
+  iosGoogleServicesFile: string;
+  androidGoogleServicesFile: string;
+}
+
+type Variant = 'development' | 'preview' | 'production';
+
+// https://docs.expo.dev/tutorial/eas/multiple-app-variants
+const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
+  development: {
+    name: 'Foam (dev)',
+    iosBundleIdentifier: 'foam-dev',
+    androidPackageName: 'com.lhowsam.foam.dev',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000',
+    iosGoogleServicesFile: './GoogleService-Info-dev.plist',
+    androidGoogleServicesFile: './google-services-dev.json',
+  },
+  preview: {
+    name: 'Foam (preview)',
+    iosBundleIdentifier: 'foam-preview',
+    androidPackageName: 'com.lhowsam.foam.preview',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000',
+    iosGoogleServicesFile: './GoogleService-Info-preview.plist',
+    androidGoogleServicesFile: './google-services-preview.json',
+  },
+  production: {
+    name: 'Foam',
+    iosBundleIdentifier: 'foam',
+    androidPackageName: 'com.lhowsam.foam',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000',
+    iosGoogleServicesFile: './GoogleService-Info-production.plist',
+    androidGoogleServicesFile: './google-services-prod.json',
+  },
+} as const;
+
+const variant = (process.env.APP_VARIANT as Variant) || 'production';
+
+const VERSION = '0.0.1';
+
+const appConfig = APP_VARIANT_CONFIG[variant];
+
+const iosGoogleServicesFileExists = fs.existsSync(
+  path.resolve(__dirname, appConfig.iosGoogleServicesFile),
+);
+
+const googleServicesExist = fs.existsSync(
+  path.resolve(__dirname, appConfig.androidGoogleServicesFile),
+);
+
+const appIconBadgeConfig: AppIconBadgeConfig = {
+  enabled: true,
+  badges: [
+    {
+      text: variant,
+      type: 'banner',
+      color: 'white',
+      background: '#FF0000',
+    },
+    {
+      text: VERSION,
+      type: 'ribbon',
+    },
+  ],
+};
+
+const config: ExpoConfig = {
+  name: appConfig.name,
+  slug: 'foam',
   newArchEnabled: true,
-  jsEngine: 'hermes',
-  assetBundlePatterns: ['**/*'],
-
-  // ios
-  ios: {
-    buildNumber: String(BUILD_NUMBER),
-    supportsTablet: false,
-    // googleServicesFile: `./GoogleService-Info.plist`,
-    bundleIdentifier: 'com.foam',
-    config: {
-      // needed for expo-secure-store
-      usesNonExemptEncryption: false,
-    },
+  version: VERSION,
+  scheme: 'foam',
+  owner: 'lhowsam',
+  icon: './assets/app-icon/app-icon-production.png',
+  userInterfaceStyle: 'dark',
+  splash: {
+    image: appConfig.splashImage,
+    resizeMode: 'contain',
+    backgroundColor: appConfig.splashBackgroundColor,
   },
-
-  // android
-  android: {
-    package: 'com.foam',
-    // needed for haptic feedback UI
-    permissions: ['VIBRATE'],
-    versionCode: BUILD_NUMBER,
-    // googleServicesFile: './google-services.json',
-    adaptiveIcon: {
-      foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#ffffff',
-    },
+  updates: {
+    url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
   },
-
-  // web
-  web: {
-    favicon: './assets/favicon.png',
+  runtimeVersion: {
+    policy: 'fingerprint',
   },
   extra: {
+    updates: {
+      assetPatternsToBeBundled: ['**/*'],
+    },
     eas: {
       projectId: '950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
     },
   },
-  runtimeVersion: {
-    policy: 'appVersion',
-  },
-  updates: {
-    fallbackToCacheTimeout: 0,
-  },
-  experiments: {
-    tsconfigPaths: true,
-  },
   plugins: [
+    ['app-icon-badge', appIconBadgeConfig],
     ['expo-font', 'expo-secure-store'],
     [
       'expo-build-properties',
       {
         ios: {
           flipper: true,
+          useFrameworks: 'static',
         },
         android: {
           enableProguardInReleaseBuilds: true,
@@ -71,9 +126,44 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+    [
+      'expo-dev-launcher',
+      {
+        launchMode: 'most-recent',
+      },
+    ],
+    [
+      'expo-video',
+      {
+        supportsBackgroundPlayback: true,
+        supportsPictureInPicture: true,
+      },
+    ],
     ['newrelic-react-native-agent'],
-    ['./src/plugins/withAnimatedWebPSupport.js'],
-    ['./src/plugins/withFastImageWebPSupportIOS.js'],
-    ['./src/plugins/withFastImageWebPSupportAndroid.js'],
+    // ['./src/plugins/withAnimatedWebPSupport.js'],
+    // ['./src/plugins/withFastImageWebPSupportIOS.js'],
+    // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
   ],
-});
+  experiments: {
+    tsconfigPaths: true,
+  },
+  ios: {
+    supportsTablet: false,
+    bundleIdentifier: appConfig.iosBundleIdentifier,
+    googleServicesFile: iosGoogleServicesFileExists
+      ? appConfig.iosGoogleServicesFile
+      : undefined,
+    config: {
+      // needed for expo-secure-store
+      usesNonExemptEncryption: false,
+    },
+  },
+  android: {
+    package: appConfig.androidPackageName,
+    googleServicesFile: googleServicesExist
+      ? appConfig.androidGoogleServicesFile
+      : undefined,
+  },
+};
+
+export default config;

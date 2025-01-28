@@ -22,12 +22,13 @@ export const makeEmoteParser = (
     if (hasLoaded && !force) {
       return;
     }
+
     emotesList = [
       ...(await Promise.all(loaders.map(loader => loader(channelId)))).flat(),
     ];
   };
 
-  const parse: MessageParser = async (message, emotePositions, options) => {
+  const parse: MessageParser = async (message, _emotePositions, options) => {
     await load(options.channelId, false);
 
     return Promise.all(
