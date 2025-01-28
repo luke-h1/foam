@@ -2,7 +2,7 @@ import { Spinner, Chat, Screen, Typography, EmptyState } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import {
   View,
   SafeAreaView,
@@ -16,6 +16,25 @@ import WebView from 'react-native-webview';
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
 }) => {
+  const screenWidth = Dimensions.get('screen').width;
+  const screenHeight = Dimensions.get('screen').height;
+
+  const videoHeight = screenWidth * (9 / 16);
+  const [availableHeight, setAvailableHeight] = useState(
+    screenHeight - videoHeight,
+  );
+
+  useEffect(() => {
+    const updateAvailableHeight = () => {
+      const { height, width } = Dimensions.get('window');
+      const newVideoHeight = width * (9 / 16);
+      setAvailableHeight(height - newVideoHeight);
+    };
+
+    Dimensions.addEventListener('change', updateAvailableHeight);
+
+    return () => {};
+  }, []);
   const { styles } = useStyles(stylesheet);
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
@@ -111,7 +130,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             </Typography>
           </View>
         </View>
-        <View style={styles.chatContainer}>
+        <View style={styles.chatContainer(availableHeight)}>
           <Chat
             channelId={user?.id as string}
             channelName={stream?.user_login as string}
@@ -169,8 +188,7 @@ const stylesheet = createStyleSheet(theme => ({
     fontSize: 16,
     color: theme.colors.border,
   },
-  chatContainer: {
-    padding: 2,
-    maxHeight: 300,
-  },
+  chatContainer: (height: number) => ({
+    maxHeight: height,
+  }),
 }));
