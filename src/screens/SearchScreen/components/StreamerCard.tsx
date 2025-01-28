@@ -1,16 +1,16 @@
-import useAppNavigation from '@app/hooks/useAppNavigation';
-import { SearchChannelResponse } from '@app/services/twitchService';
-import { colors, spacing } from '@app/styles';
-import { TouchableOpacity, View, ViewStyle } from 'react-native';
-import LiveStreamImage from '../../../components/LiveStreamImage';
-import { Text } from '../../../components/ui/Text';
+import { LiveStreamImage, Typography } from '@app/components';
+import { useAppNavigation } from '@app/hooks';
+import type { SearchChannelResponse } from '@app/services';
+import { TouchableOpacity, View } from 'react-native';
+import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
 interface Props {
   stream: SearchChannelResponse;
 }
 
-export default function StreamerCard({ stream }: Props) {
+export function StreamerCard({ stream }: Props) {
   const { navigate } = useAppNavigation();
+  const { styles } = useStyles(stylesheet);
 
   return (
     <TouchableOpacity
@@ -23,27 +23,24 @@ export default function StreamerCard({ stream }: Props) {
         });
       }}
     >
-      <View style={$streamer}>
-        <LiveStreamImage
-          thumbnail={stream.thumbnail_url}
-          animated
-          size="small"
-        />
+      <View style={styles.streamer}>
+        <LiveStreamImage thumbnail={stream.thumbnail_url} animated size="sm" />
         <View>
-          <Text preset="formLabel">{stream.display_name}</Text>
-          <Text
-            preset="tag"
-            style={{ color: colors.border, marginTop: spacing.small }}
+          <Typography>{stream.display_name}</Typography>
+          <Typography
+          // style={{ color: colors.border, marginTop: spacing.small }}
           >
             {stream.game_name}
-          </Text>
+          </Typography>
         </View>
       </View>
     </TouchableOpacity>
   );
 }
 
-const $streamer: ViewStyle = {
-  flexDirection: 'row',
-  marginBottom: spacing.small,
-};
+const stylesheet = createStyleSheet(theme => ({
+  streamer: {
+    flexDirection: 'row',
+    marginBottom: theme.spacing.sm,
+  },
+}));

@@ -1,5 +1,5 @@
 import { subMinutes } from 'date-fns';
-import elapsedStreamTime from '../elapsedStreamTime';
+import { elapsedStreamTime } from '../string';
 
 describe('elapsedStreamTime', () => {
   test('should return minutes when elapsed time is less than one hour', () => {

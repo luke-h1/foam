@@ -1,4 +1,4 @@
-import ffzService from '@app/services/ffzService';
+import { ffzService } from '@app/services';
 import { makeEmoteParser } from './make-emote-parser';
 
 export const ffzMessageParser = makeEmoteParser(

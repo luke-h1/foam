@@ -94,7 +94,7 @@ interface RefreshToken {
   token_type: string;
 }
 
-const twitchService = {
+export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     const { data } = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
@@ -205,7 +205,7 @@ const twitchService = {
       },
     });
 
-    return result[0];
+    return result[0] as Channel;
   },
 
   getTopCategories: async (
@@ -230,7 +230,7 @@ const twitchService = {
       },
     });
 
-    return result.data[0].profile_image_url;
+    return result.data[0]?.profile_image_url as string;
   },
   getFollowedStreams: async (userId: string): Promise<Stream[]> => {
     const result = await twitchApi.get<{ data: Stream[] }>(
@@ -251,7 +251,7 @@ const twitchService = {
         Authorization: `Bearer ${token}`,
       },
     });
-    return result.data[0];
+    return result.data[0] as UserInfoResponse;
   },
   getUser: async (userId: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
@@ -260,7 +260,7 @@ const twitchService = {
       },
     });
 
-    return result.data[0];
+    return result.data[0] as UserInfoResponse;
   },
 
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
@@ -293,7 +293,7 @@ const twitchService = {
         id,
       },
     });
-    return result.data[0];
+    return result.data[0] as Category;
   },
 
   searchCategories: async (query: string, cursor?: string) => {
@@ -316,5 +316,3 @@ const twitchService = {
   // blockUser: async (userId: string) => {},
   // unBlockUser: async (userId: string) => {},
 };
-
-export default twitchService;

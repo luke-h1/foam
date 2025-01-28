@@ -1,17 +1,16 @@
-import Icon from '@app/components/ui/Icon';
+import { Icon } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
+import { SearchScreen, SettingsScreen } from '@app/screens';
 import FollowingScreen from '@app/screens/FollowingScreen';
-import SearchScreen from '@app/screens/SearchScreen/SearchScreen';
-import SettingsScreen from '@app/screens/SettingsScreen';
-import { colors, spacing } from '@app/styles';
 import {
   BottomTabScreenProps,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import React, { ComponentType, FC } from 'react';
+import { useStyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
-import TopStackNavigator from './TopStackNavigator';
+import { TopStackNavigator } from './TopStackNavigator';
 
 export type TabParamList = {
   Following: undefined;
@@ -68,28 +67,28 @@ const screens: Screen[] = [
   },
 ];
 
-export default function TabNavigator() {
+export function TabNavigator() {
   const { user } = useAuthContext();
+  const { theme } = useStyles();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#123C4F',
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           height: 90,
           marginTop: -20,
-          paddingHorizontal: spacing.micro,
+          paddingHorizontal: theme.spacing.xs,
         },
         tabBarItemStyle: {
           justifyContent: 'center',
-          paddingVertical: spacing.micro,
-          paddingHorizontal: spacing.extraSmall,
+          paddingVertical: theme.spacing.xs,
+          paddingHorizontal: theme.spacing.xs,
         },
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: colors.tint,
+        tabBarActiveTintColor: theme.colors.brightPurple,
       }}
     >
       {screens.map(screen => {
@@ -102,11 +101,11 @@ export default function TabNavigator() {
             name={screen.name}
             component={screen.component as ComponentType}
             options={{
-              // eslint-disable-next-line react/no-unstable-nested-components
-              tabBarIcon: ({ focused }) => (
+              // eslint-disable-next-line react/no-unstable-nested-components, @typescript-eslint/no-unused-vars
+              tabBarIcon: () => (
                 <Icon
                   icon={screen.icon}
-                  color={focused ? colors.tint : colors.palette.primary100}
+                  // color={focused ? colors.tint : colors.palette.primary100}
                 />
               ),
             }}

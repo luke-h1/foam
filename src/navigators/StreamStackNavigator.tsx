@@ -1,5 +1,4 @@
-import LiveStreamScreen from '@app/screens/Stream/LiveStreamScreen';
-import StreamerProfileScreen from '@app/screens/Stream/StreamerProfileScreen';
+import { LiveStreamScreen, StreamerProfileScreen } from '@app/screens';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 
@@ -13,7 +12,7 @@ const Stack = createNativeStackNavigator<StreamStackParamList>();
 export type StreamStackScreenProps<T extends keyof StreamStackParamList> =
   StackScreenProps<StreamStackParamList, T>;
 
-export default function StreamStackNavigator() {
+export function StreamStackNavigator() {
   return (
     <Stack.Navigator>
       <Stack.Screen

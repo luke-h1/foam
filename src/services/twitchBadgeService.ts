@@ -53,7 +53,7 @@ const formatTwitchBadgesList = (
   );
 };
 
-const twitchBadgeService = {
+export const twitchBadgeService = {
   getChannelBadges: async (
     channelId: string | null,
   ): Promise<TwitchBadgesList> => {
@@ -83,5 +83,3 @@ const twitchBadgeService = {
     }
   },
 } as const;
-
-export default twitchBadgeService;

@@ -1,4 +1,12 @@
-import 'expo-dev-client';
+/* eslint-disable camelcase */
+import {
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_900Black,
+  useFonts,
+} from '@expo-google-fonts/inter';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
 import {
@@ -6,7 +14,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query';
-import { useFonts } from 'expo-font';
+import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect, useState } from 'react';
 import { LogBox, ViewStyle } from 'react-native';
@@ -15,16 +23,15 @@ import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import CustomToast from './components/CustomToast';
-import OTAUpdates from './components/OTAUpdates';
-import AppLoading from './components/ui/AppLoading';
-import Config from './config';
-import useChangeScreenOrientation from './hooks/useChangeScreenOrientation';
-import { useOnAppStateChange } from './hooks/useOnAppStateChange';
-import { AppNavigator } from './navigators/AppNavigator';
-import { useNavigationPersistence } from './navigators/navigationUtilities';
-import { ErrorBoundary } from './screens/ErrorScreen/ErrorBoundary';
-import { customFontsToLoad } from './styles';
+import './styles/unistyles';
+import { AppLoading, OTAUpdates, Toast } from './components';
+import { useOnAppStateChange, useChangeScreenOrientation } from './hooks';
+import {
+  useNavigationPersistence,
+  AppNavigator,
+  BaseConfig,
+} from './navigators';
+import { ErrorBoundary } from './screens';
 import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
 
@@ -76,7 +83,13 @@ export default function App(props: AppProps) {
 
   const [recoveredFromError, setRecoveredFromError] = useState<boolean>(false);
 
-  const [areFontsLoaded] = useFonts(customFontsToLoad);
+  const [areFontsLoaded] = useFonts({
+    Inter_900Black,
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
 
   useLayoutEffect(() => {
     setTimeout(hideSplashScreen, 500);
@@ -103,14 +116,13 @@ export default function App(props: AppProps) {
    */
 
   if (!areFontsLoaded || !isNavigationStateRestored) {
-    // TODO: return loading component instead
     return <AppLoading />;
   }
 
   // otherwise, we're ready to render the app
   return (
     <ErrorBoundary
-      catchErrors={Config.catchErrors}
+      catchErrors={BaseConfig.catchErrors}
       onReset={() => setRecoveredFromError(true)}
     >
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
@@ -125,8 +137,8 @@ export default function App(props: AppProps) {
                 }
                 onStateChange={onNavigationStateChange}
               >
-                <CustomToast />
                 <OTAUpdates />
+                <Toast />
               </AppNavigator>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>

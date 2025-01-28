@@ -1,7 +1,6 @@
 import render from '@app/test/render';
 import { screen } from '@testing-library/react-native';
-import React from 'react';
-import FormattedDate from '../FormattedDate';
+import { FormattedDate } from '../FormattedDate';
 
 describe('FormattedDate', () => {
   describe('using default format', () => {
@@ -11,7 +10,7 @@ describe('FormattedDate', () => {
       expect(screen.getByText('12 March 2019')).toBeOnTheScreen();
     });
 
-    test('renders correctly with number date', () => {
+    test('renders correctly with epoch date', () => {
       render(<FormattedDate>{1552395197000}</FormattedDate>);
       expect(screen.getByText('12 March 2019')).toBeOnTheScreen();
     });

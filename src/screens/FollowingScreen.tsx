@@ -1,11 +1,8 @@
-import LiveStreamCard from '@app/components/LiveStreamCard';
-import EmptyState from '@app/components/ui/EmptyState';
-import Screen from '@app/components/ui/Screen';
-import Spinner from '@app/components/ui/Spinner';
+import { Spinner, EmptyState, LiveStreamCard, Screen } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
-import useHeader from '@app/hooks/useHeader';
-import twitchQueries from '@app/queries/twitchQueries';
-import { Stream } from '@app/services/twitchService';
+import { useHeader } from '@app/hooks';
+import { twitchQueries } from '@app/queries/twitchQueries';
+import { Stream } from '@app/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { FlatList, View, RefreshControl, ScrollView } from 'react-native';

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import useMountedRef from './useMountedRef';
+import { useMountedRef } from './useMountedRef';
 
 export type UseDebouncedCallbackReturn<Args extends unknown[]> = [
   (...args: Args) => Promise<void>,
@@ -13,7 +13,7 @@ export type UseDebouncedCallbackReturn<Args extends unknown[]> = [
  * If the debounced callback is run again, it will reset the
  * current timeout and start again with the new callback arguments.
  */
-export default function useDebouncedCallback<Args extends unknown[] = []>(
+export function useDebouncedCallback<Args extends unknown[] = []>(
   callback: (...args: Args) => void,
   timeout = 0,
 ): UseDebouncedCallbackReturn<Args> {

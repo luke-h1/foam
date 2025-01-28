@@ -1,9 +1,11 @@
-import LiveStreamCard from '@app/components/LiveStreamCard';
-import ScrollToTop from '@app/components/ScrollToTop';
-import EmptyState from '@app/components/ui/EmptyState';
-import Screen from '@app/components/ui/Screen';
-import Spinner from '@app/components/ui/Spinner';
-import twitchService, { Stream } from '@app/services/twitchService';
+import {
+  EmptyState,
+  LiveStreamCard,
+  Screen,
+  ScrollToTop,
+  Spinner,
+} from '@app/components';
+import { Stream, twitchService } from '@app/services';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef } from 'react';
 import {
@@ -13,7 +15,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 
-export default function TopStreamsScreen() {
+export function TopStreamsScreen() {
   const [previousCursor, setPreviousCursor] = useState<string | undefined>(
     undefined,
   );
@@ -59,7 +61,7 @@ export default function TopStreamsScreen() {
     if (hasNextPage) {
       setPreviousCursor(cursor);
       const nextCursor =
-        streams?.pages[streams.pages.length - 1].pagination.cursor;
+        streams?.pages[streams.pages.length - 1]?.pagination.cursor;
       setCursor(nextCursor);
       await fetchNextPage();
     }

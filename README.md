@@ -26,7 +26,7 @@ You will need the following in order to run the project locally:
 - [NVM](https://github.com/nvm-sh/nvm)
 - [Xcode](https://developer.apple.com/xcode/)
 - [Android Studio](https://developer.android.com/studio)
-- [PNPM](https://pnpm.io/)
+- [bun](https://bun.sh/)
 
 Once you have the above installed, you can run the following commands to get started:
 
@@ -41,14 +41,14 @@ Install correct node and package manager versions
 If for whatever reason `corepack enable` doesn't work you can run the following script to install the right version of PNPM:
 
 ```bash
-PNPM_VERSION=$(node -e "console.log(require('./package.json').engines.pnpm)")
-curl -fsSL https://get.pnpm.io/install.sh | env PNPM_VERSION=$PNPM_VERSION sh -
+BUN_VERSION=$(node -e "console.log(require('./package.json').engines.bun)")
+curl -fsSL https://bun.sh/install | bash -s "bun-v$BUN_VERSION"
 ```
 
 Install dependencies
 
 ```bash
-pnpm i
+bun install
 ```
 
 Acquire Twitch API credentials
@@ -70,25 +70,25 @@ You will then need to start the proxy server before you start up the app to prox
 Start the proxy server
 
 ```bash
-pnpm start:proxy
+bun start:proxy
 ```
 
 Start the app
 
 ```bash
-pnpm start
+bun start
 ```
 
 Create a development build (if needed)
 
 ```bash
-pnpm run prebuild:ios
-pnpm run prebuild:android
+bun run prebuild:ios
+bun run prebuild:android
 ```
 
 ## Contributing
 
-### Commiting code
+### Committing code
 
 This project follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. [Husky](https://github.com/typicode/husky) is used to execute scrips according to git hooks in order to test if a developer is following the various linting rules and conventional commits. Run `yarn commit` to start an interactive commit.
 

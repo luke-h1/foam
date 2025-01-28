@@ -1,6 +1,7 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { getDefaultConfig } = require('expo/metro-config');
+const withStorybook = require('@storybook/react-native/metro/withStorybook');
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
@@ -20,4 +21,4 @@ config.transformer.getTransformOptions = async () => ({
 // such as Firebase that use the extension cjs.
 config.resolver.sourceExts.push('cjs');
 
-module.exports = config;
+module.exports = withStorybook(config);

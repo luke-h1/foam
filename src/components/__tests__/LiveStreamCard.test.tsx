@@ -1,8 +1,11 @@
-import _twitchService, { Stream } from '@app/services/twitchService';
+import {
+  twitchService as _twitchService,
+  Stream,
+} from '@app/services/twitchService';
 import render from '@app/test/render';
 import { NavigationContainer } from '@react-navigation/native';
 import { screen } from '@testing-library/react-native';
-import LiveStreamCard from '../LiveStreamCard';
+import { LiveStreamCard } from '../LiveStreamCard';
 
 const mockStream: Stream = {
   id: '1',

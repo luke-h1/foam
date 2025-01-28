@@ -1,6 +1,7 @@
-import _sevenTvService, {
+import {
+  sevenTvService as _sevenTvService,
   GetEmoteResponse,
-} from '@app/services/seventTvService';
+} from '@app/services';
 import { stvMessageParser } from '../7tv-emotes';
 
 jest.mock('@app/services/seventTvService');
@@ -294,24 +295,24 @@ describe('stvMessageParser', () => {
         emote: {
           images: [
             {
-              height: 22,
+              height: 17,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/1x.webp',
-              width: 22,
+              width: 17,
             },
             {
-              height: 54,
+              height: 49,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/2x.webp',
-              width: 54,
+              width: 49,
             },
             {
-              height: 86,
+              height: 81,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/3x.webp',
-              width: 86,
+              width: 81,
             },
             {
-              height: 118,
+              height: 113,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/4x.webp',
-              width: 118,
+              width: 113,
             },
           ],
           isZeroWidth: false,

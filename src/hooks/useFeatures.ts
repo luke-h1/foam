@@ -26,7 +26,7 @@ const allowedFeatures: Feature[] = [
   },
 ];
 
-export default function useFeatures() {
+export function useFeatures() {
   const [features, setFeatures] = useState<Feature[]>(allowedFeatures);
 
   useEffect(() => {

@@ -5,7 +5,7 @@ export interface ScriptState {
   error: Error | null;
 }
 
-const useScript = (src: string) => {
+export const useScript = (src: string) => {
   const [state, setState] = useState<ScriptState>({
     loading: true,
     error: null,
@@ -82,5 +82,3 @@ const useScript = (src: string) => {
 
   return state;
 };
-
-export default useScript;

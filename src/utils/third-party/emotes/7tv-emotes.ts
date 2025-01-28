@@ -1,32 +1,59 @@
 /* eslint-disable consistent-return */
 /* eslint-disable array-callback-return */
-import seventTvService from '@app/services/seventTvService';
+import { sevenTvService } from '@app/services';
 import { EmotesParser } from '../types';
 import { makeEmoteParser } from './make-emote-parser';
 
 const getEmoteUrl = async (emoteId: string, scale: string) => {
-  const data = await seventTvService.getEmote(emoteId);
+  const data = await sevenTvService.getEmote(emoteId);
 
   const scaleMap: { [key: string]: { width: number; height: number } } = {
     '1x': {
-      width: data.host.files[0].width - 10,
-      height: data.host.files[0].height - 10,
+      width:
+        data.host.files && data.host.files[0]
+          ? data.host.files[0].width - 15
+          : 0,
+      height:
+        data.host.files && data.host.files[0]
+          ? data.host.files[0].height - 15
+          : 0,
     },
     '2x': {
-      width: data.host.files[1].width - 10,
-      height: data.host.files[1].height - 10,
+      width:
+        data.host.files && data.host.files[1]
+          ? data.host.files[1].width - 15
+          : 0,
+      height:
+        data.host.files && data.host.files[1]
+          ? data.host.files[1].height - 15
+          : 0,
     },
     '3x': {
-      width: data.host.files[2].width - 10,
-      height: data.host.files[2].height - 10,
+      width:
+        data.host.files && data.host.files[2]
+          ? data.host.files[2].width - 15
+          : 0,
+      height:
+        data.host.files && data.host.files[2]
+          ? data.host.files[2].height - 15
+          : 0,
     },
     '4x': {
-      width: data.host.files[3].width - 10,
-      height: data.host.files[3].height - 10,
+      width:
+        data.host.files && data.host.files[3]
+          ? data.host.files[3].width - 15
+          : 0,
+      height:
+        data.host.files && data.host.files[3]
+          ? data.host.files[3].height - 15
+          : 0,
     },
   };
 
-  const { width, height } = scaleMap[scale];
+  const { width, height } = scaleMap[scale] as {
+    width: number;
+    height: number;
+  };
 
   return {
     url: `https:${data.host.url}/${scale}.webp`,
@@ -37,7 +64,7 @@ const getEmoteUrl = async (emoteId: string, scale: string) => {
 
 export const stvMessageParser = makeEmoteParser(
   'seventv',
-  [seventTvService.getChannelEmotes, seventTvService.getGlobalEmotes],
+  [sevenTvService.getChannelEmotes, sevenTvService.getGlobalEmotes],
   async (emoteId: string) => {
     const emoteUrls = await Promise.all(
       ['1x', '2x', '3x', '4x'].map(scale => getEmoteUrl(emoteId, scale)),

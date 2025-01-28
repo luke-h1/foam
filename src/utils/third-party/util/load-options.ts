@@ -9,6 +9,6 @@ export const loadOptions = (
     twitch: true,
     bttv: true,
     seventv: true,
-    ffz: false,
+    ffz: true,
   },
 });

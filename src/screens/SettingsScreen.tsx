@@ -1,20 +1,23 @@
-import BuildDetails from '@app/components/BuildDetails';
-import Image from '@app/components/Image';
-import SettingsItem, { Content } from '@app/components/SettingsItem';
-import Icon from '@app/components/ui/Icon';
-import Screen from '@app/components/ui/Screen';
-import { Text } from '@app/components/ui/Text';
-import { useAuthContext } from '@app/context/AuthContext';
-import useAppNavigation from '@app/hooks/useAppNavigation';
-import useHeader from '@app/hooks/useHeader';
-import { colors } from '@app/styles';
-import { openLinkInBrowser } from '@app/utils/openLinkInBrowser';
+import {
+  BuildDetails,
+  Content,
+  Icon,
+  Screen,
+  SettingsItem,
+  Typography,
+} from '@app/components';
+import { useAuthContext } from '@app/context';
+import { useAppNavigation, useHeader } from '@app/hooks';
+import { openLinkInBrowser } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { Image } from 'expo-image';
 import { useMemo, useRef, useState } from 'react';
-import { Button, Modal, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Button, Modal, TouchableOpacity, View } from 'react-native';
+import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
-export default function SettingsScreen() {
+export function SettingsScreen() {
   const navigation = useAppNavigation();
+  const { styles } = useStyles(stylesheet);
   useHeader({
     title: 'Settings',
     leftIcon: 'arrow-left',
@@ -54,34 +57,6 @@ export default function SettingsScreen() {
   ];
 
   const commonSettingItems: Content[] = [
-    // {
-    //   id: '2',
-    //   ctaTitle: 'Options',
-    //   items: [
-    //     {
-    //       iconLeft: <Icon icon="settings" />,
-    //       title: 'General',
-    //       content: 'Theme and other options',
-    //       showRightArrow: true,
-    //       iconRight: <Icon icon="arrow-right" />,
-    //     },
-    //     {
-    //       iconLeft: <Icon icon="video" />,
-    //       title: 'Video',
-    //       content: 'Overlay and other options',
-    //       showRightArrow: true,
-    //       iconRight: <Icon icon="arrow-right" />,
-    //     },
-    //     {
-    //       iconLeft: <Icon icon="layers" />,
-    //       title: 'Chat',
-    //       content: 'Sizing, timestamps and other options',
-    //       showRightArrow: true,
-    //       iconRight: <Icon icon="arrow-right" />,
-    //       showSeperator: true,
-    //     },
-    //   ],
-    // },
     {
       id: '3',
       ctaTitle: 'About',
@@ -91,13 +66,12 @@ export default function SettingsScreen() {
           title: 'About Foam',
           content: 'About the app and the developer',
           onPress: () => {
-            // open modal
             setModalVisible(true);
           },
         },
         {
           iconLeft: <Icon icon="link" />,
-          title: 'Chanelog',
+          title: 'Changelog',
           content: "What's changed?",
           onPress: () => {
             navigation.navigate('Changelog');
@@ -154,7 +128,7 @@ export default function SettingsScreen() {
         snapPoints={snapPoints}
         handleStyle={{ opacity: 0.95 }}
       >
-        <BottomSheetView style={$container}>
+        <BottomSheetView style={styles.container}>
           <Icon icon="arrow-right" />
           <Button
             title="Log out"
@@ -167,7 +141,7 @@ export default function SettingsScreen() {
             }}
           />
         </BottomSheetView>
-        <BottomSheetView style={$container}>
+        <BottomSheetView style={styles.container}>
           <Icon icon="arrow-right" />
           <Button
             title="My stream"
@@ -183,7 +157,7 @@ export default function SettingsScreen() {
             }}
           />
         </BottomSheetView>
-        <BottomSheetView style={$container}>
+        <BottomSheetView style={styles.container}>
           <Icon icon="arrow-right" />
           <Button
             title="My Profile"
@@ -199,7 +173,7 @@ export default function SettingsScreen() {
             }}
           />
         </BottomSheetView>
-        <BottomSheetView style={$container}>
+        <BottomSheetView style={styles.container}>
           <Icon icon="arrow-right" />
           <Button
             title="Blocked"
@@ -222,17 +196,15 @@ export default function SettingsScreen() {
         transparent
         onRequestClose={toggleModal}
       >
-        <View style={$modalContainer}>
-          <View style={$modalContent}>
-            <Text preset="cardFooterHeading" style={{ marginBottom: 2 }}>
-              About Foam
-            </Text>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Typography style={{ marginBottom: 2 }}>About Foam</Typography>
             <BuildDetails />
-            <Text style={{ marginBottom: 15 }}>
+            <Typography style={{ marginBottom: 15 }}>
               &copy; {new Date().getFullYear()} Luke Howsam
-            </Text>
+            </Typography>
             <TouchableOpacity onPress={toggleModal}>
-              <Text>Close</Text>
+              <Typography>Close</Typography>
             </TouchableOpacity>
           </View>
         </View>
@@ -241,22 +213,24 @@ export default function SettingsScreen() {
   );
 }
 
-const $container: ViewStyle = {
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  padding: 4,
-};
-
-const $modalContainer: ViewStyle = {
-  flex: 1,
-  justifyContent: 'center',
-  alignItems: 'center',
-};
-
-const $modalContent: ViewStyle = {
-  width: 300,
-  padding: 20,
-  backgroundColor: colors.tint,
-  borderRadius: 10,
-};
+const stylesheet = createStyleSheet(theme => ({
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+  },
+}));

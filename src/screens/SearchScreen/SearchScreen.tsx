@@ -1,18 +1,14 @@
-import DismissableKeyboard from '@app/components/DismissableKeyboard';
-import SearchHistory from '@app/components/SearchHistoryItem';
-import { PressableArea } from '@app/components/form/PressableArea';
-import Screen from '@app/components/ui/Screen';
-import { Text } from '@app/components/ui/Text';
-import { TextField } from '@app/components/ui/TextField';
-import useAppNavigation from '@app/hooks/useAppNavigation';
-import useDebouncedCallback from '@app/hooks/useDebouncedCallback';
-import useHeader from '@app/hooks/useHeader';
-import StreamerCard from '@app/screens/SearchScreen/components/StreamerCard';
-import twitchService, {
-  SearchChannelResponse,
-} from '@app/services/twitchService';
-import { colors, spacing } from '@app/styles';
-import { storage } from '@app/utils/storage';
+import {
+  DismissableKeyboard,
+  PressableArea,
+  Screen,
+  SearchHistory,
+  TextField,
+  Typography,
+} from '@app/components';
+import { useAppNavigation, useDebouncedCallback, useHeader } from '@app/hooks';
+import { twitchService, SearchChannelResponse } from '@app/services';
+import { storage } from '@app/utils';
 import Entypo from '@expo/vector-icons/build/Entypo';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -21,9 +17,10 @@ import {
   TouchableOpacity,
   TextInput as NativeTextInput,
   View,
-  ViewStyle,
 } from 'react-native';
+import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
+import { StreamerCard } from './components';
 
 const previousSearchesKey = 'previousSearches' as const;
 
@@ -32,8 +29,9 @@ interface SearchHistoryItem {
   date: string;
 }
 
-export default function SearchScreen() {
+export function SearchScreen() {
   const { navigate } = useAppNavigation();
+  const { styles } = useStyles(stylesheet);
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
@@ -88,6 +86,8 @@ export default function SearchScreen() {
 
     if (existingIndex !== -1) {
       // Update the date of the existing query
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       parsedPrevSearches[existingIndex].date = new Date().toISOString();
     } else {
       // Add the new query to the history
@@ -112,7 +112,7 @@ export default function SearchScreen() {
 
   return (
     <Screen safeAreaEdges={['top', 'bottom', 'left']} preset="scroll">
-      <View style={$container}>
+      <View style={styles.container}>
         <DismissableKeyboard>
           <ScrollView
             contentContainerStyle={{
@@ -143,13 +143,13 @@ export default function SearchScreen() {
                       style={{
                         marginRight: 6,
                       }}
-                      color={colors.border}
+                      // color={colors.border}
                     />
                   </PressableArea>
                 ) : (
                   <Feather
                     name="search"
-                    color={colors.border}
+                    // color={colors.border}
                     size={22}
                     style={{
                       marginRight: 6,
@@ -162,16 +162,16 @@ export default function SearchScreen() {
         </DismissableKeyboard>
       </View>
 
-      <View style={$searchResultsWrapper}>
+      <View style={styles.searchResultsWrapper}>
         {searchResults.length > 0 && (
           <>
-            <Text
+            <Typography
               style={{
                 marginBottom: 5,
               }}
             >
               Channels
-            </Text>
+            </Typography>
             <FlatList
               data={searchResults}
               renderItem={({ item }) => (
@@ -184,7 +184,7 @@ export default function SearchScreen() {
                       },
                     });
                   }}
-                  style={$list}
+                  style={styles.list}
                 >
                   <StreamerCard stream={item} />
                 </TouchableOpacity>
@@ -215,19 +215,19 @@ export default function SearchScreen() {
   );
 }
 
-const $container: ViewStyle = {
-  flexDirection: 'row',
-  padding: 2,
-};
-
-const $searchResultsWrapper: ViewStyle = {
-  marginTop: spacing.medium,
-  marginLeft: spacing.medium,
-};
-
-const $list: ViewStyle = {
-  flexDirection: 'row',
-  padding: 6,
-  alignContent: 'center',
-  alignItems: 'center',
-};
+const stylesheet = createStyleSheet(theme => ({
+  container: {
+    flexDirection: 'row',
+    padding: 2,
+  },
+  searchResultsWrapper: {
+    marginTop: theme.spacing.md,
+    marginLeft: theme.spacing.md,
+  },
+  list: {
+    flexDirection: 'row',
+    padding: 6,
+    alignContent: 'center',
+    alignItems: 'center',
+  },
+}));

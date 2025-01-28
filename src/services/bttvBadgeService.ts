@@ -1,7 +1,7 @@
 import { BttvBadgesResponse } from '../utils/third-party/types';
 import { bttvCachedApi } from './api';
 
-const bttvBadgeService = {
+export const bttvBadgeService = {
   getBadges: async () => {
     try {
       const { data } =
@@ -14,5 +14,3 @@ const bttvBadgeService = {
     }
   },
 } as const;
-
-export default bttvBadgeService;

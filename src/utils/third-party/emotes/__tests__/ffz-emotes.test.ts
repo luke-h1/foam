@@ -1,4 +1,4 @@
-import _ffzService from '@app/services/ffzService';
+import { ffzService as _ffzService } from '@app/services';
 import { EmotesList } from '../../types';
 import { ffzMessageParser } from '../ffz-emotes';
 

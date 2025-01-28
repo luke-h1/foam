@@ -1,21 +1,23 @@
-import CategoryCard from '@app/components/CategoryCard';
-import ScrollToTop from '@app/components/ScrollToTop';
-import EmptyState from '@app/components/ui/EmptyState';
-import Screen from '@app/components/ui/Screen';
-import Spinner from '@app/components/ui/Spinner';
-import twitchService, { Category } from '@app/services/twitchService';
+import {
+  CategoryCard,
+  EmptyState,
+  Screen,
+  ScrollToTop,
+  Spinner,
+} from '@app/components';
+import { type Category, twitchService } from '@app/services';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import {
   FlatList,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   RefreshControl,
   View,
-  ViewStyle,
+  type ViewStyle,
 } from 'react-native';
 
-export default function TopCategoriesScreen() {
+export function TopCategoriesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [previousCursor, setPreviousCursor] = useState<string | undefined>(
     undefined,
@@ -64,7 +66,7 @@ export default function TopCategoriesScreen() {
     if (hasNextPage) {
       setPreviousCursor(cursor);
       const nextCursor =
-        categories?.pages[categories.pages.length - 1].pagination.cursor;
+        categories?.pages[categories.pages.length - 1]?.pagination.cursor;
       setCursor(nextCursor);
       await fetchNextPage();
     }

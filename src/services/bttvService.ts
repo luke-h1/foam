@@ -5,7 +5,7 @@ import {
 } from '../utils/third-party/types';
 import { bttvApi } from './api';
 
-const bttvService = {
+export const bttvService = {
   getChannelEmotes: async (channelId: string | null): Promise<EmotesList> => {
     if (!channelId) {
       return [];
@@ -49,5 +49,3 @@ const bttvService = {
     }
   },
 } as const;
-
-export default bttvService;

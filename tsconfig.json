@@ -1,7 +1,9 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "allowJs": true,
     "alwaysStrict": true,
+    "noUncheckedIndexedAccess": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "module": "esnext",
@@ -21,6 +23,8 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "noFallthroughCasesInSwitch": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
     "baseUrl": ".",
     "paths": {
       "@app/*": ["./src/*"]
@@ -28,6 +32,5 @@
   },
   "include": ["src", "test", "App.js"],
   "moduleResolution": "node",
-  "exclude": ["node_modules", ".expo"],
-  "extends": "expo/tsconfig.base"
+  "exclude": ["node_modules", ".expo"]
 }

@@ -1,4 +1,5 @@
-import twitchService, {
+import {
+  twitchService,
   Channel,
   Stream,
   Category,
@@ -8,11 +9,11 @@ import twitchService, {
 } from '@app/services/twitchService';
 import { UseQueryOptions } from '@tanstack/react-query';
 
-const twitchQueries = {
+export const twitchQueries = {
   getStream(userLogin: string): UseQueryOptions<Stream> {
     return {
       queryKey: ['stream', userLogin],
-      queryFn: () => twitchService.getStream(userLogin),
+      queryFn: () => twitchService.getStream(userLogin) as Promise<Stream>,
     };
   },
   getChannel(userId: string): UseQueryOptions<Channel> {
@@ -79,5 +80,3 @@ const twitchQueries = {
     };
   },
 } as const;
-
-export default twitchQueries;

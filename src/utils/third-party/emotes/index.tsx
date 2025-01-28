@@ -1,7 +1,6 @@
-import Image from '@app/components/Image';
-import { Text } from '@app/components/ui/Text';
-import { colors } from '@app/styles';
-import { View } from 'react-native';
+import { Typography } from '@app/components';
+import { Image } from 'expo-image';
+import { Linking, View } from 'react-native';
 import {
   EmotePositions,
   EmotesParser,
@@ -48,19 +47,18 @@ export const parseEmotes = async (
   message: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _emotePositions: EmotePositions | null = null,
-  _options: Partial<ParserOptions> | null = null,
+  options: Partial<ParserOptions> | null = null,
 ) => {
   const emotePositions: EmotePositions = _emotePositions || {};
-  const options = loadOptions(_options);
 
   const parsedMessage = await emoteParsers.reduce(
     async (messagePromise, parser) => {
       // eslint-disable-next-line no-shadow
       const message = await messagePromise;
-      if (!options.providers?.[parser.provider]) {
+      if (!options?.providers?.[parser.provider]) {
         return message;
       }
-      return parser.parse(message, emotePositions, options);
+      return parser.parse(message, emotePositions, options as ParserOptions);
     },
     prepare(message),
   );
@@ -68,31 +66,49 @@ export const parseEmotes = async (
   return {
     toArray: () => parsedMessage,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    toHTML: (scale = 1, inlineStyles = true, escapeHTML = true) => {
+    toHTML: (scale = 1, inlineStyles = true, _escapeHTML = true) => {
       // eslint-disable-next-line no-shadow
       return parsedMessage.map((message, index) => {
         if (!message.emote?.images) {
-          const isMention = message.content.startsWith('@');
-          const mentionColor = isMention ? colors.error : colors.text;
+          // const isMention = message.content.startsWith('@');
+          // const mentionColor = isMention
+          //   ? theme.colors.angry100
+          //   : theme.colors.accent200;
+
+          const urlRegex = /(https?:\/\/[^\s]+)/g;
+          const parts = message.content.split(urlRegex);
 
           return (
-            <Text
+            <Typography
               // eslint-disable-next-line react/no-array-index-key
               key={`message-${index}`}
               style={{
                 marginLeft: 1,
                 marginRight: 1,
-                flexWrap: 'wrap', // Ensure text wraps on overflow
-                color: mentionColor, // Set color for mentions
+                color: 'mentionColor',
               }}
             >
-              {message.content}
-            </Text>
+              {parts.map((part, i) => {
+                if (urlRegex.test(part)) {
+                  return (
+                    <Typography
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={`link-${index}-${i}`}
+                      style={{ color: '#004EFF' }}
+                      onPress={() => Linking.openURL(part)}
+                    >
+                      {part}
+                    </Typography>
+                  );
+                }
+                return <Typography key={part}>{part}</Typography>;
+              })}
+            </Typography>
           );
         }
 
         const emoteURL =
-          message.emote.images[scale]?.url || message.emote.images[0].url;
+          message.emote.images[scale]?.url || message.emote.images[0]?.url;
 
         const height = message.emote.images[scale]?.height || 24;
         const width = message.emote.images[scale]?.width || 24;
@@ -104,7 +120,7 @@ export const parseEmotes = async (
             <Image
               // eslint-disable-next-line react/no-array-index-key
               key={`overlay-${index}-${overlayIndex}`}
-              source={overlay.images?.[scale]?.url || overlay.images[0].url}
+              source={overlay.images?.[scale]?.url || overlay.images[0]?.url}
               alt={overlay.alt}
               style={{
                 position: 'absolute',

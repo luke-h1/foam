@@ -1,7 +1,7 @@
 /* eslint-disable react/destructuring-assignment */
-import { reportCrash } from '@app/utils/reportCrash';
-import { Component, ErrorInfo, ReactNode } from 'react';
-import ErrorDetails, { ErrorDetailsProps } from './ErrorDetails';
+import { reportCrash } from '@app/utils';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { ErrorDetails, type ErrorDetailsProps } from './ErrorDetails';
 
 interface Props {
   children: ReactNode;

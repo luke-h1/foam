@@ -8,7 +8,7 @@ import {
 import newRelic from 'newrelic-react-native-agent';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform } from 'react-native';
-import Config, { type PersistNavigationConfig } from '../config';
+import { BaseConfig, type PersistNavigationConfig } from './config';
 
 function useIsMounted() {
   const isMounted = useRef(false);
@@ -46,11 +46,11 @@ export const navigationRef = createNavigationContainerRef();
 export function getActiveRouteName(
   state: NavigationState | PartialState<NavigationState>,
 ): string {
-  const route = state.routes[state.index ?? 0];
+  const route = state.routes?.[state.index ?? 0];
 
   // found active route - return the name
-  if (!route.state) {
-    return route.name;
+  if (!route?.state) {
+    return route?.name as string;
   }
 
   // recursive call to deal with nested routers
@@ -143,7 +143,9 @@ export function useNavigationPersistence(storage: any, persistenceKey: string) {
   const [initialNavigationState, setInitialNavigationState] = useState();
   const isMounted = useIsMounted();
 
-  const initNavState = navigationRestoredDefaultState(Config.persistNavigation);
+  const initNavState = navigationRestoredDefaultState(
+    BaseConfig.persistNavigation,
+  );
   const [isRestored, setIsRestored] = useState(initNavState);
 
   const routeNameRef = useRef<string>();

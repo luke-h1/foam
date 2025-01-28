@@ -1,9 +1,10 @@
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
 import { twitchApi } from '@app/services/api';
-import twitchService, {
+import {
   DefaultTokenResponse,
   UserInfoResponse,
+  twitchService,
 } from '@app/services/twitchService';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
@@ -301,6 +302,7 @@ export const AuthContextProvider = ({
       }
     }
   };
+
   const populateAuthState = async () => {
     const [storedAnonToken, storedAuthToken] = await Promise.all([
       SecureStore.getItemAsync(storageKeys.anon),
