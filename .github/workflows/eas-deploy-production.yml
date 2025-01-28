@@ -39,6 +39,8 @@ jobs:
           eas-cache: true
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
+          # prevent workflow hanging on patching linux fs watchers
+          patch-watchers: false
 
       - name: 🚀 Build & deploy to production
         run: bun run build:production
