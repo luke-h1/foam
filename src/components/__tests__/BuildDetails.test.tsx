@@ -23,9 +23,6 @@ describe('BuildDetails', () => {
 
     expect(
       screen.getByTestId('BuildDetails-nativeAppVersion'),
-    ).toHaveTextContent('v1.0.0');
-    expect(
-      screen.getByTestId('BuildDetails-nativeBuildVersion'),
-    ).toHaveTextContent('Native build version: 100');
+    ).toHaveTextContent('v1.0.0(100)');
   });
 });
