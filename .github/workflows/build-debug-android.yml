@@ -1,8 +1,8 @@
 name: Build Android Debug App
 on:
-  push:
-    branches:
-      - main # Build on main for caching purposes, this way every branch will have access to it
+  # push:
+  #   branches:
+  #     - main # Build on main for caching purposes, this way every branch will have access to it
   workflow_call:
     outputs:
       build-cache-key:
