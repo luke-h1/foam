@@ -1,0 +1,39 @@
+name: EAS deploy production
+on:
+  workflow_dispatch:
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    concurrency: deploy-prod
+    steps:
+      - name: 🔎 Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/tutorial/eas/using-github/"
+            exit 1
+          fi
+
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          eas-cache: true
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 🚀 Build & deploy to production
+        run: bun run build:production
