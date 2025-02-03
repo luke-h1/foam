@@ -1,6 +1,7 @@
-import { Spinner, Chat, Screen, Typography, EmptyState } from '@app/components';
+import { Spinner, Chat, Typography } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
+import { twitchService, UserInfoResponse } from '@app/services';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useEffect, useState } from 'react';
 import {
@@ -16,10 +17,12 @@ import WebView from 'react-native-webview';
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
 }) => {
+  const { styles } = useStyles(stylesheet);
   const screenWidth = Dimensions.get('screen').width;
   const screenHeight = Dimensions.get('screen').height;
-
   const videoHeight = screenWidth * (9 / 16);
+  const [streamer, setStreamer] = useState<UserInfoResponse>();
+
   const [availableHeight, setAvailableHeight] = useState(
     screenHeight - videoHeight,
   );
@@ -32,10 +35,8 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     };
 
     Dimensions.addEventListener('change', updateAvailableHeight);
-
-    return () => {};
   }, []);
-  const { styles } = useStyles(stylesheet);
+
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
       queries: [
@@ -45,45 +46,66 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
       ],
     });
 
-  const {
-    data: stream,
-    isLoading: isStreamLoading,
-    refetch: refetchStream,
-  } = streamQueryResult;
-  const {
-    data: user,
-    isLoading: isUserLoading,
-    refetch: refetchUser,
-  } = userQueryResult;
-  const {
-    data: userProfilePicture,
-    isLoading: isUserProfilePictureLoading,
-    refetch: refetchUserProfilePicture,
-  } = userProfilePictureQueryResult;
+  const { data: stream, isLoading: isStreamLoading } = streamQueryResult;
+
+  const { data: user, isLoading: isUserLoading } = userQueryResult;
+
+  const { data: userProfilePicture, isLoading: isUserProfilePictureLoading } =
+    userProfilePictureQueryResult;
 
   const { width } = Dimensions.get('window');
+
+  const fetchUser = async () => {
+    const result = await twitchService.getUser(params.id);
+    setStreamer(result);
+  };
+
+  useEffect(() => {
+    if (!isStreamLoading && !stream) {
+      fetchUser();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stream]);
 
   if (isStreamLoading || isUserLoading || isUserProfilePictureLoading) {
     return <Spinner />;
   }
 
-  const handleRefresh = async () => {
-    await Promise.all([
-      refetchStream(),
-      refetchUser(),
-      refetchUserProfilePicture(),
-    ]);
-  };
-
   if (!stream) {
+    // user is offline twitchService.getUser
     return (
-      <Screen>
-        <EmptyState
-          content="Failed to fetch stream."
-          heading="No Stream found"
-          buttonOnPress={() => handleRefresh()}
-        />
-      </Screen>
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <Image
+            source={{
+              uri: streamer?.offline_image_url,
+            }}
+            style={{
+              width: screenWidth,
+              height: 300,
+            }}
+          />
+          <View style={styles.videoDetails}>
+            <View style={styles.videoMetadata}>
+              <View style={styles.userInfo}>
+                <Image
+                  source={{ uri: userProfilePicture }}
+                  style={styles.avatar}
+                />
+                <Typography style={styles.videoUser}>
+                  {user?.display_name} - Offline
+                </Typography>
+              </View>
+            </View>
+          </View>
+          <View style={styles.chatContainer(availableHeight)}>
+            {/* <Chat
+              channelId={user?.id as string}
+              channelName={streamer?.user_login as string}
+            /> */}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -92,7 +114,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <WebView
           source={{
-            uri: `https://player.twitch.tv?channel=${stream?.user_login}&controls=true&parent=localhost&autoplay=true`,
+            uri: `https://player.twitch.tv?channel=${stream.user_login}&controls=true&parent=localhost&autoplay=true`,
           }}
           style={[
             styles.webView,
@@ -106,10 +128,10 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         <View style={styles.videoDetails}>
           <View style={styles.videoTitleContainer}>
             <Typography style={styles.videoTitle} size="xs">
-              {stream?.title}
+              {stream.title}
             </Typography>
             <Typography style={styles.videoTitle} size="xs">
-              {stream?.game_name}
+              {stream.game_name}
             </Typography>
           </View>
           <View style={styles.videoMetadata}>
@@ -124,7 +146,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             </View>
             <Typography style={styles.videoViews}>
               {new Intl.NumberFormat('en-US').format(
-                stream?.viewer_count as number,
+                stream.viewer_count as number,
               )}{' '}
               viewers
             </Typography>
@@ -133,7 +155,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         <View style={styles.chatContainer(availableHeight)}>
           <Chat
             channelId={user?.id as string}
-            channelName={stream?.user_login as string}
+            channelName={stream.user_login as string}
           />
         </View>
       </ScrollView>
