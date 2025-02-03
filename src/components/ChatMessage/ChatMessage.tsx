@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { FormattedChatMessage } from '../Chat';
@@ -19,13 +18,7 @@ export function ChatMessage({ item }: Props) {
             flexDirection: 'row',
           }}
         >
-          <Image
-            source={item.badges[0]?.images[0]}
-            style={{
-              width: 20,
-              height: 20,
-            }}
-          />
+          {item.badges}
           <Typography
             style={{
               color: item.user.color,

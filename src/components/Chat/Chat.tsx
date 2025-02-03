@@ -13,7 +13,7 @@ import { Typography } from '../Typography';
 export interface FormattedChatMessage {
   user: ChatUserstate;
   message: JSX.Element[];
-  badges: ParsedBadges;
+  badges: JSX.Element[];
 }
 
 interface ChatProps {
@@ -52,21 +52,19 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client.on('message', async (_channel, tags, text, _self) => {
-      const badges = await parseBadges(tags.badges, tags.username, options);
-      const message = await parseEmotes(text, tags.emotes, options);
-      const htmlBadges = badges.toArray();
-      const htmlMessage = message.toHTML();
+      const badges = (
+        await parseBadges(tags.badges, tags.username, options)
+      ).toHTML();
 
-      // console.log('req htmlBadge ->', JSON.stringify(htmlBadges));
-      // console.log('msg ->', htmlMessage);
+      const message = (await parseEmotes(text, tags.emotes, options)).toHTML();
 
       setMessages(prevMessages => {
         return [
           ...prevMessages,
           {
-            badges: htmlBadges,
+            badges,
             user: tags,
-            message: htmlMessage,
+            message,
           },
         ];
       });
