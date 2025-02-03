@@ -12,12 +12,11 @@ const badgeParsers: BadgesParser[] = [
 ];
 
 export const parseBadges = async (
-  badges: Badges | undefined,
+  badges: Badges | null,
   username: string | null = null,
   _options: Partial<ParserOptions> | null = null,
 ) => {
   const options = loadOptions(_options);
-
   const parsedBadges = replaceBadges(
     (
       await Promise.all(
@@ -36,7 +35,8 @@ export const parseBadges = async (
         console.log('badge', badge);
         const height = [18, 20, 22][scale];
 
-        // @ts-expect-error object is possibly undefined
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         const offset = [4, 5, 6][scale] * -1;
 
         // eslint-disable-next-line no-console
