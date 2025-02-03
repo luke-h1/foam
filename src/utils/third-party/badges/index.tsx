@@ -3,14 +3,12 @@ import { View } from 'react-native';
 import { Badges } from 'tmi.js';
 import { BadgesParser, ParserOptions, ParsedBadges } from '../types';
 import { loadOptions } from '../util/load-options';
-import { bttvBadgesParser } from './bttv-badges';
-import { ffzBadgesParser } from './ffz-badges';
 import { twitchBadgesParser } from './twitch-badges';
 
 const badgeParsers: BadgesParser[] = [
   twitchBadgesParser,
-  ffzBadgesParser,
-  bttvBadgesParser,
+  // ffzBadgesParser,
+  // bttvBadgesParser,
 ];
 
 export const parseBadges = async (
@@ -20,23 +18,12 @@ export const parseBadges = async (
 ) => {
   const options = loadOptions({
     ..._options,
-    providers: {
-      bttv: true,
-      ffz: true,
-      seventv: true,
-      twitch: true,
-    },
   });
+
   const parsedBadges = replaceBadges(
     (
       await Promise.all(
         badgeParsers.map(async parser => {
-          if (!options.providers?.[parser.provider]) {
-            // eslint-disable-next-line no-console
-            console.warn('No valid provider found for badges');
-            return [];
-          }
-
           if (!badges) {
             // eslint-disable-next-line no-console
             console.warn('No badges found');
@@ -65,8 +52,6 @@ export const parseBadges = async (
           const offset = [4, 5, 6][scale] * -1;
 
           // eslint-disable-next-line no-console
-          console.log('badge is ->', badge);
-
           return (
             <View
               key={badge.title}
@@ -77,6 +62,7 @@ export const parseBadges = async (
                 marginRight: offset,
                 marginLeft: offset,
                 backgroundColor: badge.color,
+                alignItems: 'center',
               }}
             >
               <Image
@@ -84,8 +70,8 @@ export const parseBadges = async (
                 key={badge.title}
                 alt={badge.title}
                 style={{
-                  height,
-                  width: 20,
+                  height: 30,
+                  width: 30,
                   marginBottom: offset,
                   borderRadius: 2,
                   backgroundColor: badge.color,
@@ -104,9 +90,6 @@ export const reloadBadges = async (
   const options = loadOptions(_options);
   await Promise.all(
     badgeParsers.map(async parser => {
-      if (!options.providers?.[parser.provider]) {
-        return;
-      }
       // eslint-disable-next-line consistent-return
       return parser.load(options.channelId, true);
     }),

@@ -105,6 +105,7 @@
     "react-dom": "18.3.1",
     "react-native": "0.76.2",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-markdown-display": "^7.0.2",
     "react-native-marked": "^6.0.5",
     "react-native-mmkv": "^3.1.0",
     "react-native-orientation-locker": "^1.6.0",

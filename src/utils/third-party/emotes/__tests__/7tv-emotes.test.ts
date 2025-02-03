@@ -280,12 +280,6 @@ describe('stvMessageParser', () => {
       {},
       {
         channelId: '123',
-        providers: {
-          bttv: false,
-          ffz: false,
-          seventv: true,
-          twitch: false,
-        },
       },
     );
 
@@ -350,12 +344,6 @@ describe('stvMessageParser', () => {
       {},
       {
         channelId: '123',
-        providers: {
-          bttv: false,
-          ffz: false,
-          seventv: true,
-          twitch: false,
-        },
       },
     );
 

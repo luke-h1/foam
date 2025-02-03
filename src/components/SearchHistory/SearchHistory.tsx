@@ -17,7 +17,7 @@ export function SearchHistory({
   onClearItem,
   onSelectItem,
 }: Props) {
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -40,7 +40,7 @@ export function SearchHistory({
               <Typography>{item}</Typography>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => onClearItem(item)}>
-              <Entypo name="cross" size={24} />
+              <Entypo name="cross" size={24} color={theme.colors.underline} />
             </TouchableOpacity>
           </View>
         )}
@@ -51,16 +51,16 @@ export function SearchHistory({
 
 const stylesheet = createStyleSheet(theme => ({
   container: {
-    margin: theme.spacing.md - 5,
+    padding: theme.spacing.md,
+    marginVertical: theme.spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xl,
   },
   clearAll: {
-    color: theme.colors.cherry,
+    color: theme.colors.surfaceHighContrast,
   },
   item: {
     flex: 1,
@@ -68,8 +68,8 @@ const stylesheet = createStyleSheet(theme => ({
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 0.25,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderFaint,
   },
 }));

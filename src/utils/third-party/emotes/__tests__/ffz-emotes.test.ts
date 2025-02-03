@@ -55,12 +55,6 @@ describe('ffzMessageParser', () => {
       {},
       {
         channelId: '25927',
-        providers: {
-          bttv: false,
-          ffz: true,
-          seventv: false,
-          twitch: false,
-        },
       },
     );
 
@@ -151,12 +145,6 @@ describe('ffzMessageParser', () => {
       {},
       {
         channelId: 'unodostres',
-        providers: {
-          bttv: false,
-          ffz: true,
-          seventv: false,
-          twitch: false,
-        },
       },
     );
 

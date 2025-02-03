@@ -10,13 +10,6 @@ export type EmotePositions = {
 
 export type ParserOptions = {
   channelId: string | null;
-  providers: {
-    twitch: boolean;
-    bttv: boolean;
-    ffz: boolean;
-    seventv: boolean;
-    [provider: string]: boolean;
-  };
 };
 
 export type ParsedEmotesMessage = {

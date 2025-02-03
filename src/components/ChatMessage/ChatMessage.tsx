@@ -1,5 +1,5 @@
-import { useWindowDimensions, View } from 'react-native';
-import RenderHtml from 'react-native-render-html';
+import { Image } from 'expo-image';
+import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { FormattedChatMessage } from '../Chat';
 import { Typography } from '../Typography';
@@ -9,8 +9,7 @@ interface Props {
 }
 
 export function ChatMessage({ item }: Props) {
-  const { width } = useWindowDimensions();
-  const { styles, theme } = useStyles(stylesheet);
+  const { styles } = useStyles(stylesheet);
 
   return (
     <View style={styles.htmlContainer}>
@@ -20,31 +19,24 @@ export function ChatMessage({ item }: Props) {
             flexDirection: 'row',
           }}
         >
-          <RenderHtml
-            contentWidth={width}
-            source={{
-              html: item.htmlBadges,
+          <Image
+            source={item.badges[0]?.images[0]}
+            style={{
+              width: 20,
+              height: 20,
             }}
           />
           <Typography
             style={{
-              color: item.tags.color,
+              color: item.user.color,
               marginLeft: 4,
             }}
           >
-            {item.tags.username}:
+            {item.user.username}:
           </Typography>
         </View>
 
-        <RenderHtml
-          contentWidth={width}
-          baseStyle={{
-            color: theme.colors.text,
-          }}
-          source={{
-            html: item.htmlMessage,
-          }}
-        />
+        {item.message}
       </View>
     </View>
   );

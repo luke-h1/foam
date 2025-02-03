@@ -1,7 +1,8 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useTmiClient } from '@app/hooks';
-import { BadgeVersions } from '@app/utils/third-party/types';
-import { parseBadges, parseEmotes } from 'emotettv';
+import { parseBadges } from '@app/utils/third-party/badges';
+import { parseEmotes } from '@app/utils/third-party/emotes';
+import { ParsedBadges } from '@app/utils/third-party/types';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Dimensions, FlatList, SafeAreaView } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
@@ -10,9 +11,9 @@ import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
 
 export interface FormattedChatMessage {
-  tags: ChatUserstate;
-  htmlMessage: string;
-  htmlBadges: string;
+  user: ChatUserstate;
+  message: JSX.Element[];
+  badges: ParsedBadges;
 }
 
 interface ChatProps {
@@ -51,22 +52,24 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client.on('message', async (_channel, tags, text, _self) => {
-      const badges = await parseBadges(
-        tags.badges as BadgeVersions,
-        tags.username,
-        options,
-      );
+      const badges = await parseBadges(tags.badges, tags.username, options);
       const message = await parseEmotes(text, tags.emotes, options);
-      const htmlBadges = badges.toHTML();
+      const htmlBadges = badges.toArray();
       const htmlMessage = message.toHTML();
 
-      const payload = {
-        tags,
-        htmlMessage,
-        htmlBadges,
-      };
+      // console.log('req htmlBadge ->', JSON.stringify(htmlBadges));
+      // console.log('msg ->', htmlMessage);
 
-      setMessages(prev => [...prev, payload]);
+      setMessages(prevMessages => {
+        return [
+          ...prevMessages,
+          {
+            badges: htmlBadges,
+            user: tags,
+            message: htmlMessage,
+          },
+        ];
+      });
     });
 
     client.on('clearchat', () => {

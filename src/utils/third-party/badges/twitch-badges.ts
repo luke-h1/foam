@@ -7,23 +7,17 @@ import type {
 } from '../types';
 
 let badgesList: TwitchBadgesList = [];
-const badgeCache: { [key: string]: TwitchBadgesList } = {};
 
 const load: BadgesLoader = async (channelId, force = false) => {
-  const cacheKey = channelId || 'global';
-
-  if (badgeCache[cacheKey] && !force) {
-    badgesList = badgeCache?.[cacheKey] as TwitchBadgesList;
-    return;
-  }
-
-  const [channelBadges, globalBadges] = await Promise.all([
-    channelId ? twitchBadgeService.getChannelBadges(channelId) : [],
-    twitchBadgeService.getGlobalBadges(),
-  ]);
-
-  badgesList = [...channelBadges, ...globalBadges];
-  badgeCache[cacheKey] = badgesList;
+  badgesList = [
+    ...badgesList,
+    ...(
+      await Promise.all([
+        twitchBadgeService.getChannelBadges(channelId),
+        twitchBadgeService.getTwitchGlobalBadges(),
+      ])
+    ).flat(),
+  ];
 };
 
 export const twitchBadgesParser: BadgesParser = {
@@ -37,12 +31,9 @@ export const twitchBadgesParser: BadgesParser = {
           x =>
             x.id === badgeId &&
             x.versionId === version &&
-            (x.channelId === channelId || x.channelId === null),
+            (x.channelId === channelId || x.channelId == null),
         );
-        if (!badge) {
-          return null;
-        }
-
+        if (!badge) return null;
         return {
           id: badge.id,
           title: badge.title,

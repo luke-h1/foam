@@ -9,44 +9,28 @@ const getEmoteUrl = async (emoteId: string, scale: string) => {
 
   const scaleMap: { [key: string]: { width: number; height: number } } = {
     '1x': {
-      width:
-        data.host.files && data.host.files[0]
-          ? data.host.files[0].width - 15
-          : 0,
-      height:
-        data.host.files && data.host.files[0]
-          ? data.host.files[0].height - 15
-          : 0,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      width: data.host.files[0]!.width - 25,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      height: data.host.files[0]!.height - 25,
     },
     '2x': {
-      width:
-        data.host.files && data.host.files[1]
-          ? data.host.files[1].width - 15
-          : 0,
-      height:
-        data.host.files && data.host.files[1]
-          ? data.host.files[1].height - 15
-          : 0,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      width: data.host.files[1]!.width - 25,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      height: data.host.files[1]!.height - 25,
     },
     '3x': {
-      width:
-        data.host.files && data.host.files[2]
-          ? data.host.files[2].width - 15
-          : 0,
-      height:
-        data.host.files && data.host.files[2]
-          ? data.host.files[2].height - 15
-          : 0,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      width: data.host.files[2]!.width - 25,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      height: data.host.files[2]!.height - 25,
     },
     '4x': {
-      width:
-        data.host.files && data.host.files[3]
-          ? data.host.files[3].width - 15
-          : 0,
-      height:
-        data.host.files && data.host.files[3]
-          ? data.host.files[3].height - 15
-          : 0,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      width: data.host.files[3]!.width - 25,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      height: data.host.files[3]!.height - 25,
     },
   };
 
@@ -69,6 +53,7 @@ export const stvMessageParser = makeEmoteParser(
     const emoteUrls = await Promise.all(
       ['1x', '2x', '3x', '4x'].map(scale => getEmoteUrl(emoteId, scale)),
     );
+
     return emoteUrls;
   },
 );

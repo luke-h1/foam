@@ -218,15 +218,15 @@ export function SearchScreen() {
 const stylesheet = createStyleSheet(theme => ({
   container: {
     flexDirection: 'row',
-    padding: 2,
   },
   searchResultsWrapper: {
     marginTop: theme.spacing.md,
     marginLeft: theme.spacing.md,
+    padding: theme.spacing.lg,
   },
   list: {
     flexDirection: 'row',
-    padding: 6,
+    padding: theme.spacing.md,
     alignContent: 'center',
     alignItems: 'center',
   },
