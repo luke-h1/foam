@@ -280,12 +280,6 @@ describe('stvMessageParser', () => {
       {},
       {
         channelId: '123',
-        providers: {
-          bttv: false,
-          ffz: false,
-          seventv: true,
-          twitch: false,
-        },
       },
     );
 
@@ -295,24 +289,24 @@ describe('stvMessageParser', () => {
         emote: {
           images: [
             {
-              height: 17,
+              height: 7,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/1x.webp',
-              width: 17,
+              width: 7,
             },
             {
-              height: 49,
+              height: 39,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/2x.webp',
-              width: 49,
+              width: 39,
             },
             {
-              height: 81,
+              height: 71,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/3x.webp',
-              width: 81,
+              width: 71,
             },
             {
-              height: 113,
+              height: 103,
               url: 'https://cdn.7tv.app/emote/01FHPDFPMG000DWASEV07BSCYM/4x.webp',
-              width: 113,
+              width: 103,
             },
           ],
           isZeroWidth: false,
@@ -350,12 +344,6 @@ describe('stvMessageParser', () => {
       {},
       {
         channelId: '123',
-        providers: {
-          bttv: false,
-          ffz: false,
-          seventv: true,
-          twitch: false,
-        },
       },
     );
 

@@ -6,7 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
 import { Alert, Platform, View, ViewStyle } from 'react-native';
 
-WebBrowser.maybeCompleteAuthSession();
+WebBrowser.maybeCompleteAuthSession({});
 
 const SCOPES = [
   'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',
@@ -21,9 +21,9 @@ const serverOrigin =
 const proxyUrl = new URL(
   // This changes because we have a naive proxy that hardcodes the redirect URL.
   Platform.select({
-    native: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/auth/proxy`,
+    native: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy`,
     // This can basically be any web URL.
-    default: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/auth/pending`,
+    default: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/pending`,
   }),
   serverOrigin,
 ).toString();
@@ -56,9 +56,15 @@ export function LoginScreen() {
 
       // Enable PKCE (Proof Key for Code Exchange) to prevent another app from intercepting the redirect request.
       usePKCE: true,
+      extraParams: {
+        force_verify: 'true',
+      },
     },
     discovery,
   );
+
+  console.log('request', request);
+  console.log('response', response);
 
   const handleAuth = async () => {
     await loginWithTwitch(response);

@@ -89,6 +89,7 @@ export function TabNavigator() {
         },
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: theme.colors.brightPurple,
+        tabBarLabelPosition: 'below-icon',
       }}
     >
       {screens.map(screen => {
@@ -101,13 +102,11 @@ export function TabNavigator() {
             name={screen.name}
             component={screen.component as ComponentType}
             options={{
-              // eslint-disable-next-line react/no-unstable-nested-components, @typescript-eslint/no-unused-vars
-              tabBarIcon: () => (
-                <Icon
-                  icon={screen.icon}
-                  // color={focused ? colors.tint : colors.palette.primary100}
-                />
+              // eslint-disable-next-line react/no-unstable-nested-components
+              tabBarIcon: ({ color, size }) => (
+                <Icon icon={screen.icon} color={color} size={size - 7} />
               ),
+              tabBarLabel: screen.name,
             }}
           />
         );

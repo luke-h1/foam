@@ -1,5 +1,4 @@
-import { useWindowDimensions, View } from 'react-native';
-import RenderHtml from 'react-native-render-html';
+import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { FormattedChatMessage } from '../Chat';
 import { Typography } from '../Typography';
@@ -9,8 +8,7 @@ interface Props {
 }
 
 export function ChatMessage({ item }: Props) {
-  const { width } = useWindowDimensions();
-  const { styles, theme } = useStyles(stylesheet);
+  const { styles } = useStyles(stylesheet);
 
   return (
     <View style={styles.htmlContainer}>
@@ -20,31 +18,19 @@ export function ChatMessage({ item }: Props) {
             flexDirection: 'row',
           }}
         >
-          <RenderHtml
-            contentWidth={width}
-            source={{
-              html: item.htmlBadges,
-            }}
-          />
+          {item.badges}
           <Typography
+            weight="bold"
             style={{
-              color: item.tags.color,
+              color: item.user.color,
               marginLeft: 4,
             }}
           >
-            {item.tags.username}:
+            {item.user.username}:
           </Typography>
         </View>
 
-        <RenderHtml
-          contentWidth={width}
-          baseStyle={{
-            color: theme.colors.text,
-          }}
-          source={{
-            html: item.htmlMessage,
-          }}
-        />
+        {item.message}
       </View>
     </View>
   );
@@ -59,7 +45,8 @@ const stylesheet = createStyleSheet(theme => ({
   htmlContainer: {
     flexDirection: 'column',
     alignItems: 'flex-start',
-    marginRight: 2,
+    marginLeft: 4,
+    padding: theme.spacing.xs,
     marginVertical: theme.spacing.md,
   },
 }));
