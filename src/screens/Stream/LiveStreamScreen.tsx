@@ -1,41 +1,35 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Spinner, Chat, Typography } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchService, UserInfoResponse } from '@app/services';
 import { useQueries } from '@tanstack/react-query';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import {
   View,
   SafeAreaView,
-  Dimensions,
-  ScrollView,
-  Image,
+  useWindowDimensions,
+  TouchableOpacity,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import WebView from 'react-native-webview';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
 }) => {
   const { styles } = useStyles(stylesheet);
-  const screenWidth = Dimensions.get('screen').width;
-  const screenHeight = Dimensions.get('screen').height;
-  const videoHeight = screenWidth * (9 / 16);
-  const [streamer, setStreamer] = useState<UserInfoResponse>();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const isLandscape = screenWidth > screenHeight;
 
-  const [availableHeight, setAvailableHeight] = useState(
-    screenHeight - videoHeight,
-  );
-
-  useEffect(() => {
-    const updateAvailableHeight = () => {
-      const { height, width } = Dimensions.get('window');
-      const newVideoHeight = width * (9 / 16);
-      setAvailableHeight(height - newVideoHeight);
-    };
-
-    Dimensions.addEventListener('change', updateAvailableHeight);
-  }, []);
+  const [, setStreamer] = useState<UserInfoResponse>();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const webViewRef = useRef<WebView>(null);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
@@ -47,13 +41,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     });
 
   const { data: stream, isLoading: isStreamLoading } = streamQueryResult;
-
   const { data: user, isLoading: isUserLoading } = userQueryResult;
-
-  const { data: userProfilePicture, isLoading: isUserProfilePictureLoading } =
+  const { isLoading: isUserProfilePictureLoading } =
     userProfilePictureQueryResult;
-
-  const { width } = Dimensions.get('window');
 
   const fetchUser = async () => {
     const result = await twitchService.getUser(params.id);
@@ -67,98 +57,105 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream]);
 
+  // 🔹 Animated Values for Smooth Resizing 🔹
+  const videoHeight = useSharedValue(
+    isLandscape ? screenHeight : screenWidth * (9 / 16),
+  );
+  const chatHeight = useSharedValue(
+    isLandscape ? screenHeight : screenHeight - videoHeight.value,
+  );
+  useEffect(() => {
+    if (stream) {
+      setIsPlaying(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    videoHeight.value = withTiming(
+      isLandscape ? screenHeight : screenWidth * (9 / 16),
+      { duration: 300 },
+    );
+    chatHeight.value = withTiming(
+      isLandscape ? screenHeight : screenHeight - videoHeight.value,
+      { duration: 300 },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLandscape, screenWidth, screenHeight]);
+
+  const animatedVideoStyle = useAnimatedStyle(() => ({
+    height: videoHeight.value,
+    width: isLandscape ? screenWidth * 0.6 : screenWidth,
+  }));
+
+  const animatedChatStyle = useAnimatedStyle(() => ({
+    height: chatHeight.value,
+    width: isLandscape ? screenWidth * 0.4 : screenWidth,
+  }));
+
+  // eslint-disable-next-line no-shadow
+  const getWebViewStyle = (isLandscape: boolean) => ({
+    width: isLandscape ? 600 : 400,
+    height: '100%',
+  });
+
+  const togglePlayPause = () => {
+    const script = `
+      document.querySelector('[data-a-target="player-play-pause-button"]').click();
+      window.ReactNativeWebView.postMessage(document.querySelector('[data-a-target="player-play-pause-button"]').getAttribute('aria-label'));
+    `;
+    setIsPlaying(prev => !prev);
+    webViewRef.current?.injectJavaScript(script);
+  };
+
   if (isStreamLoading || isUserLoading || isUserProfilePictureLoading) {
     return <Spinner />;
   }
 
   if (!stream) {
-    // user is offline twitchService.getUser
     return (
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollViewContent}>
-          <Image
-            source={{
-              uri: streamer?.offline_image_url,
-            }}
-            style={{
-              width: screenWidth,
-              height: 300,
-            }}
-          />
-          <View style={styles.videoDetails}>
-            <View style={styles.videoMetadata}>
-              <View style={styles.userInfo}>
-                <Image
-                  source={{ uri: userProfilePicture }}
-                  style={styles.avatar}
-                />
-                <Typography style={styles.videoUser}>
-                  {user?.display_name} - Offline
-                </Typography>
-              </View>
-            </View>
-          </View>
-          <View style={styles.chatContainer(availableHeight)}>
-            {/* <Chat
-              channelId={user?.id as string}
-              channelName={streamer?.user_login as string}
-            /> */}
-          </View>
-        </ScrollView>
+        <Typography style={styles.videoUser}>User Offline</Typography>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <WebView
-          source={{
-            uri: `https://player.twitch.tv?channel=${stream.user_login}&controls=true&parent=localhost&autoplay=true`,
-          }}
-          style={[
-            styles.webView,
-            {
-              width,
-              height: width * (9 / 16),
-            },
-          ]}
-          allowsInlineMediaPlayback
-        />
-        <View style={styles.videoDetails}>
-          <View style={styles.videoTitleContainer}>
-            <Typography style={styles.videoTitle} size="xs">
-              {stream.title}
-            </Typography>
-            <Typography style={styles.videoTitle} size="xs">
-              {stream.game_name}
-            </Typography>
-          </View>
-          <View style={styles.videoMetadata}>
-            <View style={styles.userInfo}>
-              <Image
-                source={{ uri: userProfilePicture }}
-                style={styles.avatar}
-              />
-              <Typography style={styles.videoUser}>
-                {user?.display_name}
-              </Typography>
-            </View>
-            <Typography style={styles.videoViews}>
-              {new Intl.NumberFormat('en-US').format(
-                stream.viewer_count as number,
-              )}{' '}
-              viewers
-            </Typography>
-          </View>
-        </View>
-        <View style={styles.chatContainer(availableHeight)}>
+      <View style={[styles.contentContainer, isLandscape && styles.row]}>
+        {/* ✅ Fixed Video Section */}
+        <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
+          <WebView
+            ref={webViewRef}
+            source={{
+              uri: `https://player.twitch.tv/?channel=${stream.user_login}&parent=foam.lhowsam.com&autoplay=true`,
+            }}
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            style={getWebViewStyle(isLandscape)}
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            javaScriptEnabled
+          />
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={togglePlayPause}
+          >
+            <Icon
+              name={isPlaying ? 'pause' : 'play-arrow'}
+              size={30}
+              color="#FFF"
+            />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* ✅ Chat Resizes Correctly */}
+        <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
           <Chat
             channelId={user?.id as string}
             channelName={stream.user_login as string}
           />
-        </View>
-      </ScrollView>
+        </Animated.View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -167,50 +164,33 @@ const stylesheet = createStyleSheet(theme => ({
   container: {
     flex: 1,
   },
-  scrollViewContent: {
+  contentContainer: {
+    flex: 1,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  videoContainer: {
     alignItems: 'center',
-  },
-  webView: {
-    overflow: 'hidden',
-  },
-  videoDetails: {
-    padding: 10,
+    justifyContent: 'center',
     width: '100%',
   },
-  videoTitleContainer: {
-    marginBottom: 10,
-    flexDirection: 'column',
-  },
-  videoTitle: {
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginVertical: theme.spacing.xs,
-  },
-  videoMetadata: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
+  chatContainer: {
+    borderLeftWidth: 1,
+    borderLeftColor: theme.colors.border,
   },
   videoUser: {
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
   },
-  videoViews: {
-    fontSize: 16,
-    color: theme.colors.border,
+  controlButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 50,
+    padding: 10,
   },
-  chatContainer: (height: number) => ({
-    maxHeight: height,
-  }),
 }));

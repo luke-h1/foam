@@ -59,12 +59,6 @@ describe('makeEmoteParser', () => {
       {},
       {
         channelId: '123',
-        providers: {
-          seventv: true,
-          bttv: true,
-          twitch: true,
-          ffz: true,
-        },
       },
     );
 
@@ -125,12 +119,6 @@ describe('makeEmoteParser', () => {
       {},
       {
         channelId: '123',
-        providers: {
-          seventv: true,
-          bttv: true,
-          twitch: true,
-          ffz: true,
-        },
       },
     );
 

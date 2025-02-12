@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { twitchBadgeService } from '@app/services';
 import type {
   TwitchBadgesList,
@@ -7,23 +8,14 @@ import type {
 } from '../types';
 
 let badgesList: TwitchBadgesList = [];
-const badgeCache: { [key: string]: TwitchBadgesList } = {};
 
-const load: BadgesLoader = async (channelId, force = false) => {
-  const cacheKey = channelId || 'global';
-
-  if (badgeCache[cacheKey] && !force) {
-    badgesList = badgeCache?.[cacheKey] as TwitchBadgesList;
-    return;
-  }
-
+const load: BadgesLoader = async (channelId, _force = false) => {
   const [channelBadges, globalBadges] = await Promise.all([
     channelId ? twitchBadgeService.getChannelBadges(channelId) : [],
-    twitchBadgeService.getGlobalBadges(),
+    twitchBadgeService.getTwitchGlobalBadges(),
   ]);
 
   badgesList = [...channelBadges, ...globalBadges];
-  badgeCache[cacheKey] = badgesList;
 };
 
 export const twitchBadgesParser: BadgesParser = {
@@ -32,21 +24,26 @@ export const twitchBadgesParser: BadgesParser = {
     await load(channelId);
     return Object.keys(badges)
       .map(badgeId => {
+        // console.log('badge id', badgeId);
         const version = badges[badgeId];
         const badge = badgesList.find(
           x =>
             x.id === badgeId &&
             x.versionId === version &&
-            (x.channelId === channelId || x.channelId === null),
+            (x.channelId === channelId || x.channelId == null),
         );
+
         if (!badge) {
+          console.log('no badge...');
           return null;
         }
+
+        console.log('images ->', badge.images);
 
         return {
           id: badge.id,
           title: badge.title,
-          images: badge.images,
+          images: [badge.images[0]],
         };
       })
       .filter(x => !!x) as ParsedBadges;

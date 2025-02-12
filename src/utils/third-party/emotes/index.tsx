@@ -35,10 +35,6 @@ export const reloadEmotes = async (
 ) => {
   const options = loadOptions(_options);
   emoteParsers.forEach(async parser => {
-    if (!options.providers?.[parser.provider]) {
-      // eslint-disable-next-line no-useless-return
-      return;
-    }
     await parser.load(options.channelId, true);
   });
 };
@@ -55,10 +51,10 @@ export const parseEmotes = async (
     async (messagePromise, parser) => {
       // eslint-disable-next-line no-shadow
       const message = await messagePromise;
-      if (!options?.providers?.[parser.provider]) {
-        return message;
-      }
-      return parser.parse(message, emotePositions, options as ParserOptions);
+
+      return parser.parse(message, emotePositions, {
+        channelId: options?.channelId as unknown as string,
+      });
     },
     prepare(message),
   );
@@ -66,10 +62,15 @@ export const parseEmotes = async (
   return {
     toArray: () => parsedMessage,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    toHTML: (scale = 1, inlineStyles = true, _escapeHTML = true) => {
+    toHTML: (
+      scale: 1 | 2 | 3 | 4 = 1,
+      inlineStyles = true,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _escapeHTML = true,
+    ) => {
       // eslint-disable-next-line no-shadow
       return parsedMessage.map((message, index) => {
-        if (!message.emote?.images) {
+        if (!message.emote) {
           // const isMention = message.content.startsWith('@');
           // const mentionColor = isMention
           //   ? theme.colors.angry100
@@ -78,6 +79,22 @@ export const parseEmotes = async (
           const urlRegex = /(https?:\/\/[^\s]+)/g;
           const parts = message.content.split(urlRegex);
 
+          const elements = parts.map((part, i) => {
+            if (urlRegex.test(part)) {
+              return (
+                <Typography
+                  // eslint-disable-next-line react/no-array-index-key
+                  key={`link-${index}-${i}`}
+                  style={{ color: '#004EFF' }}
+                  onPress={() => Linking.openURL(part)}
+                >
+                  {part}
+                </Typography>
+              );
+            }
+            return part;
+          });
+
           return (
             <Typography
               // eslint-disable-next-line react/no-array-index-key
@@ -85,24 +102,10 @@ export const parseEmotes = async (
               style={{
                 marginLeft: 1,
                 marginRight: 1,
-                color: 'mentionColor',
+                // color: 'mentionColor',
               }}
             >
-              {parts.map((part, i) => {
-                if (urlRegex.test(part)) {
-                  return (
-                    <Typography
-                      // eslint-disable-next-line react/no-array-index-key
-                      key={`link-${index}-${i}`}
-                      style={{ color: '#004EFF' }}
-                      onPress={() => Linking.openURL(part)}
-                    >
-                      {part}
-                    </Typography>
-                  );
-                }
-                return <Typography key={part}>{part}</Typography>;
-              })}
+              {elements}
             </Typography>
           );
         }
@@ -139,7 +142,7 @@ export const parseEmotes = async (
               flexDirection: 'row',
               alignItems: 'center',
               position: 'relative',
-              flexWrap: 'wrap', // Ensure text wraps on overflow
+              flexWrap: 'wrap',
             }}
           >
             <Image

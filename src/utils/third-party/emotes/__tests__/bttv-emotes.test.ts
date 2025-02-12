@@ -57,12 +57,6 @@ describe('bttvMessageParser', () => {
       {},
       {
         channelId: '123',
-        providers: {
-          bttv: true,
-          ffz: false,
-          seventv: false,
-          twitch: false,
-        },
       },
     );
 
@@ -148,12 +142,6 @@ describe('bttvMessageParser', () => {
       {},
       {
         channelId: '123456',
-        providers: {
-          bttv: true,
-          ffz: false,
-          seventv: false,
-          twitch: false,
-        },
       },
     );
 

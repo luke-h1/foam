@@ -1,24 +1,7 @@
-import { HelixChatBadgeSet } from '@twurple/api';
 import {
   TwitchBadgesList,
   TwitchBadgesResponse,
 } from '../utils/third-party/types';
-import { twurple } from '../utils/third-party/util/twurple';
-
-const formatBadgesResponse = (badges: HelixChatBadgeSet[]) =>
-  badges.map(badge => ({
-    id: badge.id,
-    versions: badge.versions.map(version => ({
-      id: version.id,
-      title: version.title,
-      description: version.description,
-      clickAction: version.clickAction || '',
-      clickUrl: version.clickUrl || '',
-      image_url_1x: version.getImageUrl(1),
-      image_url_2x: version.getImageUrl(2),
-      image_url_4x: version.getImageUrl(4),
-    })),
-  }));
 
 interface FormattedBadgeList {
   id: string;
@@ -53,6 +36,23 @@ const formatTwitchBadgesList = (
   );
 };
 
+export type UnttvBadgesResponse = {
+  id: string;
+  versions: {
+    id: string;
+    title: string;
+    description: string;
+    clickAction: string;
+    clickUrl: string;
+    image_url_1x: string;
+    image_url_2x: string;
+    image_url_4x: string;
+  }[];
+}[];
+
+// TODO: move this to our own service
+const BASE_URL = 'https://unttv.vercel.app';
+
 export const twitchBadgeService = {
   getChannelBadges: async (
     channelId: string | null,
@@ -61,22 +61,22 @@ export const twitchBadgeService = {
       return [];
     }
     try {
-      const badges = await twurple.chat.getChannelBadges(channelId);
-      const body = formatBadgesResponse(badges);
+      const resp = await fetch(`${BASE_URL}/badges/channel/${channelId}`);
+      if (!resp.ok) throw Error();
+      const data = (await resp.json()) as UnttvBadgesResponse;
+      return formatTwitchBadgesList(data, channelId);
 
-      const formattedBody = formatTwitchBadgesList(body, channelId);
-
-      return formattedBody;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return [];
     }
   },
-  getGlobalBadges: async (): Promise<TwitchBadgesList> => {
+  getTwitchGlobalBadges: async (): Promise<TwitchBadgesList> => {
     try {
-      const badges = await twurple.chat.getGlobalBadges();
-      const result = formatBadgesResponse(badges);
-      return formatTwitchBadgesList(result, null);
+      const resp = await fetch(`${BASE_URL}/badges/global`);
+      if (!resp.ok) throw Error();
+      const data = (await resp.json()) as UnttvBadgesResponse;
+      return formatTwitchBadgesList(data, null);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       return [];
