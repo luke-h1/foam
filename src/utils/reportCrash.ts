@@ -1,5 +1,3 @@
-// import crashlytics from '@react-native-firebase/crashlytics';
-
 /* eslint-disable no-console */
 export enum ErrorType {
   /**

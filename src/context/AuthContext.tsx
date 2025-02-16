@@ -6,7 +6,6 @@ import {
   UserInfoResponse,
   twitchService,
 } from '@app/services/twitchService';
-import { logInfo } from '@app/utils/logInfo';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import {
@@ -312,21 +311,18 @@ export const AuthContextProvider = ({
 
     // authenticated
     if (storedAuthToken) {
-      logInfo('[populateAuthState #storedAuthToken] - got token');
       const parsedAuthToken = JSON.parse(storedAuthToken) as TokenResponse;
       doAuth(parsedAuthToken);
     }
 
     // anon
     if (storedAnonToken) {
-      logInfo('[populateAuthState #storedAnonToken] - got anon token');
       const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
       doAnonAuth(parsedAnonToken);
     }
 
     if (!storedAnonToken || !storedAuthToken) {
       // we don't have an anonymous token or a logged in token. log the user in anonymously
-      logInfo('[populateAuthState] - no tokens at all');
       doAnonAuth();
     }
   };
