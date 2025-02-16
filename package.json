@@ -100,6 +100,7 @@
     "expo-updates": "~0.26.18",
     "expo-video": "^2.0.5",
     "express": "^4.21.0",
+    "firebase": "^11.3.1",
     "jest-junit": "16.0.0",
     "newrelic-react-native-agent": "^1.4.5",
     "pino": "^8.17.2",
