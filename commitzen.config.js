@@ -24,7 +24,7 @@ module.exports = {
     },
     {
       value: 'perf',
-      name: '\tCode change that improves performance',
+      name: 'perf:\tCode change that improves performance',
     },
     {
       value: 'test',
@@ -35,6 +35,11 @@ module.exports = {
       name: 'chore:\tChanges to the build process or auxiliary tools\n\t\tand libraries such as documentation generation',
     },
     { value: 'revert', name: 'revert:\tRevert to a commit' },
+    {
+      value: 'release',
+      name: 'release:\tRelease a new version (e.g., 0.0.2)',
+      // You can add further logic here to enforce the version format if necessary
+    },
   ],
   scopes,
   scopeOverrides: {
