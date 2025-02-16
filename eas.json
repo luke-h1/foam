@@ -22,6 +22,7 @@
       "channel": "preview"
     },
     "production": {
+      "bun": "1.1.43",
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production"
@@ -31,8 +32,9 @@
   },
   "submit": {
     "production": {
-      "ios": {},
-      "android": {}
+      "ios": {
+        "ascAppId": "6742071860"
+      }
     }
   }
 }
