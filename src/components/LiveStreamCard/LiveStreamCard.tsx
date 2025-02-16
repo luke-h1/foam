@@ -30,15 +30,18 @@ export function LiveStreamCard({ stream }: Props) {
     >
       <View style={styles.container}>
         <View style={styles.imageContainer}>
-          <Image
-            source={stream.thumbnail_url
-              .replace('{width}', '720')
-              .replace('{height}', '480')}
-            style={{
-              width: 150,
-              height: 100,
-            }}
-          />
+          {stream.thumbnail_url && (
+            <Image
+              source={stream.thumbnail_url
+                .replace('{width}', '720')
+                .replace('{height}', '480')}
+              style={{
+                width: 150,
+                height: 100,
+              }}
+            />
+          )}
+
           <View style={styles.overlay}>
             <View style={styles.redDot} />
             <Typography style={styles.liveText}>
@@ -52,11 +55,14 @@ export function LiveStreamCard({ stream }: Props) {
           </Typography>
           <View style={styles.metadata}>
             <View style={styles.info}>
-              <Image
-                source={{ uri: profilePicture }}
-                style={styles.avatar}
-                testID="LiveStreamCard-avatar"
-              />
+              {profilePicture && (
+                <Image
+                  source={{ uri: profilePicture }}
+                  style={styles.avatar}
+                  testID="LiveStreamCard-avatar"
+                />
+              )}
+
               <Typography> {stream.user_name}</Typography>
             </View>
             <Typography size="xs">

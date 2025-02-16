@@ -14,7 +14,7 @@ import { TopStackNavigator } from './TopStackNavigator';
 
 export type TabParamList = {
   Following: undefined;
-  Top: undefined;
+  TopStack: undefined;
   Search: undefined;
   Settings: undefined;
 };
@@ -29,7 +29,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
-  | FC<TabScreenProps<'Top'>>
+  | FC<TabScreenProps<'TopStack'>>
   | FC<TabScreenProps<'Search'>>
   | FC<TabScreenProps<'Settings'>>;
 
@@ -48,7 +48,7 @@ const screens: Screen[] = [
     requiresAuth: true,
   },
   {
-    name: 'Top',
+    name: 'TopStack',
     component: TopStackNavigator,
     icon: 'chevron-up',
     requiresAuth: false,

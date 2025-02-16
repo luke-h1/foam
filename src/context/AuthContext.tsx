@@ -309,31 +309,38 @@ export const AuthContextProvider = ({
       }
     }
   };
-
   const populateAuthState = async () => {
-    const [storedAnonToken, storedAuthToken] = await Promise.all([
-      SecureStore.getItemAsync(storageKeys.anon),
-      SecureStore.getItemAsync(storageKeys.user),
-    ]);
+    try {
+      const [storedAnonToken, storedAuthToken] = await Promise.all([
+        SecureStore.getItemAsync(storageKeys.anon),
+        SecureStore.getItemAsync(storageKeys.user),
+      ]);
 
-    // authenticated
-    if (storedAuthToken) {
-      const parsedAuthToken = JSON.parse(storedAuthToken) as TokenResponse;
-      await doAuth(parsedAuthToken);
+      console.log('Stored Anon Token:', storedAnonToken);
+      console.log('Stored Auth Token:', storedAuthToken);
+
+      // authenticated
+      if (storedAuthToken) {
+        const parsedAuthToken = JSON.parse(storedAuthToken) as TokenResponse;
+        await doAuth(parsedAuthToken);
+      }
+
+      // anon
+      if (storedAnonToken) {
+        const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
+        await doAnonAuth(parsedAnonToken);
+      }
+
+      if (!storedAnonToken || !storedAuthToken) {
+        // we don't have an anonymous token or a logged in token. log the user in anonymously
+        await doAnonAuth();
+      }
+
+      setState(prevState => ({ ...prevState, ready: true }));
+    } catch (error) {
+      console.error('Error in populateAuthState:', error);
+      newRelic.logError(`populateAuthState err ${error}`);
     }
-
-    // anon
-    if (storedAnonToken) {
-      const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
-      await doAnonAuth(parsedAnonToken);
-    }
-
-    if (!storedAnonToken || !storedAuthToken) {
-      // we don't have an anonymous token or a logged in token. log the user in anonymously
-      await doAnonAuth();
-    }
-
-    // never should get to this point
   };
 
   useEffect(() => {
