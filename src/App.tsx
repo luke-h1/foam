@@ -24,7 +24,7 @@ import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 import './styles/unistyles';
-import { AppLoading, OTAUpdates, Toast } from './components';
+import { OTAUpdates, Toast } from './components';
 import { useOnAppStateChange, useChangeScreenOrientation } from './hooks';
 import {
   useNavigationPersistence,
@@ -79,7 +79,7 @@ export default function App(props: AppProps) {
 
   const [recoveredFromError, setRecoveredFromError] = useState<boolean>(false);
 
-  const [areFontsLoaded] = useFonts({
+  useFonts({
     Inter_900Black,
     Inter_300Light,
     Inter_400Regular,
@@ -103,17 +103,13 @@ export default function App(props: AppProps) {
   }
 
   /**
-   * Before we show the app, we have to wait for our state to be readyy.
+   * Before we show the app, we have to wait for our state to be ready
    * In the meantime, don't render anything. This will be the background color set in
    * native by rootView's background color.
    * In iOS: application:didFinishLaunchingWithOptions:
    * In Android: https://stackoverflow.com/a/45838109/204044
    * You can replace with your own loading component
    */
-
-  if (!areFontsLoaded) {
-    return <AppLoading />;
-  }
 
   // otherwise, we're ready to render the app
   return (
