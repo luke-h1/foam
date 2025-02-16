@@ -26,7 +26,7 @@
     "commit": "cz",
     "gen-env": "gen-env-types .env -o src/types/env.d.ts -e .",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "lint:check": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
     "prettier:check": "prettier --check \"src/**/*.{ts,tsx,json}\"",
     "prettier:fix": "prettier --write \"src/**/*.{ts,tsx,json}\"",
     "prebuild:android": "npx expo prebuild -p android",
