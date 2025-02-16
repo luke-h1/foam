@@ -11,6 +11,7 @@ import mockFile from './mockFile';
 import 'cross-fetch/polyfill';
 import 'core-js';
 import '@app/hooks/useAppNavigation';
+import '../src/styles/unistyles';
 
 jest.mock('expo-font');
 jest.mock('expo-asset');
