@@ -1,10 +1,8 @@
-// Learn more https://docs.expo.io/guides/customizing-metro
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { getDefaultConfig } = require('expo/metro-config');
 const withStorybook = require('@storybook/react-native/metro/withStorybook');
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
 /** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
 
 config.transformer.getTransformOptions = async () => ({
   transform: {

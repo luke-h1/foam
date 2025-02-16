@@ -77,3 +77,5 @@ google-services-*.json
 
 # google services IOS
 GoogleService-*-*.plist
+
+.env.local

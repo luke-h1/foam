@@ -66,6 +66,7 @@
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.15",
     "@react-navigation/stack": "^6.3.20",
+    "@sentry/react-native": "^6.7.0",
     "@shopify/flash-list": "1.7.3",
     "@tanstack/react-query": "^5.17.10",
     "@twurple/api": "^7.2.0",

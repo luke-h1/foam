@@ -9,6 +9,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
+import * as Sentry from '@sentry/react-native';
 import {
   onlineManager,
   QueryClient,
@@ -35,13 +36,25 @@ import { ErrorBoundary } from './screens';
 import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
 
+Sentry.init({
+  dsn: 'https://c66140f9c8c6c72a91e15582f3086de5@o536134.ingest.us.sentry.io/4508831072780288',
+  attachScreenshot: true,
+  attachStacktrace: true,
+  attachThreads: true,
+  enableAppStartTracking: true,
+  enableCaptureFailedRequests: true,
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
+
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
 interface AppProps {
   hideSplashScreen: () => Promise<void>;
 }
 
-export default function App(props: AppProps) {
+function App(props: AppProps) {
   const { hideSplashScreen } = props;
 
   const queryClient = new QueryClient({
@@ -143,3 +156,7 @@ export default function App(props: AppProps) {
 const $bottomSheetContainer: ViewStyle = {
   flex: 1,
 };
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+export default Sentry.wrap(App);

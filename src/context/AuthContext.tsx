@@ -9,6 +9,7 @@ import {
 } from '@app/services/twitchService';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
+import newRelic from 'newrelic-react-native-agent';
 import {
   createContext,
   ReactNode,
@@ -115,7 +116,7 @@ export const AuthContextProvider = ({
         },
       });
 
-      SecureStore.setItemAsync(
+      await SecureStore.setItemAsync(
         storageKeys.anon,
         JSON.stringify({
           accessToken: result.access_token,
@@ -125,8 +126,12 @@ export const AuthContextProvider = ({
       );
       twitchApi.setAuthToken(result.access_token);
     } catch (e) {
+      newRelic.recordError({
+        message: 'Failed to get anon auth',
+        name: 'AnonAuthFail',
+        cause: e,
+      });
       console.error('Failed to get anon auth', e);
-
       // eslint-disable-next-line no-useless-return
       return;
     }
@@ -145,14 +150,14 @@ export const AuthContextProvider = ({
       // evict cached anon details
       SecureStore.deleteItemAsync(storageKeys.user);
       setUser(undefined);
-      doAnonAuth();
+      await doAnonAuth();
     }
     // we have a token, check it's validity
-    const isValidToken = isExpiredUserToken(token);
+    const isValidToken = await isExpiredUserToken(token);
 
     if (!isValidToken) {
       // token isn't valid, do anon auth
-      doAnonAuth();
+      await doAnonAuth();
     }
 
     // we can assume it's valid at this point and we have it in state, let's check if it expires soon
@@ -183,7 +188,7 @@ export const AuthContextProvider = ({
       });
       const u = await twitchService.getUserInfo(newToken.access_token);
       setUser(u);
-      SecureStore.setItemAsync(
+      await SecureStore.setItemAsync(
         storageKeys.anon,
         JSON.stringify(newToken, null, 2),
       );
@@ -239,7 +244,7 @@ export const AuthContextProvider = ({
     const stringifedAuth = JSON.stringify(response.authentication);
 
     // set tokens in secure-store
-    SecureStore.setItemAsync(storageKeys.user, stringifedAuth);
+    await SecureStore.setItemAsync(storageKeys.user, stringifedAuth);
 
     // set header in axios
     twitchApi.setAuthToken(response.authentication.accessToken);
@@ -291,7 +296,7 @@ export const AuthContextProvider = ({
           });
           const u = await twitchService.getUserInfo(newToken.access_token);
           setUser(u);
-          SecureStore.setItemAsync(
+          await SecureStore.setItemAsync(
             storageKeys.anon,
             JSON.stringify(newToken, null, 2),
           );
@@ -314,66 +319,27 @@ export const AuthContextProvider = ({
     // authenticated
     if (storedAuthToken) {
       const parsedAuthToken = JSON.parse(storedAuthToken) as TokenResponse;
-      doAuth(parsedAuthToken);
+      await doAuth(parsedAuthToken);
     }
 
     // anon
     if (storedAnonToken) {
       const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
-      doAnonAuth(parsedAnonToken);
+      await doAnonAuth(parsedAnonToken);
     }
 
     if (!storedAnonToken || !storedAuthToken) {
       // we don't have an anonymous token or a logged in token. log the user in anonymously
-      doAnonAuth();
+      await doAnonAuth();
     }
+
+    // never should get to this point
   };
 
   useEffect(() => {
     populateAuthState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // useEffect(() => {
-  //   const checkTokenValidity = async () => {
-  //     const token = state?.authState?.token?.accessToken;
-  //     if (!token) return;
-
-  //     const shouldRefreshToken =
-  //       state.authState?.isAnonAuth && state.authState.token.expiresIn
-  //         ? new Date() >=
-  //           new Date(state.authState.token.expiresIn * 1000 - 5 * 60 * 1000) // 5 minutes before expiry
-  //         : !(await twitchService.validateToken(token));
-
-  //     if (shouldRefreshToken) {
-  //       const newToken = await twitchService.getRefreshToken(token);
-
-  //       setState(prev => ({
-  //         ...prev,
-  //         authState: {
-  //           isAnonAuth: true,
-  //           isLoggedIn: false,
-  //           token: {
-  //             accessToken: newToken.access_token,
-  //             expiresIn: newToken.expires_in as number,
-  //             tokenType: 'bearer',
-  //           },
-  //         },
-  //       }));
-  //       // setState(prev => ({
-  //       //   ...prev,
-  //       //   authState: {
-  //       //     ...prev.authState,
-  //       //     token: newToken,
-  //       //   },
-  //       // }));
-  //     }
-  //   };
-
-  //   const intervalId = setInterval(checkTokenValidity, 60 * 1000); // Check every minute
-
-  //   return () => clearInterval(intervalId);
-  // }, [state.authState]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const contextState: AuthContextState = useMemo(() => {
@@ -384,7 +350,7 @@ export const AuthContextProvider = ({
       logout: () => Promise.resolve(),
       fetchAnonToken,
       user,
-      ready: state.ready,
+      ready: state.ready ?? true,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.authState, user]);
