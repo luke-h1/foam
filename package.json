@@ -19,6 +19,7 @@
     "build:production": "eas build --profile production --platform ios --auto-submit --non-interactive --no-wait",
     "build:production:android": "eas build --profile production --platform android --auto-submit --non-interactive --no-wait",
     "build:production:ios": "eas build --profile production --platform ios --auto-submit --non-interactive --no-wait",
+    "build:local:production:ios": "APP_VARIANT=production expo prebuild && APP_VARIANT=production expo run:ios",
     "alphabetize": "node scripts/alphabetizePackageJson.js",
     "check:node": "check-node-version --package",
     "clean": "rm -rf ios android .expo node_modules",
