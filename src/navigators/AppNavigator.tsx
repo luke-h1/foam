@@ -84,7 +84,7 @@ const AppStack = () => {
         headerShown: false,
         // navigationBarColor: colors.background,
       }}
-      initialRouteName="Tabs"
+      initialRouteName="AuthLoading"
     >
       <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
 
