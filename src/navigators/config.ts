@@ -9,7 +9,7 @@ export interface ConfigBaseProps {
 export const BaseConfig: ConfigBaseProps = {
   // This feature is particularly useful in development mode, but
   // can be used in production as well if you prefer.
-  persistNavigation: 'always',
+  persistNavigation: __DEV__ ? 'always' : 'never',
 
   /**
    * Only enable if we're catching errors in the right environment
