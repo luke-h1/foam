@@ -71,14 +71,10 @@ export default function App(props: AppProps) {
     });
   });
 
-  if (shouldDelete) {
-    deleteTokens();
-  }
-
   const {
     initialNavigationState,
     onNavigationStateChange,
-    isRestored: isNavigationStateRestored,
+    // isRestored: isNavigationStateRestored,
   } = useNavigationPersistence(storage, NAVIGATION_PERSISTENCE_KEY);
 
   const [recoveredFromError, setRecoveredFromError] = useState<boolean>(false);
@@ -115,7 +111,7 @@ export default function App(props: AppProps) {
    * You can replace with your own loading component
    */
 
-  if (!areFontsLoaded || !isNavigationStateRestored) {
+  if (!areFontsLoaded) {
     return <AppLoading />;
   }
 
