@@ -115,3 +115,12 @@ jest.mock('expo-secure-store', () => ({
 //     return () => null;
 //   }),
 // }));
+jest.mock('@react-native-firebase/crashlytics', () => {
+  return {
+    __esModule: true,
+    crashlytics: jest.fn(() => ({
+      log: jest.fn(),
+      recordError: jest.fn(),
+    })),
+  };
+});

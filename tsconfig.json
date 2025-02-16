@@ -30,7 +30,7 @@
       "@app/*": ["./src/*"]
     }
   },
-  "include": ["src", "test", "App.js"],
+  "include": ["src", "test", "App.js", "jest-setup/__mocks__"],
   "moduleResolution": "node",
   "exclude": ["node_modules", ".expo"]
 }

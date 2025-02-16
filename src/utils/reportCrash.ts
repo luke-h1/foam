@@ -1,3 +1,5 @@
+import crashlytics from '@react-native-firebase/crashlytics';
+
 /* eslint-disable no-console */
 export enum ErrorType {
   /**
@@ -12,12 +14,12 @@ export enum ErrorType {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const reportCrash = (error: any, type = ErrorType.FATAL) => {
+export const reportCrash = (error: Error, type = ErrorType.FATAL) => {
   if (__DEV__ || process.env.NODE_ENV === 'development') {
     const message = error.message || 'unknown';
     console.error(error);
     console.log(message, type);
   } else {
-    // TODO: log to new relic here
+    crashlytics().recordError(error);
   }
 };
