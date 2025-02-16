@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable global-require */
 /* eslint-disable @typescript-eslint/no-require-imports */
+import '@testing-library/jest-native/extend-expect';
 import 'react-native-gesture-handler/jestSetup';
 import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
@@ -9,7 +10,6 @@ import * as ReactNative from 'react-native';
 import mockFile from './mockFile';
 import 'cross-fetch/polyfill';
 import 'core-js';
-import '@testing-library/jest-native/extend-expect';
 import '@app/hooks/useAppNavigation';
 import '../src/styles/unistyles';
 
@@ -80,8 +80,11 @@ jest.doMock('react-native', () => {
         ...ReactNative.Image,
         resolveAssetSource: jest.fn(_source => mockFile),
         getSize: jest.fn(
-          (_uri: string, success: (width: number, height: number) => void) =>
-            success(100, 100),
+          (
+            _uri: string,
+            success: (width: number, height: number) => void,
+            _failure?: (_error: any) => void,
+          ) => success(100, 100),
         ),
       },
     },
@@ -115,12 +118,3 @@ jest.mock('expo-secure-store', () => ({
 //     return () => null;
 //   }),
 // }));
-jest.mock('@react-native-firebase/crashlytics', () => {
-  return {
-    __esModule: true,
-    crashlytics: jest.fn(() => ({
-      log: jest.fn(),
-      recordError: jest.fn(),
-    })),
-  };
-});

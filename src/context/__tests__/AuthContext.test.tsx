@@ -17,6 +17,15 @@ import {
 jest.mock('@app/services/twitchService');
 jest.mock('expo-secure-store');
 
+jest.mock('@react-native-firebase/crashlytics', () => {
+  return {
+    __esModule: true,
+    crashlytics: jest.fn(() => ({
+      log: jest.fn(),
+      recordError: jest.fn(),
+    })),
+  };
+});
 export const initalTestAuthContextProps: AuthContextState = {
   loginWithTwitch: jest.fn(),
   logout: jest.fn(),
