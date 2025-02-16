@@ -47,7 +47,9 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000',
-    iosGoogleServicesFile: './GoogleService-Info-production.plist',
+    iosGoogleServicesFile:
+      process.env.IOS_GOOGLE_SERVICES_JSON ??
+      './GoogleService-Info-production.plist',
     androidGoogleServicesFile: './google-services-prod.json',
   },
 } as const;
