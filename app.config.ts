@@ -88,7 +88,7 @@ const config: ExpoConfig = {
   newArchEnabled: true,
   version: VERSION,
   scheme: 'foam',
-  owner: 'lhowsam',
+  owner: 'lukehowsam123',
   icon: './assets/app-icon/app-icon-production.png',
   userInterfaceStyle: 'dark',
   splash: {
