@@ -1,4 +1,4 @@
-// import crashlytics from '@react-native-firebase/crashlytics';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 /* eslint-disable no-console */
 export enum ErrorType {
@@ -20,6 +20,6 @@ export const reportCrash = (error: Error, type = ErrorType.FATAL) => {
     console.error(error);
     console.log(message, type);
   } else {
-    // crashlytics().recordError(error);
+    crashlytics().recordError(error);
   }
 };

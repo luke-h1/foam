@@ -115,6 +115,8 @@ const config: ExpoConfig = {
   plugins: [
     ['app-icon-badge', appIconBadgeConfig],
     ['expo-font', 'expo-secure-store'],
+    '@react-native-firebase/app',
+    '@react-native-firebase/crashlytics',
     [
       'expo-build-properties',
       {

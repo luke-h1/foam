@@ -1,4 +1,4 @@
-// import crashlytics from '@react-native-firebase/crashlytics';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 export const logInfo = (message: string) => {
   if (__DEV__) {
@@ -6,5 +6,5 @@ export const logInfo = (message: string) => {
     console.info(message);
   }
 
-  // crashlytics().log(message);
+  crashlytics().log(message);
 };

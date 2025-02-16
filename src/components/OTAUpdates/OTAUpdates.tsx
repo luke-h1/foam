@@ -16,7 +16,10 @@ export function OTAUpdates() {
     } else {
       setModalVisible(false);
       setUpdating(false);
-      reportCrash('Fetch update failed');
+      reportCrash({
+        message: 'Update failed',
+        name: 'OTAUpdatedFailed',
+      });
     }
   }
 
@@ -30,7 +33,10 @@ export function OTAUpdates() {
       const update = await Updates.checkForUpdateAsync();
       setModalVisible(update.isAvailable);
     } catch (error) {
-      reportCrash(error);
+      reportCrash({
+        message: `Failed to check for updates ${error}`,
+        name: 'OTAUpdatedFailedToCheckForUpdate',
+      });
     }
   }
 

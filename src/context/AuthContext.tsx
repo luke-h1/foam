@@ -255,6 +255,8 @@ export const AuthContextProvider = ({
 
       console.log('isValidToken ->', isValidToken);
 
+      logInfo(`isValidToken -> ${isValidToken}`);
+
       // if it's expired, get a new token and set it in state
       if (!isValidToken) {
         twitchApi.removeAuthToken();

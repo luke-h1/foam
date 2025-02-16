@@ -16,6 +16,6 @@ const stylesheet = createStyleSheet(theme => ({
     padding: theme.spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.screen,
+    backgroundColor: theme.colors.border,
   },
 }));

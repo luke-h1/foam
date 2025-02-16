@@ -34,6 +34,7 @@ import {
 import { ErrorBoundary } from './screens';
 import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
+import { logInfo } from './utils/logInfo';
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
@@ -112,6 +113,7 @@ export default function App(props: AppProps) {
    */
 
   if (!areFontsLoaded) {
+    logInfo('AppLoading...');
     return <AppLoading />;
   }
 
