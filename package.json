@@ -16,7 +16,7 @@
     "build:preview": "eas build --profile preview --platform all --non-interactive --no-wait",
     "build:preview:android": "eas build --profile preview --platform android --non-interactive --no-wait",
     "build:preview:ios": "eas build --profile preview --platform ios --non-interactive --no-wait",
-    "build:production": "eas build --profile production --platform all --auto-submit --non-interactive --no-wait",
+    "build:production": "eas build --profile production --platform ios --auto-submit --non-interactive --no-wait",
     "build:production:android": "eas build --profile production --platform android --auto-submit --non-interactive --no-wait",
     "build:production:ios": "eas build --profile production --platform ios --auto-submit --non-interactive --no-wait",
     "alphabetize": "node scripts/alphabetizePackageJson.js",
