@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
+import { AppLoading } from '@app/components';
 import { twitchApi } from '@app/services/api';
 import {
   DefaultTokenResponse,
@@ -16,6 +17,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { View } from 'react-native';
 
 export const storageKeys = {
   anon: 'foam-anon', // anon token
@@ -389,7 +391,16 @@ export const AuthContextProvider = ({
 
   return state.ready ? (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
-  ) : null;
+  ) : (
+    <View
+      style={{
+        flex: 1,
+        flexDirection: 'column',
+      }}
+    >
+      <AppLoading />
+    </View>
+  );
 };
 
 export function useAuthContext() {

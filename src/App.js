@@ -7,7 +7,7 @@ import App from './App';
 import 'expo-dev-client';
 
 // eslint-disable-next-line no-undef
-if (__DEV__) {
+if (!__DEV__) {
   const {
     EXPO_PUBLIC_NEW_RELIC_IOS_APP_TOKEN,
     EXPO_PUBLIC_NEW_RELIC_ANDROID_APP_TOKEN,

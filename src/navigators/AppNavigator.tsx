@@ -15,7 +15,7 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import { PropsWithChildren, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Platform, useColorScheme } from 'react-native';
 
 import {
@@ -26,7 +26,6 @@ import { TabNavigator, TabParamList } from './TabNavigator';
 import { TopStackNavigator, TopStackParamList } from './TopStackNavigator';
 import { BaseConfig } from './config';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
-// import { initalTestAuthContextProps } from '@app/context/__tests__/AuthContext.test.tsx';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator as
@@ -117,20 +116,6 @@ type NavigationProps = Partial<
   React.ComponentProps<typeof NavigationContainer>
 >;
 
-const AuthContextComponent = ({ children }: PropsWithChildren) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-  // if (isTest) {
-  //   return (
-  //     <AuthContextTestProvider {...initalTestAuthContextProps}>
-  //       {children}
-  //     </AuthContextTestProvider>
-  //   );
-  // }
-
-  return <AuthContextProvider>{children}</AuthContextProvider>;
-};
-
 export const AppNavigator = (props: NavigationProps) => {
   const colorScheme = useColorScheme();
 
@@ -151,9 +136,9 @@ export const AppNavigator = (props: NavigationProps) => {
 
   return (
     <NavigationContainer ref={navigationRef} theme={navTheme} {...props}>
-      <AuthContextComponent>
+      <AuthContextProvider>
         <AppStack />
-      </AuthContextComponent>
+      </AuthContextProvider>
     </NavigationContainer>
   );
 };
