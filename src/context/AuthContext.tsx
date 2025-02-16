@@ -309,18 +309,22 @@ export const AuthContextProvider = ({
       SecureStore.getItemAsync(storageKeys.user),
     ]);
 
+    // authenticated
     if (storedAuthToken) {
       const parsedAuthToken = JSON.parse(storedAuthToken) as TokenResponse;
       doAuth(parsedAuthToken);
     }
 
+    // anon
     if (storedAnonToken) {
       const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
       doAnonAuth(parsedAnonToken);
     }
 
-    // we don't have an anonymous token or a logged in token. log the user in anonymously
-    doAnonAuth();
+    if (!storedAnonToken || !storedAuthToken) {
+      // we don't have an anonymous token or a logged in token. log the user in anonymously
+      doAnonAuth();
+    }
   };
 
   useEffect(() => {
