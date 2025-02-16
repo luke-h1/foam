@@ -25,7 +25,7 @@ type Variant = 'development' | 'preview' | 'production';
 const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   development: {
     name: 'Foam (dev)',
-    iosBundleIdentifier: 'foam-dev',
+    iosBundleIdentifier: 'foam-tv-dev',
     androidPackageName: 'com.lhowsam.foam.dev',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000',
@@ -34,7 +34,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   },
   preview: {
     name: 'Foam (preview)',
-    iosBundleIdentifier: 'foam-preview',
+    iosBundleIdentifier: 'foam-tv-preview',
     androidPackageName: 'com.lhowsam.foam.preview',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000',
@@ -43,7 +43,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   },
   production: {
     name: 'Foam',
-    iosBundleIdentifier: 'foam',
+    iosBundleIdentifier: 'foam-tv',
     androidPackageName: 'com.lhowsam.foam',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000',
@@ -100,7 +100,7 @@ const config: ExpoConfig = {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
   },
   runtimeVersion: {
-    policy: 'fingerprint',
+    policy: 'appVersion',
   },
   extra: {
     updates: {
