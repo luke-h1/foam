@@ -7,16 +7,17 @@ import { useEffect } from 'react';
 import { Alert, Platform, View, ViewStyle } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession({});
+WebBrowser.warmUpAsync();
 
 const SCOPES = [
   'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',
 ];
 
-const serverOrigin =
-  process.env.NODE_ENV === 'development'
-    ? 'http://localhost:8081/'
-    : // TODO: Set this as your production dev server location. You can also configure this using an environment variable for preview deployments.
-      'https://.../';
+// const serverOrigin =
+//   process.env.NODE_ENV === 'development'
+//     ? 'http://localhost:8081/'
+//     : // TODO: Set this as your production dev server location. You can also configure this using an environment variable for preview deployments.
+//       'foam://';
 
 const proxyUrl = new URL(
   // This changes because we have a naive proxy that hardcodes the redirect URL.
@@ -24,8 +25,8 @@ const proxyUrl = new URL(
     native: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy`,
     // This can basically be any web URL.
     default: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/pending`,
+    ios: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy`,
   }),
-  serverOrigin,
 ).toString();
 
 export function LoginScreen() {
