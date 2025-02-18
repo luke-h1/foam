@@ -2,12 +2,8 @@ import { Button, Screen, Typography } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useHeader } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
 import { Alert, Platform, View, ViewStyle } from 'react-native';
-
-WebBrowser.maybeCompleteAuthSession({});
-WebBrowser.warmUpAsync();
 
 const SCOPES = [
   'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',

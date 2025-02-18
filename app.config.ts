@@ -149,6 +149,7 @@ const config: ExpoConfig = {
   experiments: {
     tsconfigPaths: true,
   },
+  web: {},
   ios: {
     supportsTablet: false,
     bundleIdentifier: appConfig.iosBundleIdentifier,

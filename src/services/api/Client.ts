@@ -1,3 +1,5 @@
+import { reportCrash } from '@app/utils';
+import Sentry from '@sentry/react-native';
 import Axios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -74,6 +76,10 @@ export default class Client {
       if (isAxiosError(error)) {
         return error.response?.data;
       }
+
+      reportCrash(error);
+      Sentry.captureException(error);
+
       throw error;
     }
   }
