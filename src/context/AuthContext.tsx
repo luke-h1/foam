@@ -139,9 +139,11 @@ export const AuthContextProvider = ({
   };
 
   const doAuth = async (token: TokenResponse) => {
-    if (!token || !state.authState?.token) {
-      // evict cached anon details
-      SecureStore.deleteItemAsync(storageKeys.user);
+    if (
+      !token.accessToken ||
+      !state.authState?.isLoggedIn ||
+      !state.authState.isAnonAuth
+    ) {
       setUser(undefined);
       doAnonAuth();
     }
@@ -203,7 +205,7 @@ export const AuthContextProvider = ({
     }
 
     if (!response.authentication) {
-      // auth failed for some reason, gracefully aquire an anon token
+      // auth failed for some reason, gracefully acquire an anon token
       doAnonAuth();
       console.info('auth failed');
       return null;

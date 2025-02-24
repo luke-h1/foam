@@ -8,7 +8,7 @@ export const Button = forwardRef<View, ButtonProps>(
     <TouchableOpacity
       ref={ref}
       {...touchableProps}
-      style={touchableProps.style}
+      style={[touchableProps.style]}
       onPress={onPress}
     >
       <View>{children}</View>

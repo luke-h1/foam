@@ -4,7 +4,7 @@ import {
 } from '@app/services/twitchService';
 import render from '@app/test/render';
 import { NavigationContainer } from '@react-navigation/native';
-import { screen } from '@testing-library/react-native';
+import { screen, waitFor } from '@testing-library/react-native';
 import { LiveStreamCard } from '../LiveStreamCard';
 
 const mockStream: Stream = {
@@ -36,15 +36,19 @@ describe('LiveStreamCard', () => {
     );
   });
 
-  test('renders correctly', () => {
+  test('renders correctly', async () => {
     render(<LiveStreamCard stream={mockStream} />, {
       wrapper: NavigationContainer,
     });
 
     expect(screen.getByText('Test Stream Title')).toBeOnTheScreen();
     expect(screen.getByText('Test user')).toBeOnTheScreen();
-    expect(screen.getByTestId('LiveStreamCard-avatar')).toBeOnTheScreen();
     expect(screen.getByText('10,000 viewers')).toBeOnTheScreen();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('LiveStreamCard-avatar')).toBeOnTheScreen();
+    });
+
     expect(screen).toMatchSnapshot();
   });
 });

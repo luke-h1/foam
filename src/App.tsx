@@ -7,7 +7,6 @@ import {
   Inter_900Black,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import NetInfo from '@react-native-community/netinfo';
 import * as Sentry from '@sentry/react-native';
 import {
@@ -18,8 +17,7 @@ import {
 import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect, useState } from 'react';
-import { LogBox, ViewStyle } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { LogBox } from 'react-native';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -132,30 +130,22 @@ function App(props: AppProps) {
     >
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={$bottomSheetContainer}>
-            <BottomSheetModalProvider>
-              <AppNavigator
-                initialState={
-                  recoveredFromError
-                    ? { index: 0, routes: [] }
-                    : initialNavigationState
-                }
-                onStateChange={onNavigationStateChange}
-              >
-                <OTAUpdates />
-                <Toast />
-              </AppNavigator>
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
+          <AppNavigator
+            initialState={
+              recoveredFromError
+                ? { index: 0, routes: [] }
+                : initialNavigationState
+            }
+            onStateChange={onNavigationStateChange}
+          >
+            <OTAUpdates />
+            <Toast />
+          </AppNavigator>
         </QueryClientProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
   );
 }
-
-const $bottomSheetContainer: ViewStyle = {
-  flex: 1,
-};
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

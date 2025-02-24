@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Spinner, Chat, Typography } from '@app/components';
+import { Spinner, Chat, Typography, Screen } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchService, UserInfoResponse } from '@app/services';
@@ -57,17 +57,18 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream]);
 
-  // 🔹 Animated Values for Smooth Resizing 🔹
   const videoHeight = useSharedValue(
     isLandscape ? screenHeight : screenWidth * (9 / 16),
   );
   const chatHeight = useSharedValue(
     isLandscape ? screenHeight : screenHeight - videoHeight.value,
   );
+
   useEffect(() => {
     if (stream) {
       setIsPlaying(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -113,16 +114,15 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   if (!stream) {
     return (
-      <SafeAreaView style={styles.container}>
+      <Screen style={styles.container}>
         <Typography style={styles.videoUser}>User Offline</Typography>
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={[styles.contentContainer, isLandscape && styles.row]}>
-        {/* ✅ Fixed Video Section */}
         <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
           <WebView
             ref={webViewRef}
@@ -148,7 +148,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
           </TouchableOpacity>
         </Animated.View>
 
-        {/* ✅ Chat Resizes Correctly */}
         <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
           <Chat
             channelId={user?.id as string}
