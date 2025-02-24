@@ -100,7 +100,7 @@ const stylesheet = createStyleSheet(() => ({
     flex: 1,
     padding: 24,
     justifyContent: 'center',
-    backgroundColor: 'grey',
+    // backgroundColor: 'grey',
   },
   contentContainer: {
     flex: 1,

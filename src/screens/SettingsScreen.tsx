@@ -24,6 +24,7 @@ const BuildFooter = () => (
 
 export function SettingsScreen() {
   const { navigate, goBack, addListener } = useAppNavigation();
+
   useHeader({
     title: 'Settings',
     leftIcon: 'arrow-left',

@@ -19,8 +19,14 @@ import newRelic from 'newrelic-react-native-agent';
 import { useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { DevToolsParamList } from './DevToolsStackNavigator';
-import { PreferenceStackParamList } from './PreferenceStackNavigator';
+import {
+  DevToolsParamList,
+  DevToolsStackNavigator,
+} from './DevToolsStackNavigator';
+import {
+  PreferenceStackNavigator,
+  PreferenceStackParamList,
+} from './PreferenceStackNavigator';
 import {
   StreamStackNavigator,
   StreamStackParamList,
@@ -116,6 +122,12 @@ const AppStack = () => {
 
       {/* sb */}
       <Stack.Screen name="Storybook" component={StorybookScreen} />
+
+      {/* preferences */}
+      <Stack.Screen name="Preferences" component={PreferenceStackNavigator} />
+
+      {/* DevTools */}
+      <Stack.Screen name="DevTools" component={DevToolsStackNavigator} />
     </Stack.Navigator>
   );
 };
