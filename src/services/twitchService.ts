@@ -97,7 +97,7 @@ interface RefreshToken {
 export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     const { data } = await axios.post(
-      `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
+      `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
 
     return data;
@@ -147,7 +147,7 @@ export const twitchService = {
   getTopStreams: async (cursor?: string): Promise<PaginatedList<Stream>> => {
     const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
       headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        'Client-Id': process.env.TWITCH_CLIENT_ID,
       },
       params: {
         after: cursor,
@@ -180,7 +180,7 @@ export const twitchService = {
         first: 15,
       },
       headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        'Client-Id': process.env.TWITCH_CLIENT_ID,
       },
     });
 
@@ -236,7 +236,7 @@ export const twitchService = {
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
       headers: {
-        'Client-Id': process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+        'Client-Id': process.env.TWITCH_CLIENT_ID,
         Authorization: `Bearer ${token}`,
       },
     });

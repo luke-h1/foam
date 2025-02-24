@@ -195,7 +195,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
               source={
                 [
                   {
-                    "uri": "",
+                    "uri": "https://example.com/avatar.jpg",
                   },
                 ]
               }

@@ -5,3 +5,5 @@ export * from './TabNavigator';
 export * from './TopStackNavigator';
 export * from './config';
 export * from './BackButton';
+export * from './PreferenceStackNavigator';
+export * from './DevToolsStackNavigator';

@@ -2,26 +2,21 @@ import { Button, Screen, Typography } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useHeader } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
+import newRelic from 'newrelic-react-native-agent';
 import { useEffect } from 'react';
-import { Alert, Platform, View, ViewStyle } from 'react-native';
+import { Platform, View, ViewStyle } from 'react-native';
 
 const SCOPES = [
   'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',
 ];
 
-// const serverOrigin =
-//   process.env.NODE_ENV === 'development'
-//     ? 'http://localhost:8081/'
-//     : // TODO: Set this as your production dev server location. You can also configure this using an environment variable for preview deployments.
-//       'foam://';
-
 const proxyUrl = new URL(
   // This changes because we have a naive proxy that hardcodes the redirect URL.
   Platform.select({
-    native: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy`,
+    native: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
     // This can basically be any web URL.
-    default: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/pending`,
-    ios: `${process.env.EXPO_PUBLIC_PROXY_API_BASE_URL}/proxy`,
+    default: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
+    ios: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
   }),
 ).toString();
 
@@ -43,8 +38,8 @@ export function LoginScreen() {
 
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-      clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
+      clientId: process.env.TWITCH_CLIENT_ID,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET,
       scopes: SCOPES,
 
       // Use implicit flow to avoid code exchange.
@@ -60,17 +55,14 @@ export function LoginScreen() {
     discovery,
   );
 
-  console.log('request', request);
-  console.log('response', response);
-
   const handleAuth = async () => {
     await loginWithTwitch(response);
     if (response?.type === 'success') {
+      newRelic.recordCustomEvent('Login', 'LoginSuccess', new Map());
       navigate('Tabs', {
         screen: 'Following',
       });
     }
-    Alert.alert('Authentication', 'login successful');
   };
 
   useEffect(() => {
@@ -78,7 +70,6 @@ export function LoginScreen() {
       handleAuth();
     }
     // eslint-disable-next-line no-console
-    console.info('response', response);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 

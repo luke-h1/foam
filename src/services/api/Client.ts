@@ -1,5 +1,3 @@
-import { reportCrash } from '@app/utils';
-import Sentry from '@sentry/react-native';
 import Axios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -8,6 +6,7 @@ import Axios, {
   isAxiosError,
 } from 'axios';
 import omit from 'lodash/omit';
+import newRelic from 'newrelic-react-native-agent';
 import qs from 'qs';
 
 export type RequestConfig = Omit<AxiosRequestConfig, 'method' | 'url'> & {
@@ -58,6 +57,9 @@ export default class Client {
     },
   ): Promise<TValue> {
     try {
+      const interactionId = await newRelic.startInteraction(
+        `${config.url}_${config.method}`,
+      );
       const response = await this.axios({
         ...config,
         headers: {
@@ -69,16 +71,21 @@ export default class Client {
       if ('rawResponse' in config && config.rawResponse) {
         return omit(response, ['config', 'request']) as TValue;
       }
+      newRelic.endInteraction(interactionId);
       return response.data;
     } catch (error) {
+      newRelic.logError(
+        `${config.url}_${config.method} request failed with error: ${JSON.stringify(error, null, 2)}`,
+      );
       // eslint-disable-next-line no-console
       console.error('axiosError', error);
       if (isAxiosError(error)) {
+        newRelic.logError(
+          `AXIOS_ERROR: ${config.url}_${config.method} request failed with error: ${JSON.stringify(error, null, 2)}`,
+        );
+
         return error.response?.data;
       }
-
-      reportCrash(error);
-      Sentry.captureException(error);
 
       throw error;
     }

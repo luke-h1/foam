@@ -3,8 +3,8 @@ import { RefreshingAuthProvider, type AccessToken } from '@twurple/auth';
 import * as SecureStore from 'expo-secure-store';
 
 const authProvider = new RefreshingAuthProvider({
-  clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
-  clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
+  clientId: process.env.TWITCH_CLIENT_ID,
+  clientSecret: process.env.TWITCH_CLIENT_SECRET,
 });
 
 export const twurple = new ApiClient({ authProvider });

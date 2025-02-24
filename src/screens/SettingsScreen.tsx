@@ -1,236 +1,147 @@
 import {
-  BuildDetails,
-  Content,
-  Icon,
+  NavigationSectionList,
+  NavigationSectionListData,
   Screen,
-  SettingsItem,
+  SectionListItem,
   Typography,
 } from '@app/components';
 import { useAuthContext } from '@app/context';
 import { useAppNavigation, useHeader } from '@app/hooks';
-import { openLinkInBrowser } from '@app/utils';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Image } from 'expo-image';
-import { useMemo, useRef, useState } from 'react';
-import { Button, Modal, TouchableOpacity, View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import * as Application from 'expo-application';
+import { useRef } from 'react';
+import { View } from 'react-native';
+import { UserModal } from './SettingsScreen/components';
+
+const BuildFooter = () => (
+  <View style={{ marginBottom: 12 }}>
+    <Typography color="border">
+      Version: {Application.nativeApplicationVersion ?? ''} (
+      {Application.nativeBuildVersion ?? ''})
+    </Typography>
+  </View>
+);
 
 export function SettingsScreen() {
-  const navigation = useAppNavigation();
-  const { styles } = useStyles(stylesheet);
+  const { navigate, goBack, addListener } = useAppNavigation();
   useHeader({
     title: 'Settings',
     leftIcon: 'arrow-left',
-    onLeftPress: () => navigation.goBack(),
+    onLeftPress: () => goBack(),
   });
-  const { user, logout } = useAuthContext();
+  const { user } = useAuthContext();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ['25%', '25%'], []);
-  const [isModalVisible, setModalVisible] = useState<boolean>(false);
 
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
-  };
-
-  const authenticatedSettingItems: Content[] = [
-    {
-      id: '1',
-      ctaTitle: 'Profile',
-      items: [
-        {
-          content: user?.display_name || 'Anonymous',
-          title: 'Profile',
-          iconLeft: (
-            <Image
-              source={{ uri: user?.profile_image_url }}
-              style={{ width: 30, height: 32, borderRadius: 14 }}
-            />
-          ),
-          showRightArrow: true,
-          showSeperator: true,
-          onPress: () => {
-            bottomSheetModalRef.current?.present();
-          },
-        },
-      ],
-    },
-  ];
-
-  const commonSettingItems: Content[] = [
-    {
-      id: '3',
-      ctaTitle: 'About',
-      items: [
-        {
-          iconLeft: <Icon icon="info" />,
-          title: 'About Foam',
-          content: 'About the app and the developer',
-          onPress: () => {
-            setModalVisible(true);
-          },
-        },
-        {
-          iconLeft: <Icon icon="link" />,
-          title: 'Changelog',
-          content: "What's changed?",
-          onPress: () => {
-            navigation.navigate('Changelog');
-          },
-        },
-        {
-          iconLeft: <Icon icon="link" />,
-          title: 'FAQ',
-          content: 'Frequently asked questions',
-          onPress: () => {
-            openLinkInBrowser('https://foam.lhowsam.com/faq');
-          },
-        },
-      ],
-    },
-  ];
-
-  const unauthenticatedSettingItems: Content[] = [
-    {
-      id: '1',
-      ctaTitle: 'Profile',
-      items: [
-        {
-          content:
-            'Log in to be able to chat, view followed streams and much more',
-          title: 'Anonymous',
-          iconLeft: <Icon icon="user" />,
-          showRightArrow: true,
-          iconRight: <Icon icon="arrow-right" />,
-          showSeperator: true,
-          onPress: () => {
-            navigation.navigate('Login');
-          },
-        },
-      ],
-    },
-  ];
-
-  const settingItems: Content[] = [
-    ...(user ? authenticatedSettingItems : unauthenticatedSettingItems),
-    ...commonSettingItems,
-  ];
-
-  navigation.addListener('blur', () => {
+  addListener('blur', () => {
     bottomSheetModalRef.current?.dismiss();
   });
 
+  const authenticatedLists: SectionListItem[] = [
+    {
+      title: user?.display_name as string,
+      description: 'Profile',
+      picture: user?.profile_image_url,
+      onPress: () => bottomSheetModalRef.current?.present(),
+    },
+    {
+      title: 'My Channel',
+      description: 'View your channel',
+      iconName: 'user',
+      onPress: () =>
+        navigate('Streams', {
+          screen: 'StreamerProfile',
+          params: {
+            id: user?.id as string,
+          },
+        }),
+    },
+    {
+      title: 'Blocked Users',
+      description: 'Managed blocked users',
+      iconName: 'bell-off',
+      onPress: () =>
+        navigate('Preferences', {
+          screen: 'BlockedUsers',
+        }),
+    },
+  ];
+
+  const sections: NavigationSectionListData = [
+    {
+      title: 'Profile',
+      data: user?.login
+        ? authenticatedLists
+        : [
+            {
+              title: 'Anonymous',
+              description:
+                'Login to be able to chat, view followed streamers and much more',
+              iconName: 'user',
+              onPress: () => navigate('Login'),
+            },
+          ],
+    },
+    {
+      title: 'Preferences',
+      data: [
+        {
+          title: 'Theme',
+          description: 'Customize certain theming options',
+          iconName: 'settings',
+          onPress: () =>
+            navigate('Preferences', {
+              screen: 'Theming',
+            }),
+        },
+        {
+          title: 'Chat',
+          description: 'Customize your chat experience',
+          iconName: 'message-square',
+          onPress: () =>
+            navigate('Preferences', {
+              screen: 'Chat',
+            }),
+        },
+        {
+          title: 'Video',
+          description: 'Customize video preferences',
+          iconName: 'maximize',
+          onPress: () =>
+            navigate('Preferences', {
+              screen: 'Video',
+            }),
+        },
+      ],
+    },
+    {
+      title: 'Dev Tools',
+      data: [
+        {
+          title: 'App diagnostics',
+          iconName: '',
+          description: 'Analytics settings, feature flags',
+          onPress: () =>
+            navigate('DevTools', {
+              screen: 'Diagnostics',
+            }),
+        },
+        {
+          title: 'New Relic Demo',
+          iconName: '',
+          description: 'Demo new relic instrumentation screen',
+          onPress: () =>
+            navigate('DevTools', {
+              screen: 'NewRelicDemo',
+            }),
+        },
+      ],
+    },
+  ];
+
   return (
     <Screen preset="scroll">
-      <SettingsItem contents={settingItems} />
-      <BottomSheetModal
-        ref={bottomSheetModalRef}
-        index={1}
-        snapPoints={snapPoints}
-        handleStyle={{ opacity: 0.95 }}
-      >
-        <BottomSheetView style={styles.container}>
-          <Icon icon="arrow-right" />
-          <Button
-            title="Log out"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              await logout();
-              navigation.navigate('Tabs', {
-                screen: 'Top',
-              });
-            }}
-          />
-        </BottomSheetView>
-        <BottomSheetView style={styles.container}>
-          <Icon icon="arrow-right" />
-          <Button
-            title="My stream"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              await logout();
-              navigation.navigate('Streams', {
-                screen: 'LiveStream',
-                params: {
-                  id: user?.login as string,
-                },
-              });
-            }}
-          />
-        </BottomSheetView>
-        <BottomSheetView style={styles.container}>
-          <Icon icon="arrow-right" />
-          <Button
-            title="My Profile"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              await logout();
-              navigation.navigate('Streams', {
-                screen: 'StreamerProfile',
-                params: {
-                  id: user?.login as string,
-                },
-              });
-            }}
-          />
-        </BottomSheetView>
-        <BottomSheetView style={styles.container}>
-          <Icon icon="arrow-right" />
-          <Button
-            title="Blocked"
-            onPress={async () => {
-              bottomSheetModalRef.current?.dismiss();
-              await logout();
-              navigation.navigate('Streams', {
-                screen: 'StreamerProfile',
-                params: {
-                  id: user?.login as string,
-                },
-              });
-            }}
-          />
-        </BottomSheetView>
-      </BottomSheetModal>
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={toggleModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Typography style={{ marginBottom: 2 }}>About Foam</Typography>
-            <BuildDetails />
-            <Typography style={{ marginBottom: 15 }}>
-              &copy; {new Date().getFullYear()} Luke Howsam
-            </Typography>
-            <TouchableOpacity onPress={toggleModal}>
-              <Typography>Close</Typography>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <NavigationSectionList sections={sections} footer={<BuildFooter />} />
+      <UserModal ref={bottomSheetModalRef} />
     </Screen>
   );
 }
-
-const stylesheet = createStyleSheet(theme => ({
-  container: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 4,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: 300,
-    padding: 20,
-    borderRadius: 10,
-    backgroundColor: theme.colors.surface,
-    alignItems: 'flex-start',
-  },
-}));

@@ -1,9 +1,9 @@
-import { Button, Screen, Typography } from '@app/components';
+import { Button, Icon, Screen, Typography } from '@app/components';
+import { useHeader } from '@app/hooks';
 import { openLinkInBrowser } from '@app/utils';
 import React, { type ErrorInfo, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 export interface ErrorDetailsProps {
   error: Error | null;
@@ -15,6 +15,9 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   const { styles } = useStyles(stylesheet);
   const { error, errorInfo, onReset } = props;
   const [showStackTrace, setShowStackTrace] = useState(false);
+  useHeader({
+    title: 'Error',
+  });
   const errorTitle = `${error}`.trim();
 
   const stackTrace = errorInfo?.componentStack
@@ -27,13 +30,9 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   );
 
   return (
-    <Screen
-      preset="fixed"
-      safeAreaEdges={['top', 'bottom']}
-      contentContainerStyle={styles.contentContainer}
-    >
+    <Screen preset="scroll">
       <View style={styles.topSection}>
-        <MaterialIcons name="error" />
+        <Icon icon="alert-circle" size={30} />
         <Typography style={styles.heading}>Something went wrong</Typography>
         <Typography>
           Try resetting or restarting the app & see if that helps. If not, feel
@@ -57,7 +56,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           contentContainerStyle={styles.errorSectionContentContainer}
         >
           <Typography weight="bold">{error?.message.trim()}</Typography>
-          <Typography selectable style={styles.errorBackTrace}>
+          <Typography selectable style={styles.errorBackTrace} color="text">
             {errorInfo?.componentStack?.trim()}
           </Typography>
         </ScrollView>
@@ -70,11 +69,9 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 }
 
 const stylesheet = createStyleSheet(theme => ({
-  contentContainer: {
+  container: {
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    flex: 1,
   },
   topSection: {
     alignItems: 'center',
@@ -95,11 +92,10 @@ const stylesheet = createStyleSheet(theme => ({
     borderRadius: 6,
   },
   errorSectionContentContainer: {
-    padding: theme.spacing.md,
+    // padding: theme.spacing.md,
   },
   errorBackTrace: {
     marginTop: theme.spacing.md,
-    color: theme.colors.overlay,
   },
   button: {
     backgroundColor: theme.colors.cherry,

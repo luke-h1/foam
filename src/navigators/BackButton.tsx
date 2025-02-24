@@ -5,5 +5,9 @@ import { useAppNavigation } from '@app/hooks';
 export function BackButton() {
   const navigation = useAppNavigation();
 
-  return <HeaderAction icon="arrow-left" onPress={navigation.goBack} />;
+  if (navigation.canGoBack()) {
+    return <HeaderAction icon="arrow-left" onPress={navigation.goBack} />;
+  }
+
+  return null;
 }

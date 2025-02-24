@@ -22,7 +22,13 @@ export function StreamStackNavigator() {
           headerShown: false,
         }}
       />
-      <Stack.Screen name="StreamerProfile" component={StreamerProfileScreen} />
+      <Stack.Screen
+        name="StreamerProfile"
+        component={StreamerProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }

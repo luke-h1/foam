@@ -15,9 +15,12 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
+import newRelic from 'newrelic-react-native-agent';
 import { useMemo } from 'react';
-import { Platform, useColorScheme } from 'react-native';
+import { useColorScheme } from 'react-native';
 
+import { DevToolsParamList } from './DevToolsStackNavigator';
+import { PreferenceStackParamList } from './PreferenceStackNavigator';
 import {
   StreamStackNavigator,
   StreamStackParamList,
@@ -62,6 +65,12 @@ export type AppStackParamList = {
 
   // sb
   Storybook: undefined;
+
+  // preferences
+  Preferences: NavigatorScreenParams<PreferenceStackParamList>;
+
+  // dev-tools
+  DevTools: NavigatorScreenParams<DevToolsParamList>;
 };
 
 /**
@@ -105,9 +114,8 @@ const AppStack = () => {
       {/* Changelog */}
       <Stack.Screen name="Changelog" component={ChangelogScreen} />
 
-      {Platform.OS === 'web' && (
-        <Stack.Screen name="Storybook" component={StorybookScreen} />
-      )}
+      {/* sb */}
+      <Stack.Screen name="Storybook" component={StorybookScreen} />
     </Stack.Navigator>
   );
 };
@@ -135,7 +143,12 @@ export const AppNavigator = (props: NavigationProps) => {
   }, [colorScheme]);
 
   return (
-    <NavigationContainer ref={navigationRef} theme={navTheme} {...props}>
+    <NavigationContainer
+      ref={navigationRef}
+      onStateChange={newRelic.onStateChange}
+      theme={navTheme}
+      {...props}
+    >
       <AuthContextProvider>
         <AppStack />
       </AuthContextProvider>

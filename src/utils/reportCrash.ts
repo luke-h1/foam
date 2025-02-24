@@ -1,3 +1,4 @@
+import newRelic from 'newrelic-react-native-agent';
 /* eslint-disable no-console */
 export enum ErrorType {
   /**
@@ -19,5 +20,6 @@ export const reportCrash = (error: any, type = ErrorType.FATAL) => {
     console.log(message, type);
   } else {
     // crashlytics().recordError(error);
+    newRelic.recordError(error);
   }
 };
