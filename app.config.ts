@@ -5,9 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 // @todo luke-h1:
-// get Apple + google play test track set up
 // setup prod images ✅
-// setup different icons / splash screen for different envs - https://github.com/obytes/app-icon-badge
 
 interface AppVariantConfig {
   name: string;

@@ -1,5 +1,6 @@
-import { Screen, Typography } from '@app/components';
+import { Screen } from '@app/components';
 import { useAppNavigation, useHeader } from '@app/hooks';
+import { Diagnostics } from './components';
 
 export function DiagnosticsScreen() {
   const { goBack } = useAppNavigation();
@@ -11,8 +12,8 @@ export function DiagnosticsScreen() {
   });
 
   return (
-    <Screen>
-      <Typography>Diagnostics</Typography>
+    <Screen preset="scroll">
+      <Diagnostics />
     </Screen>
   );
 }
