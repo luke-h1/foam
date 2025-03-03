@@ -62,7 +62,7 @@ jobs:
 
       - name: 📦 Install eas
         run: |
-          bun instal eas-cli@latest
+          bun install eas-cli@latest
 
       - name: 📱 Setup EAS build cache
         uses: actions/cache@v3
