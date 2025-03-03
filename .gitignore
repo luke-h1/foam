@@ -79,3 +79,7 @@ google-services-*.json
 GoogleService-*-*.plist
 
 .env.local
+
+# build files
+*.aab
+*.apk
