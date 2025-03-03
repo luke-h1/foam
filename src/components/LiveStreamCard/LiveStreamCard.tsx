@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Typography } from '../Typography';
+import { LiveStreamCardSkeleton } from './LiveStreamCardSkeleton';
 
 interface Props {
   stream: Stream;
@@ -16,6 +17,10 @@ export function LiveStreamCard({ stream }: Props) {
   const { navigate } = useAppNavigation();
 
   const { profilePicture } = useStreamerImage(stream.user_login, [stream]);
+
+  if (!stream) {
+    return <LiveStreamCardSkeleton />;
+  }
 
   return (
     <Button
