@@ -46,7 +46,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000',
     iosGoogleServicesFile:
-      process.env.IOS_GOOGLE_SERVICES_JSON ??
+      process.env.IOS_GOOGLE_SERVICES_JSON ||
       './GoogleService-Info-production.plist',
     androidGoogleServicesFile: './google-services-prod.json',
   },
@@ -54,7 +54,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 
 const variant = (process.env.APP_VARIANT as Variant) || 'production';
 
-const VERSION = '0.0.13';
+const VERSION = '0.0.14';
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 
