@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
 import { twitchApi } from '@app/services/api';
@@ -75,23 +76,14 @@ export const AuthContextProvider = ({
 
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
 
-  // const isValidToken = async (token: string) => {
-  //   return twitchService.validateToken(token);
-  // };
-
   const isExpiredToken = (token: TwitchToken) => {
-    /* 
-    If the current date and time is before the token's expiration date and time, return true, indicating that the token is still valid. Otherwise, it returns false, indicating that the token has expired.
-    we pre-empt this in order to not call the Twitch API with an invalid token
-    */
-    return new Date() < new Date(token.expiresIn * 1000);
+    return new Date() >= new Date(token.expiresIn * 1000);
   };
 
   const fetchAnonToken = async () => {
     try {
       let result = await twitchService.getDefaultToken();
 
-      // hack to get around tests getting hung up on micro queue
       if (process.env.NODE_ENV === 'test' && enableTestResult) {
         result = testResult || {
           access_token: '123',
@@ -124,44 +116,35 @@ export const AuthContextProvider = ({
       twitchApi.setAuthToken(result.access_token);
     } catch (e) {
       console.error('Failed to get anon auth', e);
-
       // eslint-disable-next-line no-useless-return
       return;
     }
   };
 
-  const isExpiredUserToken = async (token: TokenResponse) => {
+  const isExpiredUserToken = (token: TokenResponse) => {
     if (!token.expiresIn) {
       return false;
     }
-
-    return new Date() < new Date(token.expiresIn * 1000);
+    return new Date() >= new Date(token.expiresIn * 1000);
   };
 
   const doAuth = async (token: TokenResponse) => {
-    if (
-      !token.accessToken ||
-      !state.authState?.isLoggedIn ||
-      !state.authState.isAnonAuth
-    ) {
+    if (!token.accessToken) {
       setUser(undefined);
-      doAnonAuth();
+      await doAnonAuth();
+      return;
     }
-    // we have a token, check it's validity
-    const isValidToken = isExpiredUserToken(token);
+
+    const isValidToken = !isExpiredUserToken(token);
 
     if (!isValidToken) {
-      // token isn't valid, do anon auth
-      doAnonAuth();
+      await doAnonAuth();
+      return;
     }
 
-    // we can assume it's valid at this point and we have it in state, let's check if it expires soon
     const shouldRefresh =
       new Date() >=
-      new Date(
-        // @ts-expect-error expiresIn can potentially be undefined
-        token.expiresIn * 1000 - 5 * 60 * 1000,
-      ); // 5 minutes before expiry
+      new Date((token.expiresIn as number) * 1000 - 5 * 60 * 1000);
 
     if (shouldRefresh) {
       console.info('refreshing user token...');
@@ -174,7 +157,6 @@ export const AuthContextProvider = ({
           isAnonAuth: false,
           isLoggedIn: true,
           token: {
-            ...state.authState?.token,
             accessToken: newToken.access_token,
             expiresIn: newToken.expires_in,
             tokenType: newToken.token_type,
@@ -184,38 +166,37 @@ export const AuthContextProvider = ({
       const u = await twitchService.getUserInfo(newToken.access_token);
       setUser(u);
       SecureStore.setItemAsync(
-        storageKeys.anon,
+        storageKeys.user,
         JSON.stringify(newToken, null, 2),
       );
+      twitchApi.setAuthToken(newToken.access_token);
+    } else {
+      setState({
+        ready: true,
+        authState: {
+          isAnonAuth: false,
+          isLoggedIn: true,
+          token: {
+            accessToken: token.accessToken,
+            expiresIn: token.expiresIn as number,
+            tokenType: token.tokenType,
+          },
+        },
+      });
+      const u = await twitchService.getUserInfo(token.accessToken);
+      setUser(u);
+      twitchApi.setAuthToken(token.accessToken);
     }
-
-    // token is valid, return early
-    // eslint-disable-next-line no-useless-return
-    return;
   };
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  // eslint-disable-next-line consistent-return
+  // @ts-expect-error
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
-    if (response?.type !== 'success') {
-      doAnonAuth();
-      console.info('response.type !== success');
+    if (response?.type !== 'success' || !response.authentication) {
+      await doAnonAuth();
       return null;
     }
 
-    if (!response.authentication) {
-      // auth failed for some reason, gracefully acquire an anon token
-      doAnonAuth();
-      console.info('auth failed');
-      return null;
-    }
-
-    console.log('tokenType ->', response.authentication.tokenType);
-    console.log('expiresIn ->', response.authentication.expiresIn);
-    console.log('accecssToken ->', response.authentication.accessToken);
-
-    // we have succeeded
     setState({
       ready: true,
       authState: {
@@ -233,41 +214,27 @@ export const AuthContextProvider = ({
     );
     setUser(u);
 
-    // evict cached anon details
     SecureStore.deleteItemAsync(storageKeys.anon);
 
     const stringifedAuth = JSON.stringify(response.authentication);
 
-    // set tokens in secure-store
     SecureStore.setItemAsync(storageKeys.user, stringifedAuth);
 
-    // set header in axios
     twitchApi.setAuthToken(response.authentication.accessToken);
-    // eslint-disable-next-line consistent-return
   };
 
   const doAnonAuth = async (token?: TwitchToken) => {
     if (!token?.accessToken) {
-      // request a default token and set it in state
       await fetchAnonToken();
     } else {
-      // we have an anonymous token, check it's validity
-      const isValidToken = isExpiredToken(token);
+      const isValidToken = !isExpiredToken(token);
 
-      console.log('isValidToken ->', isValidToken);
-
-      // if it's expired, get a new token and set it in state
       if (!isValidToken) {
         twitchApi.removeAuthToken();
-        fetchAnonToken();
+        await fetchAnonToken();
       } else {
-        // we can assume it's valid at this point and we have it in state, let's check if it expires soon
         const shouldRefresh =
-          new Date() >=
-          new Date(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            state!.authState!.token.expiresIn * 1000 - 5 * 60 * 1000,
-          ); // 5 minutes before expiry
+          new Date() >= new Date(token.expiresIn * 1000 - 5 * 60 * 1000);
 
         if (shouldRefresh) {
           console.info('refreshing anon token...');
@@ -282,25 +249,32 @@ export const AuthContextProvider = ({
               isAnonAuth: true,
               isLoggedIn: false,
               token: {
-                ...state.authState?.token,
                 accessToken: newToken.access_token,
                 expiresIn: newToken.expires_in,
                 tokenType: newToken.token_type,
               },
             },
           });
-          const u = await twitchService.getUserInfo(newToken.access_token);
-          setUser(u);
           SecureStore.setItemAsync(
             storageKeys.anon,
             JSON.stringify(newToken, null, 2),
           );
-          twitchApi.setAuthToken(state.authState?.token.accessToken as string);
+          twitchApi.setAuthToken(newToken.access_token);
+        } else {
+          setState({
+            ready: true,
+            authState: {
+              isAnonAuth: true,
+              isLoggedIn: false,
+              token: {
+                accessToken: token.accessToken,
+                expiresIn: token.expiresIn,
+                tokenType: token.tokenType,
+              },
+            },
+          });
+          twitchApi.setAuthToken(token.accessToken);
         }
-
-        // token is valid, return early
-        // eslint-disable-next-line no-useless-return
-        return;
       }
     }
   };
@@ -313,16 +287,13 @@ export const AuthContextProvider = ({
 
     if (storedAuthToken) {
       const parsedAuthToken = JSON.parse(storedAuthToken) as TokenResponse;
-      doAuth(parsedAuthToken);
-    }
-
-    if (storedAnonToken) {
+      await doAuth(parsedAuthToken);
+    } else if (storedAnonToken) {
       const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
-      doAnonAuth(parsedAnonToken);
+      await doAnonAuth(parsedAnonToken);
+    } else {
+      await doAnonAuth();
     }
-
-    // we don't have an anonymous token or a logged in token. log the user in anonymously
-    doAnonAuth();
   };
 
   useEffect(() => {
@@ -330,54 +301,18 @@ export const AuthContextProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // useEffect(() => {
-  //   const checkTokenValidity = async () => {
-  //     const token = state?.authState?.token?.accessToken;
-  //     if (!token) return;
-
-  //     const shouldRefreshToken =
-  //       state.authState?.isAnonAuth && state.authState.token.expiresIn
-  //         ? new Date() >=
-  //           new Date(state.authState.token.expiresIn * 1000 - 5 * 60 * 1000) // 5 minutes before expiry
-  //         : !(await twitchService.validateToken(token));
-
-  //     if (shouldRefreshToken) {
-  //       const newToken = await twitchService.getRefreshToken(token);
-
-  //       setState(prev => ({
-  //         ...prev,
-  //         authState: {
-  //           isAnonAuth: true,
-  //           isLoggedIn: false,
-  //           token: {
-  //             accessToken: newToken.access_token,
-  //             expiresIn: newToken.expires_in as number,
-  //             tokenType: 'bearer',
-  //           },
-  //         },
-  //       }));
-  //       // setState(prev => ({
-  //       //   ...prev,
-  //       //   authState: {
-  //       //     ...prev.authState,
-  //       //     token: newToken,
-  //       //   },
-  //       // }));
-  //     }
-  //   };
-
-  //   const intervalId = setInterval(checkTokenValidity, 60 * 1000); // Check every minute
-
-  //   return () => clearInterval(intervalId);
-  // }, [state.authState]);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const contextState: AuthContextState = useMemo(() => {
     return {
       authState: state.authState,
       loginWithTwitch,
       populateAuthState,
-      logout: () => Promise.resolve(),
+      logout: async () => {
+        await SecureStore.deleteItemAsync(storageKeys.user);
+        await SecureStore.deleteItemAsync(storageKeys.anon);
+        setState({ ready: true });
+        setUser(undefined);
+        await doAnonAuth();
+      },
       fetchAnonToken,
       user,
       ready: state.ready,

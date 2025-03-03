@@ -5,6 +5,7 @@ import { useAuthRequest } from 'expo-auth-session';
 import newRelic from 'newrelic-react-native-agent';
 import { useEffect } from 'react';
 import { Platform, View, ViewStyle } from 'react-native';
+import { toast } from 'sonner-native';
 
 const SCOPES = [
   'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',
@@ -59,6 +60,7 @@ export function LoginScreen() {
     await loginWithTwitch(response);
     if (response?.type === 'success') {
       newRelic.recordCustomEvent('Login', 'LoginSuccess', new Map());
+      toast.success('Logged in');
       navigate('Tabs', {
         screen: 'Following',
       });

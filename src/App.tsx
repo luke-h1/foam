@@ -18,12 +18,14 @@ import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect, useState } from 'react';
 import { LogBox } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 import './styles/unistyles';
-import { OTAUpdates, Toast } from './components';
+import { Toaster } from 'sonner-native';
+import { OTAUpdates } from './components';
 import { useOnAppStateChange, useChangeScreenOrientation } from './hooks';
 import {
   useNavigationPersistence,
@@ -128,21 +130,23 @@ function App(props: AppProps) {
       catchErrors={BaseConfig.catchErrors}
       onReset={() => setRecoveredFromError(true)}
     >
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <QueryClientProvider client={queryClient}>
-          <AppNavigator
-            initialState={
-              recoveredFromError
-                ? { index: 0, routes: [] }
-                : initialNavigationState
-            }
-            onStateChange={onNavigationStateChange}
-          >
-            <OTAUpdates />
-            <Toast />
-          </AppNavigator>
-        </QueryClientProvider>
-      </SafeAreaProvider>
+      <GestureHandlerRootView>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <QueryClientProvider client={queryClient}>
+            <AppNavigator
+              initialState={
+                recoveredFromError
+                  ? { index: 0, routes: [] }
+                  : initialNavigationState
+              }
+              onStateChange={onNavigationStateChange}
+            >
+              <OTAUpdates />
+            </AppNavigator>
+            <Toaster position="bottom-center" />
+          </QueryClientProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     </ErrorBoundary>
   );
 }
