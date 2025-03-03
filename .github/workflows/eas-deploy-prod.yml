@@ -76,24 +76,17 @@ jobs:
           echo "EAS CLI version:"
           eas --version
 
-      - name: 📱 Build Development APK
-        if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'dev' || github.event_name == 'push'
-        run: |
-          # Build with increased memory limit
-          export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
-          eas build --platform android --profile development --local --non-interactive --output=./app-dev.apk
-
       - name: 📱 Build Production APK
         if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'prod-apk' || github.event_name == 'push'
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
-          eas build --platform android --profile production --local --non-interactive --output=./app-prod.apk
+          bun run eas build --platform android --profile production --local --non-interactive --output=./app-prod.apk
 
       - name: 📱 Build Production AAB
         if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'prod-aab' || github.event_name == 'push'
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
-          eas build --platform android --profile production --local --non-interactive --output=./app-prod.aab
+          bun run eas build --platform android --profile production --local --non-interactive --output=./app-prod.aab
 
       # - name: 🏗 Setup rclone
       #   uses: AnimMouse/setup-rclone@v1
