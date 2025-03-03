@@ -1,5 +1,4 @@
 name: React Native CI/CD
-
 on:
   push:
     branches: [main, master, develop]
@@ -83,24 +82,18 @@ jobs:
           # Build with increased memory limit
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
           eas build --platform android --profile development --local --non-interactive --output=./app-dev.apk
-        env:
-          NODE_ENV: development
 
       - name: 📱 Build Production APK
         if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'prod-apk' || github.event_name == 'push'
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
           eas build --platform android --profile production --local --non-interactive --output=./app-prod.apk
-        env:
-          NODE_ENV: production
 
       - name: 📱 Build Production AAB
         if: github.event.inputs.buildType == 'all' || github.event.inputs.buildType == 'prod-aab' || github.event_name == 'push'
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
           eas build --platform android --profile production --local --non-interactive --output=./app-prod.aab
-        env:
-          NODE_ENV: production
 
       # - name: 🏗 Setup rclone
       #   uses: AnimMouse/setup-rclone@v1
