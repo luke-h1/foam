@@ -1,21 +1,5 @@
 name: React Native CI/CD
 on:
-  push:
-    branches: [main, master, develop]
-    paths-ignore:
-      - "**.md"
-      - "LICENSE"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/PULL_REQUEST_TEMPLATE.md"
-      - "docs/**"
-  pull_request:
-    branches: [main, master]
-    paths-ignore:
-      - "**.md"
-      - "LICENSE"
-      - ".github/ISSUE_TEMPLATE/**"
-      - ".github/PULL_REQUEST_TEMPLATE.md"
-      - "docs/**"
   workflow_dispatch:
     inputs:
       buildType:
