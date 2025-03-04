@@ -1,4 +1,3 @@
-/* eslint-disable consistent-return */
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
 import { twitchApi } from '@app/services/api';
@@ -9,6 +8,7 @@ import {
 } from '@app/services/twitchService';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
+import newRelic from 'newrelic-react-native-agent';
 import {
   createContext,
   ReactNode,
@@ -105,7 +105,7 @@ export const AuthContextProvider = ({
         },
       });
 
-      SecureStore.setItemAsync(
+      await SecureStore.setItemAsync(
         storageKeys.anon,
         JSON.stringify({
           accessToken: result.access_token,
@@ -116,8 +116,7 @@ export const AuthContextProvider = ({
       twitchApi.setAuthToken(result.access_token);
     } catch (e) {
       console.error('Failed to get anon auth', e);
-      // eslint-disable-next-line no-useless-return
-      return;
+      newRelic.recordError(new Error('Failed to get anon auth'));
     }
   };
 
@@ -165,7 +164,7 @@ export const AuthContextProvider = ({
       });
       const u = await twitchService.getUserInfo(newToken.access_token);
       setUser(u);
-      SecureStore.setItemAsync(
+      await SecureStore.setItemAsync(
         storageKeys.user,
         JSON.stringify(newToken, null, 2),
       );
@@ -189,9 +188,9 @@ export const AuthContextProvider = ({
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  const loginWithTwitch = async (response: AuthSessionResult | null) => {
+  const loginWithTwitch = async (
+    response: AuthSessionResult | null,
+  ): Promise<null | undefined> => {
     if (response?.type !== 'success' || !response.authentication) {
       await doAnonAuth();
       return null;
@@ -214,13 +213,14 @@ export const AuthContextProvider = ({
     );
     setUser(u);
 
-    SecureStore.deleteItemAsync(storageKeys.anon);
+    await SecureStore.deleteItemAsync(storageKeys.anon);
 
     const stringifedAuth = JSON.stringify(response.authentication);
 
-    SecureStore.setItemAsync(storageKeys.user, stringifedAuth);
+    await SecureStore.setItemAsync(storageKeys.user, stringifedAuth);
 
     twitchApi.setAuthToken(response.authentication.accessToken);
+    return undefined;
   };
 
   const doAnonAuth = async (token?: TwitchToken) => {
@@ -255,7 +255,7 @@ export const AuthContextProvider = ({
               },
             },
           });
-          SecureStore.setItemAsync(
+          await SecureStore.setItemAsync(
             storageKeys.anon,
             JSON.stringify(newToken, null, 2),
           );
@@ -298,7 +298,6 @@ export const AuthContextProvider = ({
 
   useEffect(() => {
     populateAuthState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const contextState: AuthContextState = useMemo(() => {
@@ -317,7 +316,6 @@ export const AuthContextProvider = ({
       user,
       ready: state.ready,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.authState, user]);
 
   return state.ready ? (
