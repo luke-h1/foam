@@ -80,6 +80,6 @@ GoogleService-*-*.plist
 
 .env.local
 
-# build files
-*.aab
+# app builds
+*.abd
 *.apk
