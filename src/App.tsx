@@ -33,6 +33,7 @@ import {
   BaseConfig,
 } from './navigators';
 import { ErrorBoundary } from './screens';
+import { twitchApi } from './services/api';
 import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
 
@@ -65,7 +66,6 @@ function App(props: AppProps) {
       },
     },
   });
-  const shouldDelete = false;
 
   useOnAppStateChange();
   useChangeScreenOrientation();
@@ -111,8 +111,10 @@ function App(props: AppProps) {
     }
   });
 
+  const shouldDelete = false;
   if (shouldDelete) {
     deleteTokens();
+    twitchApi.removeAuthToken();
   }
 
   /**
@@ -143,7 +145,20 @@ function App(props: AppProps) {
             >
               <OTAUpdates />
             </AppNavigator>
-            <Toaster position="bottom-center" />
+            <Toaster
+              position="bottom-center"
+              toastOptions={{
+                actionButtonStyle: {
+                  paddingHorizontal: 20,
+                },
+              }}
+              pauseWhenPageIsHidden
+              duration={3000}
+              visibleToasts={4}
+              closeButton
+              autoWiggleOnUpdate="toast-change"
+              theme="system"
+            />
           </QueryClientProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>

@@ -8,7 +8,6 @@ import {
 } from '@app/services/twitchService';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import newRelic from 'newrelic-react-native-agent';
 import {
   createContext,
   ReactNode,
@@ -17,10 +16,11 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { toast } from 'sonner-native';
 
 export const storageKeys = {
-  anon: 'foam-anon', // anon token
-  user: 'foam-user', // logged in token
+  anon: 'V1_foam-anon', // anon token
+  user: 'V1_foam-user', // logged in token
 } as const;
 
 export interface TwitchToken {
@@ -76,14 +76,11 @@ export const AuthContextProvider = ({
 
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
 
-  const isExpiredToken = (token: TwitchToken) => {
-    return new Date() >= new Date(token.expiresIn * 1000);
-  };
-
   const fetchAnonToken = async () => {
     try {
       let result = await twitchService.getDefaultToken();
 
+      // hack to get around tests getting hung up on micro queue
       if (process.env.NODE_ENV === 'test' && enableTestResult) {
         result = testResult || {
           access_token: '123',
@@ -116,86 +113,63 @@ export const AuthContextProvider = ({
       twitchApi.setAuthToken(result.access_token);
     } catch (e) {
       console.error('Failed to get anon auth', e);
-      newRelic.recordError(new Error('Failed to get anon auth'));
+      // eslint-disable-next-line no-useless-return
+      return;
     }
-  };
-
-  const isExpiredUserToken = (token: TokenResponse) => {
-    if (!token.expiresIn) {
-      return false;
-    }
-    return new Date() >= new Date(token.expiresIn * 1000);
   };
 
   const doAuth = async (token: TokenResponse) => {
-    if (!token.accessToken) {
-      setUser(undefined);
-      await doAnonAuth();
-      return;
-    }
-
-    const isValidToken = !isExpiredUserToken(token);
+    const isValidToken = await twitchService.validateToken(token.accessToken);
 
     if (!isValidToken) {
+      // token isn't valid, do anon auth
       await doAnonAuth();
       return;
     }
 
-    const shouldRefresh =
-      new Date() >=
-      new Date((token.expiresIn as number) * 1000 - 5 * 60 * 1000);
-
-    if (shouldRefresh) {
-      console.info('refreshing user token...');
-      const newToken = await twitchService.getRefreshToken(token.accessToken);
-      console.info('newUserToken', JSON.stringify(newToken, null, 2));
-
-      setState({
-        ready: true,
-        authState: {
-          isAnonAuth: false,
-          isLoggedIn: true,
-          token: {
-            accessToken: newToken.access_token,
-            expiresIn: newToken.expires_in,
-            tokenType: newToken.token_type,
-          },
+    setState({
+      ready: true,
+      authState: {
+        isAnonAuth: false,
+        isLoggedIn: true,
+        token: {
+          accessToken: token.accessToken,
+          expiresIn: token.expiresIn as number,
+          tokenType: token.tokenType,
         },
-      });
-      const u = await twitchService.getUserInfo(newToken.access_token);
-      setUser(u);
-      await SecureStore.setItemAsync(
-        storageKeys.user,
-        JSON.stringify(newToken, null, 2),
-      );
-      twitchApi.setAuthToken(newToken.access_token);
-    } else {
-      setState({
-        ready: true,
-        authState: {
-          isAnonAuth: false,
-          isLoggedIn: true,
-          token: {
-            accessToken: token.accessToken,
-            expiresIn: token.expiresIn as number,
-            tokenType: token.tokenType,
-          },
-        },
-      });
-      const u = await twitchService.getUserInfo(token.accessToken);
-      setUser(u);
-      twitchApi.setAuthToken(token.accessToken);
-    }
+      },
+    });
+    const u = await twitchService.getUserInfo(token.accessToken);
+    setUser(u);
+    twitchApi.setAuthToken(token.accessToken);
+    await SecureStore.setItemAsync(
+      storageKeys.user,
+      JSON.stringify({
+        accessToken: token.accessToken,
+        expiresIn: token.expiresIn,
+        tokenType: token.tokenType,
+      }),
+    );
   };
 
-  const loginWithTwitch = async (
-    response: AuthSessionResult | null,
-  ): Promise<null | undefined> => {
-    if (response?.type !== 'success' || !response.authentication) {
+  const loginWithTwitch = async (response: AuthSessionResult | null) => {
+    if (response?.type !== 'success') {
+      toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
     }
 
+    if (!response.authentication) {
+      await doAnonAuth();
+      console.info('auth failed');
+      return null;
+    }
+
+    console.log('tokenType ->', response.authentication.tokenType);
+    console.log('expiresIn ->', response.authentication.expiresIn);
+    console.log('accecssToken ->', response.authentication.accessToken);
+
+    // we have succeeded
     setState({
       ready: true,
       authState: {
@@ -213,68 +187,47 @@ export const AuthContextProvider = ({
     );
     setUser(u);
 
+    // evict cached anon details
     await SecureStore.deleteItemAsync(storageKeys.anon);
 
     const stringifedAuth = JSON.stringify(response.authentication);
 
+    // set tokens in secure-store
     await SecureStore.setItemAsync(storageKeys.user, stringifedAuth);
 
+    // set header in axios
     twitchApi.setAuthToken(response.authentication.accessToken);
-    return undefined;
+    return null;
   };
 
   const doAnonAuth = async (token?: TwitchToken) => {
     if (!token?.accessToken) {
+      // request a default token and set it in state
       await fetchAnonToken();
     } else {
-      const isValidToken = !isExpiredToken(token);
+      // we have an anonymous token, check its validity
+      const isValidToken = await twitchService.validateToken(token.accessToken);
 
+      console.log('isValidToken ->', isValidToken);
+
+      // if it's expired, get a new token and set it in state
       if (!isValidToken) {
         twitchApi.removeAuthToken();
         await fetchAnonToken();
       } else {
-        const shouldRefresh =
-          new Date() >= new Date(token.expiresIn * 1000 - 5 * 60 * 1000);
-
-        if (shouldRefresh) {
-          console.info('refreshing anon token...');
-          const newToken = await twitchService.getRefreshToken(
-            token.accessToken,
-          );
-          console.info('new anon token', JSON.stringify(newToken, null, 2));
-
-          setState({
-            ready: true,
-            authState: {
-              isAnonAuth: true,
-              isLoggedIn: false,
-              token: {
-                accessToken: newToken.access_token,
-                expiresIn: newToken.expires_in,
-                tokenType: newToken.token_type,
-              },
+        setState({
+          ready: true,
+          authState: {
+            isAnonAuth: true,
+            isLoggedIn: false,
+            token: {
+              accessToken: token.accessToken,
+              expiresIn: token.expiresIn,
+              tokenType: token.tokenType,
             },
-          });
-          await SecureStore.setItemAsync(
-            storageKeys.anon,
-            JSON.stringify(newToken, null, 2),
-          );
-          twitchApi.setAuthToken(newToken.access_token);
-        } else {
-          setState({
-            ready: true,
-            authState: {
-              isAnonAuth: true,
-              isLoggedIn: false,
-              token: {
-                accessToken: token.accessToken,
-                expiresIn: token.expiresIn,
-                tokenType: token.tokenType,
-              },
-            },
-          });
-          twitchApi.setAuthToken(token.accessToken);
-        }
+          },
+        });
+        twitchApi.setAuthToken(token.accessToken);
       }
     }
   };
@@ -297,7 +250,10 @@ export const AuthContextProvider = ({
   };
 
   useEffect(() => {
-    populateAuthState();
+    (async () => {
+      await populateAuthState();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const contextState: AuthContextState = useMemo(() => {

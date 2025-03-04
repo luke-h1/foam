@@ -74,15 +74,21 @@ export default class Client {
       newRelic.endInteraction(interactionId);
       return response.data;
     } catch (error) {
-      newRelic.logError(
-        `${config.url}_${config.method} request failed with error: ${JSON.stringify(error, null, 2)}`,
-      );
+      const errorMessage = `${config.url}_${config.method} request failed`;
+
+      newRelic.logError(errorMessage);
       // eslint-disable-next-line no-console
-      console.error('axiosError', error);
+
       if (isAxiosError(error)) {
-        newRelic.logError(
-          `AXIOS_ERROR: ${config.url}_${config.method} request failed with error: ${JSON.stringify(error, null, 2)}`,
-        );
+        // eslint-disable-next-line no-shadow
+        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed`;
+
+        newRelic.logError(errorMessage);
+
+        if (__DEV__) {
+          // eslint-disable-next-line no-console
+          console.error(errorMessage);
+        }
 
         return error.response?.data;
       }

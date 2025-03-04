@@ -94,6 +94,12 @@ interface RefreshToken {
   token_type: string;
 }
 
+interface TwitchTokenValidationResponse {
+  client_id: string;
+  scopes: null;
+  expires_in: number;
+}
+
 export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     const { data } = await axios.post(
@@ -125,11 +131,14 @@ export const twitchService = {
    * @returns a boolean indicating whether the token is valid or not
    */
   validateToken: async (token: string): Promise<boolean> => {
-    const res = await axios.get('https://id.twitch.tv/oauth2/validate', {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const res = await axios.get<TwitchTokenValidationResponse>(
+      'https://id.twitch.tv/oauth2/validate',
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
     if (res.status === 200) {
       return true;
