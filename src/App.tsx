@@ -7,13 +7,8 @@ import {
   Inter_900Black,
   useFonts,
 } from '@expo-google-fonts/inter';
-import NetInfo from '@react-native-community/netinfo';
 import * as Sentry from '@sentry/react-native';
-import {
-  onlineManager,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect, useState } from 'react';
@@ -26,7 +21,11 @@ import {
 import './styles/unistyles';
 import { Toaster } from 'sonner-native';
 import { OTAUpdates } from './components';
-import { useOnAppStateChange, useChangeScreenOrientation } from './hooks';
+import {
+  useOnAppStateChange,
+  useChangeScreenOrientation,
+  useOnReconnect,
+} from './hooks';
 import {
   useNavigationPersistence,
   AppNavigator,
@@ -68,21 +67,13 @@ function App(props: AppProps) {
   });
 
   useOnAppStateChange();
+  useOnReconnect();
   useChangeScreenOrientation();
 
   if (__DEV__) {
     LogBox.ignoreAllLogs();
     activateKeepAwakeAsync();
   }
-
-  /**
-   * support auto refetch on network reconnect for react-query
-   */
-  onlineManager.setEventListener(setOnline => {
-    return NetInfo.addEventListener(state => {
-      setOnline(!!state.isConnected);
-    });
-  });
 
   const {
     initialNavigationState,

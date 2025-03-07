@@ -13,3 +13,4 @@ export * from './usePrevious';
 export * from './useScript';
 export * from './useTmiClient';
 export * from './useStreamerImage';
+export * from './useOnReconnect';
