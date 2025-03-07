@@ -8,6 +8,10 @@ import {
   FlatList,
   SafeAreaView,
   useWindowDimensions,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -36,6 +40,7 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
   const flashListRef = useRef<FlatList<FormattedChatMessage>>(null);
   const messagesRef = useRef<FormattedChatMessage[]>([]);
   const [messages, setMessages] = useState<FormattedChatMessage[]>([]);
+  const [isAutoScroll, setIsAutoScroll] = useState(true);
   const { styles } = useStyles(stylesheet);
 
   // Get screen width & height to detect orientation
@@ -79,7 +84,7 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
   const connectToChat = () => {
     const options = { channelId };
 
-    client.connect().then(() => console.log('Connected to chat'));
+    client.connect();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client.on('message', async (_channel, tags, text, _self) => {
@@ -94,9 +99,11 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
       messagesRef.current = [...messagesRef.current, newMessage];
       setMessages([...messagesRef.current]);
 
-      requestAnimationFrame(() => {
-        flashListRef.current?.scrollToEnd({ animated: false });
-      });
+      if (isAutoScroll) {
+        requestAnimationFrame(() => {
+          flashListRef.current?.scrollToEnd({ animated: false });
+        });
+      }
     });
 
     client.on('clearchat', () => {
@@ -117,6 +124,27 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (isAutoScroll) {
+      flashListRef.current?.scrollToEnd({ animated: false });
+    }
+  }, [messages, isAutoScroll]);
+
+  const handleScroll = event => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const isAtBottom =
+      contentOffset.y + layoutMeasurement.height >= contentSize.height - 20;
+
+    setIsAutoScroll(isAtBottom);
+  };
+
+  const handleResumeScroll = () => {
+    setIsAutoScroll(true);
+    requestAnimationFrame(() => {
+      flashListRef.current?.scrollToEnd({ animated: true });
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Typography style={styles.header}>Chat</Typography>
@@ -130,12 +158,25 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
           maxToRenderPerBatch={10}
           windowSize={5}
           removeClippedSubviews
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           getItemLayout={(_, index) => ({
             length: 40,
             offset: 40 * index,
             index,
           })}
         />
+        {!isAutoScroll && (
+          <View style={styles.pausedOverlay}>
+            <Text style={styles.pausedText}>Chat paused due to scroll</Text>
+            <TouchableOpacity
+              onPress={handleResumeScroll}
+              style={styles.resumeButton}
+            >
+              <Text style={styles.resumeButtonText}>Resume</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </Animated.View>
     </SafeAreaView>
   );
@@ -148,15 +189,44 @@ const stylesheet = createStyleSheet(theme => ({
     justifyContent: 'flex-start',
     width: Dimensions.get('window').width,
     marginHorizontal: theme.spacing.sm,
+    // backgroundColor: theme.colors.background,
   },
   header: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: theme.colors.borderFaint,
-    margin: 4,
+    // color: theme.colors.primary,
+    margin: theme.spacing.md,
   },
   chatContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.sm,
+    // backgroundColor: theme.colors.backgroundLight,
+  },
+  pausedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    alignItems: 'center',
+  },
+  pausedText: {
+    color: 'white',
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  resumeButton: {
+    // backgroundColor: theme.colors.primary,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: theme.radii.md,
+  },
+  resumeButtonText: {
+    color: 'white',
+    fontSize: 16,
   },
 }));
