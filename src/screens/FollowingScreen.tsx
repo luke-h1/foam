@@ -1,4 +1,4 @@
-import { LiveStreamCard, Screen } from '@app/components';
+import { EmptyState, LiveStreamCard, Screen } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useHeader } from '@app/hooks';
@@ -46,7 +46,21 @@ export default function FollowingScreen() {
 
   if ((!isLoading && !streams) || isError) {
     toast.error('Failed to fetch followed streams');
-    return <LiveStreamCardSkeleton />;
+    return (
+      <EmptyState
+        content="Failed to fetch followed streams"
+        heading="No followed streams"
+      />
+    );
+  }
+
+  if (streams && streams.length === 0) {
+    return (
+      <EmptyState
+        content="None of your followed streamers are live"
+        heading="It's empty in here"
+      />
+    );
   }
 
   return (
@@ -61,6 +75,7 @@ export default function FollowingScreen() {
             data={streams}
             keyExtractor={item => item.id}
             renderItem={({ item }) => <LiveStreamCard stream={item} />}
+            showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }

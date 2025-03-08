@@ -32,6 +32,7 @@ export function TopCategoriesScreen() {
     refetch,
     hasNextPage,
     isLoading,
+    isError,
   } = useInfiniteQuery({
     queryKey: ['TopCategories'],
     queryFn: ({ pageParam }: { pageParam?: string }) =>
@@ -43,6 +44,15 @@ export function TopCategoriesScreen() {
 
   if (isLoading || refreshing) {
     return <Spinner />;
+  }
+
+  if (!isLoading && !refreshing && isError) {
+    return (
+      <EmptyState
+        heading="Failed to fetch categories"
+        content="Failed to fetch top categories"
+      />
+    );
   }
 
   const onRefresh = async () => {

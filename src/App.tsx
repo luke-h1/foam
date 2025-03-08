@@ -7,6 +7,7 @@ import {
   Inter_900Black,
   useFonts,
 } from '@expo-google-fonts/inter';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import 'expo-dev-client';
@@ -124,34 +125,38 @@ function App(props: AppProps) {
       onReset={() => setRecoveredFromError(true)}
     >
       <GestureHandlerRootView>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <QueryClientProvider client={queryClient}>
-            <AppNavigator
-              initialState={
-                recoveredFromError
-                  ? { index: 0, routes: [] }
-                  : initialNavigationState
-              }
-              onStateChange={onNavigationStateChange}
-            >
-              <OTAUpdates />
-            </AppNavigator>
-            <Toaster
-              position="bottom-center"
-              toastOptions={{
-                actionButtonStyle: {
-                  paddingHorizontal: 20,
-                },
-              }}
-              pauseWhenPageIsHidden
-              duration={3000}
-              visibleToasts={4}
-              closeButton
-              autoWiggleOnUpdate="toast-change"
-              theme="system"
-            />
-          </QueryClientProvider>
-        </SafeAreaProvider>
+        <BottomSheetModalProvider>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <QueryClientProvider client={queryClient}>
+              <AppNavigator
+                initialState={
+                  recoveredFromError
+                    ? { index: 0, routes: [] }
+                    : initialNavigationState
+                }
+                onStateChange={onNavigationStateChange}
+              >
+                <OTAUpdates />
+              </AppNavigator>
+              <Toaster
+                position="bottom-center"
+                gap={20}
+                toastOptions={{
+                  actionButtonStyle: {
+                    paddingHorizontal: 20,
+                  },
+                }}
+                pauseWhenPageIsHidden
+                duration={3000}
+                richColors
+                visibleToasts={4}
+                closeButton
+                autoWiggleOnUpdate="toast-change"
+                theme="system"
+              />
+            </QueryClientProvider>
+          </SafeAreaProvider>
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
   );
