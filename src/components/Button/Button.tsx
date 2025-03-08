@@ -4,14 +4,14 @@ import { TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 export type ButtonProps = TouchableOpacityProps;
 
 export const Button = forwardRef<View, ButtonProps>(
-  ({ children, onPress, ...touchableProps }, ref) => (
+  ({ children, onPress, style, ...touchableProps }, ref) => (
     <TouchableOpacity
       ref={ref}
       {...touchableProps}
-      style={[touchableProps.style]}
+      style={style}
       onPress={onPress}
     >
-      <View>{children}</View>
+      {children}
     </TouchableOpacity>
   ),
 );

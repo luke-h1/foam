@@ -18,7 +18,6 @@ import { StackScreenProps } from '@react-navigation/stack';
 import newRelic from 'newrelic-react-native-agent';
 import { useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-
 import {
   DevToolsParamList,
   DevToolsStackNavigator,

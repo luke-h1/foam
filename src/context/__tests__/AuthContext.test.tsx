@@ -155,7 +155,7 @@ describe('AuthContext', () => {
       };
 
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-        'foam-anon',
+        'V1_foam-anon',
         JSON.stringify(anonToken),
       );
 
@@ -166,7 +166,7 @@ describe('AuthContext', () => {
       };
 
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
-        'foam-user',
+        'V1_foam-user',
         JSON.stringify(userToken),
       );
     });

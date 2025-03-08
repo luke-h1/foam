@@ -1,9 +1,9 @@
 import {
   EmptyState,
+  LiveStreamCard,
   Screen,
   ScrollToTop,
   Spinner,
-  StreamStackCard,
   Typography,
 } from '@app/components';
 import { useHeader } from '@app/hooks';
@@ -22,6 +22,7 @@ import {
   View,
 } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { toast } from 'sonner-native';
 
 export const CategoryScreen: FC<
   StackScreenProps<AppStackParamList, 'Category'>
@@ -73,6 +74,7 @@ export const CategoryScreen: FC<
   }
 
   if (isCategoryError || isErrorStreams) {
+    toast.error('Failed to fetch categories');
     return (
       <EmptyState
         content="Failed to fetch categories"
@@ -139,7 +141,7 @@ export const CategoryScreen: FC<
         ref={flatListRef}
         data={allStreams}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <StreamStackCard stream={item} />}
+        renderItem={({ item }) => <LiveStreamCard stream={item} />}
         ListHeaderComponent={renderHeader}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.2}
