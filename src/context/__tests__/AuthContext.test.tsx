@@ -1,8 +1,15 @@
+import { Typography } from '@app/components';
+import { twitchApi as _twitchApi } from '@app/services/api';
 import {
   twitchService as _twitchService,
   type UserInfoResponse,
 } from '@app/services/twitchService';
-import { waitFor, renderHook } from '@testing-library/react-native';
+import {
+  waitFor,
+  renderHook,
+  render,
+  screen,
+} from '@testing-library/react-native';
 import type { AuthSessionResult } from 'expo-auth-session';
 import * as _SecureStore from 'expo-secure-store';
 import React, { act, type FC, type PropsWithChildren } from 'react';
@@ -15,6 +22,8 @@ import {
 } from '../AuthContext';
 
 jest.mock('@app/services/twitchService');
+jest.mock('@app/services/api');
+
 jest.mock('expo-secure-store');
 
 jest.mock('@react-native-firebase/crashlytics', () => {
@@ -38,6 +47,7 @@ export const initalTestAuthContextProps: AuthContextState = {
 
 const twitchService = jest.mocked(_twitchService);
 const SecureStore = jest.mocked(_SecureStore);
+const twitchApi = jest.mocked(_twitchApi);
 
 describe('AuthContext', () => {
   beforeEach(() => {
@@ -87,7 +97,7 @@ describe('AuthContext', () => {
     });
   });
 
-  test('should login with twitch when oauth response is succesful', async () => {
+  test('should login with twitch when oauth response is successful', async () => {
     const user: UserInfoResponse = {
       id: '123',
       login: 'test_user',
@@ -227,5 +237,154 @@ describe('AuthContext', () => {
 
     expect(result.current.authState?.isAnonAuth).toBe(true);
     expect(result.current.authState?.isLoggedIn).toBe(false);
+  });
+
+  describe('App startup', () => {
+    const TestComponent = () => {
+      const { authState, user } = useAuthContext();
+      return (
+        <>
+          <Typography>{authState?.isAnonAuth ? 'Anon' : 'User'}</Typography>
+          <Typography>{user ? user.display_name : 'No User'}</Typography>
+        </>
+      );
+    };
+    test('grants an anon token if user has no anon token and no user token', async () => {
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      twitchService.getDefaultToken.mockResolvedValueOnce({
+        access_token: 'anon_access_token',
+        expires_in: 3600,
+        token_type: 'bearer',
+      });
+
+      const { getByText } = render(
+        <AuthContextProvider>
+          <TestComponent />
+        </AuthContextProvider>,
+      );
+
+      await waitFor(() => {
+        expect(getByText('Anon')).toBeOnTheScreen();
+      });
+    });
+
+    test('checks if anon token is valid and sets the right state if valid', async () => {
+      SecureStore.getItemAsync.mockResolvedValueOnce(
+        JSON.stringify({
+          accessToken: 'anon_access_token',
+          expiresIn: 3600,
+          tokenType: 'bearer',
+        }),
+      );
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      twitchService.validateToken.mockResolvedValueOnce(true);
+
+      render(
+        <AuthContextProvider>
+          <TestComponent />
+        </AuthContextProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('Anon')).toBeOnTheScreen();
+      });
+    });
+
+    test('handles invalid anon token', async () => {
+      SecureStore.getItemAsync.mockResolvedValueOnce(
+        JSON.stringify({
+          accessToken: 'invalid_anon_access_token',
+          expiresIn: 3600,
+          tokenType: 'bearer',
+        }),
+      );
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      twitchService.validateToken.mockResolvedValueOnce(false);
+      twitchService.getDefaultToken.mockResolvedValueOnce({
+        access_token: 'new_anon_access_token',
+        expires_in: 3600,
+        token_type: 'bearer',
+      });
+
+      render(
+        <AuthContextProvider>
+          <TestComponent />
+        </AuthContextProvider>,
+      );
+
+      await waitFor(() => {
+        expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+          'new_anon_access_token',
+        );
+        expect(screen.getByText('Anon')).toBeOnTheScreen();
+      });
+    });
+
+    test('checks if auth token is valid and sets the right state if valid', async () => {
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      SecureStore.getItemAsync.mockResolvedValueOnce(
+        JSON.stringify({
+          accessToken: 'auth_access_token',
+          expiresIn: 3600,
+          tokenType: 'bearer',
+        }),
+      );
+      twitchService.validateToken.mockResolvedValueOnce(true);
+      twitchService.getUserInfo.mockResolvedValueOnce({
+        display_name: 'Test User',
+        broadcaster_type: 'streamer',
+        created_at: '2024',
+        description: 'test',
+        id: '123',
+        login: 'test_user',
+        offline_image_url: '',
+        profile_image_url: '',
+        type: 'test',
+        view_count: 123,
+      });
+
+      render(
+        <AuthContextProvider>
+          <TestComponent />
+        </AuthContextProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText('User')).toBeOnTheScreen();
+        expect(screen.getByText('Test User')).toBeOnTheScreen();
+      });
+    });
+
+    test('removes invalid auth token, fetches a new one, and sets state + twitchApi.setAuthToken', async () => {
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      SecureStore.getItemAsync.mockResolvedValueOnce(
+        JSON.stringify({
+          accessToken: 'invalid_auth_access_token',
+          expiresIn: 3600,
+          tokenType: 'bearer',
+        }),
+      );
+
+      twitchService.validateToken.mockResolvedValueOnce(false);
+      twitchService.getDefaultToken.mockResolvedValueOnce({
+        access_token: 'new_auth_access_token',
+        expires_in: 3600,
+        token_type: 'bearer',
+      });
+
+      render(
+        <AuthContextProvider>
+          <TestComponent />
+        </AuthContextProvider>,
+      );
+
+      await waitFor(() => {
+        expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+          'new_auth_access_token',
+        );
+        expect(screen.getByText('Anon')).toBeTruthy();
+      });
+    });
   });
 });
