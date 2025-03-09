@@ -49,6 +49,8 @@ const colors = {
   // error
   cherry: red.red5,
 
+  error: red.red10,
+
   // success
   lime: limeDark.lime10,
 

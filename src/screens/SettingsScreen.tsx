@@ -127,7 +127,7 @@ export function SettingsScreen() {
         {
           title: 'App diagnostics',
           iconName: '',
-          description: 'Analytics settings, feature flags',
+          description: 'View versions, config etc.',
           onPress: () =>
             navigate('DevTools', {
               screen: 'Diagnostics',
@@ -141,6 +141,12 @@ export function SettingsScreen() {
             navigate('DevTools', {
               screen: 'NewRelicDemo',
             }),
+        },
+        {
+          title: 'Debug',
+          iconName: '',
+          description: 'Turn on debug tools',
+          onPress: () => navigate('DevTools', { screen: 'Debug' }),
         },
       ],
     },

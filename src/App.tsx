@@ -10,30 +10,35 @@ import {
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as Clipboard from 'expo-clipboard';
 import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect, useState } from 'react';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { DevToolsBubble } from 'react-native-react-query-devtools';
+
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import './styles/unistyles';
 import { Toaster } from 'sonner-native';
 import { OTAUpdates } from './components';
 import {
-  useOnAppStateChange,
   useChangeScreenOrientation,
+  useClearExpiredStorageItems,
+  useDebugOptions,
+  useOnAppStateChange,
   useOnReconnect,
 } from './hooks';
 import {
-  useNavigationPersistence,
   AppNavigator,
   BaseConfig,
+  useNavigationPersistence,
 } from './navigators';
 import { ErrorBoundary } from './screens';
 import { twitchApi } from './services/api';
+import './styles/unistyles';
 import * as storage from './utils/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
 
@@ -63,6 +68,7 @@ function App(props: AppProps) {
       queries: {
         retry: 3,
         refetchOnReconnect: true,
+        retryDelay: 2000,
       },
     },
   });
@@ -70,6 +76,9 @@ function App(props: AppProps) {
   useOnAppStateChange();
   useOnReconnect();
   useChangeScreenOrientation();
+  useClearExpiredStorageItems();
+
+  const { ReactQueryDebug } = useDebugOptions();
 
   if (__DEV__) {
     LogBox.ignoreAllLogs();
@@ -119,6 +128,7 @@ function App(props: AppProps) {
    */
 
   // otherwise, we're ready to render the app
+
   return (
     <ErrorBoundary
       catchErrors={BaseConfig.catchErrors}
@@ -154,6 +164,19 @@ function App(props: AppProps) {
                 autoWiggleOnUpdate="toast-change"
                 theme="system"
               />
+              {ReactQueryDebug?.enabled && (
+                <DevToolsBubble
+                  onCopy={async text => {
+                    try {
+                      await Clipboard.setStringAsync(text);
+                      return true;
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    } catch (error) {
+                      return false;
+                    }
+                  }}
+                />
+              )}
             </QueryClientProvider>
           </SafeAreaProvider>
         </BottomSheetModalProvider>
