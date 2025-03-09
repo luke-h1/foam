@@ -1,10 +1,15 @@
-import { DiagnosticsScreen, NewRelicDemoScreen } from '@app/screens/DevTools';
+import {
+  DebugScreen,
+  DiagnosticsScreen,
+  NewRelicDemoScreen,
+} from '@app/screens/DevTools';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 
 export type DevToolsParamList = {
   Diagnostics: undefined;
   NewRelicDemo: undefined;
+  Debug: undefined;
 };
 
 const Stack = createNativeStackNavigator<DevToolsParamList>();
@@ -25,6 +30,13 @@ export function DevToolsStackNavigator() {
       <Stack.Screen
         name="NewRelicDemo"
         component={NewRelicDemoScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Debug"
+        component={DebugScreen}
         options={{
           headerShown: false,
         }}
