@@ -72,7 +72,7 @@ coverage
 # Bun
 bun.lockb
 
-# google services android
+google services android
 google-services-*.json
 
 # google services IOS
