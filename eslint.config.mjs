@@ -188,12 +188,13 @@ export default [
       'no-restricted-imports': [
         'error',
         {
+          // ensure consumers use our preferred components + libraries
           paths: [
             {
               name: 'react-native',
               importNames: ['Text', 'TextProps', 'Animated', 'Image'],
               message:
-                'Please import `Typography` instead of `Text` from `~/components` instead. Import `Animated` from `react-native-reanimated` instead. Import `Image` from `expo-image` instead.',
+                'Please import `Typography` instead of `Text`. Import `Animated` from `react-native-reanimated`. Import `Image` from `expo-image` instead.',
             },
           ],
         },
