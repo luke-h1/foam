@@ -3,6 +3,7 @@ import { EmotesParser, MessageParser } from '../types';
 const parseTwitchEmotes: MessageParser = async (
   message,
   emotePositions = {},
+  // eslint-disable-next-line @typescript-eslint/require-await
 ) => {
   return message.map(word => {
     const emoteIdx = Object.values(emotePositions).findIndex(emotePos =>

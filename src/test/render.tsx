@@ -6,7 +6,7 @@ import {
 } from '@testing-library/react-native';
 import { ReactElement, ReactNode } from 'react';
 
-const DefaultWrapper = ({ children }: { children: ReactNode }) => {
+function DefaultWrapper({ children }: { children: ReactNode }) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -18,7 +18,7 @@ const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-};
+}
 
 /**
  * Custom test render function that is pre-configured with any contexts
@@ -29,11 +29,11 @@ export default function render(
   options?: Omit<RenderOptions, 'queries'>,
 ): RenderResult {
   return {
-    ...(baseRender(ui, {
+    ...baseRender(ui, {
       wrapper: ({ children }: { children: ReactNode }) => (
         <DefaultWrapper>{children}</DefaultWrapper>
       ),
       ...options,
-    }) as RenderResult),
+    }),
   };
 }

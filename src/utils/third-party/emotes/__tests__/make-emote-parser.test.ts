@@ -3,6 +3,7 @@ import { makeEmoteParser } from '../make-emote-parser';
 
 describe('makeEmoteParser', () => {
   const mockLoaders: ((channelId: string | null) => Promise<EmotesList>)[] = [
+    // eslint-disable-next-line @typescript-eslint/require-await
     async channelId => [
       {
         id: '1',
@@ -13,6 +14,7 @@ describe('makeEmoteParser', () => {
     ],
   ];
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   const mockGetEmoteURLs = async (emoteId: string) => [
     {
       width: 18,

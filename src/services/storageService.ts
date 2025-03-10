@@ -99,6 +99,7 @@ export const storageService = {
     const keys = await this.getAllKeys();
     const entries = await AsyncStorage.multiGet(keys);
 
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     entries.forEach(async ([key, value]) => {
       if (!key.startsWith(NAMESPACE)) {
         return;

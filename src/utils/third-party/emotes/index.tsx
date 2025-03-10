@@ -21,6 +21,7 @@ const emoteParsers: EmotesParser[] = [
   stvOverlayParser,
 ];
 
+// eslint-disable-next-line @typescript-eslint/require-await
 const prepare = async (message: string): Promise<ParsedEmotesMessage> => {
   let currentPos = 0;
   return message.split(' ').map(content => {
@@ -32,8 +33,10 @@ const prepare = async (message: string): Promise<ParsedEmotesMessage> => {
 
 export const reloadEmotes = async (
   _options: Partial<ParserOptions> | null = null,
+  // eslint-disable-next-line @typescript-eslint/require-await
 ) => {
   const options = loadOptions(_options);
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   emoteParsers.forEach(async parser => {
     await parser.load(options.channelId, true);
   });
@@ -86,7 +89,7 @@ export const parseEmotes = async (
                   // eslint-disable-next-line react/no-array-index-key
                   key={`link-${index}-${i}`}
                   style={{ color: '#004EFF' }}
-                  onPress={() => Linking.openURL(part)}
+                  onPress={() => void Linking.openURL(part)}
                 >
                   {part}
                 </Typography>

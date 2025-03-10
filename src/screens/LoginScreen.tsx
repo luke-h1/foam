@@ -69,7 +69,7 @@ export function LoginScreen() {
 
   useEffect(() => {
     if (response && response?.type === 'success') {
-      handleAuth();
+      void handleAuth();
     }
     // eslint-disable-next-line no-console
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,7 +85,7 @@ export function LoginScreen() {
     >
       <View style={$buttonWrapper} />
       <View style={$textWrapper}>
-        <Button onPress={() => promptAsync()} disabled={!request}>
+        <Button onPress={() => void promptAsync()} disabled={!request}>
           <Typography>Login with Twitch</Typography>
         </Button>
       </View>

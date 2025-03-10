@@ -240,7 +240,7 @@ describe('AuthContext', () => {
   });
 
   describe('App startup', () => {
-    const TestComponent = () => {
+    function TestComponent() {
       const { authState, user } = useAuthContext();
       return (
         <>
@@ -248,7 +248,7 @@ describe('AuthContext', () => {
           <Typography>{user ? user.display_name : 'No User'}</Typography>
         </>
       );
-    };
+    }
     test('grants an anon token if user has no anon token and no user token', async () => {
       SecureStore.getItemAsync.mockResolvedValueOnce(null);
       SecureStore.getItemAsync.mockResolvedValueOnce(null);

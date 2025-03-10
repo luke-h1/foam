@@ -111,7 +111,7 @@ export const twitchService = {
 
   listGlobalEmotes: async () => {
     const { data } = await twitchApi.get<{ data: Emote[] }>(
-      `/chat/emotes/global`,
+      '/chat/emotes/global',
     );
     return data;
   },
@@ -183,7 +183,7 @@ export const twitchService = {
   },
 
   getStream: async (userLogin: string) => {
-    const result = await twitchApi.get<{ data: Stream[] }>(`/streams`, {
+    const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
       params: {
         user_login: userLogin,
         first: 15,

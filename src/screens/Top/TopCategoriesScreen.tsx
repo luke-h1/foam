@@ -55,9 +55,9 @@ export function TopCategoriesScreen() {
     );
   }
 
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    refetch();
+    void refetch();
     setRefreshing(false);
   };
 
@@ -67,7 +67,7 @@ export function TopCategoriesScreen() {
     return (
       <EmptyState
         content="No categories found"
-        buttonOnPress={() => onRefresh()}
+        buttonOnPress={() => void onRefresh()}
       />
     );
   }
@@ -108,12 +108,13 @@ export function TopCategoriesScreen() {
         )}
         keyExtractor={(_item, index) => index.toString()}
         numColumns={3}
-        onEndReached={handleLoadMore}
+        onEndReached={void handleLoadMore}
         onEndReachedThreshold={1.5}
         onRefresh={onRefresh}
         onScroll={handleScroll}
         refreshing={refreshing}
         refreshControl={
+          // eslint-disable-next-line react/jsx-wrap-multilines
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}

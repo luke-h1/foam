@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import { Badges } from 'tmi.js';
 
 export type BadgeVersions = {

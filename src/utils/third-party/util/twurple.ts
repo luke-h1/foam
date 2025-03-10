@@ -9,8 +9,10 @@ const authProvider = new RefreshingAuthProvider({
 
 export const twurple = new ApiClient({ authProvider });
 
-authProvider.onRefresh(async (_userId, newToken) => {
-  SecureStore.setItemAsync('twurpleToken', JSON.stringify(newToken));
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+authProvider.onRefresh((_userId, newToken) => {
+  // eslint-disable-next-line no-void
+  void SecureStore.setItemAsync('twurpleToken', JSON.stringify(newToken));
 });
 
 export const setupTwurple = async (channelId: string) => {

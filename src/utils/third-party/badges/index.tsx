@@ -10,6 +10,29 @@ const badgeParsers: BadgesParser[] = [
   // ffzBadgesParser,
   // bttvBadgesParser,
 ];
+export const reloadBadges = async (
+  _options: Partial<ParserOptions> | null = null,
+) => {
+  const options = loadOptions(_options);
+  await Promise.all(
+    badgeParsers.map(async parser => {
+      return parser.load(options.channelId, true);
+    }),
+  );
+};
+
+const replaceBadges = (parsedBadges: ParsedBadges): ParsedBadges =>
+  parsedBadges.reduce((badges: ParsedBadges, badge, idx) => {
+    if (badge.replaces) {
+      const replaceIdx = badges.findIndex(x => x.id === badge.replaces);
+      if (replaceIdx >= 0) {
+        // eslint-disable-next-line no-param-reassign
+        badges[replaceIdx] = badge;
+        return badges.filter((_x, i) => i !== idx);
+      }
+    }
+    return badges;
+  }, parsedBadges);
 
 export const parseBadges = async (
   badges: CommonUserstate['badges'],
@@ -72,27 +95,3 @@ export const parseBadges = async (
       }),
   };
 };
-
-export const reloadBadges = async (
-  _options: Partial<ParserOptions> | null = null,
-) => {
-  const options = loadOptions(_options);
-  await Promise.all(
-    badgeParsers.map(async parser => {
-      return parser.load(options.channelId, true);
-    }),
-  );
-};
-
-const replaceBadges = (parsedBadges: ParsedBadges): ParsedBadges =>
-  parsedBadges.reduce((badges: ParsedBadges, badge, idx) => {
-    if (badge.replaces) {
-      const replaceIdx = badges.findIndex(x => x.id === badge.replaces);
-      if (replaceIdx >= 0) {
-        // eslint-disable-next-line no-param-reassign
-        badges[replaceIdx] = badge;
-        return badges.filter((_x, i) => i !== idx);
-      }
-    }
-    return badges;
-  }, parsedBadges);

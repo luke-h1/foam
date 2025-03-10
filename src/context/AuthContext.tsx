@@ -65,11 +65,11 @@ export type AuthContextProviderProps = {
   testResult?: DefaultTokenResponse;
 };
 
-export const AuthContextProvider = ({
+export function AuthContextProvider({
   children,
   enableTestResult,
   testResult,
-}: AuthContextProviderProps) => {
+}: AuthContextProviderProps) {
   const [state, setState] = useState<State>({
     ready: false,
   });
@@ -277,7 +277,7 @@ export const AuthContextProvider = ({
   return state.ready ? (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
   ) : null;
-};
+}
 
 export function useAuthContext() {
   const context = useContext(AuthContext);

@@ -22,7 +22,7 @@ import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
 import { StreamerCard } from './components';
 
-const previousSearchesKey = 'previousSearches' as const;
+const previousSearchesKey = 'previousSearches';
 
 interface SearchHistoryItem {
   query: string;
@@ -64,6 +64,7 @@ export function SearchScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
       setSearchResults([]);
@@ -75,6 +76,7 @@ export function SearchScreen() {
     setSearchResults(results);
 
     const prevSearches = storage.getString(previousSearchesKey);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const parsedPrevSearches: SearchHistoryItem[] = prevSearches
       ? JSON.parse(prevSearches)
       : [];
@@ -101,6 +103,7 @@ export function SearchScreen() {
 
     const previousSearchResults = storage.getString(previousSearchesKey);
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     setSearchHistory(JSON.parse(previousSearchResults as string));
   }, 400);
 
@@ -125,6 +128,7 @@ export function SearchScreen() {
               value={query}
               autoComplete="off"
               autoCorrect={false}
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
               onChangeText={async text => handleQuery(text)}
               // eslint-disable-next-line react/no-unstable-nested-components
               RightAccessory={() =>
@@ -133,7 +137,7 @@ export function SearchScreen() {
                     onPress={() => {
                       setQuery?.('');
                       setSearchResults([]);
-                      fetchSearchHistory();
+                      void fetchSearchHistory();
                     }}
                     hitSlop={30}
                   >
@@ -202,7 +206,7 @@ export function SearchScreen() {
             storage.delete(previousSearchesKey);
           }}
           onSelectItem={q => {
-            handleQuery(q);
+            void handleQuery(q);
           }}
           onClearItem={id => {
             const newHistory = searchHistory.filter(item => item.query !== id);

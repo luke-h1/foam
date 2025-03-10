@@ -15,13 +15,13 @@ interface Props {
   parseFormat?: string;
 }
 
-export const FormattedDate = ({
+export function FormattedDate({
   children,
   format = 'd MMMM yyyy',
   formatRelativeToNow = false,
   testId,
   parseFormat,
-}: Props) => {
+}: Props) {
   let parsedDate: Date;
 
   if (typeof children === 'string') {
@@ -43,4 +43,4 @@ export const FormattedDate = ({
         : formatter(parsedDate, format)}
     </Typography>
   );
-};
+}
