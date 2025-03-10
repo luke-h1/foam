@@ -56,7 +56,7 @@ export function Diagnostics() {
               <Typography style={styles.headerText}>{title}</Typography>
             </View>
             {Object.entries(data).map(([key, value]) => (
-              <InfoRow key={key} label={key} value={value as string} />
+              <InfoRow key={key} label={key} value={value} />
             ))}
           </View>
         ))}

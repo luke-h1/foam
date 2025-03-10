@@ -90,7 +90,7 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 // Documentation: https://reactnavigation.org/docs/stack-navigator/
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
-const AppStack = () => {
+function AppStack() {
   return (
     <Stack.Navigator
       screenOptions={{
@@ -129,13 +129,13 @@ const AppStack = () => {
       <Stack.Screen name="DevTools" component={DevToolsStackNavigator} />
     </Stack.Navigator>
   );
-};
+}
 
 type NavigationProps = Partial<
   React.ComponentProps<typeof NavigationContainer>
 >;
 
-export const AppNavigator = (props: NavigationProps) => {
+export function AppNavigator(props: NavigationProps) {
   const colorScheme = useColorScheme();
 
   useBackButtonHandler(routeName => exitRoutes.includes(routeName));
@@ -165,4 +165,4 @@ export const AppNavigator = (props: NavigationProps) => {
       </AuthContextProvider>
     </NavigationContainer>
   );
-};
+}

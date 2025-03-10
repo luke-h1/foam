@@ -20,6 +20,7 @@ import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import WebView from 'react-native-webview';
 
+// eslint-disable-next-line react/function-component-definition
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
 }) => {
@@ -52,7 +53,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   useEffect(() => {
     if (!isStreamLoading && !stream) {
-      fetchUser();
+      void fetchUser();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stream]);
@@ -151,7 +152,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
           <Chat
             channelId={user?.id as string}
-            channelName={stream.user_login as string}
+            channelName={stream.user_login}
           />
         </Animated.View>
       </View>

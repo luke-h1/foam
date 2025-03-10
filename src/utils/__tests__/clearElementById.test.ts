@@ -2,8 +2,10 @@ import { clearElementById } from '../clearElementById';
 
 describe('clearElementById', () => {
   test('should clear the innerHTML of the element with the given id', () => {
-    document.body.innerHTML = `<div id="test">Hello, world!</div>`;
+    // eslint-disable-next-line no-undef
+    document.body.innerHTML = '<div id="test">Hello, world!</div>';
     clearElementById('test');
+    // eslint-disable-next-line no-undef
     const container = document.getElementById('test');
     expect(container?.innerHTML).toBe('');
   });

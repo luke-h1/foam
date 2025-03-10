@@ -72,6 +72,7 @@ export default class Client {
         return omit(response, ['config', 'request']) as TValue;
       }
       newRelic.endInteraction(interactionId);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return response.data;
     } catch (error) {
       const errorMessage = `${config.url}_${config.method} request failed`;
@@ -90,6 +91,7 @@ export default class Client {
           console.error(errorMessage);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return error.response?.data;
       }
 

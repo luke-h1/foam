@@ -77,6 +77,7 @@ export default function FollowingScreen() {
             renderItem={({ item }) => <LiveStreamCard stream={item} />}
             showsVerticalScrollIndicator={false}
             refreshControl={
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           />

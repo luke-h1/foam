@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import {
   Button,
   Icon,
@@ -17,16 +19,19 @@ import { View, SafeAreaView } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
-const BuildFooter = () => (
-  <View style={{ marginBottom: 12 }}>
-    <Typography color="border">
-      Version: {Application.nativeApplicationVersion ?? ''} (
-      {Application.nativeBuildVersion ?? ''})
-    </Typography>
-  </View>
-);
+function BuildFooter() {
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <Typography color="border">
+        Version: {Application.nativeApplicationVersion ?? ''} (
+        {Application.nativeBuildVersion ?? ''})
+      </Typography>
+    </View>
+  );
+}
 
 export function SettingsScreen() {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const { navigate, goBack, addListener } = useAppNavigation();
 
   useHeader({

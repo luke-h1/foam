@@ -53,6 +53,7 @@ export function TopStreamsScreen() {
 
   if (allStreams.length === 0) {
     return (
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
     );
   }
@@ -87,13 +88,16 @@ export function TopStreamsScreen() {
         data={allStreams}
         renderItem={({ item }) => <LiveStreamCard stream={item} />}
         keyExtractor={item => item.id}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={1.5}
         refreshing={refreshing}
         onScroll={handleScroll}
         refreshControl={
+          // eslint-disable-next-line react/jsx-wrap-multilines
           <RefreshControl
             refreshing={refreshing}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onRefresh={onRefresh}
             tintColor="white"
             colors={['white']}

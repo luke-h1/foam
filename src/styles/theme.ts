@@ -9,12 +9,6 @@ import {
   purpleDarkA,
 } from '@radix-ui/colors';
 
-export type ThemeColor = keyof typeof colors;
-export type FontSize = keyof typeof darkTheme.font.fontSize;
-export type FontWeight = keyof typeof darkTheme.font.fontWeight;
-export type Spacing = keyof typeof darkTheme.spacing;
-export type Radii = keyof typeof darkTheme.radii;
-
 const colors = {
   screen: slateDark.slate1,
 
@@ -109,3 +103,9 @@ export const darkTheme = {
     },
   },
 } as const;
+
+export type ThemeColor = keyof typeof colors;
+export type FontSize = keyof typeof darkTheme.font.fontSize;
+export type FontWeight = keyof typeof darkTheme.font.fontWeight;
+export type Spacing = keyof typeof darkTheme.spacing;
+export type Radii = keyof typeof darkTheme.radii;

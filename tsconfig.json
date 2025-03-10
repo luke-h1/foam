@@ -30,7 +30,14 @@
       "@app/*": ["./src/*"]
     }
   },
-  "include": ["src", "test", "App.js", "jest-setup/__mocks__"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "App.js",
+    "jest-setup/__mocks__"
+  ],
   "moduleResolution": "node",
-  "exclude": ["node_modules", ".expo"]
+  "exclude": ["node_modules"]
 }
