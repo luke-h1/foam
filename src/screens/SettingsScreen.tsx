@@ -150,6 +150,29 @@ export function SettingsScreen() {
         },
       ],
     },
+    {
+      title: 'Other',
+      data: [
+        {
+          title: 'About the app',
+          iconName: '',
+          description: 'Learn more about the app',
+          onPress: () => navigate('Other', { screen: 'About' }),
+        },
+        {
+          title: 'Changelog',
+          description: 'release notes',
+          iconName: '',
+          onPress: () => navigate('Other', { screen: 'Changelog' }),
+        },
+        {
+          title: 'FAQ',
+          description: 'Questions and answers',
+          iconName: '',
+          onPress: () => navigate('Other', { screen: 'Faq' }),
+        },
+      ],
+    },
   ];
 
   const bottomSheetSections: NavigationSectionListData = [
