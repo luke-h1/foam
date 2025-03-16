@@ -25,6 +25,7 @@ export function DevToolsStackNavigator() {
         component={DiagnosticsScreen}
         options={{
           headerShown: false,
+          orientation: 'portrait_up',
         }}
       />
       <Stack.Screen
@@ -32,6 +33,7 @@ export function DevToolsStackNavigator() {
         component={NewRelicDemoScreen}
         options={{
           headerShown: false,
+          orientation: 'portrait_up',
         }}
       />
       <Stack.Screen
@@ -39,6 +41,7 @@ export function DevToolsStackNavigator() {
         component={DebugScreen}
         options={{
           headerShown: false,
+          orientation: 'portrait_up',
         }}
       />
     </Stack.Navigator>

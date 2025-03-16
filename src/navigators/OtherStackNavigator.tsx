@@ -20,17 +20,17 @@ export function OtherStackNavigator() {
       <Stack.Screen
         name="About"
         component={AboutScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, orientation: 'portrait_up' }}
       />
       <Stack.Screen
         name="Changelog"
         component={ChangelogScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, orientation: 'portrait_up' }}
       />
       <Stack.Screen
         name="Faq"
         component={FaqScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, orientation: 'portrait_up' }}
       />
     </Stack.Navigator>
   );

@@ -27,6 +27,7 @@ export function StreamStackNavigator() {
         component={StreamerProfileScreen}
         options={{
           headerShown: false,
+          orientation: 'portrait_up',
         }}
       />
     </Stack.Navigator>
