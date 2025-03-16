@@ -3,12 +3,7 @@ import { useAppNavigation, useTmiClient } from '@app/hooks';
 import { parseBadges } from '@app/utils/third-party/badges';
 import { parseEmotes } from '@app/utils/third-party/emotes';
 import { memo, useEffect, useRef, useState } from 'react';
-import {
-  Dimensions,
-  FlatList,
-  SafeAreaView,
-  useWindowDimensions,
-} from 'react-native';
+import { FlatList, SafeAreaView, useWindowDimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -35,7 +30,6 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
   const navigation = useAppNavigation();
   const flashListRef = useRef<FlatList<FormattedChatMessage>>(null);
   const messagesRef = useRef<FormattedChatMessage[]>([]);
-  const [messages, setMessages] = useState<FormattedChatMessage[]>([]);
   const { styles } = useStyles(stylesheet);
 
   // Get screen width & height to detect orientation
@@ -76,10 +70,12 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
     },
   });
 
+  const [messages, setMessages] = useState<FormattedChatMessage[]>([]);
+
   const connectToChat = () => {
     const options = { channelId };
 
-    client.connect().then(() => console.log('Connected to chat'));
+    client.connect();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client.on('message', async (_channel, tags, text, _self) => {
@@ -91,17 +87,15 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
 
       const newMessage: FormattedChatMessage = { badges, user: tags, message };
 
-      messagesRef.current = [...messagesRef.current, newMessage];
+      messagesRef.current.push(newMessage);
       setMessages([...messagesRef.current]);
-
-      requestAnimationFrame(() => {
-        flashListRef.current?.scrollToEnd({ animated: false });
-      });
+      flashListRef.current?.scrollToEnd({ animated: false });
     });
 
     client.on('clearchat', () => {
       messagesRef.current = [];
       setMessages([]);
+      flashListRef.current?.scrollToEnd({ animated: false });
     });
 
     navigation.addListener('blur', () => {
@@ -118,7 +112,7 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <Typography style={styles.header}>Chat</Typography>
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
         <FlatList
@@ -143,20 +137,45 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
 Chat.displayName = 'Chat';
 
 const stylesheet = createStyleSheet(theme => ({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     justifyContent: 'flex-start',
-    width: Dimensions.get('window').width,
+    width: '100%',
     marginHorizontal: theme.spacing.sm,
   },
   header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.borderFaint,
-    margin: 4,
+    fontSize: 24,
+    margin: theme.spacing.md,
   },
   chatContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    flex: 1,
+    padding: theme.spacing.sm,
+    backgroundColor: theme.colors.borderFaint,
+  },
+  pausedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    alignItems: 'center',
+  },
+  pausedText: {
+    color: 'white',
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  resumeButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    borderRadius: theme.radii.md,
+  },
+  resumeButtonText: {
+    color: 'white',
+    fontSize: 16,
   },
 }));

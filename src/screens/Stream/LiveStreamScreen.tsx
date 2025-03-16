@@ -1,19 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Spinner, Chat, Typography, Screen } from '@app/components';
+import { Chat, Screen, Spinner, Typography } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchService, UserInfoResponse } from '@app/services';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useEffect, useRef, useState } from 'react';
-import {
-  View,
-  SafeAreaView,
-  useWindowDimensions,
-  TouchableOpacity,
-} from 'react-native';
+import { TouchableOpacity, useWindowDimensions } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
@@ -121,41 +115,42 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={[styles.contentContainer, isLandscape && styles.row]}>
-        <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-          <WebView
-            ref={webViewRef}
-            source={{
-              uri: `https://player.twitch.tv/?channel=${stream.user_login}&parent=foam.lhowsam.com&autoplay=true`,
-            }}
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            style={getWebViewStyle(isLandscape)}
-            allowsInlineMediaPlayback
-            mediaPlaybackRequiresUserAction={false}
-            javaScriptEnabled
+    <Screen
+      style={[styles.contentContainer, isLandscape && styles.row]}
+      safeAreaEdges={['bottom']}
+    >
+      <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
+        <WebView
+          ref={webViewRef}
+          source={{
+            uri: `https://player.twitch.tv/?channel=${stream.user_login}&parent=foam.lhowsam.com&autoplay=true`,
+          }}
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          style={getWebViewStyle(isLandscape)}
+          allowsInlineMediaPlayback
+          mediaPlaybackRequiresUserAction={false}
+          javaScriptEnabled
+        />
+        <TouchableOpacity
+          style={styles.controlButton}
+          onPress={togglePlayPause}
+        >
+          <Icon
+            name={isPlaying ? 'pause' : 'play-arrow'}
+            size={30}
+            color="#FFF"
           />
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={togglePlayPause}
-          >
-            <Icon
-              name={isPlaying ? 'pause' : 'play-arrow'}
-              size={30}
-              color="#FFF"
-            />
-          </TouchableOpacity>
-        </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
 
-        <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-          <Chat
-            channelId={user?.id as string}
-            channelName={stream.user_login as string}
-          />
-        </Animated.View>
-      </View>
-    </SafeAreaView>
+      <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
+        <Chat
+          channelId={user?.id as string}
+          channelName={stream.user_login as string}
+        />
+      </Animated.View>
+    </Screen>
   );
 };
 

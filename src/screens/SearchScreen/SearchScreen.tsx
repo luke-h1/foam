@@ -7,8 +7,11 @@ import {
   Typography,
 } from '@app/components';
 import { useAppNavigation, useDebouncedCallback, useHeader } from '@app/hooks';
-import { twitchService, SearchChannelResponse } from '@app/services';
-import { storage } from '@app/utils';
+import {
+  twitchService,
+  SearchChannelResponse,
+  storageService,
+} from '@app/services';
 import Entypo from '@expo/vector-icons/build/Entypo';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -21,8 +24,6 @@ import {
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
 import { StreamerCard } from './components';
-
-const previousSearchesKey = 'previousSearches' as const;
 
 interface SearchHistoryItem {
   query: string;
@@ -44,12 +45,13 @@ export function SearchScreen() {
   });
 
   const fetchSearchHistory = async () => {
-    const history = storage.getString(previousSearchesKey) ?? '[]';
-    const parsedHistory: SearchHistoryItem[] = JSON.parse(history);
-    parsedHistory.sort(
+    const history =
+      storageService.get<SearchHistoryItem[]>('previous_searches');
+
+    history?.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
-    setSearchHistory(parsedHistory);
+    setSearchHistory(history as SearchHistoryItem[]);
   };
 
   useEffect(() => {
@@ -74,34 +76,31 @@ export function SearchScreen() {
     const results = await twitchService.searchChannels(value);
     setSearchResults(results);
 
-    const prevSearches = storage.getString(previousSearchesKey);
-    const parsedPrevSearches: SearchHistoryItem[] = prevSearches
-      ? JSON.parse(prevSearches)
-      : [];
+    const prevSearches =
+      storageService.get<SearchHistoryItem[]>('previous_searches');
 
     // Check if the query already exists in the history
-    const existingIndex = parsedPrevSearches.findIndex(
-      item => item.query === value,
-    );
+    const existingIndex = prevSearches?.findIndex(item => item.query === value);
 
     if (existingIndex !== -1) {
       // Update the date of the existing query
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
-      parsedPrevSearches[existingIndex].date = new Date().toISOString();
+      prevSearches[existingIndex].date = new Date().toISOString();
     } else {
       // Add the new query to the history
-      parsedPrevSearches.push({
+      prevSearches?.push({
         query: value,
         date: new Date().toISOString(),
       });
     }
 
-    storage.set(previousSearchesKey, JSON.stringify(parsedPrevSearches));
+    storageService.set('previous_searches', prevSearches);
 
-    const previousSearchResults = storage.getString(previousSearchesKey);
+    const prevSearchResults =
+      storageService.get<SearchHistoryItem[]>('previous_searches');
 
-    setSearchHistory(JSON.parse(previousSearchResults as string));
+    setSearchHistory(prevSearchResults as SearchHistoryItem[]);
   }, 400);
 
   // eslint-disable-next-line no-shadow
@@ -199,7 +198,7 @@ export function SearchScreen() {
           results={searchHistory.map(item => item.query)}
           onClearAll={() => {
             setSearchHistory([]);
-            storage.delete(previousSearchesKey);
+            storageService.remove('previous_searches');
           }}
           onSelectItem={q => {
             handleQuery(q);
@@ -207,7 +206,7 @@ export function SearchScreen() {
           onClearItem={id => {
             const newHistory = searchHistory.filter(item => item.query !== id);
             setSearchHistory(newHistory);
-            storage.set(previousSearchesKey, JSON.stringify(newHistory));
+            storageService.set('previous_searches', newHistory);
           }}
         />
       )}
