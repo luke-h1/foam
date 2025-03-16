@@ -272,6 +272,7 @@ export const AuthContextProvider = ({
       user,
       ready: state.ready,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.authState, user]);
 
   return state.ready ? (

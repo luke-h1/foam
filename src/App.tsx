@@ -17,7 +17,6 @@ import { useLayoutEffect, useState } from 'react';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
-
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -39,7 +38,7 @@ import {
 import { ErrorBoundary } from './screens';
 import { twitchApi } from './services/api';
 import './styles/unistyles';
-import * as storage from './utils/async-storage';
+import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/deleteTokens';
 
 Sentry.init({

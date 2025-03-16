@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import EventEmitter from 'eventemitter3';
+import { MMKV } from 'react-native-mmkv';
 
 export type StorageSetterOptions = {
   expiry?: Date;
@@ -10,7 +10,10 @@ export type StorageItem<T = unknown> = {
   value: T;
 };
 
-export type AllowedKey = 'ReactQueryDebug';
+export type AllowedKey =
+  | 'ReactQueryDebug'
+  | 'foam_stacked_cards'
+  | 'previous_searches';
 
 const NAMESPACE = 'FOAM_V1';
 
@@ -18,11 +21,16 @@ const namespaceKey = (key: AllowedKey) => `${NAMESPACE}_${key}`;
 
 const storageEvents = new EventEmitter();
 
+const storage = new MMKV({
+  id: 'storageService',
+});
+
 export const storageService = {
   events: storageEvents,
 
-  async get<T>(key: AllowedKey): Promise<T | null> {
-    const item = await AsyncStorage.getItem(namespaceKey(key));
+  get<T>(key: AllowedKey): T | null {
+    const namespacedKey = namespaceKey(key);
+    const item = storage.getString(namespacedKey);
 
     if (!item) {
       return null;
@@ -31,30 +39,29 @@ export const storageService = {
     const { value, expiry } = JSON.parse(item) as StorageItem<T>;
 
     if (expiry && new Date() >= new Date(expiry)) {
-      await this.remove(key);
+      this.remove(key);
       return null;
     }
     return value;
   },
 
-  async multiGet<T extends readonly unknown[]>(keys: {
+  multiGet<T extends readonly unknown[]>(keys: {
     [K in keyof T]: AllowedKey;
-  }): Promise<{ [K in keyof T]: [string, T[K] | null] }> {
-    const namespacedKeys = keys.map(k => namespaceKey(k));
-    const entries = await AsyncStorage.multiGet(namespacedKeys);
+  }): { [K in keyof T]: [string, T[K] | null] } {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return entries.map(([key, value], index) => {
-      const sanitisedKey = key.replace(`${NAMESPACE}_`, '');
-
-      if (value === null) {
-        return [sanitisedKey, null] as [string, T[typeof index] | null];
+    return keys.map((key, index) => {
+      const namespacedKey = namespaceKey(key);
+      const item = storage.getString(namespacedKey);
+      if (!item) {
+        return [key, null] as [string, T[typeof index] | null];
       }
-      const { value: parsedValue } = JSON.parse(value) as StorageItem<
+      const { value: parsedValue } = JSON.parse(item) as StorageItem<
         T[typeof index]
       >;
-      return [sanitisedKey, parsedValue] as [string, T[typeof index] | null];
+      return [key, parsedValue] as [string, T[typeof index] | null];
     }) as { [K in keyof T]: [string, T[K] | null] };
   },
+
   async set(
     key: AllowedKey,
     value: unknown,
@@ -65,51 +72,44 @@ export const storageService = {
     let item: StorageItem = { value };
 
     if (expiry) {
-      // don't bother setting in storage
-      // as it would already be expired
       if (expiry <= new Date()) {
-        // eslint-disable-next-line no-useless-return
         return;
       }
 
       item = { value, expiry: expiry.toISOString() };
     }
 
-    await AsyncStorage.setItem(namespaceKey(key), JSON.stringify(item));
+    const namespacedKey = namespaceKey(key);
+    storage.set(namespacedKey, JSON.stringify(item));
     storageEvents.emit('storageChange', key);
   },
 
-  async remove(key: AllowedKey): Promise<void> {
-    await AsyncStorage.removeItem(namespaceKey(key));
+  remove(key: AllowedKey): void {
+    const namespacedKey = namespaceKey(key);
+    storage.delete(namespacedKey);
     storageEvents.emit('storageChange', key);
   },
 
-  async clear(): Promise<void> {
-    const keys = await AsyncStorage.getAllKeys();
-    const namespacedKeys = keys.filter(key => key.startsWith(NAMESPACE));
-    await AsyncStorage.multiRemove(namespacedKeys);
+  clear(): void {
+    const keys = storage.getAllKeys().filter(key => key.startsWith(NAMESPACE));
+    keys.forEach(key => storage.delete(key));
     storageEvents.emit('storageChange', 'all');
   },
-  async getAllKeys() {
-    const keys = await AsyncStorage.getAllKeys();
-    return keys.filter(key => key.startsWith(NAMESPACE));
+
+  getAllKeys() {
+    return storage.getAllKeys().filter(key => key.startsWith(NAMESPACE));
   },
 
-  async clearExpired(): Promise<void> {
-    const keys = await this.getAllKeys();
-    const entries = await AsyncStorage.multiGet(keys);
+  clearExpired(): void {
+    const keys = this.getAllKeys();
 
-    entries.forEach(async ([key, value]) => {
-      if (!key.startsWith(NAMESPACE)) {
-        return;
-      }
-
-      const { expiry } = JSON.parse(value as string) as StorageItem;
-
-      if (expiry && new Date() >= new Date(expiry)) {
-        await storageService.remove(
-          key.replace(`${NAMESPACE}_`, '') as AllowedKey,
-        );
+    keys.forEach(key => {
+      const item = storage.getString(key);
+      if (item) {
+        const { expiry } = JSON.parse(item) as StorageItem;
+        if (expiry && new Date() >= new Date(expiry)) {
+          storage.delete(key);
+        }
       }
     });
   },

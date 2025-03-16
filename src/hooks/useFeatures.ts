@@ -3,19 +3,15 @@
  * certain features of the app based on their preference
  */
 
-import { storage } from '@app/utils/storage';
+import { AllowedKey, storageService } from '@app/services';
 import { useEffect, useState } from 'react';
-
-type FeatureKey = 'foam_stacked_cards';
 
 export interface Feature {
   title: string;
   description: string;
   enabled: boolean;
-  key: FeatureKey;
+  key: AllowedKey;
 }
-
-const FEATURES_STORAGE_KEY = 'foamUserFeatures';
 
 const allowedFeatures: Feature[] = [
   {
@@ -30,7 +26,7 @@ export function useFeatures() {
   const [features, setFeatures] = useState<Feature[]>(allowedFeatures);
 
   useEffect(() => {
-    const storedFeatures = storage.getString(FEATURES_STORAGE_KEY);
+    const storedFeatures = storageService.get<string>('foam_stacked_cards');
 
     if (storedFeatures) {
       setFeatures(JSON.parse(storedFeatures));
@@ -38,10 +34,10 @@ export function useFeatures() {
   }, []);
 
   useEffect(() => {
-    storage.set(FEATURES_STORAGE_KEY, JSON.stringify(features));
+    storageService.set('foam_stacked_cards', JSON.stringify(features));
   }, [features]);
 
-  const toggleFeature = (key: FeatureKey, enabled: boolean) => {
+  const toggleFeature = (key: AllowedKey, enabled: boolean) => {
     setFeatures(prev =>
       prev.map(feature =>
         feature.key === key ? { ...feature, enabled } : feature,

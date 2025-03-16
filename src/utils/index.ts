@@ -4,6 +4,6 @@ export * from './openLinkInBrowser';
 export * from './purgeAsyncStorage';
 export * from './reportCrash';
 export * from './statusBarHeight';
-export * from './storage';
 export * from './string';
 export * from './typescript';
+export * from './async-storage';
