@@ -6,7 +6,7 @@ export * from './Top';
 export * from './AccountScreen';
 export * from './AuthLoading';
 export * from './CategoryScreen';
-export * from './ChangelogScreen';
+export * from './Other/ChangelogScreen';
 export * from './FollowingScreen';
 export * from './LoginScreen';
 export * from './SettingsScreen';

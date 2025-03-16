@@ -7,3 +7,4 @@ export * from './config';
 export * from './BackButton';
 export * from './PreferenceStackNavigator';
 export * from './DevToolsStackNavigator';
+export * from './OtherStackNavigator';

@@ -2,7 +2,6 @@ import { AuthContextProvider } from '@app/context';
 import {
   AuthLoadingScreen,
   CategoryScreen,
-  ChangelogScreen,
   LoginScreen,
   StorybookScreen,
 } from '@app/screens';
@@ -22,6 +21,10 @@ import {
   DevToolsParamList,
   DevToolsStackNavigator,
 } from './DevToolsStackNavigator';
+import {
+  OtherStackNavigator,
+  OtherStackParamList,
+} from './OtherStackNavigator';
 import {
   PreferenceStackNavigator,
   PreferenceStackParamList,
@@ -65,9 +68,6 @@ export type AppStackParamList = {
   // login screen
   Login: undefined;
 
-  // changelog
-  Changelog: undefined;
-
   // sb
   Storybook: undefined;
 
@@ -76,6 +76,9 @@ export type AppStackParamList = {
 
   // dev-tools
   DevTools: NavigatorScreenParams<DevToolsParamList>;
+
+  // other
+  Other: NavigatorScreenParams<OtherStackParamList>;
 };
 
 /**
@@ -117,7 +120,7 @@ const AppStack = () => {
       <Stack.Screen name="Login" component={LoginScreen} />
 
       {/* Changelog */}
-      <Stack.Screen name="Changelog" component={ChangelogScreen} />
+      <Stack.Screen name="Other" component={OtherStackNavigator} />
 
       {/* sb */}
       <Stack.Screen name="Storybook" component={StorybookScreen} />
