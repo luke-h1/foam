@@ -13,6 +13,7 @@ import {
   storageService,
 } from '@app/services';
 import Entypo from '@expo/vector-icons/build/Entypo';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -39,6 +40,8 @@ export function SearchScreen() {
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
+
+  ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
 
   useHeader({
     title: 'Search',
