@@ -17,9 +17,27 @@ export type TopStackScreenProps<T extends keyof TopStackParamList> =
 export function TopStackNavigator() {
   return (
     <Stack.Navigator initialRouteName="Top">
-      <Stack.Screen name="Top" component={TopScreen} />
-      <Stack.Screen name="TopCategories" component={TopCategoriesScreen} />
-      <Stack.Screen name="TopStreams" component={TopStreamsScreen} />
+      <Stack.Screen
+        name="Top"
+        component={TopScreen}
+        options={{
+          orientation: 'portrait_up',
+        }}
+      />
+      <Stack.Screen
+        name="TopCategories"
+        component={TopCategoriesScreen}
+        options={{
+          orientation: 'portrait_up',
+        }}
+      />
+      <Stack.Screen
+        name="TopStreams"
+        component={TopStreamsScreen}
+        options={{
+          orientation: 'portrait_up',
+        }}
+      />
     </Stack.Navigator>
   );
 }
