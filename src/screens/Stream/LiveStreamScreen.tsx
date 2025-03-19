@@ -23,6 +23,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const [, setStreamer] = useState<UserInfoResponse>();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isChatVisible, setIsChatVisible] = useState(true);
   const webViewRef = useRef<WebView>(null);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
@@ -79,12 +80,13 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const animatedVideoStyle = useAnimatedStyle(() => ({
     height: videoHeight.value,
-    width: isLandscape ? screenWidth * 0.6 : screenWidth,
+    width: isLandscape ? screenWidth * (isChatVisible ? 0.6 : 1) : screenWidth,
   }));
 
   const animatedChatStyle = useAnimatedStyle(() => ({
     height: chatHeight.value,
     width: isLandscape ? screenWidth * 0.4 : screenWidth,
+    display: isChatVisible ? 'flex' : 'none',
   }));
 
   // eslint-disable-next-line no-shadow
@@ -100,6 +102,10 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     `;
     setIsPlaying(prev => !prev);
     webViewRef.current?.injectJavaScript(script);
+  };
+
+  const toggleChatVisibility = () => {
+    setIsChatVisible(prev => !prev);
   };
 
   if (isStreamLoading || isUserLoading || isUserProfilePictureLoading) {
@@ -142,6 +148,18 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             color="#FFF"
           />
         </TouchableOpacity>
+        {isLandscape && (
+          <TouchableOpacity
+            style={styles.toggleChatButton}
+            onPress={toggleChatVisibility}
+          >
+            <Icon
+              name={isChatVisible ? 'chevron-right' : 'chevron-left'}
+              size={30}
+              color="#FFF"
+            />
+          </TouchableOpacity>
+        )}
       </Animated.View>
 
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
@@ -182,6 +200,14 @@ const stylesheet = createStyleSheet(theme => ({
   controlButton: {
     position: 'absolute',
     bottom: 20,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 50,
+    padding: 10,
+  },
+  toggleChatButton: {
+    position: 'absolute',
+    top: 20,
     right: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 50,
