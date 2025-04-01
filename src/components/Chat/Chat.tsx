@@ -3,7 +3,12 @@ import { useAppNavigation, useTmiClient } from '@app/hooks';
 import { parseBadges } from '@app/utils/third-party/badges';
 import { parseEmotes } from '@app/utils/third-party/emotes';
 import { memo, useEffect, useRef, useState } from 'react';
-import { FlatList, SafeAreaView, useWindowDimensions } from 'react-native';
+import {
+  FlatList,
+  SafeAreaView,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -85,7 +90,11 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
 
       const message = (await parseEmotes(text, tags.emotes, options)).toHTML();
 
-      const newMessage: FormattedChatMessage = { badges, user: tags, message };
+      const newMessage: FormattedChatMessage = {
+        badges,
+        user: tags,
+        message,
+      };
 
       messagesRef.current.push(newMessage);
       setMessages([...messagesRef.current]);
@@ -111,26 +120,45 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Scroll to the end immediately when messages change
+  useEffect(() => {
+    flashListRef.current?.scrollToEnd({ animated: false });
+  }, [messages]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Typography style={styles.header}>Chat</Typography>
-      <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-        <FlatList
-          data={messages}
-          ref={flashListRef}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => <ChatMessage item={item} />}
-          initialNumToRender={20}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          removeClippedSubviews
-          getItemLayout={(_, index) => ({
-            length: 40,
-            offset: 40 * index,
-            index,
-          })}
-        />
-      </Animated.View>
+      <View
+        style={
+          isLandscape ? styles.landscapeContainer : styles.portraitContainer
+        }
+      >
+        <View style={styles.chatWrapper}>
+          <Typography style={styles.header}>Chat</Typography>
+          <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
+            <FlatList
+              data={messages}
+              ref={flashListRef}
+              keyExtractor={(_, index) => index.toString()}
+              renderItem={({ item }) => <ChatMessage item={item} />}
+              initialNumToRender={20}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              removeClippedSubviews
+              getItemLayout={(_, index) => ({
+                length: 40,
+                offset: 40 * index,
+                index,
+              })}
+              onContentSizeChange={() =>
+                flashListRef.current?.scrollToEnd({ animated: false })
+              }
+              onLayout={() =>
+                flashListRef.current?.scrollToEnd({ animated: false })
+              }
+            />
+          </Animated.View>
+        </View>
+      </View>
     </SafeAreaView>
   );
 });
@@ -140,11 +168,22 @@ const stylesheet = createStyleSheet(theme => ({
   safeArea: {
     flex: 1,
   },
-  container: {
+  landscapeContainer: {
+    flexDirection: 'row',
     flex: 1,
-    justifyContent: 'flex-start',
-    width: '100%',
-    marginHorizontal: theme.spacing.sm,
+  },
+  portraitContainer: {
+    flexDirection: 'column',
+    flex: 1,
+  },
+  videoWrapperLandscape: {
+    flex: 3,
+  },
+  videoWrapperPortrait: {
+    flex: 1,
+  },
+  chatWrapper: {
+    flex: 2,
   },
   header: {
     fontSize: 24,
