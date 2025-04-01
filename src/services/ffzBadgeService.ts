@@ -4,8 +4,7 @@ import { ffzApi } from './api';
 export const ffzBadgeService = {
   getBadges: async () => {
     try {
-      const { data } = await ffzApi.get<FfzBadgesResponse>('/badges');
-      return data;
+      return ffzApi.get<FfzBadgesResponse>('/badges');
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import Client from './Client';
 
 // Twitch Helix API
@@ -9,32 +8,31 @@ export const twitchApi = new Client({
   },
 });
 
-// twitch badge API
-export const twitchBadgeApi = axios.create({
+export const twitchBadgeApi = new Client({
   baseURL: 'https://badges.twitch.tv/v1/badges',
 });
 
 // Better Twitch TV API
-export const bttvApi = axios.create({
+export const bttvApi = new Client({
   baseURL: 'https://api.betterttv.net',
 });
 
-// cached bttv emote API
-export const bttvCachedApi = axios.create({
+// cached Better Twitch TV emote API
+export const bttvCachedApi = new Client({
   baseURL: 'https://api.betterttv.net/3/cached',
 });
 
 // Seven TV API
-export const sevenTvApi = axios.create({
+export const sevenTvApi = new Client({
   baseURL: 'https://7tv.io/v3',
 });
 
 // FrankerzFaceZ API
-export const ffzApi = axios.create({
+export const ffzApi = new Client({
   baseURL: 'https://api.frankerfacez.com/v1',
 });
 
 // FrankerzFaceZ cached emote API
-export const ffzEmoteApi = axios.create({
+export const ffzEmoteApi = new Client({
   baseURL: 'https://api.betterttv.net/3/cached/frankerfacez',
 });

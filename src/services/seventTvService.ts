@@ -160,42 +160,39 @@ export type StvChannelEmotesResponse = {
 };
 
 export const sevenTvService = {
-  getEmoteSetId: async (setId: string) => {},
-  getStvUserId: async (userId: string): Promise<string> => {
-    const { data } = await sevenTvApi.get<StvUser>(
-      `https://7tv.io/v3/users/twitch/${userId}`,
+  getEmoteSetId: async (twitchUserId: string): Promise<string> => {
+    const result = await sevenTvApi.get<StvChannelEmotesResponse>(
+      `https://7tv.io/v3/users/twitch/${twitchUserId}`,
     );
 
-    return data.id;
+    return result.emote_set.id;
   },
-  getChannelEmotes: async (channelId: string | null): Promise<EmotesList> => {
-    if (!channelId) {
-      return [];
-    }
 
+  getEmoteSet: async (twitchUserId: string): Promise<EmotesList> => {
     try {
-      const { data } = await sevenTvApi.get<StvChannelEmotesResponse>(
-        `/users/twitch/${channelId}`,
+      const result = await sevenTvApi.get<StvChannelEmotesResponse>(
+        `/users/twitch/${twitchUserId}`,
       );
 
-      return data.emote_set.emotes.map(emote => ({
+      return result.emote_set.emotes.map(emote => ({
         id: emote.id,
         code: emote.name,
         // eslint-disable-next-line no-bitwise
         isZeroWidth: (emote.flags || 0 & 256) !== 0,
-        channelId,
+        channelId: twitchUserId,
       }));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return [];
     }
   },
+
   getGlobalEmotes: async (): Promise<EmotesList> => {
     try {
-      const { data } =
+      const result =
         await sevenTvApi.get<StvGlobalEmotesResponse>('/emote-sets/global');
 
-      return data.emotes.map(c => ({
+      return result.emotes.map(c => ({
         id: c.id,
         code: c.name,
         // eslint-disable-next-line no-bitwise
@@ -208,7 +205,6 @@ export const sevenTvService = {
     }
   },
   getEmote: async (emoteId: string) => {
-    const { data } = await sevenTvApi.get<StvEmote>(`/emotes/${emoteId}`);
-    return data;
+    return sevenTvApi.get<StvEmote>(`/emotes/${emoteId}`);
   },
 } as const;

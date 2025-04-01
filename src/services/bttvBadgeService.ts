@@ -4,10 +4,10 @@ import { bttvCachedApi } from './api';
 export const bttvBadgeService = {
   getBadges: async () => {
     try {
-      const { data } =
+      const result =
         await bttvCachedApi.get<BttvBadgesResponse>('/badges/twitch');
 
-      return data;
+      return result;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return [];

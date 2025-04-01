@@ -6,25 +6,22 @@ import {
 import { bttvApi } from './api';
 
 export const bttvService = {
-  getChannelEmotes: async (channelId: string | null): Promise<EmotesList> => {
-    if (!channelId) {
-      return [];
-    }
-
+  getChannelEmotes: async (channelId: string): Promise<EmotesList> => {
     try {
-      const { data } = await bttvApi.get<BttvChannelEmotesResponse>(
+      const result = await bttvApi.get<BttvChannelEmotesResponse>(
         `/cached/users/twitch/${channelId}`,
       );
 
-      const result = [...data.channelEmotes, ...data.sharedemotes].map(
-        emote => ({
-          id: emote.id,
-          code: emote.code,
-          channelId,
-        }),
-      );
+      const sanitizedResult = [
+        ...result.channelEmotes,
+        ...result.sharedemotes,
+      ].map(emote => ({
+        id: emote.id,
+        code: emote.code,
+        channelId,
+      }));
 
-      return result;
+      return sanitizedResult;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return [];
@@ -32,17 +29,17 @@ export const bttvService = {
   },
   getGlobalEmotes: async (): Promise<EmotesList> => {
     try {
-      const { data } = await bttvApi.get<BttvGlobalEmotesResponse>(
+      const result = await bttvApi.get<BttvGlobalEmotesResponse>(
         '/cached/emotes/global',
       );
 
-      const result = data.map(c => ({
+      const sanitizedResult = result.map(c => ({
         id: c.id,
         code: c.code,
         channelId: null,
       }));
 
-      return result;
+      return sanitizedResult;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return [];

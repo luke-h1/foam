@@ -7,17 +7,13 @@ import {
 import { ffzApi } from './api';
 
 export const ffzService = {
-  getChannelEmotes: async (channelId: string | null): Promise<EmotesList> => {
-    if (!channelId) {
-      return [];
-    }
-
+  getChannelEmotes: async (channelId: string): Promise<EmotesList> => {
     try {
-      const { data } = await ffzApi.get<FfzChannelEmotesResponse>(
+      const result = await ffzApi.get<FfzChannelEmotesResponse>(
         `/room/id/${channelId}`,
       );
 
-      const result = Object.values(data.sets).flatMap(set =>
+      const sanitizedResult = Object.values(result.sets).flatMap(set =>
         set.emoticons.map(emote => ({
           id: `${emote.id}`,
           code: emote.name,
@@ -25,7 +21,7 @@ export const ffzService = {
         })),
       );
 
-      return result;
+      return sanitizedResult;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
@@ -35,9 +31,9 @@ export const ffzService = {
 
   getGlobalEmotes: async (): Promise<EmotesList> => {
     try {
-      const { data } = await ffzApi.get<FfzGlobalEmotesResponse>('/set/global');
+      const result = await ffzApi.get<FfzGlobalEmotesResponse>('/set/global');
 
-      const result = Object.values(data.sets).flatMap(set =>
+      const sanitizedResult = Object.values(result.sets).flatMap(set =>
         set.emoticons.map(emote => ({
           id: `${emote.id}`,
           code: emote.name,
@@ -45,7 +41,7 @@ export const ffzService = {
         })),
       );
 
-      return result;
+      return sanitizedResult;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return [];
@@ -53,9 +49,7 @@ export const ffzService = {
   },
   getBadges: async () => {
     try {
-      const { data } = await ffzApi.get<FfzBadgesResponse>('/badges');
-
-      return data;
+      return ffzApi.get<FfzBadgesResponse>('/badges');
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       return {
