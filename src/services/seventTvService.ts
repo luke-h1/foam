@@ -159,13 +159,59 @@ export type StvChannelEmotesResponse = {
   };
 };
 
+export interface SanitisiedEmoteSet {
+  name: string;
+  url: string;
+  flags?: number;
+  original_name: string;
+  creator: string | null;
+  emote_link: string;
+  type: string;
+  height?: number;
+  width?: number;
+}
+
 export const sevenTvService = {
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {
     const result = await sevenTvApi.get<StvChannelEmotesResponse>(
-      `https://7tv.io/v3/users/twitch/${twitchUserId}`,
+      `/users/twitch/${twitchUserId}`,
+    );
+    return result.emote_set.id;
+  },
+
+  getSanitisedEmoteSet: async (
+    emoteSetId: string,
+  ): Promise<SanitisiedEmoteSet[]> => {
+    const result = await sevenTvApi.get<StvEmoteSet>(
+      `/emote-sets/${emoteSetId}`,
     );
 
-    return result.emote_set.id;
+    return result.emotes.map(emote => {
+      const { owner } = emote.data;
+
+      const creator =
+        owner && Object.keys(owner).length > 0
+          ? owner.display_name || owner.username || 'UNKNOWN'
+          : 'NONE';
+
+      const emote4x =
+        emote.data.host.files.find(file => file.name === '4x.avif') ||
+        emote.data.host.files.find(file => file.name === '3x.avif') ||
+        emote.data.host.files.find(file => file.name === '2x.avif') ||
+        emote.data.host.files.find(file => file.name === '1x.avif');
+
+      return {
+        name: emote.name,
+        url: `https://cdn.7tv.app/emote/${emote.id}/${emote4x?.name || '1x.avif'}`,
+        flags: emote.data.flags,
+        original_name: emote.data.name,
+        creator,
+        emote_link: `https://7tv.app/emotes/${emote.id}`,
+        type: 'unknown', // todo - work out whether it's a channel emote or global
+        height: emote4x?.height,
+        width: emote4x?.width,
+      };
+    });
   },
 
   getEmoteSet: async (twitchUserId: string): Promise<EmotesList> => {
