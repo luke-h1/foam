@@ -13,7 +13,6 @@ interface BttvEmote {
   animated: boolean;
   userId: string;
   modifier: boolean;
-
   user?: {
     name: string;
   };
