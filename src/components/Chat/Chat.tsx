@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
-import { ChatUserstate } from 'tmi.js';
+import { BanUserstate, ChatUserstate } from 'tmi.js';
 import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
 

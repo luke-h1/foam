@@ -81,7 +81,7 @@ export default class Client {
 
       if (isAxiosError(error)) {
         // eslint-disable-next-line no-shadow
-        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed`;
+        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed with ${JSON.stringify(error.message)}`;
 
         newRelic.logError(errorMessage);
 

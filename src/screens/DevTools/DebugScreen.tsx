@@ -1,6 +1,7 @@
-import { Screen, Typography, Button } from '@app/components';
+import { Screen, Typography, Button, TextField } from '@app/components';
 import { useAppNavigation, useHeader } from '@app/hooks';
-import { AllowedKey, storageService } from '@app/services';
+import { AllowedKey, storageService, twitchService } from '@app/services';
+import * as Clipboard from 'expo-clipboard';
 import { useState, useEffect } from 'react';
 import { FlatList, Switch, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
@@ -18,7 +19,7 @@ const debugItems: DebugItem[] = [
     title: 'Clear async storage',
     description: 'Clear all items',
     onPress: async () => {
-      await storageService.clear();
+      storageService.clear();
     },
     type: 'button',
   },
@@ -43,16 +44,16 @@ export function DebugScreen() {
   });
 
   const { styles } = useStyles(stylesheet);
+  const [twitchUsername, setTwitchUsername] = useState<string>('');
+  const [twitchUserId, setTwitchUserId] = useState<string>('');
 
   const [storageState, setStorageState] = useState<Record<string, string>>({});
   const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(
     {},
   );
 
-  const fetchStorageState = async () => {
-    const entries = await storageService.multiGet<[boolean]>([
-      'ReactQueryDebug',
-    ]);
+  const fetchStorageState = () => {
+    const entries = storageService.multiGet<[boolean]>(['ReactQueryDebug']);
     const state = entries.reduce(
       (acc, [key, value]) => {
         acc[key] = value === null ? 'false' : value.toString();
@@ -60,6 +61,7 @@ export function DebugScreen() {
       },
       {} as Record<string, string>,
     );
+
     setStorageState(state);
 
     const newSwitchOptions = debugItems.reduce(
@@ -120,9 +122,8 @@ export function DebugScreen() {
                 <Button
                   onPress={async () => {
                     await item.onPress();
-                    await setStorageState({});
+                    setStorageState({});
                   }}
-                  style={styles.button}
                 >
                   <Typography>Clear</Typography>
                 </Button>
@@ -132,13 +133,41 @@ export function DebugScreen() {
           </View>
         )}
         ListFooterComponent={
-          <View style={[styles.sectionHeader, styles.storageState]}>
-            <Typography style={styles.sectionTitle}>
-              AsyncStorage State
-            </Typography>
-            <Typography style={styles.storageValue}>
-              {JSON.stringify(storageState, null, 2)}
-            </Typography>
+          <View>
+            <View style={[styles.sectionHeader, styles.storageState]}>
+              <Typography style={styles.sectionTitle}>
+                AsyncStorage State
+              </Typography>
+              <Typography style={styles.storageValue}>
+                {JSON.stringify(storageState, null, 2)}
+              </Typography>
+            </View>
+            <View style={styles.twitchSection}>
+              <Typography style={styles.sectionTitle}>
+                Convert Twitch Username to User ID
+              </Typography>
+              <TextField
+                placeholder="Enter Twitch username"
+                value={twitchUsername}
+                onChangeText={setTwitchUsername}
+                style={styles.input}
+              />
+              <Button
+                onPress={async () => {
+                  const result = await twitchService.getUser(twitchUsername);
+                  setTwitchUserId(result.id);
+                  await Clipboard.setStringAsync(twitchUserId);
+                }}
+                style={styles.button}
+              >
+                <Typography>Convert and Copy</Typography>
+              </Button>
+              {twitchUserId ? (
+                <Typography style={styles.userId}>
+                  User ID: {twitchUserId}
+                </Typography>
+              ) : null}
+            </View>
           </View>
         }
       />
@@ -147,6 +176,23 @@ export function DebugScreen() {
 }
 
 const stylesheet = createStyleSheet(theme => ({
+  input: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.spacing.sm,
+    padding: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
+  twitchSection: {
+    marginTop: theme.spacing.lg,
+    padding: theme.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  userId: {
+    marginTop: theme.spacing.sm,
+    fontWeight: 'bold',
+  },
   storageState: {
     marginTop: theme.spacing.lg,
   },
@@ -182,7 +228,7 @@ const stylesheet = createStyleSheet(theme => ({
     color: theme.colors.lime,
   },
   button: {
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     backgroundColor: theme.colors.error,
     color: theme.colors.text,
     borderRadius: theme.spacing.lg,
