@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
-import { BanUserstate, ChatUserstate } from 'tmi.js';
+import { ChatUserstate } from 'tmi.js';
 import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
 
@@ -59,6 +59,7 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
   const client = useTmiClient({
     options: {
       clientId: process.env.TWITCH_CLIENT_ID,
+      skipUpdatingEmotesets: true,
     },
     channels: [channelName],
     identity: {
