@@ -65,7 +65,7 @@ export const twitchEmoteService = {
    */
   getIvrChannelEmotes: async (
     channelId: string,
-  ): Promise<SanitisiedEmoteSet> => {
+  ): Promise<SanitisiedEmoteSet[]> => {
     const result = await ivrApi.get<IvrEmoteResponse>(
       '/twitch/emotes/channel',
       {
@@ -77,25 +77,37 @@ export const twitchEmoteService = {
 
     return result.subProducts.flatMap(
       sub =>
-        sub.emotes.map(emote => ({
+        sub.emotes.map<SanitisiedEmoteSet>(emote => ({
           name: emote.code,
           url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
           emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
           site: 'Twitch Channel Emote',
+          creator: null,
+          original_name: emote.code,
         })),
-      ...result.bitEmotes.map(emote => ({
+      ...result.bitEmotes.map<SanitisiedEmoteSet>(emote => ({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         name: emote.code,
+        // @ts-expect-error - improve types
         url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
+        // @ts-expect-error - improve types
         emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
         site: 'Twitch Channel Emote',
+        creator: null,
+        // @ts-expect-error emote type improvements
+        original_name: emote.code,
       })),
-      ...result.localEmotes.flatMap((local) =>
-        local.emotes.map((emote) => ({
+      ...result.localEmotes.flatMap(local =>
+        local.emotes.map<SanitisiedEmoteSet>(emote => ({
           name: emote.code,
           url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
           emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
-          site: "Twitch Channel Emote",
-        }))
+          site: 'Twitch Channel Emote',
+          creator: null,
+          original_name: emote.code,
+        })),
+      ),
     );
   },
 } as const;
