@@ -1,6 +1,12 @@
-import { SevenTvEmote } from '@app/utils/third-party/types';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { zustandStorage } from './persist';
 
-interface ChatState {
-  sevenTvGlobalEmotes: SevenTvEmote[];
-}
+interface ChatState {}
+
+export const useChatStore = create(
+  persist<ChatState>((set, get) => ({}), {
+    name: 'chat-store',
+    storage: createJSONStorage(() => zustandStorage),
+  }),
+);
