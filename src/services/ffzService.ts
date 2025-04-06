@@ -83,7 +83,7 @@ export interface FfzBadgeUsers {
 }
 
 export const ffzService = {
-  getSanitisedGlobalEmotes: async (): Promise<SanitisiedEmoteSet> => {
+  getSanitisedGlobalEmotes: async (): Promise<SanitisiedEmoteSet[]> => {
     const result = await ffzApi.get<FfzGlobalEmotesResponse>('/set/global');
 
     return result.sets[

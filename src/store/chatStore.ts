@@ -1,4 +1,9 @@
-import { SanitisiedEmoteSet, twitchEmoteService } from '@app/services';
+import {
+  ffzService,
+  SanitisiedEmoteSet,
+  sevenTvService,
+  twitchEmoteService,
+} from '@app/services';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { zustandStorage } from './persist';
@@ -67,17 +72,32 @@ export const useChatStore = create(
       },
 
       loadChannelResources: async (channelId: string) => {
+        const sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
+
         const [
           twitchChannelEmotes,
           twitchGlobalEmotes,
           ffzChannelEmotes,
           ffzGlobalEmotes,
-          seventTvChannelEmotes,
+          sevenTvChannelEmotes,
           sevenTvGlobalEmotes,
         ] = await Promise.all([
           twitchEmoteService.getIvrChannelEmotes(channelId),
-          twitchEmoteService.
+          twitchEmoteService.getGlobalEmotes(),
+          ffzService.getSanitisedChannelEmotes(channelId),
+          ffzService.getSanitisedGlobalEmotes(),
+          sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
+          sevenTvService.getSanitisedEmoteSet('global'),
         ]);
+        set(state => ({
+          ...state,
+          twitchChannelEmotes,
+          twitchGlobalEmotes,
+          ffzChannelEmotes,
+          ffzGlobalEmotes,
+          sevenTvChannelEmotes,
+          sevenTvGlobalEmotes,
+        }));
       },
     }),
     {
