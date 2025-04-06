@@ -46,6 +46,7 @@ interface IvrEmoteResponse {
   bitEmotes: unknown[];
   localEmotes: LocalEmote[];
 }
+
 export const twitchEmoteService = {
   getChannelEmotes: async (userId: string, cursor?: string) => {
     const result = await twitchApi.get<

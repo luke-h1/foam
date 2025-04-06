@@ -1,85 +1,47 @@
-import {
-  TwitchBadgesList,
-  TwitchBadgesResponse,
-} from '../utils/third-party/types';
+import { OpenStringUnion } from '@app/utils';
+import { ivrApi } from './api';
 
-interface FormattedBadgeList {
+interface TwitchBadge {
   id: string;
-  versionId: string;
-  channelId: string | null;
+  image_url_1x: string;
+  image_url_2x: string;
+  image_url_4x: string;
+  /**
+   * @example cheer 1
+   */
   title: string;
+
+  /**
+   * @example cheer 1
+   */
   description: string;
-  clickAction: string;
-  clickUrl: string;
-  images: string[]; // 1x, 2x, 4x
+  click_action: OpenStringUnion<'visit_url' | 'subscribe_to_channel'> | null;
+  click_url: string | null;
 }
 
-const formatTwitchBadgesList = (
-  data: TwitchBadgesResponse,
-  channelId: string | null,
-): FormattedBadgeList[] => {
-  return data.flatMap(c =>
-    c.versions.map(version => ({
-      id: version.id,
-      versionId: version.id,
-      channelId,
-      title: version.title,
-      description: version.description,
-      clickAction: version.clickAction || '',
-      clickUrl: version.clickUrl || '',
-      images: [
-        version.image_url_1x,
-        version.image_url_2x,
-        version.image_url_4x,
-      ],
-    })),
-  );
-};
-
-export type UnttvBadgesResponse = {
-  id: string;
-  versions: {
-    id: string;
-    title: string;
-    description: string;
-    clickAction: string;
-    clickUrl: string;
-    image_url_1x: string;
-    image_url_2x: string;
-    image_url_4x: string;
-  }[];
-}[];
-
-// TODO: move this to our own service
-const BASE_URL = 'https://unttv.vercel.app';
+interface IvrChannelBadges {
+  set_id: OpenStringUnion<'bits' | 'subscriber'>;
+  versions: TwitchBadge[];
+}
 
 export const twitchBadgeService = {
-  getChannelBadges: async (
-    channelId: string | null,
-  ): Promise<TwitchBadgesList> => {
-    if (!channelId) {
-      return [];
-    }
-    try {
-      const resp = await fetch(`${BASE_URL}/badges/channel/${channelId}`);
-      if (!resp.ok) throw Error();
-      const data = (await resp.json()) as UnttvBadgesResponse;
-      return formatTwitchBadgesList(data, channelId);
+  getBadges: async (broadcasterLogin: string) => {
+    const result = await ivrApi.get<IvrChannelBadges[]>(
+      '/twitch/badges/channel',
+      {
+        params: {
+          login: broadcasterLogin,
+        },
+      },
+    );
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      return [];
-    }
+    return result;
   },
-  getTwitchGlobalBadges: async (): Promise<TwitchBadgesList> => {
-    try {
-      const resp = await fetch(`${BASE_URL}/badges/global`);
-      if (!resp.ok) throw Error();
-      const data = (await resp.json()) as UnttvBadgesResponse;
-      return formatTwitchBadgesList(data, null);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      return [];
-    }
+  getGlobalBadges: async () => {
+    const result = await ivrApi.get<IvrChannelBadges[]>(
+      '/twitch/badges/global',
+    );
+
+    return result;
   },
 } as const;
