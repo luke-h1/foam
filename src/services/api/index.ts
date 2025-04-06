@@ -36,3 +36,9 @@ export const ffzApi = new Client({
 export const ffzEmoteApi = new Client({
   baseURL: 'https://api.betterttv.net/3/cached/frankerfacez',
 });
+
+// IVR api - need to move to our own service. @see logs.ivr.fi & api.ivr.fi
+//
+export const ivrApi = new Client({
+  baseURL: 'https://api.ivr.fi/v2',
+});

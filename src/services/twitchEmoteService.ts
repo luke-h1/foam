@@ -1,42 +1,40 @@
-import type { HelixChatBadgeSet } from '@twurple/api';
+import { ivrApi, twitchApi } from './api';
+import { PaginatedList } from './twitchService';
 
-import { TwitchBadgesResponse } from '../utils/third-party/types';
-import { twurple } from '../utils/third-party/util/twurple';
-
-const formatBadgesResponse = (badges: HelixChatBadgeSet[]) => {
-  return badges.map(badge => ({
-    id: badge.id,
-    versions: badge.versions.map(version => ({
-      id: version.id,
-      title: version.title,
-      description: version.description,
-      clickAction: version.clickAction,
-      clickUrl: version.clickUrl,
-      image_url_1x: version.getImageUrl(1),
-      image_url_2x: version.getImageUrl(2),
-      image_url_4x: version.getImageUrl(4),
-    })),
-  }));
-};
+interface TwitchEmote {
+  // id: 'emotesv2_0d74b0c36a3e4fe0b1fc0326345594d1';
+  id: `emotesv2_${string}`;
+  name: string;
+  emote_type: 'follower' | 'subscriptions';
+  emote_set_id: string;
+  owner_id: string;
+  format: ['static' | 'animated'];
+  scale: ['1.0', '2.0', '3.0'];
+  theme_mode: ['light', 'dark'];
+}
 
 export const twitchEmoteService = {
-  listChannelBadges: async (
-    channelId: string | null,
-  ): Promise<TwitchBadgesResponse> => {
-    if (!channelId) {
-      return [];
-    }
+  getChannelEmotes: async (userId: string, cursor?: string) => {
+    const result = await twitchApi.get<
+      PaginatedList<TwitchEmote & { template: string }>
+    >('/chat/emotes/user', {
+      params: {
+        user_id: userId,
+        ...(cursor ? { after: cursor } : {}),
+      },
+    });
 
-    const badges = await twurple.chat.getChannelBadges(channelId); // TODO: move to lambda + proxy
-
-    const body = formatBadgesResponse(badges);
-
-    return body as TwitchBadgesResponse;
+    return result;
   },
-  listGlobalEmotes: async (): Promise<TwitchBadgesResponse> => {
-    const badges = await twurple.chat.getGlobalBadges(); // TODO: move to lambda + proxy
 
-    const body = formatBadgesResponse(badges);
-    return body as TwitchBadgesResponse;
+  /**
+   * @todo -  move to our own API or do logic in app
+   */
+  getIvrChannelEmotes: async (channelId: string) => {
+    const result = await ivrApi.get('/twitch/emotes/channel', {
+      params: {
+        channel: channelId,
+      },
+    });
   },
 } as const;
