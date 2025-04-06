@@ -75,6 +75,7 @@ export const useChatStore = create(
           seventTvChannelEmotes,
           sevenTvGlobalEmotes,
         ] = await Promise.all([
+          twitchEmoteService.getIvrChannelEmotes(channelId),
           twitchEmoteService.
         ]);
       },

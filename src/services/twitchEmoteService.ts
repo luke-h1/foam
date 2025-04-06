@@ -3,7 +3,6 @@ import { SanitisiedEmoteSet } from './seventTvService';
 import { PaginatedList } from './twitchService';
 
 interface TwitchEmote {
-  // id: 'emotesv2_0d74b0c36a3e4fe0b1fc0326345594d1';
   id: `emotesv2_${string}`;
   name: string;
   emote_type: 'follower' | 'subscriptions';
@@ -45,6 +44,19 @@ interface IvrEmoteResponse {
   subProducts: SubProduct[];
   bitEmotes: unknown[];
   localEmotes: LocalEmote[];
+}
+
+interface TwitchGlobalEmote {
+  id: string;
+  name: string;
+  images: {
+    url_1x: string;
+    url_2x: string;
+    url_4x: string;
+  };
+  format: ['static' | 'animated'];
+  scale: ['1.0', '2.0', '3.0'];
+  theme_mode: ['light', 'dark'];
 }
 
 export const twitchEmoteService = {
@@ -110,5 +122,19 @@ export const twitchEmoteService = {
         })),
       ),
     );
+  },
+  getGlobalEmotes: async (): Promise<SanitisiedEmoteSet[]> => {
+    const result = await twitchApi.get<{ data: TwitchGlobalEmote[] }>(
+      '/chat/emotes/global',
+    );
+
+    return result.data.map<SanitisiedEmoteSet>(emote => ({
+      name: emote.name,
+      url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
+      emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
+      creator: null,
+      original_name: emote.name,
+      site: 'Twitch Global',
+    }));
   },
 } as const;
