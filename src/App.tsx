@@ -39,7 +39,7 @@ import { ErrorBoundary } from './screens';
 import { twitchApi } from './services/api';
 import './styles/unistyles';
 import * as storage from './utils/async-storage/async-storage';
-import { deleteTokens } from './utils/deleteTokens';
+import { deleteTokens } from './utils/authentication/deleteTokens';
 
 Sentry.init({
   dsn: 'https://c66140f9c8c6c72a91e15582f3086de5@o536134.ingest.us.sentry.io/4508831072780288',

@@ -166,7 +166,7 @@ export interface SanitisiedEmoteSet {
   original_name: string;
   creator: string | null;
   emote_link: string;
-  type: string;
+  site: string;
   height?: number;
   width?: number;
 }
@@ -207,7 +207,7 @@ export const sevenTvService = {
         original_name: emote.data.name,
         creator,
         emote_link: `https://7tv.app/emotes/${emote.id}`,
-        type: 'unknown', // todo - work out whether it's a channel emote or global
+        site: 'unknown', // todo - work out whether it's a channel emote or global
         height: emote4x?.height,
         width: emote4x?.width,
       };

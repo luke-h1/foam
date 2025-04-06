@@ -80,8 +80,16 @@ export const bttvWsService = {
 
         // respond to state change in chat
       } catch (e) {
-        console.error('error parsing bttv msg');
+        console.error('error parsing bttv msg', e);
       }
+    };
+
+    ws.onerror = async err => {
+      console.error('bttv ws err:', err);
+    };
+
+    ws.onclose = async () => {
+      console.log('bttv ws closed');
     };
   },
 } as const;

@@ -47,7 +47,7 @@ export const bttvService = {
       emote_link: `https://betterttv.com/emotes/${emote.id}`,
       original_name: emote.codeOriginal ?? 'UNKNOWN',
       creator: null,
-      type: 'Global BTTV',
+      site: 'Global BTTV',
       flags: bttvZeroWidthEmotes.includes(emote.code) ? 256 : undefined,
     }));
   },
@@ -65,7 +65,7 @@ export const bttvService = {
       emote_link: `https://betterttv.com/emotes/${emote.id}`,
       original_name: emote?.codeOriginal ?? 'UNKNOWN',
       creator: emote.user?.name || null,
-      type: 'BTTV',
+      site: 'BTTV',
     }));
 
     const channelEmotes = result.channelEmotes.map<SanitisiedEmoteSet>(
@@ -75,7 +75,7 @@ export const bttvService = {
         emote_link: `https://betterttv.com/emotes/${emote.id}`,
         original_name: emote?.codeOriginal ?? 'UNKNOWN',
         creator: emote.user?.name || null,
-        type: 'BTTV',
+        site: 'BTTV',
       }),
     );
 
