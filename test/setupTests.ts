@@ -7,7 +7,7 @@ import 'react-native-gesture-handler/jestSetup';
 import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
-import mockFile from './mockFile';
+import mockFile from '../__mocks__/mockFile';
 import 'cross-fetch/polyfill';
 import 'core-js';
 import '@app/hooks/useAppNavigation';
