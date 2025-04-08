@@ -75,7 +75,7 @@ bun.lockb
 # google services android
 google-services-*.json
 
-# google services IOS
+# # google services IOS
 GoogleService-*-*.plist
 
 .env.local
@@ -83,3 +83,6 @@ GoogleService-*-*.plist
 # app builds
 *.abd
 *.apk
+
+# Google Service Account JSON key
+FOAM_ANDROID_TESTFLIGHT_KEY.json
