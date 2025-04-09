@@ -36,6 +36,8 @@ export function Diagnostics() {
         Name: Application.applicationName ?? '',
         Version: Application.nativeApplicationVersion ?? '',
         'Build Number': Application.nativeBuildVersion ?? '',
+        'Build ID': process.env.EAS_BUILD_ID ?? '',
+        'Commit Hash': process.env.EAS_BUILD_GIT_COMMIT_HASH ?? '',
       },
     },
     {

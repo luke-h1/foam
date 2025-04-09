@@ -1,0 +1,39 @@
+name: EAS OTA Production
+on:
+  workflow_dispatch:
+jobs:
+  eas-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: Check for native changes 📲
+        id: check-changes
+        run: |
+          if git diff --name-only HEAD^ HEAD | grep -E "package.json|app.config.ts|patches/|google-services/|bun.lock|eas.json"; then
+            echo "has_native_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_native_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ  Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+          patch-watchers: false
+
+      - name: 🚀 OTA Update production 
+        if: steps.check-changes.outputs.has_native_changes == 'false'
+        run: eas update --channel production --message="$(git log -1 --pretty=%B)" --non-interactive
