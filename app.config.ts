@@ -26,7 +26,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     iosBundleIdentifier: 'foam-tv-dev',
     androidPackageName: 'com.lhowsam.foam.dev',
     splashImage: './assets/splash/splash-image-production.png',
-    splashBackgroundColor: '#000',
+    splashBackgroundColor: '#000000',
     iosGoogleServicesFile: './GoogleService-Info-dev.plist',
     androidGoogleServicesFile: './google-services-dev.json',
   },
@@ -35,7 +35,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     iosBundleIdentifier: 'foam-tv-preview',
     androidPackageName: 'com.lhowsam.foam.preview',
     splashImage: './assets/splash/splash-image-production.png',
-    splashBackgroundColor: '#000',
+    splashBackgroundColor: '#000000',
     iosGoogleServicesFile: './GoogleService-Info-preview.plist',
     androidGoogleServicesFile: './google-services-preview.json',
   },
@@ -44,7 +44,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     iosBundleIdentifier: 'foam-tv',
     androidPackageName: 'com.lhowsam.foam',
     splashImage: './assets/splash/splash-image-production.png',
-    splashBackgroundColor: '#000',
+    splashBackgroundColor: '#000000',
     iosGoogleServicesFile:
       process.env.IOS_GOOGLE_SERVICES_JSON ||
       './GoogleService-Info-production.plist',
