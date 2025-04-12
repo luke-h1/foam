@@ -24,6 +24,8 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const [, setStreamer] = useState<UserInfoResponse>();
   const [isPlaying, setIsPlaying] = useState(false);
   const webViewRef = useRef<WebView>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showControls, setShowControls] = useState<boolean>(false);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
@@ -93,6 +95,22 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     height: '100%',
   });
 
+  useEffect(() => {
+    resetControlsTimeout();
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const resetControlsTimeout = () => {
+    setShowControls(true);
+    timeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 1500); // Hide controls after 3 seconds of inactivity
+  };
+
   const togglePlayPause = () => {
     const script = `
       document.querySelector('[data-a-target="player-play-pause-button"]').click();
@@ -117,31 +135,43 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   return (
     <Screen
       style={[styles.contentContainer, isLandscape && styles.row]}
-      safeAreaEdges={['bottom']}
+      safeAreaEdges={['bottom', 'top']}
     >
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-        <WebView
-          ref={webViewRef}
-          source={{
-            uri: `https://player.twitch.tv/?channel=${stream.user_login}&parent=foam.lhowsam.com&autoplay=true`,
-          }}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          style={getWebViewStyle(isLandscape)}
-          allowsInlineMediaPlayback
-          mediaPlaybackRequiresUserAction={false}
-          javaScriptEnabled
-        />
         <TouchableOpacity
-          style={styles.controlButton}
-          onPress={togglePlayPause}
+          onPress={() => {
+            setShowControls(true);
+            setTimeout(() => {
+              setShowControls(false);
+            }, 1500);
+          }}
         >
-          <Icon
-            name={isPlaying ? 'pause' : 'play-arrow'}
-            size={30}
-            color="#FFF"
+          <WebView
+            ref={webViewRef}
+            source={{
+              uri: `https://player.twitch.tv/?channel=${stream.user_login}&parent=foam.lhowsam.com&autoplay=true`,
+            }}
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            style={getWebViewStyle(isLandscape)}
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            javaScriptEnabled
           />
         </TouchableOpacity>
+
+        {showControls && (
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={togglePlayPause}
+          >
+            <Icon
+              name={isPlaying ? 'pause' : 'play-arrow'}
+              size={30}
+              color="#FFF"
+            />
+          </TouchableOpacity>
+        )}
       </Animated.View>
 
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>

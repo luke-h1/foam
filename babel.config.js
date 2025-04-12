@@ -1,15 +1,3 @@
-/* 
-  plugins: [
-    'module-resolver',
-    {
-      root: './',
-      alias: {
-        '@ui/components/*': ['./js/components/*'],
-      },
-    },
-  ],
-*/
-
 module.exports = api => {
   api.cache(true);
 
