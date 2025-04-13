@@ -1,7 +1,5 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useTmiClient } from '@app/hooks';
-import { parseBadges } from '@app/utils/third-party/badges';
-import { parseEmotes } from '@app/utils/third-party/emotes';
 import { memo, useEffect, useRef, useState } from 'react';
 import { FlatList, SafeAreaView, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -13,6 +11,7 @@ import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { ChatUserstate } from 'tmi.js';
 import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
+import { ChatMessageV2, ChatMessageV2Props } from './ChatMessageV2';
 
 export interface FormattedChatMessage {
   user: ChatUserstate;
@@ -28,8 +27,8 @@ interface ChatProps {
 export const Chat = memo(({ channelId, channelName }: ChatProps) => {
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
-  const flashListRef = useRef<FlatList<FormattedChatMessage>>(null);
-  const messagesRef = useRef<FormattedChatMessage[]>([]);
+  const flashListRef = useRef<FlatList<ChatMessageV2Props>>(null);
+  const messagesRef = useRef<ChatMessageV2Props[]>([]);
   const { styles } = useStyles(stylesheet);
 
   // Get screen width & height to detect orientation
@@ -71,7 +70,7 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
     },
   });
 
-  const [messages, setMessages] = useState<FormattedChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessageV2Props[]>([]);
 
   const connectToChat = () => {
     const options = { channelId };
@@ -80,16 +79,19 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client.on('message', async (_channel, tags, text, _self) => {
-      const badges = (
-        await parseBadges(tags.badges, tags.username, options)
-      ).toHTML();
+      const userstate = tags as ChatUserstate;
 
-      const message = (await parseEmotes(text, tags.emotes, options)).toHTML();
+      const newMessage: ChatMessageV2Props = {
+        userstate,
+        message: text.trimStart(),
+        channel: '',
+      };
 
-      const newMessage: FormattedChatMessage = { badges, user: tags, message };
-
-      messagesRef.current.push(newMessage);
+      // Append the new message to the existing messages
+      messagesRef.current = [...messagesRef.current, newMessage];
       setMessages([...messagesRef.current]);
+
+      // Scroll to the end of the chat
       flashListRef.current?.scrollToEnd({ animated: false });
     });
 
@@ -120,7 +122,13 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
           data={messages}
           ref={flashListRef}
           keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => <ChatMessage item={item} />}
+          renderItem={({ item }) => (
+            <ChatMessageV2
+              channel={''}
+              message={item.message}
+              userstate={item.userstate}
+            />
+          )}
           initialNumToRender={20}
           maxToRenderPerBatch={10}
           windowSize={5}
