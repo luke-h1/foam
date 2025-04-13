@@ -1,6 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable prefer-const */
 import { SanitisiedEmoteSet } from '@app/services';
-import { extractEmotes, sanitizeInput } from '@app/utils/chat';
+import {
+  checkUsernameVariations,
+  extractEmotes,
+  sanitizeInput,
+} from '@app/utils/chat';
 import { formatDate } from '@app/utils/date-time';
+import { generateNonce } from '@app/utils/string/generateNonce';
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
@@ -13,6 +20,8 @@ interface Message {
   message: string;
   timestamp: Date;
   emotes?: SanitisiedEmoteSet[];
+  isFirstMessage: boolean;
+  isAnnouncement: boolean;
 }
 
 export interface ChatMessageV2Props {
@@ -37,17 +46,60 @@ export const ChatMessageV2 = ({
 
   useEffect(() => {
     (async () => {
-      if (!userstate || !message) return;
+      if (!userstate || !message) {
+        return;
+      }
 
       const sanitizedMessage = sanitizeInput(message.trimStart());
       const currentTime = new Date();
 
+      if (channel && channel.toLowerCase().replace('#', '') === channel) {
+        // onMessage(userstate, message);
+      }
+
+      let username = userstate.username?.trim();
+      let displayname = userstate['display-name']?.trim();
+      let finalUsername = userstate.username?.trim();
+
+      const message_id = userstate.id || '0';
+      const message_nonce = generateNonce() || '0';
+
+      const replyDisplayName = userstate['reply-parent-display-name'];
+      const replyUserLogin = userstate['reply-parent-user-login'];
+
+      if (username && displayname) {
+        if (username.toLowerCase() === displayname.toLowerCase()) {
+          finalUsername = `${displayname}:`;
+        } else {
+          finalUsername = `${username} (${displayname}):`;
+        }
+      }
+
+      let isUsernameMentioned = checkUsernameVariations(
+        message,
+        username as string,
+      );
+      let isUsernameMentionedInReplyBody: boolean = false;
+
+      if (
+        userstate &&
+        userstate['reply-parent-msg-body'] &&
+        !isUsernameMentioned
+      ) {
+        isUsernameMentionedInReplyBody = await checkUsernameVariations(
+          userstate['reply-parent-msg-body'],
+          username as string,
+        );
+      }
+
       const newMessage: Message = {
         id: userstate.id || '0',
-        username: userstate.username,
+        username: finalUsername,
         message: sanitizedMessage,
         timestamp: currentTime,
         emotes: extractEmotes(userstate.emotes, sanitizedMessage),
+        isFirstMessage: userstate['first-msg'],
+        isAnnouncement: userstate.announcement,
       };
 
       setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -59,6 +111,7 @@ export const ChatMessageV2 = ({
       //   });
       // }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userstate, message]);
 
   return (

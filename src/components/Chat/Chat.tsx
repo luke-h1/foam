@@ -85,47 +85,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     client.on('message', async (_channel, tags, text, _self) => {
       const userstate = tags as ChatUserstate;
 
-      let tmiUsername = 'none';
-
-      let username = userstate.username?.trim();
-      let displayname = userstate['display-name']?.trim();
-      let finalUsername = userstate.username?.trim();
-
-      const currentTime = new Date();
       const message_id = userstate.id || '0';
       const message_nonce = generateNonce() || '0';
-
-      let hours = currentTime.getHours();
-      let minutes = currentTime.getMinutes();
-      let seconds = currentTime.getSeconds();
-
-      hours = hours < 10 ? `0${hours}` : hours;
-      minutes = minutes < 10 ? `0${minutes}` : minutes;
-      seconds = seconds < 10 ? `0${seconds}` : seconds;
-
-      const isUsernameMentioned = await checkUsernameVariations(
-        text,
-        tmiUsername,
-      );
-      let isUsernameMentionedInReplyBody;
-
-      if (username && displayname) {
-        if (username.toLowerCase() === displayname.toLowerCase()) {
-          finalUsername = displayname;
-        }
-        finalUsername = `${username} (${displayname})`;
-      }
-
-      if (
-        userstate &&
-        userstate['reply-parent-msg-body'] &&
-        !isUsernameMentioned
-      ) {
-        isUsernameMentionedInReplyBody = await checkUsernameVariations(
-          userstate['reply-parent-msg-body'],
-          tmiUsername,
-        );
-      }
 
       const newMessage: ChatMessageV2Props = {
         userstate,
