@@ -7,7 +7,6 @@ import {
   sanitizeInput,
 } from '@app/utils/chat';
 import { formatDate } from '@app/utils/date-time';
-import { generateNonce } from '@app/utils/string/generateNonce';
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
@@ -105,6 +104,15 @@ export const ChatMessageV2 = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps, no-param-reassign
         sanitizedMessage = message.replace(usernamePattern, '').trimStart();
       }
+
+      /**
+       * TODO:
+       */
+      // parse badges
+      // write badge parsing function that takes in userstate here
+
+      // parse emotes
+      // write emote parsing function that takes in userstate here
 
       const newMessage: Message = {
         id: userstate.id || '0',

@@ -5,8 +5,10 @@ export interface SanitisedBadgeSet {
   id: string;
   url: string;
   title: string;
-  color: string;
-  owner_username: string;
+  color?: string;
+  owner_username?: string;
+  type?: string;
+  setId?: string;
 }
 
 interface FfzEmoticon {
