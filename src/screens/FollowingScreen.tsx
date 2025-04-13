@@ -41,9 +41,15 @@ export default function FollowingScreen() {
   const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
 
   if (refreshing || isLoading) {
-    return <LiveStreamCardSkeleton />;
+    return (
+      <>
+        {Array.from({ length: 5 }).map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <LiveStreamCardSkeleton key={index} />
+        ))}
+      </>
+    );
   }
-
   if ((!isLoading && !streams) || isError) {
     toast.error('Failed to fetch followed streams');
     return (
