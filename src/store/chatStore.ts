@@ -23,6 +23,8 @@ interface ChatState {
   // FFZ emotes
   ffzChannelEmotes: SanitisiedEmoteSet[];
   ffzGlobalEmotes: SanitisiedEmoteSet[];
+
+  loadChannelResources: (channelId: string) => Promise<void>;
 }
 
 const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
@@ -65,26 +67,27 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   loadChannelResources: async (channelId: string) => {
     const sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
     const [
-      twitchChannelEmotes,
-      twitchGlobalEmotes,
-      ffzChannelEmotes,
-      ffzGlobalEmotes,
+      // twitchChannelEmotes,
+      // twitchGlobalEmotes,
+      // ffzChannelEmotes,
+      // ffzGlobalEmotes,
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
     ] = await Promise.all([
-      twitchEmoteService.getIvrChannelEmotes(channelId),
-      twitchEmoteService.getGlobalEmotes(),
-      ffzService.getSanitisedChannelEmotes(channelId),
-      ffzService.getSanitisedGlobalEmotes(),
+      // twitchEmoteService.getIvrChannelEmotes(channelId),
+      // twitchEmoteService.getGlobalEmotes(),
+      // ffzService.getSanitisedChannelEmotes(channelId),
+      // ffzService.getSanitisedGlobalEmotes(),
       sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
       sevenTvService.getSanitisedEmoteSet('global'),
     ]);
+    console.info('loaded stv emotes 🚀');
     set(state => ({
       ...state,
-      twitchChannelEmotes,
-      twitchGlobalEmotes,
-      ffzChannelEmotes,
-      ffzGlobalEmotes,
+      twitchChannelEmotes: [],
+      twitchGlobalEmotes: [],
+      ffzChannelEmotes: [],
+      ffzGlobalEmotes: [],
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
     }));

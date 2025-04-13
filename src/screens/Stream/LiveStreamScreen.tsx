@@ -2,6 +2,7 @@ import { Chat, Screen, Spinner, Typography } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchService, UserInfoResponse } from '@app/services';
+import { useChatStore } from '@app/store/chatStore';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useEffect, useRef, useState } from 'react';
 import { TouchableOpacity, useWindowDimensions } from 'react-native';
@@ -40,6 +41,14 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { data: user, isLoading: isUserLoading } = userQueryResult;
   const { isLoading: isUserProfilePictureLoading } =
     userProfilePictureQueryResult;
+  const { loadChannelResources } = useChatStore();
+
+  useEffect(() => {
+    if (user?.id) {
+      loadChannelResources(user.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const fetchUser = async () => {
     const result = await twitchService.getUser(params.id);

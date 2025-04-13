@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useTmiClient } from '@app/hooks';
 import { memo, useEffect, useRef, useState } from 'react';
@@ -12,6 +14,9 @@ import { ChatUserstate } from 'tmi.js';
 import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
 import { ChatMessageV2, ChatMessageV2Props } from './ChatMessageV2';
+import { useChatStore } from '@app/store/chatStore';
+import { generateNonce } from '@app/utils/string/generateNonce';
+import { checkUsernameVariations } from '@app/utils/chat/checkUsernameVariations';
 
 export interface FormattedChatMessage {
   user: ChatUserstate;
@@ -24,9 +29,10 @@ interface ChatProps {
   channelName: string;
 }
 
-export const Chat = memo(({ channelId, channelName }: ChatProps) => {
+export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
+
   const flashListRef = useRef<FlatList<ChatMessageV2Props>>(null);
   const messagesRef = useRef<ChatMessageV2Props[]>([]);
   const { styles } = useStyles(stylesheet);
@@ -73,18 +79,61 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
   const [messages, setMessages] = useState<ChatMessageV2Props[]>([]);
 
   const connectToChat = () => {
-    const options = { channelId };
-
     client.connect();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client.on('message', async (_channel, tags, text, _self) => {
       const userstate = tags as ChatUserstate;
 
+      let tmiUsername = 'none';
+
+      let username = userstate.username?.trim();
+      let displayname = userstate['display-name']?.trim();
+      let finalUsername = userstate.username?.trim();
+
+      const currentTime = new Date();
+      const message_id = userstate.id || '0';
+      const message_nonce = generateNonce() || '0';
+
+      let hours = currentTime.getHours();
+      let minutes = currentTime.getMinutes();
+      let seconds = currentTime.getSeconds();
+
+      hours = hours < 10 ? `0${hours}` : hours;
+      minutes = minutes < 10 ? `0${minutes}` : minutes;
+      seconds = seconds < 10 ? `0${seconds}` : seconds;
+
+      const isUsernameMentioned = await checkUsernameVariations(
+        text,
+        tmiUsername,
+      );
+      let isUsernameMentionedInReplyBody;
+
+      if (username && displayname) {
+        if (username.toLowerCase() === displayname.toLowerCase()) {
+          finalUsername = displayname;
+        }
+        finalUsername = `${username} (${displayname})`;
+      }
+
+      if (
+        userstate &&
+        userstate['reply-parent-msg-body'] &&
+        !isUsernameMentioned
+      ) {
+        isUsernameMentionedInReplyBody = await checkUsernameVariations(
+          userstate['reply-parent-msg-body'],
+          tmiUsername,
+        );
+      }
+
       const newMessage: ChatMessageV2Props = {
         userstate,
         message: text.trimStart(),
         channel: '',
+        message_id,
+        message_nonce,
+        sender: '',
       };
 
       // Append the new message to the existing messages
@@ -124,9 +173,12 @@ export const Chat = memo(({ channelId, channelName }: ChatProps) => {
           keyExtractor={(_, index) => index.toString()}
           renderItem={({ item }) => (
             <ChatMessageV2
-              channel={''}
+              channel={item.channel}
               message={item.message}
               userstate={item.userstate}
+              message_id={item.message_id}
+              message_nonce={item.message_nonce}
+              sender={item.sender}
             />
           )}
           initialNumToRender={20}
