@@ -4,9 +4,7 @@ import {
   sevenTvService,
   twitchEmoteService,
 } from '@app/services';
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import { zustandStorage } from './persist';
+import { create, StateCreator } from 'zustand';
 
 interface ChatState {
   // Twitch.tv emotes
@@ -27,82 +25,70 @@ interface ChatState {
   ffzGlobalEmotes: SanitisiedEmoteSet[];
 }
 
-export const useChatStore = create(
-  persist<ChatState>(
-    (set, get) => ({
-      /**
-       * Twitch
-       */
-      twitchChannelEmotes: [],
-      twitchGlobalEmotes: [],
-      setTwitchChannelEmotes: emoteSet => {
-        return set(state => ({
-          ...state,
-          twitchChannelEmotes: emoteSet,
-        }));
-      },
+const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
+  /**
+   * Twitch
+   */
+  twitchChannelEmotes: [],
+  twitchGlobalEmotes: [],
+  setTwitchChannelEmotes: emoteSet => {
+    return set(state => ({
+      ...state,
+      twitchChannelEmotes: emoteSet,
+    }));
+  },
+  setTwitchGlobalEmotes: emoteSet => {
+    return set(state => ({
+      ...state,
+      twitchGlobalEmotes: emoteSet,
+    }));
+  },
+  ffzChannelEmotes: [],
+  ffzGlobalEmotes: [],
+  /**
+   * Seven TV
+   */
+  sevenTvChannelEmotes: [],
+  sevenTvGlobalEmotes: [],
+  setSevenTvChannelEmotes: emoteSet => {
+    return set(state => ({
+      ...state,
+      sevenTvChannelEmotes: emoteSet,
+    }));
+  },
+  setSevenTvGlobalEmotes: emoteSet => {
+    return set(state => ({
+      ...state,
+      sevenTvGlobalEmotes: emoteSet,
+    }));
+  },
+  loadChannelResources: async (channelId: string) => {
+    const sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
+    const [
+      twitchChannelEmotes,
+      twitchGlobalEmotes,
+      ffzChannelEmotes,
+      ffzGlobalEmotes,
+      sevenTvChannelEmotes,
+      sevenTvGlobalEmotes,
+    ] = await Promise.all([
+      twitchEmoteService.getIvrChannelEmotes(channelId),
+      twitchEmoteService.getGlobalEmotes(),
+      ffzService.getSanitisedChannelEmotes(channelId),
+      ffzService.getSanitisedGlobalEmotes(),
+      sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
+      sevenTvService.getSanitisedEmoteSet('global'),
+    ]);
+    set(state => ({
+      ...state,
+      twitchChannelEmotes,
+      twitchGlobalEmotes,
+      ffzChannelEmotes,
+      ffzGlobalEmotes,
+      sevenTvChannelEmotes,
+      sevenTvGlobalEmotes,
+    }));
+  },
+});
 
-      setTwitchGlobalEmotes: emoteSet => {
-        return set(state => ({
-          ...state,
-          twitchGlobalEmotes: emoteSet,
-        }));
-      },
-
-      ffzChannelEmotes: [],
-      ffzGlobalEmotes: [],
-
-      /**
-       * Seven TV
-       */
-      sevenTvChannelEmotes: [],
-      sevenTvGlobalEmotes: [],
-
-      setSevenTvChannelEmotes: emoteSet => {
-        return set(state => ({
-          ...state,
-          sevenTvChannelEmotes: emoteSet,
-        }));
-      },
-      setSevenTvGlobalEmotes: emoteSet => {
-        return set(state => ({
-          ...state,
-          sevenTvGlobalEmotes: emoteSet,
-        }));
-      },
-
-      loadChannelResources: async (channelId: string) => {
-        const sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
-
-        const [
-          twitchChannelEmotes,
-          twitchGlobalEmotes,
-          ffzChannelEmotes,
-          ffzGlobalEmotes,
-          sevenTvChannelEmotes,
-          sevenTvGlobalEmotes,
-        ] = await Promise.all([
-          twitchEmoteService.getIvrChannelEmotes(channelId),
-          twitchEmoteService.getGlobalEmotes(),
-          ffzService.getSanitisedChannelEmotes(channelId),
-          ffzService.getSanitisedGlobalEmotes(),
-          sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
-          sevenTvService.getSanitisedEmoteSet('global'),
-        ]);
-        set(state => ({
-          ...state,
-          twitchChannelEmotes,
-          twitchGlobalEmotes,
-          ffzChannelEmotes,
-          ffzGlobalEmotes,
-          sevenTvChannelEmotes,
-          sevenTvGlobalEmotes,
-        }));
-      },
-    }),
-    {
-      name: 'chat-store',
-      storage: createJSONStorage(() => zustandStorage),
-    },
-  ),
-);
+export const useChatStore = create<ChatState>()(chatStoreCreator);
