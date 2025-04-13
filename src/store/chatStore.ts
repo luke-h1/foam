@@ -7,6 +7,10 @@ import {
 import { create, StateCreator } from 'zustand';
 
 interface ChatState {
+  // Emojis
+  emojis: SanitisiedEmoteSet[];
+  setEmojis: (sanitisedEmoteSet: SanitisiedEmoteSet[]) => void;
+
   // Twitch.tv emotes
   twitchChannelEmotes: SanitisiedEmoteSet[];
   setTwitchChannelEmotes: (sanitisedEmoteSet: SanitisiedEmoteSet[]) => void;
@@ -28,6 +32,14 @@ interface ChatState {
 }
 
 const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
+  emojis: [],
+  setEmojis: emoteSet => {
+    return set(state => ({
+      ...state,
+      emojis: emoteSet,
+    }));
+  },
+
   /**
    * Twitch
    */

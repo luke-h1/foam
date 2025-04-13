@@ -50,7 +50,7 @@ export const ChatMessageV2 = ({
         return;
       }
 
-      const sanitizedMessage = sanitizeInput(message.trimStart());
+      let sanitizedMessage = sanitizeInput(message.trimStart());
       const currentTime = new Date();
 
       if (channel && channel.toLowerCase().replace('#', '') === channel) {
@@ -60,9 +60,6 @@ export const ChatMessageV2 = ({
       let username = userstate.username?.trim();
       let displayname = userstate['display-name']?.trim();
       let finalUsername = userstate.username?.trim();
-
-      const message_id = userstate.id || '0';
-      const message_nonce = generateNonce() || '0';
 
       const replyDisplayName = userstate['reply-parent-display-name'];
       const replyUserLogin = userstate['reply-parent-user-login'];
@@ -92,6 +89,23 @@ export const ChatMessageV2 = ({
         );
       }
 
+      if (replyDisplayName || replyUserLogin) {
+        const escapedDisplayName = replyDisplayName.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          '\\$&',
+        );
+        const escapedUserLogin = replyUserLogin.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          '\\$&',
+        );
+        const usernamePattern = new RegExp(
+          `@(${escapedDisplayName}|${escapedUserLogin})(,\\s?)?`,
+          'i',
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps, no-param-reassign
+        sanitizedMessage = message.replace(usernamePattern, '').trimStart();
+      }
+
       const newMessage: Message = {
         id: userstate.id || '0',
         username: finalUsername,
@@ -103,13 +117,6 @@ export const ChatMessageV2 = ({
       };
 
       setMessages(prevMessages => [...prevMessages, newMessage]);
-
-      // Play mention sound if username is mentioned
-      // if (checkUsernameMention(sanitizedMessage, 'yourUsername')) {
-      //   const sound = new Sound('mention.mp3', Sound.MAIN_BUNDLE, error => {
-      //     if (!error) sound.play();
-      //   });
-      // }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userstate, message]);
@@ -139,7 +146,7 @@ export const ChatMessageV2 = ({
             size="sm"
             style={[styles.username, { color: userstate.color || '#FFFFFF' }]}
           >
-            {msg.username}:
+            {msg.username}
           </Typography>
           <Typography size="sm" style={styles.messageText}>
             {msg.message}

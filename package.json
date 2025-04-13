@@ -137,7 +137,8 @@
     "react-native-webview": "13.12.5",
     "sonner-native": "^0.17.0",
     "tmi.js": "^1.8.5",
-    "toastify-react-native": "^6.0.0"
+    "toastify-react-native": "^6.0.0",
+    "twemoji": "^14.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
