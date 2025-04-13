@@ -140,6 +140,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               message_id={item.message_id}
               message_nonce={item.message_nonce}
               sender={item.sender}
+              style={styles.messageContainer}
             />
           )}
           initialNumToRender={20}
@@ -176,6 +177,15 @@ const stylesheet = createStyleSheet(theme => ({
     flex: 1,
     padding: theme.spacing.sm,
     backgroundColor: theme.colors.borderFaint,
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap', // Ensure text wraps
+    alignItems: 'flex-start',
+    width: '100%', // Ensure it fits within the screen
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radii.sm, // Optional: Add rounded corners
   },
   pausedOverlay: {
     position: 'absolute',

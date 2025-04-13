@@ -173,8 +173,10 @@ const stylesheet = createStyleSheet(theme => ({
   },
   messageContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    flexWrap: 'wrap',
     marginBottom: 5,
+    width: '100%',
   },
   badgesContainer: {
     flexDirection: 'row',
@@ -188,11 +190,16 @@ const stylesheet = createStyleSheet(theme => ({
   username: {
     fontWeight: 'bold',
     marginRight: 5,
+    flexShrink: 0,
   },
   messageText: {
     color: '#FFF',
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   timestamp: {
     color: theme.colors.border,
+    marginRight: 5,
+    flexShrink: 0,
   },
 }));
