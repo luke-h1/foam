@@ -14,9 +14,7 @@ import { ChatUserstate } from 'tmi.js';
 import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
 import { ChatMessageV2, ChatMessageV2Props } from './ChatMessageV2';
-import { useChatStore } from '@app/store/chatStore';
 import { generateNonce } from '@app/utils/string/generateNonce';
-import { checkUsernameVariations } from '@app/utils/chat/checkUsernameVariations';
 
 export interface FormattedChatMessage {
   user: ChatUserstate;

@@ -117,7 +117,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     setShowControls(true);
     timeoutRef.current = setTimeout(() => {
       setShowControls(false);
-    }, 1500); // Hide controls after 3 seconds of inactivity
+    }, 1500);
   };
 
   const togglePlayPause = () => {

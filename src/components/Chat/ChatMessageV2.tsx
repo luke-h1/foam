@@ -8,7 +8,14 @@ import {
 } from '@app/utils/chat';
 import { formatDate } from '@app/utils/date-time';
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  StyleSheet,
+  ViewStyle,
+} from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { ChatUserstate } from 'tmi.js';
 import { Typography } from '../Typography';
@@ -30,6 +37,7 @@ export interface ChatMessageV2Props {
   message_id: string;
   message_nonce: string;
   sender: string;
+  style?: ViewStyle;
 }
 
 export const ChatMessageV2 = ({
@@ -39,6 +47,7 @@ export const ChatMessageV2 = ({
   message_id,
   message_nonce,
   sender,
+  style,
 }: ChatMessageV2Props) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const { styles } = useStyles(stylesheet);
@@ -108,8 +117,12 @@ export const ChatMessageV2 = ({
       /**
        * TODO:
        */
+
+      // create debug screen that just connects to chat based on username
+
       // parse badges
       // write badge parsing function that takes in userstate here
+      // create badge store
 
       // parse emotes
       // write emote parsing function that takes in userstate here
@@ -130,7 +143,7 @@ export const ChatMessageV2 = ({
   }, [userstate, message]);
 
   return (
-    <ScrollView style={styles.chatContainer}>
+    <ScrollView style={[styles.chatContainer, style]}>
       {messages.map(msg => (
         <View key={msg.id} style={styles.messageContainer}>
           {/* <View style={styles.badgesContainer}>
