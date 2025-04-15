@@ -1,10 +1,30 @@
 import { SanitisiedEmoteSet, sevenTvService } from '@app/services';
 import { create, StateCreator } from 'zustand';
 
+interface ChatUser {
+  name: string;
+  color: string;
+  // 7tv paints
+  cosmetics: unknown[];
+  avatar: string | null;
+  userId: string;
+}
+
+export interface Bit {
+  name: string;
+  tiers: {
+    min_bits: string;
+  }[];
+}
+
 interface ChatState {
   // Emojis
   emojis: SanitisiedEmoteSet[];
   setEmojis: (sanitisedEmoteSet: SanitisiedEmoteSet[]) => void;
+
+  // bits
+  bits: Bit[];
+  setBits: (bits: Bit[]) => void;
 
   // Twitch.tv emotes
   twitchChannelEmotes: SanitisiedEmoteSet[];
@@ -23,10 +43,28 @@ interface ChatState {
   ffzChannelEmotes: SanitisiedEmoteSet[];
   ffzGlobalEmotes: SanitisiedEmoteSet[];
 
+  // chat users
+  ttvUsers: ChatUser[];
+  setTTvUsers: (users: ChatUser[]) => void;
+
   loadChannelResources: (channelId: string) => Promise<void>;
 }
 
 const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
+  bits: [],
+  setBits: bits => {
+    return set(state => ({
+      ...state,
+      bits,
+    }));
+  },
+  ttvUsers: [],
+  setTTvUsers: users => {
+    return set(state => ({
+      ...state,
+      ttvUsers: users,
+    }));
+  },
   emojis: [],
   setEmojis: emoteSet => {
     return set(state => ({
@@ -88,6 +126,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
       sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
       sevenTvService.getSanitisedEmoteSet('global'),
     ]);
+    // eslint-disable-next-line no-console
     console.info('loaded stv emotes 🚀');
     set(state => ({
       ...state,

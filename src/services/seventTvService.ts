@@ -169,6 +169,9 @@ export interface SanitisiedEmoteSet {
   site: string;
   height?: number;
   width?: number;
+
+  // temporarily - review this
+  bits?: number;
 }
 
 export const sevenTvService = {
