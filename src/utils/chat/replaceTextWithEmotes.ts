@@ -3,6 +3,7 @@ import { ChatUserstate } from 'tmi.js';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
 import { SanitisiedEmoteSet } from '@app/services';
 import { findBitEntryAndTier } from '../twitch';
+import { sanitizeInput } from './sanitizeInput';
 
 export function useReplaceTextWithEmotes(
   str: string,
@@ -63,6 +64,7 @@ export function useReplaceTextWithEmotes(
 
         if (match) {
           let prefix = match[1]; // Prefix
+          // eslint-disable-next-line no-underscore-dangle
           let _bits = match[2]; // Amount
 
           const result = findBitEntryAndTier(prefix, _bits, bits);
@@ -96,5 +98,24 @@ export function useReplaceTextWithEmotes(
     }
 
     // personal 7tv emotes
+    if (!foundEmote) {
+      if (foundMessageSender && foundMessageSender.cosmetics) {
+        if (
+          foundMessageSender.cosmetics.personal_emotes &&
+          foundMessageSender.cosmetics.personal_emotes.length > 0
+        ) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const emote of foundMessageSender.cosmetics.personal_emotes) {
+            if (emote.name && part === sanitizeInput(emote.name)) {
+              foundEmote = emote;
+              emoteType = 'Personal';
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // non-global emotes
   }
 }

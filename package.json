@@ -5,8 +5,8 @@
   "engineStrict": true,
   "main": "index.js",
   "engines": {
-    "node": "20.10.0",
-    "bun": "1.1.42"
+    "node": ">=22",
+    "bun": "1.2.5"
   },
   "scripts": {
     "start": "APP_VARIANT=development expo start --dev-client",
@@ -22,7 +22,6 @@
     "build:production:ios": "eas build --profile production --platform ios --auto-submit --non-interactive --no-wait",
     "build:local:production:ios": "APP_VARIANT=production expo prebuild && APP_VARIANT=production expo run:ios",
     "alphabetize": "node scripts/alphabetizePackageJson.js",
-    "check:node": "check-node-version --package",
     "clean": "rm -rf ios android .expo node_modules",
     "commit": "cz",
     "gen-env": "gen-env-types .env -o src/types/env.d.ts -e .",
@@ -32,7 +31,7 @@
     "prettier:fix": "prettier --write \"src/**/*.{ts,tsx,json}\"",
     "prebuild:android": "npx expo prebuild -p android",
     "prebuild:ios": "npx expo prebuild -p ios",
-    "preinstall": "bun run check:node",
+    "preinstall": "only-allow bun && node ./scripts/check-semver.js",
     "prepare": "husky",
     "ts:check": "tsc -p . --noEmit",
     "start:proxy": "ts-node-dev -P tsconfig.proxy.json --respawn --transpile-only proxy.ts",
@@ -176,7 +175,6 @@
     "babel-loader": "^10.0.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-plugin-transform-inline-environment-variables": "^0.4.4",
-    "check-node-version": "^4.2.1",
     "commitizen": "4.3.0",
     "conventional-changelog-angular-all": "1.7.0",
     "cz-conventional-changelog": "^3.3.0",
@@ -202,6 +200,7 @@
     "lerna": "^8.1.8",
     "lint-staged": "^15.2.10",
     "metro-react-native-babel-preset": "^0.74.1",
+    "only-allow": "^1.2.1",
     "prettier": "^3.3.3",
     "react-native-url-polyfill": "^2.0.0",
     "svgo": "^3.3.2",
