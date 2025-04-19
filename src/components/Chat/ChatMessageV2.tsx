@@ -76,7 +76,10 @@ export const ChatMessageV2 = ({
               <Image
                 key={index}
                 source={{ uri: part.url }}
-                style={styles.emote}
+                style={{
+                  width: 25,
+                  height: 25,
+                }}
               />
             );
           }
@@ -133,5 +136,15 @@ const stylesheet = createStyleSheet(theme => ({
     color: theme.colors.border,
     marginRight: 5,
     flexShrink: 0,
+  },
+  mention: {
+    fontWeight: 'bold',
+    color: '#FF4500', // Default mention color
+    marginHorizontal: 2,
+  },
+  emote: {
+    width: 25,
+    height: 25,
+    marginHorizontal: 2, // Add spacing between emotes and text
   },
 }));

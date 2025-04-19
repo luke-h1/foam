@@ -60,10 +60,6 @@ export function replaceWithEmotesV2({
   bttvChannelEmotes: SanitisiedEmoteSet[];
   bttvGlobalEmotes: SanitisiedEmoteSet[];
 }): ParsedPart[] {
-  if (!inputString) {
-    return [{ type: 'text', content: inputString }];
-  }
-
   const emojiData = [...sevenTvChannelEmotes, ...twitchGlobalEmotes].map(
     emote => ({
       ...emote,
@@ -84,7 +80,6 @@ export function replaceWithEmotesV2({
 
   try {
     const EmoteSplit = splitTextWithTwemoji(inputString); // Split text into parts (text and emojis)
-    console.log('EmoteSplit', EmoteSplit);
     const replacedParts: ParsedPart[] = [];
 
     for (let i = 0; i < EmoteSplit.length; i += 1) {
@@ -97,24 +92,17 @@ export function replaceWithEmotesV2({
       if (userstate?.custom_emotes) {
         foundEmote = userstate.custom_emotes.find(
           (emote: { name: { text: string } | undefined }) =>
-            emote.name?.original_name === part,
+            emote.name === part,
         );
         if (foundEmote) {
           emoteType = 'Custom emote';
         }
       }
 
-      if (
-        part &&
-        !foundEmote &&
-        typeof part === 'object' &&
-        'emoji' in part &&
-        part.emoji && // Ensure the emoji property exists
-        emojiData.length > 0
-      ) {
+      if (part && !foundEmote) {
         console.log('found emoji...');
         // console.log('unified part ->', part.emoji);
-        foundEmote = emojiData.find(emoji => emoji.original_name === part.text);
+        foundEmote = emojiData.find(emoji => emoji.name === part.text);
         if (foundEmote) {
           emoteType = 'Emoji';
           foundEmote.url = part.text || foundEmote.url; // Use the Twemoji image URL if available
@@ -129,7 +117,7 @@ export function replaceWithEmotesV2({
       // Check for Twitch emotes
       if (!foundEmote) {
         foundEmote = ttvEmoteData.find(
-          emote => emote.name === sanitizeInput(part?.text),
+          emote => emote.name === sanitizeInput(part?.text ?? ''),
         );
         if (foundEmote) {
           emoteType = 'Twitch Emote';
@@ -166,7 +154,7 @@ export function replaceWithEmotesV2({
         } else {
           replacedParts.push({
             type: 'text',
-            content: part?.text,
+            content: part?.text ?? '',
           });
         }
       }
