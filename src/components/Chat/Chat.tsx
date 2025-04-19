@@ -106,6 +106,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         userstate,
       });
 
+      console.log('replacedMessage', replacedMessage);
+
       const newMessage: ChatMessageV2Props = {
         userstate,
         message: replacedMessage,

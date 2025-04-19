@@ -3,20 +3,13 @@ import { ChatUserstate } from 'tmi.js';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
 
-interface Emote {
-  name: string;
-  url: string;
-  site: string;
-  creator?: string;
-  color?: string;
-  bits?: string;
-}
-
 export interface ParsedPart {
   type: 'text' | 'emote' | 'mention';
   content: string;
   url?: string;
   color?: string;
+  width?: number;
+  height?: number;
 }
 
 function decodeEmojiToUnified(emoji: string) {
@@ -29,6 +22,78 @@ function decodeEmojiToUnified(emoji: string) {
     })
     .join('-');
 }
+
+function calculateAspectRatio(
+  width: number,
+  height: number,
+  desiredHeight: number,
+) {
+  const aspectRatio = width / height;
+  const calculatedWidth = desiredHeight * aspectRatio;
+  return { width: calculatedWidth, height: desiredHeight };
+}
+
+async function getImageSize(
+  urlOrDimensions: { width: number; height: number } | string,
+  desiredHeight: number,
+  retries = 3,
+): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    if (
+      typeof urlOrDimensions === 'object' &&
+      urlOrDimensions.width &&
+      urlOrDimensions.height
+    ) {
+      // If dimensions are provided directly, calculate aspect ratio
+      const { width, height } = urlOrDimensions;
+      const dimensions = calculateAspectRatio(width, height, desiredHeight);
+      resolve(dimensions);
+    } else if (typeof urlOrDimensions === 'string') {
+      // Use the Image object to load the image and get its dimensions
+      const loadImage = (attempt: number) => {
+        const img = new Image();
+
+        img.onload = () => {
+          const dimensions = calculateAspectRatio(
+            img.naturalWidth,
+            img.naturalHeight,
+            desiredHeight,
+          );
+          resolve(dimensions);
+        };
+
+        img.onerror = () => {
+          console.error(
+            `Error loading image: ${urlOrDimensions} (Attempt: ${
+              attempt + 1
+            }/${retries})`,
+          );
+          if (attempt < retries - 1) {
+            console.warn(`Retrying image load (${attempt + 1}/${retries})...`);
+            loadImage(attempt + 1);
+          } else {
+            reject(
+              new Error(
+                `Failed to load the image after ${retries} attempts: ${urlOrDimensions}`,
+              ),
+            );
+          }
+        };
+
+        img.src = urlOrDimensions;
+      };
+
+      loadImage(0);
+    } else {
+      reject(
+        new Error(
+          'Invalid input. Expected an object with width and height or a URL string.',
+        ),
+      );
+    }
+  });
+}
+
 export function replaceWithEmotesV2({
   inputString,
   sevenTvChannelEmotes,
@@ -69,25 +134,28 @@ export function replaceWithEmotesV2({
   ];
 
   // Create a lookup map for emotes by name
-  const emoteMap = new Map<string, Emote>();
+  const emoteMap = new Map<string, SanitisiedEmoteSet>();
   allEmotes.forEach(emote => {
     emoteMap.set(emote.name, {
       ...emote,
-      creator: emote.creator ?? undefined,
-      bits: emote.bits !== undefined ? emote.bits.toString() : undefined,
+      creator: emote.creator,
+      bits: emote.bits,
     });
   });
 
   // Sanitize input
+  // eslint-disable-next-line no-param-reassign
   inputString = sanitizeInput(inputString);
 
   try {
-    const EmoteSplit = splitTextWithTwemoji(inputString); // Split text into parts (text and emojis)
+    const splitEmote = splitTextWithTwemoji(inputString); // Split text into parts (text and emojis)
+
+    console.log(splitEmote);
     const replacedParts: ParsedPart[] = [];
 
-    for (let i = 0; i < EmoteSplit.length; i += 1) {
-      const part = EmoteSplit[i];
-      let foundEmote: Emote | undefined;
+    for (let i = 0; i < splitEmote.length; i += 1) {
+      const part = splitEmote[i];
+      let foundEmote: SanitisiedEmoteSet | undefined;
 
       // Check for custom emotes
       if (userstate?.custom_emotes) {
@@ -116,6 +184,7 @@ export function replaceWithEmotesV2({
         });
       } else {
         // If no emote is found, treat it as plain text or a mention
+        // eslint-disable-next-line no-lonely-if
         if (part?.text?.startsWith('@')) {
           replacedParts.push({
             type: 'mention',

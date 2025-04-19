@@ -63,7 +63,6 @@ export const ChatMessageV2 = ({
             );
           }
           if (part.type === 'emote') {
-            console.log(part.type);
             return (
               <Image
                 // eslint-disable-next-line react/no-array-index-key
