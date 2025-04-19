@@ -2,6 +2,9 @@
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useTmiClient } from '@app/hooks';
+import { useChatStore } from '@app/store/chatStore';
+import { replaceWithEmotesV2 } from '@app/utils/chat/replaceTextWithEmotesV2';
+import { generateNonce } from '@app/utils/string/generateNonce';
 import { memo, useEffect, useRef, useState } from 'react';
 import { FlatList, SafeAreaView, useWindowDimensions } from 'react-native';
 import Animated, {
@@ -11,16 +14,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { ChatUserstate } from 'tmi.js';
-import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
 import { ChatMessageV2, ChatMessageV2Props } from './ChatMessageV2';
-import { generateNonce } from '@app/utils/string/generateNonce';
-import { useReplaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
-import {
-  replaceWithEmotesV2,
-  useReplaceWithEmotesV2,
-} from '@app/utils/chat/replaceTextWithEmotesV2';
-import { useChatStore } from '@app/store/chatStore';
 
 export interface FormattedChatMessage {
   user: ChatUserstate;
@@ -36,7 +31,14 @@ interface ChatProps {
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
-  const { sevenTvChannelEmotes, twitchChannelEmotes } = useChatStore();
+  const {
+    sevenTvChannelEmotes,
+    twitchChannelEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    sevenTvGlobalEmotes,
+    twitchGlobalEmotes,
+  } = useChatStore();
 
   const flashListRef = useRef<FlatList<ChatMessageV2Props>>(null);
   const messagesRef = useRef<ChatMessageV2Props[]>([]);
@@ -91,13 +93,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       const message_id = userstate.id || '0';
       const message_nonce = generateNonce() || '0';
-      const replacedMessage = replaceWithEmotesV2(
-        text.trimStart(),
-        userstate,
+      const replacedMessage = replaceWithEmotesV2({
+        bttvChannelEmotes: [],
+        bttvGlobalEmotes: [],
+        ffzChannelEmotes,
+        ffzGlobalEmotes,
+        inputString: text.trim(),
         sevenTvChannelEmotes,
+        sevenTvGlobalEmotes,
         twitchChannelEmotes,
-      );
-      console.log('replacedMessage ->', replacedMessage);
+        twitchGlobalEmotes,
+        userstate,
+      });
 
       const newMessage: ChatMessageV2Props = {
         userstate,
@@ -192,7 +199,7 @@ const stylesheet = createStyleSheet(theme => ({
   messageContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap', // Ensure text wraps
-    alignItems: 'flex-start',
+    // alignItems: 'flex-start',
     width: '100%', // Ensure it fits within the screen
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,

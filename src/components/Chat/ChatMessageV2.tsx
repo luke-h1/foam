@@ -6,6 +6,7 @@ import {
   extractEmotes,
   sanitizeInput,
 } from '@app/utils/chat';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotesV2';
 import { formatDate } from '@app/utils/date-time';
 import React, { useState, useEffect } from 'react';
 import {
@@ -32,14 +33,13 @@ interface Message {
 
 export interface ChatMessageV2Props {
   userstate: ChatUserstate;
-  message: string;
+  message: ParsedPart[];
   channel: string;
   message_id: string;
   message_nonce: string;
   sender: string;
   style?: ViewStyle;
 }
-
 export const ChatMessageV2 = ({
   userstate,
   message,
@@ -49,131 +49,51 @@ export const ChatMessageV2 = ({
   sender,
   style,
 }: ChatMessageV2Props) => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const { styles } = useStyles(stylesheet);
-
-  useEffect(() => {
-    (async () => {
-      if (!userstate || !message) {
-        return;
-      }
-
-      let sanitizedMessage = sanitizeInput(message.trimStart());
-      const currentTime = new Date();
-
-      if (channel && channel.toLowerCase().replace('#', '') === channel) {
-        // onMessage(userstate, message);
-      }
-
-      let username = userstate.username?.trim();
-      let displayname = userstate['display-name']?.trim();
-      let finalUsername = userstate.username?.trim();
-
-      const replyDisplayName = userstate['reply-parent-display-name'];
-      const replyUserLogin = userstate['reply-parent-user-login'];
-
-      if (username && displayname) {
-        if (username.toLowerCase() === displayname.toLowerCase()) {
-          finalUsername = `${displayname}:`;
-        } else {
-          finalUsername = `${username} (${displayname}):`;
-        }
-      }
-
-      let isUsernameMentioned = checkUsernameVariations(
-        message,
-        username as string,
-      );
-      let isUsernameMentionedInReplyBody: boolean = false;
-
-      if (
-        userstate &&
-        userstate['reply-parent-msg-body'] &&
-        !isUsernameMentioned
-      ) {
-        isUsernameMentionedInReplyBody = await checkUsernameVariations(
-          userstate['reply-parent-msg-body'],
-          username as string,
-        );
-      }
-
-      if (replyDisplayName || replyUserLogin) {
-        const escapedDisplayName = replyDisplayName.replace(
-          /[.*+?^${}()|[\]\\]/g,
-          '\\$&',
-        );
-        const escapedUserLogin = replyUserLogin.replace(
-          /[.*+?^${}()|[\]\\]/g,
-          '\\$&',
-        );
-        const usernamePattern = new RegExp(
-          `@(${escapedDisplayName}|${escapedUserLogin})(,\\s?)?`,
-          'i',
-        );
-        // eslint-disable-next-line react-hooks/exhaustive-deps, no-param-reassign
-        sanitizedMessage = message.replace(usernamePattern, '').trimStart();
-      }
-
-      /**
-       * TODO:
-       */
-
-      // create debug screen that just connects to chat based on username
-
-      // parse badges
-      // write badge parsing function that takes in userstate here
-      // create badge store
-
-      // parse emotes
-      // write emote parsing function that takes in userstate here
-
-      const newMessage: Message = {
-        id: userstate.id || '0',
-        username: finalUsername,
-        message: sanitizedMessage,
-        timestamp: currentTime,
-        emotes: extractEmotes(userstate.emotes, sanitizedMessage),
-        isFirstMessage: userstate['first-msg'],
-        isAnnouncement: userstate.announcement,
-      };
-
-      setMessages(prevMessages => [...prevMessages, newMessage]);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userstate, message]);
 
   return (
     <ScrollView style={[styles.chatContainer, style]}>
-      {messages.map(msg => (
-        <View key={msg.id} style={styles.messageContainer}>
-          {/* <View style={styles.badgesContainer}>
-            {userstate.badges &&
-              userstate.badges?.map((badge, index) => (
-                <Image
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={index}
-                  source={{ uri: badge.url }}
-                  style={[
-                    styles.badge,
-                    { backgroundColor: badge.color || 'transparent' },
-                  ]}
-                />
-              ))}
-          </View> */}
-          <Typography style={styles.timestamp} size="sm">
-            {formatDate(msg.timestamp, 'HH:mm')}{' '}
-          </Typography>
-          <Typography
-            size="sm"
-            style={[styles.username, { color: userstate.color || '#FFFFFF' }]}
-          >
-            {msg.username}
-          </Typography>
-          <Typography size="sm" style={styles.messageText}>
-            {msg.message}
-          </Typography>
-        </View>
-      ))}
+      <View style={styles.messageContainer}>
+        <Typography style={styles.timestamp} size="sm">
+          {formatDate(new Date(), 'HH:mm')}{' '}
+        </Typography>
+        <Typography
+          size="sm"
+          style={[styles.username, { color: userstate.color || '#FFFFFF' }]}
+        >
+          {userstate.username || 'Unknown'}:
+        </Typography>
+        {message.map((part, index) => {
+          if (part.type === 'text') {
+            return (
+              <Typography key={index} size="sm" style={styles.messageText}>
+                {part.content}
+              </Typography>
+            );
+          }
+          if (part.type === 'emote') {
+            return (
+              <Image
+                key={index}
+                source={{ uri: part.url }}
+                style={styles.emote}
+              />
+            );
+          }
+          if (part.type === 'mention') {
+            return (
+              <Typography
+                key={index}
+                size="sm"
+                style={[styles.mention, { color: '#FF4500' }]}
+              >
+                {part.content}
+              </Typography>
+            );
+          }
+          return null;
+        })}
+      </View>
     </ScrollView>
   );
 };
@@ -186,7 +106,6 @@ const stylesheet = createStyleSheet(theme => ({
   },
   messageContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
     flexWrap: 'wrap',
     marginBottom: 5,
     width: '100%',

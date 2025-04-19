@@ -1,8 +1,7 @@
+import { SanitisiedEmoteSet } from '@app/services';
 import { ChatUserstate } from 'tmi.js';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
-import { useChatStore } from '@app/store/chatStore';
-import { SanitisiedEmoteSet } from '@app/services';
 
 interface Emote {
   name: string;
@@ -13,7 +12,7 @@ interface Emote {
   bits?: string;
 }
 
-interface ParsedPart {
+export interface ParsedPart {
   type: 'text' | 'emote' | 'mention';
   content: string;
   url?: string;
@@ -31,60 +30,106 @@ function decodeEmojiToUnified(emoji: string) {
     .join('-');
 }
 
-export function replaceWithEmotesV2(
-  inputString: string,
-  userstate: ChatUserstate | null,
-  sevenTvChannelEmotes: SanitisiedEmoteSet[],
-  twitchGlobalEmotes: SanitisiedEmoteSet[],
-): ParsedPart[] {
+export function replaceWithEmotesV2({
+  inputString,
+  sevenTvChannelEmotes,
+  sevenTvGlobalEmotes,
+  twitchGlobalEmotes,
+  bttvChannelEmotes,
+  bttvGlobalEmotes,
+  ffzChannelEmotes,
+  ffzGlobalEmotes,
+  twitchChannelEmotes,
+  userstate,
+}: {
+  inputString: string;
+  userstate: ChatUserstate | null;
+  // stv
+  sevenTvGlobalEmotes: SanitisiedEmoteSet[];
+  sevenTvChannelEmotes: SanitisiedEmoteSet[];
+
+  // twitch
+  twitchGlobalEmotes: SanitisiedEmoteSet[];
+  twitchChannelEmotes: SanitisiedEmoteSet[];
+
+  // ffz
+  ffzChannelEmotes: SanitisiedEmoteSet[];
+  ffzGlobalEmotes: SanitisiedEmoteSet[];
+
+  // bttv
+  bttvChannelEmotes: SanitisiedEmoteSet[];
+  bttvGlobalEmotes: SanitisiedEmoteSet[];
+}): ParsedPart[] {
   if (!inputString) {
     return [{ type: 'text', content: inputString }];
   }
 
-  const emojiData = [...sevenTvChannelEmotes, ...twitchGlobalEmotes];
+  const emojiData = [...sevenTvChannelEmotes, ...twitchGlobalEmotes].map(
+    emote => ({
+      ...emote,
+      creator: emote.creator ?? undefined,
+      bits: emote.bits !== undefined ? emote.bits.toString() : undefined,
+    }),
+  );
 
   // eslint-disable-next-line no-param-reassign
   inputString = sanitizeInput(inputString); // Sanitize input
+  const ttvEmoteData = [...twitchChannelEmotes, ...twitchChannelEmotes];
+
+  const nonGlobalEmoteData = [
+    ...twitchChannelEmotes,
+    ...sevenTvChannelEmotes,
+    ...ffzChannelEmotes,
+  ];
 
   try {
-    const ttvEmoteData = [...twitchGlobalEmotes];
-    const nonGlobalEmoteData = [...sevenTvChannelEmotes];
-    const emoteData = [...ttvEmoteData, ...nonGlobalEmoteData];
-
-    if (emoteData.length === 0) {
-      return [{ type: 'text', content: inputString }];
-    }
-
     const EmoteSplit = splitTextWithTwemoji(inputString); // Split text into parts (text and emojis)
+    console.log('EmoteSplit', EmoteSplit);
     const replacedParts: ParsedPart[] = [];
 
     for (let i = 0; i < EmoteSplit.length; i += 1) {
-      let part = EmoteSplit[i];
+      const part = EmoteSplit[i];
       let foundEmote: Emote | undefined;
       let emoteType = '';
+      console.log('PART IS ->', part);
 
       // Check for custom emotes
       if (userstate?.custom_emotes) {
-        foundEmote = userstate.custom_emotes.find(emote => emote.name === part);
+        foundEmote = userstate.custom_emotes.find(
+          (emote: { name: { text: string } | undefined }) =>
+            emote.name?.original_name === part,
+        );
         if (foundEmote) {
           emoteType = 'Custom emote';
         }
       }
 
-      // Check for emojis
-      if (!foundEmote && part.emoji && emojiData.length > 0) {
-        const unifiedPart = decodeEmojiToUnified(part.emoji); // Convert emoji to unified code
-        foundEmote = emojiData.find(emoji => emoji.unified === unifiedPart);
+      if (
+        part &&
+        !foundEmote &&
+        typeof part === 'object' &&
+        'emoji' in part &&
+        part.emoji && // Ensure the emoji property exists
+        emojiData.length > 0
+      ) {
+        console.log('found emoji...');
+        // console.log('unified part ->', part.emoji);
+        foundEmote = emojiData.find(emoji => emoji.original_name === part.text);
         if (foundEmote) {
           emoteType = 'Emoji';
-          foundEmote.url = part.image; // Use the Twemoji image URL
+          foundEmote.url = part.text || foundEmote.url; // Use the Twemoji image URL if available
+          replacedParts.push({
+            type: 'emote',
+            content: foundEmote.name,
+            url: foundEmote.url,
+          });
         }
       }
 
       // Check for Twitch emotes
       if (!foundEmote) {
         foundEmote = ttvEmoteData.find(
-          emote => emote.name === sanitizeInput(part),
+          emote => emote.name === sanitizeInput(part?.text),
         );
         if (foundEmote) {
           emoteType = 'Twitch Emote';
@@ -94,7 +139,7 @@ export function replaceWithEmotesV2(
       // Check for global emotes
       if (!foundEmote) {
         foundEmote = nonGlobalEmoteData.find(
-          emote => emote.name === sanitizeInput(part),
+          emote => emote.name === sanitizeInput(part?.text),
         );
         if (foundEmote) {
           emoteType = 'Global Emote';
@@ -111,16 +156,17 @@ export function replaceWithEmotesV2(
       } else {
         // If no emote is found, treat it as plain text or a mention
         // eslint-disable-next-line no-lonely-if
-        if (part.startsWith('@')) {
+        if (part?.text.startsWith('@')) {
+          console.log('mention');
           replacedParts.push({
             type: 'mention',
-            content: part,
-            color: userstate?.title ? '#FF4500' : undefined,
+            content: part.text,
+            color: userstate?.color,
           });
         } else {
           replacedParts.push({
             type: 'text',
-            content: part,
+            content: part?.text,
           });
         }
       }

@@ -41,14 +41,14 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { data: user, isLoading: isUserLoading } = userQueryResult;
   const { isLoading: isUserProfilePictureLoading } =
     userProfilePictureQueryResult;
-  const { loadChannelResources } = useChatStore();
+  const { loadChannelResources, loading: chatLoading } = useChatStore();
 
   useEffect(() => {
     if (user?.id) {
       loadChannelResources(user.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, []);
 
   const fetchUser = async () => {
     const result = await twitchService.getUser(params.id);
@@ -184,10 +184,12 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
       </Animated.View>
 
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-        <Chat
-          channelId={user?.id as string}
-          channelName={stream.user_login as string}
-        />
+        {!chatLoading && (
+          <Chat
+            channelId={user?.id as string}
+            channelName={stream.user_login as string}
+          />
+        )}
       </Animated.View>
     </Screen>
   );

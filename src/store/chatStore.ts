@@ -16,8 +16,11 @@ export interface Bit {
     min_bits: string;
   }[];
 }
-
 interface ChatState {
+  // Loading state
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+
   // Emojis
   emojis: SanitisiedEmoteSet[];
   setEmojis: (sanitisedEmoteSet: SanitisiedEmoteSet[]) => void;
@@ -47,10 +50,17 @@ interface ChatState {
   ttvUsers: ChatUser[];
   setTTvUsers: (users: ChatUser[]) => void;
 
-  loadChannelResources: (channelId: string) => Promise<void>;
+  loadChannelResources: (channelId: string) => Promise<boolean>;
 }
 
 const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
+  loading: false,
+  setLoading: loading => {
+    set(state => ({
+      ...state,
+      loading,
+    }));
+  },
   bits: [],
   setBits: bits => {
     return set(state => ({
@@ -110,33 +120,31 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }));
   },
   loadChannelResources: async (channelId: string) => {
-    const sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
-    const [
-      // twitchChannelEmotes,
-      // twitchGlobalEmotes,
-      // ffzChannelEmotes,
-      // ffzGlobalEmotes,
-      sevenTvChannelEmotes,
-      sevenTvGlobalEmotes,
-    ] = await Promise.all([
-      // twitchEmoteService.getIvrChannelEmotes(channelId),
-      // twitchEmoteService.getGlobalEmotes(),
-      // ffzService.getSanitisedChannelEmotes(channelId),
-      // ffzService.getSanitisedGlobalEmotes(),
-      sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
-      sevenTvService.getSanitisedEmoteSet('global'),
-    ]);
-    // eslint-disable-next-line no-console
-    console.info('loaded stv emotes 🚀');
-    set(state => ({
-      ...state,
-      twitchChannelEmotes: [],
-      twitchGlobalEmotes: [],
-      ffzChannelEmotes: [],
-      ffzGlobalEmotes: [],
-      sevenTvChannelEmotes,
-      sevenTvGlobalEmotes,
-    }));
+    set(state => ({ ...state, loading: true })); // Set loading to true
+    try {
+      const sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
+      const [sevenTvChannelEmotes, sevenTvGlobalEmotes] = await Promise.all([
+        sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
+        sevenTvService.getSanitisedEmoteSet('global'),
+      ]);
+      // eslint-disable-next-line no-console
+      console.info('loaded stv emotes 🚀');
+      set(state => ({
+        ...state,
+        twitchChannelEmotes: [],
+        twitchGlobalEmotes: [],
+        ffzChannelEmotes: [],
+        ffzGlobalEmotes: [],
+        sevenTvChannelEmotes,
+        sevenTvGlobalEmotes,
+        loading: false, // Set loading to false after success
+      }));
+      return true; // Indicate success
+    } catch (error) {
+      console.error('Error loading channel resources:', error);
+      set(state => ({ ...state, loading: false })); // Set loading to false on error
+      return false; // Indicate failure
+    }
   },
 });
 
