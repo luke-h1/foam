@@ -77,8 +77,8 @@ export const ChatMessageV2 = ({
                 key={index}
                 source={{ uri: part.url }}
                 style={{
-                  width: 25,
-                  height: 25,
+                  width: 45,
+                  height: 45,
                 }}
               />
             );
