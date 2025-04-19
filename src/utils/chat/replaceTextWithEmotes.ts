@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import { useChatStore } from '@app/store/chatStore';
 import { ChatUserstate } from 'tmi.js';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
@@ -20,6 +21,8 @@ export function useReplaceTextWithEmotes(
   } = useChatStore();
 
   const allEmotes = [...sevenTvChannelEmotes, ...ttvEmoteData];
+
+  const nonGlobalEmotes = [];
 
   const twitchEmotes = [...twitchChannelEmotes, ...twitchGlobalEmotes];
 
@@ -117,5 +120,63 @@ export function useReplaceTextWithEmotes(
     }
 
     // non-global emotes
+
+    if (!foundEmote) {
+      for (const emote of nonGlobalEmotes) {
+        if (emote.name && part === sanitizeInput(emote.name)) {
+          foundEmote = emote;
+          emoteType = emote.site;
+          break;
+        }
+      }
+    }
+
+    // search in all emotes
+
+    // search for user
+    if (!foundEmote && (!userstate || !userstate.noMention)) {
+      for (const user of ttvUsers) {
+        const userName = user.name.toLowerCase();
+        const regex = new RegExp(
+          `^(${userName.slice(1)}[,]?|${userName},?)$`,
+          'i',
+        );
+
+        if (regex.test(part)) {
+          foundUser = user;
+          break;
+        }
+      }
+    }
+
+    if (foundEmote) {
+      let emoteMarkup = '';
+
+      if (emoteType !== 'Bits' && !part.emoji) {
+        for (const key in foundEmote) {
+          if (typeof foundEmote[key] === 'string') {
+            foundEmote[key] = sanitizeInput(foundEmote[key]);
+          }
+        }
+      }
+
+      let additionalInfo = '';
+      if (
+        foundEmote.original_name &&
+        foundEmote.name !== foundEmote.original_name
+      ) {
+        additionalInfo += `, Alias of: ${foundEmote.original_name}`;
+      }
+
+      let desired_height = 5;
+
+      if (userstate && userstate.title) {
+        desired_height = 10;
+      }
+
+      let creator = foundEmote.creator
+        ? `Created by: ${foundEmote.creator}`
+        : '';
+    }
   }
 }

@@ -15,6 +15,12 @@ import { ChatMessage } from '../ChatMessage';
 import { Typography } from '../Typography';
 import { ChatMessageV2, ChatMessageV2Props } from './ChatMessageV2';
 import { generateNonce } from '@app/utils/string/generateNonce';
+import { useReplaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
+import {
+  replaceWithEmotesV2,
+  useReplaceWithEmotesV2,
+} from '@app/utils/chat/replaceTextWithEmotesV2';
+import { useChatStore } from '@app/store/chatStore';
 
 export interface FormattedChatMessage {
   user: ChatUserstate;
@@ -30,6 +36,7 @@ interface ChatProps {
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
+  const { sevenTvChannelEmotes, twitchChannelEmotes } = useChatStore();
 
   const flashListRef = useRef<FlatList<ChatMessageV2Props>>(null);
   const messagesRef = useRef<ChatMessageV2Props[]>([]);
@@ -79,16 +86,22 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const connectToChat = () => {
     client.connect();
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     client.on('message', async (_channel, tags, text, _self) => {
       const userstate = tags as ChatUserstate;
 
       const message_id = userstate.id || '0';
       const message_nonce = generateNonce() || '0';
+      const replacedMessage = replaceWithEmotesV2(
+        text.trimStart(),
+        userstate,
+        sevenTvChannelEmotes,
+        twitchChannelEmotes,
+      );
+      console.log('replacedMessage ->', replacedMessage);
 
       const newMessage: ChatMessageV2Props = {
         userstate,
-        message: text.trimStart(),
+        message: replacedMessage,
         channel: '',
         message_id,
         message_nonce,
