@@ -21,16 +21,6 @@ import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { ChatUserstate } from 'tmi.js';
 import { Typography } from '../Typography';
 
-interface Message {
-  id: string;
-  username: ChatUserstate['username'];
-  message: string;
-  timestamp: Date;
-  emotes?: SanitisiedEmoteSet[];
-  isFirstMessage: boolean;
-  isAnnouncement: boolean;
-}
-
 export interface ChatMessageV2Props {
   userstate: ChatUserstate;
   message: ParsedPart[];
@@ -66,14 +56,17 @@ export const ChatMessageV2 = ({
         {message.map((part, index) => {
           if (part.type === 'text') {
             return (
+              // eslint-disable-next-line react/no-array-index-key
               <Typography key={index} size="sm" style={styles.messageText}>
                 {part.content}
               </Typography>
             );
           }
           if (part.type === 'emote') {
+            console.log(part.type);
             return (
               <Image
+                // eslint-disable-next-line react/no-array-index-key
                 key={index}
                 source={{ uri: part.url }}
                 style={{
@@ -85,11 +78,8 @@ export const ChatMessageV2 = ({
           }
           if (part.type === 'mention') {
             return (
-              <Typography
-                key={index}
-                size="sm"
-                style={[styles.mention, { color: '#FF4500' }]}
-              >
+              // eslint-disable-next-line react/no-array-index-key
+              <Typography key={index} size="sm" style={[styles.mention, {}]}>
                 {part.content}
               </Typography>
             );
