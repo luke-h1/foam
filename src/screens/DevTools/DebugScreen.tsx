@@ -1,7 +1,6 @@
 import { Screen, Typography, Button } from '@app/components';
-import { useAppNavigation, useHeader } from '@app/hooks';
+import { useAppNavigation, useHeader, useDebugOptions } from '@app/hooks';
 import { AllowedKey, storageService } from '@app/services';
-import { useState, useEffect } from 'react';
 import { FlatList, Switch, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
@@ -18,7 +17,7 @@ const debugItems: DebugItem[] = [
     title: 'Clear async storage',
     description: 'Clear all items',
     onPress: async () => {
-      await storageService.clear();
+      storageService.clear();
     },
     type: 'button',
   },
@@ -35,6 +34,7 @@ const debugItems: DebugItem[] = [
 
 export function DebugScreen() {
   const { goBack } = useAppNavigation();
+  const debugOptions = useDebugOptions();
 
   useHeader({
     title: 'Debug',
@@ -44,55 +44,11 @@ export function DebugScreen() {
 
   const { styles } = useStyles(stylesheet);
 
-  const [storageState, setStorageState] = useState<Record<string, string>>({});
-  const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(
-    {},
-  );
-
-  const fetchStorageState = async () => {
-    const entries = await storageService.multiGet<[boolean]>([
-      'ReactQueryDebug',
-    ]);
-    const state = entries.reduce(
-      (acc, [key, value]) => {
-        acc[key] = value === null ? 'false' : value.toString();
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-    setStorageState(state);
-
-    const newSwitchOptions = debugItems.reduce(
-      (acc, item) => {
-        if (item.type === 'switch' && item.storageKey) {
-          acc[item.title] = state[item.storageKey] === 'true';
-        }
-        return acc;
-      },
-      {} as Record<string, boolean>,
-    );
-    setSwitchOptions(newSwitchOptions);
-  };
-
-  useEffect(() => {
-    fetchStorageState();
-  }, []);
-
   const handleToggleSwitch = async (
-    title: string,
-    value: boolean,
-    // eslint-disable-next-line no-shadow
-    onPress: (value?: boolean) => void,
-    storageKey?: AllowedKey,
+    switchValue: boolean,
+    onPress: (value?: boolean) => Promise<void>,
   ) => {
-    setSwitchOptions(prevState => ({ ...prevState, [title]: value }));
-    if (storageKey) {
-      onPress(value);
-      setStorageState(prevState => ({
-        ...prevState,
-        [storageKey]: value.toString(),
-      }));
-    }
+    await onPress(switchValue);
   };
 
   return (
@@ -106,21 +62,19 @@ export function DebugScreen() {
               <Typography style={styles.itemTitle}>{item.title}</Typography>
               {item.type === 'switch' ? (
                 <Switch
-                  value={switchOptions[item.title]}
+                  value={
+                    item.storageKey
+                      ? debugOptions[item.storageKey]?.enabled
+                      : false
+                  }
                   onValueChange={async value => {
-                    await handleToggleSwitch(
-                      item.title,
-                      value,
-                      item.onPress,
-                      item.storageKey,
-                    );
+                    await handleToggleSwitch(value, item.onPress);
                   }}
                 />
               ) : (
                 <Button
                   onPress={async () => {
                     await item.onPress();
-                    await setStorageState({});
                   }}
                   style={styles.button}
                 >
@@ -133,11 +87,9 @@ export function DebugScreen() {
         )}
         ListFooterComponent={
           <View style={[styles.sectionHeader, styles.storageState]}>
-            <Typography style={styles.sectionTitle}>
-              AsyncStorage State
-            </Typography>
+            <Typography style={styles.sectionTitle}>Debug Options</Typography>
             <Typography style={styles.storageValue}>
-              {JSON.stringify(storageState, null, 2)}
+              {JSON.stringify(debugOptions, null, 2)}
             </Typography>
           </View>
         }
