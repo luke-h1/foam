@@ -6,7 +6,7 @@
   "main": "index.js",
   "engines": {
     "node": ">=20",
-    "bun": "1.2.5"
+    "bun": ">=1.2.5"
   },
   "scripts": {
     "start": "APP_VARIANT=development expo start --dev-client",
