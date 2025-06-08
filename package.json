@@ -80,7 +80,6 @@
     "axios-mock-adapter": "^2.1.0",
     "clsx": "^2.1.0",
     "commitlint": "^18.4.4",
-    "core-js": "^3.39.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
@@ -236,7 +235,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx}": [
       "eslint"
     ],
     "*.{js,jsx,ts,tsx,css,scss,html}": [

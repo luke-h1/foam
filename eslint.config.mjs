@@ -25,6 +25,7 @@ export default [
       '**/.github',
       '**/public',
       '**/build',
+      '**/scripts/',
       '**/build/',
       '**/coverage/',
       '**/node_modules/',
@@ -32,6 +33,19 @@ export default [
       '.storybook/storybook.requires.ts',
       'metro.config.js',
     ],
+    languageOptions: {
+      globals: {
+        ...globals.es2023,
+        ...globals.jest,
+        ...globals.node,
+        logger: true,
+        __DEV__: true,
+      },
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
   },
   ...fixupConfigRules(
     compat.extends(
@@ -51,23 +65,10 @@ export default [
     plugins: {
       '@typescript-eslint': fixupPluginRules(typescriptEslint),
     },
-    languageOptions: {
-      globals: {
-        ...globals.es2023,
-        ...globals.jest,
-        ...globals.node,
-        __DEV__: 'readonly',
-      },
-      parser: tsParser,
-      parserOptions: {
-        project: ['./tsconfig.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
     settings: {
       'import/resolver': {
         typescript: {
-          project: ['./tsconfig.json'],
+          project: ['tsconfig.json'],
         },
       },
       react: {
@@ -226,23 +227,6 @@ export default [
           ],
         },
       ],
-    },
-  },
-  {
-    files: ['**/*.js', '**/*.jsx'],
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.jest,
-        ...globals.node,
-        __DEV__: 'readonly',
-      },
-    },
-    rules: {
-      '@typescript-eslint/no-var-requires': 'off',
-      'global-require': 'off',
-      'import/no-dynamic-require': 'off',
-      'no-console': 'off',
     },
   },
 ];
