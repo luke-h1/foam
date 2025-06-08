@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable no-restricted-imports */
 /* eslint-disable no-shadow */
 import {
   ImageProps,

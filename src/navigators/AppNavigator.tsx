@@ -15,7 +15,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import newRelic from 'newrelic-react-native-agent';
-import { useMemo } from 'react';
+import { ComponentProps, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import {
   DevToolsParamList,
@@ -134,9 +134,7 @@ const AppStack = () => {
   );
 };
 
-type NavigationProps = Partial<
-  React.ComponentProps<typeof NavigationContainer>
->;
+type NavigationProps = Partial<ComponentProps<typeof NavigationContainer>>;
 
 export const AppNavigator = (props: NavigationProps) => {
   const colorScheme = useColorScheme();

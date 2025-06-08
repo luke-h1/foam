@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { Button, Screen, Typography } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useHeader } from '@app/hooks';
@@ -7,9 +8,22 @@ import { useEffect } from 'react';
 import { Platform, View, ViewStyle } from 'react-native';
 import { toast } from 'sonner-native';
 
-const SCOPES = [
-  'chat:read chat:edit user:read:follows user:read:blocked_users user:manage:blocked_users channel:read:polls channel:read:predictions',
-];
+const USER_SCOPES = [
+  'user:read:follows',
+  'user:read:blocked_users',
+  'user:read:emotes',
+  'user:manage:blocked_users',
+] as const;
+
+const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
+
+const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
+
+const CHANNEL_SCOPES = [
+  'channel:read:polls',
+  'channel:read:predictions',
+  'channel:moderate',
+] as const;
 
 const proxyUrl = new URL(
   // This changes because we have a naive proxy that hardcodes the redirect URL.
@@ -39,10 +53,14 @@ export function LoginScreen() {
 
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: process.env.TWITCH_CLIENT_ID,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET,
-      scopes: SCOPES,
-
+      clientId: process.env.TWITCH_CLIENT_ID as string,
+      clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
+      scopes: [
+        ...USER_SCOPES,
+        ...CHAT_SCOPES,
+        ...WHISPER_SCOPES,
+        ...CHANNEL_SCOPES,
+      ],
       // Use implicit flow to avoid code exchange.
       responseType: 'token',
       redirectUri: proxyUrl,
@@ -69,7 +87,7 @@ export function LoginScreen() {
 
   useEffect(() => {
     if (response && response?.type === 'success') {
-      handleAuth();
+      void handleAuth();
     }
     // eslint-disable-next-line no-console
     // eslint-disable-next-line react-hooks/exhaustive-deps

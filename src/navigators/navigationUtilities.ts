@@ -31,7 +31,7 @@ export const RootNavigation = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   resetRoot(_state?: PartialState<NavigationState> | NavigationState) {},
   getRootState(): NavigationState {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
     return {} as any;
   },
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -167,6 +167,7 @@ export function useNavigationPersistence(storage: any, persistenceKey: string) {
         routeNameRef.current = currentRouteName;
 
         // persist state to storage
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         storage.save(persistenceKey, state);
 
         // log to new relic
@@ -177,8 +178,10 @@ export function useNavigationPersistence(storage: any, persistenceKey: string) {
 
   const restoreState = async () => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const state = await storage.load(persistenceKey);
       if (state) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         setInitialNavigationState(state);
       }
     } finally {
@@ -190,7 +193,7 @@ export function useNavigationPersistence(storage: any, persistenceKey: string) {
 
   useEffect(() => {
     if (!isRestored) {
-      restoreState();
+      void restoreState();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRestored]);

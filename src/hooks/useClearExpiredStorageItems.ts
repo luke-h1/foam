@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 
 export function useClearExpiredStorageItems() {
   useEffect(() => {
-    (async () => {
-      await storageService.clearExpired();
+    (() => {
+      storageService.clearExpired();
     })();
   }, []);
 }

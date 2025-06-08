@@ -5,7 +5,7 @@ import { useHeader } from '@app/hooks';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { Stream } from '@app/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState, JSX } from 'react';
 import { FlatList, View, RefreshControl } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -41,9 +41,15 @@ export default function FollowingScreen() {
   const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
 
   if (refreshing || isLoading) {
-    return <LiveStreamCardSkeleton />;
+    return (
+      <>
+        {Array.from({ length: 5 }).map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <LiveStreamCardSkeleton key={index} />
+        ))}
+      </>
+    );
   }
-
   if ((!isLoading && !streams) || isError) {
     toast.error('Failed to fetch followed streams');
     return (
@@ -77,6 +83,7 @@ export default function FollowingScreen() {
             renderItem={({ item }) => <LiveStreamCard stream={item} />}
             showsVerticalScrollIndicator={false}
             refreshControl={
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
           />

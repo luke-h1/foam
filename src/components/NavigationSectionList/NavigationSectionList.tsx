@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { SectionList, SectionListData, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { ButtonProps } from '../Button';
 import { Typography } from '../Typography';
@@ -13,14 +13,10 @@ export interface SectionListItem {
   onPress: ButtonProps['onPress'];
 }
 
-interface SectionHeaderItem {
+export type NavigationSectionListData = {
   title?: string;
-}
-
-export type NavigationSectionListData = SectionListData<
-  SectionListItem,
-  SectionHeaderItem
->[];
+  data: SectionListItem[];
+}[];
 
 export interface NavigationSectionListProps {
   sections: NavigationSectionListData;
@@ -33,84 +29,89 @@ export function NavigationSectionList({
 }: NavigationSectionListProps) {
   const { styles } = useStyles(stylesheet);
 
-  const renderSectionHeader = ({
-    section,
-  }: {
-    section: SectionListData<SectionListItem, SectionHeaderItem>;
-  }) => {
-    if (!section.title) {
-      return null;
-    }
-
-    return (
-      <View style={styles.sectionTitleContainer}>
-        <Typography size="sm" style={styles.sectionTitle}>
-          {section.title}
-        </Typography>
-      </View>
-    );
-  };
-
-  const renderItem = ({ item }: { item: SectionListItem }) => {
-    return (
-      <View style={styles.container}>
-        <NavigationSectionListItemButton
-          title={item.title}
-          description={item.description}
-          iconName={item.iconName}
-          picture={item.picture}
-          onPress={item.onPress}
-        />
-      </View>
-    );
-  };
-
-  const renderFooter = () => {
-    if (!footer) {
-      return null;
-    }
-
-    return <View style={styles.footer}>{footer}</View>;
-  };
-
   return (
-    <SectionList
-      showsHorizontalScrollIndicator={false}
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
-      sections={sections}
-      renderItem={renderItem}
-      renderSectionHeader={renderSectionHeader}
-      keyExtractor={(item, idx) => item.title + idx}
-      ListFooterComponent={renderFooter}
-    />
+    >
+      {sections.map(section => (
+        <View
+          key={section.title ?? `section-${section.data[0]?.title}`}
+          style={styles.sectionContainer}
+        >
+          {section.title && (
+            <View style={styles.sectionTitleContainer}>
+              <Typography size="sm" style={styles.sectionTitle}>
+                {section.title}
+              </Typography>
+            </View>
+          )}
+          <View style={styles.itemsContainer}>
+            {section.data.map(item => (
+              <View key={item.title}>
+                <NavigationSectionListItemButton
+                  title={item.title}
+                  description={item.description}
+                  iconName={item.iconName}
+                  picture={item.picture}
+                  onPress={item.onPress}
+                />
+                {item !== section.data[section.data.length - 1] && (
+                  <View style={styles.separator} />
+                )}
+              </View>
+            ))}
+          </View>
+          {section !== sections[sections.length - 1] && (
+            <View style={styles.sectionSeparator} />
+          )}
+        </View>
+      ))}
+      {footer && <View style={styles.footer}>{footer}</View>}
+    </ScrollView>
   );
 }
 
 const stylesheet = createStyleSheet(theme => ({
   container: {
     flex: 1,
-    paddingVertical: theme.spacing.sm,
+  },
+  contentContainer: {
+    flexGrow: 1,
+  },
+  sectionContainer: {
+    marginBottom: theme.spacing.md,
+    backgroundColor: theme.colors.screen,
+  },
+  itemsContainer: {
+    backgroundColor: theme.colors.screen,
+    borderRadius: theme.radii.md,
+    overflow: 'hidden',
   },
   icon: {
     width: 24,
     height: 24,
   },
-  contentContainer: {
-    flex: 1,
-  },
   sectionTitleContainer: {
-    padding: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
   },
   sectionTitle: {
     textTransform: 'uppercase',
+    fontWeight: '600',
+    color: theme.colors.foregroundNeutral,
   },
   footer: {
-    padding: theme.spacing.md,
+    padding: theme.spacing.lg,
   },
   separator: {
     height: 1,
     backgroundColor: theme.colors.border,
-    marginVertical: theme.spacing.sm,
+    marginHorizontal: theme.spacing.lg,
+  },
+  sectionSeparator: {
+    height: theme.spacing.md,
+    backgroundColor: theme.colors.screen,
   },
 }));

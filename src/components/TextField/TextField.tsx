@@ -10,11 +10,11 @@ import {
   TextInput,
   TextInputProps,
   TextStyle,
-  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { Button } from '../Button';
 import { Typography, TypographyProps } from '../Typography';
 
 export interface TextFieldAccessoryProps {
@@ -103,7 +103,7 @@ export const TextField = forwardRef(function TextField(
   useImperativeHandle(ref, () => input.current as TextInput);
 
   return (
-    <TouchableOpacity
+    <Button
       activeOpacity={1}
       style={$containerStyles}
       // eslint-disable-next-line react/jsx-no-bind
@@ -130,7 +130,7 @@ export const TextField = forwardRef(function TextField(
           underlineColorAndroid={theme.colors.foregroundNeutral}
           textAlignVertical="center"
           placeholder={placeholderContent as string}
-          placeholderTextColor={theme.colors.borderFaint}
+          placeholderTextColor={theme.colors.foregroundNeutral}
           {...TextInputProps}
           editable={!disabled}
           style={$inputStyles}
@@ -150,7 +150,7 @@ export const TextField = forwardRef(function TextField(
           {helper}
         </Typography>
       )}
-    </TouchableOpacity>
+    </Button>
   );
 });
 

@@ -15,7 +15,7 @@ export type AllowedKey =
   | 'foam_stacked_cards'
   | 'previous_searches';
 
-const NAMESPACE = 'FOAM_V1';
+export const NAMESPACE = 'FOAM_V1';
 
 const namespaceKey = (key: AllowedKey) => `${NAMESPACE}_${key}`;
 
@@ -28,9 +28,8 @@ const storage = new MMKV({
 export const storageService = {
   events: storageEvents,
 
-  get<T>(key: AllowedKey): T | null {
-    const namespacedKey = namespaceKey(key);
-    const item = storage.getString(namespacedKey);
+  getString<T>(key: AllowedKey): T | null {
+    const item = storage.getString(namespaceKey(key));
 
     if (!item) {
       return null;
@@ -39,34 +38,18 @@ export const storageService = {
     const { value, expiry } = JSON.parse(item) as StorageItem<T>;
 
     if (expiry && new Date() >= new Date(expiry)) {
-      this.remove(key);
+      this.delete(key);
       return null;
     }
+
     return value;
   },
 
-  multiGet<T extends readonly unknown[]>(keys: {
-    [K in keyof T]: AllowedKey;
-  }): { [K in keyof T]: [string, T[K] | null] } {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return keys.map((key, index) => {
-      const namespacedKey = namespaceKey(key);
-      const item = storage.getString(namespacedKey);
-      if (!item) {
-        return [key, null] as [string, T[typeof index] | null];
-      }
-      const { value: parsedValue } = JSON.parse(item) as StorageItem<
-        T[typeof index]
-      >;
-      return [key, parsedValue] as [string, T[typeof index] | null];
-    }) as { [K in keyof T]: [string, T[K] | null] };
-  },
-
-  async set(
+  set(
     key: AllowedKey,
     value: unknown,
     options: StorageSetterOptions = {},
-  ): Promise<void> {
+  ): void {
     const { expiry } = options;
 
     let item: StorageItem = { value };
@@ -83,7 +66,10 @@ export const storageService = {
     storage.set(namespacedKey, JSON.stringify(item));
     storageEvents.emit('storageChange', key);
   },
-
+  delete(key: AllowedKey): void {
+    storage.delete(namespaceKey(key));
+    storageEvents.emit('storageChange', key);
+  },
   remove(key: AllowedKey): void {
     const namespacedKey = namespaceKey(key);
     storage.delete(namespacedKey);

@@ -1,15 +1,8 @@
 import { ReactElement } from 'react';
-import {
-  StyleProp,
-  TextStyle,
-  TouchableOpacity,
-  TouchableOpacityProps,
-  View,
-  ViewProps,
-  ViewStyle,
-} from 'react-native';
+import { StyleProp, TextStyle, View, ViewProps, ViewStyle } from 'react-native';
 import { Edge } from 'react-native-safe-area-context';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { Button, ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography, TypographyProps } from '../Typography';
@@ -63,7 +56,7 @@ export interface HeaderProps {
   /**
    * What happens when you press the left icon or text action.
    */
-  onLeftPress?: TouchableOpacityProps['onPress'];
+  onLeftPress?: ButtonProps['onPress'];
   /**
    * Icon that should appear on the right.
    * Can be used with `onRightPress`.
@@ -86,7 +79,7 @@ export interface HeaderProps {
   /**
    * What happens when you press the right icon or text action.
    */
-  onRightPress?: TouchableOpacityProps['onPress'];
+  onRightPress?: ButtonProps['onPress'];
   /**
    * Override the default edges for the safe area.
    */
@@ -102,7 +95,7 @@ interface HeaderActionProps {
   icon?: string;
   iconColor?: string;
   text?: TypographyProps['children'];
-  onPress?: TouchableOpacityProps['onPress'];
+  onPress?: ButtonProps['onPress'];
   ActionComponent?: ReactElement;
 }
 
@@ -197,7 +190,7 @@ export function HeaderAction({
 
   if (content) {
     return (
-      <TouchableOpacity
+      <Button
         style={[styles.actionTextContainer, { backgroundColor }]}
         onPress={onPress}
         disabled={!onPress}
@@ -206,7 +199,7 @@ export function HeaderAction({
         <Typography maxFontSizeMultiplier={1.5} size="md">
           {content}
         </Typography>
-      </TouchableOpacity>
+      </Button>
     );
   }
 

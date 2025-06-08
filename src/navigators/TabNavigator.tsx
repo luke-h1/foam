@@ -76,16 +76,9 @@ export function TabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          height: 90,
+          height: 80,
           marginTop: -20,
-          paddingHorizontal: theme.spacing.xs,
-        },
-        tabBarItemStyle: {
-          justifyContent: 'center',
-          paddingVertical: theme.spacing.xs,
-          paddingHorizontal: theme.spacing.xs,
+          paddingHorizontal: theme.spacing.lg,
         },
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: theme.colors.brightPurple,
@@ -104,7 +97,7 @@ export function TabNavigator() {
             options={{
               // eslint-disable-next-line react/no-unstable-nested-components
               tabBarIcon: ({ color, size }) => (
-                <Icon icon={screen.icon} color={color} size={size - 7} />
+                <Icon icon={screen.icon} color={color} size={size - 5} />
               ),
               tabBarLabel: screen.name,
             }}

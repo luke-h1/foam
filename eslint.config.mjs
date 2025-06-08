@@ -7,6 +7,7 @@ import tsParser from '@typescript-eslint/parser';
 import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import eslintPluginReact from 'eslint-plugin-react';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,20 +19,15 @@ const compat = new FlatCompat({
 
 export default [
   {
+    files: ['src/**/*.{js,mjs,cjs,ts,jsx,tsx}'],
     ignores: [
       '**/node_modules',
       '**/.github',
-      '**/.next',
-      '**/.vercel',
       '**/public',
       '**/build',
-      '**/.next/',
       '**/build/',
       '**/coverage/',
       '**/node_modules/',
-      '**/*.min.css',
-      '**/*.min.js',
-      '**/@sanity',
       '.expo',
       '.storybook/storybook.requires.ts',
       'metro.config.js',
@@ -41,6 +37,7 @@ export default [
     compat.extends(
       'airbnb',
       'plugin:@typescript-eslint/recommended',
+      'plugin:@typescript-eslint/recommended-type-checked',
       'plugin:import/typescript',
       'plugin:@typescript-eslint/strict',
       'plugin:react/recommended',
@@ -50,54 +47,46 @@ export default [
     ),
   ),
   {
+    files: ['**/*.ts', '**/*.tsx'],
     plugins: {
       '@typescript-eslint': fixupPluginRules(typescriptEslint),
     },
-
     languageOptions: {
       globals: {
-        ...globals.browser,
+        ...globals.es2023,
         ...globals.jest,
         ...globals.node,
+        __DEV__: 'readonly',
       },
-
       parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
-
     settings: {
       'import/resolver': {
         typescript: {
-          project: ['tsconfig.json'],
+          project: ['./tsconfig.json'],
         },
       },
-
       react: {
         version: 'detect',
       },
     },
-
     rules: {
       'import/no-cycle': 'off',
-
+      'import/no-unresolved': ['error'],
       'import/extensions': [
         'error',
         'ignorePackages',
         {
           js: 'never',
-          mjs: 'never',
           jsx: 'never',
           ts: 'never',
           tsx: 'never',
         },
       ],
-
-      'import/no-unresolved': [
-        'error',
-        {
-          ignore: ['^(part|all):'],
-        },
-      ],
-
       'import/order': [
         'error',
         {
@@ -110,7 +99,7 @@ export default [
 
           pathGroups: [
             {
-              pattern: '@frontend/**',
+              pattern: '@app/**',
               group: 'internal',
             },
           ],
@@ -120,11 +109,9 @@ export default [
           },
         },
       ],
-
       'react/function-component-definition': 'off',
       'import/prefer-default-export': 'off',
       'no-unsafe-finally': 'off',
-
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -147,29 +134,44 @@ export default [
           extensions: ['.jsx', '.tsx'],
         },
       ],
-
+      '@typescript-eslint/no-floating-promises': 'warn',
       'react/jsx-one-expression-per-line': 'off',
       '@typescript-eslint/ban-types': 'off',
+      'no-void': 'off',
       'no-case-declarations': 'error',
       '@typescript-eslint/no-use-before-define': 'off',
       '@typescript-eslint/method-signature-style': ['error', 'property'],
       '@next/next/no-img-element': 'off',
       'react/jsx-props-no-spreading': 'off',
       'jsx-a11y/anchor-is-valid': 'off',
-
+      'comma-dangle': ['error', 'always-multiline'],
+      'consistent-return': 0,
+      'function-paren-newline': 0,
+      'global-require': 0,
+      'implicit-arrow-linebreak': 0,
+      'jsx-quotes': ['error', 'prefer-double'],
+      'no-console': ['off'],
+      'no-extra-boolean-cast': 0,
+      'no-return-assign': 0,
+      'no-undef': ['warn'],
+      'no-unused-expressions': 0,
+      'no-fallthrough': 'error',
+      'object-curly-newline': 0,
+      'object-curly-spacing': ['error', 'always'],
+      'operator-linebreak': 0,
+      'quote-props': 0,
+      'react-hooks/rules-of-hooks': 'error',
       'react/jsx-wrap-multilines': [
         'error',
-        {
-          prop: 'ignore',
-        },
+        { declaration: false, assignment: false },
       ],
-
+      'react/react-in-jsx-scope': 0,
+      semi: ['error', 'always'],
+      'spaced-comment': 0,
       'react/prop-types': 'off',
       'import/no-extraneous-dependencies': 'off',
-      'react/react-in-jsx-scope': 'off',
       'react/require-default-props': 'off',
       'react/state-in-constructor': 'off',
-
       'react/no-unescaped-entities': [
         'error',
         {
@@ -185,11 +187,57 @@ export default [
           ],
         },
       ],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'react-native',
+              importNames: [
+                'Animated',
+                'Button',
+                'ButtonProps',
+                'Image',
+                'ImageProps',
+                'Pressable',
+                'PressableProps',
+                'Text',
+                'TextProps',
+                'TouchableHighlight',
+                'TouchableHighlightProps',
+                'TouchableOpacity',
+                'TouchableOpacityProps',
+                'TouchableWithoutFeedback',
+                'TouchableWithoutFeedbackProps',
+              ],
+              message:
+                'Import these components from `~/components` instead. Use `react-native-reanimated` instead of `Animated` API.',
+            },
+            {
+              name: 'React',
+              importNames: ['React'],
+              message: 'Import respective React API as a named import instead.',
+            },
+            {
+              name: 'expo-image',
+              importNames: ['Image', 'ImageProps'],
+              message: 'Use `~/components/Image` instead.',
+            },
+          ],
+        },
+      ],
     },
   },
   {
-    files: ['**/*.js'],
-
+    files: ['**/*.js', '**/*.jsx'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.jest,
+        ...globals.node,
+        __DEV__: 'readonly',
+      },
+    },
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       'global-require': 'off',

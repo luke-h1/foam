@@ -9,9 +9,8 @@ const jestConfig = {
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|newrelic-react-native-agent)',
   ],
   moduleNameMapper: {
-    '\\.svg': '<rootDir>/src/test/__mocks__/svgMock.js',
     '^@app/(.*)$': '<rootDir>/src/$1',
-    '\\.otf$': '<rootDir>/test/__mocks__/fileMock.js',
+    '\\.otf$': '<rootDir>/__mocks__/fileMock.js',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   verbose: true,

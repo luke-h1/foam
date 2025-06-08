@@ -3,6 +3,7 @@ import Axios, {
   AxiosRequestConfig,
   AxiosResponse,
   CustomParamsSerializer,
+  InternalAxiosRequestConfig,
   isAxiosError,
 } from 'axios';
 import omit from 'lodash/omit';
@@ -26,21 +27,45 @@ export type ClientResponse<TValue> = Omit<
   'config' | 'request'
 >;
 
+export interface RequestInterceptor {
+  onRequest: (
+    config: InternalAxiosRequestConfig,
+  ) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>;
+  onError?: (error: unknown) => unknown;
+}
+
+export interface ResponseInterceptor {
+  onResponse: (
+    response: AxiosResponse<unknown>,
+  ) => AxiosResponse<unknown> | Promise<AxiosResponse<unknown>>;
+  onError?: (error: unknown) => unknown;
+}
+
 const defaultParamsSerializer: CustomParamsSerializer = params =>
   qs.stringify(params, { arrayFormat: 'comma' });
 
 export interface ClientOptions {
   baseURL?: string;
   headers?: AxiosRequestConfig['headers'];
+  requestInterceptors?: RequestInterceptor[];
+  responseInterceptors?: ResponseInterceptor[];
   paramsSerializer?: CustomParamsSerializer;
 }
 
 export default class Client {
   private readonly axios: AxiosInstance;
 
+  private readonly requestInterceptors: Map<RequestInterceptor, number> =
+    new Map();
+
+  private readonly responseInterceptors: Map<ResponseInterceptor, number> =
+    new Map();
+
   public constructor({
     baseURL,
     paramsSerializer = defaultParamsSerializer,
+    requestInterceptors,
+    responseInterceptors,
     headers,
   }: ClientOptions) {
     this.axios = Axios.create({
@@ -48,6 +73,9 @@ export default class Client {
       paramsSerializer,
       headers,
     });
+
+    requestInterceptors?.forEach(this.addRequestInterceptor.bind(this));
+    responseInterceptors?.forEach(this.addResponseInterceptor.bind(this));
   }
 
   public async request<TValue>(
@@ -57,6 +85,7 @@ export default class Client {
     },
   ): Promise<TValue> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const interactionId = await newRelic.startInteraction(
         `${config.url}_${config.method}`,
       );
@@ -72,6 +101,7 @@ export default class Client {
         return omit(response, ['config', 'request']) as TValue;
       }
       newRelic.endInteraction(interactionId);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return response.data;
     } catch (error) {
       const errorMessage = `${config.url}_${config.method} request failed`;
@@ -81,7 +111,7 @@ export default class Client {
 
       if (isAxiosError(error)) {
         // eslint-disable-next-line no-shadow
-        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed`;
+        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed with ${JSON.stringify(error.message)}`;
 
         newRelic.logError(errorMessage);
 
@@ -90,6 +120,7 @@ export default class Client {
           console.error(errorMessage);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return error.response?.data;
       }
 
@@ -215,6 +246,46 @@ export default class Client {
 
   public get baseURL(): string {
     return this.axios.defaults.baseURL ?? '';
+  }
+
+  public addRequestInterceptor(interceptor: RequestInterceptor): void {
+    if (this.requestInterceptors.has(interceptor)) {
+      return;
+    }
+
+    const id = this.axios.interceptors.request.use(
+      interceptor.onRequest,
+      interceptor.onError,
+    );
+    this.requestInterceptors.set(interceptor, id);
+  }
+
+  public addResponseInterceptor(interceptor: ResponseInterceptor): void {
+    if (this.responseInterceptors.has(interceptor)) {
+      return;
+    }
+
+    const id = this.axios.interceptors.response.use(
+      interceptor.onResponse,
+      interceptor.onError,
+    );
+    this.responseInterceptors.set(interceptor, id);
+  }
+
+  public removeRequestInterceptor(interceptor: RequestInterceptor): void {
+    const id = this.requestInterceptors.get(interceptor);
+
+    if (id) {
+      this.axios.interceptors.request.eject(id);
+    }
+  }
+
+  public removeResponseInterceptor(interceptor: ResponseInterceptor): void {
+    const id = this.responseInterceptors.get(interceptor);
+
+    if (id) {
+      this.axios.interceptors.response.eject(id);
+    }
   }
 
   public setAuthToken(token: string) {

@@ -1,4 +1,5 @@
 import { PropsWithChildren, Ref, forwardRef } from 'react';
+// eslint-disable-next-line no-restricted-imports
 import { Pressable, PressableProps, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,

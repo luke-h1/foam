@@ -26,9 +26,11 @@ export function useFeatures() {
   const [features, setFeatures] = useState<Feature[]>(allowedFeatures);
 
   useEffect(() => {
-    const storedFeatures = storageService.get<string>('foam_stacked_cards');
+    const storedFeatures =
+      storageService.getString<string>('foam_stacked_cards');
 
     if (storedFeatures) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       setFeatures(JSON.parse(storedFeatures));
     }
   }, []);

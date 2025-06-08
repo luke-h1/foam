@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-alert */
 import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';

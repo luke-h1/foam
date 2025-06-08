@@ -1,3 +1,7 @@
+/* eslint-disable no-restricted-imports */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable global-require */
@@ -7,7 +11,7 @@ import 'react-native-gesture-handler/jestSetup';
 import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
-import mockFile from './mockFile';
+import mockFile from '../__mocks__/mockFile';
 import 'cross-fetch/polyfill';
 import 'core-js';
 import '@app/hooks/useAppNavigation';

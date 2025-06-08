@@ -11,7 +11,7 @@ export function useStreamerImage(login: string, deps: DependencyList) {
   };
 
   useEffect(() => {
-    fetchStreamerProfilePicture();
+    void fetchStreamerProfilePicture();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deps]);
 

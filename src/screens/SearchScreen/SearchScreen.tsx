@@ -1,12 +1,17 @@
 import {
+  Button,
   DismissableKeyboard,
   PressableArea,
   Screen,
   SearchHistory,
   TextField,
-  Typography,
 } from '@app/components';
-import { useAppNavigation, useDebouncedCallback, useHeader } from '@app/hooks';
+import {
+  useAppNavigation,
+  useDebouncedCallback,
+  useHeader,
+  useDebouncedEffect,
+} from '@app/hooks';
 import {
   twitchService,
   SearchChannelResponse,
@@ -15,13 +20,7 @@ import {
 import Entypo from '@expo/vector-icons/build/Entypo';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useEffect, useRef, useState } from 'react';
-import {
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
-  TextInput as NativeTextInput,
-  View,
-} from 'react-native';
+import { FlatList, TextInput as NativeTextInput } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
 import { StreamerCard } from './components';
@@ -33,7 +32,7 @@ interface SearchHistoryItem {
 
 export function SearchScreen() {
   const { navigate } = useAppNavigation();
-  const { styles } = useStyles(stylesheet);
+  const { styles, theme } = useStyles(stylesheet);
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
@@ -41,34 +40,34 @@ export function SearchScreen() {
     [],
   );
 
-  ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+  void ScreenOrientation.lockAsync(
+    ScreenOrientation.OrientationLock.PORTRAIT_UP,
+  );
 
   useHeader({
     title: 'Search',
   });
 
-  const fetchSearchHistory = async () => {
+  const fetchSearchHistory = () => {
     const history =
-      storageService.get<SearchHistoryItem[]>('previous_searches');
+      storageService.getString<SearchHistoryItem[]>('previous_searches');
 
-    history?.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-    setSearchHistory(history as SearchHistoryItem[]);
+    if (history) {
+      history?.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+      setSearchHistory(history);
+    }
   };
 
-  useEffect(() => {
-    fetchSearchHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useDebouncedEffect(fetchSearchHistory, 300);
 
   useEffect(() => {
-    setTimeout(() => {
-      fetchSearchHistory();
-    }, 350);
+    void fetchSearchHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
       setSearchResults([]);
@@ -80,30 +79,35 @@ export function SearchScreen() {
     setSearchResults(results);
 
     const prevSearches =
-      storageService.get<SearchHistoryItem[]>('previous_searches');
+      storageService.getString<SearchHistoryItem[]>('previous_searches') ?? [];
 
-    // Check if the query already exists in the history
-    const existingIndex = prevSearches?.findIndex(item => item.query === value);
+    /**
+     * Check to see if we have an existing search term
+     */
+    const existingQuery = prevSearches.findIndex(item => item.query === value);
 
-    if (existingIndex !== -1) {
-      // Update the date of the existing query
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      prevSearches[existingIndex].date = new Date().toISOString();
+    if (existingQuery !== -1) {
+      /**
+       * If we have an existing query
+       * update the date so we can order it
+       */
+      if (prevSearches[existingQuery]) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        prevSearches[existingQuery].date = new Date().toISOString();
+      }
     } else {
-      // Add the new query to the history
-      prevSearches?.push({
+      /**
+       * New query - add it to the list of results
+       */
+      prevSearches.push({
         query: value,
         date: new Date().toISOString(),
       });
     }
 
     storageService.set('previous_searches', prevSearches);
-
-    const prevSearchResults =
-      storageService.get<SearchHistoryItem[]>('previous_searches');
-
-    setSearchHistory(prevSearchResults as SearchHistoryItem[]);
+    setSearchHistory(prevSearches);
   }, 400);
 
   // eslint-disable-next-line no-shadow
@@ -113,20 +117,19 @@ export function SearchScreen() {
   };
 
   return (
-    <Screen safeAreaEdges={['top', 'bottom', 'left']} preset="scroll">
-      <View style={styles.container}>
-        <DismissableKeyboard>
-          <ScrollView
-            contentContainerStyle={{
-              flexGrow: 1,
-            }}
-          >
+    <Screen safeAreaEdges={['top', 'bottom', 'left']}>
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        data={searchResults}
+        ListHeaderComponent={
+          <DismissableKeyboard>
             <TextField
               ref={ref}
               placeholder="Find a channel"
               value={query}
               autoComplete="off"
               autoCorrect={false}
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
               onChangeText={async text => handleQuery(text)}
               // eslint-disable-next-line react/no-unstable-nested-components
               RightAccessory={() =>
@@ -135,7 +138,7 @@ export function SearchScreen() {
                     onPress={() => {
                       setQuery?.('');
                       setSearchResults([]);
-                      fetchSearchHistory();
+                      void fetchSearchHistory();
                     }}
                     hitSlop={30}
                   >
@@ -145,13 +148,13 @@ export function SearchScreen() {
                       style={{
                         marginRight: 6,
                       }}
-                      // color={colors.border}
+                      color={theme.colors.border}
                     />
                   </PressableArea>
                 ) : (
                   <Feather
                     name="search"
-                    // color={colors.border}
+                    color={theme.colors.border}
                     size={22}
                     style={{
                       marginRight: 6,
@@ -160,42 +163,24 @@ export function SearchScreen() {
                 )
               }
             />
-          </ScrollView>
-        </DismissableKeyboard>
-      </View>
-
-      <View style={styles.searchResultsWrapper}>
-        {searchResults.length > 0 && (
-          <>
-            <Typography
-              style={{
-                marginBottom: 5,
-              }}
-            >
-              Channels
-            </Typography>
-            <FlatList
-              data={searchResults}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => {
-                    navigate('Streams', {
-                      screen: 'LiveStream',
-                      params: {
-                        id: item.broadcaster_login,
-                      },
-                    });
-                  }}
-                  style={styles.list}
-                >
-                  <StreamerCard stream={item} />
-                </TouchableOpacity>
-              )}
-            />
-          </>
+          </DismissableKeyboard>
+        }
+        renderItem={({ item }) => (
+          <Button
+            onPress={() => {
+              navigate('Streams', {
+                screen: 'LiveStream',
+                params: {
+                  id: item.broadcaster_login,
+                },
+              });
+            }}
+            style={styles.list}
+          >
+            <StreamerCard stream={item} />
+          </Button>
         )}
-      </View>
-
+      />
       {searchHistory && (
         <SearchHistory
           results={searchHistory.map(item => item.query)}
@@ -204,7 +189,7 @@ export function SearchScreen() {
             storageService.remove('previous_searches');
           }}
           onSelectItem={q => {
-            handleQuery(q);
+            void handleQuery(q);
           }}
           onClearItem={id => {
             const newHistory = searchHistory.filter(item => item.query !== id);
@@ -218,13 +203,9 @@ export function SearchScreen() {
 }
 
 const stylesheet = createStyleSheet(theme => ({
-  container: {
-    flexDirection: 'row',
-  },
   searchResultsWrapper: {
     marginTop: theme.spacing.md,
     marginLeft: theme.spacing.md,
-    padding: theme.spacing.lg,
   },
   list: {
     flexDirection: 'row',

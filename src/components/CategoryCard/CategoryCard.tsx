@@ -1,9 +1,9 @@
 import { useAppNavigation } from '@app/hooks';
 import { Category } from '@app/services/twitchService';
-import { Image } from 'expo-image';
 import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
+import { Image } from '../Image';
 import { Typography } from '../Typography';
 
 interface Props {
@@ -29,11 +29,9 @@ export function CategoryCard({ category }: Props) {
     >
       <View style={styles.wrapper}>
         <Image
-          source={{
-            uri: category.box_art_url
-              .replace('{width}', '200')
-              .replace('{height}', '250'),
-          }}
+          source={category.box_art_url
+            .replace('{width}', '200')
+            .replace('{height}', '250')}
           style={styles.image}
           contentFit="contain"
         />

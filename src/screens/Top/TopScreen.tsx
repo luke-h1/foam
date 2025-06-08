@@ -1,9 +1,9 @@
-import { Typography } from '@app/components';
+import { Button, Typography } from '@app/components';
 import { useAuthContext } from '@app/context';
 import { useHeader } from '@app/hooks';
 import { BackButton } from '@app/navigators';
 import React, { useState } from 'react';
-import { useWindowDimensions, View, TouchableOpacity } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
@@ -48,7 +48,7 @@ export function TopScreen() {
         <View style={styles.tabContainer}>
           {props.navigationState.routes.map((route, i) => {
             return (
-              <TouchableOpacity
+              <Button
                 key={route.key}
                 onPress={() => {
                   props.jumpTo(route.key);
@@ -62,7 +62,7 @@ export function TopScreen() {
                 ]}
               >
                 <Typography>{route.title}</Typography>
-              </TouchableOpacity>
+              </Button>
             );
           })}
         </View>

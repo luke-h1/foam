@@ -1,5 +1,6 @@
 import {
   EmptyState,
+  Image,
   LiveStreamCard,
   Screen,
   ScrollToTop,
@@ -12,7 +13,6 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { Stream, twitchService } from '@app/services';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { Image } from 'expo-image';
 import { FC, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
@@ -79,6 +79,7 @@ export const CategoryScreen: FC<
       <EmptyState
         content="Failed to fetch categories"
         heading="No Categories"
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetch()}
       />
     );
@@ -94,6 +95,7 @@ export const CategoryScreen: FC<
 
   if (allStreams.length === 0) {
     return (
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
     );
   }
@@ -124,11 +126,11 @@ export const CategoryScreen: FC<
   const renderHeader = () => (
     <View style={styles.headerContent}>
       <Image
-        source={{
-          uri: category?.box_art_url
+        source={
+          category?.box_art_url
             .replace('{width}', '600')
-            .replace('{height}', '1080'),
-        }}
+            .replace('{height}', '1080') ?? ''
+        }
         style={styles.categoryLogo}
       />
       <Typography style={styles.categoryTitle}>{category?.name}</Typography>
@@ -143,6 +145,7 @@ export const CategoryScreen: FC<
         keyExtractor={item => item.id}
         renderItem={({ item }) => <LiveStreamCard stream={item} />}
         ListHeaderComponent={renderHeader}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.2}
         refreshing={refreshing}
@@ -150,6 +153,7 @@ export const CategoryScreen: FC<
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onRefresh={onRefresh}
             tintColor="white"
             colors={['white']}

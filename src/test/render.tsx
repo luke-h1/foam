@@ -29,11 +29,11 @@ export default function render(
   options?: Omit<RenderOptions, 'queries'>,
 ): RenderResult {
   return {
-    ...(baseRender(ui, {
+    ...baseRender(ui, {
       wrapper: ({ children }: { children: ReactNode }) => (
         <DefaultWrapper>{children}</DefaultWrapper>
       ),
       ...options,
-    }) as RenderResult),
+    }),
   };
 }

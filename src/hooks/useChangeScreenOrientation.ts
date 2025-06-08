@@ -21,6 +21,6 @@ export const useChangeScreenOrientation = () => {
       };
     }
 
-    changeScreenOrientation();
+    void changeScreenOrientation();
   }, []);
 };

@@ -1,85 +1,105 @@
-import {
-  TwitchBadgesList,
-  TwitchBadgesResponse,
-} from '../utils/third-party/types';
+import { OpenStringUnion } from '@app/utils';
+import { twitchApi } from './api';
 
-interface FormattedBadgeList {
+interface TwitchBadgeVersion {
   id: string;
-  versionId: string;
-  channelId: string | null;
+  image_url_1x: string;
+  image_url_2x: string;
+  image_url_4x: string;
   title: string;
   description: string;
-  clickAction: string;
-  clickUrl: string;
-  images: string[]; // 1x, 2x, 4x
+  click_action: string;
+  click_url: string | null;
 }
 
-const formatTwitchBadgesList = (
-  data: TwitchBadgesResponse,
-  channelId: string | null,
-): FormattedBadgeList[] => {
-  return data.flatMap(c =>
-    c.versions.map(version => ({
-      id: version.id,
-      versionId: version.id,
-      channelId,
-      title: version.title,
-      description: version.description,
-      clickAction: version.clickAction || '',
-      clickUrl: version.clickUrl || '',
-      images: [
-        version.image_url_1x,
-        version.image_url_2x,
-        version.image_url_4x,
-      ],
-    })),
-  );
-};
+interface TwitchBadge {
+  set_id: OpenStringUnion<'subscriber' | 'bits'>;
+  versions: TwitchBadgeVersion[];
+}
 
-export type UnttvBadgesResponse = {
+export interface SanitisedBadgeSet {
   id: string;
-  versions: {
-    id: string;
-    title: string;
-    description: string;
-    clickAction: string;
-    clickUrl: string;
-    image_url_1x: string;
-    image_url_2x: string;
-    image_url_4x: string;
-  }[];
-}[];
+  url: string;
+  type: OpenStringUnion<
+    | 'Twitch Channel Badge'
+    | 'Twitch Subscriber Badge'
+    | 'Twitch Bit Badge'
+    | 'Twitch Global Badge'
+    | 'FFZ Badge'
+    | 'FFZ Channel Badge'
+  >;
+  title: string;
 
-// TODO: move this to our own service
-const BASE_URL = 'https://unttv.vercel.app';
+  color?: string;
+  owner_username?: string;
+  /**
+   * The set ID
+   */
+  set: string;
+}
 
 export const twitchBadgeService = {
-  getChannelBadges: async (
-    channelId: string | null,
-  ): Promise<TwitchBadgesList> => {
-    if (!channelId) {
-      return [];
-    }
-    try {
-      const resp = await fetch(`${BASE_URL}/badges/channel/${channelId}`);
-      if (!resp.ok) throw Error();
-      const data = (await resp.json()) as UnttvBadgesResponse;
-      return formatTwitchBadgesList(data, channelId);
+  listSanitisedChannelBadges: async (
+    channelId: string,
+  ): Promise<SanitisedBadgeSet[]> => {
+    const result = await twitchApi.get<{ data: TwitchBadge[] }>(
+      '/chat/badges',
+      {
+        params: {
+          broadcaster_id: channelId,
+        },
+      },
+    );
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      return [];
-    }
+    const sanitisedBadges: SanitisedBadgeSet[] = [];
+
+    result.data.forEach(badgeSet => {
+      if (badgeSet.set_id === 'bits') {
+        badgeSet.versions.forEach((badge: TwitchBadgeVersion) => {
+          sanitisedBadges.push({
+            id: badge.id,
+            url: badge.image_url_4x,
+            type: 'Twitch Bit Badge',
+            title: `Cheer ${badge.id}`,
+            set: badgeSet.set_id,
+          });
+        });
+      }
+      if (badgeSet.set_id === 'subscriber') {
+        badgeSet.versions.forEach((badge: TwitchBadgeVersion) => {
+          sanitisedBadges.push({
+            id: badge.id,
+            url: badge.image_url_4x,
+            type: 'Twitch Subscriber Badge',
+            title: badge.title,
+            set: badgeSet.set_id,
+          });
+        });
+      }
+    });
+    return sanitisedBadges;
   },
-  getTwitchGlobalBadges: async (): Promise<TwitchBadgesList> => {
-    try {
-      const resp = await fetch(`${BASE_URL}/badges/global`);
-      if (!resp.ok) throw Error();
-      const data = (await resp.json()) as UnttvBadgesResponse;
-      return formatTwitchBadgesList(data, null);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      return [];
-    }
+  listSanitisedGlobalBadges: async (): Promise<SanitisedBadgeSet[]> => {
+    const result = await twitchApi.get<{ data: TwitchBadge[] }>(
+      '/chat/badges/global',
+    );
+
+    const sanitisedBadges: SanitisedBadgeSet[] = [];
+
+    result.data.forEach(badgeSet => {
+      if (Object.keys(badgeSet).length > 0) {
+        badgeSet.versions.forEach(version => {
+          sanitisedBadges.push({
+            id: `${badgeSet.set_id}_${version.id}`, // set set_id as id
+            url: version.image_url_4x,
+            title: version.title,
+            type: 'Twitch Global Badge',
+            set: badgeSet.set_id,
+          });
+        });
+      }
+    });
+
+    return sanitisedBadges;
   },
 } as const;

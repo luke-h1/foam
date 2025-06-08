@@ -22,6 +22,14 @@ exports[`LiveStreamCard renders correctly 1`] = `
   accessible={true}
   collapsable={false}
   focusable={true}
+  hitSlop={
+    {
+      "bottom": 10,
+      "left": 10,
+      "right": 10,
+      "top": 10,
+    }
+  }
   onClick={[Function]}
   onResponderGrant={[Function]}
   onResponderMove={[Function]}
@@ -54,38 +62,54 @@ exports[`LiveStreamCard renders correctly 1`] = `
         }
       }
     >
-      <ViewManagerAdapter_ExpoImage
-        containerViewRef={"[React.ref]"}
-        contentFit="cover"
-        contentPosition={
-          {
-            "left": "50%",
-            "top": "50%",
-          }
-        }
-        height={100}
-        nativeViewRef={"[React.ref]"}
-        onError={[Function]}
-        onLoad={[Function]}
-        onLoadStart={[Function]}
-        onProgress={[Function]}
-        placeholder={[]}
-        source={
+      <View
+        style={
           [
             {
-              "uri": "https://example.com/thumbnail.jpg",
+              "position": "relative",
             },
+            undefined,
           ]
         }
-        style={
-          {
-            "height": 100,
-            "width": 150,
+      >
+        <ViewManagerAdapter_ExpoImage
+          containerViewRef={"[React.ref]"}
+          contentFit="cover"
+          contentPosition={
+            {
+              "left": "50%",
+              "top": "50%",
+            }
           }
-        }
-        transition={null}
-        width={150}
-      />
+          height={100}
+          nativeViewRef={"[React.ref]"}
+          onError={[Function]}
+          onLoad={[Function]}
+          onLoadStart={[Function]}
+          onProgress={[Function]}
+          placeholder={[]}
+          placeholderContentFit="cover"
+          source={
+            [
+              {
+                "uri": "https://example.com/thumbnail.jpg",
+              },
+            ]
+          }
+          style={
+            {
+              "height": 100,
+              "width": 150,
+            }
+          }
+          transition={
+            {
+              "duration": 500,
+            }
+          }
+          width={150}
+        />
+      </View>
       <View
         style={
           {
@@ -118,13 +142,11 @@ exports[`LiveStreamCard renders correctly 1`] = `
               {
                 "color": "rgba(255, 255, 255, 0.8)",
                 "fontFamily": "Inter",
-                "fontSize": 16,
+                "fontSize": 10,
                 "fontWeight": 400,
               },
               {
                 "color": "white",
-                "fontSize": 12,
-                "fontWeight": "bold",
               },
             ]
           }
@@ -148,7 +170,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
             {
               "color": "rgba(255, 255, 255, 0.8)",
               "fontFamily": "Inter",
-              "fontSize": 14,
+              "fontSize": 12,
               "fontWeight": 600,
             },
             undefined,
@@ -173,57 +195,72 @@ exports[`LiveStreamCard renders correctly 1`] = `
             }
           }
         >
-          <ViewManagerAdapter_ExpoImage
-            borderRadius={10}
-            containerViewRef={"[React.ref]"}
-            contentFit="cover"
-            contentPosition={
-              {
-                "left": "50%",
-                "top": "50%",
-              }
-            }
-            height={20}
-            marginRight={2}
-            nativeViewRef={"[React.ref]"}
-            onError={[Function]}
-            onLoad={[Function]}
-            onLoadStart={[Function]}
-            onProgress={[Function]}
-            placeholder={[]}
-            source={
+          <View
+            style={
               [
                 {
-                  "uri": "https://example.com/avatar.jpg",
+                  "position": "relative",
                 },
+                undefined,
               ]
             }
-            style={
-              {
-                "borderRadius": 10,
-                "height": 20,
-                "marginRight": 2,
-                "width": 20,
+          >
+            <ViewManagerAdapter_ExpoImage
+              borderRadius={10}
+              containerViewRef={"[React.ref]"}
+              contentFit="cover"
+              contentPosition={
+                {
+                  "left": "50%",
+                  "top": "50%",
+                }
               }
-            }
-            testID="LiveStreamCard-avatar"
-            transition={null}
-            width={20}
-          />
+              height={20}
+              marginRight={2}
+              nativeViewRef={"[React.ref]"}
+              onError={[Function]}
+              onLoad={[Function]}
+              onLoadStart={[Function]}
+              onProgress={[Function]}
+              placeholder={[]}
+              placeholderContentFit="cover"
+              source={
+                [
+                  {
+                    "uri": "https://example.com/avatar.jpg",
+                  },
+                ]
+              }
+              style={
+                {
+                  "borderRadius": 10,
+                  "height": 20,
+                  "marginRight": 2,
+                  "width": 20,
+                }
+              }
+              testID="LiveStreamCard-avatar"
+              transition={
+                {
+                  "duration": 500,
+                }
+              }
+              width={20}
+            />
+          </View>
           <Text
             style={
               [
                 {
                   "color": "rgba(255, 255, 255, 0.8)",
                   "fontFamily": "Inter",
-                  "fontSize": 16,
+                  "fontSize": 12,
                   "fontWeight": 400,
                 },
                 undefined,
               ]
             }
           >
-             
             Test user
           </Text>
         </View>
@@ -233,7 +270,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
               {
                 "color": "rgba(255, 255, 255, 0.8)",
                 "fontFamily": "Inter",
-                "fontSize": 12,
+                "fontSize": 10,
                 "fontWeight": 400,
               },
               undefined,
@@ -250,7 +287,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
             {
               "color": "rgba(255, 255, 255, 0.8)",
               "fontFamily": "Inter",
-              "fontSize": 12,
+              "fontSize": 10,
               "fontWeight": 400,
             },
             undefined,

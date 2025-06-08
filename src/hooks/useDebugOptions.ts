@@ -8,18 +8,21 @@ type DebugOptions = {
 export function useDebugOptions() {
   const [debugOptions, setDebugOptions] = useState<DebugOptions>({});
 
-  const fetchDebugOptions = async () => {
-    const result = await storageService.multiGet<[boolean]>([
-      'ReactQueryDebug',
-    ]);
-    const options = result.reduce((acc, [key, value]) => {
-      acc[key as AllowedKey] = { enabled: value === true };
-      return acc;
-    }, {} as DebugOptions);
+  const fetchDebugOptions = () => {
+    const keys: AllowedKey[] = ['ReactQueryDebug'];
+    const options: DebugOptions = {};
+
+    keys.forEach(key => {
+      const value = storageService.getString<boolean>(key);
+      options[key] = { enabled: value === true };
+    });
     setDebugOptions(options);
   };
 
   useEffect(() => {
+    // eslint-disable-next-line no-void
+    void storageService.clearExpired();
+
     fetchDebugOptions();
 
     const handleStorageChange = () => {

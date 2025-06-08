@@ -19,7 +19,7 @@ import { toast } from 'sonner-native';
 
 const BuildFooter = () => (
   <View style={{ marginBottom: 12 }}>
-    <Typography color="border">
+    <Typography color="text">
       Version: {Application.nativeApplicationVersion ?? ''} (
       {Application.nativeBuildVersion ?? ''})
     </Typography>
@@ -27,6 +27,7 @@ const BuildFooter = () => (
 );
 
 export function SettingsScreen() {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const { navigate, goBack, addListener } = useAppNavigation();
 
   useHeader({
@@ -34,6 +35,7 @@ export function SettingsScreen() {
     leftIcon: 'arrow-left',
     onLeftPress: () => goBack(),
   });
+
   const { styles, theme } = useStyles(stylesheet);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const { logout, user } = useAuthContext();
@@ -160,6 +162,13 @@ export function SettingsScreen() {
           onPress: () => navigate('Other', { screen: 'About' }),
         },
         {
+          title: 'Open Source Licenses',
+          iconName: '',
+          description: 'Licenses',
+          onPress: () => navigate('Other', { screen: 'Licenses' }),
+        },
+
+        {
           title: 'Changelog',
           description: 'release notes',
           iconName: '',
@@ -183,7 +192,7 @@ export function SettingsScreen() {
           title: 'My stream',
           description: 'View your stream',
           iconName: 'video',
-          onPress: async () => {
+          onPress: () => {
             bottomSheetModalRef.current?.dismiss();
             navigation.navigate('Streams', {
               screen: 'LiveStream',
@@ -197,7 +206,7 @@ export function SettingsScreen() {
           title: 'My Profile',
           iconName: 'user',
           description: 'View your profile',
-          onPress: async () => {
+          onPress: () => {
             bottomSheetModalRef.current?.dismiss();
             navigation.navigate('Streams', {
               screen: 'StreamerProfile',
@@ -211,7 +220,7 @@ export function SettingsScreen() {
           title: 'Blocked users',
           description: 'View blocked users',
           iconName: 'user-x',
-          onPress: async () => {
+          onPress: () => {
             bottomSheetModalRef.current?.dismiss();
             navigation.navigate('Preferences', {
               screen: 'BlockedUsers',
@@ -222,9 +231,9 @@ export function SettingsScreen() {
           title: 'Logout',
           iconName: 'log-out',
           description: 'Log out of foam',
-          onPress: async () => {
+          onPress: () => {
             bottomSheetModalRef.current?.dismiss();
-            await logout();
+            void logout();
             toast.info('Logged out');
             navigation.navigate('Tabs', {
               screen: 'Top',
@@ -238,34 +247,31 @@ export function SettingsScreen() {
   return (
     <Screen preset="scroll">
       <NavigationSectionList sections={sections} footer={<BuildFooter />} />
-      <SafeAreaView>
-        <BottomSheetModal
-          ref={bottomSheetModalRef}
-          index={1}
-          snapPoints={snapPoints}
-          handleStyle={{ opacity: 0.95 }}
-          backgroundStyle={styles.bottomSheet}
-          handleComponent={ModalHandle}
-        >
-          <SafeAreaView style={styles.safeArea}>
-            <BottomSheetSectionList
-              sections={bottomSheetSections}
-              keyExtractor={(item, index) => item.title + index}
-              renderItem={({ item }) => (
-                <Button style={styles.btn} onPress={item.onPress}>
-                  <Typography style={styles.btnText}>{item.title}</Typography>
-                  <Icon icon="arrow-right" />
-                </Button>
-              )}
-              contentContainerStyle={{
-                paddingHorizontal: theme.spacing.md,
-                backgroundColor: theme.colors.borderFaint,
-              }}
-              keyboardShouldPersistTaps="handled"
-            />
-          </SafeAreaView>
-        </BottomSheetModal>
-      </SafeAreaView>
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={1}
+        snapPoints={snapPoints}
+        backgroundStyle={styles.bottomSheet}
+        handleComponent={ModalHandle}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <BottomSheetSectionList
+            sections={bottomSheetSections}
+            keyExtractor={(item, index) => item.title + index}
+            renderItem={({ item }) => (
+              <Button style={styles.btn} onPress={item.onPress}>
+                <Typography style={styles.btnText}>{item.title}</Typography>
+                <Icon icon="arrow-right" />
+              </Button>
+            )}
+            contentContainerStyle={{
+              paddingHorizontal: theme.spacing.md,
+              backgroundColor: theme.colors.borderFaint,
+            }}
+            keyboardShouldPersistTaps="handled"
+          />
+        </SafeAreaView>
+      </BottomSheetModal>
     </Screen>
   );
 }
@@ -295,7 +301,6 @@ const stylesheet = createStyleSheet(theme => ({
   sectionHeader: {
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    fontWeight: 'bold',
   },
   bottomSheet: {
     backgroundColor: theme.colors.borderFaint,

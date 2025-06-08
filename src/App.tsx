@@ -39,7 +39,7 @@ import { ErrorBoundary } from './screens';
 import { twitchApi } from './services/api';
 import './styles/unistyles';
 import * as storage from './utils/async-storage/async-storage';
-import { deleteTokens } from './utils/deleteTokens';
+import { deleteTokens } from './utils/authentication/deleteTokens';
 
 Sentry.init({
   dsn: 'https://c66140f9c8c6c72a91e15582f3086de5@o536134.ingest.us.sentry.io/4508831072780288',
@@ -81,7 +81,7 @@ function App(props: AppProps) {
 
   if (__DEV__) {
     LogBox.ignoreAllLogs();
-    activateKeepAwakeAsync();
+    void activateKeepAwakeAsync();
   }
 
   const {
@@ -101,6 +101,7 @@ function App(props: AppProps) {
   });
 
   useLayoutEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     setTimeout(hideSplashScreen, 500);
   });
 
@@ -113,7 +114,7 @@ function App(props: AppProps) {
 
   const shouldDelete = false;
   if (shouldDelete) {
-    deleteTokens();
+    void deleteTokens();
     twitchApi.removeAuthToken();
   }
 

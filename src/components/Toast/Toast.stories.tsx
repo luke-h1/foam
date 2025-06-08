@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { View, Button } from 'react-native';
+import { View } from 'react-native';
 import RNToast from 'react-native-toast-message';
+import { Button } from '../Button';
+import { Typography } from '../Typography';
 import { Toast } from './Toast';
 
 const meta = {
@@ -23,7 +25,6 @@ export const Default: Story = {
   render: () => (
     <>
       <Button
-        title="Show Toast"
         onPress={() => {
           RNToast.show({
             type: 'success',
@@ -31,7 +32,9 @@ export const Default: Story = {
             text2: 'This is a toast message',
           });
         }}
-      />
+      >
+        <Typography>Show toast</Typography>
+      </Button>
       <Toast />
     </>
   ),

@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { Keyboard } from 'react-native';
+import { Button } from '../Button';
 
 interface Props {
   children: ReactNode;
@@ -7,8 +8,8 @@ interface Props {
 
 export function DismissableKeyboard({ children }: Props) {
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <Button onPress={Keyboard.dismiss} accessible={false}>
       {children}
-    </TouchableWithoutFeedback>
+    </Button>
   );
 }
