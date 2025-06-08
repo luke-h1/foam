@@ -1,42 +1,73 @@
-import type { HelixChatBadgeSet } from '@twurple/api';
+import { twitchApi } from './api';
+import { SanitisiedEmoteSet } from './seventTvService';
+import { PaginatedList, twitchService } from './twitchService';
 
-import { TwitchBadgesResponse } from '../utils/third-party/types';
-import { twurple } from '../utils/third-party/util/twurple';
+interface TwitchEmote {
+  id: `emotesv2_${string}`;
+  name: string;
+  emote_type: 'follower' | 'subscriptions';
+  emote_set_id: string;
+  owner_id: string;
+  format: ['static' | 'animated'];
+  scale: ['1.0', '2.0', '3.0'];
+  theme_mode: ['light', 'dark'];
+}
 
-const formatBadgesResponse = (badges: HelixChatBadgeSet[]) => {
-  return badges.map(badge => ({
-    id: badge.id,
-    versions: badge.versions.map(version => ({
-      id: version.id,
-      title: version.title,
-      description: version.description,
-      clickAction: version.clickAction,
-      clickUrl: version.clickUrl,
-      image_url_1x: version.getImageUrl(1),
-      image_url_2x: version.getImageUrl(2),
-      image_url_4x: version.getImageUrl(4),
-    })),
-  }));
-};
+interface TwitchGlobalEmote {
+  id: string;
+  name: string;
+  images: {
+    url_1x: string;
+    url_2x: string;
+    url_4x: string;
+  };
+  format: ['static' | 'animated'];
+  scale: ['1.0', '2.0', '3.0'];
+  theme_mode: ['light', 'dark'];
+}
 
 export const twitchEmoteService = {
-  listChannelBadges: async (
-    channelId: string | null,
-  ): Promise<TwitchBadgesResponse> => {
-    if (!channelId) {
-      return [];
-    }
+  getChannelEmotes: async (
+    channelId: string,
+  ): Promise<SanitisiedEmoteSet[]> => {
+    const result = await twitchApi.get<
+      PaginatedList<TwitchEmote & { template: string }>
+    >('/chat/emotes', {
+      params: {
+        broadcaster_id: channelId,
+      },
+    });
 
-    const badges = await twurple.chat.getChannelBadges(channelId); // TODO: move to lambda + proxy
+    const broadcaster = await twitchService.getUser(undefined, channelId);
 
-    const body = formatBadgesResponse(badges);
+    const sanitisedSet = result.data.map<SanitisiedEmoteSet>(emote => ({
+      name: emote.name,
+      id: emote.id,
+      url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
+      emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
+      creator: broadcaster.display_name,
+      original_name: emote.name,
+      site: 'Twitch Channel',
+    }));
 
-    return body as TwitchBadgesResponse;
+    return sanitisedSet;
   },
-  listGlobalEmotes: async (): Promise<TwitchBadgesResponse> => {
-    const badges = await twurple.chat.getGlobalBadges(); // TODO: move to lambda + proxy
 
-    const body = formatBadgesResponse(badges);
-    return body as TwitchBadgesResponse;
+  getGlobalEmotes: async (): Promise<SanitisiedEmoteSet[]> => {
+    const result = await twitchApi.get<{ data: TwitchGlobalEmote[] }>(
+      '/chat/emotes/global',
+    );
+
+    const sanitisedSet = result.data.map<SanitisiedEmoteSet>(emote => ({
+      name: emote.name,
+      id: emote.id,
+      url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
+      emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
+      creator: null,
+      original_name: emote.name,
+      site: 'Twitch Global',
+    }));
+
+    return sanitisedSet;
   },
 } as const;

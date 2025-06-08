@@ -6,7 +6,7 @@ export function AuthLoadingScreen() {
   const { populateAuthState, authState } = useAuthContext();
   const { navigate } = useAppNavigation();
   useEffect(() => {
-    populateAuthState().then(() => {
+    void populateAuthState().then(() => {
       if (authState?.isLoggedIn) {
         navigate('Tabs', {
           screen: 'Following',

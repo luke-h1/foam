@@ -6,6 +6,7 @@ import {
   UserInfoResponse,
   twitchService,
 } from '@app/services/twitchService';
+import { logger } from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import {
@@ -112,19 +113,27 @@ export const AuthContextProvider = ({
       );
       twitchApi.setAuthToken(result.access_token);
     } catch (e) {
-      console.error('Failed to get anon auth', e);
+      logger.auth.error('Failed to get anon auth', e);
       // eslint-disable-next-line no-useless-return
       return;
     }
   };
 
   const doAuth = async (token: TokenResponse) => {
-    const isValidToken = await twitchService.validateToken(token.accessToken);
+    try {
+      const isValidToken = await twitchService.validateToken(token.accessToken);
 
-    if (!isValidToken) {
-      // token isn't valid, do anon auth
-      await doAnonAuth();
-      return;
+      if (!isValidToken) {
+        // token isn't valid, do anon auth
+        await SecureStore.deleteItemAsync(storageKeys.anon);
+        await SecureStore.deleteItemAsync(storageKeys.user);
+        await doAnonAuth();
+        return;
+      }
+    } catch (error) {
+      logger.auth.warn('validateToken failed. Clearing tokens', error);
+      await SecureStore.deleteItemAsync(storageKeys.anon);
+      await SecureStore.deleteItemAsync(storageKeys.user);
     }
 
     setState({
@@ -165,9 +174,9 @@ export const AuthContextProvider = ({
       return null;
     }
 
-    console.log('tokenType ->', response.authentication.tokenType);
-    console.log('expiresIn ->', response.authentication.expiresIn);
-    console.log('accecssToken ->', response.authentication.accessToken);
+    // console.log('tokenType ->', response.authentication.tokenType);
+    // console.log('expiresIn ->', response.authentication.expiresIn);
+    // console.log('accecssToken ->', response.authentication.accessToken);
 
     // we have succeeded
     setState({
@@ -250,7 +259,7 @@ export const AuthContextProvider = ({
   };
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       await populateAuthState();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

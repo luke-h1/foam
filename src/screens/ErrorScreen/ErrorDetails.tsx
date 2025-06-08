@@ -2,7 +2,7 @@ import { Button, Icon, Screen, Typography } from '@app/components';
 import { useHeader } from '@app/hooks';
 import { openLinkInBrowser } from '@app/utils';
 import React, { type ErrorInfo, useState } from 'react';
-import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
 export interface ErrorDetailsProps {
@@ -45,11 +45,11 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       >
         GitHub
       </Button>
-      <TouchableOpacity onPress={() => setShowStackTrace(!showStackTrace)}>
+      <Button onPress={() => setShowStackTrace(!showStackTrace)}>
         <Typography style={styles.toggleStackTrace}>
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
         </Typography>
-      </TouchableOpacity>
+      </Button>
       {showStackTrace && (
         <ScrollView
           style={styles.errorSection}

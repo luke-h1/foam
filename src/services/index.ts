@@ -1,6 +1,5 @@
 export * from './bttvBadgeService';
-export * from './bttvService';
-export * from './ffzBadgeService';
+export * from './bttvEmoteService';
 export * from './ffzService';
 export * from './seventTvService';
 export * from './storageService';

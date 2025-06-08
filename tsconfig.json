@@ -16,7 +16,11 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "jsx": "preserve",
-    "lib": ["dom", "DOM.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "DOM.iterable",
+      "esnext"
+    ],
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -27,10 +31,17 @@
     "noUnusedLocals": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["./src/*"]
+      "@app/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["src", "test", "App.js", "jest-setup/__mocks__"],
-  "moduleResolution": "node",
-  "exclude": ["node_modules", ".expo"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".expo"
+  ]
 }

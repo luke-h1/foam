@@ -1,5 +1,6 @@
 import { FontSize, FontWeight, ThemeColor } from '@app/styles';
 import { forwardRef, LegacyRef, ReactNode } from 'react';
+// eslint-disable-next-line no-restricted-imports
 import { Text, TextProps } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
@@ -12,8 +13,11 @@ export interface TypographyProps extends TextProps {
 
 export const typographyStyles = createStyleSheet(() => ({
   text: ({ fontWeight, fontSize, textColor }) => ({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     fontWeight,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     fontSize,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     color: textColor,
     fontFamily: 'Inter',
   }),

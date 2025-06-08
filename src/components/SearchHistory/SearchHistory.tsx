@@ -1,7 +1,8 @@
 import { Entypo } from '@expo/vector-icons';
 import React from 'react';
-import { View, FlatList, TouchableOpacity } from 'react-native';
+import { View, FlatList } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { Button } from '../Button';
 import { Typography } from '../Typography';
 
 interface Props {
@@ -21,27 +22,27 @@ export function SearchHistory({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Typography>Search History</Typography>
         {results.length > 0 && (
-          <TouchableOpacity onPress={onClearAll}>
-            <Typography style={styles.clearAll}>Clear All</Typography>
-          </TouchableOpacity>
+          <>
+            <Typography>Search History</Typography>
+            <Button onPress={onClearAll}>
+              <Typography style={styles.clearAll}>Clear All</Typography>
+            </Button>
+          </>
         )}
       </View>
       <FlatList<string>
         data={results}
         keyExtractor={item => item}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
-            <TouchableOpacity
-              style={styles.item}
-              onPress={() => onSelectItem(item)}
-            >
-              <Typography>{item}</Typography>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => onClearItem(item)}>
+            <Button style={styles.item} onPress={() => onSelectItem(item)}>
+              <Typography size="sm">{item}</Typography>
+            </Button>
+            <Button onPress={() => onClearItem(item)}>
               <Entypo name="cross" size={24} color={theme.colors.underline} />
-            </TouchableOpacity>
+            </Button>
           </View>
         )}
       />

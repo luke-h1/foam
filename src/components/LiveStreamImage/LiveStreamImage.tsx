@@ -1,6 +1,6 @@
-import { Image } from 'expo-image';
 import { View, ViewStyle } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { Image } from '../Image';
 
 interface Props {
   thumbnail?: string;
@@ -20,11 +20,9 @@ export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
         <Image
           testID="LiveStreamImage-image"
           contentFit="contain"
-          source={{
-            uri: thumbnail
-              .replace('{width}', '2560')
-              .replace('{height}', '1080'),
-          }}
+          source={thumbnail
+            .replace('{width}', '2560')
+            .replace('{height}', '1080')}
           style={styles.image}
           transition={animated ? 300 : 0}
         />

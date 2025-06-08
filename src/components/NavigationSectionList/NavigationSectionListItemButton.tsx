@@ -1,9 +1,9 @@
-import { Image } from 'expo-image';
 import { forwardRef, Ref } from 'react';
 import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { Icon } from '../Icon';
+import { Image } from '../Image';
 import { Typography } from '../Typography';
 import { SectionListItem } from './NavigationSectionList';
 
@@ -23,34 +23,27 @@ export const NavigationSectionListItemButton = forwardRef(
   ) => {
     const { styles, theme } = useStyles(stylesheet);
     return (
-      <>
-        <Button {...props} ref={ref} onPress={e => onPress?.(e)}>
-          <View style={styles.container}>
-            <View style={styles.contentWrapper}>
-              {icon && <Icon icon={icon} size={20} />}
-              {picture && <Image source={picture} style={styles.image} />}
-              <View style={styles.textWrapper}>
-                <Typography size="sm" style={styles.title}>
-                  {title}
-                </Typography>
-                <Typography
-                  size="xs"
-                  style={styles.description}
-                  color="foregroundNeutral"
-                >
-                  {description}
-                </Typography>
-              </View>
+      <Button {...props} ref={ref} onPress={e => onPress?.(e)}>
+        <View style={styles.container}>
+          <View style={styles.contentWrapper}>
+            {icon && <Icon icon={icon} size={20} />}
+            {picture && <Image source={picture} style={styles.image} />}
+            <View style={styles.textWrapper}>
+              <Typography size="sm" style={styles.title}>
+                {title}
+              </Typography>
+              <Typography
+                size="xs"
+                style={styles.description}
+                color="foregroundNeutral"
+              >
+                {description}
+              </Typography>
             </View>
-            <Icon
-              icon="arrow-right"
-              size={20}
-              color={theme.colors.borderFaint}
-            />
           </View>
-        </Button>
-        {/* <View style={styles.separator} /> */}
-      </>
+          <Icon icon="arrow-right" size={20} color={theme.colors.foreground} />
+        </View>
+      </Button>
     );
   },
 );

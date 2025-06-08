@@ -38,6 +38,7 @@ export async function saveString(key: string, value: string): Promise<boolean> {
 export async function load<T>(key: string): Promise<T | null> {
   try {
     const almostThere = await AsyncStorage.getItem(key);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return JSON.parse(almostThere ?? '');
   } catch {
     return null;

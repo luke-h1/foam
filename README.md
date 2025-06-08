@@ -70,20 +70,19 @@ You will then need to start the proxy server before you start up the app to prox
 Start the proxy server
 
 ```bash
-bun start:proxy
+bun run start:proxy
 ```
 
 Start the app
 
 ```bash
-bun start
+bun run ios
 ```
 
 Create a development build (if needed)
 
 ```bash
-bun run prebuild:ios
-bun run prebuild:android
+bun run prebuild
 ```
 
 ## Contributing

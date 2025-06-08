@@ -4,9 +4,6 @@ import type { AppIconBadgeConfig } from 'app-icon-badge/types';
 import fs from 'fs';
 import path from 'path';
 
-// @todo luke-h1:
-// setup prod images ✅
-
 interface AppVariantConfig {
   name: string;
   androidPackageName: string;
@@ -67,7 +64,7 @@ const googleServicesExist = fs.existsSync(
 );
 
 const appIconBadgeConfig: AppIconBadgeConfig = {
-  enabled: true,
+  enabled: variant !== 'production',
   badges: [
     {
       text: variant,

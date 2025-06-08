@@ -1,29 +1,23 @@
-import { View, Animated, Easing } from 'react-native';
+import { View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
 export function Spinner() {
-  const spinValue = new Animated.Value(0);
   const { styles } = useStyles(stylesheet);
 
-  Animated.loop(
-    Animated.timing(spinValue, {
-      toValue: 1,
-      duration: 1000,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }),
-  ).start();
-
-  const spin = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: withRepeat(withTiming('360deg', { duration: 1000 }), -1) },
+    ],
+  }));
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[styles.spinner, { transform: [{ rotate: spin }] }]}
-      >
+      <Animated.View style={[styles.spinner, animatedStyle]}>
         <View style={styles.circle} />
       </Animated.View>
     </View>

@@ -1,10 +1,5 @@
-import {
-  CategoryCard,
-  EmptyState,
-  Screen,
-  ScrollToTop,
-  Spinner,
-} from '@app/components';
+import { CategoryCard, EmptyState, Screen, ScrollToTop } from '@app/components';
+import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { type Category, twitchService } from '@app/services';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
@@ -16,6 +11,18 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+
+const SKELETON_COUNT = 9;
+const SKELETON_COLUMNS = 3;
+
+function CategoryCardSkeleton() {
+  return (
+    <View style={$categoryCardContainer}>
+      <Skeleton style={$skeletonImage} />
+      <Skeleton style={$skeletonTitle} />
+    </View>
+  );
+}
 
 export function TopCategoriesScreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -43,7 +50,16 @@ export function TopCategoriesScreen() {
   });
 
   if (isLoading || refreshing) {
-    return <Spinner />;
+    return (
+      <Screen style={{ flex: 1 }}>
+        <FlatList
+          data={Array.from({ length: SKELETON_COUNT })}
+          keyExtractor={(_, idx) => `skeleton-${idx}`}
+          numColumns={SKELETON_COLUMNS}
+          renderItem={() => <CategoryCardSkeleton />}
+        />
+      </Screen>
+    );
   }
 
   if (!isLoading && !refreshing && isError) {
@@ -55,9 +71,9 @@ export function TopCategoriesScreen() {
     );
   }
 
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    refetch();
+    void refetch();
     setRefreshing(false);
   };
 
@@ -108,6 +124,7 @@ export function TopCategoriesScreen() {
         )}
         keyExtractor={(_item, index) => index.toString()}
         numColumns={3}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={1.5}
         onRefresh={onRefresh}
@@ -130,4 +147,19 @@ export function TopCategoriesScreen() {
 const $categoryCardContainer: ViewStyle = {
   flex: 1,
   margin: 5,
+};
+
+const $skeletonImage: ViewStyle = {
+  width: 110,
+  height: 150,
+  borderRadius: 8,
+  alignSelf: 'center',
+  marginBottom: 8,
+};
+
+const $skeletonTitle: ViewStyle = {
+  width: 80,
+  height: 18,
+  borderRadius: 4,
+  alignSelf: 'center',
 };

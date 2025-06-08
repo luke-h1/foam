@@ -4,7 +4,7 @@ import { Dimensions } from 'react-native';
 export const useIsLandscape = () => {
   const [landscape, setLandscape] = useState(false);
 
-  Dimensions.addEventListener('change', _ => {
+  Dimensions.addEventListener('change', () => {
     setLandscape(Dimensions.get('window').width > 500);
   });
 

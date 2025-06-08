@@ -1,7 +1,7 @@
-import { LiveStreamImage, Typography } from '@app/components';
+import { Button, LiveStreamImage, Typography } from '@app/components';
 import { useAppNavigation } from '@app/hooks';
 import type { SearchChannelResponse } from '@app/services';
-import { TouchableOpacity, View } from 'react-native';
+import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
 interface Props {
@@ -13,7 +13,7 @@ export function StreamerCard({ stream }: Props) {
   const { styles } = useStyles(stylesheet);
 
   return (
-    <TouchableOpacity
+    <Button
       onPress={() => {
         navigate('Streams', {
           screen: 'LiveStream',
@@ -27,14 +27,12 @@ export function StreamerCard({ stream }: Props) {
         <LiveStreamImage thumbnail={stream.thumbnail_url} animated size="sm" />
         <View>
           <Typography>{stream.display_name}</Typography>
-          <Typography
-          // style={{ color: colors.border, marginTop: spacing.small }}
-          >
+          <Typography size="xs" style={styles.gameName}>
             {stream.game_name}
           </Typography>
         </View>
       </View>
-    </TouchableOpacity>
+    </Button>
   );
 }
 
@@ -42,5 +40,8 @@ const stylesheet = createStyleSheet(theme => ({
   streamer: {
     flexDirection: 'row',
     marginBottom: theme.spacing.sm,
+  },
+  gameName: {
+    marginTop: theme.spacing.md,
   },
 }));

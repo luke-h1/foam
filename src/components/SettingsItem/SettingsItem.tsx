@@ -1,6 +1,7 @@
-import React from 'react';
-import { FlatList, TouchableOpacity, View } from 'react-native';
+import { JSX } from 'react';
+import { FlatList, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { Button } from '../Button';
 import { Typography } from '../Typography';
 
 interface ContentItem {
@@ -39,7 +40,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
             // eslint-disable-next-line no-shadow
             renderItem={({ item }) => (
               <View style={styles.item}>
-                <TouchableOpacity style={styles.button} onPress={item.onPress}>
+                <Button style={styles.button} onPress={item.onPress}>
                   <View style={styles.iconLeft}>{item.iconLeft}</View>
                   <View style={styles.textContainer}>
                     <Typography style={styles.title}>{item.title}</Typography>
@@ -50,7 +51,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
                   {item.showRightArrow && (
                     <View style={styles.iconRight}>{item.iconRight}</View>
                   )}
-                </TouchableOpacity>
+                </Button>
                 {item.showSeperator && <View style={styles.separator} />}
               </View>
             )}

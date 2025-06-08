@@ -14,9 +14,13 @@ import { toRad } from 'react-native-redash';
 export const transformOrigin = ({ x, y }, ...transformations) => {
   'worklet';
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return [
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     { translateX: x },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     { translateY: y },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ...transformations,
     { translateX: x * -1 },
     { translateY: y * -1 },
@@ -105,7 +109,6 @@ export const ModalHandle: React.FC<HandleProps> = ({
     };
   });
 
-  // render
   return (
     <Animated.View
       style={[containerStyle, containerAnimatedStyle]}

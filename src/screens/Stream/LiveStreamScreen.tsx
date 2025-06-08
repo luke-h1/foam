@@ -1,17 +1,15 @@
 import { Chat, Screen, Spinner, Typography } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
-import { twitchService, UserInfoResponse } from '@app/services';
 import { useQueries } from '@tanstack/react-query';
-import { FC, useEffect, useRef, useState } from 'react';
-import { TouchableOpacity, useWindowDimensions } from 'react-native';
+import { FC, useEffect, useRef } from 'react';
+import { useWindowDimensions } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import WebView from 'react-native-webview';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
@@ -21,8 +19,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
 
-  const [, setStreamer] = useState<UserInfoResponse>();
-  const [isPlaying, setIsPlaying] = useState(false);
   const webViewRef = useRef<WebView>(null);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
@@ -34,22 +30,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
       ],
     });
 
-  const { data: stream, isLoading: isStreamLoading } = streamQueryResult;
-  const { data: user, isLoading: isUserLoading } = userQueryResult;
-  const { isLoading: isUserProfilePictureLoading } =
-    userProfilePictureQueryResult;
-
-  const fetchUser = async () => {
-    const result = await twitchService.getUser(params.id);
-    setStreamer(result);
-  };
-
-  useEffect(() => {
-    if (!isStreamLoading && !stream) {
-      fetchUser();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stream]);
+  const { data: stream, isPending: isStreamPending } = streamQueryResult;
+  const { data: user, isPending: isUserPending } = userQueryResult;
+  const { isPending: isPfpPending } = userProfilePictureQueryResult;
 
   const videoHeight = useSharedValue(
     isLandscape ? screenHeight : screenWidth * (9 / 16),
@@ -57,13 +40,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const chatHeight = useSharedValue(
     isLandscape ? screenHeight : screenHeight - videoHeight.value,
   );
-
-  useEffect(() => {
-    if (stream) {
-      setIsPlaying(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     videoHeight.value = withTiming(
@@ -93,16 +69,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     height: '100%',
   });
 
-  const togglePlayPause = () => {
-    const script = `
-      document.querySelector('[data-a-target="player-play-pause-button"]').click();
-      window.ReactNativeWebView.postMessage(document.querySelector('[data-a-target="player-play-pause-button"]').getAttribute('aria-label'));
-    `;
-    setIsPlaying(prev => !prev);
-    webViewRef.current?.injectJavaScript(script);
-  };
-
-  if (isStreamLoading || isUserLoading || isUserProfilePictureLoading) {
+  if (isStreamPending || isPfpPending) {
     return <Spinner />;
   }
 
@@ -115,10 +82,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   }
 
   return (
-    <Screen
-      style={[styles.contentContainer, isLandscape && styles.row]}
-      safeAreaEdges={['bottom']}
-    >
+    <Screen style={[styles.contentContainer, isLandscape && styles.row]}>
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
         <WebView
           ref={webViewRef}
@@ -129,32 +93,20 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
           // @ts-ignore
           style={getWebViewStyle(isLandscape)}
           allowsInlineMediaPlayback
-          mediaPlaybackRequiresUserAction={false}
           javaScriptEnabled
         />
-        <TouchableOpacity
-          style={styles.controlButton}
-          onPress={togglePlayPause}
-        >
-          <Icon
-            name={isPlaying ? 'pause' : 'play-arrow'}
-            size={30}
-            color="#FFF"
-          />
-        </TouchableOpacity>
       </Animated.View>
 
-      <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-        <Chat
-          channelId={user?.id as string}
-          channelName={stream.user_login as string}
-        />
+      <Animated.View style={[animatedChatStyle]}>
+        {!isUserPending && user?.id && (
+          <Chat channelId={user?.id} channelName={stream.user_login} />
+        )}
       </Animated.View>
     </Screen>
   );
 };
 
-const stylesheet = createStyleSheet(theme => ({
+const stylesheet = createStyleSheet(() => ({
   container: {
     flex: 1,
   },
@@ -168,10 +120,6 @@ const stylesheet = createStyleSheet(theme => ({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-  },
-  chatContainer: {
-    borderLeftWidth: 1,
-    borderLeftColor: theme.colors.border,
   },
   videoUser: {
     fontSize: 16,

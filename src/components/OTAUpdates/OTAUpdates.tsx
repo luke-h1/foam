@@ -37,6 +37,7 @@ export function OTAUpdates() {
   useAppState({
     match: /background/,
     nextAppState: 'active',
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     callback: onFetchUpdateAsync,
   });
 
@@ -45,6 +46,7 @@ export function OTAUpdates() {
       title="Update available"
       subtitle="New update available. Install to get the latest features and bugfixes"
       confirmOnPress={{
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         cta: async () => {
           setUpdating(true);
           await fetchAndRestartApp();

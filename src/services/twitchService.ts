@@ -100,18 +100,44 @@ interface TwitchTokenValidationResponse {
   expires_in: number;
 }
 
+interface TwitchClip {
+  id: string;
+  url: string;
+  embed_url: string;
+  broadcaster_id: string;
+  broadcaster_name: string;
+  creator_id: string;
+  creator_name: string;
+  video_id: string;
+  game_id: string;
+  language: string;
+  title: string;
+  view_count: number;
+  created_at: string;
+  thumbnail_url: string;
+  duration: number;
+  vod_offset: number;
+  is_featured: boolean;
+}
+
+interface TwitchClipResponse {
+  data: TwitchClip[];
+}
+
 export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data } = await axios.post(
       `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return data;
   },
 
   listGlobalEmotes: async () => {
     const { data } = await twitchApi.get<{ data: Emote[] }>(
-      `/chat/emotes/global`,
+      '/chat/emotes/global',
     );
     return data;
   },
@@ -120,9 +146,10 @@ export const twitchService = {
    * @returns a token for an anonymous user
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
-    const { data } = await axios.get(
+    const { data } = await axios.get<{ data: DefaultTokenResponse }>(
       'https://foam-staging.lhowsam.com/api/token',
     );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return data.data;
   },
 
@@ -156,7 +183,7 @@ export const twitchService = {
   getTopStreams: async (cursor?: string): Promise<PaginatedList<Stream>> => {
     const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID,
+        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
       },
       params: {
         after: cursor,
@@ -183,13 +210,13 @@ export const twitchService = {
   },
 
   getStream: async (userLogin: string) => {
-    const result = await twitchApi.get<{ data: Stream[] }>(`/streams`, {
+    const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
       params: {
         user_login: userLogin,
         first: 15,
       },
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID,
+        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
       },
     });
 
@@ -245,20 +272,27 @@ export const twitchService = {
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID,
+        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
         Authorization: `Bearer ${token}`,
       },
     });
     return result.data[0] as UserInfoResponse;
   },
-  getUser: async (userId: string): Promise<UserInfoResponse> => {
+  getUser: async (userId?: string, id?: string): Promise<UserInfoResponse> => {
+    const params: Record<string, string> = {};
+    if (userId) {
+      params.login = userId;
+    }
+
+    if (id) {
+      params.id = id;
+    }
+
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
-      params: {
-        login: userId,
-      },
+      params,
     });
 
-    return result.data[0] as UserInfoResponse;
+    return (result.data[0] as UserInfoResponse) ?? '';
   },
 
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
@@ -301,6 +335,14 @@ export const twitchService = {
         after: cursor,
       },
     });
+  },
+  getClip: async (id: string): Promise<TwitchClip> => {
+    const result = await twitchApi.get<TwitchClipResponse>('clips', {
+      params: {
+        id,
+      },
+    });
+    return result.data[0] as TwitchClip;
   },
 
   // getSubscriberCount: async (userId: string) => {},

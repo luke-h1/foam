@@ -16,6 +16,7 @@ export function NewRelicDemoScreen() {
     <Screen>
       <View style={styles.container}>
         <Button
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
           onPress={() =>
             newRelic.recordError(new Error('NewRelicDemo test error'))
           }

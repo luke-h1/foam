@@ -3,8 +3,8 @@ import {
   LiveStreamCard,
   Screen,
   ScrollToTop,
-  Spinner,
 } from '@app/components';
+import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { Stream, twitchService } from '@app/services';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef } from 'react';
@@ -40,7 +40,14 @@ export function TopStreamsScreen() {
   });
 
   if (refreshing || isLoading) {
-    return <Spinner />;
+    return (
+      <>
+        {Array.from({ length: 5 }).map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <LiveStreamCardSkeleton key={index} />
+        ))}
+      </>
+    );
   }
 
   const onRefresh = async () => {
@@ -53,6 +60,7 @@ export function TopStreamsScreen() {
 
   if (allStreams.length === 0) {
     return (
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
     );
   }
@@ -87,6 +95,7 @@ export function TopStreamsScreen() {
         data={allStreams}
         renderItem={({ item }) => <LiveStreamCard stream={item} />}
         keyExtractor={item => item.id}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={1.5}
         refreshing={refreshing}
@@ -94,6 +103,7 @@ export function TopStreamsScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onRefresh={onRefresh}
             tintColor="white"
             colors={['white']}

@@ -132,7 +132,7 @@ describe('AuthContext', () => {
       },
     });
 
-    await waitFor(async () => {
+    await waitFor(() => {
       expect(result.current.ready).toEqual(true);
     });
 
@@ -140,7 +140,7 @@ describe('AuthContext', () => {
       await result.current.loginWithTwitch(succesfulOauthResponse);
     });
 
-    await waitFor(async () => {
+    await waitFor(() => {
       expect(result.current.user).toEqual(user);
       expect(result.current.authState?.isAnonAuth).toBe(false);
       expect(result.current.authState?.isLoggedIn).toBe(true);
@@ -231,7 +231,7 @@ describe('AuthContext', () => {
       },
     });
 
-    await waitFor(async () => {
+    await waitFor(() => {
       expect(result.current.ready).toEqual(true);
     });
 
@@ -314,6 +314,7 @@ describe('AuthContext', () => {
       );
 
       await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
           'new_anon_access_token',
         );
@@ -380,6 +381,7 @@ describe('AuthContext', () => {
       );
 
       await waitFor(() => {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
           'new_auth_access_token',
         );

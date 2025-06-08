@@ -1,16 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable global-require */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import React, { ComponentType } from 'react';
-import {
-  ImageStyle,
-  StyleProp,
-  TouchableOpacity,
-  TouchableOpacityProps,
-  View,
-  ViewStyle,
-} from 'react-native';
+import { ImageStyle, StyleProp, View, ViewStyle } from 'react-native';
 import { useStyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
+import { Button, ButtonProps } from '../Button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const iconType = {
@@ -51,7 +47,7 @@ const iconComponents: Record<string, typeof Feather> = {
   Feather: require('react-native-vector-icons/Feather').default,
 } as const;
 
-export interface IconProps extends TouchableOpacityProps {
+export interface IconProps extends ButtonProps {
   /**
    * The name of the icon
    */
@@ -86,7 +82,7 @@ export interface IconProps extends TouchableOpacityProps {
   /**
    * An optional function to be called when the icon is pressed
    */
-  onPress?: TouchableOpacityProps['onPress'];
+  onPress?: ButtonProps['onPress'];
 }
 
 /**
@@ -105,9 +101,9 @@ export function Icon({
 
   const { theme } = useStyles();
 
-  const Wrapper: ComponentType<TouchableOpacityProps> = (
-    isPressable ? TouchableOpacity : View
-  ) as ComponentType<TouchableOpacityProps>;
+  const Wrapper: ComponentType<ButtonProps> = (
+    isPressable ? Button : View
+  ) as ComponentType<ButtonProps>;
 
   const IconComponent = iconComponents[
     iconFamily || 'Feather'
