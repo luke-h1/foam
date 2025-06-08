@@ -29,13 +29,10 @@
       "channel": "preview"
     },
     "production": {
-      "bun": "1.1.43",
+      "bun": "1.2.5",
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "production"
-      },
-      "android": {
-        "buildType": "app-bundle"
       },
       "channel": "production"
     }
