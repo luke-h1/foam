@@ -674,6 +674,19 @@
     }
   },
   {
+    "libraryName": "expo-symbols",
+    "version": "0.2.2",
+    "_license": "MIT",
+    "_description": "Provides access to the SF Symbols library on iOS for React Native and Expo apps.",
+    "homepage": "https://docs.expo.dev/versions/latest/sdk/symbols/",
+    "author": { "name": "650 Industries, Inc." },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/expo/expo.git",
+      "directory": "packages/expo-symbols"
+    }
+  },
+  {
     "libraryName": "expo-updates",
     "version": "0.27.4",
     "_license": "MIT",

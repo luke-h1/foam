@@ -17,3 +17,4 @@ export * from './useScript';
 export * from './useStreamerImage';
 export * from './useTmiClient';
 export * from './useDebouncedEffect';
+export * from './useScrollToTop';
