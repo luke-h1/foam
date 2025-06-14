@@ -11,7 +11,7 @@ import React, { useRef, useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
-import { Icon } from '../Icon';
+import { IconSymbol } from '../IconSymbol/IconSymbol';
 import { Image } from '../Image';
 import { ModalHandle } from '../ModalHandle';
 import { Typography } from '../Typography';
@@ -222,13 +222,13 @@ export const ChatMessage = React.memo(
         >
           <View style={styles.messageActionsContainer}>
             <Button onPress={handleCopy} style={styles.messageActionButton}>
-              <Icon icon="copy" size={20} />
+              <IconSymbol name="document.on.clipboard" size={20} color="#fff" />
               <Typography size="sm" style={styles.messageActionText}>
                 Copy Message
               </Typography>
             </Button>
             <Button onPress={handleReply} style={styles.messageActionButton}>
-              <Icon icon="corner-down-left" size={20} />
+              <IconSymbol name="arrow.uturn.backward" size={20} color="#fff" />
               <Typography size="sm" style={styles.messageActionText}>
                 Reply
               </Typography>

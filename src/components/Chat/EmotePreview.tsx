@@ -11,12 +11,16 @@ import { toast } from 'sonner-native';
 import { BrandIcon } from '../BrandIcon';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
+import { IconSymbolName } from '../IconSymbol/IconSymbolFallback';
 import { Image } from '../Image';
 import { Typography } from '../Typography';
 
 interface EmoteAction {
   title: string;
-  icon: 'link' | 'copy' | 'external-link';
+  icon: Extract<
+    IconSymbolName,
+    'link' | 'document.on.document' | 'arrow.up.right'
+  >;
   onPress: () => void;
 }
 
@@ -55,17 +59,17 @@ export function EmotePreview({ selectedEmote }: EmotePreviewProps) {
           data: [
             {
               title: 'Copy Name',
-              icon: 'copy',
+              icon: 'document.on.document',
               onPress: handleCopyName,
             },
             {
               title: 'Copy URL',
-              icon: 'link',
+              icon: 'document.on.document',
               onPress: handleCopyUrl,
             },
             {
               title: 'Open in Browser',
-              icon: 'external-link',
+              icon: 'link',
               onPress: () => openLinkInBrowser(selectedEmote.emote_link ?? ''),
             },
           ],

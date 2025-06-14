@@ -1,7 +1,8 @@
 import { SymbolView, SymbolViewProps, SymbolWeight } from 'expo-symbols';
+import { memo } from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 
-export function IconSymbol({
+export const IconSymbol = memo(function IconSymbol({
   name,
   size = 24,
   color,
@@ -32,4 +33,4 @@ export function IconSymbol({
       ]}
     />
   );
-}
+});
