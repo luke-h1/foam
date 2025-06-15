@@ -94,10 +94,9 @@ export function TopStreamsScreen() {
         ref={flatListRef}
         data={allStreams}
         renderItem={({ item }) => <LiveStreamCard stream={item} />}
-        keyExtractor={item => item.id}
+        keyExtractor={item => `${item.id}-${item.title}`}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={3.5}
         refreshing={refreshing}
         onScroll={handleScroll}
         refreshControl={

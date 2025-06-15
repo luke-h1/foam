@@ -16,6 +16,7 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect, useState } from 'react';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
 import {
   initialWindowMetrics,
@@ -134,53 +135,55 @@ function App(props: AppProps) {
       catchErrors={BaseConfig.catchErrors}
       onReset={() => setRecoveredFromError(true)}
     >
-      <GestureHandlerRootView>
-        <BottomSheetModalProvider>
-          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-            <QueryClientProvider client={queryClient}>
-              <AppNavigator
-                initialState={
-                  recoveredFromError
-                    ? { index: 0, routes: [] }
-                    : initialNavigationState
-                }
-                onStateChange={onNavigationStateChange}
-              >
-                <OTAUpdates />
-              </AppNavigator>
-              <Toaster
-                position="bottom-center"
-                gap={20}
-                toastOptions={{
-                  actionButtonStyle: {
-                    paddingHorizontal: 20,
-                  },
-                }}
-                pauseWhenPageIsHidden
-                duration={3000}
-                richColors
-                visibleToasts={4}
-                closeButton
-                autoWiggleOnUpdate="toast-change"
-                theme="system"
-              />
-              {ReactQueryDebug?.enabled && (
-                <DevToolsBubble
-                  onCopy={async text => {
-                    try {
-                      await Clipboard.setStringAsync(text);
-                      return true;
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    } catch (error) {
-                      return false;
-                    }
+      <KeyboardProvider>
+        <GestureHandlerRootView>
+          <BottomSheetModalProvider>
+            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+              <QueryClientProvider client={queryClient}>
+                <AppNavigator
+                  initialState={
+                    recoveredFromError
+                      ? { index: 0, routes: [] }
+                      : initialNavigationState
+                  }
+                  onStateChange={onNavigationStateChange}
+                >
+                  <OTAUpdates />
+                </AppNavigator>
+                <Toaster
+                  position="bottom-center"
+                  gap={20}
+                  toastOptions={{
+                    actionButtonStyle: {
+                      paddingHorizontal: 20,
+                    },
                   }}
+                  pauseWhenPageIsHidden
+                  duration={3000}
+                  richColors
+                  visibleToasts={4}
+                  closeButton
+                  autoWiggleOnUpdate="toast-change"
+                  theme="system"
                 />
-              )}
-            </QueryClientProvider>
-          </SafeAreaProvider>
-        </BottomSheetModalProvider>
-      </GestureHandlerRootView>
+                {ReactQueryDebug?.enabled && (
+                  <DevToolsBubble
+                    onCopy={async text => {
+                      try {
+                        await Clipboard.setStringAsync(text);
+                        return true;
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      } catch (error) {
+                        return false;
+                      }
+                    }}
+                  />
+                )}
+              </QueryClientProvider>
+            </SafeAreaProvider>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </KeyboardProvider>
     </ErrorBoundary>
   );
 }

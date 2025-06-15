@@ -65,6 +65,23 @@
     "_licenseContent": "MIT License\n\nCopyright (c) 2020 Mo Gorhom\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
+    "libraryName": "@legendapp/list",
+    "version": "1.0.20",
+    "_license": "MIT",
+    "_description": "Legend List is a drop-in replacement for FlatList with much better performance and supporting dynamically sized items.",
+    "homepage": "https://github.com/LegendApp/legend-list#readme",
+    "author": {
+      "name": "Legend",
+      "email": "contact@legendapp.com",
+      "url": "https://github.com/LegendApp"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/LegendApp/legend-list.git"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) 2022 Moo.do LLC\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
     "libraryName": "@pmmmwh/react-refresh-webpack-plugin",
     "version": "0.5.16",
     "_license": "MIT",
@@ -479,6 +496,19 @@
     }
   },
   {
+    "libraryName": "expo-blur",
+    "version": "14.0.3",
+    "_license": "MIT",
+    "_description": "A component that renders a native blur view on iOS and falls back to a semi-transparent view on Android. A common usage of this is for navigation bars, tab bars, and modals.",
+    "homepage": "https://docs.expo.dev/versions/latest/sdk/blur-view/",
+    "author": { "name": "650 Industries, Inc." },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/expo/expo.git",
+      "directory": "packages/expo-blur"
+    }
+  },
+  {
     "libraryName": "expo-build-properties",
     "version": "0.13.2",
     "_license": "MIT",
@@ -674,19 +704,6 @@
     }
   },
   {
-    "libraryName": "expo-symbols",
-    "version": "0.2.2",
-    "_license": "MIT",
-    "_description": "Provides access to the SF Symbols library on iOS for React Native and Expo apps.",
-    "homepage": "https://docs.expo.dev/versions/latest/sdk/symbols/",
-    "author": { "name": "650 Industries, Inc." },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/expo/expo.git",
-      "directory": "packages/expo-symbols"
-    }
-  },
-  {
     "libraryName": "expo-updates",
     "version": "0.27.4",
     "_license": "MIT",
@@ -843,6 +860,23 @@
       "url": "git+https://github.com/software-mansion/react-native-gesture-handler.git"
     },
     "_licenseContent": "The MIT License (MIT)\n\nCopyright (c) 2016 Software Mansion <swmansion.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
+    "libraryName": "react-native-keyboard-controller",
+    "version": "1.17.4",
+    "_license": "MIT",
+    "_description": "Keyboard manager which works in identical way on both iOS and Android",
+    "homepage": "https://kirillzyusko.github.io/react-native-keyboard-controller/",
+    "author": {
+      "name": "Kiryl Ziusko",
+      "email": "zyusko.kirik@gmail.com",
+      "url": "https://github.com/kirillzyusko"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/kirillzyusko/react-native-keyboard-controller.git"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) 2021 Kiryl Ziusko\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "react-native-logs",
