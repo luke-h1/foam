@@ -9,15 +9,22 @@ import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
-import { LegendList, LegendListRef } from '@legendapp/list';
+import { LegendListRef } from '@legendapp/list';
+import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-
 import {
   SafeAreaView,
   TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
@@ -31,6 +38,12 @@ interface ChatProps {
 }
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
+  const scale = useSharedValue(0.8);
+
+  useEffect(() => {
+    scale.value = withSpring(1);
+  }, []);
+
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
   const client = useTmiClient({
@@ -286,40 +299,49 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       <View
         style={[styles.chatContainer, { width: chatWidth, height: chatHeight }]}
       >
-        <LegendList
-          data={messages}
-          alignItemsAtEnd
-          maintainScrollAtEnd
-          maintainScrollAtEndThreshold={0.1}
-          ref={legendListRef}
-          keyExtractor={item => `${item.message_id}-${item.message_nonce}`}
-          recycleItems
-          waitForInitialLayout
-          // eslint-disable-next-line react/no-unused-prop-types
-          renderItem={({ item }: { item: ChatMessageType }) => (
-            <ChatMessage
-              channel={item.channel}
-              message={item.message}
-              userstate={item.userstate}
-              badges={item.badges}
-              message_id={item.message_id}
-              message_nonce={item.message_nonce}
-              sender={item.sender}
-              style={styles.messageContainer}
-              parentDisplayName={item.parentDisplayName}
-              onReply={message => {
-                setReplyTo({
-                  messageId: message.message_id,
-                  username: message.sender,
-                  message: message.message.map(part => part.content).join(''),
-                  replyParentUserLogin: message.userstate.username || '',
-                });
-              }}
-              replyDisplayName={item.replyDisplayName}
-              replyBody={item.replyBody}
-            />
-          )}
-        />
+        <KeyboardAvoidingView
+          behavior="position"
+          keyboardVerticalOffset={headerHeight}
+        >
+          <AnimatedLegendList
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            style={useAnimatedStyle(() => ({
+              transform: [{ scale: scale.value }],
+            }))}
+            data={messages}
+            alignItemsAtEnd
+            maintainScrollAtEnd
+            maintainScrollAtEndThreshold={0.1}
+            ref={legendListRef}
+            keyExtractor={item => `${item.message_id}-${item.message_nonce}`}
+            recycleItems
+            waitForInitialLayout
+            // eslint-disable-next-line react/no-unused-prop-types
+            renderItem={({ item }: { item: ChatMessageType }) => (
+              <ChatMessage
+                channel={item.channel}
+                message={item.message}
+                userstate={item.userstate}
+                badges={item.badges}
+                message_id={item.message_id}
+                message_nonce={item.message_nonce}
+                sender={item.sender}
+                style={styles.messageContainer}
+                parentDisplayName={item.parentDisplayName}
+                onReply={message => {
+                  setReplyTo({
+                    messageId: message.message_id,
+                    username: message.sender,
+                    message: message.message.map(part => part.content).join(''),
+                    replyParentUserLogin: message.userstate.username || '',
+                  });
+                }}
+                replyDisplayName={item.replyDisplayName}
+                replyBody={item.replyBody}
+              />
+            )}
+          />
+        </KeyboardAvoidingView>
       </View>
       <View style={styles.inputContainer}>
         {replyTo && (
