@@ -1,5 +1,4 @@
-import { IconSymbol } from '@app/components/IconSymbol/IconSymbol.ios';
-import { IconSymbolName } from '@app/components/IconSymbol/IconSymbolFallback';
+import { Icon } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
 import { SearchScreen, SettingsScreen } from '@app/screens';
 import FollowingScreen from '@app/screens/FollowingScreen';
@@ -12,8 +11,6 @@ import React, { ComponentType, FC } from 'react';
 import { useStyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
-
-const Tab = createBottomTabNavigator<TabParamList>();
 
 export type TabParamList = {
   Following: undefined;
@@ -28,6 +25,8 @@ export type TabScreenProps<TParam extends keyof TabParamList> =
     AppStackScreenProps<keyof AppStackParamList>
   >;
 
+const Tab = createBottomTabNavigator<TabParamList>();
+
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
   | FC<TabScreenProps<'Top'>>
@@ -37,7 +36,7 @@ type ScreenComponentType =
 interface Screen {
   name: keyof TabParamList;
   component: ScreenComponentType;
-  icon: IconSymbolName;
+  icon: string;
   requiresAuth?: boolean;
 }
 
@@ -51,19 +50,19 @@ const screens: Screen[] = [
   {
     name: 'Top',
     component: TopStackNavigator,
-    icon: 'arrow.up',
+    icon: 'chevron-up',
     requiresAuth: false,
   },
   {
     name: 'Search',
     component: SearchScreen,
-    icon: 'text.magnifyingglass',
+    icon: 'search',
     requiresAuth: false,
   },
   {
     name: 'Settings',
     component: SettingsScreen,
-    icon: 'gearshape',
+    icon: 'settings',
     requiresAuth: false,
   },
 ];
@@ -90,7 +89,6 @@ export function TabNavigator() {
         if (screen.requiresAuth && !user) {
           return null;
         }
-
         return (
           <Tab.Screen
             key={screen.name}
@@ -99,7 +97,7 @@ export function TabNavigator() {
             options={{
               // eslint-disable-next-line react/no-unstable-nested-components
               tabBarIcon: ({ color, size }) => (
-                <IconSymbol name={screen.icon} color={color} size={size - 5} />
+                <Icon icon={screen.icon} color={color} size={size - 5} />
               ),
               tabBarLabel: screen.name,
             }}

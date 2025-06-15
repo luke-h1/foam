@@ -97,7 +97,7 @@ export function TopStreamsScreen() {
         keyExtractor={item => item.id}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={1.5}
+        onEndReachedThreshold={3.5}
         refreshing={refreshing}
         onScroll={handleScroll}
         refreshControl={

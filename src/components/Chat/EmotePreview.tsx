@@ -11,16 +11,12 @@ import { toast } from 'sonner-native';
 import { BrandIcon } from '../BrandIcon';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
-import { IconSymbolName } from '../IconSymbol/IconSymbolFallback';
 import { Image } from '../Image';
 import { Typography } from '../Typography';
 
 interface EmoteAction {
   title: string;
-  icon: Extract<
-    IconSymbolName,
-    'link' | 'document.on.document' | 'arrow.up.right'
-  >;
+  icon: 'link' | 'copy';
   onPress: () => void;
 }
 

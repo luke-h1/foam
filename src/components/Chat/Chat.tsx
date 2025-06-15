@@ -25,7 +25,6 @@ import { Icon } from '../Icon';
 import { Typography } from '../Typography';
 import { ChatMessage } from './ChatMessage';
 import { ChatSkeleton } from './ChatSkeleton';
-import { IconSymbol } from '../IconSymbol/IconSymbol';
 
 interface ChatProps {
   channelId: string;
@@ -383,11 +382,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               style={styles.cancelReplyButton}
               onPress={() => setReplyTo(null)}
             >
-              <IconSymbol
-                name="x.circle"
-                size={16}
-                color={theme.colors.border}
-              />
+              <Icon icon="circle" size={16} color={theme.colors.border} />
             </Button>
           </View>
         )}
@@ -395,11 +390,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           style={styles.sendButton}
           onPress={() => setShowEmotePicker(!showEmotePicker)}
         >
-          <IconSymbol
-            name="face.smiling"
-            size={24}
-            color={theme.colors.border}
-          />
+          <Icon icon="face.smiling" size={24} color={theme.colors.border} />
         </Button>
         <TextInput
           style={styles.input}
@@ -420,8 +411,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           onPress={() => void handleSendMessage()}
           disabled={!messageInput.trim()}
         >
-          <IconSymbol
-            name="paperplane"
+          <Icon
+            icon="send"
             size={24}
             color={
               messageInput.trim()
