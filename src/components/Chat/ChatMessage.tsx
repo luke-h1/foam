@@ -228,7 +228,7 @@ export const ChatMessage = React.memo(
               </Typography>
             </Button>
             <Button onPress={handleReply} style={styles.messageActionButton}>
-              <Icon icon="reply" size={20} color="#fff" />
+              <Icon icon="corner-down-left" size={20} color="#fff" />
               <Typography size="sm" style={styles.messageActionText}>
                 Reply
               </Typography>

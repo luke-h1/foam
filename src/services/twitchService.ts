@@ -148,11 +148,6 @@ export const twitchService = {
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
     const { data } = await axios.get<{ data: DefaultTokenResponse }>(
       `${process.env.AUTH_PROXY_API_BASE_URL}/token`,
-      {
-        params: {
-          'x-api-key': process.env.AUTH_PROXY_API_KEY,
-        },
-      },
     );
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return data.data;

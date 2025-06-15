@@ -350,7 +350,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               style={styles.cancelReplyButton}
               onPress={() => setReplyTo(null)}
             >
-              <Icon icon="circle" size={16} color={theme.colors.border} />
+              <Icon icon="x" size={16} color={theme.colors.border} />
             </Button>
           </View>
         )}
@@ -358,7 +358,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           style={styles.sendButton}
           onPress={() => setShowEmotePicker(!showEmotePicker)}
         >
-          <Icon icon="face.smiling" size={24} color={theme.colors.border} />
+          <Icon icon="smile" size={24} color={theme.colors.border} />
         </Button>
         <TextInput
           style={styles.input}

@@ -16,7 +16,7 @@ import { Typography } from '../Typography';
 
 interface EmoteAction {
   title: string;
-  icon: 'link' | 'copy';
+  icon: 'link' | 'copy' | 'external-link';
   onPress: () => void;
 }
 
@@ -55,17 +55,17 @@ export function EmotePreview({ selectedEmote }: EmotePreviewProps) {
           data: [
             {
               title: 'Copy Name',
-              icon: 'document.on.document',
+              icon: 'copy',
               onPress: handleCopyName,
             },
             {
               title: 'Copy URL',
-              icon: 'document.on.document',
+              icon: 'copy',
               onPress: handleCopyUrl,
             },
             {
               title: 'Open in Browser',
-              icon: 'link',
+              icon: 'external-link',
               onPress: () => openLinkInBrowser(selectedEmote.emote_link ?? ''),
             },
           ],
