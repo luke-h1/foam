@@ -12,7 +12,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import newRelic from 'newrelic-react-native-agent';
 import { ComponentProps, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
+import { ActivityIndicator, useColorScheme } from 'react-native';
 import {
   DevToolsParamList,
   DevToolsStackNavigator,
@@ -90,7 +90,11 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
-  useAcquireAuth();
+  const { loading } = useAcquireAuth();
+
+  if (loading) {
+    return <ActivityIndicator size="large" />;
+  }
   return (
     <Stack.Navigator
       screenOptions={{
