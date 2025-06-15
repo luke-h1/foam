@@ -60,7 +60,7 @@ export function EmotePreview({ selectedEmote }: EmotePreviewProps) {
             },
             {
               title: 'Copy URL',
-              icon: 'link',
+              icon: 'copy',
               onPress: handleCopyUrl,
             },
             {

@@ -29,4 +29,7 @@ export const createLoggerInterceptor = (
 
     return config;
   },
+  onError: error => {
+    logger[prefix].error(`Request error: ${JSON.stringify(error, null, 2)}`);
+  },
 });

@@ -9,16 +9,22 @@ import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
-import { FlashList } from '@shopify/flash-list';
+import { LegendListRef } from '@legendapp/list';
+import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   SafeAreaView,
   TextInput,
   useWindowDimensions,
   View,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
@@ -32,6 +38,12 @@ interface ChatProps {
 }
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
+  const scale = useSharedValue(0.8);
+
+  useEffect(() => {
+    scale.value = withSpring(1);
+  }, []);
+
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
   const client = useTmiClient({
@@ -80,8 +92,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const flashListRef = useRef<FlashList<ChatMessageType>>(null);
+  const legendListRef = useRef<LegendListRef>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
   const { styles, theme } = useStyles(stylesheet);
 
@@ -95,12 +106,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [showEmotePicker, setShowEmotePicker] = useState<boolean>(false);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const lastContentHeightRef = useRef(0);
-  const lastScrollYRef = useRef(0);
-  const viewportHeightRef = useRef(0);
 
-  const [messageInput, setMessageInput] = useState('');
+  const [messageInput, setMessageInput] = useState<string>('');
   const [replyTo, setReplyTo] = useState<{
     messageId: string;
     username: string;
@@ -208,7 +215,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         messagesRef.current = [];
         setMessages([]);
         setTimeout(() => {
-          flashListRef.current?.scrollToEnd({ animated: false });
+          legendListRef.current?.scrollToEnd({ animated: false });
         }, 0);
       });
 
@@ -230,49 +237,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  // Track scroll position
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-
-    // Update refs with current values
-    lastScrollYRef.current = contentOffset.y;
-    viewportHeightRef.current = layoutMeasurement.height;
-    lastContentHeightRef.current = contentSize.height;
-
-    const isAtBottomNow =
-      layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-
-    setIsAtBottom(isAtBottomNow);
-  };
-
-  const handleContentSizeChange = (_width: number, height: number) => {
-    lastContentHeightRef.current = height;
-  };
-
-  const addMessageAndMaybeScroll = (newMessage: ChatMessageType) => {
-    messagesRef.current = [...messagesRef.current, newMessage];
-    setMessages([...messagesRef.current]);
-
-    const isCurrentlyAtBottom =
-      viewportHeightRef.current + lastScrollYRef.current >=
-      lastContentHeightRef.current - 20;
-
-    if (isCurrentlyAtBottom) {
-      // eslint-disable-next-line no-undef
-      requestAnimationFrame(() => {
-        flashListRef.current?.scrollToIndex({
-          index: messagesRef.current.length - 1,
-          animated: false,
-        });
-      });
-    }
-  };
-
-  // Update the message handler to add messages
+  // Simplified message handling - LegendList handles auto-scroll
   const handleNewMessage = useCallback(
     (newMessage: ChatMessageType) => {
       addMessage(newMessage);
-      addMessageAndMaybeScroll(newMessage);
+
+      // Simply add the message to state - LegendList will handle scroll behavior
+      messagesRef.current = [...messagesRef.current, newMessage];
+      setMessages([...messagesRef.current]);
     },
     [addMessage],
   );
@@ -327,50 +299,46 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       <View
         style={[styles.chatContainer, { width: chatWidth, height: chatHeight }]}
       >
-        <FlashList
-          data={messages}
-          ref={flashListRef}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => (
-            <ChatMessage
-              channel={item.channel}
-              message={item.message}
-              userstate={item.userstate}
-              badges={item.badges}
-              message_id={item.message_id}
-              message_nonce={item.message_nonce}
-              sender={item.sender}
-              style={styles.messageContainer}
-              parentDisplayName={item.parentDisplayName}
-              onReply={message => {
-                setReplyTo({
-                  messageId: message.message_id,
-                  username: message.sender,
-                  message: message.message.map(part => part.content).join(''),
-                  replyParentUserLogin: message.userstate.username || '',
-                });
-              }}
-              replyDisplayName={item.replyDisplayName}
-              replyBody={item.replyBody}
-            />
-          )}
-          estimatedItemSize={40}
-          onScroll={handleScroll}
-          onContentSizeChange={handleContentSizeChange}
-        />
-        {!isAtBottom && (
-          <View style={styles.pausedOverlay}>
-            <Typography style={styles.pausedText}>Chat Paused</Typography>
-            <Button
-              style={styles.resumeButton}
-              onPress={() => {
-                flashListRef.current?.scrollToEnd({ animated: true });
-              }}
-            >
-              <Typography style={styles.resumeButtonText}>Resume</Typography>
-            </Button>
-          </View>
-        )}
+        <KeyboardAvoidingView behavior="position">
+          <AnimatedLegendList
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            style={useAnimatedStyle(() => ({
+              transform: [{ scale: scale.value }],
+            }))}
+            data={messages}
+            alignItemsAtEnd
+            maintainScrollAtEnd
+            maintainScrollAtEndThreshold={0.1}
+            ref={legendListRef}
+            keyExtractor={item => `${item.message_id}-${item.message_nonce}`}
+            recycleItems
+            waitForInitialLayout
+            // eslint-disable-next-line react/no-unused-prop-types
+            renderItem={({ item }: { item: ChatMessageType }) => (
+              <ChatMessage
+                channel={item.channel}
+                message={item.message}
+                userstate={item.userstate}
+                badges={item.badges}
+                message_id={item.message_id}
+                message_nonce={item.message_nonce}
+                sender={item.sender}
+                style={styles.messageContainer}
+                parentDisplayName={item.parentDisplayName}
+                onReply={message => {
+                  setReplyTo({
+                    messageId: message.message_id,
+                    username: message.sender,
+                    message: message.message.map(part => part.content).join(''),
+                    replyParentUserLogin: message.userstate.username || '',
+                  });
+                }}
+                replyDisplayName={item.replyDisplayName}
+                replyBody={item.replyBody}
+              />
+            )}
+          />
+        </KeyboardAvoidingView>
       </View>
       <View style={styles.inputContainer}>
         {replyTo && (

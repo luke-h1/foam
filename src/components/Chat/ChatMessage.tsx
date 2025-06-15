@@ -222,13 +222,13 @@ export const ChatMessage = React.memo(
         >
           <View style={styles.messageActionsContainer}>
             <Button onPress={handleCopy} style={styles.messageActionButton}>
-              <Icon icon="copy" size={20} />
+              <Icon icon="copy" size={20} color="#fff" />
               <Typography size="sm" style={styles.messageActionText}>
                 Copy Message
               </Typography>
             </Button>
             <Button onPress={handleReply} style={styles.messageActionButton}>
-              <Icon icon="corner-down-left" size={20} />
+              <Icon icon="corner-down-left" size={20} color="#fff" />
               <Typography size="sm" style={styles.messageActionText}>
                 Reply
               </Typography>

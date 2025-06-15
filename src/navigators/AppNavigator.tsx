@@ -1,10 +1,6 @@
 import { AuthContextProvider } from '@app/context';
-import {
-  AuthLoadingScreen,
-  CategoryScreen,
-  LoginScreen,
-  StorybookScreen,
-} from '@app/screens';
+import { useAcquireAuth } from '@app/hooks';
+import { CategoryScreen, LoginScreen, StorybookScreen } from '@app/screens';
 import {
   DarkTheme,
   DefaultTheme,
@@ -16,7 +12,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import newRelic from 'newrelic-react-native-agent';
 import { ComponentProps, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
+import { ActivityIndicator, useColorScheme } from 'react-native';
 import {
   DevToolsParamList,
   DevToolsStackNavigator,
@@ -94,16 +90,17 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
+  const { loading } = useAcquireAuth();
+
+  if (loading) {
+    return <ActivityIndicator size="large" />;
+  }
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        // navigationBarColor: colors.background,
       }}
-      initialRouteName="AuthLoading"
     >
-      <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
-
       {/* tabs */}
       <Stack.Screen name="Tabs" component={TabNavigator} />
 

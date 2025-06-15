@@ -147,7 +147,7 @@ export const twitchService = {
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
     const { data } = await axios.get<{ data: DefaultTokenResponse }>(
-      'https://foam-staging.lhowsam.com/api/token',
+      `${process.env.AUTH_PROXY_API_BASE_URL}/token`,
     );
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return data.data;

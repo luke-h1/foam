@@ -1,8 +1,9 @@
 import { useAuthContext } from '@app/context';
-import { useAppNavigation } from '@app/hooks';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useAppNavigation } from './useAppNavigation';
 
-export function AuthLoadingScreen() {
+export function useAcquireAuth() {
+  const [loading, setLoading] = useState<boolean>(true);
   const { populateAuthState, authState } = useAuthContext();
   const { navigate } = useAppNavigation();
   useEffect(() => {
@@ -18,9 +19,12 @@ export function AuthLoadingScreen() {
           screen: 'Top',
         });
       }
+      setLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return null;
+  return {
+    loading,
+  };
 }

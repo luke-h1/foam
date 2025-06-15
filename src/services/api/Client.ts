@@ -104,14 +104,14 @@ export default class Client {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return response.data;
     } catch (error) {
-      const errorMessage = `${config.url}_${config.method} request failed`;
+      const errorMessage = `${config.url}_${config.method} request failed - ${JSON.stringify(error, null, 2)}`;
 
       newRelic.logError(errorMessage);
       // eslint-disable-next-line no-console
 
       if (isAxiosError(error)) {
         // eslint-disable-next-line no-shadow
-        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed with ${JSON.stringify(error.message)}`;
+        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed with ${JSON.stringify(error, null, 2)}`;
 
         newRelic.logError(errorMessage);
 
