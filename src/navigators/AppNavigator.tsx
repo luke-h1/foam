@@ -1,10 +1,6 @@
 import { AuthContextProvider } from '@app/context';
-import {
-  AuthLoadingScreen,
-  CategoryScreen,
-  LoginScreen,
-  StorybookScreen,
-} from '@app/screens';
+import { useAcquireAuth } from '@app/hooks';
+import { CategoryScreen, LoginScreen, StorybookScreen } from '@app/screens';
 import {
   DarkTheme,
   DefaultTheme,
@@ -94,16 +90,13 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
+  useAcquireAuth();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        // navigationBarColor: colors.background,
       }}
-      initialRouteName="AuthLoading"
     >
-      <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
-
       {/* tabs */}
       <Stack.Screen name="Tabs" component={TabNavigator} />
 

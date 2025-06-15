@@ -299,10 +299,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       <View
         style={[styles.chatContainer, { width: chatWidth, height: chatHeight }]}
       >
-        <KeyboardAvoidingView
-          behavior="position"
-          keyboardVerticalOffset={headerHeight}
-        >
+        <KeyboardAvoidingView behavior="position">
           <AnimatedLegendList
             // eslint-disable-next-line react-hooks/rules-of-hooks
             style={useAnimatedStyle(() => ({
