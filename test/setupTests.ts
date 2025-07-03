@@ -13,7 +13,6 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 import * as ReactNative from 'react-native';
 import mockFile from '../__mocks__/mockFile';
 import 'cross-fetch/polyfill';
-import 'core-js';
 import '@app/hooks/useAppNavigation';
 import '../src/styles/unistyles';
 

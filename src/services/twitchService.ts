@@ -1,3 +1,4 @@
+import { logger } from '@app/utils/logger';
 import axios, { AxiosHeaders } from 'axios';
 import { twitchApi } from './api';
 
@@ -6,6 +7,7 @@ export interface PaginatedList<T> {
   pagination: {
     cursor: string;
   };
+  total?: number;
 }
 
 export interface UserInfoResponse {
@@ -147,9 +149,9 @@ export const twitchService = {
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
     const { data } = await axios.get<{ data: DefaultTokenResponse }>(
-      'https://foam-staging.lhowsam.com/api/token',
+      `${process.env.AUTH_PROXY_API_BASE_URL}/token`,
     );
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+
     return data.data;
   },
 
@@ -246,7 +248,7 @@ export const twitchService = {
   },
 
   getUserImage: async (userId: string): Promise<string> => {
-    // TODO: work out the full response type here
+    logger.twitch.info('fetching profile image for', userId);
     const result = await twitchApi.get<{
       data: { profile_image_url: string }[];
     }>('/users', {

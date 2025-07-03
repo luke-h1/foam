@@ -12,7 +12,7 @@ import {
 } from '@testing-library/react-native';
 import type { AuthSessionResult } from 'expo-auth-session';
 import * as _SecureStore from 'expo-secure-store';
-import React, { act, type FC, type PropsWithChildren } from 'react';
+import { act, type FC, type PropsWithChildren } from 'react';
 import {
   AuthContextProvider,
   type AuthContextProviderProps,
@@ -23,18 +23,8 @@ import {
 
 jest.mock('@app/services/twitchService');
 jest.mock('@app/services/api');
-
 jest.mock('expo-secure-store');
 
-jest.mock('@react-native-firebase/crashlytics', () => {
-  return {
-    __esModule: true,
-    crashlytics: jest.fn(() => ({
-      log: jest.fn(),
-      recordError: jest.fn(),
-    })),
-  };
-});
 export const initalTestAuthContextProps: AuthContextState = {
   loginWithTwitch: jest.fn(),
   logout: jest.fn(),

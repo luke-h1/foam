@@ -7,7 +7,7 @@ SplashScreen.preventAutoHideAsync();
 
 function FoamApp() {
   // eslint-disable-next-line react/jsx-filename-extension
-  return <App hideSplashScreen={SplashScreen.hideAsync} />;
+  return <App />;
 }
 
 registerRootComponent(FoamApp);

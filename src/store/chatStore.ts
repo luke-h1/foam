@@ -72,8 +72,10 @@ export interface ChatMessageType {
   replyBody: string;
 }
 
+export type ChatStatus = 'idle' | 'loading' | 'fulfilled' | 'error';
+
 export interface ChatState {
-  status: 'idle' | 'loading' | 'fulfilled' | 'error';
+  status: ChatStatus;
 
   /**
    * Emojis
@@ -124,7 +126,7 @@ export interface ChatState {
    * Chat users
    */
   ttvUsers: ChatUser[];
-  setTTvUsers: (users: ChatUser[]) => void;
+  setTTvUsers: (user: ChatUser[]) => void;
 
   /**
    * Twitch badges
@@ -174,14 +176,26 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
   },
 
   /**
-   * Chat users
+   * Chatters
    */
   ttvUsers: [],
   setTTvUsers: users => {
-    return set(state => ({
-      ...state,
-      ttvUsers: users,
-    }));
+    return set(state => {
+      const uniqueUsersMap = new Map(
+        state.ttvUsers.map(user => [user.userId, user]),
+      );
+
+      // Update or add new users
+      users.forEach(user => {
+        uniqueUsersMap.set(user.userId, user);
+      });
+
+      // Convert map back to array
+      return {
+        ...state,
+        ttvUsers: Array.from(uniqueUsersMap.values()),
+      };
+    });
   },
 
   /**

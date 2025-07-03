@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Button, Screen, Typography } from '@app/components';
+import { Button, Typography } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation, useHeader } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
 import newRelic from 'newrelic-react-native-agent';
 import { useEffect } from 'react';
@@ -26,22 +26,16 @@ const CHANNEL_SCOPES = [
 ] as const;
 
 const proxyUrl = new URL(
-  // This changes because we have a naive proxy that hardcodes the redirect URL.
   Platform.select({
     native: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-    // This can basically be any web URL.
     default: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
+    web: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
     ios: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
   }),
 ).toString();
 
 export function LoginScreen() {
-  const { navigate, goBack } = useAppNavigation();
-  useHeader({
-    title: 'Login',
-    leftIcon: 'arrow-left',
-    onLeftPress: () => goBack(),
-  });
+  const navigation = useAppNavigation();
 
   const { loginWithTwitch } = useAuthContext();
 
@@ -79,23 +73,30 @@ export function LoginScreen() {
     if (response?.type === 'success') {
       newRelic.recordCustomEvent('Login', 'LoginSuccess', new Map());
       toast.success('Logged in');
-      navigate('Tabs', {
+
+      navigation.popTo('Tabs', {
         screen: 'Following',
       });
     }
+
+    newRelic.recordCustomEvent(
+      'Login',
+      response?.type ?? 'LoginFail',
+      new Map(),
+    );
   };
 
   useEffect(() => {
     if (response && response?.type === 'success') {
       void handleAuth();
     }
-    // eslint-disable-next-line no-console
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
   return (
-    <Screen
-      contentContainerStyle={{
+    <View
+      style={{
         padding: 8,
         display: 'flex',
         alignItems: 'center',
@@ -107,7 +108,7 @@ export function LoginScreen() {
           <Typography>Login with Twitch</Typography>
         </Button>
       </View>
-    </Screen>
+    </View>
   );
 }
 

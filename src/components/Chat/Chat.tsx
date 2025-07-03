@@ -1,4 +1,3 @@
-/* eslint-disable no-shadow */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
@@ -9,22 +8,24 @@ import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
-import { FlashList } from '@shopify/flash-list';
+import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
+import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
+
 import {
   SafeAreaView,
-  TextInput,
-  useWindowDimensions,
   View,
+  Platform,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
+import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
 import { Typography } from '../Typography';
-import { ChatMessage } from './ChatMessage';
-import { ChatSkeleton } from './ChatSkeleton';
+import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 
 interface ChatProps {
   channelId: string;
@@ -39,6 +40,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       clientId: process.env.TWITCH_CLIENT_ID as string,
     },
     channels: [channelName],
+
     identity: {
       username: user?.display_name ?? '',
       password: authState?.token.accessToken,
@@ -54,6 +56,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     loadChannelResources,
     twitchGlobalEmotes,
     clearChannelResources,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
     status,
     ttvUsers,
     setTTvUsers,
@@ -68,6 +72,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   navigation.addListener('beforeRemove', () => {
     void client.disconnect();
     clearChannelResources();
+    setTTvUsers([]);
   });
 
   const loadChat = async () => {
@@ -81,32 +86,76 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const flashListRef = useRef<FlashList<ChatMessageType>>(null);
+  const legendListRef = useRef<LegendListRef>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
   const { styles, theme } = useStyles(stylesheet);
-
-  const { width, height } = useWindowDimensions();
-
-  // Portrait only: 100% width, 60% height
-  const chatWidth = width;
-  const chatHeight = height * 0.6;
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [showEmotePicker, setShowEmotePicker] = useState<boolean>(false);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const lastContentHeightRef = useRef(0);
-  const lastScrollYRef = useRef(0);
-  const viewportHeightRef = useRef(0);
 
-  const [messageInput, setMessageInput] = useState('');
+  const [messageInput, setMessageInput] = useState<string>('');
+
   const [replyTo, setReplyTo] = useState<{
     messageId: string;
     username: string;
     message: string;
     replyParentUserLogin: string;
   } | null>(null);
+
+  const [, setIsInputFocused] = useState(false);
+
+  const [inputEnabled, setInputEnabled] = useState(false);
+
+  const BOTTOM_THRESHOLD = 100; // px
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const isAtBottomRef = useRef(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
+
+      const distanceFromBottom =
+        contentSize.height - (contentOffset.y + layoutMeasurement.height);
+
+      const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD;
+
+      isAtBottomRef.current = atBottom;
+      setIsAtBottom(atBottom);
+
+      if (atBottom) {
+        setUnreadCount(0);
+      }
+    },
+    [],
+  );
+
+  const handleContentSizeChange = useCallback(() => {
+    if (isAtBottomRef.current) {
+      legendListRef.current?.scrollToEnd({ animated: false });
+    }
+  }, []);
+
+  const MAX_MESSAGES = 150;
+
+  const handleNewMessage = useCallback(
+    (newMessage: ChatMessageType) => {
+      addMessage(newMessage);
+
+      const updatedMessages = [...messagesRef.current, newMessage].slice(
+        -MAX_MESSAGES,
+      );
+      messagesRef.current = updatedMessages;
+      setMessages(updatedMessages);
+
+      if (!isAtBottomRef.current) {
+        setUnreadCount(prev => prev + 1);
+      }
+    },
+    [addMessage],
+  );
 
   const connectToChat = async () => {
     if (isConnecting) {
@@ -116,9 +165,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     try {
       setIsConnecting(true);
       setConnectionError(null);
+
       await client.connect();
 
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       client.on('message', (_channel, tags, text, _self) => {
         const userstate = tags;
 
@@ -128,6 +177,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         const replyParentDisplayName = tags[
           'reply-parent-display-name'
         ] as string;
+
         const replyParentUserLogin = tags['reply-parent-user-login'] as string;
         const replyParentMessageBody = tags['reply-parent-msg-body'] as string;
 
@@ -172,16 +222,19 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         });
 
         const foundTtvUser = ttvUsers.find(
-          u => u.name === `@${userstate.username}`,
+          u => u.name.replace('@', '') === userstate.username,
         );
 
+        /**
+         * Look into https://api.twitch.tv/helix/chat/chatters and seeing if that is more performant than writing to store
+         */
         if (!foundTtvUser) {
           const ttvUser: ChatUser = {
             name: `@${userstate.username}`,
             userId: userstate['user-id'] ?? '',
             color:
               userstate.color ?? generateRandomTwitchColor(userstate.username),
-            avatar: '', // todo fetch this for static twitch CDN,
+            avatar: '',
           };
 
           setTTvUsers([ttvUser]);
@@ -204,12 +257,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         handleNewMessage(newMessage);
       });
 
+      client.on('connecting', () => {
+        void client.say(channelName, `Connecting to ${channelName}'s room`);
+      });
+
       client.on('clearchat', () => {
         messagesRef.current = [];
         setMessages([]);
         setTimeout(() => {
-          flashListRef.current?.scrollToEnd({ animated: false });
+          legendListRef.current?.scrollToEnd({ animated: false });
         }, 0);
+        void client.say(channelName, 'Chat cleared by moderator');
       });
 
       client.on('disconnected', reason => {
@@ -230,55 +288,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  // Track scroll position
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInputEnabled(true);
+    }, 1000);
 
-    // Update refs with current values
-    lastScrollYRef.current = contentOffset.y;
-    viewportHeightRef.current = layoutMeasurement.height;
-    lastContentHeightRef.current = contentSize.height;
-
-    const isAtBottomNow =
-      layoutMeasurement.height + contentOffset.y >= contentSize.height - 20;
-
-    setIsAtBottom(isAtBottomNow);
-  };
-
-  const handleContentSizeChange = (_width: number, height: number) => {
-    lastContentHeightRef.current = height;
-  };
-
-  const addMessageAndMaybeScroll = (newMessage: ChatMessageType) => {
-    messagesRef.current = [...messagesRef.current, newMessage];
-    setMessages([...messagesRef.current]);
-
-    const isCurrentlyAtBottom =
-      viewportHeightRef.current + lastScrollYRef.current >=
-      lastContentHeightRef.current - 20;
-
-    if (isCurrentlyAtBottom) {
-      // eslint-disable-next-line no-undef
-      requestAnimationFrame(() => {
-        flashListRef.current?.scrollToIndex({
-          index: messagesRef.current.length - 1,
-          animated: false,
-        });
-      });
-    }
-  };
-
-  // Update the message handler to add messages
-  const handleNewMessage = useCallback(
-    (newMessage: ChatMessageType) => {
-      addMessage(newMessage);
-      addMessageAndMaybeScroll(newMessage);
-    },
-    [addMessage],
-  );
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSendMessage = useCallback(async () => {
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim()) {
+      return;
+    }
 
     if (replyTo) {
       try {
@@ -300,10 +321,48 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       await client.say(channelName, messageInput);
     }
 
-    // Clear input and reply state
     setMessageInput('');
     setReplyTo(null);
   }, [channelName, client, messageInput, replyTo]);
+
+  const inputContainerRef = useRef<View>(null);
+  const [_inputContainerHeight, setInputContainerHeight] = useState(0);
+
+  const measureInputContainer = useCallback(() => {
+    if (inputContainerRef.current) {
+      inputContainerRef.current.measure((_x, _y, _width, height) => {
+        setInputContainerHeight(height);
+      });
+    }
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: LegendListRenderItemProps<ChatMessageType>) => (
+      <ChatMessage
+        channel={item.channel}
+        message={item.message}
+        userstate={item.userstate}
+        badges={item.badges}
+        message_id={item.message_id}
+        message_nonce={item.message_nonce}
+        sender={item.sender}
+        style={styles.messageContainer}
+        parentDisplayName={item.parentDisplayName}
+        onReply={message => {
+          setReplyTo({
+            messageId: message.message_id,
+            username: message.sender,
+            message: message.message.map(part => part.content).join(''),
+            replyParentUserLogin: message.userstate.username || '',
+          });
+        }}
+        replyDisplayName={item.replyDisplayName}
+        replyBody={item.replyBody}
+      />
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   if (status === 'loading') {
     return <ChatSkeleton />;
@@ -324,104 +383,123 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       <Typography style={styles.header} size="sm">
         CHAT
       </Typography>
-      <View
-        style={[styles.chatContainer, { width: chatWidth, height: chatHeight }]}
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <FlashList
-          data={messages}
-          ref={flashListRef}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => (
-            <ChatMessage
-              channel={item.channel}
-              message={item.message}
-              userstate={item.userstate}
-              badges={item.badges}
-              message_id={item.message_id}
-              message_nonce={item.message_nonce}
-              sender={item.sender}
-              style={styles.messageContainer}
-              parentDisplayName={item.parentDisplayName}
-              onReply={message => {
-                setReplyTo({
-                  messageId: message.message_id,
-                  username: message.sender,
-                  message: message.message.map(part => part.content).join(''),
-                  replyParentUserLogin: message.userstate.username || '',
-                });
-              }}
-              replyDisplayName={item.replyDisplayName}
-              replyBody={item.replyBody}
+        <View
+          style={[
+            styles.chatContainer,
+            {
+              flex: 1,
+              width: '100%',
+              overflow: 'hidden',
+              maxWidth: '100%',
+            },
+          ]}
+        >
+          <AnimatedLegendList
+            data={messages}
+            ref={legendListRef}
+            keyExtractor={item =>
+              `${item.message_id}_${item.message_nonce}_${item.message_id}`
+            }
+            recycleItems
+            waitForInitialLayout
+            estimatedItemSize={150}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            onContentSizeChange={handleContentSizeChange}
+            renderItem={renderItem}
+          />
+          {!isAtBottom && (
+            <ResumeScroll
+              isAtBottomRef={isAtBottomRef}
+              legendListRef={legendListRef}
+              setIsAtBottom={setIsAtBottom}
+              setUnreadCount={setUnreadCount}
+              unreadCount={unreadCount}
             />
           )}
-          estimatedItemSize={40}
-          onScroll={handleScroll}
-          onContentSizeChange={handleContentSizeChange}
-        />
-        {!isAtBottom && (
-          <View style={styles.pausedOverlay}>
-            <Typography style={styles.pausedText}>Chat Paused</Typography>
-            <Button
-              style={styles.resumeButton}
-              onPress={() => {
-                flashListRef.current?.scrollToEnd({ animated: true });
-              }}
-            >
-              <Typography style={styles.resumeButtonText}>Resume</Typography>
-            </Button>
-          </View>
-        )}
-      </View>
-      <View style={styles.inputContainer}>
-        {replyTo && (
-          <View style={styles.replyContainer}>
-            <Typography size="sm" style={styles.replyText}>
-              Replying to {replyTo.username}
-            </Typography>
-            <Button
-              style={styles.cancelReplyButton}
-              onPress={() => setReplyTo(null)}
-            >
-              <Icon icon="x" size={16} color={theme.colors.border} />
-            </Button>
-          </View>
-        )}
-        <Button
-          style={styles.sendButton}
-          onPress={() => setShowEmotePicker(!showEmotePicker)}
+        </View>
+
+        <View
+          ref={inputContainerRef}
+          style={[styles.inputContainer, { zIndex: 2 }]}
+          onLayout={measureInputContainer}
         >
-          <Icon icon="smile" size={24} color={theme.colors.border} />
-        </Button>
-        <TextInput
-          style={styles.input}
-          value={messageInput}
-          onChangeText={setMessageInput}
-          placeholder={
-            replyTo ? `Reply to ${replyTo.username}` : 'Send a message'
-          }
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect={false}
-          placeholderTextColor="#666"
-          onSubmitEditing={() => void handleSendMessage()}
-          returnKeyType="send"
-        />
-        <Button
-          style={styles.sendButton}
-          onPress={() => void handleSendMessage()}
-          disabled={!messageInput.trim()}
-        >
-          <Icon
-            icon="send"
-            size={24}
-            color={
-              messageInput.trim()
-                ? theme.colors.border
-                : theme.colors.borderFaint
+          {replyTo && (
+            <View style={styles.replyContainer}>
+              <Typography size="sm" style={styles.replyText}>
+                Replying to {replyTo.username}
+              </Typography>
+              <Button
+                style={styles.cancelReplyButton}
+                onPress={() => setReplyTo(null)}
+              >
+                <Icon icon="x" size={16} color={theme.colors.border} />
+              </Button>
+            </View>
+          )}
+          <Button
+            style={styles.sendButton}
+            onPress={() => setShowEmotePicker(!showEmotePicker)}
+          >
+            <Icon icon="smile" size={24} color={theme.colors.border} />
+          </Button>
+          <ChatAutoCompleteInput
+            value={messageInput}
+            onChangeText={setMessageInput}
+            onEmoteSelect={emote => {
+              setMessageInput(prev => `${prev + emote.name} `);
+            }}
+            onFocus={() => {
+              setIsInputFocused(true);
+            }}
+            onBlur={() => {
+              setIsInputFocused(false);
+            }}
+            placeholder={
+              replyTo ? `Reply to ${replyTo.username}` : 'Send a message'
             }
+            editable={inputEnabled}
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholderTextColor="#666"
+            onSubmitEditing={() => void handleSendMessage()}
+            returnKeyType="send"
+            prioritizeChannelEmotes
+            status={status}
+            sevenTvChannelEmotes={sevenTvChannelEmotes}
+            sevenTvGlobalEmotes={sevenTvGlobalEmotes}
+            twitchChannelEmotes={twitchChannelEmotes}
+            twitchGlobalEmotes={twitchGlobalEmotes}
+            bttvChannelEmotes={bttvChannelEmotes}
+            bttvGlobalEmotes={bttvGlobalEmotes}
+            ffzChannelEmotes={ffzChannelEmotes}
+            ffzGlobalEmotes={ffzGlobalEmotes}
+            emojis={[]}
+            ttvUsers={ttvUsers}
           />
-        </Button>
-      </View>
+          <Button
+            style={styles.sendButton}
+            onPress={() => void handleSendMessage()}
+            disabled={!messageInput.trim()}
+          >
+            <Icon
+              icon="send"
+              size={24}
+              color={
+                messageInput.trim().length > 0
+                  ? theme.colors.iOS_blue
+                  : theme.colors.borderFaint
+              }
+            />
+          </Button>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 });
@@ -437,6 +515,7 @@ const stylesheet = createStyleSheet(theme => ({
     padding: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: '#2d2d2d',
+    position: 'relative',
   },
   input: {
     flex: 1,
@@ -463,17 +542,16 @@ const stylesheet = createStyleSheet(theme => ({
   },
   chatContainer: {
     flex: 1,
-    // backgroundColor: theme.colors.borderFaint,
   },
-
   messageContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    // alignItems: 'flex-start',
     width: '100%',
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     borderRadius: theme.radii.sm,
+    minHeight: 50,
+    overflow: 'hidden',
   },
   pausedOverlay: {
     position: 'absolute',
@@ -489,15 +567,6 @@ const stylesheet = createStyleSheet(theme => ({
     fontSize: 16,
     marginBottom: 10,
   },
-  resumeButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: theme.radii.md,
-  },
-  resumeButtonText: {
-    color: 'white',
-    fontSize: 16,
-  },
   replyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -512,5 +581,21 @@ const stylesheet = createStyleSheet(theme => ({
   },
   cancelReplyButton: {
     padding: theme.spacing.xs,
+  },
+  emojiPickerContainer: {
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    padding: theme.spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    maxHeight: 300,
   },
 }));

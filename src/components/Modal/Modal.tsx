@@ -1,4 +1,3 @@
-import React from 'react';
 import { Modal as RNModal, View, ViewStyle } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';

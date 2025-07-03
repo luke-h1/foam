@@ -20,7 +20,7 @@ export type TwitchAnd7TVVariant = Extract<
   'stvEmote' | 'twitchClip'
 >;
 
-export interface ParsedPart
+export interface ParsedPart<TType extends PartVariant = PartVariant>
   extends Pick<
     Partial<SanitisiedEmoteSet>,
     'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
@@ -28,7 +28,7 @@ export interface ParsedPart
   id?: string;
   name?: string;
   flags?: number;
-  type: PartVariant;
+  type: TType;
   content: string;
   color?: string;
   width?: number;
@@ -324,122 +324,85 @@ export function replaceTextWithEmotes({
           });
         }
       } else if (text) {
-        /**
-         *  Handle text that might contain emotes or links
-         */
-        if (text.startsWith('@')) {
-          const mentionText = text.endsWith(' ') ? text.trimEnd() : text;
-          const emoteInMention = Array.from(emoteMap.values()).find(emote =>
-            mentionText.includes(emote.name.trimEnd()),
-          );
+        // Split text into words and process each word
+        const words = text.split(/(\s+)/);
+        words.forEach(word => {
+          if (word.startsWith('@')) {
+            const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
+            const emoteInMention = Array.from(emoteMap.values()).find(emote =>
+              mentionText.includes(emote.name.trimEnd()),
+            );
 
-          if (emoteInMention) {
+            if (emoteInMention) {
+              replacedParts.push({
+                type: 'emote',
+                content: emoteInMention.name,
+                creator: emoteInMention.creator,
+                emote_link: emoteInMention.emote_link,
+                original_name: emoteInMention.original_name,
+                url: emoteInMention.url,
+                thumbnail: emoteInMention.url,
+                height: emoteInMention.height,
+                width: emoteInMention.width,
+                site: emoteInMention.site,
+              });
+            }
+
             replacedParts.push({
-              type: 'emote',
-              content: emoteInMention.name,
-              creator: emoteInMention.creator,
-              emote_link: emoteInMention.emote_link,
-              original_name: emoteInMention.original_name,
-              url: emoteInMention.url,
-              thumbnail: emoteInMention.url,
-              height: emoteInMention.height,
-              width: emoteInMention.width,
-              site: emoteInMention.site,
+              type: 'mention',
+              content: mentionText,
+              color: userstate?.color,
+              ...emoteInMention,
             });
-          }
-
-          replacedParts.push({
-            type: 'mention',
-            content: text,
-            color: userstate?.color,
-            ...emoteInMention,
-          });
-        } else {
-          // First check for links
-          const words = text.split(/\s+/);
-          let lastIndex = 0;
-
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          words.forEach(word => {
+          } else if (/\s+/.test(word)) {
+            // Preserve whitespace
+            replacedParts.push({
+              type: 'text',
+              content: word,
+            });
+          } else {
+            // Check for links and emotes in non-mention words
             const linkMetadata = parseLink(word);
             if (linkMetadata) {
-              // Add text before the link if there is any
-              if (lastIndex < text.indexOf(word)) {
-                const textBefore = text.slice(lastIndex, text.indexOf(word));
-                if (textBefore) {
-                  replacedParts.push({
-                    type: 'text',
-                    content: textBefore,
-                  });
-                }
-              }
-
               replacedParts.push({
                 ...linkMetadata,
                 content: word,
               });
-
-              lastIndex = text.indexOf(word) + word.length;
-            }
-          });
-
-          // Process remaining text for emotes
-          const remainingText = text.slice(lastIndex);
-          if (remainingText) {
-            const foundEmotes = findEmotesInText(remainingText, emoteMap);
-
-            if (foundEmotes.length > 0) {
-              // eslint-disable-next-line no-shadow
-              let lastIndex = 0;
-              foundEmotes.forEach(({ emote, start, end }) => {
-                // Add text before the emote if there is any
-                if (start > lastIndex) {
-                  const textBefore = remainingText.slice(lastIndex, start);
-                  if (textBefore) {
+            } else {
+              const foundEmotes = findEmotesInText(word, emoteMap);
+              if (foundEmotes.length > 0) {
+                let lastIndex = 0;
+                foundEmotes.forEach(({ emote, start, end }) => {
+                  if (start > lastIndex) {
                     replacedParts.push({
                       type: 'text',
-                      content: textBefore,
+                      content: word.slice(lastIndex, start),
                     });
                   }
-                }
-
-                replacedParts.push({
-                  type: 'emote',
-                  content: emote.name,
-                  height: emote.height,
-                  width: emote.width,
-                  ...emote,
+                  replacedParts.push({
+                    type: 'emote',
+                    content: emote.name,
+                    height: emote.height,
+                    width: emote.width,
+                    ...emote,
+                  });
+                  lastIndex = end;
                 });
-
-                // Add space after emote if it exists
-                if (end < remainingText.length && remainingText[end] === ' ') {
+                if (lastIndex < word.length) {
                   replacedParts.push({
                     type: 'text',
-                    content: ' ',
+                    content: word.slice(lastIndex),
                   });
                 }
-
-                lastIndex = end + 1;
-              });
-
-              // Add any remaining text after the last emote
-              if (lastIndex < remainingText.length) {
-                const remainingTextAfter = remainingText.slice(lastIndex);
-                if (remainingTextAfter) {
-                  replacedParts.push({
-                    type: 'text',
-                    content: remainingTextAfter.trimEnd(),
-                  });
-                }
+              } else {
+                replacedParts.push({
+                  type: 'text',
+                  content: word,
+                });
               }
-            } else {
-              replacedParts.push({
-                type: 'text',
-                content: remainingText,
-              });
             }
           }
-        }
+        });
       }
     });
 

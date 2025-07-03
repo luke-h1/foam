@@ -1,9 +1,9 @@
-import { Chat, Screen, Spinner, Typography } from '@app/components';
+import { Chat, Spinner, Typography } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useEffect, useRef } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -75,14 +75,14 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   if (!stream) {
     return (
-      <Screen style={styles.container}>
+      <View style={styles.container}>
         <Typography style={styles.videoUser}>User Offline</Typography>
-      </Screen>
+      </View>
     );
   }
 
   return (
-    <Screen style={[styles.contentContainer, isLandscape && styles.row]}>
+    <View style={[styles.contentContainer, isLandscape && styles.row]}>
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
         <WebView
           ref={webViewRef}
@@ -97,12 +97,14 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         />
       </Animated.View>
 
-      <Animated.View style={[animatedChatStyle]}>
-        {!isUserPending && user?.id && (
-          <Chat channelId={user?.id} channelName={stream.user_login} />
+      <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
+        {!isUserPending && user?.id && stream.user_login && (
+          <View style={{ flex: 1, width: '100%', overflow: 'hidden' }}>
+            <Chat channelId={user.id} channelName={stream.user_login} />
+          </View>
         )}
       </Animated.View>
-    </Screen>
+    </View>
   );
 };
 
@@ -134,5 +136,11 @@ const stylesheet = createStyleSheet(() => ({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 50,
     padding: 10,
+  },
+  chatContainer: {
+    overflow: 'hidden',
+    flex: 1,
+    maxWidth: '100%',
+    backgroundColor: '#000',
   },
 }));

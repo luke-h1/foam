@@ -9,6 +9,7 @@ export interface TypographyProps extends TextProps {
   size?: FontSize;
   color?: ThemeColor;
   children: ReactNode;
+  animated?: boolean;
 }
 
 export const typographyStyles = createStyleSheet(() => ({
@@ -31,6 +32,8 @@ export const Typography = forwardRef(
       color = 'text',
       children,
       style,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      animated,
       ...props
     }: TypographyProps,
     ref: LegacyRef<Text>,

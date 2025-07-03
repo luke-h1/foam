@@ -1,12 +1,18 @@
-import { EmptyState, LiveStreamCard, Screen } from '@app/components';
+import {
+  BodyScrollView,
+  EmptyState,
+  LiveStreamCard,
+  AnimatedFlashList,
+  ListRenderItem,
+} from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { RefreshControl } from '@app/components/RefreshControl';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useHeader } from '@app/hooks';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { Stream } from '@app/services';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useMemo, useState, JSX } from 'react';
-import { FlatList, View, RefreshControl } from 'react-native';
+import { useMemo, useState, JSX, useCallback } from 'react';
+
 import { toast } from 'sonner-native';
 
 export interface Section {
@@ -20,10 +26,6 @@ export default function FollowingScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
-  useHeader({
-    title: 'Following',
-  });
-
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.refetchQueries({
@@ -34,11 +36,15 @@ export default function FollowingScreen() {
 
   const followingStreamsQuery = useMemo(
     () => twitchQueries.getFollowedStreams(user?.id as string),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [user],
   );
 
   const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
+
+  const renderItem: ListRenderItem<Stream> = useCallback(({ item }) => {
+    return <LiveStreamCard stream={item} />;
+  }, []);
 
   if (refreshing || isLoading) {
     return (
@@ -70,25 +76,12 @@ export default function FollowingScreen() {
   }
 
   return (
-    <Screen>
-      <View
-        style={{
-          padding: 4,
-        }}
-      >
-        <View>
-          <FlatList<Stream>
-            data={streams}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => <LiveStreamCard stream={item} />}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-          />
-        </View>
-      </View>
-    </Screen>
+    <BodyScrollView refreshControl={<RefreshControl onRefresh={onRefresh} />}>
+      <AnimatedFlashList<Stream>
+        data={streams}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+      />
+    </BodyScrollView>
   );
 }

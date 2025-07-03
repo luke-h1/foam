@@ -2,7 +2,6 @@
 // @ts-nocheck
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable no-console */
 
 export const bttvWsService = {
   handleEvents: (channelId: string) => {
@@ -23,10 +22,9 @@ export const bttvWsService = {
 
     ws.onmessage = (event: MessageEvent) => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const message = JSON.parse(event.data);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
         const messageType = message.name;
         const { data } = message;
 
@@ -47,7 +45,6 @@ export const bttvWsService = {
 
         if (messageType === 'emote_create') {
           if (!data.emote) {
-            // eslint-disable-next-line no-useless-return
             return;
           }
 
@@ -67,7 +64,6 @@ export const bttvWsService = {
 
         if (messageType === 'emote_update') {
           if (!data.emote) {
-            // eslint-disable-next-line no-useless-return
             return;
           }
 

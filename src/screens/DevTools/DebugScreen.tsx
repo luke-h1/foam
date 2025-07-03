@@ -1,16 +1,16 @@
-/* eslint-disable no-shadow */
-import { Screen, Typography, Button, TextField } from '@app/components';
+import { Typography, Button, TextField, FlashList } from '@app/components';
 import { useAuthContext } from '@app/context';
-import { useAppNavigation, useHeader, useDebugOptions } from '@app/hooks';
+import { useAppNavigation, useDebugOptions } from '@app/hooks';
 import {
   AllowedKey,
   NAMESPACE,
   storageService,
   twitchService,
 } from '@app/services';
+import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
-import { useState, useEffect } from 'react';
-import { Alert, FlatList, Switch, View } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { Alert, Switch, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
 type DebugItem = {
@@ -172,18 +172,11 @@ function NavigateToChat() {
 }
 
 export function DebugScreen() {
-  const { goBack } = useAppNavigation();
   const debugOptions = useDebugOptions();
   const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(
     {},
   );
   const { styles } = useStyles(stylesheet);
-
-  useHeader({
-    title: 'Debug',
-    leftIcon: 'arrow-left',
-    onLeftPress: () => goBack(),
-  });
 
   useEffect(() => {
     const newSwitchOptions = debugItems.reduce(
@@ -218,54 +211,61 @@ export function DebugScreen() {
     </>
   );
 
+  const renderListFooter = useCallback(() => {
+    return (
+      <>
+        <View style={[styles.sectionHeader, styles.storageState]}>
+          <Typography style={styles.sectionTitle}>Debug Options</Typography>
+          <Typography style={styles.storageValue}>
+            {JSON.stringify(debugOptions, null, 2)}
+          </Typography>
+        </View>
+        {renderFooter()}
+      </>
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const renderListItem: ListRenderItem<DebugItem> = useCallback(({ item }) => {
+    return (
+      <View style={styles.itemContainer}>
+        <View style={styles.itemHeader}>
+          <Typography style={styles.itemTitle}>{item.title}</Typography>
+          {item.type === 'switch' ? (
+            <Switch
+              value={switchOptions[item.title] ?? false}
+              onValueChange={value => {
+                handleToggleSwitch(
+                  item.title,
+                  value,
+                  item.onPress,
+                  item.storageKey,
+                );
+              }}
+            />
+          ) : (
+            <Button
+              onPress={() => {
+                item.onPress();
+              }}
+            >
+              <Typography>Clear</Typography>
+            </Button>
+          )}
+        </View>
+        <Typography size="xs">{item.description}</Typography>
+      </View>
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <Screen preset="fixed">
-      <FlatList
-        data={debugItems}
-        keyExtractor={item => item.title}
-        renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <View style={styles.itemHeader}>
-              <Typography style={styles.itemTitle}>{item.title}</Typography>
-              {item.type === 'switch' ? (
-                <Switch
-                  value={switchOptions[item.title] ?? false}
-                  onValueChange={value => {
-                    handleToggleSwitch(
-                      item.title,
-                      value,
-                      item.onPress,
-                      item.storageKey,
-                    );
-                  }}
-                />
-              ) : (
-                <Button
-                  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                  onPress={() => {
-                    item.onPress();
-                  }}
-                >
-                  <Typography>Clear</Typography>
-                </Button>
-              )}
-            </View>
-            <Typography size="xs">{item.description}</Typography>
-          </View>
-        )}
-        ListFooterComponent={
-          <>
-            <View style={[styles.sectionHeader, styles.storageState]}>
-              <Typography style={styles.sectionTitle}>Debug Options</Typography>
-              <Typography style={styles.storageValue}>
-                {JSON.stringify(debugOptions, null, 2)}
-              </Typography>
-            </View>
-            {renderFooter()}
-          </>
-        }
-      />
-    </Screen>
+    <FlashList<DebugItem>
+      data={debugItems}
+      keyExtractor={item => item.title}
+      renderItem={renderListItem}
+      ListFooterComponent={renderListFooter}
+    />
   );
 }
 

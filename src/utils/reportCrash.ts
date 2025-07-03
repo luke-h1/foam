@@ -1,5 +1,5 @@
 import newRelic from 'newrelic-react-native-agent';
-/* eslint-disable no-console */
+
 export enum ErrorType {
   /**
    * An error that would normally cause a red screen in dev
@@ -15,7 +15,6 @@ export enum ErrorType {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const reportCrash = (error: any, type = ErrorType.FATAL) => {
   if (__DEV__ || process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const message = error instanceof Error ? error.message : 'Unknown';
     console.error(error);
     console.log(message, type);

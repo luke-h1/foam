@@ -16,7 +16,12 @@ export type TopStackScreenProps<T extends keyof TopStackParamList> =
 
 export function TopStackNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Top">
+    <Stack.Navigator
+      initialRouteName="Top"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
       <Stack.Screen
         name="Top"
         component={TopScreen}

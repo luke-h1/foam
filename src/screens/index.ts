@@ -4,7 +4,6 @@ export * from './StorybookScreen';
 export * from './Stream';
 export * from './Top';
 export * from './AccountScreen';
-export * from './AuthLoading';
 export * from './CategoryScreen';
 export * from './Other/ChangelogScreen';
 export * from './FollowingScreen';

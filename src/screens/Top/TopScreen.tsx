@@ -1,9 +1,6 @@
 import { Button, Typography } from '@app/components';
-import { useAuthContext } from '@app/context';
-import { useHeader } from '@app/hooks';
-import { BackButton } from '@app/navigators';
-import React, { useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
+import { SafeAreaView, useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
@@ -14,21 +11,12 @@ export function TopScreen() {
   const [index, setIndex] = useState<number>(0);
   const { styles, theme } = useStyles(stylesheet);
 
-  const { user } = useAuthContext();
-
   const [routes] = useState([
     { key: 'streams', title: 'Streams' },
     { key: 'categories', title: 'Categories' },
   ]);
-  const [currentTitle, setCurrentTitle] = useState<string>('Streams');
-
-  useHeader(
-    {
-      title: currentTitle,
-      LeftActionComponent: user ? <BackButton /> : undefined,
-    },
-    [currentTitle],
-  );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, setCurrentTitle] = useState<string>('Streams');
 
   const renderScene = SceneMap({
     streams: TopStreamsScreen,
@@ -36,38 +24,40 @@ export function TopScreen() {
   });
 
   return (
-    <TabView
-      navigationState={{ index, routes }}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{ width: layout.width }}
-      style={{
-        backgroundColor: theme.colors.screen,
-      }}
-      renderTabBar={props => (
-        <View style={styles.tabContainer}>
-          {props.navigationState.routes.map((route, i) => {
-            return (
-              <Button
-                key={route.key}
-                onPress={() => {
-                  props.jumpTo(route.key);
-                  setCurrentTitle(route.title);
-                }}
-                style={[
-                  styles.tab,
-                  {
-                    borderBottomColor: index === i ? 'purple' : 'transparent',
-                  },
-                ]}
-              >
-                <Typography>{route.title}</Typography>
-              </Button>
-            );
-          })}
-        </View>
-      )}
-    />
+    <SafeAreaView style={{ flex: 1 }}>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width }}
+        style={{
+          backgroundColor: theme.colors.screen,
+        }}
+        renderTabBar={props => (
+          <View style={styles.tabContainer}>
+            {props.navigationState.routes.map((route, i) => {
+              return (
+                <Button
+                  key={route.key}
+                  onPress={() => {
+                    props.jumpTo(route.key);
+                    setCurrentTitle(route.title);
+                  }}
+                  style={[
+                    styles.tab,
+                    {
+                      borderBottomColor: index === i ? 'purple' : 'transparent',
+                    },
+                  ]}
+                >
+                  <Typography>{route.title}</Typography>
+                </Button>
+              );
+            })}
+          </View>
+        )}
+      />
+    </SafeAreaView>
   );
 }
 

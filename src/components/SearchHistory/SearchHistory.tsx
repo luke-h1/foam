@@ -1,8 +1,10 @@
 import { Entypo } from '@expo/vector-icons';
-import React from 'react';
-import { View, FlatList } from 'react-native';
+import { ListRenderItem } from '@shopify/flash-list';
+import { useCallback } from 'react';
+import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
+import { FlashList } from '../FlashList';
 import { Typography } from '../Typography';
 
 interface Props {
@@ -19,6 +21,22 @@ export function SearchHistory({
   onSelectItem,
 }: Props) {
   const { styles, theme } = useStyles(stylesheet);
+
+  const renderItem: ListRenderItem<string> = useCallback(
+    ({ item }) => (
+      <View style={styles.itemContainer}>
+        <Button style={styles.item} onPress={() => onSelectItem(item)}>
+          <Typography size="sm">{item}</Typography>
+        </Button>
+        <Button onPress={() => onClearItem(item)}>
+          <Entypo name="cross" size={24} color={theme.colors.underline} />
+        </Button>
+      </View>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -31,20 +49,12 @@ export function SearchHistory({
           </>
         )}
       </View>
-      <FlatList<string>
+      <FlashList<string>
         data={results}
+        style={{ flex: 1 }}
         keyExtractor={item => item}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <Button style={styles.item} onPress={() => onSelectItem(item)}>
-              <Typography size="sm">{item}</Typography>
-            </Button>
-            <Button onPress={() => onClearItem(item)}>
-              <Entypo name="cross" size={24} color={theme.colors.underline} />
-            </Button>
-          </View>
-        )}
+        renderItem={renderItem}
       />
     </View>
   );

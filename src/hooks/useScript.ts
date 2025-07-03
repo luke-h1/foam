@@ -74,7 +74,6 @@ export const useScript = (src: string) => {
     script.addEventListener('load', setStateFromEvent);
     script.addEventListener('error', setStateFromEvent);
 
-    // eslint-disable-next-line consistent-return
     return () => {
       script?.removeEventListener('load', setStateFromEvent);
       script?.removeEventListener('error', setStateFromEvent);

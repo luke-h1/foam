@@ -100,21 +100,18 @@ export const ffzService = {
         // @ts-ignore
         result.default_sets[0]
         // @ts-expect-error improve types of emote
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       ].emoticons.map<SanitisiedEmoteSet>(emote => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-
         return {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           name: emote.name,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
           id: emote.id.toString(),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           url: emote.animated
             ? `https://cdn.frankerfacez.com/emote/${emote.id}/animated/4`
             : `https://cdn.frankerfacez.com/emote/${emote.id}/4`,
           emote_link: `https://www.frankerfacez.com/emoticon/${emote.id}`,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
           creator: 'UNKNOWN',
           site: 'Global FFZ',
           original_name: 'UNKNOWN',

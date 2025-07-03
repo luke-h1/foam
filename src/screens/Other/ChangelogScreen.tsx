@@ -1,6 +1,4 @@
-import { Screen, Typography } from '@app/components';
-import { useHeader } from '@app/hooks';
-import { useNavigation } from '@react-navigation/native';
+import { Typography } from '@app/components';
 
 // todo - in the future, read from github md
 const mockChangelog = `
@@ -40,16 +38,5 @@ All notable changes to this project will be documented in this file.
 `;
 
 export function ChangelogScreen() {
-  const { goBack } = useNavigation();
-  useHeader({
-    title: 'Changelog',
-    leftIcon: 'arrow-left',
-    onLeftPress: () => goBack(),
-  });
-
-  return (
-    <Screen preset="scroll">
-      <Typography>{mockChangelog}</Typography>
-    </Screen>
-  );
+  return <Typography>{mockChangelog}</Typography>;
 }

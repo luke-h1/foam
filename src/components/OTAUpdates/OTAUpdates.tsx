@@ -22,7 +22,6 @@ export function OTAUpdates() {
 
   async function onFetchUpdateAsync() {
     if (__DEV__ || process.env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-useless-return
       return;
     }
 

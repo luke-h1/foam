@@ -8,7 +8,6 @@ export const useChangeScreenOrientation = () => {
 
       const subscription = ScreenOrientation.addOrientationChangeListener(
         event => {
-          // eslint-disable-next-line no-console
           console.info(
             'Orientation changed:',
             event.orientationInfo.orientation,

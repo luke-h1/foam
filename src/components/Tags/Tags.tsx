@@ -1,8 +1,10 @@
 import { useAppNavigation } from '@app/hooks';
-import React from 'react';
-import { FlatList, View } from 'react-native';
+import { ListRenderItem } from '@shopify/flash-list';
+import { useCallback } from 'react';
+import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
+import { FlashList } from '../FlashList';
 import { Typography } from '../Typography';
 
 interface Props {
@@ -14,7 +16,24 @@ export function Tags({ tags, limit = 10 }: Props) {
   const { styles } = useStyles(stylesheet);
   const { navigate } = useAppNavigation();
 
-  if (!tags) {
+  const renderItem: ListRenderItem<string> = useCallback(({ item }) => {
+    return (
+      <Button
+        onPress={() => {
+          navigate('Category', {
+            id: item,
+          });
+        }}
+      >
+        <View style={styles.tag}>
+          <Typography>{item}</Typography>
+        </View>
+      </Button>
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (tags.length === 0) {
     return null;
   }
 
@@ -22,24 +41,13 @@ export function Tags({ tags, limit = 10 }: Props) {
 
   return (
     <View style={styles.container}>
-      <FlatList<string>
+      <FlashList<string>
         data={limitedTags}
+        estimatedItemSize={10}
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={item => item}
-        renderItem={({ item }) => (
-          <Button
-            onPress={() => {
-              navigate('Category', {
-                id: item,
-              });
-            }}
-          >
-            <View style={styles.tag}>
-              <Typography>{item}</Typography>
-            </View>
-          </Button>
-        )}
+        renderItem={renderItem}
       />
     </View>
   );

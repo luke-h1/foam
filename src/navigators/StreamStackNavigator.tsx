@@ -28,6 +28,7 @@ export function StreamStackNavigator() {
         options={{
           headerShown: false,
           orientation: 'portrait_up',
+          presentation: 'modal',
         }}
       />
     </Stack.Navigator>

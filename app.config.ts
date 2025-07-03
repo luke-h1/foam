@@ -114,24 +114,15 @@ const config: ExpoConfig = {
   },
   plugins: [
     ['app-icon-badge', appIconBadgeConfig],
-    ['expo-font', 'expo-secure-store'],
+    ['expo-secure-store'],
+    ['expo-font'],
+    ['@bacons/apple-colors'],
     [
       'expo-build-properties',
       {
         ios: {
-          flipper: true,
           useFrameworks: 'static',
         },
-        android: {
-          enableProguardInReleaseBuilds: true,
-          enableShrinkResourcesInReleaseBuilds: true,
-        },
-      },
-    ],
-    [
-      'expo-dev-launcher',
-      {
-        launchMode: 'most-recent',
       },
     ],
     [
@@ -141,7 +132,6 @@ const config: ExpoConfig = {
         supportsPictureInPicture: true,
       },
     ],
-    ['newrelic-react-native-agent'],
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
     // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
@@ -166,6 +156,7 @@ const config: ExpoConfig = {
     googleServicesFile: googleServicesExist
       ? appConfig.androidGoogleServicesFile
       : undefined,
+    edgeToEdgeEnabled: true,
   },
 };
 

@@ -1,12 +1,12 @@
 /* eslint-disable camelcase */
 import {
-  Inter_300Light,
-  Inter_400Regular,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_900Black,
+  SourceCodePro_400Regular,
+  SourceCodePro_300Light,
+  SourceCodePro_600SemiBold,
+  SourceCodePro_700Bold,
   useFonts,
-} from '@expo-google-fonts/inter';
+} from '@expo-google-fonts/source-code-pro';
+
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as Sentry from '@sentry/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -16,7 +16,9 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect, useState } from 'react';
 import { LogBox } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
+
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -48,9 +50,7 @@ Sentry.init({
   attachThreads: true,
   enableAppStartTracking: true,
   enableCaptureFailedRequests: true,
-
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: __DEV__,
+  spotlight: __DEV__,
 });
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
@@ -65,9 +65,9 @@ function App(props: AppProps) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        retry: 3,
+        retry: 5,
         refetchOnReconnect: true,
-        retryDelay: 2000,
+        retryDelay: 3000,
       },
     },
   });
@@ -93,11 +93,10 @@ function App(props: AppProps) {
   const [recoveredFromError, setRecoveredFromError] = useState<boolean>(false);
 
   useFonts({
-    Inter_900Black,
-    Inter_300Light,
-    Inter_400Regular,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    SourceCodePro_400Regular,
+    SourceCodePro_300Light,
+    SourceCodePro_600SemiBold,
+    SourceCodePro_700Bold,
   });
 
   useLayoutEffect(() => {
@@ -124,63 +123,69 @@ function App(props: AppProps) {
    * native by rootView's background color.
    * In iOS: application:didFinishLaunchingWithOptions:
    * In Android: https://stackoverflow.com/a/45838109/204044
-   * You can replace with your own loading component
    */
-
-  // otherwise, we're ready to render the app
 
   return (
     <ErrorBoundary
       catchErrors={BaseConfig.catchErrors}
       onReset={() => setRecoveredFromError(true)}
     >
-      <GestureHandlerRootView>
-        <BottomSheetModalProvider>
-          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-            <QueryClientProvider client={queryClient}>
-              <AppNavigator
-                initialState={
-                  recoveredFromError
-                    ? { index: 0, routes: [] }
-                    : initialNavigationState
-                }
-                onStateChange={onNavigationStateChange}
-              >
-                <OTAUpdates />
-              </AppNavigator>
-              <Toaster
-                position="bottom-center"
-                gap={20}
-                toastOptions={{
-                  actionButtonStyle: {
-                    paddingHorizontal: 20,
-                  },
-                }}
-                pauseWhenPageIsHidden
-                duration={3000}
-                richColors
-                visibleToasts={4}
-                closeButton
-                autoWiggleOnUpdate="toast-change"
-                theme="system"
-              />
-              {ReactQueryDebug?.enabled && (
-                <DevToolsBubble
-                  onCopy={async text => {
-                    try {
-                      await Clipboard.setStringAsync(text);
-                      return true;
-                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    } catch (error) {
-                      return false;
+      <KeyboardProvider>
+        <GestureHandlerRootView>
+          <BottomSheetModalProvider>
+            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+              <QueryClientProvider client={queryClient}>
+                {__DEV__ ? (
+                  <AppNavigator
+                    initialState={
+                      recoveredFromError
+                        ? { index: 0, routes: [] }
+                        : initialNavigationState
                     }
+                    onStateChange={onNavigationStateChange}
+                  >
+                    <OTAUpdates />
+                  </AppNavigator>
+                ) : (
+                  <AppNavigator>
+                    <OTAUpdates />
+                  </AppNavigator>
+                )}
+
+                <Toaster
+                  position="bottom-center"
+                  gap={20}
+                  toastOptions={{
+                    actionButtonStyle: {
+                      paddingHorizontal: 20,
+                    },
                   }}
+                  pauseWhenPageIsHidden
+                  duration={3000}
+                  richColors
+                  visibleToasts={4}
+                  closeButton
+                  autoWiggleOnUpdate="toast-change"
+                  theme="system"
                 />
-              )}
-            </QueryClientProvider>
-          </SafeAreaProvider>
-        </BottomSheetModalProvider>
-      </GestureHandlerRootView>
+                {ReactQueryDebug?.enabled && (
+                  <DevToolsBubble
+                    onCopy={async text => {
+                      try {
+                        await Clipboard.setStringAsync(text);
+                        return true;
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      } catch (error) {
+                        return false;
+                      }
+                    }}
+                  />
+                )}
+              </QueryClientProvider>
+            </SafeAreaProvider>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </KeyboardProvider>
     </ErrorBoundary>
   );
 }

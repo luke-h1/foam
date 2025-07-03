@@ -1,101 +1,32 @@
-import { Typography } from '@app/components';
-import * as Application from 'expo-application';
-import { useUpdates } from 'expo-updates';
-import { ScrollView, View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
-
-interface InfoRowProps {
-  label: string;
-  value: string;
-}
-
-function InfoRow({ label, value }: InfoRowProps) {
-  const { styles } = useStyles(stylesheet);
-
-  return (
-    <View style={styles.row}>
-      <Typography style={styles.label}>{label}</Typography>
-      <Typography style={styles.value}>{value}</Typography>
-    </View>
-  );
-}
-
-interface TableData {
-  title: string;
-  data: Record<string, string>;
-}
+import * as Form from '@app/components/Form/Form';
+import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
+import * as AC from '@bacons/apple-colors';
+import { Linking, View } from 'react-native';
+import { AppStoreSection } from './AppStoreSection';
+import { ExpoSection } from './ExpoSection';
+import { OTADynamicSection } from './OTADynamicSection';
+import { OTASection } from './OTASection';
 
 export function Diagnostics() {
-  const { styles } = useStyles(stylesheet);
-  const { isUpdateAvailable, isUpdatePending } = useUpdates();
-
-  const sections: TableData[] = [
-    {
-      title: 'Application',
-      data: {
-        Name: Application.applicationName ?? '',
-        Version: Application.nativeApplicationVersion ?? '',
-        'Build Number': Application.nativeBuildVersion ?? '',
-        'Build ID': process.env.EAS_BUILD_ID ?? '',
-        'Commit Hash': process.env.EAS_BUILD_GIT_COMMIT_HASH ?? '',
-      },
-    },
-    {
-      title: 'Updates',
-      data: {
-        'Update Available': isUpdateAvailable ? 'Yes' : 'No',
-        'Update Pending': isUpdatePending ? 'Yes' : 'No',
-      },
-    },
-  ];
-
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.table}>
-        {sections.map(({ title, data }) => (
-          <View key={title} style={styles.section}>
-            <View style={[styles.row, styles.headerRow]}>
-              <Typography style={styles.headerText}>{title}</Typography>
-            </View>
-            {Object.entries(data).map(([key, value]) => (
-              <InfoRow key={key} label={key} value={value} />
-            ))}
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+    <>
+      <AppStoreSection />
+      <ExpoSection />
+      <View style={{ marginTop: 18 }} />
+      <Form.Section title="Views">
+        {process.env.EXPO_OS !== 'web' && (
+          <Form.Text
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onPress={() => Linking.openSettings()}
+            hint={<IconSymbol name="gear" color={AC.secondaryLabel} />}
+          >
+            Open System Settings
+          </Form.Text>
+        )}
+      </Form.Section>
+
+      <OTADynamicSection />
+      <OTASection />
+    </>
   );
 }
-
-const stylesheet = createStyleSheet(theme => ({
-  container: {
-    flex: 1,
-    padding: theme.spacing.xl,
-  },
-  table: {
-    overflow: 'hidden',
-  },
-  section: {
-    marginBottom: theme.spacing.lg,
-  },
-  row: {
-    flexDirection: 'row',
-    padding: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerRow: {
-    borderBottomWidth: 2,
-  },
-  headerText: {
-    fontWeight: 'bold',
-  },
-  label: {
-    flex: 1,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-  },
-  value: {
-    flex: 2,
-  },
-}));

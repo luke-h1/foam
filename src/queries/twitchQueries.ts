@@ -38,7 +38,6 @@ export const twitchQueries = {
     return {
       queryKey: ['followedStreams', userId],
       queryFn: () => twitchService.getFollowedStreams(userId),
-      refetchInterval: 30000, // 30 seconds
     };
   },
   getUserInfo(token: string): UseQueryOptions<UserInfoResponse> {

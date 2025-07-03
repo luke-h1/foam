@@ -1,7 +1,6 @@
-import { Button, Icon, Screen, Typography } from '@app/components';
-import { useHeader } from '@app/hooks';
+import { Button, Icon, Typography } from '@app/components';
 import { openLinkInBrowser } from '@app/utils';
-import React, { type ErrorInfo, useState } from 'react';
+import { type ErrorInfo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
@@ -15,9 +14,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   const { styles } = useStyles(stylesheet);
   const { error, errorInfo, onReset } = props;
   const [showStackTrace, setShowStackTrace] = useState(false);
-  useHeader({
-    title: 'Error',
-  });
+
   const errorTitle = `${error}`.trim();
 
   const stackTrace = errorInfo?.componentStack
@@ -30,7 +27,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   );
 
   return (
-    <Screen preset="scroll">
+    <>
       <View style={styles.topSection}>
         <Icon icon="alert-circle" size={30} />
         <Typography style={styles.heading}>Something went wrong</Typography>
@@ -64,7 +61,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       <Button style={styles.resetButton} onPress={onReset}>
         Reset
       </Button>
-    </Screen>
+    </>
   );
 }
 

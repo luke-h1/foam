@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable camelcase */
 import { twitchApi } from '@app/services/api';
 import {
   DefaultTokenResponse,
