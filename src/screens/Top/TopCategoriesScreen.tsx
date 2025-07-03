@@ -1,16 +1,10 @@
-import { CategoryCard, EmptyState, Screen, ScrollToTop } from '@app/components';
+import { CategoryCard, EmptyState, FlashList } from '@app/components';
 import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { type Category, twitchService } from '@app/services';
+import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
-import {
-  FlatList,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  RefreshControl,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { RefreshControl, View, type ViewStyle } from 'react-native';
 
 const SKELETON_COUNT = 9;
 const SKELETON_COLUMNS = 3;
@@ -30,8 +24,7 @@ export function TopCategoriesScreen() {
     undefined,
   );
   const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
-  const flatListRef = useRef<FlatList<Category>>(null);
+  const flashListRef = useRef<FlashList<Category>>(null);
 
   const {
     data: categories,
@@ -49,16 +42,36 @@ export function TopCategoriesScreen() {
     getPreviousPageParam: () => previousCursor,
   });
 
+  const handleLoadMore = useCallback(async () => {
+    setPreviousCursor(cursor);
+    const nextCursor =
+      categories?.pages[categories.pages.length - 1]?.pagination.cursor;
+    setCursor(nextCursor);
+    await fetchNextPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasNextPage]);
+
+  const renderItem: ListRenderItem<Category> = useCallback(({ item }) => {
+    return (
+      <View style={$categoryCardContainer}>
+        <CategoryCard category={item} />
+      </View>
+    );
+  }, []);
+
+  const loadingRenderItem: ListRenderItem<unknown> = useCallback(() => {
+    return <CategoryCardSkeleton />;
+  }, []);
+
   if (isLoading || refreshing) {
     return (
-      <Screen style={{ flex: 1 }}>
-        <FlatList
-          data={Array.from({ length: SKELETON_COUNT })}
-          keyExtractor={(_, idx) => `skeleton-${idx}`}
-          numColumns={SKELETON_COLUMNS}
-          renderItem={() => <CategoryCardSkeleton />}
-        />
-      </Screen>
+      <FlashList
+        style={{ flex: 1 }}
+        data={Array.from({ length: SKELETON_COUNT })}
+        keyExtractor={(_, idx) => `skeleton-${idx}`}
+        numColumns={SKELETON_COLUMNS}
+        renderItem={loadingRenderItem}
+      />
     );
   }
 
@@ -88,59 +101,28 @@ export function TopCategoriesScreen() {
     );
   }
 
-  const handleLoadMore = async () => {
-    if (hasNextPage) {
-      setPreviousCursor(cursor);
-      const nextCursor =
-        categories?.pages[categories.pages.length - 1]?.pagination.cursor;
-      setCursor(nextCursor);
-      await fetchNextPage();
-    }
-  };
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-
-    if (offsetY > 300) {
-      setShowScrollToTop(true);
-    } else {
-      setShowScrollToTop(false);
-    }
-  };
-
-  const scrollToTop = () => {
-    flatListRef.current?.scrollToOffset({ animated: true, offset: 0 });
-  };
-
   return (
-    <Screen style={{ flex: 1 }}>
-      <FlatList<Category>
-        data={allCategories}
-        ref={flatListRef}
-        renderItem={({ item }) => (
-          <View style={$categoryCardContainer}>
-            <CategoryCard category={item} />
-          </View>
-        )}
-        keyExtractor={(_item, index) => index.toString()}
-        numColumns={3}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={1.5}
-        onRefresh={onRefresh}
-        onScroll={handleScroll}
-        refreshing={refreshing}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="white"
-            colors={['white']}
-          />
-        }
-      />
-      {showScrollToTop && <ScrollToTop onPress={scrollToTop} />}
-    </Screen>
+    <FlashList<Category>
+      data={allCategories}
+      style={{ flex: 1 }}
+      numColumns={3}
+      ref={flashListRef}
+      renderItem={renderItem}
+      keyExtractor={(_item, index) => index.toString()}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.4}
+      onRefresh={onRefresh}
+      refreshing={refreshing}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="white"
+          colors={['white']}
+        />
+      }
+    />
   );
 }
 

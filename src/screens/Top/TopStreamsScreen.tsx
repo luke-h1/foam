@@ -1,28 +1,22 @@
-import {
-  EmptyState,
-  LiveStreamCard,
-  Screen,
-  ScrollToTop,
-} from '@app/components';
+import { EmptyState, LiveStreamCard, FlashList } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { useDebouncedCallback } from '@app/hooks';
 import { Stream, twitchService } from '@app/services';
+import { getNextPageParam, getPreviousPageParam } from '@app/utils';
+import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useState, useRef } from 'react';
-import {
-  FlatList,
-  RefreshControl,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from 'react-native';
+import { useState, useRef, useCallback } from 'react';
+import { RefreshControl } from 'react-native';
+
+// Enhanced Stream type with profile picture
+interface StreamWithProfile extends Stream {
+  profilePicture?: string;
+}
 
 export function TopStreamsScreen() {
-  const [previousCursor, setPreviousCursor] = useState<string | undefined>(
-    undefined,
-  );
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [cursor, setCursor] = useState<string>('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
-  const flatListRef = useRef<FlatList<Stream>>(null);
+  const flashListRef = useRef<FlashList<StreamWithProfile>>(null);
 
   const {
     data: streams,
@@ -30,14 +24,38 @@ export function TopStreamsScreen() {
     refetch,
     hasNextPage,
     isLoading,
+    isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['TopStreams'],
-    queryFn: ({ pageParam }: { pageParam?: string }) =>
-      twitchService.getTopStreams(pageParam as string),
     initialPageParam: cursor,
-    getNextPageParam: lastPage => lastPage.pagination.cursor,
-    getPreviousPageParam: () => previousCursor,
+    getNextPageParam,
+    getPreviousPageParam,
+    queryFn: ({ pageParam }) => twitchService.getTopStreams(pageParam),
+    queryKey: ['Streams'],
   });
+
+  const handleLoadMore = useCallback(async () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      const nextCursor =
+        streams?.pages[streams.pages.length - 1]?.pagination.cursor;
+      setCursor(nextCursor as string);
+      await fetchNextPage();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasNextPage, isFetchingNextPage]);
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  const [debouncedHandleLoadMore] = useDebouncedCallback(handleLoadMore, 150);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const renderItem: ListRenderItem<Stream> = useCallback(({ item }) => {
+    return <LiveStreamCard stream={item} />;
+  }, []);
 
   if (refreshing || isLoading) {
     return (
@@ -50,12 +68,6 @@ export function TopStreamsScreen() {
     );
   }
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  };
-
   const allStreams = streams?.pages.flatMap(page => page.data) ?? [];
 
   if (allStreams.length === 0) {
@@ -65,52 +77,26 @@ export function TopStreamsScreen() {
     );
   }
 
-  const handleLoadMore = async () => {
-    if (hasNextPage) {
-      setPreviousCursor(cursor);
-      const nextCursor =
-        streams?.pages[streams.pages.length - 1]?.pagination.cursor;
-      setCursor(nextCursor);
-      await fetchNextPage();
-    }
-  };
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    if (offsetY > 300) {
-      setShowScrollToTop(true);
-    } else {
-      setShowScrollToTop(false);
-    }
-  };
-
-  const scrollToTop = () => {
-    flatListRef.current?.scrollToOffset({ animated: true, offset: 0 });
-  };
-
   return (
-    <Screen style={{ flex: 1 }}>
-      <FlatList<Stream>
-        ref={flatListRef}
-        data={allStreams}
-        renderItem={({ item }) => <LiveStreamCard stream={item} />}
-        keyExtractor={item => item.id}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={1.5}
-        refreshing={refreshing}
-        onScroll={handleScroll}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onRefresh={onRefresh}
-            tintColor="white"
-            colors={['white']}
-          />
-        }
-      />
-      {showScrollToTop && <ScrollToTop onPress={scrollToTop} />}
-    </Screen>
+    <FlashList<StreamWithProfile>
+      ref={flashListRef}
+      style={{ flex: 1 }}
+      data={allStreams}
+      renderItem={renderItem}
+      keyExtractor={item => `${item.id}-${item.title}`}
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      onEndReached={debouncedHandleLoadMore}
+      refreshing={refreshing}
+      onEndReachedThreshold={0.3}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onRefresh={onRefresh}
+          tintColor="white"
+          colors={['white']}
+        />
+      }
+    />
   );
 }

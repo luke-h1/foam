@@ -17,7 +17,9 @@ export function useDebouncedCallback<Args extends unknown[] = []>(
   callback: (...args: Args) => void,
   timeout = 0,
 ): UseDebouncedCallbackReturn<Args> {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const callbackRef = useRef(callback);
   const mountedRef = useMountedRef();
 

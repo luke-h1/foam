@@ -9,3 +9,4 @@ export * from './color';
 export * from './emoji';
 export * from './chat';
 export * from './date-time';
+export * from './pagination';

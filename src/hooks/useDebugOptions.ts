@@ -20,7 +20,6 @@ export function useDebugOptions() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line no-void
     void storageService.clearExpired();
 
     fetchDebugOptions();

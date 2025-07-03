@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { StyleProp, View, ViewProps, ViewStyle } from 'react-native';
 import { Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 

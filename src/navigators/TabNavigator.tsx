@@ -7,7 +7,7 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
-import React, { ComponentType, FC } from 'react';
+import { ComponentType, FC } from 'react';
 import { useStyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import { TopStackNavigator } from './TopStackNavigator';

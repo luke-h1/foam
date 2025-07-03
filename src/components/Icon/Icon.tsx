@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable global-require */
 /* eslint-disable @typescript-eslint/no-require-imports */
-import React, { ComponentType } from 'react';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { ComponentType } from 'react';
 import { ImageStyle, StyleProp, View, ViewStyle } from 'react-native';
 import { useStyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';

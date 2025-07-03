@@ -1,4 +1,4 @@
-// eslint-disable-next-line no-restricted-imports
+/* eslint-disable no-restricted-imports */
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
 import { View, ViewStyle } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
@@ -11,7 +11,7 @@ export function Image({
   contentFit = 'cover',
   containerStyle,
   placeholderContentFit,
-  transition,
+  transition = 500,
   source,
   ...props
 }: ImageProps) {
@@ -23,7 +23,7 @@ export function Image({
         {...props}
         source={source}
         contentFit={contentFit}
-        transition={transition ?? 500}
+        transition={transition}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={error => {
           console.warn('Image loading error:', error);

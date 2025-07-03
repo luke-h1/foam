@@ -14,9 +14,7 @@ interface Props {
 export function LiveStreamCard({ stream }: Props) {
   const { styles } = useStyles(stylesheet);
   const { navigate } = useAppNavigation();
-
   const { profilePicture } = useStreamerImage(stream.user_login, [stream]);
-
   return (
     <Button
       onPress={() => {
@@ -30,18 +28,16 @@ export function LiveStreamCard({ stream }: Props) {
     >
       <View style={styles.container}>
         <View style={styles.imageContainer}>
-          {stream.thumbnail_url && (
-            <Image
-              source={stream.thumbnail_url
-                .replace('{width}', '720')
-                .replace('{height}', '480')}
-              style={{
-                width: 150,
-                height: 100,
-              }}
-            />
-          )}
-
+          <Image
+            source={stream?.thumbnail_url
+              .replace('{width}', '1920')
+              .replace('{height}', '1080')}
+            style={{
+              width: 150,
+              height: 100,
+            }}
+            transition={150}
+          />
           <View style={styles.overlay}>
             <View style={styles.redDot} />
             <Typography style={styles.liveText} size="xxs">
@@ -55,13 +51,11 @@ export function LiveStreamCard({ stream }: Props) {
           </Typography>
           <View style={styles.metadata}>
             <View style={styles.info}>
-              {profilePicture && (
-                <Image
-                  source={profilePicture}
-                  style={styles.avatar}
-                  testID="LiveStreamCard-avatar"
-                />
-              )}
+              <Image
+                source={profilePicture}
+                style={styles.avatar}
+                testID="LiveStreamCard-avatar"
+              />
 
               <Typography size="xs">{stream.user_name}</Typography>
             </View>
@@ -84,7 +78,6 @@ const stylesheet = createStyleSheet(theme => ({
     marginBottom: theme.spacing.md,
     columnGap: theme.spacing.sm,
     flex: 1,
-    // borderBottomWidth: 1.25,
   },
   tagWrapper: {
     width: '85%',

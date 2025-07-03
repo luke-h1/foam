@@ -1,17 +1,5 @@
-import { Screen, Typography } from '@app/components';
-import { useAppNavigation, useHeader } from '@app/hooks';
+import { Typography } from '@app/components';
 
 export function AboutScreen() {
-  const { goBack } = useAppNavigation();
-
-  useHeader({
-    title: 'About',
-    leftIcon: 'arrow-left',
-    onLeftPress: () => goBack(),
-  });
-  return (
-    <Screen>
-      <Typography>About</Typography>
-    </Screen>
-  );
+  return <Typography>About</Typography>;
 }

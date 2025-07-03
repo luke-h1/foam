@@ -30,12 +30,14 @@ export function CategoryCard({ category }: Props) {
       <View style={styles.wrapper}>
         <Image
           source={category.box_art_url
-            .replace('{width}', '200')
-            .replace('{height}', '250')}
+            ?.replace('{width}', '200')
+            ?.replace('{height}', '250')}
           style={styles.image}
           contentFit="contain"
         />
-        <Typography style={styles.title}>{category.name}</Typography>
+        <Typography style={styles.title} size="sm">
+          {category.name}
+        </Typography>
       </View>
     </Button>
   );

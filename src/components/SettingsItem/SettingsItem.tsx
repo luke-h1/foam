@@ -1,7 +1,10 @@
-import { JSX } from 'react';
-import { FlatList, View } from 'react-native';
+/* eslint-disable no-shadow */
+import { ListRenderItem } from '@shopify/flash-list';
+import { JSX, useCallback } from 'react';
+import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
+import { FlashList } from '../FlashList';
 import { Typography } from '../Typography';
 
 interface ContentItem {
@@ -26,38 +29,45 @@ interface SettingsItemProps {
 
 export function SettingsItem({ contents }: SettingsItemProps) {
   const { styles } = useStyles(stylesheet);
+
+  const renderContentItem: ListRenderItem<ContentItem> = useCallback(
+    ({ item }) => (
+      <View style={styles.item}>
+        <Button style={styles.button} onPress={item.onPress}>
+          <View style={styles.iconLeft}>{item.iconLeft}</View>
+          <View style={styles.textContainer}>
+            <Typography style={styles.title}>{item.title}</Typography>
+            <Typography style={styles.content}>{item.content}</Typography>
+          </View>
+          {item.showRightArrow && (
+            <View style={styles.iconRight}>{item.iconRight}</View>
+          )}
+        </Button>
+        {item.showSeperator && <View style={styles.separator} />}
+      </View>
+    ),
+    [styles],
+  );
+
+  const renderSectionItem: ListRenderItem<Content> = useCallback(
+    ({ item }) => (
+      <View style={styles.section}>
+        <Typography style={styles.ctaTitle}>{item.ctaTitle}</Typography>
+        <FlashList<ContentItem>
+          data={item.items}
+          keyExtractor={item => item.title}
+          renderItem={renderContentItem}
+        />
+      </View>
+    ),
+    [styles, renderContentItem],
+  );
+
   return (
-    <FlatList<Content>
+    <FlashList<Content>
       data={contents}
       keyExtractor={item => item.id}
-      renderItem={({ item }) => (
-        <View style={styles.section}>
-          <Typography style={styles.ctaTitle}>{item.ctaTitle}</Typography>
-          <FlatList<ContentItem>
-            data={item.items}
-            // eslint-disable-next-line no-shadow
-            keyExtractor={item => item.title}
-            // eslint-disable-next-line no-shadow
-            renderItem={({ item }) => (
-              <View style={styles.item}>
-                <Button style={styles.button} onPress={item.onPress}>
-                  <View style={styles.iconLeft}>{item.iconLeft}</View>
-                  <View style={styles.textContainer}>
-                    <Typography style={styles.title}>{item.title}</Typography>
-                    <Typography style={styles.content}>
-                      {item.content}
-                    </Typography>
-                  </View>
-                  {item.showRightArrow && (
-                    <View style={styles.iconRight}>{item.iconRight}</View>
-                  )}
-                </Button>
-                {item.showSeperator && <View style={styles.separator} />}
-              </View>
-            )}
-          />
-        </View>
-      )}
+      renderItem={renderSectionItem}
     />
   );
 }

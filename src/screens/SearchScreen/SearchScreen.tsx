@@ -1,15 +1,7 @@
-import {
-  Button,
-  DismissableKeyboard,
-  PressableArea,
-  Screen,
-  SearchHistory,
-  TextField,
-} from '@app/components';
+import { Button, SearchHistory, TextField, FlashList } from '@app/components';
 import {
   useAppNavigation,
   useDebouncedCallback,
-  useHeader,
   useDebouncedEffect,
 } from '@app/hooks';
 import {
@@ -18,9 +10,11 @@ import {
   storageService,
 } from '@app/services';
 import Entypo from '@expo/vector-icons/build/Entypo';
+import { ListRenderItem } from '@shopify/flash-list';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useEffect, useRef, useState } from 'react';
-import { FlatList, TextInput as NativeTextInput } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { TextInput as NativeTextInput, Platform } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
 import { StreamerCard } from './components';
@@ -29,7 +23,9 @@ interface SearchHistoryItem {
   query: string;
   date: string;
 }
-
+/**
+ * TODO: use swipe to delete
+ */
 export function SearchScreen() {
   const { navigate } = useAppNavigation();
   const { styles, theme } = useStyles(stylesheet);
@@ -43,10 +39,6 @@ export function SearchScreen() {
   void ScreenOrientation.lockAsync(
     ScreenOrientation.OrientationLock.PORTRAIT_UP,
   );
-
-  useHeader({
-    title: 'Search',
-  });
 
   const fetchSearchHistory = () => {
     const history =
@@ -64,14 +56,13 @@ export function SearchScreen() {
 
   useEffect(() => {
     void fetchSearchHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
       setSearchResults([]);
-      // eslint-disable-next-line no-useless-return
+
       return;
     }
 
@@ -116,89 +107,111 @@ export function SearchScreen() {
     await search(query);
   };
 
-  return (
-    <Screen safeAreaEdges={['top', 'bottom', 'left']}>
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        data={searchResults}
-        ListHeaderComponent={
-          <DismissableKeyboard>
-            <TextField
-              ref={ref}
-              placeholder="Find a channel"
-              value={query}
-              autoComplete="off"
-              autoCorrect={false}
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onChangeText={async text => handleQuery(text)}
-              // eslint-disable-next-line react/no-unstable-nested-components
-              RightAccessory={() =>
-                query ? (
-                  <PressableArea
-                    onPress={() => {
-                      setQuery?.('');
-                      setSearchResults([]);
-                      void fetchSearchHistory();
-                    }}
-                    hitSlop={30}
-                  >
-                    <Entypo
-                      name="circle-with-cross"
-                      size={22}
-                      style={{
-                        marginRight: 6,
-                      }}
-                      color={theme.colors.border}
-                    />
-                  </PressableArea>
-                ) : (
-                  <Feather
-                    name="search"
-                    color={theme.colors.border}
-                    size={22}
-                    style={{
-                      marginRight: 6,
-                    }}
-                  />
-                )
-              }
-            />
-          </DismissableKeyboard>
-        }
-        renderItem={({ item }) => (
-          <Button
-            onPress={() => {
-              navigate('Streams', {
-                screen: 'LiveStream',
-                params: {
-                  id: item.broadcaster_login,
-                },
-              });
-            }}
-            style={styles.list}
-          >
-            <StreamerCard stream={item} />
-          </Button>
-        )}
+  const ListFooterComponent = useCallback(() => {
+    return searchResults.length === 0 ? (
+      <SearchHistory
+        results={searchHistory.map(item => item.query)}
+        onClearAll={() => {
+          setSearchHistory([]);
+          storageService.remove('previous_searches');
+        }}
+        onSelectItem={q => {
+          void handleQuery(q);
+        }}
+        onClearItem={id => {
+          const newHistory = searchHistory.filter(item => item.query !== id);
+          setSearchHistory(newHistory);
+          storageService.set('previous_searches', newHistory);
+        }}
       />
-      {searchHistory && (
-        <SearchHistory
-          results={searchHistory.map(item => item.query)}
-          onClearAll={() => {
-            setSearchHistory([]);
-            storageService.remove('previous_searches');
-          }}
-          onSelectItem={q => {
-            void handleQuery(q);
-          }}
-          onClearItem={id => {
-            const newHistory = searchHistory.filter(item => item.query !== id);
-            setSearchHistory(newHistory);
-            storageService.set('previous_searches', newHistory);
-          }}
+    ) : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const ListHeaderComponent = useCallback(() => {
+    return (
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={{ paddingHorizontal: theme.spacing.md }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <TextField
+          ref={ref}
+          placeholder="Find a channel"
+          value={query}
+          autoCorrect={false}
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          onChangeText={async text => handleQuery(text)}
+          // eslint-disable-next-line react/no-unstable-nested-components
+          RightAccessory={() =>
+            query ? (
+              <Button
+                onPress={() => {
+                  setQuery?.('');
+                  setSearchResults([]);
+                  void fetchSearchHistory();
+                }}
+                hitSlop={30}
+              >
+                <Entypo
+                  name="circle-with-cross"
+                  size={22}
+                  style={{
+                    marginRight: 6,
+                  }}
+                  color={theme.colors.border}
+                />
+              </Button>
+            ) : (
+              <Feather
+                name="search"
+                color={theme.colors.border}
+                size={22}
+                style={{
+                  marginRight: 6,
+                }}
+              />
+            )
+          }
         />
-      )}
-    </Screen>
+      </KeyboardAvoidingView>
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const renderItem: ListRenderItem<SearchChannelResponse> = useCallback(
+    ({ item }) => {
+      return (
+        <Button
+          onPress={() => {
+            navigate('Streams', {
+              screen: 'LiveStream',
+              params: {
+                id: item.broadcaster_login,
+              },
+            });
+          }}
+          style={styles.list}
+        >
+          <StreamerCard stream={item} />
+        </Button>
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  return (
+    <FlashList
+      showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="automatic"
+      data={searchResults}
+      estimatedItemSize={100}
+      style={{ flex: 1 }}
+      ListFooterComponent={ListFooterComponent}
+      ListHeaderComponent={ListHeaderComponent}
+      renderItem={renderItem}
+    />
   );
 }
 

@@ -1,40 +1,37 @@
 import {
+  BodyScrollView,
   Button,
   Icon,
   ModalHandle,
   NavigationSectionList,
   NavigationSectionListData,
-  Screen,
   SectionListItem,
   Typography,
 } from '@app/components';
 import { useAuthContext } from '@app/context';
-import { useAppNavigation, useHeader } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks';
 import { BottomSheetModal, BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import * as Application from 'expo-application';
-import { useRef } from 'react';
-import { View, SafeAreaView } from 'react-native';
+import { useCallback, useRef } from 'react';
+import { SafeAreaView, SectionListRenderItem, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
-const BuildFooter = () => (
-  <View style={{ marginBottom: 12 }}>
-    <Typography color="text">
-      Version: {Application.nativeApplicationVersion ?? ''} (
-      {Application.nativeBuildVersion ?? ''})
-    </Typography>
-  </View>
-);
+const BuildFooter = () => {
+  const { styles } = useStyles(stylesheet);
+  return (
+    <View style={styles.buildContainer}>
+      <Typography color="text" size="xs">
+        v:{Application.nativeApplicationVersion ?? ''} (
+        {Application.nativeBuildVersion ?? ''})
+      </Typography>
+    </View>
+  );
+};
 
 export function SettingsScreen() {
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const { navigate, goBack, addListener } = useAppNavigation();
-
-  useHeader({
-    title: 'Settings',
-    leftIcon: 'arrow-left',
-    onLeftPress: () => goBack(),
-  });
+  const { navigate, addListener } = useAppNavigation();
 
   const { styles, theme } = useStyles(stylesheet);
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -244,8 +241,20 @@ export function SettingsScreen() {
     },
   ];
 
+  const renderItem: SectionListRenderItem<SectionListItem> = useCallback(
+    ({ item }) => {
+      return (
+        <Button style={styles.btn} onPress={item.onPress}>
+          <Typography style={styles.btnText}>{item.title}</Typography>
+          <Icon icon="arrow-right" />
+        </Button>
+      );
+    },
+    [styles.btn, styles.btnText],
+  );
+
   return (
-    <Screen preset="scroll">
+    <BodyScrollView>
       <NavigationSectionList sections={sections} footer={<BuildFooter />} />
       <BottomSheetModal
         ref={bottomSheetModalRef}
@@ -258,12 +267,7 @@ export function SettingsScreen() {
           <BottomSheetSectionList
             sections={bottomSheetSections}
             keyExtractor={(item, index) => item.title + index}
-            renderItem={({ item }) => (
-              <Button style={styles.btn} onPress={item.onPress}>
-                <Typography style={styles.btnText}>{item.title}</Typography>
-                <Icon icon="arrow-right" />
-              </Button>
-            )}
+            renderItem={renderItem}
             contentContainerStyle={{
               paddingHorizontal: theme.spacing.md,
               backgroundColor: theme.colors.borderFaint,
@@ -272,7 +276,7 @@ export function SettingsScreen() {
           />
         </SafeAreaView>
       </BottomSheetModal>
-    </Screen>
+    </BodyScrollView>
   );
 }
 
@@ -304,5 +308,11 @@ const stylesheet = createStyleSheet(theme => ({
   },
   bottomSheet: {
     backgroundColor: theme.colors.borderFaint,
+  },
+  buildContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
   },
 }));

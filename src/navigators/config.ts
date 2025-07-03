@@ -14,11 +14,11 @@ export const BaseConfig: ConfigBaseProps = {
   /**
    * Only enable if we're catching errors in the right environment
    */
-  catchErrors: 'always',
+  catchErrors: __DEV__ ? 'dev' : 'always',
 
   /**
    * This is a list of all the route names that will exit the app if the back button
    * is pressed while in that screen. Only affects Android.
    */
-  exitRoutes: [''],
+  exitRoutes: [],
 };

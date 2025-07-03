@@ -13,7 +13,8 @@ export type StorageItem<T = unknown> = {
 export type AllowedKey =
   | 'ReactQueryDebug'
   | 'foam_stacked_cards'
-  | 'previous_searches';
+  | 'previous_searches'
+  | `appStoreLink_${string}`;
 
 export const NAMESPACE = 'FOAM_V1';
 

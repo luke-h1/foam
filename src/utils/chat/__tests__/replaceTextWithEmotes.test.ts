@@ -294,7 +294,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
               content: emote.name,
               height: emote.height,
               type: 'emote',
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
               url: emote.url,
               width: emote.width,
             },
@@ -323,7 +323,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
               content: emote.name,
               height: undefined,
               type: 'emote',
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
               url: emote.url,
               width: undefined,
             },

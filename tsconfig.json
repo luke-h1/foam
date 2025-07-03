@@ -6,8 +6,6 @@
     "noUncheckedIndexedAccess": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "module": "esnext",
-    "moduleResolution": "node",
     "noEmit": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -15,12 +13,8 @@
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "jsx": "preserve",
-    "lib": [
-      "dom",
-      "DOM.iterable",
-      "esnext"
-    ],
+    "jsx": "react-jsx",
+    "lib": ["dom", "DOM.iterable", "esnext"],
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -31,17 +25,9 @@
     "noUnusedLocals": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": [
-        "./src/*"
-      ]
+      "@app/*": ["./src/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    ".expo"
-  ]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }

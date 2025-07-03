@@ -1,10 +1,6 @@
 import { AuthContextProvider } from '@app/context';
-import {
-  AuthLoadingScreen,
-  CategoryScreen,
-  LoginScreen,
-  StorybookScreen,
-} from '@app/screens';
+import { CategoryScreen, LoginScreen, StorybookScreen } from '@app/screens';
+import { AuthLoadingScreen } from '@app/screens/AuthLoadingScreen';
 import {
   DarkTheme,
   DefaultTheme,
@@ -14,7 +10,6 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import newRelic from 'newrelic-react-native-agent';
 import { ComponentProps, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import {
@@ -36,7 +31,7 @@ import {
 import { TabNavigator, TabParamList } from './TabNavigator';
 import { TopStackNavigator, TopStackParamList } from './TopStackNavigator';
 import { BaseConfig } from './config';
-import { navigationRef, useBackButtonHandler } from './navigationUtilities';
+import { useBackButtonHandler } from './navigationUtilities';
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator as
@@ -96,11 +91,10 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 const AppStack = () => {
   return (
     <Stack.Navigator
+      initialRouteName="AuthLoading"
       screenOptions={{
         headerShown: false,
-        // navigationBarColor: colors.background,
       }}
-      initialRouteName="AuthLoading"
     >
       <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
 
@@ -114,19 +108,49 @@ const AppStack = () => {
       <Stack.Screen name="Top" component={TopStackNavigator} />
 
       {/* category slug */}
-      <Stack.Screen name="Category" component={CategoryScreen} />
+      <Stack.Screen
+        name="Category"
+        component={CategoryScreen}
+        options={{
+          presentation: 'modal',
+        }}
+      />
 
       {/* Auth */}
-      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          presentation: 'modal',
+        }}
+      />
 
       {/* Changelog */}
-      <Stack.Screen name="Other" component={OtherStackNavigator} />
+      <Stack.Screen
+        name="Other"
+        component={OtherStackNavigator}
+        options={{
+          presentation: 'modal',
+        }}
+      />
 
       {/* sb */}
-      <Stack.Screen name="Storybook" component={StorybookScreen} />
+      <Stack.Screen
+        name="Storybook"
+        component={StorybookScreen}
+        options={{
+          presentation: 'modal',
+        }}
+      />
 
       {/* preferences */}
-      <Stack.Screen name="Preferences" component={PreferenceStackNavigator} />
+      <Stack.Screen
+        name="Preferences"
+        component={PreferenceStackNavigator}
+        options={{
+          presentation: 'modal',
+        }}
+      />
 
       {/* DevTools */}
       <Stack.Screen name="DevTools" component={DevToolsStackNavigator} />
@@ -150,17 +174,10 @@ export const AppNavigator = (props: NavigationProps) => {
         ...theme.colors,
       },
     };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [colorScheme]);
 
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      onStateChange={newRelic.onStateChange}
-      theme={navTheme}
-      {...props}
-    >
+    <NavigationContainer theme={navTheme} {...props}>
       <AuthContextProvider>
         <AppStack />
       </AuthContextProvider>

@@ -14,7 +14,6 @@ export function extractEmoteSubstring(emoteStr: string) {
   emoteList.forEach(emote => {
     const [emoteId, position] = emote.split(':');
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     emoteTable[emoteId as string] = emoteTable[emoteId as string] || [];
     if (emoteId) {
       emoteTable[emoteId]?.push(position as string);

@@ -14,6 +14,35 @@
     "_licenseContent": "MIT License\n\nCopyright (c) 2014-present Sebastian McKenzie and other contributors\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
   },
   {
+    "libraryName": "@bacons/apple-colors",
+    "version": "0.0.8",
+    "_license": "MIT",
+    "_description": "Use native apple colors across all platforms",
+    "homepage": "https://github.com/evanbacon/expo-apple-colors#readme",
+    "author": { "name": "Evan Bacon" },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/evanbacon/expo-apple-colors.git"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) 2024 Evan Bacon\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
+    "libraryName": "@bottom-tabs/react-navigation",
+    "version": "0.9.2",
+    "_license": "MIT",
+    "_description": "React Native Bottom Tabs React Navigation integration",
+    "homepage": "https://github.com/callstackincubator/react-native-bottom-tabs#readme",
+    "author": {
+      "name": "Oskar Kwasniewski",
+      "email": "oskarkwasniewski@icloud.com",
+      "url": "https://github.com/okwasniewski"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/callstackincubator/react-native-bottom-tabs.git"
+    }
+  },
+  {
     "libraryName": "@expo-google-fonts/inter",
     "version": "0.2.3",
     "_license": "MIT",
@@ -26,8 +55,22 @@
     }
   },
   {
+    "libraryName": "@expo-google-fonts/source-code-pro",
+    "version": "0.4.0",
+    "_license": "MIT AND OFL-1.1",
+    "_description": "Use the Source Code Pro font family from Google Fonts in your Expo app",
+    "homepage": "https://github.com/expo/google-fonts/tree/master/font-packages/source-code-pro#readme",
+    "author": { "name": "Expo Team", "email": "team@expo.io" },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/expo/google-fonts.git",
+      "directory": "font-packages/source-code-pro"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) 2020 Expo\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
     "libraryName": "@expo/metro-runtime",
-    "version": "4.0.1",
+    "version": "5.0.4",
     "_license": "MIT",
     "_description": "Tools for making advanced Metro bundler features work",
     "homepage": "https://github.com/expo/expo/tree/main/packages/@expo/metro-runtime",
@@ -65,6 +108,23 @@
     "_licenseContent": "MIT License\n\nCopyright (c) 2020 Mo Gorhom\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
+    "libraryName": "@legendapp/list",
+    "version": "1.0.20",
+    "_license": "MIT",
+    "_description": "Legend List is a drop-in replacement for FlatList with much better performance and supporting dynamically sized items.",
+    "homepage": "https://github.com/LegendApp/legend-list#readme",
+    "author": {
+      "name": "Legend",
+      "email": "contact@legendapp.com",
+      "url": "https://github.com/LegendApp"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/LegendApp/legend-list.git"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) 2022 Moo.do LLC\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
     "libraryName": "@pmmmwh/react-refresh-webpack-plugin",
     "version": "0.5.16",
     "_license": "MIT",
@@ -86,11 +146,11 @@
   },
   {
     "libraryName": "@react-native-async-storage/async-storage",
-    "version": "1.23.1",
+    "version": "2.1.2",
     "_license": "MIT",
     "_description": "Asynchronous, persistent, key-value storage system for React Native.",
     "homepage": "https://github.com/react-native-async-storage/async-storage#readme",
-    "author": { "name": "Krzysztof Borowy", "email": "hello@krizzu.dev" },
+    "author": { "name": "Krzysztof Borowy", "email": "contact@kborowy.com" },
     "repository": {
       "type": "git",
       "url": "git+https://github.com/react-native-async-storage/async-storage.git",
@@ -126,38 +186,6 @@
     "_licenseContent": "MIT License\n\nCopyright (c) 2020 React Native Community\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
-    "libraryName": "@react-native-firebase/analytics",
-    "version": "21.10.0",
-    "_license": "Apache-2.0",
-    "_description": "React Native Firebase - The analytics module provides out of the box support with Google Analytics for Firebase. Integration with the Android & iOS allows for in-depth analytical insight reporting, such as device information, location, user actions and more.",
-    "author": {
-      "name": "Invertase",
-      "email": "oss@invertase.io",
-      "url": "http://invertase.io"
-    },
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/invertase/react-native-firebase/tree/main/packages/analytics"
-    },
-    "_licenseContent": "Apache-2.0 License\n------------------\n\nCopyright (c) 2016-present Invertase Limited <oss@invertase.io> & Contributors\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this library except in compliance with the License.\n\nYou may obtain a copy of the Apache-2.0 License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\n\nCreative Commons Attribution 3.0 License\n----------------------------------------\n\nCopyright (c) 2016-present Invertase Limited <oss@invertase.io> & Contributors\n\nDocumentation and other instructional materials provided for this project\n(including on a separate documentation repository or it's documentation website) are\nlicensed under the Creative Commons Attribution 3.0 License. Code samples/blocks\ncontained therein are licensed under the Apache License, Version 2.0 (the \"License\"), as above.\n\nYou may obtain a copy of the Creative Commons Attribution 3.0 License at\n\n    https://creativecommons.org/licenses/by/3.0/\n"
-  },
-  {
-    "libraryName": "@react-native-firebase/crashlytics",
-    "version": "21.10.0",
-    "_license": "Apache-2.0",
-    "_description": "React Native Firebase - Firebase Crashlytics is a lightweight, realtime crash reporter that helps you track, prioritize, and fix stability issues that erode your app quality. React Native Firebase provides automatic crash reporting for both native and JavaScript errors, including unhandled promise rejections.",
-    "author": {
-      "name": "Invertase",
-      "email": "oss@invertase.io",
-      "url": "http://invertase.io"
-    },
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/invertase/react-native-firebase/tree/main/packages/crashlytics"
-    },
-    "_licenseContent": "Apache-2.0 License\n------------------\n\nCopyright (c) 2016-present Invertase Limited <oss@invertase.io> & Contributors\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this library except in compliance with the License.\n\nYou may obtain a copy of the Apache-2.0 License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n\n\nCreative Commons Attribution 3.0 License\n----------------------------------------\n\nCopyright (c) 2016-present Invertase Limited <oss@invertase.io> & Contributors\n\nDocumentation and other instructional materials provided for this project\n(including on a separate documentation repository or it's documentation website) are\nlicensed under the Creative Commons Attribution 3.0 License. Code samples/blocks\ncontained therein are licensed under the Apache License, Version 2.0 (the \"License\"), as above.\n\nYou may obtain a copy of the Creative Commons Attribution 3.0 License at\n\n    https://creativecommons.org/licenses/by/3.0/\n"
-  },
-  {
     "libraryName": "@react-native-masked-view/masked-view",
     "version": "0.3.2",
     "_license": "MIT",
@@ -172,7 +200,7 @@
   },
   {
     "libraryName": "@react-navigation/bottom-tabs",
-    "version": "6.6.1",
+    "version": "7.4.0",
     "_license": "MIT",
     "_description": "Bottom tab navigator following iOS design guidelines",
     "homepage": "https://github.com/react-navigation/react-navigation#readme",
@@ -184,21 +212,21 @@
     "_licenseContent": "MIT License\n\nCopyright (c) 2017 React Navigation Contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
-    "libraryName": "@react-navigation/material-top-tabs",
-    "version": "6.6.14",
+    "libraryName": "@react-navigation/elements",
+    "version": "2.5.0",
     "_license": "MIT",
-    "_description": "Integration for the animated tab view component from react-native-tab-view",
-    "homepage": "https://reactnavigation.org/docs/material-top-tab-navigator/",
+    "_description": "UI Components for React Navigation",
+    "homepage": "https://reactnavigation.org",
     "repository": {
       "type": "git",
       "url": "git+https://github.com/react-navigation/react-navigation.git",
-      "directory": "packages/material-top-tabs"
+      "directory": "packages/elements"
     },
     "_licenseContent": "MIT License\n\nCopyright (c) 2017 React Navigation Contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "@react-navigation/native",
-    "version": "6.1.18",
+    "version": "7.0.14",
     "_license": "MIT",
     "_description": "React Native integration for React Navigation",
     "homepage": "https://reactnavigation.org",
@@ -211,7 +239,7 @@
   },
   {
     "libraryName": "@react-navigation/native-stack",
-    "version": "6.11.0",
+    "version": "7.2.0",
     "_license": "MIT",
     "_description": "Native stack navigator using react-native-screens",
     "homepage": "https://github.com/software-mansion/react-native-screens#readme",
@@ -224,7 +252,7 @@
   },
   {
     "libraryName": "@react-navigation/stack",
-    "version": "6.4.1",
+    "version": "7.4.2",
     "_license": "MIT",
     "_description": "Stack navigator component for iOS and Android with animated transitions and gestures",
     "homepage": "https://reactnavigation.org/docs/stack-navigator/",
@@ -237,7 +265,7 @@
   },
   {
     "libraryName": "@sentry/react-native",
-    "version": "6.10.0",
+    "version": "6.14.0",
     "_license": "MIT",
     "_description": "Official Sentry SDK for react-native",
     "homepage": "https://github.com/getsentry/sentry-react-native",
@@ -250,7 +278,7 @@
   },
   {
     "libraryName": "@shopify/flash-list",
-    "version": "1.7.3",
+    "version": "1.7.6",
     "_license": "MIT",
     "_description": "FlashList is a more performant FlatList replacement",
     "homepage": "https://shopify.github.io/flash-list/",
@@ -276,34 +304,6 @@
     "_licenseContent": "MIT License\n\nCopyright (c) 2021-present Tanner Linsley\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
-    "libraryName": "@twurple/api",
-    "version": "7.2.1",
-    "_license": "MIT",
-    "_description": "Interact with Twitch's API.",
-    "homepage": "https://twurple.js.org",
-    "author": { "name": "Daniel Fischer", "email": "daniel@d-fischer.dev" },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/twurple/twurple.git",
-      "directory": "packages/api"
-    },
-    "_licenseContent": "MIT License\n\nCopyright (c) 2017-2023 Daniel Fischer\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
-  },
-  {
-    "libraryName": "@twurple/auth",
-    "version": "7.2.1",
-    "_license": "MIT",
-    "_description": "Authenticate with Twitch and stop caring about refreshing tokens.",
-    "homepage": "https://twurple.js.org",
-    "author": { "name": "Daniel Fischer", "email": "daniel@d-fischer.dev" },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/twurple/twurple.git",
-      "directory": "packages/auth"
-    },
-    "_licenseContent": "MIT License\n\nCopyright (c) 2020-2023 Daniel Fischer\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
-  },
-  {
     "libraryName": "app-icon-badge",
     "version": "0.1.2",
     "_license": "MIT",
@@ -314,23 +314,6 @@
       "type": "git",
       "url": "git+https://github.com/obytes/app-icon-badge.git"
     }
-  },
-  {
-    "libraryName": "async-mutex",
-    "version": "0.4.1",
-    "_license": "MIT",
-    "_description": "A mutex for guarding async workflows",
-    "homepage": "https://github.com/DirtyHairy/async-mutex#readme",
-    "author": {
-      "name": "Christian Speckner",
-      "email": "cnspeckn@googlemail.com",
-      "url": "https://github.com/DirtyHairy/"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/DirtyHairy/async-mutex.git"
-    },
-    "_licenseContent": "The MIT License (MIT)\n\nCopyright (c) 2016 Christian Speckner <cnspeckn@googlemail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
   },
   {
     "libraryName": "axios",
@@ -344,22 +327,6 @@
       "url": "git+https://github.com/axios/axios.git"
     },
     "_licenseContent": "# Copyright (c) 2014-present Matt Zabriskie & Collaborators\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
-  },
-  {
-    "libraryName": "axios-mock-adapter",
-    "version": "2.1.0",
-    "_license": "MIT",
-    "_description": "Axios adapter that allows to easily mock requests",
-    "homepage": "https://github.com/ctimmerm/axios-mock-adapter#readme",
-    "author": {
-      "name": "Colin Timmermans",
-      "email": "colintimmermans@gmail.com"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/ctimmerm/axios-mock-adapter.git"
-    },
-    "_licenseContent": "The MIT License (MIT)\n\nCopyright (c) Colin Timmermans\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "clsx",
@@ -430,18 +397,8 @@
     "_licenseContent": "Copyright (c) 2015, Scott Motte\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
   },
   {
-    "libraryName": "emotettv",
-    "version": "1.0.2",
-    "_description": "<h1>emoteTTV <img src=\"https://i.imgur.com/Qgc9fJ4.gif\" height=\"56\" width=\"56\" align=\"right\"></h1>",
-    "homepage": "https://emotettv.gitbook.io",
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/doceazedo/emotettv.git"
-    }
-  },
-  {
     "libraryName": "expo",
-    "version": "52.0.46",
+    "version": "53.0.13",
     "_license": "MIT",
     "_description": "The Expo SDK",
     "homepage": "https://github.com/expo/expo/tree/main/packages/expo",
@@ -454,7 +411,7 @@
   },
   {
     "libraryName": "expo-auth-session",
-    "version": "6.0.3",
+    "version": "6.2.0",
     "_license": "MIT",
     "_description": "Expo module for browser-based authentication",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/auth-session",
@@ -467,7 +424,7 @@
   },
   {
     "libraryName": "expo-av",
-    "version": "15.0.2",
+    "version": "15.1.6",
     "_license": "MIT",
     "_description": "Expo universal module for Audio and Video playback",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/av/",
@@ -479,8 +436,21 @@
     }
   },
   {
+    "libraryName": "expo-blur",
+    "version": "14.1.5",
+    "_license": "MIT",
+    "_description": "A component that renders a native blur view on iOS and falls back to a semi-transparent view on Android. A common usage of this is for navigation bars, tab bars, and modals.",
+    "homepage": "https://docs.expo.dev/versions/latest/sdk/blur-view/",
+    "author": { "name": "650 Industries, Inc." },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/expo/expo.git",
+      "directory": "packages/expo-blur"
+    }
+  },
+  {
     "libraryName": "expo-build-properties",
-    "version": "0.13.2",
+    "version": "0.14.6",
     "_license": "MIT",
     "_description": "Config plugin to customize native build properties on prebuild",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/build-properties",
@@ -493,7 +463,7 @@
   },
   {
     "libraryName": "expo-clipboard",
-    "version": "7.0.1",
+    "version": "7.1.4",
     "_license": "MIT",
     "_description": "Provides an interface for getting and setting Clipboard content on Android, iOS and Web.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/clipboard",
@@ -506,7 +476,7 @@
   },
   {
     "libraryName": "expo-constants",
-    "version": "17.0.8",
+    "version": "17.1.6",
     "_license": "MIT",
     "_description": "Provides system information that remains constant throughout the lifetime of your app.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/constants/",
@@ -519,7 +489,7 @@
   },
   {
     "libraryName": "expo-dev-client",
-    "version": "5.0.20",
+    "version": "5.2.2",
     "_license": "MIT",
     "_description": "Expo Development Client",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/dev-client/",
@@ -531,21 +501,8 @@
     }
   },
   {
-    "libraryName": "expo-dev-launcher",
-    "version": "5.0.35",
-    "_license": "MIT",
-    "_description": "Pre-release version of the Expo development launcher package for testing.",
-    "homepage": "https://docs.expo.dev",
-    "author": { "name": "650 Industries, Inc." },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/expo/expo.git",
-      "directory": "packages/expo-dev-launcher"
-    }
-  },
-  {
     "libraryName": "expo-font",
-    "version": "13.0.4",
+    "version": "13.3.1",
     "_license": "MIT",
     "_description": "Load fonts at runtime and use them in React Native components.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/font/",
@@ -558,9 +515,9 @@
   },
   {
     "libraryName": "expo-haptics",
-    "version": "14.0.1",
+    "version": "14.1.4",
     "_license": "MIT",
-    "_description": "Provides access to the system's haptics engine on iOS and vibration effects on Android.",
+    "_description": "Provides access to the system's haptics engine on iOS, vibration effects on Android, and Web Vibration API on web.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/haptics/",
     "author": { "name": "650 Industries, Inc." },
     "repository": {
@@ -571,7 +528,7 @@
   },
   {
     "libraryName": "expo-image",
-    "version": "2.0.7",
+    "version": "2.3.0",
     "_license": "MIT",
     "_description": "A cross-platform, performant image component for React Native and Expo with Web support",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/image/",
@@ -584,7 +541,7 @@
   },
   {
     "libraryName": "expo-linear-gradient",
-    "version": "14.0.2",
+    "version": "14.1.5",
     "_license": "MIT",
     "_description": "Provides a React component that renders a gradient view.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/linear-gradient/",
@@ -597,7 +554,7 @@
   },
   {
     "libraryName": "expo-linking",
-    "version": "7.0.5",
+    "version": "7.1.5",
     "_license": "MIT",
     "_description": "Create and open deep links universally",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/linking",
@@ -610,7 +567,7 @@
   },
   {
     "libraryName": "expo-network",
-    "version": "7.0.5",
+    "version": "7.1.5",
     "_license": "MIT",
     "_description": "Provides useful information about the device's network such as its IP address, MAC address, and airplane mode status",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/network/",
@@ -623,7 +580,7 @@
   },
   {
     "libraryName": "expo-screen-orientation",
-    "version": "8.0.4",
+    "version": "8.1.7",
     "_license": "MIT",
     "_description": "Expo universal module for managing device's screen orientation",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/screen-orientation/",
@@ -636,7 +593,7 @@
   },
   {
     "libraryName": "expo-secure-store",
-    "version": "14.0.1",
+    "version": "14.2.3",
     "_license": "MIT",
     "_description": "Provides a way to encrypt and securely store key-value pairs locally on the device.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/securestore/",
@@ -649,7 +606,7 @@
   },
   {
     "libraryName": "expo-splash-screen",
-    "version": "0.29.24",
+    "version": "0.30.9",
     "_license": "MIT",
     "_description": "Provides a module to allow keeping the native Splash Screen visible until you choose to hide it.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/splash-screen/",
@@ -662,7 +619,7 @@
   },
   {
     "libraryName": "expo-status-bar",
-    "version": "2.0.1",
+    "version": "2.2.3",
     "_license": "MIT",
     "_description": "Provides the same interface as the React Native StatusBar API, but with slightly different defaults to work great in Expo environments.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/status-bar/",
@@ -674,8 +631,34 @@
     }
   },
   {
+    "libraryName": "expo-symbols",
+    "version": "0.4.5",
+    "_license": "MIT",
+    "_description": "Provides access to the SF Symbols library on iOS for React Native and Expo apps.",
+    "homepage": "https://docs.expo.dev/versions/latest/sdk/symbols/",
+    "author": { "name": "650 Industries, Inc." },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/expo/expo.git",
+      "directory": "packages/expo-symbols"
+    }
+  },
+  {
+    "libraryName": "expo-system-ui",
+    "version": "5.0.9",
+    "_license": "MIT",
+    "_description": "Interact with system UI elements",
+    "homepage": "https://docs.expo.dev/versions/latest/sdk/system-ui",
+    "author": { "name": "650 Industries, Inc." },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/expo/expo.git",
+      "directory": "packages/expo-system-ui"
+    }
+  },
+  {
     "libraryName": "expo-updates",
-    "version": "0.27.4",
+    "version": "0.28.15",
     "_license": "MIT",
     "_description": "Fetches and manages remotely-hosted assets and updates to your app's JS bundle.",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/updates/",
@@ -688,7 +671,7 @@
   },
   {
     "libraryName": "expo-video",
-    "version": "2.0.6",
+    "version": "2.2.2",
     "_license": "MIT",
     "_description": "A cross-platform, performant video component for React Native and Expo with Web support",
     "homepage": "https://docs.expo.dev/versions/latest/sdk/video/",
@@ -713,22 +696,6 @@
     "_licenseContent": "(The MIT License)\n\nCopyright (c) 2009-2014 TJ Holowaychuk <tj@vision-media.ca>\nCopyright (c) 2013-2014 Roman Shtylman <shtylman+expressjs@gmail.com>\nCopyright (c) 2014-2015 Douglas Christopher Wilson <doug@somethingdoug.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
   },
   {
-    "libraryName": "firebase",
-    "version": "11.3.1",
-    "_license": "Apache-2.0",
-    "_description": "Firebase JavaScript library for web and Node.js",
-    "homepage": "https://firebase.google.com/",
-    "author": {
-      "name": "Firebase",
-      "email": "firebase-support@google.com",
-      "url": "https://firebase.google.com/"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/firebase/firebase-js-sdk.git"
-    }
-  },
-  {
     "libraryName": "jest-junit",
     "version": "16.0.0",
     "_license": "Apache-2.0",
@@ -751,60 +718,34 @@
     "_licenseContent": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
   },
   {
-    "libraryName": "pino",
-    "version": "8.21.0",
-    "_license": "MIT",
-    "_description": "super fast, all natural json logger",
-    "homepage": "https://getpino.io",
-    "author": { "name": "Matteo Collina", "email": "hello@matteocollina.com" },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/pinojs/pino.git"
-    },
-    "_licenseContent": "The MIT License (MIT)\n\nCopyright (c) 2016-2024 Matteo Collina, David Mark Clements and the Pino contributors listed at https://github.com/pinojs/pino#the-team and in the README file.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
-  },
-  {
-    "libraryName": "pino-pretty",
-    "version": "10.3.1",
-    "_license": "MIT",
-    "_description": "Prettifier for Pino log lines",
-    "homepage": "https://github.com/pinojs/pino-pretty#readme",
-    "author": { "name": "James Sumners", "email": "james.sumners@gmail.com" },
-    "repository": {
-      "type": "git",
-      "url": "git+ssh://git@github.com/pinojs/pino-pretty.git"
-    },
-    "_licenseContent": "The MIT License (MIT)\n\nCopyright (c) 2019 the Pino team\n\nPino team listed at https://github.com/pinojs/pino#the-team\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
-  },
-  {
     "libraryName": "react",
-    "version": "18.3.1",
+    "version": "19.0.0",
     "_license": "MIT",
     "_description": "React is a JavaScript library for building user interfaces.",
-    "homepage": "https://reactjs.org/",
+    "homepage": "https://react.dev/",
     "repository": {
       "type": "git",
       "url": "git+https://github.com/facebook/react.git",
       "directory": "packages/react"
     },
-    "_licenseContent": "MIT License\n\nCopyright (c) Facebook, Inc. and its affiliates.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+    "_licenseContent": "MIT License\n\nCopyright (c) Meta Platforms, Inc. and affiliates.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "react-dom",
-    "version": "18.3.1",
+    "version": "19.0.0",
     "_license": "MIT",
     "_description": "React package for working with the DOM.",
-    "homepage": "https://reactjs.org/",
+    "homepage": "https://react.dev/",
     "repository": {
       "type": "git",
       "url": "git+https://github.com/facebook/react.git",
       "directory": "packages/react-dom"
     },
-    "_licenseContent": "MIT License\n\nCopyright (c) Facebook, Inc. and its affiliates.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+    "_licenseContent": "MIT License\n\nCopyright (c) Meta Platforms, Inc. and affiliates.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "react-native",
-    "version": "0.76.9",
+    "version": "0.79.4",
     "_license": "MIT",
     "_description": "A framework for building native apps using React",
     "homepage": "https://reactnative.dev/",
@@ -816,10 +757,26 @@
     "_licenseContent": "MIT License\n\nCopyright (c) Meta Platforms, Inc. and affiliates.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
-    "libraryName": "react-native-gesture-handler",
-    "version": "2.20.2",
+    "libraryName": "react-native-bottom-tabs",
+    "version": "0.9.0",
     "_license": "MIT",
-    "_description": "Experimental implementation of a new declarative API for gesture handling in react-native",
+    "_description": "Native Bottom Tabs for React Native",
+    "homepage": "https://github.com/callstackincubator/react-native-bottom-tabs#readme",
+    "author": {
+      "name": "Oskar Kwasniewski",
+      "email": "oskarkwasniewski@icloud.com",
+      "url": "https://github.com/okwasniewski"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/callstackincubator/react-native-bottom-tabs.git"
+    }
+  },
+  {
+    "libraryName": "react-native-gesture-handler",
+    "version": "2.24.0",
+    "_license": "MIT",
+    "_description": "Declarative API exposing native platform touch and gesture system to React Native",
     "homepage": "https://github.com/software-mansion/react-native-gesture-handler#readme",
     "author": {
       "name": "Krzysztof Magiera",
@@ -830,6 +787,23 @@
       "url": "git+https://github.com/software-mansion/react-native-gesture-handler.git"
     },
     "_licenseContent": "The MIT License (MIT)\n\nCopyright (c) 2016 Software Mansion <swmansion.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
+    "libraryName": "react-native-keyboard-controller",
+    "version": "1.17.4",
+    "_license": "MIT",
+    "_description": "Keyboard manager which works in identical way on both iOS and Android",
+    "homepage": "https://kirillzyusko.github.io/react-native-keyboard-controller/",
+    "author": {
+      "name": "Kiryl Ziusko",
+      "email": "zyusko.kirik@gmail.com",
+      "url": "https://github.com/kirillzyusko"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/kirillzyusko/react-native-keyboard-controller.git"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) 2021 Kiryl Ziusko\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "react-native-logs",
@@ -843,38 +817,6 @@
       "url": "git+https://github.com/mowispace/react-native-logs.git"
     },
     "_licenseContent": "MIT License\n\nCopyright (c) 2021 Alessandro Bottamedi.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
-  },
-  {
-    "libraryName": "react-native-markdown-display",
-    "version": "7.0.2",
-    "_license": "MIT",
-    "_description": "Markdown renderer for react-native, with CommonMark spec support + adds syntax extensions & sugar (URL autolinking, typographer), originally created by Mient-jan Stelling as react-native-markdown-renderer",
-    "homepage": "https://github.com/iamacup/react-native-markdown-display/",
-    "author": {
-      "name": "Mient-jan Stelling and Tom Pickard + others from the community"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/iamacup/react-native-markdown-display.git"
-    },
-    "_licenseContent": "MIT License\n\nCopyright (c) 2018 - 2019 Mient-jan Stelling and Tom Pickard\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
-  },
-  {
-    "libraryName": "react-native-marked",
-    "version": "6.0.7",
-    "_license": "MIT",
-    "_description": "Markdown renderer for React Native powered by marked.js",
-    "homepage": "https://github.com/gmsgowtham/react-native-marked#readme",
-    "author": {
-      "name": "Gowtham G",
-      "email": "webappsbygowtham@gmail.com",
-      "url": "https://github.com/gmsgowtham"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/gmsgowtham/react-native-marked.git"
-    },
-    "_licenseContent": "MIT License\n\nCopyright (c) 2022 Gowtham G\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "react-native-mmkv",
@@ -907,7 +849,7 @@
   },
   {
     "libraryName": "react-native-pager-view",
-    "version": "6.5.1",
+    "version": "6.8.1",
     "_license": "MIT",
     "_description": "React Native wrapper for Android and iOS ViewPager",
     "homepage": "https://github.com/callstack/react-native-pager-view#readme",
@@ -921,19 +863,6 @@
       "url": "git+https://github.com/callstack/react-native-pager-view.git"
     },
     "_licenseContent": "MIT License\n\nCopyright (c) 2021 Callstack\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
-  },
-  {
-    "libraryName": "react-native-paper",
-    "version": "5.13.1",
-    "_license": "MIT",
-    "_description": "Material design for React Native",
-    "homepage": "https://callstack.github.io/react-native-paper",
-    "author": "",
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/callstack/react-native-paper.git"
-    },
-    "_licenseContent": "MIT License\n\nCopyright (c) 2017 Callstack\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
   },
   {
     "libraryName": "react-native-react-query-devtools",
@@ -951,7 +880,7 @@
   },
   {
     "libraryName": "react-native-reanimated",
-    "version": "3.16.7",
+    "version": "3.17.5",
     "_license": "MIT",
     "_description": "More powerful alternative to Animated library for React Native.",
     "homepage": "https://docs.swmansion.com/react-native-reanimated",
@@ -1015,7 +944,7 @@
   },
   {
     "libraryName": "react-native-safe-area-context",
-    "version": "4.12.0",
+    "version": "5.4.0",
     "_license": "MIT",
     "_description": "A flexible way to handle safe area, also works on Android and web.",
     "homepage": "https://github.com/th3rdwave/react-native-safe-area-context#readme",
@@ -1031,7 +960,7 @@
   },
   {
     "libraryName": "react-native-screens",
-    "version": "4.4.0",
+    "version": "4.11.1",
     "_license": "MIT",
     "_description": "Native navigation primitives for your React Native app.",
     "homepage": "https://github.com/software-mansion/react-native-screens#readme",
@@ -1047,7 +976,7 @@
   },
   {
     "libraryName": "react-native-svg",
-    "version": "15.8.0",
+    "version": "15.11.2",
     "_license": "MIT",
     "_description": "SVG library for react-native",
     "homepage": "https://github.com/react-native-community/react-native-svg",
@@ -1059,7 +988,7 @@
   },
   {
     "libraryName": "react-native-tab-view",
-    "version": "3.5.2",
+    "version": "4.1.2",
     "_license": "MIT",
     "_description": "Tab view component for React Native",
     "homepage": "https://reactnavigation.org/docs/tab-view/",
@@ -1115,7 +1044,7 @@
   },
   {
     "libraryName": "react-native-web",
-    "version": "0.19.13",
+    "version": "0.20.0",
     "_license": "MIT",
     "_description": "React Native for Web",
     "homepage": "https://github.com/necolas/react-native-web#readme",
@@ -1128,7 +1057,7 @@
   },
   {
     "libraryName": "react-native-webview",
-    "version": "13.12.5",
+    "version": "13.13.5",
     "_license": "MIT",
     "_description": "React Native WebView component for iOS, Android, macOS, and Windows",
     "homepage": "https://github.com/react-native-webview/react-native-webview#readme",
@@ -1138,6 +1067,36 @@
       "url": "git+https://github.com/react-native-webview/react-native-webview.git"
     },
     "_licenseContent": "MIT License\n\nCopyright (c) 2015-present, Facebook, Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
+    "libraryName": "react-server-dom-webpack",
+    "version": "19.0.0",
+    "_license": "MIT",
+    "_description": "React Server Components bindings for DOM using Webpack. This is intended to be integrated into meta-frameworks. It is not intended to be imported directly.",
+    "homepage": "https://react.dev/",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/facebook/react.git",
+      "directory": "packages/react-server-dom-webpack"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) Meta Platforms, Inc. and affiliates.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+  },
+  {
+    "libraryName": "reanimated-color-picker",
+    "version": "4.1.0",
+    "_license": "MIT",
+    "_description": "A Pure JavaScript Color Picker for React Native",
+    "homepage": "https://github.com/alabsi91/reanimated-color-picker",
+    "author": {
+      "name": "Ahmed AlAbsi",
+      "email": "alabsi91@gmail.com",
+      "url": "https://github.com/alabsi91"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/alabsi91/reanimated-color-picker.git"
+    },
+    "_licenseContent": "MIT License\n\nCopyright (c) 2022 Ahmed Alabsi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE. \n"
   },
   {
     "libraryName": "sonner-native",

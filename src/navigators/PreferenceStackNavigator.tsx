@@ -26,22 +26,38 @@ export function PreferenceStackNavigator() {
       <Stack.Screen
         name="Chat"
         component={ChatPreferenceScreen}
-        options={{ headerShown: false, orientation: 'portrait_up' }}
+        options={{
+          headerShown: false,
+          orientation: 'portrait_up',
+          presentation: 'modal',
+        }}
       />
       <Stack.Screen
         name="Theming"
         component={ThemePreferenceScreen}
-        options={{ headerShown: false, orientation: 'portrait_up' }}
+        options={{
+          headerShown: false,
+          orientation: 'portrait_up',
+          presentation: 'modal',
+        }}
       />
       <Stack.Screen
         name="Video"
         component={VideoPreferenceScreen}
-        options={{ headerShown: false, orientation: 'portrait_up' }}
+        options={{
+          headerShown: false,
+          orientation: 'portrait_up',
+          presentation: 'modal',
+        }}
       />
       <Stack.Screen
         name="BlockedUsers"
         component={BlockedUsersScreen}
-        options={{ headerShown: false, orientation: 'portrait_up' }}
+        options={{
+          headerShown: false,
+          orientation: 'portrait_up',
+          presentation: 'modal',
+        }}
       />
     </Stack.Navigator>
   );

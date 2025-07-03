@@ -89,7 +89,7 @@ export const darkTheme = {
     xxl: 16,
   },
   font: {
-    fontFamily: 'Inter',
+    fontFamily: 'SFProRounded',
     fontWeight: {
       thin: 300,
       regular: 400,

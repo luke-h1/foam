@@ -177,6 +177,9 @@ export function EmptyState(props: EmptyStateProps) {
 
 const styleSheet = createStyleSheet(theme => ({
   container: (containerStyleOverride: StyleProp<ViewStyle>) => ({
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     ...(containerStyleOverride as object),
   }),
   heading: (
