@@ -37,9 +37,9 @@ yarn-error.*
 !.env.example
 ios
 android
-!modules/foam-live-activity/ios
-!modules/foam-live-activity/android
-modules/foam-live-activity/android/build
+!modules/activity-controller/ios
+!modules/activity-controller/android
+modules/activity-controller/android/build
 
 # Turborepo
 .turbo
@@ -89,3 +89,4 @@ GoogleService-*-*.plist
 
 # Google Service Account JSON key
 FOAM_ANDROID_TESTFLIGHT_KEY.json
+
