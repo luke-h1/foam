@@ -25,7 +25,8 @@
     "noUnusedLocals": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["./src/*"]
+      "@app/*": ["./src/*"],
+      "@modules/*": ["./modules/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
