@@ -117,6 +117,7 @@ const config: ExpoConfig = {
     ['expo-secure-store'],
     ['expo-font'],
     ['@bacons/apple-colors'],
+    ['@bacons/apple-targets'],
     [
       'expo-build-properties',
       {
@@ -141,6 +142,7 @@ const config: ExpoConfig = {
   },
   web: {},
   ios: {
+    appleTeamId: 'XJA7HDCMMY',
     supportsTablet: false,
     bundleIdentifier: appConfig.iosBundleIdentifier,
     googleServicesFile: iosGoogleServicesFileExists
@@ -149,6 +151,12 @@ const config: ExpoConfig = {
     config: {
       // needed for expo-secure-store
       usesNonExemptEncryption: false,
+    },
+    infoPlist: {
+      NSSupportsLiveActivities: true,
+    },
+    entitlements: {
+      'com.apple.security.application-groups': ['group.foam-tv-dev'],
     },
   },
   android: {
