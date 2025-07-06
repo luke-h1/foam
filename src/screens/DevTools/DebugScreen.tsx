@@ -46,17 +46,21 @@ const debugItems: DebugItem[] = [
   {
     title: 'Enable/stop live activity',
     description: 'Enable live activity test',
-    onPress: value => {
-      if (value) {
-        void startLiveActivity({
-          customString: 'My test activity',
-          customNumber: 123,
-        });
-      } else {
-        void stopLiveActivity();
-      }
+    onPress: () => {
+      void startLiveActivity({
+        customString: 'My test activity',
+        customNumber: 123,
+      });
     },
-    type: 'switch',
+    type: 'button',
+  },
+  {
+    title: 'Stop live activity',
+    description: 'Stop live activity test',
+    onPress: () => {
+      void stopLiveActivity();
+    },
+    type: 'button',
   },
 ];
 

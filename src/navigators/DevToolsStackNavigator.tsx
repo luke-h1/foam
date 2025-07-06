@@ -28,6 +28,7 @@ export function DevToolsStackNavigator() {
         options={{
           headerShown: false,
           orientation: 'portrait_up',
+          presentation: 'modal',
         }}
       />
       <Stack.Screen

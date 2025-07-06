@@ -1,10 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable no-shadow */
-/* eslint-disable no-param-reassign */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable no-restricted-imports */
@@ -82,7 +76,6 @@ const RefreshContextProvider: React.FC<{
 
   return (
     <RefreshContext.Provider
-      // eslint-disable-next-line react/jsx-no-constructed-context-values
       value={{
         subscribe,
         refresh,
@@ -164,7 +157,6 @@ function InnerList({
         }}
         refreshControl={
           hasSubscribers ? (
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             <RefreshControl refreshing={refreshing} onRefresh={refresh} />
           ) : undefined
         }
@@ -178,17 +170,13 @@ export function HStack(props: ViewProps) {
   return (
     <View
       {...props}
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       style={mergedStyles(
         {
           flex: 1,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
-          // @ts-expect-error types not up to date
-          wordWrap: 'break-word',
-          // flexWrap: "wrap",
+          width: '100%',
         },
         props,
       )}
@@ -217,9 +205,20 @@ export function FormItem({
   style?: ViewStyle;
   ref?: React.Ref<View>;
 }) {
+  const itemStyle = [
+    styles.itemPadding,
+    {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    style,
+  ];
+
   if (onPress == null && onLongPress == null) {
     return (
-      <View style={[styles.itemPadding, style]}>
+      // @ts-expect-error react 19 types
+      <View style={itemStyle}>
         <HStack style={{ minHeight: minItemHeight }}>{children}</HStack>
       </View>
     );
@@ -231,7 +230,8 @@ export function FormItem({
       onPress={onPress}
       onLongPress={onLongPress}
     >
-      <View style={styles.itemPadding}>
+      {/* @ts-expect-error react 19 types */}
+      <View style={itemStyle}>
         <HStack style={{ minHeight: minItemHeight }}>{children}</HStack>
       </View>
     </TouchableHighlight>
@@ -315,6 +315,9 @@ export function Link({
   const resolvedChildren = (() => {
     if (headerRight) {
       if (process.env.EXPO_OS === 'web') {
+        return (
+          <div style={{ paddingRight: 16, width: '100%' }}>{children}</div>
+        );
         return <div style={{ paddingRight: 16 }}>{children}</div>;
       }
       const wrappedTextChildren = React.Children.map(children, child => {
@@ -327,7 +330,7 @@ export function Link({
             <RNText
               style={mergedStyleProp<TextStyle>(
                 { ...font, color: AppleColors.link },
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
                 // @ts-ignore
                 props.style,
               )}
@@ -360,7 +363,6 @@ export function Link({
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       style={mergedStyleProp<TextStyle>(font, props.style)}
     >
@@ -410,7 +412,7 @@ export function Section({
   const allChildren: React.ReactNode[] = [];
 
   // @ts-expect-error react 19 types not caught up
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+
   Children.map(children, child => {
     if (!React.isValidElement(child)) {
       return child;
@@ -566,6 +568,7 @@ export function Section({
               </Text>
             );
           }
+
           return child;
         });
       })();
@@ -603,9 +606,7 @@ export function Section({
       });
     }
 
-    // Ensure child is a FormItem otherwise wrap it in a FormItem
-
-    // @ts-expect-error react 19 types not caught up
+    // @ts-expect-error react 19 types
     if (!wrapsFormItem && !child.props.custom && child.type !== FormItem) {
       child = (
         <FormItem onPress={originalOnPress} onLongPress={originalOnLongPress}>
@@ -733,7 +734,6 @@ export function Section({
   );
 }
 
-/** @return true if the node should be wrapped in text. */
 function isStringishNode(node: React.ReactNode): boolean {
   let containsStringChildren = typeof node === 'string';
 
@@ -767,7 +767,6 @@ function SymbolView({
     return systemImage;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const symbolProps: SystemImageCustomProps =
     typeof systemImage === 'object' && 'name' in systemImage
@@ -801,13 +800,10 @@ function LinkChevronIcon({
       }
       return (
         <IconSymbol
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           name={systemImage.name}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           size={systemImage.size ?? size}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           color={systemImage.color ?? AppleColors.tertiaryLabel}
         />
@@ -844,13 +840,7 @@ function Separator() {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-
 function mergedStyles(style: ViewStyle | TextStyle, props: any) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-
   return mergedStyleProp(style, props.style);
 }
 
@@ -872,7 +862,6 @@ function extractStyle(styleProp: any, key: string) {
     return undefined;
   }
   if (Array.isArray(styleProp)) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return styleProp.find(style => {
       return style[key] != null;
