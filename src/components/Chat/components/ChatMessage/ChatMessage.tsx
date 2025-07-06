@@ -6,16 +6,18 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatDate } from '@app/utils/date-time';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
-import { useRef, useCallback, useMemo, memo, useState } from 'react';
+import { useRef, useCallback, memo, useState } from 'react';
 import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { toast } from 'sonner-native';
 import { Button } from '../../../Button';
 import { Icon } from '../../../Icon';
 import { Image } from '../../../Image';
-import { ModalHandle } from '../../../ModalHandle';
 import { Typography } from '../../../Typography';
-import { EmoteBadgePreview } from '../EmoteBadgePreview';
 import { MediaLinkCard } from '../MediaLinkCard';
+import { ActionSheet } from './ActionSheet';
+import { BadgePreviewSheet } from './BadgePreviewSheet';
+import { EmotePreviewSheet } from './EmotePreviewSheet';
 import { EmoteRenderer } from './renderers';
 
 type OnReply = Omit<ChatMessageType, 'style'>;
@@ -36,33 +38,37 @@ export const ChatMessage = memo(
     onReply,
   }: ChatMessageType & { onReply: (args: OnReply) => void }) => {
     const { styles } = useStyles(stylesheet);
-    const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-    const messageActionsSheetRef = useRef<BottomSheetModal>(null);
-    const snapPoints = useMemo(() => ['25%', '50%'], []);
-    const messageActionSnapPoints = useMemo(() => ['25%'], []);
+    const emoteSheetRef = useRef<BottomSheetModal>(null);
+    const badgeSheetRef = useRef<BottomSheetModal>(null);
+    const actionSheetRef = useRef<BottomSheetModal>(null);
+
     const { theme } = useStyles();
+
     const [selectedEmote, setSelectedEmote] = useState<ParsedPart | null>(null);
     const [selectedBadge, setSelectedBadge] =
       useState<SanitisedBadgeSet | null>(null);
 
     const handleEmotePress = useCallback((part: ParsedPart) => {
       setSelectedEmote(part);
-      setSelectedBadge(null);
-      bottomSheetModalRef.current?.present();
+      emoteSheetRef.current?.present();
     }, []);
 
     const handleBadgePress = useCallback((badge: SanitisedBadgeSet) => {
       setSelectedBadge(badge);
-      setSelectedEmote(null);
-      bottomSheetModalRef.current?.present();
+      badgeSheetRef.current?.present();
     }, []);
 
-    const handleSheetChanges = useCallback((index: number) => {
-      if (index === -1) {
-        setSelectedEmote(null);
-        setSelectedBadge(null);
-      }
-    }, []);
+    const messageText = useCallback(
+      () => replaceEmotesWithText(message),
+      [message],
+    );
+
+    const handleCopy = useCallback(() => {
+      void Clipboard.setStringAsync(messageText()).then(() =>
+        toast.success('Copied to clipboard'),
+      );
+      actionSheetRef.current?.dismiss();
+    }, [messageText]);
 
     const renderMessagePart = useCallback(
       (part: ParsedPart, index: number) => {
@@ -122,14 +128,8 @@ export const ChatMessage = memo(
     }, [badges, styles.badge, handleBadgePress]);
 
     const handleLongPress = useCallback(() => {
-      messageActionsSheetRef.current?.present();
+      actionSheetRef.current?.present();
     }, []);
-
-    const handleCopy = useCallback(() => {
-      const messageText = replaceEmotesWithText(message);
-      void Clipboard.setStringAsync(messageText);
-      messageActionsSheetRef.current?.dismiss();
-    }, [message]);
 
     const handleReply = useCallback(() => {
       onReply?.({
@@ -144,7 +144,7 @@ export const ChatMessage = memo(
         replyBody,
         replyDisplayName,
       });
-      messageActionsSheetRef.current?.dismiss();
+      actionSheetRef.current?.dismiss();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onReply]);
 
@@ -189,53 +189,27 @@ export const ChatMessage = memo(
           {message.map(renderMessagePart)}
         </Typography>
 
-        {/* Emote & Badge Preview Bottom Sheet */}
-        <BottomSheetModal
-          ref={bottomSheetModalRef}
-          index={1}
-          snapPoints={snapPoints}
-          handleStyle={{ opacity: 0.95 }}
-          backgroundStyle={styles.bottomSheet}
-          handleComponent={ModalHandle}
-          onChange={handleSheetChanges}
-          enablePanDownToClose
-          enableDismissOnClose
-          enableContentPanningGesture
-          enableHandlePanningGesture
-        >
-          <View style={styles.safeArea}>
-            <EmoteBadgePreview
-              selectedEmote={selectedEmote}
-              selectedBadge={selectedBadge}
-            />
-          </View>
-        </BottomSheetModal>
+        {selectedEmote && selectedEmote.type === 'emote' && (
+          <EmotePreviewSheet
+            ref={emoteSheetRef}
+            selectedEmote={selectedEmote as ParsedPart<'emote'>}
+          />
+        )}
 
-        <BottomSheetModal
-          ref={messageActionsSheetRef}
-          index={0}
-          snapPoints={messageActionSnapPoints}
-          handleStyle={{ opacity: 0.95 }}
-          backgroundStyle={styles.bottomSheet}
-          handleComponent={ModalHandle}
-          enablePanDownToClose
-          enableDismissOnClose
-        >
-          <View style={styles.messageActionsContainer}>
-            <Button onPress={handleCopy} style={styles.messageActionButton}>
-              <Icon icon="copy" size={20} color="#fff" />
-              <Typography size="sm" style={styles.messageActionText}>
-                Copy Message
-              </Typography>
-            </Button>
-            <Button onPress={handleReply} style={styles.messageActionButton}>
-              <Icon icon="corner-down-left" size={20} color="#fff" />
-              <Typography size="sm" style={styles.messageActionText}>
-                Reply
-              </Typography>
-            </Button>
-          </View>
-        </BottomSheetModal>
+        {selectedBadge && (
+          <BadgePreviewSheet
+            ref={badgeSheetRef}
+            selectedBadge={selectedBadge}
+          />
+        )}
+
+        <ActionSheet
+          ref={actionSheetRef}
+          message={message}
+          username={userstate.username}
+          handleReply={handleReply}
+          handleCopy={handleCopy}
+        />
       </Button>
     );
   },

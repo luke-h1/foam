@@ -639,7 +639,7 @@ export function IconSymbolMaterial({
 }: {
   name: IconSymbolName;
   size?: number;
-  color: string | OpaqueColorValue;
+  color?: string | OpaqueColorValue;
   style?: StyleProp<TextStyle>;
   // eslint-disable-next-line react/no-unused-prop-types
   weight?: SymbolWeight;
