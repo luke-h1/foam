@@ -275,6 +275,7 @@ Manual trigger is available from GitHub, Expo Dashboard or directly from the con
 
 You can inspect the builds history on the [EAS Builds dashboard](https://expo.dev/accounts/lukehowsam123/projects/foam/builds).
 You can inspect the submissions history on the [EAS Submissions dashboard](https://expo.dev/accounts/lukehowsam123/projects/foam/submissions).
+You can view the build queue on the [EAS build queue dashboard](https://expo.dev/eas-build-status)
 
 # Testers management
 
