@@ -67,7 +67,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
 
 const stylesheet = createStyleSheet(theme => ({
   contentContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.spacing.xl,
     overflow: 'visible',
   },
   bottomSheet: {

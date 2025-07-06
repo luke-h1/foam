@@ -73,7 +73,7 @@ const stylesheet = createStyleSheet(theme => ({
     gap: theme.spacing.md,
   },
   contentContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.spacing.xl,
     overflow: 'visible',
   },
   bottomSheet: {

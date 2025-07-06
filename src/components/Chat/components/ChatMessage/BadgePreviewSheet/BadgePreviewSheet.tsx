@@ -53,15 +53,15 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
               <Typography weight="bold" size="lg" style={styles.emoteName}>
                 {selectedBadge.title}
               </Typography>
-              <Typography weight="thin" size="xs" style={styles.emoteDetail}>
+              <Typography weight="thin" size="sm" style={styles.emoteDetail}>
                 {selectedBadge.type}
               </Typography>
               {selectedBadge.owner_username && (
-                <Typography weight="thin" size="xs" style={styles.emoteDetail}>
+                <Typography weight="thin" size="sm" style={styles.emoteDetail}>
                   By {selectedBadge.owner_username}
                 </Typography>
               )}
-              <Typography weight="thin" size="xs" style={styles.emoteDetail}>
+              <Typography weight="thin" size="sm" style={styles.emoteDetail}>
                 ID: {selectedBadge.id}
               </Typography>
             </View>

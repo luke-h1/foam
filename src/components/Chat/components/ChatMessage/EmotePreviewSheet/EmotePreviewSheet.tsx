@@ -63,15 +63,15 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
               <Typography weight="bold" size="lg" style={styles.emoteName}>
                 {selectedEmote?.name}
               </Typography>
-              <Typography weight="thin" size="xs" style={styles.emoteDetail}>
+              <Typography weight="thin" size="sm" style={styles.emoteDetail}>
                 {selectedEmote.site}
               </Typography>
               {selectedEmote.creator && (
-                <Typography weight="thin" size="xs" style={styles.emoteDetail}>
+                <Typography weight="thin" size="sm" style={styles.emoteDetail}>
                   By {selectedEmote.creator}
                 </Typography>
               )}
-              <Typography weight="thin" size="xs" style={styles.emoteDetail}>
+              <Typography weight="thin" size="sm" style={styles.emoteDetail}>
                 Original Name: {selectedEmote.original_name}
               </Typography>
             </View>
@@ -158,7 +158,7 @@ export const emoteStylesheet = createStyleSheet(theme => ({
     marginBottom: theme.spacing.xs / 2,
   },
   contentContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.spacing.xl,
     overflow: 'visible',
   },
   wrapper: {
