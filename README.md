@@ -354,20 +354,28 @@ In order to join the TestFlight internal testing of the iOS app distributed via 
 
 1. The app currently depends on the following APIs and services to deliver its content
 
-| Title              | Description                                                               | Base URL                                        | Uptime                     |
-| ------------------ | ------------------------------------------------------------------------- | ----------------------------------------------- | -------------------------- |
-| Auth proxy         | Auth Lambda - handles proxying twitch authentication requests             | redacted for security                           | https://status.lhowsam.com |
-| Twitch Helix       | Twitch rest API                                                           | https://api.twitch.tv/helix                     | https://status.twitch.com/ |
-| Twitch eventsub    | Event sub WebSocket - used for reacting to twitch events in chat          | wss://eventsub.wss.twitch.tv/ws                 | https://status.twitch.com/ |
-| Twitch badges      | Provides Twitch badges                                                    | https://badges.twitch.tv/v1/badges              | https://status.twitch.com/ |
-| V3 7TV             | Used for 7tv emotes and emotes in chat                                    | https://7tv.io/v3                               | https://status.7tv.app/    |
-| 7TV events         | 7TV event WS - used for reacting to 7TV emote/badge/paint changes in chat | wss://events.7tv.io/v3                          | https://status.7tv.app/    |
-| V4 7TV             | V4 GQL endpoint - will be used for user paints                            | https://7tv.io/v3                               | https://status.7tv.app/    |
-| BTTV               | Used for BTTV badges and emotes in chat                                   | https://api.betterttv.net                       | N/A                        |
-| BTTV WS            | Used to subscribe and react to BTTV badge/emote changes                   | wss://sockets.betterttv.net/ws                  | N/A                        |
-| BTTV V3 cached     | Returns cached BTTV emotes and badges                                     | https://api.betterttv.net/3/cached              | N/A                        |
-| BTTV V3 cached FFZ | Returns cached FFZ emotes and badges                                      | https://api.betterttv.net/3/cached/frankerfacez | N/A                        |
-| V1 FFZ             | V1 FFZ - used for FFZ emotes & badges                                     | https://api.frankerfacez.com/v1                 | N/A                        |
+| Title              | Description                                                               | Base URL                                        |
+| ------------------ | ------------------------------------------------------------------------- | ----------------------------------------------- |
+| Auth proxy         | Auth Lambda - handles proxying twitch authentication requests             | redacted for security                           |
+| Twitch Helix       | Twitch rest API                                                           | https://api.twitch.tv/helix                     |
+| Twitch eventsub    | Event sub WebSocket - used for reacting to twitch events in chat          | wss://eventsub.wss.twitch.tv/ws                 |
+| Twitch badges      | Provides Twitch badges                                                    | https://badges.twitch.tv/v1/badges              |
+| V3 7TV             | Used for 7tv emotes and emotes in chat                                    | https://7tv.io/v3                               |
+| 7TV events         | 7TV event WS - used for reacting to 7TV emote/badge/paint changes in chat | wss://events.7tv.io/v3                          |
+| V4 7TV             | V4 GQL endpoint - will be used for user paints                            | https://7tv.io/v3                               |
+| BTTV               | Used for BTTV badges and emotes in chat                                   | https://api.betterttv.net                       |
+| BTTV WS            | Used to subscribe and react to BTTV badge/emote changes                   | wss://sockets.betterttv.net/ws                  |
+| BTTV V3 cached     | Returns cached BTTV emotes and badges                                     | https://api.betterttv.net/3/cached              |
+| BTTV V3 cached FFZ | Returns cached FFZ emotes and badges                                      | https://api.betterttv.net/3/cached/frankerfacez |
+| V1 FFZ             | V1 FFZ - used for FFZ emotes & badges                                     | https://api.frankerfacez.com/v1                 |
+
+> [!NOTE]
+> To check the status of these services, visit their respective status pages:
+>
+> - Twitch services: https://status.twitch.com/
+> - 7TV services: https://status.7tv.app/
+> - Auth proxy: https://status.lhowsam.com
+> - BTTV and FFZ do not have status pages
 
 # Markdown writing guide
 
