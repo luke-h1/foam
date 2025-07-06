@@ -18,6 +18,7 @@ import { MediaLinkCard } from '../MediaLinkCard';
 import { ActionSheet } from './ActionSheet';
 import { BadgePreviewSheet } from './BadgePreviewSheet';
 import { EmotePreviewSheet } from './EmotePreviewSheet';
+import { UserSheet } from './UserSheet/UserSheet';
 import { EmoteRenderer } from './renderers';
 
 type OnReply = Omit<ChatMessageType, 'style'>;
@@ -41,6 +42,7 @@ export const ChatMessage = memo(
     const emoteSheetRef = useRef<BottomSheetModal>(null);
     const badgeSheetRef = useRef<BottomSheetModal>(null);
     const actionSheetRef = useRef<BottomSheetModal>(null);
+    const userSheetRef = useRef<BottomSheetModal>(null);
 
     const { theme } = useStyles();
 
@@ -150,6 +152,10 @@ export const ChatMessage = memo(
 
     const isReply = Boolean(parentDisplayName);
 
+    const onUsernamePress = useCallback(() => {
+      userSheetRef.current?.present();
+    }, []);
+
     return (
       <Button
         onLongPress={handleLongPress}
@@ -173,19 +179,21 @@ export const ChatMessage = memo(
             {formatDate(new Date(), 'HH:mm')}:
           </Typography>
           {renderBadges()}
-          <Typography
-            size="sm"
-            style={[
-              styles.username,
-              {
-                color: userstate.color
-                  ? lightenColor(userstate.color)
-                  : '#FFFFFF',
-              },
-            ]}
-          >
-            {userstate.username ?? ''}:
-          </Typography>{' '}
+          <Button onLongPress={onUsernamePress}>
+            <Typography
+              size="sm"
+              style={[
+                styles.username,
+                {
+                  color: userstate.color
+                    ? lightenColor(userstate.color)
+                    : '#FFFFFF',
+                },
+              ]}
+            >
+              {userstate.username ?? ''}:
+            </Typography>
+          </Button>{' '}
           {message.map(renderMessagePart)}
         </Typography>
 
@@ -210,6 +218,7 @@ export const ChatMessage = memo(
           handleReply={handleReply}
           handleCopy={handleCopy}
         />
+        <UserSheet ref={userSheetRef} userId={userstate['user-id']} />
       </Button>
     );
   },

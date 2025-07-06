@@ -82,11 +82,11 @@ export const darkTheme = {
     quick: 300,
   },
   radii: {
-    sm: 2,
-    md: 4,
-    lg: 8,
-    xl: 12,
-    xxl: 16,
+    sm: 4,
+    md: 6,
+    lg: 10,
+    xl: 14,
+    xxl: 18,
   },
   font: {
     fontFamily: 'SFProRounded',

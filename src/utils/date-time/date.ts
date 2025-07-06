@@ -5,7 +5,7 @@ import isYesterday from 'dayjs/plugin/isYesterday';
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
-export type DatePattern = 'DD/MM/YY' | 'HH:mm';
+export type DatePattern = 'DD/MM/YY' | 'HH:mm' | 'MMMM D YYYY';
 
 export function formatDate(
   date: Date | string | number,
