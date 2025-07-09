@@ -11,6 +11,8 @@
   "scripts": {
     "start": "APP_VARIANT=development expo start --dev-client",
     "ios": "APP_VARIANT=development expo run:ios",
+    "ios:production": "APP_VARIANT=production expo run:ios --configuration Release",
+    "android:production": "APP_VARIANT=production expo run:android --variant release",
     "icons:optimize": "svgo -f ./assets/icons",
     "android": "APP_VARIANT=development expo run:android",
     "prebuild": "APP_VARIANT=development expo prebuild",

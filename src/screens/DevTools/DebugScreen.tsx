@@ -173,7 +173,9 @@ function NavigateToChat() {
   };
   return (
     <View style={styles.navigateToChatContainer}>
-      <Typography style={styles.sectionTitle}>Join a Chat Channel</Typography>
+      <Typography style={styles.sectionTitle}>
+        Navigate to chat channel
+      </Typography>
       <TextField
         placeholder="Enter channel name"
         value={channelName}
@@ -183,6 +185,61 @@ function NavigateToChat() {
       />
       <Button onPress={handleJoinChannel} style={styles.button}>
         <Typography>Join Channel</Typography>
+      </Button>
+      {authState?.token?.accessToken && (
+        <Typography style={styles.loggedInUser}>
+          Logged in as:{' '}
+          {authState.isAnonAuth ? 'Anonymous' : user?.display_name}
+        </Typography>
+      )}
+    </View>
+  );
+}
+
+function NavigateToEmojiScreen() {
+  const { styles } = useStyles(stylesheet);
+  const { user, authState } = useAuthContext();
+  const { navigate } = useAppNavigation();
+  const [channelName, setChannelName] = useState<string>('');
+  const [twitchUserId, setTwitchUserId] = useState<string>('');
+
+  const toUserId = async (username: string) => {
+    const result = await twitchService.getUser(username);
+    setTwitchUserId(result.id);
+  };
+
+  useEffect(() => {
+    void toUserId(channelName);
+  }, [channelName]);
+
+  const handleJoinEmoteMenu = () => {
+    if (!channelName.trim()) {
+      Alert.alert('Enter a channel name');
+      return;
+    }
+
+    navigate('DevTools', {
+      screen: 'Emotes',
+      params: {
+        channelName,
+        channelId: twitchUserId,
+      },
+    });
+  };
+  return (
+    <View style={styles.navigateToChatContainer}>
+      <Typography style={styles.sectionTitle}>
+        Navigate to emote picker
+      </Typography>
+      <TextField
+        placeholder="Enter channel name"
+        value={channelName}
+        onChangeText={e => setChannelName(e)}
+        autoComplete="off"
+        autoCapitalize="none"
+      />
+      <Button onPress={handleJoinEmoteMenu} style={styles.button}>
+        <Typography>Navigate</Typography>
       </Button>
       {authState?.token?.accessToken && (
         <Typography style={styles.loggedInUser}>
@@ -231,6 +288,7 @@ export function DebugScreen() {
       <TwitchUsernameConverter />
       <DisplayAccessToken />
       <NavigateToChat />
+      <NavigateToEmojiScreen />
     </>
   );
 

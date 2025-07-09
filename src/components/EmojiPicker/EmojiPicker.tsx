@@ -1,8 +1,19 @@
-import { AnimatedFlashList } from '@shopify/flash-list';
-import { useCallback, useMemo } from 'react';
-import { ScrollView, View, ViewStyle } from 'react-native';
+/* eslint-disable react/display-name */
+/* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-plusplus */
+import React, { useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ViewStyle,
+  FlatList,
+  Pressable,
+} from 'react-native';
 import Animated, {
-  AnimatedRef,
   Extrapolation,
   interpolate,
   SharedValue,
@@ -12,12 +23,8 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
-import { Button } from '../Button';
-import { FlashList } from '../FlashList';
-import { Typography } from '../Typography';
-import { EmojiSection, processEmojiSections } from './config';
 
+// CONFIG
 const PICKER_WIDTH = 300;
 const PICKER_PAD = 5;
 const PICKER_GAP = 12;
@@ -33,40 +40,105 @@ const TOP_CORNER_STYLE: ViewStyle = {
   borderTopRightRadius: PICKER_RADIUS,
 };
 
-interface EmojiPickerProps {
+export type EmojiPickerProps = {
   data: EmojiSection[];
-}
+};
 
-interface RowItem {
-  type: 'row';
-  data: { emoji: string; index: number }[];
-}
-
-interface HeaderItem {
+type HeaderItem = {
   type: 'header';
   title: string;
-}
+};
+
+type RowItem = {
+  type: 'row';
+  data: { emoji: string; index: number }[];
+};
+
+const getItemLayout = (
+  _: ArrayLike<FlatListItem> | null | undefined,
+  index: number,
+) => ({
+  length: EMOJI_SIZE,
+  offset: EMOJI_SIZE * index,
+  index,
+});
 
 type FlatListItem = HeaderItem | RowItem;
 
-export function EmojiPicker({ data }: EmojiPickerProps) {
-  const barColor = '#2B2B2B';
-  const flashListRef = useAnimatedRef<FlashList<FlatListItem>>();
-  const scrollY = useSharedValue<number>(0);
-  const { styles } = useStyles(stylesheet);
+type EmojiCell = {
+  emoji: string;
+  index: number;
+};
+
+export type ProcessedEmojiSection = {
+  title: string;
+  icon: string | string[];
+  data: EmojiCell[][];
+  index: number;
+  sectionOffset: number;
+};
+
+export type EmojiSection = {
+  title: string;
+  icon: string | string[];
+  data: string[];
+  index?: number;
+  sectionOffset?: number;
+};
+
+export function processEmojiSections(
+  sections: EmojiSection[],
+  chunkSize = 6,
+): ProcessedEmojiSection[] {
+  let globalIndex = 0;
+
+  return sections.map((section, sectionIndex) => {
+    const offset = globalIndex;
+
+    const chunked = chunkArray(section.data, chunkSize).map(row =>
+      row.map(emoji => ({
+        emoji,
+        index: globalIndex++,
+      })),
+    );
+
+    return {
+      ...section,
+      data: chunked,
+      index: sectionIndex,
+      sectionOffset: offset,
+    };
+  });
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+
+export default function EmojiPicker({ data }: EmojiPickerProps) {
+  const flatListRef = useAnimatedRef<FlatList<FlatListItem>>();
+  const scrollY = useSharedValue(0);
 
   const flatData: FlatListItem[] = useMemo(() => {
     const processed = processEmojiSections(data, CHUNK_SIZE);
-    return processed.flatMap(section => [
-      { type: 'header' as const, title: section.title },
-      ...section.data.map(row => ({ type: 'row' as const, data: row })),
-    ]);
+    const result: FlatListItem[] = [];
+    for (const section of processed) {
+      result.push({ type: 'header', title: section.title });
+      for (const row of section.data) {
+        result.push({ type: 'row', data: row });
+      }
+    }
+    return result;
   }, [data]);
 
   return (
     <View
       style={{
-        backgroundColor: barColor,
+        backgroundColor: '#000',
         paddingHorizontal: PICKER_PAD,
         borderRadius: PICKER_RADIUS,
       }}
@@ -81,33 +153,26 @@ export function EmojiPicker({ data }: EmojiPickerProps) {
           data={data}
           flatData={flatData}
           scrollY={scrollY}
-          flashListRef={flashListRef}
+          flatListRef={flatListRef}
         />
       </View>
     </View>
   );
 }
 
-/**
- * Todo replace with LegendList once we have a custom wrapper around it
- * Credit to https://github.com/Solarin-Johnson/tg-emoji-picker
- * We need to revamp this to work with emojicon providers rather than a fixed list
- */
 function EmojiFlatList({
   data,
   flatData,
   scrollY,
-  flashListRef,
+  flatListRef,
 }: {
   data: EmojiSection[];
   flatData: FlatListItem[];
   scrollY: SharedValue<number>;
-  flashListRef: AnimatedRef<FlashList<FlatListItem>>;
+  flatListRef: any;
 }) {
-  const { styles } = useStyles(stylesheet);
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      // eslint-disable-next-line no-param-reassign
       scrollY.value = event.contentOffset.y;
     },
   });
@@ -116,28 +181,27 @@ function EmojiFlatList({
     (sectionIndex: number) => {
       const index = flatData.findIndex(
         item =>
-          item.type === 'header' && data[sectionIndex]?.title === item.title,
+          item.type === 'header' && data[sectionIndex].title === item.title,
       );
       if (index !== -1) {
-        flashListRef.current?.scrollToIndex({
+        flatListRef.current?.scrollToIndex({
           index,
           animated: true,
           viewOffset: EMOJI_SIZE,
         });
       }
     },
-    [flatData, data, flashListRef],
+    [flatData, data, flatListRef],
   );
 
   const renderItem = useMemo(
     () =>
-      // eslint-disable-next-line react/display-name, react/no-unstable-nested-components
       ({ item, index }: { item: FlatListItem; index: number }) => {
         if (item.type === 'header') {
           if (index > 0)
             return (
               <View style={styles.header}>
-                <Typography style={styles.headerText}>{item.title}</Typography>
+                <Text style={styles.headerText}>{item.title}</Text>
               </View>
             );
         } else if (item.type === 'row') {
@@ -145,14 +209,14 @@ function EmojiFlatList({
         }
         return null;
       },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [scrollY],
   );
+
   return (
     <>
       <EmojiCategoryBar data={data} onPress={scrollToSection} />
-      <AnimatedFlashList
-        ref={flashListRef}
+      <Animated.FlatList
+        ref={flatListRef}
         data={flatData}
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
@@ -163,7 +227,11 @@ function EmojiFlatList({
           paddingBottom: PICKER_GAP,
         }}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={CHUNK_SIZE}
+        maxToRenderPerBatch={CHUNK_SIZE * 2}
         removeClippedSubviews
+        getItemLayout={getItemLayout}
+        windowSize={5}
       />
     </>
   );
@@ -176,12 +244,9 @@ function EmojiCategoryBar({
   data: EmojiSection[];
   onPress: (index: number) => void;
 }) {
-  const { styles } = useStyles(stylesheet);
-
-  const barColor = '#ccc';
   return (
     <ScrollView
-      style={[styles.topbar, { backgroundColor: barColor }]}
+      style={[styles.topbar, { backgroundColor: '#000' }]}
       contentContainerStyle={{
         padding: PICKER_PAD,
         gap: 4,
@@ -190,7 +255,7 @@ function EmojiCategoryBar({
       showsHorizontalScrollIndicator={false}
     >
       {data.map((section, index) => (
-        <Button
+        <TouchableOpacity
           key={section.title}
           onPress={() => onPress(index)}
           style={{
@@ -201,8 +266,8 @@ function EmojiCategoryBar({
             borderRadius: PICKER_RADIUS / 2,
           }}
         >
-          <Typography style={styles.icon}>{section.icon}</Typography>
-        </Button>
+          <Text style={styles.icon}>{section.icon}</Text>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );
@@ -219,7 +284,6 @@ function EmojiRow({
   scrollY: SharedValue<number>;
   onPress?: (emoji: string) => void;
 }) {
-  const { styles } = useStyles(stylesheet);
   const positionY = index * EMOJI_SIZE;
   const { startFade, endFade } = useMemo(() => {
     const chunkHeight = EMOJI_SIZE * CHUNK_SIZE - PICKER_GAP;
@@ -255,11 +319,9 @@ function EmojiRow({
   return (
     <Animated.View style={[styles.row, animatedStyle]}>
       {items.map(emojiObj => {
-        const content = (
-          <Typography style={styles.emoji}>{emojiObj.emoji}</Typography>
-        );
+        const content = <Text style={styles.emoji}>{emojiObj.emoji}</Text>;
         return (
-          <Button
+          <Pressable
             style={styles.emojiContainer}
             key={emojiObj.index}
             onPress={() => onPress?.(emojiObj.emoji)}
@@ -268,14 +330,14 @@ function EmojiRow({
             // }}
           >
             {content}
-          </Button>
+          </Pressable>
         );
       })}
     </Animated.View>
   );
 }
 
-const stylesheet = createStyleSheet(() => ({
+const styles = StyleSheet.create({
   container: { flex: 1, flexDirection: 'column' },
   emojiContainer: {
     width: EMOJI_SIZE,
@@ -304,7 +366,7 @@ const stylesheet = createStyleSheet(() => ({
     width: PICKER_WIDTH + 2 * PICKER_PAD,
     zIndex: 1,
     height: CATEGORY_HEADER_HEIGHT,
-    // ...TOP_CORNER_STYLE,
+    ...TOP_CORNER_STYLE,
   },
   icon: {
     fontSize: EMOJI_SIZE / (PICKER_PAD / 2.5),
@@ -313,4 +375,4 @@ const stylesheet = createStyleSheet(() => ({
     flexDirection: 'row',
     transformOrigin: 'top',
   },
-}));
+});
