@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import {
   bttvEmoteService,
   ffzService,
@@ -10,10 +11,13 @@ import {
 import { chatterinoService } from '@app/services/chatterinoService';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
+import { current } from 'immer';
 import newRelic from 'newrelic-react-native-agent';
 import { ViewStyle } from 'react-native';
 import { ChatUserstate } from 'tmi.js';
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/with-selector';
 import { create, StateCreator } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
 
 interface CosmeticPaint {
   id: string;
@@ -111,7 +115,10 @@ export interface ChatState {
    * FFZ emomtes
    */
   ffzChannelEmotes: SanitisiedEmoteSet[];
+  setFfzChannelEmotes: (emoteSet: SanitisiedEmoteSet[]) => void;
+
   ffzGlobalEmotes: SanitisiedEmoteSet[];
+  setFfzGlobalEmotes: (emoteSet: SanitisiedEmoteSet[]) => void;
 
   /**
    * BTTV emotes
@@ -165,14 +172,16 @@ export interface ChatState {
   clearMessages: () => void;
 }
 
-const chatStoreCreator: StateCreator<ChatState> = set => ({
+const chatStoreCreator: StateCreator<
+  ChatState,
+  [['zustand/immer', never]],
+  [['zustand/immer', never]]
+> = set => ({
   status: 'idle',
-  bits: [],
   setBits: bits => {
-    return set(state => ({
-      ...state,
-      bits,
-    }));
+    set(state => {
+      state.bits = bits;
+    });
   },
 
   /**
@@ -180,7 +189,7 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    */
   ttvUsers: [],
   setTTvUsers: users => {
-    return set(state => {
+    set(state => {
       const uniqueUsersMap = new Map(
         state.ttvUsers.map(user => [user.userId, user]),
       );
@@ -191,10 +200,7 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
       });
 
       // Convert map back to array
-      return {
-        ...state,
-        ttvUsers: Array.from(uniqueUsersMap.values()),
-      };
+      state.ttvUsers = Array.from(uniqueUsersMap.values());
     });
   },
 
@@ -203,28 +209,26 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    */
   emojis: [],
   setEmojis: emoteSet => {
-    return set(state => ({
-      ...state,
-      emojis: emoteSet,
-    }));
+    set(state => {
+      state.emojis = emoteSet;
+    });
   },
 
   /**
    * Twitch
    */
   twitchChannelEmotes: [],
+  bits: [],
   twitchGlobalEmotes: [],
   setTwitchChannelEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      twitchChannelEmotes: emoteSet,
-    }));
+    set(state => {
+      state.twitchChannelEmotes = emoteSet;
+    });
   },
   setTwitchGlobalEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      twitchGlobalEmotes: emoteSet,
-    }));
+    set(state => {
+      state.twitchGlobalEmotes = emoteSet;
+    });
   },
 
   /**
@@ -232,6 +236,16 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    */
   ffzChannelEmotes: [],
   ffzGlobalEmotes: [],
+  setFfzChannelEmotes: emoteSet => {
+    set(state => {
+      state.ffzChannelEmotes = emoteSet;
+    });
+  },
+  setFfzGlobalEmotes: emoteSet => {
+    set(state => {
+      state.ffzGlobalEmotes = emoteSet;
+    });
+  },
 
   /**
    * Seven TV
@@ -239,16 +253,14 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
   sevenTvChannelEmotes: [],
   sevenTvGlobalEmotes: [],
   setSevenTvChannelEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      sevenTvChannelEmotes: emoteSet,
-    }));
+    set(state => {
+      state.sevenTvChannelEmotes = emoteSet;
+    });
   },
   setSevenTvGlobalEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      sevenTvGlobalEmotes: emoteSet,
-    }));
+    set(state => {
+      state.sevenTvGlobalEmotes = emoteSet;
+    });
   },
 
   /**
@@ -257,17 +269,15 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
   bttvChannelEmotes: [],
   bttvGlobalEmotes: [],
   setBttvChannelEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      bttvChannelEmotes: emoteSet,
-    }));
+    set(state => {
+      state.bttvChannelEmotes = emoteSet;
+    });
   },
 
   setBttvGlobalEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      bttvGlobalEmotes: emoteSet,
-    }));
+    set(state => {
+      state.bttvGlobalEmotes = emoteSet;
+    });
   },
 
   /**
@@ -275,18 +285,16 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    */
   twitchGlobalBadges: [],
   setTwitchGlobalBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      twitchBadges: badgeSet,
-    }));
+    set(state => {
+      state.twitchGlobalBadges = badgeSet;
+    });
   },
 
   twitchChannelBadges: [],
   setTwitchChannelBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      twitchBadges: badgeSet,
-    }));
+    set(state => {
+      state.twitchChannelBadges = badgeSet;
+    });
   },
 
   /**
@@ -294,48 +302,48 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    */
   ffzGlobalBadges: [],
   setFfzGlobalBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      ffzGlobalBadges: badgeSet,
-    }));
+    set(state => {
+      state.ffzGlobalBadges = badgeSet;
+    });
   },
   ffzChannelBadges: [],
   setFfzChannelBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      ffzGlobalBadges: badgeSet,
-    }));
+    set(state => {
+      state.ffzChannelBadges = badgeSet;
+    });
   },
 
   chatterinoBadges: [],
   setChatterinoBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      chatterinoBadges: badgeSet,
-    }));
+    set(state => {
+      state.chatterinoBadges = badgeSet;
+    });
   },
 
   clearChannelResources: () => {
-    set(() => ({
-      status: 'idle',
-      twitchChannelEmotes: [],
-      twitchGlobalEmotes: [],
-      ffzChannelEmotes: [],
-      ffzGlobalEmotes: [],
-      sevenTvChannelEmotes: [],
-      sevenTvGlobalEmotes: [],
-      emojis: [],
-      ttvUsers: [],
-      bits: [],
-      twitchChannelBadges: [],
-      twitchGlobalBadges: [],
-      ffzGlobalBadges: [],
-      ffzChannelBadges: [],
-      chatterinoBadges: [],
-    }));
+    set(state => {
+      state.status = 'idle';
+      // Keep global emotes loaded for performance
+      state.twitchChannelEmotes = [];
+      // state.twitchGlobalEmotes = []; // Keep global emotes
+      state.ffzChannelEmotes = [];
+      // state.ffzGlobalEmotes = []; // Keep global emotes
+      state.sevenTvChannelEmotes = [];
+      // state.sevenTvGlobalEmotes = []; // Keep global emotes
+      state.emojis = [];
+      state.ttvUsers = [];
+      state.bits = [];
+      state.twitchChannelBadges = [];
+      state.twitchGlobalBadges = [];
+      state.ffzGlobalBadges = [];
+      state.ffzChannelBadges = [];
+      state.chatterinoBadges = [];
+    });
   },
   loadChannelResources: async (channelId: string) => {
-    set(state => ({ ...state, status: 'loading' }));
+    set(state => {
+      state.status = 'loading';
+    });
     try {
       let sevenTvSetId = 'global';
       try {
@@ -431,29 +439,36 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
       logEmptyBadgeResponse('Twitch', 'channel', twitchChannelBadges);
       logEmptyBadgeResponse('FFZ', 'global', ffzGlobalBadges);
 
-      set(state => ({
-        ...state,
-        status: 'fulfilled',
-        twitchChannelEmotes: getValue<SanitisiedEmoteSet>(twitchChannelEmotes),
-        twitchGlobalEmotes: getValue<SanitisiedEmoteSet>(twitchGlobalEmotes),
-        sevenTvChannelEmotes:
-          getValue<SanitisiedEmoteSet>(sevenTvChannelEmotes),
-        sevenTvGlobalEmotes: getValue<SanitisiedEmoteSet>(sevenTvGlobalEmotes),
-        bttvGlobalEmotes: getValue<SanitisiedEmoteSet>(bttvGlobalEmotes),
-        bttvChannelEmotes: getValue<SanitisiedEmoteSet>(bttvChannelEmotes),
-        ffzChannelEmotes: getValue<SanitisiedEmoteSet>(ffzChannelEmotes),
-        ffzGlobalEmotes: getValue<SanitisiedEmoteSet>(ffzGlobalEmotes),
-        twitchChannelBadges: getValue<SanitisedBadgeSet>(twitchChannelBadges),
-        twitchGlobalBadges: getValue<SanitisedBadgeSet>(twitchGlobalBadges),
-        ffzGlobalBadges: getValue<SanitisedBadgeSet>(ffzGlobalBadges),
-        ffzChannelBadges: getValue<SanitisedBadgeSet>(ffzChannelBadges),
-        chatterinoBadges: getValue<SanitisedBadgeSet>(chatterinoBadges),
-      }));
+      set(state => {
+        state.status = 'fulfilled';
+        state.twitchChannelEmotes =
+          getValue<SanitisiedEmoteSet>(twitchChannelEmotes);
+        state.twitchGlobalEmotes =
+          getValue<SanitisiedEmoteSet>(twitchGlobalEmotes);
+        state.sevenTvChannelEmotes =
+          getValue<SanitisiedEmoteSet>(sevenTvChannelEmotes);
+        state.sevenTvGlobalEmotes =
+          getValue<SanitisiedEmoteSet>(sevenTvGlobalEmotes);
+        state.bttvGlobalEmotes = getValue<SanitisiedEmoteSet>(bttvGlobalEmotes);
+        state.bttvChannelEmotes =
+          getValue<SanitisiedEmoteSet>(bttvChannelEmotes);
+        state.ffzChannelEmotes = getValue<SanitisiedEmoteSet>(ffzChannelEmotes);
+        state.ffzGlobalEmotes = getValue<SanitisiedEmoteSet>(ffzGlobalEmotes);
+        state.twitchChannelBadges =
+          getValue<SanitisedBadgeSet>(twitchChannelBadges);
+        state.twitchGlobalBadges =
+          getValue<SanitisedBadgeSet>(twitchGlobalBadges);
+        state.ffzGlobalBadges = getValue<SanitisedBadgeSet>(ffzGlobalBadges);
+        state.ffzChannelBadges = getValue<SanitisedBadgeSet>(ffzChannelBadges);
+        state.chatterinoBadges = getValue<SanitisedBadgeSet>(chatterinoBadges);
+      });
 
       return true;
     } catch (error) {
       logger.chat.error('Error loading channel resources:', error);
-      set(state => ({ ...state, status: 'error' }));
+      set(state => {
+        state.status = 'error';
+      });
       return false;
     }
   },
@@ -461,23 +476,109 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
   messages: [],
   addMessage: (message: ChatMessageType) => {
     set(state => {
-      const newMessages = [...state.messages, message];
+      const currentMessages = current(state.messages);
+      const newMessages = [...currentMessages, message];
       // Keep only the last 150 messages
       if (newMessages.length > 150) {
         newMessages.shift();
       }
-      return {
-        ...state,
-        messages: newMessages,
-      };
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      state.messages = newMessages;
     });
   },
   clearMessages: () => {
-    set(state => ({
-      ...state,
-      messages: [],
-    }));
+    set(state => {
+      state.messages = [];
+    });
   },
 });
 
-export const useChatStore = create<ChatState>()(chatStoreCreator);
+export const useChatStore = create<ChatState>()(immer(chatStoreCreator));
+
+export const useChatStoreWithSelector = <T>(
+  selector: (state: ChatState) => T,
+  equalityFn?: (a: T, b: T) => boolean,
+) => {
+  return useSyncExternalStoreWithSelector(
+    useChatStore.subscribe,
+    useChatStore.getState,
+    useChatStore.getState,
+    selector,
+    equalityFn,
+  );
+};
+
+export const useEmotesSelector = () => {
+  return useChatStoreWithSelector(
+    state => ({
+      twitchChannelEmotes: state.twitchChannelEmotes,
+      twitchGlobalEmotes: state.twitchGlobalEmotes,
+      sevenTvChannelEmotes: state.sevenTvChannelEmotes,
+      sevenTvGlobalEmotes: state.sevenTvGlobalEmotes,
+      bttvChannelEmotes: state.bttvChannelEmotes,
+      bttvGlobalEmotes: state.bttvGlobalEmotes,
+      ffzChannelEmotes: state.ffzChannelEmotes,
+      ffzGlobalEmotes: state.ffzGlobalEmotes,
+      emojis: state.emojis,
+    }),
+    (a, b) => {
+      return (
+        a.twitchChannelEmotes === b.twitchChannelEmotes &&
+        a.twitchGlobalEmotes === b.twitchGlobalEmotes &&
+        a.sevenTvChannelEmotes === b.sevenTvChannelEmotes &&
+        a.sevenTvGlobalEmotes === b.sevenTvGlobalEmotes &&
+        a.bttvChannelEmotes === b.bttvChannelEmotes &&
+        a.bttvGlobalEmotes === b.bttvGlobalEmotes &&
+        a.ffzChannelEmotes === b.ffzChannelEmotes &&
+        a.ffzGlobalEmotes === b.ffzGlobalEmotes &&
+        a.emojis === b.emojis
+      );
+    },
+  );
+};
+
+export const useBadgesSelector = () => {
+  return useChatStoreWithSelector(
+    state => ({
+      twitchGlobalBadges: state.twitchGlobalBadges,
+      twitchChannelBadges: state.twitchChannelBadges,
+      ffzGlobalBadges: state.ffzGlobalBadges,
+      ffzChannelBadges: state.ffzChannelBadges,
+      chatterinoBadges: state.chatterinoBadges,
+    }),
+    (a, b) => {
+      return (
+        a.twitchGlobalBadges === b.twitchGlobalBadges &&
+        a.twitchChannelBadges === b.twitchChannelBadges &&
+        a.ffzGlobalBadges === b.ffzGlobalBadges &&
+        a.ffzChannelBadges === b.ffzChannelBadges &&
+        a.chatterinoBadges === b.chatterinoBadges
+      );
+    },
+  );
+};
+
+export const useMessagesSelector = () => {
+  return useChatStoreWithSelector(
+    state => state.messages,
+    (a, b) =>
+      a.length === b.length && a.every((msg, index) => msg === b[index]),
+  );
+};
+
+export const useChatUsersSelector = () => {
+  return useChatStoreWithSelector(
+    state => state.ttvUsers,
+    (a, b) =>
+      a.length === b.length && a.every((user, index) => user === b[index]),
+  );
+};
+
+export const useChatStatusSelector = () => {
+  return useChatStoreWithSelector(
+    state => state.status,
+    (a, b) => a === b,
+  );
+};

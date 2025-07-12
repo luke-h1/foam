@@ -2,6 +2,7 @@ import { ChatScreen } from '@app/screens/ChatScreen';
 import {
   DebugScreen,
   DiagnosticsScreen,
+  EmotesScreen,
   NewRelicDemoScreen,
 } from '@app/screens/DevTools';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -12,6 +13,7 @@ export type DevToolsParamList = {
   NewRelicDemo: undefined;
   Debug: undefined;
   Chat: { channelName: string; channelId: string };
+  Emotes: { channelName: string; channelId: string };
 };
 
 const Stack = createNativeStackNavigator<DevToolsParamList>();
@@ -50,6 +52,14 @@ export function DevToolsStackNavigator() {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
+        options={{
+          headerShown: false,
+          orientation: 'portrait_up',
+        }}
+      />
+      <Stack.Screen
+        name="Emotes"
+        component={EmotesScreen}
         options={{
           headerShown: false,
           orientation: 'portrait_up',

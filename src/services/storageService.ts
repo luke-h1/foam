@@ -14,6 +14,7 @@ export type AllowedKey =
   | 'ReactQueryDebug'
   | 'foam_stacked_cards'
   | 'previous_searches'
+  | 'recent_emotes'
   | `appStoreLink_${string}`;
 
 export const NAMESPACE = 'FOAM_V1';
@@ -99,5 +100,19 @@ export const storageService = {
         }
       }
     });
+  },
+
+  getItem(key: AllowedKey): string | null {
+    return storage.getString(namespaceKey(key));
+  },
+
+  setItem(key: AllowedKey, value: string): void {
+    storage.set(namespaceKey(key), value);
+    storageEvents.emit('storageChange', key);
+  },
+
+  removeItem(key: AllowedKey): void {
+    storage.delete(namespaceKey(key));
+    storageEvents.emit('storageChange', key);
   },
 } as const;

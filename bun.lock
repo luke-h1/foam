@@ -61,6 +61,7 @@
         "expo-updates": "~0.28.15",
         "expo-video": "~2.2.2",
         "express": "^4.21.0",
+        "immer": "^10.1.1",
         "jest-junit": "^16.0.0",
         "newrelic-react-native-agent": "^1.4.5",
         "react": "19.0.0",
@@ -93,6 +94,7 @@
         "tmi.js": "^1.8.5",
         "toastify-react-native": "^6.0.0",
         "twemoji": "^14.0.2",
+        "use-sync-external-store": "^1.5.0",
         "zustand": "^5.0.4",
         "zustand-expo-devtools": "^0.2.2",
       },
@@ -2377,6 +2379,8 @@
     "image-q": ["image-q@4.0.0", "", { "dependencies": { "@types/node": "16.9.1" } }, "sha512-PfJGVgIfKQJuq3s0tTDOKtztksibuUEbJQIYT3by6wctQo+Rdlh7ef4evJ5NCdxY4CfMbvFkocEwbl4BF8RlJw=="],
 
     "image-size": ["image-size@1.2.0", "", { "dependencies": { "queue": "6.0.2" }, "bin": { "image-size": "bin/image-size.js" } }, "sha512-4S8fwbO6w3GeCVN6OPtA9I5IGKkcDMPcKndtUlpJuCwu7JLjtj7JZpwqLuyY2nrmQT3AWsCJLSKPsc2mPBSl3w=="],
+
+    "immer": ["immer@10.1.1", "", {}, "sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw=="],
 
     "import-fresh": ["import-fresh@3.3.0", "", { "dependencies": { "parent-module": "^1.0.0", "resolve-from": "^4.0.0" } }, "sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw=="],
 

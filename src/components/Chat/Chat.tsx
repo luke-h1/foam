@@ -2,6 +2,7 @@
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useTmiClient } from '@app/hooks';
+import { SanitisiedEmoteSet } from '@app/services/seventTvService';
 import { ChatMessageType, ChatUser, useChatStore } from '@app/store/chatStore';
 import { generateRandomTwitchColor } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -23,6 +24,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
+import { EmoteMenuModal } from '../EmoteMenu';
 import { Icon } from '../Icon';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
@@ -93,7 +95,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
-  const [showEmotePicker, setShowEmotePicker] = useState<boolean>(false);
+  const [showEmoteMenu, setShowEmoteMenu] = useState<boolean>(false);
 
   const [messageInput, setMessageInput] = useState<string>('');
 
@@ -168,94 +170,102 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       await client.connect();
 
-      client.on('message', (_channel, tags, text, _self) => {
-        const userstate = tags;
+      client.on(
+        'message',
+        (_channel: string, tags, text: string, _self: boolean) => {
+          const userstate = tags;
 
-        const message_id = userstate.id || '0';
-        const replyParentMessageId = tags.id;
+          const message_id = userstate.id || '0';
+          const replyParentMessageId = tags.id;
 
-        const replyParentDisplayName = tags[
-          'reply-parent-display-name'
-        ] as string;
+          const replyParentDisplayName = tags[
+            'reply-parent-display-name'
+          ] as string;
 
-        const replyParentUserLogin = tags['reply-parent-user-login'] as string;
-        const replyParentMessageBody = tags['reply-parent-msg-body'] as string;
+          const replyParentUserLogin = tags[
+            'reply-parent-user-login'
+          ] as string;
+          const replyParentMessageBody = tags[
+            'reply-parent-msg-body'
+          ] as string;
 
-        if (replyParentMessageId) {
-          const replyParent = messages.find(
-            message => message.message_id === replyParentMessageId,
+          if (replyParentMessageId) {
+            const replyParent = messages.find(
+              message => message.message_id === replyParentMessageId,
+            );
+
+            if (replyParent) {
+              setReplyTo({
+                messageId: replyParentMessageId,
+                username: replyParentDisplayName,
+                message: replyParentMessageBody,
+                replyParentUserLogin,
+              });
+            }
+          }
+
+          const message_nonce = generateNonce();
+
+          const replacedMessage = replaceTextWithEmotes({
+            bttvChannelEmotes: [],
+            bttvGlobalEmotes: [],
+            ffzChannelEmotes,
+            ffzGlobalEmotes,
+            inputString: text.trimEnd(),
+            sevenTvChannelEmotes,
+            sevenTvGlobalEmotes,
+            twitchChannelEmotes,
+            twitchGlobalEmotes,
+            userstate,
+          });
+
+          const replacedBadges = findBadges({
+            userstate,
+            chatterinoBadges,
+            chatUsers: ttvUsers,
+            ffzChannelBadges,
+            ffzGlobalBadges,
+            twitchChannelBadges,
+            twitchGlobalBadges,
+          });
+
+          const foundTtvUser = ttvUsers.find(
+            u => u.name.replace('@', '') === userstate.username,
           );
 
-          if (replyParent) {
-            setReplyTo({
-              messageId: replyParentMessageId,
-              username: replyParentDisplayName,
-              message: replyParentMessageBody,
-              replyParentUserLogin,
-            });
+          /**
+           * Look into https://api.twitch.tv/helix/chat/chatters and seeing if that is more performant than writing to store
+           */
+          if (!foundTtvUser) {
+            const ttvUser: ChatUser = {
+              name: `@${userstate.username}`,
+              userId: userstate['user-id'] ?? '',
+              color:
+                userstate.color ??
+                generateRandomTwitchColor(userstate.username),
+              avatar: '',
+            };
+
+            setTTvUsers([ttvUser]);
           }
-        }
 
-        const message_nonce = generateNonce();
-
-        const replacedMessage = replaceTextWithEmotes({
-          bttvChannelEmotes: [],
-          bttvGlobalEmotes: [],
-          ffzChannelEmotes,
-          ffzGlobalEmotes,
-          inputString: text.trimEnd(),
-          sevenTvChannelEmotes,
-          sevenTvGlobalEmotes,
-          twitchChannelEmotes,
-          twitchGlobalEmotes,
-          userstate,
-        });
-
-        const replacedBadges = findBadges({
-          userstate,
-          chatterinoBadges,
-          chatUsers: ttvUsers,
-          ffzChannelBadges,
-          ffzGlobalBadges,
-          twitchChannelBadges,
-          twitchGlobalBadges,
-        });
-
-        const foundTtvUser = ttvUsers.find(
-          u => u.name.replace('@', '') === userstate.username,
-        );
-
-        /**
-         * Look into https://api.twitch.tv/helix/chat/chatters and seeing if that is more performant than writing to store
-         */
-        if (!foundTtvUser) {
-          const ttvUser: ChatUser = {
-            name: `@${userstate.username}`,
-            userId: userstate['user-id'] ?? '',
-            color:
-              userstate.color ?? generateRandomTwitchColor(userstate.username),
-            avatar: '',
+          const newMessage: ChatMessageType = {
+            userstate,
+            message: replacedMessage,
+            badges: replacedBadges,
+            channel: channelName,
+            message_id,
+            message_nonce,
+            sender: userstate.username || '',
+            parentDisplayName:
+              (tags['reply-parent-display-name'] as string) || '',
+            replyDisplayName: (tags['reply-parent-user-login'] as string) || '',
+            replyBody: (tags['reply-parent-msg-body'] as string) || '',
           };
 
-          setTTvUsers([ttvUser]);
-        }
-
-        const newMessage: ChatMessageType = {
-          userstate,
-          message: replacedMessage,
-          badges: replacedBadges,
-          channel: channelName,
-          message_id,
-          message_nonce,
-          sender: userstate.username || '',
-          parentDisplayName:
-            (tags['reply-parent-display-name'] as string) || '',
-          replyDisplayName: (tags['reply-parent-user-login'] as string) || '',
-          replyBody: (tags['reply-parent-msg-body'] as string) || '',
-        };
-
-        handleNewMessage(newMessage);
-      });
+          handleNewMessage(newMessage);
+        },
+      );
 
       client.on('connecting', () => {
         void client.say(channelName, `Connecting to ${channelName}'s room`);
@@ -270,7 +280,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         void client.say(channelName, 'Chat cleared by moderator');
       });
 
-      client.on('disconnected', reason => {
+      client.on('disconnected', (reason: string) => {
         logger.chat.info('Disconnected from chat:', reason);
       });
     } catch (error) {
@@ -303,17 +313,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
     if (replyTo) {
       try {
-        await client.say(
-          channelName,
-          `@${replyTo.username} ${messageInput}`,
-          // @ts-expect-error - upstream types in tmi.js are not up to date
-          {
-            'reply-parent-msg-id': replyTo.messageId,
-            'reply-parent-display-name': replyTo.username,
-            'reply-parent-msg-body': replyTo.message,
-            'reply-parent-user-login': replyTo.replyParentUserLogin,
-          },
-        );
+        // For now, just send a regular reply message
+        await client.say(channelName, `@${replyTo.username} ${messageInput}`);
       } catch (error) {
         logger.chat.error('issue sending reply', error);
       }
@@ -324,6 +325,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     setMessageInput('');
     setReplyTo(null);
   }, [channelName, client, messageInput, replyTo]);
+
+  const handleEmoteSelect = useCallback((emote: SanitisiedEmoteSet) => {
+    setMessageInput(prev => `${prev + emote.name} `);
+  }, []);
 
   const inputContainerRef = useRef<View>(null);
   const [_inputContainerHeight, setInputContainerHeight] = useState(0);
@@ -444,7 +449,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           )}
           <Button
             style={styles.sendButton}
-            onPress={() => setShowEmotePicker(!showEmotePicker)}
+            onPress={() => setShowEmoteMenu(true)}
           >
             <Icon icon="smile" size={24} color={theme.colors.border} />
           </Button>
@@ -500,6 +505,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           </Button>
         </View>
       </KeyboardAvoidingView>
+
+      <EmoteMenuModal
+        isVisible={showEmoteMenu}
+        onClose={() => setShowEmoteMenu(false)}
+        onEmoteSelect={handleEmoteSelect}
+      />
     </SafeAreaView>
   );
 });

@@ -6,7 +6,7 @@ export function useTmiClient(options: tmijs.Options) {
     return new tmijs.Client({
       ...options,
       options: {
-        // debug: __DEV__,
+        debug: __DEV__,
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

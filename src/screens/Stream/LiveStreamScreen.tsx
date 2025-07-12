@@ -1,6 +1,8 @@
 import { Chat, Spinner, Typography } from '@app/components';
+import { useAppNavigation } from '@app/hooks';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
+import { useChatStore } from '@app/store/chatStore';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useEffect, useRef } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -18,8 +20,21 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { styles } = useStyles(stylesheet);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
+  const navigation = useAppNavigation();
+  const { clearChannelResources, setTTvUsers } = useChatStore();
 
   const webViewRef = useRef<WebView>(null);
+
+  // Add navigation listener to cleanup chat when leaving the screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      // Clear chat resources and users when leaving the live stream screen
+      clearChannelResources();
+      setTTvUsers([]);
+    });
+
+    return unsubscribe;
+  }, [navigation, clearChannelResources, setTTvUsers]);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
