@@ -170,94 +170,102 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       await client.connect();
 
-      client.on('message', (_channel: string, tags: any, text: string, _self: boolean) => {
-        const userstate = tags;
+      client.on(
+        'message',
+        (_channel: string, tags, text: string, _self: boolean) => {
+          const userstate = tags;
 
-        const message_id = userstate.id || '0';
-        const replyParentMessageId = tags.id;
+          const message_id = userstate.id || '0';
+          const replyParentMessageId = tags.id;
 
-        const replyParentDisplayName = tags[
-          'reply-parent-display-name'
-        ] as string;
+          const replyParentDisplayName = tags[
+            'reply-parent-display-name'
+          ] as string;
 
-        const replyParentUserLogin = tags['reply-parent-user-login'] as string;
-        const replyParentMessageBody = tags['reply-parent-msg-body'] as string;
+          const replyParentUserLogin = tags[
+            'reply-parent-user-login'
+          ] as string;
+          const replyParentMessageBody = tags[
+            'reply-parent-msg-body'
+          ] as string;
 
-        if (replyParentMessageId) {
-          const replyParent = messages.find(
-            message => message.message_id === replyParentMessageId,
+          if (replyParentMessageId) {
+            const replyParent = messages.find(
+              message => message.message_id === replyParentMessageId,
+            );
+
+            if (replyParent) {
+              setReplyTo({
+                messageId: replyParentMessageId,
+                username: replyParentDisplayName,
+                message: replyParentMessageBody,
+                replyParentUserLogin,
+              });
+            }
+          }
+
+          const message_nonce = generateNonce();
+
+          const replacedMessage = replaceTextWithEmotes({
+            bttvChannelEmotes: [],
+            bttvGlobalEmotes: [],
+            ffzChannelEmotes,
+            ffzGlobalEmotes,
+            inputString: text.trimEnd(),
+            sevenTvChannelEmotes,
+            sevenTvGlobalEmotes,
+            twitchChannelEmotes,
+            twitchGlobalEmotes,
+            userstate,
+          });
+
+          const replacedBadges = findBadges({
+            userstate,
+            chatterinoBadges,
+            chatUsers: ttvUsers,
+            ffzChannelBadges,
+            ffzGlobalBadges,
+            twitchChannelBadges,
+            twitchGlobalBadges,
+          });
+
+          const foundTtvUser = ttvUsers.find(
+            u => u.name.replace('@', '') === userstate.username,
           );
 
-          if (replyParent) {
-            setReplyTo({
-              messageId: replyParentMessageId,
-              username: replyParentDisplayName,
-              message: replyParentMessageBody,
-              replyParentUserLogin,
-            });
+          /**
+           * Look into https://api.twitch.tv/helix/chat/chatters and seeing if that is more performant than writing to store
+           */
+          if (!foundTtvUser) {
+            const ttvUser: ChatUser = {
+              name: `@${userstate.username}`,
+              userId: userstate['user-id'] ?? '',
+              color:
+                userstate.color ??
+                generateRandomTwitchColor(userstate.username),
+              avatar: '',
+            };
+
+            setTTvUsers([ttvUser]);
           }
-        }
 
-        const message_nonce = generateNonce();
-
-        const replacedMessage = replaceTextWithEmotes({
-          bttvChannelEmotes: [],
-          bttvGlobalEmotes: [],
-          ffzChannelEmotes,
-          ffzGlobalEmotes,
-          inputString: text.trimEnd(),
-          sevenTvChannelEmotes,
-          sevenTvGlobalEmotes,
-          twitchChannelEmotes,
-          twitchGlobalEmotes,
-          userstate,
-        });
-
-        const replacedBadges = findBadges({
-          userstate,
-          chatterinoBadges,
-          chatUsers: ttvUsers,
-          ffzChannelBadges,
-          ffzGlobalBadges,
-          twitchChannelBadges,
-          twitchGlobalBadges,
-        });
-
-        const foundTtvUser = ttvUsers.find(
-          u => u.name.replace('@', '') === userstate.username,
-        );
-
-        /**
-         * Look into https://api.twitch.tv/helix/chat/chatters and seeing if that is more performant than writing to store
-         */
-        if (!foundTtvUser) {
-          const ttvUser: ChatUser = {
-            name: `@${userstate.username}`,
-            userId: userstate['user-id'] ?? '',
-            color:
-              userstate.color ?? generateRandomTwitchColor(userstate.username),
-            avatar: '',
+          const newMessage: ChatMessageType = {
+            userstate,
+            message: replacedMessage,
+            badges: replacedBadges,
+            channel: channelName,
+            message_id,
+            message_nonce,
+            sender: userstate.username || '',
+            parentDisplayName:
+              (tags['reply-parent-display-name'] as string) || '',
+            replyDisplayName: (tags['reply-parent-user-login'] as string) || '',
+            replyBody: (tags['reply-parent-msg-body'] as string) || '',
           };
 
-          setTTvUsers([ttvUser]);
-        }
-
-        const newMessage: ChatMessageType = {
-          userstate,
-          message: replacedMessage,
-          badges: replacedBadges,
-          channel: channelName,
-          message_id,
-          message_nonce,
-          sender: userstate.username || '',
-          parentDisplayName:
-            (tags['reply-parent-display-name'] as string) || '',
-          replyDisplayName: (tags['reply-parent-user-login'] as string) || '',
-          replyBody: (tags['reply-parent-msg-body'] as string) || '',
-        };
-
-        handleNewMessage(newMessage);
-      });
+          handleNewMessage(newMessage);
+        },
+      );
 
       client.on('connecting', () => {
         void client.say(channelName, `Connecting to ${channelName}'s room`);
@@ -497,7 +505,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           </Button>
         </View>
       </KeyboardAvoidingView>
-      
+
       <EmoteMenuModal
         isVisible={showEmoteMenu}
         onClose={() => setShowEmoteMenu(false)}
