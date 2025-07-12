@@ -1,8 +1,9 @@
+/* eslint-disable no-restricted-imports */
 /* eslint-disable react/display-name */
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-plusplus */
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,6 +24,7 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
+import { useStyles } from 'react-native-unistyles';
 
 // CONFIG
 const PICKER_WIDTH = 300;
@@ -122,6 +124,7 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 export default function EmojiPicker({ data }: EmojiPickerProps) {
   const flatListRef = useAnimatedRef<FlatList<FlatListItem>>();
   const scrollY = useSharedValue(0);
+  const { theme } = useStyles();
 
   const flatData: FlatListItem[] = useMemo(() => {
     const processed = processEmojiSections(data, CHUNK_SIZE);
@@ -138,7 +141,7 @@ export default function EmojiPicker({ data }: EmojiPickerProps) {
   return (
     <View
       style={{
-        backgroundColor: '#000',
+        backgroundColor: theme.colors.borderNeutral,
         paddingHorizontal: PICKER_PAD,
         borderRadius: PICKER_RADIUS,
       }}
@@ -244,9 +247,11 @@ function EmojiCategoryBar({
   data: EmojiSection[];
   onPress: (index: number) => void;
 }) {
+  const { theme } = useStyles();
+
   return (
     <ScrollView
-      style={[styles.topbar, { backgroundColor: '#000' }]}
+      style={[styles.topbar, { backgroundColor: theme.colors.surfaceNeutral }]}
       contentContainerStyle={{
         padding: PICKER_PAD,
         gap: 4,
@@ -358,6 +363,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     opacity: 0.6,
+    color: '#fff',
   },
   topbar: {
     position: 'absolute',
