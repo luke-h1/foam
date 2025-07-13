@@ -369,12 +369,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [],
   );
 
-  if (status === 'error' || connectionError) {
+  if (connectionError) {
     return (
       <View>
-        <Typography>
-          Error: {connectionError || 'Error getting emotes'}
-        </Typography>
+        <Typography>Error: {connectionError}</Typography>
       </View>
     );
   }
