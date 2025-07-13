@@ -3,7 +3,7 @@
 /* eslint-disable react/no-unstable-nested-components */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-plusplus */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,8 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useStyles } from 'react-native-unistyles';
+import { Image } from '@app/components';
+import { SanitisiedEmoteSet } from '../../services/seventTvService';
 
 // CONFIG
 const PICKER_WIDTH = 300;
@@ -42,8 +44,22 @@ const TOP_CORNER_STYLE: ViewStyle = {
   borderTopRightRadius: PICKER_RADIUS,
 };
 
+// Generic types for flexible data support
+export type PickerItem = string | SanitisiedEmoteSet;
+
 export type EmojiPickerProps = {
   data: EmojiSection[];
+  onItemPress?: (item: PickerItem) => void;
+  showSubNavigation?: boolean;
+  onSubNavigationChange?: (subKey: string) => void;
+  activeSubNavigation?: string;
+  subNavigationOptions?: SubNavigationOption[];
+};
+
+export type SubNavigationOption = {
+  key: string;
+  label: string;
+  icon?: string;
 };
 
 type HeaderItem = {
@@ -53,7 +69,7 @@ type HeaderItem = {
 
 type RowItem = {
   type: 'row';
-  data: { emoji: string; index: number }[];
+  data: { item: PickerItem; index: number }[];
 };
 
 const getItemLayout = (
@@ -67,15 +83,15 @@ const getItemLayout = (
 
 type FlatListItem = HeaderItem | RowItem;
 
-type EmojiCell = {
-  emoji: string;
+type PickerCell = {
+  item: PickerItem;
   index: number;
 };
 
 export type ProcessedEmojiSection = {
   title: string;
   icon: string | string[];
-  data: EmojiCell[][];
+  data: PickerCell[][];
   index: number;
   sectionOffset: number;
 };
@@ -83,7 +99,7 @@ export type ProcessedEmojiSection = {
 export type EmojiSection = {
   title: string;
   icon: string | string[];
-  data: string[];
+  data: PickerItem[];
   index?: number;
   sectionOffset?: number;
 };
@@ -94,12 +110,15 @@ export function processEmojiSections(
 ): ProcessedEmojiSection[] {
   let globalIndex = 0;
 
-  return sections.map((section, sectionIndex) => {
+  // Filter out empty sections to avoid blank spaces
+  const nonEmptySections = sections.filter(section => section.data.length > 0);
+
+  return nonEmptySections.map((section, sectionIndex) => {
     const offset = globalIndex;
 
     const chunked = chunkArray(section.data, chunkSize).map(row =>
-      row.map(emoji => ({
-        emoji,
+      row.map(item => ({
+        item,
         index: globalIndex++,
       })),
     );
@@ -121,22 +140,58 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return result;
 }
 
-export default function EmojiPicker({ data }: EmojiPickerProps) {
+export default function EmojiPicker({
+  data,
+  onItemPress,
+  showSubNavigation = false,
+  onSubNavigationChange,
+  activeSubNavigation = 'all',
+  subNavigationOptions = [],
+}: EmojiPickerProps) {
   const flatListRef = useAnimatedRef<FlatList<FlatListItem>>();
   const scrollY = useSharedValue(0);
   const { theme } = useStyles();
+  const [activeSection, setActiveSection] = useState(0);
+
+  // Filter out empty sections
+  const filteredData = useMemo(() => {
+    return data.filter(section => section.data.length > 0);
+  }, [data]);
 
   const flatData: FlatListItem[] = useMemo(() => {
-    const processed = processEmojiSections(data, CHUNK_SIZE);
+    const processed = processEmojiSections(filteredData, CHUNK_SIZE);
     const result: FlatListItem[] = [];
     for (const section of processed) {
-      result.push({ type: 'header', title: section.title });
-      for (const row of section.data) {
-        result.push({ type: 'row', data: row });
+      if (section.data.length > 0) {
+        result.push({ type: 'header', title: section.title });
+        for (const row of section.data) {
+          result.push({ type: 'row', data: row });
+        }
       }
     }
     return result;
-  }, [data]);
+  }, [filteredData]);
+
+  const handleSectionPress = useCallback((sectionIndex: number) => {
+    setActiveSection(sectionIndex);
+  }, []);
+
+  if (filteredData.length === 0) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { width: PICKER_WIDTH, height: PICKER_WIDTH },
+        ]}
+      >
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: theme.colors.text }]}>
+            No emotes available
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View
@@ -152,14 +207,64 @@ export default function EmojiPicker({ data }: EmojiPickerProps) {
           { width: PICKER_WIDTH, maxHeight: PICKER_WIDTH },
         ]}
       >
+        {showSubNavigation && subNavigationOptions.length > 0 && (
+          <SubNavigationBar
+            options={subNavigationOptions}
+            activeKey={activeSubNavigation}
+            onPress={onSubNavigationChange}
+          />
+        )}
         <EmojiFlatList
-          data={data}
+          data={filteredData}
           flatData={flatData}
           scrollY={scrollY}
           flatListRef={flatListRef}
+          onItemPress={onItemPress}
+          activeSection={activeSection}
+          onSectionPress={handleSectionPress}
+          showSubNavigation={showSubNavigation}
         />
       </View>
     </View>
+  );
+}
+
+function SubNavigationBar({
+  options,
+  activeKey,
+  onPress,
+}: {
+  options: SubNavigationOption[];
+  activeKey: string;
+  onPress?: (key: string) => void;
+}) {
+  const { theme } = useStyles();
+
+  return (
+    <ScrollView
+      style={[styles.subNavBar, { backgroundColor: theme.colors.surface }]}
+      contentContainerStyle={styles.subNavContent}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+    >
+      {options.map(option => (
+        <TouchableOpacity
+          key={option.key}
+          onPress={() => onPress?.(option.key)}
+          style={[
+            styles.subNavItem,
+            activeKey === option.key && {
+              backgroundColor: theme.colors.borderNeutral,
+            },
+          ]}
+        >
+          {option.icon && <Text style={styles.subNavIcon}>{option.icon}</Text>}
+          <Text style={[styles.subNavLabel, { color: theme.colors.text }]}>
+            {option.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -168,11 +273,19 @@ function EmojiFlatList({
   flatData,
   scrollY,
   flatListRef,
+  onItemPress,
+  activeSection,
+  onSectionPress,
+  showSubNavigation,
 }: {
   data: EmojiSection[];
   flatData: FlatListItem[];
   scrollY: SharedValue<number>;
   flatListRef: any;
+  onItemPress?: (item: PickerItem) => void;
+  activeSection: number;
+  onSectionPress: (index: number) => void;
+  showSubNavigation: boolean;
 }) {
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
@@ -193,8 +306,9 @@ function EmojiFlatList({
           viewOffset: EMOJI_SIZE,
         });
       }
+      onSectionPress(sectionIndex);
     },
-    [flatData, data, flatListRef],
+    [flatData, data, flatListRef, onSectionPress],
   );
 
   const renderItem = useMemo(
@@ -208,16 +322,31 @@ function EmojiFlatList({
               </View>
             );
         } else if (item.type === 'row') {
-          return <EmojiRow items={item.data} index={index} scrollY={scrollY} />;
+          return (
+            <EmojiRow
+              items={item.data}
+              index={index}
+              scrollY={scrollY}
+              onPress={onItemPress}
+            />
+          );
         }
         return null;
       },
-    [scrollY],
+    [scrollY, onItemPress],
   );
+
+  const topPadding = showSubNavigation
+    ? CATEGORY_HEADER_HEIGHT + 40
+    : CATEGORY_HEADER_HEIGHT;
 
   return (
     <>
-      <EmojiCategoryBar data={data} onPress={scrollToSection} />
+      <EmojiCategoryBar
+        data={data}
+        onPress={scrollToSection}
+        activeSection={activeSection}
+      />
       <Animated.FlatList
         ref={flatListRef}
         data={flatData}
@@ -226,7 +355,7 @@ function EmojiFlatList({
         onScroll={scrollHandler}
         style={TOP_CORNER_STYLE}
         contentContainerStyle={{
-          paddingTop: CATEGORY_HEADER_HEIGHT,
+          paddingTop: topPadding,
           paddingBottom: PICKER_GAP,
         }}
         showsVerticalScrollIndicator={false}
@@ -243,9 +372,11 @@ function EmojiFlatList({
 function EmojiCategoryBar({
   data,
   onPress,
+  activeSection,
 }: {
   data: EmojiSection[];
   onPress: (index: number) => void;
+  activeSection: number;
 }) {
   const { theme } = useStyles();
 
@@ -263,13 +394,12 @@ function EmojiCategoryBar({
         <TouchableOpacity
           key={section.title}
           onPress={() => onPress(index)}
-          style={{
-            height: '100%',
-            aspectRatio: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: PICKER_RADIUS / 2,
-          }}
+          style={[
+            styles.categoryButton,
+            activeSection === index && {
+              backgroundColor: theme.colors.borderNeutral,
+            },
+          ]}
         >
           <Text style={styles.icon}>{section.icon}</Text>
         </TouchableOpacity>
@@ -284,10 +414,10 @@ function EmojiRow({
   scrollY,
   onPress,
 }: {
-  items: { emoji: string; index: number }[];
+  items: { item: PickerItem; index: number }[];
   index: number;
   scrollY: SharedValue<number>;
-  onPress?: (emoji: string) => void;
+  onPress?: (item: PickerItem) => void;
 }) {
   const positionY = index * EMOJI_SIZE;
   const { startFade, endFade } = useMemo(() => {
@@ -323,16 +453,23 @@ function EmojiRow({
 
   return (
     <Animated.View style={[styles.row, animatedStyle]}>
-      {items.map(emojiObj => {
-        const content = <Text style={styles.emoji}>{emojiObj.emoji}</Text>;
+      {items.map(itemObj => {
+        const isEmote = typeof itemObj.item === 'object';
+        const content = isEmote ? (
+          <Image
+            source={(itemObj.item as SanitisiedEmoteSet).url}
+            style={styles.emoteImage}
+            contentFit="contain"
+          />
+        ) : (
+          <Text style={styles.emoji}>{itemObj.item as string}</Text>
+        );
+
         return (
           <Pressable
             style={styles.emojiContainer}
-            key={emojiObj.index}
-            onPress={() => onPress?.(emojiObj.emoji)}
-            // android_ripple={{
-            //   color: text + "90",
-            // }}
+            key={itemObj.index}
+            onPress={() => onPress?.(itemObj.item)}
           >
             {content}
           </Pressable>
@@ -354,6 +491,10 @@ const styles = StyleSheet.create({
     fontSize: EMOJI_SIZE / EMOJI_SCALE_RATIO,
     textAlign: 'center',
     lineHeight: EMOJI_SIZE,
+  },
+  emoteImage: {
+    width: EMOJI_SIZE / EMOJI_SCALE_RATIO,
+    height: EMOJI_SIZE / EMOJI_SCALE_RATIO,
   },
   header: {
     height: EMOJI_SIZE,
@@ -380,5 +521,48 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     transformOrigin: 'top',
+  },
+  categoryButton: {
+    height: '100%',
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: PICKER_RADIUS / 2,
+  },
+  subNavBar: {
+    position: 'absolute',
+    top: CATEGORY_HEADER_HEIGHT,
+    left: -PICKER_PAD,
+    width: PICKER_WIDTH + 2 * PICKER_PAD,
+    zIndex: 1,
+    height: 40,
+  },
+  subNavContent: {
+    padding: PICKER_PAD,
+    gap: 8,
+  },
+  subNavItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  subNavIcon: {
+    fontSize: 12,
+  },
+  subNavLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    opacity: 0.6,
   },
 });

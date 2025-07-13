@@ -11,6 +11,9 @@ export function useTmiClient(options: tmijs.Options) {
         debug: __DEV__,
         skipUpdatingEmotesets: true,
       },
+      connection: {
+        secure: true,
+      },
     });
   }
 
