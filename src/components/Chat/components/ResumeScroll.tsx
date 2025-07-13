@@ -1,33 +1,36 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Typography } from '@app/components/Typography';
-import { LegendListRef } from '@legendapp/list';
+import { FlashList } from '@shopify/flash-list';
 import { RefObject } from 'react';
 import { View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
 interface ResumeScrollProps {
-  legendListRef: RefObject<LegendListRef | null>;
+  flashListRef: RefObject<FlashList<any> | null>;
   isAtBottomRef: RefObject<boolean>;
   unreadCount: number;
   setIsAtBottom: (val: boolean) => void;
   setUnreadCount: (num: number) => void;
+  scrollToBottom: (animated?: boolean, force?: boolean) => void;
 }
 
 export function ResumeScroll({
   isAtBottomRef,
-  legendListRef,
+  flashListRef,
   setIsAtBottom,
   setUnreadCount,
   unreadCount,
+  scrollToBottom,
 }: ResumeScrollProps) {
   const { styles, theme } = useStyles(stylesheet);
+
   return (
     <View style={styles.resumeButtonContainer}>
       <Button
         style={styles.resumeButton}
         onPress={() => {
-          legendListRef.current?.scrollToEnd({ animated: true });
+          scrollToBottom(true, true);
           // eslint-disable-next-line no-param-reassign
           isAtBottomRef.current = true;
           setIsAtBottom(true);
@@ -36,7 +39,7 @@ export function ResumeScroll({
       >
         <Icon icon="arrow-down" size={16} color={theme.colors.text} />
         {unreadCount > 0 && (
-          <Typography weight="semiBold" size="md">
+          <Typography weight="semiBold" size="sm" style={styles.unreadText}>
             {unreadCount}
           </Typography>
         )}
@@ -67,5 +70,10 @@ const stylesheet = createStyleSheet(theme => ({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    gap: theme.spacing.xs,
+  },
+  unreadText: {
+    color: theme.colors.text,
+    marginLeft: theme.spacing.xs,
   },
 }));

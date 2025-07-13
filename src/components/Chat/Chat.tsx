@@ -9,8 +9,7 @@ import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
-import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
-import { AnimatedLegendList } from '@legendapp/list/reanimated';
+import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
@@ -88,7 +87,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const legendListRef = useRef<LegendListRef>(null);
+  const flashListRef = useRef<FlashList<ChatMessageType>>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
   const { styles, theme } = useStyles(stylesheet);
 
@@ -107,38 +106,126 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   } | null>(null);
 
   const [, setIsInputFocused] = useState(false);
-
   const [inputEnabled, setInputEnabled] = useState(false);
 
-  const BOTTOM_THRESHOLD = 100; // px
+  // Simplified scroll management
+  const BOTTOM_THRESHOLD = 150;
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const isAtBottomRef = useRef(true);
+  const [isScrollPaused, setIsScrollPaused] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isAtBottomRef = useRef(true);
+  const isScrollPausedRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isManualScrollRef = useRef(false);
 
+  // Simple and reliable scroll to bottom
+  const scrollToBottom = useCallback(
+    (animated = true) => {
+      if (!flashListRef.current) return;
+
+      try {
+        if (messages.length > 0) {
+          flashListRef.current.scrollToIndex({
+            index: messages.length - 1,
+            animated,
+            viewPosition: 1,
+          });
+        }
+      } catch (error) {
+        // Fallback to offset method
+        try {
+          flashListRef.current.scrollToOffset({
+            offset: 999999,
+            animated,
+          });
+        } catch (fallbackError) {
+          logger.chat.error('Failed to scroll:', fallbackError);
+        }
+      }
+    },
+    [messages.length],
+  );
+
+  // Handle scroll events
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
 
+      // Calculate if we're at the bottom
       const distanceFromBottom =
         contentSize.height - (contentOffset.y + layoutMeasurement.height);
-
       const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD;
 
+      // Update state
       isAtBottomRef.current = atBottom;
       setIsAtBottom(atBottom);
 
+      // If user manually scrolled up, pause auto-scrolling
+      if (!atBottom && !isManualScrollRef.current) {
+        isManualScrollRef.current = true;
+        isScrollPausedRef.current = true;
+        setIsScrollPaused(true);
+
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+
+        // Auto-resume after 5 seconds
+        scrollTimeoutRef.current = setTimeout(() => {
+          if (isAtBottomRef.current) {
+            isScrollPausedRef.current = false;
+            setIsScrollPaused(false);
+            isManualScrollRef.current = false;
+          }
+        }, 5000);
+      }
+
+      // Reset states when at bottom
       if (atBottom) {
         setUnreadCount(0);
+        if (isScrollPausedRef.current) {
+          isScrollPausedRef.current = false;
+          setIsScrollPaused(false);
+          isManualScrollRef.current = false;
+        }
       }
     },
     [],
   );
 
-  const handleContentSizeChange = useCallback(() => {
-    if (isAtBottomRef.current) {
-      legendListRef.current?.scrollToEnd({ animated: false });
+  // Auto-scroll on new messages
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Always scroll to bottom if not paused or if at bottom
+      if (!isScrollPausedRef.current || isAtBottomRef.current) {
+        // Use a small delay to ensure the new message is rendered
+        const timeoutId = setTimeout(() => {
+          scrollToBottom(false);
+        }, 50);
+
+        return () => clearTimeout(timeoutId);
+      }
     }
-  }, []);
+  }, [messages.length, scrollToBottom]);
+
+  // Handle content size changes
+  const handleContentSizeChange = useCallback(() => {
+    if (!isScrollPausedRef.current) {
+      scrollToBottom(false);
+    }
+  }, [scrollToBottom]);
+
+  // Resume scrolling function
+  const resumeScrolling = useCallback(() => {
+    isScrollPausedRef.current = false;
+    setIsScrollPaused(false);
+    isManualScrollRef.current = false;
+    isAtBottomRef.current = true;
+    setIsAtBottom(true);
+    setUnreadCount(0);
+    scrollToBottom(true);
+  }, [scrollToBottom]);
 
   const MAX_MESSAGES = 150;
 
@@ -152,7 +239,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       messagesRef.current = updatedMessages;
       setMessages(updatedMessages);
 
-      if (!isAtBottomRef.current) {
+      // Increment unread count if scrolling is paused
+      if (isScrollPausedRef.current && !isAtBottomRef.current) {
         setUnreadCount(prev => prev + 1);
       }
     },
@@ -233,9 +321,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             u => u.name.replace('@', '') === userstate.username,
           );
 
-          /**
-           * Look into https://api.twitch.tv/helix/chat/chatters and seeing if that is more performant than writing to store
-           */
           if (!foundTtvUser) {
             const ttvUser: ChatUser = {
               name: `@${userstate.username}`,
@@ -274,9 +359,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       client.on('clearchat', () => {
         messagesRef.current = [];
         setMessages([]);
-        setTimeout(() => {
-          legendListRef.current?.scrollToEnd({ animated: false });
-        }, 0);
+        setUnreadCount(0);
+        isScrollPausedRef.current = false;
+        setIsScrollPaused(false);
+        isManualScrollRef.current = false;
         void client.say(channelName, 'Chat cleared by moderator');
       });
 
@@ -306,6 +392,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleSendMessage = useCallback(async () => {
     if (!messageInput.trim()) {
       return;
@@ -313,7 +408,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
     if (replyTo) {
       try {
-        // For now, just send a regular reply message
         await client.say(channelName, `@${replyTo.username} ${messageInput}`);
       } catch (error) {
         logger.chat.error('issue sending reply', error);
@@ -324,7 +418,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
     setMessageInput('');
     setReplyTo(null);
-  }, [channelName, client, messageInput, replyTo]);
+
+    // Ensure we scroll to bottom after sending
+    setTimeout(() => {
+      scrollToBottom(true);
+    }, 100);
+  }, [channelName, client, messageInput, replyTo, scrollToBottom]);
 
   const handleEmoteSelect = useCallback((emote: SanitisiedEmoteSet) => {
     setMessageInput(prev => `${prev + emote.name} `);
@@ -341,8 +440,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, []);
 
-  const renderItem = useCallback(
-    ({ item }: LegendListRenderItemProps<ChatMessageType>) => (
+  const renderItem: ListRenderItem<ChatMessageType> = useCallback(
+    ({ item }) => (
       <ChatMessage
         channel={item.channel}
         message={item.message}
@@ -365,8 +464,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         replyBody={item.replyBody}
       />
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [styles.messageContainer],
   );
 
   if (connectionError) {
@@ -387,38 +485,49 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <View
-          style={[
-            styles.chatContainer,
-            {
-              flex: 1,
-              width: '100%',
-              overflow: 'hidden',
-              maxWidth: '100%',
-            },
-          ]}
-        >
-          <AnimatedLegendList
+        <View style={styles.chatContainer}>
+          <FlashList
             data={messages}
-            ref={legendListRef}
+            ref={flashListRef}
             keyExtractor={item =>
               `${item.message_id}_${item.message_nonce}_${item.message_id}`
             }
-            recycleItems
-            waitForInitialLayout
-            estimatedItemSize={150}
+            estimatedItemSize={60}
             onScroll={handleScroll}
             scrollEventThrottle={16}
             onContentSizeChange={handleContentSizeChange}
             renderItem={renderItem}
+            removeClippedSubviews={false}
+            initialNumToRender={30}
+            maxToRenderPerBatch={20}
+            windowSize={20}
+            inverted={false}
+            maintainVisibleContentPosition={{
+              minIndexForVisible: 0,
+            }}
           />
-          {!isAtBottom && (
+
+          {/* Pause indicator */}
+          {isScrollPaused && (
+            <View style={styles.pausedOverlay}>
+              <Typography style={styles.pausedText}>
+                Chat paused - new messages: {unreadCount}
+              </Typography>
+              <Button style={styles.resumeButton} onPress={resumeScrolling}>
+                <Typography style={styles.resumeButtonText}>Resume</Typography>
+              </Button>
+            </View>
+          )}
+
+          {/* Resume scroll button */}
+          {!isAtBottom && !isScrollPaused && (
             <ResumeScroll
               isAtBottomRef={isAtBottomRef}
-              legendListRef={legendListRef}
+              flashListRef={flashListRef}
               setIsAtBottom={setIsAtBottom}
               setUnreadCount={setUnreadCount}
               unreadCount={unreadCount}
+              scrollToBottom={scrollToBottom}
             />
           )}
         </View>
@@ -547,6 +656,7 @@ const stylesheet = createStyleSheet(theme => ({
   },
   chatContainer: {
     flex: 1,
+    position: 'relative',
   },
   messageContainer: {
     flexDirection: 'row',
@@ -563,14 +673,30 @@ const stylesheet = createStyleSheet(theme => ({
     top: 0,
     left: 0,
     right: 0,
-    padding: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: theme.spacing.md,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 100,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   pausedText: {
-    color: 'white',
-    fontSize: 16,
-    marginBottom: 10,
+    color: theme.colors.text,
+    fontSize: 14,
+    flex: 1,
+  },
+  resumeButton: {
+    backgroundColor: theme.colors.brightPurple,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radii.md,
+  },
+  resumeButtonText: {
+    color: theme.colors.text,
+    fontWeight: 'bold',
+    fontSize: 12,
   },
   replyContainer: {
     flexDirection: 'row',
