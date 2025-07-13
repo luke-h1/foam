@@ -369,10 +369,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [],
   );
 
-  if (status === 'loading') {
-    return <ChatSkeleton />;
-  }
-
   if (status === 'error' || connectionError) {
     return (
       <View>
