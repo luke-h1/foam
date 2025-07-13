@@ -92,6 +92,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { styles, theme } = useStyles(stylesheet);
 
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [showEmoteMenu, setShowEmoteMenu] = useState<boolean>(false);
@@ -239,12 +240,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       messagesRef.current = updatedMessages;
       setMessages(updatedMessages);
 
+      // Hide initial loading after first message
+      if (isInitialLoad) {
+        setIsInitialLoad(false);
+      }
+
       // Increment unread count if scrolling is paused
       if (isScrollPausedRef.current && !isAtBottomRef.current) {
         setUnreadCount(prev => prev + 1);
       }
     },
-    [addMessage],
+    [addMessage, isInitialLoad],
   );
 
   const connectToChat = async () => {
@@ -257,6 +263,29 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       setConnectionError(null);
 
       await client.connect();
+
+      // Add a welcome message immediately to show something
+      const welcomeMessage: ChatMessageType = {
+        userstate: {
+          username: 'System',
+          'display-name': 'System',
+          color: '#999999',
+        },
+        message: [
+          { type: 'text', content: `Connected to ${channelName}'s chat` },
+        ],
+        badges: [],
+        channel: channelName,
+        message_id: 'welcome',
+        message_nonce: 'welcome',
+        sender: 'System',
+        parentDisplayName: '',
+        replyDisplayName: '',
+        replyBody: '',
+      };
+
+      handleNewMessage(welcomeMessage);
+      setIsInitialLoad(false);
 
       client.on(
         'message',
@@ -372,6 +401,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     } catch (error) {
       logger.chat.error('Failed to connect to chat:', error);
       setConnectionError('Failed to connect to chat');
+      setIsInitialLoad(false);
     } finally {
       setIsConnecting(false);
     }
@@ -486,26 +516,37 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.chatContainer}>
-          <FlashList
-            data={messages}
-            ref={flashListRef}
-            keyExtractor={item =>
-              `${item.message_id}_${item.message_nonce}_${item.message_id}`
-            }
-            estimatedItemSize={60}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            onContentSizeChange={handleContentSizeChange}
-            renderItem={renderItem}
-            removeClippedSubviews={false}
-            initialNumToRender={30}
-            maxToRenderPerBatch={20}
-            windowSize={20}
-            inverted={false}
-            maintainVisibleContentPosition={{
-              minIndexForVisible: 0,
-            }}
-          />
+          {isInitialLoad || isConnecting ? (
+            <ChatSkeleton />
+          ) : (
+            <FlashList
+              data={messages}
+              ref={flashListRef}
+              keyExtractor={item =>
+                `${item.message_id}_${item.message_nonce}_${item.message_id}`
+              }
+              estimatedItemSize={60}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              onContentSizeChange={handleContentSizeChange}
+              renderItem={renderItem}
+              removeClippedSubviews={false}
+              initialNumToRender={30}
+              maxToRenderPerBatch={20}
+              windowSize={20}
+              inverted={false}
+              maintainVisibleContentPosition={{
+                minIndexForVisible: 0,
+              }}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Typography style={styles.emptyText}>
+                    Waiting for messages...
+                  </Typography>
+                </View>
+              }
+            />
+          )}
 
           {/* Pause indicator */}
           {isScrollPaused && (
@@ -728,5 +769,15 @@ const stylesheet = createStyleSheet(theme => ({
     shadowRadius: 3.84,
     elevation: 5,
     maxHeight: 300,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  emptyText: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
 }));
