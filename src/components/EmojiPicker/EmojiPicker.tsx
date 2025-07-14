@@ -59,7 +59,6 @@ export type EmojiPickerProps = {
 export type SubNavigationOption = {
   key: string;
   label: string;
-  icon?: string;
 };
 
 type HeaderItem = {
@@ -258,7 +257,6 @@ function SubNavigationBar({
             },
           ]}
         >
-          {option.icon && <Text style={styles.subNavIcon}>{option.icon}</Text>}
           <Text style={[styles.subNavLabel, { color: theme.colors.text }]}>
             {option.label}
           </Text>
@@ -297,7 +295,7 @@ function EmojiFlatList({
     (sectionIndex: number) => {
       const index = flatData.findIndex(
         item =>
-          item.type === 'header' && data[sectionIndex].title === item.title,
+          item.type === 'header' && data[sectionIndex]?.title === item.title,
       );
       if (index !== -1) {
         flatListRef.current?.scrollToIndex({

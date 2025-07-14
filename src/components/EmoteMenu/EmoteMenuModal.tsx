@@ -21,10 +21,10 @@ interface EmoteMenuModalProps {
 type SubMenuKey = 'all' | 'channel' | 'global' | 'subscriber';
 
 const subNavigationOptions: SubNavigationOption[] = [
-  { key: 'all', label: 'All', icon: '🔢' },
-  { key: 'channel', label: 'Channel', icon: '📺' },
-  { key: 'global', label: 'Global', icon: '🌍' },
-  { key: 'subscriber', label: 'Sub', icon: '👑' },
+  { key: 'all', label: 'All' },
+  { key: 'channel', label: 'Channel' },
+  { key: 'global', label: 'Global' },
+  { key: 'subscriber', label: 'Sub' },
 ];
 
 const filterEmotesByType = (
@@ -148,7 +148,7 @@ export const EmoteMenuModal: React.FC<EmoteMenuModalProps> = ({
   const handleEmotePress = useCallback(
     (item: PickerItem) => {
       if (typeof item === 'object') {
-        const emote = item as SanitisiedEmoteSet;
+        const emote = item;
         addRecentEmote(emote);
         onEmoteSelect(emote);
         onClose();
@@ -197,7 +197,7 @@ export const EmoteMenuModal: React.FC<EmoteMenuModalProps> = ({
           <EmojiPicker
             data={emoteSections}
             onItemPress={handleEmotePress}
-            showSubNavigation={true}
+            showSubNavigation
             subNavigationOptions={subNavigationOptions}
             activeSubNavigation={activeSubNavigation}
             onSubNavigationChange={handleSubNavigationChange}
