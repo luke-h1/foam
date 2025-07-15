@@ -288,6 +288,7 @@ export function DebugScreen() {
       keyExtractor={item => item.title}
       renderItem={renderListItem}
       ListFooterComponent={renderListFooter}
+      contentInsetAdjustmentBehavior="automatic"
     />
   );
 }

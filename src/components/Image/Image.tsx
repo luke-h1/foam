@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
+import { memo } from 'react';
 import { View, ViewStyle } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
@@ -7,11 +8,12 @@ export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
   containerStyle?: ViewStyle;
   source: string;
 }
-export function Image({
+
+export const Image = memo(function Image({
   contentFit = 'cover',
   containerStyle,
   placeholderContentFit,
-  transition = 500,
+  transition = 50,
   source,
   ...props
 }: ImageProps) {
@@ -24,14 +26,17 @@ export function Image({
         source={source}
         contentFit={contentFit}
         transition={transition}
-        placeholderContentFit={placeholderContentFit ?? 'cover'}
+        cachePolicy="disk"
+        decodeFormat="rgb"
+        recyclingKey={source}
+        placeholderContentFit={placeholderContentFit ?? 'scale-down'}
         onError={error => {
           console.warn('Image loading error:', error);
         }}
       />
     </View>
   );
-}
+});
 
 const stylesheet = createStyleSheet(() => ({
   container: {

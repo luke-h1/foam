@@ -119,7 +119,21 @@ export const ChatMessage = memo(
     );
 
     const renderBadges = useCallback(() => {
-      return badges?.map(badge => (
+      if (badges.length === 0) {
+        return null;
+      }
+
+      /**
+       * Filter out potentially duplicated badges
+       */
+      const uniqueBadges = badges.filter((badge, index, self) => {
+        const firstIndex = self.findIndex(
+          b => b.id === badge.id && b.set === badge.set,
+        );
+        return firstIndex === index;
+      });
+
+      return uniqueBadges.map(badge => (
         <Button
           key={`${badge.set}-${badge.id}`}
           onPress={() => handleBadgePress(badge)}
