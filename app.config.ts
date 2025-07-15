@@ -114,10 +114,11 @@ const config: ExpoConfig = {
   },
   plugins: [
     ['app-icon-badge', appIconBadgeConfig],
-    ['expo-secure-store'],
-    ['expo-font'],
-    ['@bacons/apple-colors'],
-    ['@bacons/apple-targets'],
+    'expo-secure-store',
+    'expo-font',
+    '@bacons/apple-colors',
+    '@bacons/apple-targets',
+    'react-native-legal',
     [
       'expo-build-properties',
       {

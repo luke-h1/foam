@@ -8,6 +8,7 @@ import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -26,6 +27,7 @@ import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
+import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
 
 interface ChatProps {
   channelId: string;
@@ -69,10 +71,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     addMessage,
   } = useChatStore();
 
-  navigation.addListener('beforeRemove', () => {
+  navigation.addListener('blur', () => {
     void client.disconnect();
     clearChannelResources();
     setTTvUsers([]);
+    void client.part(channelId);
   });
 
   const loadChat = async () => {
@@ -257,9 +260,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         handleNewMessage(newMessage);
       });
 
-      client.on('connecting', () => {
-        void client.say(channelName, `Connecting to ${channelName}'s room`);
-      });
+      // client.on('connecting', () => {
+      //   void client.say(channelName, `Connecting to ${channelName}'s room`);
+      // });
 
       client.on('clearchat', () => {
         messagesRef.current = [];
@@ -364,6 +367,30 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [],
   );
 
+  const emojiPickerRef = useRef<BottomSheetModal>(null);
+
+  const handleEmojiPickerToggle = useCallback(() => {
+    if (showEmotePicker) {
+      emojiPickerRef.current?.dismiss();
+    } else {
+      emojiPickerRef.current?.present();
+    }
+    setShowEmotePicker(!showEmotePicker);
+  }, [showEmotePicker]);
+
+  const handleEmojiSelect = useCallback((item: PickerItem) => {
+    // Handle emoji/emote selection
+    if (typeof item === 'string') {
+      // Regular emoji
+      setMessageInput(prev => `${prev}${' '}${item} `);
+    } else {
+      // Custom emote
+      setMessageInput(prev => `${prev}${' '}${item.name} `);
+    }
+    emojiPickerRef.current?.dismiss();
+    setShowEmotePicker(false);
+  }, []);
+
   if (status === 'loading') {
     return <ChatSkeleton />;
   }
@@ -442,10 +469,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               </Button>
             </View>
           )}
-          <Button
-            style={styles.sendButton}
-            onPress={() => setShowEmotePicker(!showEmotePicker)}
-          >
+          <Button style={styles.sendButton} onPress={handleEmojiPickerToggle}>
             <Icon icon="smile" size={24} color={theme.colors.border} />
           </Button>
           <ChatAutoCompleteInput
@@ -499,6 +523,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             />
           </Button>
         </View>
+        <EmojiPickerSheet
+          ref={emojiPickerRef}
+          onItemPress={handleEmojiSelect}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

@@ -30,9 +30,14 @@ interface IconProps extends Omit<ImageProps, 'source'> {
   color?: ThemeColor;
 }
 
-const BrandIcons = {
+export const BrandIcons = {
+  /**
+   * Companies
+   */
   stv: require('../../../assets/icons/stv.svg'),
   twitch: require('../../../assets/icons/twitch.svg'),
+  bttv: require('../../../assets/icons/bttv.svg'),
+  ffz: require('../../../assets/icons/ffz.svg'),
 } as const;
 
 function resolveSize(size: IconSize) {
