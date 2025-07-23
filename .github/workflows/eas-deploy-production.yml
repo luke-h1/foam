@@ -84,7 +84,7 @@ jobs:
       group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}-build-ios
       cancel-in-progress: true
     needs: [deploy-production]
-    if: ${{ inputs.channel != 'preview' && needs.bundleDeploy.outputs.changes-detected }}
+    if: ${{ inputs.channel != 'preview' && needs.deploy-production.outputs.changes-detected }}
     steps:
       - name: Check for EXPO_TOKEN
         run: >
