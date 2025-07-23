@@ -1,0 +1,19 @@
+---
+name: Fingerprint Native Changes
+author: luke-h1
+description: Debug the fingerprint of two separate commits for OTA-breaking changes
+runs:
+  using: node20
+  main: ./index.js
+inputs:
+  profile:
+    description: The profile that we are perform. Options are `production`, `preview`, or `pull-request`
+    required: true
+  previous-commit-tag:
+    description: Tag for getting the second commit to debug against.
+    required: false
+outputs:
+  includes-changes:
+    description: Whether there are changes that prevent the commit from being properly deployed with the current client.
+  diff:
+    description: The diff between the two commits.
