@@ -37,6 +37,14 @@ const loggingConfig = {
     enabled: true,
     color: 'grey',
   },
+  performance: {
+    enabled: true,
+    color: 'white',
+  },
+  cache: {
+    enabled: true,
+    color: 'green',
+  },
 } satisfies Record<
   string,
   {

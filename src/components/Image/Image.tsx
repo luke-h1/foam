@@ -3,11 +3,11 @@ import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
 import { View, ViewStyle } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
-export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
+export interface ImageProps extends ExpoImageProps {
   containerStyle?: ViewStyle;
-  source: string;
 }
-export function Image({
+
+export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
   placeholderContentFit,
@@ -24,6 +24,8 @@ export function Image({
         source={source}
         contentFit={contentFit}
         transition={transition}
+        decodeFormat="rgb"
+        useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={error => {
           console.warn('Image loading error:', error);
@@ -31,7 +33,7 @@ export function Image({
       />
     </View>
   );
-}
+};
 
 const stylesheet = createStyleSheet(() => ({
   container: {

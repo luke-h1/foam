@@ -1,5 +1,5 @@
 import { SanitisedBadgeSet } from '@app/services';
-import { ChatUser } from '@app/store/chatStore';
+import { ChatUser } from '@app/store';
 import { ChatUserstate } from 'tmi.js';
 
 interface FindBadgesParams {

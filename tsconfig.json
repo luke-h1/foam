@@ -15,7 +15,6 @@
     "strictPropertyInitialization": false,
     "jsx": "react-jsx",
     "lib": ["dom", "DOM.iterable", "esnext"],
-    "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,

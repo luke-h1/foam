@@ -14,7 +14,8 @@ import {
 import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
 import { useState, useEffect, useCallback } from 'react';
-import { Alert, Switch, View } from 'react-native';
+import { Alert, Platform, Switch, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
 
 type DebugItem = {
@@ -89,27 +90,35 @@ function TwitchUsernameConverter() {
   };
 
   return (
-    <View style={styles.twitchSection}>
-      <Typography style={styles.sectionTitle}>
-        Convert Twitch Username to User ID
-      </Typography>
-      <TextField
-        placeholder="Enter Twitch username"
-        value={twitchUsername}
-        onChangeText={setTwitchUsername}
-      />
-      <Button onPress={() => void handleConvert()} style={styles.button}>
-        <Typography>
-          {isLoading ? 'Converting...' : 'Convert and Copy'}
+    <KeyboardAvoidingView
+      behavior="padding"
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <View style={styles.twitchSection}>
+        <Typography style={styles.sectionTitle}>
+          Convert Twitch Username to User ID
         </Typography>
-      </Button>
-      {twitchUserId ? (
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        <Button onPress={() => Clipboard.setStringAsync(twitchUserId)}>
-          <Typography style={styles.userId}>User ID: {twitchUserId}</Typography>
+        <TextField
+          placeholder="Enter Twitch username"
+          value={twitchUsername}
+          onChangeText={setTwitchUsername}
+        />
+        <Button onPress={() => void handleConvert()} style={styles.button}>
+          <Typography>
+            {isLoading ? 'Converting...' : 'Convert and Copy'}
+          </Typography>
         </Button>
-      ) : null}
-    </View>
+        {twitchUserId ? (
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          <Button onPress={() => Clipboard.setStringAsync(twitchUserId)}>
+            <Typography style={styles.userId}>
+              User ID: {twitchUserId}
+            </Typography>
+          </Button>
+        ) : null}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -172,25 +181,31 @@ function NavigateToChat() {
     });
   };
   return (
-    <View style={styles.navigateToChatContainer}>
-      <Typography style={styles.sectionTitle}>Join a Chat Channel</Typography>
-      <TextField
-        placeholder="Enter channel name"
-        value={channelName}
-        onChangeText={e => setChannelName(e)}
-        autoComplete="off"
-        autoCapitalize="none"
-      />
-      <Button onPress={handleJoinChannel} style={styles.button}>
-        <Typography>Join Channel</Typography>
-      </Button>
-      {authState?.token?.accessToken && (
-        <Typography style={styles.loggedInUser}>
-          Logged in as:{' '}
-          {authState.isAnonAuth ? 'Anonymous' : user?.display_name}
-        </Typography>
-      )}
-    </View>
+    <KeyboardAvoidingView
+      behavior="padding"
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <View style={styles.navigateToChatContainer}>
+        <Typography style={styles.sectionTitle}>Join a Chat Channel</Typography>
+        <TextField
+          placeholder="Enter channel name"
+          value={channelName}
+          onChangeText={e => setChannelName(e)}
+          autoComplete="off"
+          autoCapitalize="none"
+        />
+        <Button onPress={handleJoinChannel} style={styles.button}>
+          <Typography>Join Channel</Typography>
+        </Button>
+        {authState?.token?.accessToken && (
+          <Typography style={styles.loggedInUser}>
+            Logged in as:{' '}
+            {authState.isAnonAuth ? 'Anonymous' : user?.display_name}
+          </Typography>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -288,6 +303,7 @@ export function DebugScreen() {
       keyExtractor={item => item.title}
       renderItem={renderListItem}
       ListFooterComponent={renderListFooter}
+      contentInsetAdjustmentBehavior="automatic"
     />
   );
 }

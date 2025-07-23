@@ -55,7 +55,6 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
               transition={50}
               style={{
                 width: width - 25,
-
                 height: height - 25,
               }}
             />

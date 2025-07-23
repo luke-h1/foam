@@ -1,7 +1,11 @@
+import { BrandIconName } from '@app/components/BrandIcon';
+import { SanitisiedEmoteSet } from '@app/services';
+
 export interface EmojiSection {
   title: string;
-  icon: string | string[];
-  data: string[];
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  icon: BrandIconName | string;
+  data: string[] | SanitisiedEmoteSet[];
   index?: number;
   sectionOffset?: number;
 }
@@ -9,7 +13,7 @@ export interface EmojiSection {
 export const EMOJI: EmojiSection[] = [
   {
     title: 'Recent',
-    icon: '🕑',
+    icon: '😎',
     data: [
       '😀',
       '😂',
@@ -65,7 +69,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Smileys & People',
-    icon: '😄',
+    icon: '😁',
     data: [
       '😀',
       '😁',
@@ -121,7 +125,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Animals & Nature',
-    icon: '🐶',
+    icon: '🐱',
     data: [
       '🐶',
       '🐱',
@@ -177,7 +181,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Food & Drink',
-    icon: '🍔',
+    icon: '🍎',
     data: [
       '🍏',
       '🍎',
@@ -233,7 +237,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Activities',
-    icon: '⚽',
+    icon: '🏀',
     data: [
       '⚽',
       '🏀',
@@ -289,7 +293,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Travel & Places',
-    icon: '✈️',
+    icon: '🚕',
     data: [
       '🚗',
       '🚕',
@@ -345,7 +349,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Objects',
-    icon: '💡',
+    icon: '💻',
     data: [
       '📱',
       '📲',
@@ -401,7 +405,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Symbols',
-    icon: '❤️',
+    icon: '💚',
     data: [
       '❤️',
       '🧡',
@@ -457,7 +461,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Flags',
-    icon: '🏳️',
+    icon: '🇵🇱',
     data: [
       '🇺🇸',
       '🇬🇧',
@@ -569,7 +573,7 @@ export const EMOJI: EmojiSection[] = [
   },
   {
     title: 'Time',
-    icon: '⏰',
+    icon: '🕛',
     data: [
       '⏰',
       '⏱️',
@@ -626,13 +630,14 @@ export const EMOJI: EmojiSection[] = [
 ];
 
 type EmojiCell = {
-  emoji: string;
+  emoji: string | SanitisiedEmoteSet;
   index: number;
 };
 
 export type ProcessedEmojiSection = {
   title: string;
-  icon: string | string[];
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  icon: string | BrandIconName;
   data: EmojiCell[][];
   index: number;
   sectionOffset: number;
@@ -647,6 +652,8 @@ export function processEmojiSections(
   return sections.map((section, sectionIndex) => {
     const offset = globalIndex;
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const chunked = chunkArray(section.data, chunkSize).map(row =>
       row.map(emoji => ({
         emoji,
@@ -670,3 +677,13 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   }
   return result;
 }
+
+export const PICKER_WIDTH = 350;
+export const PICKER_PAD = 6;
+export const PICKER_GAP = 12;
+export const PICKER_RADIUS = 16;
+export const CHUNK_SIZE = 7;
+export const EMOJI_SIZE = PICKER_WIDTH / CHUNK_SIZE;
+export const EMOJI_SCALE_RATIO = 1.3;
+export const CATEGORY_HEADER_HEIGHT = EMOJI_SIZE + PICKER_PAD;
+export const EMOJI_RANGE_MARGIN = 1;

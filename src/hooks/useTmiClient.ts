@@ -1,16 +1,20 @@
-import { useMemo } from 'react';
+import { useRef } from 'react';
 import tmijs from 'tmi.js';
 
 export function useTmiClient(options: tmijs.Options) {
-  const tmiClient = useMemo(() => {
-    return new tmijs.Client({
+  const clientRef = useRef<tmijs.Client | null>(null);
+
+  if (!clientRef.current) {
+    clientRef.current = new tmijs.Client({
       ...options,
       options: {
-        // debug: __DEV__,
+        debug: __DEV__,
+      },
+      connection: {
+        secure: true,
       },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
 
-  return tmiClient;
+  return clientRef.current;
 }

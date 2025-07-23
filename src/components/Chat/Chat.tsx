@@ -2,12 +2,13 @@
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useTmiClient } from '@app/hooks';
-import { ChatMessageType, ChatUser, useChatStore } from '@app/store/chatStore';
+import { ChatMessageType, ChatUser, useChatStore } from '@app/store';
 import { generateRandomTwitchColor } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -26,6 +27,7 @@ import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
+import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
 
 interface ChatProps {
   channelId: string;
@@ -33,8 +35,11 @@ interface ChatProps {
 }
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
+  const [connected, setConnected] = useState<boolean>(false);
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
+  const [messages, setMessages] = useState<ChatMessageType[]>([]);
+
   const client = useTmiClient({
     options: {
       clientId: process.env.TWITCH_CLIENT_ID as string,
@@ -60,19 +65,21 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     bttvGlobalEmotes,
     status,
     ttvUsers,
-    setTTvUsers,
+    addTtvUser,
     twitchChannelBadges,
     twitchGlobalBadges,
     ffzGlobalBadges,
+    clearTtvUsers,
     ffzChannelBadges,
     chatterinoBadges,
     addMessage,
+    clearMessages,
   } = useChatStore();
 
   navigation.addListener('beforeRemove', () => {
     void client.disconnect();
     clearChannelResources();
-    setTTvUsers([]);
+    clearTtvUsers();
   });
 
   const loadChat = async () => {
@@ -80,9 +87,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   };
 
   useEffect(() => {
-    void (async () => {
-      await loadChat();
-    })();
+    void loadChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -90,8 +95,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const messagesRef = useRef<ChatMessageType[]>([]);
   const { styles, theme } = useStyles(stylesheet);
 
-  const [messages, setMessages] = useState<ChatMessageType[]>([]);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [_connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [showEmotePicker, setShowEmotePicker] = useState<boolean>(false);
 
@@ -104,14 +108,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     replyParentUserLogin: string;
   } | null>(null);
 
-  const [, setIsInputFocused] = useState(false);
+  const [, setIsInputFocused] = useState<boolean>(false);
 
-  const [inputEnabled, setInputEnabled] = useState(false);
-
-  const BOTTOM_THRESHOLD = 100; // px
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const isAtBottomRef = useRef(true);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const BOTTOM_THRESHOLD = 100;
+  const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
+  const isAtBottomRef = useRef<boolean>(true);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -138,15 +140,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, []);
 
-  const MAX_MESSAGES = 150;
-
   const handleNewMessage = useCallback(
     (newMessage: ChatMessageType) => {
       addMessage(newMessage);
 
-      const updatedMessages = [...messagesRef.current, newMessage].slice(
-        -MAX_MESSAGES,
-      );
+      const updatedMessages = [...messagesRef.current, newMessage].slice(-250);
       messagesRef.current = updatedMessages;
       setMessages(updatedMessages);
 
@@ -167,6 +165,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       setConnectionError(null);
 
       await client.connect();
+
+      setConnected(true);
 
       client.on('message', (_channel, tags, text, _self) => {
         const userstate = tags;
@@ -199,8 +199,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         const message_nonce = generateNonce();
 
         const replacedMessage = replaceTextWithEmotes({
-          bttvChannelEmotes: [],
-          bttvGlobalEmotes: [],
+          bttvChannelEmotes,
+          bttvGlobalEmotes,
           ffzChannelEmotes,
           ffzGlobalEmotes,
           inputString: text.trimEnd(),
@@ -237,7 +237,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             avatar: '',
           };
 
-          setTTvUsers([ttvUser]);
+          addTtvUser(ttvUser);
         }
 
         const newMessage: ChatMessageType = {
@@ -257,13 +257,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         handleNewMessage(newMessage);
       });
 
-      client.on('connecting', () => {
-        void client.say(channelName, `Connecting to ${channelName}'s room`);
-      });
-
       client.on('clearchat', () => {
         messagesRef.current = [];
-        setMessages([]);
+        clearMessages();
         setTimeout(() => {
           legendListRef.current?.scrollToEnd({ animated: false });
         }, 0);
@@ -276,24 +272,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     } catch (error) {
       logger.chat.error('Failed to connect to chat:', error);
       setConnectionError('Failed to connect to chat');
+      setConnected(false);
     } finally {
       setIsConnecting(false);
     }
   };
 
   useEffect(() => {
-    if (status === 'fulfilled') {
-      void connectToChat();
-    }
+    void connectToChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setInputEnabled(true);
-    }, 1000);
-
-    return () => clearTimeout(timer);
   }, []);
 
   const handleSendMessage = useCallback(async () => {
@@ -364,18 +351,39 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [],
   );
 
+  const emojiPickerRef = useRef<BottomSheetModal>(null);
+
+  const handleEmojiPickerToggle = useCallback(() => {
+    if (showEmotePicker) {
+      emojiPickerRef.current?.dismiss();
+    } else {
+      emojiPickerRef.current?.present();
+    }
+    setShowEmotePicker(!showEmotePicker);
+  }, [showEmotePicker]);
+
+  const handleEmojiSelect = useCallback((item: PickerItem) => {
+    /**
+     * Regular emoji
+     */
+    if (typeof item === 'string') {
+      setMessageInput(prev => `${prev}${' '}${item} `);
+    } else {
+      /**
+       * Third party emote
+       */
+      setMessageInput(prev => `${prev}${' '}${item.name} `);
+    }
+    emojiPickerRef.current?.dismiss();
+    setShowEmotePicker(false);
+  }, []);
+
   if (status === 'loading') {
     return <ChatSkeleton />;
   }
 
-  if (status === 'error' || connectionError) {
-    return (
-      <View>
-        <Typography>
-          Error: {connectionError || 'Error getting emotes'}
-        </Typography>
-      </View>
-    );
+  if (status === 'error') {
+    // log to sentry
   }
 
   return (
@@ -442,10 +450,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               </Button>
             </View>
           )}
-          <Button
-            style={styles.sendButton}
-            onPress={() => setShowEmotePicker(!showEmotePicker)}
-          >
+          <Button style={styles.sendButton} onPress={handleEmojiPickerToggle}>
             <Icon icon="smile" size={24} color={theme.colors.border} />
           </Button>
           <ChatAutoCompleteInput
@@ -463,7 +468,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             placeholder={
               replyTo ? `Reply to ${replyTo.username}` : 'Send a message'
             }
-            editable={inputEnabled}
+            editable
             autoComplete="off"
             autoCapitalize="none"
             autoCorrect={false}
@@ -471,22 +476,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onSubmitEditing={() => void handleSendMessage()}
             returnKeyType="send"
             prioritizeChannelEmotes
-            status={status}
-            sevenTvChannelEmotes={sevenTvChannelEmotes}
-            sevenTvGlobalEmotes={sevenTvGlobalEmotes}
-            twitchChannelEmotes={twitchChannelEmotes}
-            twitchGlobalEmotes={twitchGlobalEmotes}
-            bttvChannelEmotes={bttvChannelEmotes}
-            bttvGlobalEmotes={bttvGlobalEmotes}
-            ffzChannelEmotes={ffzChannelEmotes}
-            ffzGlobalEmotes={ffzGlobalEmotes}
-            emojis={[]}
-            ttvUsers={ttvUsers}
           />
           <Button
             style={styles.sendButton}
             onPress={() => void handleSendMessage()}
-            disabled={!messageInput.trim()}
+            disabled={!messageInput.trim() || !connected}
           >
             <Icon
               icon="send"
@@ -499,6 +493,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             />
           </Button>
         </View>
+        {connected && (
+          <EmojiPickerSheet
+            ref={emojiPickerRef}
+            onItemPress={handleEmojiSelect}
+          />
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -520,16 +520,16 @@ const stylesheet = createStyleSheet(theme => ({
   input: {
     flex: 1,
     backgroundColor: '#2d2d2d',
-    borderRadius: 20,
-    paddingHorizontal: 15,
+    borderRadius: theme.radii.lg,
+    paddingHorizontal: theme.spacing.lg,
     paddingVertical: 8,
     color: '#efeff1',
-    marginRight: 10,
+    marginRight: theme.spacing.md,
   },
   sendButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: 40,
+    width: theme.spacing['3xl'],
   },
   container: {
     flex: 1,
@@ -558,14 +558,13 @@ const stylesheet = createStyleSheet(theme => ({
     top: 0,
     left: 0,
     right: 0,
-    padding: 10,
+    padding: theme.spacing.lg,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     alignItems: 'center',
   },
   pausedText: {
     color: 'white',
-    fontSize: 16,
-    marginBottom: 10,
+    marginBottom: theme.spacing.md,
   },
   replyContainer: {
     flexDirection: 'row',
@@ -593,9 +592,5 @@ const stylesheet = createStyleSheet(theme => ({
       width: 0,
       height: -2,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    maxHeight: 300,
   },
 }));

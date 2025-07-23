@@ -51,6 +51,7 @@ Sentry.init({
   enableAppStartTracking: true,
   enableCaptureFailedRequests: true,
   spotlight: __DEV__,
+  enableAutoPerformanceTracing: true,
 });
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
@@ -101,7 +102,7 @@ function App(props: AppProps) {
 
   useLayoutEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    setTimeout(hideSplashScreen, 500);
+    setTimeout(hideSplashScreen, 100);
   });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
