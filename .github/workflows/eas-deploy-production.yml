@@ -76,6 +76,10 @@ jobs:
         if: ${{ !steps.fingerprint.outputs.includes-changes }}
         run: echo ${{ github.sha }} > most-recent-testflight-commit.txt
 
+      - name: 🚀 Create and publish update
+        if: ${{ !steps.fingerprint.outputs.includes-changes }}
+        run: eas update --auto --channel ${{ inputs.channel }} --message "Update ${{ github.sha }}" --non-interactive        
+
   # GitHub actions are horrible so let's just copy paste this in
   buildIfNecessaryIOS:
     name: Build and Submit iOS
