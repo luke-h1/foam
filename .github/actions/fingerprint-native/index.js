@@ -53393,8 +53393,7 @@ const getCurrentFP = async () => {
     info.currentCommit = currentCommit;
     await checkoutCommit(currentCommit);
     await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('rm -rf node_modules');
-    await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('yarn install');
-    await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('yarn add bluesky-social/react-native-bottom-sheet');
+    await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('bun install');
     const { stdout } = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.getExecOutput)(`npx @expo/fingerprint .`);
     info.currentFingerprint = JSON.parse(stdout.trim());
     return true;
@@ -53426,7 +53425,7 @@ const getPrevFP = async () => {
         info.previousCommit = stdout.trim();
     }
     await checkoutCommit(info.previousCommit);
-    await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('yarn install');
+    await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.exec)('bun install');
     const { stdout } = await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_1__.getExecOutput)(`npx @expo/fingerprint .`);
     info.previousFingerprint = JSON.parse(stdout.trim());
     return true;
