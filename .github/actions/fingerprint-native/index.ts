@@ -108,7 +108,7 @@ const getPrevFP = async () => {
   }
 
   await checkoutCommit(info.previousCommit as string)
-  await exec('yarn install')
+  await exec('bun install')
 
   const {stdout} = await getExecOutput(`npx @expo/fingerprint .`)
 
