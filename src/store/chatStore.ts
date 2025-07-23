@@ -10,7 +10,6 @@ import {
 import { chatterinoService } from '@app/services/chatterinoService';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
-import newRelic from 'newrelic-react-native-agent';
 import { ViewStyle } from 'react-native';
 import { ChatUserstate } from 'tmi.js';
 import { create, StateCreator } from 'zustand';
@@ -81,7 +80,6 @@ export interface ChatState {
    * Emojis
    */
   emojis: SanitisiedEmoteSet[];
-  setEmojis: (sanitisedEmoteSet: SanitisiedEmoteSet[]) => void;
 
   /**
    * Bits
@@ -93,19 +91,13 @@ export interface ChatState {
    * Twitch emotes
    */
   twitchChannelEmotes: SanitisiedEmoteSet[];
-  setTwitchChannelEmotes: (sanitisedEmoteSet: SanitisiedEmoteSet[]) => void;
-
   twitchGlobalEmotes: SanitisiedEmoteSet[];
-  setTwitchGlobalEmotes: (emoteSet: SanitisiedEmoteSet[]) => void;
 
   /**
    * 7TV emotes
    */
   sevenTvChannelEmotes: SanitisiedEmoteSet[];
-  setSevenTvChannelEmotes: (emoteSet: SanitisiedEmoteSet[]) => void;
-
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];
-  setSevenTvGlobalEmotes: (emoteSet: SanitisiedEmoteSet[]) => void;
 
   /**
    * FFZ emomtes
@@ -117,40 +109,30 @@ export interface ChatState {
    * BTTV emotes
    */
   bttvGlobalEmotes: SanitisiedEmoteSet[];
-  setBttvGlobalEmotes: (emoteSet: SanitisiedEmoteSet[]) => void;
-
   bttvChannelEmotes: SanitisiedEmoteSet[];
-  setBttvChannelEmotes: (emoteSet: SanitisiedEmoteSet[]) => void;
 
   /**
    * Chat users
    */
   ttvUsers: ChatUser[];
-  setTTvUsers: (user: ChatUser[]) => void;
+  addTtvUser: (user: ChatUser) => void;
 
   /**
    * Twitch badges
    */
   twitchGlobalBadges: SanitisedBadgeSet[];
-  setTwitchGlobalBadges: (badges: SanitisedBadgeSet[]) => void;
-
   twitchChannelBadges: SanitisedBadgeSet[];
-  setTwitchChannelBadges: (badges: SanitisedBadgeSet[]) => void;
 
   /**
    * FFZ badges
    */
   ffzGlobalBadges: SanitisedBadgeSet[];
-  setFfzGlobalBadges: (badges: SanitisedBadgeSet[]) => void;
-
   ffzChannelBadges: SanitisedBadgeSet[];
-  setFfzChannelBadges: (badges: SanitisedBadgeSet[]) => void;
 
   /**
    * Chatterino badges
    */
   chatterinoBadges: SanitisedBadgeSet[];
-  setChatterinoBadges: (badges: SanitisedBadgeSet[]) => void;
 
   loadChannelResources: (channelId: string) => Promise<boolean>;
   clearChannelResources: () => void;
@@ -162,7 +144,9 @@ export interface ChatState {
    */
   messages: ChatMessageType[];
   addMessage: (message: ChatMessageType) => void;
+
   clearMessages: () => void;
+  clearTtvUsers: () => void;
 }
 
 const chatStoreCreator: StateCreator<ChatState> = set => ({
@@ -179,21 +163,27 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    * Chatters
    */
   ttvUsers: [],
-  setTTvUsers: users => {
+  addTtvUser: user => {
     return set(state => {
       const uniqueUsersMap = new Map(
+        // eslint-disable-next-line no-shadow
         state.ttvUsers.map(user => [user.userId, user]),
       );
 
-      // Update or add new users
-      users.forEach(user => {
-        uniqueUsersMap.set(user.userId, user);
-      });
+      uniqueUsersMap.set(user.userId, user);
 
-      // Convert map back to array
       return {
         ...state,
         ttvUsers: Array.from(uniqueUsersMap.values()),
+      };
+    });
+  },
+
+  clearTtvUsers: () => {
+    return set(state => {
+      return {
+        ...state,
+        ttvUsers: [],
       };
     });
   },
@@ -202,30 +192,12 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    * Placeholder for chatterino emotes
    */
   emojis: [],
-  setEmojis: emoteSet => {
-    return set(state => ({
-      ...state,
-      emojis: emoteSet,
-    }));
-  },
 
   /**
    * Twitch
    */
   twitchChannelEmotes: [],
   twitchGlobalEmotes: [],
-  setTwitchChannelEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      twitchChannelEmotes: emoteSet,
-    }));
-  },
-  setTwitchGlobalEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      twitchGlobalEmotes: emoteSet,
-    }));
-  },
 
   /**
    * FFZ
@@ -238,82 +210,27 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
    */
   sevenTvChannelEmotes: [],
   sevenTvGlobalEmotes: [],
-  setSevenTvChannelEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      sevenTvChannelEmotes: emoteSet,
-    }));
-  },
-  setSevenTvGlobalEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      sevenTvGlobalEmotes: emoteSet,
-    }));
-  },
 
   /**
    * BTTV
    */
   bttvChannelEmotes: [],
   bttvGlobalEmotes: [],
-  setBttvChannelEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      bttvChannelEmotes: emoteSet,
-    }));
-  },
-
-  setBttvGlobalEmotes: emoteSet => {
-    return set(state => ({
-      ...state,
-      bttvGlobalEmotes: emoteSet,
-    }));
-  },
 
   /**
    * Twitch Badges
    */
   twitchGlobalBadges: [],
-  setTwitchGlobalBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      twitchBadges: badgeSet,
-    }));
-  },
 
   twitchChannelBadges: [],
-  setTwitchChannelBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      twitchBadges: badgeSet,
-    }));
-  },
 
   /**
    * FFZ badges
    */
   ffzGlobalBadges: [],
-  setFfzGlobalBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      ffzGlobalBadges: badgeSet,
-    }));
-  },
   ffzChannelBadges: [],
-  setFfzChannelBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      ffzGlobalBadges: badgeSet,
-    }));
-  },
 
   chatterinoBadges: [],
-  setChatterinoBadges: badgeSet => {
-    return set(state => ({
-      ...state,
-      chatterinoBadges: badgeSet,
-    }));
-  },
 
   clearChannelResources: () => {
     set(() => ({
@@ -402,7 +319,7 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
       ) => {
         if (getValue(emotes).length === 0) {
           const message = `Empty response from ${provider} ${type}`;
-          newRelic.logWarn(message);
+          logger.api.warn(message);
         }
       };
 
@@ -414,7 +331,7 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
       ) => {
         if (getValue(badges).length === 0) {
           const message = `Empty response from ${provider} ${type} badges`;
-          newRelic.logWarn(message);
+          logger.api.warn(message);
         }
       };
 
@@ -426,7 +343,6 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
       logEmptyEmoteResponse('BTTV', 'channel', bttvChannelEmotes);
       logEmptyEmoteResponse('FFZ', 'channel', ffzChannelEmotes);
       logEmptyEmoteResponse('FFZ', 'global', ffzGlobalEmotes);
-
       logEmptyBadgeResponse('Twitch', 'global', twitchGlobalBadges);
       logEmptyBadgeResponse('Twitch', 'channel', twitchChannelBadges);
       logEmptyBadgeResponse('FFZ', 'global', ffzGlobalBadges);

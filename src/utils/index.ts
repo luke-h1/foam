@@ -10,3 +10,4 @@ export * from './emoji';
 export * from './chat';
 export * from './date-time';
 export * from './pagination';
+export * from './performance';

@@ -1,5 +1,5 @@
 import { SanitisiedEmoteSet } from '@app/services';
-import { ChatStatus, ChatUser } from '@app/store/chatStore';
+import { ChatUser, useChatStore } from '@app/store';
 import truncate from 'lodash/truncate';
 
 import {
@@ -50,18 +50,6 @@ export interface EmoteAutoCompleteProps
   prioritizeChannelEmotes?: boolean;
   showSiteLabel?: boolean;
   value?: string;
-
-  status: ChatStatus;
-  sevenTvChannelEmotes: SanitisiedEmoteSet[];
-  sevenTvGlobalEmotes: SanitisiedEmoteSet[];
-  twitchChannelEmotes: SanitisiedEmoteSet[];
-  twitchGlobalEmotes: SanitisiedEmoteSet[];
-  bttvChannelEmotes: SanitisiedEmoteSet[];
-  bttvGlobalEmotes: SanitisiedEmoteSet[];
-  ffzChannelEmotes: SanitisiedEmoteSet[];
-  ffzGlobalEmotes: SanitisiedEmoteSet[];
-  ttvUsers: ChatUser[];
-  emojis: SanitisiedEmoteSet[];
 }
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -126,17 +114,6 @@ export const ChatAutoCompleteInput = forwardRef<
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       showSiteLabel = true,
       value = '',
-      status,
-      sevenTvChannelEmotes = [],
-      sevenTvGlobalEmotes = [],
-      twitchChannelEmotes = [],
-      twitchGlobalEmotes = [],
-      bttvChannelEmotes = [],
-      bttvGlobalEmotes = [],
-      ffzChannelEmotes = [],
-      ffzGlobalEmotes = [],
-      emojis = [],
-      ttvUsers = [],
       ...textFieldProps
     },
     ref,
@@ -155,6 +132,20 @@ export const ChatAutoCompleteInput = forwardRef<
       type: 'emote' as SuggestionType,
       searchTerm: '',
     });
+
+    const {
+      bttvChannelEmotes,
+      bttvGlobalEmotes,
+      emojis,
+      ffzChannelEmotes,
+      ffzGlobalEmotes,
+      sevenTvChannelEmotes,
+      sevenTvGlobalEmotes,
+      twitchChannelEmotes,
+      status,
+      ttvUsers,
+      twitchGlobalEmotes,
+    } = useChatStore();
 
     /**
      * ref to measure input position

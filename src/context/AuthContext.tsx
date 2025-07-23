@@ -10,7 +10,7 @@ import * as SecureStore from 'expo-secure-store';
 import {
   createContext,
   ReactNode,
-  useContext,
+  use,
   useEffect,
   useMemo,
   useState,
@@ -288,7 +288,7 @@ export const AuthContextProvider = ({
 };
 
 export function useAuthContext() {
-  const context = useContext(AuthContext);
+  const context = use(AuthContext);
 
   if (!context) {
     throw new Error(

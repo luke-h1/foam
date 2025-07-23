@@ -18,7 +18,6 @@ export type Radii = keyof typeof darkTheme.radii;
 const colors = {
   screen: slateDark.slate1,
 
-  // brand
   brightPurple: purpleDarkA.purpleA10,
 
   // foreground
@@ -57,8 +56,6 @@ const colors = {
   //
   text: whiteA.whiteA10,
 
-  // custom
-
   /**
    * https://developer.apple.com/design/human-interface-guidelines/color/#iOS-iPadOS-system-colors
    */
@@ -75,6 +72,10 @@ export const darkTheme = {
     xl: 16,
     '2xl': 24,
     '3xl': 32,
+    '4xl': 40,
+    '5xl': 48,
+    '6xl': 56,
+    '7xl': 64,
     headerHeight: 56,
     tabBarHeight: 70,
   },
@@ -87,6 +88,7 @@ export const darkTheme = {
     lg: 10,
     xl: 14,
     xxl: 18,
+    full: 999,
   },
   font: {
     fontFamily: 'SFProRounded',
