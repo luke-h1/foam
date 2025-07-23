@@ -1,6 +1,18 @@
 name: EAS deploy production
 on:
   workflow_dispatch:
+    inputs:
+      channel:
+        type: choice
+        description: Deployment channel to use
+        options:
+          - preview
+          - production
+      runtimeVersion:
+        type: string
+        description: Runtime version (in x.x.x format) that this update is for
+        required: true
+
 jobs:
   deploy-production:
     runs-on: ubuntu-latest
