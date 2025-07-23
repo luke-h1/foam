@@ -70,7 +70,7 @@ const getCurrentFP = async () => {
 
   await checkoutCommit(currentCommit)
   await exec('rm -rf node_modules')
-  await exec('bun install install')
+  await exec('bun install')
 
   const {stdout} = await getExecOutput(`npx @expo/fingerprint .`)
 
