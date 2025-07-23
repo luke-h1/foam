@@ -70,8 +70,7 @@ const getCurrentFP = async () => {
 
   await checkoutCommit(currentCommit)
   await exec('rm -rf node_modules')
-  await exec('yarn install')
-  await exec('yarn add bluesky-social/react-native-bottom-sheet')
+  await exec('bun install install')
 
   const {stdout} = await getExecOutput(`npx @expo/fingerprint .`)
 
