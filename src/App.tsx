@@ -31,6 +31,7 @@ import {
   useDebugOptions,
   useOnAppStateChange,
   useOnReconnect,
+  useOTAUpdates,
 } from './hooks';
 import {
   AppNavigator,
@@ -93,6 +94,7 @@ function App(props: AppProps) {
 
   const [recoveredFromError, setRecoveredFromError] = useState<boolean>(false);
 
+  useOTAUpdates();
   useFonts({
     SourceCodePro_400Regular,
     SourceCodePro_300Light,

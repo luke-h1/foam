@@ -19,3 +19,4 @@ export * from './useScrollToTop';
 export * from './useStreamerImage';
 export * from './useTargetMeasurement';
 export * from './useTmiClient';
+export * from './useOTAUpdates';
