@@ -31,7 +31,6 @@ import {
   useDebugOptions,
   useOnAppStateChange,
   useOnReconnect,
-  useOTAUpdates,
 } from './hooks';
 import {
   AppNavigator,
@@ -41,6 +40,7 @@ import {
 import { ErrorBoundary } from './screens';
 import { twitchApi } from './services/api';
 import './styles/unistyles';
+import { setupBackgroundUpdates } from './utils';
 import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
 
@@ -94,7 +94,7 @@ function App(props: AppProps) {
 
   const [recoveredFromError, setRecoveredFromError] = useState<boolean>(false);
 
-  useOTAUpdates();
+  void setupBackgroundUpdates();
   useFonts({
     SourceCodePro_400Regular,
     SourceCodePro_300Light,

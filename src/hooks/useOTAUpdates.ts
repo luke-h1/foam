@@ -37,7 +37,7 @@ export function useOTAUpdates() {
   const timeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const setCheckTimeout = React.useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises, @typescript-eslint/ban-ts-comment
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     timeout.current = setTimeout(async () => {
