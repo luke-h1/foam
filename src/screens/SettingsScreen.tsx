@@ -12,6 +12,7 @@ import { useAuthContext } from '@app/context';
 import { useAppNavigation } from '@app/hooks';
 import { BottomSheetModal, BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import * as Application from 'expo-application';
+import * as Updates from 'expo-updates';
 import { useCallback, useRef } from 'react';
 import { SafeAreaView, SectionListRenderItem, View } from 'react-native';
 import { createStyleSheet, useStyles } from 'react-native-unistyles';
@@ -24,6 +25,13 @@ const BuildFooter = () => {
       <Typography color="text" size="xs">
         v:{Application.nativeApplicationVersion ?? ''} (
         {Application.nativeBuildVersion ?? ''})
+      </Typography>
+      <Typography color="text" size="xs">
+        OTA: {Updates.runtimeVersion} (
+        {(Updates.createdAt ?? new Date()).toLocaleString('en-US', {
+          timeZoneName: 'short',
+        })}
+        )
       </Typography>
     </View>
   );

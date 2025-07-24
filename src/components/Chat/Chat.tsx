@@ -3,7 +3,7 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation, useTmiClient } from '@app/hooks';
 import { ChatMessageType, ChatUser, useChatStore } from '@app/store';
-import { generateRandomTwitchColor } from '@app/utils';
+import { createHitslop, generateRandomTwitchColor } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
@@ -450,7 +450,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               </Button>
             </View>
           )}
-          <Button style={styles.sendButton} onPress={handleEmojiPickerToggle}>
+          <Button
+            style={styles.sendButton}
+            onPress={handleEmojiPickerToggle}
+            hitSlop={createHitslop(40)}
+          >
             <Icon icon="smile" size={24} color={theme.colors.border} />
           </Button>
           <ChatAutoCompleteInput
