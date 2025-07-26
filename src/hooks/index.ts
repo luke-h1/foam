@@ -20,3 +20,4 @@ export * from './useStreamerImage';
 export * from './useTargetMeasurement';
 export * from './useTmiClient';
 export * from './useOTAUpdates';
+export * from './useRecoveredFromError';

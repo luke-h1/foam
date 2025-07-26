@@ -6,8 +6,6 @@ type DebugOptions = {
 };
 
 export function useDebugOptions() {
-  const [debugOptions, setDebugOptions] = useState<DebugOptions>({});
-
   const fetchDebugOptions = () => {
     const keys: AllowedKey[] = ['ReactQueryDebug'];
     const options: DebugOptions = {};
@@ -16,16 +14,17 @@ export function useDebugOptions() {
       const value = storageService.getString<boolean>(key);
       options[key] = { enabled: value === true };
     });
-    setDebugOptions(options);
+    return options;
   };
+
+  const [debugOptions, setDebugOptions] =
+    useState<DebugOptions>(fetchDebugOptions());
 
   useEffect(() => {
     void storageService.clearExpired();
 
-    fetchDebugOptions();
-
     const handleStorageChange = () => {
-      fetchDebugOptions();
+      setDebugOptions(fetchDebugOptions());
     };
 
     storageService.events.on('storageChange', handleStorageChange);

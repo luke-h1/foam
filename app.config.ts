@@ -1,6 +1,5 @@
 import type { ExpoConfig } from '@expo/config';
 import type { AppIconBadgeConfig } from 'app-icon-badge/types';
-
 import fs from 'fs';
 import path from 'path';
 
@@ -115,7 +114,37 @@ const config: ExpoConfig = {
   plugins: [
     ['app-icon-badge', appIconBadgeConfig],
     'expo-secure-store',
-    'expo-font',
+    [
+      'expo-font',
+      {
+        fonts: [
+          'node_modules/@expo-google-fonts/source-code-pro/400Regular',
+          'node_modules/@expo-google-fonts/source-code-pro/600SemiBold',
+          'node_modules/@expo-google-fonts/source-code-pro/700Bold',
+        ],
+        android: {
+          fonts: [
+            {
+              fontFamily: 'SourceCodePro',
+              fontDefinitions: [
+                {
+                  path: 'node_modules/@expo-google-fonts/source-code-pro/400Regular/SourceCodePro_400Regular.ttf',
+                  weight: 400,
+                },
+                {
+                  path: 'node_modules/@expo-google-fonts/source-code-pro/600SemiBold/SourceCodePro_600SemiBold.ttf',
+                  weight: 600,
+                },
+                {
+                  path: 'node_modules/@expo-google-fonts/source-code-pro/700Bold/SourceCodePro_700Bold.ttf',
+                  weight: 700,
+                },
+              ],
+            },
+          ],
+        },
+      },
+    ],
     '@bacons/apple-colors',
     '@bacons/apple-targets',
     'react-native-legal',

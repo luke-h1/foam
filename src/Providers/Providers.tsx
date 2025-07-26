@@ -1,0 +1,76 @@
+import { useDebugOptions, useRecoveredFromError } from '@app/hooks';
+import { BaseConfig } from '@app/navigators';
+import { ErrorBoundary } from '@app/screens';
+import { twitchApi } from '@app/services/api';
+import { deleteTokens } from '@app/utils';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as Clipboard from 'expo-clipboard';
+import { PropsWithChildren } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { DevToolsBubble } from 'react-native-react-query-devtools';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
+import { createStyleSheet, useStyles } from 'react-native-unistyles';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 5,
+      refetchOnReconnect: true,
+      retryDelay: 3000,
+    },
+  },
+});
+
+export function Providers({ children }: PropsWithChildren) {
+  const { setRecoveredFromError } = useRecoveredFromError();
+  const { styles } = useStyles(stylesheet);
+
+  const { ReactQueryDebug } = useDebugOptions();
+
+  const shouldDelete = false;
+  if (shouldDelete) {
+    void deleteTokens();
+    twitchApi.removeAuthToken();
+  }
+
+  return (
+    <ErrorBoundary
+      catchErrors={BaseConfig.catchErrors}
+      onReset={() => setRecoveredFromError(true)}
+    >
+      <KeyboardProvider>
+        <GestureHandlerRootView style={styles.gestureContainer}>
+          <BottomSheetModalProvider>
+            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+              <QueryClientProvider client={queryClient}>
+                {children}
+                {ReactQueryDebug?.enabled && (
+                  <DevToolsBubble
+                    onCopy={async text => {
+                      try {
+                        await Clipboard.setStringAsync(text);
+                        return true;
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      } catch (error) {
+                        return false;
+                      }
+                    }}
+                  />
+                )}
+              </QueryClientProvider>
+            </SafeAreaProvider>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </KeyboardProvider>
+    </ErrorBoundary>
+  );
+}
+
+const stylesheet = createStyleSheet(() => ({
+  gestureContainer: { flex: 1 },
+}));
