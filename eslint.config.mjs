@@ -225,6 +225,7 @@ export default [
                 'TouchableOpacityProps',
                 'TouchableWithoutFeedback',
                 'TouchableWithoutFeedbackProps',
+                'Switch',
               ],
               message:
                 'Import these components from `~/components` instead. Use `react-native-reanimated` instead of `Animated` API.',
