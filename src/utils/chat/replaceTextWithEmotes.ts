@@ -67,21 +67,19 @@ export function findEmotesInText(
     end: number;
   }[] = [];
 
-  /**
-   * Sort emotes by length (longest first) to handle cases where
-   * one emote name is a substring of another
-   */
+  // Sort emotes by length (longest first) to handle cases where one emote name is a substring of another
   const sortedEmoteNames = Array.from(emoteMap.keys()).sort(
     (a, b) => b.length - a.length,
   );
 
   let currentIndex = 0;
 
+  // Helper function to check if a character is a word boundary
   function isDelimiter(char: string): boolean {
-    // eslint-disable-next-line no-useless-escape
-    return /[\s,.!?()[\]{}<>:;'"\\\/]/.test(char);
+    return /[\s,.!?()[\]{}<>:;'"\\]/.test(char);
   }
 
+  // Helper function to check if index is within a URL
   function isWithinUrl(index: number): boolean {
     const beforeText = text.slice(Math.max(0, index - 50), index);
     const afterText = text.slice(index, Math.min(text.length, index + 50));
@@ -93,6 +91,7 @@ export function findEmotesInText(
     );
   }
 
+  // Helper function to check if position is a valid emote location
   function isValidEmotePosition(
     index: number,
     emoteName: string,
@@ -103,9 +102,7 @@ export function findEmotesInText(
       return false;
     }
 
-    /**
-     * For Twitch emotes that are pure special characters (like <3), need word boundaries
-     */
+    // For Twitch emotes that are pure special characters (like <3), need word boundaries
     if (isTwitchEmote && /^[^a-zA-Z0-9]+$/.test(emoteName)) {
       const hasValidStart =
         index === 0 || (index > 0 && isDelimiter(text.charAt(index - 1)));
@@ -116,19 +113,19 @@ export function findEmotesInText(
       return hasValidStart && hasValidEnd;
     }
 
-    /**
-     * For normal emotes and alphanumeric Twitch emotes, be more lenient with boundaries
-     */
+    // For normal emotes and alphanumeric Twitch emotes, check word boundaries
     const hasValidStart =
       index === 0 || (index > 0 && isDelimiter(text.charAt(index - 1)));
     const endIndex = index + emoteName.length;
     const hasValidEnd =
       endIndex === text.length || isDelimiter(text.charAt(endIndex));
 
-    /**
-     * more lenient with word boundaries for all emotes
-     */
-    return hasValidStart || hasValidEnd;
+    // For Twitch emotes, be more lenient with boundaries
+    if (isTwitchEmote) {
+      return hasValidStart || hasValidEnd;
+    }
+
+    return hasValidStart && hasValidEnd;
   }
 
   while (currentIndex < text.length) {
@@ -141,9 +138,7 @@ export function findEmotesInText(
         const isTwitchEmote = emote.site === 'Twitch Global';
 
         if (isTwitchEmote) {
-          /**
-           * For Twitch emotes, we need an exact match
-           */
+          // For Twitch emotes, we need an exact match
           const exactMatch = text.slice(currentIndex).startsWith(emoteName);
           if (
             exactMatch &&
@@ -159,9 +154,7 @@ export function findEmotesInText(
             break;
           }
         } else {
-          /**
-           * Other emotes
-           */
+          // For other emotes
           const startIndex = text.indexOf(emoteName, currentIndex);
           if (
             startIndex !== -1 &&
@@ -222,6 +215,7 @@ function parseLink(url: string): ParsedPart | null {
 
 /**
  * Problems to fix:
+ * emotes in replies
  * test that all emotes work
  * unit test
  * clean up
@@ -330,9 +324,7 @@ export function replaceTextWithEmotes({
           });
         }
       } else if (text) {
-        /**
-         * Split text into words and process each word
-         */
+        // Split text into words and process each word
         const words = text.split(/(\s+)/);
         words.forEach(word => {
           if (word.startsWith('@')) {
@@ -363,17 +355,13 @@ export function replaceTextWithEmotes({
               ...emoteInMention,
             });
           } else if (/\s+/.test(word)) {
-            /**
-             * Preserve whitespace
-             */
+            // Preserve whitespace
             replacedParts.push({
               type: 'text',
               content: word,
             });
           } else {
-            /**
-             * Check for links and emotes in non-mention words
-             */
+            // Check for links and emotes in non-mention words
             const linkMetadata = parseLink(word);
             if (linkMetadata) {
               replacedParts.push({
@@ -418,7 +406,7 @@ export function replaceTextWithEmotes({
       }
     });
 
-    logger.chat.debug('Final replaced parts:', replacedParts);
+    // logger.chat.debug('Final replaced parts:', replacedParts);
     return replacedParts;
   } catch (error) {
     logger.chat.error('Error replacing words with emotes:', error);
