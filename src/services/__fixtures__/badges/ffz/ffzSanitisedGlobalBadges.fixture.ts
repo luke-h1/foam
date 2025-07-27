@@ -1,3 +1,3 @@
-import { SanitisedBadgeSet } from '@app/services/twitchBadgeService';
+import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 
 export const ffzSanitiisedGlobalBadges: SanitisedBadgeSet[] = [];

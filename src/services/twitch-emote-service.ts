@@ -1,6 +1,6 @@
 import { twitchApi } from './api';
-import { SanitisiedEmoteSet } from './seventTvService';
-import { PaginatedList, twitchService } from './twitchService';
+import { SanitisiedEmoteSet } from './seventv-service';
+import { PaginatedList, twitchService } from './twitch-service';
 
 interface TwitchEmote {
   id: `emotesv2_${string}`;

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { logger } from '@app/utils/logger';
 import { ffzApi } from './api';
-import { SanitisiedEmoteSet } from './seventTvService';
+import { SanitisiedEmoteSet } from './seventv-service';
 import { SanitisedBadgeSet } from '.';
 
 interface FfzEmoticon {
