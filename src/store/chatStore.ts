@@ -7,7 +7,7 @@ import {
   twitchBadgeService,
   twitchEmoteService,
 } from '@app/services';
-import { chatterinoService } from '@app/services/chatterinoService';
+import { chatterinoService } from '@app/services/chatterino-service';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
 import { ViewStyle } from 'react-native';

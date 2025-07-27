@@ -3,7 +3,7 @@ import { twitchApi as _twitchApi } from '@app/services/api';
 import {
   twitchService as _twitchService,
   type UserInfoResponse,
-} from '@app/services/twitchService';
+} from '@app/services/twitch-service';
 import {
   waitFor,
   renderHook,

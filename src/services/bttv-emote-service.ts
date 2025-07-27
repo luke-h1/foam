@@ -1,5 +1,5 @@
 import { bttvCachedApi } from './api';
-import { SanitisiedEmoteSet } from './seventTvService';
+import { SanitisiedEmoteSet } from './seventv-service';
 
 interface BttvEmote {
   id: string;
