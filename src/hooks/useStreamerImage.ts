@@ -1,6 +1,5 @@
 import { twitchService } from '@app/services';
-import { useEffect, useState } from 'react';
-import { DependencyList } from 'react-native-reanimated/lib/typescript/hook';
+import { DependencyList, useEffect, useState } from 'react';
 
 export function useStreamerImage(login: string, deps: DependencyList) {
   const [profilePicture, setProfilePicture] = useState<string>('');
