@@ -14,7 +14,6 @@ import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
-  SafeAreaView,
   View,
   Platform,
   NativeSyntheticEvent,
