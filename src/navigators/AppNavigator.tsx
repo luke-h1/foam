@@ -1,6 +1,6 @@
 import { AuthContextProvider } from '@app/context';
+import { usePopulateAuth } from '@app/hooks';
 import { CategoryScreen, LoginScreen, StorybookScreen } from '@app/screens';
-import { AuthLoadingScreen } from '@app/screens/AuthLoadingScreen';
 import {
   DarkTheme,
   DefaultTheme,
@@ -45,8 +45,6 @@ import { useBackButtonHandler } from './navigationUtilities';
  */
 
 export type AppStackParamList = {
-  AuthLoading: undefined;
-
   // tabs
   Tabs: NavigatorScreenParams<TabParamList>;
 
@@ -89,15 +87,13 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
+  usePopulateAuth();
   return (
     <Stack.Navigator
-      initialRouteName="AuthLoading"
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
-
       {/* tabs */}
       <Stack.Screen name="Tabs" component={TabNavigator} />
 

@@ -15,6 +15,7 @@ import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
+import { Toaster } from 'sonner-native';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,15 +39,16 @@ export function Providers({ children }: PropsWithChildren) {
   }
 
   return (
-    <ErrorBoundary
-      catchErrors={BaseConfig.catchErrors}
-      onReset={() => setRecoveredFromError(true)}
-    >
-      <KeyboardProvider>
-        <GestureHandlerRootView style={styles.gestureContainer}>
-          <BottomSheetModalProvider>
-            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <ErrorBoundary
+        catchErrors={BaseConfig.catchErrors}
+        onReset={() => setRecoveredFromError(true)}
+      >
+        <KeyboardProvider>
+          <GestureHandlerRootView style={styles.gestureContainer}>
+            <BottomSheetModalProvider>
               <QueryClientProvider client={queryClient}>
+                <Toaster />
                 {children}
                 {ReactQueryDebug?.enabled && (
                   <DevToolsBubble
@@ -63,11 +65,11 @@ export function Providers({ children }: PropsWithChildren) {
                   />
                 )}
               </QueryClientProvider>
-            </SafeAreaProvider>
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </KeyboardProvider>
-    </ErrorBoundary>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </KeyboardProvider>
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 
