@@ -5,6 +5,7 @@ import {
   ModalHandle,
   NavigationSectionList,
   NavigationSectionListData,
+  SafeAreaViewFixed,
   SectionListItem,
   Typography,
 } from '@app/components';
@@ -14,7 +15,7 @@ import { BottomSheetModal, BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import { useCallback, useRef } from 'react';
-import { SafeAreaView, SectionListRenderItem, View } from 'react-native';
+import { SectionListRenderItem, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
@@ -271,7 +272,7 @@ export function SettingsScreen() {
         backgroundStyle={styles.bottomSheet}
         handleComponent={ModalHandle}
       >
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaViewFixed style={styles.safeArea}>
           <BottomSheetSectionList
             sections={bottomSheetSections}
             keyExtractor={(item, index) => item.title + index}
@@ -282,7 +283,7 @@ export function SettingsScreen() {
             }}
             keyboardShouldPersistTaps="handled"
           />
-        </SafeAreaView>
+        </SafeAreaViewFixed>
       </BottomSheetModal>
     </BodyScrollView>
   );

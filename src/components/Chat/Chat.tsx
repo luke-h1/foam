@@ -25,6 +25,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
+import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
@@ -387,7 +388,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaViewFixed style={styles.safeArea}>
       <Typography style={styles.header} size="sm">
         CHAT
       </Typography>
@@ -504,7 +505,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           />
         )}
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaViewFixed>
   );
 });
 

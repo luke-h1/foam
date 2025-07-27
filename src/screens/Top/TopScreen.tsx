@@ -1,6 +1,6 @@
-import { Button, Typography } from '@app/components';
+import { Button, SafeAreaViewFixed, Typography } from '@app/components';
 import { useState } from 'react';
-import { SafeAreaView, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
@@ -25,7 +25,7 @@ export function TopScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaViewFixed style={{ flex: 1 }}>
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -58,7 +58,7 @@ export function TopScreen() {
           </View>
         )}
       />
-    </SafeAreaView>
+    </SafeAreaViewFixed>
   );
 }
 
