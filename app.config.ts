@@ -5,6 +5,7 @@ import path from 'path';
 
 interface AppVariantConfig {
   name: string;
+  icon: string;
   androidPackageName: string;
   splashImage: string;
   splashBackgroundColor: string;
@@ -19,6 +20,7 @@ type Variant = 'development' | 'preview' | 'production';
 const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   development: {
     name: 'Foam (dev)',
+    icon: './assets/splash/splash-image-production.png',
     iosBundleIdentifier: 'foam-tv-dev',
     androidPackageName: 'com.lhowsam.foam.dev',
     splashImage: './assets/splash/splash-image-production.png',
@@ -28,6 +30,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   },
   preview: {
     name: 'Foam (preview)',
+    icon: './assets/splash/splash-image-production.png',
     iosBundleIdentifier: 'foam-tv-preview',
     androidPackageName: 'com.lhowsam.foam.preview',
     splashImage: './assets/splash/splash-image-production.png',
@@ -37,6 +40,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   },
   production: {
     name: 'Foam',
+    icon: './assets/splash/splash-image-production.png',
     iosBundleIdentifier: 'foam-tv',
     androidPackageName: 'com.lhowsam.foam',
     splashImage: './assets/splash/splash-image-production.png',
@@ -179,6 +183,7 @@ const config: ExpoConfig = {
     googleServicesFile: iosGoogleServicesFileExists
       ? appConfig.iosGoogleServicesFile
       : undefined,
+    icon: appConfig.icon,
     config: {
       // needed for expo-secure-store
       usesNonExemptEncryption: false,
