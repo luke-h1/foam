@@ -1,4 +1,10 @@
-import { Typography, Button, TextField, FlashList } from '@app/components';
+import {
+  Typography,
+  Button,
+  TextField,
+  FlashList,
+  Switch,
+} from '@app/components';
 import { useAuthContext } from '@app/context';
 import { useAppNavigation, useDebugOptions } from '@app/hooks';
 import {
@@ -14,7 +20,7 @@ import {
 import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
 import { useState, useEffect, useCallback } from 'react';
-import { Alert, Platform, Switch, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { StyleSheet } from 'react-native-unistyles';
 
