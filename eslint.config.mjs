@@ -3,11 +3,10 @@ import { fixupConfigRules, fixupPluginRules } from '@eslint/compat';
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import tsParser from '@typescript-eslint/parser';
 import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import eslintPluginReact from 'eslint-plugin-react';
+import tseslint from 'typescript-eslint';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +16,7 @@ const compat = new FlatCompat({
   allConfig: js.configs.all,
 });
 
+/** @type {import('eslint').Linter.Config[]} */
 export default [
   {
     files: ['src/**/*.{js,mjs,cjs,ts,jsx,tsx}'],
@@ -64,6 +64,8 @@ export default [
     files: ['**/*.ts', '**/*.tsx'],
     plugins: {
       '@typescript-eslint': fixupPluginRules(typescriptEslint),
+      ...tseslint.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
     },
     settings: {
       'import/resolver': {
