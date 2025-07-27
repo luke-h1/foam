@@ -50,6 +50,7 @@ export function Providers({ children }: PropsWithChildren) {
                 {children}
                 {ReactQueryDebug?.enabled && (
                   <DevToolsBubble
+                    queryClient={queryClient}
                     onCopy={async text => {
                       try {
                         await Clipboard.setStringAsync(text);
