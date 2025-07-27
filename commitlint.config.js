@@ -12,6 +12,7 @@ const scopes = [
   'ffz',
   'stream',
   'auth',
+  'tooling',
 ];
 
 module.exports = {
