@@ -67,6 +67,15 @@ export default [
       ...tseslint.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
     },
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
     settings: {
       'import/resolver': {
         typescript: {

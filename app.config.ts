@@ -148,6 +148,7 @@ const config: ExpoConfig = {
     '@bacons/apple-colors',
     '@bacons/apple-targets',
     'react-native-legal',
+    'react-native-edge-to-edge',
     [
       'expo-build-properties',
       {
