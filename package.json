@@ -34,7 +34,6 @@
     "prebuild:android": "npx expo prebuild -p android",
     "prebuild:ios": "npx expo prebuild -p ios",
     "preinstall": "only-allow bun && node ./scripts/commit-hooks",
-    "prepare": "husky",
     "ts:check": "tsc --noEmit",
     "start:proxy": "ts-node-dev -P tsconfig.proxy.json --respawn --transpile-only proxy.ts",
     "test": "jest",
@@ -211,9 +210,9 @@
     "expo-atlas": "^0.4.0",
     "git-cz": "^4.9.0",
     "globals": "^16.2.0",
-    "husky": "^9.1.6",
     "jest": "^30.0.4",
     "jest-expo": "^53.0.9",
+    "lefthook": "^1.12.2",
     "lerna": "^8.1.8",
     "lint-staged": "^15.2.10",
     "only-allow": "^1.2.1",
@@ -239,19 +238,6 @@
     "overrides": {
       "uuid": "3.4.0"
     }
-  },
-  "husky": {
-    "hooks": {
-      "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint"
-    ],
-    "*.{js,jsx,ts,tsx,css,scss,html}": [
-      "prettier --write"
-    ]
   },
   "config": {
     "commitizen": {
