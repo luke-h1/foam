@@ -15,13 +15,12 @@ import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 export const CategoryScreen: FC<
   StackScreenProps<AppStackParamList, 'Category'>
 > = ({ route: { params } }) => {
   const { id } = params;
-  const { styles } = useStyles(stylesheet);
   const [previousCursor, setPreviousCursor] = useState<string>('');
   const [cursor, setCursor] = useState<string>('');
   const flashListRef = useRef<FlashList<Stream>>(null);
@@ -112,7 +111,7 @@ export const CategoryScreen: FC<
   );
 };
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'flex-start',

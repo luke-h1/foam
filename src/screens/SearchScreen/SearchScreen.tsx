@@ -15,9 +15,15 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TextInput as NativeTextInput, Platform } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import {
+  StyleSheet,
+  useUnistyles,
+  withUnistyles,
+} from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
 import { StreamerCard } from './components';
+
+const UniKeyboardAvoidingView = withUnistyles(KeyboardAvoidingView);
 
 interface SearchHistoryItem {
   query: string;
@@ -28,7 +34,7 @@ interface SearchHistoryItem {
  */
 export function SearchScreen() {
   const { navigate } = useAppNavigation();
-  const { styles, theme } = useStyles(stylesheet);
+
   const [query, setQuery] = useState<string>('');
   const ref = useRef<NativeTextInput | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
@@ -106,6 +112,7 @@ export function SearchScreen() {
     setQuery(query);
     await search(query);
   };
+  const { theme } = useUnistyles();
 
   const ListFooterComponent = useCallback(() => {
     return searchResults.length === 0 ? (
@@ -130,9 +137,9 @@ export function SearchScreen() {
 
   const ListHeaderComponent = useCallback(() => {
     return (
-      <KeyboardAvoidingView
+      <UniKeyboardAvoidingView
         behavior="padding"
-        style={{ paddingHorizontal: theme.spacing.md }}
+        style={styles.kb}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <TextField
@@ -174,7 +181,7 @@ export function SearchScreen() {
             )
           }
         />
-      </KeyboardAvoidingView>
+      </UniKeyboardAvoidingView>
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -215,7 +222,7 @@ export function SearchScreen() {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   searchResultsWrapper: {
     marginTop: theme.spacing.md,
     marginLeft: theme.spacing.md,
@@ -225,5 +232,8 @@ const stylesheet = createStyleSheet(theme => ({
     padding: theme.spacing.md,
     alignContent: 'center',
     alignItems: 'center',
+  },
+  kb: {
+    paddingHorizontal: theme.spacing.md,
   },
 }));

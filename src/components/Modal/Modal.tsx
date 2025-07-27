@@ -1,5 +1,5 @@
 import { Modal as RNModal, View, ViewStyle } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { Typography } from '../Typography';
 
@@ -23,8 +23,6 @@ export function Modal({
   isVisible,
   subtitle,
 }: ModalProps) {
-  const { styles } = useStyles(stylesheet);
-
   return (
     <RNModal animationType="slide" transparent visible={isVisible}>
       <View style={$wrapper}>
@@ -51,7 +49,7 @@ const $wrapper: ViewStyle = {
   justifyContent: 'center',
 };
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   card: {
     borderRadius: theme.radii.md,
     paddingHorizontal: theme.spacing.lg,

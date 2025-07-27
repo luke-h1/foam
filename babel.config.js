@@ -2,6 +2,12 @@ module.exports = api => {
   api.cache(true);
 
   const plugins = [
+    [
+      'react-native-unistyles/plugin',
+      {
+        root: 'src',
+      },
+    ],
     'transform-inline-environment-variables',
     [
       'module-resolver',

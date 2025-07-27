@@ -3,7 +3,7 @@ import { typedObjectEntries, typedObjectKeys } from '@app/utils';
 import type { Meta, StoryObj } from '@storybook/react';
 import { useMemo } from 'react';
 import { ScrollView, View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Typography as TypographyComponent } from './Typography';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 }
 
 function Texts({ fontColor, fontWeight }: Props) {
-  const { styles, theme } = useStyles(stylesheet);
+  const { theme } = useUnistyles();
 
   const sizes = useMemo(
     () =>
@@ -51,7 +51,7 @@ function Texts({ fontColor, fontWeight }: Props) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
   },

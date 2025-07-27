@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { ButtonProps } from '../Button';
 import { Typography } from '../Typography';
 import { NavigationSectionListItemButton } from './NavigationSectionListItemButton';
@@ -27,8 +27,6 @@ export function NavigationSectionList({
   sections,
   footer,
 }: NavigationSectionListProps) {
-  const { styles } = useStyles(stylesheet);
-
   return (
     <ScrollView
       style={styles.container}
@@ -72,7 +70,7 @@ export function NavigationSectionList({
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
   },

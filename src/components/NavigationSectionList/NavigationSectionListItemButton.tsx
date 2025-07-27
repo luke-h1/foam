@@ -1,7 +1,7 @@
 import { forwardRef, Ref } from 'react';
 
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import { Image } from '../Image';
@@ -22,7 +22,8 @@ export const NavigationSectionListItemButton = forwardRef(
     }: NavigationSectionListItemButtonProps,
     ref: Ref<View>,
   ) => {
-    const { styles, theme } = useStyles(stylesheet);
+    const { theme } = useUnistyles();
+
     return (
       <Button {...props} ref={ref} onPress={e => onPress?.(e)}>
         <View style={styles.container}>
@@ -50,7 +51,7 @@ export const NavigationSectionListItemButton = forwardRef(
 );
 NavigationSectionListItemButton.displayName = 'NavigationSectionListItemButton';
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flexDirection: 'row',
     alignItems: 'center',

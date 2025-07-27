@@ -2,7 +2,7 @@
 import { ListRenderItem } from '@shopify/flash-list';
 import { JSX, useCallback } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
 import { Typography } from '../Typography';
@@ -28,8 +28,6 @@ interface SettingsItemProps {
 }
 
 export function SettingsItem({ contents }: SettingsItemProps) {
-  const { styles } = useStyles(stylesheet);
-
   const renderContentItem: ListRenderItem<ContentItem> = useCallback(
     ({ item }) => (
       <View style={styles.item}>
@@ -46,7 +44,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
         {item.showSeperator && <View style={styles.separator} />}
       </View>
     ),
-    [styles],
+    [],
   );
 
   const renderSectionItem: ListRenderItem<Content> = useCallback(
@@ -60,7 +58,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
         />
       </View>
     ),
-    [styles, renderContentItem],
+    [renderContentItem],
   );
 
   return (
@@ -72,7 +70,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   section: {
     marginBottom: 16,
   },

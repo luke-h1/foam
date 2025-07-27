@@ -1,6 +1,6 @@
 import React, { ForwardedRef } from 'react';
 import { TextInput as TextInputPrimitive, TextInputProps } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 export interface InputProps extends TextInputProps {
   testID?: string;
@@ -27,7 +27,6 @@ const Input = (
 
   const blue = '#007AFF';
   const defaultSelectionColor = blue;
-  const { styles } = useStyles(stylesheet);
 
   return (
     <TextInputPrimitive
@@ -48,7 +47,7 @@ const Input = (
   );
 };
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   input: {
     fontFamily: theme.font.fontFamily,
     color: theme.colors.text,

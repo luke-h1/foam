@@ -5,7 +5,7 @@ import { ParsedPart, replaceEmotesWithText } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 interface Props {
   message: ParsedPart[];
@@ -16,7 +16,6 @@ interface Props {
 
 export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
   const { message, username, handleReply, handleCopy } = props;
-  const { styles } = useStyles(stylesheet);
 
   const snapPoints = useMemo(() => ['25%', '50%', '60%'], []);
 
@@ -65,7 +64,7 @@ export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
   );
 });
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   contentContainer: {
     paddingHorizontal: theme.spacing.xl,
     overflow: 'visible',

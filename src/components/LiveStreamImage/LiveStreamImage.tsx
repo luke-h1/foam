@@ -1,5 +1,5 @@
 import { View, ViewStyle } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Image } from '../Image';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
-  const { styles } = useStyles(stylesheet, {
+  styles.useVariants({
     size,
   });
 
@@ -31,7 +31,7 @@ export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   imageContainer: {
     marginRight: theme.spacing.md,
     borderRadius: theme.radii.sm,

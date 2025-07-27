@@ -16,7 +16,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useState, useEffect, useCallback } from 'react';
 import { Alert, Platform, Switch, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 type DebugItem = {
   title: string;
@@ -66,7 +66,6 @@ const debugItems: DebugItem[] = [
 ];
 
 function TwitchUsernameConverter() {
-  const { styles } = useStyles(stylesheet);
   const [twitchUsername, setTwitchUsername] = useState<string>('');
   const [twitchUserId, setTwitchUserId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -123,7 +122,6 @@ function TwitchUsernameConverter() {
 }
 
 function DisplayAccessToken() {
-  const { styles } = useStyles(stylesheet);
   const { authState } = useAuthContext();
 
   const handleCopyToClipboard = async () => {
@@ -151,7 +149,6 @@ function DisplayAccessToken() {
 }
 
 function NavigateToChat() {
-  const { styles } = useStyles(stylesheet);
   const { user, authState } = useAuthContext();
   const { navigate } = useAppNavigation();
   const [channelName, setChannelName] = useState<string>('');
@@ -214,7 +211,6 @@ export function DebugScreen() {
   const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(
     {},
   );
-  const { styles } = useStyles(stylesheet);
 
   useEffect(() => {
     const newSwitchOptions = debugItems.reduce(
@@ -308,7 +304,7 @@ export function DebugScreen() {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   twitchSection: {
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,

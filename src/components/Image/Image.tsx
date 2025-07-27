@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
 import { View, ViewStyle } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 export interface ImageProps extends ExpoImageProps {
   containerStyle?: ViewStyle;
@@ -15,8 +15,6 @@ export const Image = function Image({
   source,
   ...props
 }: ImageProps) {
-  const { styles } = useStyles(stylesheet);
-
   return (
     <View style={[styles.container, containerStyle]}>
       <ExpoImage
@@ -35,7 +33,7 @@ export const Image = function Image({
   );
 };
 
-const stylesheet = createStyleSheet(() => ({
+const styles = StyleSheet.create(() => ({
   container: {
     position: 'relative',
   },

@@ -1,11 +1,9 @@
 import { Button, Typography } from '@app/components';
 import newRelic from 'newrelic-react-native-agent';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 export function NewRelicDemoScreen() {
-  const { styles } = useStyles(stylesheet);
-
   return (
     <View style={styles.container}>
       <Button
@@ -29,7 +27,7 @@ export function NewRelicDemoScreen() {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     justifyContent: 'center',
     alignItems: 'center',

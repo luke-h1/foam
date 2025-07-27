@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ComponentType } from 'react';
 import { ImageStyle, StyleProp, View, ViewStyle } from 'react-native';
-import { useStyles } from 'react-native-unistyles';
+import { useUnistyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
 import { Button, ButtonProps } from '../Button';
 
@@ -98,7 +98,7 @@ export function Icon({
 }: IconProps) {
   const isPressable = !!WrapperProps.onPress;
 
-  const { theme } = useStyles();
+  const { theme } = useUnistyles();
 
   const Wrapper: ComponentType<ButtonProps> = (
     isPressable ? Button : View

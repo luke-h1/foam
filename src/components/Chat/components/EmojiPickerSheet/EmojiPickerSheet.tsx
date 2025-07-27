@@ -8,7 +8,7 @@ import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 import { View, ViewStyle, useWindowDimensions } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { SanitisiedEmoteSet } from '../../../../services/seventTvService';
 import { EmojiLegendList } from './EmojiLegendList';
 import { SubNavigationBar } from './SubNavigationBar';
@@ -98,8 +98,9 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
 
     const legendListRef = useRef<LegendListRef>(null);
     const scrollY = useSharedValue<number>(0);
-    const { styles, theme } = useStyles(emojiStylesheet);
     const [activeSection, setActiveSection] = useState(0);
+
+    const { theme } = useUnistyles();
 
     const data = useMemo(() => {
       const sections: EmojiSection[] = [
@@ -241,7 +242,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
 
 EmojiPickerSheet.displayName = 'EmojiPickerSheet';
 
-const emojiStylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   contentContainer: {
     paddingHorizontal: theme.spacing.xl,
     overflow: 'visible',

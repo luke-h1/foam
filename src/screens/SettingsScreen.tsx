@@ -15,11 +15,10 @@ import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import { useCallback, useRef } from 'react';
 import { SafeAreaView, SectionListRenderItem, View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
 const BuildFooter = () => {
-  const { styles } = useStyles(stylesheet);
   return (
     <View style={styles.buildContainer}>
       <Typography color="text" size="xs">
@@ -41,7 +40,8 @@ export function SettingsScreen() {
   // eslint-disable-next-line @typescript-eslint/unbound-method
   const { navigate, addListener } = useAppNavigation();
 
-  const { styles, theme } = useStyles(stylesheet);
+  const { theme } = useUnistyles();
+
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const { logout, user } = useAuthContext();
   const navigation = useAppNavigation();
@@ -258,7 +258,7 @@ export function SettingsScreen() {
         </Button>
       );
     },
-    [styles.btn, styles.btnText],
+    [],
   );
 
   return (
@@ -288,7 +288,7 @@ export function SettingsScreen() {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   safeArea: {
     flex: 1,
   },

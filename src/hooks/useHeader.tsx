@@ -8,7 +8,7 @@ import Animated, {
   SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { useAppNavigation } from './useAppNavigation';
 import { useTargetMeasurement } from './useTargetMeasurement';
 
@@ -19,7 +19,6 @@ interface Props {
 
 export function useHeader({ offsetY, title }: Props) {
   const navigation = useAppNavigation();
-  const { styles } = useStyles(stylesheet);
   const headerHeight = useHeaderHeight();
 
   const {
@@ -67,13 +66,12 @@ export function useHeader({ offsetY, title }: Props) {
         </View>
       ),
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation, rightStyle, title]);
 
   return { triggerRef, onLayout };
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   headerLeft: {
     width: 48,
   },

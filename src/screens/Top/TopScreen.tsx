@@ -2,14 +2,13 @@ import { Button, Typography } from '@app/components';
 import { useState } from 'react';
 import { SafeAreaView, useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
 export function TopScreen() {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState<number>(0);
-  const { styles, theme } = useStyles(stylesheet);
 
   const [routes] = useState([
     { key: 'streams', title: 'Streams' },
@@ -22,6 +21,8 @@ export function TopScreen() {
     streams: TopStreamsScreen,
     categories: TopCategoriesScreen,
   });
+
+  const { theme } = useUnistyles();
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -61,7 +62,7 @@ export function TopScreen() {
   );
 }
 
-const stylesheet = createStyleSheet(() => ({
+const styles = StyleSheet.create(() => ({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

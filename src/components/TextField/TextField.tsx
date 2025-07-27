@@ -13,7 +13,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Typography, TypographyProps } from '../Typography';
 
@@ -59,7 +59,7 @@ export const TextField = forwardRef(function TextField(
     ...TextInputProps
   } = props;
 
-  const { styles, theme } = useStyles(styleSheet);
+  const { theme } = useUnistyles();
 
   const input = useRef<TextInput>(null);
 
@@ -154,7 +154,7 @@ export const TextField = forwardRef(function TextField(
   );
 });
 
-const styleSheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   label: {
     marginBottom: theme.spacing.sm,
   },

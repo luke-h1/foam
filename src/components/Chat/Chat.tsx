@@ -21,7 +21,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
@@ -39,6 +39,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
+
+  const { theme } = useUnistyles();
 
   const client = useTmiClient({
     options: {
@@ -93,7 +95,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const legendListRef = useRef<LegendListRef>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
-  const { styles, theme } = useStyles(stylesheet);
 
   const [_connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
@@ -347,7 +348,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         replyBody={item.replyBody}
       />
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -510,7 +510,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
 Chat.displayName = 'Chat';
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   safeArea: {
     flex: 1,
   },

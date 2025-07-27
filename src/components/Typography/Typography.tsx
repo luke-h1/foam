@@ -2,7 +2,7 @@ import { FontSize, FontWeight, ThemeColor } from '@app/styles';
 import { forwardRef, LegacyRef, ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { Text, TextProps } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export interface TypographyProps extends TextProps {
   weight?: FontWeight;
@@ -12,7 +12,7 @@ export interface TypographyProps extends TextProps {
   animated?: boolean;
 }
 
-export const typographyStyles = createStyleSheet(() => ({
+export const typographyStyles = StyleSheet.create(() => ({
   text: ({ fontWeight, fontSize, textColor }) => ({
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     fontWeight,
@@ -38,7 +38,7 @@ export const Typography = forwardRef(
     }: TypographyProps,
     ref: LegacyRef<Text>,
   ) => {
-    const { styles, theme } = useStyles(typographyStyles);
+    const { theme } = useUnistyles();
 
     const fontWeight = theme.font.fontWeight[weight];
     const fontSize = theme.font.fontSize[size];
@@ -48,7 +48,10 @@ export const Typography = forwardRef(
       <Text
         ref={ref}
         {...props}
-        style={[{ ...styles.text({ fontSize, fontWeight, textColor }) }, style]}
+        style={[
+          { ...typographyStyles.text({ fontSize, fontWeight, textColor }) },
+          style,
+        ]}
       >
         {children}
       </Text>

@@ -4,11 +4,9 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 export function Spinner() {
-  const { styles } = useStyles(stylesheet);
-
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { rotate: withRepeat(withTiming('360deg', { duration: 1000 }), -1) },
@@ -24,7 +22,7 @@ export function Spinner() {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
     justifyContent: 'center',

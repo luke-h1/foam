@@ -4,7 +4,7 @@ import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { RefObject, useCallback, useMemo, useState } from 'react';
 import { View, ViewToken, ViewabilityConfig } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { EmojiCategoryBar } from './EmojiCategoryBar';
 import { FlatListItem, PickerItem, TOP_CORNER_STYLE } from './EmojiPickerSheet';
 import { EmojiRow } from './EmojiRow';
@@ -34,7 +34,6 @@ export function EmojiLegendList({
   onSectionPress: (sectionIndex: number) => void;
   showSubNavigation?: boolean;
 }) {
-  const { styles } = useStyles(stylesheet);
   // Add this state to track if we're programmatically scrolling
   const [isScrolling, setIsScrolling] = useState(false);
 
@@ -124,7 +123,6 @@ export function EmojiLegendList({
         }
         return null;
       },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [scrollY, onItemPress],
   );
 
@@ -158,7 +156,7 @@ export function EmojiLegendList({
   );
 }
 
-const stylesheet = createStyleSheet(() => ({
+const styles = StyleSheet.create(() => ({
   header: {
     height: EMOJI_SIZE,
     justifyContent: 'center',

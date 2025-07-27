@@ -10,7 +10,7 @@ import Animated, {
   Extrapolation,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { PickerItem } from './EmojiPickerSheet';
 import {
   EMOJI_SIZE,
@@ -31,7 +31,6 @@ export function EmojiRow({
   scrollY: SharedValue<number>;
   onPress?: (item: PickerItem) => void;
 }) {
-  const { styles } = useStyles(stylesheet);
   const positionY = index * EMOJI_SIZE;
   const { startFade, endFade } = useMemo(() => {
     const chunkHeight = EMOJI_SIZE * CHUNK_SIZE - PICKER_GAP;
@@ -97,7 +96,7 @@ export function EmojiRow({
   );
 }
 
-const stylesheet = createStyleSheet(() => ({
+const styles = StyleSheet.create(() => ({
   row: {
     flexDirection: 'row',
     transformOrigin: 'top',

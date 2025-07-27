@@ -1,12 +1,13 @@
 import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RNToast, { BaseToast, ToastConfig } from 'react-native-toast-message';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export function Toast() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
-  const { styles, theme } = useStyles(stylesheet);
+
+  const { theme } = useUnistyles();
 
   const width = screenWidth - theme.spacing.xs * 2;
 
@@ -24,7 +25,7 @@ export function Toast() {
   return <RNToast config={toastConfig} topOffset={insets.top} />;
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   toast: {
     backgroundColor: theme.colors.borderFaint,
     borderLeftWidth: 0,
