@@ -1,3 +1,4 @@
+import './styles/unistyles';
 /* eslint-disable camelcase */
 import {
   SourceCodePro_400Regular,
@@ -23,7 +24,6 @@ import {
 } from './hooks';
 import { AppNavigator, useNavigationPersistence } from './navigators';
 import { twitchApi } from './services/api';
-import './styles/unistyles';
 import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
 

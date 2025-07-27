@@ -4,7 +4,7 @@ import { Typography } from '@app/components/Typography';
 import { LegendListRef } from '@legendapp/list';
 import { RefObject } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 interface ResumeScrollProps {
   legendListRef: RefObject<LegendListRef | null>;
@@ -21,7 +21,7 @@ export function ResumeScroll({
   setUnreadCount,
   unreadCount,
 }: ResumeScrollProps) {
-  const { styles, theme } = useStyles(stylesheet);
+  const { theme } = useUnistyles();
   return (
     <View style={styles.resumeButtonContainer}>
       <Button
@@ -45,7 +45,7 @@ export function ResumeScroll({
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   resumeButtonContainer: {
     position: 'absolute',
     bottom: theme.spacing.lg,

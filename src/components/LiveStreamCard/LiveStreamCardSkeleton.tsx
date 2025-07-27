@@ -1,10 +1,8 @@
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Skeleton } from '../Skeleton';
 
 export function LiveStreamCardSkeleton() {
-  const { styles } = useStyles(stylesheet);
-
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
@@ -25,7 +23,7 @@ export function LiveStreamCardSkeleton() {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flexDirection: 'row',
     paddingVertical: theme.spacing.xl,

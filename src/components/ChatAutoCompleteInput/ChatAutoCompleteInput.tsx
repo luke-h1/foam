@@ -29,7 +29,7 @@ import Animated, {
   FadeIn,
   FadeInUp,
 } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { InputProps } from '..';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
@@ -118,7 +118,6 @@ export const ChatAutoCompleteInput = forwardRef<
     },
     ref,
   ) => {
-    const { styles } = useStyles(styleSheet);
     const [isFocused, setIsFocused] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [cursorPosition, setCursorPosition] = useState(0);
@@ -412,7 +411,7 @@ export const ChatAutoCompleteInput = forwardRef<
           </Button>
         </AnimatedView>
       ),
-      [handleEmotePress, styles],
+      [handleEmotePress],
     );
 
     const handleOutsidePress = useCallback(() => {
@@ -575,7 +574,7 @@ export const ChatAutoCompleteInput = forwardRef<
   },
 );
 
-const styleSheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
     position: 'relative',

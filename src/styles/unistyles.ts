@@ -1,4 +1,4 @@
-import { UnistylesRegistry, UnistylesRuntime } from 'react-native-unistyles';
+import { StyleSheet, UnistylesRuntime } from 'react-native-unistyles';
 import { breakpoints } from './breakpoints';
 import { darkTheme } from './theme';
 
@@ -9,20 +9,19 @@ export interface AppTheme {
 }
 
 export function getAppTheme() {
-  return UnistylesRuntime.getTheme() as AppTheme['dark'];
+  return UnistylesRuntime.getTheme();
 }
 
 declare module 'react-native-unistyles' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  export interface UnistylesBreakpoints extends BreakPoints {}
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface UnistylesThemes extends AppTheme {}
 }
 
-UnistylesRegistry.addBreakpoints(breakpoints)
-  .addThemes({
+StyleSheet.configure({
+  themes: {
     dark: darkTheme,
-  })
-  .addConfig({
-    adaptiveThemes: true,
-  });
+  },
+  settings: {
+    adaptiveThemes: false,
+  },
+});

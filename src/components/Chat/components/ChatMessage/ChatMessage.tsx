@@ -8,7 +8,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { useRef, useCallback, memo, useState } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 import { Button } from '../../../Button';
 import { Icon } from '../../../Icon';
@@ -38,13 +38,12 @@ export const ChatMessage = memo(
     replyDisplayName,
     onReply,
   }: ChatMessageType & { onReply: (args: OnReply) => void }) => {
-    const { styles } = useStyles(stylesheet);
     const emoteSheetRef = useRef<BottomSheetModal>(null);
     const badgeSheetRef = useRef<BottomSheetModal>(null);
     const actionSheetRef = useRef<BottomSheetModal>(null);
     const userSheetRef = useRef<BottomSheetModal>(null);
 
-    const { theme } = useStyles();
+    const { theme } = useUnistyles();
 
     const [selectedEmote, setSelectedEmote] = useState<ParsedPart | null>(null);
     const [selectedBadge, setSelectedBadge] =
@@ -127,7 +126,7 @@ export const ChatMessage = memo(
           <Image source={badge.url} style={styles.badge} transition={20} />
         </Button>
       ));
-    }, [badges, styles.badge, handleBadgePress]);
+    }, [badges, handleBadgePress]);
 
     const handleLongPress = useCallback(() => {
       actionSheetRef.current?.present();
@@ -226,7 +225,7 @@ export const ChatMessage = memo(
 
 ChatMessage.displayName = 'ChatMessage';
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   chatContainer: {
     backgroundColor: theme.colors.foregroundInverted,
   },

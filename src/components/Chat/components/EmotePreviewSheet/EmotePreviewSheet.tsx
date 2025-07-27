@@ -11,7 +11,7 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
 interface Props {
@@ -21,7 +21,6 @@ interface Props {
 export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
   (props, ref) => {
     const { selectedEmote } = props;
-    const { styles } = useStyles(emoteStylesheet);
 
     const { height, width } = calculateAspectRatio(
       selectedEmote.width || 20,
@@ -120,7 +119,7 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
 
 EmotePreviewSheet.displayName = 'EmotePreviewSheet';
 
-export const emoteStylesheet = createStyleSheet(theme => ({
+export const styles = StyleSheet.create(theme => ({
   meta: {
     flexDirection: 'row',
     justifyContent: 'flex-start',

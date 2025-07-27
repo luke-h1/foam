@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button';
 import { Typography } from '@app/components/Typography';
 import { ScrollView } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { CATEGORY_HEADER_HEIGHT, PICKER_PAD, PICKER_WIDTH } from './config';
 
 type SubNavigationOption = {
@@ -18,7 +18,7 @@ export function SubNavigationBar({
   activeKey: string;
   onPress?: (key: string) => void;
 }) {
-  const { theme, styles } = useStyles(stylesheet);
+  const { theme } = useUnistyles();
 
   return (
     <ScrollView
@@ -49,7 +49,7 @@ export function SubNavigationBar({
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   subNavBar: {
     position: 'absolute',
     top: CATEGORY_HEADER_HEIGHT,

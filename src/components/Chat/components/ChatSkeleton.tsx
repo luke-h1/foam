@@ -13,7 +13,7 @@ import Animated, {
   withSequence,
   runOnJS,
 } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { FlashList } from '../../FlashList';
 import { Typography } from '../../Typography';
 
@@ -69,7 +69,6 @@ export function ChatSkeleton() {
 
   const chatWidth = width;
   const chatHeight = height * 0.6;
-  const { styles } = useStyles(stylesheet);
   return (
     <SafeAreaView style={styles.safeArea}>
       <Typography style={styles.header} size="sm">
@@ -97,7 +96,7 @@ export function ChatSkeleton() {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   header: {
     padding: theme.spacing.sm,
     borderBottomWidth: 1,

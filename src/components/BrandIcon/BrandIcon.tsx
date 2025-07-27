@@ -6,7 +6,7 @@ import { typedObjectKeys } from '@app/utils';
 import { ImageProps } from 'expo-image';
 import { memo } from 'react';
 import { DimensionValue } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Image } from '../Image';
 
 export type BrandIconName = keyof typeof BrandIcons;
@@ -53,7 +53,6 @@ function resolveSize(size: IconSize) {
 
 export const BrandIcon = memo(
   ({ name, color, size = 'md', style, ...props }: IconProps) => {
-    const { styles } = useStyles(stylesheet);
     const { height, width } = resolveSize(size);
 
     return (
@@ -70,7 +69,7 @@ export const BrandIcon = memo(
 );
 BrandIcon.displayName = 'BrandIcon';
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   iconImage: ({
     height,
     width,

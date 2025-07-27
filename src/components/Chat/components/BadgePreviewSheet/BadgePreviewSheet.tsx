@@ -8,9 +8,8 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { View } from 'react-native';
-import { useStyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
-import { emoteStylesheet } from '../EmotePreviewSheet';
+import { styles } from '../EmotePreviewSheet';
 
 interface Props {
   selectedBadge: SanitisedBadgeSet;
@@ -19,8 +18,6 @@ interface Props {
 export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
   (props, ref) => {
     const { selectedBadge } = props;
-
-    const { styles } = useStyles(emoteStylesheet);
 
     const snapPoints = useMemo(() => ['25%', '50%', '60%'], []);
 

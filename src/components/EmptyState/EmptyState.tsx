@@ -10,7 +10,7 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { Typography } from '../Typography';
 
@@ -112,8 +112,6 @@ export function EmptyState(props: EmptyStateProps) {
   // eslint-disable-next-line react/destructuring-assignment
   const preset = EmptyStatePresets[props.preset ?? 'generic'];
 
-  const { styles } = useStyles(styleSheet);
-
   const {
     button = preset.button,
     buttonOnPress,
@@ -175,7 +173,7 @@ export function EmptyState(props: EmptyStateProps) {
   );
 }
 
-const styleSheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: (containerStyleOverride: StyleProp<ViewStyle>) => ({
     flex: 1,
     justifyContent: 'center',

@@ -14,7 +14,7 @@ import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,7 +28,6 @@ const queryClient = new QueryClient({
 
 export function Providers({ children }: PropsWithChildren) {
   const { setRecoveredFromError } = useRecoveredFromError();
-  const { styles } = useStyles(stylesheet);
 
   const { ReactQueryDebug } = useDebugOptions();
 
@@ -71,6 +70,6 @@ export function Providers({ children }: PropsWithChildren) {
   );
 }
 
-const stylesheet = createStyleSheet(() => ({
+const styles = StyleSheet.create(() => ({
   gestureContainer: { flex: 1 },
 }));

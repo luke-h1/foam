@@ -2,7 +2,7 @@ import { Button, LiveStreamImage, Typography } from '@app/components';
 import { useAppNavigation } from '@app/hooks';
 import type { SearchChannelResponse } from '@app/services';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 interface Props {
   stream: SearchChannelResponse;
@@ -10,7 +10,6 @@ interface Props {
 
 export function StreamerCard({ stream }: Props) {
   const { navigate } = useAppNavigation();
-  const { styles } = useStyles(stylesheet);
 
   return (
     <Button
@@ -36,7 +35,7 @@ export function StreamerCard({ stream }: Props) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   streamer: {
     flexDirection: 'row',
     marginBottom: theme.spacing.sm,

@@ -2,7 +2,7 @@ import { Entypo } from '@expo/vector-icons';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useCallback } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
 import { Typography } from '../Typography';
@@ -20,7 +20,7 @@ export function SearchHistory({
   onClearItem,
   onSelectItem,
 }: Props) {
-  const { styles, theme } = useStyles(stylesheet);
+  const { theme } = useUnistyles();
 
   const renderItem: ListRenderItem<string> = useCallback(
     ({ item }) => (
@@ -60,7 +60,7 @@ export function SearchHistory({
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     padding: theme.spacing.md,
     marginVertical: theme.spacing.md,

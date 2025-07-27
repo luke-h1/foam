@@ -1,7 +1,7 @@
 import { useAppNavigation } from '@app/hooks';
 import { Category } from '@app/services/twitchService';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
 import { Typography } from '../Typography';
@@ -16,7 +16,6 @@ const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
 export function CategoryCard({ category }: Props) {
   const { navigate } = useAppNavigation();
-  const { styles } = useStyles(stylesheet);
 
   return (
     <Button
@@ -43,7 +42,7 @@ export function CategoryCard({ category }: Props) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   title: {
     marginTop: theme.spacing.sm,
   },

@@ -2,7 +2,7 @@ import { useAppNavigation, useStreamerImage } from '@app/hooks';
 import { Stream } from '@app/services';
 import { elapsedStreamTime, formatViewCount } from '@app/utils';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
 import { Typography } from '../Typography';
@@ -12,7 +12,6 @@ interface Props {
 }
 
 export function LiveStreamCard({ stream }: Props) {
-  const { styles } = useStyles(stylesheet);
   const { navigate } = useAppNavigation();
   const { profilePicture } = useStreamerImage(stream.user_login, [stream]);
   return (
@@ -70,7 +69,7 @@ export function LiveStreamCard({ stream }: Props) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flexDirection: 'row',
     paddingVertical: theme.spacing.xl,

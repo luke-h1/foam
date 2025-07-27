@@ -7,7 +7,7 @@ import {
 import { BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 import { BrandIcon } from '../../BrandIcon';
 import { Button } from '../../Button';
@@ -35,7 +35,7 @@ export function EmoteBadgePreview({
   selectedEmote,
   selectedBadge,
 }: EmotePreviewProps) {
-  const { styles, theme } = useStyles(stylesheet);
+  const { theme } = useUnistyles();
 
   const handleCopyName = () => {
     if (selectedEmote?.content) {
@@ -228,7 +228,7 @@ export function EmoteBadgePreview({
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   previewContainer: {
     paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,

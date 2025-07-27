@@ -9,13 +9,12 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import WebView from 'react-native-webview';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
 }) => {
-  const { styles } = useStyles(stylesheet);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
 
@@ -108,7 +107,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   );
 };
 
-const stylesheet = createStyleSheet(() => ({
+const styles = StyleSheet.create(() => ({
   container: {
     flex: 1,
   },

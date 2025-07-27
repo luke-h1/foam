@@ -6,7 +6,7 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQuery } from '@tanstack/react-query';
 import { forwardRef, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 interface Props {
   userId?: string;
@@ -14,8 +14,6 @@ interface Props {
 
 export const UserSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
   const { userId } = props;
-
-  const { styles } = useStyles(stylesheet);
 
   const snapPoints = useMemo(() => ['25%', '50%', '60%'], []);
 
@@ -65,7 +63,7 @@ export const UserSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
 });
 UserSheet.displayName = 'UserSheet';
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   info: {
     flexDirection: 'row',
     justifyContent: 'flex-start',

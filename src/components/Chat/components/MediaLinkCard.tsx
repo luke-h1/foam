@@ -13,7 +13,7 @@ import {
 } from '@app/utils';
 import { useQueries } from '@tanstack/react-query';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 
 type MediaLinkCardProps = {
   type: TwitchAnd7TVVariant;
@@ -21,8 +21,6 @@ type MediaLinkCardProps = {
 };
 
 export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
-  const { styles } = useStyles(stylesheet);
-
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
       {
@@ -128,7 +126,7 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     marginVertical: theme.spacing.xs,
   },

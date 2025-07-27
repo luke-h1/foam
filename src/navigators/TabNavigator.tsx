@@ -8,7 +8,7 @@ import {
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { ComponentType, FC } from 'react';
-import { useStyles } from 'react-native-unistyles';
+import { useUnistyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
 
@@ -69,7 +69,8 @@ const screens: Screen[] = [
 
 export function TabNavigator() {
   const { user } = useAuthContext();
-  const { theme } = useStyles();
+
+  const { theme } = useUnistyles();
 
   return (
     <Tab.Navigator

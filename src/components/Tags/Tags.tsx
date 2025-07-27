@@ -2,7 +2,7 @@ import { useAppNavigation } from '@app/hooks';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useCallback } from 'react';
 import { View } from 'react-native';
-import { createStyleSheet, useStyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
 import { Typography } from '../Typography';
@@ -13,7 +13,6 @@ interface Props {
 }
 
 export function Tags({ tags, limit = 10 }: Props) {
-  const { styles } = useStyles(stylesheet);
   const { navigate } = useAppNavigation();
 
   const renderItem: ListRenderItem<string> = useCallback(({ item }) => {
@@ -53,7 +52,7 @@ export function Tags({ tags, limit = 10 }: Props) {
   );
 }
 
-const stylesheet = createStyleSheet(theme => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     marginBottom: theme.spacing.md,
     marginTop: theme.spacing.md,
