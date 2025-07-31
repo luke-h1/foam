@@ -18,6 +18,7 @@ The native Twitch app experience doesn't quite line up with the desktop experien
 - [Features](#features)
 - [Installation](#installation)
   - [Recommended dev environment](#recommended-dev-environment)
+  - [Tips](#tips)
   - [Running `development` version of the app locally](#running-development-version-of-the-app-locally)
   - [Storybook](#storybook)
   - [Running `preview` or `production` version of the app locally](#running-preview-or-production-version-of-the-app-locally)
@@ -78,7 +79,7 @@ TBA
 
 TBA
 
-## Getting started
+# Getting started
 
 You will need the following in order to run the project locally:
 
@@ -145,6 +146,34 @@ See [Expo React Native project](https://docs.expo.dev/get-started/set-up-your-en
 
 1. Mac - due to being able to run xcode and android simultaneously
 
+_IOS_:
+
+- Any IOS commands requires Xcode to be installed.
+  - A simulator must be preconfigured in Xcode settings.
+    - if no iOS versions are available, install the iOS runtime at `Xcode > Settings > Platforms`.
+    - if the simulator download keeps failing you can download it from the developer website.
+      - [Apple Developer](https://developer.apple.com/download/all/?q=Simulator%20Runtime)
+      - `sudo xcode-select -s /Applications/Xcode.app`
+      - `xcodebuild -runFirstLaunch`
+      - `xcrun simctl runtime add "~/Downloads/iOS_17.4_Simulator_Runtime.dmg"` (adapt the path to the downloaded file)
+  - In addition, ensure Xcode Command Line Tools are installed using `xcode-select --install`.
+- Expo will require you to configure Xcode Signing. We use automatic signing which let's expo deal with the signing so we don't have to do it manually.
+- Make sure you do have automatic signing setup properly. Open the project in xcode (`cd ios && xed .`) > select the project > Signing & Capabilities > check `Automatically manage signing` and select a team + unique bundle identifier
+
+_Android_:
+
+- Install "Android Studio"
+  - Make sure you have the Android SDK installed (Android Studio > Tools > Android SDK).
+    - In "SDK Platforms": "Android x" (where x is Android's current version).
+    - In "SDK Tools": "Android SDK Build-Tools" and "Android Emulator" are required.
+    - Add `export ANDROID_HOME=/Users/<your_username>/Library/Android/sdk` to your `.zshrc` or `.bashrc` (and restart your terminal).
+  - Setup an emulator (Android Studio > Tools > Device Manager).
+
+## Tips
+
+- To run on your phone (ensure connected via a cable) add `-- --device` to your command (i.e. `bun run ios -- --device`).
+- If the Android simulator frequently hangs or is very slow, [bump its memory limit](https://stackoverflow.com/a/40068396)
+
 ## Running `development` version of the app locally
 
 In order to run the `development` variant of the app locally you will need to run:
@@ -186,7 +215,6 @@ fix(streams): fix crash on `LiveStreamScreen`
 1. For every change, create a new branch from `main`
 2. Use conventional commits for your commits and other good practices to help ease the review process
 3. Open a PR against `main` & title it using the pattern mentioned in [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
-
    - Provide a proper description of the changes
    - Include some screenshots/videos of the change if applicable
    - Ensure to test your changes on a physical device as sometimes the simulator works but on a real device it breaks
@@ -332,13 +360,11 @@ In order to join the TestFlight internal testing of the iOS app distributed via 
 # Managing access to the project and associated services
 
 - [Google Play Console](https://play.google.com/console/u/0/developers/9181778102935271854/users-and-permissions)
-
   - access Play Console app dashboard
   - manage releases to the Beta Testers
   - manage data visible on the Play Store associated with the app
 
 - [App Store Connect](https://appstoreconnect.apple.com/apps/6742071860/distribution)
-
   - access App Store Connect app dashboard
   - manage releases to the TestFlight
   - manage data visible on the App Store associated with the app
