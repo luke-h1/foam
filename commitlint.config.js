@@ -14,6 +14,7 @@ const scopes = [
   'auth',
   'tooling',
   'documentation',
+  'security',
 ];
 
 module.exports = {
