@@ -13,6 +13,7 @@ const scopes = [
   'stream',
   'auth',
   'tooling',
+  'documentation',
   'security',
 ];
 
