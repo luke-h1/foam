@@ -1,10 +1,10 @@
-import { Typography } from '@app/components';
+import { Text } from '@app/components';
 import { View } from 'react-native';
 
 export function AccountScreen() {
   return (
     <View>
-      <Typography>Account screen</Typography>
+      <Text variant="title2">Account screen</Text>
     </View>
   );
 }

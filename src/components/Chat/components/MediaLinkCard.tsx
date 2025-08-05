@@ -3,7 +3,7 @@ import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
 import { Skeleton } from '@app/components/Skeleton';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { sevenTvService, twitchService } from '@app/services';
 import {
   SEVENTV_EMOTE_LINK_REGEX,
@@ -109,16 +109,11 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
         <View style={styles.info}>
           <View style={styles.titleRow}>
             {getBrandIcon()}
-            <Typography
-              size="md"
-              weight="bold"
-              color="text"
-              style={{ flex: 1, flexShrink: 1 }}
-            >
+            <Text color="text" style={{ flex: 1, flexShrink: 1 }}>
               {title}
-            </Typography>
+            </Text>
           </View>
-          <Typography size="sm">By {createdBy}</Typography>
+          <Text>By {createdBy}</Text>
         </View>
         <Icon icon="external-link" />
       </View>

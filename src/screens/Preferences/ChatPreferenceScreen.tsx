@@ -1,5 +1,5 @@
-import { Typography } from '@app/components';
+import { Text } from '@app/components';
 
 export function ChatPreferenceScreen() {
-  return <Typography>chat preferences</Typography>;
+  return <Text variant="title">chat preferences</Text>;
 }

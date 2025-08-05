@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 interface Props {
   stream: Stream;
@@ -39,15 +39,13 @@ export function LiveStreamCard({ stream }: Props) {
           />
           <View style={styles.overlay}>
             <View style={styles.redDot} />
-            <Typography style={styles.liveText} size="xxs">
+            <Text style={styles.liveText} variant="caption2">
               {elapsedStreamTime(stream.started_at)}
-            </Typography>
+            </Text>
           </View>
         </View>
         <View style={styles.details}>
-          <Typography size="xs" weight="semiBold">
-            {stream.title}
-          </Typography>
+          <Text variant="caption">{stream.title}</Text>
           <View style={styles.metadata}>
             <View style={styles.info}>
               <Image
@@ -56,13 +54,13 @@ export function LiveStreamCard({ stream }: Props) {
                 testID="LiveStreamCard-avatar"
               />
 
-              <Typography size="xs">{stream.user_name}</Typography>
+              <Text variant="caption">{stream.user_name}</Text>
             </View>
-            <Typography size="xxs">
+            <Text variant="caption2">
               {formatViewCount(stream.viewer_count)} viewers
-            </Typography>
+            </Text>
           </View>
-          <Typography size="xxs">{stream.game_name}</Typography>
+          <Text variant="caption2">{stream.game_name}</Text>
         </View>
       </View>
     </Button>

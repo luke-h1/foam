@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 
-import { Typography } from '@app/components';
+import { Text } from '@app/components';
 import { useChatStore } from '@app/store';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { LegendListRef } from '@legendapp/list';
@@ -192,7 +192,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
     if (data.length === 0) {
       return (
         <View style={[{ width: PICKER_WIDTH }]}>
-          <Typography>No emotes available</Typography>
+          <Text>No emotes available</Text>
         </View>
       );
     }

@@ -3,7 +3,7 @@ import {
   Image,
   LiveStreamCard,
   Spinner,
-  Typography,
+  Text,
   FlashList,
 } from '@app/components';
 import { AppStackParamList } from '@app/navigators';
@@ -93,7 +93,7 @@ export const CategoryScreen: FC<
         }
         style={styles.categoryLogo}
       />
-      <Typography style={styles.categoryTitle}>{category?.name}</Typography>
+      <Text variant="title2">{category?.name}</Text>
     </View>
   );
 
@@ -117,13 +117,15 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     display: 'flex',
-    marginBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing['2xl'],
   },
   categoryLogo: {
     width: 105,
     height: 140,
     borderRadius: 12,
     resizeMode: 'cover',
+    marginRight: theme.spacing.sm,
   },
   categoryTitle: {
     textAlign: 'center',

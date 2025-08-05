@@ -1,4 +1,4 @@
-import { Button, SafeAreaViewFixed, Typography } from '@app/components';
+import { Button, SafeAreaViewFixed, Text } from '@app/components';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
@@ -51,7 +51,7 @@ export function TopScreen() {
                     },
                   ]}
                 >
-                  <Typography>{route.title}</Typography>
+                  <Text>{route.title}</Text>
                 </Button>
               );
             })}

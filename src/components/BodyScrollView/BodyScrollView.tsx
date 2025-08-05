@@ -1,5 +1,4 @@
 import { useScrollToTop } from '@app/hooks';
-import * as AC from '@bacons/apple-colors';
 import { forwardRef } from 'react';
 import { ScrollViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -26,7 +25,7 @@ export const BodyScrollView = forwardRef<Animated.ScrollView, ScrollViewProps>(
           bottom: paddingBottom - (process.env.EXPO_OS === 'ios' ? bottom : 0),
         }}
         {...props}
-        style={[{ backgroundColor: AC.systemGroupedBackground }, props.style]}
+        style={[{}, props.style]}
       />
     );
   },

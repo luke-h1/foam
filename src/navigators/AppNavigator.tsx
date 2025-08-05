@@ -1,4 +1,4 @@
-import { AuthContextProvider } from '@app/context';
+import { useAuthContext } from '@app/context';
 import { usePopulateAuth } from '@app/hooks';
 import { CategoryScreen, LoginScreen, StorybookScreen } from '@app/screens';
 import {
@@ -88,6 +88,12 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 
 const AppStack = () => {
   usePopulateAuth();
+  const { ready } = useAuthContext();
+
+  console.log('ready ->', ready);
+  if (!ready) {
+    return null;
+  }
   return (
     <Stack.Navigator
       screenOptions={{
@@ -174,9 +180,7 @@ export const AppNavigator = (props: NavigationProps) => {
 
   return (
     <NavigationContainer theme={navTheme} {...props}>
-      <AuthContextProvider>
-        <AppStack />
-      </AuthContextProvider>
+      <AppStack />
     </NavigationContainer>
   );
 };

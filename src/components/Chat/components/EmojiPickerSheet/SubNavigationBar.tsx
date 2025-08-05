@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { ScrollView } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { CATEGORY_HEADER_HEIGHT, PICKER_PAD, PICKER_WIDTH } from './config';
@@ -38,11 +38,9 @@ export function SubNavigationBar({
             },
           ]}
         >
-          <Typography
-            style={[styles.subNavLabel, { color: theme.colors.text }]}
-          >
+          <Text style={[styles.subNavLabel, { color: theme.colors.text }]}>
             {option.label}
-          </Typography>
+          </Text>
         </Button>
       ))}
     </ScrollView>

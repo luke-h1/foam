@@ -12,7 +12,7 @@ import {
 import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const empty = require('../../../assets/sad-face.png');
@@ -135,7 +135,7 @@ export function EmptyState(props: EmptyStateProps) {
       style={styles.container($contentStyleOverride as StyleProp<ViewStyle>)}
     >
       {isHeadingPresent && (
-        <Typography
+        <Text
           {...HeadingTextProps}
           style={styles.heading(
             $headingStyleOverride,
@@ -146,11 +146,11 @@ export function EmptyState(props: EmptyStateProps) {
           )}
         >
           {heading}
-        </Typography>
+        </Text>
       )}
 
       {isContentPresent && (
-        <Typography
+        <Text
           {...ContentTextProps}
           style={styles.content(
             isImagePresent,
@@ -161,7 +161,7 @@ export function EmptyState(props: EmptyStateProps) {
           )}
         >
           {content}
-        </Typography>
+        </Text>
       )}
 
       {isButtonPresent && (

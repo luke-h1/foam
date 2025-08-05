@@ -1,6 +1,6 @@
 import { BrandIcon } from '@app/components/BrandIcon';
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import { ScrollView } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -55,7 +55,7 @@ export function EmojiCategoryBar({
                 color={section.icon === 'stv' ? 'text' : undefined}
               />
             ) : (
-              <Typography>{section.icon}</Typography>
+              <Text>{section.icon}</Text>
             )}
           </Button>
         );

@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 interface Props {
   tags: string[];
@@ -25,7 +25,7 @@ export function Tags({ tags, limit = 10 }: Props) {
         }}
       >
         <View style={styles.tag}>
-          <Typography>{item}</Typography>
+          <Text variant="caption2">{item}</Text>
         </View>
       </Button>
     );
