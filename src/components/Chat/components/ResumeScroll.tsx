@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { LegendListRef } from '@legendapp/list';
 import { RefObject } from 'react';
 import { View } from 'react-native';
@@ -35,11 +35,7 @@ export function ResumeScroll({
         }}
       >
         <Icon icon="arrow-down" size={16} color={theme.colors.text} />
-        {unreadCount > 0 && (
-          <Typography weight="semiBold" size="md">
-            {unreadCount}
-          </Typography>
-        )}
+        {unreadCount > 0 && <Text variant="caption2">{unreadCount}</Text>}
       </Button>
     </View>
   );

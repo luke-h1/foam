@@ -1,4 +1,4 @@
-import { Button, Typography } from '@app/components';
+import { Button, Text } from '@app/components';
 import { View } from 'react-native';
 import { ReactNativeLegal } from 'react-native-legal';
 
@@ -8,7 +8,7 @@ export function LicensesScreen() {
       <Button
         onPress={() => ReactNativeLegal.launchLicenseListScreen('OSS licenses')}
       >
-        <Typography>OSS licenses</Typography>
+        <Text variant="title">OSS licenses</Text>
       </Button>
     </View>
   );

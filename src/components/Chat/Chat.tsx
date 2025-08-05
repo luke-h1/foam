@@ -25,7 +25,7 @@ import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
 
@@ -388,9 +388,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   return (
     <SafeAreaViewFixed style={styles.safeArea}>
-      <Typography style={styles.header} size="sm">
-        CHAT
-      </Typography>
+      <Text style={styles.header}>CHAT</Text>
       <KeyboardAvoidingView
         behavior="padding"
         style={{ flex: 1 }}
@@ -439,9 +437,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         >
           {replyTo && (
             <View style={styles.replyContainer}>
-              <Typography size="sm" style={styles.replyText}>
+              <Text style={styles.replyText}>
                 Replying to {replyTo.username}
-              </Typography>
+              </Text>
               <Button
                 style={styles.cancelReplyButton}
                 onPress={() => setReplyTo(null)}

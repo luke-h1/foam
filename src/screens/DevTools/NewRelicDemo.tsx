@@ -1,4 +1,4 @@
-import { Button, Typography } from '@app/components';
+import { Button, Text } from '@app/components';
 import newRelic from 'newrelic-react-native-agent';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -13,7 +13,7 @@ export function NewRelicDemoScreen() {
         }
         style={[styles.buttonText, styles.button]}
       >
-        <Typography>Log 'test error' error</Typography>
+        <Text>Log 'test error' error</Text>
       </Button>
       <Button
         onPress={() =>
@@ -21,7 +21,7 @@ export function NewRelicDemoScreen() {
         }
         style={[styles.buttonText, styles.button]}
       >
-        <Typography>Log 'test_event' event</Typography>
+        <Text>Log 'test_event' event</Text>
       </Button>
     </View>
   );

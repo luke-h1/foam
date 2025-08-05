@@ -30,7 +30,7 @@ export function TopStreamsScreen() {
     getNextPageParam,
     getPreviousPageParam,
     queryFn: ({ pageParam }) => twitchService.getTopStreams(pageParam),
-    queryKey: ['Streams'],
+    queryKey: ['TopStreams'],
   });
 
   const handleLoadMore = useCallback(async () => {
@@ -83,7 +83,7 @@ export function TopStreamsScreen() {
       style={{ flex: 1 }}
       data={allStreams}
       renderItem={renderItem}
-      keyExtractor={item => `${item.id}-${item.title}`}
+      keyExtractor={item => `${item.game_id}-${item.title}`}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onEndReached={debouncedHandleLoadMore}
       refreshing={refreshing}

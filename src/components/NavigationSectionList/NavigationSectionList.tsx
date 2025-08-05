@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { ButtonProps } from '../Button';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 import { NavigationSectionListItemButton } from './NavigationSectionListItemButton';
 
 export interface SectionListItem {
@@ -39,9 +39,7 @@ export function NavigationSectionList({
         >
           {section.title && (
             <View style={styles.sectionTitleContainer}>
-              <Typography size="sm" style={styles.sectionTitle}>
-                {section.title}
-              </Typography>
+              <Text variant="title3">{section.title}</Text>
             </View>
           )}
           <View style={styles.itemsContainer}>
@@ -79,10 +77,10 @@ const styles = StyleSheet.create(theme => ({
   },
   sectionContainer: {
     marginBottom: theme.spacing.md,
-    backgroundColor: theme.colors.screen,
+    // backgroundColor: theme.colors.screen,
   },
   itemsContainer: {
-    backgroundColor: theme.colors.screen,
+    // backgroundColor: theme.colors.screen,
     borderRadius: theme.radii.md,
     overflow: 'hidden',
   },
@@ -105,11 +103,10 @@ const styles = StyleSheet.create(theme => ({
   },
   separator: {
     height: 1,
-    backgroundColor: theme.colors.border,
     marginHorizontal: theme.spacing.lg,
   },
   sectionSeparator: {
-    height: theme.spacing.md,
-    backgroundColor: theme.colors.screen,
+    height: theme.spacing.xs,
+    backgroundColor: theme.colors.surface,
   },
 }));

@@ -1,5 +1,5 @@
-import { Typography } from '@app/components';
+import { Text } from '@app/components';
 
 export function ThemePreferenceScreen() {
-  return <Typography>Theme preferences</Typography>;
+  return <Text variant="title">Theme preferences</Text>;
 }

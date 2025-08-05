@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { SanitisiedEmoteSet } from '@app/services';
 import { useMemo } from 'react';
 import Animated, {
@@ -77,9 +77,7 @@ export function EmojiRow({
             contentFit="contain"
           />
         ) : (
-          <Typography style={styles.emoji}>
-            {itemObj.emoji as string}
-          </Typography>
+          <Text style={styles.emoji}>{itemObj.emoji as string}</Text>
         );
 
         return (

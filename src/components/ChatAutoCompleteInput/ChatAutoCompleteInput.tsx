@@ -35,7 +35,7 @@ import { Button } from '../Button';
 import { FlashList } from '../FlashList';
 import { Image } from '../Image';
 import Input from '../Input/Input';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 // Add this type for user suggestions
 type SuggestionType = 'emote' | 'user';
@@ -398,14 +398,12 @@ export const ChatAutoCompleteInput = forwardRef<
                 />
               </AnimatedView>
               <View style={styles.emoteTextContainer}>
-                <Typography size="sm" style={styles.emoteName}>
+                <Text style={styles.emoteName}>
                   {truncate(item.name, {
                     length: 50,
                   })}
-                </Typography>
-                <Typography size="xs" style={styles.emoteSite}>
-                  {item.site}
-                </Typography>
+                </Text>
+                <Text style={styles.emoteSite}>{item.site}</Text>
               </View>
             </View>
           </Button>
@@ -513,12 +511,12 @@ export const ChatAutoCompleteInput = forwardRef<
                     style={styles.userSuggestionItem}
                     onPress={() => handleUserSelect(user)}
                   >
-                    <Typography
-                      size="sm"
+                    <Text
+                      variant="caption2"
                       style={[styles.userSuggestionText, { color: user.color }]}
                     >
                       {user.name}
-                    </Typography>
+                    </Text>
                   </Button>
                 ))}
               </ScrollView>

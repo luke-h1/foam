@@ -7,7 +7,7 @@ import {
   NavigationSectionListData,
   SafeAreaViewFixed,
   SectionListItem,
-  Typography,
+  Text,
 } from '@app/components';
 import { useAuthContext } from '@app/context';
 import { useAppNavigation } from '@app/hooks';
@@ -22,17 +22,17 @@ import { toast } from 'sonner-native';
 const BuildFooter = () => {
   return (
     <View style={styles.buildContainer}>
-      <Typography color="text" size="xs">
+      <Text color="text" variant="caption2">
         v:{Application.nativeApplicationVersion ?? ''} (
         {Application.nativeBuildVersion ?? ''})
-      </Typography>
-      <Typography color="text" size="xs">
+      </Text>
+      <Text variant="caption2">
         OTA: {Updates.runtimeVersion} (
         {(Updates.createdAt ?? new Date()).toLocaleString('en-US', {
           timeZoneName: 'short',
         })}
         )
-      </Typography>
+      </Text>
     </View>
   );
 };
@@ -254,7 +254,7 @@ export function SettingsScreen() {
     ({ item }) => {
       return (
         <Button style={styles.btn} onPress={item.onPress}>
-          <Typography style={styles.btnText}>{item.title}</Typography>
+          <Text style={styles.btnText}>{item.title}</Text>
           <Icon icon="arrow-right" />
         </Button>
       );
@@ -319,8 +319,9 @@ const styles = StyleSheet.create(theme => ({
     backgroundColor: theme.colors.borderFaint,
   },
   buildContainer: {
+    borderTopColor: theme.colors.borderFaint,
+    borderTopWidth: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     paddingVertical: theme.spacing.md,
     marginBottom: theme.spacing.lg,
   },

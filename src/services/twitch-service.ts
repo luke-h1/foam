@@ -197,7 +197,7 @@ export const twitchService = {
         'Client-Id': process.env.TWITCH_CLIENT_ID as string,
       },
       params: {
-        after: cursor,
+        ...(cursor && { after: cursor }),
       },
     });
 
@@ -213,7 +213,7 @@ export const twitchService = {
       headers,
       params: {
         game_id: gameId,
-        after: cursor,
+        ...(cursor && { after: cursor }),
       },
     });
 
@@ -250,8 +250,8 @@ export const twitchService = {
   ): Promise<PaginatedList<Category>> => {
     return twitchApi.get<PaginatedList<Category>>('/games/top', {
       params: {
-        before: beforeCursor,
-        after: cursor,
+        ...(beforeCursor && { before: beforeCursor }),
+        ...(cursor && { after: cursor }),
       },
     });
   },
@@ -325,7 +325,7 @@ export const twitchService = {
     return twitchApi.get<PaginatedList<Stream>>('/streams', {
       params: {
         game_id: gameId,
-        after: cursor,
+        ...(cursor && { after: cursor }),
       },
     });
   },
@@ -343,7 +343,7 @@ export const twitchService = {
     return twitchApi.get<PaginatedList<Category>>('/search/categories', {
       params: {
         query,
-        after: cursor,
+        ...(cursor && { after: cursor }),
       },
     });
   },

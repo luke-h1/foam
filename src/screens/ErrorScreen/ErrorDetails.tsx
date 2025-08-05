@@ -1,4 +1,4 @@
-import { Button, Icon, Typography } from '@app/components';
+import { Button, Icon, Text } from '@app/components';
 import { openLinkInBrowser } from '@app/utils';
 import { type ErrorInfo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -29,11 +29,11 @@ export function ErrorDetails(props: ErrorDetailsProps) {
     <>
       <View style={styles.topSection}>
         <Icon icon="alert-circle" size={30} />
-        <Typography style={styles.heading}>Something went wrong</Typography>
-        <Typography>
+        <Text style={styles.heading}>Something went wrong</Text>
+        <Text>
           Try resetting or restarting the app & see if that helps. If not, feel
           free to file an issue on GitHub and we'll take a look
-        </Typography>
+        </Text>
       </View>
       <Button
         style={styles.resetButton}
@@ -42,19 +42,24 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         GitHub
       </Button>
       <Button onPress={() => setShowStackTrace(!showStackTrace)}>
-        <Typography style={styles.toggleStackTrace}>
+        <Text style={styles.toggleStackTrace}>
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
-        </Typography>
+        </Text>
       </Button>
       {showStackTrace && (
         <ScrollView
           style={styles.errorSection}
           contentContainerStyle={styles.errorSectionContentContainer}
         >
-          <Typography weight="bold">{error?.message.trim()}</Typography>
-          <Typography selectable style={styles.errorBackTrace} color="text">
+          <Text variant="caption2">{error?.message.trim()}</Text>
+          <Text
+            selectable
+            style={styles.errorBackTrace}
+            color="text"
+            variant="footnote"
+          >
             {errorInfo?.componentStack?.trim()}
-          </Typography>
+          </Text>
         </ScrollView>
       )}
       <Button style={styles.resetButton} onPress={onReset}>

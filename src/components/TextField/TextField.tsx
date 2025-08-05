@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
-import { Typography, TypographyProps } from '../Typography';
+import { Text, TextProps } from '../Text';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<unknown>;
@@ -27,11 +27,11 @@ export interface TextFieldAccessoryProps {
 export interface TextFieldProps
   extends Omit<TextInputProps, 'ref' | 'placeholder'> {
   status?: 'error' | 'disabled';
-  label?: TypographyProps['children'];
-  LabelTextProps?: TypographyProps;
-  helper?: TypographyProps['children'];
-  HelperTextProps?: TypographyProps;
-  placeholder?: TypographyProps['children'];
+  label?: TextProps['children'];
+  LabelTextProps?: TextProps;
+  helper?: TextProps['children'];
+  HelperTextProps?: TextProps;
+  placeholder?: TextProps['children'];
   style?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   inputWrapperStyle?: StyleProp<ViewStyle>;
@@ -111,9 +111,9 @@ export const TextField = forwardRef(function TextField(
       accessibilityState={{ disabled }}
     >
       {!!label && (
-        <Typography {...LabelTextProps} style={$labelStyles}>
+        <Text {...LabelTextProps} style={$labelStyles}>
           {label}
-        </Typography>
+        </Text>
       )}
       <View style={$inputWrapperStyles}>
         {!!LeftAccessory && (
@@ -146,9 +146,9 @@ export const TextField = forwardRef(function TextField(
         )}
       </View>
       {!!helper && (
-        <Typography {...HelperTextProps} style={$helperStyles}>
+        <Text {...HelperTextProps} style={$helperStyles}>
           {helper}
-        </Typography>
+        </Text>
       )}
     </Button>
   );

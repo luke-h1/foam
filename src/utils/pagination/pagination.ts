@@ -8,12 +8,12 @@ export const getNextPageParam: GetNextPageParamFunction<
   string,
   PaginatedList<Stream>
 > = lastPage => {
-  return lastPage.pagination.cursor;
+  return lastPage.pagination?.cursor ?? '';
 };
 
 export const getPreviousPageParam: GetPreviousPageParamFunction<
   string,
   PaginatedList<Stream>
 > = firstPage => {
-  return firstPage.pagination.cursor;
+  return firstPage.pagination?.cursor ?? '';
 };

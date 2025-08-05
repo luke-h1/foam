@@ -1,5 +1,5 @@
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { twitchService } from '@app/services';
 import { formatDate } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -35,9 +35,7 @@ export const UserSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
       snapPoints={snapPoints}
     >
       <BottomSheetView style={styles.wrapper}>
-        {error && !isPending && (
-          <Typography>Failed to load user details</Typography>
-        )}
+        {error && !isPending && <Text>Failed to load user details</Text>}
         {isPending ? (
           <ActivityIndicator size="large" color="#fff" />
         ) : (
@@ -48,11 +46,11 @@ export const UserSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
               contentFit="cover"
             />
             <View style={styles.userInfo}>
-              <Typography weight="bold">{data?.display_name}</Typography>
+              <Text>{data?.display_name}</Text>
               {data?.created_at && (
-                <Typography>
+                <Text>
                   Account created: {formatDate(data?.created_at, 'MMMM D YYYY')}
-                </Typography>
+                </Text>
               )}
             </View>
           </View>

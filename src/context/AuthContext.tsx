@@ -126,6 +126,7 @@ export const AuthContextProvider = ({
         await SecureStore.deleteItemAsync(storageKeys.anon);
         await SecureStore.deleteItemAsync(storageKeys.user);
         await doAnonAuth();
+
         return;
       }
     } catch (error) {
@@ -134,6 +135,17 @@ export const AuthContextProvider = ({
       await SecureStore.deleteItemAsync(storageKeys.user);
     }
 
+    const u = await twitchService.getUserInfo(token.accessToken);
+    setUser(u);
+    twitchApi.setAuthToken(token.accessToken);
+    await SecureStore.setItemAsync(
+      storageKeys.user,
+      JSON.stringify({
+        accessToken: token.accessToken,
+        expiresIn: token.expiresIn,
+        tokenType: token.tokenType,
+      }),
+    );
     setState({
       ready: true,
       authState: {
@@ -146,17 +158,6 @@ export const AuthContextProvider = ({
         },
       },
     });
-    const u = await twitchService.getUserInfo(token.accessToken);
-    setUser(u);
-    twitchApi.setAuthToken(token.accessToken);
-    await SecureStore.setItemAsync(
-      storageKeys.user,
-      JSON.stringify({
-        accessToken: token.accessToken,
-        expiresIn: token.expiresIn,
-        tokenType: token.tokenType,
-      }),
-    );
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {

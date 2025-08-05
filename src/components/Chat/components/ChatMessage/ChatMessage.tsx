@@ -13,7 +13,7 @@ import { toast } from 'sonner-native';
 import { Button } from '../../../Button';
 import { Icon } from '../../../Icon';
 import { Image } from '../../../Image';
-import { Typography } from '../../../Typography';
+import { Text } from '../../../Text';
 import { ActionSheet } from '../ActionSheet';
 import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
@@ -75,11 +75,7 @@ export const ChatMessage = memo(
       (part: ParsedPart, index: number) => {
         switch (part.type) {
           case 'text':
-            return (
-              <Typography size="sm" color="text">
-                {part.content}
-              </Typography>
-            );
+            return <Text color="text">{part.content}</Text>;
 
           case 'stvEmote':
             return <MediaLinkCard type="stvEmote" url={part.content} />;
@@ -98,14 +94,13 @@ export const ChatMessage = memo(
 
           case 'mention': {
             return (
-              <Typography key={`message-${index}`} size="sm">
-                <Typography
-                  size="sm"
+              <Text key={`message-${index}`}>
+                <Text
                   style={[styles.mention, { color: part.color ?? '#FFFFFF' }]}
                 >
                   {part.content}
-                </Typography>
-              </Typography>
+                </Text>
+              </Text>
             );
           }
 
@@ -167,20 +162,20 @@ export const ChatMessage = memo(
               size={16}
               color={theme.colors.border}
             />
-            <Typography size="xs" color="border" style={styles.replyToText}>
+            <Text color="border" style={styles.replyToText}>
               Replying to {parentDisplayName}
-            </Typography>
+            </Text>
           </View>
         )}
 
-        <Typography style={styles.line} numberOfLines={0}>
-          <Typography style={styles.timestamp} size="sm">
+        <View style={[styles.line]}>
+          <Text style={styles.timestamp}>
             {formatDate(new Date(), 'HH:mm')}:
-          </Typography>
+          </Text>
           {renderBadges()}
           <Button onLongPress={onUsernamePress}>
-            <Typography
-              size="sm"
+            <Text
+              variant="chatMessage"
               style={[
                 styles.username,
                 {
@@ -191,10 +186,12 @@ export const ChatMessage = memo(
               ]}
             >
               {userstate.username ?? ''}:
-            </Typography>
-          </Button>{' '}
-          {message.map(renderMessagePart)}
-        </Typography>
+            </Text>
+          </Button>
+          <View style={styles.messageContainer}>
+            {message.map(renderMessagePart)}
+          </View>
+        </View>
 
         {selectedEmote && selectedEmote.type === 'emote' && (
           <EmotePreviewSheet
@@ -232,9 +229,15 @@ const styles = StyleSheet.create(theme => ({
   line: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     width: '100%',
     marginBottom: 5,
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    flex: 1,
   },
   badge: {
     width: 20,

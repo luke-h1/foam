@@ -1,10 +1,4 @@
-import {
-  Typography,
-  Button,
-  TextField,
-  FlashList,
-  Switch,
-} from '@app/components';
+import { Text, Button, TextField, FlashList, Switch } from '@app/components';
 import { useAuthContext } from '@app/context';
 import { useAppNavigation, useDebugOptions } from '@app/hooks';
 import {
@@ -101,25 +95,21 @@ function TwitchUsernameConverter() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.twitchSection}>
-        <Typography style={styles.sectionTitle}>
+        <Text style={styles.sectionTitle}>
           Convert Twitch Username to User ID
-        </Typography>
+        </Text>
         <TextField
           placeholder="Enter Twitch username"
           value={twitchUsername}
           onChangeText={setTwitchUsername}
         />
         <Button onPress={() => void handleConvert()} style={styles.button}>
-          <Typography>
-            {isLoading ? 'Converting...' : 'Convert and Copy'}
-          </Typography>
+          <Text>{isLoading ? 'Converting...' : 'Convert and Copy'}</Text>
         </Button>
         {twitchUserId ? (
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           <Button onPress={() => Clipboard.setStringAsync(twitchUserId)}>
-            <Typography style={styles.userId}>
-              User ID: {twitchUserId}
-            </Typography>
+            <Text style={styles.userId}>User ID: {twitchUserId}</Text>
           </Button>
         ) : null}
       </View>
@@ -136,17 +126,17 @@ function DisplayAccessToken() {
 
   return (
     <View style={styles.accessTokenContainer}>
-      <Typography style={styles.accessTokenLabel}>
+      <Text style={styles.accessTokenLabel}>
         Auth Token ({authState?.isAnonAuth ? 'ANON' : 'USER'}):
-      </Typography>
+      </Text>
       <View style={styles.accessTokenRow}>
-        <Typography style={styles.accessTokenValue} numberOfLines={1}>
+        <Text style={styles.accessTokenValue} numberOfLines={1}>
           {authState?.token.accessToken || 'No token available'}
-        </Typography>
+        </Text>
         {authState?.token.accessToken && (
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           <Button onPress={handleCopyToClipboard} style={styles.copyButton}>
-            <Typography style={styles.copyButtonText}>Copy</Typography>
+            <Text style={styles.copyButtonText}>Copy</Text>
           </Button>
         )}
       </View>
@@ -190,7 +180,7 @@ function NavigateToChat() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.navigateToChatContainer}>
-        <Typography style={styles.sectionTitle}>Join a Chat Channel</Typography>
+        <Text style={styles.sectionTitle}>Join a Chat Channel</Text>
         <TextField
           placeholder="Enter channel name"
           value={channelName}
@@ -199,13 +189,13 @@ function NavigateToChat() {
           autoCapitalize="none"
         />
         <Button onPress={handleJoinChannel} style={styles.button}>
-          <Typography>Join Channel</Typography>
+          <Text>Join Channel</Text>
         </Button>
         {authState?.token?.accessToken && (
-          <Typography style={styles.loggedInUser}>
+          <Text style={styles.loggedInUser}>
             Logged in as:{' '}
             {authState.isAnonAuth ? 'Anonymous' : user?.display_name}
-          </Typography>
+          </Text>
         )}
       </View>
     </KeyboardAvoidingView>
@@ -255,10 +245,10 @@ export function DebugScreen() {
     return (
       <>
         <View style={[styles.sectionHeader, styles.storageState]}>
-          <Typography style={styles.sectionTitle}>Debug Options</Typography>
-          <Typography style={styles.storageValue}>
+          <Text style={styles.sectionTitle}>Debug Options</Text>
+          <Text style={styles.storageValue}>
             {JSON.stringify(debugOptions, null, 2)}
-          </Typography>
+          </Text>
         </View>
         {renderFooter()}
       </>
@@ -270,7 +260,7 @@ export function DebugScreen() {
     return (
       <View style={styles.itemContainer}>
         <View style={styles.itemHeader}>
-          <Typography style={styles.itemTitle}>{item.title}</Typography>
+          <Text style={styles.itemTitle}>{item.title}</Text>
           {item.type === 'switch' ? (
             <Switch
               value={switchOptions[item.title] ?? false}
@@ -289,11 +279,11 @@ export function DebugScreen() {
                 item.onPress();
               }}
             >
-              <Typography>Clear</Typography>
+              <Text>Clear</Text>
             </Button>
           )}
         </View>
-        <Typography size="xs">{item.description}</Typography>
+        <Text variant="caption">{item.description}</Text>
       </View>
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
