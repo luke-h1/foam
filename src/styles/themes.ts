@@ -1,4 +1,4 @@
-import { font } from './font';
+import { typography } from './font';
 import { radii } from './radii';
 import { spacing } from './spacing';
 import { createPallete } from './util';
@@ -10,7 +10,7 @@ export const lightTheme = {
   name: 'light',
   spacing,
   radii,
-  font,
+  typography,
 };
 
 export const darkTheme = {
@@ -18,5 +18,5 @@ export const darkTheme = {
   name: 'dark',
   spacing,
   radii,
-  font,
+  typography,
 };
