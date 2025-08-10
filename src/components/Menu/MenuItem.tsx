@@ -3,13 +3,7 @@ import { ThemeColor } from '@app/styles';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useRef } from 'react';
-import {
-  View,
-  type StyleProp,
-  type ViewStyle,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, type StyleProp, type ViewStyle, StyleSheet } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
@@ -169,11 +163,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 12,
-    height: 32,
+    minHeight: 56,
     paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   contentContainer: {
     flex: 1,
+    paddingVertical: 4,
   },
   separator: {
     marginVertical: 4,
