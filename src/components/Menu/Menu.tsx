@@ -2,12 +2,13 @@ import { SFSymbol } from 'expo-symbols';
 import { ReactElement } from 'react';
 import { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { FlashList, FlashListProps } from '../FlashList';
-import { IconName, IconWeight } from '../Icon';
 import { RefreshControl } from '../RefreshControl';
 import { Text } from '../Text';
 import { MenuItem } from './MenuItem';
 
-type Icon =
+type Item = MenuItem | string | null | (() => ReactElement);
+
+export type Icon =
   | {
       color?: string;
       name: SFSymbol;
@@ -15,14 +16,13 @@ type Icon =
     }
   | {
       color?: string;
-      name: IconName;
+      name: string;
       type: 'icon';
-      weight?: IconWeight;
     };
 
 export interface MenuItemOption {
   hideRight?: boolean;
-  icon?: string;
+  icon?: Icon;
   label: string;
   labelStyle?: StyleProp<TextStyle>;
   left?: ReactElement;
@@ -61,7 +61,7 @@ export type MenuItem = {
 interface MenuProps {
   footer?: ReactElement;
   header?: ReactElement;
-  items: FlashList[];
+  items: Item[];
   listProps?: FlashListProps;
   onRefresh?: () => Promise<unknown>;
   style?: StyleProp<ViewStyle>;

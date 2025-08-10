@@ -2,15 +2,10 @@
 import { FontSize } from '@app/styles';
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
-import {
-  Pressable,
-  type StyleProp,
-  type TextStyle,
-  type ViewStyle,
-} from 'react-native';
+import { type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
-import { Icon, IconName, IconWeight } from '../Icon';
+import { Icon } from '../Icon';
 import { Text } from '../Text';
 
 type Icon =
@@ -22,10 +17,9 @@ type Icon =
     }
   | {
       color?: string;
-      name: IconName;
+      name: string;
       size?: number;
       type: 'icon';
-      weight?: IconWeight;
     };
 
 type Props = {
@@ -70,12 +64,7 @@ export function SheetItem({
             tintColor={icon.color ?? theme.colors.borderFaint}
           />
         ) : (
-          <Icon
-            color={icon.color ?? theme.colors.borderFaint}
-            name={icon.name}
-            size={icon.size ?? theme.spacing.md}
-            weight={icon.weight ?? 'duotone'}
-          />
+          <Icon icon={icon.name} />
         )
       ) : (
         left
@@ -92,7 +81,7 @@ export function SheetItem({
 
       {navigate ? (
         <Icon
-          name="CaretRight"
+          icon="CaretRight"
           // size={theme.typography[size === '2' ? '1' : '2'].lineHeight}
         />
       ) : (

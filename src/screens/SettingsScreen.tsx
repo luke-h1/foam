@@ -38,7 +38,7 @@ const BuildFooter = () => {
 
 export function SettingsScreen() {
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const { navigate, addListener } = useAppNavigation();
+  const { navigate } = useAppNavigation();
 
   const { theme } = useUnistyles();
 

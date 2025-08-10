@@ -105,7 +105,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
           />
         ) : null}
 
-        {item.arrow ? <Icon color="borderNeutral" name="CaretRight" /> : null}
+        {item.arrow ? <Icon color="borderNeutral" icon="arrowRight" /> : null}
       </Component>
 
       {item.type === 'options' ? (
