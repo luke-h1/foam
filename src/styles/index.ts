@@ -1,4 +1,4 @@
 export * from './breakpoints';
-export * from './theme';
 export * from './unistyles';
 export * from './util';
+export * from './themes';
