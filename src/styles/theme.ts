@@ -16,6 +16,10 @@ export type Spacing = keyof typeof darkTheme.spacing;
 export type Radii = keyof typeof darkTheme.radii;
 
 const colors = {
+  tabBarBackground: '#091725',
+  tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.35)',
+  tabBarActiveTintColor: purpleDarkA.purpleA10,
+
   screen: slateDark.slate1,
 
   brightPurple: purpleDarkA.purpleA10,

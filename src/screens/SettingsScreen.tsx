@@ -2,20 +2,19 @@ import {
   BodyScrollView,
   Button,
   Icon,
-  ModalHandle,
   NavigationSectionList,
   NavigationSectionListData,
   SafeAreaViewFixed,
   SectionListItem,
   Text,
 } from '@app/components';
+import { Menu, MenuItem } from '@app/components/Menu';
 import { useAuthContext } from '@app/context';
 import { useAppNavigation } from '@app/hooks';
-import { BottomSheetModal, BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
-import { useCallback, useRef } from 'react';
-import { SectionListRenderItem, View } from 'react-native';
+import { useState } from 'react';
+import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
@@ -43,21 +42,75 @@ export function SettingsScreen() {
 
   const { theme } = useUnistyles();
 
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const { logout, user } = useAuthContext();
   const navigation = useAppNavigation();
-  const snapPoints = ['25%', '50%'];
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  addListener('blur', () => {
-    bottomSheetModalRef.current?.dismiss();
-  });
+  const profileMenuItems: MenuItem[] = [
+    {
+      label: 'My stream',
+      description: 'View your stream',
+      icon: { type: 'icon', name: 'video' },
+      arrow: true,
+      onPress: () => {
+        setShowProfileMenu(false);
+        navigation.navigate('Streams', {
+          screen: 'LiveStream',
+          params: {
+            id: user?.login as string,
+          },
+        });
+      },
+    },
+    {
+      label: 'My Profile',
+      description: 'View your profile',
+      icon: { type: 'icon', name: 'user' },
+      arrow: true,
+      onPress: () => {
+        setShowProfileMenu(false);
+        navigation.navigate('Streams', {
+          screen: 'StreamerProfile',
+          params: {
+            id: user?.login as string,
+          },
+        });
+      },
+    },
+    {
+      label: 'Blocked users',
+      description: 'View blocked users',
+      icon: { type: 'icon', name: 'user-x' },
+      arrow: true,
+      onPress: () => {
+        setShowProfileMenu(false);
+        navigation.navigate('Preferences', {
+          screen: 'BlockedUsers',
+        });
+      },
+    },
+    {
+      label: 'Logout',
+      description: 'Log out of foam',
+      icon: { type: 'icon', name: 'log-out' },
+      arrow: true,
+      onPress: () => {
+        setShowProfileMenu(false);
+        void logout();
+        toast.info('Logged out');
+        navigation.navigate('Tabs', {
+          screen: 'Top',
+        });
+      },
+    },
+  ];
 
   const authenticatedLists: SectionListItem[] = [
     {
       title: user?.display_name as string,
       description: 'Profile',
       picture: user?.profile_image_url,
-      onPress: () => bottomSheetModalRef.current?.present(),
+      onPress: () => setShowProfileMenu(true),
     },
     {
       title: 'My Channel',
@@ -190,101 +243,26 @@ export function SettingsScreen() {
     },
   ];
 
-  const bottomSheetSections: NavigationSectionListData = [
-    {
-      title: 'Actions',
-      data: [
-        {
-          title: 'My stream',
-          description: 'View your stream',
-          iconName: 'video',
-          onPress: () => {
-            bottomSheetModalRef.current?.dismiss();
-            navigation.navigate('Streams', {
-              screen: 'LiveStream',
-              params: {
-                id: user?.login as string,
-              },
-            });
-          },
-        },
-        {
-          title: 'My Profile',
-          iconName: 'user',
-          description: 'View your profile',
-          onPress: () => {
-            bottomSheetModalRef.current?.dismiss();
-            navigation.navigate('Streams', {
-              screen: 'StreamerProfile',
-              params: {
-                id: user?.login as string,
-              },
-            });
-          },
-        },
-        {
-          title: 'Blocked users',
-          description: 'View blocked users',
-          iconName: 'user-x',
-          onPress: () => {
-            bottomSheetModalRef.current?.dismiss();
-            navigation.navigate('Preferences', {
-              screen: 'BlockedUsers',
-            });
-          },
-        },
-        {
-          title: 'Logout',
-          iconName: 'log-out',
-          description: 'Log out of foam',
-          onPress: () => {
-            bottomSheetModalRef.current?.dismiss();
-            void logout();
-            toast.info('Logged out');
-            navigation.navigate('Tabs', {
-              screen: 'Top',
-            });
-          },
-        },
-      ],
-    },
-  ];
-
-  const renderItem: SectionListRenderItem<SectionListItem> = useCallback(
-    ({ item }) => {
-      return (
-        <Button style={styles.btn} onPress={item.onPress}>
-          <Text style={styles.btnText}>{item.title}</Text>
-          <Icon icon="arrow-right" />
-        </Button>
-      );
-    },
-    [],
-  );
+  if (showProfileMenu) {
+    return (
+      <SafeAreaViewFixed style={styles.safeArea}>
+        <View style={styles.menuHeader}>
+          <Button onPress={() => setShowProfileMenu(false)}>
+            <Icon name="ArrowLeft" />
+            <Text>Back</Text>
+          </Button>
+          <Text weight="bold" size="lg">
+            Profile Actions
+          </Text>
+        </View>
+        <Menu items={profileMenuItems} />
+      </SafeAreaViewFixed>
+    );
+  }
 
   return (
     <BodyScrollView>
       <NavigationSectionList sections={sections} footer={<BuildFooter />} />
-      <BottomSheetModal
-        ref={bottomSheetModalRef}
-        index={1}
-        snapPoints={snapPoints}
-        backgroundStyle={styles.bottomSheet}
-        handleComponent={ModalHandle}
-      >
-        <SafeAreaViewFixed style={styles.safeArea}>
-          <BottomSheetSectionList
-            sections={bottomSheetSections}
-            keyExtractor={(item, index) => item.title + index}
-            renderItem={renderItem}
-            contentContainerStyle={{
-              paddingHorizontal: theme.spacing.md,
-              backgroundColor: theme.colors.borderFaint,
-            }}
-            keyboardShouldPersistTaps="handled"
-          />
-        </SafeAreaViewFixed>
-      </BottomSheetModal>
     </BodyScrollView>
   );
 }
@@ -292,6 +270,15 @@ export function SettingsScreen() {
 const styles = StyleSheet.create(theme => ({
   safeArea: {
     flex: 1,
+  },
+  menuHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderFaint,
+    gap: theme.spacing.sm,
   },
   container: {
     flex: 1,

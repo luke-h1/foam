@@ -1,4 +1,4 @@
-import { ThemeColor } from '@app/styles';
+import { ThemeColor, FontWeight, FontSize, Spacing } from '@app/styles';
 import { forwardRef, LegacyRef, ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { Text as RNText, TextProps as RNTextProps } from 'react-native';
@@ -23,6 +23,25 @@ export interface TextProps extends RNTextProps {
   children: ReactNode;
   animated?: boolean;
   variant?: TextVariant;
+  // Design system props
+  weight?: FontWeight;
+  size?: FontSize;
+  highContrast?: boolean;
+  // Spacing props
+  m?: Spacing;
+  mx?: Spacing;
+  my?: Spacing;
+  mt?: Spacing;
+  mr?: Spacing;
+  mb?: Spacing;
+  ml?: Spacing;
+  p?: Spacing;
+  px?: Spacing;
+  py?: Spacing;
+  pt?: Spacing;
+  pr?: Spacing;
+  pb?: Spacing;
+  pl?: Spacing;
 }
 
 export const Text = forwardRef(
@@ -34,6 +53,24 @@ export const Text = forwardRef(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       animated,
       variant = 'body',
+      weight,
+      size,
+      highContrast = true,
+      // Spacing props
+      m,
+      mx,
+      my,
+      mt,
+      mr,
+      mb,
+      ml,
+      p,
+      px,
+      py,
+      pt,
+      pr,
+      pb,
+      pl,
       ...props
     }: TextProps,
     ref: LegacyRef<RNText>,
@@ -42,15 +79,36 @@ export const Text = forwardRef(
 
     stylesheet.useVariants({
       variant,
+      weight,
+      size,
+      highContrast,
     });
 
     const fontColor = theme.colors[color];
+
+    // Build spacing styles
+    const spacingStyle = {
+      ...(m !== undefined && { margin: theme.spacing[m] }),
+      ...(mx !== undefined && { marginHorizontal: theme.spacing[mx] }),
+      ...(my !== undefined && { marginVertical: theme.spacing[my] }),
+      ...(mt !== undefined && { marginTop: theme.spacing[mt] }),
+      ...(mr !== undefined && { marginRight: theme.spacing[mr] }),
+      ...(mb !== undefined && { marginBottom: theme.spacing[mb] }),
+      ...(ml !== undefined && { marginLeft: theme.spacing[ml] }),
+      ...(p !== undefined && { padding: theme.spacing[p] }),
+      ...(px !== undefined && { paddingHorizontal: theme.spacing[px] }),
+      ...(py !== undefined && { paddingVertical: theme.spacing[py] }),
+      ...(pt !== undefined && { paddingTop: theme.spacing[pt] }),
+      ...(pr !== undefined && { paddingRight: theme.spacing[pr] }),
+      ...(pb !== undefined && { paddingBottom: theme.spacing[pb] }),
+      ...(pl !== undefined && { paddingLeft: theme.spacing[pl] }),
+    };
 
     return (
       <RNText
         ref={ref}
         {...props}
-        style={[{ ...stylesheet.text({ fontColor }) }, style]}
+        style={[{ ...stylesheet.text({ fontColor }) }, spacingStyle, style]}
       >
         {children}
       </RNText>
@@ -124,6 +182,32 @@ const stylesheet = StyleSheet.create(theme => ({
         },
         chatMessage: {
           fontSize: theme.spacing.lg + theme.spacing.xs,
+        },
+      },
+      weight: {
+        thin: { fontWeight: theme.font.fontWeight.thin },
+        regular: { fontWeight: theme.font.fontWeight.regular },
+        semiBold: { fontWeight: theme.font.fontWeight.semiBold },
+        bold: { fontWeight: theme.font.fontWeight.bold },
+        medium: { fontWeight: theme.font.fontWeight.semiBold }, // alias for semiBold
+      },
+      size: {
+        xxs: { fontSize: theme.font.fontSize.xxs },
+        xs: { fontSize: theme.font.fontSize.xs },
+        sm: { fontSize: theme.font.fontSize.sm },
+        md: { fontSize: theme.font.fontSize.md },
+        lg: { fontSize: theme.font.fontSize.lg },
+        xl: { fontSize: theme.font.fontSize.xl },
+        '2xl': { fontSize: theme.font.fontSize['2xl'] },
+        '3xl': { fontSize: theme.font.fontSize['3xl'] },
+        '4xl': { fontSize: theme.font.fontSize['4xl'] },
+        '1': { fontSize: theme.font.fontSize.xs }, // size="1" maps to xs
+        '2': { fontSize: theme.font.fontSize.sm }, // size="2" maps to sm
+      },
+      highContrast: {
+        true: {},
+        false: {
+          opacity: 0.7,
         },
       },
     },

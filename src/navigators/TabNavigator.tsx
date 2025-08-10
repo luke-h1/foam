@@ -1,4 +1,4 @@
-import { Icon } from '@app/components';
+import { TabBarButton } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
 import { SearchScreen, SettingsScreen } from '@app/screens';
 import FollowingScreen from '@app/screens/FollowingScreen';
@@ -8,7 +8,9 @@ import {
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { ComponentType, FC } from 'react';
+import { Platform } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
+import Feather from 'react-native-vector-icons/Feather';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
 
@@ -69,21 +71,25 @@ const screens: Screen[] = [
 
 export function TabNavigator() {
   const { user } = useAuthContext();
-
   const { theme } = useUnistyles();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
-          height: 80,
-          marginTop: -20,
-          paddingHorizontal: theme.spacing.lg,
+          backgroundColor: theme.colors.screen,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.borderFaint,
+          // height: Platform.OS === 'ios' ? 85 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+          paddingTop: 10,
+          paddingHorizontal: theme.spacing.md,
+          elevation: 0, // Remove shadow on Android
+          shadowOpacity: 0, // Remove shadow on iOS
         },
         tabBarHideOnKeyboard: true,
-        tabBarActiveTintColor: theme.colors.brightPurple,
-        tabBarLabelPosition: 'below-icon',
       }}
     >
       {screens.map(screen => {
@@ -96,10 +102,23 @@ export function TabNavigator() {
             name={screen.name}
             component={screen.component as ComponentType}
             options={{
+              headerStyle: {
+                backgroundColor: theme.colors.tabBarBackground,
+              },
               // eslint-disable-next-line react/no-unstable-nested-components
-              tabBarIcon: ({ color, size }) => (
-                <Icon icon={screen.icon} color={color} size={size - 5} />
+              tabBarButton: props => (
+                <TabBarButton
+                  {...props}
+                  activeTintColor={theme.colors.brightPurple}
+                  inactiveTintColor={theme.colors.tabBarInactiveTintColor}
+                  {...props}
+                  // eslint-disable-next-line react/no-unstable-nested-components
+                  icon={({ color }) => (
+                    <Feather name={screen.icon} size={24} color={color} />
+                  )}
+                />
               ),
+
               tabBarLabel: screen.name,
             }}
           />
