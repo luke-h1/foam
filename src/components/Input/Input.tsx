@@ -49,8 +49,8 @@ const Input = (
 
 const styles = StyleSheet.create(theme => ({
   input: {
-    fontFamily: theme.font.fontFamily,
-    color: theme.colors.text,
+    // fontFamily: theme.font.fontFamily,
+    // color: theme.colors.text,
   },
 }));
 

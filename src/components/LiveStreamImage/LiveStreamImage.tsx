@@ -62,7 +62,7 @@ const styles = StyleSheet.create(theme => ({
     },
   },
   fallback: {
-    backgroundColor: theme.colors.borderNeutral,
+    backgroundColor: theme.colors.accent.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },

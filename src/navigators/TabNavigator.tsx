@@ -79,9 +79,9 @@ export function TabNavigator() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: theme.colors.screen,
+          backgroundColor: theme.colors.black.bgAlpha,
           borderTopWidth: 1,
-          borderTopColor: theme.colors.borderFaint,
+          borderTopColor: theme.colors.gray.border,
           // height: Platform.OS === 'ios' ? 85 : 70,
           paddingBottom: Platform.OS === 'ios' ? 25 : 10,
           paddingTop: 10,
@@ -103,15 +103,14 @@ export function TabNavigator() {
             component={screen.component as ComponentType}
             options={{
               headerStyle: {
-                backgroundColor: theme.colors.tabBarBackground,
+                backgroundColor: theme.colors.black.bgAlpha,
               },
               // eslint-disable-next-line react/no-unstable-nested-components
               tabBarButton: props => (
                 <TabBarButton
                   {...props}
-                  activeTintColor={theme.colors.brightPurple}
-                  inactiveTintColor={theme.colors.tabBarInactiveTintColor}
-                  {...props}
+                  activeTintColor={theme.colors.accent.accent}
+                  inactiveTintColor={theme.colors.gray.textLow}
                   // eslint-disable-next-line react/no-unstable-nested-components
                   icon={({ color }) => (
                     <Feather name={screen.icon} size={24} color={color} />

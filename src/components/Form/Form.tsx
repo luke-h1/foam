@@ -563,9 +563,9 @@ export function Section({
           }
           if (typeof child === 'string') {
             return (
-              <Text selectable style={FormFont.secondary}>
+              <Typography selectable style={FormFont.secondary}>
                 {child}
-              </Text>
+              </Typography>
             );
           }
 

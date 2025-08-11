@@ -7,7 +7,7 @@ import {
   NavigationSectionListData,
   SafeAreaViewFixed,
   SectionListItem,
-  Text,
+  Typography,
 } from '@app/components';
 import { useAuthContext } from '@app/context';
 import { useAppNavigation } from '@app/hooks';
@@ -22,17 +22,17 @@ import { toast } from 'sonner-native';
 const BuildFooter = () => {
   return (
     <View style={styles.buildContainer}>
-      <Text color="text" variant="caption2">
+      <Typography>
         v:{Application.nativeApplicationVersion ?? ''} (
         {Application.nativeBuildVersion ?? ''})
-      </Text>
-      <Text variant="caption2">
+      </Typography>
+      <Typography>
         OTA: {Updates.runtimeVersion} (
         {(Updates.createdAt ?? new Date()).toLocaleString('en-US', {
           timeZoneName: 'short',
         })}
         )
-      </Text>
+      </Typography>
     </View>
   );
 };
@@ -254,7 +254,7 @@ export function SettingsScreen() {
     ({ item }) => {
       return (
         <Button style={styles.btn} onPress={item.onPress}>
-          <Text style={styles.btnText}>{item.title}</Text>
+          <Typography style={styles.btnText}>{item.title}</Typography>
           <Icon icon="arrow-right" />
         </Button>
       );
@@ -279,7 +279,7 @@ export function SettingsScreen() {
             renderItem={renderItem}
             contentContainerStyle={{
               paddingHorizontal: theme.spacing.md,
-              backgroundColor: theme.colors.borderFaint,
+              backgroundColor: theme.colors.black.accentAlpha,
             }}
             keyboardShouldPersistTaps="handled"
           />
@@ -316,10 +316,10 @@ const styles = StyleSheet.create(theme => ({
     paddingHorizontal: theme.spacing.md,
   },
   bottomSheet: {
-    backgroundColor: theme.colors.borderFaint,
+    borderTopColor: theme.colors.accent.uiActive,
   },
   buildContainer: {
-    borderTopColor: theme.colors.borderFaint,
+    borderTopColor: theme.colors.accent.uiActive,
     borderTopWidth: 1,
     justifyContent: 'center',
     paddingVertical: theme.spacing.md,

@@ -31,7 +31,7 @@ export interface MarginProps {
   my?: MarginToken;
 }
 
-export function getMargin(theme: UnistylesThemes['foam-dark']) {
+export function getMargin(theme: UnistylesThemes['dark']) {
   return function styles({ m, mb, ml, mr, mt, mx, my }: MarginProps) {
     const style: ViewStyle = {};
 
@@ -79,7 +79,7 @@ export interface PaddingProps {
   py?: PaddingToken;
 }
 
-export function getPadding(theme: UnistylesThemes['foam-dark']) {
+export function getPadding(theme: UnistylesThemes['dark']) {
   return function styles({ p, pb, pl, pr, pt, px, py }: PaddingProps) {
     const style: ViewStyle = {};
 
@@ -116,7 +116,7 @@ export function getPadding(theme: UnistylesThemes['foam-dark']) {
 }
 
 function getSpace(
-  theme: UnistylesThemes['foam-dark'],
+  theme: UnistylesThemes['dark'],
   key: MarginToken | PaddingToken,
 ) {
   if (typeof key === 'number') {

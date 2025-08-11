@@ -5,8 +5,8 @@ import { darkTheme, lightTheme } from './themes';
 export type BreakPoints = typeof breakpoints;
 
 export interface AppTheme {
-  'foam-dark': typeof darkTheme;
-  'foam-light': typeof lightTheme;
+  dark: typeof darkTheme;
+  light: typeof lightTheme;
 }
 
 export function getAppTheme() {
@@ -20,8 +20,8 @@ declare module 'react-native-unistyles' {
 
 StyleSheet.configure({
   themes: {
-    'foam-dark': darkTheme,
-    'foam-light': lightTheme,
+    dark: darkTheme,
+    light: lightTheme,
   },
   settings: {
     adaptiveThemes: true,

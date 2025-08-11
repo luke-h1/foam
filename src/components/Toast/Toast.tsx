@@ -27,7 +27,7 @@ export function Toast() {
 
 const styles = StyleSheet.create(theme => ({
   toast: {
-    backgroundColor: theme.colors.borderFaint,
+    backgroundColor: theme.colors.accent.accent,
     borderLeftWidth: 0,
     borderRadius: theme.spacing.sm,
   },

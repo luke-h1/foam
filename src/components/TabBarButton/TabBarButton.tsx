@@ -1,4 +1,3 @@
-import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { FC, ReactNode } from 'react';
 import {

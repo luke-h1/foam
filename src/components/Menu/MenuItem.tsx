@@ -1,15 +1,14 @@
 /* eslint-disable no-nested-ternary */
-import { ThemeColor } from '@app/styles';
 import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useRef } from 'react';
-import { View, type StyleProp, type ViewStyle, StyleSheet } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { Icon } from '../Icon';
 import { Switch } from '../Switch';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 import { SheetItem } from '../sheets/SheetItem';
 import { SheetModal } from '../sheets/SheetModal';
 import { type MenuItem } from './Menu';
@@ -21,8 +20,6 @@ interface MenuItemProps {
 
 export function MenuItem({ item, style }: MenuItemProps) {
   const sheet = useRef<BottomSheetModal>(null);
-
-  const { theme } = useUnistyles();
 
   const Component = item.type === 'switch' ? View : Pressable;
 
@@ -56,36 +53,28 @@ export function MenuItem({ item, style }: MenuItemProps) {
           item.icon.type === 'symbol' ? (
             <SymbolView
               name={item.icon.name}
-              tintColor={item.icon.color ?? theme.colors.borderFaint}
+              // tintColor={item.icon.color ?? theme.colors.gray.border}
             />
           ) : (
-            <Icon
-              // color={item.icon.color ?? theme.colors.accent.accent}
-              color={
-                (item.icon.color as ThemeColor) ?? theme.colors.borderFaint
-              }
-              name={item.icon.name}
-              weight={item.icon.weight ?? 'duotone'}
-            />
+            // <Icon icon={'} />
+            <></>
           )
         ) : null}
 
         <View style={styles.contentContainer}>
-          <Text style={item.labelStyle} weight="bold">
-            {item.label}
-          </Text>
+          <Typography weight="bold">{item.label}</Typography>
 
           {item.description ? (
-            <Text color="borderFaint" highContrast={false}>
+            <Typography color="gray" highContrast={false}>
               {item.description}
-            </Text>
+            </Typography>
           ) : null}
         </View>
 
         {item.hideSelected ? null : typeof selected === 'string' ? (
-          <Text color="borderFaint" weight="bold">
+          <Typography color="gray" weight="bold">
             {selected}
-          </Text>
+          </Typography>
         ) : (
           selected
         )}
@@ -99,7 +88,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
           />
         ) : null}
 
-        {item.arrow ? <Icon color="borderNeutral" icon="arrowRight" /> : null}
+        {item.arrow ? <Icon color="gray" icon="arrowRight" /> : null}
       </Component>
 
       {item.type === 'options' ? (
@@ -121,7 +110,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
 
             if (typeof option === 'string') {
               return (
-                <Text
+                <Typography
                   highContrast={false}
                   key={option}
                   mb="sm"
@@ -131,7 +120,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
                   weight="semiBold"
                 >
                   {option}
-                </Text>
+                </Typography>
               );
             }
             return (
@@ -158,20 +147,20 @@ export function MenuItem({ item, style }: MenuItemProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(theme => ({
   component: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 12,
-    minHeight: 56,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    gap: theme.spacing.lg,
+    minHeight: theme.spacing['6xl'],
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
   },
   contentContainer: {
     flex: 1,
-    paddingVertical: 4,
+    paddingVertical: theme.spacing.xs,
   },
   separator: {
-    marginVertical: 4,
+    marginVertical: theme.spacing.xs,
   },
-});
+}));

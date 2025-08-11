@@ -117,7 +117,7 @@ export function Icon({
       <IconComponent
         name={icon}
         size={size}
-        color={color ?? theme.colors.text}
+        color={color ?? theme.colors.accent.accentAlpha}
       />
     </Wrapper>
   );

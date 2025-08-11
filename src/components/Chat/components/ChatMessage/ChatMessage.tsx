@@ -13,7 +13,7 @@ import { toast } from 'sonner-native';
 import { Button } from '../../../Button';
 import { Icon } from '../../../Icon';
 import { Image } from '../../../Image';
-import { Text } from '../../../Text';
+import { Typography } from '../../../Typography';
 import { ActionSheet } from '../ActionSheet';
 import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
@@ -75,7 +75,7 @@ export const ChatMessage = memo(
       (part: ParsedPart, index: number) => {
         switch (part.type) {
           case 'text':
-            return <Text color="text">{part.content}</Text>;
+            return <Typography color="accent">{part.content}</Typography>;
 
           case 'stvEmote':
             return <MediaLinkCard type="stvEmote" url={part.content} />;
@@ -94,13 +94,13 @@ export const ChatMessage = memo(
 
           case 'mention': {
             return (
-              <Text key={`message-${index}`}>
-                <Text
+              <Typography key={`message-${index}`}>
+                <Typography
                   style={[styles.mention, { color: part.color ?? '#FFFFFF' }]}
                 >
                   {part.content}
-                </Text>
-              </Text>
+                </Typography>
+              </Typography>
             );
           }
 
@@ -160,22 +160,21 @@ export const ChatMessage = memo(
             <Icon
               icon="corner-down-left"
               size={16}
-              color={theme.colors.border}
+              color={theme.colors.accent.accent}
             />
-            <Text color="border" style={styles.replyToText}>
+            <Typography color="accent" style={styles.replyToText}>
               Replying to {parentDisplayName}
-            </Text>
+            </Typography>
           </View>
         )}
 
         <View style={[styles.line]}>
-          <Text style={styles.timestamp}>
+          <Typography style={styles.timestamp}>
             {formatDate(new Date(), 'HH:mm')}:
-          </Text>
+          </Typography>
           {renderBadges()}
           <Button onLongPress={onUsernamePress}>
-            <Text
-              variant="chatMessage"
+            <Typography
               style={[
                 styles.username,
                 {
@@ -186,7 +185,7 @@ export const ChatMessage = memo(
               ]}
             >
               {userstate.username ?? ''}:
-            </Text>
+            </Typography>
           </Button>
           <View style={styles.messageContainer}>
             {message.map(renderMessagePart)}
@@ -224,7 +223,7 @@ ChatMessage.displayName = 'ChatMessage';
 
 const styles = StyleSheet.create(theme => ({
   chatContainer: {
-    backgroundColor: theme.colors.foregroundInverted,
+    backgroundColor: theme.colors.accent.accent,
   },
   line: {
     flexDirection: 'row',
@@ -249,8 +248,8 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: 'bold',
   },
   timestamp: {
-    color: theme.colors.border,
-    fontSize: theme.font.fontSize.xs,
+    color: theme.colors.accent.accent,
+    // fontSize: theme.font.fontSize.xs,
     marginRight: 2,
   },
   messageText: {
@@ -270,7 +269,7 @@ const styles = StyleSheet.create(theme => ({
     flex: 1,
   },
   bottomSheet: {
-    backgroundColor: theme.colors.borderFaint,
+    backgroundColor: theme.colors.accent.accent,
   },
   messageActionsContainer: {
     padding: 16,
@@ -288,7 +287,7 @@ const styles = StyleSheet.create(theme => ({
   replyContainer: {
     marginLeft: theme.spacing.md,
     borderLeftWidth: 2,
-    borderLeftColor: theme.colors.border,
+    borderLeftColor: theme.colors.accent.accent,
     paddingLeft: theme.spacing.sm,
   },
   replyIndicator: {

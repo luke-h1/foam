@@ -1,15 +1,9 @@
+/* eslint-disable no-restricted-imports */
 import { createHitslop } from '@app/utils';
 import { forwardRef } from 'react';
-// eslint-disable-next-line no-restricted-imports
-import {
-  Pressable,
-  PressableProps,
-  TouchableOpacity,
-  TouchableOpacityProps,
-  View,
-} from 'react-native';
+import { TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 
-export type ButtonProps = PressableProps & {
+export type ButtonProps = TouchableOpacityProps & {
   label?: string;
 };
 
@@ -25,7 +19,7 @@ export const Button = forwardRef<View, ButtonProps>(
     },
     ref,
   ) => (
-    <Pressable
+    <TouchableOpacity
       ref={ref}
       accessibilityLabel={label}
       {...touchableProps}
@@ -34,7 +28,7 @@ export const Button = forwardRef<View, ButtonProps>(
       onPress={onPress}
     >
       {children}
-    </Pressable>
+    </TouchableOpacity>
   ),
 );
 

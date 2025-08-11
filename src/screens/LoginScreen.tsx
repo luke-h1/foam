@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Button, Text } from '@app/components';
+import { Button, Typography } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
@@ -105,7 +105,7 @@ export function LoginScreen() {
       <View style={$buttonWrapper} />
       <View style={$textWrapper}>
         <Button onPress={() => promptAsync()} disabled={!request}>
-          <Text variant="title3">Login with Twitch</Text>
+          <Typography>Login with Twitch</Typography>
         </Button>
       </View>
     </View>

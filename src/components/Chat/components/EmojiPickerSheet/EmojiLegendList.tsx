@@ -1,4 +1,3 @@
-import { Text } from '@app/components/Text';
 import { LegendListRef } from '@legendapp/list';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { RefObject, useCallback, useMemo, useState } from 'react';
@@ -107,7 +106,7 @@ export function EmojiLegendList({
           if (index > 0)
             return (
               <View style={styles.header}>
-                <Text style={styles.headerText}>{item.title}</Text>
+                <Typography style={styles.headerText}>{item.title}</Typography>
               </View>
             );
         } else if (item.type === 'row') {

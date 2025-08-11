@@ -2,25 +2,25 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type FontVariant, type TextStyle } from 'react-native';
 import { UnistylesThemes } from 'react-native-unistyles';
-import { ColorToken } from './colors';
-import { TypographySize } from './font';
+import { ThemeColor } from './colors';
+import { FontSize } from './font';
 import { getMargin, MarginProps } from './spacing';
 
 export type FontWeight = 'light' | 'regular' | 'medium' | 'bold';
 
 export type TextStyleProps = {
   align?: 'left' | 'center' | 'right';
-  color?: ColorToken;
+  color?: ThemeColor;
   contrast?: boolean;
   highContrast?: boolean;
   italic?: boolean;
-  size: TypographySize;
+  size: FontSize;
   tabular?: boolean;
   variant?: 'SFPro' | 'mono';
   weight?: FontWeight;
 } & MarginProps;
 
-export function getTextStyles(theme: UnistylesThemes['foam-dark']) {
+export function getTextStyles(theme: UnistylesThemes['dark']) {
   return function styles(
     {
       align = 'left',
@@ -37,7 +37,7 @@ export function getTextStyles(theme: UnistylesThemes['foam-dark']) {
     }: TextStyleProps,
     scaling: number,
   ) {
-    const fontVariant: Array<FontVariant> = ['no-contextual', 'stylistic-four'];
+    const fontVariant: FontVariant[] = ['no-contextual', 'stylistic-four'];
 
     if (tabular) {
       fontVariant.push('tabular-nums');
@@ -54,11 +54,11 @@ export function getTextStyles(theme: UnistylesThemes['foam-dark']) {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
         ] as keyof (typeof theme.colors)[typeof color],
-      fontSize: theme.typography.size[size].fontSize * scaling,
+      fontSize: theme.font.fontSize[size].fontSize * scaling,
       fontStyle: italic ? 'italic' : 'normal',
       fontVariant,
       fontWeight: weights[weight],
-      lineHeight: theme.typography.size[size].lineHeight * scaling,
+      lineHeight: theme.font.fontSize[size].lineHeight * scaling,
       textAlign: align,
     };
   };
@@ -71,7 +71,7 @@ export const weights: Record<FontWeight, TextStyle['fontWeight']> = {
   regular: '400',
 };
 
-export function addTextSize(size: TypographySize, by: number): TypographySize {
+export function addTextSize(size: FontSize, by: number): FontSize {
   const next = Number(size) + by;
 
   if (next < 1) {
@@ -82,5 +82,5 @@ export function addTextSize(size: TypographySize, by: number): TypographySize {
     return '2xl';
   }
 
-  return String(next) as TypographySize;
+  return String(next) as FontSize;
 }

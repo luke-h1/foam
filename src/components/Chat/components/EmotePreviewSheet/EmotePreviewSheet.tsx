@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Text, Typography } from '@app/components/Typography';
 import {
   calculateAspectRatio,
   openLinkInBrowser,
@@ -58,16 +58,20 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
               }}
             />
             <View style={styles.emoteInfo}>
-              <Text style={styles.emoteName}>{selectedEmote?.name}</Text>
-              <Text style={styles.emoteDetail}>{selectedEmote.site}</Text>
+              <Typography style={styles.emoteName}>
+                {selectedEmote?.name}
+              </Typography>
+              <Typography style={styles.emoteDetail}>
+                {selectedEmote.site}
+              </Typography>
               {selectedEmote.creator && (
-                <Text style={styles.emoteDetail}>
+                <Typography style={styles.emoteDetail}>
                   By {selectedEmote.creator}
-                </Text>
+                </Typography>
               )}
-              <Text style={styles.emoteDetail}>
+              <Typography style={styles.emoteDetail}>
                 Original Name: {selectedEmote.original_name}
-              </Text>
+              </Typography>
             </View>
           </View>
           <View style={styles.actions}>
@@ -77,7 +81,9 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
             >
               <View style={styles.actionContent}>
                 <Icon icon="copy" color="#fff" size={16} />
-                <Text style={styles.actionText}>Copy emote name</Text>
+                <Typography style={styles.actionText}>
+                  Copy emote name
+                </Typography>
               </View>
             </Button>
             <Button
@@ -86,7 +92,9 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
             >
               <View style={styles.actionContent}>
                 <Icon icon="copy" color="#fff" size={16} />
-                <Text style={styles.actionText}>Copy emote URL</Text>
+                <Typography style={styles.actionText}>
+                  Copy emote URL
+                </Typography>
               </View>
             </Button>
             <Button
@@ -97,7 +105,9 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
             >
               <View style={styles.actionContent}>
                 <Icon icon="external-link" color="#fff" size={16} />
-                <Text style={styles.actionText}>Open in Browser</Text>
+                <Typography style={styles.actionText}>
+                  Open in Browser
+                </Typography>
               </View>
             </Button>
           </View>
@@ -132,8 +142,8 @@ export const styles = StyleSheet.create(theme => ({
     gap: theme.spacing.sm,
   },
   actionText: {
-    fontWeight: theme.font.fontWeight.thin,
-    fontSize: theme.font.fontSize.sm,
+    // fontWeight: theme.typography.weight.thin,
+    fontSize: theme.font.fontSize['3xl'],
   },
   emoteInfo: {
     flex: 1,
@@ -157,6 +167,6 @@ export const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
   },
   bottomSheet: {
-    backgroundColor: theme.colors.borderNeutral,
+    backgroundColor: theme.colors.accent.accent,
   },
 }));

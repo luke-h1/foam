@@ -27,7 +27,7 @@ export type ViewStyleProps = {
 } & MarginProps &
   PaddingProps;
 
-export function getViewStyles(theme: UnistylesThemes['foam-dark']) {
+export function getViewStyles(theme: UnistylesThemes['dark']) {
   return function styles({
     align,
     direction,
@@ -101,10 +101,7 @@ export function getViewStyles(theme: UnistylesThemes['foam-dark']) {
   };
 }
 
-function getSpacing(
-  theme: UnistylesThemes['foam-dark'],
-  key?: SpaceToken | number,
-) {
+function getSpacing(theme: UnistylesThemes['dark'], key?: SpaceToken | number) {
   if (!key) {
     return;
   }

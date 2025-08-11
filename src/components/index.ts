@@ -24,5 +24,5 @@ export * from './TabBarBackground';
 export * from './Tags';
 export * from './TextField';
 export * from './Toast';
-export * from './Text';
+export * from './Typography';
 export * from './TabBarButton';

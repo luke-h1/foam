@@ -61,7 +61,7 @@ export function SheetModal({
 
 const styles = StyleSheet.create((theme, rt) => ({
   background: {
-    backgroundColor: theme.colors.borderNeutral,
+    backgroundColor: theme.colors.black.bgAlpha,
   },
   content: {
     paddingBottom: rt.insets.bottom,

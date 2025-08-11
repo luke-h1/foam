@@ -10,7 +10,7 @@ interface Props {
   onRefresh: () => Promise<unknown>;
 }
 
-export function RefreshControl({ onRefresh, color = 'text', offset }: Props) {
+export function RefreshControl({ onRefresh, color = 'blue', offset }: Props) {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const { theme } = useUnistyles();
@@ -28,7 +28,7 @@ export function RefreshControl({ onRefresh, color = 'text', offset }: Props) {
       onRefresh={refresh}
       progressViewOffset={offset}
       refreshing={refreshing}
-      tintColor={theme.colors[color]}
+      // tintColor={theme.colors[color]}
     />
   );
 }

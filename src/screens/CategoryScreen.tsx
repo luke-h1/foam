@@ -3,8 +3,8 @@ import {
   Image,
   LiveStreamCard,
   Spinner,
-  Text,
   FlashList,
+  Typography,
 } from '@app/components';
 import { AppStackParamList } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
@@ -93,7 +93,7 @@ export const CategoryScreen: FC<
         }
         style={styles.categoryLogo}
       />
-      <Text variant="title2">{category?.name}</Text>
+      <Typography>{category?.name}</Typography>
     </View>
   );
 

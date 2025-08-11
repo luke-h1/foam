@@ -1,6 +1,6 @@
 import * as colors from '@radix-ui/colors';
 import compact from 'lodash/compact';
-import { ColorToken } from '../colors';
+import { ThemeColor } from '../colors';
 
 type RadixColor = keyof typeof colors;
 
@@ -24,7 +24,7 @@ export type ColorScaleExtras = 'contrast';
 export type BlackAndWhite = ColorScaleAlpha;
 export type Colors = ColorScale | ColorScaleAlpha | ColorScaleExtras;
 
-type PaletteColor = Exclude<ColorToken, 'accent'>;
+type PaletteColor = Exclude<ThemeColor, 'accent'>;
 
 export function createPallete(color: PaletteColor, dark?: boolean) {
   const gray = getGray(color);

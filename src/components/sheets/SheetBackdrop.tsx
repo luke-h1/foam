@@ -5,11 +5,7 @@ import {
 
 type Props = BottomSheetBackdropProps;
 
-export function SheetBackdrop({
-  animatedIndex,
-  animatedPosition,
-  style,
-}: Props) {
+export function SheetBackdrop({ animatedIndex, animatedPosition }: Props) {
   return (
     <BottomSheetBackdrop
       animatedIndex={animatedIndex}

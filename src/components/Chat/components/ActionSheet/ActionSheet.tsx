@@ -1,4 +1,4 @@
-import { Text } from '@app/components';
+import { Typography } from '@app/components';
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { ParsedPart, replaceEmotesWithText } from '@app/utils';
@@ -34,28 +34,28 @@ export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
     >
       <BottomSheetView style={styles.wrapper}>
         <View style={styles.info}>
-          <Text>
+          <Typography>
             {username} : {messageText()}
-          </Text>
+          </Typography>
         </View>
 
         <View style={styles.actions}>
           <Button onPress={handleCopy} style={styles.actionButton}>
             <View style={styles.actionContent}>
               <Icon icon="copy" color="#fff" size={16} />
-              <Text style={styles.actionText}>Copy Message</Text>
+              <Typography style={styles.actionText}>Copy Message</Typography>
             </View>
           </Button>
           <Button onPress={handleReply} style={styles.actionButton}>
             <View style={styles.actionContent}>
               <Icon icon="copy" color="#fff" size={16} />
-              <Text style={styles.actionText}>Reply</Text>
+              <Typography style={styles.actionText}>Reply</Typography>
             </View>
           </Button>
           <Button onPress={() => {}} style={styles.actionButton}>
             <View style={styles.actionContent}>
               <Icon icon="external-link" color="#fff" size={16} />
-              <Text style={styles.actionText}>Report message</Text>
+              <Typography style={styles.actionText}>Report message</Typography>
             </View>
           </Button>
         </View>
@@ -70,7 +70,7 @@ const styles = StyleSheet.create(theme => ({
     overflow: 'visible',
   },
   bottomSheet: {
-    backgroundColor: theme.colors.borderFaint,
+    // backgroundColor: theme.colors.borderFaint,
   },
   wrapper: {
     paddingVertical: theme.spacing.md,
@@ -86,8 +86,8 @@ const styles = StyleSheet.create(theme => ({
     gap: theme.spacing.sm,
   },
   actionText: {
-    fontWeight: theme.font.fontWeight.thin,
-    fontSize: theme.font.fontSize.sm,
+    // fontWeight: theme.font.fontWeight.thin,
+    // fontSize: theme.font.fontSize.sm,
   },
   info: {},
 }));

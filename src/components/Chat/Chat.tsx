@@ -25,9 +25,9 @@ import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
-import { Text } from '../Text';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
+import { Typography } from '../Typography';
 
 interface ChatProps {
   channelId: string;
@@ -42,17 +42,19 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const { theme } = useUnistyles();
 
-  const client = useTmiClient({
-    options: {
-      clientId: process.env.TWITCH_CLIENT_ID as string,
-    },
-    channels: [channelName],
+  // const client = useTmiClient({
+  //   options: {
+  //     clientId: process.env.TWITCH_CLIENT_ID as string,
+  //   },
+  //   channels: [channelName],
 
-    identity: {
-      username: user?.display_name ?? '',
-      password: authState?.token.accessToken,
-    },
-  });
+  //   identity: {
+  //     username: user?.display_name ?? '',
+  //     password: authState?.token.accessToken,
+  //   },
+  // });
+
+  const client = {};
 
   const {
     sevenTvChannelEmotes,
@@ -79,17 +81,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   } = useChatStore();
 
   navigation.addListener('beforeRemove', () => {
-    void client.disconnect();
-    clearChannelResources();
-    clearTtvUsers();
+    // void client.disconnect();
+    // clearChannelResources();
+    // clearTtvUsers();
   });
 
   const loadChat = async () => {
-    await loadChannelResources(channelId);
+    // await loadChannelResources(channelId);
+    void client.disconnect();
   };
 
   useEffect(() => {
-    void loadChat();
+    // void loadChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -388,7 +391,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   return (
     <SafeAreaViewFixed style={styles.safeArea}>
-      <Text style={styles.header}>CHAT</Text>
+      <Typography style={styles.header}>CHAT</Typography>
       <KeyboardAvoidingView
         behavior="padding"
         style={{ flex: 1 }}
@@ -437,14 +440,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         >
           {replyTo && (
             <View style={styles.replyContainer}>
-              <Text style={styles.replyText}>
+              <Typography style={styles.replyText}>
                 Replying to {replyTo.username}
-              </Text>
+              </Typography>
               <Button
                 style={styles.cancelReplyButton}
                 onPress={() => setReplyTo(null)}
               >
-                <Icon icon="x" size={16} color={theme.colors.border} />
+                <Icon icon="x" size={16} />
               </Button>
             </View>
           )}
@@ -453,7 +456,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onPress={handleEmojiPickerToggle}
             hitSlop={createHitslop(40)}
           >
-            <Icon icon="smile" size={24} color={theme.colors.border} />
+            <Icon icon="smile" size={24} />
           </Button>
           <ChatAutoCompleteInput
             value={messageInput}
@@ -484,15 +487,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onPress={() => void handleSendMessage()}
             disabled={!messageInput.trim() || !connected}
           >
-            <Icon
-              icon="send"
-              size={24}
-              color={
-                messageInput.trim().length > 0
-                  ? theme.colors.iOS_blue
-                  : theme.colors.borderFaint
-              }
-            />
+            <Icon icon="send" size={24} />
           </Button>
         </View>
         {connected && (
@@ -571,23 +566,23 @@ const styles = StyleSheet.create(theme => ({
   replyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.foregroundInverted,
+    // backgroundColor: theme.colors.foregroundInverted,
     padding: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    // borderTopColor: theme.colors.border,
   },
   replyText: {
     flex: 1,
-    color: theme.colors.text,
+    // color: theme.colors.text,
   },
   cancelReplyButton: {
     padding: theme.spacing.xs,
   },
   emojiPickerContainer: {
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    // borderTopColor: theme.colors.border,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    // borderBottomColor: theme.colors.border,
     padding: theme.spacing.sm,
     shadowColor: '#000',
     shadowOffset: {

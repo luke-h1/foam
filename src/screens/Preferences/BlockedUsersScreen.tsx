@@ -1,5 +1,5 @@
-import { Text } from '@app/components';
+import { Typography } from '@app/components';
 
 export function BlockedUsersScreen() {
-  return <Text variant="title">Blocked users</Text>;
+  return <Typography>Blocked users</Typography>;
 }

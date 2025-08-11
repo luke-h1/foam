@@ -166,13 +166,13 @@ export function SearchScreen() {
                   style={{
                     marginRight: 6,
                   }}
-                  color={theme.colors.border}
+                  color={theme.colors.gray.accent}
                 />
               </Button>
             ) : (
               <Feather
                 name="search"
-                color={theme.colors.border}
+                color={theme.colors.gray.accent}
                 size={22}
                 style={{
                   marginRight: 6,

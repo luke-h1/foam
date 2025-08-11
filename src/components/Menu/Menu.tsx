@@ -3,7 +3,7 @@ import { ReactElement } from 'react';
 import { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { FlashList, FlashListProps } from '../FlashList';
 import { RefreshControl } from '../RefreshControl';
-import { Text } from '../Text';
+import { Text } from '../Typography';
 import { MenuItem } from './MenuItem';
 
 type Item = MenuItem | string | null | (() => ReactElement);
@@ -90,7 +90,7 @@ export function Menu({
       }
       renderItem={({ item }) => {
         if (typeof item === 'string') {
-          return <Text>{item}</Text>;
+          return <Typography>{item}</Typography>;
         }
 
         if (typeof item === 'function') {

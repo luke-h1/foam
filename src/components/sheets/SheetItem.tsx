@@ -1,12 +1,11 @@
 /* eslint-disable no-nested-ternary */
-import { FontSize } from '@app/styles';
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
 import { type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 type Icon =
   | {
@@ -31,7 +30,7 @@ type Props = {
   onPress?: () => void;
   right?: ReactNode;
   selected?: boolean;
-  size?: FontSize;
+  size?: unknown;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -61,7 +60,7 @@ export function SheetItem({
           <SymbolView
             name={icon.name}
             size={icon.size ?? theme.spacing.md}
-            tintColor={icon.color ?? theme.colors.borderFaint}
+            tintColor={icon.color ?? theme.colors.black.bgAltAlpha}
           />
         ) : (
           <Icon icon={icon.name} />
@@ -70,14 +69,14 @@ export function SheetItem({
         left
       )}
 
-      <Text
+      <Typography
         numberOfLines={1}
-        size={size}
+        // size={size}
         style={[styles.label, labelStyle]}
         weight="semiBold"
       >
         {label}
-      </Text>
+      </Typography>
 
       {navigate ? (
         <Icon

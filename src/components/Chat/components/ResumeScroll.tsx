@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Text } from '@app/components/Text';
+import { Typography } from '@app/components/Typography';
 import { LegendListRef } from '@legendapp/list';
 import { RefObject } from 'react';
 import { View } from 'react-native';
@@ -34,8 +34,12 @@ export function ResumeScroll({
           setUnreadCount(0);
         }}
       >
-        <Icon icon="arrow-down" size={16} color={theme.colors.text} />
-        {unreadCount > 0 && <Text variant="caption2">{unreadCount}</Text>}
+        <Icon
+          icon="arrow-down"
+          size={16}
+          color={theme.colors.amber.accentAlpha}
+        />
+        {unreadCount > 0 && <Typography>{unreadCount}</Typography>}
       </Button>
     </View>
   );
@@ -49,13 +53,13 @@ const styles = StyleSheet.create(theme => ({
     zIndex: 10,
   },
   resumeButton: {
-    backgroundColor: theme.colors.brightPurple,
+    backgroundColor: theme.colors.black.bgAlpha,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
     borderRadius: theme.radii.xl,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: theme.colors.border,
+    shadowColor: theme.colors.black.accentAlpha,
     shadowOffset: {
       width: 0,
       height: 2,

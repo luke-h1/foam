@@ -11,7 +11,7 @@ export function Skeleton({ style }: SkeletonProps) {
 
 const styles = StyleSheet.create(theme => ({
   skeleton: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.black.bgAlpha,
     borderRadius: theme.radii.md,
     opacity: 0.3,
   },

@@ -19,4 +19,4 @@ export const colorTokens = [
   'green',
 ] as const;
 
-export type ColorToken = (typeof colorTokens)[number];
+export type ThemeColor = (typeof colorTokens)[number];

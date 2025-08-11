@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-imports */
 import {
   ComponentType,
   forwardRef,
@@ -9,13 +10,14 @@ import {
   StyleProp,
   TextInput,
   TextInputProps,
+  TextProps,
   TextStyle,
   View,
   ViewStyle,
 } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
-import { Text, TextProps } from '../Text';
+import { Typography } from '../Typography';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<unknown>;
@@ -73,7 +75,7 @@ export const TextField = forwardRef(function TextField(
 
   const $inputWrapperStyles: StyleProp<ViewStyle> = [
     styles.inputWrapper,
-    status === 'error' && { borderColor: theme.colors.cherry },
+    status === 'error' && { borderColor: theme.colors.red.accent },
     TextInputProps.multiline && { minHeight: 112 },
     LeftAccessory && { paddingStart: 0 },
     RightAccessory && { paddingEnd: 0 },
@@ -82,14 +84,14 @@ export const TextField = forwardRef(function TextField(
 
   const $inputStyles: StyleProp<TextStyle> = [
     styles.input,
-    disabled && { color: theme.colors.borderFaint },
+    disabled && { color: theme.colors.black.accentAlpha },
     TextInputProps.multiline && { height: 'auto' },
     $inputStyleOverride,
   ];
 
   const $helperStyles = [
     styles.helper,
-    status === 'error' && { color: theme.colors.cherry },
+    status === 'error' && { color: theme.colors.red.border },
     HelperTextProps?.style,
   ];
 
@@ -111,9 +113,9 @@ export const TextField = forwardRef(function TextField(
       accessibilityState={{ disabled }}
     >
       {!!label && (
-        <Text {...LabelTextProps} style={$labelStyles}>
+        <Typography {...LabelTextProps} style={$labelStyles}>
           {label}
-        </Text>
+        </Typography>
       )}
       <View style={$inputWrapperStyles}>
         {!!LeftAccessory && (
@@ -127,10 +129,10 @@ export const TextField = forwardRef(function TextField(
 
         <TextInput
           ref={input}
-          underlineColorAndroid={theme.colors.foregroundNeutral}
+          underlineColorAndroid={theme.colors.accent.bgAlpha}
           textAlignVertical="center"
           placeholder={placeholderContent as string}
-          placeholderTextColor={theme.colors.foregroundNeutral}
+          placeholderTextColor={theme.colors.accent.bgAlpha}
           {...TextInputProps}
           editable={!disabled}
           style={$inputStyles}
@@ -146,9 +148,9 @@ export const TextField = forwardRef(function TextField(
         )}
       </View>
       {!!helper && (
-        <Text {...HelperTextProps} style={$helperStyles}>
+        <Typography {...HelperTextProps} style={$helperStyles}>
           {helper}
-        </Text>
+        </Typography>
       )}
     </Button>
   );
@@ -163,13 +165,13 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: 4,
-    borderColor: theme.colors.borderFaint,
+    color: theme.colors.accent.text,
     overflow: 'hidden',
   },
   input: {
     flex: 1,
     alignSelf: 'stretch',
-    color: theme.colors.text,
+    color: theme.colors.accent.text,
     height: 30,
     paddingVertical: 0,
     paddingHorizontal: 0,
