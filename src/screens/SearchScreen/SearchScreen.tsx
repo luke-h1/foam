@@ -1,10 +1,4 @@
-import {
-  Button,
-  SearchHistory,
-  TextField,
-  FlashList,
-  SearchBox,
-} from '@app/components';
+import { Button, SearchHistory, FlashList, SearchBox } from '@app/components';
 import {
   useAppNavigation,
   useDebouncedCallback,
@@ -15,7 +9,6 @@ import {
   SearchChannelResponse,
   storageService,
 } from '@app/services';
-import Entypo from '@expo/vector-icons/build/Entypo';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -26,7 +19,6 @@ import {
   useUnistyles,
   withUnistyles,
 } from 'react-native-unistyles';
-import Feather from 'react-native-vector-icons/Feather';
 import { StreamerCard } from './components';
 
 const UniKeyboardAvoidingView = withUnistyles(KeyboardAvoidingView);
