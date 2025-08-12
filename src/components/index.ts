@@ -26,3 +26,5 @@ export * from './TextField';
 export * from './Toast';
 export * from './Typography';
 export * from './TabBarButton';
+export * from './SearchBox';
+export * from './Slider';

@@ -1,4 +1,4 @@
-import { Icon } from '@app/components';
+import { Button, Icon } from '@app/components';
 import { TextBox } from '@app/components/TextBox';
 import {
   type StyleProp,
@@ -12,6 +12,8 @@ interface SearchProps {
   onSubmitEditing?: TextInputProps['onSubmitEditing'];
   placeholder?: 'search' | 'filter';
   style?: StyleProp<ViewStyle>;
+  rightOnPress?: () => void;
+  leftOnPress?: () => void;
   value?: string;
 }
 
@@ -21,19 +23,27 @@ export function SearchBox({
   placeholder,
   style,
   value,
+  leftOnPress,
+  rightOnPress,
 }: SearchProps) {
   return (
     <TextBox
       autoCapitalize="none"
       autoComplete="off"
       autoCorrect={false}
-      left={<Icon icon="search" style={styles.icon} />}
+      left={
+        <Button onPress={() => leftOnPress?.()}>
+          <Icon icon="search" style={styles.icon} />
+        </Button>
+      }
       onChangeText={onChange}
       onSubmitEditing={onSubmitEditing}
       placeholder={placeholder}
       right={
         value && value.length > 0 ? (
-          <Icon icon="x" style={styles.clear} />
+          <Button onPress={() => rightOnPress?.()}>
+            <Icon icon="x" style={styles.clear} />
+          </Button>
         ) : null
       }
       style={[styles.main, style]}

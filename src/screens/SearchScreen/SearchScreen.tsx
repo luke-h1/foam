@@ -1,4 +1,10 @@
-import { Button, SearchHistory, TextField, FlashList } from '@app/components';
+import {
+  Button,
+  SearchHistory,
+  TextField,
+  FlashList,
+  SearchBox,
+} from '@app/components';
 import {
   useAppNavigation,
   useDebouncedCallback,
@@ -142,7 +148,15 @@ export function SearchScreen() {
         style={styles.kb}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <TextField
+        <SearchBox
+          placeholder="search"
+          onChange={text => {
+            if (text.length > 2) {
+              void handleQuery(text);
+            }
+          }}
+        />
+        {/* <TextField
           ref={ref}
           placeholder="Find a channel"
           value={query}
@@ -180,7 +194,7 @@ export function SearchScreen() {
               />
             )
           }
-        />
+        /> */}
       </UniKeyboardAvoidingView>
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
