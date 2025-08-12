@@ -17,9 +17,9 @@ export const spacing = {
   tabBarHeight: 70,
 } as const;
 
-export type SpaceToken = keyof typeof spacing;
+export type Spacing = keyof typeof spacing;
 
-export type MarginToken = '0' | 'auto' | SpaceToken | `-${SpaceToken}` | number;
+export type MarginToken = '0' | 'auto' | Spacing | `-${Spacing}` | number;
 
 export interface MarginProps {
   m?: MarginToken;
@@ -67,7 +67,7 @@ export function getMargin(theme: UnistylesThemes['dark']) {
   };
 }
 
-export type PaddingToken = '0' | SpaceToken | `-${SpaceToken}` | number;
+export type PaddingToken = '0' | Spacing | `-${Spacing}` | number;
 
 export interface PaddingProps {
   p?: PaddingToken;
@@ -133,7 +133,7 @@ function getSpace(
 
   const negative = key.startsWith('-');
 
-  const token = (key.startsWith('-') ? key.slice(1) : key) as SpaceToken;
+  const token = (key.startsWith('-') ? key.slice(1) : key) as Spacing;
 
   const value = theme.spacing[token];
 

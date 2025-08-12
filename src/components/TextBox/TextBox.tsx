@@ -7,8 +7,8 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Typography } from '../Typography';
-import { StyleSheet } from 'react-native-unistyles';
 
 type TextBoxProps = Pick<
   TextInputProps,
@@ -67,6 +67,8 @@ export function TextBox({
 }: TextBoxProps) {
   const [focused, setFocused] = useState<boolean>(false);
 
+  const { theme } = useUnistyles();
+
   return (
     <View style={[styles.main, style]}>
       {label && (
@@ -75,14 +77,84 @@ export function TextBox({
         </Typography>
       )}
 
-      <View style={styles.wrapper}></View>
+      <View style={[styles.wrapper(focused, Boolean(error)), styleContent]}>
+        {left}
+        <TextInput
+          // allowFontScaling={systemScaling}
+          autoCapitalize={autoCapitalize}
+          autoComplete={autoComplete}
+          autoCorrect={autoCorrect}
+          editable={editable}
+          keyboardType={keyboardType}
+          multiline={multiline}
+          onBlur={event => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
+          onChangeText={onChangeText}
+          onFocus={event => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onSubmitEditing={onSubmitEditing}
+          placeholder={placeholder}
+          placeholderTextColor={theme.colors.gray.accent}
+          ref={ref}
+          returnKeyType={returnKeyType}
+          secureTextEntry={secureTextEntry}
+          selectionColor={theme.colors.accent.accent}
+          textAlignVertical="center"
+          value={value}
+          style={[styles.input(Boolean(multiline), Boolean(code)), styleInput]}
+        />
+        {right}
+      </View>
+      {hint && (
+        <Typography color="gray" size="sm">
+          {hint}
+        </Typography>
+      )}
+      {error && (
+        <Typography color="red" size="sm">
+          {error}
+        </Typography>
+      )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
+const styles = StyleSheet.create(theme => ({
+  wrapper: (focused: boolean, error: boolean) => ({
     alignItems: 'center',
     flexDirection: 'row',
+    backgroundColor: theme.colors.gray.ui,
+    borderColor: (() => {
+      if (focused) {
+        if (error) {
+          return theme.colors.red.accent;
+        }
+        return theme.colors.accent.accent;
+      }
+      if (error) {
+        return theme.colors.red.borderUi;
+      }
+      return theme.colors.gray.borderUi;
+    })(),
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexGrow: 1,
+  }),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  input: (multiline: boolean, _code: boolean) => ({
+    color: theme.colors.gray.text,
+    flex: 1,
+    fontSize: theme.font.fontSize.lg,
+    height: multiline ? undefined : theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: multiline ? theme.spacing.lg : undefined,
+  }),
+  main: {
+    gap: theme.spacing.md,
   },
-});
+}));
