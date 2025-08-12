@@ -3,7 +3,7 @@ import { ReactElement } from 'react';
 import { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { FlashList, FlashListProps } from '../FlashList';
 import { RefreshControl } from '../RefreshControl';
-import { Text } from '../Typography';
+import { Typography } from '../Typography';
 import { MenuItem } from './MenuItem';
 
 type Item = MenuItem | string | null | (() => ReactElement);
