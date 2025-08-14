@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation, useTmiClient } from '@app/hooks';
+import { useAppNavigation, useDownloadImages, useTmiClient } from '@app/hooks';
 import { ChatMessageType, ChatUser, useChatStore } from '@app/store';
 import { createHitslop, generateRandomTwitchColor } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -42,19 +42,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const { theme } = useUnistyles();
 
-  // const client = useTmiClient({
-  //   options: {
-  //     clientId: process.env.TWITCH_CLIENT_ID as string,
-  //   },
-  //   channels: [channelName],
+  const client = useTmiClient({
+    options: {
+      clientId: process.env.TWITCH_CLIENT_ID as string,
+    },
+    channels: [channelName],
 
-  //   identity: {
-  //     username: user?.display_name ?? '',
-  //     password: authState?.token.accessToken,
-  //   },
-  // });
-
-  const client = {};
+    identity: {
+      username: user?.display_name ?? '',
+      password: authState?.token.accessToken,
+    },
+  });
 
   const {
     sevenTvChannelEmotes,
@@ -81,18 +79,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   } = useChatStore();
 
   navigation.addListener('beforeRemove', () => {
-    // void client.disconnect();
-    // clearChannelResources();
-    // clearTtvUsers();
+    void client.disconnect();
+    clearChannelResources();
+    clearTtvUsers();
   });
 
   const loadChat = async () => {
-    // await loadChannelResources(channelId);
+    await loadChannelResources(channelId);
     void client.disconnect();
   };
 
   useEffect(() => {
-    // void loadChat();
+    void loadChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

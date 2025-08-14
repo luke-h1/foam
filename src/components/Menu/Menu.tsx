@@ -83,7 +83,7 @@ export function Menu({
       // contentContainerStyle={[styles.content, style]}
       data={items}
       // initialNumToRender={100}
-      keyExtractor={(item, index) => String(index)}
+      keyExtractor={(_item, index) => String(index)}
       // ref={list}
       refreshControl={
         onRefresh ? <RefreshControl onRefresh={onRefresh} /> : undefined

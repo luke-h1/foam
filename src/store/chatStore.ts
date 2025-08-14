@@ -347,6 +347,22 @@ const chatStoreCreator: StateCreator<ChatState> = set => ({
       logEmptyBadgeResponse('Twitch', 'channel', twitchChannelBadges);
       logEmptyBadgeResponse('FFZ', 'global', ffzGlobalBadges);
 
+      // const directory = new Directory(Paths.cache, createId());
+
+      // directory.create();
+
+      // const assets = await Promise.all(
+      //   urls.map(async url => {
+      //     const file = await File.downloadFileAsync(url, directory);
+
+      //     return MediaLibrary.createAssetAsync(file.uri);
+      //   }),
+      // );
+
+      // const album = await getAppAlbum();
+      // await MediaLibrary.addAssetsToAlbumAsync(compact(assets), album);
+      // directory.delete();
+
       set(state => ({
         ...state,
         status: 'fulfilled',
