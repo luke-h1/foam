@@ -22,11 +22,11 @@ import { toast } from 'sonner-native';
 const BuildFooter = () => {
   return (
     <View style={styles.buildContainer}>
-      <Typography>
+      <Typography size="xs">
         v:{Application.nativeApplicationVersion ?? ''} (
         {Application.nativeBuildVersion ?? ''})
       </Typography>
-      <Typography>
+      <Typography size="xs">
         OTA: {Updates.runtimeVersion} (
         {(Updates.createdAt ?? new Date()).toLocaleString('en-US', {
           timeZoneName: 'short',
@@ -316,11 +316,11 @@ const styles = StyleSheet.create(theme => ({
     paddingHorizontal: theme.spacing.md,
   },
   bottomSheet: {
-    borderTopColor: theme.colors.accent.uiActive,
+    borderTopColor: theme.colors.gray.accent,
   },
   buildContainer: {
-    borderTopColor: theme.colors.accent.uiActive,
-    borderTopWidth: 1,
+    borderTopColor: theme.colors.gray.accent,
+    borderTopWidth: StyleSheet.hairlineWidth,
     justifyContent: 'center',
     paddingVertical: theme.spacing.md,
     marginBottom: theme.spacing.lg,

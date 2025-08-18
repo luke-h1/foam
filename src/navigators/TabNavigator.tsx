@@ -13,6 +13,7 @@ import { useUnistyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
+import { SettingsScreenv2 } from '@app/screens/SettingsScreen/SettingsScreenv2';
 
 export type TabParamList = {
   Following: undefined;
@@ -63,7 +64,7 @@ const screens: Screen[] = [
   },
   {
     name: 'Settings',
-    component: SettingsScreen,
+    component: SettingsScreenv2,
     icon: 'settings',
     requiresAuth: false,
   },

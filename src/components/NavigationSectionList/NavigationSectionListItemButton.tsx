@@ -73,7 +73,6 @@ const styles = StyleSheet.create(theme => ({
   icon: {
     width: 20,
     height: 20,
-    tintColor: theme.colors.accent.accent,
   },
   image: {
     width: 35,
@@ -82,7 +81,6 @@ const styles = StyleSheet.create(theme => ({
   },
   separator: {
     height: 0.55,
-    backgroundColor: theme.colors.accent.accent,
     marginVertical: theme.spacing.sm,
   },
 }));

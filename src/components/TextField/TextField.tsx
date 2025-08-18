@@ -84,7 +84,7 @@ export const TextField = forwardRef(function TextField(
 
   const $inputStyles: StyleProp<TextStyle> = [
     styles.input,
-    disabled && { color: theme.colors.black.accentAlpha },
+    disabled && { color: theme.colors.accent.accentHoverAlpha },
     TextInputProps.multiline && { height: 'auto' },
     $inputStyleOverride,
   ];
@@ -129,10 +129,10 @@ export const TextField = forwardRef(function TextField(
 
         <TextInput
           ref={input}
-          underlineColorAndroid={theme.colors.accent.bgAlpha}
+          underlineColorAndroid={theme.colors.gray.bg}
           textAlignVertical="center"
           placeholder={placeholderContent as string}
-          placeholderTextColor={theme.colors.accent.bgAlpha}
+          placeholderTextColor={theme.colors.gray.text}
           {...TextInputProps}
           editable={!disabled}
           style={$inputStyles}
@@ -165,18 +165,16 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: 4,
-    color: theme.colors.accent.text,
+    color: theme.colors.gray.text,
     overflow: 'hidden',
   },
   input: {
     flex: 1,
-    alignSelf: 'stretch',
-    color: theme.colors.accent.text,
-    height: 30,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
+    color: theme.colors.gray.text,
     marginVertical: theme.spacing.sm,
-    marginHorizontal: theme.spacing.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.colors.gray.text,
+    padding: theme.spacing.lg,
   },
   helper: {
     marginTop: theme.spacing.xs,

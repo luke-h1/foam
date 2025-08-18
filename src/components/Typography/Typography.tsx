@@ -79,7 +79,7 @@ export const Typography = forwardRef<Text, TypographyProps>(
     }: TypographyProps,
     ref: LegacyRef<Text>,
   ) => {
-    const { theme, rt } = useUnistyles();
+    const { theme } = useUnistyles();
 
     // Determine contrast level logic once
     const resolvedHighContrast = highContrast ?? color === 'gray';

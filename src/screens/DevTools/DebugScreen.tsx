@@ -315,7 +315,7 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.black.bgAlpha,
+    borderTopColor: theme.colors.gray.accent,
   },
   userId: {
     marginTop: theme.spacing.sm,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create(theme => ({
   itemContainer: {
     padding: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.black.bgAltAlpha,
+    borderBottomColor: theme.colors.gray.accent,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -348,7 +348,7 @@ const styles = StyleSheet.create(theme => ({
   },
   button: {
     padding: theme.spacing.md,
-    backgroundColor: theme.colors.plum.accent,
+    backgroundColor: theme.colors.blue.accent,
     color: theme.colors.plum.accentAlpha,
     borderRadius: theme.spacing.sm,
     alignSelf: 'flex-start',
@@ -358,14 +358,13 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,
     borderWidth: 1,
-    borderColor: theme.colors.black.bgAltAlpha,
+    borderColor: theme.colors.gray.accent,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.black.bgAltAlpha,
   },
   accessTokenLabel: {
     fontWeight: 'bold',
     marginBottom: theme.spacing.sm,
-    color: theme.colors.accent.text,
+    color: theme.colors.gray.text,
   },
   accessTokenRow: {
     flexDirection: 'row',
@@ -375,7 +374,7 @@ const styles = StyleSheet.create(theme => ({
   accessTokenValue: {
     flex: 1,
     marginRight: theme.spacing.sm,
-    color: theme.colors.accent.text,
+    color: theme.colors.gray.text,
   },
   copyButton: {
     paddingVertical: theme.spacing.xs,
@@ -389,11 +388,11 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.accent.text,
+    borderTopColor: theme.colors.gray.accent,
   },
   loggedInUser: {
     marginTop: theme.spacing.sm,
     fontWeight: 'bold',
-    color: theme.colors.accent.text,
+    color: theme.colors.gray.text,
   },
 }));

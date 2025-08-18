@@ -77,11 +77,8 @@ const styles = StyleSheet.create(theme => ({
   },
   sectionContainer: {
     marginBottom: theme.spacing.md,
-    // backgroundColor: theme.colors.screen,
   },
   itemsContainer: {
-    // backgroundColor: theme.colors.screen,
-    borderRadius: theme.radii.md,
     overflow: 'hidden',
   },
   icon: {
@@ -96,7 +93,7 @@ const styles = StyleSheet.create(theme => ({
   sectionTitle: {
     textTransform: 'uppercase',
     fontWeight: '600',
-    color: theme.colors.accent.bgAltAlpha,
+    color: theme.colors.gray.text,
   },
   footer: {
     padding: theme.spacing.lg,
@@ -106,7 +103,7 @@ const styles = StyleSheet.create(theme => ({
     marginHorizontal: theme.spacing.lg,
   },
   sectionSeparator: {
-    height: theme.spacing.xs,
-    backgroundColor: theme.colors.accent.accent,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: theme.colors.gray.accent,
   },
 }));

@@ -6,7 +6,7 @@ import { RefreshControl } from '../RefreshControl';
 import { Typography } from '../Typography';
 import { MenuItem } from './MenuItem';
 
-type Item = MenuItem | string | null | (() => ReactElement);
+export type Item = MenuItem | string | null | (() => ReactElement);
 
 export type Icon =
   | {
