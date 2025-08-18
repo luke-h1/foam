@@ -62,7 +62,7 @@ export function TextBox({
   secureTextEntry,
   style,
   styleContent,
-  styleInput,
+  styleInput = {},
   value,
 }: TextBoxProps) {
   const [focused, setFocused] = useState<boolean>(false);
@@ -150,11 +150,12 @@ const styles = StyleSheet.create(theme => ({
     color: theme.colors.gray.text,
     flex: 1,
     fontSize: theme.font.fontSize.lg,
-    height: multiline ? undefined : theme.spacing.md,
+    height: multiline ? undefined : theme.spacing['3xl'],
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: multiline ? theme.spacing.lg : undefined,
   }),
   main: {
     gap: theme.spacing.md,
+    marginBottom: theme.spacing['2xl'],
   },
 }));

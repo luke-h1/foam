@@ -40,11 +40,16 @@ export function SearchBox({
       onSubmitEditing={onSubmitEditing}
       placeholder={placeholder}
       right={
-        value && value.length > 0 ? (
-          <Button onPress={() => rightOnPress?.()}>
-            <Icon icon="x" style={styles.clear} />
-          </Button>
-        ) : null
+        <Button
+          onPress={() => rightOnPress?.()}
+          style={[
+            styles.clearButton,
+            { opacity: value && value.length > 0 ? 1 : 0 },
+          ]}
+          disabled={!value || value.length === 0}
+        >
+          <Icon icon="x" style={styles.clear} />
+        </Button>
       }
       style={[styles.main, style]}
       styleContent={styles.content}
@@ -58,6 +63,9 @@ const styles = StyleSheet.create(theme => ({
     height: theme.spacing.xl,
     width: theme.spacing.xl,
   },
+  clearButton: {
+    // Add any specific styling for the clear button container if needed
+  },
   content: {
     backgroundColor: 'transparent',
     borderWidth: 0,
@@ -67,6 +75,6 @@ const styles = StyleSheet.create(theme => ({
   },
   main: {
     flexGrow: 1,
-    height: theme.spacing.xl,
+    height: theme.spacing['2xl'],
   },
 }));
