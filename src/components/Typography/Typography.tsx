@@ -1,15 +1,44 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
- 
+
 import { FontSize, FontWeight, ThemeColor } from '@app/styles';
 import { getMargin, MarginProps } from '@app/styles/spacing';
+import { ColorScale, Colors } from '@app/styles/util/createPallete';
 import { forwardRef, LegacyRef, ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { Text, TextProps, type FontVariant } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 
+// Helper type for nested color paths
+type NestedColorPath = `${ThemeColor}.${ColorScale | 'contrast'}`;
+
+function getNestedColor(
+  // clean me up
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  theme: any,
+  colorPath: ThemeColor | NestedColorPath,
+): string {
+  if (colorPath.includes('.')) {
+    const [colorName, colorScale] = colorPath.split('.') as [
+      ThemeColor,
+      ColorScale | 'contrast',
+    ];
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+    return theme.colors[colorName]?.[colorScale] || theme.colors.gray.text;
+  }
+
+  // Fallback to existing logic for backward compatibility
+  const color = colorPath as ThemeColor;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+  return theme.colors[color]?.text || theme.colors.gray.text;
+}
+
 export type TypographyStyleProps = {
   align?: 'left' | 'center' | 'right';
-  color?: ThemeColor;
+  color?: ThemeColor | NestedColorPath;
   contrast?: boolean;
   highContrast?: boolean;
   italic?: boolean;
@@ -63,6 +92,7 @@ export const Typography = forwardRef<Text, TypographyProps>(
       highContrast,
       italic,
       tabular,
+      fontWeight = 'regular',
       children,
       style,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -81,14 +111,28 @@ export const Typography = forwardRef<Text, TypographyProps>(
   ) => {
     const { theme } = useUnistyles();
 
-    // Determine contrast level logic once
-    const resolvedHighContrast = highContrast ?? color === 'gray';
-    // eslint-disable-next-line no-nested-ternary
-    const contrastLevel = contrast
-      ? 'contrast'
-      : resolvedHighContrast
-        ? 'text'
-        : 'textLow';
+    // Handle nested color paths or fallback to existing logic
+    let resolvedColor: string;
+
+    if (typeof color === 'string' && color.includes('.')) {
+      // Handle nested color paths like "gray.accent.ui"
+      resolvedColor = getNestedColor(theme, color as NestedColorPath);
+    } else {
+      // Existing logic for backward compatibility
+      const baseColor = color as ThemeColor;
+      const resolvedHighContrast = highContrast ?? baseColor === 'gray';
+      // eslint-disable-next-line no-nested-ternary
+      const contrastLevel = contrast
+        ? 'contrast'
+        : resolvedHighContrast
+          ? 'text'
+          : 'textLow';
+
+      resolvedColor =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        theme.colors[baseColor as keyof typeof theme.colors][contrastLevel];
+    }
 
     // Build font variant array
     const fontVariant: FontVariant[] = ['no-contextual', 'stylistic-four'];
@@ -99,12 +143,11 @@ export const Typography = forwardRef<Text, TypographyProps>(
     // Create style object directly
     const textStyle = {
       ...getMargin(theme)({ m, mb, ml, mr, mt, mx, my }),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
-      color: theme.colors[color as keyof typeof theme.colors][contrastLevel],
+      color: resolvedColor,
       fontSize: theme.font.fontSize[size],
       fontStyle: italic ? 'italic' : 'normal',
       fontVariant,
+      fontWeight: theme.font.fontWeight[fontWeight],
       // lineHeight: theme.font.fontSize[size].lineHeight * rt.fontScale,
       textAlign: align,
     };

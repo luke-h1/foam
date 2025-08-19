@@ -15,15 +15,14 @@ const USER_SCOPES = [
   'user:manage:blocked_users',
 ] as const;
 
-const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
-
-const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
-
 const CHANNEL_SCOPES = [
   'channel:read:polls',
   'channel:read:predictions',
   'channel:moderate',
 ] as const;
+
+const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
+const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
 const proxyUrl = new URL(
   Platform.select({

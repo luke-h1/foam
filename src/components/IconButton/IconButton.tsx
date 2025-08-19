@@ -1,14 +1,30 @@
 import { Spacing } from '@app/styles';
+import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { Insets, StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Icon } from '../Icon/Icon';
 import { Spinner } from '../Spinner';
 
+type IconType =
+  | {
+      color?: string;
+      name: SFSymbol;
+      size?: number;
+      type: 'symbol';
+    }
+  | {
+      color?: string;
+      name: string;
+      size?: number;
+      type: 'icon';
+    }
+  | string; // For backward compatibility
+
 interface IconButtonProps {
   contrast?: boolean;
   hitSlop?: number | Insets;
-  icon: string;
+  icon: IconType;
   label: string;
   loading?: boolean;
   onLongPress?: () => void;
@@ -29,6 +45,30 @@ export function IconButton({
   size = 'md',
   style,
 }: IconButtonProps) {
+  const { theme } = useUnistyles();
+
+  const renderIcon = () => {
+    if (loading) {
+      return <Spinner />;
+    }
+
+    if (typeof icon === 'string') {
+      return <Icon icon={icon} />;
+    }
+
+    if (icon.type === 'symbol') {
+      return (
+        <SymbolView
+          name={icon.name}
+          size={icon.size ?? theme.spacing[size]}
+          tintColor={icon.color ?? theme.colors.gray.accent}
+        />
+      );
+    }
+
+    return <Icon icon={icon.name} color={icon.color} size={icon.size} />;
+  };
+
   return (
     <Button
       disabled={loading}
@@ -38,7 +78,7 @@ export function IconButton({
       onLongPress={onLongPress}
       onPress={onPress}
     >
-      {loading ? <Spinner /> : <Icon icon={icon} />}
+      {renderIcon()}
     </Button>
   );
 }

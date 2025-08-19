@@ -1,15 +1,16 @@
-import { Item, Menu } from '@app/components/Menu';
-import { useAuthContext } from '@app/context';
+import { Menu } from '@app/components/Menu';
 import { useAppNavigation } from '@app/hooks';
 import { SettingsStackParamList } from '@app/navigators';
 import { SafeAreaView } from 'react-native';
+import { AboutCard, BuildStatus } from './components';
 
 export function SettingsIndexScreen() {
-  const { authState } = useAuthContext();
   const { navigate } = useAppNavigation<SettingsStackParamList>();
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Menu
+        header={<AboutCard />}
+        footer={<BuildStatus />}
         items={[
           {
             arrow: true,
@@ -32,7 +33,7 @@ export function SettingsIndexScreen() {
           {
             arrow: true,
             icon: {
-              name: 'chart.line.text.clipboard',
+              name: 'chart.bar',
               type: 'symbol',
             },
             label: 'Dev tools',
@@ -41,7 +42,7 @@ export function SettingsIndexScreen() {
           {
             arrow: true,
             icon: {
-              name: 'widget.extralarge.badge.plus',
+              name: 'opticid',
               type: 'symbol',
             },
             label: 'Other',

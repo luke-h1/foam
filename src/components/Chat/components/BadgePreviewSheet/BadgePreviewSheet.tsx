@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Typography';
+import { Text, Typography } from '@app/components/Typography';
 import { SanitisedBadgeSet } from '@app/services';
 import { openLinkInBrowser } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';

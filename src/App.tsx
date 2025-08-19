@@ -87,22 +87,14 @@ function App() {
    */
   return (
     <Providers>
-      {__DEV__ ? (
-        <AppNavigator
-          initialState={
-            recoveredFromError
-              ? { index: 0, routes: [] }
-              : initialNavigationState
-          }
-          onStateChange={onNavigationStateChange}
-        >
-          <OTAUpdates />
-        </AppNavigator>
-      ) : (
-        <AppNavigator>
-          <OTAUpdates />
-        </AppNavigator>
-      )}
+      <AppNavigator
+        initialState={
+          recoveredFromError ? { index: 0, routes: [] } : initialNavigationState
+        }
+        onStateChange={onNavigationStateChange}
+      >
+        <OTAUpdates />
+      </AppNavigator>
     </Providers>
   );
 }

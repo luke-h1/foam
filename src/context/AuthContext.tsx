@@ -1,3 +1,4 @@
+import { useAppNavigation } from '@app/hooks';
 import { twitchApi } from '@app/services/api';
 import {
   DefaultTokenResponse,
@@ -5,8 +6,15 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
-import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
+import {
+  AuthRequestConfig,
+  AuthSessionResult,
+  DiscoveryDocument,
+  TokenResponse,
+  useAuthRequest,
+} from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
+import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
   ReactNode,
@@ -161,7 +169,7 @@ export const AuthContextProvider = ({
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
-    if (response?.type !== 'success') {
+    if (!response || response?.type !== 'success') {
       toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
