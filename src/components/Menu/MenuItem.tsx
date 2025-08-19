@@ -5,8 +5,9 @@ import { useMemo, useRef } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Icon } from '../Icon';
+import { Image } from '../Image';
 import { Switch } from '../Switch';
 import { Typography } from '../Typography';
 import { SheetItem } from '../sheets/SheetItem';
@@ -35,6 +36,8 @@ export function MenuItem({ item, style }: MenuItemProps) {
     return null;
   }, [item]);
 
+  const { theme } = useUnistyles();
+
   return (
     <>
       <Component
@@ -53,7 +56,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
           item.icon.type === 'symbol' ? (
             <SymbolView
               name={item.icon.name}
-              // tintColor={item.icon.color ?? theme.colors.gray.border}
+              tintColor={item.icon.color ?? theme.colors.gray.border}
             />
           ) : (
             // <Icon icon={'} />
@@ -61,8 +64,18 @@ export function MenuItem({ item, style }: MenuItemProps) {
           )
         ) : null}
 
+        {!item.icon && item.image && (
+          <Image
+            source={item.image}
+            style={{
+              width: 20,
+              height: 20,
+            }}
+          />
+        )}
+
         <View style={styles.contentContainer}>
-          <Typography weight="bold">{item.label}</Typography>
+          <Typography fontWeight="bold">{item.label}</Typography>
 
           {item.description ? (
             <Typography color="gray" highContrast={false}>
@@ -72,7 +85,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
         </View>
 
         {item.hideSelected ? null : typeof selected === 'string' ? (
-          <Typography color="gray" weight="bold">
+          <Typography color="gray" fontWeight="bold">
             {selected}
           </Typography>
         ) : (
@@ -88,7 +101,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
           />
         ) : null}
 
-        {item.arrow ? <Icon color="gray" icon="arrowRight" /> : null}
+        {item.arrow ? <Icon color="gray" icon="arrow-right" /> : null}
       </Component>
 
       {item.type === 'options' ? (
@@ -117,7 +130,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
                   mt="sm"
                   mx="sm"
                   size="md"
-                  weight="semiBold"
+                  fontWeight="semiBold"
                 >
                   {option}
                 </Typography>

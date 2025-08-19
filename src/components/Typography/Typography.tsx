@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
 import { FontSize, FontWeight, ThemeColor } from '@app/styles';
 import { getMargin, MarginProps } from '@app/styles/spacing';
 import { forwardRef, LegacyRef, ReactNode } from 'react';

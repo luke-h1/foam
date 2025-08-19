@@ -36,6 +36,7 @@ export type MenuItem = {
   description?: string;
   hideSelected?: boolean;
   icon?: Icon;
+  image?: string;
   label: string;
   labelStyle?: StyleProp<TextStyle>;
   onPress?: () => void | Promise<void>;

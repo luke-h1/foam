@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type FontVariant, type TextStyle } from 'react-native';
 import { UnistylesThemes } from 'react-native-unistyles';

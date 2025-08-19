@@ -1,19 +1,16 @@
-import { TabBarButton } from '@app/components';
+import { TabBar } from '@app/components/TabBar';
 import { useAuthContext } from '@app/context/AuthContext';
-import { SearchScreen, SettingsScreen } from '@app/screens';
+import { SearchScreen } from '@app/screens';
 import FollowingScreen from '@app/screens/FollowingScreen';
-import {
-  BottomTabScreenProps,
-  createBottomTabNavigator,
-} from '@react-navigation/bottom-tabs';
+import { createNativeBottomTabNavigator } from '@bottom-tabs/react-navigation';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
+import { SFSymbol } from 'expo-symbols';
 import { ComponentType, FC } from 'react';
-import { Platform } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
-import Feather from 'react-native-vector-icons/Feather';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
+import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
-import { SettingsScreenv2 } from '@app/screens/SettingsScreen/SettingsScreenv2';
 
 export type TabParamList = {
   Following: undefined;
@@ -28,7 +25,7 @@ export type TabScreenProps<TParam extends keyof TabParamList> =
     AppStackScreenProps<keyof AppStackParamList>
   >;
 
-const Tab = createBottomTabNavigator<TabParamList>();
+const Tab = createNativeBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
@@ -39,7 +36,7 @@ type ScreenComponentType =
 interface Screen {
   name: keyof TabParamList;
   component: ScreenComponentType;
-  icon: string;
+  symbol: SFSymbol;
   requiresAuth?: boolean;
 }
 
@@ -47,25 +44,25 @@ const screens: Screen[] = [
   {
     name: 'Following',
     component: FollowingScreen,
-    icon: 'heart',
+    symbol: 'heart',
     requiresAuth: true,
   },
   {
     name: 'Top',
     component: TopStackNavigator,
-    icon: 'chevron-up',
+    symbol: 'arrowshape.up',
     requiresAuth: false,
   },
   {
     name: 'Search',
     component: SearchScreen,
-    icon: 'search',
+    symbol: 'sparkle.magnifyingglass',
     requiresAuth: false,
   },
   {
     name: 'Settings',
-    component: SettingsScreenv2,
-    icon: 'settings',
+    component: SettingsStackNavigator,
+    symbol: 'gear',
     requiresAuth: false,
   },
 ];
@@ -76,50 +73,30 @@ export function TabNavigator() {
 
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: {
-          backgroundColor: theme.colors.black.bgAlpha,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.gray.border,
-          // height: Platform.OS === 'ios' ? 85 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 25 : 10,
-          paddingTop: 10,
-          paddingHorizontal: theme.spacing.md,
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
-        },
-        tabBarHideOnKeyboard: true,
-      }}
+      screenOptions={{}}
+      tabBarActiveTintColor={theme.colors.grass.accentAlpha}
+      tabBarInactiveTintColor={theme.colors.gray.accent}
+      hapticFeedbackEnabled
+      // eslint-disable-next-line react/no-unstable-nested-components
+      tabBar={props => <TabBar {...props} />}
     >
       {screens.map(screen => {
         if (screen.requiresAuth && !user) {
           return null;
         }
+
         return (
           <Tab.Screen
             key={screen.name}
             name={screen.name}
             component={screen.component as ComponentType}
             options={{
-              headerStyle: {
-                backgroundColor: theme.colors.black.bgAlpha,
-              },
-              // eslint-disable-next-line react/no-unstable-nested-components
-              tabBarButton: props => (
-                <TabBarButton
-                  {...props}
-                  activeTintColor={theme.colors.accent.accent}
-                  inactiveTintColor={theme.colors.gray.textLow}
-                  // eslint-disable-next-line react/no-unstable-nested-components
-                  icon={({ color }) => (
-                    <Feather name={screen.icon} size={24} color={color} />
-                  )}
-                />
-              ),
-
-              tabBarLabel: screen.name,
+              lazy: true,
+              tabBarIcon: () => ({
+                sfSymbol: screen.symbol,
+                height: 10,
+                width: 10,
+              }),
             }}
           />
         );

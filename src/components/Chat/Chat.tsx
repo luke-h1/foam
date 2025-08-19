@@ -25,9 +25,9 @@ import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
+import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
-import { Typography } from '../Typography';
 
 interface ChatProps {
   channelId: string;

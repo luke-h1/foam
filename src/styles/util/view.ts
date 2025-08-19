@@ -6,7 +6,7 @@ import {
   getPadding,
   MarginProps,
   PaddingProps,
-  SpaceToken,
+  Spacing,
 } from '../spacing';
 
 export type ViewStyleProps = {
@@ -16,13 +16,13 @@ export type ViewStyleProps = {
   flexBasis?: number;
   flexGrow?: number;
   flexShrink?: number;
-  gap?: SpaceToken | number;
-  gapX?: SpaceToken | number;
-  gapY?: SpaceToken | number;
-  height?: SpaceToken | number;
+  gap?: Spacing | number;
+  gapX?: Spacing | number;
+  gapY?: Spacing | number;
+  height?: Spacing | number;
   justify?: 'between' | 'center' | 'end' | 'start';
   self?: 'center' | 'end' | 'start' | 'stretch';
-  width?: SpaceToken | number;
+  width?: Spacing | number;
   wrap?: 'nowrap' | 'wrap-reverse' | 'wrap';
 } & MarginProps &
   PaddingProps;
@@ -101,7 +101,7 @@ export function getViewStyles(theme: UnistylesThemes['dark']) {
   };
 }
 
-function getSpacing(theme: UnistylesThemes['dark'], key?: SpaceToken | number) {
+function getSpacing(theme: UnistylesThemes['dark'], key?: Spacing | number) {
   if (!key) {
     return;
   }
