@@ -38,6 +38,7 @@ export type MenuItem = {
   icon?: Icon;
   image?: string;
   label: string;
+  key?: string;
   labelStyle?: StyleProp<TextStyle>;
   onPress?: () => void | Promise<void>;
   style?: StyleProp<ViewStyle>;
@@ -50,7 +51,7 @@ export type MenuItem = {
       options: Array<MenuItemOption | string | null>;
       title?: string;
       type: 'options';
-      value?: string;
+      value?: string | number;
     }
   | {
       onSelect: (value: boolean) => void;
@@ -101,7 +102,7 @@ export function Menu({
 
         // @ts-expect-error fix me being unknown
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        return <MenuItem item={item} style={item.style} />;
+        return <MenuItem item={item} style={item.style ?? {}} />;
       }}
     />
   );
