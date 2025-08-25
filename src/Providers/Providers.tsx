@@ -18,7 +18,7 @@ import {
 import { StyleSheet } from 'react-native-unistyles';
 import { Toaster } from 'sonner-native';
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 5,

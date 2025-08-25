@@ -5,7 +5,7 @@ import { useAppNavigation } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
 import newRelic from 'newrelic-react-native-agent';
 import { useEffect } from 'react';
-import { Platform, View, ViewStyle } from 'react-native';
+import { Platform, SafeAreaView, View, ViewStyle } from 'react-native';
 import { toast } from 'sonner-native';
 
 const USER_SCOPES = [
@@ -73,7 +73,7 @@ export function LoginScreen() {
       newRelic.recordCustomEvent('Login', 'LoginSuccess', new Map());
       toast.success('Logged in');
 
-      navigation.popTo('Tabs', {
+      navigation.push('Tabs', {
         screen: 'Following',
       });
     }
@@ -94,7 +94,7 @@ export function LoginScreen() {
   }, [response]);
 
   return (
-    <View
+    <SafeAreaView
       style={{
         padding: 8,
         display: 'flex',
@@ -107,7 +107,7 @@ export function LoginScreen() {
           <Typography>Login with Twitch</Typography>
         </Button>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

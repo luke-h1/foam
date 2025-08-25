@@ -221,10 +221,16 @@ export const twitchService = {
   },
 
   getStream: async (userLogin: string) => {
+    const params: Record<string, string> = {};
+
+    if (userLogin) {
+      params.user_login = userLogin;
+    }
+
     const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
       params: {
-        user_login: userLogin,
         first: 15,
+        ...params,
       },
       headers: {
         'Client-Id': process.env.TWITCH_CLIENT_ID as string,

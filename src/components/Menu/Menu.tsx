@@ -1,6 +1,6 @@
 import { SFSymbol } from 'expo-symbols';
 import { ReactElement } from 'react';
-import { StyleProp, TextStyle, ViewStyle } from 'react-native';
+import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
 import { FlashList, FlashListProps } from '../FlashList';
 import { RefreshControl } from '../RefreshControl';
 import { Typography } from '../Typography';
@@ -23,10 +23,11 @@ export type Icon =
 export interface MenuItemOption {
   hideRight?: boolean;
   icon?: Icon;
-  label: string;
+  label?: string;
   labelStyle?: StyleProp<TextStyle>;
   left?: ReactElement;
   right?: ReactElement;
+  key?: string;
   style?: StyleProp<ViewStyle>;
   value: string;
 }
@@ -51,11 +52,12 @@ export type MenuItem = {
       options: Array<MenuItemOption | string | null>;
       title?: string;
       type: 'options';
-      value?: string | number;
+      value?: string | boolean | number;
     }
   | {
       onSelect: (value: boolean) => void;
       type: 'switch';
+      key?: string;
       value: boolean;
     }
 );
@@ -91,6 +93,10 @@ export function Menu({
         onRefresh ? <RefreshControl onRefresh={onRefresh} /> : undefined
       }
       renderItem={({ item }) => {
+        if (item === null) {
+          return <View style={{ height: 4 }} />;
+        }
+
         if (typeof item === 'string') {
           return <Typography>{item}</Typography>;
         }
@@ -102,7 +108,7 @@ export function Menu({
 
         // @ts-expect-error fix me being unknown
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        return <MenuItem item={item} style={item.style ?? {}} />;
+        return <MenuItem item={item} style={item.style} />;
       }}
     />
   );

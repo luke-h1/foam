@@ -30,7 +30,7 @@ const preferenceStoreCreator: StateCreator<
   },
 });
 
-export const usePreferenceStore = create<PreferenceState>()(
+export const usePreferences = create<PreferenceState>()(
   persist(preferenceStoreCreator, {
     name: PREFERENCE_STORAGE_KEY,
     storage: createJSONStorage(() => zustandStorage),

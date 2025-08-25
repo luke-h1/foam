@@ -1,8 +1,8 @@
 import { Chat } from '@app/components';
-import { DevToolsStackScreenProps } from '@app/navigators';
+import { SettingsStackScreenProps } from '@app/navigators';
 import { FC } from 'react';
 
-export const ChatScreen: FC<DevToolsStackScreenProps<'Chat'>> = ({
+export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
   route: { params },
 }) => {
   const { channelId, channelName } = params;

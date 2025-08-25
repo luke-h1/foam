@@ -1,4 +1,4 @@
-import { useAppNavigation } from '@app/hooks';
+import { queryClient } from '@app/Providers';
 import { twitchApi } from '@app/services/api';
 import {
   DefaultTokenResponse,
@@ -6,15 +6,8 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
-import {
-  AuthRequestConfig,
-  AuthSessionResult,
-  DiscoveryDocument,
-  TokenResponse,
-  useAuthRequest,
-} from 'expo-auth-session';
+import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
   ReactNode,
@@ -278,10 +271,15 @@ export const AuthContextProvider = ({
       loginWithTwitch,
       populateAuthState,
       logout: async () => {
-        await SecureStore.deleteItemAsync(storageKeys.user);
-        await SecureStore.deleteItemAsync(storageKeys.anon);
+        await Promise.all([
+          SecureStore.deleteItemAsync(storageKeys.user),
+          SecureStore.deleteItemAsync(storageKeys.anon),
+        ]);
         setState({ ready: true });
         setUser(undefined);
+        twitchApi.removeAuthToken();
+        await queryClient.invalidateQueries();
+        await queryClient.resetQueries();
         await doAnonAuth();
       },
       fetchAnonToken,

@@ -60,6 +60,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
             />
           ) : (
             // <Icon icon={'} />
+            // eslint-disable-next-line react/jsx-no-useless-fragment
             <></>
           )
         ) : null}
@@ -140,7 +141,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
               <SheetItem
                 icon={'icon' in option ? option.icon : undefined}
                 key={option.value}
-                label={option.label}
+                label={option.label ?? ''}
                 labelStyle={option.labelStyle}
                 left={option.left}
                 onPress={() => {

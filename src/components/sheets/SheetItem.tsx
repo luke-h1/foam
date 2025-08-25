@@ -21,7 +21,7 @@ type Icon =
       type: 'icon';
     };
 
-type Props = {
+export type SheetItemProps = {
   icon?: Icon;
   label: string;
   labelStyle?: StyleProp<TextStyle>;
@@ -45,7 +45,7 @@ export function SheetItem({
   selected,
   size,
   style,
-}: Props) {
+}: SheetItemProps) {
   const { theme } = useUnistyles();
 
   return (
@@ -73,7 +73,7 @@ export function SheetItem({
         numberOfLines={1}
         // size={size}
         style={[styles.label, labelStyle]}
-        weight="semiBold"
+        fontWeight="semiBold"
       >
         {label}
       </Typography>
