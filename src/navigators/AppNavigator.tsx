@@ -12,14 +12,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import { ComponentProps, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import {
-  DevToolsParamList,
-  DevToolsStackNavigator,
-} from './DevToolsStackNavigator';
-import {
-  OtherStackNavigator,
-  OtherStackParamList,
-} from './OtherStackNavigator';
+import { DevToolsParamList } from './DevToolsStackNavigator';
+import { OtherStackParamList } from './OtherStackNavigator';
 import {
   PreferenceStackNavigator,
   PreferenceStackParamList,
