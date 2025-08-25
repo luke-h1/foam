@@ -99,6 +99,7 @@ const config: ExpoConfig = {
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
   },
+  assetBundlePatterns: ['**/*'],
   runtimeVersion: {
     policy: 'appVersion',
   },
@@ -120,6 +121,12 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    [
+      'expo-dev-launcher',
+      {
+        launchMode: 'most-recent',
+      },
+    ],
     [
       'expo-router',
       {
@@ -169,7 +176,6 @@ const config: ExpoConfig = {
       {
         ios: {
           useFrameworks: 'static',
-          extraPods: [],
         },
       },
     ],

@@ -87,7 +87,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "dotenv": "^17.2.1",
-    "expo": "53.0.20",
+    "expo": "^53.0.20",
     "expo-auth-session": "~6.2.1",
     "expo-background-task": "^0.2.8",
     "expo-blur": "~14.1.5",
@@ -117,7 +117,7 @@
     "newrelic-react-native-agent": "^1.5.6",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-native": "0.79.5",
+    "react-native": "0.79.6",
     "react-native-bottom-tabs": "^0.9.2",
     "react-native-edge-to-edge": "1.6.0",
     "react-native-gesture-handler": "~2.24.0",
@@ -231,10 +231,8 @@
     "suiteName": "App Jest tests",
     "outputName": "junit-app.xml"
   },
-  "bun": {
-    "overrides": {
-      "uuid": "3.4.0"
-    }
+  "overrides": {
+    "metro": "0.82.0"
   },
   "config": {
     "commitizen": {
