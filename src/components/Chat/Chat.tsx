@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation, useDownloadImages, useTmiClient } from '@app/hooks';
+import { useTmiClient } from '@app/hooks';
 import { ChatMessageType, ChatUser, useChatStore } from '@app/store';
 import { createHitslop, generateRandomTwitchColor } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -11,6 +11,7 @@ import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
+import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
@@ -37,8 +38,8 @@ interface ChatProps {
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [connected, setConnected] = useState<boolean>(false);
   const { authState, user } = useAuthContext();
-  const navigation = useAppNavigation();
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const router = useRouter();
 
   const { theme } = useUnistyles();
 
@@ -78,11 +79,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     clearMessages,
   } = useChatStore();
 
-  navigation.addListener('beforeRemove', () => {
-    void client.disconnect();
-    clearChannelResources();
-    clearTtvUsers();
-  });
+  // navigation.addListener('beforeRemove', () => {
+  //   void client.disconnect();
+  //   clearChannelResources();
+  //   clearTtvUsers();
+  // });
 
   const loadChat = async () => {
     await loadChannelResources(channelId);

@@ -1,3 +1,4 @@
+import { Typography } from '@app/components/Typography';
 import { LegendListRef } from '@legendapp/list';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { RefObject, useCallback, useMemo, useState } from 'react';

@@ -1,7 +1,5 @@
 import { AuthContextProvider } from '@app/context';
-import { useDebugOptions, useRecoveredFromError } from '@app/hooks';
-import { BaseConfig } from '@app/navigators';
-import { ErrorBoundary } from '@app/screens';
+import { useDebugOptions } from '@app/hooks';
 import { twitchApi } from '@app/services/api';
 import { deleteTokens } from '@app/utils';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -11,10 +9,6 @@ import { PropsWithChildren } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
-import {
-  initialWindowMetrics,
-  SafeAreaProvider,
-} from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { Toaster } from 'sonner-native';
 
@@ -29,8 +23,6 @@ export const queryClient = new QueryClient({
 });
 
 export function Providers({ children }: PropsWithChildren) {
-  const { setRecoveredFromError } = useRecoveredFromError();
-
   const { ReactQueryDebug } = useDebugOptions();
 
   const shouldDelete = false;
@@ -41,37 +33,30 @@ export function Providers({ children }: PropsWithChildren) {
 
   return (
     <AuthContextProvider>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-        <ErrorBoundary
-          catchErrors={BaseConfig.catchErrors}
-          onReset={() => setRecoveredFromError(true)}
-        >
-          <KeyboardProvider>
-            <GestureHandlerRootView style={styles.gestureContainer}>
-              <BottomSheetModalProvider>
-                <QueryClientProvider client={queryClient}>
-                  <Toaster />
-                  {children}
-                  {ReactQueryDebug?.enabled && (
-                    <DevToolsBubble
-                      queryClient={queryClient}
-                      onCopy={async text => {
-                        try {
-                          await Clipboard.setStringAsync(text);
-                          return true;
-                          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                        } catch (error) {
-                          return false;
-                        }
-                      }}
-                    />
-                  )}
-                </QueryClientProvider>
-              </BottomSheetModalProvider>
-            </GestureHandlerRootView>
-          </KeyboardProvider>
-        </ErrorBoundary>
-      </SafeAreaProvider>
+      <KeyboardProvider>
+        <GestureHandlerRootView style={styles.gestureContainer}>
+          <BottomSheetModalProvider>
+            <QueryClientProvider client={queryClient}>
+              <Toaster />
+              {children}
+              {ReactQueryDebug?.enabled && (
+                <DevToolsBubble
+                  queryClient={queryClient}
+                  onCopy={async text => {
+                    try {
+                      await Clipboard.setStringAsync(text);
+                      return true;
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    } catch (error) {
+                      return false;
+                    }
+                  }}
+                />
+              )}
+            </QueryClientProvider>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </KeyboardProvider>
     </AuthContextProvider>
   );
 }

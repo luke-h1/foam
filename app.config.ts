@@ -54,7 +54,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 
 const variant = (process.env.APP_VARIANT as Variant) || 'production';
 
-const VERSION = '0.0.26';
+const VERSION = '0.0.27';
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 
@@ -115,8 +115,17 @@ const config: ExpoConfig = {
     eas: {
       projectId: '950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
     },
+    router: {
+      origin: false,
+    },
   },
   plugins: [
+    [
+      'expo-router',
+      {
+        asyncRoutes: false,
+      },
+    ],
     'react-native-bottom-tabs',
     ['app-icon-badge', appIconBadgeConfig],
     'expo-secure-store',
@@ -177,6 +186,8 @@ const config: ExpoConfig = {
   ],
   experiments: {
     tsconfigPaths: true,
+    typedRoutes: true,
+    reactCompiler: true,
   },
   web: {},
   ios: {

@@ -7,6 +7,7 @@ import {
 } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
+import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import {
   createContext,
@@ -260,7 +261,12 @@ export const AuthContextProvider = ({
 
   useEffect(() => {
     void (async () => {
-      await populateAuthState();
+      await populateAuthState().then(() => {
+        if (state.authState?.isAnonAuth) {
+          router.push('/(tabs)/top/top-streams');
+        }
+        router.push('/(tabs)/following');
+      });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

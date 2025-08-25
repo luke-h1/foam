@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
-import { Text, Typography } from '@app/components/Typography';
+import { Typography } from '@app/components/Typography';
 import {
   calculateAspectRatio,
   openLinkInBrowser,

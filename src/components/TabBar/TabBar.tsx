@@ -1,7 +1,7 @@
-import { useAppNavigation } from '@app/hooks';
 import { TabParamList } from '@app/navigators';
 import { type BottomTabBarProps } from '@bottom-tabs/react-navigation';
 import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
 import { SFSymbol, SymbolView } from 'expo-symbols';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -19,11 +19,11 @@ const icons: Record<keyof TabParamList, SFSymbol> = {
 
 export function TabBar(props: BottomTabBarProps) {
   const { descriptors, navigation, state } = props;
-  const appNavigation = useAppNavigation();
+  const router = useRouter();
 
   const gesture = Gesture.Pan().onEnd(event => {
     if (event.translationX > 100) {
-      runOnJS(appNavigation.goBack)();
+      runOnJS(router.back)();
     }
   });
 

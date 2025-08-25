@@ -14,7 +14,7 @@ export function SheetHeader({ left, right, style, title }: Props) {
   return (
     <View style={[styles.main, style]}>
       {left ? <View style={[styles.left]}>{left}</View> : null}
-      <Typography weight="bold">{title}</Typography>
+      <Typography fontWeight="bold">{title}</Typography>
       {right ? <View style={[styles.right]}>{right}</View> : null}
     </View>
   );

@@ -2,7 +2,6 @@ import { ThemeColor } from '@app/styles';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from 'react';
 import { RefreshControl as RNRefreshControl } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
 
 interface Props {
   color?: ThemeColor;
@@ -12,8 +11,6 @@ interface Props {
 
 export function RefreshControl({ onRefresh, color = 'blue', offset }: Props) {
   const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  const { theme } = useUnistyles();
 
   const refresh = useCallback(async () => {
     setRefreshing(true);

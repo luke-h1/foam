@@ -2,7 +2,7 @@
 
 import { FontSize, FontWeight, ThemeColor } from '@app/styles';
 import { getMargin, MarginProps } from '@app/styles/spacing';
-import { ColorScale, Colors } from '@app/styles/util/createPallete';
+import { ColorScale } from '@app/styles/util/createPallete';
 import { forwardRef, LegacyRef, ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { Text, TextProps, type FontVariant } from 'react-native';

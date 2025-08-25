@@ -13,7 +13,6 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 import * as ReactNative from 'react-native';
 import mockFile from '../__mocks__/mockFile';
 import 'cross-fetch/polyfill';
-import '@app/hooks/useAppNavigation';
 import '../src/styles/unistyles';
 
 jest.mock('expo-font');
@@ -43,17 +42,6 @@ jest.mock('react-native-reanimated', () => {
 
   return Reanimated;
 });
-
-// jest.mock('@app/hooks/useAppNavigation', () => {
-//   const mockNavigation: Partial<NativeStackNavigationProp<AppStackParamList>> =
-//     {
-//       navigate: jest.fn(),
-//       goBack: jest.fn(),
-//       ...jest.requireActual('@reac')
-//     };
-
-//   return () => mockNavigation as NativeStackNavigationProp<AppStackParamList>;
-// });
 
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');

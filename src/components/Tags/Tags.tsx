@@ -1,5 +1,5 @@
-import { useAppNavigation } from '@app/hooks';
 import { ListRenderItem } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -13,15 +13,13 @@ interface Props {
 }
 
 export function Tags({ tags, limit = 10 }: Props) {
-  const { navigate } = useAppNavigation();
+  const router = useRouter();
 
   const renderItem: ListRenderItem<string> = useCallback(({ item }) => {
     return (
       <Button
         onPress={() => {
-          navigate('Category', {
-            id: item,
-          });
+          router.push(`/categories/${item}`);
         }}
       >
         <View style={styles.tag}>

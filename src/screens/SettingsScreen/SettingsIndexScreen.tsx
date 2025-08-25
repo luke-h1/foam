@@ -1,11 +1,12 @@
 import { Menu } from '@app/components/Menu';
-import { useAppNavigation } from '@app/hooks';
-import { SettingsStackParamList } from '@app/navigators';
+import { useAuthContext } from '@app/context';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native';
 import { AboutCard, BuildStatus } from './components';
 
 export function SettingsIndexScreen() {
-  const { navigate } = useAppNavigation<SettingsStackParamList>();
+  const router = useRouter();
+  const { user } = useAuthContext();
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Menu
@@ -19,7 +20,8 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Profile',
-            onPress: () => navigate('Profile'),
+            // onPress: () => navigate('Profile'),
+            onPress: () => router.push(`/streams/${user?.id}/profile`),
           },
           {
             arrow: true,
@@ -28,7 +30,8 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Appearance',
-            onPress: () => navigate('Appearance'),
+            // onPress: () => navigate('Appearance'),
+            onPress: () => router.push('/settings/appearance'),
           },
           {
             arrow: true,
@@ -37,7 +40,7 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Dev tools',
-            onPress: () => navigate('DevTools'),
+            onPress: () => router.push('/dev-tools/debug'),
           },
           {
             arrow: true,
@@ -46,7 +49,7 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Other',
-            onPress: () => navigate('Other'),
+            onPress: () => router.push('/settings/other'),
           },
         ]}
       />

@@ -1,4 +1,3 @@
- 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type FontVariant, type TextStyle } from 'react-native';
 import { UnistylesThemes } from 'react-native-unistyles';
@@ -54,11 +53,11 @@ export function getTextStyles(theme: UnistylesThemes['dark']) {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
         ] as keyof (typeof theme.colors)[typeof color],
-      fontSize: theme.font.fontSize[size].fontSize * scaling,
+      fontSize: theme.font.fontSize[size] * scaling,
       fontStyle: italic ? 'italic' : 'normal',
       fontVariant,
       fontWeight: weights[weight],
-      lineHeight: theme.font.fontSize[size].lineHeight * scaling,
+      // lineHeight: theme.font.fontSize[size].lineHeight * scaling,
       textAlign: align,
     };
   };

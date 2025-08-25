@@ -2,10 +2,10 @@ import { Button, FlashList } from '@app/components';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
 import { useAuthContext } from '@app/context';
-import { useAppNavigation } from '@app/hooks';
 import { resetRoot } from '@app/navigators/navigationUtilities';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { ListRenderItem } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -20,7 +20,7 @@ interface ProfileItem {
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
-  const { navigate } = useAppNavigation();
+  const router = useRouter();
 
   const sheetRef = useRef<BottomSheetModal>(null);
 
@@ -35,12 +35,13 @@ export function ProfileCard() {
       title: 'My Channel',
       description: 'View your channel',
       onPress: () =>
-        navigate('Streams', {
-          screen: 'StreamerProfile',
-          params: {
-            id: user?.id as string,
-          },
-        }),
+        // navigate('Streams', {
+        //   screen: 'StreamerProfile',
+        //   params: {
+        //     id: user?.id as string,
+        //   },
+        // }),
+        router.push(`/streams/${user?.id}/profile`),
     },
     {
       title: 'Blocked Users',

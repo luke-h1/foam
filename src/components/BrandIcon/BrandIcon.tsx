@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { typedObjectKeys } from '@app/utils';
@@ -68,11 +69,10 @@ export const BrandIcon = memo(
 );
 BrandIcon.displayName = 'BrandIcon';
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create(() => ({
   iconImage: ({
     height,
     width,
-    color,
   }: {
     height: DimensionValue;
     width: DimensionValue;

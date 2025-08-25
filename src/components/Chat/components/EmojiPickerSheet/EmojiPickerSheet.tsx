@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 
+import { Typography } from '@app/components/Typography';
 import { useChatStore } from '@app/store';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { LegendListRef } from '@legendapp/list';

@@ -6,8 +6,8 @@ import {
   useAuthRequest,
 } from 'expo-auth-session';
 import { InteractionManager, Platform } from 'react-native';
-import { useAppNavigation } from './useAppNavigation';
 import { useAsyncEffect } from './useAsyncEffect';
+import { useRouter } from 'expo-router';
 
 /**
  * Experimental oauth hook
@@ -66,8 +66,8 @@ const twitchDiscovery: DiscoveryDocument = {
 };
 
 export function useTwitchOauth() {
-  // eslint-disable-next-line @typescript-eslint/unbound-method
-  const { navigate } = useAppNavigation();
+  const router = useRouter();
+
   const { loginWithTwitch } = useAuthContext();
   const [twitchRequest, twitchResponse, promptTwitchAsync] = useAuthRequest(
     twitchConfig,
@@ -85,9 +85,10 @@ export function useTwitchOauth() {
       if (twitchResponse?.type === 'success') {
         // Wait for any pending interactions to complete before navigating
         InteractionManager.runAfterInteractions(() => {
-          navigate('Tabs', {
-            screen: 'Following',
-          });
+          // navigate('Tabs', {
+          //   screen: 'Following',
+          // });
+          router.push(`/(tabs)/following`);
         });
       }
     } catch (error) {

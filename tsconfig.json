@@ -14,7 +14,11 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "jsx": "react-jsx",
-    "lib": ["dom", "DOM.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "DOM.iterable",
+      "esnext"
+    ],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
@@ -24,10 +28,21 @@
     "noUnusedLocals": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["./src/*"],
-      "@modules/*": ["./modules/*"]
+      "@app/*": [
+        "./src/*"
+      ],
+      "@modules/*": [
+        "./modules/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -1,11 +1,9 @@
 import { Menu } from '@app/components/Menu';
-import { useAppNavigation } from '@app/hooks';
-import { SettingsStackParamList } from '@app/navigators';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native';
 
 export function SettingsDevtoolsScreen() {
-  const { navigate } = useAppNavigation<SettingsStackParamList>();
-
+  const router = useRouter();
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Menu
@@ -13,7 +11,7 @@ export function SettingsDevtoolsScreen() {
           {
             label: 'App Diagnostics',
             description: 'View versions, config etc.',
-            onPress: () => navigate('Diagnostics'),
+            onPress: () => router.push(`/dev-tools/diagnostics`),
             icon: {
               type: 'symbol',
               name: 'laptopcomputer.trianglebadge.exclamationmark',
@@ -22,7 +20,7 @@ export function SettingsDevtoolsScreen() {
           {
             label: 'Debug',
             description: 'Turn on debugging tools',
-            onPress: () => navigate('Debug'),
+            onPress: () => router.push(`/dev-tools/debug`),
             icon: {
               type: 'symbol',
               name: 'laptopcomputer.trianglebadge.exclamationmark',

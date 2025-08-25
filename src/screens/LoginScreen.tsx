@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Button, Typography } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
+import { useRouter } from 'expo-router';
 import newRelic from 'newrelic-react-native-agent';
 import { useEffect } from 'react';
 import { Platform, SafeAreaView, View, ViewStyle } from 'react-native';
@@ -34,7 +34,7 @@ const proxyUrl = new URL(
 ).toString();
 
 export function LoginScreen() {
-  const navigation = useAppNavigation();
+  const router = useRouter();
 
   const { loginWithTwitch } = useAuthContext();
 
@@ -73,9 +73,11 @@ export function LoginScreen() {
       newRelic.recordCustomEvent('Login', 'LoginSuccess', new Map());
       toast.success('Logged in');
 
-      navigation.push('Tabs', {
-        screen: 'Following',
-      });
+      // navigation.push('Tabs', {
+      //   screen: 'Following',
+      // });
+
+      router.push(`/(tabs)/following`);
     }
 
     newRelic.recordCustomEvent(

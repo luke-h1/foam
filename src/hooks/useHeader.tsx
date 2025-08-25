@@ -9,7 +9,6 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-import { useAppNavigation } from './useAppNavigation';
 import { useTargetMeasurement } from './useTargetMeasurement';
 
 interface Props {
@@ -80,7 +79,7 @@ const styles = StyleSheet.create(theme => ({
     overflow: 'hidden',
   },
   titleText: {
-    fontSize: theme.font.fontSize.md.fontSize,
+    fontSize: theme.font.fontSize.md,
     textAlign: 'center',
   },
 }));

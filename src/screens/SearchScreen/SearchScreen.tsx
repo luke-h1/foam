@@ -1,15 +1,5 @@
-import {
-  Button,
-  SearchHistory,
-  FlashList,
-  SearchBox,
-  SearchHistoryV2,
-} from '@app/components';
-import {
-  useAppNavigation,
-  useDebouncedCallback,
-  useDebouncedEffect,
-} from '@app/hooks';
+import { Button, FlashList, SearchBox, SearchHistoryV2 } from '@app/components';
+import { useDebouncedCallback, useDebouncedEffect } from '@app/hooks';
 import {
   twitchService,
   SearchChannelResponse,
@@ -17,11 +7,12 @@ import {
 } from '@app/services';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { TextInput as NativeTextInput, Platform, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { StyleSheet, withUnistyles } from 'react-native-unistyles';
 import { StreamerCard } from './components';
+import { useRouter } from 'expo-router';
 
 const UniKeyboardAvoidingView = withUnistyles(KeyboardAvoidingView);
 
@@ -33,10 +24,8 @@ interface SearchHistoryItem {
  * TODO: use swipe to delete
  */
 export function SearchScreen() {
-  const { navigate } = useAppNavigation();
-
+  const router = useRouter();
   const [query, setQuery] = useState<string>('');
-  const ref = useRef<NativeTextInput | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
@@ -176,12 +165,7 @@ export function SearchScreen() {
       return (
         <Button
           onPress={() => {
-            navigate('Streams', {
-              screen: 'LiveStream',
-              params: {
-                id: item.broadcaster_login,
-              },
-            });
+            router.push(`/streams/live/${item.broadcaster_login}`);
           }}
           style={styles.list}
         >

@@ -6,7 +6,7 @@ import {
   Typography,
 } from '@app/components';
 import { useAuthContext } from '@app/context';
-import { useAppNavigation, useDebugOptions } from '@app/hooks';
+import { useDebugOptions } from '@app/hooks';
 import {
   AllowedKey,
   NAMESPACE,
@@ -19,6 +19,7 @@ import {
 } from '@modules/activity-controller';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
+import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -156,9 +157,9 @@ function DisplayAccessToken() {
 
 function NavigateToChat() {
   const { user, authState } = useAuthContext();
-  const { navigate } = useAppNavigation();
   const [channelName, setChannelName] = useState<string>('');
   const [twitchUserId, setTwitchUserId] = useState<string>('');
+  const router = useRouter();
 
   const toUserId = async (username: string) => {
     const result = await twitchService.getUser(username);
@@ -175,13 +176,9 @@ function NavigateToChat() {
       return;
     }
 
-    navigate('DevTools', {
-      screen: 'Chat',
-      params: {
-        channelName,
-        channelId: twitchUserId,
-      },
-    });
+    router.push(
+      `/dev-tools/chat?channelName=${channelName}&channelId=${twitchUserId}`,
+    );
   };
   return (
     <KeyboardAvoidingView

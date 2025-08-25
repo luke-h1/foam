@@ -3,7 +3,7 @@ import { Button } from '@app/components/Button';
 import { Typography } from '@app/components/Typography';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import { ScrollView } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import {
   CATEGORY_HEADER_HEIGHT,
   EMOJI_SIZE,
@@ -22,8 +22,6 @@ export function EmojiCategoryBar({
   onPress: (index: number) => void;
   activeSection: number;
 }) {
-  const { theme } = useUnistyles();
-
   return (
     <ScrollView
       // style={[styles.topbar, { backgroundColor: theme.colors.underline }]}
