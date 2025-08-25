@@ -5,6 +5,8 @@ import {
   AnimatedFlashList,
   ListRenderItem,
 } from '@app/components';
+import { HeaderV2 } from '@app/components/HeaderV2/HeaderV2';
+import { StackHeader } from '@app/components/HeaderV2/StackHeader';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshControl } from '@app/components/RefreshControl';
 import { useAuthContext } from '@app/context/AuthContext';

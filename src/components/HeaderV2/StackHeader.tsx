@@ -14,6 +14,8 @@ export function StackHeader({ navigation, options, ...props }: Props) {
       back={back}
       left={options.headerLeft?.({ canGoBack: back })}
       modal={modal}
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
       right={options.headerRight?.({ canGoBack: back })}
       sticky={options.headerTransparent === false}
       title={

@@ -73,7 +73,7 @@ export function HeaderV2({
 const styles = StyleSheet.create((theme, rt) => ({
   blurView: (sticky: boolean, modal: boolean, tint: boolean) => {
     const base: UnistylesValues = {
-      backgroundColor: theme.colors[tint ? 'accent' : 'gray'].bgAlpha,
+      backgroundColor: theme.colors[tint ? 'accent' : 'gray'].bg,
       borderBottomColor: 'transparent',
       borderBottomWidth: StyleSheet.hairlineWidth,
     };
@@ -120,7 +120,7 @@ const styles = StyleSheet.create((theme, rt) => ({
   actions: {
     bottom: 0,
     position: 'absolute',
-    flexDirection: 'row',
+    // flexDirection: 'row',
   },
   left: {
     left: 0,
