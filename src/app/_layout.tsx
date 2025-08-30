@@ -1,3 +1,4 @@
+import '../styles/unistyles';
 import Providers from '@app/Providers/Providers';
 import {
   useOnAppStateChange,
@@ -62,6 +63,7 @@ function AppContent() {
 const styles = StyleSheet.create((theme, rt) => ({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.blue.accent,
     paddingTop: Platform.select({
       ios: 0,
       android: rt.insets.top,
