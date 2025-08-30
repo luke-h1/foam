@@ -13,3 +13,4 @@ export * from './setupBackgroundUpdates';
 export * from './statusBarHeight';
 export * from './string';
 export * from './typescript';
+export * from './auth-guards';

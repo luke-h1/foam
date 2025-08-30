@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 
 // todo - in the future, read from github md
 const mockChangelog = `

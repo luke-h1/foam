@@ -19,13 +19,13 @@ import {
   Platform,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  SafeAreaView,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
-import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
@@ -389,7 +389,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }
 
   return (
-    <SafeAreaViewFixed style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <Typography style={styles.header}>CHAT</Typography>
       <KeyboardAvoidingView
         behavior="padding"
@@ -496,7 +496,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           />
         )}
       </KeyboardAvoidingView>
-    </SafeAreaViewFixed>
+    </SafeAreaView>
   );
 });
 

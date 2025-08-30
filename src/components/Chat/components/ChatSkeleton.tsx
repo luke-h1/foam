@@ -1,7 +1,11 @@
-import { SafeAreaViewFixed } from '@app/components/SafeAreaViewFixed';
 import { Typography } from '@app/components/Typography';
 import { useEffect } from 'react';
-import { useWindowDimensions, View, ViewStyle } from 'react-native';
+import {
+  SafeAreaView,
+  useWindowDimensions,
+  View,
+  ViewStyle,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -66,7 +70,7 @@ export function ChatSkeleton() {
   const chatWidth = width;
   const chatHeight = height * 0.6;
   return (
-    <SafeAreaViewFixed style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <Typography style={styles.header}>CHAT</Typography>
       <View
         style={[styles.chatContainer, { width: chatWidth, height: chatHeight }]}
@@ -86,7 +90,7 @@ export function ChatSkeleton() {
         />
       </View>
       <View style={styles.inputContainer} />
-    </SafeAreaViewFixed>
+    </SafeAreaView>
   );
 }
 

@@ -148,11 +148,13 @@ export const twitchService = {
    * @returns a token for an anonymous user
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
+    console.log(process.env.AUTH_PROXY_API_BASE_URL);
+    console.log(process.env.AUTH_PROXY_API_KEY);
     const { data } = await axios.get<{ data: DefaultTokenResponse }>(
-      `${process.env.AUTH_PROXY_API_BASE_URL}/token`,
+      `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/token`,
       {
         headers: {
-          'x-api-key': process.env.AUTH_PROXY_API_KEY,
+          'x-api-key': process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
         },
       },
     );

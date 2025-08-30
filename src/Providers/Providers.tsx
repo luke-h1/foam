@@ -1,9 +1,10 @@
 import { AuthContextProvider } from '@app/context';
 import { useDebugOptions } from '@app/hooks';
 import { twitchApi } from '@app/services/api';
+import { queryClient } from '@app/services/query-client';
 import { deleteTokens } from '@app/utils';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { PropsWithChildren } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,17 +13,7 @@ import { DevToolsBubble } from 'react-native-react-query-devtools';
 import { StyleSheet } from 'react-native-unistyles';
 import { Toaster } from 'sonner-native';
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 5,
-      refetchOnReconnect: true,
-      retryDelay: 3000,
-    },
-  },
-});
-
-export function Providers({ children }: PropsWithChildren) {
+export default function Providers({ children }: PropsWithChildren) {
   const { ReactQueryDebug } = useDebugOptions();
 
   const shouldDelete = false;
@@ -39,7 +30,7 @@ export function Providers({ children }: PropsWithChildren) {
             <QueryClientProvider client={queryClient}>
               <Toaster />
               {children}
-              {ReactQueryDebug?.enabled && (
+              {ReactQueryDebug?.enabled && ReactQueryDebug && (
                 <DevToolsBubble
                   queryClient={queryClient}
                   onCopy={async text => {

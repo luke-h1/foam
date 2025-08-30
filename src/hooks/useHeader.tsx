@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useEffect } from 'react';
 import { View } from 'react-native';

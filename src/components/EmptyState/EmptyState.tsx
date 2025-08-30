@@ -4,6 +4,7 @@
 import {
   ImageProps,
   ImageStyle,
+  SafeAreaView,
   StyleProp,
   TextProps,
   TextStyle,
@@ -11,7 +12,6 @@ import {
 } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
-import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -131,7 +131,7 @@ export function EmptyState(props: EmptyStateProps) {
   const isButtonPresent = !!button;
 
   return (
-    <SafeAreaViewFixed
+    <SafeAreaView
       style={styles.container($contentStyleOverride as StyleProp<ViewStyle>)}
     >
       {isHeadingPresent && (
@@ -169,7 +169,7 @@ export function EmptyState(props: EmptyStateProps) {
           {button}
         </Button>
       )}
-    </SafeAreaViewFixed>
+    </SafeAreaView>
   );
 }
 

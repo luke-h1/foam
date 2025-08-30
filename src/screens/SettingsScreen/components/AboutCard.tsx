@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { IconButton } from '@app/components/IconButton';
 import { openLinkInBrowser } from '@app/utils';
 import { SFSymbol } from 'expo-symbols';

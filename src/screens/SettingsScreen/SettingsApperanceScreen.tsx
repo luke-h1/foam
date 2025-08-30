@@ -1,4 +1,4 @@
-import { Slider } from '@app/components';
+import { Slider } from '@app/components/Slider';
 import { Menu, MenuItem } from '@app/components/Menu';
 import { Preferences, usePreferences } from '@app/store';
 import { SafeAreaView, View } from 'react-native';

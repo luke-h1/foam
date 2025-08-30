@@ -1,4 +1,5 @@
-import { Button, Icon } from '@app/components';
+import { Button } from '@app/components/Button';
+import { Icon } from '@app/components/Icon';
 import { TextBox } from '@app/components/TextBox';
 import {
   type StyleProp,

@@ -6,7 +6,7 @@ import { View, ViewToken, ViewabilityConfig } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 import { EmojiCategoryBar } from './EmojiCategoryBar';
-import { FlatListItem, PickerItem, TOP_CORNER_STYLE } from './EmojiPickerSheet';
+import { FlatListItem, PickerItem, TOP_CORNER_STYLE } from './types';
 import { EmojiRow } from './EmojiRow';
 import {
   EmojiSection,

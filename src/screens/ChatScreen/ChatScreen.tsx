@@ -1,4 +1,4 @@
-import { Chat } from '@app/components';
+import { Chat } from '@app/components/Chat';
 import { SettingsStackScreenProps } from '@app/navigators';
 import { FC } from 'react';
 

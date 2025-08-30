@@ -82,7 +82,7 @@ export function ProfileCard() {
        * eventually we want to be able to login directly here
        * (oauth webview)
        */
-      onPress: () => navigate('Login'),
+      onPress: () => router.push('/login'),
     },
   ];
 

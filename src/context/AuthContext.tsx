@@ -1,5 +1,6 @@
-import { queryClient } from '@app/Providers';
+import { storageKeys } from '@app/constants/storage';
 import { twitchApi } from '@app/services/api';
+import { queryClient } from '@app/services/query-client';
 import {
   DefaultTokenResponse,
   UserInfoResponse,
@@ -7,7 +8,7 @@ import {
 } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
-import { router } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import {
   createContext,
@@ -18,11 +19,6 @@ import {
   useState,
 } from 'react';
 import { toast } from 'sonner-native';
-
-export const storageKeys = {
-  anon: 'V1_foam-anon', // anon token
-  user: 'V1_foam-user', // logged in token
-} as const;
 
 export interface TwitchToken {
   accessToken: string;
@@ -71,6 +67,7 @@ export const AuthContextProvider = ({
   enableTestResult,
   testResult,
 }: AuthContextProviderProps) => {
+  const router = useRouter();
   const [state, setState] = useState<State>({
     ready: false,
   });
@@ -148,6 +145,7 @@ export const AuthContextProvider = ({
         tokenType: token.tokenType,
       }),
     );
+    router.push('/(tabs)/following');
     setState({
       ready: true,
       authState: {
@@ -238,6 +236,7 @@ export const AuthContextProvider = ({
           },
         });
         twitchApi.setAuthToken(token.accessToken);
+        router.push('/(tabs)/top/top-streams');
       }
     }
   };

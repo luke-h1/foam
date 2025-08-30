@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { ParsedPart, replaceEmotesWithText } from '@app/utils';

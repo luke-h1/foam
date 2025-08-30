@@ -21,6 +21,7 @@ import {
   PICKER_WIDTH,
   processEmojiSections,
 } from './config';
+// import { FlatListItem, PickerItem, TOP_CORNER_STYLE } from './types';
 
 export const TOP_CORNER_STYLE: ViewStyle = {
   borderTopLeftRadius: PICKER_RADIUS,
