@@ -2,14 +2,8 @@ import { useAuthContext } from '@app/context';
 import { Stack, Tabs } from 'expo-router';
 
 export default function TabsLayout() {
-  const { authState, ready } = useAuthContext();
+  const { authState } = useAuthContext();
 
-  // Don't render tabs until auth state is ready
-  if (!ready) {
-    return null;
-  }
-
-  // Determine which tabs to show based on auth state
   const isAuthenticated = authState?.isLoggedIn && !authState?.isAnonAuth;
 
   return (
@@ -23,7 +17,7 @@ export default function TabsLayout() {
         backBehavior="order"
       >
         {/* Following tab - only for authenticated users */}
-        {isAuthenticated && (
+        <Tabs.Protected guard={isAuthenticated as boolean}>
           <Tabs.Screen
             name="following"
             options={{
@@ -31,18 +25,15 @@ export default function TabsLayout() {
               href: '/(tabs)/following',
             }}
           />
-        )}
-        
-        {/* Top tab - available for all users */}
+        </Tabs.Protected>
         <Tabs.Screen
           name="top"
           options={{
             tabBarLabel: 'Top',
-            href: '/(tabs)/top',
+            href: '/(tabs)/top/top-streams',
           }}
         />
-        
-        {/* Search tab - available for all users */}
+
         <Tabs.Screen
           name="search"
           options={{
@@ -50,8 +41,7 @@ export default function TabsLayout() {
             href: '/(tabs)/search',
           }}
         />
-        
-        {/* Settings tab - available for all users */}
+
         <Tabs.Screen
           name="settings"
           options={{

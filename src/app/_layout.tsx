@@ -1,3 +1,4 @@
+import Providers from '@app/Providers/Providers';
 import { useAuthContext } from '@app/context';
 import {
   useOnAppStateChange,
@@ -5,12 +6,11 @@ import {
   useChangeScreenOrientation,
   useClearExpiredStorageItems,
 } from '@app/hooks';
-import Providers from '@app/Providers/Providers';
 import { twitchApi } from '@app/services/api';
 import { deleteTokens } from '@app/utils';
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation';
 import { ErrorBoundary } from '@sentry/react-native';
-import { Redirect, Stack, useNavigationContainerRef } from 'expo-router';
+import { Stack, useNavigationContainerRef } from 'expo-router';
 import { Platform, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -44,12 +44,9 @@ function RootLayout() {
 }
 
 function AppContent() {
-  const { authState, ready } = useAuthContext();
-
   return (
     <View style={styles.container}>
       <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
-        {/* Auth routes */}
         <Stack.Screen name="auth" options={{ headerShown: false }} />
 
         <Stack.Screen name="index" options={{ headerShown: false }} />

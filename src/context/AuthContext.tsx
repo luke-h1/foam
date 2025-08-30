@@ -294,9 +294,12 @@ export const AuthContextProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.authState, user]);
 
-  return state.ready ? (
-    <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
-  ) : null;
+  // Always provide the context, even when not ready
+  return (
+    <AuthContext.Provider value={contextState}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export function useAuthContext() {

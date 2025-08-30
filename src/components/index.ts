@@ -28,4 +28,3 @@ export * from './Tags';
 export * from './TextField';
 export * from './Toast';
 export * from './Typography';
-export { ProtectedRoute } from './ProtectedRoute';

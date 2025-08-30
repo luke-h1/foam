@@ -14,7 +14,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, JSX, useCallback } from 'react';
 
 import { toast } from 'sonner-native';
-import { ProtectedRoute } from '@app/components/ProtectedRoute';
 
 export interface Section {
   key: string;
@@ -77,14 +76,12 @@ export default function FollowingScreen() {
   }
 
   return (
-    <ProtectedRoute requireAuth>
-      <BodyScrollView refreshControl={<RefreshControl onRefresh={onRefresh} />}>
-        <AnimatedFlashList<Stream>
-          data={streams}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-        />
-      </BodyScrollView>
-    </ProtectedRoute>
+    <BodyScrollView refreshControl={<RefreshControl onRefresh={onRefresh} />}>
+      <AnimatedFlashList<Stream>
+        data={streams}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+      />
+    </BodyScrollView>
   );
 }
