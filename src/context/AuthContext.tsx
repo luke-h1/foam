@@ -8,16 +8,8 @@ import {
 } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
-import { router, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import {
-  createContext,
-  ReactNode,
-  use,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, ReactNode, use, useMemo, useState } from 'react';
 import { toast } from 'sonner-native';
 
 export interface TwitchToken {
@@ -67,7 +59,6 @@ export const AuthContextProvider = ({
   enableTestResult,
   testResult,
 }: AuthContextProviderProps) => {
-  const router = useRouter();
   const [state, setState] = useState<State>({
     ready: false,
   });
@@ -77,6 +68,8 @@ export const AuthContextProvider = ({
   const fetchAnonToken = async () => {
     try {
       let result = await twitchService.getDefaultToken();
+
+      console.log('result ->', result);
 
       // hack to get around tests getting hung up on micro queue
       if (process.env.NODE_ENV === 'test' && enableTestResult) {
@@ -108,6 +101,7 @@ export const AuthContextProvider = ({
           tokenType: result.token_type,
         }),
       );
+      console.log('result.access_token ->', result.access_token);
       twitchApi.setAuthToken(result.access_token);
     } catch (e) {
       logger.auth.error('Failed to get anon auth', e);
@@ -145,7 +139,7 @@ export const AuthContextProvider = ({
         tokenType: token.tokenType,
       }),
     );
-    router.push('/(tabs)/following');
+    // router.push('/(tabs)/following');
     setState({
       ready: true,
       authState: {
@@ -236,7 +230,7 @@ export const AuthContextProvider = ({
           },
         });
         twitchApi.setAuthToken(token.accessToken);
-        router.push('/(tabs)/top/top-streams');
+        // router.push('/(tabs)/top/top-streams');
       }
     }
   };
@@ -258,17 +252,17 @@ export const AuthContextProvider = ({
     }
   };
 
-  useEffect(() => {
-    void (async () => {
-      await populateAuthState().then(() => {
-        if (state.authState?.isAnonAuth) {
-          router.push('/(tabs)/top/top-streams');
-        }
-        router.push('/(tabs)/following');
-      });
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // useEffect(() => {
+  //   void (async () => {
+  //     await populateAuthState().then(() => {
+  //       if (state.authState?.isAnonAuth) {
+  //         // router.push('/(tabs)/top/top-streams');
+  //       }
+  //       // router.push('/(tabs)/following');
+  //     });
+  //   })();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   const contextState: AuthContextState = useMemo(() => {
     return {
@@ -296,9 +290,7 @@ export const AuthContextProvider = ({
 
   // Always provide the context, even when not ready
   return (
-    <AuthContext.Provider value={contextState}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
   );
 };
 

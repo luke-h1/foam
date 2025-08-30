@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 
 // eslint-disable-next-line camelcase
 export const unstable_settings = {
-  initialRouteName: 'top-streams',
+  initialRouteName: 'index',
 };
 
 export default function TopLayout() {

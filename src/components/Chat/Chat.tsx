@@ -45,7 +45,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const client = useTmiClient({
     options: {
-      clientId: process.env.TWITCH_CLIENT_ID as string,
+      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID as string,
     },
     channels: [channelName],
 

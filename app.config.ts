@@ -104,12 +104,14 @@ const config: ExpoConfig = {
     policy: 'appVersion',
   },
   extra: {
-    AUTH_PROXY_API_BASE_URL: process.env.AUTH_PROXY_API_BASE_URL,
-    TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
-    TWITCH_CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET,
+    EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL:
+      process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL,
+    EXPO_PUBLIC_TWITCH_CLIENT_ID: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+    EXPO_PUBLIC_TWITCH_CLIENT_SECRET:
+      process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
     NEW_RELIC_IOS_APP_TOKEN: process.env.NEW_RELIC_IOS_APP_TOKEN,
     NEW_RELIC_ANDROID_APP_TOKEN: process.env.NEW_RELIC_ANDROID_APP_TOKEN,
-    AUTH_PROXY_API_KEY: process.env.AUTH_PROXY_API_KEY,
+    EXPO_PUBLIC_AUTH_PROXY_API_KEY: process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
     updates: {
       assetPatternsToBeBundled: ['**/*'],
     },

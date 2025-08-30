@@ -57,6 +57,7 @@ export default function TopStreamsScreen() {
     return <LiveStreamCard stream={item} />;
   }, []);
 
+  // Show loading while auth context is not ready or while loading data
   if (refreshing || isLoading) {
     return (
       <>

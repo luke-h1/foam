@@ -40,8 +40,8 @@ const proxyUrl = new URL(
 ).toString();
 
 const twitchConfig: AuthRequestConfig = {
-  clientId: process.env.TWITCH_CLIENT_ID as string,
-  clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
+  clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID as string,
+  clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET as string,
   scopes: [
     ...USER_SCOPES,
     ...CHAT_SCOPES,

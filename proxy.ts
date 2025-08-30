@@ -36,8 +36,8 @@ const main = async () => {
         null,
         {
           params: {
-            client_id: process.env.TWITCH_CLIENT_ID,
-            client_secret: process.env.TWITCH_CLIENT_SECRET,
+            client_id: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+            client_secret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
             grant_type: 'client_credentials',
           },
           headers: {
@@ -52,7 +52,7 @@ const main = async () => {
   );
 
   // @ts-expect-error - express type definitions are incorrect
-  app.get('/api/pending', async (req: Request, res: Response) => {
+  app.get('/api/pending', (req: Request, res: Response) => {
     return res.status(200).send(`
       <html>
         <head>

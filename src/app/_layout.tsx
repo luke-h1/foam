@@ -1,5 +1,4 @@
 import Providers from '@app/Providers/Providers';
-import { useAuthContext } from '@app/context';
 import {
   useOnAppStateChange,
   useOnReconnect,
@@ -28,12 +27,6 @@ function RootLayout() {
   useChangeScreenOrientation();
   useClearExpiredStorageItems();
 
-  const shouldDelete = false;
-  if (shouldDelete) {
-    void deleteTokens();
-    twitchApi.removeAuthToken();
-  }
-
   return (
     <ErrorBoundary>
       <Providers>
@@ -44,6 +37,12 @@ function RootLayout() {
 }
 
 function AppContent() {
+  const shouldDelete = false;
+  if (shouldDelete) {
+    console.log('REMOVED ');
+    void deleteTokens();
+    twitchApi.removeAuthToken();
+  }
   return (
     <View style={styles.container}>
       <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
