@@ -1,10 +1,10 @@
-import { useAppNavigation } from '@app/hooks';
 import { Category } from '@app/services/twitch-service';
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 interface Props {
   category: Category;
@@ -15,14 +15,11 @@ const IMAGE_HEIGHT = 150;
 const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
 export function CategoryCard({ category }: Props) {
-  const { navigate } = useAppNavigation();
-
+  const router = useRouter();
   return (
     <Button
       onPress={() => {
-        navigate('Category', {
-          id: category.id,
-        });
+        router.push(`/category/${category.id}`);
       }}
       style={styles.container}
     >
@@ -34,9 +31,7 @@ export function CategoryCard({ category }: Props) {
           style={styles.image}
           contentFit="contain"
         />
-        <Text style={styles.title} variant="subtitle">
-          {category.name}
-        </Text>
+        <Typography style={styles.title}>{category.name}</Typography>
       </View>
     </Button>
   );

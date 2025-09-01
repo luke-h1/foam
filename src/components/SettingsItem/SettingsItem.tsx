@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 interface ContentItem {
   onPress?: () => void;
@@ -34,8 +34,8 @@ export function SettingsItem({ contents }: SettingsItemProps) {
         <Button style={styles.button} onPress={item.onPress}>
           <View style={styles.iconLeft}>{item.iconLeft}</View>
           <View style={styles.textContainer}>
-            <Text>{item.title}</Text>
-            <Text>{item.content}</Text>
+            <Typography>{item.title}</Typography>
+            <Typography>{item.content}</Typography>
           </View>
           {item.showRightArrow && (
             <View style={styles.iconRight}>{item.iconRight}</View>
@@ -50,7 +50,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
   const renderSectionItem: ListRenderItem<Content> = useCallback(
     ({ item }) => (
       <View style={styles.section}>
-        <Text style={styles.ctaTitle}>{item.ctaTitle}</Text>
+        <Typography style={styles.ctaTitle}>{item.ctaTitle}</Typography>
         <FlashList<ContentItem>
           data={item.items}
           keyExtractor={item => item.title}
@@ -104,7 +104,7 @@ const styles = StyleSheet.create(theme => ({
   },
   separator: {
     height: 1,
-    backgroundColor: theme.colors.borderFaint,
+    backgroundColor: theme.colors.black.bgAlpha,
     marginTop: 16,
   },
 }));

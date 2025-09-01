@@ -5,7 +5,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import { Image } from '../Image';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 import { SectionListItem } from './NavigationSectionList';
 
 type NavigationSectionListItemButtonProps = ButtonProps & SectionListItem;
@@ -31,11 +31,15 @@ export const NavigationSectionListItemButton = forwardRef(
             {icon && <Icon icon={icon} size={20} />}
             {picture && <Image source={picture} style={styles.image} />}
             <View style={styles.textWrapper}>
-              <Text variant="caption">{title}</Text>
-              <Text variant="footnote">{description}</Text>
+              <Typography>{title}</Typography>
+              <Typography>{description}</Typography>
             </View>
           </View>
-          <Icon icon="arrow-right" size={20} color={theme.colors.foreground} />
+          <Icon
+            icon="arrow-right"
+            size={20}
+            color={theme.colors.black.accentHoverAlpha}
+          />
         </View>
       </Button>
     );
@@ -69,7 +73,6 @@ const styles = StyleSheet.create(theme => ({
   icon: {
     width: 20,
     height: 20,
-    tintColor: theme.colors.brightPurple,
   },
   image: {
     width: 35,
@@ -78,7 +81,6 @@ const styles = StyleSheet.create(theme => ({
   },
   separator: {
     height: 0.55,
-    backgroundColor: theme.colors.borderFaint,
     marginVertical: theme.spacing.sm,
   },
 }));

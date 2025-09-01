@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation, useTmiClient } from '@app/hooks';
+import { useTmiClient } from '@app/hooks';
 import { ChatMessageType, ChatUser, useChatStore } from '@app/store';
 import { createHitslop, generateRandomTwitchColor } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -11,6 +11,7 @@ import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
+import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import {
@@ -18,14 +19,14 @@ import {
   Platform,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  SafeAreaView,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { Icon } from '../Icon';
-import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
 
@@ -37,14 +38,14 @@ interface ChatProps {
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [connected, setConnected] = useState<boolean>(false);
   const { authState, user } = useAuthContext();
-  const navigation = useAppNavigation();
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
+  const router = useRouter();
 
   const { theme } = useUnistyles();
 
   const client = useTmiClient({
     options: {
-      clientId: process.env.TWITCH_CLIENT_ID as string,
+      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID as string,
     },
     channels: [channelName],
 
@@ -78,14 +79,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     clearMessages,
   } = useChatStore();
 
-  navigation.addListener('beforeRemove', () => {
-    void client.disconnect();
-    clearChannelResources();
-    clearTtvUsers();
-  });
+  // navigation.addListener('beforeRemove', () => {
+  //   void client.disconnect();
+  //   clearChannelResources();
+  //   clearTtvUsers();
+  // });
 
   const loadChat = async () => {
     await loadChannelResources(channelId);
+    void client.disconnect();
   };
 
   useEffect(() => {
@@ -387,8 +389,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }
 
   return (
-    <SafeAreaViewFixed style={styles.safeArea}>
-      <Text style={styles.header}>CHAT</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <Typography style={styles.header}>CHAT</Typography>
       <KeyboardAvoidingView
         behavior="padding"
         style={{ flex: 1 }}
@@ -437,14 +439,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         >
           {replyTo && (
             <View style={styles.replyContainer}>
-              <Text style={styles.replyText}>
+              <Typography style={styles.replyText}>
                 Replying to {replyTo.username}
-              </Text>
+              </Typography>
               <Button
                 style={styles.cancelReplyButton}
                 onPress={() => setReplyTo(null)}
               >
-                <Icon icon="x" size={16} color={theme.colors.border} />
+                <Icon icon="x" size={16} />
               </Button>
             </View>
           )}
@@ -453,7 +455,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onPress={handleEmojiPickerToggle}
             hitSlop={createHitslop(40)}
           >
-            <Icon icon="smile" size={24} color={theme.colors.border} />
+            <Icon icon="smile" size={24} />
           </Button>
           <ChatAutoCompleteInput
             value={messageInput}
@@ -484,15 +486,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onPress={() => void handleSendMessage()}
             disabled={!messageInput.trim() || !connected}
           >
-            <Icon
-              icon="send"
-              size={24}
-              color={
-                messageInput.trim().length > 0
-                  ? theme.colors.iOS_blue
-                  : theme.colors.borderFaint
-              }
-            />
+            <Icon icon="send" size={24} />
           </Button>
         </View>
         {connected && (
@@ -502,7 +496,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           />
         )}
       </KeyboardAvoidingView>
-    </SafeAreaViewFixed>
+    </SafeAreaView>
   );
 });
 
@@ -571,23 +565,23 @@ const styles = StyleSheet.create(theme => ({
   replyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.foregroundInverted,
+    // backgroundColor: theme.colors.foregroundInverted,
     padding: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    // borderTopColor: theme.colors.border,
   },
   replyText: {
     flex: 1,
-    color: theme.colors.text,
+    // color: theme.colors.text,
   },
   cancelReplyButton: {
     padding: theme.spacing.xs,
   },
   emojiPickerContainer: {
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    // borderTopColor: theme.colors.border,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    // borderBottomColor: theme.colors.border,
     padding: theme.spacing.sm,
     shadowColor: '#000',
     shadowOffset: {

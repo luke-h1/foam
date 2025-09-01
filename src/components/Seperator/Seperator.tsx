@@ -8,7 +8,7 @@ export function Seperator() {
 const styles = StyleSheet.create(theme => ({
   seperator: {
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderFaint,
+    borderBottomColor: theme.colors.black.bgAlpha,
     marginTop: theme.spacing.sm,
   },
 }));

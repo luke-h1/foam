@@ -1,6 +1,12 @@
-import { Text, Button, TextField, FlashList, Switch } from '@app/components';
+import {
+  Button,
+  TextField,
+  FlashList,
+  Switch,
+  Typography,
+} from '@app/components';
 import { useAuthContext } from '@app/context';
-import { useAppNavigation, useDebugOptions } from '@app/hooks';
+import { useDebugOptions } from '@app/hooks';
 import {
   AllowedKey,
   NAMESPACE,
@@ -13,6 +19,7 @@ import {
 } from '@modules/activity-controller';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
+import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -95,21 +102,25 @@ function TwitchUsernameConverter() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.twitchSection}>
-        <Text style={styles.sectionTitle}>
+        <Typography style={styles.sectionTitle}>
           Convert Twitch Username to User ID
-        </Text>
+        </Typography>
         <TextField
           placeholder="Enter Twitch username"
           value={twitchUsername}
           onChangeText={setTwitchUsername}
         />
         <Button onPress={() => void handleConvert()} style={styles.button}>
-          <Text>{isLoading ? 'Converting...' : 'Convert and Copy'}</Text>
+          <Typography>
+            {isLoading ? 'Converting...' : 'Convert and Copy'}
+          </Typography>
         </Button>
         {twitchUserId ? (
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           <Button onPress={() => Clipboard.setStringAsync(twitchUserId)}>
-            <Text style={styles.userId}>User ID: {twitchUserId}</Text>
+            <Typography style={styles.userId}>
+              User ID: {twitchUserId}
+            </Typography>
           </Button>
         ) : null}
       </View>
@@ -126,17 +137,17 @@ function DisplayAccessToken() {
 
   return (
     <View style={styles.accessTokenContainer}>
-      <Text style={styles.accessTokenLabel}>
+      <Typography style={styles.accessTokenLabel}>
         Auth Token ({authState?.isAnonAuth ? 'ANON' : 'USER'}):
-      </Text>
+      </Typography>
       <View style={styles.accessTokenRow}>
-        <Text style={styles.accessTokenValue} numberOfLines={1}>
+        <Typography style={styles.accessTokenValue} numberOfLines={1}>
           {authState?.token.accessToken || 'No token available'}
-        </Text>
+        </Typography>
         {authState?.token.accessToken && (
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
           <Button onPress={handleCopyToClipboard} style={styles.copyButton}>
-            <Text style={styles.copyButtonText}>Copy</Text>
+            <Typography style={styles.copyButtonText}>Copy</Typography>
           </Button>
         )}
       </View>
@@ -146,9 +157,9 @@ function DisplayAccessToken() {
 
 function NavigateToChat() {
   const { user, authState } = useAuthContext();
-  const { navigate } = useAppNavigation();
   const [channelName, setChannelName] = useState<string>('');
   const [twitchUserId, setTwitchUserId] = useState<string>('');
+  const router = useRouter();
 
   const toUserId = async (username: string) => {
     const result = await twitchService.getUser(username);
@@ -165,13 +176,9 @@ function NavigateToChat() {
       return;
     }
 
-    navigate('DevTools', {
-      screen: 'Chat',
-      params: {
-        channelName,
-        channelId: twitchUserId,
-      },
-    });
+    router.push(
+      `/dev-tools/chat?channelName=${channelName}&channelId=${twitchUserId}`,
+    );
   };
   return (
     <KeyboardAvoidingView
@@ -180,7 +187,7 @@ function NavigateToChat() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.navigateToChatContainer}>
-        <Text style={styles.sectionTitle}>Join a Chat Channel</Text>
+        <Typography style={styles.sectionTitle}>Join a Chat Channel</Typography>
         <TextField
           placeholder="Enter channel name"
           value={channelName}
@@ -189,13 +196,13 @@ function NavigateToChat() {
           autoCapitalize="none"
         />
         <Button onPress={handleJoinChannel} style={styles.button}>
-          <Text>Join Channel</Text>
+          <Typography>Join Channel</Typography>
         </Button>
         {authState?.token?.accessToken && (
-          <Text style={styles.loggedInUser}>
+          <Typography style={styles.loggedInUser}>
             Logged in as:{' '}
             {authState.isAnonAuth ? 'Anonymous' : user?.display_name}
-          </Text>
+          </Typography>
         )}
       </View>
     </KeyboardAvoidingView>
@@ -245,10 +252,10 @@ export function DebugScreen() {
     return (
       <>
         <View style={[styles.sectionHeader, styles.storageState]}>
-          <Text style={styles.sectionTitle}>Debug Options</Text>
-          <Text style={styles.storageValue}>
+          <Typography style={styles.sectionTitle}>Debug Options</Typography>
+          <Typography style={styles.storageValue}>
             {JSON.stringify(debugOptions, null, 2)}
-          </Text>
+          </Typography>
         </View>
         {renderFooter()}
       </>
@@ -260,7 +267,7 @@ export function DebugScreen() {
     return (
       <View style={styles.itemContainer}>
         <View style={styles.itemHeader}>
-          <Text style={styles.itemTitle}>{item.title}</Text>
+          <Typography style={styles.itemTitle}>{item.title}</Typography>
           {item.type === 'switch' ? (
             <Switch
               value={switchOptions[item.title] ?? false}
@@ -279,11 +286,11 @@ export function DebugScreen() {
                 item.onPress();
               }}
             >
-              <Text>Clear</Text>
+              <Typography>Clear</Typography>
             </Button>
           )}
         </View>
-        <Text variant="caption">{item.description}</Text>
+        <Typography>{item.description}</Typography>
       </View>
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -305,7 +312,7 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors.gray.accent,
   },
   userId: {
     marginTop: theme.spacing.sm,
@@ -317,7 +324,7 @@ const styles = StyleSheet.create(theme => ({
   itemContainer: {
     padding: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.gray.accent,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -334,12 +341,12 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: 'bold',
   },
   storageValue: {
-    color: theme.colors.lime,
+    color: theme.colors.grass.accent,
   },
   button: {
     padding: theme.spacing.md,
-    backgroundColor: theme.colors.brightPurple,
-    color: theme.colors.text,
+    backgroundColor: theme.colors.blue.accent,
+    color: theme.colors.plum.accentAlpha,
     borderRadius: theme.spacing.sm,
     alignSelf: 'flex-start',
     marginTop: theme.spacing.md,
@@ -348,14 +355,13 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.gray.accent,
     borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.border,
   },
   accessTokenLabel: {
     fontWeight: 'bold',
     marginBottom: theme.spacing.sm,
-    color: theme.colors.text,
+    color: theme.colors.gray.text,
   },
   accessTokenRow: {
     flexDirection: 'row',
@@ -365,7 +371,7 @@ const styles = StyleSheet.create(theme => ({
   accessTokenValue: {
     flex: 1,
     marginRight: theme.spacing.sm,
-    color: theme.colors.text,
+    color: theme.colors.gray.text,
   },
   copyButton: {
     paddingVertical: theme.spacing.xs,
@@ -379,11 +385,11 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors.gray.accent,
   },
   loggedInUser: {
     marginTop: theme.spacing.sm,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.gray.text,
   },
 }));

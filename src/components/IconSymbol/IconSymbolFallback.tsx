@@ -606,6 +606,8 @@ const MAPPING = {
   'arrow.down.right': 'arrow-bottom-right',
   asterisk: 'asterisk',
   'apple.logo': 'apple',
+  'chart.line.text.clipboard': 'chart-line',
+  'widget.extralarge.badge.plus': 'widgets-outline',
 } as Partial<
   Record<
     import('expo-symbols').SymbolViewProps['name'],

@@ -1,7 +1,7 @@
 import { Modal as RNModal, View, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 interface OnPressProps extends ButtonProps {
   cta: () => void;
@@ -27,8 +27,10 @@ export function Modal({
     <RNModal animationType="slide" transparent visible={isVisible}>
       <View style={$wrapper}>
         <View style={styles.card}>
-          <Text style={styles.text}>{title}</Text>
-          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+          <Typography style={styles.text}>{title}</Typography>
+          {subtitle ? (
+            <Typography style={styles.subtitle}>{subtitle}</Typography>
+          ) : null}
           <Button onPress={confirmOnPress.cta} style={styles.confirmButton}>
             {confirmOnPress.label}
           </Button>
@@ -54,11 +56,11 @@ const styles = StyleSheet.create(theme => ({
     width: '80%',
   },
   text: {
-    color: theme.colors.borderFaint,
+    color: theme.colors.black.bgAlpha,
   },
   subtitle: {
     marginTop: theme.spacing.md,
-    color: theme.colors.borderFaint,
+    color: theme.colors.black.accentAlpha,
   },
   confirmButton: {
     marginTop: theme.spacing.md,

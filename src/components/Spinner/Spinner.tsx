@@ -39,6 +39,6 @@ const styles = StyleSheet.create(theme => ({
     height: 40,
     borderRadius: 20,
     borderWidth: 5,
-    borderColor: theme.colors.borderNeutral,
+    borderColor: theme.colors.black.bgAlpha,
   },
 }));

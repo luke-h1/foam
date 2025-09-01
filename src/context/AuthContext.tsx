@@ -1,4 +1,6 @@
+import { storageKeys } from '@app/constants/storage';
 import { twitchApi } from '@app/services/api';
+import { queryClient } from '@app/services/query-client';
 import {
   DefaultTokenResponse,
   UserInfoResponse,
@@ -7,20 +9,8 @@ import {
 import { logger } from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import {
-  createContext,
-  ReactNode,
-  use,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, ReactNode, use, useMemo, useState } from 'react';
 import { toast } from 'sonner-native';
-
-export const storageKeys = {
-  anon: 'V1_foam-anon', // anon token
-  user: 'V1_foam-user', // logged in token
-} as const;
 
 export interface TwitchToken {
   accessToken: string;
@@ -79,6 +69,8 @@ export const AuthContextProvider = ({
     try {
       let result = await twitchService.getDefaultToken();
 
+      console.log('result ->', result);
+
       // hack to get around tests getting hung up on micro queue
       if (process.env.NODE_ENV === 'test' && enableTestResult) {
         result = testResult || {
@@ -109,6 +101,7 @@ export const AuthContextProvider = ({
           tokenType: result.token_type,
         }),
       );
+      console.log('result.access_token ->', result.access_token);
       twitchApi.setAuthToken(result.access_token);
     } catch (e) {
       logger.auth.error('Failed to get anon auth', e);
@@ -146,6 +139,7 @@ export const AuthContextProvider = ({
         tokenType: token.tokenType,
       }),
     );
+    // router.push('/(tabs)/following');
     setState({
       ready: true,
       authState: {
@@ -161,7 +155,7 @@ export const AuthContextProvider = ({
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
-    if (response?.type !== 'success') {
+    if (!response || response?.type !== 'success') {
       toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
@@ -236,6 +230,7 @@ export const AuthContextProvider = ({
           },
         });
         twitchApi.setAuthToken(token.accessToken);
+        // router.push('/(tabs)/top/top-streams');
       }
     }
   };
@@ -257,12 +252,17 @@ export const AuthContextProvider = ({
     }
   };
 
-  useEffect(() => {
-    void (async () => {
-      await populateAuthState();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // useEffect(() => {
+  //   void (async () => {
+  //     await populateAuthState().then(() => {
+  //       if (state.authState?.isAnonAuth) {
+  //         // router.push('/(tabs)/top/top-streams');
+  //       }
+  //       // router.push('/(tabs)/following');
+  //     });
+  //   })();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   const contextState: AuthContextState = useMemo(() => {
     return {
@@ -270,10 +270,15 @@ export const AuthContextProvider = ({
       loginWithTwitch,
       populateAuthState,
       logout: async () => {
-        await SecureStore.deleteItemAsync(storageKeys.user);
-        await SecureStore.deleteItemAsync(storageKeys.anon);
+        await Promise.all([
+          SecureStore.deleteItemAsync(storageKeys.user),
+          SecureStore.deleteItemAsync(storageKeys.anon),
+        ]);
         setState({ ready: true });
         setUser(undefined);
+        twitchApi.removeAuthToken();
+        await queryClient.invalidateQueries();
+        await queryClient.resetQueries();
         await doAnonAuth();
       },
       fetchAnonToken,
@@ -283,9 +288,10 @@ export const AuthContextProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.authState, user]);
 
-  return state.ready ? (
+  // Always provide the context, even when not ready
+  return (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
-  ) : null;
+  );
 };
 
 export function useAuthContext() {

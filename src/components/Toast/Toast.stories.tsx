@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
 import RNToast from 'react-native-toast-message';
 import { Button } from '../Button';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 import { Toast } from './Toast';
 
 const meta = {
@@ -33,7 +33,7 @@ export const Default: Story = {
           });
         }}
       >
-        <Text>Show toast</Text>
+        <Typography>Show toast</Typography>
       </Button>
       <Toast />
     </>

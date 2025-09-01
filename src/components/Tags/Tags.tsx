@@ -1,11 +1,11 @@
-import { useAppNavigation } from '@app/hooks';
 import { ListRenderItem } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
 import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 interface Props {
   tags: string[];
@@ -13,19 +13,17 @@ interface Props {
 }
 
 export function Tags({ tags, limit = 10 }: Props) {
-  const { navigate } = useAppNavigation();
+  const router = useRouter();
 
   const renderItem: ListRenderItem<string> = useCallback(({ item }) => {
     return (
       <Button
         onPress={() => {
-          navigate('Category', {
-            id: item,
-          });
+          router.push(`/categories/${item}`);
         }}
       >
         <View style={styles.tag}>
-          <Text variant="caption2">{item}</Text>
+          <Typography>{item}</Typography>
         </View>
       </Button>
     );
@@ -64,6 +62,6 @@ const styles = StyleSheet.create(theme => ({
     marginRight: theme.spacing.xs,
     borderWidth: 0.2,
     marginBottom: 8,
-    borderColor: theme.colors.borderFaint,
+    borderColor: theme.colors.black.bgAltAlpha,
   },
 }));

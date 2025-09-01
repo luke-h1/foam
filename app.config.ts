@@ -54,7 +54,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 
 const variant = (process.env.APP_VARIANT as Variant) || 'production';
 
-const VERSION = '0.0.26';
+const VERSION = '0.0.27';
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 
@@ -99,24 +99,43 @@ const config: ExpoConfig = {
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
   },
+  assetBundlePatterns: ['**/*'],
   runtimeVersion: {
     policy: 'appVersion',
   },
   extra: {
-    AUTH_PROXY_API_BASE_URL: process.env.AUTH_PROXY_API_BASE_URL,
-    TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
-    TWITCH_CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET,
+    EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL:
+      process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL,
+    EXPO_PUBLIC_TWITCH_CLIENT_ID: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+    EXPO_PUBLIC_TWITCH_CLIENT_SECRET:
+      process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
     NEW_RELIC_IOS_APP_TOKEN: process.env.NEW_RELIC_IOS_APP_TOKEN,
     NEW_RELIC_ANDROID_APP_TOKEN: process.env.NEW_RELIC_ANDROID_APP_TOKEN,
-    AUTH_PROXY_API_KEY: process.env.AUTH_PROXY_API_KEY,
+    EXPO_PUBLIC_AUTH_PROXY_API_KEY: process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
     updates: {
       assetPatternsToBeBundled: ['**/*'],
     },
     eas: {
       projectId: '950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
     },
+    router: {
+      origin: false,
+    },
   },
   plugins: [
+    [
+      'expo-dev-launcher',
+      {
+        launchMode: 'most-recent',
+      },
+    ],
+    [
+      'expo-router',
+      {
+        asyncRoutes: false,
+      },
+    ],
+    'react-native-bottom-tabs',
     ['app-icon-badge', appIconBadgeConfig],
     'expo-secure-store',
     [
@@ -175,6 +194,8 @@ const config: ExpoConfig = {
   ],
   experiments: {
     tsconfigPaths: true,
+    typedRoutes: true,
+    reactCompiler: true,
   },
   web: {},
   ios: {

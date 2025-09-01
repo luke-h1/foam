@@ -1,6 +1,6 @@
-import { Button, LiveStreamImage, Text } from '@app/components';
-import { useAppNavigation } from '@app/hooks';
+import { Button, LiveStreamImage, Typography } from '@app/components';
 import type { SearchChannelResponse } from '@app/services';
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -9,24 +9,19 @@ interface Props {
 }
 
 export function StreamerCard({ stream }: Props) {
-  const { navigate } = useAppNavigation();
+  const router = useRouter();
 
   return (
     <Button
       onPress={() => {
-        navigate('Streams', {
-          screen: 'LiveStream',
-          params: {
-            id: stream.broadcaster_login,
-          },
-        });
+        router.push(`/streams/live/${stream.broadcaster_login}`);
       }}
     >
       <View style={styles.streamer}>
         <LiveStreamImage thumbnail={stream.thumbnail_url} animated size="sm" />
         <View>
-          <Text variant="caption2">{stream.display_name}</Text>
-          <Text style={styles.gameName}>{stream.game_name}</Text>
+          <Typography>{stream.display_name}</Typography>
+          <Typography style={styles.gameName}>{stream.game_name}</Typography>
         </View>
       </View>
     </Button>

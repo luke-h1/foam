@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Button, Text } from '@app/components';
+import { Button, Typography } from '@app/components';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
+import { useRouter } from 'expo-router';
 import newRelic from 'newrelic-react-native-agent';
 import { useEffect } from 'react';
-import { Platform, View, ViewStyle } from 'react-native';
+import { Platform, SafeAreaView, View, ViewStyle } from 'react-native';
 import { toast } from 'sonner-native';
 
 const USER_SCOPES = [
@@ -15,15 +15,14 @@ const USER_SCOPES = [
   'user:manage:blocked_users',
 ] as const;
 
-const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
-
-const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
-
 const CHANNEL_SCOPES = [
   'channel:read:polls',
   'channel:read:predictions',
   'channel:moderate',
 ] as const;
+
+const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
+const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
 const proxyUrl = new URL(
   Platform.select({
@@ -35,7 +34,7 @@ const proxyUrl = new URL(
 ).toString();
 
 export function LoginScreen() {
-  const navigation = useAppNavigation();
+  const router = useRouter();
 
   const { loginWithTwitch } = useAuthContext();
 
@@ -47,8 +46,8 @@ export function LoginScreen() {
 
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: process.env.TWITCH_CLIENT_ID as string,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET as string,
+      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID as string,
+      clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET as string,
       scopes: [
         ...USER_SCOPES,
         ...CHAT_SCOPES,
@@ -74,9 +73,11 @@ export function LoginScreen() {
       newRelic.recordCustomEvent('Login', 'LoginSuccess', new Map());
       toast.success('Logged in');
 
-      navigation.popTo('Tabs', {
-        screen: 'Following',
-      });
+      // navigation.push('Tabs', {
+      //   screen: 'Following',
+      // });
+
+      router.push(`/(tabs)/following`);
     }
 
     newRelic.recordCustomEvent(
@@ -95,7 +96,7 @@ export function LoginScreen() {
   }, [response]);
 
   return (
-    <View
+    <SafeAreaView
       style={{
         padding: 8,
         display: 'flex',
@@ -105,10 +106,10 @@ export function LoginScreen() {
       <View style={$buttonWrapper} />
       <View style={$textWrapper}>
         <Button onPress={() => promptAsync()} disabled={!request}>
-          <Text variant="title3">Login with Twitch</Text>
+          <Typography>Login with Twitch</Typography>
         </Button>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -85,16 +85,21 @@ export default class Client {
     },
   ): Promise<TValue> {
     try {
+      // Debug: Log the final headers being sent
+      const finalHeaders = {
+        ...this.axios.defaults.headers.common,
+        ...config.headers,
+      };
+      console.log('🔥 Final headers being sent:', finalHeaders);
+      console.log('🔥 Request URL:', config.url);
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const interactionId = await newRelic.startInteraction(
         `${config.url}_${config.method}`,
       );
       const response = await this.axios({
         ...config,
-        headers: {
-          ...this.axios.defaults.headers.common,
-          ...config.headers,
-        },
+        headers: finalHeaders,
       });
 
       if ('rawResponse' in config && config.rawResponse) {

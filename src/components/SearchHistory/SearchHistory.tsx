@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 interface Props {
   results: string[];
@@ -26,10 +26,14 @@ export function SearchHistory({
     ({ item }) => (
       <View style={styles.itemContainer}>
         <Button style={styles.item} onPress={() => onSelectItem(item)}>
-          <Text>{item}</Text>
+          <Typography>{item}</Typography>
         </Button>
         <Button onPress={() => onClearItem(item)}>
-          <Entypo name="cross" size={24} color={theme.colors.underline} />
+          <Entypo
+            name="cross"
+            size={24}
+            color={theme.colors.crimson.accentAlpha}
+          />
         </Button>
       </View>
     ),
@@ -42,9 +46,9 @@ export function SearchHistory({
       <View style={styles.header}>
         {results.length > 0 && (
           <>
-            <Text>Search History</Text>
+            <Typography>Search History</Typography>
             <Button onPress={onClearAll}>
-              <Text style={styles.clearAll}>Clear All</Text>
+              <Typography style={styles.clearAll}>Clear All</Typography>
             </Button>
           </>
         )}
@@ -71,7 +75,7 @@ const styles = StyleSheet.create(theme => ({
     marginBottom: theme.spacing.xl,
   },
   clearAll: {
-    color: theme.colors.surfaceHighContrast,
+    color: theme.colors.gray.accentAlpha,
   },
   item: {
     flex: 1,
@@ -81,6 +85,6 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     paddingVertical: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderFaint,
+    color: theme.colors.gray.accent,
   },
 }));

@@ -1,4 +1,6 @@
-import { CategoryCard, EmptyState, FlashList } from '@app/components';
+import { CategoryCard } from '@app/components/CategoryCard';
+import { EmptyState } from '@app/components/EmptyState';
+import { FlashList } from '@app/components/FlashList';
 import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { type Category, twitchService } from '@app/services';
 import { ListRenderItem } from '@shopify/flash-list';

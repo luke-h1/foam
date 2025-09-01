@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 
-import { Text } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { useChatStore } from '@app/store';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { LegendListRef } from '@legendapp/list';
@@ -21,6 +21,7 @@ import {
   PICKER_WIDTH,
   processEmojiSections,
 } from './config';
+// import { FlatListItem, PickerItem, TOP_CORNER_STYLE } from './types';
 
 export const TOP_CORNER_STYLE: ViewStyle = {
   borderTopLeftRadius: PICKER_RADIUS,
@@ -192,7 +193,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
     if (data.length === 0) {
       return (
         <View style={[{ width: PICKER_WIDTH }]}>
-          <Text>No emotes available</Text>
+          <Typography>No emotes available</Typography>
         </View>
       );
     }
@@ -209,7 +210,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
         <BottomSheetView style={styles.wrapper}>
           <View
             style={{
-              backgroundColor: theme.colors.borderNeutral,
+              backgroundColor: theme.colors.accent.accentAlpha,
               paddingHorizontal: PICKER_PAD,
               borderRadius: PICKER_RADIUS,
             }}
@@ -251,6 +252,6 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.md,
   },
   bottomSheet: {
-    backgroundColor: theme.colors.borderNeutral,
+    backgroundColor: theme.colors.accent.accent,
   },
 }));

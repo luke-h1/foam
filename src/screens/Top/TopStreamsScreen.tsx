@@ -1,4 +1,6 @@
-import { EmptyState, LiveStreamCard, FlashList } from '@app/components';
+import { EmptyState } from '@app/components/EmptyState';
+import { LiveStreamCard } from '@app/components/LiveStreamCard';
+import { FlashList } from '@app/components/FlashList';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useDebouncedCallback } from '@app/hooks';
 import { Stream, twitchService } from '@app/services';

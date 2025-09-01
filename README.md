@@ -385,6 +385,7 @@ In order to join the TestFlight internal testing of the iOS app distributed via 
 | Title              | Description                                                               | Base URL                                        |
 | ------------------ | ------------------------------------------------------------------------- | ----------------------------------------------- |
 | Auth proxy         | Auth Lambda - handles proxying twitch authentication requests             | redacted for security                           |
+| Twitch ID          | Twitch Authentication API                                                 | https://id.twitch.tv                            |
 | Twitch Helix       | Twitch rest API                                                           | https://api.twitch.tv/helix                     |
 | Twitch eventsub    | Event sub WebSocket - used for reacting to twitch events in chat          | wss://eventsub.wss.twitch.tv/ws                 |
 | Twitch badges      | Provides Twitch badges                                                    | https://badges.twitch.tv/v1/badges              |

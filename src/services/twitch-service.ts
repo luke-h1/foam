@@ -130,7 +130,7 @@ export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data } = await axios.post(
-      `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
+      `https://id.twitch.tv/oauth2/token?client_id=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID}&client_secret=${process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -149,17 +149,21 @@ export const twitchService = {
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
     const { data } = await axios.get<{ data: DefaultTokenResponse }>(
-      `${process.env.AUTH_PROXY_API_BASE_URL}/token`,
+      `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/token`,
       {
         headers: {
-          'x-api-key': process.env.AUTH_PROXY_API_KEY,
+          'x-api-key': process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
         },
       },
     );
 
+    console.log('data ->', data);
+
     if (!data.data.access_token) {
       console.error('no token received from auth lambda');
     }
+
+    console.log('data ->', data);
 
     return data.data;
   },
@@ -192,10 +196,13 @@ export const twitchService = {
    * @requires a non-anon token
    */
   getTopStreams: async (cursor?: string): Promise<PaginatedList<Stream>> => {
+    console.log(
+      '🔥 twitchApi default headers:',
+      twitchApi.axios?.defaults?.headers,
+    );
+    console.log('🔥 Current auth token:', twitchApi.getAuthToken());
+
     const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
-      headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
-      },
       params: {
         ...(cursor && { after: cursor }),
       },
@@ -221,13 +228,16 @@ export const twitchService = {
   },
 
   getStream: async (userLogin: string) => {
+    const params: Record<string, string> = {};
+
+    if (userLogin) {
+      params.user_login = userLogin;
+    }
+
     const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
       params: {
-        user_login: userLogin,
         first: 15,
-      },
-      headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
+        ...params,
       },
     });
 
@@ -283,7 +293,6 @@ export const twitchService = {
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
         Authorization: `Bearer ${token}`,
       },
     });

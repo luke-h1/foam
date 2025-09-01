@@ -1,12 +1,12 @@
 import { Icon } from '@app/components';
-import { useAppNavigation } from '@app/hooks';
+import { useRouter } from 'expo-router';
 
 // Component which implements a back button for the navigation bar
 export function BackButton() {
-  const navigation = useAppNavigation();
+  const router = useRouter();
 
-  if (navigation.canGoBack()) {
-    return <Icon icon="arrow-left" onPress={navigation.goBack} />;
+  if (router.canGoBack()) {
+    return <Icon icon="arrow-left" onPress={router.back} />;
   }
 
   return null;

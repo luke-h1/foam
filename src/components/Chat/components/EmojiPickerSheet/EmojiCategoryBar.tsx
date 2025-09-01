@@ -1,9 +1,9 @@
 import { BrandIcon } from '@app/components/BrandIcon';
 import { Button } from '@app/components/Button';
-import { Text } from '@app/components/Text';
+import { Typography } from '@app/components/Typography';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import { ScrollView } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import {
   CATEGORY_HEADER_HEIGHT,
   EMOJI_SIZE,
@@ -22,11 +22,9 @@ export function EmojiCategoryBar({
   onPress: (index: number) => void;
   activeSection: number;
 }) {
-  const { theme } = useUnistyles();
-
   return (
     <ScrollView
-      style={[styles.topbar, { backgroundColor: theme.colors.underline }]}
+      // style={[styles.topbar, { backgroundColor: theme.colors.underline }]}
       contentContainerStyle={{
         padding: PICKER_PAD,
         gap: 4,
@@ -44,7 +42,7 @@ export function EmojiCategoryBar({
               activeSection === index && {
                 // backgroundColor: theme.colors.borderNeutral,
                 borderWidth: 1,
-                borderColor: theme.colors.foregroundNeutral,
+                // borderColor: theme.colors.foregroundNeutral,
               },
             ]}
           >
@@ -55,7 +53,7 @@ export function EmojiCategoryBar({
                 color={section.icon === 'stv' ? 'text' : undefined}
               />
             ) : (
-              <Text>{section.icon}</Text>
+              <Typography>{section.icon}</Typography>
             )}
           </Button>
         );
