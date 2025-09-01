@@ -9,6 +9,7 @@ import {
 import { twitchApi } from '@app/services/api';
 import { deleteTokens } from '@app/utils';
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation';
+import { ThemeProvider, DarkTheme } from '@react-navigation/native';
 import { ErrorBoundary } from '@sentry/react-native';
 import { Stack, useNavigationContainerRef } from 'expo-router';
 import { Platform, View } from 'react-native';
@@ -30,9 +31,11 @@ function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <Providers>
-        <AppContent />
-      </Providers>
+      <ThemeProvider value={DarkTheme}>
+        <Providers>
+          <AppContent />
+        </Providers>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
@@ -44,6 +47,7 @@ function AppContent() {
     void deleteTokens();
     twitchApi.removeAuthToken();
   }
+
   return (
     <View style={styles.container}>
       <Stack initialRouteName="index" screenOptions={{ headerShown: false }}>
