@@ -3,7 +3,7 @@ import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
 import { Skeleton } from '@app/components/Skeleton';
-import { Text } from '@app/components/Text';
+import { Typography } from '@app/components/Typography';
 import { sevenTvService, twitchService } from '@app/services';
 import {
   SEVENTV_EMOTE_LINK_REGEX,
@@ -109,11 +109,9 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
         <View style={styles.info}>
           <View style={styles.titleRow}>
             {getBrandIcon()}
-            <Text color="text" style={{ flex: 1, flexShrink: 1 }}>
-              {title}
-            </Text>
+            <Typography style={{ flex: 1, flexShrink: 1 }}>{title}</Typography>
           </View>
-          <Text>By {createdBy}</Text>
+          <Typography>By {createdBy}</Typography>
         </View>
         <Icon icon="external-link" />
       </View>
@@ -126,7 +124,7 @@ const styles = StyleSheet.create(theme => ({
     marginVertical: theme.spacing.xs,
   },
   card: {
-    backgroundColor: theme.colors.borderFaint,
+    backgroundColor: theme.colors.black.accentAlpha,
     borderRadius: theme.radii.sm,
     flexDirection: 'row',
     alignItems: 'center',
@@ -150,7 +148,7 @@ const styles = StyleSheet.create(theme => ({
   title: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: theme.colors.text,
+    color: theme.colors.accent.accent,
   },
   brandIconSkeleton: {
     width: 20,

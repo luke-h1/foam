@@ -1,4 +1,4 @@
-import { Button, SafeAreaViewFixed, Text } from '@app/components';
+import { Button, SafeAreaViewFixed, Typography } from '@app/components';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
@@ -31,9 +31,6 @@ export function TopScreen() {
         renderScene={renderScene}
         onIndexChange={setIndex}
         initialLayout={{ width: layout.width }}
-        style={{
-          backgroundColor: theme.colors.screen,
-        }}
         renderTabBar={props => (
           <View style={styles.tabContainer}>
             {props.navigationState.routes.map((route, i) => {
@@ -47,11 +44,12 @@ export function TopScreen() {
                   style={[
                     styles.tab,
                     {
-                      borderBottomColor: index === i ? 'purple' : 'transparent',
+                      borderBottomColor:
+                        index === i ? theme.colors.plum.border : 'transparent',
                     },
                   ]}
                 >
-                  <Text>{route.title}</Text>
+                  <Typography>{route.title}</Typography>
                 </Button>
               );
             })}

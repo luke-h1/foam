@@ -1,9 +1,11 @@
+/* eslint-disable no-restricted-imports */
 import { createHitslop } from '@app/utils';
 import { forwardRef } from 'react';
-// eslint-disable-next-line no-restricted-imports
 import { TouchableOpacity, TouchableOpacityProps, View } from 'react-native';
 
-export type ButtonProps = TouchableOpacityProps & {};
+export type ButtonProps = TouchableOpacityProps & {
+  label?: string;
+};
 
 export const Button = forwardRef<View, ButtonProps>(
   (
@@ -12,12 +14,14 @@ export const Button = forwardRef<View, ButtonProps>(
       onPress,
       style,
       hitSlop = createHitslop(10),
+      label,
       ...touchableProps
     },
     ref,
   ) => (
     <TouchableOpacity
       ref={ref}
+      accessibilityLabel={label}
       {...touchableProps}
       hitSlop={hitSlop}
       style={style}

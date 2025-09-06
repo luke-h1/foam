@@ -135,7 +135,9 @@ export function findEmotesInText(
     for (const emoteName of sortedEmoteNames) {
       const emote = emoteMap.get(emoteName);
       if (emote) {
-        const isTwitchEmote = emote.site === 'Twitch Global';
+        // FIX: Check for both Twitch Global and Twitch Channel emotes
+        const isTwitchEmote =
+          emote.site === 'Twitch Global' || emote.site === 'Twitch Channel';
 
         if (isTwitchEmote) {
           // For Twitch emotes, we need an exact match
@@ -178,6 +180,7 @@ export function findEmotesInText(
     }
   }
 
+  console.log('foundEmotes ->', foundEmotes);
   return foundEmotes;
 }
 
@@ -247,6 +250,21 @@ export function replaceTextWithEmotes({
     return [{ type: 'text', content: inputString }];
   }
 
+  // Add debugging to see what emotes we have
+  const totalEmotes =
+    sevenTvGlobalEmotes.length +
+    sevenTvChannelEmotes.length +
+    twitchGlobalEmotes.length +
+    twitchChannelEmotes.length +
+    ffzGlobalEmotes.length +
+    ffzChannelEmotes.length +
+    bttvGlobalEmotes.length +
+    bttvChannelEmotes.length;
+
+  console.log(
+    `🎭 Processing "${inputString}" with ${totalEmotes} total emotes available`,
+  );
+
   const emoteMap = new Map<string, SanitisiedEmoteSet>();
 
   /**
@@ -286,6 +304,9 @@ export function replaceTextWithEmotes({
       emoteMap.set(emote.name, emote);
     }
   });
+
+  console.log('🗺️ Final emote map size:', emoteMap.size);
+  console.log('🗺️ Sample emotes:', Array.from(emoteMap.keys()).slice(0, 10));
 
   const sanitizedInput = sanitizeInput(inputString);
 

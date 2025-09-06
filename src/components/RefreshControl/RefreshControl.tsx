@@ -1,19 +1,14 @@
-import { ThemeColor } from '@app/styles';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from 'react';
 import { RefreshControl as RNRefreshControl } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
 
 interface Props {
-  color?: ThemeColor;
   offset?: number;
   onRefresh: () => Promise<unknown>;
 }
 
-export function RefreshControl({ onRefresh, color = 'text', offset }: Props) {
+export function RefreshControl({ onRefresh, offset }: Props) {
   const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  const { theme } = useUnistyles();
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -28,7 +23,7 @@ export function RefreshControl({ onRefresh, color = 'text', offset }: Props) {
       onRefresh={refresh}
       progressViewOffset={offset}
       refreshing={refreshing}
-      tintColor={theme.colors[color]}
+      // tintColor={theme.colors[color]}
     />
   );
 }

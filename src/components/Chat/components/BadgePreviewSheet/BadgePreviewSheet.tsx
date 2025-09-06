@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Typography } from '@app/components/Typography';
 import { SanitisedBadgeSet } from '@app/services';
 import { openLinkInBrowser } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -47,14 +47,20 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
               }}
             />
             <View style={styles.emoteInfo}>
-              <Text style={styles.emoteName}>{selectedBadge.title}</Text>
-              <Text style={styles.emoteDetail}>{selectedBadge.type}</Text>
+              <Typography style={styles.emoteName}>
+                {selectedBadge.title}
+              </Typography>
+              <Typography style={styles.emoteDetail}>
+                {selectedBadge.type}
+              </Typography>
               {selectedBadge.owner_username && (
-                <Text style={styles.emoteDetail}>
+                <Typography style={styles.emoteDetail}>
                   By {selectedBadge.owner_username}
-                </Text>
+                </Typography>
               )}
-              <Text style={styles.emoteDetail}>ID: {selectedBadge.id}</Text>
+              <Typography style={styles.emoteDetail}>
+                ID: {selectedBadge.id}
+              </Typography>
             </View>
           </View>
           <View style={styles.actions}>
@@ -64,7 +70,9 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
             >
               <View style={styles.actionContent}>
                 <Icon icon="copy" color="#fff" size={16} />
-                <Text style={styles.actionText}>Copy Badge name</Text>
+                <Typography style={styles.actionText}>
+                  Copy Badge name
+                </Typography>
               </View>
             </Button>
             <Button
@@ -73,7 +81,9 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
             >
               <View style={styles.actionContent}>
                 <Icon icon="copy" color="#fff" size={16} />
-                <Text style={styles.actionText}>Copy Badge URL</Text>
+                <Typography style={styles.actionText}>
+                  Copy Badge URL
+                </Typography>
               </View>
             </Button>
             <Button
@@ -82,7 +92,9 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
             >
               <View style={styles.actionContent}>
                 <Icon icon="external-link" color="#fff" size={16} />
-                <Text style={styles.actionText}>Open in Browser</Text>
+                <Typography style={styles.actionText}>
+                  Open in Browser
+                </Typography>
               </View>
             </Button>
           </View>

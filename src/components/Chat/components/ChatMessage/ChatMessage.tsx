@@ -8,12 +8,12 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { useRef, useCallback, memo, useState } from 'react';
 import { View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 import { Button } from '../../../Button';
 import { Icon } from '../../../Icon';
 import { Image } from '../../../Image';
-import { Text } from '../../../Text';
+import { Typography } from '../../../Typography';
 import { ActionSheet } from '../ActionSheet';
 import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
@@ -42,8 +42,6 @@ export const ChatMessage = memo(
     const badgeSheetRef = useRef<BottomSheetModal>(null);
     const actionSheetRef = useRef<BottomSheetModal>(null);
     const userSheetRef = useRef<BottomSheetModal>(null);
-
-    const { theme } = useUnistyles();
 
     const [selectedEmote, setSelectedEmote] = useState<ParsedPart | null>(null);
     const [selectedBadge, setSelectedBadge] =
@@ -75,7 +73,7 @@ export const ChatMessage = memo(
       (part: ParsedPart, index: number) => {
         switch (part.type) {
           case 'text':
-            return <Text color="text">{part.content}</Text>;
+            return <Typography color="gray.text">{part.content}</Typography>;
 
           case 'stvEmote':
             return <MediaLinkCard type="stvEmote" url={part.content} />;
@@ -94,13 +92,13 @@ export const ChatMessage = memo(
 
           case 'mention': {
             return (
-              <Text key={`message-${index}`}>
-                <Text
+              <Typography key={`message-${index}`}>
+                <Typography
                   style={[styles.mention, { color: part.color ?? '#FFFFFF' }]}
                 >
                   {part.content}
-                </Text>
-              </Text>
+                </Typography>
+              </Typography>
             );
           }
 
@@ -160,22 +158,21 @@ export const ChatMessage = memo(
             <Icon
               icon="corner-down-left"
               size={16}
-              color={theme.colors.border}
+              // color={theme.colors.border}
             />
-            <Text color="border" style={styles.replyToText}>
+            <Typography color="gray.accent" style={styles.replyToText}>
               Replying to {parentDisplayName}
-            </Text>
+            </Typography>
           </View>
         )}
 
         <View style={[styles.line]}>
-          <Text style={styles.timestamp}>
+          <Typography style={styles.timestamp}>
             {formatDate(new Date(), 'HH:mm')}:
-          </Text>
+          </Typography>
           {renderBadges()}
           <Button onLongPress={onUsernamePress}>
-            <Text
-              variant="chatMessage"
+            <Typography
               style={[
                 styles.username,
                 {
@@ -186,7 +183,7 @@ export const ChatMessage = memo(
               ]}
             >
               {userstate.username ?? ''}:
-            </Text>
+            </Typography>
           </Button>
           <View style={styles.messageContainer}>
             {message.map(renderMessagePart)}
@@ -221,23 +218,23 @@ export const ChatMessage = memo(
 );
 
 ChatMessage.displayName = 'ChatMessage';
-
 const styles = StyleSheet.create(theme => ({
   chatContainer: {
-    backgroundColor: theme.colors.foregroundInverted,
+    // backgroundColor: theme.colors.foregroundInverted,
   },
   line: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     width: '100%',
     marginBottom: 5,
   },
   messageContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flex: 1,
+    minWidth: 0,
   },
   badge: {
     width: 20,
@@ -249,14 +246,9 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: 'bold',
   },
   timestamp: {
-    color: theme.colors.border,
+    // color: theme.colors.border,
     fontSize: theme.font.fontSize.xs,
     marginRight: 2,
-  },
-  messageText: {
-    flexShrink: 1,
-    flexWrap: 'wrap',
-    minWidth: 0,
   },
   mention: {
     marginHorizontal: 2,
@@ -270,7 +262,7 @@ const styles = StyleSheet.create(theme => ({
     flex: 1,
   },
   bottomSheet: {
-    backgroundColor: theme.colors.borderFaint,
+    // backgroundColor: theme.colors.borderFaint,
   },
   messageActionsContainer: {
     padding: 16,
@@ -288,7 +280,7 @@ const styles = StyleSheet.create(theme => ({
   replyContainer: {
     marginLeft: theme.spacing.md,
     borderLeftWidth: 2,
-    borderLeftColor: theme.colors.border,
+    // borderLeftColor: theme.colors.border,
     paddingLeft: theme.spacing.sm,
   },
   replyIndicator: {

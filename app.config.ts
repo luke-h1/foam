@@ -117,6 +117,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    'react-native-bottom-tabs',
     ['app-icon-badge', appIconBadgeConfig],
     'expo-secure-store',
     [
@@ -159,6 +160,7 @@ const config: ExpoConfig = {
       {
         ios: {
           useFrameworks: 'static',
+          extraPods: [],
         },
       },
     ],

@@ -136,7 +136,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
             }
           }
         />
-        <Text
+        <Typography
           style={
             [
               {
@@ -152,7 +152,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
           }
         >
           00m
-        </Text>
+        </Typography>
       </View>
     </View>
     <View
@@ -164,7 +164,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
         }
       }
     >
-      <Text
+      <Typography
         style={
           [
             {
@@ -178,7 +178,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
         }
       >
         Test Stream Title
-      </Text>
+      </Typography>
       <View
         style={
           {
@@ -248,7 +248,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
               width={20}
             />
           </View>
-          <Text
+          <Typography
             style={
               [
                 {
@@ -262,9 +262,9 @@ exports[`LiveStreamCard renders correctly 1`] = `
             }
           >
             Test user
-          </Text>
+          </Typography>
         </View>
-        <Text
+        <Typography
           style={
             [
               {
@@ -279,9 +279,9 @@ exports[`LiveStreamCard renders correctly 1`] = `
         >
           10,000
            viewers
-        </Text>
+        </Typography>
       </View>
-      <Text
+      <Typography
         style={
           [
             {
@@ -295,7 +295,7 @@ exports[`LiveStreamCard renders correctly 1`] = `
         }
       >
         Just Chatting
-      </Text>
+      </Typography>
     </View>
   </View>
 </View>

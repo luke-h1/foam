@@ -1,4 +1,4 @@
-import { Text } from '@app/components';
+import { Typography } from '@app/components';
 import { twitchApi as _twitchApi } from '@app/services/api';
 import {
   twitchService as _twitchService,
@@ -234,8 +234,8 @@ describe('AuthContext', () => {
       const { authState, user } = useAuthContext();
       return (
         <>
-          <Text>{authState?.isAnonAuth ? 'Anon' : 'User'}</Text>
-          <Text>{user ? user.display_name : 'No User'}</Text>
+          <Typography>{authState?.isAnonAuth ? 'Anon' : 'User'}</Typography>
+          <Typography>{user ? user.display_name : 'No User'}</Typography>
         </>
       );
     };

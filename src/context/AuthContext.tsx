@@ -1,3 +1,4 @@
+import { queryClient } from '@app/Providers';
 import { twitchApi } from '@app/services/api';
 import {
   DefaultTokenResponse,
@@ -161,7 +162,7 @@ export const AuthContextProvider = ({
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
-    if (response?.type !== 'success') {
+    if (!response || response?.type !== 'success') {
       toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
@@ -270,10 +271,15 @@ export const AuthContextProvider = ({
       loginWithTwitch,
       populateAuthState,
       logout: async () => {
-        await SecureStore.deleteItemAsync(storageKeys.user);
-        await SecureStore.deleteItemAsync(storageKeys.anon);
+        await Promise.all([
+          SecureStore.deleteItemAsync(storageKeys.user),
+          SecureStore.deleteItemAsync(storageKeys.anon),
+        ]);
         setState({ ready: true });
         setUser(undefined);
+        twitchApi.removeAuthToken();
+        await queryClient.invalidateQueries();
+        await queryClient.resetQueries();
         await doAnonAuth();
       },
       fetchAnonToken,

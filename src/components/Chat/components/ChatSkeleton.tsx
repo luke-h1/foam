@@ -1,4 +1,5 @@
 import { SafeAreaViewFixed } from '@app/components/SafeAreaViewFixed';
+import { Typography } from '@app/components/Typography';
 import { useEffect } from 'react';
 import { useWindowDimensions, View, ViewStyle } from 'react-native';
 import Animated, {
@@ -11,7 +12,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 import { FlashList } from '../../FlashList';
-import { Text } from '../../Text';
 
 const Shimmer = ({ style }: { style: ViewStyle }) => {
   const translateX = useSharedValue(-100);
@@ -67,9 +67,7 @@ export function ChatSkeleton() {
   const chatHeight = height * 0.6;
   return (
     <SafeAreaViewFixed style={styles.safeArea}>
-      <Text style={styles.header} variant="caption2">
-        CHAT
-      </Text>
+      <Typography style={styles.header}>CHAT</Typography>
       <View
         style={[styles.chatContainer, { width: chatWidth, height: chatHeight }]}
       >

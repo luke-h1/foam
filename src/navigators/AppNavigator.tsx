@@ -1,6 +1,7 @@
 import { useAuthContext } from '@app/context';
 import { usePopulateAuth } from '@app/hooks';
 import { CategoryScreen, LoginScreen, StorybookScreen } from '@app/screens';
+import { ChatScreen } from '@app/screens/ChatScreen';
 import {
   DarkTheme,
   DefaultTheme,
@@ -12,14 +13,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import { ComponentProps, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import {
-  DevToolsParamList,
-  DevToolsStackNavigator,
-} from './DevToolsStackNavigator';
-import {
-  OtherStackNavigator,
-  OtherStackParamList,
-} from './OtherStackNavigator';
+import { DevToolsParamList } from './DevToolsStackNavigator';
+import { OtherStackParamList } from './OtherStackNavigator';
 import {
   PreferenceStackNavigator,
   PreferenceStackParamList,
@@ -72,6 +67,9 @@ export type AppStackParamList = {
 
   // other
   Other: NavigatorScreenParams<OtherStackParamList>;
+
+  // chat - globally accessible
+  Chat: { channelName: string; channelId: string };
 };
 
 /**
@@ -91,22 +89,27 @@ const AppStack = () => {
   const { ready } = useAuthContext();
 
   console.log('ready ->', ready);
+
+  /**
+   * Todo: add loading state + fallback here if auth down
+   */
   if (!ready) {
     return null;
   }
+
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
       }}
     >
-      {/* tabs */}
+      {/* Tab stack */}
       <Stack.Screen name="Tabs" component={TabNavigator} />
 
-      {/* streams */}
+      {/* Stream stack */}
       <Stack.Screen name="Streams" component={StreamStackNavigator} />
 
-      {/* top */}
+      {/* Top stack */}
       <Stack.Screen name="Top" component={TopStackNavigator} />
 
       {/* category slug */}
@@ -119,22 +122,7 @@ const AppStack = () => {
       />
 
       {/* Auth */}
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{
-          presentation: 'modal',
-        }}
-      />
-
-      {/* Changelog */}
-      <Stack.Screen
-        name="Other"
-        component={OtherStackNavigator}
-        options={{
-          presentation: 'modal',
-        }}
-      />
+      <Stack.Screen name="Login" component={LoginScreen} />
 
       {/* sb */}
       <Stack.Screen
@@ -145,7 +133,7 @@ const AppStack = () => {
         }}
       />
 
-      {/* preferences */}
+      {/* Preference stack */}
       <Stack.Screen
         name="Preferences"
         component={PreferenceStackNavigator}
@@ -154,8 +142,8 @@ const AppStack = () => {
         }}
       />
 
-      {/* DevTools */}
-      <Stack.Screen name="DevTools" component={DevToolsStackNavigator} />
+      {/* Chat - globally accessible */}
+      <Stack.Screen name="Chat" component={ChatScreen} />
     </Stack.Navigator>
   );
 };

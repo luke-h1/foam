@@ -52,7 +52,7 @@ function App() {
   }
 
   const {
-    initialNavigationState,
+    // initialNavigationState,
     onNavigationStateChange,
     // isRestored: isNavigationStateRestored,
   } = useNavigationPersistence(storage, NAVIGATION_PERSISTENCE_KEY);
@@ -87,22 +87,9 @@ function App() {
    */
   return (
     <Providers>
-      {__DEV__ ? (
-        <AppNavigator
-          initialState={
-            recoveredFromError
-              ? { index: 0, routes: [] }
-              : initialNavigationState
-          }
-          onStateChange={onNavigationStateChange}
-        >
-          <OTAUpdates />
-        </AppNavigator>
-      ) : (
-        <AppNavigator>
-          <OTAUpdates />
-        </AppNavigator>
-      )}
+      <AppNavigator onStateChange={onNavigationStateChange}>
+        <OTAUpdates />
+      </AppNavigator>
     </Providers>
   );
 }

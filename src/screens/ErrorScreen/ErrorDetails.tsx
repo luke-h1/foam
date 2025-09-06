@@ -1,4 +1,4 @@
-import { Button, Icon, Text } from '@app/components';
+import { Button, Icon, Typography } from '@app/components';
 import { openLinkInBrowser } from '@app/utils';
 import { type ErrorInfo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -29,11 +29,11 @@ export function ErrorDetails(props: ErrorDetailsProps) {
     <>
       <View style={styles.topSection}>
         <Icon icon="alert-circle" size={30} />
-        <Text style={styles.heading}>Something went wrong</Text>
-        <Text>
+        <Typography style={styles.heading}>Something went wrong</Typography>
+        <Typography>
           Try resetting or restarting the app & see if that helps. If not, feel
           free to file an issue on GitHub and we'll take a look
-        </Text>
+        </Typography>
       </View>
       <Button
         style={styles.resetButton}
@@ -42,24 +42,19 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         GitHub
       </Button>
       <Button onPress={() => setShowStackTrace(!showStackTrace)}>
-        <Text style={styles.toggleStackTrace}>
+        <Typography style={styles.toggleStackTrace}>
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
-        </Text>
+        </Typography>
       </Button>
       {showStackTrace && (
         <ScrollView
           style={styles.errorSection}
           contentContainerStyle={styles.errorSectionContentContainer}
         >
-          <Text variant="caption2">{error?.message.trim()}</Text>
-          <Text
-            selectable
-            style={styles.errorBackTrace}
-            color="text"
-            variant="footnote"
-          >
+          <Typography>{error?.message.trim()}</Typography>
+          <Typography selectable style={styles.errorBackTrace}>
             {errorInfo?.componentStack?.trim()}
-          </Text>
+          </Typography>
         </ScrollView>
       )}
       <Button style={styles.resetButton} onPress={onReset}>
@@ -87,7 +82,7 @@ const styles = StyleSheet.create(theme => ({
   },
   errorSection: {
     flex: 2,
-    backgroundColor: theme.colors.borderFaint,
+    backgroundColor: theme.colors.accent.accent,
     marginBottom: theme.spacing.md,
     marginTop: theme.spacing.lg,
     borderRadius: 6,
@@ -99,10 +94,10 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.md,
   },
   button: {
-    backgroundColor: theme.colors.cherry,
+    backgroundColor: theme.colors.red.accent,
   },
   resetButton: {
-    backgroundColor: theme.colors.cherry,
+    backgroundColor: theme.colors.red.accent,
     paddingHorizontal: theme.spacing.lg,
   },
 }));
