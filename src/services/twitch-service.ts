@@ -194,7 +194,7 @@ export const twitchService = {
   getTopStreams: async (cursor?: string): Promise<PaginatedList<Stream>> => {
     const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
+        'Client-Id': process.env.TWITCH_CLIENT_ID,
       },
       params: {
         ...(cursor && { after: cursor }),
@@ -221,13 +221,19 @@ export const twitchService = {
   },
 
   getStream: async (userLogin: string) => {
+    const params: Record<string, string> = {};
+
+    if (userLogin) {
+      params.user_login = userLogin;
+    }
+
     const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
       params: {
-        user_login: userLogin,
         first: 15,
+        ...params,
       },
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
+        'Client-Id': process.env.TWITCH_CLIENT_ID,
       },
     });
 
@@ -283,7 +289,7 @@ export const twitchService = {
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID as string,
+        'Client-Id': process.env.TWITCH_CLIENT_ID,
         Authorization: `Bearer ${token}`,
       },
     });

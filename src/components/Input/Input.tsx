@@ -1,4 +1,4 @@
-import React, { ForwardedRef } from 'react';
+import { ForwardedRef, forwardRef } from 'react';
 import { TextInput as TextInputPrimitive, TextInputProps } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -50,8 +50,8 @@ const Input = (
 const styles = StyleSheet.create(theme => ({
   input: {
     fontFamily: theme.font.fontFamily,
-    color: theme.colors.text,
+    color: theme.colors.gray.text,
   },
 }));
 
-export default React.forwardRef<TextInputPrimitive, InputProps>(Input);
+export default forwardRef<TextInputPrimitive, InputProps>(Input);

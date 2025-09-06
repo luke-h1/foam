@@ -1,4 +1,4 @@
-import { Button, SearchHistory, TextField, FlashList } from '@app/components';
+import { Button, FlashList, SearchBox, SearchHistoryV2 } from '@app/components';
 import {
   useAppNavigation,
   useDebouncedCallback,
@@ -9,18 +9,12 @@ import {
   SearchChannelResponse,
   storageService,
 } from '@app/services';
-import Entypo from '@expo/vector-icons/build/Entypo';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { TextInput as NativeTextInput, Platform } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Platform, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import {
-  StyleSheet,
-  useUnistyles,
-  withUnistyles,
-} from 'react-native-unistyles';
-import Feather from 'react-native-vector-icons/Feather';
+import { StyleSheet, withUnistyles } from 'react-native-unistyles';
 import { StreamerCard } from './components';
 
 const UniKeyboardAvoidingView = withUnistyles(KeyboardAvoidingView);
@@ -36,7 +30,6 @@ export function SearchScreen() {
   const { navigate } = useAppNavigation();
 
   const [query, setQuery] = useState<string>('');
-  const ref = useRef<NativeTextInput | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
@@ -107,23 +100,41 @@ export function SearchScreen() {
     setSearchHistory(prevSearches);
   }, 400);
 
-  // eslint-disable-next-line no-shadow
-  const handleQuery = async (query: string) => {
-    setQuery(query);
-    await search(query);
-  };
-  const { theme } = useUnistyles();
+  const handleClearSearch = useCallback(() => {
+    setQuery('');
+    setSearchResults([]);
+  }, []);
 
-  const ListFooterComponent = useCallback(() => {
-    return searchResults.length === 0 ? (
-      <SearchHistory
-        results={searchHistory.map(item => item.query)}
+  const handleQuerySearch = useCallback(
+    async (searchQuery: string) => {
+      await search(searchQuery);
+    },
+    [search],
+  );
+
+  const handleTextChange = useCallback(
+    (text: string) => {
+      setQuery(text);
+      if (text.length > 2) {
+        void handleQuerySearch(text);
+      } else if (text.length === 0) {
+        setSearchResults([]);
+      }
+    },
+    [handleQuerySearch],
+  );
+
+  const ListFooterComponent = useMemo(() => {
+    return searchResults.length > 0 ? (
+      <SearchHistoryV2
+        history={searchHistory.map(item => item.query)}
         onClearAll={() => {
           setSearchHistory([]);
           storageService.remove('previous_searches');
         }}
         onSelectItem={q => {
-          void handleQuery(q);
+          setQuery(q);
+          void handleQuerySearch(q);
         }}
         onClearItem={id => {
           const newHistory = searchHistory.filter(item => item.query !== id);
@@ -132,59 +143,26 @@ export function SearchScreen() {
         }}
       />
     ) : null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchResults.length, searchHistory, handleQuerySearch]);
 
-  const ListHeaderComponent = useCallback(() => {
+  const ListHeaderComponent = useMemo(() => {
     return (
       <UniKeyboardAvoidingView
         behavior="padding"
         style={styles.kb}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <TextField
-          ref={ref}
-          placeholder="Find a channel"
-          value={query}
-          autoCorrect={false}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onChangeText={async text => handleQuery(text)}
-          // eslint-disable-next-line react/no-unstable-nested-components
-          RightAccessory={() =>
-            query ? (
-              <Button
-                onPress={() => {
-                  setQuery?.('');
-                  setSearchResults([]);
-                  void fetchSearchHistory();
-                }}
-                hitSlop={30}
-              >
-                <Entypo
-                  name="circle-with-cross"
-                  size={22}
-                  style={{
-                    marginRight: 6,
-                  }}
-                  color={theme.colors.border}
-                />
-              </Button>
-            ) : (
-              <Feather
-                name="search"
-                color={theme.colors.border}
-                size={22}
-                style={{
-                  marginRight: 6,
-                }}
-              />
-            )
-          }
-        />
+        <View style={styles.searchWrapper}>
+          <SearchBox
+            placeholder="search"
+            value={query}
+            onChange={handleTextChange}
+            rightOnPress={handleClearSearch}
+          />
+        </View>
       </UniKeyboardAvoidingView>
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [query, handleTextChange, handleClearSearch]);
 
   const renderItem: ListRenderItem<SearchChannelResponse> = useCallback(
     ({ item }) => {
@@ -235,5 +213,8 @@ const styles = StyleSheet.create(theme => ({
   },
   kb: {
     paddingHorizontal: theme.spacing.md,
+  },
+  searchWrapper: {
+    flexDirection: 'row',
   },
 }));

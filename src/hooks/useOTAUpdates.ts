@@ -34,6 +34,7 @@ export function useOTAUpdates() {
   const [lastChecked, setLastChecked] = React.useState<Date | null>(null);
   const { isUpdatePending } = useUpdates();
 
+  // eslint-disable-next-line no-undef
   const timeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const setCheckTimeout = React.useCallback(() => {

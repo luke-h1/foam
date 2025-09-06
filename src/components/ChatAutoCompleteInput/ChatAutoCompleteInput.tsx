@@ -1,6 +1,5 @@
 import { SanitisiedEmoteSet } from '@app/services';
 import { ChatUser, useChatStore } from '@app/store';
-import truncate from 'lodash/truncate';
 
 import {
   useCallback,
@@ -35,7 +34,7 @@ import { Button } from '../Button';
 import { FlashList } from '../FlashList';
 import { Image } from '../Image';
 import Input from '../Input/Input';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 // Add this type for user suggestions
 type SuggestionType = 'emote' | 'user';
@@ -86,7 +85,6 @@ const getCurrentWordInfo = (text: string, cursorPosition: number) => {
   };
 };
 
-// Add this function to get current word and check if it's a mention
 const getCurrentWordAndType = (text: string, cursorPosition: number) => {
   const wordInfo = getCurrentWordInfo(text, cursorPosition);
   const isUserMention = wordInfo.word.startsWith('@');
@@ -199,7 +197,6 @@ export const ChatAutoCompleteInput = forwardRef<
         emoteMap.set(emote.name.toLowerCase(), emote);
       });
 
-      // Convert back to array and sort
       const uniqueEmotes = Array.from(emoteMap.values());
 
       if (prioritizeChannelEmotes) {
@@ -301,7 +298,8 @@ export const ChatAutoCompleteInput = forwardRef<
           { translateY: suggestionTranslateY.value },
         ],
         position: 'absolute',
-        left: inputLayout.x,
+        left: 0,
+        right: 0,
         width: inputLayout.width,
         height: suggestionsHeight,
         maxHeight: suggestionsHeight,
@@ -398,12 +396,20 @@ export const ChatAutoCompleteInput = forwardRef<
                 />
               </AnimatedView>
               <View style={styles.emoteTextContainer}>
-                <Text style={styles.emoteName}>
-                  {truncate(item.name, {
-                    length: 50,
-                  })}
-                </Text>
-                <Text style={styles.emoteSite}>{item.site}</Text>
+                <Typography
+                  style={styles.emoteName}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.name}
+                </Typography>
+                <Typography
+                  style={styles.emoteSite}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.site}
+                </Typography>
               </View>
             </View>
           </Button>
@@ -511,12 +517,11 @@ export const ChatAutoCompleteInput = forwardRef<
                     style={styles.userSuggestionItem}
                     onPress={() => handleUserSelect(user)}
                   >
-                    <Text
-                      variant="caption2"
+                    <Typography
                       style={[styles.userSuggestionText, { color: user.color }]}
                     >
                       {user.name}
-                    </Text>
+                    </Typography>
                   </Button>
                 ))}
               </ScrollView>
@@ -595,10 +600,9 @@ const styles = StyleSheet.create(theme => ({
     marginHorizontal: 0,
   },
   suggestionsContainer: {
-    backgroundColor: theme.colors.border,
     borderRadius: theme.radii.md,
     borderWidth: 1,
-    borderColor: theme.colors.borderFaint,
+    borderColor: theme.colors.accent.text,
     zIndex: 1000,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -616,7 +620,7 @@ const styles = StyleSheet.create(theme => ({
   },
   separator: {
     height: 1,
-    backgroundColor: theme.colors.borderFaint,
+    backgroundColor: theme.colors.accent.accent,
     marginHorizontal: theme.spacing.md,
   },
   emoteContainer: {
@@ -632,22 +636,25 @@ const styles = StyleSheet.create(theme => ({
   emoteTextContainer: {
     flex: 1,
     justifyContent: 'center',
+    minWidth: 0,
   },
   emoteName: {
     fontWeight: '500',
+    flexShrink: 1,
   },
   emoteSite: {
     marginTop: 2,
+    flexShrink: 1,
   },
   userSuggestionsWrapper: {
     width: '100%',
     marginBottom: theme.spacing.sm,
   },
   userSuggestionsContainer: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.accent.accent,
     borderRadius: theme.radii.md,
     borderWidth: 1,
-    borderColor: theme.colors.borderFaint,
+    borderColor: theme.colors.accent.accent,
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
     shadowOffset: { width: 0, height: 2 },
@@ -663,7 +670,7 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.xs,
     marginRight: theme.spacing.xs,
     borderRadius: theme.radii.sm,
-    backgroundColor: theme.colors.foregroundInverted,
+    backgroundColor: theme.colors.accent.accentHover,
   },
   userSuggestionText: {
     fontWeight: '500',

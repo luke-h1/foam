@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 
-import { Text } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { useChatStore } from '@app/store';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { LegendListRef } from '@legendapp/list';
@@ -8,7 +8,7 @@ import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 import { View, ViewStyle, useWindowDimensions } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { SanitisiedEmoteSet } from '../../../../services/seventv-service';
 import { EmojiLegendList } from './EmojiLegendList';
 import { SubNavigationBar } from './SubNavigationBar';
@@ -100,8 +100,6 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
     const scrollY = useSharedValue<number>(0);
     const [activeSection, setActiveSection] = useState(0);
 
-    const { theme } = useUnistyles();
-
     const data = useMemo(() => {
       const sections: EmojiSection[] = [
         /**
@@ -192,7 +190,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
     if (data.length === 0) {
       return (
         <View style={[{ width: PICKER_WIDTH }]}>
-          <Text>No emotes available</Text>
+          <Typography>No emotes available</Typography>
         </View>
       );
     }
@@ -209,7 +207,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
         <BottomSheetView style={styles.wrapper}>
           <View
             style={{
-              backgroundColor: theme.colors.borderNeutral,
+              // backgroundColor: theme.colors.borderNeutral,
               paddingHorizontal: PICKER_PAD,
               borderRadius: PICKER_RADIUS,
             }}
@@ -251,6 +249,6 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.md,
   },
   bottomSheet: {
-    backgroundColor: theme.colors.borderNeutral,
+    // backgroundColor: theme.colors.borderNeutral,
   },
 }));

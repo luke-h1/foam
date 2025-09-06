@@ -5,7 +5,7 @@ import { createLoggerInterceptor } from './interceptors';
 export const twitchApi = new Client({
   baseURL: 'https://api.twitch.tv/helix',
   headers: {
-    'Client-ID': process.env.TWITCH_CLIENT_ID as string,
+    'Client-ID': process.env.TWITCH_CLIENT_ID,
   },
   requestInterceptors: [createLoggerInterceptor('twitch')],
 });

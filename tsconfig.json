@@ -22,12 +22,18 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@app/*": ["./src/*"],
       "@modules/*": ["./modules/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "modules/**/*.ts",
+    "modules/**/*.tsx"
+  ],
+  "exclude": ["node_modules", "**/node_modules/**"]
 }

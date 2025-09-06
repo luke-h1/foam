@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Typography } from '@app/components/Typography';
 import { SanitisiedEmoteSet } from '@app/services';
 import { useMemo } from 'react';
 import Animated, {
@@ -68,6 +68,8 @@ export function EmojiRow({
       {items.map(itemObj => {
         const isEmote = typeof itemObj.emoji === 'object';
 
+        console.log(itemObj.emoji);
+
         const content = isEmote ? (
           <Image
             source={(itemObj.emoji as SanitisiedEmoteSet).url}
@@ -77,7 +79,9 @@ export function EmojiRow({
             contentFit="contain"
           />
         ) : (
-          <Text style={styles.emoji}>{itemObj.emoji as string}</Text>
+          <Typography style={styles.emoji}>
+            {itemObj.emoji as string}
+          </Typography>
         );
 
         return (

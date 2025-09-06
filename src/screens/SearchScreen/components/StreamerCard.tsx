@@ -1,4 +1,4 @@
-import { Button, LiveStreamImage, Text } from '@app/components';
+import { Button, LiveStreamImage, Typography } from '@app/components';
 import { useAppNavigation } from '@app/hooks';
 import type { SearchChannelResponse } from '@app/services';
 import { View } from 'react-native';
@@ -25,8 +25,8 @@ export function StreamerCard({ stream }: Props) {
       <View style={styles.streamer}>
         <LiveStreamImage thumbnail={stream.thumbnail_url} animated size="sm" />
         <View>
-          <Text variant="caption2">{stream.display_name}</Text>
-          <Text style={styles.gameName}>{stream.game_name}</Text>
+          <Typography>{stream.display_name}</Typography>
+          <Typography style={styles.gameName}>{stream.game_name}</Typography>
         </View>
       </View>
     </Button>

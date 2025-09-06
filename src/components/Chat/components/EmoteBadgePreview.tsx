@@ -13,7 +13,7 @@ import { BrandIcon } from '../../BrandIcon';
 import { Button } from '../../Button';
 import { Icon } from '../../Icon';
 import { Image } from '../../Image';
-import { Text } from '../../Text';
+import { Typography } from '../../Typography';
 
 interface EmoteAction {
   title: string;
@@ -124,31 +124,33 @@ export function EmoteBadgePreview({
                 </View>
                 <View style={styles.metadataContainer}>
                   <View style={styles.metadataRow}>
-                    <Text style={styles.metadataValue}>
+                    <Typography style={styles.metadataValue}>
                       {selectedEmote.original_name}
-                    </Text>
+                    </Typography>
                   </View>
                   <View style={styles.metadataRow}>
-                    <Text style={styles.metadataValue}>
+                    <Typography style={styles.metadataValue}>
                       {selectedEmote.site}
-                    </Text>
+                    </Typography>
                     {selectedEmote.site?.includes('7tv') && (
                       <BrandIcon name="stv" size="md" />
                     )}
                   </View>
                   {selectedEmote.creator && (
                     <View style={styles.metadataRow}>
-                      <Text style={styles.metadataValue}>
+                      <Typography style={styles.metadataValue}>
                         Created by: {selectedEmote.creator}
-                      </Text>
+                      </Typography>
                     </View>
                   )}
                   {selectedEmote.original_name && (
                     <View style={styles.metadataRow}>
-                      <Text style={styles.metadataLabel}>Original Name:</Text>
-                      <Text style={styles.metadataValue}>
+                      <Typography style={styles.metadataLabel}>
+                        Original Name:
+                      </Typography>
+                      <Typography style={styles.metadataValue}>
                         {selectedEmote.original_name}
-                      </Text>
+                      </Typography>
                     </View>
                   )}
                 </View>
@@ -170,27 +172,27 @@ export function EmoteBadgePreview({
                 </View>
                 <View style={styles.metadataContainer}>
                   <View style={styles.metadataRow}>
-                    <Text style={styles.metadataValue}>
+                    <Typography style={styles.metadataValue}>
                       {selectedBadge.title}
-                    </Text>
+                    </Typography>
                   </View>
                   <View style={styles.metadataRow}>
-                    <Text style={styles.metadataValue}>
+                    <Typography style={styles.metadataValue}>
                       {selectedBadge.type}
-                    </Text>
+                    </Typography>
                   </View>
                   {selectedBadge.owner_username && (
                     <View style={styles.metadataRow}>
-                      <Text style={styles.metadataValue}>
+                      <Typography style={styles.metadataValue}>
                         Owner: {selectedBadge.owner_username}
-                      </Text>
+                      </Typography>
                     </View>
                   )}
                   <View style={styles.metadataRow}>
-                    <Text style={styles.metadataLabel}>Set:</Text>
-                    <Text style={styles.metadataValue}>
+                    <Typography style={styles.metadataLabel}>Set:</Typography>
+                    <Typography style={styles.metadataValue}>
                       {selectedBadge.set}
-                    </Text>
+                    </Typography>
                   </View>
                 </View>
               </View>
@@ -206,12 +208,12 @@ export function EmoteBadgePreview({
           onPress={item.onPress}
         >
           <Icon icon={item.icon} />
-          <Text style={styles.actionText}>{item.title}</Text>
+          <Typography style={styles.actionText}>{item.title}</Typography>
         </Button>
       )}
       contentContainerStyle={{
         paddingHorizontal: theme.spacing.md,
-        backgroundColor: theme.colors.borderFaint,
+        // backgroundColor: theme.colors.borderFaint,
       }}
       keyboardShouldPersistTaps="handled"
     />

@@ -1,5 +1,5 @@
-import { Text } from '@app/components';
+import { Typography } from '@app/components';
 
 export function FaqScreen() {
-  return <Text variant="title">FAQ</Text>;
+  return <Typography>FAQ</Typography>;
 }

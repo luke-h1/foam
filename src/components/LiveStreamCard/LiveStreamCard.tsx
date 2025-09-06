@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 interface Props {
   stream: Stream;
@@ -39,13 +39,12 @@ export function LiveStreamCard({ stream }: Props) {
           />
           <View style={styles.overlay}>
             <View style={styles.redDot} />
-            <Text style={styles.liveText} variant="caption2">
+            <Typography size="xxs">
               {elapsedStreamTime(stream.started_at)}
-            </Text>
+            </Typography>
           </View>
         </View>
         <View style={styles.details}>
-          <Text variant="caption">{stream.title}</Text>
           <View style={styles.metadata}>
             <View style={styles.info}>
               <Image
@@ -53,14 +52,14 @@ export function LiveStreamCard({ stream }: Props) {
                 style={styles.avatar}
                 testID="LiveStreamCard-avatar"
               />
-
-              <Text variant="caption">{stream.user_name}</Text>
+              <Typography size="xs">{stream.user_name}</Typography>
             </View>
-            <Text variant="caption2">
+            <Typography size="xxs" style={styles.viewers}>
               {formatViewCount(stream.viewer_count)} viewers
-            </Text>
+            </Typography>
           </View>
-          <Text variant="caption2">{stream.game_name}</Text>
+          <Typography size="xxs">{stream.game_name}</Typography>
+          <Typography size="sm">{stream.title}</Typography>
         </View>
       </View>
     </Button>
@@ -100,30 +99,27 @@ const styles = StyleSheet.create(theme => ({
     backgroundColor: 'red',
     marginRight: 5,
   },
-  liveText: {
-    color: 'white',
-  },
+  liveText: {},
   details: {
     flex: 1,
     justifyContent: 'flex-start',
-    marginLeft: theme.spacing.md,
+    marginLeft: theme.spacing.sm,
   },
-  title: {
-    fontWeight: 'bold',
-  },
+  viewers: {},
+  title: {},
   metadata: {
     marginVertical: theme.spacing.sm,
   },
   info: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   avatar: {
     width: 20,
     height: 20,
-    borderRadius: 10,
-    marginRight: theme.spacing.xs,
+    borderRadius: theme.spacing.lg,
+    marginRight: theme.spacing.sm,
   },
   tagsContainer: {
     marginTop: theme.spacing.xs,

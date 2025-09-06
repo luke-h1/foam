@@ -5,7 +5,7 @@ import {
   parse,
   toDate,
 } from 'date-fns';
-import { Text } from '../Text';
+import { Typography } from '../Typography';
 
 interface Props {
   children: Date | number | string;
@@ -37,10 +37,10 @@ export const FormattedDate = ({
   }
 
   return (
-    <Text data-testid={testId} variant="caption2">
+    <Typography data-testid={testId}>
       {formatRelativeToNow
         ? formatRelative(parsedDate, new Date())
         : formatter(parsedDate, format)}
-    </Text>
+    </Typography>
   );
 };

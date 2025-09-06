@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { ThemeColor } from '@app/styles';
 import { typedObjectKeys } from '@app/utils';
 // eslint-disable-next-line no-restricted-imports
 import { ImageProps } from 'expo-image';
@@ -27,7 +26,7 @@ export const IconSizes = typedObjectKeys(ICON_SIZES);
 interface IconProps extends Omit<ImageProps, 'source'> {
   name: BrandIconName;
   size?: IconSize;
-  color?: ThemeColor;
+  color?: unknown;
 }
 
 export const BrandIcons = {
@@ -69,18 +68,17 @@ export const BrandIcon = memo(
 );
 BrandIcon.displayName = 'BrandIcon';
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create(() => ({
   iconImage: ({
     height,
     width,
-    color,
   }: {
     height: DimensionValue;
     width: DimensionValue;
-    color?: ThemeColor;
+    color?: unknown;
   }) => ({
     height,
     width,
-    tintColor: color ? theme.colors[color] : undefined,
+    // tintColor: color ? theme.colors[color] : undefined,
   }),
 }));

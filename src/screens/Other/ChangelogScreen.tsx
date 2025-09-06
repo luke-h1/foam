@@ -1,4 +1,4 @@
-import { Text } from '@app/components';
+import { Typography } from '@app/components';
 
 // todo - in the future, read from github md
 const mockChangelog = `
@@ -38,5 +38,5 @@ All notable changes to this project will be documented in this file.
 `;
 
 export function ChangelogScreen() {
-  return <Text variant="title">{mockChangelog}</Text>;
+  return <Typography>{mockChangelog}</Typography>;
 }
