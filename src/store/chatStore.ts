@@ -254,7 +254,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   },
   cacheQueue: [],
 
-  // Add initialization method to calculate initial cache size once
   initializeCacheStats: () => {
     try {
       logger.chat.info('Initializing cache statistics...');
@@ -284,7 +283,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         return;
       }
 
-      // Optimized recursive file counting
       let totalFiles = 0;
       let totalSize = 0;
 
@@ -329,17 +327,18 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
   },
 
-  // Enhanced cache image method with immediate in-memory caching
   cacheImage: (
     url: string,
     channelId: string,
     type: 'emote' | 'badge',
     priority = 1,
   ) => {
-    // Immediately add to in-memory cache for instant access
     get().addToMemoryCache(url, channelId, type);
 
-    // Add to disk cache queue for background processing
+    /**
+     * Add to disk cache queue for background processing
+     * while also caching in memory
+     */
     set(state => {
       const existingIndex = state.cacheQueue.findIndex(
         item =>
@@ -389,7 +388,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
   },
 
-  // New method for immediate in-memory caching
   addToMemoryCache: (
     url: string,
     channelId: string,
@@ -419,7 +417,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     });
   },
 
-  // Enhanced getter that prioritizes disk cache but falls back to memory cache
   getCachedImageUrl: (
     url: string,
     channelId: string,
@@ -439,7 +436,9 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     if (memoryCache) {
       const targetMap =
         type === 'emote' ? memoryCache.emotes : memoryCache.badges;
+
       const memoryCached = targetMap.get(url);
+
       if (memoryCached) {
         return memoryCached;
       }
@@ -448,7 +447,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     return url;
   },
 
-  // Enhanced batch cache with immediate memory caching
   batchCacheImages: async (
     items: Array<{ url: string; channelId: string; type: 'emote' | 'badge' }>,
   ) => {
@@ -483,7 +481,9 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
   },
 
-  // High-performance queue processor with concurrent downloads
+  /**
+   * Processes cache queues for emojis and badges
+   */
   processCacheQueue: async () => {
     const state = get();
     if (state.cacheStats.isProcessing || state.cacheQueue.length === 0) {
@@ -567,7 +567,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }
   },
 
-  // Enhanced single item processor that updates cache status
   processSingleCacheItem: async (item: CacheQueueItem) => {
     const { url, channelId, type } = item;
 
@@ -824,13 +823,17 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
 
   getCacheAge: (channelId: string) => {
     const channelCache = get().imageCache.get(channelId);
-    if (!channelCache) return null;
+    if (!channelCache) {
+      return null;
+    }
     return Date.now() - channelCache.lastUpdated;
   },
 
   isCacheExpired: (channelId: string, maxAge = 24 * 60 * 60 * 1000) => {
     const cacheAge = get().getCacheAge(channelId);
-    if (cacheAge === null) return true;
+    if (cacheAge === null) {
+      return true;
+    }
     return cacheAge > maxAge;
   },
 
@@ -953,6 +956,10 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
   loadChannelResources: async (channelId: string, forceRefresh = false) => {
     set(state => ({ ...state, status: 'loading' }));
     try {
+      /**
+       * For the time being - cache for 24 hours. Eventually we'll react to WS events to dictate this cache age
+       * with the default being Infinity until the WS informs us of updates
+       */
       const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
       if (!forceRefresh) {
@@ -1168,7 +1175,6 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
     }));
   },
 
-  // Enhanced cached emotes getter
   getCachedEmotes: (channelId: string) => {
     const channelCache = get().imageCache.get(channelId);
     const memoryCache = get().inMemoryCache.get(channelId);
