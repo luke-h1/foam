@@ -39,7 +39,7 @@ const loggingConfig = {
   },
   performance: {
     enabled: true,
-    color: 'white',
+    color: 'cyanBright',
   },
   cache: {
     enabled: true,

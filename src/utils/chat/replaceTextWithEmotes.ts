@@ -180,7 +180,7 @@ export function findEmotesInText(
     }
   }
 
-  console.log('foundEmotes ->', foundEmotes);
+  // console.log('foundEmotes ->', foundEmotes);
   return foundEmotes;
 }
 

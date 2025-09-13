@@ -22,7 +22,9 @@ export const EmoteRenderer = ({
     <Button onLongPress={() => handleEmotePress(part)}>
       <Image
         source={part.url ?? ''}
-        cachePolicy="disk"
+        cachePolicy="memory-disk"
+        decodeFormat="rgb"
+        useAppleWebpCodec
         transition={50}
         style={{
           width,

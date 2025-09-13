@@ -22,6 +22,7 @@ export const Image = function Image({
         {...props}
         source={source}
         contentFit={contentFit}
+        cachePolicy={cachePolicy}
         transition={transition}
         cachePolicy={cachePolicy}
         decodeFormat="rgb"

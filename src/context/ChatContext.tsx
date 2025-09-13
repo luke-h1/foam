@@ -1097,6 +1097,66 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [getCacheAge],
   );
 
+  // Method to get fresh emote data - this will always return current values
+  const getCurrentEmoteData = useCallback(
+    (channelId?: string) => {
+      // Always use the provided channelId if available, fallback to currentChannelId
+      const targetChannelId = channelId || persistedState.currentChannelId;
+      const currentData = targetChannelId
+        ? persistedState.channelCaches[targetChannelId]
+        : null;
+
+      // // Enhanced debugging
+      // logger.main.info('🐛 getCurrentEmoteData called:', {
+      //   providedChannelId: channelId,
+      //   currentChannelId: persistedState.currentChannelId,
+      //   targetChannelId,
+      //   hasCurrentData: !!currentData,
+      //   allChannelIds: Object.keys(persistedState.channelCaches),
+      //   channelCacheKeys: currentData ? Object.keys(currentData) : [],
+      //   twitchChannelCount: currentData?.twitchChannelEmotes?.length || 0,
+      //   twitchGlobalCount: currentData?.twitchGlobalEmotes?.length || 0,
+      //   sevenTvChannelCount: currentData?.sevenTvChannelEmotes?.length || 0,
+      //   totalEmotes:
+      //     (currentData?.twitchChannelEmotes?.length || 0) +
+      //     (currentData?.twitchGlobalEmotes?.length || 0) +
+      //     (currentData?.sevenTvChannelEmotes?.length || 0) +
+      //     (currentData?.sevenTvGlobalEmotes?.length || 0) +
+      //     (currentData?.ffzChannelEmotes?.length || 0) +
+      //     (currentData?.ffzGlobalEmotes?.length || 0) +
+      //     (currentData?.bttvChannelEmotes?.length || 0) +
+      //     (currentData?.bttvGlobalEmotes?.length || 0),
+      //   lastUpdated: currentData?.lastUpdated,
+      //   // Log some sample emote names to verify data structure
+      //   sampleTwitchGlobal:
+      //     currentData?.twitchGlobalEmotes?.slice(0, 3)?.map(e => e.name) || [],
+      //   sampleSevenTvGlobal:
+      //     currentData?.sevenTvGlobalEmotes?.slice(0, 3)?.map(e => e.name) || [],
+      // });
+
+      // Debug: Log what we're returning from getCurrentEmoteData
+      const result = {
+        twitchChannelEmotes: currentData?.twitchChannelEmotes || [],
+        twitchGlobalEmotes: currentData?.twitchGlobalEmotes || [],
+        sevenTvChannelEmotes: currentData?.sevenTvChannelEmotes || [],
+        sevenTvGlobalEmotes: currentData?.sevenTvGlobalEmotes || [],
+        ffzChannelEmotes: currentData?.ffzChannelEmotes || [],
+        ffzGlobalEmotes: currentData?.ffzGlobalEmotes || [],
+        bttvGlobalEmotes: currentData?.bttvGlobalEmotes || [],
+        bttvChannelEmotes: currentData?.bttvChannelEmotes || [],
+        twitchChannelBadges: currentData?.twitchChannelBadges || [],
+        twitchGlobalBadges: currentData?.twitchGlobalBadges || [],
+        ffzChannelBadges: currentData?.ffzChannelBadges || [],
+        ffzGlobalBadges: currentData?.ffzGlobalBadges || [],
+        chatterinoBadges: currentData?.chatterinoBadges || [],
+      };
+
+      return result;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [persistedState.channelCaches],
+  );
+
   const setBits = useCallback((bits: Bit[]) => {
     setRuntimeState(prevState => ({
       ...prevState,
@@ -1237,9 +1297,49 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
                 loadingState: 'COMPLETED',
               }));
 
-              await new Promise(resolve => {
-                setTimeout(resolve, 50);
+              // Wait for state to propagate and verify it's available
+              await new Promise<void>(resolve => {
+                let attempts = 0;
+                const maxAttempts = 50; // 500ms max wait time
+
+                const checkState = () => {
+                  // eslint-disable-next-line no-plusplus
+                  attempts++;
+
+                  const emoteData = getCurrentEmoteData(channelId);
+                  const totalEmotes =
+                    emoteData.twitchChannelEmotes.length +
+                    emoteData.twitchGlobalEmotes.length +
+                    emoteData.sevenTvChannelEmotes.length +
+                    emoteData.sevenTvGlobalEmotes.length +
+                    emoteData.ffzChannelEmotes.length +
+                    emoteData.ffzGlobalEmotes.length +
+                    emoteData.bttvChannelEmotes.length +
+                    emoteData.bttvGlobalEmotes.length;
+
+                  // logger.main.info('🔍 State verification check:', {
+                  //   channelId,
+                  //   totalEmotes,
+                  //   hasData: totalEmotes > 0,
+                  //   attempts,
+                  //   maxAttempts,
+                  // });
+
+                  if (totalEmotes > 0) {
+                    logger.main.info('✅ State verification successful!');
+                    resolve();
+                  } else if (attempts >= maxAttempts) {
+                    logger.main.warn(
+                      '⚠️ State verification timed out, proceeding anyway',
+                    );
+                    resolve();
+                  } else {
+                    setTimeout(checkState, 10);
+                  }
+                };
+                checkState();
               });
+
               logger.main.info(
                 '🎯 Cache path completed, currentChannelId:',
                 channelId,
@@ -1440,39 +1540,84 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
         };
 
         const statePersistStart = performance.now();
-        setPersistedState(prevState => ({
-          ...prevState,
-          channelCaches: {
-            ...prevState.channelCaches,
-            [channelId]: channelData,
-          },
-          // currentChannelId is already set above, so we don't need to set it again
-          // but we can keep it for safety
-          currentChannelId: channelId,
-        }));
 
-        setRuntimeState(prevState => ({
-          ...prevState,
-          loadingState: 'COMPLETED',
-        }));
+        // Use a Promise to ensure state updates are complete
+        await new Promise<void>(resolve => {
+          setPersistedState(prevState => ({
+            ...prevState,
+            channelCaches: {
+              ...prevState.channelCaches,
+              [channelId]: channelData,
+            },
+            currentChannelId: channelId,
+          }));
+
+          setRuntimeState(prevState => ({
+            ...prevState,
+            loadingState: 'COMPLETED',
+          }));
+
+          // Wait for both state updates to propagate
+          setTimeout(() => {
+            resolve();
+          }, 10);
+        });
+
         const statePersistDuration = performance.now() - statePersistStart;
         logger.performance.debug(
           `⏳ State persistence -- time: ${statePersistDuration.toFixed(2)} ms`,
         );
 
-        // Wait for state to propagate before returning
-        await new Promise(resolve => {
-          setTimeout(resolve, 50);
+        // Wait for state to actually be available in getCurrentEmoteData
+        await new Promise<void>(resolve => {
+          let attempts = 0;
+          const maxAttempts = 50; // 500ms max wait time
+
+          const checkState = () => {
+            attempts += 1;
+
+            const total = getCurrentEmoteData(channelId);
+            const totalEmotes =
+              total.twitchChannelEmotes.length +
+              total.twitchGlobalEmotes.length +
+              total.sevenTvChannelEmotes.length +
+              total.sevenTvGlobalEmotes.length +
+              total.ffzChannelEmotes.length +
+              total.ffzGlobalEmotes.length +
+              total.bttvChannelEmotes.length +
+              total.bttvGlobalEmotes.length;
+
+            // logger.main.info('🔍 State verification check:', {
+            //   channelId,
+            //   totalEmotes,
+            //   hasData: totalEmotes > 0,
+            //   attempts,
+            //   maxAttempts,
+            // });
+
+            if (totalEmotes > 0) {
+              logger.main.info('✅ State verification successful!');
+              resolve();
+            } else if (attempts >= maxAttempts) {
+              logger.main.warn(
+                '⚠️ State verification timed out, proceeding anyway',
+              );
+              resolve();
+            } else {
+              setTimeout(checkState, 10);
+            }
+          };
+          checkState();
         });
 
         // Verify the state was set correctly
         const verifyEmoteData = () => {
-          const currentData = persistedState.currentChannelId
-            ? persistedState.channelCaches[persistedState.currentChannelId]
-            : null;
+          // Check the data for the specific channelId we just loaded, not currentChannelId
+          const currentData = persistedState.channelCaches[channelId];
 
           return currentData
             ? {
+                channelId,
                 currentChannelId: persistedState.currentChannelId,
                 hasData: !!currentData,
                 emoteCount:
@@ -1485,7 +1630,12 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
                   (currentData.bttvChannelEmotes?.length || 0) +
                   (currentData.bttvGlobalEmotes?.length || 0),
               }
-            : { currentChannelId: null, hasData: false, emoteCount: 0 };
+            : {
+                channelId,
+                currentChannelId: null,
+                hasData: false,
+                emoteCount: 0,
+              };
         };
 
         logger.chat.info(
@@ -1512,6 +1662,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       addToMemoryCache,
       batchCacheImages,
       setPersistedState,
+      getCurrentEmoteData,
     ],
   );
 
@@ -1636,55 +1787,6 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [runtimeState.imageCache, runtimeState.inMemoryCache],
   );
 
-  // Method to get fresh emote data - this will always return current values
-  const getCurrentEmoteData = useCallback(
-    (channelId?: string) => {
-      const targetChannelId = channelId || persistedState.currentChannelId;
-      const currentData = targetChannelId
-        ? persistedState.channelCaches[targetChannelId]
-        : null;
-
-      logger.main.info('🐛 getCurrentEmoteData called:', {
-        providedChannelId: channelId,
-        currentChannelId: persistedState.currentChannelId,
-        targetChannelId,
-        hasCurrentData: !!currentData,
-        twitchChannelCount: currentData?.twitchChannelEmotes?.length || 0,
-        twitchGlobalCount: currentData?.twitchGlobalEmotes?.length || 0,
-        sevenTvChannelCount: currentData?.sevenTvChannelEmotes?.length || 0,
-        totalEmotes:
-          (currentData?.twitchChannelEmotes?.length || 0) +
-          (currentData?.twitchGlobalEmotes?.length || 0) +
-          (currentData?.sevenTvChannelEmotes?.length || 0) +
-          (currentData?.sevenTvGlobalEmotes?.length || 0) +
-          (currentData?.ffzChannelEmotes?.length || 0) +
-          (currentData?.ffzGlobalEmotes?.length || 0) +
-          (currentData?.bttvChannelEmotes?.length || 0) +
-          (currentData?.bttvGlobalEmotes?.length || 0),
-      });
-
-      // Debug: Log what we're returning from getCurrentEmoteData
-      const result = {
-        twitchChannelEmotes: currentData?.twitchChannelEmotes || [],
-        twitchGlobalEmotes: currentData?.twitchGlobalEmotes || [],
-        sevenTvChannelEmotes: currentData?.sevenTvChannelEmotes || [],
-        sevenTvGlobalEmotes: currentData?.sevenTvGlobalEmotes || [],
-        ffzChannelEmotes: currentData?.ffzChannelEmotes || [],
-        ffzGlobalEmotes: currentData?.ffzGlobalEmotes || [],
-        bttvGlobalEmotes: currentData?.bttvGlobalEmotes || [],
-        bttvChannelEmotes: currentData?.bttvChannelEmotes || [],
-        twitchChannelBadges: currentData?.twitchChannelBadges || [],
-        twitchGlobalBadges: currentData?.twitchGlobalBadges || [],
-        ffzChannelBadges: currentData?.ffzChannelBadges || [],
-        ffzGlobalBadges: currentData?.ffzGlobalBadges || [],
-        chatterinoBadges: currentData?.chatterinoBadges || [],
-      };
-
-      return result;
-    },
-    [persistedState.channelCaches, persistedState.currentChannelId],
-  );
-
   const getCacheSize = useCallback((): { files: number; sizeBytes: number } => {
     const { cacheStats } = runtimeState;
     logger.chat.debug(
@@ -1726,7 +1828,6 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       ttvUsers: runtimeState.ttvUsers,
       messages: runtimeState.messages,
 
-      // Methods
       cacheImage,
       batchCacheImages,
       processCacheQueue,
@@ -1735,7 +1836,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       getCachedImageUrl,
       expireCache,
       clearCache,
-      clearAllCache, // Add the new method
+      clearAllCache,
       getCacheSize,
       initializeCacheStats,
       refreshChannelResources,

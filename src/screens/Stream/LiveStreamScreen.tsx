@@ -86,7 +86,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         <WebView
           ref={webViewRef}
           source={{
-            uri: `https://player.twitch.tv/?channel=${stream.user_login}&parent=foam.lhowsam.com&autoplay=true`,
+            uri: `https://player.twitch.tv/?channel=${stream.user_login}autoplay=true&parent=foam-app.com`,
           }}
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore

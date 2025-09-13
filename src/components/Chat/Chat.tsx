@@ -45,6 +45,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const hasPartedRef = useRef<boolean>(false);
   const [client, setClient] = useState<tmijs.Client | null>(null);
   const initializingRef = useRef<boolean>(false);
+  const initializedChannelRef = useRef<string | null>(null); // Track which channel we've initialized
 
   const {
     loadChannelResources,
@@ -54,21 +55,45 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     addMessage,
     clearMessages,
     getCurrentEmoteData,
-    currentChannelId,
   } = useChatContext();
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
+      console.log('🚪 Screen is being removed, cleaning up chat connection...');
+
+      // Part the channel if we haven't already
       if (client && !hasPartedRef.current) {
         hasPartedRef.current = true;
+        console.log(`👋 Parting channel: ${channelName}`);
         void client.part(channelName);
       }
+
+      // Clean up listeners
+      if (client) {
+        console.log('🧹 Removing all TMI listeners');
+        client.removeAllListeners('message');
+        client.removeAllListeners('clearchat');
+        client.removeAllListeners('disconnected');
+        client.removeAllListeners('connected');
+      }
+
+      // Reset connection state
+      setConnected(false);
+      setClient(null);
+
+      // Reset initialization tracking
+      initializedChannelRef.current = null;
+      initializingRef.current = false;
     });
-    clearChannelResources();
-    clearTtvUsers();
-    return unsubscribe;
+
+    return () => {
+      unsubscribe();
+      // Only clear resources when component unmounts
+      clearChannelResources();
+      clearTtvUsers();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, navigation]);
+  }, [navigation, client, channelName]); // Add client and channelName as dependencies
 
   const legendListRef = useRef<LegendListRef>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
@@ -87,12 +112,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const [, setIsInputFocused] = useState<boolean>(false);
 
-  const BOTTOM_THRESHOLD = 20;
+  const BOTTOM_THRESHOLD = 50; // Increase threshold for better detection
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
   const isAtBottomRef = useRef<boolean>(true);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [isScrollingToBottom, setIsScrollingToBottom] =
     useState<boolean>(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -103,57 +129,72 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD;
 
-      if (!isScrollingToBottom) {
+      // Clear any existing timeout when user scrolls
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
+
+      // Only update state if not currently auto-scrolling, or if we've reached the bottom
+      if (!isScrollingToBottom || atBottom) {
         isAtBottomRef.current = atBottom;
         setIsAtBottom(atBottom);
+
+        if (isScrollingToBottom && atBottom) {
+          setIsScrollingToBottom(false);
+        }
       }
 
       if (atBottom) {
         setUnreadCount(0);
-        if (isScrollingToBottom) {
-          setIsScrollingToBottom(false);
-        }
       }
     },
     [isScrollingToBottom],
   );
 
   const handleContentSizeChange = useCallback(() => {
-    if (isAtBottomRef.current && !isScrollingToBottom) {
+    // More aggressive auto-scrolling for fast chats
+    if (isAtBottomRef.current) {
       const lastIndex = messages.length - 1;
       if (lastIndex >= 0) {
-        legendListRef.current?.scrollToIndex({
-          index: lastIndex,
-          animated: false,
-          viewPosition: 1, // Position at bottom of viewport
-        });
+        // Use scrollToEnd for better performance in fast chats
+        legendListRef.current?.scrollToEnd({ animated: false });
       }
     }
-  }, [messages.length, isScrollingToBottom]);
+  }, [messages.length]);
 
   const scrollToBottom = useCallback(() => {
     setIsScrollingToBottom(true);
     const lastIndex = messages.length - 1;
 
     if (lastIndex >= 0) {
-      // Use scrollToIndex for better performance with recycling
-      legendListRef.current?.scrollToIndex({
-        index: lastIndex,
-        animated: true,
-        viewPosition: 1, // Position at bottom of viewport
-      });
-    } else {
-      // Fallback to scrollToEnd if no messages
+      // Use scrollToEnd for more reliable scrolling
       legendListRef.current?.scrollToEnd({ animated: true });
     }
 
-    // Set states optimistically, but let handleScroll confirm when we actually reach bottom
-    setTimeout(() => {
+    // Clear any existing timeout
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // Shorter timeout for faster response
+    scrollTimeoutRef.current = setTimeout(() => {
       isAtBottomRef.current = true;
       setIsAtBottom(true);
       setUnreadCount(0);
-    }, 300); // Give time for animation to complete
+      setIsScrollingToBottom(false);
+      scrollTimeoutRef.current = null;
+    }, 100); // Reduced from 300ms to 100ms
   }, [messages.length]);
+
+  // Add cleanup for timeout
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleNewMessage = useCallback(
     (newMessage: ChatMessageType) => {
@@ -163,11 +204,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       messagesRef.current = updatedMessages;
       setMessages(updatedMessages);
 
-      if (!isAtBottomRef.current) {
+      // Only increment unread count if user is not at bottom and not auto-scrolling
+      if (!isAtBottomRef.current && !isScrollingToBottom) {
         setUnreadCount(prev => prev + 1);
       }
+
+      // Force scroll to bottom if we're already at bottom (for fast chats)
+      if (isAtBottomRef.current && !isScrollingToBottom) {
+        // Use requestAnimationFrame for better performance
+        requestAnimationFrame(() => {
+          legendListRef.current?.scrollToEnd({ animated: false });
+        });
+      }
     },
-    [addMessage],
+    [addMessage, isScrollingToBottom],
   );
 
   const setupChatListeners = useCallback(
@@ -211,25 +261,26 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         const message_nonce = generateNonce();
 
         /**
-         * Get fresh emote data from the context method (this will have the latest values)
+         * Use the getCurrentEmoteData function from the context hook
+         * that was already destructured at the top of the component
          */
         const currentEmotes = getCurrentEmoteData(channelId);
 
-        console.log('🐛 getCurrentEmoteData returned:', {
-          twitchChannelCount: currentEmotes.twitchChannelEmotes.length,
-          twitchGlobalCount: currentEmotes.twitchGlobalEmotes.length,
-          sevenTvChannelCount: currentEmotes.sevenTvChannelEmotes.length,
-          sevenTvGlobalCount: currentEmotes.sevenTvGlobalEmotes.length,
-          totalEmotes:
-            currentEmotes.twitchChannelEmotes.length +
-            currentEmotes.twitchGlobalEmotes.length +
-            currentEmotes.sevenTvChannelEmotes.length +
-            currentEmotes.sevenTvGlobalEmotes.length +
-            currentEmotes.ffzChannelEmotes.length +
-            currentEmotes.ffzGlobalEmotes.length +
-            currentEmotes.bttvChannelEmotes.length +
-            currentEmotes.bttvGlobalEmotes.length,
-        });
+        // console.log('🐛 getCurrentEmoteData returned:', {
+        //   twitchChannelCount: currentEmotes.twitchChannelEmotes.length,
+        //   twitchGlobalCount: currentEmotes.twitchGlobalEmotes.length,
+        //   sevenTvChannelCount: currentEmotes.sevenTvChannelEmotes.length,
+        //   sevenTvGlobalCount: currentEmotes.sevenTvGlobalEmotes.length,
+        //   totalEmotes:
+        //     currentEmotes.twitchChannelEmotes.length +
+        //     currentEmotes.twitchGlobalEmotes.length +
+        //     currentEmotes.sevenTvChannelEmotes.length +
+        //     currentEmotes.sevenTvGlobalEmotes.length +
+        //     currentEmotes.ffzChannelEmotes.length +
+        //     currentEmotes.ffzGlobalEmotes.length +
+        //     currentEmotes.bttvChannelEmotes.length +
+        //     currentEmotes.bttvGlobalEmotes.length,
+        // });
 
         const replacedMessage = replaceTextWithEmotes({
           bttvChannelEmotes: currentEmotes.bttvChannelEmotes,
@@ -289,36 +340,91 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         setConnected(true);
       });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       channelName,
       handleNewMessage,
       clearMessages,
-      getCurrentEmoteData,
       channelId,
+      getCurrentEmoteData, // Add this back since we're using it directly
     ],
   );
 
-  // Add cleanup effect
+  // Add an effect to wait for emote data to be available before setting up listeners
+  useEffect(() => {
+    const checkEmoteDataAndSetupListeners = () => {
+      if (!client || !channelId) return;
+
+      // Check if emote data is actually available
+      const emoteData = getCurrentEmoteData(channelId);
+      const hasEmotes =
+        emoteData.twitchGlobalEmotes.length > 0 ||
+        emoteData.sevenTvGlobalEmotes.length > 0 ||
+        emoteData.bttvGlobalEmotes.length > 0 ||
+        emoteData.ffzGlobalEmotes.length > 0;
+
+      if (hasEmotes) {
+        console.log('🎧 Emote data is available, setting up chat listeners');
+        setupChatListeners(client);
+      } else if (loadingState === 'COMPLETED') {
+        // If loading is completed but we still don't have emotes, try again in a bit
+        console.log(
+          '⏳ Loading completed but no emotes yet, retrying in 100ms...',
+        );
+        setTimeout(() => {
+          checkEmoteDataAndSetupListeners();
+        }, 100);
+      }
+    };
+
+    checkEmoteDataAndSetupListeners();
+  }, [
+    client,
+    channelId,
+    loadingState,
+    getCurrentEmoteData,
+    setupChatListeners,
+  ]);
+
+  // Update the cleanup effect
   useEffect(() => {
     return () => {
       // Cleanup listeners when component unmounts or channel changes
       if (client) {
-        console.log('🧹 Cleaning up chat listeners');
+        console.log('🧹 Cleaning up chat listeners (useEffect cleanup)');
+
+        // Part the channel if we haven't already
+        if (!hasPartedRef.current) {
+          hasPartedRef.current = true;
+          console.log(`👋 Parting channel: ${channelName} (cleanup)`);
+          void client.part(channelName);
+        }
+
+        // Remove all listeners
         client.removeAllListeners('message');
         client.removeAllListeners('clearchat');
         client.removeAllListeners('disconnected');
         client.removeAllListeners('connected');
       }
-    };
-  }, [client, channelId]);
 
-  // Simpler approach - always initialize if we don't have resources loaded
+      // Reset states
+      setConnected(false);
+      setMessages([]);
+      messagesRef.current = [];
+    };
+  }, [client, channelId, channelName]);
+
+  // Simpler approach - just track if we've initialized this specific channel
   useEffect(() => {
     const initializeChat = async () => {
       // Prevent multiple simultaneous initializations
       if (initializingRef.current) {
         console.log('⏸️ Already initializing, skipping...');
+        return;
+      }
+
+      // Check if we've already initialized this channel
+      if (initializedChannelRef.current === channelId) {
+        console.log('⏸️ Already initialized for this channel:', channelId);
         return;
       }
 
@@ -346,10 +452,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           console.log('🔗 TMI already connected, reusing connection');
           const existingClient = TmiService.getInstance();
           setClient(existingClient);
-          setupChatListeners(existingClient);
+          // Remove setupChatListeners from here - it will be called by the useEffect above
+          // setupChatListeners(existingClient);
           setConnected(true);
           await existingClient.join(channelName);
           console.log('🎉 Chat initialization complete (reused connection)!');
+          initializedChannelRef.current = channelId;
           return;
         }
 
@@ -365,7 +473,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
                 username: user.display_name ?? '',
                 password: authState?.token.accessToken,
               }
-            : undefined, // No identity for anonymous connections
+            : undefined,
           connection: {
             secure: true,
             reconnect: true,
@@ -379,8 +487,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         const tmiClient = TmiService.getInstance();
         setClient(tmiClient);
 
-        // Set up event listeners
-        setupChatListeners(tmiClient);
+        // Remove setupChatListeners from here too - it will be called by the useEffect above
+        // setupChatListeners(tmiClient);
 
         // Connect and join
         await TmiService.connect();
@@ -388,6 +496,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         await tmiClient.join(channelName);
 
         console.log('🎉 Chat initialization complete!');
+        initializedChannelRef.current = channelId;
       } catch (error) {
         console.log('💥 Chat initialization error:', error);
         logger.chat.error('Failed to initialize chat:', error);
@@ -398,37 +507,35 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       }
     };
 
-    // Initialize if we have valid channel data and either no current channel or different channel
-    if (
-      channelId &&
-      channelId.trim() &&
-      (!currentChannelId || currentChannelId !== channelId) &&
-      authState?.token.accessToken
-    ) {
+    // Simple check - just need channelId and auth token
+    if (channelId && channelId.trim() && authState?.token.accessToken) {
       console.log('🚀 Initializing chat for:', {
         channelId,
-        currentChannelId,
         hasUser: !!user,
         hasAuthState: !!authState,
+        alreadyInitialized: initializedChannelRef.current === channelId,
       });
       void initializeChat();
     } else {
       console.log('⏸️ Skipping initialization:', {
         channelId,
-        currentChannelId,
         hasUser: !!user,
         hasAuthToken: !!authState?.token.accessToken,
-        condition: !currentChannelId || currentChannelId !== channelId,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // Reset initialization tracking when channel changes
+    return () => {
+      if (initializedChannelRef.current !== channelId) {
+        initializedChannelRef.current = null;
+      }
+    };
   }, [
-    channelId,
-    currentChannelId,
+    channelId, // Only depend on channelId, not currentChannelId
     loadChannelResources,
     setupChatListeners,
     channelName,
-    // Removed user and authState from dependencies to prevent unnecessary re-initialization
+    authState?.token.accessToken, // Add this back since we need it
   ]);
 
   const handleSendMessage = useCallback(async () => {
@@ -564,14 +671,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           <AnimatedLegendList
             data={messages}
             ref={legendListRef}
-            keyExtractor={item =>
-              `${item.message_id}_${item.message_nonce}_${item.message_id}`
-            }
+            keyExtractor={item => `${item.message_id}_${item.message_nonce}`}
             recycleItems
-            waitForInitialLayout
-            estimatedItemSize={150}
+            waitForInitialLayout={false}
+            estimatedItemSize={80}
             onScroll={handleScroll}
-            scrollEventThrottle={16}
+            scrollEventThrottle={32}
             onContentSizeChange={handleContentSizeChange}
             renderItem={renderItem}
           />

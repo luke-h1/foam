@@ -1,7 +1,7 @@
 import type { ExpoConfig } from '@expo/config';
 import type { AppIconBadgeConfig } from 'app-icon-badge/types';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface AppVariantConfig {
   name: string;
@@ -45,6 +45,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     iosGoogleServicesFile:
       process.env.IOS_GOOGLE_SERVICES_JSON ||
       './GoogleService-Info-production.plist',
@@ -120,6 +121,7 @@ const config: ExpoConfig = {
     'react-native-bottom-tabs',
     ['app-icon-badge', appIconBadgeConfig],
     'expo-secure-store',
+    'expo-background-task',
     [
       'expo-font',
       {
