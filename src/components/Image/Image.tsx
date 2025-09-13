@@ -24,7 +24,6 @@ export const Image = function Image({
         contentFit={contentFit}
         cachePolicy={cachePolicy}
         transition={transition}
-        cachePolicy={cachePolicy}
         decodeFormat="rgb"
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
