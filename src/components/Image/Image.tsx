@@ -13,6 +13,7 @@ export const Image = function Image({
   placeholderContentFit,
   transition = 500,
   source,
+  cachePolicy,
   ...props
 }: ImageProps) {
   return (
@@ -22,6 +23,7 @@ export const Image = function Image({
         source={source}
         contentFit={contentFit}
         transition={transition}
+        cachePolicy={cachePolicy}
         decodeFormat="rgb"
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}

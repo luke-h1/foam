@@ -1,5 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
+import { useChatContext } from '@app/context';
 import { calculateAspectRatio, ParsedPart } from '@app/utils';
 
 type PartVariant = ParsedPart<'emote'>;
@@ -22,6 +23,7 @@ export const EmoteRenderer = ({
     <Button onLongPress={() => handleEmotePress(part)}>
       <Image
         source={part.url ?? ''}
+        cachePolicy="disk"
         transition={50}
         style={{
           width,
