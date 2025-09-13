@@ -23,7 +23,7 @@ export const CategoryScreen: FC<
   const { id } = params;
   const [previousCursor, setPreviousCursor] = useState<string>('');
   const [cursor, setCursor] = useState<string>('');
-  const flashListRef = useRef<FlashList<Stream>>(null);
+  const flashListRef = useRef(null);
 
   const categoryQuery = useMemo(() => twitchQueries.getCategory(id), [id]);
 

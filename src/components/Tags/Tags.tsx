@@ -42,7 +42,6 @@ export function Tags({ tags, limit = 10 }: Props) {
     <View style={styles.container}>
       <FlashList<string>
         data={limitedTags}
-        estimatedItemSize={10}
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={item => item}

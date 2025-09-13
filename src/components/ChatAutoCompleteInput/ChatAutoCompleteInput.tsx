@@ -561,7 +561,6 @@ export const ChatAutoCompleteInput = forwardRef<
             >
               <FlashList
                 style={{ height: 280 }}
-                estimatedItemSize={60}
                 keyboardShouldPersistTaps="handled"
                 data={filteredEmotes}
                 keyExtractor={item => item.id}

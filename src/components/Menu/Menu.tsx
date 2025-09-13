@@ -106,6 +106,7 @@ export function Menu({
         }
 
         // @ts-expect-error fix me being unknown
+
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         return <MenuItem item={item} style={item.style} />;
       }}

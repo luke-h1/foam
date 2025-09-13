@@ -6,7 +6,7 @@ import {
 } from '@app/utils';
 import { BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
-import { View } from 'react-native';
+import { View, SectionListRenderItem } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 import { BrandIcon } from '../../BrandIcon';
@@ -36,6 +36,125 @@ export function EmoteBadgePreview({
   selectedBadge,
 }: EmotePreviewProps) {
   const { theme } = useUnistyles();
+
+  // Properly typed render functions
+  const renderItem: SectionListRenderItem<EmoteAction, EmotePreviewSection> = ({
+    item,
+    index,
+  }) => (
+    <Button
+      key={index}
+      style={[styles.actionButton, index > 0 && styles.actionButtonGap]}
+      onPress={item.onPress}
+    >
+      <Icon icon={item.icon} />
+      <Typography style={styles.actionText}>{item.title}</Typography>
+    </Button>
+  );
+
+  const renderSectionHeader = ({
+    section,
+  }: {
+    section: EmotePreviewSection;
+  }) => {
+    if (section.title === 'preview') {
+      if (selectedEmote) {
+        const { height, width } = calculateAspectRatio(
+          selectedEmote.width || 20,
+          selectedEmote.height || 20,
+          100,
+        );
+        return (
+          <View style={styles.previewContainer}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={selectedEmote.url ?? ''}
+                transition={50}
+                style={{
+                  width: width - 50,
+                  height: height - 50,
+                }}
+              />
+            </View>
+            <View style={styles.metadataContainer}>
+              <View style={styles.metadataRow}>
+                <Typography style={styles.metadataValue}>
+                  {selectedEmote.original_name}
+                </Typography>
+              </View>
+              <View style={styles.metadataRow}>
+                <Typography style={styles.metadataValue}>
+                  {selectedEmote.site}
+                </Typography>
+                {selectedEmote.site?.includes('7tv') && (
+                  <BrandIcon name="stv" size="md" />
+                )}
+              </View>
+              {selectedEmote.creator && (
+                <View style={styles.metadataRow}>
+                  <Typography style={styles.metadataValue}>
+                    Created by: {selectedEmote.creator}
+                  </Typography>
+                </View>
+              )}
+              {selectedEmote.original_name && (
+                <View style={styles.metadataRow}>
+                  <Typography style={styles.metadataLabel}>
+                    Original Name:
+                  </Typography>
+                  <Typography style={styles.metadataValue}>
+                    {selectedEmote.original_name}
+                  </Typography>
+                </View>
+              )}
+            </View>
+          </View>
+        );
+      }
+      if (selectedBadge) {
+        return (
+          <View style={styles.previewContainer}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={selectedBadge.url}
+                transition={50}
+                style={{
+                  width: 50,
+                  height: 50,
+                }}
+              />
+            </View>
+            <View style={styles.metadataContainer}>
+              <View style={styles.metadataRow}>
+                <Typography style={styles.metadataValue}>
+                  {selectedBadge.title}
+                </Typography>
+              </View>
+              <View style={styles.metadataRow}>
+                <Typography style={styles.metadataValue}>
+                  {selectedBadge.type}
+                </Typography>
+              </View>
+              {selectedBadge.owner_username && (
+                <View style={styles.metadataRow}>
+                  <Typography style={styles.metadataValue}>
+                    Owner: {selectedBadge.owner_username}
+                  </Typography>
+                </View>
+              )}
+              <View style={styles.metadataRow}>
+                <Typography style={styles.metadataLabel}>Set:</Typography>
+                <Typography style={styles.metadataValue}>
+                  {selectedBadge.set}
+                </Typography>
+              </View>
+            </View>
+          </View>
+        );
+      }
+    }
+    return null;
+  };
 
   const handleCopyName = () => {
     if (selectedEmote?.content) {
@@ -101,116 +220,11 @@ export function EmoteBadgePreview({
   return (
     <BottomSheetSectionList
       sections={previews}
-      keyExtractor={(item, index) => item.title + index}
-      renderSectionHeader={({ section }) => {
-        if (section.title === 'preview') {
-          if (selectedEmote) {
-            const { height, width } = calculateAspectRatio(
-              selectedEmote.width || 20,
-              selectedEmote.height || 20,
-              100,
-            );
-            return (
-              <View style={styles.previewContainer}>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={selectedEmote.url ?? ''}
-                    transition={50}
-                    style={{
-                      width: width - 50,
-                      height: height - 50,
-                    }}
-                  />
-                </View>
-                <View style={styles.metadataContainer}>
-                  <View style={styles.metadataRow}>
-                    <Typography style={styles.metadataValue}>
-                      {selectedEmote.original_name}
-                    </Typography>
-                  </View>
-                  <View style={styles.metadataRow}>
-                    <Typography style={styles.metadataValue}>
-                      {selectedEmote.site}
-                    </Typography>
-                    {selectedEmote.site?.includes('7tv') && (
-                      <BrandIcon name="stv" size="md" />
-                    )}
-                  </View>
-                  {selectedEmote.creator && (
-                    <View style={styles.metadataRow}>
-                      <Typography style={styles.metadataValue}>
-                        Created by: {selectedEmote.creator}
-                      </Typography>
-                    </View>
-                  )}
-                  {selectedEmote.original_name && (
-                    <View style={styles.metadataRow}>
-                      <Typography style={styles.metadataLabel}>
-                        Original Name:
-                      </Typography>
-                      <Typography style={styles.metadataValue}>
-                        {selectedEmote.original_name}
-                      </Typography>
-                    </View>
-                  )}
-                </View>
-              </View>
-            );
-          }
-          if (selectedBadge) {
-            return (
-              <View style={styles.previewContainer}>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={selectedBadge.url}
-                    transition={50}
-                    style={{
-                      width: 50,
-                      height: 50,
-                    }}
-                  />
-                </View>
-                <View style={styles.metadataContainer}>
-                  <View style={styles.metadataRow}>
-                    <Typography style={styles.metadataValue}>
-                      {selectedBadge.title}
-                    </Typography>
-                  </View>
-                  <View style={styles.metadataRow}>
-                    <Typography style={styles.metadataValue}>
-                      {selectedBadge.type}
-                    </Typography>
-                  </View>
-                  {selectedBadge.owner_username && (
-                    <View style={styles.metadataRow}>
-                      <Typography style={styles.metadataValue}>
-                        Owner: {selectedBadge.owner_username}
-                      </Typography>
-                    </View>
-                  )}
-                  <View style={styles.metadataRow}>
-                    <Typography style={styles.metadataLabel}>Set:</Typography>
-                    <Typography style={styles.metadataValue}>
-                      {selectedBadge.set}
-                    </Typography>
-                  </View>
-                </View>
-              </View>
-            );
-          }
-        }
-        return null;
-      }}
-      renderItem={({ item, index }) => (
-        <Button
-          key={index}
-          style={[styles.actionButton, index > 0 && styles.actionButtonGap]}
-          onPress={item.onPress}
-        >
-          <Icon icon={item.icon} />
-          <Typography style={styles.actionText}>{item.title}</Typography>
-        </Button>
-      )}
+      keyExtractor={(item: EmoteAction, index: number) =>
+        `${item.title}-${index}`
+      }
+      renderSectionHeader={renderSectionHeader}
+      renderItem={renderItem}
       contentContainerStyle={{
         paddingHorizontal: theme.spacing.md,
         // backgroundColor: theme.colors.borderFaint,

@@ -72,7 +72,6 @@ export function ChatSkeleton() {
         style={[styles.chatContainer, { width: chatWidth, height: chatHeight }]}
       >
         <FlashList
-          estimatedItemSize={20}
           data={new Array(20)}
           renderItem={({ index }) => (
             <View key={index} style={styles.skeletonMessageContainer}>
