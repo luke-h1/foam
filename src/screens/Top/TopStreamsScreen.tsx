@@ -16,7 +16,7 @@ interface StreamWithProfile extends Stream {
 export function TopStreamsScreen() {
   const [cursor, setCursor] = useState<string>('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const flashListRef = useRef<FlashList<StreamWithProfile>>(null);
+  const flashListRef = useRef(null);
 
   const {
     data: streams,

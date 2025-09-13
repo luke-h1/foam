@@ -22,8 +22,8 @@ export const Image = function Image({
         {...props}
         source={source}
         contentFit={contentFit}
-        transition={transition}
         cachePolicy={cachePolicy}
+        transition={transition}
         decodeFormat="rgb"
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}

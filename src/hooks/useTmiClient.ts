@@ -34,7 +34,7 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
       TmiService.setOptions({
         ...options,
         options: {
-          debug: __DEV__,
+          // debug: __DEV__,
           ...options.options,
         },
         connection: {

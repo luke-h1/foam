@@ -191,7 +191,6 @@ export function SearchScreen() {
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior="automatic"
       data={searchResults}
-      estimatedItemSize={100}
       style={{ flex: 1 }}
       ListFooterComponent={ListFooterComponent}
       ListHeaderComponent={ListHeaderComponent}

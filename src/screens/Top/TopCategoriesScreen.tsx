@@ -24,7 +24,7 @@ export function TopCategoriesScreen() {
     undefined,
   );
   const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const flashListRef = useRef<FlashList<Category>>(null);
+  const flashListRef = useRef(null);
 
   const {
     data: categories,
