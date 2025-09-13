@@ -1,9 +1,9 @@
-import { createContext, PropsWithChildren, use, useMemo } from "react";
-import { CachedPhotoType } from "./cache-service";
+import { createContext, PropsWithChildren, use, useMemo } from 'react';
+import { CachedPhotoType } from './cache-service';
 import {
   CachedPhotosLoadingState,
   useCachedPhotos as useCachedPhotosData,
-} from "./useCachedPhotos";
+} from './useCachedPhotos';
 
 type CachedPhotosDataType = {
   cachedPhotos: CachedPhotoType[];
@@ -43,7 +43,7 @@ export const useCachedPhotos = (): CachedPhotosDataType => {
 
   if (context === undefined) {
     throw new Error(
-      "useCachedPhotos must be used within an CachedPhotosProvider",
+      'useCachedPhotos must be used within an CachedPhotosProvider',
     );
   }
 

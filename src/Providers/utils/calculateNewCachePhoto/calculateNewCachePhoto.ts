@@ -3,9 +3,9 @@
  * It's limited to {@link CACHE_CALCULATION_PARALLELISM_LIMIT} photos at a time.
  */
 
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
-import pLimit from "p-limit";
-import { PixelRatio } from "react-native";
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
+import pLimit from 'p-limit';
+import { PixelRatio } from 'react-native';
 
 export const calculateNewCachePhoto = async (
   photoUri: string,

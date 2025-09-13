@@ -193,7 +193,7 @@ export const useMediaLibraryPhotos = () => {
     didRunOnceFlag.current = true;
 
     logger.main.info('Automatic MediaLibrary photo load start');
-    loadMediaLibraryPhotos();
+    void loadMediaLibraryPhotos();
   }, [
     stateRestorationStatus,
     state.mediaLibraryLoadingState,

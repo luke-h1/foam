@@ -17,7 +17,6 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
     return getActiveRouteName(state);
   });
 
-  // Set options immediately, not in useEffect
   useMemo(() => {
     // Deep compare options to avoid unnecessary reconnection(s)
     const optionsChanged =

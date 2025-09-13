@@ -1,1 +1,1 @@
-export * from "./GalleryUISettingsProvider";
+export * from './GalleryUISettingsProvider';

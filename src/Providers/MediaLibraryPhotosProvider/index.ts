@@ -1,1 +1,1 @@
-export * from "./MediaLibraryPhotosProvider";
+export * from './MediaLibraryPhotosProvider';

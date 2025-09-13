@@ -29,7 +29,6 @@ export class DirectoryStorage {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
       request.onerror = () => reject(request.error);
 
       request.onsuccess = () => {

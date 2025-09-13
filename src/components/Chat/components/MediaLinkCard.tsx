@@ -94,8 +94,6 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
         sevenTvEmote.data?.owner.username
       : twitchClip.data?.creator_name;
 
-  console.log(sevenTvEmote.data);
-
   return (
     <Button style={styles.container} onPress={() => {}}>
       <View style={styles.card}>

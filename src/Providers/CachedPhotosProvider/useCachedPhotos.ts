@@ -68,7 +68,6 @@ export function isLoading(state: CachedPhotosLoadingState) {
  * Ensures we have all the photos coming from {@link useMediaLibraryPhotos} properly processed and stored in the cache.
  */
 export const useCachedPhotos = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { dimensions } = useScreenDimensions();
   const {
     numberOfColumns,
@@ -89,12 +88,9 @@ export const useCachedPhotos = () => {
     cachedPhotosLoadingState: 'IDLE',
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const relevantDimension = IS_WIDE_SCREEN
-    ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      dimensions.width
-    : // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      Math.min(dimensions.width, dimensions.height);
+    ? dimensions.width
+    : Math.min(dimensions.width, dimensions.height);
 
   /**
    * Calculate estimated target image size based on screen dimensions
@@ -273,7 +269,7 @@ export const useCachedPhotos = () => {
       return;
     }
 
-    calculateCachedPhotos();
+    void calculateCachedPhotos();
   }, [
     state.cachedPhotosLoadingState,
     state.cachedPhotos.length,

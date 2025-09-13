@@ -30,7 +30,7 @@ export function usePersistedState<T>(key: string, initialValue: T) {
       try {
         const persistedValue = storage.getString(key);
 
-        console.log(`${key}: persisted value: ${persistedValue}`);
+        // console.log(`${key}: persisted value: ${persistedValue}`);
 
         if (persistedValue != null) {
           // Try to parse the persisted value

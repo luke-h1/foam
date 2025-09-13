@@ -1,2 +1,2 @@
-export * from "./ScreenDimensionsProvider";
-export * from "./dimensions";
+export * from './ScreenDimensionsProvider';
+export * from './dimensions';

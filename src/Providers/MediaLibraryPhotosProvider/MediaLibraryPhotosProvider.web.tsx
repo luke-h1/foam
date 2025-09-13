@@ -6,14 +6,14 @@ import {
   useEffect,
   useMemo,
   useState,
-} from "react";
-import { DirectoryStorage } from "./filesystem/storage.web";
-import { API, Directory, FilesystemDirectory } from "./filesystem/types.web";
+} from 'react';
+import { DirectoryStorage } from './filesystem/storage.web';
+import { API, Directory, FilesystemDirectory } from './filesystem/types.web';
 import {
   MediaLibraryLoadingState,
   MediaLibraryPhoto,
   useMediaLibraryPhotos as useMediaLibraryPhotosHook,
-} from "./useMediaLibraryPhotos.web";
+} from './useMediaLibraryPhotos.web';
 
 // Helper type definition
 export type MediaLibraryPhotosDataType = {
@@ -33,7 +33,7 @@ const MediaLibraryPhotosContext = createContext<
 
 export const MediaLibraryPhotosProvider = ({ children }: PropsWithChildren) => {
   // API mode
-  const [api, setApi] = useState<API>("filesystem");
+  const [api, setApi] = useState<API>('filesystem');
 
   // Selected photos directory
   const [photosDirectory, setDirectory] = useState<Directory | null>(null);
@@ -56,20 +56,21 @@ export const MediaLibraryPhotosProvider = ({ children }: PropsWithChildren) => {
         setDirectory(storedDirectory.handle);
     };
 
-    DirectoryStorage.clearOnBuildChange();
-    loadDirectory();
+    void DirectoryStorage.clearOnBuildChange();
+    void loadDirectory();
   }, []);
 
   const changePhotosDirectory = useCallback(
+    // eslint-disable-next-line no-shadow
     (directory: Directory | null, api: API) => {
       setApi(api);
       setDirectory(directory);
 
-      // Save directory handle to IndexedDB in locacal storage (only for filesystem API)
-      if (api === "filesystem") {
+      // Save directory handle to IndexedDB in local storage (only for filesystem API)
+      if (api === 'filesystem') {
         const dirHandle = directory as FilesystemDirectory;
 
-        DirectoryStorage.storeDirectory(dirHandle, dirHandle.name);
+        void DirectoryStorage.storeDirectory(dirHandle, dirHandle.name);
       }
     },
     [],
@@ -103,13 +104,12 @@ export const MediaLibraryPhotosProvider = ({ children }: PropsWithChildren) => {
   );
 };
 
-// We create a wrapper for the hook to return shared data from global context
 export const useMediaLibraryPhotos = (): MediaLibraryPhotosDataType => {
   const context = use(MediaLibraryPhotosContext);
 
   if (context === undefined) {
     throw new Error(
-      "useMediaLibraryPhotos must be used within an MediaLibraryPhotosProvider",
+      'useMediaLibraryPhotos must be used within an MediaLibraryPhotosProvider',
     );
   }
 

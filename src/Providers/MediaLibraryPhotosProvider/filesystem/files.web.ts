@@ -8,7 +8,7 @@ export type FileFilter<T extends File> = (file: T) => boolean;
  */
 export function isImageFile<T extends File = File>(file: T): boolean {
   return (
-    file.type.startsWith("image/") ||
+    file.type.startsWith('image/') ||
     /\.(jpg|jpeg|png|gif|bmp|webp|svg|avif|heic)$/i.test(file.name)
   );
 }

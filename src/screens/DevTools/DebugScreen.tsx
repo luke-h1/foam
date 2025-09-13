@@ -330,7 +330,6 @@ export function DebugScreen() {
           <Typography>{item.description}</Typography>
         </View>
       );
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [switchOptions],
   );

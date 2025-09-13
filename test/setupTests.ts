@@ -25,6 +25,14 @@ jest.mock('react-native-vector-icons', () => {
   };
 });
 
+/**
+ * Polyfill for setImmediate which Sentry uses under the hood
+ */
+global.setImmediate =
+  global.setImmediate ||
+  ((callback: (...args: any[]) => void, ...args: any) =>
+    setTimeout(callback, 0, ...args));
+
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => {
   const { EventEmitter } = require('events');
   return {

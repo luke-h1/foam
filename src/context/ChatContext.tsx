@@ -1,3 +1,4 @@
+import { LOAD_BATCH_SIZE } from '@app/Providers/MediaLibraryPhotosProvider/useMediaLibraryPhotos';
 import { PersistedStateStatus, usePersistedState } from '@app/hooks';
 import {
   bttvEmoteService,
@@ -26,7 +27,6 @@ import {
 import { ViewStyle } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import { ChatUserstate } from 'tmi.js';
-import { LOAD_BATCH_SIZE } from '@app/Providers/MediaLibraryPhotosProvider/useMediaLibraryPhotos';
 
 const chatStorage = new MMKV({
   id: 'chat-cache',
@@ -1157,7 +1157,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
   const loadChannelResources = useCallback(
     async (channelId: string, forceRefresh = false) => {
       const startTime = performance.now();
-      console.log('🏗️ ChatContext loadChannelResources called:', {
+      logger.main.info('🏗️ ChatContext loadChannelResources called:', {
         channelId,
         forceRefresh,
       });
@@ -1173,7 +1173,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
         if (!forceRefresh) {
           const cacheCheckStart = performance.now();
           const existingCache = persistedState.channelCaches[channelId];
-          console.log('🗄️ Existing cache check:', {
+          logger.main.info('🗄️ Existing cache check:', {
             channelId,
             hasCache: !!existingCache,
             cacheKeys: existingCache ? Object.keys(existingCache) : [],
@@ -1200,7 +1200,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
               (existingCache.bttvChannelEmotes?.length || 0) === 0 &&
               (existingCache.bttvGlobalEmotes?.length || 0) === 0;
 
-            console.log('📊 Cache validation:', {
+            logger.main.info('📊 Cache validation:', {
               cacheAge: Math.round(cacheAge / (60 * 1000)),
               hasEmptyEmotes,
               emoteCounts: {
@@ -1222,7 +1222,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
               /**
                * Cache is valid and we have data - use it
                */
-              console.log('✅ Using cached data');
+              logger.main.info('✅ Using cached data');
               logger.chat.info(
                 `Using cached data for channel ${channelId} (age: ${Math.round(cacheAge / (60 * 1000))} minutes)`,
               );
@@ -1240,8 +1240,8 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
               await new Promise(resolve => {
                 setTimeout(resolve, 50);
               });
-              console.log(
-                '🎯 Cache path completed, currentChannelId should be:',
+              logger.main.info(
+                '🎯 Cache path completed, currentChannelId:',
                 channelId,
               );
               const cacheCheckDuration = performance.now() - cacheCheckStart;
@@ -1259,7 +1259,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
         /**
          * If we've reached this point - we need to fetch from emoji/badge APIs
          */
-        console.log('🌐 Fetching from APIs, reason:', reason);
+        logger.main.info('🌐 Fetching from APIs, reason:', reason);
         logger.chat.info(
           `Fetching fresh data for channel ${channelId} - Reason: ${reason}`,
         );
@@ -1267,7 +1267,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
         /**
          * Set the currentChannelId immediately when we start fetching
          */
-        console.log('🎯 Setting currentChannelId to:', channelId);
+        logger.main.info('🎯 Setting currentChannelId to:', channelId);
         setPersistedState(prevState => ({
           ...prevState,
           currentChannelId: channelId,
@@ -1644,7 +1644,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
         ? persistedState.channelCaches[targetChannelId]
         : null;
 
-      console.log('🐛 getCurrentEmoteData called:', {
+      logger.main.info('🐛 getCurrentEmoteData called:', {
         providedChannelId: channelId,
         currentChannelId: persistedState.currentChannelId,
         targetChannelId,

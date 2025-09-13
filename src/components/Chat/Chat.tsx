@@ -44,6 +44,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const hasPartedRef = useRef<boolean>(false);
   const [client, setClient] = useState<tmijs.Client | null>(null);
+  const initializingRef = useRef<boolean>(false);
 
   const {
     loadChannelResources,
@@ -171,7 +172,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const setupChatListeners = useCallback(
     (tmiClient: tmijs.Client) => {
-      if (connected) return; // Prevent duplicate listeners
+      // Remove existing listeners first to prevent duplicates
+      tmiClient.removeAllListeners('message');
+      tmiClient.removeAllListeners('clearchat');
+      tmiClient.removeAllListeners('disconnected');
+      tmiClient.removeAllListeners('connected');
+
+      console.log('🎧 Setting up fresh chat listeners');
 
       tmiClient.on('message', (_channel, tags, text, _self) => {
         const userstate = tags;
@@ -247,25 +254,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           twitchGlobalBadges: currentEmotes.twitchGlobalBadges,
         });
 
-        // const foundTtvUser = useChatStore
-        //   .getState()
-        //   .ttvUsers.find(u => u.name.replace('@', '') === userstate.username);
-
-        /**
-         * Look into https://api.twitch.tv/helix/chat/chatters and seeing if that is more performant than writing to store
-         */
-        // if (!foundTtvUser) {
-        //   const ttvUser: ChatUser = {
-        //     name: `@${userstate.username}`,
-        //     userId: userstate['user-id'] ?? '',
-        //     color:
-        //       userstate.color ?? generateRandomTwitchColor(userstate.username),
-        //     avatar: '',
-        //   };
-
-        //   addTtvUser(ttvUser);
-        // }
-
         const newMessage: ChatMessageType = {
           userstate,
           message: replacedMessage,
@@ -302,13 +290,40 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [
+      channelName,
+      handleNewMessage,
+      clearMessages,
+      getCurrentEmoteData,
+      channelId,
+    ],
   );
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      // Cleanup listeners when component unmounts or channel changes
+      if (client) {
+        console.log('🧹 Cleaning up chat listeners');
+        client.removeAllListeners('message');
+        client.removeAllListeners('clearchat');
+        client.removeAllListeners('disconnected');
+        client.removeAllListeners('connected');
+      }
+    };
+  }, [client, channelId]);
 
   // Simpler approach - always initialize if we don't have resources loaded
   useEffect(() => {
     const initializeChat = async () => {
+      // Prevent multiple simultaneous initializations
+      if (initializingRef.current) {
+        console.log('⏸️ Already initializing, skipping...');
+        return;
+      }
+
       try {
+        initializingRef.current = true;
         console.log('🔄 initializeChat starting for:', channelId);
 
         // Load channel resources first
@@ -327,6 +342,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         console.log('✅ loadChannelResources succeeded, setting up TMI...');
 
+        if (TmiService.isConnected()) {
+          console.log('🔗 TMI already connected, reusing connection');
+          const existingClient = TmiService.getInstance();
+          setClient(existingClient);
+          setupChatListeners(existingClient);
+          setConnected(true);
+          await existingClient.join(channelName);
+          console.log('🎉 Chat initialization complete (reused connection)!');
+          return;
+        }
+
         // Set up TMI service options
         TmiService.setOptions({
           options: {
@@ -334,10 +360,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             debug: __DEV__,
           },
           channels: [],
-          identity: {
-            username: user?.display_name ?? '',
-            password: authState?.token.accessToken,
-          },
+          identity: user
+            ? {
+                username: user.display_name ?? '',
+                password: authState?.token.accessToken,
+              }
+            : undefined, // No identity for anonymous connections
           connection: {
             secure: true,
             reconnect: true,
@@ -365,6 +393,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         logger.chat.error('Failed to initialize chat:', error);
         setConnectionError('Failed to connect to chat');
         setConnected(false);
+      } finally {
+        initializingRef.current = false;
       }
     };
 
@@ -372,7 +402,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     if (
       channelId &&
       channelId.trim() &&
-      (!currentChannelId || currentChannelId !== channelId)
+      (!currentChannelId || currentChannelId !== channelId) &&
+      authState?.token.accessToken
     ) {
       console.log('🚀 Initializing chat for:', {
         channelId,
@@ -385,17 +416,19 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       console.log('⏸️ Skipping initialization:', {
         channelId,
         currentChannelId,
+        hasUser: !!user,
+        hasAuthToken: !!authState?.token.accessToken,
         condition: !currentChannelId || currentChannelId !== channelId,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     channelId,
     currentChannelId,
     loadChannelResources,
     setupChatListeners,
     channelName,
-    user,
-    authState,
+    // Removed user and authState from dependencies to prevent unnecessary re-initialization
   ]);
 
   const handleSendMessage = useCallback(async () => {
