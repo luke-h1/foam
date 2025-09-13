@@ -1,6 +1,5 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
-import { useChatContext } from '@app/context';
 import { calculateAspectRatio, ParsedPart } from '@app/utils';
 
 type PartVariant = ParsedPart<'emote'>;
