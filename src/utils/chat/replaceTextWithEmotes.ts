@@ -305,9 +305,6 @@ export function replaceTextWithEmotes({
     }
   });
 
-  console.log('🗺️ Final emote map size:', emoteMap.size);
-  console.log('🗺️ Sample emotes:', Array.from(emoteMap.keys()).slice(0, 10));
-
   const sanitizedInput = sanitizeInput(inputString);
 
   try {

@@ -8,6 +8,8 @@ export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
 }) => {
   const { channelId, channelName } = params;
 
+  console.log('🏠 ChatScreen render:', { channelId, channelName });
+
   return (
     <View
       style={{

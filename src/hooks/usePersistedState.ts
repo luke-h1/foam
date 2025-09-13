@@ -1,4 +1,3 @@
-import { logger } from '@app/utils/logger';
 import { useCallback, useEffect, useState } from 'react';
 import { MMKV } from 'react-native-mmkv';
 
@@ -31,11 +30,14 @@ export function usePersistedState<T>(key: string, initialValue: T) {
       try {
         const persistedValue = storage.getString(key);
 
+        // console.log(`${key}: persisted value: ${persistedValue}`);
+
         if (persistedValue != null) {
           // Try to parse the persisted value
           try {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const parsedValue = JSON.parse(persistedValue);
+            // console.log(`${key}: parsed value: ${persistedValue}`);
             setState(prev => ({
               ...prev,
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -108,6 +110,6 @@ const saveToStorage = (key: string, value: any) => {
       typeof value === 'object' ? JSON.stringify(value) : String(value);
     storage.set(key, valueToStore);
   } catch (error) {
-    logger.cache.error(`Failed to persist value for key "${key}":`, error);
+    logger.main.error(`Failed to persist value for key "${key}":`, error);
   }
 };

@@ -5,7 +5,7 @@ import {
   Switch,
   Typography,
 } from '@app/components';
-import { useAuthContext } from '@app/context';
+import { useAuthContext, useChatContext } from '@app/context'; // Add useChatContext
 import { useAppNavigation, useDebugOptions } from '@app/hooks';
 import {
   AllowedKey,
@@ -19,7 +19,7 @@ import {
 } from '@modules/activity-controller';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { StyleSheet } from 'react-native-unistyles';
@@ -31,45 +31,6 @@ type DebugItem = {
   type: 'button' | 'switch';
   storageKey?: AllowedKey;
 };
-
-const debugItems: DebugItem[] = [
-  {
-    title: 'Clear storage',
-    description: `Clear all items within our namespace ${NAMESPACE}`,
-    onPress: () => {
-      storageService.clear();
-    },
-    type: 'button',
-  },
-  {
-    title: 'Enable React Query DevTools',
-    description: 'Enable the React Query DevTools for debugging queries.',
-    storageKey: 'ReactQueryDebug',
-    onPress: (value?: boolean) => {
-      return storageService.set('ReactQueryDebug', value);
-    },
-    type: 'switch',
-  },
-  {
-    title: 'Enable/stop live activity',
-    description: 'Enable live activity test',
-    onPress: () => {
-      void startLiveActivity({
-        customString: 'My test activity',
-        customNumber: 123,
-      });
-    },
-    type: 'button',
-  },
-  {
-    title: 'Stop live activity',
-    description: 'Stop live activity test',
-    onPress: () => {
-      void stopLiveActivity();
-    },
-    type: 'button',
-  },
-];
 
 function TwitchUsernameConverter() {
   const [twitchUsername, setTwitchUsername] = useState<string>('');
@@ -210,10 +171,82 @@ function NavigateToChat() {
   );
 }
 
+// Move debugItems creation inside the component to access useChatContext
 export function DebugScreen() {
   const debugOptions = useDebugOptions();
+  const { clearAllCache, getCacheSize } = useChatContext();
   const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(
     {},
+  );
+
+  const debugItems: DebugItem[] = useMemo(
+    () => [
+      {
+        title: 'Clear storage',
+        description: `Clear all items within our namespace ${NAMESPACE}`,
+        onPress: () => {
+          storageService.clear();
+        },
+        type: 'button',
+      },
+      {
+        title: 'Clear chat cache',
+        description: 'Clear all chat emotes, badges, and image cache',
+        onPress: () => {
+          const { files, sizeBytes } = getCacheSize();
+          const sizeMB = (sizeBytes / 1024 / 1024).toFixed(2);
+
+          Alert.alert(
+            'Clear Chat Cache',
+            `This will clear ${files} cached files (${sizeMB} MB). This action cannot be undone.`,
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {
+                text: 'Clear Cache',
+                style: 'destructive',
+                onPress: () => {
+                  clearAllCache();
+                  Alert.alert('Success', 'Chat cache cleared successfully');
+                },
+              },
+            ],
+          );
+        },
+        type: 'button',
+      },
+      {
+        title: 'Enable React Query DevTools',
+        description: 'Enable the React Query DevTools for debugging queries.',
+        storageKey: 'ReactQueryDebug',
+        onPress: (value?: boolean) => {
+          return storageService.set('ReactQueryDebug', value);
+        },
+        type: 'switch',
+      },
+      {
+        title: 'Enable/stop live activity',
+        description: 'Enable live activity test',
+        onPress: () => {
+          void startLiveActivity({
+            customString: 'My test activity',
+            customNumber: 123,
+          });
+        },
+        type: 'button',
+      },
+      {
+        title: 'Stop live activity',
+        description: 'Stop live activity test',
+        onPress: () => {
+          void stopLiveActivity();
+        },
+        type: 'button',
+      },
+    ],
+    [clearAllCache, getCacheSize],
   );
 
   useEffect(() => {
@@ -227,7 +260,7 @@ export function DebugScreen() {
       {} as Record<string, boolean>,
     );
     setSwitchOptions(newSwitchOptions);
-  }, [debugOptions]);
+  }, [debugOptions, debugItems]);
 
   const handleToggleSwitch = (
     title: string,
@@ -264,38 +297,42 @@ export function DebugScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const renderListItem: ListRenderItem<DebugItem> = useCallback(({ item }) => {
-    return (
-      <View style={styles.itemContainer}>
-        <View style={styles.itemHeader}>
-          <Typography style={styles.itemTitle}>{item.title}</Typography>
-          {item.type === 'switch' ? (
-            <Switch
-              value={switchOptions[item.title] ?? false}
-              onValueChange={value => {
-                handleToggleSwitch(
-                  item.title,
-                  value,
-                  item.onPress,
-                  item.storageKey,
-                );
-              }}
-            />
-          ) : (
-            <Button
-              onPress={() => {
-                item.onPress();
-              }}
-            >
-              <Typography>Clear</Typography>
-            </Button>
-          )}
+  const renderListItem: ListRenderItem<DebugItem> = useCallback(
+    ({ item }) => {
+      return (
+        <View style={styles.itemContainer}>
+          <View style={styles.itemHeader}>
+            <Typography style={styles.itemTitle}>{item.title}</Typography>
+            {item.type === 'switch' ? (
+              <Switch
+                value={switchOptions[item.title] ?? false}
+                onValueChange={value => {
+                  handleToggleSwitch(
+                    item.title,
+                    value,
+                    item.onPress,
+                    item.storageKey,
+                  );
+                }}
+              />
+            ) : (
+              <Button
+                onPress={() => {
+                  item.onPress();
+                }}
+              >
+                <Typography>
+                  {item.title.includes('Clear') ? 'Clear' : 'Action'}
+                </Typography>
+              </Button>
+            )}
+          </View>
+          <Typography>{item.description}</Typography>
         </View>
-        <Typography>{item.description}</Typography>
-      </View>
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      );
+    },
+    [switchOptions],
+  );
 
   return (
     <FlashList<DebugItem>
