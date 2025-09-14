@@ -155,23 +155,19 @@ export const ChatMessage = memo(
       >
         {isReply && (
           <View style={styles.replyIndicator}>
-            <Icon
-              icon="corner-down-left"
-              size={16}
-              // color={theme.colors.border}
-            />
+            <Icon icon="corner-down-left" size={16} />
             <Typography color="gray.accent" style={styles.replyToText}>
               Replying to {parentDisplayName}
             </Typography>
           </View>
         )}
 
-        <View style={[styles.line]}>
+        <View style={styles.messageLine}>
           <Typography style={styles.timestamp}>
             {formatDate(new Date(), 'HH:mm')}:
           </Typography>
           {renderBadges()}
-          <Button onLongPress={onUsernamePress}>
+          <Button onLongPress={onUsernamePress} style={styles.usernameButton}>
             <Typography
               style={[
                 styles.username,
@@ -185,9 +181,7 @@ export const ChatMessage = memo(
               {userstate.username ?? ''}:
             </Typography>
           </Button>
-          <View style={styles.messageContainer}>
-            {message.map(renderMessagePart)}
-          </View>
+          {message.map(renderMessagePart)}
         </View>
 
         {selectedEmote && selectedEmote.type === 'emote' && (
@@ -204,14 +198,14 @@ export const ChatMessage = memo(
           />
         )}
 
+        <UserSheet ref={userSheetRef} userId={userstate['user-id'] || ''} />
+
         <ActionSheet
-          ref={actionSheetRef}
           message={message}
-          username={userstate.username}
+          ref={actionSheetRef}
           handleReply={handleReply}
           handleCopy={handleCopy}
         />
-        <UserSheet ref={userSheetRef} userId={userstate['user-id']} />
       </Button>
     );
   },
@@ -222,12 +216,43 @@ const styles = StyleSheet.create(theme => ({
   chatContainer: {
     // backgroundColor: theme.colors.foregroundInverted,
   },
-  line: {
+  messageLine: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start',
     width: '100%',
     marginBottom: 5,
+  },
+  usernameButton: {
+    flexShrink: 0,
+  },
+  messageWrapper: {
+    width: '100%',
+    marginBottom: 5,
+  },
+  firstLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  inlineMessageContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    flex: 1,
+    minWidth: 0,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 5,
+  },
+  messagePrefix: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flexShrink: 0,
   },
   messageContainer: {
     flexDirection: 'row',
@@ -235,6 +260,14 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'flex-start',
     flex: 1,
     minWidth: 0,
+    marginLeft: 0,
+  },
+  line: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    width: '100%',
+    marginBottom: 5,
   },
   badge: {
     width: 20,

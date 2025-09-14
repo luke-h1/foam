@@ -2,8 +2,9 @@ import { Chat, Spinner, Typography } from '@app/components';
 import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
-import { FC, useEffect, useRef } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -11,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
 import WebView from 'react-native-webview';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
@@ -18,7 +20,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
 
-  const webViewRef = useRef<WebView>(null);
+  const [isChatVisible, setIsChatVisible] = useState(true);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
@@ -33,40 +35,107 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { data: user, isPending: isUserPending } = userQueryResult;
   const { isPending: isPfpPending } = userProfilePictureQueryResult;
 
-  const videoHeight = useSharedValue(
-    isLandscape ? screenHeight : screenWidth * (9 / 16),
-  );
-  const chatHeight = useSharedValue(
-    isLandscape ? screenHeight : screenHeight - videoHeight.value,
-  );
+  const getVideoDimensions = useCallback(() => {
+    if (isLandscape) {
+      return {
+        width: isChatVisible ? screenWidth * 0.6 : screenWidth,
+        height: screenHeight,
+      };
+    }
+    return {
+      width: screenWidth,
+      height: screenWidth * (9 / 16),
+    };
+  }, [isLandscape, isChatVisible, screenWidth, screenHeight]);
 
-  useEffect(() => {
-    videoHeight.value = withTiming(
-      isLandscape ? screenHeight : screenWidth * (9 / 16),
-      { duration: 300 },
-    );
-    chatHeight.value = withTiming(
-      isLandscape ? screenHeight : screenHeight - videoHeight.value,
-      { duration: 300 },
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getChatDimensions = useCallback(() => {
+    if (isLandscape) {
+      return {
+        width: screenWidth * 0.65,
+        height: screenHeight,
+      };
+    }
+    const videoHeight = screenWidth * (9 / 16);
+    return {
+      width: screenWidth,
+      height: screenHeight - videoHeight,
+    };
   }, [isLandscape, screenWidth, screenHeight]);
 
+  const videoWidth = useSharedValue(getVideoDimensions().width);
+  const videoHeight = useSharedValue(getVideoDimensions().height);
+  const chatWidth = useSharedValue(getChatDimensions().width);
+  const chatHeight = useSharedValue(getChatDimensions().height);
+  const chatOpacity = useSharedValue(1);
+  const chatTranslateX = useSharedValue(0);
+
+  useEffect(() => {
+    const videoDims = getVideoDimensions();
+    const chatDims = getChatDimensions();
+
+    videoWidth.value = withTiming(videoDims.width, { duration: 300 });
+    videoHeight.value = withTiming(videoDims.height, { duration: 300 });
+    chatWidth.value = withTiming(chatDims.width, { duration: 300 });
+    chatHeight.value = withTiming(chatDims.height, { duration: 300 });
+
+    if (isChatVisible) {
+      chatOpacity.value = withTiming(1, { duration: 300 });
+      chatTranslateX.value = withTiming(0, { duration: 300 });
+    } else {
+      chatOpacity.value = withTiming(0, { duration: 300 });
+      if (isLandscape) {
+        chatTranslateX.value = withTiming(chatDims.width, { duration: 300 });
+      }
+    }
+  }, [
+    isLandscape,
+    isChatVisible,
+    screenWidth,
+    screenHeight,
+    videoWidth,
+    videoHeight,
+    chatWidth,
+    chatHeight,
+    chatOpacity,
+    chatTranslateX,
+    getVideoDimensions,
+    getChatDimensions,
+  ]);
+
   const animatedVideoStyle = useAnimatedStyle(() => ({
+    width: videoWidth.value,
     height: videoHeight.value,
-    width: isLandscape ? screenWidth * 0.6 : screenWidth,
   }));
 
   const animatedChatStyle = useAnimatedStyle(() => ({
+    width: chatWidth.value,
     height: chatHeight.value,
-    width: isLandscape ? screenWidth * 0.4 : screenWidth,
+    opacity: chatOpacity.value,
+    transform: [{ translateX: chatTranslateX.value }],
   }));
 
-  // eslint-disable-next-line no-shadow
-  const getWebViewStyle = (isLandscape: boolean) => ({
-    width: isLandscape ? 600 : 400,
-    height: '100%',
-  });
+  const handleDoubleTap = useCallback(() => {
+    setIsChatVisible(prev => !prev);
+  }, []);
+
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDelay(300)
+    .onEnd(() => {
+      /**
+       * todo fix deprecation warn
+       */
+      scheduleOnRN(handleDoubleTap);
+    });
+
+  const getWebViewStyle = useCallback(
+    // eslint-disable-next-line no-shadow
+    (isLandscape: boolean) => ({
+      width: isLandscape ? '100%' : screenWidth,
+      height: '100%',
+    }),
+    [screenWidth],
+  );
 
   if (isStreamPending || isPfpPending) {
     return <Spinner />;
@@ -82,27 +151,32 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   return (
     <View style={[styles.contentContainer, isLandscape && styles.row]}>
-      <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-        <WebView
-          ref={webViewRef}
-          source={{
-            uri: `https://player.twitch.tv/?channel=${stream.user_login}autoplay=true&parent=foam-app.com`,
-          }}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          style={getWebViewStyle(isLandscape)}
-          allowsInlineMediaPlayback
-          javaScriptEnabled
-        />
-      </Animated.View>
+      <GestureDetector gesture={doubleTapGesture}>
+        <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
+          <WebView
+            source={{
+              uri: `https://player.twitch.tv/?channel=${stream.user_login}&autoplay=true&parent=foam-app.com`,
+            }}
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            style={getWebViewStyle(isLandscape)}
+            allowsInlineMediaPlaybook
+            javaScriptEnabled
+            mediaPlaybackRequiresUserAction={false}
+          />
+        </Animated.View>
+      </GestureDetector>
 
-      <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-        {!isUserPending && user?.id && stream.user_login && (
-          <View style={{ flex: 1, width: '100%', overflow: 'hidden' }}>
-            <Chat channelId={user.id} channelName={stream.user_login} />
-          </View>
-        )}
-      </Animated.View>
+      {/* Chat container - only render when visible or animating */}
+      {(isChatVisible || chatOpacity.value > 0) && (
+        <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
+          {!isUserPending && user?.id && stream.user_login && (
+            <View style={styles.chatContent}>
+              <Chat channelId={user.id} channelName={stream.user_login} />
+            </View>
+          )}
+        </Animated.View>
+      )}
     </View>
   );
 };
@@ -110,9 +184,12 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 const styles = StyleSheet.create(() => ({
   container: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   contentContainer: {
     flex: 1,
+    backgroundColor: '#000',
   },
   row: {
     flexDirection: 'row',
@@ -120,26 +197,22 @@ const styles = StyleSheet.create(() => ({
   videoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
+    backgroundColor: '#000',
   },
   videoUser: {
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: '#fff',
     marginTop: 20,
   },
-  controlButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 50,
-    padding: 10,
-  },
   chatContainer: {
-    overflow: 'hidden',
-    flex: 1,
-    maxWidth: '100%',
     backgroundColor: '#000',
+    overflow: 'hidden',
+  },
+  chatContent: {
+    flex: 1,
+    width: '100%',
+    overflow: 'hidden',
   },
 }));

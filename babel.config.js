@@ -19,8 +19,7 @@ module.exports = api => {
         },
       },
     ],
-    // ORDER MATTERS - this must be always at the end
-    'react-native-reanimated/plugin',
+    'react-native-worklets/plugin',
   ];
 
   return {
