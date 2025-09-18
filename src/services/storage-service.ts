@@ -1,3 +1,4 @@
+import { OpenStringUnion } from '@app/utils';
 import EventEmitter from 'eventemitter3';
 import { MMKV } from 'react-native-mmkv';
 
@@ -10,15 +11,21 @@ export type StorageItem<T = unknown> = {
   value: T;
 };
 
-export type AllowedKey =
+export type AllowedKey = OpenStringUnion<
   | 'ReactQueryDebug'
   | 'foam_stacked_cards'
   | 'previous_searches'
-  | `appStoreLink_${string}`;
+  | `appStoreLink_${string}`
+>;
 
 export const NAMESPACE = 'FOAM_V1';
 
-const namespaceKey = (key: AllowedKey) => `${NAMESPACE}_${key}`;
+const namespaceKey = (key: AllowedKey, namespacePrefix?: string) => {
+  if (namespacePrefix) {
+    return `${NAMESPACE}_${namespacePrefix}_${key}`;
+  }
+  return `${NAMESPACE}_${key}`;
+};
 
 const storageEvents = new EventEmitter();
 
@@ -26,11 +33,16 @@ const storage = new MMKV({
   id: 'storageService',
 });
 
+type NamespacePrefixes = 'image_cache';
+
 export const storageService = {
   events: storageEvents,
 
-  getString<T>(key: AllowedKey): T | null {
-    const item = storage.getString(namespaceKey(key));
+  getString<T extends string>(
+    key: AllowedKey,
+    namespacePrefix?: NamespacePrefixes,
+  ): T | null {
+    const item = storage.getString(namespaceKey(key, namespacePrefix));
 
     if (!item) {
       return null;
@@ -49,6 +61,7 @@ export const storageService = {
   set(
     key: AllowedKey,
     value: unknown,
+    namespacePrefix?: NamespacePrefixes,
     options: StorageSetterOptions = {},
   ): void {
     const { expiry } = options;
@@ -63,16 +76,16 @@ export const storageService = {
       item = { value, expiry: expiry.toISOString() };
     }
 
-    const namespacedKey = namespaceKey(key);
+    const namespacedKey = namespaceKey(key, namespacePrefix);
     storage.set(namespacedKey, JSON.stringify(item));
     storageEvents.emit('storageChange', key);
   },
-  delete(key: AllowedKey): void {
-    storage.delete(namespaceKey(key));
+  delete(key: AllowedKey, namespacePrefix?: NamespacePrefixes): void {
+    storage.delete(namespaceKey(key, namespacePrefix));
     storageEvents.emit('storageChange', key);
   },
-  remove(key: AllowedKey): void {
-    const namespacedKey = namespaceKey(key);
+  remove(key: AllowedKey, namespacePrefix?: NamespacePrefixes): void {
+    const namespacedKey = namespaceKey(key, namespacePrefix);
     storage.delete(namespacedKey);
     storageEvents.emit('storageChange', key);
   },
@@ -83,8 +96,10 @@ export const storageService = {
     storageEvents.emit('storageChange', 'all');
   },
 
-  getAllKeys() {
-    return storage.getAllKeys().filter(key => key.startsWith(NAMESPACE));
+  getAllKeys(namespacePrefix?: NamespacePrefixes) {
+    return storage
+      .getAllKeys()
+      .filter(key => key.startsWith(`${NAMESPACE}_${namespacePrefix}`));
   },
 
   clearExpired(): void {
@@ -99,5 +114,12 @@ export const storageService = {
         }
       }
     });
+  },
+  clearImageCache() {
+    const keys = storage
+      .getAllKeys()
+      .filter(key => key.startsWith(`${NAMESPACE}_image_cache`));
+    keys.forEach(key => storage.delete(key));
+    storageEvents.emit('storageChange', 'image_cache');
   },
 } as const;

@@ -45,6 +45,10 @@ const loggingConfig = {
     enabled: true,
     color: 'green',
   },
+  cachedPhotos: {
+    enabled: true,
+    color: 'green',
+  },
 } satisfies Record<
   string,
   {

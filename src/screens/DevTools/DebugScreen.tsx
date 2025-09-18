@@ -5,7 +5,7 @@ import {
   Switch,
   Typography,
 } from '@app/components';
-import { useAuthContext, useChatContext } from '@app/context'; // Add useChatContext
+import { useAuthContext, useChatContext } from '@app/context';
 import { useAppNavigation, useDebugOptions } from '@app/hooks';
 import {
   AllowedKey,
@@ -186,34 +186,6 @@ export function DebugScreen() {
         description: `Clear all items within our namespace ${NAMESPACE}`,
         onPress: () => {
           storageService.clear();
-        },
-        type: 'button',
-      },
-      {
-        title: 'Clear chat cache',
-        description: 'Clear all chat emotes, badges, and image cache',
-        onPress: () => {
-          const { files, sizeBytes } = getCacheSize();
-          const sizeMB = (sizeBytes / 1024 / 1024).toFixed(2);
-
-          Alert.alert(
-            'Clear Chat Cache',
-            `This will clear ${files} cached files (${sizeMB} MB). This action cannot be undone.`,
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-              },
-              {
-                text: 'Clear Cache',
-                style: 'destructive',
-                onPress: () => {
-                  clearAllCache();
-                  Alert.alert('Success', 'Chat cache cleared successfully');
-                },
-              },
-            ],
-          );
         },
         type: 'button',
       },
