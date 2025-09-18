@@ -98,7 +98,7 @@ export const imageCacheService = {
     mipmapWidth: number,
   ): CachedImage[] => {
     const results = storageService.getAllKeys('image_cache');
-    const pairs = results.map(k => [k, storageService.getString(k)]);
+    const pairs = results.map(k => [k, storageService.getString<string>(k)]);
 
     const sizeMatchingImages = pairs
       .map(pair => {

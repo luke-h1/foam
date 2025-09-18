@@ -38,7 +38,7 @@ type NamespacePrefixes = 'image_cache';
 export const storageService = {
   events: storageEvents,
 
-  getString<T extends string>(
+  getString<T = unknown>(
     key: AllowedKey,
     namespacePrefix?: NamespacePrefixes,
   ): T | null {

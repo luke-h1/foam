@@ -5,7 +5,7 @@ import {
   Switch,
   Typography,
 } from '@app/components';
-import { useAuthContext, useChatContext } from '@app/context';
+import { useAuthContext } from '@app/context';
 import { useAppNavigation, useDebugOptions } from '@app/hooks';
 import {
   AllowedKey,
@@ -174,7 +174,6 @@ function NavigateToChat() {
 // Move debugItems creation inside the component to access useChatContext
 export function DebugScreen() {
   const debugOptions = useDebugOptions();
-  const { clearAllCache, getCacheSize } = useChatContext();
   const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(
     {},
   );
@@ -218,7 +217,7 @@ export function DebugScreen() {
         type: 'button',
       },
     ],
-    [clearAllCache, getCacheSize],
+    [],
   );
 
   useEffect(() => {
