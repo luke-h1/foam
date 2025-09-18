@@ -119,6 +119,14 @@ const config: ExpoConfig = {
   },
   plugins: [
     'react-native-bottom-tabs',
+    [
+      'expo-media-library',
+      {
+        photosPermission: 'Allow $(PRODUCT_NAME) to access your photos.',
+        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save photos.',
+        isAccessMediaLocationEnabled: true,
+      },
+    ],
     ['app-icon-badge', appIconBadgeConfig],
     'expo-secure-store',
     'expo-background-task',
@@ -131,6 +139,11 @@ const config: ExpoConfig = {
           'node_modules/@expo-google-fonts/source-code-pro/700Bold',
         ],
         android: {
+          permissions: [
+            'android.permission.READ_EXTERNAL_STORAGE',
+            'android.permission.WRITE_EXTERNAL_STORAGE',
+            'android.permission.ACCESS_MEDIA_LOCATION',
+          ],
           fonts: [
             {
               fontFamily: 'SourceCodePro',
