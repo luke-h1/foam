@@ -1,3 +1,4 @@
+import { logger } from '@app/utils/logger';
 import { useCallback, useReducer, useRef } from 'react';
 
 export const imageComponentsLoadingTimes: Record<

@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { logger } from '@app/utils/logger';
 import { FileFilter, FileOrderer } from './files.web';
 import { FileEntry, FilesystemDirectory } from './types.web';
-
 /**
  * Scans given directions and loads all the files that meet the specified criterion
  *

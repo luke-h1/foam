@@ -1,10 +1,10 @@
+import { CachedPhotosLoadingState } from '@app/hooks/useCachedImages';
 import { createContext, PropsWithChildren, use, useMemo } from 'react';
 import { useMediaLibraryPhotos } from '../MediaLibraryPhotosProvider/MediaLibraryPhotosProvider.web';
-import { CachedPhotoType } from './cache-service';
-import { CachedPhotosLoadingState } from './useCachedPhotos';
+import { CachedImage } from './image-cache-service';
 
 type CachedPhotosDataType = {
-  cachedPhotos: CachedPhotoType[];
+  cachedPhotos: CachedImage[];
   cachedPhotosLoadingState: CachedPhotosLoadingState;
   recalculateCachedPhotos: () => void;
 };
@@ -19,14 +19,15 @@ export const CachedPhotosProvider = ({ children }: PropsWithChildren) => {
   const contextValue: CachedPhotosDataType = useMemo(() => {
     return {
       cachedPhotos: mediaLibraryPhotosContext.mediaLibraryPhotos.map(item => ({
-        originalPhotoUri: item.uri,
+        originalImageUri: item.uri,
         mipmapWidth: 100,
-        cachedPhotoUri: item.uri,
+        cachedImageUri: item.uri,
       })),
       cachedPhotosLoadingState:
         mediaLibraryPhotosContext.mediaLibraryLoadingState === 'COMPLETED'
           ? 'COMPLETED'
           : 'CALCULATING',
+
       recalculateCachedPhotos:
         mediaLibraryPhotosContext.reloadMediaLibraryPhotos,
     };

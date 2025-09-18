@@ -1,43 +1,19 @@
+import {
+  CachedImage,
+  imageCacheService,
+} from '@app/Providers/CachedPhotosProvider/image-cache-service';
+import { generateCachedPhoto } from '@app/Providers/CachedPhotosProvider/useCachedPhotos';
+import { useMediaLibraryPhotos } from '@app/Providers/MediaLibraryPhotosProvider';
+import { useScreenDimensions } from '@app/Providers/ScreenDimensionsProvider';
 import { IS_WIDE_SCREEN } from '@app/config/image-caching';
 import { logPerformance } from '@app/utils';
 import { logger } from '@app/utils/logger';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useMediaLibraryPhotos } from '../MediaLibraryPhotosProvider';
-import { useScreenDimensions } from '../ScreenDimensionsProvider';
-import { calculateNewCachePhoto } from '../utils/calculateNewCachePhoto/calculateNewCachePhoto';
-import { CachedImage, imageCacheService } from './image-cache-service';
-// A limitation for photos loaded in photos gallery from device / local filesystem
-// - Set to Infinity if you want to disable it
-export const MEDIA_LIBRARY_PHOTOS_LIMIT = Infinity;
-
-// ------------------
-// UI config - images
-// ------------------
-
-// Decides whether to use image native components from expo-image or react-native-image
-export const IMAGE_NATIVE_PRESET: 'expo' | 'rni' = 'expo';
-
-// ----------------------
-// UI config - UI scaling
-// ----------------------
-
-// A relative screen size preset for UI scaling (phone, tablet or fullhd)
-export const UI_DESIGN_PRESET: 'phone' | 'tablet' | 'fullhd' = 'phone';
-
-// How should UI be scaled for custom device screen (via screen height or diagonal)
-export const UI_SCALING_METHOD: 'height' | 'diagonal' = 'height';
-
 /**
  * Upon scenario that we have a lot of photos to process (e.g. when resetting the cache),
  * we want to process them in batches in order to retain some UI responsiveness.
  */
 const PROCESSING_BATCH_SIZE_LIMIT = 25;
-
-/**
- * Helper definitions - loading state
- *
- * "IDLE" works as a default state, which is neither running nor completed
- */
 
 export type CachedPhotosLoadingState =
   | 'IDLE'
@@ -46,12 +22,10 @@ export type CachedPhotosLoadingState =
   | 'CALCULATING'
   | 'COMPLETED';
 
-// Helper function - detect completed loading
 export function isCompleted(state: CachedPhotosLoadingState) {
   return state === 'RESTORED_FROM_CACHE' || state === 'COMPLETED';
 }
 
-// Helper function - detect active loading
 export function isLoading(state: CachedPhotosLoadingState) {
   return state === 'RESTORING_FROM_CACHE' || state === 'CALCULATING';
 }
@@ -60,7 +34,7 @@ export function isLoading(state: CachedPhotosLoadingState) {
  * Queries the cache for photos based on the UI settings.
  * Ensures we have all the photos coming from {@link useMediaLibraryPhotos} properly processed and stored in the cache.
  */
-export const useCachedPhotos = () => {
+export const useCachedImages = () => {
   const { dimensions } = useScreenDimensions();
 
   const {
@@ -81,10 +55,6 @@ export const useCachedPhotos = () => {
     ? dimensions.width
     : Math.min(dimensions.width, dimensions.height);
 
-  /**
-   * Calculate estimated target image size based on screen dimensions
-   * We use a rough heuristic, since neither overestimating nor underestimating by 10 pixels hurts us
-   */
   const targetImageSize = useMemo(
     () => relevantDimension / 4,
     [relevantDimension],
@@ -95,6 +65,7 @@ export const useCachedPhotos = () => {
      * useWindowDimensions hook sometimes might cause 2 or 3 rerenders in a short time, including the initialization stage
      * That's why we need to be careful and check for other ongoing calculations
      */
+
     if (
       state.cachedPhotosLoadingState === 'CALCULATING' ||
       state.cachedPhotosLoadingState === 'RESTORING_FROM_CACHE'
@@ -104,7 +75,6 @@ export const useCachedPhotos = () => {
       );
       return;
     }
-
     setState({
       cachedPhotos: [],
       cachedPhotosLoadingState: 'CALCULATING',
@@ -112,6 +82,7 @@ export const useCachedPhotos = () => {
 
     await logPerformance(async () => {
       let processedPhotosCount = 0;
+
       const photosCountToProcess = mediaLibraryPhotos.length;
       const processedPhotos: CachedImage[] = [];
 
@@ -138,7 +109,6 @@ export const useCachedPhotos = () => {
             generateCachedPhoto(photo.uri, targetImageSize),
           ),
         );
-
         processedPhotosCount += nextPhotosBatch.length;
         processedPhotos.push(...newCachedPhotosBatch);
 
@@ -244,10 +214,6 @@ export const useCachedPhotos = () => {
     state.cachedPhotosLoadingState,
   ]);
 
-  /**
-   * Once we've restored cached photos for a given mipmap width,
-   * we can actually do a proper cache calculation for every MediaLibrary photo.
-   */
   useEffect(() => {
     /**
      * The cache is being restored or we're not ready yet, do nothing for now.
@@ -270,32 +236,4 @@ export const useCachedPhotos = () => {
     ...state,
     recalculateCachedPhotos,
   };
-};
-
-export const generateCachedPhoto = async (
-  uri: string,
-  mipmapWidth: number,
-): Promise<CachedImage> => {
-  const cached = await imageCacheService.getImageFromCache({
-    originalImageUri: uri,
-    mipmapWidth,
-  });
-  /**
-   * Cache hit, early return.
-   */
-  if (cached) {
-    return cached;
-  }
-
-  const result = await calculateNewCachePhoto(uri, mipmapWidth);
-
-  const cachedPhoto = imageCacheService.setImageInCache(
-    {
-      originalImageUri: uri,
-      mipmapWidth,
-    },
-    result.uri,
-  );
-
-  return cachedPhoto;
 };

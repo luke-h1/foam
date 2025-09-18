@@ -1,3 +1,4 @@
+import { logger } from '@app/utils/logger';
 import { useCallback, useEffect, useState } from 'react';
 import { MMKV } from 'react-native-mmkv';
 

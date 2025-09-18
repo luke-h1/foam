@@ -2,7 +2,9 @@ import { storageService } from '@app/services';
 
 export async function getAppStoreLink(bundleId: string) {
   // Check cache first
-  const cachedLink = storageService.getString(`appStoreLink_${bundleId}`);
+  const cachedLink = storageService.getString<string>(
+    `appStoreLink_${bundleId}`,
+  );
   if (cachedLink) {
     console.log(`Returning cached App Store link for ${bundleId}`);
     return cachedLink;

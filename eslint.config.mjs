@@ -38,7 +38,6 @@ export default [
         ...globals.es2023,
         ...globals.jest,
         ...globals.node,
-        logger: true,
         __DEV__: true,
       },
       parserOptions: {

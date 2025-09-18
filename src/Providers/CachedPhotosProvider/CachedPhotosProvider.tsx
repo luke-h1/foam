@@ -1,12 +1,12 @@
-import { createContext, PropsWithChildren, use, useMemo } from 'react';
-import { CachedPhotoType } from './cache-service';
 import {
   CachedPhotosLoadingState,
-  useCachedPhotos as useCachedPhotosData,
-} from './useCachedPhotos';
+  useCachedImages,
+} from '@app/hooks/useCachedImages';
+import { createContext, PropsWithChildren, use, useMemo } from 'react';
+import { CachedImage } from './image-cache-service';
 
 type CachedPhotosDataType = {
-  cachedPhotos: CachedPhotoType[];
+  cachedPhotos: CachedImage[];
   cachedPhotosLoadingState: CachedPhotosLoadingState;
   recalculateCachedPhotos: () => Promise<void>;
 };
@@ -20,7 +20,7 @@ const CachedPhotosContext = createContext<CachedPhotosDataType | undefined>(
  */
 export const CachedPhotosProvider = ({ children }: PropsWithChildren) => {
   const { cachedPhotos, cachedPhotosLoadingState, recalculateCachedPhotos } =
-    useCachedPhotosData();
+    useCachedImages();
 
   return (
     <CachedPhotosContext

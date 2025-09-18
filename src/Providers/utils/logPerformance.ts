@@ -1,3 +1,4 @@
+import { logger } from '@app/utils/logger';
 import { useCallback, useReducer } from 'react';
 
 let performanceLogs: Record<string, string> = {};
