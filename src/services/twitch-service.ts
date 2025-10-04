@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import axios, { AxiosHeaders } from 'axios';
-import { twitchApi } from '.';
+import { twitchApi } from './api';
 
 export interface PaginatedList<T> {
   data: T[];

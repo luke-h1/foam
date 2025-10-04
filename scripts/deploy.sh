@@ -11,4 +11,4 @@ bun run eas build --platform android --profile production --local --non-interact
 
 # ios preview
 
-bun run eas build --platform ios --profile preview --local --non-interactive --output=./app-preview.abd && bun run eas submit -p ios --path ./app-preview.abd
+EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile preview --local --non-interactive --output=./app-preview.abd && bun run eas submit -p ios --path ./app-preview.abd

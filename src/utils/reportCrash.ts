@@ -1,4 +1,4 @@
-import newRelic from 'newrelic-react-native-agent';
+import { sentryService } from '@app/services';
 
 export enum ErrorType {
   /**
@@ -19,7 +19,6 @@ export const reportCrash = (error: any, type = ErrorType.FATAL) => {
     console.error(error);
     console.log(message, type);
   } else {
-    // crashlytics().recordError(error);
-    void newRelic.recordError(error as Error);
+    sentryService.captureException(error);
   }
 };

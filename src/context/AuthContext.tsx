@@ -4,7 +4,7 @@ import {
   DefaultTokenResponse,
   UserInfoResponse,
   twitchService,
-} from '@app/services/api/twitch-service';
+} from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';

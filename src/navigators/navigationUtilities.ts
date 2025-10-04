@@ -5,7 +5,6 @@ import {
   NavigationAction,
   createNavigationContainerRef,
 } from '@react-navigation/native';
-import newRelic from 'newrelic-react-native-agent';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Linking, Platform } from 'react-native';
 import { BaseConfig, type PersistNavigationConfig } from './config';
@@ -177,11 +176,7 @@ export function useNavigationPersistence(
         routeNameRef.current = currentRouteName as keyof AppStackParamList;
 
         // persist state to storage
-
         void storage.save(persistenceKey, state);
-
-        // log to new relic
-        newRelic.onStateChange(state);
       }
     }
   };

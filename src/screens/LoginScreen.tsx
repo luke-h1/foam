@@ -3,8 +3,8 @@ import { Button, Typography, Image } from '@app/components';
 import { BrandIcon } from '@app/components/BrandIcon';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks';
+import { sentryService } from '@app/services';
 import { useAuthRequest } from 'expo-auth-session';
-import newRelic from 'newrelic-react-native-agent';
 import { useEffect } from 'react';
 import { Platform, SafeAreaView, View, Dimensions } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -74,7 +74,7 @@ export function LoginScreen() {
   const handleAuth = async () => {
     await loginWithTwitch(response);
     if (response?.type === 'success') {
-      newRelic.recordCustomEvent('Login', 'LoginSuccess', new Map());
+      sentryService.captureMessage('LoginSuccess');
       toast.success('Logged in');
 
       navigation.push('Tabs', {
@@ -82,11 +82,7 @@ export function LoginScreen() {
       });
     }
 
-    newRelic.recordCustomEvent(
-      'Login',
-      response?.type ?? 'LoginFail',
-      new Map(),
-    );
+    sentryService.captureMessage(response?.type || 'unknownAuthEvent');
   };
 
   useEffect(() => {

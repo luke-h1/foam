@@ -1,5 +1,5 @@
 import { logger } from '@app/utils/logger';
-import { sevenTvApi } from '.';
+import { sevenTvApi } from './api';
 
 interface SevenTvFile {
   name: string;

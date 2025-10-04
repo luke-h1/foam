@@ -7,8 +7,8 @@ import Axios, {
   isAxiosError,
 } from 'axios';
 import omit from 'lodash/omit';
-import newRelic from 'newrelic-react-native-agent';
 import qs from 'qs';
+import { sentryService } from '../sentry-service';
 
 export type RequestConfig = Omit<AxiosRequestConfig, 'method' | 'url'> & {
   cookie?: { name: string; value: string };
@@ -85,10 +85,6 @@ export default class Client {
     },
   ): Promise<TValue> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const interactionId = await newRelic.startInteraction(
-        `${config.url}_${config.method}`,
-      );
       const response = await this.axios({
         ...config,
         headers: {
@@ -100,23 +96,17 @@ export default class Client {
       if ('rawResponse' in config && config.rawResponse) {
         return omit(response, ['config', 'request']) as TValue;
       }
-      newRelic.endInteraction(interactionId);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return response.data;
     } catch (error) {
-      const errorMessage = `${config.url}_${config.method} request failed - ${JSON.stringify(error, null, 2)}`;
-
-      newRelic.logError(errorMessage);
-
       if (isAxiosError(error)) {
-        // eslint-disable-next-line no-shadow
-        const errorMessage = `AXIOS_ERROR: ${config.url}_${config.method} request failed with ${JSON.stringify(error, null, 2)}`;
-
-        newRelic.logError(errorMessage);
+        const errorMessage = `${config.url}_${config.method} request failed with ${JSON.stringify(error, null, 2)}`;
 
         if (__DEV__) {
           console.error(errorMessage);
         }
+
+        sentryService.captureException(errorMessage);
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return error.response?.data;

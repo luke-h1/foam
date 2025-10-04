@@ -1,7 +1,7 @@
 import {
   twitchService as _twitchService,
   Stream,
-} from '@app/services/api/twitch-service';
+} from '@app/services/twitch-service';
 import render from '@app/test/render';
 import { NavigationContainer } from '@react-navigation/native';
 import { screen, waitFor } from '@testing-library/react-native';
