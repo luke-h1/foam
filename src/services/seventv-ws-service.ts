@@ -442,7 +442,7 @@ export default class SevenTvWsService {
 
             default: {
               logger.stvWs.info(
-                `💚 Received WS unhandled event: ${message.d.type}`,
+                `💚 Received WS unhandled data event: ${message.d.type}`,
               );
               break;
             }
@@ -524,11 +524,14 @@ export default class SevenTvWsService {
             site: '7TV Channel Emote',
             height: emote4x?.height,
             width: emote4x?.width,
+            actor: data.body.actor,
           });
         });
       }
 
       if (data.body.pulled) {
+        console.log('actor is ->', data.body.actor?.display_name);
+
         Object.values(data.body.pulled).forEach(emote => {
           if (emote && emote.old_value) {
             removedEmotes.push({
@@ -540,6 +543,7 @@ export default class SevenTvWsService {
               creator: 'UNKNOWN',
               emote_link: `https://7tv.app/emotes/${emote.old_value.id}`,
               site: '7TV Channel Emote',
+              actor: data.body.actor,
             });
           }
         });

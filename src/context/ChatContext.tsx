@@ -1,4 +1,3 @@
-import { LOAD_BATCH_SIZE } from '@app/Providers/MediaLibraryPhotosProvider/useMediaLibraryPhotos';
 import { PersistedStateStatus, usePersistedState } from '@app/hooks';
 import {
   bttvEmoteService,
@@ -23,12 +22,22 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { ViewStyle } from 'react-native';
+import { Platform, ViewStyle } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import { ChatUserstate } from 'tmi.js';
 
 const chatStorage = new MMKV({
   id: 'chat-cache',
+});
+
+export const MEDIA_LIBRARY_PHOTOS_LIMIT = Infinity;
+
+export const LOAD_BATCH_SIZE = Platform.select({
+  /**
+   * iOS can provide results much faster than Android.
+   */
+  ios: Math.min(50, MEDIA_LIBRARY_PHOTOS_LIMIT),
+  default: Math.min(30, MEDIA_LIBRARY_PHOTOS_LIMIT),
 });
 
 interface CosmeticPaint {

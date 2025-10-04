@@ -177,7 +177,7 @@ export interface SanitisiedEmoteSet {
   /**
    * The person who added/removed this emote
    */
-  actor_id?: string;
+  actor?: StvUser;
 }
 
 export const sevenTvService = {

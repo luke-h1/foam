@@ -31,7 +31,11 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
             <Typography color={removed ? 'red' : 'green'}>{status}</Typography>
             <Typography> Emote</Typography>
           </Typography>
-          <Typography style={styles.userText}>user</Typography>
+          {part.stvEvents.data.actor?.display_name && (
+            <Typography style={styles.userText}>
+              {part.stvEvents.data.actor?.display_name}
+            </Typography>
+          )}
         </View>
       </View>
       <View style={styles.content}>
