@@ -1,12 +1,12 @@
 import { Menu } from '@app/components/Menu';
-import { SafeAreaView } from 'react-native';
+import { Screen } from '@app/components/Screen';
 import { useUnistyles } from 'react-native-unistyles';
 
 export function SettingsCacheScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Screen safeAreaEdges={['top']} preset="fixed">
       <Menu
         items={[
           {
@@ -31,6 +31,6 @@ export function SettingsCacheScreen() {
           },
         ]}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }

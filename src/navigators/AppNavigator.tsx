@@ -12,7 +12,8 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import { ComponentProps, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import { DevToolsParamList } from './DevToolsStackNavigator';
 import { OtherStackParamList } from './OtherStackNavigator';
 import {
@@ -113,36 +114,17 @@ const AppStack = () => {
       <Stack.Screen name="Top" component={TopStackNavigator} />
 
       {/* category slug */}
-      <Stack.Screen
-        name="Category"
-        component={CategoryScreen}
-        options={{
-          presentation: 'modal',
-        }}
-      />
+      <Stack.Screen name="Category" component={CategoryScreen} />
 
       {/* Auth */}
       <Stack.Screen name="Login" component={LoginScreen} />
 
       {/* sb */}
-      <Stack.Screen
-        name="Storybook"
-        component={StorybookScreen}
-        options={{
-          presentation: 'modal',
-        }}
-      />
+      <Stack.Screen name="Storybook" component={StorybookScreen} />
 
       {/* Preference stack */}
-      <Stack.Screen
-        name="Preferences"
-        component={PreferenceStackNavigator}
-        options={{
-          presentation: 'modal',
-        }}
-      />
+      <Stack.Screen name="Preferences" component={PreferenceStackNavigator} />
 
-      {/* Chat - globally accessible */}
       <Stack.Screen name="Chat" component={ChatScreen} />
     </Stack.Navigator>
   );
@@ -168,7 +150,20 @@ export const AppNavigator = (props: NavigationProps) => {
 
   return (
     <NavigationContainer theme={navTheme} {...props}>
-      <AppStack />
+      <View style={styles.container}>
+        <AppStack />
+      </View>
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create((theme, rt) => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.blue.accent,
+    paddingTop: Platform.select({
+      ios: 0,
+      android: rt.insets.top,
+    }),
+  },
+}));

@@ -1,12 +1,12 @@
 import { Menu } from '@app/components/Menu';
+import { Screen } from '@app/components/Screen';
 import { useAppNavigation } from '@app/hooks';
 import { SettingsStackParamList } from '@app/navigators';
-import { SafeAreaView } from 'react-native';
 
 export function SettingsOtherScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Screen safeAreaEdges={['top']} preset="fixed">
       <Menu
         items={[
           {
@@ -31,6 +31,6 @@ export function SettingsOtherScreen() {
           },
         ]}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }

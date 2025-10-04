@@ -276,7 +276,7 @@ export const generateCachedPhoto = async (
   uri: string,
   mipmapWidth: number,
 ): Promise<CachedImage> => {
-  const cached = await imageCacheService.getImageFromCache({
+  const cached = imageCacheService.getImageFromCache({
     originalImageUri: uri,
     mipmapWidth,
   });

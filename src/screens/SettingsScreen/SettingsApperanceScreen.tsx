@@ -1,14 +1,14 @@
-import { Slider } from '@app/components';
+import { Slider, SafeAreaViewFixed } from '@app/components';
 import { Menu, MenuItem } from '@app/components/Menu';
 import { Preferences, usePreferences } from '@app/store';
-import { SafeAreaView, View } from 'react-native';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function SettingsAppearanceScreen() {
   const { fontScaling, systemScaling, theme, update } = usePreferences();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaViewFixed avoidTabBar style={{ flex: 1 }}>
       <Menu
         items={[
           'Theme',
@@ -102,7 +102,7 @@ export function SettingsAppearanceScreen() {
           } satisfies MenuItem;
         })}
       />
-    </SafeAreaView>
+    </SafeAreaViewFixed>
   );
 }
 

@@ -1,4 +1,5 @@
-import { Button, SafeAreaViewFixed, Typography } from '@app/components';
+import { Button, Typography } from '@app/components';
+import { Screen } from '@app/components/Screen';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
@@ -25,8 +26,9 @@ export function TopScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <SafeAreaViewFixed style={{ flex: 1 }}>
+    <Screen preset="fixed" safeAreaEdges={['top']}>
       <TabView
+        style={{ flex: 1 }}
         navigationState={{ index, routes }}
         renderScene={renderScene}
         onIndexChange={setIndex}
@@ -56,7 +58,7 @@ export function TopScreen() {
           </View>
         )}
       />
-    </SafeAreaViewFixed>
+    </Screen>
   );
 }
 

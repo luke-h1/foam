@@ -8,7 +8,7 @@ import {
   twitchEmoteService,
 } from '@app/services';
 import { chatterinoService } from '@app/services/chatterino-service';
-import { ParsedPart } from '@app/utils';
+import { ParsedPart, PartVariant } from '@app/utils';
 import { logger } from '@app/utils/logger';
 import { fetch } from 'expo/fetch';
 import { Directory, File, Paths } from 'expo-file-system/next';
@@ -59,9 +59,11 @@ export interface Bit {
   }[];
 }
 
-export interface ChatMessageType {
+export interface ChatMessageType<
+  TPartVariant extends PartVariant = PartVariant,
+> {
   userstate: ChatUserstate;
-  message: ParsedPart[];
+  message: ParsedPart<TPartVariant>[];
   badges: SanitisedBadgeSet[];
   channel: string;
   message_id: string;

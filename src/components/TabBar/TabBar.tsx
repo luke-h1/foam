@@ -70,7 +70,14 @@ export function TabBar(props: BottomTabBarProps) {
               }}
             >
               {icon && (
-                <SymbolView name={icon} tintColor={theme.colors.gray.accent} />
+                <SymbolView
+                  name={icon}
+                  tintColor={
+                    focused
+                      ? theme.colors.violet.accent
+                      : theme.colors.gray.accent
+                  }
+                />
               )}
 
               {options?.tabBarBadge && (

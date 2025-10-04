@@ -1,5 +1,4 @@
 import {
-  BodyScrollView,
   EmptyState,
   LiveStreamCard,
   AnimatedFlashList,
@@ -7,6 +6,7 @@ import {
 } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshControl } from '@app/components/RefreshControl';
+import { Screen } from '@app/components/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { Stream } from '@app/services';
@@ -76,12 +76,13 @@ export default function FollowingScreen() {
   }
 
   return (
-    <BodyScrollView refreshControl={<RefreshControl onRefresh={onRefresh} />}>
+    <Screen preset="fixed" safeAreaEdges={['top']}>
       <AnimatedFlashList<Stream>
         data={streams}
         keyExtractor={item => item.id}
         renderItem={renderItem}
+        refreshControl={<RefreshControl onRefresh={onRefresh} />}
       />
-    </BodyScrollView>
+    </Screen>
   );
 }

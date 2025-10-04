@@ -1,5 +1,6 @@
 /* eslint-disable no-shadow */
 import { storageService } from '@app/services';
+import { File } from 'expo-file-system/next';
 import { Platform } from 'react-native';
 
 export type CacheKey = Pick<CachedImage, 'originalImageUri' | 'mipmapWidth'>;
@@ -38,9 +39,7 @@ export interface CachedImage {
 }
 
 export const imageCacheService = {
-  getImageFromCache: async (
-    key: CacheKey,
-  ): Promise<CachedImage | undefined> => {
+  getImageFromCache: (key: CacheKey): CachedImage | undefined => {
     if (!imageCacheService.existsInCache(key)) {
       return;
     }
@@ -57,8 +56,6 @@ export const imageCacheService = {
      * Since expo-file-system does not support web, we need to omit this step in case of web build
      */
     if (Platform.OS !== 'web') {
-      const { File } = await import('expo-file-system/next');
-
       const fileInfo = new File(cachedImageUri);
 
       if (!fileInfo.exists) {

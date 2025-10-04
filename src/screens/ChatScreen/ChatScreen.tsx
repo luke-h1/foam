@@ -1,7 +1,6 @@
-import { Chat } from '@app/components';
+import { Chat, SafeAreaViewFixed } from '@app/components';
 import { SettingsStackScreenProps } from '@app/navigators';
 import { FC } from 'react';
-import { View } from 'react-native';
 
 export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
   route: { params },
@@ -11,13 +10,8 @@ export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
   console.log('🏠 ChatScreen render:', { channelId, channelName });
 
   return (
-    <View
-      style={{
-        flex: 1,
-        paddingBottom: 100, // Hacky fix for tab bar height - will refactor in future
-      }}
-    >
+    <SafeAreaViewFixed avoidTabBar style={{ flex: 1 }}>
       <Chat channelName={channelName} channelId={channelId} />
-    </View>
+    </SafeAreaViewFixed>
   );
 };

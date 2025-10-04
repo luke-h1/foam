@@ -18,6 +18,7 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
            * For emotes - use the original name
            */
           return part.original_name || part.content;
+
         case 'mention':
           /**
            * For mentions, preserve @ symbol, username &
@@ -31,10 +32,16 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
            */
           return part.content;
 
+        case 'notice':
+        case 'stvEmote':
+        case 'stv_emote_added':
+        case 'stv_emote_removed':
+        case 'twitchClip':
+          return part;
+
         default:
-          /**
-           * Fallback for any unknown types
-           */
+          // @ts-expect-error - ts struggling to narrow type of part
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return part.content;
       }
     })

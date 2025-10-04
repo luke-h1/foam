@@ -2,7 +2,7 @@ import { twitchApi } from './api';
 import { SanitisiedEmoteSet } from './seventv-service';
 import { PaginatedList, twitchService } from './twitch-service';
 
-interface TwitchEmote {
+export interface TwitchEmote {
   id: `emotesv2_${string}`;
   name: string;
   emote_type: 'follower' | 'subscriptions';

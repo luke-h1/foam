@@ -1,12 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-require-imports */
 import { typedObjectKeys } from '@app/utils';
-// eslint-disable-next-line no-restricted-imports
-import { ImageProps } from 'expo-image';
 import { memo } from 'react';
-import { DimensionValue } from 'react-native';
+import { DimensionValue, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Image } from '../Image';
+import { BttvIcon, FfzIcon, StvIcon, TwitchIcon } from './svg';
 
 export type BrandIconName = keyof typeof BrandIcons;
 
@@ -23,20 +19,21 @@ export type IconSize =
 
 export const IconSizes = typedObjectKeys(ICON_SIZES);
 
-interface IconProps extends Omit<ImageProps, 'source'> {
+interface IconProps {
   name: BrandIconName;
   size?: IconSize;
-  color?: unknown;
+  color?: string;
+  style?: ViewStyle;
 }
 
 export const BrandIcons = {
   /**
    * Companies
    */
-  stv: require('../../../assets/icons/stv.svg'),
-  twitch: require('../../../assets/icons/twitch.svg'),
-  bttv: require('../../../assets/icons/bttv.svg'),
-  ffz: require('../../../assets/icons/ffz.svg'),
+  stv: StvIcon,
+  twitch: TwitchIcon,
+  bttv: BttvIcon,
+  ffz: FfzIcon,
 } as const;
 
 function resolveSize(size: IconSize) {
@@ -53,15 +50,13 @@ function resolveSize(size: IconSize) {
 export const BrandIcon = memo(
   ({ name, color, size = 'md', style, ...props }: IconProps) => {
     const { height, width } = resolveSize(size);
+    const IconComponent = BrandIcons[name];
 
     return (
-      <Image
-        contentFit="contain"
-        priority="high"
-        style={[styles.iconImage({ height, width, color }), style]}
+      <IconComponent
+        color={color}
+        style={[styles.iconImage({ height, width }), style]}
         {...props}
-        source={BrandIcons[name]}
-        transition={0}
       />
     );
   },
@@ -75,10 +70,8 @@ const styles = StyleSheet.create(() => ({
   }: {
     height: DimensionValue;
     width: DimensionValue;
-    color?: unknown;
   }) => ({
     height,
     width,
-    // tintColor: color ? theme.colors[color] : undefined,
   }),
 }));

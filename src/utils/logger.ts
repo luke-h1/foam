@@ -53,6 +53,18 @@ const loggingConfig = {
     enabled: true,
     color: 'black',
   },
+
+  /**
+   * Websocket connections
+   */
+  twitchWs: {
+    enabled: true,
+    color: 'green',
+  },
+  stvWs: {
+    enabled: true,
+    color: 'cyanBright',
+  },
 } satisfies Record<
   string,
   {

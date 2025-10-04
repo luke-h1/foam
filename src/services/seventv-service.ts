@@ -16,7 +16,7 @@ interface SevenTvHost {
   files: SevenTvFile[];
 }
 
-interface SevenTvVersion {
+export interface SevenTvVersion {
   id: string;
   name: string;
   description?: string;
@@ -27,7 +27,7 @@ interface SevenTvVersion {
   host: SevenTvHost;
 }
 
-interface StvConnection {
+export interface StvConnection {
   id: string;
   platform: 'TWITCH' | 'YOUTUBE' | 'KICK';
   username: string;
@@ -37,7 +37,7 @@ interface StvConnection {
   emote_set_id: string;
 }
 
-interface StvUser {
+export interface StvUser {
   id: string;
   username: string;
   display_name: string;
@@ -173,6 +173,11 @@ export interface SanitisiedEmoteSet {
 
   // temporarily - review this
   bits?: number;
+
+  /**
+   * The person who added/removed this emote
+   */
+  actor_id?: string;
 }
 
 export const sevenTvService = {

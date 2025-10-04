@@ -5,6 +5,7 @@ export * from './chat';
 export * from './color';
 export * from './date-time';
 export * from './emoji';
+export * from './emote';
 export * from './image';
 export * from './pagination';
 export * from './performance';

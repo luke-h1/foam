@@ -4,7 +4,7 @@ import { ffzApi } from './api';
 import { SanitisiedEmoteSet } from './seventv-service';
 import { SanitisedBadgeSet } from '.';
 
-interface FfzEmoticon {
+export interface FfzEmoticon {
   id: number;
   name: string;
   height: number;

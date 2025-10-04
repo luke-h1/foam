@@ -139,7 +139,6 @@ export const ChatAutoCompleteInput = forwardRef<
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
-      status,
       ttvUsers,
       twitchGlobalEmotes,
     } = useChatStore();
@@ -480,24 +479,6 @@ export const ChatAutoCompleteInput = forwardRef<
       },
       [value, currentWordInfo, onChangeText],
     );
-
-    if (status !== 'fulfilled') {
-      return (
-        <KeyboardAvoidingView style={styles.container} behavior="padding">
-          <Input
-            ref={ref}
-            {...textFieldProps}
-            value={value}
-            placeholder={
-              status === 'loading' ? 'Loading emotes...' : placeholder
-            }
-            onChangeText={onChangeText}
-            style={[styles.input, textFieldProps.style]}
-            editable={false}
-          />
-        </KeyboardAvoidingView>
-      );
-    }
 
     return (
       <View style={styles.mainContainer}>

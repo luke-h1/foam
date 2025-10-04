@@ -5,6 +5,7 @@ import {
   Switch,
   Typography,
 } from '@app/components';
+import { Screen } from '@app/components/Screen';
 import { useAuthContext } from '@app/context';
 import { useAppNavigation, useDebugOptions } from '@app/hooks';
 import {
@@ -306,13 +307,15 @@ export function DebugScreen() {
   );
 
   return (
-    <FlashList<DebugItem>
-      data={debugItems}
-      keyExtractor={item => item.title}
-      renderItem={renderListItem}
-      ListFooterComponent={renderListFooter}
-      contentInsetAdjustmentBehavior="automatic"
-    />
+    <Screen safeAreaEdges={['top', 'bottom']} preset="scroll">
+      <FlashList<DebugItem>
+        data={debugItems}
+        keyExtractor={item => item.title}
+        renderItem={renderListItem}
+        ListFooterComponent={renderListFooter}
+        contentInsetAdjustmentBehavior="automatic"
+      />
+    </Screen>
   );
 }
 

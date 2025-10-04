@@ -4,41 +4,73 @@ import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const partVariants = {
-  text: 'text',
-  emote: 'emote',
-  mention: 'mention',
-  stvEmote: 'stvEmote',
-  twitchClip: 'twitchClip',
-} as const;
-
-type PartVariant = keyof typeof partVariants;
+export type PartVariant =
+  /**
+   * Plain text
+   */
+  | 'text'
+  /**
+   * Emoji i.e. 🚀
+   */
+  | 'emote'
+  /**
+   * Mention i.e. @username
+   */
+  | 'mention'
+  /**
+   * stv emote
+   */
+  | 'stvEmote'
+  /**
+   * Twitch clip
+   */
+  | 'twitchClip'
+  /**
+   * Notice event
+   */
+  | 'notice'
+  /**
+   * stv emote added to set
+   */
+  | 'stv_emote_added'
+  /**
+   * stv emote removed from set
+   */
+  | 'stv_emote_removed';
 
 export type TwitchAnd7TVVariant = Extract<
   PartVariant,
   'stvEmote' | 'twitchClip'
 >;
 
-export interface ParsedPart<TType extends PartVariant = PartVariant>
-  extends Pick<
-    Partial<SanitisiedEmoteSet>,
-    'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
-  > {
-  id?: string;
-  name?: string;
-  flags?: number;
-  type: TType;
-  content: string;
-  color?: string;
-  width?: number;
-  height?: number;
+export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
+  | 'stv_emote_added'
+  | 'stv_emote_removed'
+  ? {
+      type: TType;
+      stvEvents: {
+        type: 'added' | 'removed';
+        data: SanitisiedEmoteSet;
+      };
+    }
+  : Pick<
+      Partial<SanitisiedEmoteSet>,
+      'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
+    > & {
+      id?: string;
+      name?: string;
+      flags?: number;
+      type: TType;
+      content: string;
+      color?: string;
+      width?: number;
+      height?: number;
 
-  /**
-   * Used for emote and twitch clip previews
-   */
-  thumbnail?: string;
-}
+      /**
+       * Used for emote and twitch clip previews
+       */
+      thumbnail?: string;
+    };
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
@@ -67,19 +99,16 @@ export function findEmotesInText(
     end: number;
   }[] = [];
 
-  // Sort emotes by length (longest first) to handle cases where one emote name is a substring of another
   const sortedEmoteNames = Array.from(emoteMap.keys()).sort(
     (a, b) => b.length - a.length,
   );
 
   let currentIndex = 0;
 
-  // Helper function to check if a character is a word boundary
   function isDelimiter(char: string): boolean {
     return /[\s,.!?()[\]{}<>:;'"\\]/.test(char);
   }
 
-  // Helper function to check if index is within a URL
   function isWithinUrl(index: number): boolean {
     const beforeText = text.slice(Math.max(0, index - 50), index);
     const afterText = text.slice(index, Math.min(text.length, index + 50));
@@ -91,7 +120,6 @@ export function findEmotesInText(
     );
   }
 
-  // Helper function to check if position is a valid emote location
   function isValidEmotePosition(
     index: number,
     emoteName: string,
@@ -102,7 +130,9 @@ export function findEmotesInText(
       return false;
     }
 
-    // For Twitch emotes that are pure special characters (like <3), need word boundaries
+    /**
+     * For Twitch emotes that are pure special characters (like <3), need word boundaries
+     */
     if (isTwitchEmote && /^[^a-zA-Z0-9]+$/.test(emoteName)) {
       const hasValidStart =
         index === 0 || (index > 0 && isDelimiter(text.charAt(index - 1)));
@@ -113,7 +143,9 @@ export function findEmotesInText(
       return hasValidStart && hasValidEnd;
     }
 
-    // For normal emotes and alphanumeric Twitch emotes, check word boundaries
+    /**
+     * For normal emotes and alphanumeric Twitch emotes, check word boundaries
+     */
     const hasValidStart =
       index === 0 || (index > 0 && isDelimiter(text.charAt(index - 1)));
     const endIndex = index + emoteName.length;
@@ -135,12 +167,10 @@ export function findEmotesInText(
     for (const emoteName of sortedEmoteNames) {
       const emote = emoteMap.get(emoteName);
       if (emote) {
-        // FIX: Check for both Twitch Global and Twitch Channel emotes
         const isTwitchEmote =
           emote.site === 'Twitch Global' || emote.site === 'Twitch Channel';
 
         if (isTwitchEmote) {
-          // For Twitch emotes, we need an exact match
           const exactMatch = text.slice(currentIndex).startsWith(emoteName);
           if (
             exactMatch &&
@@ -156,7 +186,6 @@ export function findEmotesInText(
             break;
           }
         } else {
-          // For other emotes
           const startIndex = text.indexOf(emoteName, currentIndex);
           if (
             startIndex !== -1 &&
@@ -180,7 +209,6 @@ export function findEmotesInText(
     }
   }
 
-  // console.log('foundEmotes ->', foundEmotes);
   return foundEmotes;
 }
 
@@ -205,6 +233,7 @@ function parseLink(url: string): ParsedPart | null {
   const twitchClipMatch = url.match(TWITCH_CLIP_REGEX);
   const twitchChannelClipMatch = url.match(TWITCH_CHANNEL_CLIP_REGEX);
   const clipId = twitchClipMatch?.[1] ?? twitchChannelClipMatch?.[1] ?? '';
+
   if (clipId) {
     return {
       type: 'twitchClip',
@@ -313,7 +342,6 @@ export function replaceTextWithEmotes({
 
     splitParts.forEach(({ emoji, text }) => {
       if (emoji) {
-        // Handle emojis
         const unifiedEmoji = decodeEmojiToUnified(emoji);
         const foundEmote = emoteMap.get(unifiedEmoji);
 
@@ -379,11 +407,14 @@ export function replaceTextWithEmotes({
               content: word,
             });
           } else {
-            // Check for links and emotes in non-mention words
+            /**
+             * Our custom link parser
+             */
             const linkMetadata = parseLink(word);
             if (linkMetadata) {
               replacedParts.push({
                 ...linkMetadata,
+                // @ts-expect-error - ts struggling to narrow the type of our @see ParsedPart type
                 content: word,
               });
             } else {
