@@ -1,15 +1,15 @@
-name: EAS production / test deployment
+name: EAS production / preview deployment
 on:
   workflow_dispatch:
     inputs:
       variant:
-        description: 'Production or test deployment (build & submit)'
+        description: 'Production or preview deployment (build & submit)'
         required: true
         type: choice
         default: 'production'
         options:
           - production
-          - test
+          - preview
       platform:
         description: 'The platform to deploy to'
         required: true
