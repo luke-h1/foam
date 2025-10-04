@@ -76,10 +76,10 @@ coverage
 bun.lockb
 
 # google services android
-google-services-*.json
+# google-services-*.json
 
 # # google services IOS
-GoogleService-*-*.plist
+# GoogleService-*-*.plist
 
 .env.local
 

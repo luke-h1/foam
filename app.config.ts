@@ -122,9 +122,11 @@ const config: ExpoConfig = {
     [
       'expo-media-library',
       {
-        photosPermission: 'Allow $(PRODUCT_NAME) to access your photos.',
-        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save photos.',
+        photosPermission:
+          'Allow $(PRODUCT_NAME) to access your photos to download emotes/badges',
+        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save emotes/badges.',
         isAccessMediaLocationEnabled: true,
+        granularPermissions: ['audio', 'photo'],
       },
     ],
     ['app-icon-badge', appIconBadgeConfig],
