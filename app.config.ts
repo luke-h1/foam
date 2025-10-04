@@ -240,9 +240,7 @@ const config: ExpoConfig = {
       NSPhotoLibraryUsageDescription: 'Used for saving emotes/badges',
     },
     entitlements: {
-      'com.apple.security.application-groups': [
-        `group.foam-tv-${process.env.APP_VARIANT}`,
-      ],
+      'com.apple.security.application-groups': [`group.foam-tv-dev`],
     },
   },
   android: {
