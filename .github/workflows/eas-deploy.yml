@@ -72,3 +72,4 @@ jobs:
           elif [ "${{ inputs.platform }}" == "android" ]; then
             bun run build:${{ inputs.variant }}:android
           fi
+          

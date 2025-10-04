@@ -35,7 +35,6 @@
     },
     "preview": {
       "environment": "preview",
-      "distribution": "internal",
       "env": {
         "APP_VARIANT": "preview"
       },
