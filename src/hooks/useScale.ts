@@ -1,9 +1,19 @@
-import {
-  UI_DESIGN_PRESET,
-  UI_SCALING_METHOD,
-} from '@app/Providers/CachedPhotosProvider/useCachedPhotos';
 import { Dimensions } from 'react-native';
 
+// Decides whether to use image native components from expo-image or react-native-image
+export const IMAGE_NATIVE_PRESET: 'expo' | 'rni' = 'expo';
+
+// ----------------------
+// UI config - UI scaling
+// ----------------------
+
+// A relative screen size preset for UI scaling (phone, tablet or fullhd)
+export const UI_DESIGN_PRESET: 'phone' | 'tablet' | 'fullhd' = 'phone';
+
+// How should UI be scaled for custom device screen (via screen height or diagonal)
+export const UI_SCALING_METHOD: 'height' | 'diagonal' = 'height';
+
+/**
 /**
  * Helper definitions - screen resolution
  */
@@ -43,14 +53,21 @@ const presetPhone: Resolution = {
   height: 924,
 };
 
-// Select currently used preset based on config state
-const currentPreset =
-  // eslint-disable-next-line no-nested-ternary
-  UI_DESIGN_PRESET === 'tablet'
-    ? presetTablet
-    : UI_DESIGN_PRESET === 'fullhd'
-      ? presetFullHD
-      : presetPhone;
+let currentPreset: Resolution;
+switch (UI_DESIGN_PRESET) {
+  // @ts-expect-error issues with default val
+  case 'tablet':
+    currentPreset = presetTablet;
+    break;
+  // @ts-expect-error issues with default val
+  case 'fullhd':
+    currentPreset = presetFullHD;
+    break;
+  case 'phone':
+  default:
+    currentPreset = presetPhone;
+    break;
+}
 
 /**
  * Scale function factory
