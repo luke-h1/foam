@@ -55,9 +55,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     iosGoogleServicesFile:
-      process.env.IOS_GOOGLE_SERVICES_JSON ||
+      (process.env.IOS_GOOGLE_SERVICES_JSON as string) ||
       './GoogleService-Info-production.plist',
     androidGoogleServicesFile: './google-services-prod.json',
   },
