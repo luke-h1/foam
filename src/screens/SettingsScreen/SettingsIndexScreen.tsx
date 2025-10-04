@@ -1,13 +1,13 @@
 import { Menu } from '@app/components/Menu';
+import { Screen } from '@app/components/Screen';
 import { useAppNavigation } from '@app/hooks';
 import { SettingsStackParamList } from '@app/navigators';
-import { SafeAreaView } from 'react-native';
 import { AboutCard, BuildStatus } from './components';
 
 export function SettingsIndexScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Screen safeAreaEdges={['top']} preset="fixed">
       <Menu
         header={<AboutCard />}
         footer={<BuildStatus />}
@@ -50,6 +50,6 @@ export function SettingsIndexScreen() {
           },
         ]}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }

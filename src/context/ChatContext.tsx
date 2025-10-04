@@ -1,4 +1,3 @@
-import { LOAD_BATCH_SIZE } from '@app/Providers/MediaLibraryPhotosProvider/useMediaLibraryPhotos';
 import { PersistedStateStatus, usePersistedState } from '@app/hooks';
 import {
   bttvEmoteService,
@@ -9,7 +8,7 @@ import {
   twitchBadgeService,
   twitchEmoteService,
 } from '@app/services';
-import { chatterinoService } from '@app/services/chatterino-service';
+import { chatterinoService } from '@app/services/api/chatterino-service';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
 
@@ -23,12 +22,22 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { ViewStyle } from 'react-native';
+import { Platform, ViewStyle } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import { ChatUserstate } from 'tmi.js';
 
 const chatStorage = new MMKV({
   id: 'chat-cache',
+});
+
+export const MEDIA_LIBRARY_PHOTOS_LIMIT = Infinity;
+
+export const LOAD_BATCH_SIZE = Platform.select({
+  /**
+   * iOS can provide results much faster than Android.
+   */
+  ios: Math.min(50, MEDIA_LIBRARY_PHOTOS_LIMIT),
+  default: Math.min(30, MEDIA_LIBRARY_PHOTOS_LIMIT),
 });
 
 interface CosmeticPaint {
@@ -153,12 +162,12 @@ interface ChatState {
       ffzGlobalBadges: SanitisedBadgeSet[];
       ffzChannelBadges: SanitisedBadgeSet[];
       chatterinoBadges: SanitisedBadgeSet[];
+      sevenTvEmoteSetId?: string;
     }
   >;
   currentChannelId: string | null;
   lastGlobalUpdate: number;
 
-  // Runtime data (previously non-persisted, but now we'll persist some and keep others in local state)
   loadingState: ChatLoadingState;
   cacheStats: CacheStats;
   emojis: SanitisiedEmoteSet[];
@@ -168,7 +177,6 @@ interface ChatState {
 }
 
 export interface ChatContextState {
-  // State restoration status
   stateRestorationStatus: PersistedStateStatus;
   loadingState: ChatLoadingState;
 
@@ -188,7 +196,6 @@ export interface ChatContextState {
   ffzChannelBadges: SanitisedBadgeSet[];
   chatterinoBadges: SanitisedBadgeSet[];
 
-  // Runtime data (kept in local state for performance)
   imageCache: Map<string, ChannelCache>;
   inMemoryCache: Map<string, InMemoryCache>;
   cacheStats: CacheStats;
@@ -247,7 +254,6 @@ export interface ChatContextState {
   getCachedEmotes: (channelId: string) => SanitisiedEmoteSet[];
   getCachedBadges: (channelId: string) => SanitisedBadgeSet[];
 
-  // New method to get fresh emote data for message processing
   getCurrentEmoteData: (channelId?: string) => {
     twitchChannelEmotes: SanitisiedEmoteSet[];
     twitchGlobalEmotes: SanitisiedEmoteSet[];
@@ -263,6 +269,14 @@ export interface ChatContextState {
     ffzGlobalBadges: SanitisedBadgeSet[];
     chatterinoBadges: SanitisedBadgeSet[];
   };
+
+  getSevenTvEmoteSetId: (channelId?: string) => string | null;
+
+  updateSevenTvEmotes: (
+    channelId: string,
+    added: SanitisiedEmoteSet[],
+    removed: SanitisiedEmoteSet[],
+  ) => void;
 }
 
 export const ChatContext = createContext<ChatContextState | undefined>(
@@ -303,9 +317,6 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
   >(new Map());
   const [cacheQueue, setCacheQueue] = useState<CacheQueueItem[]>([]);
 
-  /**
-   * Retrieve current channel resources from persisted state
-   */
   const currentChannelData = state.currentChannelId
     ? state.channelCaches[state.currentChannelId]
     : null;
@@ -1089,9 +1100,13 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
               (existingCache.bttvChannelEmotes?.length || 0) === 0 &&
               (existingCache.bttvGlobalEmotes?.length || 0) === 0;
 
+            // Check if we're missing the sevenTvEmoteSetId
+            const missingEmoteSetId = !existingCache.sevenTvEmoteSetId;
+
             logger.main.info('📊 Cache validation:', {
               cacheAge: Math.round(cacheAge / (60 * 1000)),
               hasEmptyEmotes,
+              missingEmoteSetId,
               emoteCounts: {
                 twitch: existingCache.twitchGlobalEmotes?.length || 0,
                 sevenTv: existingCache.sevenTvGlobalEmotes?.length || 0,
@@ -1110,13 +1125,53 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
                 `Using cached data for channel ${channelId} (age: ${Math.round(cacheAge / (60 * 1000))} minutes)`,
               );
 
+              // If we're missing the emote set ID, fetch it and update the cache
+              if (missingEmoteSetId) {
+                try {
+                  console.log(
+                    '🔍 DEBUG: Fetching missing sevenTvEmoteSetId for cached data',
+                  );
+                  const sevenTvSetId =
+                    await sevenTvService.getEmoteSetId(channelId);
+                  console.log(
+                    '🔍 DEBUG: Retrieved sevenTvSetId for cache:',
+                    sevenTvSetId,
+                  );
+
+                  // Update the cache with the emote set ID
+                  setState(prevState => ({
+                    ...prevState,
+                    channelCaches: {
+                      ...prevState.channelCaches,
+                      [channelId]: {
+                        ...existingCache,
+                        sevenTvEmoteSetId: sevenTvSetId,
+                      },
+                    },
+                  }));
+
+                  console.log(
+                    '🔍 DEBUG: Updated cache with sevenTvEmoteSetId:',
+                    sevenTvSetId,
+                  );
+                } catch (error) {
+                  console.log(
+                    '🔍 DEBUG: Failed to fetch sevenTvEmoteSetId for cache:',
+                    error,
+                  );
+                  logger.chat.warn(
+                    'Failed to get 7TV emote set ID for cached data:',
+                    error,
+                  );
+                }
+              }
+
               setState(prevState => ({
                 ...prevState,
                 currentChannelId: channelId,
                 loadingState: 'COMPLETED',
               }));
 
-              // Wait for state to propagate and verify it's available
               await new Promise<void>(resolve => {
                 let attempts = 0;
                 const maxAttempts = 50;
@@ -1202,11 +1257,23 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
         const sevenTvSetIdStart = performance.now();
         try {
           sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
+          console.log(
+            '🔍 DEBUG: Retrieved sevenTvSetId:',
+            sevenTvSetId,
+            'for channelId:',
+            channelId,
+          );
           const sevenTvSetIdDuration = performance.now() - sevenTvSetIdStart;
           logger.performance.debug(
             `⏳ Get 7TV set ID -- time: ${sevenTvSetIdDuration.toFixed(2)} ms`,
           );
         } catch (error) {
+          console.log(
+            '🔍 DEBUG: Failed to get sevenTvSetId for channelId:',
+            channelId,
+            'error:',
+            error,
+          );
           const sevenTvSetIdDuration = performance.now() - sevenTvSetIdStart;
           logger.performance.debug(
             `⏳ Get 7TV set ID (failed) -- time: ${sevenTvSetIdDuration.toFixed(2)} ms`,
@@ -1313,7 +1380,6 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
           `Loaded ${allEmotes.length} emotes and ${allBadges.length} badges to memory cache, started background disk caching for channel ${channelId}`,
         );
 
-        // Save to persisted state
         const channelData = {
           emotes: allEmotes,
           badges: allBadges,
@@ -1334,7 +1400,16 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
           ffzGlobalBadges: getValue<SanitisedBadgeSet>(ffzGlobalBadges),
           ffzChannelBadges: getValue<SanitisedBadgeSet>(ffzChannelBadges),
           chatterinoBadges: getValue<SanitisedBadgeSet>(chatterinoBadges),
+          sevenTvEmoteSetId:
+            sevenTvSetId !== 'global' ? sevenTvSetId : undefined,
         };
+
+        console.log(
+          '🔍 DEBUG: Storing channelData with sevenTvEmoteSetId:',
+          channelData.sevenTvEmoteSetId,
+          'for channelId:',
+          channelId,
+        );
 
         const statePersistStart = performance.now();
 
@@ -1359,7 +1434,6 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
           `⏳ State persistence -- time: ${statePersistDuration.toFixed(2)} ms`,
         );
 
-        // Wait for state to actually be available in getCurrentEmoteData
         await new Promise<void>(resolve => {
           let attempts = 0;
           const maxAttempts = 50;
@@ -1393,7 +1467,6 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
           checkState();
         });
 
-        // Verify the state was set correctly
         const verifyEmoteData = () => {
           const currentData = state.channelCaches[channelId];
 
@@ -1571,6 +1644,88 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [imageCache, inMemoryCache],
   );
 
+  const getSevenTvEmoteSetId = useCallback(
+    (channelId?: string) => {
+      const targetChannelId = channelId || state.currentChannelId;
+      console.log('🔍 DEBUG: getSevenTvEmoteSetId called with:', {
+        channelId,
+        targetChannelId,
+        currentChannelId: state.currentChannelId,
+      });
+
+      if (!targetChannelId) {
+        console.log('🔍 DEBUG: No targetChannelId, returning null');
+        return null;
+      }
+
+      const channelCache = state.channelCaches[targetChannelId];
+      console.log('🔍 DEBUG: channelCache for', targetChannelId, ':', {
+        exists: !!channelCache,
+        sevenTvEmoteSetId: channelCache?.sevenTvEmoteSetId,
+        cacheKeys: channelCache ? Object.keys(channelCache) : [],
+      });
+
+      const result = channelCache?.sevenTvEmoteSetId || null;
+      console.log('🔍 DEBUG: getSevenTvEmoteSetId returning:', result);
+      return result;
+    },
+    [state.channelCaches, state.currentChannelId],
+  );
+
+  const updateSevenTvEmotes = useCallback(
+    (
+      channelId: string,
+      added: SanitisiedEmoteSet[],
+      removed: SanitisiedEmoteSet[],
+    ) => {
+      logger.chat.info(
+        `Updating SevenTV emotes for channel ${channelId}: +${added.length} -${removed.length}`,
+      );
+
+      setState(prevState => {
+        const channelCache = prevState.channelCaches[channelId];
+        if (!channelCache) {
+          logger.chat.warn(
+            `No channel cache found for ${channelId}, skipping emote update`,
+          );
+          return prevState;
+        }
+
+        const currentEmotes = channelCache.sevenTvChannelEmotes || [];
+
+        /**
+         * Remove emotes that were deleted
+         */
+        const emotesAfterRemoval = currentEmotes.filter(
+          emote => !removed.some(removedEmote => removedEmote.id === emote.id),
+        );
+
+        /**
+         * Add new emotes
+         */
+        const updatedEmotes = [...emotesAfterRemoval, ...added];
+
+        added.forEach(emote => {
+          addToMemoryCache(emote.url, channelId, 'emote');
+          cacheImage(emote.url, channelId, 'emote', 2);
+        });
+
+        return {
+          ...prevState,
+          channelCaches: {
+            ...prevState.channelCaches,
+            [channelId]: {
+              ...channelCache,
+              sevenTvChannelEmotes: updatedEmotes,
+              lastUpdated: Date.now(),
+            },
+          },
+        };
+      });
+    },
+    [setState, addToMemoryCache, cacheImage],
+  );
+
   const contextState: ChatContextState = useMemo(
     () => ({
       stateRestorationStatus,
@@ -1623,6 +1778,8 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       getCachedEmotes,
       getCachedBadges,
       getCurrentEmoteData,
+      getSevenTvEmoteSetId,
+      updateSevenTvEmotes,
     }),
     [
       stateRestorationStatus,
@@ -1653,6 +1810,8 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       getCachedEmotes,
       getCachedBadges,
       getCurrentEmoteData,
+      getSevenTvEmoteSetId,
+      updateSevenTvEmotes,
     ],
   );
 

@@ -1,3 +1,4 @@
+import { sentryService } from '@app/services/sentry-service';
 import { AllowedPrefix, logger } from '@app/utils/logger';
 import { RequestInterceptor } from '../Client';
 
@@ -31,5 +32,6 @@ export const createLoggerInterceptor = (
   },
   onError: error => {
     logger[prefix].error(`Request error: ${JSON.stringify(error, null, 2)}`);
+    sentryService.captureException(error);
   },
 });

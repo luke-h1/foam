@@ -125,7 +125,7 @@ export function SearchScreen() {
   );
 
   const ListFooterComponent = useMemo(() => {
-    return searchResults.length > 0 ? (
+    return searchResults.length === 0 && searchHistory.length > 0 ? (
       <SearchHistoryV2
         history={searchHistory.map(item => item.query)}
         onClearAll={() => {

@@ -1,11 +1,11 @@
 import { Menu } from '@app/components/Menu';
-import { SafeAreaView } from 'react-native';
+import { Screen } from '@app/components/Screen';
 import { ProfileCard } from './components/profile/ProfileCard';
 
 export function SettingsProfileScreen() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <Screen safeAreaEdges={['top']} preset="fixed">
       <Menu header={<ProfileCard />} items={[]} />
-    </SafeAreaView>
+    </Screen>
   );
 }

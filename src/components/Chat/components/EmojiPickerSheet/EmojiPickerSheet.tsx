@@ -9,7 +9,7 @@ import { View, ViewStyle, useWindowDimensions } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
-import { SanitisiedEmoteSet } from '../../../../services/seventv-service';
+import { SanitisiedEmoteSet } from '../../../../services/api/seventv-service';
 import { EmojiLegendList } from './EmojiLegendList';
 import { SubNavigationBar } from './SubNavigationBar';
 import {

@@ -20,7 +20,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
 
-  const [isChatVisible, setIsChatVisible] = useState(true);
+  const [isChatVisible, setIsChatVisible] = useState<boolean>(true);
 
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
@@ -122,9 +122,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     .numberOfTaps(2)
     .maxDelay(300)
     .onEnd(() => {
-      /**
-       * todo fix deprecation warn
-       */
       scheduleOnRN(handleDoubleTap);
     });
 

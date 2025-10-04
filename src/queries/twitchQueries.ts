@@ -6,7 +6,7 @@ import {
   UserInfoResponse,
   SearchChannelResponse,
   PaginatedList,
-} from '@app/services/twitch-service';
+} from '@app/services/api/twitch-service';
 import { UseQueryOptions } from '@tanstack/react-query';
 
 export const twitchQueries = {

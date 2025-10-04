@@ -18,6 +18,7 @@ import { ActionSheet } from '../ActionSheet';
 import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
 import { MediaLinkCard } from '../MediaLinkCard';
+import { StvEmoteEvent } from '../StvEmoteEvent';
 import { UserSheet } from './UserSheet/UserSheet';
 import { EmoteRenderer } from './renderers';
 
@@ -72,23 +73,27 @@ export const ChatMessage = memo(
     const renderMessagePart = useCallback(
       (part: ParsedPart, index: number) => {
         switch (part.type) {
-          case 'text':
+          case 'text': {
             return <Typography color="gray.text">{part.content}</Typography>;
+          }
 
-          case 'stvEmote':
+          case 'stvEmote': {
             return <MediaLinkCard type="stvEmote" url={part.content} />;
+          }
 
-          case 'twitchClip':
+          case 'twitchClip': {
             return <MediaLinkCard type="twitchClip" url={part.content} />;
+          }
 
-          case 'emote':
+          case 'emote': {
             return (
               <EmoteRenderer
                 key={index}
-                part={part as ParsedPart<'emote'>}
+                part={part}
                 handleEmotePress={handleEmotePress}
               />
             );
+          }
 
           case 'mention': {
             return (
@@ -100,6 +105,15 @@ export const ChatMessage = memo(
                 </Typography>
               </Typography>
             );
+          }
+
+          case 'stv_emote_added': {
+            return <StvEmoteEvent part={part} />;
+          }
+
+          case 'stv_emote_removed': {
+            console.log('here for stv remove');
+            return <StvEmoteEvent part={part} />;
           }
 
           default:
@@ -163,31 +177,39 @@ export const ChatMessage = memo(
         )}
 
         <View style={styles.messageLine}>
-          <Typography style={styles.timestamp}>
-            {formatDate(new Date(), 'HH:mm')}:
-          </Typography>
-          {renderBadges()}
-          <Button onLongPress={onUsernamePress} style={styles.usernameButton}>
-            <Typography
-              style={[
-                styles.username,
-                {
-                  color: userstate.color
-                    ? lightenColor(userstate.color)
-                    : '#FFFFFF',
-                },
-              ]}
-            >
-              {userstate.username ?? ''}:
+          {!message.some(
+            part =>
+              part.type === 'stv_emote_added' ||
+              part.type === 'stv_emote_removed',
+          ) && (
+            <Typography style={styles.timestamp}>
+              {formatDate(new Date(), 'HH:mm')}:
             </Typography>
-          </Button>
+          )}
+          {renderBadges()}
+          {userstate.username && (
+            <Button onLongPress={onUsernamePress} style={styles.usernameButton}>
+              <Typography
+                style={[
+                  styles.username,
+                  {
+                    color: userstate.color
+                      ? lightenColor(userstate.color)
+                      : '#FFFFFF',
+                  },
+                ]}
+              >
+                {userstate.username}:
+              </Typography>
+            </Button>
+          )}
           {message.map(renderMessagePart)}
         </View>
 
         {selectedEmote && selectedEmote.type === 'emote' && (
           <EmotePreviewSheet
             ref={emoteSheetRef}
-            selectedEmote={selectedEmote as ParsedPart<'emote'>}
+            selectedEmote={selectedEmote}
           />
         )}
 

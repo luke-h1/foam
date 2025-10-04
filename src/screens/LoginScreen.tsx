@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Button, Typography, Image } from '@app/components';
+import { BrandIcon } from '@app/components/BrandIcon';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks';
 import { useAuthRequest } from 'expo-auth-session';
@@ -146,12 +147,7 @@ export function LoginScreen() {
               ]}
             >
               <View style={styles.buttonContent}>
-                <Image
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-                  source={require('../../assets/icons/twitch.svg')}
-                  style={styles.twitchIcon}
-                  contentFit="contain"
-                />
+                <BrandIcon name="twitch" />
                 <Typography size="lg" color="gray.text" fontWeight="semiBold">
                   Continue with Twitch
                 </Typography>

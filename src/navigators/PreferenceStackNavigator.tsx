@@ -29,7 +29,6 @@ export function PreferenceStackNavigator() {
         options={{
           headerShown: false,
           orientation: 'portrait_up',
-          presentation: 'modal',
         }}
       />
       <Stack.Screen
@@ -38,7 +37,6 @@ export function PreferenceStackNavigator() {
         options={{
           headerShown: false,
           orientation: 'portrait_up',
-          presentation: 'modal',
         }}
       />
       <Stack.Screen
@@ -47,7 +45,6 @@ export function PreferenceStackNavigator() {
         options={{
           headerShown: false,
           orientation: 'portrait_up',
-          presentation: 'modal',
         }}
       />
       <Stack.Screen
@@ -56,7 +53,6 @@ export function PreferenceStackNavigator() {
         options={{
           headerShown: false,
           orientation: 'portrait_up',
-          presentation: 'modal',
         }}
       />
     </Stack.Navigator>

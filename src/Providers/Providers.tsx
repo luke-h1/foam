@@ -17,8 +17,6 @@ import {
 } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { Toaster } from 'sonner-native';
-import { CachedPhotosProvider } from './CachedPhotosProvider';
-import { MediaLibraryPhotosProvider } from './MediaLibraryPhotosProvider';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider';
 
 export const queryClient = new QueryClient({
@@ -44,45 +42,41 @@ export function Providers({ children }: PropsWithChildren) {
 
   return (
     <AuthContextProvider>
-      <MediaLibraryPhotosProvider>
-        <ScreenDimensionsProvider>
-          <CachedPhotosProvider>
-            <ChatContextProvider>
-              <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-                <ErrorBoundary
-                  catchErrors={BaseConfig.catchErrors}
-                  onReset={() => setRecoveredFromError(true)}
-                >
-                  <KeyboardProvider>
-                    <GestureHandlerRootView style={styles.gestureContainer}>
-                      <BottomSheetModalProvider>
-                        <QueryClientProvider client={queryClient}>
-                          <Toaster />
-                          {children}
-                          {ReactQueryDebug?.enabled && (
-                            <DevToolsBubble
-                              queryClient={queryClient}
-                              onCopy={async text => {
-                                try {
-                                  await Clipboard.setStringAsync(text);
-                                  return true;
-                                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                } catch (error) {
-                                  return false;
-                                }
-                              }}
-                            />
-                          )}
-                        </QueryClientProvider>
-                      </BottomSheetModalProvider>
-                    </GestureHandlerRootView>
-                  </KeyboardProvider>
-                </ErrorBoundary>
-              </SafeAreaProvider>
-            </ChatContextProvider>
-          </CachedPhotosProvider>
-        </ScreenDimensionsProvider>
-      </MediaLibraryPhotosProvider>
+      <ScreenDimensionsProvider>
+        <ChatContextProvider>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <ErrorBoundary
+              catchErrors={BaseConfig.catchErrors}
+              onReset={() => setRecoveredFromError(true)}
+            >
+              <KeyboardProvider>
+                <GestureHandlerRootView style={styles.gestureContainer}>
+                  <BottomSheetModalProvider>
+                    <QueryClientProvider client={queryClient}>
+                      <Toaster />
+                      {children}
+                      {ReactQueryDebug?.enabled && (
+                        <DevToolsBubble
+                          queryClient={queryClient}
+                          onCopy={async text => {
+                            try {
+                              await Clipboard.setStringAsync(text);
+                              return true;
+                              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            } catch (error) {
+                              return false;
+                            }
+                          }}
+                        />
+                      )}
+                    </QueryClientProvider>
+                  </BottomSheetModalProvider>
+                </GestureHandlerRootView>
+              </KeyboardProvider>
+            </ErrorBoundary>
+          </SafeAreaProvider>
+        </ChatContextProvider>
+      </ScreenDimensionsProvider>
     </AuthContextProvider>
   );
 }

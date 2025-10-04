@@ -14,7 +14,7 @@ interface AppVariantConfig {
   androidGoogleServicesFile: string;
 }
 
-type Variant = 'development' | 'preview' | 'production';
+type Variant = 'development' | 'preview' | 'test' | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
 const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
@@ -33,6 +33,16 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     icon: './assets/splash/splash-image-production.png',
     iosBundleIdentifier: 'foam-tv-preview',
     androidPackageName: 'com.lhowsam.foam.preview',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
+    iosGoogleServicesFile: './GoogleService-Info-preview.plist',
+    androidGoogleServicesFile: './google-services-preview.json',
+  },
+  test: {
+    name: 'Foam (test)',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv-test',
+    androidPackageName: 'com.lhowsam.foam.test',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
     iosGoogleServicesFile: './GoogleService-Info-preview.plist',
@@ -99,6 +109,13 @@ const config: ExpoConfig = {
   },
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
+    // Configure the channel to "local" for local development, if we
+    // compile/run locally EAS Build will configure this for us automatically
+    // based on the value provided in the build profile, and that will
+    // overwrite this value.
+    requestHeaders: {
+      'expo-channel-name': 'local',
+    },
   },
   runtimeVersion: {
     policy: 'appVersion',
@@ -118,13 +135,25 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    'react-native-compressor',
+    [
+      '@sentry/react-native/expo',
+      {
+        url: 'https://sentry.io/',
+        note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
+        project: 'foam',
+        organization: 'luke-howsam',
+      },
+    ],
     'react-native-bottom-tabs',
     [
       'expo-media-library',
       {
-        photosPermission: 'Allow $(PRODUCT_NAME) to access your photos.',
-        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save photos.',
+        photosPermission:
+          'Allow $(PRODUCT_NAME) to access your photos to download emotes/badges',
+        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save emotes/badges.',
         isAccessMediaLocationEnabled: true,
+        granularPermissions: ['audio', 'photo'],
       },
     ],
     ['app-icon-badge', appIconBadgeConfig],
@@ -208,9 +237,12 @@ const config: ExpoConfig = {
     },
     infoPlist: {
       NSSupportsLiveActivities: true,
+      NSPhotoLibraryUsageDescription: 'Used for saving emotes/badges',
     },
     entitlements: {
-      'com.apple.security.application-groups': ['group.foam-tv-dev'],
+      'com.apple.security.application-groups': [
+        `group.foam-tv-${process.env.APP_VARIANT}`,
+      ],
     },
   },
   android: {

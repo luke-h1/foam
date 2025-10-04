@@ -1,5 +1,6 @@
 import { createHitslop } from '@app/utils';
-import { View } from 'react-native';
+// eslint-disable-next-line no-restricted-imports
+import { View, Pressable } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
@@ -12,9 +13,6 @@ interface SearchHistoryV2Props {
   onClearAll: () => void;
 }
 
-/**
- * TODO: add swipeable support
- */
 export function SearchHistoryV2({
   history,
   onClearAll,
@@ -22,6 +20,7 @@ export function SearchHistoryV2({
   onSelectItem,
 }: SearchHistoryV2Props) {
   const { theme } = useUnistyles();
+
   return (
     <View style={styles.wrapper}>
       <Typography size="md" fontWeight="semiBold">
@@ -29,31 +28,32 @@ export function SearchHistoryV2({
       </Typography>
 
       {history.map(query => (
-        <Button
-          style={styles.button}
-          hitSlop={createHitslop(16)}
-          key={query}
-          label={query}
-          onPress={() => {
-            onSelectItem(query);
-          }}
-        >
-          <Icon icon="zoom-in" color={theme.colors.gray.text} />
-          <Typography style={styles.query}>{query}</Typography>
-          <Button
+        <View key={query} style={styles.historyItem}>
+          <Pressable
+            style={styles.historyButton}
+            hitSlop={createHitslop(16)}
+            onPress={() => onSelectItem(query)}
+          >
+            <Icon icon="search" color={theme.colors.gray.text} size={18} />
+            <Typography style={styles.query}>{query}</Typography>
+          </Pressable>
+
+          <Pressable
+            style={styles.deleteButton}
             hitSlop={createHitslop(16)}
             onPress={() => onClearItem(query)}
           >
-            <Icon color={theme.colors.red.accent} icon="x" />
-          </Button>
-        </Button>
+            <Icon icon="x" size={18} />
+          </Pressable>
+        </View>
       ))}
 
-      <Button style={styles.clearAllButton} onPress={() => onClearAll()}>
-        <Icon icon="x" color={theme.colors.red.accent}>
-          <Typography fontWeight="semiBold">Clear all</Typography>
-        </Icon>
-      </Button>
+      {history.length > 0 && (
+        <Button style={styles.clearAllButton} onPress={onClearAll}>
+          {/* <Icon icon="x" size={18} /> */}
+          <Typography color="red.accent">Clear all</Typography>
+        </Button>
+      )}
     </View>
   );
 }
@@ -64,17 +64,34 @@ const styles = StyleSheet.create(theme => ({
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.md,
   },
-  button: {
-    alignItems: 'center',
+  historyItem: {
     flexDirection: 'row',
+    alignItems: 'center',
+    // backgroundColor: theme.colors.gray.accent,
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  historyButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
   },
   query: {
     flex: 1,
+    color: theme.colors.gray.text,
+  },
+  deleteButton: {
+    padding: theme.spacing.xs,
+    borderRadius: theme.radii.sm,
+    backgroundColor: theme.colors.red.accentAlpha,
   },
   clearAllButton: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.spacing.sm,
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.sm,
   },
 }));

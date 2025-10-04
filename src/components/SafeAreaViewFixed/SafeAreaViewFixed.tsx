@@ -1,11 +1,12 @@
-import { ReactNode } from 'react';
+/* eslint-disable no-nested-ternary */
 import { StyleProp, View, ViewProps, ViewStyle } from 'react-native';
 import { Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useUnistyles } from 'react-native-unistyles';
 
 interface Props extends ViewProps {
-  children: ReactNode;
   style?: StyleProp<ViewStyle>;
   edges?: Edge[];
+  avoidTabBar?: boolean; // New prop to control tab bar avoidance
 }
 
 /**
@@ -19,8 +20,19 @@ interface Props extends ViewProps {
  * [226](https://github.com/th3rdwave/react-native-safe-area-context/issues/226)
  */
 
-export function SafeAreaViewFixed({ children, style, edges, ...rest }: Props) {
+export function SafeAreaViewFixed({
+  children,
+  style,
+  edges,
+  avoidTabBar = false,
+  ...rest
+}: Props) {
   const insets = useSafeAreaInsets();
+  const {
+    theme: {
+      spacing: { tabBarHeight },
+    },
+  } = useUnistyles();
   const defaultEdges = edges === undefined;
 
   return (
@@ -31,8 +43,12 @@ export function SafeAreaViewFixed({ children, style, edges, ...rest }: Props) {
             defaultEdges || edges?.includes('top') ? insets.top : undefined,
           paddingBottom:
             defaultEdges || edges?.includes('bottom')
-              ? insets.bottom
-              : undefined,
+              ? avoidTabBar
+                ? insets.bottom + tabBarHeight
+                : insets.bottom
+              : avoidTabBar
+                ? tabBarHeight
+                : undefined,
           paddingLeft:
             defaultEdges || edges?.includes('left') ? insets.left : undefined,
           paddingRight:

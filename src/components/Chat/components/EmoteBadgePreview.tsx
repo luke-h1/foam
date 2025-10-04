@@ -27,7 +27,7 @@ interface EmotePreviewSection {
 }
 
 interface EmotePreviewProps {
-  selectedEmote: ParsedPart | null;
+  selectedEmote: ParsedPart<'emote'> | null;
   selectedBadge: SanitisedBadgeSet | null;
 }
 

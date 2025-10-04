@@ -2,10 +2,14 @@
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { useChatContext } from '@app/context/ChatContext';
-import { useAppNavigation } from '@app/hooks';
+import { useAppNavigation, useSeventvWs } from '@app/hooks';
 import TmiService from '@app/services/tmi-service';
 import { ChatMessageType } from '@app/store';
-import { createHitslop, clearImageCache } from '@app/utils';
+import {
+  createHitslop,
+  clearImageCache,
+  generateStvEmoteNotice,
+} from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
@@ -13,8 +17,7 @@ import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
-
+import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
   Platform,
@@ -45,7 +48,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const hasPartedRef = useRef<boolean>(false);
   const [client, setClient] = useState<tmijs.Client | null>(null);
   const initializingRef = useRef<boolean>(false);
-  const initializedChannelRef = useRef<string | null>(null); // Track which channel we've initialized
+  const initializedChannelRef = useRef<string | null>(null);
+
+  // Add ref to track current emote set ID
+  const currentEmoteSetIdRef = useRef<string | null>(null);
 
   const {
     loadChannelResources,
@@ -55,20 +61,140 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     addMessage,
     clearMessages,
     getCurrentEmoteData,
+    getSevenTvEmoteSetId,
+    updateSevenTvEmotes,
   } = useChatContext();
+
+  const sevenTvEmoteSetId = useMemo(() => {
+    return getSevenTvEmoteSetId(channelId) || undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelId]); // Only depend on channelId, not getSevenTvEmoteSetId
+
+  const { subscribeToChannel, unsubscribeFromChannel, isConnected } =
+    useSeventvWs({
+      // eslint-disable-next-line no-shadow
+      onEmoteUpdate: ({ added, removed, channelId }) => {
+        logger.stvWs.info(
+          `Channel ${channelId}: +${added.length} -${removed.length} emotes`,
+        );
+
+        updateSevenTvEmotes(channelId, added, removed);
+
+        added.forEach(emote => {
+          handleNewMessage(
+            generateStvEmoteNotice({
+              channelName,
+              emote,
+              type: 'added',
+            }),
+          );
+        });
+
+        removed.forEach(emote => {
+          handleNewMessage(
+            generateStvEmoteNotice({
+              channelName,
+              emote,
+              type: 'removed',
+            }),
+          );
+        });
+      },
+      onEvent: (eventType, data) => {
+        console.log(`SevenTV event: ${eventType}`, data);
+      },
+      twitchChannelId: channelId,
+      sevenTvEmoteSetId,
+    });
+
+  // Add this to track connection state changes
+  const [wsConnected, setWsConnected] = useState(false);
+
+  // Add an effect to track connection state changes
+  useEffect(() => {
+    const checkConnection = () => {
+      // eslint-disable-next-line no-shadow
+      const connected = isConnected();
+      setWsConnected(connected);
+    };
+
+    // Check immediately
+    checkConnection();
+
+    // Check periodically (since we don't have connection state events)
+    const interval = setInterval(checkConnection, 1000);
+
+    return () => clearInterval(interval);
+  }, [isConnected]);
+
+  // Separate effect for SevenTV WebSocket subscription that waits for loaded state
+  useEffect(() => {
+    console.log('🔍 SevenTV subscription effect running:', {
+      isConnected: wsConnected,
+      channelId,
+      loadingState,
+      allConditionsMet:
+        wsConnected && channelId && loadingState === 'COMPLETED',
+    });
+
+    // Only try to subscribe after channel resources are loaded AND WebSocket is connected
+    if (wsConnected && channelId) {
+      const emoteSetId = getSevenTvEmoteSetId(channelId);
+
+      console.log('emoteSetId ->', emoteSetId);
+      console.log('loadingState ->', loadingState);
+      console.log('channelId ->', channelId);
+
+      if (emoteSetId) {
+        // Only subscribe if the emote set ID has changed or we haven't subscribed yet
+        if (currentEmoteSetIdRef.current !== emoteSetId) {
+          currentEmoteSetIdRef.current = emoteSetId;
+
+          // Add a small delay to ensure WebSocket is fully ready
+          setTimeout(() => {
+            if (wsConnected) {
+              logger.stvWs.info(
+                `Subscribing to SevenTV emote set: ${emoteSetId} for channel: ${channelId}`,
+              );
+              subscribeToChannel(emoteSetId);
+            }
+          }, 100);
+        }
+
+        return () => {
+          logger.stvWs.info(
+            `Unsubscribing from SevenTV emote set: ${emoteSetId} for channel: ${channelId}`,
+          );
+          unsubscribeFromChannel(channelId);
+          currentEmoteSetIdRef.current = null;
+        };
+      }
+      logger.stvWs.warn(
+        `No SevenTV emote set ID found for channel: ${channelId}, skipping subscription`,
+      );
+    }
+
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    channelId,
+    subscribeToChannel,
+    unsubscribeFromChannel,
+    wsConnected,
+    loadingState,
+    // Removed getSevenTvEmoteSetId from dependencies
+  ]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       console.log('🚪 Screen is being removed, cleaning up chat connection...');
 
-      // Part the channel if we haven't already
       if (client && !hasPartedRef.current) {
         hasPartedRef.current = true;
         console.log(`👋 Parting channel: ${channelName}`);
         void client.part(channelName);
       }
 
-      // Clean up listeners
       if (client) {
         console.log('🧹 Removing all TMI listeners');
         client.removeAllListeners('message');
@@ -77,23 +203,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         client.removeAllListeners('connected');
       }
 
-      // Reset connection state
       setConnected(false);
       setClient(null);
 
-      // Reset initialization tracking
       initializedChannelRef.current = null;
       initializingRef.current = false;
     });
 
     return () => {
       unsubscribe();
-      // Only clear resources when component unmounts
       clearChannelResources();
       clearTtvUsers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation, client, channelName]); // Add client and channelName as dependencies
+  }, [navigation, client, channelName]);
 
   const legendListRef = useRef<LegendListRef>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
@@ -112,7 +235,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const [, setIsInputFocused] = useState<boolean>(false);
 
-  const BOTTOM_THRESHOLD = 50; // Increase threshold for better detection
+  const BOTTOM_THRESHOLD = 50;
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
   const isAtBottomRef = useRef<boolean>(true);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -177,17 +300,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       clearTimeout(scrollTimeoutRef.current);
     }
 
-    // Shorter timeout for faster response
     scrollTimeoutRef.current = setTimeout(() => {
       isAtBottomRef.current = true;
       setIsAtBottom(true);
       setUnreadCount(0);
       setIsScrollingToBottom(false);
       scrollTimeoutRef.current = null;
-    }, 100); // Reduced from 300ms to 100ms
+    }, 100);
   }, [messages.length]);
 
-  // Add cleanup for timeout
   useEffect(() => {
     return () => {
       if (scrollTimeoutRef.current) {
@@ -260,27 +381,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const message_nonce = generateNonce();
 
-        /**
-         * Use the getCurrentEmoteData function from the context hook
-         * that was already destructured at the top of the component
-         */
         const currentEmotes = getCurrentEmoteData(channelId);
-
-        // console.log('🐛 getCurrentEmoteData returned:', {
-        //   twitchChannelCount: currentEmotes.twitchChannelEmotes.length,
-        //   twitchGlobalCount: currentEmotes.twitchGlobalEmotes.length,
-        //   sevenTvChannelCount: currentEmotes.sevenTvChannelEmotes.length,
-        //   sevenTvGlobalCount: currentEmotes.sevenTvGlobalEmotes.length,
-        //   totalEmotes:
-        //     currentEmotes.twitchChannelEmotes.length +
-        //     currentEmotes.twitchGlobalEmotes.length +
-        //     currentEmotes.sevenTvChannelEmotes.length +
-        //     currentEmotes.sevenTvGlobalEmotes.length +
-        //     currentEmotes.ffzChannelEmotes.length +
-        //     currentEmotes.ffzGlobalEmotes.length +
-        //     currentEmotes.bttvChannelEmotes.length +
-        //     currentEmotes.bttvGlobalEmotes.length,
-        // });
 
         const replacedMessage = replaceTextWithEmotes({
           bttvChannelEmotes: currentEmotes.bttvChannelEmotes,
@@ -340,12 +441,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         setConnected(true);
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       channelName,
       handleNewMessage,
       clearMessages,
       channelId,
-      getCurrentEmoteData, // Add this back since we're using it directly
+      getCurrentEmoteData,
     ],
   );
 
@@ -354,8 +456,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     const checkEmoteDataAndSetupListeners = () => {
       if (!client || !channelId) return;
 
-      // Check if emote data is actually available
       const emoteData = getCurrentEmoteData(channelId);
+
       const hasEmotes =
         emoteData.twitchGlobalEmotes.length > 0 ||
         emoteData.sevenTvGlobalEmotes.length > 0 ||
@@ -366,13 +468,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         console.log('🎧 Emote data is available, setting up chat listeners');
         setupChatListeners(client);
       } else if (loadingState === 'COMPLETED') {
-        // If loading is completed but we still don't have emotes, try again in a bit
         console.log(
-          '⏳ Loading completed but no emotes yet, retrying in 100ms...',
+          '⏳ Loading completed but no emotes yet, retrying in 200ms...',
         );
         setTimeout(() => {
           checkEmoteDataAndSetupListeners();
-        }, 100);
+        }, 200);
       }
     };
 
@@ -385,44 +486,36 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     setupChatListeners,
   ]);
 
-  // Update the cleanup effect
   useEffect(() => {
     return () => {
-      // Cleanup listeners when component unmounts or channel changes
       if (client) {
         console.log('🧹 Cleaning up chat listeners (useEffect cleanup)');
 
-        // Part the channel if we haven't already
         if (!hasPartedRef.current) {
           hasPartedRef.current = true;
           console.log(`👋 Parting channel: ${channelName} (cleanup)`);
           void client.part(channelName);
         }
 
-        // Remove all listeners
         client.removeAllListeners('message');
         client.removeAllListeners('clearchat');
         client.removeAllListeners('disconnected');
         client.removeAllListeners('connected');
       }
 
-      // Reset states
       setConnected(false);
       setMessages([]);
       messagesRef.current = [];
     };
   }, [client, channelId, channelName]);
 
-  // Simpler approach - just track if we've initialized this specific channel
   useEffect(() => {
     const initializeChat = async () => {
-      // Prevent multiple simultaneous initializations
       if (initializingRef.current) {
         console.log('⏸️ Already initializing, skipping...');
         return;
       }
 
-      // Check if we've already initialized this channel
       if (initializedChannelRef.current === channelId) {
         console.log('⏸️ Already initialized for this channel:', channelId);
         return;
@@ -432,9 +525,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         initializingRef.current = true;
         console.log('🔄 initializeChat starting for:', channelId);
 
-        // Load channel resources first
         logger.chat.info(`Loading resources for channel ${channelId}`);
-        console.log('📡 About to call loadChannelResources...');
 
         const success = await loadChannelResources(channelId);
 
@@ -452,8 +543,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           console.log('🔗 TMI already connected, reusing connection');
           const existingClient = TmiService.getInstance();
           setClient(existingClient);
-          // Remove setupChatListeners from here - it will be called by the useEffect above
-          // setupChatListeners(existingClient);
           setConnected(true);
           await existingClient.join(channelName);
           console.log('🎉 Chat initialization complete (reused connection)!');
@@ -461,7 +550,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           return;
         }
 
-        // Set up TMI service options
         TmiService.setOptions({
           options: {
             clientId: process.env.TWITCH_CLIENT_ID,
@@ -487,10 +575,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         const tmiClient = TmiService.getInstance();
         setClient(tmiClient);
 
-        // Remove setupChatListeners from here too - it will be called by the useEffect above
-        // setupChatListeners(tmiClient);
-
-        // Connect and join
         await TmiService.connect();
         setConnected(true);
         await tmiClient.join(channelName);
@@ -507,7 +591,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       }
     };
 
-    // Simple check - just need channelId and auth token
     if (channelId && channelId.trim() && authState?.token.accessToken) {
       console.log('🚀 Initializing chat for:', {
         channelId,
@@ -530,12 +613,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         initializedChannelRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    channelId, // Only depend on channelId, not currentChannelId
+    channelId,
     loadChannelResources,
     setupChatListeners,
     channelName,
-    authState?.token.accessToken, // Add this back since we need it
+    authState?.token.accessToken,
   ]);
 
   const handleSendMessage = useCallback(async () => {
@@ -594,7 +678,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           setReplyTo({
             messageId: message.message_id,
             username: message.sender,
-            message: message.message.map(part => part.content).join(''),
+            message: message.message
+              .map(part => (part as { content: string }).content)
+              .join(''),
             replyParentUserLogin: message.userstate.username || '',
           });
         }}

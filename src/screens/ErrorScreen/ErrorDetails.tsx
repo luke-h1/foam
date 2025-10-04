@@ -1,4 +1,5 @@
 import { Button, Icon, Typography } from '@app/components';
+import { sentryService } from '@app/services';
 import { openLinkInBrowser } from '@app/utils';
 import { type ErrorInfo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -25,6 +26,10 @@ export function ErrorDetails(props: ErrorDetailsProps) {
     `https://github.com/luke-h1/foam/issues/new?title=(CRASH) ${errorTitle}&body=What were you doing when the app crashed?\n\n\nTruncated Stacktrace:\n\`\`\`${stackTrace}\`\`\``,
   );
 
+  const handleShowFeedback = () => {
+    sentryService.showFeedbackWidget();
+  };
+
   return (
     <>
       <View style={styles.topSection}>
@@ -35,17 +40,25 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           free to file an issue on GitHub and we'll take a look
         </Typography>
       </View>
-      <Button
-        style={styles.resetButton}
-        onPress={() => openLinkInBrowser(githubURL)}
-      >
-        GitHub
-      </Button>
+
+      <View style={styles.buttonContainer}>
+        <Button
+          style={styles.button}
+          onPress={() => openLinkInBrowser(githubURL)}
+        >
+          GitHub
+        </Button>
+        <Button style={styles.button} onPress={handleShowFeedback}>
+          <Typography style={styles.buttonText}>Send Feedback</Typography>
+        </Button>
+      </View>
+
       <Button onPress={() => setShowStackTrace(!showStackTrace)}>
         <Typography style={styles.toggleStackTrace}>
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
         </Typography>
       </Button>
+
       {showStackTrace && (
         <ScrollView
           style={styles.errorSection}
@@ -57,6 +70,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           </Typography>
         </ScrollView>
       )}
+
       <Button style={styles.resetButton} onPress={onReset}>
         Reset
       </Button>
@@ -76,6 +90,20 @@ const styles = StyleSheet.create(theme => ({
   heading: {
     marginBottom: theme.spacing.md,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  button: {
+    flex: 1,
+    backgroundColor: theme.colors.blue.accent,
+    paddingHorizontal: theme.spacing.md,
+  },
+  buttonText: {
+    color: theme.colors.gray.accent,
+    textAlign: 'center',
+  },
   toggleStackTrace: {
     color: 'blue',
     marginVertical: theme.spacing.md,
@@ -92,9 +120,6 @@ const styles = StyleSheet.create(theme => ({
   },
   errorBackTrace: {
     marginTop: theme.spacing.md,
-  },
-  button: {
-    backgroundColor: theme.colors.red.accent,
   },
   resetButton: {
     backgroundColor: theme.colors.red.accent,

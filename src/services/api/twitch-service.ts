@@ -1,6 +1,6 @@
-import { logger } from '@app/utils/logger';
+/* eslint-disable camelcase */
 import axios, { AxiosHeaders } from 'axios';
-import { twitchApi } from './api';
+import { twitchApi } from '.';
 
 export interface PaginatedList<T> {
   data: T[];
@@ -126,7 +126,116 @@ interface TwitchClipResponse {
   data: TwitchClip[];
 }
 
+type EventSubStatus =
+  /**
+   * The subscription is enabled.
+   */
+  | 'enabled'
+  /**
+   * The subscription is pending verification of the specified callback URL.
+   */
+  | 'webhook_callback_verification_pending'
+  /**
+   * The specified callback URL failed verification.
+   */
+  | 'webhook_callback_verification_failed'
+
+  /**
+   * The notification delivery failure rate was too high
+   */
+  | 'notification_failures_exceeded'
+  /**
+   * The authorization was revoked for one or more users specified in the Condition object.
+   */
+  | 'authorization_revoked'
+  /**
+   * The moderator that authorized the subscription is no longer one of the broadcaster's moderators.
+   */
+  | 'moderator_removed'
+  /**
+   *  One of the users specified in the Condition object was removed.
+   */
+  | 'user_removed'
+  /**
+   * The user specified in the Condition object was banned from the broadcaster's chat.
+   */
+  | 'chat_user_banned'
+  /**
+   * The subscription to subscription type and version is no longer supported.
+   */
+  | 'version_removed'
+
+  /**
+   * The subscription to the beta subscription type was removed due to maintenance.
+   */
+  | 'beta_maintenance'
+
+  /**
+   * The client closed the connection.
+   */
+  | 'websocket_disconnected'
+
+  /**
+   * The client failed to respond to a ping message.
+   */
+  | 'websocket_failed_ping_pong'
+
+  /**
+   * The client sent a non-pong message.
+   */
+  | 'websocket_received_inbound_traffic'
+
+  /**
+   * The client failed to subscribe to events within the required time.
+   */
+  | 'websocket_connection_unused'
+
+  /**
+   * The Twitch WebSocket server experienced an unexpected error.
+   */
+  | 'websocket_internal_error'
+
+  /**
+   * The Twitch WebSocket server timed out writing the message to the client.
+   */
+  | 'websocket_network_timeout'
+
+  /**
+   *  The Twitch WebSocket server experienced a network error writing the message to the client.
+   */
+  | 'websocket_network_error'
+
+  /**
+   * The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message.
+   */
+  | 'websocket_failed_to_reconnect';
+
+interface EventSubscription {
+  id: string;
+  status: EventSubStatus;
+  type: string;
+  version: string;
+  condition: object; // todo - type better
+  created_at: string;
+  transport: object; // todo - type better
+  method: 'webhook' | 'websocket';
+  callback: string;
+  session_id: string;
+  connected_at?: string;
+  disconnected_at?: string;
+  cost: number;
+}
+
+interface UserBlockList {
+  user_id: string;
+  user_login: string;
+  display_name: string;
+}
+
 export const twitchService = {
+  /**
+   * @see https://dev.twitch.tv/docs/authentication/refresh-tokens#refreshing-access-tokens
+   */
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data } = await axios.post(
@@ -137,6 +246,9 @@ export const twitchService = {
     return data;
   },
 
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#get-global-emotes
+   */
   listGlobalEmotes: async () => {
     const { data } = await twitchApi.get<{ data: Emote[] }>(
       '/chat/emotes/global',
@@ -167,6 +279,7 @@ export const twitchService = {
   /**
    * @param token
    * @returns a boolean indicating whether the token is valid or not
+   * @see https://dev.twitch.tv/docs/authentication/validate-tokens#validating-tokens
    */
   validateToken: async (token: string): Promise<boolean> => {
     const res = await axios.get<TwitchTokenValidationResponse>(
@@ -186,7 +299,6 @@ export const twitchService = {
   },
 
   /**
-   *
    * @param cursor
    * @returns an object that contains the top 20 streams and a cursor for further requests
    * @requires a non-anon token
@@ -263,7 +375,6 @@ export const twitchService = {
   },
 
   getUserImage: async (userId: string): Promise<string> => {
-    logger.twitch.info('fetching profile image for', userId);
     const result = await twitchApi.get<{
       data: { profile_image_url: string }[];
     }>('/users', {
@@ -362,14 +473,121 @@ export const twitchService = {
     return result.data[0] as TwitchClip;
   },
 
-  // getSubscriberCount: async (userId: string) => {},
+  /**
+   * Retrieves a list of event-sub subscriptions that the client in the access token has created
+   * @see https://dev.twitch.tv/docs/api/reference#get-eventsub-subscriptions
+   */
+  listEventSubscriptions: async ({
+    status,
+    type,
+    after,
+    subscription_id,
+    user_id,
+  }: {
+    status?: string;
+    type?: string;
+    after?: string;
+    subscription_id?: string;
+    user_id?: string;
+  }) => {
+    return twitchApi.get<
+      PaginatedList<EventSubscription> & {
+        total_cost: number;
+        max_total_cost: number;
+      }
+    >('/eventsub/subscriptions', {
+      params: {
+        status,
+        type,
+        user_id,
+        subscription_id,
+        after,
+      },
+    });
+  },
 
-  // getUserBlockedList: async (
-  //   id: string,
-  //   headers: AxiosHeaders,
-  //   cursor?: string,
-  // ) => {},
+  /**
+   * Creates an EventSub subscription
+   * @see https://dev.twitch.tv/docs/api/reference#create-eventsub-subscription
+   */
+  createEventSubscription: async ({
+    type,
+    version,
+    condition,
+    transport,
+  }: {
+    type: string;
+    version: string;
+    condition: Record<string, string>;
+    transport: {
+      method: 'websocket';
+      session_id: string;
+    };
+  }) => {
+    return twitchApi.post<{
+      data: EventSubscription[];
+      total: number;
+      total_cost: number;
+      max_total_cost: number;
+    }>('/eventsub/subscriptions', {
+      type,
+      version,
+      condition,
+      transport,
+    });
+  },
 
-  // blockUser: async (userId: string) => {},
-  // unBlockUser: async (userId: string) => {},
+  /**
+   * Deletes an EventSub subscription
+   * @see https://dev.twitch.tv/docs/api/reference#delete-eventsub-subscription
+   */
+  deleteEventSubscription: async (subscriptionId: string) => {
+    return twitchApi.delete('/eventsub/subscriptions', {
+      params: {
+        id: subscriptionId,
+      },
+    });
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference#block-user
+   */
+  blockUser: async (
+    targetUserId: string,
+    sourceContext?: 'chat' | 'whisper',
+    reason?: 'harassment' | 'spam' | 'other',
+  ) => {
+    return twitchApi.put(
+      '/users/blocks',
+      {},
+      {
+        params: {
+          target_user_id: targetUserId,
+          source_context: sourceContext,
+          reason,
+        },
+      },
+    );
+  },
+
+  getUserBlockList: async (
+    broadcasterId: string,
+    first?: number,
+    after?: number,
+  ) => {
+    return twitchApi.get<PaginatedList<UserBlockList>>('/users/blocks', {
+      params: {
+        broadcaster_id: broadcasterId,
+        first,
+        after,
+      },
+    });
+  },
+  unblockUser: async (targetUserId: string) => {
+    return twitchApi.delete('/users/blocks', {
+      params: {
+        target_user_id: targetUserId,
+      },
+    });
+  },
 };

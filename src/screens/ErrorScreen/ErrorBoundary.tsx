@@ -1,5 +1,5 @@
 /* eslint-disable react/destructuring-assignment */
-import { reportCrash } from '@app/utils';
+import { sentryService } from '@app/services';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorDetails, type ErrorDetailsProps } from './ErrorDetails';
 
@@ -24,7 +24,6 @@ interface State {
 export class ErrorBoundary extends Component<Props, State> {
   state: Omit<ErrorDetailsProps, 'onReset'> = { error: null, errorInfo: null };
 
-  // To avoid unnecessary re-renders
   shouldComponentUpdate(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     nextProps: Readonly<any>,
@@ -42,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    reportCrash(error);
+    sentryService.captureException(error);
   }
 
   // reset the error back to null

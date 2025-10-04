@@ -4,7 +4,7 @@ import tmijs from 'tmi.js';
 import { getActiveRouteName } from '../navigators/navigationUtilities';
 import TmiService from '../services/tmi-service';
 
-const CHAT_SCREENS = ['Chat', 'LiveStream'];
+export const CHAT_SCREENS = ['Chat', 'LiveStream'];
 
 export function useTmiClient(options: tmijs.Options): tmijs.Client {
   const optionsRef = useRef<tmijs.Options>(null);
