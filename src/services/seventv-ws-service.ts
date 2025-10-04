@@ -540,7 +540,7 @@ export default class SevenTvWsService {
               url: `https://cdn.7tv.app/emote/${emote.old_value.id}/1x.avif`,
               flags: 0,
               original_name: emote.old_value.data.name,
-              creator: 'UNKNOWN',
+              creator: emote.old_value.data.owner?.display_name,
               emote_link: `https://7tv.app/emotes/${emote.old_value.id}`,
               site: '7TV Channel Emote',
               actor: data.body.actor,
