@@ -7,7 +7,7 @@ import {
   twitchBadgeService,
   twitchEmoteService,
 } from '@app/services';
-import { chatterinoService } from '@app/services/chatterino-service';
+import { chatterinoService } from '@app/services/api/chatterino-service';
 import { ParsedPart, PartVariant } from '@app/utils';
 import { logger } from '@app/utils/logger';
 import { fetch } from 'expo/fetch';

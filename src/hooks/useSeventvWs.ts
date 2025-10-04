@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { getActiveRouteName } from '../navigators/navigationUtilities';
 import SevenTvWsService, {
   SevenTvEventData,
-} from '../services/seventv-ws-service';
+} from '../services/ws/seventv-ws-service';
 
 export const SEVENTV_CHAT_SCREENS = ['Chat', 'LiveStream'];
 

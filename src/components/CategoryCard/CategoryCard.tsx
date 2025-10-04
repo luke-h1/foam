@@ -1,5 +1,5 @@
 import { useAppNavigation } from '@app/hooks';
-import { Category } from '@app/services/twitch-service';
+import { Category } from '@app/services/api/twitch-service';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';

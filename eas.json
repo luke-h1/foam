@@ -1,8 +1,21 @@
 {
   "cli": {
+    "version": ">=16.18.0",
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "bun": "1.2.5"
+    },
+    "test": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "test",
+      "env": {
+        "APP_VARIANT": "test"
+      }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",

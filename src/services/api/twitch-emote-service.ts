@@ -1,4 +1,4 @@
-import { twitchApi } from './api';
+import { twitchApi } from '.';
 import { SanitisiedEmoteSet } from './seventv-service';
 import { PaginatedList, twitchService } from './twitch-service';
 

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { logger } from '@app/utils/logger';
-import { ffzApi } from './api';
+import { ffzApi } from '.';
 import { SanitisiedEmoteSet } from './seventv-service';
-import { SanitisedBadgeSet } from '.';
+import { SanitisedBadgeSet } from '..';
 
 export interface FfzEmoticon {
   id: number;

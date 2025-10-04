@@ -2,7 +2,7 @@ import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
 import { useEffect, useRef } from 'react';
 import { getActiveRouteName } from '../navigators/navigationUtilities';
-import TwitchWsService from '../services/twitch-ws-service';
+import TwitchWsService from '../services/ws/twitch-ws-service';
 import { CHAT_SCREENS } from './useTmiClient';
 
 export function useTwitchWs(): WebSocket {

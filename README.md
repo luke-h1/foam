@@ -194,7 +194,82 @@ Storybook is currently configured to preview UI components on app. Eventually th
 
 ## Running `production` variant of the app locally
 
-TODO
+To run the `production` variant of the app locally, you'll need to follow these steps. This is useful for testing the production build configuration, verifying store-ready builds, or debugging production-specific issues.
+
+> [!WARNING]
+> The production variant uses different bundle identifiers and package names, so it can be installed alongside the development version on the same device.
+
+### Prerequisites
+
+1. **Environment Setup**: Ensure you have all the development environment requirements from the [Installation](#installation) section
+2. **Production Credentials**: You'll need production-specific credentials and configuration files:
+   - Production Google Services files (`GoogleService-Info-production.plist` for iOS, `google-services-prod.json` for Android)
+   - Production environment variables in your `.env` file
+   - Valid Apple Developer account and signing certificates for iOS
+
+### Steps
+
+1. **Set up production environment variables**
+
+   Ensure your `.env` file contains the correct values
+
+2. **Start the proxy server** (if needed for local testing and not using the auth proxy lambda)
+
+   ```bash
+   bun run start:proxy
+   ```
+
+3. **Run the production app**
+
+   **For iOS:**
+
+   ```bash
+   bun run ios:production
+   ```
+
+   **For Android:**
+
+   ```bash
+   bun run android:production
+   ```
+
+   These commands will:
+   - Build the native app with production configuration
+   - Install it on your simulator/device
+   - Start the Metro bundler for the JavaScript code
+
+### Alternative: Using EAS Build for Local Testing
+
+If you want to test the exact production build that would be submitted to the stores, you can use EAS Build:
+
+1. **Build locally with EAS**
+
+   ```bash
+   # For iOS
+   eas build --profile production --platform ios --local
+
+   # For Android
+   eas build --profile production --platform android --local
+   ```
+
+2. **Install the built app**
+
+   The built `.ipa` (iOS) or `.apk` (Android) files will be in the `builds/` directory and can be installed on your device.
+
+### Troubleshooting
+
+- **Bundle identifier conflicts**: If you get signing errors, ensure your Apple Developer account has the production bundle identifier (`foam-tv`) registered
+- **Missing credentials**: Verify all production Google Services files are present and valid
+- **Environment variables**: Double-check that all required production environment variables are set correctly
+- **Build failures**: Check the EAS build logs for detailed error information
+
+### Key Differences from Development
+
+- Uses production bundle identifier (`foam-tv` for iOS, `com.lhowsam.foam` for Android)
+- App name shows as "Foam" (without dev suffix)
+- No development badge on the app icon
+- Uses production API endpoints and credentials
+- Optimized for performance and store submission
 
 # contributing
 

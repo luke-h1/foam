@@ -8,6 +8,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/source-code-pro';
 
+import { createNavigationContainerRef } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
@@ -23,20 +24,10 @@ import {
   useRecoveredFromError,
 } from './hooks';
 import { AppNavigator, useNavigationPersistence } from './navigators';
+import { navigationIntegration } from './services';
 import { twitchApi } from './services/api';
 import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
-
-Sentry.init({
-  dsn: 'https://c66140f9c8c6c72a91e15582f3086de5@o536134.ingest.us.sentry.io/4508831072780288',
-  attachScreenshot: true,
-  attachStacktrace: true,
-  attachThreads: true,
-  enableAppStartTracking: true,
-  enableCaptureFailedRequests: true,
-  spotlight: __DEV__,
-  enableAutoPerformanceTracing: true,
-});
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
@@ -45,6 +36,7 @@ function App() {
   useOnReconnect();
   useChangeScreenOrientation();
   useClearExpiredStorageItems();
+  const containerRef = createNavigationContainerRef();
 
   if (__DEV__) {
     LogBox.ignoreAllLogs();
@@ -87,7 +79,12 @@ function App() {
    */
   return (
     <Providers>
-      <AppNavigator onStateChange={onNavigationStateChange}>
+      <AppNavigator
+        onStateChange={onNavigationStateChange}
+        onReady={() => {
+          navigationIntegration.registerNavigationContainer(containerRef);
+        }}
+      >
         <OTAUpdates />
       </AppNavigator>
     </Providers>
