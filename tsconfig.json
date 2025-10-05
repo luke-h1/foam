@@ -7,7 +7,6 @@
     "noUncheckedIndexedAccess": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "noEmit": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "strict": true,

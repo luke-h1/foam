@@ -1,5 +1,8 @@
 import { HapticTab } from '@app/components/HapticTab';
-import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
+import {
+  IconSymbol,
+  IconSymbolName,
+} from '@app/components/IconSymbol/IconSymbol';
 import { useAuthContext } from '@app/context/AuthContext';
 import { SearchScreen } from '@app/screens';
 import FollowingScreen from '@app/screens/FollowingScreen';
@@ -8,7 +11,6 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
-import { SFSymbol } from 'expo-symbols';
 import { ComponentType, FC } from 'react';
 import { useUnistyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
@@ -39,7 +41,7 @@ type ScreenComponentType =
 interface Screen {
   name: keyof TabParamList;
   component: ScreenComponentType;
-  symbol: SFSymbol;
+  symbol: IconSymbolName;
   requiresAuth?: boolean;
 }
 

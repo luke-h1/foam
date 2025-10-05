@@ -660,7 +660,9 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         }
 
         const bytes = await response.bytes();
-        file.write(bytes);
+        file.write(bytes, {
+          encoding: 'base64',
+        });
 
         clearTimeout(timeoutId);
       } catch (fetchError) {

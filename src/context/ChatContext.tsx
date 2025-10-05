@@ -479,7 +479,9 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
           }
 
           const bytes = await response.bytes();
-          file.write(bytes);
+          file.write(bytes, {
+            encoding: 'base64',
+          });
 
           clearTimeout(timeoutId);
 

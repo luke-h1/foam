@@ -12,6 +12,7 @@ Sentry.init({
   attachThreads: true,
   enableCaptureFailedRequests: true,
   spotlight: __DEV__,
+  appHangTimeoutInterval: 1,
   enabled: !__DEV__,
   enableAutoPerformanceTracing: true,
   enableUserInteractionTracing: true,
