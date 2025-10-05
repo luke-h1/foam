@@ -1,7 +1,7 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
-import { SanitisiedEmoteSet, SevenTvEmote, StvUser } from '@app/services';
 import { logger } from '@app/utils/logger';
+import { StvUser, SevenTvEmote, SanitisiedEmoteSet } from '../seventv-service';
 
 interface SevenTvWsBody {
   id: string;

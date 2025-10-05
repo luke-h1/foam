@@ -2,7 +2,7 @@
 import { logger } from '@app/utils/logger';
 import { ffzApi } from './api';
 import { SanitisiedEmoteSet } from './seventv-service';
-import { SanitisedBadgeSet } from '.';
+import { SanitisedBadgeSet } from './twitch-badge-service';
 
 export interface FfzEmoticon {
   id: number;

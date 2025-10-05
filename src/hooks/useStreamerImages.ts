@@ -1,4 +1,4 @@
-import { twitchService } from '@app/services';
+import { twitchService } from '@app/services/twitch-service';
 import { useEffect, useState, useMemo } from 'react';
 
 export function useStreamerImages(logins: string[]) {

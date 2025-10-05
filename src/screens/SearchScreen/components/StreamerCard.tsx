@@ -1,6 +1,6 @@
 import { Button, LiveStreamImage, Typography } from '@app/components';
 import { useAppNavigation } from '@app/hooks';
-import type { SearchChannelResponse } from '@app/services';
+import { SearchChannelResponse } from '@app/services/twitch-service';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 

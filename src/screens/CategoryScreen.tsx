@@ -8,7 +8,7 @@ import {
 } from '@app/components';
 import { AppStackParamList } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
-import { Stream, twitchService } from '@app/services';
+import { TwitchStream, twitchService } from '@app/services/twitch-service';
 import { getNextPageParam, getPreviousPageParam } from '@app/utils';
 import { StackScreenProps } from '@react-navigation/stack';
 import { ListRenderItem } from '@shopify/flash-list';
@@ -58,7 +58,7 @@ export const CategoryScreen: FC<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasNextPage]);
 
-  const renderItem: ListRenderItem<Stream> = useCallback(({ item }) => {
+  const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
     return <LiveStreamCard stream={item} />;
   }, []);
 
@@ -98,7 +98,7 @@ export const CategoryScreen: FC<
   );
 
   return (
-    <FlashList<Stream>
+    <FlashList<TwitchStream>
       ref={flashListRef}
       data={allStreams}
       style={{ flex: 1 }}

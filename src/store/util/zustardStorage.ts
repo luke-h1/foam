@@ -1,4 +1,4 @@
-import { NAMESPACE } from '@app/services';
+import { NAMESPACE } from '@app/services/storage-service';
 import { MMKV } from 'react-native-mmkv';
 
 const storage = new MMKV({

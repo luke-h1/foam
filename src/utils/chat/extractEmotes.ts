@@ -1,4 +1,4 @@
-import { SanitisiedEmoteSet } from '@app/services';
+import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 
 export const extractEmotes = (
   emotes: Record<string, string[]> | undefined,

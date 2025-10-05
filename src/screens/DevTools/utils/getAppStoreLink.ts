@@ -1,4 +1,4 @@
-import { storageService } from '@app/services';
+import { storageService } from '@app/services/storage-service';
 
 export async function getAppStoreLink(bundleId: string) {
   // Check cache first

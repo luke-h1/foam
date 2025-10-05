@@ -1,5 +1,5 @@
 import { useAppNavigation, useStreamerImage } from '@app/hooks';
-import { Stream } from '@app/services';
+import { TwitchStream } from '@app/services/twitch-service';
 import { elapsedStreamTime, formatViewCount } from '@app/utils';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -8,7 +8,7 @@ import { Image } from '../Image';
 import { Typography } from '../Typography';
 
 interface Props {
-  stream: Stream;
+  stream: TwitchStream;
 }
 
 export function LiveStreamCard({ stream }: Props) {

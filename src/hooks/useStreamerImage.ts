@@ -1,4 +1,4 @@
-import { twitchService } from '@app/services';
+import { twitchService } from '@app/services/twitch-service';
 import { DependencyList, useEffect, useState } from 'react';
 
 export function useStreamerImage(login: string, deps: DependencyList) {

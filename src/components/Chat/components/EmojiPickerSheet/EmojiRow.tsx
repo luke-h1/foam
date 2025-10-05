@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { SanitisiedEmoteSet } from '@app/services';
+import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { useMemo } from 'react';
 import Animated, {
   SharedValue,

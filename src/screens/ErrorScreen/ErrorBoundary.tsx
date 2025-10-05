@@ -1,5 +1,5 @@
 /* eslint-disable react/destructuring-assignment */
-import { sentryService } from '@app/services';
+import { sentryService } from '@app/services/sentry-service';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorDetails, type ErrorDetailsProps } from './ErrorDetails';
 

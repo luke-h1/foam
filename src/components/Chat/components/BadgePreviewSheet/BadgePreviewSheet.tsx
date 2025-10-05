@@ -2,7 +2,7 @@ import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { SanitisedBadgeSet } from '@app/services';
+import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { openLinkInBrowser } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';

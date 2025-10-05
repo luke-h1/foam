@@ -1,6 +1,6 @@
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { twitchService } from '@app/services';
+import { twitchService } from '@app/services/twitch-service';
 import { formatDate } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQuery } from '@tanstack/react-query';

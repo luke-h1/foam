@@ -4,11 +4,12 @@ import {
   useDebouncedCallback,
   useDebouncedEffect,
 } from '@app/hooks';
+
+import { storageService } from '@app/services/storage-service';
 import {
-  twitchService,
   SearchChannelResponse,
-  storageService,
-} from '@app/services';
+  twitchService,
+} from '@app/services/twitch-service';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useMemo, useState } from 'react';

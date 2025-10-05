@@ -1,14 +1,16 @@
 import { PersistedStateStatus, usePersistedState } from '@app/hooks';
+import { bttvEmoteService } from '@app/services/bttv-emote-service';
+import { chatterinoService } from '@app/services/chatterino-service';
+import { ffzService } from '@app/services/ffz-service';
 import {
-  bttvEmoteService,
-  ffzService,
-  SanitisedBadgeSet,
   SanitisiedEmoteSet,
   sevenTvService,
+} from '@app/services/seventv-service';
+import {
+  SanitisedBadgeSet,
   twitchBadgeService,
-  twitchEmoteService,
-} from '@app/services';
-import { chatterinoService } from '@app/services/chatterino-service';
+} from '@app/services/twitch-badge-service';
+import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
 

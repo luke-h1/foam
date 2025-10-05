@@ -1,4 +1,3 @@
-import { SanitisiedEmoteSet } from '@app/services';
 import {
   sevenTvSanitisedChannelEmoteSetFixture,
   seventvSanitiisedGlobalEmoteSetFixture,
@@ -9,6 +8,7 @@ import {
   ffzSanitisedChannelEmoteSet,
   ffzSanitisedGlobalEmoteSet,
 } from '@app/services/__fixtures__';
+import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { ChatUserstate } from 'tmi.js';
 import { ParsedPart, replaceTextWithEmotes } from '../replaceTextWithEmotes';
 

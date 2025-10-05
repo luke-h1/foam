@@ -1,4 +1,4 @@
-import { SanitisedBadgeSet } from '@app/services';
+import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 
 export const twitchSanitisedChannelBadges: SanitisedBadgeSet[] = [
   {

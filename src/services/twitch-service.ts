@@ -23,7 +23,7 @@ export interface UserInfoResponse {
   view_count: number;
 }
 
-export interface Stream {
+export interface TwitchStream {
   id: string;
   user_id: string;
   user_login: string;
@@ -303,15 +303,20 @@ export const twitchService = {
    * @returns an object that contains the top 20 streams and a cursor for further requests
    * @requires a non-anon token
    */
-  getTopStreams: async (cursor?: string): Promise<PaginatedList<Stream>> => {
-    const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
-      headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID,
+  getTopStreams: async (
+    cursor?: string,
+  ): Promise<PaginatedList<TwitchStream>> => {
+    const result = await twitchApi.get<PaginatedList<TwitchStream>>(
+      '/streams',
+      {
+        headers: {
+          'Client-Id': process.env.TWITCH_CLIENT_ID,
+        },
+        params: {
+          ...(cursor && { after: cursor }),
+        },
       },
-      params: {
-        ...(cursor && { after: cursor }),
-      },
-    });
+    );
 
     return result;
   },
@@ -320,14 +325,17 @@ export const twitchService = {
     gameId: string,
     headers: AxiosHeaders,
     cursor?: string,
-  ): Promise<PaginatedList<Stream>> => {
-    const result = await twitchApi.get<PaginatedList<Stream>>('/streams', {
-      headers,
-      params: {
-        game_id: gameId,
-        ...(cursor && { after: cursor }),
+  ): Promise<PaginatedList<TwitchStream>> => {
+    const result = await twitchApi.get<PaginatedList<TwitchStream>>(
+      '/streams',
+      {
+        headers,
+        params: {
+          game_id: gameId,
+          ...(cursor && { after: cursor }),
+        },
       },
-    });
+    );
 
     return result;
   },
@@ -339,7 +347,7 @@ export const twitchService = {
       params.user_login = userLogin;
     }
 
-    const result = await twitchApi.get<{ data: Stream[] }>('/streams', {
+    const result = await twitchApi.get<{ data: TwitchStream[] }>('/streams', {
       params: {
         first: 15,
         ...params,
@@ -385,8 +393,8 @@ export const twitchService = {
 
     return result.data[0]?.profile_image_url as string;
   },
-  getFollowedStreams: async (userId: string): Promise<Stream[]> => {
-    const result = await twitchApi.get<{ data: Stream[] }>(
+  getFollowedStreams: async (userId: string): Promise<TwitchStream[]> => {
+    const result = await twitchApi.get<{ data: TwitchStream[] }>(
       '/streams/followed',
       {
         params: {
@@ -435,11 +443,8 @@ export const twitchService = {
 
     return result.data;
   },
-  getStreamsByCategory: async (
-    gameId: string,
-    cursor?: string,
-  ): Promise<PaginatedList<Stream>> => {
-    return twitchApi.get<PaginatedList<Stream>>('/streams', {
+  getStreamsByCategory: async (gameId: string, cursor?: string) => {
+    return twitchApi.get<PaginatedList<TwitchStream>>('/streams', {
       params: {
         game_id: gameId,
         ...(cursor && { after: cursor }),
