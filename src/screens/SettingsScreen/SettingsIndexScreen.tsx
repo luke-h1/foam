@@ -1,13 +1,12 @@
 import { Menu } from '@app/components/Menu';
-import { Screen } from '@app/components/Screen';
-import { useAppNavigation } from '@app/hooks';
-import { SettingsStackParamList } from '@app/navigators';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AboutCard, BuildStatus } from './components';
 
 export function SettingsIndexScreen() {
-  const { navigate } = useAppNavigation<SettingsStackParamList>();
+  const router = useRouter();
   return (
-    <Screen safeAreaEdges={['top']} preset="fixed">
+    <SafeAreaView style={{ flex: 1 }}>
       <Menu
         header={<AboutCard />}
         footer={<BuildStatus />}
@@ -19,7 +18,7 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Profile',
-            onPress: () => navigate('Profile'),
+            onPress: () => router.push('/(settings)/profile'),
           },
           {
             arrow: true,
@@ -28,7 +27,7 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Appearance',
-            onPress: () => navigate('Appearance'),
+            onPress: () => router.push('/(settings)/appearance'),
           },
           {
             arrow: true,
@@ -37,7 +36,7 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Dev tools',
-            onPress: () => navigate('DevTools'),
+            onPress: () => router.push('/dev-tools'),
           },
           {
             arrow: true,
@@ -46,10 +45,10 @@ export function SettingsIndexScreen() {
               type: 'symbol',
             },
             label: 'Other',
-            onPress: () => navigate('Other'),
+            onPress: () => router.push('/(settings)/other'),
           },
         ]}
       />
-    </Screen>
+    </SafeAreaView>
   );
 }

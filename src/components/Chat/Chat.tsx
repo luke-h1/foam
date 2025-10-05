@@ -2,7 +2,7 @@
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { useChatContext } from '@app/context/ChatContext';
-import { useAppNavigation, useSeventvWs } from '@app/hooks';
+import { useSeventvWs } from '@app/hooks';
 import TmiService from '@app/services/tmi-service';
 import { ChatMessageType } from '@app/store';
 import {
@@ -43,7 +43,6 @@ interface ChatProps {
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [connected, setConnected] = useState<boolean>(false);
   const { authState, user } = useAuthContext();
-  const navigation = useAppNavigation();
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const hasPartedRef = useRef<boolean>(false);
   const [client, setClient] = useState<tmijs.Client | null>(null);
@@ -185,38 +184,38 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // Removed getSevenTvEmoteSetId from dependencies
   ]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', () => {
-      console.log('🚪 Screen is being removed, cleaning up chat connection...');
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener('beforeRemove', () => {
+  //     console.log('🚪 Screen is being removed, cleaning up chat connection...');
 
-      if (client && !hasPartedRef.current) {
-        hasPartedRef.current = true;
-        console.log(`👋 Parting channel: ${channelName}`);
-        void client.part(channelName);
-      }
+  //     if (client && !hasPartedRef.current) {
+  //       hasPartedRef.current = true;
+  //       console.log(`👋 Parting channel: ${channelName}`);
+  //       void client.part(channelName);
+  //     }
 
-      if (client) {
-        console.log('🧹 Removing all TMI listeners');
-        client.removeAllListeners('message');
-        client.removeAllListeners('clearchat');
-        client.removeAllListeners('disconnected');
-        client.removeAllListeners('connected');
-      }
+  //     if (client) {
+  //       console.log('🧹 Removing all TMI listeners');
+  //       client.removeAllListeners('message');
+  //       client.removeAllListeners('clearchat');
+  //       client.removeAllListeners('disconnected');
+  //       client.removeAllListeners('connected');
+  //     }
 
-      setConnected(false);
-      setClient(null);
+  //     setConnected(false);
+  //     setClient(null);
 
-      initializedChannelRef.current = null;
-      initializingRef.current = false;
-    });
+  //     initializedChannelRef.current = null;
+  //     initializingRef.current = false;
+  //   });
 
-    return () => {
-      unsubscribe();
-      clearChannelResources();
-      clearTtvUsers();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation, client, channelName]);
+  //   return () => {
+  //     unsubscribe();
+  //     clearChannelResources();
+  //     clearTtvUsers();
+  //   };
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [navigation, client, channelName]);
 
   const legendListRef = useRef<LegendListRef>(null);
   const messagesRef = useRef<ChatMessageType[]>([]);
@@ -552,7 +551,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         TmiService.setOptions({
           options: {
-            clientId: process.env.TWITCH_CLIENT_ID,
+            clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
             debug: __DEV__,
           },
           channels: [],

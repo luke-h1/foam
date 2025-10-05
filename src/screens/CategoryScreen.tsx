@@ -6,21 +6,20 @@ import {
   FlashList,
   Typography,
 } from '@app/components';
-import { AppStackParamList } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
 import { getNextPageParam, getPreviousPageParam } from '@app/utils';
-import { StackScreenProps } from '@react-navigation/stack';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { FC, useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-export const CategoryScreen: FC<
-  StackScreenProps<AppStackParamList, 'Category'>
-> = ({ route: { params } }) => {
-  const { id } = params;
+interface CategoryScreenParams {
+  id: string;
+}
+
+export const CategoryScreen = ({ id }: CategoryScreenParams) => {
   const [previousCursor, setPreviousCursor] = useState<string>('');
   const [cursor, setCursor] = useState<string>('');
   const flashListRef = useRef(null);

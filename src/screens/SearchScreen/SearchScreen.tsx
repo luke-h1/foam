@@ -1,9 +1,5 @@
 import { Button, FlashList, SearchBox, SearchHistoryV2 } from '@app/components';
-import {
-  useAppNavigation,
-  useDebouncedCallback,
-  useDebouncedEffect,
-} from '@app/hooks';
+import { useDebouncedCallback, useDebouncedEffect } from '@app/hooks';
 
 import { storageService } from '@app/services/storage-service';
 import {
@@ -11,6 +7,7 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { ListRenderItem } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -28,7 +25,7 @@ interface SearchHistoryItem {
  * TODO: use swipe to delete
  */
 export function SearchScreen() {
-  const { navigate } = useAppNavigation();
+  const router = useRouter();
 
   const [query, setQuery] = useState<string>('');
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
@@ -62,7 +59,6 @@ export function SearchScreen() {
   const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
       setSearchResults([]);
-
       return;
     }
 
@@ -170,12 +166,7 @@ export function SearchScreen() {
       return (
         <Button
           onPress={() => {
-            navigate('Streams', {
-              screen: 'LiveStream',
-              params: {
-                id: item.broadcaster_login,
-              },
-            });
+            router.push(`/streams/live/${item.broadcaster_login}`);
           }}
           style={styles.list}
         >

@@ -1,15 +1,12 @@
-import { Typography } from '@app/components';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useEffect } from 'react';
-import { View } from 'react-native';
-import Animated, {
+import { useRouter } from 'expo-router';
+import {
   Extrapolation,
   interpolate,
   SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-import { useAppNavigation } from './useAppNavigation';
 import { useTargetMeasurement } from './useTargetMeasurement';
 
 interface Props {
@@ -18,9 +15,8 @@ interface Props {
 }
 
 export function useHeader({ offsetY, title }: Props) {
-  const navigation = useAppNavigation();
   const headerHeight = useHeaderHeight();
-
+  const router = useRouter();
   const {
     targetRef: triggerRef,
     onTargetLayout: onLayout,
@@ -54,19 +50,19 @@ export function useHeader({ offsetY, title }: Props) {
     };
   });
 
-  useEffect(() => {
-    navigation.setOptions({
-      // temp fix for headerTitleAlign: 'center' not working on Android
-      headerLeft: () => <View style={styles.headerLeft} />,
-      headerTitle: () => (
-        <View style={styles.titleContainer}>
-          <Animated.View style={rightStyle}>
-            <Typography style={styles.titleText}>{title}</Typography>
-          </Animated.View>
-        </View>
-      ),
-    });
-  }, [navigation, rightStyle, title]);
+  // useEffect(() => {
+  //   router.setParams({
+  //     // temp fix for headerTitleAlign: 'center' not working on Android
+  //     headerLeft: () => <View style={styles.headerLeft} />,
+  //     headerTitle: () => (
+  //       <View style={styles.titleContainer}>
+  //         <Animated.View style={rightStyle}>
+  //           <Typography style={styles.titleText}>{title}</Typography>
+  //         </Animated.View>
+  //       </View>
+  //     ),
+  //   });
+  // }, [navigation, rightStyle, title]);
 
   return { triggerRef, onLayout };
 }

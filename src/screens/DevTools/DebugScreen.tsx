@@ -5,9 +5,8 @@ import {
   Switch,
   Typography,
 } from '@app/components';
-import { Screen } from '@app/components/Screen';
 import { useAuthContext } from '@app/context';
-import { useAppNavigation, useDebugOptions } from '@app/hooks';
+import { useDebugOptions } from '@app/hooks';
 import {
   AllowedKey,
   NAMESPACE,
@@ -20,6 +19,7 @@ import {
 } from '@modules/activity-controller';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
+import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -118,9 +118,9 @@ function DisplayAccessToken() {
 
 function NavigateToChat() {
   const { user, authState } = useAuthContext();
-  const { navigate } = useAppNavigation();
   const [channelName, setChannelName] = useState<string>('');
   const [twitchUserId, setTwitchUserId] = useState<string>('');
+  const router = useRouter();
 
   const toUserId = async (username: string) => {
     const result = await twitchService.getUser(username);
@@ -137,10 +137,7 @@ function NavigateToChat() {
       return;
     }
 
-    navigate('Chat', {
-      channelName,
-      channelId: twitchUserId,
-    });
+    router.push(`/dev-tools/chat/${twitchUserId}?channelName=${channelName}`);
   };
 
   return (
@@ -307,7 +304,7 @@ export function DebugScreen() {
   );
 
   return (
-    <Screen safeAreaEdges={['top', 'bottom']} preset="scroll">
+    <View style={styles.container}>
       <FlashList<DebugItem>
         data={debugItems}
         keyExtractor={item => item.title}
@@ -315,11 +312,15 @@ export function DebugScreen() {
         ListFooterComponent={renderListFooter}
         contentInsetAdjustmentBehavior="automatic"
       />
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
+  container: {
+    paddingHorizontal: theme.spacing.xs,
+    flex: 1,
+  },
   twitchSection: {
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,

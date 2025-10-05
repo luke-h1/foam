@@ -5,15 +5,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colorKit } from 'reanimated-color-picker';
-import { useAppNavigation } from './useAppNavigation';
 
 interface Props {
   offsetY: SharedValue<number>;
 }
 
 export const useHeaderBackground = ({ offsetY }: Props) => {
-  const navigation = useAppNavigation();
-
   const rightContainerStyle = useAnimatedStyle(() => {
     return {
       borderBottomWidth: withTiming(offsetY.value > 0 ? 0.5 : 0, {
@@ -22,18 +19,18 @@ export const useHeaderBackground = ({ offsetY }: Props) => {
     };
   });
 
-  useEffect(() => {
-    navigation.setOptions({
-      headerBackground: () => (
-        <Animated.View
-          style={[
-            rightContainerStyle,
-            {
-              borderColor: colorKit.setAlpha('#ffffff', 0.1).hex(),
-            },
-          ]}
-        />
-      ),
-    });
-  }, [navigation, rightContainerStyle]);
+  // useEffect(() => {
+  //   navigation.setOptions({
+  //     headerBackground: () => (
+  //       <Animated.View
+  //         style={[
+  //           rightContainerStyle,
+  //           {
+  //             borderColor: colorKit.setAlpha('#ffffff', 0.1).hex(),
+  //           },
+  //         ]}
+  //       />
+  //     ),
+  //   });
+  // }, [navigation, rightContainerStyle]);
 };

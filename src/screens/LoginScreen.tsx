@@ -2,9 +2,9 @@
 import { Button, Typography, Image } from '@app/components';
 import { BrandIcon } from '@app/components/BrandIcon';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks';
 import { sentryService } from '@app/services/sentry-service';
 import { useAuthRequest } from 'expo-auth-session';
+import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Platform, SafeAreaView, View, Dimensions } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -28,17 +28,17 @@ const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
 const proxyUrl = new URL(
   Platform.select({
-    native: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-    default: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    web: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    ios: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
+    native: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/proxy`,
+    default: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/pending`,
+    web: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/pending`,
+    ios: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/proxy`,
   }),
 ).toString();
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export function LoginScreen() {
-  const navigation = useAppNavigation();
+  const router = useRouter();
 
   const { loginWithTwitch } = useAuthContext();
 
@@ -50,8 +50,8 @@ export function LoginScreen() {
 
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: process.env.TWITCH_CLIENT_ID,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+      clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
       scopes: [
         ...USER_SCOPES,
         ...CHAT_SCOPES,
@@ -77,9 +77,7 @@ export function LoginScreen() {
       sentryService.captureMessage('LoginSuccess');
       toast.success('Logged in');
 
-      navigation.push('Tabs', {
-        screen: 'Following',
-      });
+      router.push('/(tabs)/following');
     }
 
     sentryService.captureMessage(response?.type || 'unknownAuthEvent');

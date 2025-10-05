@@ -8,17 +8,6 @@ module.exports = api => {
         root: 'src',
       },
     ],
-    'transform-inline-environment-variables',
-    [
-      'module-resolver',
-      {
-        root: ['./src'],
-        extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
-        alias: {
-          '@app': './src',
-        },
-      },
-    ],
     'react-native-worklets/plugin',
   ];
 

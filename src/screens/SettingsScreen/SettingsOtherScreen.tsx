@@ -1,36 +1,36 @@
 import { Menu } from '@app/components/Menu';
-import { Screen } from '@app/components/Screen';
-import { useAppNavigation } from '@app/hooks';
-import { SettingsStackParamList } from '@app/navigators';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function SettingsOtherScreen() {
-  const { navigate } = useAppNavigation<SettingsStackParamList>();
+  const router = useRouter();
+
   return (
-    <Screen safeAreaEdges={['top']} preset="fixed">
+    <SafeAreaView style={{ flex: 1 }}>
       <Menu
         items={[
           {
             label: 'About the app',
             description: 'Learn more about the app',
-            onPress: () => navigate('About'),
+            onPress: () => router.push('/(settings)/about'),
           },
           {
             label: 'OSS Licenses',
             description: 'Open source software used to build this app',
-            onPress: () => navigate('Licenses'),
+            onPress: () => router.push('/(settings)/licenses'),
           },
           {
             label: 'FAQ',
             description: 'Frequently asked questions',
-            onPress: () => navigate('Faq'),
+            onPress: () => router.push('/(settings)/faq'),
           },
           {
             label: 'ChangeLog',
             description: "What's new in the app",
-            onPress: () => navigate('Changelog'),
+            onPress: () => router.push('/(settings)/changelog'),
           },
         ]}
       />
-    </Screen>
+    </SafeAreaView>
   );
 }

@@ -1,6 +1,7 @@
-import { useAppNavigation, useStreamerImage } from '@app/hooks';
+import { useStreamerImage } from '@app/hooks';
 import { TwitchStream } from '@app/services/twitch-service';
 import { elapsedStreamTime, formatViewCount } from '@app/utils';
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
@@ -12,17 +13,14 @@ interface Props {
 }
 
 export function LiveStreamCard({ stream }: Props) {
-  const { navigate } = useAppNavigation();
   const { profilePicture } = useStreamerImage(stream.user_login, [stream]);
+
+  const router = useRouter();
+
   return (
     <Button
       onPress={() => {
-        navigate('Streams', {
-          screen: 'LiveStream',
-          params: {
-            id: stream.user_login,
-          },
-        });
+        router.push(`/streams/live/${stream.user_login}`);
       }}
     >
       <View style={styles.container}>

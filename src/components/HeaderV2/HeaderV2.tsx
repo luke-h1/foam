@@ -1,5 +1,5 @@
-import { useAppNavigation } from '@app/hooks';
 import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
 import { UnistylesValues } from 'node_modules/react-native-unistyles/lib/typescript/src/types';
 import { ReactNode } from 'react';
 import { View } from 'react-native';
@@ -26,8 +26,8 @@ export function HeaderV2({
   sticky = true,
   title,
 }: HeaderV2Props) {
-  const navigation = useAppNavigation();
   const { theme } = useUnistyles();
+  const router = useRouter();
 
   return (
     <BlurView
@@ -46,7 +46,7 @@ export function HeaderV2({
             {back ? (
               <IconButton
                 label={modal ? 'close' : 'goBack'}
-                onPress={() => navigation.goBack()}
+                onPress={() => router.back()}
                 icon={modal ? 'x' : 'arrowLeft'}
               />
             ) : null}
