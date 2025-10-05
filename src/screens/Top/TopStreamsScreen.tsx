@@ -1,10 +1,7 @@
 import { EmptyState, LiveStreamCard, FlashList } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useDebouncedCallback } from '@app/hooks';
-import {
-  TwitchStream as TwitchStream,
-  twitchService,
-} from '@app/services/twitch-service';
+import { TwitchStream, twitchService } from '@app/services/twitch-service';
 import { getNextPageParam, getPreviousPageParam } from '@app/utils';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';

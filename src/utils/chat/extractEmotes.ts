@@ -10,8 +10,7 @@ export const extractEmotes = (
     positions.map(position => {
       const [start, end] = position.split('-').map(Number);
 
-      // @ts-expect-error end can be undefined
-      const name = graphemes.slice(start, end + 1).join('');
+      const name = graphemes.slice(start, (end as number) + 1).join('');
       return {
         id: emoteId,
         name,

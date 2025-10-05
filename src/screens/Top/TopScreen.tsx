@@ -35,26 +35,30 @@ export function TopScreen() {
         initialLayout={{ width: layout.width }}
         renderTabBar={props => (
           <View style={styles.tabContainer}>
-            {props.navigationState.routes.map((route, i) => {
-              return (
-                <Button
-                  key={route.key}
-                  onPress={() => {
-                    props.jumpTo(route.key);
-                    setCurrentTitle(route.title);
-                  }}
-                  style={[
-                    styles.tab,
-                    {
-                      borderBottomColor:
-                        index === i ? theme.colors.plum.border : 'transparent',
-                    },
-                  ]}
-                >
-                  <Typography>{route.title}</Typography>
-                </Button>
-              );
-            })}
+            {props.navigationState.routes.map(
+              (route: { key: string; title: string }, i) => {
+                return (
+                  <Button
+                    key={route.key}
+                    onPress={() => {
+                      props.jumpTo(route.key);
+                      setCurrentTitle(route.title);
+                    }}
+                    style={[
+                      styles.tab,
+                      {
+                        borderBottomColor:
+                          index === i
+                            ? theme.colors.plum.border
+                            : 'transparent',
+                      },
+                    ]}
+                  >
+                    <Typography>{route.title}</Typography>
+                  </Button>
+                );
+              },
+            )}
           </View>
         )}
       />

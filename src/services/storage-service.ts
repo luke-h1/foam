@@ -51,7 +51,7 @@ export const storageService = {
     const { value, expiry } = JSON.parse(item) as StorageItem<T>;
 
     if (expiry && new Date() >= new Date(expiry)) {
-      this.delete(key);
+      storageService.delete(key);
       return null;
     }
 
@@ -96,14 +96,14 @@ export const storageService = {
     storageEvents.emit('storageChange', 'all');
   },
 
-  getAllKeys(namespacePrefix?: NamespacePrefixes) {
+  getAllKeys(namespacePrefix?: NamespacePrefixes): string[] {
     return storage
       .getAllKeys()
       .filter(key => key.startsWith(`${NAMESPACE}_${namespacePrefix}`));
   },
 
   clearExpired(): void {
-    const keys = this.getAllKeys();
+    const keys = storageService.getAllKeys();
 
     keys.forEach(key => {
       const item = storage.getString(key);

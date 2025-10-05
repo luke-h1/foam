@@ -74,7 +74,9 @@ export default class Client {
       headers,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     requestInterceptors?.forEach(this.addRequestInterceptor.bind(this));
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     responseInterceptors?.forEach(this.addResponseInterceptor.bind(this));
   }
 

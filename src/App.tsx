@@ -1,12 +1,4 @@
 import './styles/unistyles';
-/* eslint-disable camelcase */
-import {
-  SourceCodePro_400Regular,
-  SourceCodePro_300Light,
-  SourceCodePro_600SemiBold,
-  SourceCodePro_700Bold,
-  useFonts,
-} from '@expo-google-fonts/source-code-pro';
 
 import { createNavigationContainerRef } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
@@ -50,13 +42,6 @@ function App() {
   } = useNavigationPersistence(storage, NAVIGATION_PERSISTENCE_KEY);
 
   const { recoveredFromError, setRecoveredFromError } = useRecoveredFromError();
-
-  useFonts({
-    SourceCodePro_400Regular,
-    SourceCodePro_300Light,
-    SourceCodePro_600SemiBold,
-    SourceCodePro_700Bold,
-  });
 
   const shouldDelete = false;
   if (shouldDelete) {
