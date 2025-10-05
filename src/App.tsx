@@ -1,5 +1,4 @@
 import './styles/unistyles';
-/* eslint-disable camelcase */
 
 import { createNavigationContainerRef } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';

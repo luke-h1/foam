@@ -51,7 +51,7 @@ export const storageService = {
     const { value, expiry } = JSON.parse(item) as StorageItem<T>;
 
     if (expiry && new Date() >= new Date(expiry)) {
-      this.delete(key);
+      storageService.delete(key);
       return null;
     }
 

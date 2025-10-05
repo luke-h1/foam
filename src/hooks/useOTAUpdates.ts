@@ -56,7 +56,6 @@ export function useOTAUpdates() {
           console.debug('No update available.');
         }
       } catch (e) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         console.error('OTA Update Error', { error: `${e}` });
       }
     }, 10e3);

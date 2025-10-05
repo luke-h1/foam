@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/react-native';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: true,
 });
