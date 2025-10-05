@@ -15,6 +15,7 @@ import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 export const CategoryScreen: FC<
@@ -98,16 +99,18 @@ export const CategoryScreen: FC<
   );
 
   return (
-    <FlashList<TwitchStream>
-      ref={flashListRef}
-      data={allStreams}
-      style={{ flex: 1 }}
-      keyExtractor={item => item.id}
-      renderItem={renderItem}
-      ListHeaderComponent={renderHeader}
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onEndReached={handleLoadMore}
-    />
+    <SafeAreaView style={{ flex: 1 }}>
+      <FlashList<TwitchStream>
+        ref={flashListRef}
+        data={allStreams}
+        style={{ flex: 1 }}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onEndReached={handleLoadMore}
+      />
+    </SafeAreaView>
   );
 };
 

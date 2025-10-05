@@ -1,5 +1,10 @@
 import { Typography } from '@app/components';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function FaqScreen() {
-  return <Typography>FAQ</Typography>;
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <Typography>FAQ</Typography>
+    </SafeAreaView>
+  );
 }

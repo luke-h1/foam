@@ -1,4 +1,5 @@
 import { Typography } from '@app/components';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // todo - in the future, read from github md
 const mockChangelog = `
@@ -38,5 +39,9 @@ All notable changes to this project will be documented in this file.
 `;
 
 export function ChangelogScreen() {
-  return <Typography>{mockChangelog}</Typography>;
+  return (
+    <SafeAreaView>
+      <Typography>{mockChangelog}</Typography>
+    </SafeAreaView>
+  );
 }

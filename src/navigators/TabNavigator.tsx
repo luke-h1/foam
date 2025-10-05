@@ -1,9 +1,12 @@
-import { TabBar } from '@app/components/TabBar';
+import { HapticTab } from '@app/components/HapticTab';
+import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
 import { useAuthContext } from '@app/context/AuthContext';
 import { SearchScreen } from '@app/screens';
 import FollowingScreen from '@app/screens/FollowingScreen';
-import { createNativeBottomTabNavigator } from '@bottom-tabs/react-navigation';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import {
+  BottomTabScreenProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { SFSymbol } from 'expo-symbols';
 import { ComponentType, FC } from 'react';
@@ -25,7 +28,7 @@ export type TabScreenProps<TParam extends keyof TabParamList> =
     AppStackScreenProps<keyof AppStackParamList>
   >;
 
-const Tab = createNativeBottomTabNavigator<TabParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
@@ -44,25 +47,25 @@ const screens: Screen[] = [
   {
     name: 'Following',
     component: FollowingScreen,
-    symbol: 'heart',
+    symbol: 'person.2',
     requiresAuth: true,
   },
   {
     name: 'Top',
     component: TopStackNavigator,
-    symbol: 'arrowshape.up',
+    symbol: 'chart.bar',
     requiresAuth: false,
   },
   {
     name: 'Search',
     component: SearchScreen,
-    symbol: 'sparkle.magnifyingglass',
+    symbol: 'magnifyingglass',
     requiresAuth: false,
   },
   {
     name: 'Settings',
     component: SettingsStackNavigator,
-    symbol: 'gear',
+    symbol: 'gearshape',
     requiresAuth: false,
   },
 ];
@@ -73,11 +76,13 @@ export function TabNavigator() {
 
   return (
     <Tab.Navigator
-      tabBarActiveTintColor={theme.colors.grass.accentAlpha}
-      tabBarInactiveTintColor={theme.colors.gray.accent}
-      hapticFeedbackEnabled
-      // eslint-disable-next-line react/no-unstable-nested-components
-      tabBar={props => <TabBar {...props} />}
+      screenOptions={{
+        tabBarActiveTintColor: theme.colors.grass.accentAlpha,
+        tabBarInactiveTintColor: theme.colors.gray.accent,
+        // @ts-expect-error: hapticFeedbackEnabled is not in types but supported by library
+        hapticFeedbackEnabled: true,
+        tabBarButton: HapticTab,
+      }}
     >
       {screens.map(screen => {
         if (screen.requiresAuth && !user) {
@@ -91,11 +96,16 @@ export function TabNavigator() {
             component={screen.component as ComponentType}
             options={{
               lazy: true,
-              tabBarIcon: () => ({
-                sfSymbol: screen.symbol,
-                height: 10,
-                width: 10,
-              }),
+              headerShown: false,
+              // eslint-disable-next-line react/no-unstable-nested-components
+              tabBarIcon: ({ focused, color, size }) => (
+                <IconSymbol
+                  name={screen.symbol}
+                  color={color}
+                  size={size}
+                  weight={focused ? 'semibold' : 'regular'}
+                />
+              ),
             }}
           />
         );
