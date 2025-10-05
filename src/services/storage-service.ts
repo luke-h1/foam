@@ -96,14 +96,14 @@ export const storageService = {
     storageEvents.emit('storageChange', 'all');
   },
 
-  getAllKeys(namespacePrefix?: NamespacePrefixes) {
+  getAllKeys(namespacePrefix?: NamespacePrefixes): string[] {
     return storage
       .getAllKeys()
       .filter(key => key.startsWith(`${NAMESPACE}_${namespacePrefix}`));
   },
 
   clearExpired(): void {
-    const keys = this.getAllKeys();
+    const keys = storageService.getAllKeys();
 
     keys.forEach(key => {
       const item = storage.getString(key);

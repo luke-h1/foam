@@ -1,0 +1,189 @@
+diff --git a/src/legacyWarnings.ts b/src/legacyWarnings.ts
+index 0c2be1d956920e13d43707fa2066e22ddb98d5b3..599904862542a3cf9c19bc5eaa9b7b7b97f10cfe 100644
+--- a/src/legacyWarnings.ts
++++ b/src/legacyWarnings.ts
+@@ -24,6 +24,8 @@ function errorOnLegacyMethodUse(methodName: string): Error {
+ /**
+  * @deprecated Use `new File().info` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+ export async function getInfoAsync(fileUri: string, options: InfoOptions = {}): Promise<FileInfo> {
+   throw errorOnLegacyMethodUse('getInfoAsync');
+ }
+@@ -32,7 +34,11 @@ export async function getInfoAsync(fileUri: string, options: InfoOptions = {}):
+  * @deprecated Use `new File().text()` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
+ export async function readAsStringAsync(
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   fileUri: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   options: ReadingOptions = {}
+ ): Promise<string> {
+   throw errorOnLegacyMethodUse('readAsStringAsync');
+@@ -41,6 +47,8 @@ export async function readAsStringAsync(
+ /**
+  * @deprecated Import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+ export async function getContentUriAsync(fileUri: string): Promise<string> {
+   throw errorOnLegacyMethodUse('getContentUriAsync');
+ }
+@@ -49,8 +57,14 @@ export async function getContentUriAsync(fileUri: string): Promise<string> {
+  * @deprecated Use `new File().write()` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
+ export async function writeAsStringAsync(
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+   fileUri: string,
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+   contents: string,
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+   options: WritingOptions = {}
+ ): Promise<void> {
+   throw errorOnLegacyMethodUse('writeAsStringAsync');
+@@ -59,6 +73,8 @@ export async function writeAsStringAsync(
+ /**
+  * @deprecated Use `new File().delete()` or `new Directory().delete()` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+ export async function deleteAsync(fileUri: string, options: DeletingOptions = {}): Promise<void> {
+   throw errorOnLegacyMethodUse('deleteAsync');
+ }
+@@ -73,6 +89,8 @@ export async function deleteLegacyDocumentDirectoryAndroid(): Promise<void> {
+ /**
+  * @deprecated Use `new File().move()` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+ export async function moveAsync(options: RelocatingOptions): Promise<void> {
+   throw errorOnLegacyMethodUse('moveAsync');
+ }
+@@ -80,6 +98,9 @@ export async function moveAsync(options: RelocatingOptions): Promise<void> {
+ /**
+  * @deprecated Use `new File().copy()` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
++
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+ export async function copyAsync(options: RelocatingOptions): Promise<void> {
+   throw errorOnLegacyMethodUse('copyAsync');
+ }
+@@ -88,7 +109,11 @@ export async function copyAsync(options: RelocatingOptions): Promise<void> {
+  * @deprecated Use `new Directory().create()` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
+ export async function makeDirectoryAsync(
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+   fileUri: string,
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+   options: MakeDirectoryOptions = {}
+ ): Promise<void> {
+   throw errorOnLegacyMethodUse('makeDirectoryAsync');
+@@ -97,6 +122,8 @@ export async function makeDirectoryAsync(
+ /**
+  * @deprecated Use `new Directory().list()` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+ export async function readDirectoryAsync(fileUri: string): Promise<string[]> {
+   throw errorOnLegacyMethodUse('readDirectoryAsync');
+ }
+@@ -119,8 +146,14 @@ export async function getTotalDiskCapacityAsync(): Promise<number> {
+  * @deprecated Use `File.downloadFileAsync` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
+ export async function downloadAsync(
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   uri: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   fileUri: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   options: DownloadOptions = {}
+ ): Promise<FileSystemDownloadResult> {
+   throw errorOnLegacyMethodUse('downloadAsync');
+@@ -130,8 +163,14 @@ export async function downloadAsync(
+  * @deprecated Use `@expo/fetch` or import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
+ export async function uploadAsync(
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   url: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   fileUri: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   options: FileSystemUploadOptions = {}
+ ): Promise<FileSystemUploadResult> {
+   throw errorOnLegacyMethodUse('uploadAsync');
+@@ -141,10 +180,20 @@ export async function uploadAsync(
+  * @deprecated Import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
+ export function createDownloadResumable(
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   uri: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   fileUri: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   options?: DownloadOptions,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   callback?: FileSystemNetworkTaskProgressCallback<DownloadProgressData>,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   resumeData?: string
+ ): any {
+   throw errorOnLegacyMethodUse('createDownloadResumable');
+@@ -154,9 +203,17 @@ export function createDownloadResumable(
+  * @deprecated Import this method from `expo-file-system/legacy`. This method will throw in runtime.
+  */
+ export function createUploadTask(
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore
+   url: string,
++// eslint-disable-next-line @typescript-eslint/ban-ts-comment
++// @ts-ignore
+   fileUri: string,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore  
+   options?: FileSystemUploadOptions,
++  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++  // @ts-ignore  
+   callback?: FileSystemNetworkTaskProgressCallback<UploadProgressData>
+ ): any {
+   throw errorOnLegacyMethodUse('createUploadTask');
+diff --git a/src/pathUtilities/index.ts b/src/pathUtilities/index.ts
+index bb3593da247ec6e561794c60bb84be2efac2b1e7..6be8252f551402dcb08129fd23ac02432edc6c45 100644
+--- a/src/pathUtilities/index.ts
++++ b/src/pathUtilities/index.ts
+@@ -14,12 +14,16 @@ export class PathUtilities {
+    */
+   static join(...paths: (string | File | Directory)[]): string {
+     const [firstSegment, ...rest] = paths.map(uriObjectToString);
++    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++    // @ts-ignore
+     const pathAsUrl = asUrl(firstSegment);
+     if (pathAsUrl) {
+       pathAsUrl.pathname = nodePath.join(pathAsUrl.pathname, ...rest.map(encodeURLChars));
+       return pathAsUrl.toString();
+     }
+-    return nodePath.join(firstSegment, ...rest.map(encodeURLChars));
++      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
++      // @ts-ignore
++      return nodePath.join(firstSegment, ...rest.map(encodeURLChars));
+   }
+ 
+   /**

@@ -41,7 +41,6 @@ export function useSafeAreaInsetsStyle<
 
   return safeAreaEdges.reduce((acc, e) => {
     const value = edgeInsetMap[e] ?? e;
-    // @ts-expect-error - value is a valid key
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { ...acc, [`${property}${propertySuffixMap[e]}`]: insets[value] };
   }, {}) as SafeAreaInsetsStyle<Property, Edges>;

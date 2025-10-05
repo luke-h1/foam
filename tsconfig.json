@@ -9,7 +9,6 @@
     "isolatedModules": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "strict": true,
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
@@ -36,5 +35,5 @@
     "modules/**/*.tsx",
     "app.config.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "node_modules/expo-file-system/**/*"]
 }

@@ -46,7 +46,7 @@
         "expo-clipboard": "~8.0.7",
         "expo-constants": "~18.0.9",
         "expo-dev-client": "~6.0.13",
-        "expo-file-system": "~19.0.16",
+        "expo-file-system": "^19.0.16",
         "expo-haptics": "~15.0.7",
         "expo-image": "~3.0.8",
         "expo-image-manipulator": "^14.0.7",
@@ -185,6 +185,9 @@
     "core-js-pure",
     "@sentry/cli",
   ],
+  "patchedDependencies": {
+    "expo-file-system@19.0.16": "patches/expo-file-system@19.0.16.patch",
+  },
   "packages": {
     "@0no-co/graphql.web": ["@0no-co/graphql.web@1.0.13", "", { "peerDependencies": { "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0" }, "optionalPeers": ["graphql"] }, "sha512-jqYxOevheVTU1S36ZdzAkJIdvRp2m3OYIG5SEoKDw5NI8eVwkoI0D/Q3DYNGmXCxkA6CQuoa7zvMiDPTLqUNuw=="],
 
