@@ -660,7 +660,7 @@ const chatStoreCreator: StateCreator<ChatState> = (set, get) => ({
         }
 
         const bytes = await response.bytes();
-        file.write(bytes);
+        file.write(bytes, {});
 
         clearTimeout(timeoutId);
       } catch (fetchError) {

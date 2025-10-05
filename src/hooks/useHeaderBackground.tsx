@@ -4,7 +4,6 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
-import { colorKit } from 'reanimated-color-picker';
 
 interface Props {
   offsetY: SharedValue<number>;
