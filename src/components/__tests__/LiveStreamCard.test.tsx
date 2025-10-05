@@ -1,13 +1,13 @@
 import {
   twitchService as _twitchService,
-  Stream,
+  TwitchStream,
 } from '@app/services/twitch-service';
 import render from '@app/test/render';
 import { NavigationContainer } from '@react-navigation/native';
 import { screen, waitFor } from '@testing-library/react-native';
 import { LiveStreamCard } from '../LiveStreamCard';
 
-const mockStream: Stream = {
+const mockStream: TwitchStream = {
   id: '1',
   user_id: '123',
   user_login: 'test_user',

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { SanitisedBadgeSet } from '@app/services';
+import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { ChatMessageType } from '@app/store/chatStore';
 import { lightenColor, replaceEmotesWithText } from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';

@@ -9,7 +9,7 @@ import { RefreshControl } from '@app/components/RefreshControl';
 import { Screen } from '@app/components/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
-import { Stream } from '@app/services';
+import { TwitchStream } from '@app/services/twitch-service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, JSX, useCallback } from 'react';
 
@@ -42,7 +42,7 @@ export default function FollowingScreen() {
 
   const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
 
-  const renderItem: ListRenderItem<Stream> = useCallback(({ item }) => {
+  const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
     return <LiveStreamCard stream={item} />;
   }, []);
 
@@ -77,7 +77,7 @@ export default function FollowingScreen() {
 
   return (
     <Screen preset="fixed" safeAreaEdges={['top']}>
-      <AnimatedFlashList<Stream>
+      <AnimatedFlashList<TwitchStream>
         data={streams}
         keyExtractor={item => item.id}
         renderItem={renderItem}

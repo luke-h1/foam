@@ -1,5 +1,5 @@
 import { Button, Icon, Typography } from '@app/components';
-import { sentryService } from '@app/services';
+import { sentryService } from '@app/services/sentry-service';
 import { openLinkInBrowser } from '@app/utils';
 import { type ErrorInfo, useState } from 'react';
 import { ScrollView, View } from 'react-native';

@@ -1,4 +1,4 @@
-import { SanitisiedEmoteSet } from '@app/services';
+import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { ChatUserstate } from 'tmi.js';
 import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';

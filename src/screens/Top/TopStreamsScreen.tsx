@@ -1,17 +1,15 @@
 import { EmptyState, LiveStreamCard, FlashList } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useDebouncedCallback } from '@app/hooks';
-import { Stream, twitchService } from '@app/services';
+import {
+  TwitchStream as TwitchStream,
+  twitchService,
+} from '@app/services/twitch-service';
 import { getNextPageParam, getPreviousPageParam } from '@app/utils';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
 import { RefreshControl } from 'react-native';
-
-// Enhanced Stream type with profile picture
-interface StreamWithProfile extends Stream {
-  profilePicture?: string;
-}
 
 export function TopStreamsScreen() {
   const [cursor, setCursor] = useState<string>('');
@@ -29,7 +27,8 @@ export function TopStreamsScreen() {
     initialPageParam: cursor,
     getNextPageParam,
     getPreviousPageParam,
-    queryFn: ({ pageParam }) => twitchService.getTopStreams(pageParam),
+    queryFn: ({ pageParam }: { pageParam?: string }) =>
+      twitchService.getTopStreams(pageParam ?? ''),
     queryKey: ['TopStreams'],
   });
 
@@ -53,7 +52,7 @@ export function TopStreamsScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const renderItem: ListRenderItem<Stream> = useCallback(({ item }) => {
+  const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
     return <LiveStreamCard stream={item} />;
   }, []);
 
@@ -78,7 +77,7 @@ export function TopStreamsScreen() {
   }
 
   return (
-    <FlashList<StreamWithProfile>
+    <FlashList
       ref={flashListRef}
       style={{ flex: 1 }}
       data={allStreams}

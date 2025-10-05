@@ -1,5 +1,5 @@
 import { BrandIconName } from '@app/components/BrandIcon';
-import { SanitisiedEmoteSet } from '@app/services';
+import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 
 export interface EmojiSection {
   title: string;

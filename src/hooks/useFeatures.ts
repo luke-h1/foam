@@ -3,7 +3,7 @@
  * certain features of the app based on their preference
  */
 
-import { AllowedKey, storageService } from '@app/services';
+import { AllowedKey, storageService } from '@app/services/storage-service';
 import { useEffect, useState } from 'react';
 
 export interface Feature {

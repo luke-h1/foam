@@ -24,8 +24,8 @@ import {
   useRecoveredFromError,
 } from './hooks';
 import { AppNavigator, useNavigationPersistence } from './navigators';
-import { navigationIntegration } from './services';
 import { twitchApi } from './services/api';
+import { navigationIntegration } from './services/sentry-service';
 import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
 

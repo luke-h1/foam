@@ -12,8 +12,8 @@ import {
   AllowedKey,
   NAMESPACE,
   storageService,
-  twitchService,
-} from '@app/services';
+} from '@app/services/storage-service';
+import { twitchService } from '@app/services/twitch-service';
 import {
   startLiveActivity,
   stopLiveActivity,

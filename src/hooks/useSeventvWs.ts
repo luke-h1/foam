@@ -1,4 +1,4 @@
-import { SanitisiedEmoteSet } from '@app/services';
+import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
 import { useCallback, useEffect, useRef } from 'react';

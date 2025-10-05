@@ -1,7 +1,7 @@
 import {
   twitchService,
   Channel,
-  Stream,
+  TwitchStream,
   Category,
   UserInfoResponse,
   SearchChannelResponse,
@@ -10,10 +10,11 @@ import {
 import { UseQueryOptions } from '@tanstack/react-query';
 
 export const twitchQueries = {
-  getStream(userLogin: string): UseQueryOptions<Stream> {
+  getStream(userLogin: string): UseQueryOptions<TwitchStream> {
     return {
       queryKey: ['stream', userLogin],
-      queryFn: () => twitchService.getStream(userLogin) as Promise<Stream>,
+      queryFn: () =>
+        twitchService.getStream(userLogin) as Promise<TwitchStream>,
     };
   },
   getChannel(userId: string): UseQueryOptions<Channel> {
@@ -34,7 +35,7 @@ export const twitchQueries = {
       queryFn: () => twitchService.getUserImage(userId),
     };
   },
-  getFollowedStreams(userId: string): UseQueryOptions<Stream[]> {
+  getFollowedStreams(userId: string): UseQueryOptions<TwitchStream[]> {
     return {
       queryKey: ['followedStreams', userId],
       queryFn: () => twitchService.getFollowedStreams(userId),
@@ -58,7 +59,7 @@ export const twitchQueries = {
       queryFn: () => twitchService.searchChannels(query),
     };
   },
-  getTopStreams(cursor?: string): UseQueryOptions<PaginatedList<Stream>> {
+  getTopStreams(cursor?: string): UseQueryOptions<PaginatedList<TwitchStream>> {
     return {
       queryKey: ['topStreams', cursor],
       queryFn: () => twitchService.getTopStreams(cursor),
@@ -73,7 +74,7 @@ export const twitchQueries = {
   getStreamsByCategory(
     id: string,
     cursor?: string,
-  ): UseQueryOptions<PaginatedList<Stream>> {
+  ): UseQueryOptions<PaginatedList<TwitchStream>> {
     return {
       queryKey: ['streamsByCategory', id, cursor],
       queryFn: () => twitchService.getStreamsByCategory(id, cursor),

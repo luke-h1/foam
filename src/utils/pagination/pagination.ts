@@ -1,4 +1,4 @@
-import { PaginatedList, Stream } from '@app/services';
+import { PaginatedList, TwitchStream } from '@app/services/twitch-service';
 import {
   GetNextPageParamFunction,
   GetPreviousPageParamFunction,
@@ -6,14 +6,14 @@ import {
 
 export const getNextPageParam: GetNextPageParamFunction<
   string,
-  PaginatedList<Stream>
+  PaginatedList<TwitchStream>
 > = lastPage => {
   return lastPage.pagination?.cursor ?? '';
 };
 
 export const getPreviousPageParam: GetPreviousPageParamFunction<
   string,
-  PaginatedList<Stream>
+  PaginatedList<TwitchStream>
 > = firstPage => {
   return firstPage.pagination?.cursor ?? '';
 };

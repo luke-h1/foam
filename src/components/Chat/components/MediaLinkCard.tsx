@@ -4,7 +4,8 @@ import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
 import { Skeleton } from '@app/components/Skeleton';
 import { Typography } from '@app/components/Typography';
-import { sevenTvService, twitchService } from '@app/services';
+import { sevenTvService } from '@app/services/seventv-service';
+import { twitchService } from '@app/services/twitch-service';
 import {
   SEVENTV_EMOTE_LINK_REGEX,
   TWITCH_CHANNEL_CLIP_REGEX,

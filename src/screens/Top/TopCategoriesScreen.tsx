@@ -1,6 +1,6 @@
 import { CategoryCard, EmptyState, FlashList } from '@app/components';
 import { Skeleton } from '@app/components/Skeleton/Skeleton';
-import { type Category, twitchService } from '@app/services';
+import { Category, twitchService } from '@app/services/twitch-service';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
