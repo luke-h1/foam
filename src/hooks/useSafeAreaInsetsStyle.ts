@@ -41,6 +41,8 @@ export function useSafeAreaInsetsStyle<
 
   return safeAreaEdges.reduce((acc, e) => {
     const value = edgeInsetMap[e] ?? e;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     return { ...acc, [`${property}${propertySuffixMap[e]}`]: insets[value] };
   }, {}) as SafeAreaInsetsStyle<Property, Edges>;

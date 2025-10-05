@@ -99,11 +99,9 @@ export const ffzService = {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         result.default_sets[0]
-      ].emoticons.map<SanitisiedEmoteSet>(emote => {
+      ].emoticons.map<SanitisiedEmoteSet>((emote: FfzEmoticon) => {
         return {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           name: emote.name,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
           id: emote.id.toString(),
 
           url: emote.animated
