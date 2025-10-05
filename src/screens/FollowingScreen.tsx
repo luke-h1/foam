@@ -6,7 +6,6 @@ import {
 } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshControl } from '@app/components/RefreshControl';
-import { Screen } from '@app/components/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
@@ -76,13 +75,11 @@ export default function FollowingScreen() {
   }
 
   return (
-    <Screen preset="fixed" safeAreaEdges={['top']}>
-      <AnimatedFlashList<TwitchStream>
-        data={streams}
-        keyExtractor={item => item.id}
-        renderItem={renderItem}
-        refreshControl={<RefreshControl onRefresh={onRefresh} />}
-      />
-    </Screen>
+    <AnimatedFlashList<TwitchStream>
+      data={streams}
+      keyExtractor={item => item.id}
+      renderItem={renderItem}
+      refreshControl={<RefreshControl onRefresh={onRefresh} />}
+    />
   );
 }

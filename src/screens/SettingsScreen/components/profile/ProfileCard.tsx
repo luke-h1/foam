@@ -2,10 +2,9 @@ import { Button, FlashList } from '@app/components';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
 import { useAuthContext } from '@app/context';
-import { useAppNavigation } from '@app/hooks';
-import { resetRoot } from '@app/navigators/navigationUtilities';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { ListRenderItem } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -20,7 +19,8 @@ interface ProfileItem {
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
-  const { navigate } = useAppNavigation();
+  // const { navigate } = useAppNavigation();
+  const router = useRouter();
 
   const sheetRef = useRef<BottomSheetModal>(null);
 
@@ -34,39 +34,20 @@ export function ProfileCard() {
     {
       title: 'My Channel',
       description: 'View your channel',
-      onPress: () =>
-        navigate('Streams', {
-          screen: 'StreamerProfile',
-          params: {
-            id: user?.id as string,
-          },
-        }),
+      onPress: () => router.push(`/streams/profile/${user?.id as string}`),
     },
     {
       title: 'Blocked Users',
       description: 'Manage blocked users',
-      onPress: () => {},
+      onPress: () => router.push('/(settings)/preferences/blocked-users'),
     },
     {
       title: 'Log out',
       description: 'Log out of your account',
       onPress: () => {
-        void logout();
-
-        setTimeout(() => {
-          resetRoot({
-            index: 0,
-            routes: [
-              {
-                name: 'Tabs',
-                state: {
-                  index: 0, // This ensures we land on the first tab (Top)
-                  routes: [{ name: 'Top' }],
-                },
-              },
-            ],
-          });
-        }, 300);
+        void logout().then(() => {
+          router.push('/(tabs)/top');
+        });
       },
     },
   ];
@@ -81,7 +62,7 @@ export function ProfileCard() {
        * eventually we want to be able to login directly here
        * (oauth webview)
        */
-      onPress: () => navigate('Login'),
+      onPress: () => router.push('/login'),
     },
   ];
 

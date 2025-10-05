@@ -5,8 +5,8 @@ import {
   DiscoveryDocument,
   useAuthRequest,
 } from 'expo-auth-session';
+import { useRouter } from 'expo-router';
 import { InteractionManager, Platform } from 'react-native';
-import { useAppNavigation } from './useAppNavigation';
 import { useAsyncEffect } from './useAsyncEffect';
 
 /**
@@ -32,16 +32,16 @@ const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
 const proxyUrl = new URL(
   Platform.select({
-    native: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-    default: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    web: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    ios: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
+    native: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/proxy`,
+    default: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/pending`,
+    web: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/pending`,
+    ios: `${process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL}/proxy`,
   }),
 ).toString();
 
 const twitchConfig: AuthRequestConfig = {
-  clientId: process.env.TWITCH_CLIENT_ID,
-  clientSecret: process.env.TWITCH_CLIENT_SECRET,
+  clientId: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+  clientSecret: process.env.EXPO_PUBLIC_TWITCH_CLIENT_SECRET,
   scopes: [
     ...USER_SCOPES,
     ...CHAT_SCOPES,
@@ -66,7 +66,7 @@ const twitchDiscovery: DiscoveryDocument = {
 };
 
 export function useTwitchOauth() {
-  const { navigate } = useAppNavigation();
+  const router = useRouter();
   const { loginWithTwitch } = useAuthContext();
   const [twitchRequest, twitchResponse, promptTwitchAsync] = useAuthRequest(
     twitchConfig,
@@ -84,9 +84,7 @@ export function useTwitchOauth() {
       if (twitchResponse?.type === 'success') {
         // Wait for any pending interactions to complete before navigating
         InteractionManager.runAfterInteractions(() => {
-          navigate('Tabs', {
-            screen: 'Following',
-          });
+          router.push('/(tabs)/following');
         });
       }
     } catch (error) {

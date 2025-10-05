@@ -34,7 +34,10 @@
     "src/**/*.tsx",
     "modules/**/*.ts",
     "modules/**/*.tsx",
-    "app.config.ts"
+    "app.config.ts",
+    "index.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
   ],
   "exclude": ["node_modules", "**/node_modules/**"]
 }

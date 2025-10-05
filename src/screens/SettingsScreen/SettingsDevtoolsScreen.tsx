@@ -1,35 +1,31 @@
 import { Menu } from '@app/components/Menu';
-import { Screen } from '@app/components/Screen';
-import { useAppNavigation } from '@app/hooks';
-import { SettingsStackParamList } from '@app/navigators';
+import { useRouter } from 'expo-router';
 
 export function SettingsDevtoolsScreen() {
-  const { navigate } = useAppNavigation<SettingsStackParamList>();
+  const router = useRouter();
 
   return (
-    <Screen safeAreaEdges={['top']} preset="fixed">
-      <Menu
-        items={[
-          {
-            label: 'App Diagnostics',
-            description: 'View versions, config etc.',
-            onPress: () => navigate('Diagnostics'),
-            icon: {
-              type: 'symbol',
-              name: 'laptopcomputer.trianglebadge.exclamationmark',
-            },
+    <Menu
+      items={[
+        {
+          label: 'App Diagnostics',
+          description: 'View versions, config etc.',
+          onPress: () => router.push('/dev-tools/diagnostics'),
+          icon: {
+            type: 'symbol',
+            name: 'laptopcomputer.trianglebadge.exclamationmark',
           },
-          {
-            label: 'Debug',
-            description: 'Turn on debugging tools',
-            onPress: () => navigate('Debug'),
-            icon: {
-              type: 'symbol',
-              name: 'laptopcomputer.trianglebadge.exclamationmark',
-            },
+        },
+        {
+          label: 'Debug',
+          description: 'Turn on debugging tools',
+          onPress: () => router.push('/dev-tools/debug'),
+          icon: {
+            type: 'symbol',
+            name: 'laptopcomputer.trianglebadge.exclamationmark',
           },
-        ]}
-      />
-    </Screen>
+        },
+      ]}
+    />
   );
 }

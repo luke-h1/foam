@@ -1,5 +1,4 @@
 import { Button, Typography } from '@app/components';
-import { Screen } from '@app/components/Screen';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
@@ -26,39 +25,37 @@ export function TopScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <Screen preset="fixed" safeAreaEdges={['top']}>
-      <TabView
-        style={{ flex: 1 }}
-        navigationState={{ index, routes }}
-        renderScene={renderScene}
-        onIndexChange={setIndex}
-        initialLayout={{ width: layout.width }}
-        renderTabBar={props => (
-          <View style={styles.tabContainer}>
-            {props.navigationState.routes.map((route, i) => {
-              return (
-                <Button
-                  key={route.key}
-                  onPress={() => {
-                    props.jumpTo(route.key);
-                    setCurrentTitle(route.title);
-                  }}
-                  style={[
-                    styles.tab,
-                    {
-                      borderBottomColor:
-                        index === i ? theme.colors.plum.border : 'transparent',
-                    },
-                  ]}
-                >
-                  <Typography>{route.title}</Typography>
-                </Button>
-              );
-            })}
-          </View>
-        )}
-      />
-    </Screen>
+    <TabView
+      style={{ flex: 1 }}
+      navigationState={{ index, routes }}
+      renderScene={renderScene}
+      onIndexChange={setIndex}
+      initialLayout={{ width: layout.width }}
+      renderTabBar={props => (
+        <View style={styles.tabContainer}>
+          {props.navigationState.routes.map((route, i) => {
+            return (
+              <Button
+                key={route.key}
+                onPress={() => {
+                  props.jumpTo(route.key);
+                  setCurrentTitle(route.title);
+                }}
+                style={[
+                  styles.tab,
+                  {
+                    borderBottomColor:
+                      index === i ? theme.colors.plum.border : 'transparent',
+                  },
+                ]}
+              >
+                <Typography>{route.title}</Typography>
+              </Button>
+            );
+          })}
+        </View>
+      )}
+    />
   );
 }
 

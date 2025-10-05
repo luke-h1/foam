@@ -1,8 +1,7 @@
 import { Chat, Spinner, Typography } from '@app/components';
-import { StreamStackScreenProps } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -14,9 +13,11 @@ import { StyleSheet } from 'react-native-unistyles';
 import WebView from 'react-native-webview';
 import { scheduleOnRN } from 'react-native-worklets';
 
-export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
-  route: { params },
-}) => {
+export interface LiveStreamScreenParams {
+  id: string;
+}
+
+export const LiveStreamScreen = ({ id }: LiveStreamScreenParams) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
 
@@ -25,9 +26,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
       queries: [
-        twitchQueries.getStream(params.id),
-        twitchQueries.getUser(params.id),
-        twitchQueries.getUserImage(params.id),
+        twitchQueries.getStream(id),
+        twitchQueries.getUser(id),
+        twitchQueries.getUserImage(id),
       ],
     });
 
