@@ -87,6 +87,7 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     padding: 16,
     borderRadius: 8,
+    borderCurve: 'continuous',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

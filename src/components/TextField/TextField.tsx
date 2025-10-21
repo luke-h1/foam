@@ -106,7 +106,6 @@ export const TextField = forwardRef(function TextField(
 
   return (
     <Button
-      activeOpacity={1}
       style={$containerStyles}
       // eslint-disable-next-line react/jsx-no-bind
       onPress={focusInput}
@@ -165,6 +164,7 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: 4,
+    borderCurve: 'continuous',
     color: theme.colors.gray.text,
     overflow: 'hidden',
   },

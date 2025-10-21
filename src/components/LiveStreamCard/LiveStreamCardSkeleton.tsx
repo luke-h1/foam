@@ -63,6 +63,7 @@ const styles = StyleSheet.create(theme => ({
     height: 20,
     borderRadius: 10,
     marginRight: theme.spacing.xs,
+    borderCurve: 'continuous',
   },
   textSkeleton: {
     height: 15,

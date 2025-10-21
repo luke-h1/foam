@@ -10,5 +10,6 @@ const styles = StyleSheet.create(theme => ({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.black.bgAlpha,
     marginTop: theme.spacing.sm,
+    borderCurve: 'continuous',
   },
 }));

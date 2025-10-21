@@ -865,6 +865,7 @@ const styles = StyleSheet.create(theme => ({
     borderTopWidth: 1,
     borderTopColor: '#2d2d2d',
     position: 'relative',
+    borderCurve: 'continuous',
   },
   input: {
     flex: 1,
@@ -874,6 +875,7 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: 8,
     color: '#efeff1',
     marginRight: theme.spacing.md,
+    borderCurve: 'continuous',
   },
   sendButton: {
     justifyContent: 'center',
@@ -926,7 +928,7 @@ const styles = StyleSheet.create(theme => ({
     // backgroundColor: theme.colors.foregroundInverted,
     padding: theme.spacing.sm,
     borderTopWidth: 1,
-    // borderTopColor: theme.colors.border,
+    borderCurve: 'continuous',
   },
   replyText: {
     flex: 1,

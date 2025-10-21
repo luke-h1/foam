@@ -63,12 +63,11 @@ const styles = StyleSheet.create(theme => ({
     height: theme.spacing.xl,
     width: theme.spacing.xl,
   },
-  clearButton: {
-    // Add any specific styling for the clear button container if needed
-  },
+  clearButton: {},
   content: {
     backgroundColor: 'transparent',
     borderWidth: 0,
+    borderCurve: 'continuous',
   },
   icon: {
     marginLeft: theme.spacing.md,

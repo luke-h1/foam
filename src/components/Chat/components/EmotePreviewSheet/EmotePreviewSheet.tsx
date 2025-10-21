@@ -172,6 +172,7 @@ export const styles = StyleSheet.create(theme => ({
     backgroundColor: theme.colors.gray.bgAlt,
     borderTopLeftRadius: theme.radii.xl,
     borderTopRightRadius: theme.radii.xl,
+    borderCurve: 'continuous',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

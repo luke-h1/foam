@@ -61,7 +61,7 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.xs,
     marginRight: theme.spacing.xs,
-    borderWidth: 0.2,
+    borderWidth: StyleSheet.hairlineWidth,
     marginBottom: 8,
     borderColor: theme.colors.black.bgAltAlpha,
   },

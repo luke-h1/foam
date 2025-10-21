@@ -24,6 +24,7 @@ const styles = StyleSheet.create(theme => ({
   buttonText: {
     padding: theme.spacing.lg,
     borderRadius: theme.spacing.lg,
+    borderCurve: 'continuous',
     backgroundColor: theme.colors.accent.accent,
   },
   button: {

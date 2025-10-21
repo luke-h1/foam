@@ -53,6 +53,7 @@ const styles = StyleSheet.create(theme => ({
   card: {
     borderRadius: theme.radii.md,
     paddingHorizontal: theme.spacing.lg,
+    borderCurve: 'continuous',
     width: '80%',
   },
   text: {

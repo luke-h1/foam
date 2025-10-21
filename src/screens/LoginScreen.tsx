@@ -203,6 +203,7 @@ const styles = StyleSheet.create(theme => ({
     width: 100,
     height: 100,
     borderRadius: 20,
+    borderCurve: 'continuous',
     marginBottom: theme.spacing['2xl'],
     shadowColor: theme.colors.accent.ui,
     shadowOffset: {
@@ -235,14 +236,7 @@ const styles = StyleSheet.create(theme => ({
     borderRadius: theme.radii.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#9146ff',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: '0px 4px 8px rgba(145, 70, 255, 0.3)',
     minHeight: 56,
     width: '100%',
     maxWidth: 300,

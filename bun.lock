@@ -158,6 +158,7 @@
         "eslint-plugin-react-compiler": "^19.1.0-rc.1",
         "eslint-plugin-react-hooks": "^5.2.0",
         "eslint-plugin-react-native": "^5.0.0",
+        "eslint-plugin-refined": "^0.0.4",
         "expo-atlas": "^0.4.3",
         "git-cz": "^4.9.0",
         "globals": "^16.3.0",
@@ -2012,6 +2013,8 @@
     "eslint-plugin-react-native": ["eslint-plugin-react-native@5.0.0", "", { "dependencies": { "eslint-plugin-react-native-globals": "^0.1.1" }, "peerDependencies": { "eslint": "^3.17.0 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9" } }, "sha512-VyWlyCC/7FC/aONibOwLkzmyKg4j9oI8fzrk9WYNs4I8/m436JuOTAFwLvEn1CVvc7La4cPfbCyspP4OYpP52Q=="],
 
     "eslint-plugin-react-native-globals": ["eslint-plugin-react-native-globals@0.1.2", "", {}, "sha512-9aEPf1JEpiTjcFAmmyw8eiIXmcNZOqaZyHO77wgm0/dWfT/oxC1SrIq8ET38pMxHYrcB6Uew+TzUVsBeczF88g=="],
+
+    "eslint-plugin-refined": ["eslint-plugin-refined@0.0.4", "", { "peerDependencies": { "eslint": ">=8.0.0" } }, "sha512-5/560Vr9oVPuaJkgUw8QF7LT0ZfwlQ6hw3mJwlYPtPi2pcz33bcDenqgV9Rqo+YctKtq/DGahKovjBGhoPAdqg=="],
 
     "eslint-scope": ["eslint-scope@8.4.0", "", { "dependencies": { "esrecurse": "^4.3.0", "estraverse": "^5.2.0" } }, "sha512-sNXOfKCn74rt8RICKMvJS7XKV/Xk9kA7DyJr8mJik3S7Cwgy3qlkkmyS2uQB3jiJg6VNdZd/pDBJu0nvG2NlTg=="],
 

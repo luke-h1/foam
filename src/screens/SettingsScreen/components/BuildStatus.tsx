@@ -27,6 +27,7 @@ const styles = StyleSheet.create(theme => ({
     borderTopColor: theme.colors.gray.accent,
     borderTopWidth: StyleSheet.hairlineWidth,
     justifyContent: 'center',
+    borderCurve: 'continuous',
     paddingVertical: theme.spacing.md,
     marginBottom: theme.spacing.lg,
   },

@@ -210,6 +210,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
               // backgroundColor: theme.colors.borderNeutral,
               paddingHorizontal: PICKER_PAD,
               borderRadius: PICKER_RADIUS,
+              borderCurve: 'continuous',
             }}
           >
             <View style={[{ width: PICKER_WIDTH }]}>

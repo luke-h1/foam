@@ -94,6 +94,7 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: '#2d2d2d',
+    borderCurve: 'continuous',
   },
   chatContainer: {
     flex: 1,

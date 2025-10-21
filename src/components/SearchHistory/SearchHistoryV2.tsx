@@ -85,6 +85,7 @@ const styles = StyleSheet.create(theme => ({
   deleteButton: {
     padding: theme.spacing.xs,
     borderRadius: theme.radii.sm,
+    borderCurve: 'continuous',
     backgroundColor: theme.colors.red.accentAlpha,
   },
   clearAllButton: {

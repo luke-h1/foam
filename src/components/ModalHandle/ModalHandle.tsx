@@ -54,6 +54,7 @@ export const ModalHandle: React.FC<HandleProps> = ({
     return {
       borderTopLeftRadius: borderTopRadius,
       borderTopRightRadius: borderTopRadius,
+      borderCurve: 'continuous',
     };
   });
   const leftIndicatorStyle = useMemo(
@@ -138,9 +139,11 @@ const styles = StyleSheet.create({
   leftIndicator: {
     borderTopStartRadius: 2,
     borderBottomStartRadius: 2,
+    borderCurve: 'continuous',
   },
   rightIndicator: {
     borderTopEndRadius: 2,
     borderBottomEndRadius: 2,
+    borderCurve: 'continuous',
   },
 });

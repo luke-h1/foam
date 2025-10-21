@@ -334,6 +334,7 @@ const styles = StyleSheet.create(theme => ({
   },
   replyContainer: {
     marginLeft: theme.spacing.md,
+    borderCurve: 'continuous',
     borderLeftWidth: 2,
     // borderLeftColor: theme.colors.border,
     paddingLeft: theme.spacing.sm,

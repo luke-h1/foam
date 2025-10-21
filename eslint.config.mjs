@@ -7,6 +7,7 @@ import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tseslint from 'typescript-eslint';
+import refinedEslint from 'eslint-plugin-refined';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,6 +63,7 @@ export default [
   {
     files: ['**/*.ts', '**/*.tsx'],
     plugins: {
+      refined: refinedEslint,
       '@typescript-eslint': fixupPluginRules(typescriptEslint),
       ...tseslint.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
@@ -86,6 +88,17 @@ export default [
       },
     },
     rules: {
+      'refined/border-radius-with-curve': 'error',
+      'refined/prefer-hairline-width': 'error',
+      'refined/prefer-box-shadow': 'error',
+      'refined/require-hitslop-small-touchables': 'error',
+      'refined/spring-config-consistency': [
+        'error',
+        {
+          reanimatedVersion: 'v4',
+        },
+      ],
+      'refined/avoid-touchable-opacity': 'error',
       'import/no-cycle': 'off',
       'import/no-unresolved': ['error'],
       'import/extensions': [

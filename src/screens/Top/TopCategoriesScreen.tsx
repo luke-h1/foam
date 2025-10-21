@@ -135,6 +135,7 @@ const $skeletonImage: ViewStyle = {
   width: 110,
   height: 150,
   borderRadius: 8,
+  borderCurve: 'continuous',
   alignSelf: 'center',
   marginBottom: 8,
 };
@@ -143,5 +144,6 @@ const $skeletonTitle: ViewStyle = {
   width: 80,
   height: 18,
   borderRadius: 4,
+  borderCurve: 'continuous',
   alignSelf: 'center',
 };

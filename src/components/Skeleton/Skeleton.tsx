@@ -14,5 +14,6 @@ const styles = StyleSheet.create(theme => ({
     backgroundColor: theme.colors.black.bgAlpha,
     borderRadius: theme.radii.md,
     opacity: 0.3,
+    borderCurve: 'continuous',
   },
 }));

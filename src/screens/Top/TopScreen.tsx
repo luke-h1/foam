@@ -51,6 +51,7 @@ export function TopScreen() {
                           index === i
                             ? theme.colors.plum.border
                             : 'transparent',
+                        borderCurve: 'continuous',
                       },
                     ]}
                   >

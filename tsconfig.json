@@ -2,7 +2,10 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "allowJs": true,
-    "lib": ["dom", "esnext"],
+    "lib": [
+      "dom",
+      "esnext"
+    ],
     "alwaysStrict": true,
     "noUncheckedIndexedAccess": true,
     "allowSyntheticDefaultImports": true,
@@ -21,19 +24,24 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@app/*": ["./src/*"],
-      "@modules/*": ["./modules/*"]
+      "@app/*": [
+        "./src/*"
+      ],
+      "@modules/*": [
+        "./modules/*"
+      ]
     }
   },
   "include": [
     "assets",
     "**/*.ts",
     "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
     "modules/**/*.ts",
     "modules/**/*.tsx",
     "app.config.ts"
   ],
-  "exclude": ["node_modules", "node_modules/expo-file-system/**/*"]
+  "exclude": [
+    "node_modules",
+    "node_modules/expo-file-system/**/*"
+  ]
 }

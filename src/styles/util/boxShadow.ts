@@ -7,11 +7,7 @@ interface ShadowRules {
 }
 
 const defaultValues: ShadowRules = {
-  shadowRadius: 4,
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowColor: '#000000',
-  elevation: 3,
+  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
 };
 
 export const boxShadow = (rules: ShadowRules = defaultValues): ShadowRules =>

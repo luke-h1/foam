@@ -91,6 +91,7 @@ const styles = StyleSheet.create(theme => ({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 5,
+    borderCurve: 'continuous',
   },
   redDot: {
     width: 8,

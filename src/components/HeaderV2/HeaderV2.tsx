@@ -76,6 +76,7 @@ const styles = StyleSheet.create((theme, rt) => ({
       backgroundColor: theme.colors[tint ? 'accent' : 'gray'].bg,
       borderBottomColor: 'transparent',
       borderBottomWidth: StyleSheet.hairlineWidth,
+      borderCurve: 'continuous',
     };
 
     if (modal) {

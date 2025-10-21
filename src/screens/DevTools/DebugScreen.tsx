@@ -337,6 +337,7 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.gray.accent,
+    borderCurve: 'continuous',
   },
   itemHeader: {
     flexDirection: 'row',
@@ -367,6 +368,7 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,
     borderWidth: 1,
+    borderCurve: 'continuous',
     borderColor: theme.colors.gray.accent,
     borderRadius: theme.radii.md,
   },
@@ -389,6 +391,7 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.sm,
+    borderCurve: 'continuous',
   },
   copyButtonText: {
     fontWeight: 'bold',
@@ -398,6 +401,7 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing.md,
     borderTopWidth: 1,
     borderTopColor: theme.colors.gray.accent,
+    borderCurve: 'continuous',
   },
   loggedInUser: {
     marginTop: theme.spacing.sm,

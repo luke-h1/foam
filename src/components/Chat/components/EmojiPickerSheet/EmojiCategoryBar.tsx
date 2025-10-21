@@ -42,6 +42,7 @@ export function EmojiCategoryBar({
               activeSection === index && {
                 // backgroundColor: theme.colors.borderNeutral,
                 borderWidth: 1,
+                borderCurve: 'continuous',
                 // borderColor: theme.colors.foregroundNeutral,
               },
             ]}
@@ -72,6 +73,7 @@ const styles = StyleSheet.create(() => ({
     height: CATEGORY_HEADER_HEIGHT,
     borderTopLeftRadius: PICKER_RADIUS,
     borderTopRightRadius: PICKER_RADIUS,
+    borderCurve: 'continuous',
   },
   categoryButton: {
     height: '100%',

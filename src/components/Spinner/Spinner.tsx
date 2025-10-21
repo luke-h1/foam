@@ -38,6 +38,7 @@ const styles = StyleSheet.create(theme => ({
     width: 40,
     height: 40,
     borderRadius: 20,
+    borderCurve: 'continuous',
     borderWidth: 5,
     borderColor: theme.colors.black.bgAlpha,
   },

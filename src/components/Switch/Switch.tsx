@@ -39,6 +39,7 @@ export function Switch({ onValueChange, value }: Props) {
       withSpring(newValue ? SWITCH_MAX_OFFSET : 0, {
         damping: 25,
         stiffness: 300,
+        mass: 4,
       }),
     );
     onValueChange?.(newValue);
@@ -89,12 +90,14 @@ const styles = StyleSheet.create({
     borderRadius: SWITCH_HEIGHT / 2,
     paddingHorizontal: SWITCH_HORIZONTAL_PADDING,
     paddingVertical: SWITCH_VERTICAL_PADDING,
+    borderCurve: 'continuous',
   },
   thumb: {
     width: SWITCH_THUMB_SIZE,
     height: SWITCH_THUMB_SIZE,
     borderRadius: SWITCH_THUMB_SIZE / 2,
     backgroundColor: THUMB_COLOR,
+    borderCurve: 'continuous',
   },
   center: {
     justifyContent: 'center',

@@ -113,6 +113,7 @@ const styles = StyleSheet.create(theme => ({
     backgroundColor: theme.colors.accent.accent,
     marginBottom: theme.spacing.md,
     marginTop: theme.spacing.lg,
+    borderCurve: 'continuous',
     borderRadius: 6,
   },
   errorSectionContentContainer: {

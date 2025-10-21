@@ -266,10 +266,12 @@ export const ChatAutoCompleteInput = forwardRef<
         suggestionScale.value = withSpring(1, {
           damping: 20,
           stiffness: 300,
+          mass: 4,
         });
         suggestionTranslateY.value = withSpring(0, {
           damping: 20,
           stiffness: 300,
+          mass: 4,
         });
       } else {
         suggestionOpacity.value = withTiming(0, { duration: 150 });
@@ -633,6 +635,7 @@ const styles = StyleSheet.create(theme => ({
   userSuggestionsContainer: {
     backgroundColor: theme.colors.accent.accent,
     borderRadius: theme.radii.md,
+    borderCurve: 'continuous',
     borderWidth: 1,
     borderColor: theme.colors.accent.accent,
     paddingVertical: theme.spacing.xs,

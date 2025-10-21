@@ -147,6 +147,7 @@ const styles = StyleSheet.create(theme => ({
     borderWidth: 2,
     borderColor: theme.colors.gray.accent,
     borderStyle: 'dashed',
+    borderCurve: 'continuous',
   },
   contentContainer: {
     flex: 1,

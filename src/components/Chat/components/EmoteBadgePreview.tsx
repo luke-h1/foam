@@ -266,6 +266,7 @@ const styles = StyleSheet.create(theme => ({
     justifyContent: 'space-around',
     borderRadius: theme.radii.md,
     paddingTop: theme.spacing.md,
+    borderCurve: 'continuous',
   },
   actionButton: {
     flexDirection: 'row',

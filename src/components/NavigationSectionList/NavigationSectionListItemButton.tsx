@@ -78,6 +78,7 @@ const styles = StyleSheet.create(theme => ({
     width: 35,
     height: 35,
     borderRadius: theme.radii.xxl,
+    borderCurve: 'continuous',
   },
   separator: {
     height: 0.55,

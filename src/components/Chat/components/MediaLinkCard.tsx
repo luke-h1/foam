@@ -153,6 +153,7 @@ const styles = StyleSheet.create(theme => ({
     width: 20,
     height: 20,
     borderRadius: theme.radii.sm,
+    borderCurve: 'continuous',
   },
   titleSkeleton: {
     width: '60%',

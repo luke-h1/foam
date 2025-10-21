@@ -78,6 +78,7 @@ const styles = StyleSheet.create(theme => ({
     borderLeftWidth: 3,
     borderRightWidth: 3,
     borderLeftColor: theme.colors.accent.accent,
+    borderCurve: 'continuous',
     borderRightColor: theme.colors.accent.accent,
     variants: {
       added: {
