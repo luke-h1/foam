@@ -25,7 +25,7 @@ env:
   AUTH_PROXY_API_KEY: ${{ secrets.AUTH_PROXY_API_KEY_STAGING }}
 jobs:
   deploy:
-    runs-on: mac-m2
+    runs-on: macos-latest
     if: github.actor == 'luke-h1'
     concurrency: deploy-testflight-${{ github.run_id }}
     steps:
