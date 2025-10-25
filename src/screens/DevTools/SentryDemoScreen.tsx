@@ -2,7 +2,7 @@ import { Button, Typography } from '@app/components';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-export function NewRelicDemoScreen() {
+export function SentryDemoScreen() {
   return (
     <View style={styles.container}>
       <Button style={[styles.buttonText, styles.button]}>

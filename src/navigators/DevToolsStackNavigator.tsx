@@ -1,15 +1,12 @@
 import { ChatScreen } from '@app/screens/ChatScreen';
-import {
-  DebugScreen,
-  DiagnosticsScreen,
-  NewRelicDemoScreen,
-} from '@app/screens/DevTools';
+import { DebugScreen, DiagnosticsScreen } from '@app/screens/DevTools';
+import { SentryDemoScreen } from '@app/screens/DevTools/SentryDemoScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 
 export type DevToolsParamList = {
   Diagnostics: undefined;
-  NewRelicDemo: undefined;
+  SentryDemo: undefined;
   Debug: undefined;
   Chat: { channelName: string; channelId: string };
 };
@@ -32,8 +29,8 @@ export function DevToolsStackNavigator() {
         }}
       />
       <Stack.Screen
-        name="NewRelicDemo"
-        component={NewRelicDemoScreen}
+        name="SentryDemo"
+        component={SentryDemoScreen}
         options={{
           headerShown: false,
           orientation: 'portrait_up',

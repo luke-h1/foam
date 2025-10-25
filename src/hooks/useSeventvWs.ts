@@ -43,6 +43,7 @@ export function useSeventvWs(
   const lastScreenRef = useRef<string | null>(null);
   const emoteCallbackRef = useRef(options?.onEmoteUpdate);
   const eventCallbackRef = useRef(options?.onEvent);
+  const connectionTimestamp = useRef<number | null>(null);
 
   const twitchChannelIdRef = useRef(options?.twitchChannelId);
   const sevenTvEmoteSetIdRef = useRef(options?.sevenTvEmoteSetId);
@@ -96,6 +97,7 @@ export function useSeventvWs(
       SevenTvWsService.unsubscribeFromChannel();
       SevenTvWsService.disconnect();
       hasInitialized.current = false;
+      connectionTimestamp.current = null;
     }
 
     lastScreenRef.current = currentScreen;
@@ -126,6 +128,22 @@ export function useSeventvWs(
     }
 
     SevenTvWsService.setEmoteUpdateCallback(data => {
+      // Skip processing emote updates during initial load to avoid historical data
+      if (connectionTimestamp.current) {
+        const now = Date.now();
+        const timeSinceConnection = now - connectionTimestamp.current;
+
+        // If we connected recently (less than 10 seconds ago),
+        // this is likely historical data from the initial subscription
+        if (timeSinceConnection < 10000) {
+          // 10 seconds
+          logger.stvWs.info(
+            '[useSeventvWs] Skipping potential historical emote update (recent connection)',
+          );
+          return;
+        }
+      }
+
       if (emoteCallbackRef.current) {
         emoteCallbackRef.current(data);
       }
@@ -136,6 +154,7 @@ export function useSeventvWs(
       logger.stvWs.info(
         '[useSeventvWs] All requirements met, connecting SevenTV WS',
       );
+      connectionTimestamp.current = Date.now(); // Record when we connected
       SevenTvWsService.getInstance();
       hasInitialized.current = true;
     }
@@ -146,6 +165,7 @@ export function useSeventvWs(
       logger.stvWs.info('[useSeventvWs] Cleaning up SevenTV WS client');
       SevenTvWsService.unsubscribeFromChannel();
       SevenTvWsService.disconnect();
+      connectionTimestamp.current = null;
     };
   }, []);
 
