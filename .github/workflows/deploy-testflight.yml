@@ -42,13 +42,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
 
-      - name: ☕️ Setup Cocoapods
-        run: |
-          # Install CocoaPods using user-specific gem installation
-          sudo gem install --user-install cocoapods
-          # Add the user gem bin directory to PATH
-          echo "$HOME/.gem/ruby/$(ruby -e 'puts RUBY_VERSION[/\d+\.\d+/]')/bin" >> $GITHUB_PATH
-
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
