@@ -33,7 +33,7 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
-.env
+
 !.env.example
 ios
 android
@@ -91,3 +91,5 @@ GoogleService-*-*.plist
 FOAM_ANDROID_TESTFLIGHT_KEY.json
 
 .vscode
+
+.env
