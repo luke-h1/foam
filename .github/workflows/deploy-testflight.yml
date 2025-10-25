@@ -45,7 +45,7 @@ jobs:
       - name: ☕️ Setup Cocoapods
         run: |
           # Install CocoaPods using user-specific gem installation
-          gem install --user-install cocoapods
+          sudo gem install --user-install cocoapods
           # Add the user gem bin directory to PATH
           echo "$HOME/.gem/ruby/$(ruby -e 'puts RUBY_VERSION[/\d+\.\d+/]')/bin" >> $GITHUB_PATH
 
