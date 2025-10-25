@@ -19,7 +19,6 @@ import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
 import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
-import { UserSheet } from './UserSheet/UserSheet';
 import { EmoteRenderer } from './renderers';
 
 type OnReply = Omit<ChatMessageType, 'style'>;
@@ -42,7 +41,6 @@ export const ChatMessage = memo(
     const emoteSheetRef = useRef<BottomSheetModal>(null);
     const badgeSheetRef = useRef<BottomSheetModal>(null);
     const actionSheetRef = useRef<BottomSheetModal>(null);
-    const userSheetRef = useRef<BottomSheetModal>(null);
 
     const [selectedEmote, setSelectedEmote] = useState<ParsedPart | null>(null);
     const [selectedBadge, setSelectedBadge] =
@@ -125,9 +123,10 @@ export const ChatMessage = memo(
     );
 
     const renderBadges = useCallback(() => {
-      return badges?.map(badge => (
+      return badges?.map((badge, index) => (
         <Button
-          key={`${badge.set}-${badge.id}`}
+          // eslint-disable-next-line react/no-array-index-key
+          key={`${badge.set}-${badge.id}-${badge.type}-${badge.url}-${index}`}
           onPress={() => handleBadgePress(badge)}
         >
           <Image source={badge.url} style={styles.badge} transition={20} />
@@ -158,10 +157,6 @@ export const ChatMessage = memo(
 
     const isReply = Boolean(parentDisplayName);
 
-    const onUsernamePress = useCallback(() => {
-      userSheetRef.current?.present();
-    }, []);
-
     return (
       <Button
         onLongPress={handleLongPress}
@@ -188,20 +183,18 @@ export const ChatMessage = memo(
           )}
           {renderBadges()}
           {userstate.username && (
-            <Button onLongPress={onUsernamePress} style={styles.usernameButton}>
-              <Typography
-                style={[
-                  styles.username,
-                  {
-                    color: userstate.color
-                      ? lightenColor(userstate.color)
-                      : '#FFFFFF',
-                  },
-                ]}
-              >
-                {userstate.username}:
-              </Typography>
-            </Button>
+            <Typography
+              style={[
+                styles.username,
+                {
+                  color: userstate.color
+                    ? lightenColor(userstate.color)
+                    : '#FFFFFF',
+                },
+              ]}
+            >
+              {userstate.username}:
+            </Typography>
           )}
           {message.map(renderMessagePart)}
         </View>
@@ -219,8 +212,6 @@ export const ChatMessage = memo(
             selectedBadge={selectedBadge}
           />
         )}
-
-        <UserSheet ref={userSheetRef} userId={userstate['user-id'] || ''} />
 
         <ActionSheet
           message={message}

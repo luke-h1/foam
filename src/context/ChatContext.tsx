@@ -251,6 +251,7 @@ export interface ChatContextState {
   ) => Promise<boolean>;
   clearChannelResources: () => void;
   addMessage: (message: ChatMessageType) => void;
+  addMessages: (messages: ChatMessageType[]) => void;
   clearMessages: () => void;
   clearTtvUsers: () => void;
   getCachedEmotes: (channelId: string) => SanitisiedEmoteSet[];
@@ -698,6 +699,20 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
 
   const cacheImage = useCallback(
     (url: string, channelId: string, type: 'emote' | 'badge', priority = 1) => {
+      const existingCache = imageCache.get(channelId);
+      if (existingCache) {
+        const targetMap =
+          type === 'emote' ? existingCache.emotes : existingCache.badges;
+        const cached = targetMap.get(url);
+        if (
+          cached &&
+          (cached.diskCacheStatus === 'cached' ||
+            cached.diskCacheStatus === 'pending')
+        ) {
+          return; // Skip if already cached or in progress
+        }
+      }
+
       addToMemoryCache(url, channelId, type);
 
       setCacheQueue(prevQueue => {
@@ -744,6 +759,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     },
     [
       addToMemoryCache,
+      imageCache,
       state.cacheStats.isProcessing,
       processCacheQueue,
       setState,
@@ -1539,8 +1555,13 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     (message: ChatMessageType) => {
       setState(prevState => {
         const newMessages = [...prevState.messages, message];
-        if (newMessages.length > 150) {
-          newMessages.shift();
+        // Increase message limit and use more efficient removal
+        if (newMessages.length > 500) {
+          // Remove oldest 100 messages at once for better performance
+          return {
+            ...prevState,
+            messages: newMessages.slice(100),
+          };
         }
         return {
           ...prevState,
@@ -1779,6 +1800,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       addMessage,
       clearMessages,
       clearTtvUsers,
+      addMessages: () => [],
       getCachedEmotes,
       getCachedBadges,
       getCurrentEmoteData,

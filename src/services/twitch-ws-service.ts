@@ -1,5 +1,5 @@
 import { logger } from '@app/utils/logger';
-import { twitchService } from '../twitch-service';
+import { twitchService } from './twitch-service';
 
 interface EventSubMetadata {
   message_id: string;
@@ -481,23 +481,40 @@ class TwitchWsService {
     }
 
     logger.twitchWs.info(
-      `💜 Cleaning up ${subscriptionIds.length} subscriptions`,
+      `💜 Cleaning up ${subscriptionIds.length} subscriptions in background`,
     );
+
+    TwitchWsService.activeSubscriptions.clear();
+
+    const cleanupTimeout = new Promise<void>(resolve => {
+      setTimeout(() => {
+        logger.twitchWs.warn(
+          '💜 Subscription cleanup timed out, continuing...',
+        );
+        resolve();
+      }, 5000); // 5 second timeout
+    });
 
     const cleanupPromises = subscriptionIds.map(async subscriptionId => {
       try {
-        await twitchService.deleteEventSubscription(subscriptionId);
+        const deletePromise =
+          twitchService.deleteEventSubscription(subscriptionId);
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout')), 2000);
+        });
+
+        await Promise.race([deletePromise, timeoutPromise]);
         logger.twitchWs.info(`💜 Cleaned up subscription: ${subscriptionId}`);
       } catch (error) {
-        logger.twitchWs.error(
+        logger.twitchWs.warn(
           `💜 Failed to cleanup subscription ${subscriptionId}:`,
           error,
         );
       }
     });
 
-    await Promise.allSettled(cleanupPromises);
-    TwitchWsService.activeSubscriptions.clear();
+    // Race between cleanup and timeout
+    await Promise.race([Promise.allSettled(cleanupPromises), cleanupTimeout]);
   }
 
   public get sessionId(): string {
@@ -537,15 +554,16 @@ class TwitchWsService {
   public static disconnect() {
     TwitchWsService.clearKeepaliveTimer();
 
-    void TwitchWsService.cleanupSubscriptions();
-
+    // Close WebSocket immediately for fast disconnection
     if (TwitchWsService.instance) {
       TwitchWsService.instance.close(1000, 'Manual Disconnect');
       TwitchWsService.instance = null;
       TwitchWsService.sessionId = '';
       TwitchWsService.isReconnecting = false;
-      TwitchWsService.activeSubscriptions.clear();
     }
+
+    // Clean up subscriptions in background without blocking disconnection
+    void TwitchWsService.cleanupSubscriptions();
   }
 
   public static isConnected(): boolean {

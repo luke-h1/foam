@@ -1,8 +1,8 @@
+import TwitchWsService from '@app/services/twitch-ws-service';
 import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
 import { useEffect, useRef } from 'react';
 import { getActiveRouteName } from '../navigators/navigationUtilities';
-import TwitchWsService from '../services/ws/twitch-ws-service';
 import { CHAT_SCREENS } from './useTmiClient';
 
 export function useTwitchWs(): WebSocket {
@@ -46,13 +46,11 @@ export function useTwitchWs(): WebSocket {
   }, [currentScreen]);
 
   useEffect(() => {
-    // Cleanup function
     return () => {
       logger.twitchWs.info('[useTwitchWs] Cleaning up Twitch WS client');
       void TwitchWsService.disconnect();
     };
   }, []);
 
-  // Return the singleton instance
   return TwitchWsService.getInstance();
 }

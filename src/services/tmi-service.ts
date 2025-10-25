@@ -243,7 +243,13 @@ class TmiService {
 
     try {
       TmiService.currentChannels.clear();
-      await TmiService.instance.disconnect();
+
+      const disconnectPromise = TmiService.instance.disconnect();
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('TMI disconnect timeout')), 3000);
+      });
+
+      await Promise.race([disconnectPromise, timeoutPromise]);
       TmiService.logger.info('Successfully disconnected from TMI');
     } catch (error) {
       TmiService.logger.warn('Error during disconnect (ignoring):', error);

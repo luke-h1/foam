@@ -20,6 +20,7 @@ export const UserSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
   const { data, isPending, error } = useQuery({
     queryKey: ['user', userId],
     queryFn: () => twitchService.getUser(userId),
+    enabled: !!userId, // Only fetch when userId is provided
   });
 
   /**

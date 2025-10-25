@@ -25,7 +25,7 @@ interface UseSeventvWsOptions {
 type UseSeventvWsReturn = {
   ws: WebSocket;
   subscribeToChannel: (channelId: string) => void;
-  unsubscribeFromChannel: (channelId: string) => void;
+  unsubscribeFromChannel: () => void;
   isConnected: () => boolean;
   getConnectionState: () =>
     | 'DISCONNECTED'

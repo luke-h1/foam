@@ -22,6 +22,12 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const [isChatVisible, setIsChatVisible] = useState<boolean>(true);
 
+  useEffect(() => {
+    return () => {
+      console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
+    };
+  }, []);
+
   const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
     useQueries({
       queries: [
@@ -148,7 +154,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   return (
     <View style={[styles.contentContainer, isLandscape && styles.row]}>
-      <GestureDetector gesture={doubleTapGesture}>
+      {/* <GestureDetector gesture={doubleTapGesture}>
         <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
           <WebView
             source={{
@@ -162,14 +168,17 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             mediaPlaybackRequiresUserAction={false}
           />
         </Animated.View>
-      </GestureDetector>
+      </GestureDetector> */}
 
       {/* Chat container - only render when visible or animating */}
       {(isChatVisible || chatOpacity.value > 0) && (
         <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-          {!isUserPending && user?.id && stream.user_login && (
+          {stream.user_login && stream.user_id && (
             <View style={styles.chatContent}>
-              <Chat channelId={user.id} channelName={stream.user_login} />
+              <Chat
+                channelId={stream.user_id}
+                channelName={stream.user_login}
+              />
             </View>
           )}
         </Animated.View>
