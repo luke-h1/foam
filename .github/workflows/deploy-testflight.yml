@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy testflight
 on:
   workflow_dispatch:
     inputs:
