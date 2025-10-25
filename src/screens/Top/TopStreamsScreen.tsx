@@ -1,7 +1,8 @@
 import { EmptyState, LiveStreamCard, FlashList } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useDebouncedCallback } from '@app/hooks';
-import { TwitchStream, twitchService } from '@app/services/twitch-service';
+import { twitchQueries } from '@app/queries/twitchQueries';
+import { TwitchStream } from '@app/services/twitch-service';
 import { getNextPageParam, getPreviousPageParam } from '@app/utils';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -24,9 +25,7 @@ export function TopStreamsScreen() {
     initialPageParam: cursor,
     getNextPageParam,
     getPreviousPageParam,
-    queryFn: ({ pageParam }: { pageParam?: string }) =>
-      twitchService.getTopStreams(pageParam ?? ''),
-    queryKey: ['TopStreams'],
+    ...twitchQueries.getTopStreamsInfinite(),
   });
 
   const handleLoadMore = useCallback(async () => {

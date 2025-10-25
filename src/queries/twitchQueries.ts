@@ -38,7 +38,15 @@ export const twitchQueries = {
   getFollowedStreams(userId: string): UseQueryOptions<TwitchStream[]> {
     return {
       queryKey: ['followedStreams', userId],
-      queryFn: () => twitchService.getFollowedStreams(userId),
+      queryFn: async () => {
+        const streams = await twitchService.getFollowedStreams(userId);
+        return Promise.all(
+          streams.map(async stream => ({
+            ...stream,
+            profilePicture: await twitchService.getUserImage(stream.user_login),
+          })),
+        );
+      },
     };
   },
   getUserInfo(token: string): UseQueryOptions<UserInfoResponse> {
@@ -62,7 +70,44 @@ export const twitchQueries = {
   getTopStreams(cursor?: string): UseQueryOptions<PaginatedList<TwitchStream>> {
     return {
       queryKey: ['topStreams', cursor],
-      queryFn: () => twitchService.getTopStreams(cursor),
+      queryFn: async () => {
+        const result = await twitchService.getTopStreams(cursor);
+        const streamsWithProfilePictures = await Promise.all(
+          result.data.map(async stream => ({
+            ...stream,
+            profilePicture: await twitchService.getUserImage(stream.user_login),
+          })),
+        );
+        return {
+          ...result,
+          data: streamsWithProfilePictures,
+        };
+      },
+    };
+  },
+  getTopStreamsInfinite(): {
+    queryKey: string[];
+    queryFn: ({
+      pageParam,
+    }: {
+      pageParam?: string;
+    }) => Promise<PaginatedList<TwitchStream>>;
+  } {
+    return {
+      queryKey: ['topStreamsInfinite'],
+      queryFn: async ({ pageParam }: { pageParam?: string }) => {
+        const result = await twitchService.getTopStreams(pageParam);
+        const streamsWithProfilePictures = await Promise.all(
+          result.data.map(async stream => ({
+            ...stream,
+            profilePicture: await twitchService.getUserImage(stream.user_login),
+          })),
+        );
+        return {
+          ...result,
+          data: streamsWithProfilePictures,
+        };
+      },
     };
   },
   getCategory(id: string): UseQueryOptions<Category> {

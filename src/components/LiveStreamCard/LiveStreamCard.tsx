@@ -1,4 +1,4 @@
-import { useAppNavigation, useStreamerImage } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks';
 import { TwitchStream } from '@app/services/twitch-service';
 import { elapsedStreamTime, formatViewCount } from '@app/utils';
 import { View } from 'react-native';
@@ -13,7 +13,6 @@ interface Props {
 
 export function LiveStreamCard({ stream }: Props) {
   const { navigate } = useAppNavigation();
-  const { profilePicture } = useStreamerImage(stream.user_login, [stream]);
   return (
     <Button
       onPress={() => {
@@ -48,7 +47,7 @@ export function LiveStreamCard({ stream }: Props) {
           <View style={styles.metadata}>
             <View style={styles.info}>
               <Image
-                source={profilePicture}
+                source={stream.profilePicture}
                 style={styles.avatar}
                 testID="LiveStreamCard-avatar"
               />
