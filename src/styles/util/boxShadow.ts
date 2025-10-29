@@ -4,6 +4,7 @@ interface ShadowRules {
   shadowOffset?: { width: number; height: number };
   shadowColor?: `#${string}`;
   elevation?: number;
+  boxShadow?: string;
 }
 
 const defaultValues: ShadowRules = {
