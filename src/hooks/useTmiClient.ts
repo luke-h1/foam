@@ -35,14 +35,15 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
         ...options,
         options: {
           // debug: __DEV__,
+          skipMembership: true,
+          skipUpdatingEmotesets: true,
+          updateEmotesetsTimer: 10000,
+          joinInterval: 1000,
           ...options.options,
         },
         connection: {
           secure: true,
           reconnect: true,
-          maxReconnectAttempts: 5,
-          maxReconnectInterval: 30000,
-          reconnectDecay: 1.5,
           reconnectInterval: 1000,
           ...options.connection,
         },
