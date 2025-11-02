@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
-import { useChatContext } from '@app/context/ChatContext';
+import { ChatMessageType, useChatContext } from '@app/context/ChatContext';
 import { useAppNavigation, useSeventvWs } from '@app/hooks';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
-import TmiService from '@app/services/tmi-service';
-import { ChatMessageType } from '@app/store';
+import {
+  getTmiClient,
+  isTmiClientConnected,
+  connectTmiClient,
+  setTmiClientOptions,
+} from '@app/hooks/useTmiClient';
 import { createHitslop, clearImageCache } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { logger } from '@app/utils/logger';
@@ -588,18 +592,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         console.log('🚀 Connecting to TMI immediately...');
 
-        if (TmiService.isConnected()) {
+        if (isTmiClientConnected()) {
           console.log('🔗 TMI already connected, reusing connection');
-          const existingClient = TmiService.getInstance();
-          setClient(existingClient);
-          setConnected(true);
-          await existingClient.join(channelName);
-          console.log('🎉 Chat initialization complete (reused connection)!');
-          initializedChannelRef.current = channelId;
-          return;
+          const existingClient = getTmiClient();
+          if (existingClient) {
+            setClient(existingClient);
+            setConnected(true);
+            await existingClient.join(channelName);
+            console.log('🎉 Chat initialization complete (reused connection)!');
+            initializedChannelRef.current = channelId;
+            return;
+          }
         }
 
-        TmiService.setOptions({
+        setTmiClientOptions({
           options: {
             clientId: process.env.TWITCH_CLIENT_ID,
             debug: __DEV__,
@@ -621,10 +627,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           },
         });
 
-        const tmiClient = TmiService.getInstance();
+        const tmiClient = getTmiClient();
+        if (!tmiClient) {
+          throw new Error('Failed to get TMI client instance');
+        }
         setClient(tmiClient);
 
-        await TmiService.connect();
+        await connectTmiClient();
         setConnected(true);
         await tmiClient.join(channelName);
 

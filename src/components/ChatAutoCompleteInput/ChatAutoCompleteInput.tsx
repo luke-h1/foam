@@ -1,5 +1,4 @@
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUser, useChatStore } from '@app/store';
 
 import {
   useCallback,
@@ -35,6 +34,7 @@ import { FlashList } from '../FlashList';
 import { Image } from '../Image';
 import Input from '../Input/Input';
 import { Typography } from '../Typography';
+import { ChatUser, useChatContext } from '@app/context';
 
 // Add this type for user suggestions
 type SuggestionType = 'emote' | 'user';
@@ -141,7 +141,7 @@ export const ChatAutoCompleteInput = forwardRef<
       twitchChannelEmotes,
       ttvUsers,
       twitchGlobalEmotes,
-    } = useChatStore();
+    } = useChatContext();
 
     /**
      * ref to measure input position

@@ -1,24 +1,26 @@
 import { useNavigationState } from '@react-navigation/native';
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import tmijs from 'tmi.js';
 import { getActiveRouteName } from '../navigators/navigationUtilities';
-import TmiService from '../services/tmi-service';
 
 export const CHAT_SCREENS = ['Chat', 'LiveStream'];
 
+let clientInstance: tmijs.Client | null = null;
+let clientOptions: tmijs.Options | null = null;
+let isConnected = false;
+
 export function useTmiClient(options: tmijs.Options): tmijs.Client {
-  const optionsRef = useRef<tmijs.Options>(null);
+  const optionsRef = useRef<tmijs.Options | null>(null);
   const hasInitialized = useRef(false);
   const lastScreenRef = useRef<string | null>(null);
+  const [, forceUpdate] = useState({});
 
-  // Track current screen using navigation state
   const currentScreen = useNavigationState(state => {
     if (!state) return null;
     return getActiveRouteName(state);
   });
 
   useMemo(() => {
-    // Deep compare options to avoid unnecessary reconnection(s)
     const optionsChanged =
       JSON.stringify(optionsRef.current) !== JSON.stringify(options);
 
@@ -31,7 +33,7 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
         hasClientId: !!options.options?.clientId,
       });
 
-      TmiService.setOptions({
+      const mergedOptions: tmijs.Options = {
         ...options,
         options: {
           // debug: __DEV__,
@@ -47,7 +49,31 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
           reconnectInterval: 1000,
           ...options.connection,
         },
-      });
+      };
+
+      if (clientInstance && optionsChanged) {
+        console.log('[useTmiClient] Options changed, disconnecting old client');
+        void clientInstance.disconnect();
+        clientInstance = null;
+        isConnected = false;
+      }
+
+      if (!clientInstance) {
+        clientInstance = new tmijs.Client(mergedOptions);
+        clientOptions = mergedOptions;
+
+        clientInstance.on('connected', () => {
+          console.log('[useTmiClient] Client connected');
+          isConnected = true;
+          forceUpdate({});
+        });
+
+        clientInstance.on('disconnected', reason => {
+          console.log('[useTmiClient] Client disconnected:', reason);
+          isConnected = false;
+          forceUpdate({});
+        });
+      }
 
       optionsRef.current = options;
       hasInitialized.current = true;
@@ -55,7 +81,7 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
   }, [options]);
 
   useEffect(() => {
-    if (!currentScreen) return;
+    if (!currentScreen || !clientInstance) return;
 
     const isOnChatScreen = CHAT_SCREENS.includes(currentScreen);
     const wasOnChatScreen = lastScreenRef.current
@@ -74,14 +100,16 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
       console.log(
         '[useTmiClient] Left chat/livestream screen, disconnecting TMI',
       );
-      void TmiService.disconnect();
+      void clientInstance.disconnect();
     }
     // If we moved from a non-chat screen to a chat screen, ensure connection
     else if (!wasOnChatScreen && isOnChatScreen) {
       console.log(
         '[useTmiClient] Entered chat/livestream screen, ensuring TMI connection',
       );
-      void TmiService.connect();
+      if (!isConnected) {
+        void clientInstance.connect();
+      }
     }
 
     lastScreenRef.current = currentScreen;
@@ -91,13 +119,89 @@ export function useTmiClient(options: tmijs.Options): tmijs.Client {
     // Cleanup function - only disconnect if we're not in development
     return () => {
       console.log('[useTmiClient] Cleaning up TMI client');
-      // if (!__DEV__) {
-      // Only disconnect in production to avoid issues with hot reload
-      void TmiService.disconnect();
-      // }
+      if (clientInstance) {
+        void clientInstance.disconnect();
+      }
     };
   }, []);
 
   // Return the singleton instance - options are now guaranteed to be set
-  return TmiService.getInstance();
+  if (!clientInstance) {
+    throw new Error('TMI client not initialized');
+  }
+  return clientInstance;
+}
+
+// Helper functions for use outside the hook (like in Chat.tsx)
+export function getTmiClient(): tmijs.Client | null {
+  return clientInstance;
+}
+
+export function isTmiClientConnected(): boolean {
+  if (!clientInstance) return false;
+  return isConnected;
+}
+
+export async function connectTmiClient(): Promise<void> {
+  if (!clientInstance) {
+    throw new Error('TMI client not initialized');
+  }
+  if (!isConnected) {
+    await clientInstance.connect();
+  }
+}
+
+export async function disconnectTmiClient(): Promise<void> {
+  if (clientInstance) {
+    await clientInstance.disconnect();
+  }
+}
+
+export function setTmiClientOptions(options: tmijs.Options): void {
+  const mergedOptions: tmijs.Options = {
+    ...options,
+    options: {
+      skipMembership: true,
+      skipUpdatingEmotesets: true,
+      updateEmotesetsTimer: 10000,
+      joinInterval: 1000,
+      ...options.options,
+    },
+    connection: {
+      secure: true,
+      reconnect: true,
+      reconnectInterval: 1000,
+      ...options.connection,
+    },
+  };
+
+  // If client exists and options changed, disconnect the old one
+  if (clientInstance) {
+    const optionsChanged =
+      JSON.stringify(clientOptions) !== JSON.stringify(mergedOptions);
+    if (optionsChanged) {
+      console.log('[setTmiClientOptions] Options changed, recreating client');
+      void clientInstance.disconnect();
+      clientInstance = null;
+      isConnected = false;
+    }
+  }
+
+  // Create new client if it doesn't exist
+  if (!clientInstance) {
+    clientInstance = new tmijs.Client(mergedOptions);
+    clientOptions = mergedOptions;
+    isConnected = false;
+
+    // Set up connection state tracking
+    clientInstance.on('connected', () => {
+      console.log('[setTmiClientOptions] Client connected');
+      isConnected = true;
+    });
+
+    clientInstance.on('disconnected', reason => {
+      console.log('[setTmiClientOptions] Client disconnected:', reason);
+      isConnected = false;
+    });
+  }
 }

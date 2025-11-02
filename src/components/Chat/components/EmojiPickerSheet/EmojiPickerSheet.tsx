@@ -1,7 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 
 import { Typography } from '@app/components/Typography';
-import { useChatStore } from '@app/store';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { LegendListRef } from '@legendapp/list';
 import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
@@ -21,6 +20,7 @@ import {
   PICKER_WIDTH,
   processEmojiSections,
 } from './config';
+import { useChatContext } from '@app/context';
 
 export const TOP_CORNER_STYLE: ViewStyle = {
   borderTopLeftRadius: PICKER_RADIUS,
@@ -92,9 +92,8 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
-      status,
       twitchGlobalEmotes,
-    } = useChatStore();
+    } = useChatContext();
 
     const legendListRef = useRef<LegendListRef>(null);
     const scrollY = useSharedValue<number>(0);
@@ -166,7 +165,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
 
       return sections;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [status]);
+    }, []);
 
     const flatData: FlatListItem[] = useMemo(() => {
       const processed = processEmojiSections(data, CHUNK_SIZE);

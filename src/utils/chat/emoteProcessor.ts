@@ -17,7 +17,44 @@ interface EmoteProcessorParams {
   bttvGlobalEmotes: SanitisiedEmoteSet[];
 }
 
-// Worklet for processing emotes in a separate thread
+const cache = new Map<string, ParsedPart[]>();
+const MAX_CACHE_SIZE = 1000;
+
+// Helper to create cache key from emote sets and input string
+const createCacheKey = (
+  inputString: string,
+  sevenTvGlobalEmotes: SanitisiedEmoteSet[],
+  sevenTvChannelEmotes: SanitisiedEmoteSet[],
+  twitchGlobalEmotes: SanitisiedEmoteSet[],
+  twitchChannelEmotes: SanitisiedEmoteSet[],
+  ffzChannelEmotes: SanitisiedEmoteSet[],
+  ffzGlobalEmotes: SanitisiedEmoteSet[],
+  bttvChannelEmotes: SanitisiedEmoteSet[],
+  bttvGlobalEmotes: SanitisiedEmoteSet[],
+): string => {
+  'worklet';
+
+  const emoteHash = [
+    sevenTvGlobalEmotes.length,
+    sevenTvChannelEmotes.length,
+    twitchGlobalEmotes.length,
+    twitchChannelEmotes.length,
+    ffzChannelEmotes.length,
+    ffzGlobalEmotes.length,
+    bttvChannelEmotes.length,
+    bttvGlobalEmotes.length,
+  ].join('|');
+
+  const firstLastIds = [
+    sevenTvChannelEmotes[0]?.id || '',
+    sevenTvChannelEmotes[sevenTvChannelEmotes.length - 1]?.id || '',
+    sevenTvGlobalEmotes[0]?.id || '',
+    sevenTvGlobalEmotes[sevenTvGlobalEmotes.length - 1]?.id || '',
+  ].join('|');
+
+  return `${emoteHash}:${firstLastIds}:${inputString}`;
+};
+
 export const processEmotesWorklet = (
   params: EmoteProcessorParams,
 ): ParsedPart[] => {
@@ -39,10 +76,24 @@ export const processEmotesWorklet = (
     return [{ type: 'text', content: inputString }];
   }
 
-  // Create emote map for fast lookup
+  const cacheKey = createCacheKey(
+    inputString,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+  );
+
+  const cached = cache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
   const emoteMap = new Map<string, SanitisiedEmoteSet>();
 
-  // Channel emotes take priority
   const channelEmotes = [
     ...sevenTvChannelEmotes,
     ...twitchChannelEmotes,
@@ -57,19 +108,16 @@ export const processEmotesWorklet = (
     ...bttvGlobalEmotes,
   ];
 
-  // Add channel emotes first
   channelEmotes.forEach(emote => {
     emoteMap.set(emote.name, emote);
   });
 
-  // Add global emotes only if not already set by channel emotes
   globalEmotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
     }
   });
 
-  // Simple text processing - split by spaces and check for emotes
   const words = inputString.split(/(\s+)/);
   const result: ParsedPart[] = [];
 
@@ -91,7 +139,6 @@ export const processEmotesWorklet = (
       continue;
     }
 
-    // Check if word is an emote
     const emote = emoteMap.get(word);
     if (emote) {
       result.push({
@@ -112,6 +159,23 @@ export const processEmotesWorklet = (
       result.push({ type: 'text', content: word });
     }
     i += 1;
+  }
+
+  const hasEmotes = result.some(
+    part => part.type === 'emote' || part.type === 'stvEmote',
+  );
+
+  if (hasEmotes) {
+    if (cache.size >= MAX_CACHE_SIZE) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const firstKey = cache.keys().next().value;
+      if (firstKey) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        cache.delete(firstKey);
+      }
+    }
+
+    cache.set(cacheKey, result);
   }
 
   return result;

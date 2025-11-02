@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
+import { ChatMessageType } from '@app/context';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType } from '@app/store/chatStore';
 import { lightenColor, replaceEmotesWithText } from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatDate } from '@app/utils/date-time';

@@ -1,5 +1,5 @@
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor.worklet';
+import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useCallback } from 'react';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
@@ -40,13 +40,10 @@ export const useEmoteProcessor = (params: UseEmoteProcessorParams) => {
         ...params,
       };
 
-      // Use worklet to process emotes in background thread
       const result = processEmotesWorklet(processParams);
 
-      // Update the shared value
       processingQueue.value = result;
 
-      // Call the completion callback on JS thread
       runOnJS(onComplete)(result);
 
       isProcessing.value = false;
