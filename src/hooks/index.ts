@@ -17,7 +17,6 @@ export * from './usePrevious';
 export * from './useScript';
 export * from './useScrollToTop';
 export * from './useTargetMeasurement';
-export * from './useTmiClient';
 export * from './useOTAUpdates';
 export * from './useRecoveredFromError';
 export * from './usePopulateAuth';

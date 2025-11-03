@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 
 import { Typography } from '@app/components/Typography';
+import { useChatContext } from '@app/context';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { LegendListRef } from '@legendapp/list';
 import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
@@ -20,7 +21,6 @@ import {
   PICKER_WIDTH,
   processEmojiSections,
 } from './config';
-import { useChatContext } from '@app/context';
 
 export const TOP_CORNER_STYLE: ViewStyle = {
   borderTopLeftRadius: PICKER_RADIUS,

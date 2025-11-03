@@ -11,6 +11,7 @@ import {
   twitchBadgeService,
 } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { ChatUserstate } from '@app/types/chat';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
 
@@ -28,7 +29,6 @@ import {
 } from 'react';
 import { Platform, ViewStyle } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
-import { ChatUserstate } from 'tmi.js';
 
 const chatStorage = new MMKV({
   id: 'chat-cache',
@@ -102,6 +102,7 @@ export interface ChatMessageType {
   parentDisplayName: string;
   replyDisplayName: string;
   replyBody: string;
+  parentColor?: string;
 }
 
 export type ChatLoadingState =

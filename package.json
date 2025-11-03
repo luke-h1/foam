@@ -149,7 +149,6 @@
     "react-server-dom-webpack": "~19.0.0",
     "reanimated-color-picker": "^4.1.0",
     "sonner-native": "^0.21.0",
-    "tmi.js": "^1.8.5",
     "twemoji": "^14.0.2",
     "zustand": "^5.0.6"
   },
@@ -187,7 +186,6 @@
     "@types/qs": "^6.14.0",
     "@types/react": "~19.1.10",
     "@types/react-native-vector-icons": "^6.4.18",
-    "@types/tmi.js": "^1.8.6",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@vercel/ncc": "^0.38.3",

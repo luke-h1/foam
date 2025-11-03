@@ -2,8 +2,8 @@ import { twitchService } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
 import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
+import { CHAT_SCREENS } from '../constants/chat';
 import { getActiveRouteName } from '../navigators/navigationUtilities';
-import { CHAT_SCREENS } from './useTmiClient';
 import { useWebsocket } from './ws/useWebsocket';
 
 interface EventSubMetadata {
@@ -325,6 +325,21 @@ export function useTwitchWs(): WebSocket {
         );
         clearKeepaliveTimer();
 
+        // Handle 4003 (connection unused) - reset state since we're not reconnecting
+        if (event.code === 4003) {
+          const hasActiveSubscriptions =
+            activeSubscriptionsRef.current.size > 0;
+          if (!hasActiveSubscriptions) {
+            logger.twitchWs.info(
+              '🟣 Connection unused (4003) with no active subscriptions - not reconnecting',
+            );
+            reconnectUrlRef.current = '';
+            setWsUrl(DEFAULT_URL);
+            isReconnectingRef.current = false;
+            return;
+          }
+        }
+
         // Reset reconnect URL if it was a normal closure
         if (event.code === 1000) {
           reconnectUrlRef.current = '';
@@ -336,8 +351,26 @@ export function useTwitchWs(): WebSocket {
         logger.twitchWs.error('🟣 Twitch EventSub WebSocket error:', error);
       },
       shouldReconnect: (event: CloseEvent) => {
-        // Only reconnect if we're still on a chat screen and it's not a normal closure
-        return shouldConnect && event.code !== 1000;
+        // Don't reconnect on normal closure
+        if (event.code === 1000) {
+          return false;
+        }
+
+        // Don't reconnect on 4003 (connection unused) if we have no active subscriptions
+        // Twitch closes unused connections, and reconnecting without subscriptions will just
+        // result in another 4003 closure
+        if (event.code === 4003) {
+          const hasActiveSubscriptions =
+            activeSubscriptionsRef.current.size > 0;
+          if (!hasActiveSubscriptions) {
+            logger.twitchWs.info(
+              '🟣 Not reconnecting on 4003 - no active subscriptions to maintain',
+            );
+            return false;
+          }
+        }
+
+        return shouldConnect;
       },
       reconnectAttempts: 20,
       reconnectInterval: 2000,

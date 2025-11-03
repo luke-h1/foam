@@ -1,5 +1,5 @@
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUserstate } from 'tmi.js';
+import { ChatUserstate } from '@app/types/chat';
 import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';

@@ -1,6 +1,6 @@
 import { ChatUser } from '@app/context';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatUserstate } from 'tmi.js';
+import { ChatUserstate } from '@app/types/chat';
 
 interface FindBadgesParams {
   userstate: ChatUserstate;
@@ -38,10 +38,7 @@ export function findBadges({
   /**
    * Twitch badges
    */
-  if (
-    userstate['badges-raw'] &&
-    Object.keys(userstate['badges-raw']).length > 0
-  ) {
+  if (userstate['badges-raw'] && userstate['badges-raw'].length > 0) {
     const rawBadges = userstate['badges-raw'].split(',');
 
     // eslint-disable-next-line no-restricted-syntax

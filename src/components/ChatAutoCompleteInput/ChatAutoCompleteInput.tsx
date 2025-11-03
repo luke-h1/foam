@@ -1,3 +1,4 @@
+import { ChatUser, useChatContext } from '@app/context';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 
 import {
@@ -34,7 +35,6 @@ import { FlashList } from '../FlashList';
 import { Image } from '../Image';
 import Input from '../Input/Input';
 import { Typography } from '../Typography';
-import { ChatUser, useChatContext } from '@app/context';
 
 // Add this type for user suggestions
 type SuggestionType = 'emote' | 'user';

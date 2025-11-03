@@ -2,16 +2,14 @@
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { ChatMessageType, useChatContext } from '@app/context/ChatContext';
-import { useAppNavigation, useSeventvWs } from '@app/hooks';
+import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
-import {
-  getTmiClient,
-  isTmiClientConnected,
-  connectTmiClient,
-  setTmiClientOptions,
-} from '@app/hooks/useTmiClient';
+import { useTwitchChat } from '@app/services/twitch-chat-service';
+import { ChatUserstate } from '@app/types/chat';
 import { createHitslop, clearImageCache } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { parseBadges } from '@app/utils/chat/parseBadges';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -25,7 +23,6 @@ import {
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { StyleSheet } from 'react-native-unistyles';
-import tmijs from 'tmi.js';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { FlashList } from '../FlashList';
@@ -41,11 +38,9 @@ interface ChatProps {
 }
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
-  const [connected, setConnected] = useState<boolean>(false);
   const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
   const hasPartedRef = useRef<boolean>(false);
-  const [client, setClient] = useState<tmijs.Client | null>(null);
   const initializingRef = useRef<boolean>(false);
   const initializedChannelRef = useRef<string | null>(null);
 
@@ -69,6 +64,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId]);
 
+  useTwitchWs();
+
   // Initialize emote processor with current emote data
   const currentEmotes = getCurrentEmoteData(channelId);
   const emoteProcessor = useEmoteProcessor({
@@ -81,6 +78,231 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     bttvChannelEmotes: currentEmotes?.bttvChannelEmotes || [],
     bttvGlobalEmotes: currentEmotes?.bttvGlobalEmotes || [],
   });
+
+  const flashListRef = useRef<FlashListRef<ChatMessageType>>(null);
+  const messagesRef = useRef<ChatMessageType[]>([]);
+  const messageBatchRef = useRef<ChatMessageType[]>([]);
+  const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAtBottomRef = useRef<boolean>(true);
+  const [isScrollingToBottom, setIsScrollingToBottom] =
+    useState<boolean>(false);
+
+  const processMessageBatch = useCallback(() => {
+    if (messageBatchRef.current.length === 0) return;
+
+    const batch = [...messageBatchRef.current];
+    messageBatchRef.current = [];
+
+    // Use addMessages for batch processing instead of individual addMessage calls
+    addMessages(batch);
+
+    messagesRef.current = [...messagesRef.current, ...batch].slice(-500);
+
+    // Update unread count
+    if (!isAtBottomRef.current && !isScrollingToBottom) {
+      setUnreadCount(prev => prev + batch.length);
+    }
+
+    // Force scroll to bottom if we're already at bottom (for fast chats)
+    if (isAtBottomRef.current && !isScrollingToBottom) {
+      setTimeout(() => {
+        void flashListRef.current?.scrollToIndex({
+          index: messages.length - 1,
+          animated: false,
+        });
+      }, 0);
+    }
+  }, [addMessages, isScrollingToBottom, messages.length]);
+
+  const handleNewMessage = useCallback(
+    (newMessage: ChatMessageType) => {
+      // Add to batch
+      messageBatchRef.current.push(newMessage);
+
+      // Clear existing timeout
+      if (batchTimeoutRef.current) {
+        clearTimeout(batchTimeoutRef.current);
+      }
+
+      if (messageBatchRef.current.length >= 3) {
+        processMessageBatch();
+      } else {
+        batchTimeoutRef.current = setTimeout(() => {
+          processMessageBatch();
+        }, 10);
+      }
+    },
+    [processMessageBatch],
+  );
+
+  // Initialize Twitch chat hook
+  const {
+    isConnected: isChatConnected,
+    partChannel,
+    sendMessage,
+  } = useTwitchChat({
+    channel: channelName,
+    onMessage: useCallback(
+      (_channel: string, tags: Record<string, string>, text: string) => {
+        // Parse badges from IRC tags (like tmi.js does)
+        const badgeData = parseBadges(tags.badges);
+
+        // Map IRC tags to ChatUserstate format
+        // Username should be display-name for display, login for lowercase username
+        const userstate: ChatUserstate = {
+          ...tags,
+          username: tags['display-name'] || tags.login || '',
+          login: tags.login || tags['display-name']?.toLowerCase() || '',
+          'badges-raw': badgeData['badges-raw'],
+          badges: badgeData.badges,
+        };
+
+        const message_id = userstate.id || '0';
+        const replyParentMessageId = tags['reply-parent-msg-id'];
+
+        const replyParentDisplayName = tags['reply-parent-display-name'];
+        const replyParentUserLogin = tags['reply-parent-user-login'];
+        const replyParentMessageBody = tags['reply-parent-msg-body'];
+
+        // Calculate parent color for reply messages
+        let parentColor: string | undefined;
+        if (replyParentDisplayName && replyParentDisplayName.trim()) {
+          // Try to find parent message to get its color
+          if (replyParentMessageId) {
+            const replyParent = messages.find(
+              message => message.message_id === replyParentMessageId,
+            );
+            if (replyParent?.userstate.color) {
+              parentColor = replyParent.userstate.color;
+            } else {
+              parentColor = generateRandomTwitchColor(replyParentDisplayName);
+            }
+          } else {
+            // If no parent message ID, always generate color from username
+            parentColor = generateRandomTwitchColor(replyParentDisplayName);
+          }
+        }
+
+        if (replyParentMessageId && replyParentDisplayName) {
+          const replyParent = messages.find(
+            message => message.message_id === replyParentMessageId,
+          );
+
+          if (replyParent) {
+            setReplyTo({
+              messageId: replyParentMessageId,
+              username: replyParentDisplayName || '',
+              message: replyParentMessageBody || '',
+              replyParentUserLogin: replyParentUserLogin || '',
+            });
+          }
+        }
+
+        const message_nonce = generateNonce();
+
+        const emoteData = getCurrentEmoteData(channelId);
+
+        // Create message immediately with basic text, defer emote/badge processing
+        const newMessage: ChatMessageType = {
+          userstate,
+          message: [{ type: 'text', content: text.trimEnd() }],
+          badges: [],
+          channel: channelName,
+          message_id,
+          message_nonce,
+          sender: userstate.username || '',
+          parentDisplayName: tags['reply-parent-display-name'] || '',
+          replyDisplayName: tags['reply-parent-user-login'] || '',
+          replyBody: tags['reply-parent-msg-body'] || '',
+          parentColor: parentColor || undefined,
+        };
+
+        // Send message immediately for fast rendering
+        handleNewMessage(newMessage);
+
+        // Process emotes and badges asynchronously using worklet
+        if (
+          emoteData &&
+          (emoteData.twitchGlobalEmotes.length > 0 ||
+            emoteData.sevenTvGlobalEmotes.length > 0 ||
+            emoteData.bttvGlobalEmotes.length > 0 ||
+            emoteData.ffzGlobalEmotes.length > 0)
+        ) {
+          // Use worklet-based emote processor for better concurrency
+          emoteProcessor.processEmotes(
+            text.trimEnd(),
+            userstate,
+            replacedMessage => {
+              try {
+                const replacedBadges = findBadges({
+                  userstate,
+                  chatterinoBadges: emoteData.chatterinoBadges,
+                  chatUsers: [], // need to populate from ctx
+                  ffzChannelBadges: emoteData.ffzChannelBadges,
+                  ffzGlobalBadges: emoteData.ffzGlobalBadges,
+                  twitchChannelBadges: emoteData.twitchChannelBadges,
+                  twitchGlobalBadges: emoteData.twitchGlobalBadges,
+                });
+
+                // Update the message with processed emotes and badges
+                const updatedMessage: ChatMessageType = {
+                  ...newMessage,
+                  message: replacedMessage,
+                  badges: replacedBadges,
+                  parentColor: newMessage.parentColor,
+                };
+
+                // Update the message in the context
+                addMessage(updatedMessage);
+              } catch (error) {
+                logger.chat.error('Error processing emotes:', error);
+              }
+            },
+          );
+        }
+      },
+      [
+        channelId,
+        channelName,
+        getCurrentEmoteData,
+        emoteProcessor,
+        handleNewMessage,
+        addMessage,
+        messages,
+      ],
+    ),
+    onClearChat: useCallback(() => {
+      clearMessages();
+      messagesRef.current = [];
+      setTimeout(() => {
+        void flashListRef.current?.scrollToIndex({
+          index: messages.length - 1,
+          animated: false,
+        });
+      }, 0);
+    }, [clearMessages, messages.length]),
+    onJoin: useCallback(() => {
+      logger.chat.info('Joined channel:', channelName);
+    }, [channelName]),
+    onPart: useCallback(() => {
+      logger.chat.info('Parted from channel:', channelName);
+    }, [channelName]),
+  });
+
+  const [connected, setConnected] = useState<boolean>(false);
+
+  // Sync connection state from hook
+  useEffect(() => {
+    const checkConnection = () => {
+      const isConnected = isChatConnected();
+      setConnected(isConnected);
+    };
+
+    checkConnection();
+    const interval = setInterval(checkConnection, 1000);
+
+    return () => clearInterval(interval);
+  }, [isChatConnected]);
 
   const { subscribeToChannel, unsubscribeFromChannel, isConnected } =
     useSeventvWs({
@@ -191,23 +413,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       console.log('🚪 Screen is being removed, cleaning up chat connection...');
 
-      if (client && !hasPartedRef.current) {
+      if (!hasPartedRef.current) {
         hasPartedRef.current = true;
         console.log(`👋 Parting channel: ${channelName}`);
-        void client.part(channelName);
-      }
-
-      if (client) {
-        console.log('🧹 Removing all TMI listeners');
-        client.removeAllListeners('message');
-        client.removeAllListeners('clearchat');
-        client.removeAllListeners('disconnected');
-        client.removeAllListeners('connected');
+        partChannel(channelName);
       }
 
       setConnected(false);
-      setClient(null);
-
       initializedChannelRef.current = null;
       initializingRef.current = false;
     });
@@ -218,12 +430,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       clearTtvUsers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation, client, channelName]);
+  }, [navigation, channelName, partChannel]);
 
-  const flashListRef = useRef<FlashListRef<ChatMessageType>>(null);
-  const messagesRef = useRef<ChatMessageType[]>([]);
-
-  const [_connectionError, setConnectionError] = useState<string | null>(null);
+  const [_connectionError] = useState<string | null>(null);
   const [showEmotePicker, setShowEmotePicker] = useState<boolean>(false);
 
   const [messageInput, setMessageInput] = useState<string>('');
@@ -239,14 +448,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const BOTTOM_THRESHOLD = 50;
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
-  const isAtBottomRef = useRef<boolean>(true);
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [isScrollingToBottom, setIsScrollingToBottom] =
-    useState<boolean>(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const messageBatchRef = useRef<ChatMessageType[]>([]);
-  const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -330,382 +533,41 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     messagesRef.current = messages;
   }, [messages]);
 
-  const processMessageBatch = useCallback(() => {
-    if (messageBatchRef.current.length === 0) return;
-
-    const batch = [...messageBatchRef.current];
-    messageBatchRef.current = [];
-
-    // Use addMessages for batch processing instead of individual addMessage calls
-    addMessages(batch);
-
-    messagesRef.current = [...messagesRef.current, ...batch].slice(-500);
-
-    // Update unread count
-    if (!isAtBottomRef.current && !isScrollingToBottom) {
-      setUnreadCount(prev => prev + batch.length);
-    }
-
-    // Force scroll to bottom if we're already at bottom (for fast chats)
-    if (isAtBottomRef.current && !isScrollingToBottom) {
-      setTimeout(() => {
-        void flashListRef.current?.scrollToIndex({
-          index: messages.length - 1,
-          animated: false,
-        });
-      }, 0);
-    }
-  }, [addMessages, isScrollingToBottom, messages.length]);
-
-  const handleNewMessage = useCallback(
-    (newMessage: ChatMessageType) => {
-      // Add to batch
-      messageBatchRef.current.push(newMessage);
-
-      // Clear existing timeout
-      if (batchTimeoutRef.current) {
-        clearTimeout(batchTimeoutRef.current);
-      }
-
-      if (messageBatchRef.current.length >= 3) {
-        processMessageBatch();
-      } else {
-        batchTimeoutRef.current = setTimeout(() => {
-          processMessageBatch();
-        }, 10);
-      }
-    },
-    [processMessageBatch],
-  );
-
-  const setupChatListeners = useCallback(
-    (tmiClient: tmijs.Client) => {
-      tmiClient.removeAllListeners('message');
-      tmiClient.removeAllListeners('clearchat');
-      tmiClient.removeAllListeners('disconnected');
-      tmiClient.removeAllListeners('connected');
-
-      console.log('🎧 Setting up fresh chat listeners');
-
-      tmiClient.on('message', (_channel, tags, text, _self) => {
-        const userstate = tags;
-
-        const message_id = userstate.id || '0';
-        const replyParentMessageId = tags.id;
-
-        const replyParentDisplayName = tags[
-          'reply-parent-display-name'
-        ] as string;
-
-        const replyParentUserLogin = tags['reply-parent-user-login'] as string;
-        const replyParentMessageBody = tags['reply-parent-msg-body'] as string;
-
-        if (replyParentMessageId) {
-          const replyParent = messages.find(
-            message => message.message_id === replyParentMessageId,
-          );
-
-          if (replyParent) {
-            setReplyTo({
-              messageId: replyParentMessageId,
-              username: replyParentDisplayName,
-              message: replyParentMessageBody,
-              replyParentUserLogin,
-            });
-          }
-        }
-
-        const message_nonce = generateNonce();
-
-        const emoteData = getCurrentEmoteData(channelId);
-
-        // Create message immediately with basic text, defer emote/badge processing
-        const newMessage: ChatMessageType = {
-          userstate,
-          message: [{ type: 'text', content: text.trimEnd() }],
-          badges: [],
-          channel: channelName,
-          message_id,
-          message_nonce,
-          sender: userstate.username || '',
-          parentDisplayName:
-            (tags['reply-parent-display-name'] as string) || '',
-          replyDisplayName: (tags['reply-parent-user-login'] as string) || '',
-          replyBody: (tags['reply-parent-msg-body'] as string) || '',
-        };
-
-        // Send message immediately for fast rendering
-        handleNewMessage(newMessage);
-
-        // Process emotes and badges asynchronously using worklet
-        if (
-          emoteData &&
-          (emoteData.twitchGlobalEmotes.length > 0 ||
-            emoteData.sevenTvGlobalEmotes.length > 0 ||
-            emoteData.bttvGlobalEmotes.length > 0 ||
-            emoteData.ffzGlobalEmotes.length > 0)
-        ) {
-          // Use worklet-based emote processor for better concurrency
-          emoteProcessor.processEmotes(
-            text.trimEnd(),
-            userstate,
-            replacedMessage => {
-              try {
-                const replacedBadges = findBadges({
-                  userstate,
-                  chatterinoBadges: emoteData.chatterinoBadges,
-                  chatUsers: [], // need to populate from ctx
-                  ffzChannelBadges: emoteData.ffzChannelBadges,
-                  ffzGlobalBadges: emoteData.ffzGlobalBadges,
-                  twitchChannelBadges: emoteData.twitchChannelBadges,
-                  twitchGlobalBadges: emoteData.twitchGlobalBadges,
-                });
-
-                // Update the message with processed emotes and badges
-                const updatedMessage: ChatMessageType = {
-                  ...newMessage,
-                  message: replacedMessage,
-                  badges: replacedBadges,
-                };
-
-                // Update the message in the context
-                addMessage(updatedMessage);
-              } catch (error) {
-                logger.chat.error('Error processing emotes:', error);
-              }
-            },
-          );
-        }
-      });
-
-      tmiClient.on('clearchat', () => {
-        clearMessages(); // This will clear messages in context
-        messagesRef.current = [];
-        setTimeout(() => {
-          void flashListRef.current?.scrollToIndex({
-            index: messages.length - 1,
-            animated: false,
-          });
-        }, 0);
-        void tmiClient.say(channelName, 'Chat cleared by moderator');
-      });
-
-      tmiClient.on('disconnected', reason => {
-        logger.chat.info('Disconnected from chat:', reason);
-        setConnected(false);
-      });
-
-      tmiClient.on('connected', () => {
-        setConnected(true);
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      channelName,
-      handleNewMessage,
-      clearMessages,
-      channelId,
-      getCurrentEmoteData,
-    ],
-  );
-
-  // Add an effect to wait for emote data to be available before setting up listeners
+  // Initialize channel resources when channelId changes
   useEffect(() => {
-    const checkEmoteDataAndSetupListeners = () => {
-      if (!client || !channelId) return;
-
-      const emoteData = getCurrentEmoteData(channelId);
-
-      const hasEmotes =
-        emoteData.twitchGlobalEmotes.length > 0 ||
-        emoteData.sevenTvGlobalEmotes.length > 0 ||
-        emoteData.bttvGlobalEmotes.length > 0 ||
-        emoteData.ffzGlobalEmotes.length > 0;
-
-      if (hasEmotes) {
-        console.log('🎧 Emote data is available, setting up chat listeners');
-        setupChatListeners(client);
-      } else if (loadingState === 'COMPLETED') {
-        console.log(
-          '⏳ Loading completed but no emotes yet, retrying in 200ms...',
-        );
-        setTimeout(() => {
-          checkEmoteDataAndSetupListeners();
-        }, 200);
-      }
-    };
-
-    checkEmoteDataAndSetupListeners();
-  }, [
-    client,
-    channelId,
-    loadingState,
-    getCurrentEmoteData,
-    setupChatListeners,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (client) {
-        console.log('🧹 Cleaning up chat listeners (useEffect cleanup)');
-
-        if (!hasPartedRef.current) {
-          hasPartedRef.current = true;
-          console.log(`👋 Parting channel: ${channelName} (cleanup)`);
-          void client.part(channelName);
-        }
-
-        client.removeAllListeners('message');
-        client.removeAllListeners('clearchat');
-        client.removeAllListeners('disconnected');
-        client.removeAllListeners('connected');
-      }
-
-      setConnected(false);
-      clearMessages();
-      messagesRef.current = [];
-    };
-  }, [client, channelId, channelName, clearMessages]);
-
-  useEffect(() => {
-    const initializeChat = async () => {
-      if (initializingRef.current) {
-        console.log('⏸️ Already initializing, skipping...');
-        return;
-      }
-
-      if (initializedChannelRef.current === channelId) {
-        console.log('⏸️ Already initialized for this channel:', channelId);
-        return;
-      }
-
-      try {
-        initializingRef.current = true;
-        console.log('🔄 initializeChat starting for:', channelId);
-
-        void loadChannelResources(channelId).then(success => {
-          console.log('📡 loadChannelResources result (background):', success);
-          if (!success) {
-            console.log('❌ loadChannelResources failed (background)');
-          }
-        });
-
-        console.log('🚀 Connecting to TMI immediately...');
-
-        if (isTmiClientConnected()) {
-          console.log('🔗 TMI already connected, reusing connection');
-          const existingClient = getTmiClient();
-          if (existingClient) {
-            setClient(existingClient);
-            setConnected(true);
-            await existingClient.join(channelName);
-            console.log('🎉 Chat initialization complete (reused connection)!');
-            initializedChannelRef.current = channelId;
-            return;
-          }
-        }
-
-        setTmiClientOptions({
-          options: {
-            clientId: process.env.TWITCH_CLIENT_ID,
-            debug: __DEV__,
-          },
-          channels: [],
-          identity: user
-            ? {
-                username: user.display_name ?? '',
-                password: authState?.token.accessToken,
-              }
-            : undefined,
-          connection: {
-            secure: true,
-            reconnect: true,
-            maxReconnectAttempts: 5,
-            maxReconnectInterval: 30000,
-            reconnectDecay: 1.5,
-            reconnectInterval: 1000,
-          },
-        });
-
-        const tmiClient = getTmiClient();
-        if (!tmiClient) {
-          throw new Error('Failed to get TMI client instance');
-        }
-        setClient(tmiClient);
-
-        await connectTmiClient();
-        setConnected(true);
-        await tmiClient.join(channelName);
-
-        console.log('🎉 Chat initialization complete!');
-        initializedChannelRef.current = channelId;
-      } catch (error) {
-        console.log('💥 Chat initialization error:', error);
-        logger.chat.error('Failed to initialize chat:', error);
-        setConnectionError('Failed to connect to chat');
-        setConnected(false);
-      } finally {
-        initializingRef.current = false;
-      }
-    };
-
     if (channelId && channelId.trim() && authState?.token.accessToken) {
-      console.log('🚀 Initializing chat for:', {
-        channelId,
-        hasUser: !!user,
-        hasAuthState: !!authState,
-        alreadyInitialized: initializedChannelRef.current === channelId,
-      });
-      void initializeChat();
-    } else {
-      console.log('⏸️ Skipping initialization:', {
-        channelId,
-        hasUser: !!user,
-        hasAuthToken: !!authState?.token.accessToken,
+      void loadChannelResources(channelId).then(success => {
+        console.log('📡 loadChannelResources result:', success);
+        if (!success) {
+          console.log('❌ loadChannelResources failed');
+        }
       });
     }
-
-    return () => {
-      if (initializedChannelRef.current !== channelId) {
-        initializedChannelRef.current = null;
-      }
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    channelId,
-    setupChatListeners,
-    channelName,
-    authState?.token.accessToken,
-  ]);
+  }, [channelId, authState?.token.accessToken]);
 
-  const handleSendMessage = useCallback(async () => {
-    if (!messageInput.trim() || !client) {
+  const handleSendMessage = useCallback(() => {
+    if (!messageInput.trim() || !isChatConnected()) {
       return;
     }
 
     if (replyTo) {
       try {
-        await client.say(
+        sendMessage(
           channelName,
           `@${replyTo.username} ${messageInput}`,
-          // @ts-expect-error - upstream types in tmi.js are not up to date
-          {
-            'reply-parent-msg-id': replyTo.messageId,
-            'reply-parent-display-name': replyTo.username,
-            'reply-parent-msg-body': replyTo.message,
-            'reply-parent-user-login': replyTo.replyParentUserLogin,
-          },
+          replyTo.messageId,
         );
       } catch (error) {
         logger.chat.error('issue sending reply', error);
       }
     } else {
-      await client.say(channelName, messageInput);
+      sendMessage(channelName, messageInput);
     }
 
     setMessageInput('');
     setReplyTo(null);
-  }, [channelName, client, messageInput, replyTo]);
+  }, [channelName, messageInput, replyTo, sendMessage, isChatConnected]);
 
   const inputContainerRef = useRef<View>(null);
   const [_inputContainerHeight, setInputContainerHeight] = useState(0);
@@ -716,6 +578,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         setInputContainerHeight(height);
       });
     }
+  }, []);
+
+  const handleReply = useCallback((message: ChatMessageType) => {
+    setReplyTo({
+      messageId: message.message_id,
+      username: message.sender,
+      message: message.message
+        .map(part => (part as { content: string }).content)
+        .join(''),
+      replyParentUserLogin: message.userstate.username || '',
+    });
   }, []);
 
   const renderItem = useCallback(
@@ -731,21 +604,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         sender={item.sender}
         style={styles.messageContainer}
         parentDisplayName={item.parentDisplayName}
-        onReply={message => {
-          setReplyTo({
-            messageId: message.message_id,
-            username: message.sender,
-            message: message.message
-              .map(part => (part as { content: string }).content)
-              .join(''),
-            replyParentUserLogin: message.userstate.username || '',
-          });
-        }}
+        parentColor={item.parentColor}
+        onReply={handleReply}
         replyDisplayName={item.replyDisplayName}
         replyBody={item.replyBody}
       />
     ),
-    [setReplyTo],
+    [handleReply],
   );
 
   const emojiPickerRef = useRef<BottomSheetModal>(null);
@@ -905,7 +770,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           <Button
             style={styles.sendButton}
             onPress={() => void handleSendMessage()}
-            disabled={!messageInput.trim() || !connected || !client}
+            disabled={!messageInput.trim() || !connected}
           >
             <Icon icon="send" size={24} />
           </Button>

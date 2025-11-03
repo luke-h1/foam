@@ -36,6 +36,7 @@ export const ChatMessage = memo(
     parentDisplayName,
     replyBody,
     replyDisplayName,
+    parentColor,
     onReply,
   }: ChatMessageType & { onReply: (args: OnReply) => void }) => {
     const emoteSheetRef = useRef<BottomSheetModal>(null);
@@ -165,9 +166,27 @@ export const ChatMessage = memo(
         {isReply && (
           <View style={styles.replyIndicator}>
             <Icon icon="corner-down-left" size={16} />
-            <Typography color="gray.accent" style={styles.replyToText}>
-              Replying to {parentDisplayName}
-            </Typography>
+            <View style={styles.replyToTextContainer}>
+              <Typography color="gray.accent" style={styles.replyToText}>
+                Replying to{' '}
+              </Typography>
+              {parentColor ? (
+                <Typography
+                  style={[
+                    styles.replyToText,
+                    {
+                      color: lightenColor(parentColor),
+                    },
+                  ]}
+                >
+                  {parentDisplayName}
+                </Typography>
+              ) : (
+                <Typography color="gray.accent" style={styles.replyToText}>
+                  {parentDisplayName}
+                </Typography>
+              )}
+            </View>
           </View>
         )}
 
@@ -335,7 +354,12 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     marginBottom: theme.spacing.xs,
   },
-  replyToText: {
+  replyToTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginLeft: theme.spacing.xs,
+  },
+  replyToText: {
+    // Styles applied via inline styles
   },
 }));
