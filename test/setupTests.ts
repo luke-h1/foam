@@ -1,29 +1,36 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-restricted-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable global-require */
+
 /* eslint-disable @typescript-eslint/no-require-imports */
 import '@testing-library/jest-native/extend-expect';
 import 'react-native-gesture-handler/jestSetup';
 import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
-import mockFile from '../__mocks__/mockFile';
 import 'cross-fetch/polyfill';
 import '@app/hooks/useAppNavigation';
 import '../src/styles/unistyles';
+import { configure as configureReassure } from 'reassure';
+import { TextEncoder, TextDecoder } from 'util';
+import mockFile from '../__mocks__/mockFile';
+
+// Polyfill TextEncoder/TextDecoder for Node.js environment
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as typeof global.TextDecoder;
+
+configureReassure({ testingLibrary: 'react-native' });
 
 jest.mock('expo-font');
 jest.mock('expo-asset');
-jest.mock('react-native-vector-icons', () => {
-  return {
-    __esModule: true,
-    ...jest.requireActual('react-native-vector-icons'),
-  };
-});
+// Mock react-native-vector-icons - mocks are in __mocks__ directory
+jest.mock('react-native-vector-icons');
 
 /**
  * Polyfill for setImmediate which Sentry uses under the hood
@@ -31,6 +38,7 @@ jest.mock('react-native-vector-icons', () => {
 global.setImmediate =
   global.setImmediate ||
   ((callback: (...args: any[]) => void, ...args: any) =>
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     setTimeout(callback, 0, ...args));
 
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => {
@@ -111,21 +119,13 @@ jest.mock('expo-secure-store', () => ({
   deleteItemAsync: jest.fn(),
 }));
 
-// jest.mock('expo-modules-core', () => ({
-//   requireNativeModule: jest.fn().mockImplementation(moduleName => {
-//     if (moduleName === 'ExpoPlatformInfo') {
-//       return {
-//         getIsReducedMotionEnabled: () => false,
-//       };
-//     }
-//     if (moduleName === 'BottomSheet') {
-//       return {
-//         dismissAll: () => {},
-//       };
-//     }
-//     console.log('moduleName ->', moduleName);
-//   }),
-//   requireNativeViewManager: jest.fn().mockImplementation(moduleName => {
-//     return () => null;
-//   }),
-// }));
+// Mocks are in __mocks__ directory - Jest will auto-discover them
+jest.mock('react-native-nitro-modules');
+jest.mock('react-native-unistyles');
+jest.mock('react-native-keyboard-controller');
+jest.mock('expo-task-manager');
+jest.mock('expo-background-task');
+jest.mock('expo-updates');
+
+// expo/fetch needs manual mock due to path structure
+jest.mock('expo/fetch');

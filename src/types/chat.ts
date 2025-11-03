@@ -16,6 +16,9 @@ export interface ChatUserstate {
   /** User's color (hex color code) */
   color?: string;
   /** Badges (parsed object) */
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   badges?: {
     broadcaster?: string;
     moderator?: string;

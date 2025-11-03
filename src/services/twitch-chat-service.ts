@@ -99,7 +99,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Determine if we should be connected based on screen
   const shouldConnect = useMemo(() => {
     if (!currentScreen) return false;
-    return CHAT_SCREENS.includes(currentScreen);
+    return CHAT_SCREENS.includes(currentScreen as 'Chat' | 'LiveStream');
   }, [currentScreen]);
 
   /**
@@ -684,9 +684,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   useEffect(() => {
     if (!currentScreen) return;
 
-    const isOnChatScreen = CHAT_SCREENS.includes(currentScreen);
+    const isOnChatScreen = CHAT_SCREENS.includes(
+      currentScreen as 'Chat' | 'LiveStream',
+    );
     const wasOnChatScreen = lastScreenRef.current
-      ? CHAT_SCREENS.includes(lastScreenRef.current)
+      ? CHAT_SCREENS.includes(lastScreenRef.current as 'Chat' | 'LiveStream')
       : false;
 
     logger.chat.info('[useTwitchChat] Screen changed:', {
