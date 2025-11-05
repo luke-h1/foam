@@ -44,7 +44,24 @@ export type PartVariant =
 
 export type TwitchAnd7TVVariant = Extract<
   PartVariant,
-  'stvEmote' | 'twitchClip'
+  | 'stvEmote'
+  | 'twitchClip'
+  | 'twitch_subscription'
+
+  /**
+   * Twitch notices
+   */
+  | 'viewermilestone'
+  | 'sub'
+  | 'resub'
+  | 'subgift'
+  | 'submysterygift'
+  | 'giftpaidupgrade'
+  | 'rewardgift'
+  | 'anongiftpaidupgrade'
+  | 'raid'
+  | 'unraid'
+  | 'sharedchatnotice'
 >;
 
 export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
@@ -75,24 +92,35 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
           gifterId?: string; // for subgift
         };
       }
-    : Pick<
-        Partial<SanitisiedEmoteSet>,
-        'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
-      > & {
-        id?: string;
-        name?: string;
-        flags?: number;
-        type: TType;
-        content: string;
-        color?: string;
-        width?: number;
-        height?: number;
-
-        /**
-         * Used for emote and twitch clip previews
+    : TType extends 'viewermilestone'
+      ? {
+          type: TType;
+          category: string;
+          reward: string;
+          value: string;
+          content: string;
+        }
+      : /**
+         * Normal message
          */
-        thumbnail?: string;
-      };
+        Pick<
+          Partial<SanitisiedEmoteSet>,
+          'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
+        > & {
+          id?: string;
+          name?: string;
+          flags?: number;
+          type: TType;
+          content: string;
+          color?: string;
+          width?: number;
+          height?: number;
+
+          /**
+           * Used for emote and twitch clip previews
+           */
+          thumbnail?: string;
+        };
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
