@@ -1,4 +1,5 @@
 import { useAuthContext } from '@app/context/AuthContext';
+import { UserNoticeTags } from '@app/types/chat';
 import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
 import { useEffect, useRef, useMemo, useCallback } from 'react';
@@ -31,7 +32,7 @@ interface UseTwitchChatOptions {
   ) => void;
   onUserNotice?: (
     channel: string,
-    tags: Record<string, string>,
+    tags: UserNoticeTags,
     message: string,
   ) => void;
   onClearChat?: (

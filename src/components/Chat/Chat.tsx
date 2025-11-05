@@ -45,7 +45,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const hasPartedRef = useRef<boolean>(false);
   const initializingRef = useRef<boolean>(false);
   const initializedChannelRef = useRef<string | null>(null);
-  const testSubscriptionSentRef = useRef<boolean>(false);
 
   const currentEmoteSetIdRef = useRef<string | null>(null);
 
