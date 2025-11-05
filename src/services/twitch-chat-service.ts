@@ -89,6 +89,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     channel: string;
     message: string;
     replyParentMsgId?: string;
+    replyParentDisplayName?: string;
+    replyParentMsgBody?: string;
   } | null>(null);
 
   const currentScreen = useNavigationState(state => {
@@ -392,9 +394,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
                 return;
               }
 
-              logger.chat.debug(
-                `PRIVMSG in ${channelName}: ${messageText.substring(0, 50)}...`,
-              );
+              // logger.chat.debug(
+              //   `PRIVMSG in ${channelName}: ${messageText.substring(0, 50)}...`,
+              // );
               onMessage?.(channelName, tagsRecord, messageText);
             }
           }
@@ -581,7 +583,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     ],
   );
 
-  // Handle WebSocket messages (IRC protocol uses text, not JSON)
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       try {
@@ -652,7 +653,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     shouldConnect,
   );
 
-  // Store getWebSocket in ref for use in callbacks
   useEffect(() => {
     getWebSocketRef.current = getWebSocket;
   }, [getWebSocket]);
@@ -727,7 +727,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    * Send a chat message
    */
   const sendMessage = useCallback(
-    (channelName: string, message: string, replyParentMsgId?: string) => {
+    (
+      channelName: string,
+      message: string,
+      replyParentMsgId?: string,
+      replyParentDisplayName?: string,
+      replyParentMsgBody?: string,
+    ) => {
       if (message.trim().length === 0) {
         logger.chat.warn('Cannot send empty message');
         return;
@@ -748,13 +754,25 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         channel: channelFormatted,
         message,
         replyParentMsgId,
+        replyParentDisplayName,
+        replyParentMsgBody,
       };
 
-      // Build PRIVMSG command with optional reply tag
-      // Twitch IRC format: @reply-parent-msg-id=<id> PRIVMSG #channel :message
+      // Build PRIVMSG command with optional reply tags
+      // Twitch IRC format: @reply-parent-msg-id=<id>;reply-parent-display-name=<name>;reply-parent-msg-body=<body> PRIVMSG #channel :message
       let privmsgCommand = 'PRIVMSG';
       if (replyParentMsgId) {
-        privmsgCommand = `@reply-parent-msg-id=${replyParentMsgId} ${privmsgCommand}`;
+        const tags: string[] = [`reply-parent-msg-id=${replyParentMsgId}`];
+
+        if (replyParentDisplayName) {
+          tags.push(`reply-parent-display-name=${replyParentDisplayName}`);
+        }
+
+        if (replyParentMsgBody) {
+          tags.push(`reply-parent-msg-body=${replyParentMsgBody}`);
+        }
+
+        privmsgCommand = `@${tags.join(';')} ${privmsgCommand}`;
       }
 
       const fullMessage = `${privmsgCommand} ${channelFormatted} :${message}`;

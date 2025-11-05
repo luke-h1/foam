@@ -19,6 +19,7 @@ import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
 import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
+import { SubscriptionNotice } from '../SubscriptionNotice';
 import { EmoteRenderer } from './renderers';
 
 type OnReply = Omit<ChatMessageType, 'style'>;
@@ -39,6 +40,7 @@ export const ChatMessage = memo(
     parentColor,
     onReply,
   }: ChatMessageType & { onReply: (args: OnReply) => void }) => {
+    console.log('messageid ->', message_id);
     const emoteSheetRef = useRef<BottomSheetModal>(null);
     const badgeSheetRef = useRef<BottomSheetModal>(null);
     const actionSheetRef = useRef<BottomSheetModal>(null);
@@ -113,6 +115,10 @@ export const ChatMessage = memo(
           case 'stv_emote_removed': {
             console.log('here for stv remove');
             return <StvEmoteEvent part={part} />;
+          }
+
+          case 'twitch_subscription': {
+            return <SubscriptionNotice part={part} />;
           }
 
           default:
@@ -194,7 +200,8 @@ export const ChatMessage = memo(
           {!message.some(
             part =>
               part.type === 'stv_emote_added' ||
-              part.type === 'stv_emote_removed',
+              part.type === 'stv_emote_removed' ||
+              part.type === 'twitch_subscription',
           ) && (
             <Typography style={styles.timestamp}>
               {formatDate(new Date(), 'HH:mm')}:

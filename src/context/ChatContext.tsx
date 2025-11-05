@@ -90,6 +90,8 @@ export interface Bit {
   }[];
 }
 
+export type MessageVariant = 'PRIVMSG' | 'NOTICE' | 'USERNOTICE';
+
 export interface ChatMessageType {
   userstate: ChatUserstate;
   message: ParsedPart[];
@@ -103,6 +105,7 @@ export interface ChatMessageType {
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;
+  messageVariant?: MessageVariant;
 }
 
 export type ChatLoadingState =

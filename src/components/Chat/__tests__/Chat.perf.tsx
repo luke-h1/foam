@@ -7,14 +7,19 @@ import {
   type ChatContextState,
   type ChatMessageType,
 } from '@app/context/ChatContext';
+import {
+  seventvSanitiisedGlobalEmoteSetFixture,
+  sevenTvSanitisedChannelEmoteSetFixture,
+  twitchTvSanitisedEmoteSetChannelFixture,
+  twitchTvSanitisedEmoteSetGlobalFixture,
+} from '@app/services/__fixtures__';
 import { ChatUserstate } from '@app/types/chat';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { type FC, type PropsWithChildren } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { measureRenders } from 'reassure';
 import { Chat } from '../Chat';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-// Mock hooks that are used by Chat component
 jest.mock('@app/hooks/useAppNavigation', () => ({
   useAppNavigation: () => ({
     navigate: jest.fn(),
@@ -55,7 +60,6 @@ jest.mock('@app/services/twitch-chat-service', () => ({
   })),
 }));
 
-// Helper function to create a mock message
 const createMockMessage = (
   id: number,
   username: string,
@@ -100,18 +104,19 @@ const createMockMessage = (
   };
 };
 
-// Helper function to create multiple messages
 const createMockMessages = (count: number): ChatMessageType[] => {
   const messages: ChatMessageType[] = [];
   const usernames = [
-    'xQc',
-    'shroud',
-    'pokimane',
-    'ninja',
-    'timthetatman',
-    'ludwig',
-    'asmongold',
-    'moistcr1tikal',
+    'justinfan',
+    'bob',
+    'alice',
+    'charlie',
+    'delta',
+    'echo',
+    'foxtrot',
+    'golf',
+    'hotel',
+    'india',
   ];
   const sampleMessages = [
     'Hello chat!',
@@ -141,7 +146,6 @@ const createMockMessages = (count: number): ChatMessageType[] => {
   return messages;
 };
 
-// Mock auth context state
 const mockAuthContext: AuthContextState = {
   authState: {
     isLoggedIn: false,
@@ -160,7 +164,6 @@ const mockAuthContext: AuthContextState = {
   ready: true,
 };
 
-// Helper to create mock chat context
 const createMockChatContext = (
   messages: ChatMessageType[],
 ): ChatContextState => {
@@ -178,10 +181,10 @@ const createMockChatContext = (
     loadingState: 'COMPLETED',
     currentChannelId: 'test_channel_id',
     messages,
-    twitchChannelEmotes: [],
-    twitchGlobalEmotes: [],
-    sevenTvChannelEmotes: [],
-    sevenTvGlobalEmotes: [],
+    twitchChannelEmotes: twitchTvSanitisedEmoteSetChannelFixture,
+    twitchGlobalEmotes: twitchTvSanitisedEmoteSetGlobalFixture,
+    sevenTvChannelEmotes: sevenTvSanitisedChannelEmoteSetFixture,
+    sevenTvGlobalEmotes: seventvSanitiisedGlobalEmoteSetFixture,
     ffzChannelEmotes: [],
     ffzGlobalEmotes: [],
     bttvGlobalEmotes: [],
@@ -245,7 +248,6 @@ const createMockChatContext = (
   };
 };
 
-// Test wrapper component
 const TestWrapper: FC<
   PropsWithChildren<{
     authContext?: Partial<AuthContextState>;

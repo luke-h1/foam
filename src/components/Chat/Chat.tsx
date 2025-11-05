@@ -7,7 +7,9 @@ import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { ChatUserstate } from '@app/types/chat';
 import { createHitslop, clearImageCache } from '@app/utils';
+import { mockSubscriptions } from '@app/utils/chat/createMockSubscriptionNotice';
 import { findBadges } from '@app/utils/chat/findBadges';
+import { formatSubscriptionNotice } from '@app/utils/chat/formatSubscriptionNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { logger } from '@app/utils/logger';
@@ -43,6 +45,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const hasPartedRef = useRef<boolean>(false);
   const initializingRef = useRef<boolean>(false);
   const initializedChannelRef = useRef<string | null>(null);
+  const testSubscriptionSentRef = useRef<boolean>(false);
 
   const currentEmoteSetIdRef = useRef<string | null>(null);
 
@@ -135,7 +138,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [processMessageBatch],
   );
 
-  // Initialize Twitch chat hook
   const {
     isConnected: isChatConnected,
     partChannel,
@@ -159,12 +161,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const message_id = userstate.id || '0';
         const replyParentMessageId = tags['reply-parent-msg-id'];
-
         const replyParentDisplayName = tags['reply-parent-display-name'];
         const replyParentUserLogin = tags['reply-parent-user-login'];
         const replyParentMessageBody = tags['reply-parent-msg-body'];
 
-        // Calculate parent color for reply messages
         let parentColor: string | undefined;
         if (replyParentDisplayName && replyParentDisplayName.trim()) {
           // Try to find parent message to get its color
@@ -202,7 +202,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const emoteData = getCurrentEmoteData(channelId);
 
-        // Create message immediately with basic text, defer emote/badge processing
         const newMessage: ChatMessageType = {
           userstate,
           message: [{ type: 'text', content: text.trimEnd() }],
@@ -217,10 +216,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           parentColor: parentColor || undefined,
         };
 
-        // Send message immediately for fast rendering
         handleNewMessage(newMessage);
 
-        // Process emotes and badges asynchronously using worklet
         if (
           emoteData &&
           (emoteData.twitchGlobalEmotes.length > 0 ||
@@ -228,7 +225,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             emoteData.bttvGlobalEmotes.length > 0 ||
             emoteData.ffzGlobalEmotes.length > 0)
         ) {
-          // Use worklet-based emote processor for better concurrency
           emoteProcessor.processEmotes(
             text.trimEnd(),
             userstate,
@@ -287,11 +283,143 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     onPart: useCallback(() => {
       logger.chat.info('Parted from channel:', channelName);
     }, [channelName]),
+    onUserNotice: useCallback(
+      (_channel: string, tags: Record<string, string>, messageText: string) => {
+        const msgId = tags['msg-id'];
+
+        /**
+         *   "badge-info": "",
+              "badges": "gamerduo/1",
+              "color": "#FF4EA6",
+              "display-name": "kv__i",
+              "emotes": "",
+              "flags": "",
+              "id": "eff158f4-ad8f-4f28-804b-05a30af1ae33",
+              "login": "kv__i",
+              "mod": "0",
+              "msg-id": "viewermilestone",
+              "msg-param-category": "watch-streak",
+              "msg-param-copoReward": "450",
+              "msg-param-id": "4d40540f-7950-4db0-8373-eb22f12f4956",
+              "msg-param-value": "5",
+              "room-id": "95304188",
+              "subscriber": "0",
+              "system-msg": "kv__i\\swatched\\s5\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
+              "tmi-sent-ts": "1762376309084",
+              "user-id": "1137109694",
+              "user-type": "",
+              "vip": "0"
+            }
+            LOG  messageText -> 5 months sub WW
+            LOG  msgId -> viewermilestone
+         */
+
+        switch (msgId) {
+          case 'viewermilestone': {
+            console.log('tags', JSON.stringify(tags, null, 2));
+
+            const category = tags['msg-param-category'];
+            const reward = tags['msg-param-copoReward'];
+            const paramValue = tags['msg-param-value'];
+
+            // addMessage();
+
+            console.log('messageText ->', messageText);
+
+            // todo: see if we need to change AddMessage to accept messageVariant and use that to determine the params to send over
+            // or if we should just use the messageVariant in ChatMessage to determine what tags we have and what to render (this is probably what we want to do)
+            addMessage({
+              userstate: tags,
+              message: [{ type: 'text', content: messageText }],
+              badges: [],
+              channel: channelName,
+              message_id: tags.id || '0',
+              message_nonce: generateNonce(),
+              sender: tags['display-name'] || '',
+              parentDisplayName: '',
+              replyDisplayName: '',
+              replyBody: '',
+              parentColor: undefined,
+              messageVariant: 'USERNOTICE',
+            });
+            break;
+          }
+
+          case 'sub': {
+            break;
+          }
+
+          case 'resub': {
+            break;
+          }
+
+          case 'subgift': {
+            break;
+          }
+
+          case 'submysterygift': {
+            break;
+          }
+
+          /**
+           * User upgrades their gifted sub to a paid subscription
+           */
+          case 'giftpaidupgrade': {
+            break;
+          }
+
+          case 'rewardgift': {
+            break;
+          }
+
+          /**
+           * Anonymous user upgrades their gifted sub to a paid subscription
+           */
+          case 'anongiftpaidupgrade': {
+            break;
+          }
+
+          /**
+           * user starts a raid
+           */
+          case 'raid': {
+            break;
+          }
+
+          /**
+           * user cancel a raid
+           */
+          case 'unraid': {
+            break;
+          }
+
+          /**
+           * User got a bits badge tier due to donating bits
+           */
+          case 'bitsbadgetier': {
+            break;
+          }
+
+          /**
+           * Shared chat started
+           */
+          case 'sharedchatnotice': {
+            break;
+          }
+
+          default:
+            return undefined;
+        }
+
+        console.log('msgId ->', msgId);
+      },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [channelName, handleNewMessage],
+    ),
   });
 
   const [connected, setConnected] = useState<boolean>(false);
 
-  // Sync connection state from hook
   useEffect(() => {
     const checkConnection = () => {
       const isConnected = isChatConnected();
@@ -557,6 +685,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           channelName,
           `@${replyTo.username} ${messageInput}`,
           replyTo.messageId,
+          replyTo.username,
+          replyTo.message,
         );
       } catch (error) {
         logger.chat.error('issue sending reply', error);
