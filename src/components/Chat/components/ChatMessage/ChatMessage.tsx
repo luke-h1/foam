@@ -121,6 +121,8 @@ export const ChatMessage = memo(
             return <SubscriptionNotice part={part} />;
           }
 
+          // todo: need more notice types here.
+
           default:
             return null;
         }

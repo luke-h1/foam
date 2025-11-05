@@ -340,7 +340,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               replyDisplayName: '',
               replyBody: '',
               parentColor: undefined,
-              messageVariant: 'USERNOTICE',
             });
             break;
           }
