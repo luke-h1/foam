@@ -29,7 +29,7 @@ const namespaceKey = (key: AllowedKey, namespacePrefix?: string) => {
 
 const storageEvents = new EventEmitter();
 
-const storage = new MMKV({
+export const storage = new MMKV({
   id: 'storageService',
 });
 

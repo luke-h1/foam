@@ -1,10 +1,16 @@
 import { AuthContextProvider, ChatContextProvider } from '@app/context';
 import { useDebugOptions, useRecoveredFromError } from '@app/hooks';
-import { BaseConfig } from '@app/navigators';
+import { BaseConfig, navigationRef } from '@app/navigators';
 import { ErrorBoundary } from '@app/screens';
 import { twitchApi } from '@app/services/api';
+import { storage } from '@app/services/storage-service';
 import { deleteTokens } from '@app/utils';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { useMMKVDevTools } from '@rozenite/mmkv-plugin';
+import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
+import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
+import { useReactNavigationDevTools } from '@rozenite/react-navigation-plugin';
+import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { PropsWithChildren } from 'react';
@@ -31,8 +37,14 @@ export const queryClient = new QueryClient({
 
 export function Providers({ children }: PropsWithChildren) {
   const { setRecoveredFromError } = useRecoveredFromError();
-
+  useTanStackQueryDevTools(queryClient);
   const { ReactQueryDebug } = useDebugOptions();
+  useReactNavigationDevTools({ ref: navigationRef });
+  useNetworkActivityDevTools();
+  usePerformanceMonitorDevTools();
+  useMMKVDevTools({
+    storages: [storage],
+  });
 
   const shouldDelete = false;
   if (shouldDelete) {

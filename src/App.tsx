@@ -1,3 +1,4 @@
+import './utils/performance/wdyr';
 import './styles/unistyles';
 
 import { createNavigationContainerRef } from '@react-navigation/native';
@@ -6,6 +7,7 @@ import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
+import { enableFreeze } from 'react-native-screens';
 import { Providers } from './Providers';
 import { OTAUpdates } from './components';
 import {
@@ -20,6 +22,8 @@ import { twitchApi } from './services/api';
 import { navigationIntegration } from './services/sentry-service';
 import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
+
+enableFreeze(true);
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
