@@ -1,8 +1,8 @@
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUserstate } from '@app/types/chat';
 import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
+import { UserState } from '@app/types/chat/irc-tags/userstate';
 
 export type PartVariant =
   /**
@@ -315,7 +315,7 @@ export function replaceTextWithEmotes({
   userstate,
 }: {
   inputString: string;
-  userstate: ChatUserstate | null;
+  userstate: UserState | null;
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];
   sevenTvChannelEmotes: SanitisiedEmoteSet[];
   twitchGlobalEmotes: SanitisiedEmoteSet[];

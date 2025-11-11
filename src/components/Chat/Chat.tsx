@@ -5,11 +5,8 @@ import { ChatMessageType, useChatContext } from '@app/context/ChatContext';
 import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
-import { ChatUserstate } from '@app/types/chat';
 import { createHitslop, clearImageCache } from '@app/utils';
-import { mockSubscriptions } from '@app/utils/chat/createMockSubscriptionNotice';
 import { findBadges } from '@app/utils/chat/findBadges';
-import { formatSubscriptionNotice } from '@app/utils/chat/formatSubscriptionNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { logger } from '@app/utils/logger';
@@ -33,6 +30,7 @@ import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
 interface ChatProps {
   channelId: string;
@@ -40,7 +38,7 @@ interface ChatProps {
 }
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
-  const { authState, user } = useAuthContext();
+  const { authState } = useAuthContext();
   const navigation = useAppNavigation();
   const hasPartedRef = useRef<boolean>(false);
   const initializingRef = useRef<boolean>(false);
@@ -81,9 +79,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     bttvGlobalEmotes: currentEmotes?.bttvGlobalEmotes || [],
   });
 
-  const flashListRef = useRef<FlashListRef<ChatMessageType>>(null);
-  const messagesRef = useRef<ChatMessageType[]>([]);
-  const messageBatchRef = useRef<ChatMessageType[]>([]);
+  const flashListRef = useRef<FlashListRef<ChatMessageType<never>>>(null);
+  const messagesRef = useRef<ChatMessageType<never>[]>([]);
+  const messageBatchRef = useRef<ChatMessageType<never>[]>([]);
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAtBottomRef = useRef<boolean>(true);
   const [isScrollingToBottom, setIsScrollingToBottom] =
@@ -117,7 +115,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }, [addMessages, isScrollingToBottom, messages.length]);
 
   const handleNewMessage = useCallback(
-    (newMessage: ChatMessageType) => {
+    (newMessage: ChatMessageType<never>) => {
       // Add to batch
       messageBatchRef.current.push(newMessage);
 
@@ -148,9 +146,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         // Parse badges from IRC tags (like tmi.js does)
         const badgeData = parseBadges(tags.badges);
 
-        // Map IRC tags to ChatUserstate format
+        // Map IRC tags to UserState format
         // Username should be display-name for display, login for lowercase username
-        const userstate: ChatUserstate = {
+        const userstate: UserStateTags = {
           ...tags,
           username: tags['display-name'] || tags.login || '',
           login: tags.login || tags['display-name']?.toLowerCase() || '',
@@ -201,7 +199,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const emoteData = getCurrentEmoteData(channelId);
 
-        const newMessage: ChatMessageType = {
+        const newMessage: ChatMessageType<never> = {
           userstate,
           message: [{ type: 'text', content: text.trimEnd() }],
           badges: [],
@@ -240,14 +238,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
                 });
 
                 // Update the message with processed emotes and badges
-                const updatedMessage: ChatMessageType = {
+                const updatedMessage: ChatMessageType<never> = {
                   ...newMessage,
                   message: replacedMessage,
                   badges: replacedBadges,
                   parentColor: newMessage.parentColor,
                 };
 
-                // Update the message in the context
                 addMessage(updatedMessage);
               } catch (error) {
                 logger.chat.error('Error processing emotes:', error);

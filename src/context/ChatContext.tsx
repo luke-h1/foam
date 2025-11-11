@@ -11,7 +11,9 @@ import {
   twitchBadgeService,
 } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
-import { ChatUserstate } from '@app/types/chat';
+import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { UserState, UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
 
@@ -29,6 +31,11 @@ import {
 } from 'react';
 import { Platform, ViewStyle } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
+import { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
+import { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
+import { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
+import { RoomStateTags } from '@app/types/chat/irc-tags/roomstate';
+import { NoticeTags } from '@app/types/chat/irc-tags/notice';
 
 const chatStorage = new MMKV({
   id: 'chat-cache',
@@ -90,8 +97,8 @@ export interface Bit {
   }[];
 }
 
-export interface ChatMessageType {
-  userstate: ChatUserstate;
+export interface ChatMessageType<TNoticeType extends NoticeVariants> {
+  userstate: UserState;
   message: ParsedPart[];
   badges: SanitisedBadgeSet[];
   channel: string;
@@ -103,6 +110,22 @@ export interface ChatMessageType {
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;
+  notice_type: TNoticeType;
+  notice_tags: TNoticeType extends 'userstate'
+    ? UserStateTags
+    : TNoticeType extends 'usernotice'
+      ? UserNoticeTags
+      : TNoticeType extends 'clearchat'
+        ? ClearChatTags
+        : TNoticeType extends 'clearmsg'
+          ? ClearMsgTags
+          : TNoticeType extends 'globalusernotice'
+            ? GlobalUserStateTags
+            : TNoticeType extends 'roomstate'
+              ? RoomStateTags
+              : TNoticeType extends 'notice'
+                ? NoticeTags
+                : never;
 }
 
 export type ChatLoadingState =

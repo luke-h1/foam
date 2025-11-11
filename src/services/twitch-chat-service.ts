@@ -1,5 +1,5 @@
 import { useAuthContext } from '@app/context/AuthContext';
-import { UserNoticeTags } from '@app/types/chat';
+import { UserNoticeTags } from '@app/types/chat/chat';
 import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
 import { useEffect, useRef, useMemo, useCallback } from 'react';

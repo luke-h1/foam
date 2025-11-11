@@ -1,6 +1,6 @@
 import { twitchSanitisedChannelBadges } from '@app/services/__fixtures__';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
-import { ChatUserstate } from '@app/types/chat';
+import { ChatUserstate } from '@app/types/chat/chat';
 import { findBadges } from '../findBadges';
 
 describe('findBadges', () => {

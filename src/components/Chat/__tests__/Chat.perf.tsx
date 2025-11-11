@@ -13,7 +13,7 @@ import {
   twitchTvSanitisedEmoteSetChannelFixture,
   twitchTvSanitisedEmoteSetGlobalFixture,
 } from '@app/services/__fixtures__';
-import { ChatUserstate } from '@app/types/chat';
+import { ChatUserstate } from '@app/types/chat/chat';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { type FC, type PropsWithChildren } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';

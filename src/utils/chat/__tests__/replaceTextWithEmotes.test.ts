@@ -9,7 +9,7 @@ import {
   ffzSanitisedGlobalEmoteSet,
 } from '@app/services/__fixtures__';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUserstate } from '@app/types/chat';
+import { ChatUserstate } from '@app/types/chat/chat';
 import { ParsedPart, replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
 /**

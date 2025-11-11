@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUserstate } from '@app/types/chat';
+import { ChatUserstate } from '@app/types/chat/chat';
 import { ParsedPart } from './replaceTextWithEmotes';
 
 interface EmoteProcessorParams {

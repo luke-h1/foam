@@ -1,10 +1,9 @@
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUserstate } from '@app/types/chat';
+import { ChatUserstate } from '@app/types/chat/chat';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useCallback } from 'react';
 import { runOnJS, useSharedValue } from 'react-native-reanimated';
-
 
 interface UseEmoteProcessorParams {
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];

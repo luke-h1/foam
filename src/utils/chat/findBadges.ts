@@ -1,6 +1,6 @@
 import { ChatUser } from '@app/context';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatUserstate } from '@app/types/chat';
+import { ChatUserstate } from '@app/types/chat/chat';
 
 interface FindBadgesParams {
   userstate: ChatUserstate;
