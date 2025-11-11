@@ -34,6 +34,7 @@ export interface ViewerMilestoneTags extends BaseUserNoticeTags {
 type MsgParamSubPlan = 'Prime' | '1000' | '2000' | '3000';
 
 export interface SubscriptionTags extends BaseUserNoticeTags {
+  'msg-id': 'sub' | 'resub';
   'msg-param-cumulative-months': string;
 
   /**
@@ -57,7 +58,9 @@ export interface SubscriptionTags extends BaseUserNoticeTags {
 
 export type ResubTags = SubscriptionTags;
 
-export type SubGiftTags = Pick<SubscriptionTags, 'msg-param-sub-plan'> & {
+export interface SubGiftTags extends BaseUserNoticeTags {
+  'msg-id': 'subgift';
+  'msg-param-sub-plan': MsgParamSubPlan;
   /**
    * The number of months gifted
    */
@@ -82,9 +85,10 @@ export type SubGiftTags = Pick<SubscriptionTags, 'msg-param-sub-plan'> & {
    * The total number of the months the user has subscribed
    */
   'msg-param-months': string;
-};
+}
 
 export interface AnonGiftPaidUpgradeTags extends BaseUserNoticeTags {
+  'msg-id': 'anongiftpaidupgrade';
   /**
    * The subscriptions promotion (if any) - i.e. Valorant discount
    */
@@ -98,6 +102,7 @@ export interface AnonGiftPaidUpgradeTags extends BaseUserNoticeTags {
 }
 
 export interface RaidTags extends BaseUserNoticeTags {
+  'msg-id': 'raid';
   /**
    * The number of viewers that are raiding
    */
@@ -113,6 +118,24 @@ export interface RaidTags extends BaseUserNoticeTags {
    */
   'msg-param-displayName': string;
 }
+
+/**
+ * Type mapping from msg-id values to their corresponding tag types
+ */
+export type UserNoticeVariantMap = {
+  viewermilestone: ViewerMilestoneTags;
+  sub: SubscriptionTags;
+  resub: SubscriptionTags;
+  subgift: SubGiftTags;
+  anongiftpaidupgrade: AnonGiftPaidUpgradeTags;
+  raid: RaidTags;
+};
+
+/**
+ * Extract the specific tag type based on msg-id
+ */
+export type UserNoticeTagsByVariant<T extends keyof UserNoticeVariantMap> =
+  UserNoticeVariantMap[T];
 
 export type UserNoticeTags =
   | ViewerMilestoneTags

@@ -11,9 +11,18 @@ import {
   twitchBadgeService,
 } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
+import { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
+import { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
+import { NoticeTags } from '@app/types/chat/irc-tags/notice';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { UserState, UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { RoomStateTags } from '@app/types/chat/irc-tags/roomstate';
+import {
+  UserNoticeTags,
+  UserNoticeTagsByVariant,
+  UserNoticeVariantMap,
+} from '@app/types/chat/irc-tags/usernotice';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
 
@@ -31,11 +40,6 @@ import {
 } from 'react';
 import { Platform, ViewStyle } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
-import { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
-import { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
-import { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
-import { RoomStateTags } from '@app/types/chat/irc-tags/roomstate';
-import { NoticeTags } from '@app/types/chat/irc-tags/notice';
 
 const chatStorage = new MMKV({
   id: 'chat-cache',
@@ -97,8 +101,13 @@ export interface Bit {
   }[];
 }
 
-export interface ChatMessageType<TNoticeType extends NoticeVariants> {
-  userstate: UserState;
+export interface ChatMessageType<
+  TNoticeType extends NoticeVariants,
+  TVariant extends TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never = never,
+> {
+  userstate: UserStateTags;
   message: ParsedPart[];
   badges: SanitisedBadgeSet[];
   channel: string;
@@ -110,11 +119,12 @@ export interface ChatMessageType<TNoticeType extends NoticeVariants> {
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;
-  notice_type: TNoticeType;
-  notice_tags: TNoticeType extends 'userstate'
+  notice_tags?: TNoticeType extends 'userstate'
     ? UserStateTags
     : TNoticeType extends 'usernotice'
-      ? UserNoticeTags
+      ? TVariant extends keyof UserNoticeVariantMap
+        ? UserNoticeTagsByVariant<TVariant>
+        : UserNoticeTags
       : TNoticeType extends 'clearchat'
         ? ClearChatTags
         : TNoticeType extends 'clearmsg'
@@ -207,7 +217,7 @@ interface ChatState extends PersistedChatState {
   emojis: SanitisiedEmoteSet[];
   bits: Bit[];
   ttvUsers: ChatUser[];
-  messages: ChatMessageType[];
+  messages: ChatMessageType<never>[];
 }
 
 export interface ChatContextState {
@@ -237,7 +247,7 @@ export interface ChatContextState {
   emojis: SanitisiedEmoteSet[];
   bits: Bit[];
   ttvUsers: ChatUser[];
-  messages: ChatMessageType[];
+  messages: ChatMessageType<never>[];
 
   cacheImage: (
     url: string,
@@ -282,8 +292,10 @@ export interface ChatContextState {
     forceRefresh?: boolean,
   ) => Promise<boolean>;
   clearChannelResources: () => void;
-  addMessage: (message: ChatMessageType) => void;
-  addMessages: (messages: ChatMessageType[]) => void;
+  addMessage: <TNoticeType extends NoticeVariants>(
+    message: ChatMessageType<TNoticeType>,
+  ) => void;
+  addMessages: (messages: ChatMessageType<never>[]) => void;
   clearMessages: () => void;
   clearTtvUsers: () => void;
   getCachedEmotes: (channelId: string) => SanitisiedEmoteSet[];
@@ -356,7 +368,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     emojis: SanitisiedEmoteSet[];
     bits: Bit[];
     ttvUsers: ChatUser[];
-    messages: ChatMessageType[];
+    messages: ChatMessageType<never>[];
   }>({
     emojis: [],
     bits: [],
@@ -1667,10 +1679,9 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [clearCache, loadChannelResources],
   );
 
-  const addMessage = useCallback((message: ChatMessageType) => {
+  const addMessage = useCallback((message: ChatMessageType<never>) => {
     setTransientState(prevState => {
       const newMessages = [...prevState.messages, message];
-      // Use more efficient chunked removal for better performance
       if (newMessages.length > MAX_MESSAGES_PER_CHANNEL) {
         // Remove oldest chunk at once for better performance
         const removeCount = Math.floor(MAX_MESSAGES_PER_CHANNEL * 0.2); // Remove 20% at a time

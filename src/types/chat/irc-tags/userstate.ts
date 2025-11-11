@@ -38,6 +38,13 @@ export interface UserStateTags {
   turbo?: string;
   /** Emote sets (comma-separated list of emote set IDs) */
   'emote-sets'?: string;
-  /** Additional IRC tags */
-  [key: string]: string | { [key: string]: string } | undefined;
+
+  /**
+   * Custom tags we're adding to the response to
+   * support reply threads
+   */
+  'reply-parent-msg-id': string;
+  'reply-parent-msg-body': string;
+  'reply-parent-display-name': string;
+  'reply-parent-user-login': string;
 }

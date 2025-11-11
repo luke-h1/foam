@@ -5,6 +5,10 @@ import { ChatMessageType, useChatContext } from '@app/context/ChatContext';
 import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
+import {
+  UserNoticeVariantMap,
+  UserNoticeTagsByVariant,
+} from '@app/types/chat/irc-tags/usernotice';
 import { createHitslop, clearImageCache } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
@@ -30,7 +34,6 @@ import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
 interface ChatProps {
   channelId: string;
@@ -144,16 +147,16 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     onMessage: useCallback(
       (_channel: string, tags: Record<string, string>, text: string) => {
         // Parse badges from IRC tags (like tmi.js does)
-        const badgeData = parseBadges(tags.badges);
+        const badgeData = parseBadges(tags.badges as unknown as string);
 
         // Map IRC tags to UserState format
         // Username should be display-name for display, login for lowercase username
-        const userstate: UserStateTags = {
+        const userstate: Record<string, string> = {
           ...tags,
           username: tags['display-name'] || tags.login || '',
           login: tags.login || tags['display-name']?.toLowerCase() || '',
           'badges-raw': badgeData['badges-raw'],
-          badges: badgeData.badges,
+          badges: badgeData.badges as unknown as string,
         };
 
         const message_id = userstate.id || '0';
@@ -199,21 +202,62 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const emoteData = getCurrentEmoteData(channelId);
 
-        const newMessage: ChatMessageType<never> = {
-          userstate,
-          message: [{ type: 'text', content: text.trimEnd() }],
-          badges: [],
-          channel: channelName,
-          message_id,
-          message_nonce,
-          sender: userstate.username || '',
-          parentDisplayName: tags['reply-parent-display-name'] || '',
-          replyDisplayName: tags['reply-parent-user-login'] || '',
-          replyBody: tags['reply-parent-msg-body'] || '',
-          parentColor: parentColor || undefined,
+        const msgId = tags['msg-id'];
+
+        const isValidVariant = (
+          id?: string,
+        ): id is keyof UserNoticeVariantMap => {
+          return (
+            id !== undefined &&
+            (id === 'viewermilestone' ||
+              id === 'sub' ||
+              id === 'resub' ||
+              id === 'subgift' ||
+              id === 'anongiftpaidupgrade' ||
+              id === 'raid')
+          );
         };
 
-        handleNewMessage(newMessage);
+        // Narrow the type based on msg-id if it's a known usernotice variant
+        // When msg-id is 'subgift', notice_tags will be narrowed to SubGiftTags
+        let newMessage: ChatMessageType<never>;
+        if (isValidVariant(msgId)) {
+          // TypeScript now knows msgId is a keyof UserNoticeVariantMap
+          // The narrowed type will be applied to notice_tags
+          const narrowedMessage: ChatMessageType<'usernotice', typeof msgId> = {
+            userstate,
+            message: [{ type: 'text', content: text.trimEnd() }],
+            badges: [],
+            channel: channelName,
+            message_id,
+            message_nonce,
+            sender: userstate.username || '',
+            parentDisplayName: tags['reply-parent-display-name'] || '',
+            replyDisplayName: tags['reply-parent-user-login'] || '',
+            replyBody: tags['reply-parent-msg-body'] || '',
+            parentColor: parentColor || undefined,
+            notice_tags: tags as UserNoticeTagsByVariant<typeof msgId>,
+          };
+          newMessage = narrowedMessage as ChatMessageType<never>;
+          handleNewMessage(newMessage);
+        } else {
+          // Fallback for when msg-id is not a known variant or undefined
+          const fallbackMessage: ChatMessageType<'usernotice'> = {
+            userstate,
+            message: [{ type: 'text', content: text.trimEnd() }],
+            badges: [],
+            channel: channelName,
+            message_id,
+            message_nonce,
+            sender: userstate.username || '',
+            parentDisplayName: tags['reply-parent-display-name'] || '',
+            replyDisplayName: tags['reply-parent-user-login'] || '',
+            replyBody: tags['reply-parent-msg-body'] || '',
+            parentColor: parentColor || undefined,
+          };
+          newMessage = fallbackMessage as ChatMessageType<never>;
+          handleNewMessage(newMessage);
+        }
 
         if (
           emoteData &&
@@ -336,6 +380,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               replyDisplayName: '',
               replyBody: '',
               parentColor: undefined,
+              notice_type: 'userstate',
             });
             break;
           }
@@ -705,7 +750,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, []);
 
-  const handleReply = useCallback((message: ChatMessageType) => {
+  const handleReply = useCallback((message: ChatMessageType<'usernotice'>) => {
     setReplyTo({
       messageId: message.message_id,
       username: message.sender,
@@ -718,7 +763,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const renderItem = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
-    ({ item }: { item: ChatMessageType }) => (
+    ({ item }: { item: ChatMessageType<never> }) => (
       <ChatMessage
         channel={item.channel}
         message={item.message}
