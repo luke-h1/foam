@@ -1199,12 +1199,12 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       },
     }));
 
-    setTransientState({
+    setTransientState(prevState => ({
       emojis: [],
       ttvUsers: [],
       bits: [],
-      messages: [],
-    });
+      messages: prevState.messages, // Preserve messages when clearing channel resources
+    }));
 
     setImageCache(new Map());
     setInMemoryCache(new Map());

@@ -9,6 +9,7 @@ import {
   UserNoticeVariantMap,
   UserNoticeTagsByVariant,
 } from '@app/types/chat/irc-tags/usernotice';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { createHitslop, clearImageCache } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
@@ -151,13 +152,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         // Map IRC tags to UserState format
         // Username should be display-name for display, login for lowercase username
-        const userstate: Record<string, string> = {
+        const userstate: UserStateTags = {
           ...tags,
           username: tags['display-name'] || tags.login || '',
           login: tags.login || tags['display-name']?.toLowerCase() || '',
           'badges-raw': badgeData['badges-raw'],
-          badges: badgeData.badges as unknown as string,
-        };
+          badges: badgeData.badges,
+          'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',
+          'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
+          'reply-parent-display-name': tags['reply-parent-display-name'] || '',
+          'reply-parent-user-login': tags['reply-parent-user-login'] || '',
+        } as UserStateTags;
 
         const message_id = userstate.id || '0';
         const replyParentMessageId = tags['reply-parent-msg-id'];
@@ -319,7 +324,40 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }, [clearMessages, messages.length]),
     onJoin: useCallback(() => {
       logger.chat.info('Joined channel:', channelName);
-    }, [channelName]),
+
+      // Add system message to chat
+      addMessage({
+        userstate: {
+          'display-name': 'System',
+          login: 'system',
+          username: 'System',
+          'user-id': '',
+          id: '',
+          color: '#808080',
+          badges: {},
+          'badges-raw': '',
+          'user-type': '',
+          mod: '0',
+          subscriber: '0',
+          turbo: '0',
+          'emote-sets': '',
+          'reply-parent-msg-id': '',
+          'reply-parent-msg-body': '',
+          'reply-parent-display-name': '',
+          'reply-parent-user-login': '',
+        },
+        message: [{ type: 'text', content: `You joined ${channelName}` }],
+        badges: [],
+        channel: channelName,
+        message_id: `system-join-${Date.now()}`,
+        message_nonce: generateNonce(),
+        sender: 'System',
+        parentDisplayName: '',
+        replyDisplayName: '',
+        replyBody: '',
+        parentColor: undefined,
+      });
+    }, [channelName, addMessage]),
     onPart: useCallback(() => {
       logger.chat.info('Parted from channel:', channelName);
     }, [channelName]),
@@ -369,7 +407,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             // todo: see if we need to change AddMessage to accept messageVariant and use that to determine the params to send over
             // or if we should just use the messageVariant in ChatMessage to determine what tags we have and what to render (this is probably what we want to do)
             addMessage({
-              userstate: tags,
+              userstate: {
+                ...tags,
+                'reply-parent-msg-id': '',
+                'reply-parent-msg-body': '',
+                'reply-parent-display-name': '',
+                'reply-parent-user-login': '',
+              } as UserStateTags,
               message: [{ type: 'text', content: messageText }],
               badges: [],
               channel: channelName,
@@ -380,7 +424,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               replyDisplayName: '',
               replyBody: '',
               parentColor: undefined,
-              notice_type: 'userstate',
             });
             break;
           }
