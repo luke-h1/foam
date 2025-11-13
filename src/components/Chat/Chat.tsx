@@ -36,6 +36,16 @@ import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
 
+// Union type representing all possible ChatMessageType variants
+type AnyChatMessageType =
+  | ChatMessageType<'usernotice', 'viewermilestone'>
+  | ChatMessageType<'usernotice', 'sub'>
+  | ChatMessageType<'usernotice', 'resub'>
+  | ChatMessageType<'usernotice', 'subgift'>
+  | ChatMessageType<'usernotice', 'anongiftpaidupgrade'>
+  | ChatMessageType<'usernotice', 'raid'>
+  | ChatMessageType<'usernotice'>;
+
 interface ChatProps {
   channelId: string;
   channelName: string;
@@ -83,9 +93,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     bttvGlobalEmotes: currentEmotes?.bttvGlobalEmotes || [],
   });
 
-  const flashListRef = useRef<FlashListRef<ChatMessageType<never>>>(null);
-  const messagesRef = useRef<ChatMessageType<never>[]>([]);
-  const messageBatchRef = useRef<ChatMessageType<never>[]>([]);
+  const flashListRef = useRef<FlashListRef<AnyChatMessageType>>(null);
+  const messagesRef = useRef<AnyChatMessageType[]>([]);
+  const messageBatchRef = useRef<AnyChatMessageType[]>([]);
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAtBottomRef = useRef<boolean>(true);
   const [isScrollingToBottom, setIsScrollingToBottom] =
@@ -98,7 +108,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     messageBatchRef.current = [];
 
     // Use addMessages for batch processing instead of individual addMessage calls
-    addMessages(batch);
+    addMessages(batch as ChatMessageType<never>[]);
 
     messagesRef.current = [...messagesRef.current, ...batch].slice(-500);
 
@@ -119,7 +129,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }, [addMessages, isScrollingToBottom, messages.length]);
 
   const handleNewMessage = useCallback(
-    (newMessage: ChatMessageType<never>) => {
+    (newMessage: AnyChatMessageType) => {
       // Add to batch
       messageBatchRef.current.push(newMessage);
 
@@ -147,7 +157,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     channel: channelName,
     onMessage: useCallback(
       (_channel: string, tags: Record<string, string>, text: string) => {
-        // Parse badges from IRC tags (like tmi.js does)
         const badgeData = parseBadges(tags.badges as unknown as string);
 
         // Map IRC tags to UserState format
@@ -162,6 +171,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
           'reply-parent-display-name': tags['reply-parent-display-name'] || '',
           'reply-parent-user-login': tags['reply-parent-user-login'] || '',
+          'user-type': tags['user-type'],
         } as UserStateTags;
 
         const message_id = userstate.id || '0';
@@ -224,14 +234,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         };
 
         // Narrow the type based on msg-id if it's a known usernotice variant
-        // When msg-id is 'subgift', notice_tags will be narrowed to SubGiftTags
-        let newMessage: ChatMessageType<never>;
+        // When msg-id is 'viewermilestone', notice_tags will be narrowed to ViewerMilestoneTags
+        // When msg-id is 'sub', notice_tags will be narrowed to SubscriptionTags, etc.
+        let newMessage: AnyChatMessageType;
         if (isValidVariant(msgId)) {
-          // TypeScript now knows msgId is a keyof UserNoticeVariantMap
-          // The narrowed type will be applied to notice_tags
-          const narrowedMessage: ChatMessageType<'usernotice', typeof msgId> = {
+          // Base message fields shared across all variants
+          const baseMessage = {
             userstate,
-            message: [{ type: 'text', content: text.trimEnd() }],
+            message: [{ type: 'text' as const, content: text.trimEnd() }],
             badges: [],
             channel: channelName,
             message_id,
@@ -241,12 +251,86 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             replyDisplayName: tags['reply-parent-user-login'] || '',
             replyBody: tags['reply-parent-msg-body'] || '',
             parentColor: parentColor || undefined,
-            notice_tags: tags as UserNoticeTagsByVariant<typeof msgId>,
           };
-          newMessage = narrowedMessage as ChatMessageType<never>;
-          handleNewMessage(newMessage);
+
+          // Use a switch statement to allow TypeScript to narrow msgId to specific literal types
+          // This ensures notice_tags is properly narrowed to the corresponding variant tags
+
+          /**
+           * Narrow the msg id so we can match up notice_tags with the correct
+           */
+          switch (msgId) {
+            case 'viewermilestone': {
+              const narrowedMessage: ChatMessageType<
+                'usernotice',
+                'viewermilestone'
+              > = {
+                ...baseMessage,
+                notice_tags: tags as UserNoticeTagsByVariant<'viewermilestone'>,
+              };
+              newMessage = narrowedMessage;
+              handleNewMessage(narrowedMessage);
+              break;
+            }
+            case 'sub': {
+              const narrowedMessage: ChatMessageType<'usernotice', 'sub'> = {
+                ...baseMessage,
+                notice_tags: tags as UserNoticeTagsByVariant<'sub'>,
+              };
+              newMessage = narrowedMessage;
+              handleNewMessage(narrowedMessage);
+              break;
+            }
+            case 'resub': {
+              const narrowedMessage: ChatMessageType<'usernotice', 'resub'> = {
+                ...baseMessage,
+                notice_tags: tags as UserNoticeTagsByVariant<'resub'>,
+              };
+              newMessage = narrowedMessage;
+              handleNewMessage(narrowedMessage);
+              break;
+            }
+            case 'subgift': {
+              const narrowedMessage: ChatMessageType<'usernotice', 'subgift'> =
+                {
+                  ...baseMessage,
+                  notice_tags: tags as UserNoticeTagsByVariant<'subgift'>,
+                };
+              newMessage = narrowedMessage;
+              handleNewMessage(narrowedMessage);
+              break;
+            }
+            case 'anongiftpaidupgrade': {
+              const narrowedMessage: ChatMessageType<
+                'usernotice',
+                'anongiftpaidupgrade'
+              > = {
+                ...baseMessage,
+                notice_tags:
+                  tags as UserNoticeTagsByVariant<'anongiftpaidupgrade'>,
+              };
+              newMessage = narrowedMessage;
+              handleNewMessage(narrowedMessage);
+              break;
+            }
+            case 'raid': {
+              const narrowedMessage: ChatMessageType<'usernotice', 'raid'> = {
+                ...baseMessage,
+                notice_tags: tags as UserNoticeTagsByVariant<'raid'>,
+              };
+              newMessage = narrowedMessage;
+              handleNewMessage(narrowedMessage);
+              break;
+            }
+            default: {
+              const fallbackMessage: ChatMessageType<'usernotice'> = {
+                ...baseMessage,
+              };
+              newMessage = fallbackMessage;
+              handleNewMessage(newMessage);
+            }
+          }
         } else {
-          // Fallback for when msg-id is not a known variant or undefined
           const fallbackMessage: ChatMessageType<'usernotice'> = {
             userstate,
             message: [{ type: 'text', content: text.trimEnd() }],
@@ -260,7 +344,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             replyBody: tags['reply-parent-msg-body'] || '',
             parentColor: parentColor || undefined,
           };
-          newMessage = fallbackMessage as ChatMessageType<never>;
+          newMessage = fallbackMessage;
           handleNewMessage(newMessage);
         }
 
@@ -287,14 +371,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
                 });
 
                 // Update the message with processed emotes and badges
-                const updatedMessage: ChatMessageType<never> = {
+                const updatedMessage: AnyChatMessageType = {
                   ...newMessage,
                   message: replacedMessage,
                   badges: replacedBadges,
                   parentColor: newMessage.parentColor,
                 };
 
-                addMessage(updatedMessage);
+                addMessage(updatedMessage as ChatMessageType<'usernotice'>);
               } catch (error) {
                 logger.chat.error('Error processing emotes:', error);
               }
@@ -806,7 +890,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const renderItem = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
-    ({ item }: { item: ChatMessageType<never> }) => (
+    ({ item }: { item: AnyChatMessageType }) => (
       <ChatMessage
         channel={item.channel}
         message={item.message}

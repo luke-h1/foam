@@ -50,6 +50,8 @@ export const MEDIA_LIBRARY_PHOTOS_LIMIT = Infinity;
 // Message chunking constants for better performance
 const MAX_MESSAGES_PER_CHANNEL = 1000;
 
+const MAX_CACHED_CHANNELS = 10;
+
 export const LOAD_BATCH_SIZE = Platform.select({
   /**
    * iOS can provide results much faster than Android.
@@ -385,6 +387,40 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [persistedState, transientState],
   );
 
+  // Helper function to limit channelCaches size to prevent MMKV size limit issues
+  const limitChannelCaches = useCallback(
+    (
+      channelCaches: PersistedChatState['channelCaches'],
+      currentChannelId: string | null,
+    ): PersistedChatState['channelCaches'] => {
+      const entries = Object.entries(channelCaches);
+
+      // If we're under the limit, no need to prune
+      if (entries.length <= MAX_CACHED_CHANNELS) {
+        return channelCaches;
+      }
+
+      // Sort by lastUpdated (most recent first), keeping current channel at top
+      const sorted = entries.sort((a, b) => {
+        // Always keep current channel first
+        if (a[0] === currentChannelId) return -1;
+        if (b[0] === currentChannelId) return 1;
+        // Then sort by lastUpdated (most recent first)
+        return (b[1].lastUpdated || 0) - (a[1].lastUpdated || 0);
+      });
+
+      // Keep only the most recent channels (including current)
+      const limited = sorted.slice(0, MAX_CACHED_CHANNELS);
+
+      logger.main.info(
+        `Pruned channelCaches from ${entries.length} to ${limited.length} channels`,
+      );
+
+      return Object.fromEntries(limited);
+    },
+    [],
+  );
+
   // Helper to update state (splits persisted and transient updates)
   const setState = useCallback(
     (update: ChatState | ((prev: ChatState) => ChatState)) => {
@@ -401,11 +437,20 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       // Split into persisted and transient
       const { emojis, bits, ttvUsers, messages, ...persisted } = newState;
 
+      // Limit channelCaches size before persisting to prevent MMKV size limit issues
+      const limitedPersisted: PersistedChatState = {
+        ...persisted,
+        channelCaches: limitChannelCaches(
+          persisted.channelCaches,
+          persisted.currentChannelId,
+        ),
+      } as PersistedChatState;
+
       // Update both states
-      setPersistedState(persisted as PersistedChatState);
+      setPersistedState(limitedPersisted);
       setTransientState({ emojis, bits, ttvUsers, messages });
     },
-    [persistedState, transientState, setPersistedState],
+    [persistedState, transientState, setPersistedState, limitChannelCaches],
   );
 
   // Keep performance-critical data in local state (not persisted)
@@ -416,6 +461,26 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     Map<string, InMemoryCache>
   >(new Map());
   const [cacheQueue, setCacheQueue] = useState<CacheQueueItem[]>([]);
+
+  // Prune channelCaches on restoration if it's too large (only run once when restoration completes)
+  useEffect(() => {
+    if (stateRestorationStatus === 'IN_MEMORY') {
+      const channelCount = Object.keys(persistedState.channelCaches).length;
+      if (channelCount > MAX_CACHED_CHANNELS) {
+        logger.main.info(
+          `Restored state has ${channelCount} channels, pruning to ${MAX_CACHED_CHANNELS}`,
+        );
+        setPersistedState(prevState => ({
+          ...prevState,
+          channelCaches: limitChannelCaches(
+            prevState.channelCaches,
+            prevState.currentChannelId,
+          ),
+        }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateRestorationStatus]); // Only run when restoration status changes
 
   // Add cleanup for memory leaks
   useEffect(() => {
