@@ -1,12 +1,14 @@
 /* eslint-disable camelcase */
+import { ChatMessageType } from '@app/context';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType } from '@app/store/chatStore';
+import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { lightenColor, replaceEmotesWithText } from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatDate } from '@app/utils/date-time';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
-import { useRef, useCallback, memo, useState } from 'react';
+import React, { useRef, useCallback, memo, useState } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
@@ -19,221 +21,255 @@ import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
 import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
-import { UserSheet } from './UserSheet/UserSheet';
+import { SubscriptionNotice } from '../SubscriptionNotice';
 import { EmoteRenderer } from './renderers';
 
-type OnReply = Omit<ChatMessageType, 'style'>;
+type OnReply<TNoticeType extends NoticeVariants> = Omit<
+  ChatMessageType<TNoticeType>,
+  'style'
+>;
 
-export const ChatMessage = memo(
-  ({
-    userstate,
-    message,
-    badges,
-    channel,
-    message_id,
-    message_nonce,
-    sender,
-    style,
-    parentDisplayName,
-    replyBody,
-    replyDisplayName,
-    onReply,
-  }: ChatMessageType & { onReply: (args: OnReply) => void }) => {
-    const emoteSheetRef = useRef<BottomSheetModal>(null);
-    const badgeSheetRef = useRef<BottomSheetModal>(null);
-    const actionSheetRef = useRef<BottomSheetModal>(null);
-    const userSheetRef = useRef<BottomSheetModal>(null);
+function ChatMessageComponent<
+  TNoticeType extends NoticeVariants,
+  TVariant extends TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never = never,
+>({
+  userstate,
+  message,
+  badges,
+  channel,
+  message_id,
+  message_nonce,
+  sender,
+  style,
+  parentDisplayName,
+  replyBody,
+  replyDisplayName,
+  parentColor,
+  onReply,
+}: ChatMessageType<TNoticeType, TVariant> & {
+  onReply: (args: OnReply<TNoticeType>) => void;
+}) {
+  console.log('messageid ->', message_id);
+  const emoteSheetRef = useRef<BottomSheetModal>(null);
+  const badgeSheetRef = useRef<BottomSheetModal>(null);
+  const actionSheetRef = useRef<BottomSheetModal>(null);
 
-    const [selectedEmote, setSelectedEmote] = useState<ParsedPart | null>(null);
-    const [selectedBadge, setSelectedBadge] =
-      useState<SanitisedBadgeSet | null>(null);
+  const [selectedEmote, setSelectedEmote] = useState<ParsedPart | null>(null);
+  const [selectedBadge, setSelectedBadge] = useState<SanitisedBadgeSet | null>(
+    null,
+  );
 
-    const handleEmotePress = useCallback((part: ParsedPart) => {
-      setSelectedEmote(part);
-      emoteSheetRef.current?.present();
-    }, []);
+  const handleEmotePress = useCallback((part: ParsedPart) => {
+    setSelectedEmote(part);
+    emoteSheetRef.current?.present();
+  }, []);
 
-    const handleBadgePress = useCallback((badge: SanitisedBadgeSet) => {
-      setSelectedBadge(badge);
-      badgeSheetRef.current?.present();
-    }, []);
+  const handleBadgePress = useCallback((badge: SanitisedBadgeSet) => {
+    setSelectedBadge(badge);
+    badgeSheetRef.current?.present();
+  }, []);
 
-    const messageText = useCallback(
-      () => replaceEmotesWithText(message),
-      [message],
+  const messageText = useCallback(
+    () => replaceEmotesWithText(message),
+    [message],
+  );
+
+  const handleCopy = useCallback(() => {
+    void Clipboard.setStringAsync(messageText()).then(() =>
+      toast.success('Copied to clipboard'),
     );
+    actionSheetRef.current?.dismiss();
+  }, [messageText]);
 
-    const handleCopy = useCallback(() => {
-      void Clipboard.setStringAsync(messageText()).then(() =>
-        toast.success('Copied to clipboard'),
-      );
-      actionSheetRef.current?.dismiss();
-    }, [messageText]);
-
-    const renderMessagePart = useCallback(
-      (part: ParsedPart, index: number) => {
-        switch (part.type) {
-          case 'text': {
-            return <Typography color="gray.text">{part.content}</Typography>;
-          }
-
-          case 'stvEmote': {
-            return <MediaLinkCard type="stvEmote" url={part.content} />;
-          }
-
-          case 'twitchClip': {
-            return <MediaLinkCard type="twitchClip" url={part.content} />;
-          }
-
-          case 'emote': {
-            return (
-              <EmoteRenderer
-                key={index}
-                part={part}
-                handleEmotePress={handleEmotePress}
-              />
-            );
-          }
-
-          case 'mention': {
-            return (
-              <Typography key={`message-${index}`}>
-                <Typography
-                  style={[styles.mention, { color: part.color ?? '#FFFFFF' }]}
-                >
-                  {part.content}
-                </Typography>
-              </Typography>
-            );
-          }
-
-          case 'stv_emote_added': {
-            return <StvEmoteEvent part={part} />;
-          }
-
-          case 'stv_emote_removed': {
-            console.log('here for stv remove');
-            return <StvEmoteEvent part={part} />;
-          }
-
-          default:
-            return null;
+  const renderMessagePart = useCallback(
+    (part: ParsedPart, index: number) => {
+      switch (part.type) {
+        case 'text': {
+          return <Typography color="gray.text">{part.content}</Typography>;
         }
-      },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      [userstate.username, userstate.color, handleEmotePress],
-    );
 
-    const renderBadges = useCallback(() => {
-      return badges?.map(badge => (
-        <Button
-          key={`${badge.set}-${badge.id}`}
-          onPress={() => handleBadgePress(badge)}
-        >
-          <Image source={badge.url} style={styles.badge} transition={20} />
-        </Button>
-      ));
-    }, [badges, handleBadgePress]);
+        case 'stvEmote': {
+          return <MediaLinkCard type="stvEmote" url={part.content} />;
+        }
 
-    const handleLongPress = useCallback(() => {
-      actionSheetRef.current?.present();
-    }, []);
+        case 'twitchClip': {
+          return <MediaLinkCard type="twitchClip" url={part.content} />;
+        }
 
-    const handleReply = useCallback(() => {
-      onReply?.({
-        userstate,
-        message,
-        badges,
-        channel,
-        message_id,
-        message_nonce,
-        sender,
-        parentDisplayName,
-        replyBody,
-        replyDisplayName,
-      });
-      actionSheetRef.current?.dismiss();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [onReply]);
+        case 'emote': {
+          return (
+            <EmoteRenderer
+              key={index}
+              part={part}
+              handleEmotePress={handleEmotePress}
+            />
+          );
+        }
 
-    const isReply = Boolean(parentDisplayName);
+        case 'mention': {
+          return (
+            <Typography key={`message-${index}`}>
+              <Typography
+                style={[styles.mention, { color: part.color ?? '#FFFFFF' }]}
+              >
+                {part.content}
+              </Typography>
+            </Typography>
+          );
+        }
 
-    const onUsernamePress = useCallback(() => {
-      userSheetRef.current?.present();
-    }, []);
+        case 'stv_emote_added': {
+          return <StvEmoteEvent part={part} />;
+        }
 
-    return (
+        case 'stv_emote_removed': {
+          console.log('here for stv remove');
+          return <StvEmoteEvent part={part} />;
+        }
+
+        case 'twitch_subscription': {
+          return <SubscriptionNotice part={part} />;
+        }
+
+        // todo: need more notice types here.
+
+        default:
+          return null;
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userstate.username, userstate.color, handleEmotePress],
+  );
+
+  const renderBadges = useCallback(() => {
+    return badges?.map((badge, index) => (
       <Button
-        onLongPress={handleLongPress}
-        style={[styles.chatContainer, style, isReply && styles.replyContainer]}
+        // eslint-disable-next-line react/no-array-index-key
+        key={`${badge.set}-${badge.id}-${badge.type}-${badge.url}-${index}`}
+        onPress={() => handleBadgePress(badge)}
       >
-        {isReply && (
-          <View style={styles.replyIndicator}>
-            <Icon icon="corner-down-left" size={16} />
-            <Typography color="gray.accent" style={styles.replyToText}>
-              Replying to {parentDisplayName}
-            </Typography>
-          </View>
-        )}
+        <Image source={badge.url} style={styles.badge} transition={20} />
+      </Button>
+    ));
+  }, [badges, handleBadgePress]);
 
-        <View style={styles.messageLine}>
-          {!message.some(
-            part =>
-              part.type === 'stv_emote_added' ||
-              part.type === 'stv_emote_removed',
-          ) && (
-            <Typography style={styles.timestamp}>
-              {formatDate(new Date(), 'HH:mm')}:
+  const handleLongPress = useCallback(() => {
+    actionSheetRef.current?.present();
+  }, []);
+
+  const handleReply = useCallback(() => {
+    onReply?.({
+      userstate,
+      message,
+      badges,
+      channel,
+      message_id,
+      message_nonce,
+      sender,
+      parentDisplayName,
+      replyBody,
+      replyDisplayName,
+    });
+    actionSheetRef.current?.dismiss();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onReply]);
+
+  const isReply = Boolean(parentDisplayName);
+
+  return (
+    <Button
+      onLongPress={handleLongPress}
+      style={[styles.chatContainer, style, isReply && styles.replyContainer]}
+    >
+      {isReply && (
+        <View style={styles.replyIndicator}>
+          <Icon icon="corner-down-left" size={16} />
+          <View style={styles.replyToTextContainer}>
+            <Typography color="gray.accent" style={styles.replyToText}>
+              Replying to{' '}
             </Typography>
-          )}
-          {renderBadges()}
-          {userstate.username && (
-            <Button onLongPress={onUsernamePress} style={styles.usernameButton}>
+            {parentColor ? (
               <Typography
                 style={[
-                  styles.username,
+                  styles.replyToText,
                   {
-                    color: userstate.color
-                      ? lightenColor(userstate.color)
-                      : '#FFFFFF',
+                    color: lightenColor(parentColor),
                   },
                 ]}
               >
-                {userstate.username}:
+                {parentDisplayName}
               </Typography>
-            </Button>
-          )}
-          {message.map(renderMessagePart)}
+            ) : (
+              <Typography color="gray.accent" style={styles.replyToText}>
+                {parentDisplayName}
+              </Typography>
+            )}
+          </View>
         </View>
+      )}
 
-        {selectedEmote && selectedEmote.type === 'emote' && (
-          <EmotePreviewSheet
-            ref={emoteSheetRef}
-            selectedEmote={selectedEmote}
-          />
+      <View style={styles.messageLine}>
+        {!message.some(
+          part =>
+            part.type === 'stv_emote_added' ||
+            part.type === 'stv_emote_removed' ||
+            part.type === 'twitch_subscription',
+        ) && (
+          <Typography style={styles.timestamp}>
+            {formatDate(new Date(), 'HH:mm')}:
+          </Typography>
         )}
-
-        {selectedBadge && (
-          <BadgePreviewSheet
-            ref={badgeSheetRef}
-            selectedBadge={selectedBadge}
-          />
+        {renderBadges()}
+        {userstate.username && (
+          <Typography
+            style={[
+              styles.username,
+              {
+                color: userstate.color
+                  ? lightenColor(userstate.color)
+                  : '#FFFFFF',
+              },
+            ]}
+          >
+            {userstate.username}:
+          </Typography>
         )}
+        {message.map(renderMessagePart)}
+      </View>
 
-        <UserSheet ref={userSheetRef} userId={userstate['user-id'] || ''} />
+      {selectedEmote && selectedEmote.type === 'emote' && (
+        <EmotePreviewSheet ref={emoteSheetRef} selectedEmote={selectedEmote} />
+      )}
 
-        <ActionSheet
-          message={message}
-          ref={actionSheetRef}
-          handleReply={handleReply}
-          handleCopy={handleCopy}
-        />
-      </Button>
-    );
+      {selectedBadge && (
+        <BadgePreviewSheet ref={badgeSheetRef} selectedBadge={selectedBadge} />
+      )}
+
+      <ActionSheet
+        message={message}
+        ref={actionSheetRef}
+        handleReply={handleReply}
+        handleCopy={handleCopy}
+      />
+    </Button>
+  );
+}
+
+const MemoizedChatMessage = memo(ChatMessageComponent);
+MemoizedChatMessage.displayName = 'ChatMessage';
+
+export const ChatMessage = MemoizedChatMessage as <
+  TNoticeType extends NoticeVariants,
+  TVariant extends TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never = never,
+>(
+  props: ChatMessageType<TNoticeType, TVariant> & {
+    onReply: (args: OnReply<TNoticeType>) => void;
   },
-);
-
-ChatMessage.displayName = 'ChatMessage';
+) => React.JSX.Element;
 const styles = StyleSheet.create(theme => ({
   chatContainer: {
     // backgroundColor: theme.colors.foregroundInverted,
@@ -344,7 +380,12 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     marginBottom: theme.spacing.xs,
   },
-  replyToText: {
+  replyToTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginLeft: theme.spacing.xs,
+  },
+  replyToText: {
+    // Styles applied via inline styles
   },
 }));

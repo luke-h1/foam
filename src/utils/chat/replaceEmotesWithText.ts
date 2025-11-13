@@ -37,6 +37,7 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
         case 'stv_emote_added':
         case 'stv_emote_removed':
         case 'twitchClip':
+        case 'twitch_subscription':
           return part;
 
         default:

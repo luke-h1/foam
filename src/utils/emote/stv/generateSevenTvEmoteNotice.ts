@@ -1,5 +1,5 @@
+import { ChatMessageType } from '@app/context';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatMessageType } from '@app/store';
 import { ParsedPart } from '@app/utils/chat';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
@@ -13,9 +13,7 @@ export function generateStvEmoteNotice({
   channelName,
   emote,
   type,
-}: GenerateStvEmoteNoticeArgs): ChatMessageType<
-  'stv_emote_added' | 'stv_emote_removed'
-> {
+}: GenerateStvEmoteNoticeArgs): ChatMessageType {
   console.log('type');
   if (type === 'removed') {
     return {
@@ -62,5 +60,5 @@ export function generateStvEmoteNotice({
       sender: '',
     };
   }
-  return new Error("type wasn't 'removed' or 'added'") as never;
+  return new Error("type wasn't `removed` or `added`") as never;
 }

@@ -334,9 +334,19 @@ export default class SevenTvWsService {
   private static hasInitialSubscriptions: boolean = false;
 
   /**
+   * Track active subscriptions to prevent duplicates
+   */
+  private static activeSubscriptions: Set<string> = new Set();
+
+  /**
    * Timeout for waiting for IDs to be set (in milliseconds)
    */
   private static readonly ID_WAIT_TIMEOUT: number = 30000; // 30 seconds
+
+  /**
+   * Timestamp when we first connected to filter out historical events
+   */
+  private static connectionTimestamp: number = 0;
 
   /**
    * Callback for emote updates
@@ -394,6 +404,9 @@ export default class SevenTvWsService {
       SevenTvWsService.isReconnecting = false;
       SevenTvWsService.reconnectAttempts = 0;
 
+      // Set connection timestamp to filter out historical events
+      SevenTvWsService.connectionTimestamp = Date.now();
+
       if (!SevenTvWsService.hasInitialSubscriptions) {
         await SevenTvWsService.setupInitialSubscriptions();
         SevenTvWsService.hasInitialSubscriptions = true;
@@ -441,9 +454,9 @@ export default class SevenTvWsService {
             }
 
             default: {
-              logger.stvWs.info(
-                `💚 Received WS unhandled data event: ${message.d.type}`,
-              );
+              // logger.stvWs.info(
+              //   `💚 Received WS unhandled data event: ${message.d.type}`,
+              // );
               break;
             }
           }
@@ -494,7 +507,20 @@ export default class SevenTvWsService {
 
   private static handleEmoteSetUpdate(data: SevenTvEventData): void {
     try {
-      logger.stvWs.info('data', data);
+      logger.stvWs.info('💚 Handling emote set update event', data);
+
+      // Filter out historical events by checking if this is within the first few seconds of connection
+      // This helps filter out the initial historical events that come when first subscribing
+      const timeSinceConnection =
+        Date.now() - SevenTvWsService.connectionTimestamp;
+      const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds buffer
+
+      if (timeSinceConnection < HISTORICAL_EVENT_BUFFER) {
+        logger.stvWs.info(
+          '💚 Ignoring potential historical emote set update event (within buffer period)',
+        );
+        return;
+      }
 
       const addedEmotes: SanitisiedEmoteSet[] = [];
       const removedEmotes: SanitisiedEmoteSet[] = [];
@@ -709,19 +735,6 @@ export default class SevenTvWsService {
       },
     };
 
-    const emoteUpdatesSubscriptionMessage: SevenTvWsMessage<
-      never,
-      'emote.update'
-    > = {
-      op: 35,
-      d: {
-        type: 'emote.update',
-        condition: {
-          object_id: emoteSetId,
-        },
-      },
-    };
-
     const entitlementSubscriptionMessage: SevenTvWsMessage<
       never,
       'entitlement.create'
@@ -747,10 +760,6 @@ export default class SevenTvWsService {
 
       SevenTvWsService.instance?.send(
         JSON.stringify(emoteSetSubscriptionMessage),
-      );
-
-      SevenTvWsService.instance?.send(
-        JSON.stringify(emoteUpdatesSubscriptionMessage),
       );
 
       logger.stvWs.info(
@@ -791,6 +800,13 @@ export default class SevenTvWsService {
    * Subscribe to a channel's emote set
    */
   public static subscribeToChannel(emoteSetId: string): void {
+    // Check if already subscribed to this emote set
+    if (SevenTvWsService.activeSubscriptions.has(emoteSetId)) {
+      logger.stvWs.info(`💚 Already subscribed to emote set: ${emoteSetId}`);
+      return;
+    }
+
+    // Unsubscribe from previous channel if different
     if (
       SevenTvWsService.currentEmoteSetId &&
       SevenTvWsService.currentEmoteSetId !== emoteSetId
@@ -798,12 +814,16 @@ export default class SevenTvWsService {
       SevenTvWsService.unsubscribeFromEmoteSet(
         SevenTvWsService.currentEmoteSetId,
       );
+      SevenTvWsService.activeSubscriptions.delete(
+        SevenTvWsService.currentEmoteSetId,
+      );
     }
 
-    this.currentEmoteSetId = emoteSetId;
+    SevenTvWsService.currentEmoteSetId = emoteSetId;
 
     if (SevenTvWsService.isConnected() && emoteSetId) {
       SevenTvWsService.sendSubscription(emoteSetId);
+      SevenTvWsService.activeSubscriptions.add(emoteSetId);
     }
 
     logger.stvWs.info(`💚 Set current emote set: ${emoteSetId}`);
@@ -815,6 +835,9 @@ export default class SevenTvWsService {
   public static unsubscribeFromChannel(): void {
     if (SevenTvWsService.currentEmoteSetId && SevenTvWsService.isConnected()) {
       SevenTvWsService.unsubscribeFromEmoteSet(
+        SevenTvWsService.currentEmoteSetId,
+      );
+      SevenTvWsService.activeSubscriptions.delete(
         SevenTvWsService.currentEmoteSetId,
       );
     }
@@ -844,6 +867,7 @@ export default class SevenTvWsService {
   public static disconnect(): void {
     if (SevenTvWsService.instance) {
       SevenTvWsService.instance.close(1000, 'Manual Disconnect');
+
       SevenTvWsService.instance = null;
       SevenTvWsService.isReconnecting = false;
       SevenTvWsService.reconnectAttempts = 0;
@@ -851,7 +875,9 @@ export default class SevenTvWsService {
       SevenTvWsService.twitchChannelId = '';
       SevenTvWsService.sevenTVemoteSetId = '';
       SevenTvWsService.hasInitialSubscriptions = false;
+      SevenTvWsService.activeSubscriptions.clear();
       SevenTvWsService.emoteUpdateCallback = null;
+
       logger.stvWs.info('🟢 SevenTV WebSocket disconnected');
     }
   }

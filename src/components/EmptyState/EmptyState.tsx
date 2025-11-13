@@ -15,7 +15,6 @@ import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const empty = require('../../../assets/sad-face.png');
 
 interface EmptyStatePresetItem {
   imageSource: ImageProps['source'];
@@ -26,7 +25,7 @@ interface EmptyStatePresetItem {
 
 const EmptyStatePresets = {
   generic: {
-    imageSource: empty,
+    imageSource: '../../../assets/data/category_apex.jpg',
     heading: 'Empty',
     content: 'No data found, click the button to refresh or reload the app',
     button: "Let's try this again",

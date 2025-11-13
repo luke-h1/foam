@@ -38,7 +38,7 @@ export interface TwitchStream {
   thumbnail_url: string;
   tag_ids: unknown[];
   tags: string[];
-  profilePicture: string;
+  profilePicture?: string;
   is_mature: boolean;
 }
 

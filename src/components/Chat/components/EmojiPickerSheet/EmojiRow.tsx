@@ -87,7 +87,8 @@ export function EmojiRow({
         return (
           <Button
             style={styles.emojiContainer}
-            key={itemObj.index}
+            // eslint-disable-next-line @typescript-eslint/no-base-to-string
+            key={`${index}-${itemObj.index}-${isEmote ? (itemObj.emoji as SanitisiedEmoteSet).name : String(itemObj.emoji)}`}
             onPress={() => onPress?.(itemObj.emoji)}
           >
             {content}
