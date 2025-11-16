@@ -2,23 +2,6 @@ name: Deploy testflight
 on:
   pull_request:
   workflow_dispatch:
-    inputs:
-      variant:
-        description: The variant to deploy to
-        required: true
-        default: 'preview'
-        type: choice
-        options:
-          - preview
-          - production
-      platform:
-        description: The platform to deploy to
-        required: true
-        default: 'ios'
-        type: choice
-        options:
-          - ios
-          - android
 jobs:
   deploy:
     runs-on: macos-latest
@@ -85,19 +68,7 @@ jobs:
 
       - name: EAS build
         run: |
-          if [ "${{ inputs.platform }}" = "ios" ]; then
-            bun eas build -p ios --profile ${{ inputs.variant }} --local --output app-${{ inputs.variant }}.abd --non-interactive
-            # bun eas submit -p ios --path ./app-${{ inputs.variant }}.abd
-
-          else
-            bun eas build -p android --profile ${{ inputs.variant }} --local --output app-${{ inputs.variant }}.apk --non-interactive
-            # bun eas submit -p android --path ./app-${{ inputs.variant }}.apk
-          fi
-
+          bun eas build -p ios --profile production --local --output app-production.abd --non-interactive
       - name: Deploy 🚀
         run: |
-          if [ "${{ inputs.platform }}" = "ios" ]; then
-            bun eas submit -p ios --path ./app-${{ inputs.variant }}.abd
-          else
-            bun eas submit -p android --path ./app-${{ inputs.variant }}.apk
-          fi
+          bun eas submit -p ios --path ./app-production.abd
