@@ -18,6 +18,7 @@ import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { FlashListRef } from '@shopify/flash-list';
+import omit from 'lodash/omit';
 import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
@@ -35,7 +36,6 @@ import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
-import omit from 'lodash/omit';
 
 // Union type representing all possible ChatMessageType variants
 type AnyChatMessageType =
