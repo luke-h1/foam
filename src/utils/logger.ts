@@ -53,7 +53,10 @@ const loggingConfig = {
     enabled: true,
     color: 'black',
   },
-
+  remoteConfig: {
+    enabled: true,
+    color: 'green',
+  },
   /**
    * Websocket connections
    */
