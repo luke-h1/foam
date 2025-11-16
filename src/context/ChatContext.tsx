@@ -11,11 +11,24 @@ import {
   twitchBadgeService,
 } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
+import { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
+import { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
+import { NoticeTags } from '@app/types/chat/irc-tags/notice';
+import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import { RoomStateTags } from '@app/types/chat/irc-tags/roomstate';
+import {
+  UserNoticeTags,
+  UserNoticeTagsByVariant,
+  UserNoticeVariantMap,
+} from '@app/types/chat/irc-tags/usernotice';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils';
 import { logger } from '@app/utils/logger';
 
 import { fetch } from 'expo/fetch';
 import { Directory, File, Paths } from 'expo-file-system/next';
+import debounce from 'lodash/debounce';
 import {
   createContext,
   ReactNode,
@@ -23,16 +36,21 @@ import {
   useCallback,
   useMemo,
   useState,
+  useEffect,
 } from 'react';
 import { Platform, ViewStyle } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
-import { ChatUserstate } from 'tmi.js';
 
 const chatStorage = new MMKV({
   id: 'chat-cache',
 });
 
 export const MEDIA_LIBRARY_PHOTOS_LIMIT = Infinity;
+
+// Message chunking constants for better performance
+const MAX_MESSAGES_PER_CHANNEL = 1000;
+
+const MAX_CACHED_CHANNELS = 10;
 
 export const LOAD_BATCH_SIZE = Platform.select({
   /**
@@ -85,8 +103,13 @@ export interface Bit {
   }[];
 }
 
-export interface ChatMessageType {
-  userstate: ChatUserstate;
+export interface ChatMessageType<
+  TNoticeType extends NoticeVariants,
+  TVariant extends TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never = never,
+> {
+  userstate: UserStateTags;
   message: ParsedPart[];
   badges: SanitisedBadgeSet[];
   channel: string;
@@ -97,6 +120,24 @@ export interface ChatMessageType {
   parentDisplayName: string;
   replyDisplayName: string;
   replyBody: string;
+  parentColor?: string;
+  notice_tags?: TNoticeType extends 'userstate'
+    ? UserStateTags
+    : TNoticeType extends 'usernotice'
+      ? TVariant extends keyof UserNoticeVariantMap
+        ? UserNoticeTagsByVariant<TVariant>
+        : UserNoticeTags
+      : TNoticeType extends 'clearchat'
+        ? ClearChatTags
+        : TNoticeType extends 'clearmsg'
+          ? ClearMsgTags
+          : TNoticeType extends 'globalusernotice'
+            ? GlobalUserStateTags
+            : TNoticeType extends 'roomstate'
+              ? RoomStateTags
+              : TNoticeType extends 'notice'
+                ? NoticeTags
+                : never;
 }
 
 export type ChatLoadingState =
@@ -142,9 +183,8 @@ interface CacheStats {
   isProcessing: boolean;
 }
 
-// Combined state interface - everything in one persisted state
-interface ChatState {
-  // Channel cache data (previously persisted)
+// Persisted state - only essential cache data (not transient data like messages)
+interface PersistedChatState {
   channelCaches: Record<
     string,
     {
@@ -169,13 +209,17 @@ interface ChatState {
   >;
   currentChannelId: string | null;
   lastGlobalUpdate: number;
-
   loadingState: ChatLoadingState;
   cacheStats: CacheStats;
+}
+
+// Combined state interface - persisted + in-memory
+interface ChatState extends PersistedChatState {
+  // Transient data - not persisted (too large for MMKV)
   emojis: SanitisiedEmoteSet[];
   bits: Bit[];
   ttvUsers: ChatUser[];
-  messages: ChatMessageType[];
+  messages: ChatMessageType<never>[];
 }
 
 export interface ChatContextState {
@@ -205,7 +249,7 @@ export interface ChatContextState {
   emojis: SanitisiedEmoteSet[];
   bits: Bit[];
   ttvUsers: ChatUser[];
-  messages: ChatMessageType[];
+  messages: ChatMessageType<never>[];
 
   cacheImage: (
     url: string,
@@ -250,7 +294,10 @@ export interface ChatContextState {
     forceRefresh?: boolean,
   ) => Promise<boolean>;
   clearChannelResources: () => void;
-  addMessage: (message: ChatMessageType) => void;
+  addMessage: <TNoticeType extends NoticeVariants>(
+    message: ChatMessageType<TNoticeType>,
+  ) => void;
+  addMessages: (messages: ChatMessageType<never>[]) => void;
   clearMessages: () => void;
   clearTtvUsers: () => void;
   getCachedEmotes: (channelId: string) => SanitisiedEmoteSet[];
@@ -289,7 +336,7 @@ export type ChatContextProviderProps = {
   children: ReactNode;
 };
 
-const initialState: ChatState = {
+const initialPersistedState: PersistedChatState = {
   channelCaches: {},
   currentChannelId: null,
   lastGlobalUpdate: 0,
@@ -300,6 +347,10 @@ const initialState: ChatState = {
     queueSize: 0,
     isProcessing: false,
   },
+};
+
+const initialState: ChatState = {
+  ...initialPersistedState,
   emojis: [],
   bits: [],
   ttvUsers: [],
@@ -307,8 +358,100 @@ const initialState: ChatState = {
 };
 
 export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
-  const [state, setState, stateRestorationStatus] =
-    usePersistedState<ChatState>('chat-context', initialState);
+  // Only persist essential cache data, not transient messages/users
+  const [persistedState, setPersistedState, stateRestorationStatus] =
+    usePersistedState<PersistedChatState>(
+      'chat-context',
+      initialPersistedState,
+    );
+
+  // Transient data in separate in-memory state (not persisted)
+  const [transientState, setTransientState] = useState<{
+    emojis: SanitisiedEmoteSet[];
+    bits: Bit[];
+    ttvUsers: ChatUser[];
+    messages: ChatMessageType<never>[];
+  }>({
+    emojis: [],
+    bits: [],
+    ttvUsers: [],
+    messages: [],
+  });
+
+  // Combined state for easier access
+  const state: ChatState = useMemo(
+    () => ({
+      ...persistedState,
+      ...transientState,
+    }),
+    [persistedState, transientState],
+  );
+
+  // Helper function to limit channelCaches size to prevent MMKV size limit issues
+  const limitChannelCaches = useCallback(
+    (
+      channelCaches: PersistedChatState['channelCaches'],
+      currentChannelId: string | null,
+    ): PersistedChatState['channelCaches'] => {
+      const entries = Object.entries(channelCaches);
+
+      // If we're under the limit, no need to prune
+      if (entries.length <= MAX_CACHED_CHANNELS) {
+        return channelCaches;
+      }
+
+      // Sort by lastUpdated (most recent first), keeping current channel at top
+      const sorted = entries.sort((a, b) => {
+        // Always keep current channel first
+        if (a[0] === currentChannelId) return -1;
+        if (b[0] === currentChannelId) return 1;
+        // Then sort by lastUpdated (most recent first)
+        return (b[1].lastUpdated || 0) - (a[1].lastUpdated || 0);
+      });
+
+      // Keep only the most recent channels (including current)
+      const limited = sorted.slice(0, MAX_CACHED_CHANNELS);
+
+      logger.main.info(
+        `Pruned channelCaches from ${entries.length} to ${limited.length} channels`,
+      );
+
+      return Object.fromEntries(limited);
+    },
+    [],
+  );
+
+  // Helper to update state (splits persisted and transient updates)
+  const setState = useCallback(
+    (update: ChatState | ((prev: ChatState) => ChatState)) => {
+      // Get current combined state
+      const currentState: ChatState = {
+        ...persistedState,
+        ...transientState,
+      };
+
+      // Compute new state
+      const newState =
+        typeof update === 'function' ? update(currentState) : update;
+
+      // Split into persisted and transient
+      const { emojis, bits, ttvUsers, messages, ...persisted } = newState;
+
+      // Limit channelCaches size before persisting to prevent MMKV size limit issues
+      const limitedPersisted: PersistedChatState = {
+        ...persisted,
+        channelCaches: limitChannelCaches(
+          persisted.channelCaches,
+          persisted.currentChannelId,
+        ),
+      } as PersistedChatState;
+
+      // Update both states
+      setPersistedState(limitedPersisted);
+      setTransientState({ emojis, bits, ttvUsers, messages });
+    },
+    [persistedState, transientState, setPersistedState, limitChannelCaches],
+  );
 
   // Keep performance-critical data in local state (not persisted)
   const [imageCache, setImageCache] = useState<Map<string, ChannelCache>>(
@@ -318,6 +461,36 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     Map<string, InMemoryCache>
   >(new Map());
   const [cacheQueue, setCacheQueue] = useState<CacheQueueItem[]>([]);
+
+  // Prune channelCaches on restoration if it's too large (only run once when restoration completes)
+  useEffect(() => {
+    if (stateRestorationStatus === 'IN_MEMORY') {
+      const channelCount = Object.keys(persistedState.channelCaches).length;
+      if (channelCount > MAX_CACHED_CHANNELS) {
+        logger.main.info(
+          `Restored state has ${channelCount} channels, pruning to ${MAX_CACHED_CHANNELS}`,
+        );
+        setPersistedState(prevState => ({
+          ...prevState,
+          channelCaches: limitChannelCaches(
+            prevState.channelCaches,
+            prevState.currentChannelId,
+          ),
+        }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stateRestorationStatus]); // Only run when restoration status changes
+
+  // Add cleanup for memory leaks
+  useEffect(() => {
+    return () => {
+      // Clear all maps and arrays on unmount
+      setImageCache(new Map());
+      setInMemoryCache(new Map());
+      setCacheQueue([]);
+    };
+  }, []);
 
   const currentChannelData = state.currentChannelId
     ? state.channelCaches[state.currentChannelId]
@@ -698,6 +871,20 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
 
   const cacheImage = useCallback(
     (url: string, channelId: string, type: 'emote' | 'badge', priority = 1) => {
+      const existingCache = imageCache.get(channelId);
+      if (existingCache) {
+        const targetMap =
+          type === 'emote' ? existingCache.emotes : existingCache.badges;
+        const cached = targetMap.get(url);
+        if (
+          cached &&
+          (cached.diskCacheStatus === 'cached' ||
+            cached.diskCacheStatus === 'pending')
+        ) {
+          return; // Skip if already cached or in progress
+        }
+      }
+
       addToMemoryCache(url, channelId, type);
 
       setCacheQueue(prevQueue => {
@@ -744,6 +931,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     },
     [
       addToMemoryCache,
+      imageCache,
       state.cacheStats.isProcessing,
       processCacheQueue,
       setState,
@@ -792,6 +980,30 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       processCacheQueue,
       setState,
     ],
+  );
+
+  // Create debounced versions of cache operations for better performance
+  const debouncedCacheImage = useMemo(
+    () => debounce(cacheImage, 100),
+    [cacheImage],
+  );
+
+  const debouncedBatchCacheImages = useMemo(
+    () => debounce(batchCacheImages, 200),
+    [batchCacheImages],
+  );
+
+  // Create a wrapper that ensures the debounced function always returns a Promise
+  const debouncedBatchCacheImagesWrapper = useCallback(
+    async (
+      items: Array<{ url: string; channelId: string; type: 'emote' | 'badge' }>,
+    ) => {
+      return new Promise<void>(resolve => {
+        void debouncedBatchCacheImages(items);
+        resolve();
+      });
+    },
+    [debouncedBatchCacheImages],
   );
 
   const expireCache = useCallback(
@@ -1007,53 +1219,43 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [state.channelCaches, state.currentChannelId],
   );
 
-  const setBits = useCallback(
-    (bits: Bit[]) => {
-      setState(prevState => ({
+  const setBits = useCallback((bits: Bit[]) => {
+    setTransientState(prevState => ({
+      ...prevState,
+      bits,
+    }));
+  }, []);
+
+  const addTtvUser = useCallback((user: ChatUser) => {
+    setTransientState(prevState => {
+      const uniqueUsersMap = new Map(
+        prevState.ttvUsers.map(existingUser => [
+          existingUser.userId,
+          existingUser,
+        ]),
+      );
+
+      uniqueUsersMap.set(user.userId, user);
+
+      return {
         ...prevState,
-        bits,
-      }));
-    },
-    [setState],
-  );
-
-  const addTtvUser = useCallback(
-    (user: ChatUser) => {
-      setState(prevState => {
-        const uniqueUsersMap = new Map(
-          prevState.ttvUsers.map(existingUser => [
-            existingUser.userId,
-            existingUser,
-          ]),
-        );
-
-        uniqueUsersMap.set(user.userId, user);
-
-        return {
-          ...prevState,
-          ttvUsers: Array.from(uniqueUsersMap.values()),
-        };
-      });
-    },
-    [setState],
-  );
+        ttvUsers: Array.from(uniqueUsersMap.values()),
+      };
+    });
+  }, []);
 
   const clearTtvUsers = useCallback(() => {
-    setState(prevState => ({
+    setTransientState(prevState => ({
       ...prevState,
       ttvUsers: [],
     }));
-  }, [setState]);
+  }, []);
 
   const clearChannelResources = useCallback(() => {
-    setState(prevState => ({
+    setPersistedState(prevState => ({
       ...prevState,
       currentChannelId: null,
       loadingState: 'IDLE',
-      emojis: [],
-      ttvUsers: [],
-      bits: [],
-      messages: [],
       cacheStats: {
         totalFiles: 0,
         totalSizeBytes: 0,
@@ -1062,10 +1264,17 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       },
     }));
 
+    setTransientState(prevState => ({
+      emojis: [],
+      ttvUsers: [],
+      bits: [],
+      messages: prevState.messages, // Preserve messages when clearing channel resources
+    }));
+
     setImageCache(new Map());
     setInMemoryCache(new Map());
     setCacheQueue([]);
-  }, [setState]);
+  }, [setPersistedState]);
 
   const loadChannelResources = useCallback(
     async (channelId: string, forceRefresh = false) => {
@@ -1535,28 +1744,30 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [clearCache, loadChannelResources],
   );
 
-  const addMessage = useCallback(
-    (message: ChatMessageType) => {
-      setState(prevState => {
-        const newMessages = [...prevState.messages, message];
-        if (newMessages.length > 150) {
-          newMessages.shift();
-        }
+  const addMessage = useCallback((message: ChatMessageType<never>) => {
+    setTransientState(prevState => {
+      const newMessages = [...prevState.messages, message];
+      if (newMessages.length > MAX_MESSAGES_PER_CHANNEL) {
+        // Remove oldest chunk at once for better performance
+        const removeCount = Math.floor(MAX_MESSAGES_PER_CHANNEL * 0.2); // Remove 20% at a time
         return {
           ...prevState,
-          messages: newMessages,
+          messages: newMessages.slice(removeCount),
         };
-      });
-    },
-    [setState],
-  );
+      }
+      return {
+        ...prevState,
+        messages: newMessages,
+      };
+    });
+  }, []);
 
   const clearMessages = useCallback(() => {
-    setState(prevState => ({
+    setTransientState(prevState => ({
       ...prevState,
       messages: [],
     }));
-  }, [setState]);
+  }, []);
 
   const getCachedEmotes = useCallback(
     (channelId: string) => {
@@ -1730,12 +1941,9 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
     [setState, addToMemoryCache, cacheImage],
   );
 
-  const contextState: ChatContextState = useMemo(
+  // Split context into smaller, focused memoized values
+  const channelData = useMemo(
     () => ({
-      stateRestorationStatus,
-      loadingState: state.loadingState,
-      currentChannelId: state.currentChannelId,
-
       twitchChannelEmotes: currentChannelData?.twitchChannelEmotes || [],
       twitchGlobalEmotes: currentChannelData?.twitchGlobalEmotes || [],
       sevenTvChannelEmotes: currentChannelData?.sevenTvChannelEmotes || [],
@@ -1749,19 +1957,53 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       ffzGlobalBadges: currentChannelData?.ffzGlobalBadges || [],
       ffzChannelBadges: currentChannelData?.ffzChannelBadges || [],
       chatterinoBadges: currentChannelData?.chatterinoBadges || [],
+    }),
+    [currentChannelData],
+  );
 
-      // Local state data
+  const cacheData = useMemo(
+    () => ({
       imageCache,
       inMemoryCache,
       cacheStats: state.cacheStats,
       cacheQueue,
+    }),
+    [imageCache, inMemoryCache, state.cacheStats, cacheQueue],
+  );
+
+  const messageData = useMemo(
+    () => ({
+      messages: state.messages,
+      addMessage,
+      clearMessages,
+      addMessages: () => [],
+    }),
+    [state.messages, addMessage, clearMessages],
+  );
+
+  const userData = useMemo(
+    () => ({
       emojis: state.emojis,
       bits: state.bits,
       ttvUsers: state.ttvUsers,
-      messages: state.messages,
+      setBits,
+      addTtvUser,
+      clearTtvUsers,
+    }),
+    [
+      state.emojis,
+      state.bits,
+      state.ttvUsers,
+      setBits,
+      addTtvUser,
+      clearTtvUsers,
+    ],
+  );
 
-      cacheImage,
-      batchCacheImages,
+  const cacheOperations = useMemo(
+    () => ({
+      cacheImage: debouncedCacheImage,
+      batchCacheImages: debouncedBatchCacheImagesWrapper,
       processCacheQueue,
       processSingleCacheItem,
       addToMemoryCache,
@@ -1772,13 +2014,27 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       refreshChannelResources,
       getCacheAge,
       isCacheExpired,
-      setBits,
-      addTtvUser,
+    }),
+    [
+      debouncedCacheImage,
+      debouncedBatchCacheImagesWrapper,
+      processCacheQueue,
+      processSingleCacheItem,
+      addToMemoryCache,
+      getCachedImageUrl,
+      expireCache,
+      clearCache,
+      clearAllCache,
+      refreshChannelResources,
+      getCacheAge,
+      isCacheExpired,
+    ],
+  );
+
+  const channelOperations = useMemo(
+    () => ({
       loadChannelResources,
       clearChannelResources,
-      addMessage,
-      clearMessages,
-      clearTtvUsers,
       getCachedEmotes,
       getCachedBadges,
       getCurrentEmoteData,
@@ -1786,36 +2042,38 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       updateSevenTvEmotes,
     }),
     [
-      stateRestorationStatus,
-      state,
-      currentChannelData,
-      imageCache,
-      inMemoryCache,
-      cacheQueue,
-      cacheImage,
-      batchCacheImages,
-      processCacheQueue,
-      processSingleCacheItem,
-      addToMemoryCache,
-      getCachedImageUrl,
-      expireCache,
-      clearCache,
-      clearAllCache,
-      refreshChannelResources,
-      getCacheAge,
-      isCacheExpired,
-      setBits,
-      addTtvUser,
       loadChannelResources,
       clearChannelResources,
-      addMessage,
-      clearMessages,
-      clearTtvUsers,
       getCachedEmotes,
       getCachedBadges,
       getCurrentEmoteData,
       getSevenTvEmoteSetId,
       updateSevenTvEmotes,
+    ],
+  );
+
+  const contextState: ChatContextState = useMemo(
+    () => ({
+      stateRestorationStatus,
+      loadingState: state.loadingState,
+      currentChannelId: state.currentChannelId,
+      ...channelData,
+      ...cacheData,
+      ...messageData,
+      ...userData,
+      ...cacheOperations,
+      ...channelOperations,
+    }),
+    [
+      stateRestorationStatus,
+      state.loadingState,
+      state.currentChannelId,
+      channelData,
+      cacheData,
+      messageData,
+      userData,
+      cacheOperations,
+      channelOperations,
     ],
   );
 

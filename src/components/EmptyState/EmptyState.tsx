@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable no-restricted-imports */
 /* eslint-disable no-shadow */
 import {
@@ -14,9 +13,6 @@ import { Button, ButtonProps } from '../Button';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const empty = require('../../../assets/sad-face.png');
-
 interface EmptyStatePresetItem {
   imageSource: ImageProps['source'];
   heading: TextProps['children'];
@@ -26,7 +22,7 @@ interface EmptyStatePresetItem {
 
 const EmptyStatePresets = {
   generic: {
-    imageSource: empty,
+    imageSource: '../../../assets/data/category_apex.jpg',
     heading: 'Empty',
     content: 'No data found, click the button to refresh or reload the app',
     button: "Let's try this again",

@@ -4,15 +4,12 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useCallback, useEffect, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-import WebView from 'react-native-webview';
-import { scheduleOnRN } from 'react-native-worklets';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
@@ -20,20 +17,37 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
 
-  const [isChatVisible, setIsChatVisible] = useState<boolean>(true);
+  const [isChatVisible] = useState<boolean>(true);
+  const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
 
-  const [streamQueryResult, userQueryResult, userProfilePictureQueryResult] =
-    useQueries({
-      queries: [
-        twitchQueries.getStream(params.id),
-        twitchQueries.getUser(params.id),
-        twitchQueries.getUserImage(params.id),
-      ],
-    });
+  useEffect(() => {
+    setShouldRenderChat(false);
+    return () => {
+      console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
+      setShouldRenderChat(false);
+    };
+  }, [params.id]);
+
+  const [streamQueryResult] = useQueries({
+    queries: [
+      twitchQueries.getStream(params.id),
+      twitchQueries.getUser(params.id),
+      twitchQueries.getUserImage(params.id),
+    ],
+  });
 
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
-  const { data: user, isPending: isUserPending } = userQueryResult;
-  const { isPending: isPfpPending } = userProfilePictureQueryResult;
+
+  useEffect(() => {
+    if (stream?.user_login && stream?.user_id && !shouldRenderChat) {
+      // Use setTimeout to defer Chat rendering to next tick, allowing screen to render first to stop blocking navigation
+      const timer = setTimeout(() => {
+        setShouldRenderChat(true);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [stream?.user_login, stream?.user_id, shouldRenderChat]);
 
   const getVideoDimensions = useCallback(() => {
     if (isLandscape) {
@@ -102,11 +116,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     getChatDimensions,
   ]);
 
-  const animatedVideoStyle = useAnimatedStyle(() => ({
-    width: videoWidth.value,
-    height: videoHeight.value,
-  }));
-
   const animatedChatStyle = useAnimatedStyle(() => ({
     width: chatWidth.value,
     height: chatHeight.value,
@@ -114,27 +123,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     transform: [{ translateX: chatTranslateX.value }],
   }));
 
-  const handleDoubleTap = useCallback(() => {
-    setIsChatVisible(prev => !prev);
-  }, []);
-
-  const doubleTapGesture = Gesture.Tap()
-    .numberOfTaps(2)
-    .maxDelay(300)
-    .onEnd(() => {
-      scheduleOnRN(handleDoubleTap);
-    });
-
-  const getWebViewStyle = useCallback(
-    // eslint-disable-next-line no-shadow
-    (isLandscape: boolean) => ({
-      width: isLandscape ? '100%' : screenWidth,
-      height: '100%',
-    }),
-    [screenWidth],
-  );
-
-  if (isStreamPending || isPfpPending) {
+  if (isStreamPending) {
     return <Spinner />;
   }
 
@@ -148,7 +137,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   return (
     <View style={[styles.contentContainer, isLandscape && styles.row]}>
-      <GestureDetector gesture={doubleTapGesture}>
+      {/* <GestureDetector gesture={doubleTapGesture}>
         <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
           <WebView
             source={{
@@ -162,14 +151,16 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             mediaPlaybackRequiresUserAction={false}
           />
         </Animated.View>
-      </GestureDetector>
+      </GestureDetector> */}
 
-      {/* Chat container - only render when visible or animating */}
       {(isChatVisible || chatOpacity.value > 0) && (
         <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-          {!isUserPending && user?.id && stream.user_login && (
+          {shouldRenderChat && stream.user_login && stream.user_id && (
             <View style={styles.chatContent}>
-              <Chat channelId={user.id} channelName={stream.user_login} />
+              <Chat
+                channelId={stream.user_id}
+                channelName={stream.user_login}
+              />
             </View>
           )}
         </Animated.View>

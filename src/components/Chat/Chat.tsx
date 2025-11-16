@@ -1,22 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
-import { useChatContext } from '@app/context/ChatContext';
-import { useAppNavigation, useSeventvWs } from '@app/hooks';
-import TmiService from '@app/services/tmi-service';
-import { ChatMessageType } from '@app/store';
+import { ChatMessageType, useChatContext } from '@app/context/ChatContext';
+import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
+import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
+import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
-  createHitslop,
-  clearImageCache,
-  generateStvEmoteNotice,
-} from '@app/utils';
+  UserNoticeVariantMap,
+  UserNoticeTagsByVariant,
+} from '@app/types/chat/irc-tags/usernotice';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { createHitslop, clearImageCache } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { parseBadges } from '@app/utils/chat/parseBadges';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
-import { AnimatedLegendList } from '@legendapp/list/reanimated';
+import { FlashListRef } from '@shopify/flash-list';
 import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
@@ -26,14 +27,24 @@ import {
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { StyleSheet } from 'react-native-unistyles';
-import tmijs from 'tmi.js';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
+import { FlashList } from '../FlashList';
 import { Icon } from '../Icon';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
+
+// Union type representing all possible ChatMessageType variants
+type AnyChatMessageType =
+  | ChatMessageType<'usernotice', 'viewermilestone'>
+  | ChatMessageType<'usernotice', 'sub'>
+  | ChatMessageType<'usernotice', 'resub'>
+  | ChatMessageType<'usernotice', 'subgift'>
+  | ChatMessageType<'usernotice', 'anongiftpaidupgrade'>
+  | ChatMessageType<'usernotice', 'raid'>
+  | ChatMessageType<'usernotice'>;
 
 interface ChatProps {
   channelId: string;
@@ -41,16 +52,15 @@ interface ChatProps {
 }
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
-  const [connected, setConnected] = useState<boolean>(false);
-  const { authState, user } = useAuthContext();
+  const { authState } = useAuthContext();
   const navigation = useAppNavigation();
-  const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const hasPartedRef = useRef<boolean>(false);
-  const [client, setClient] = useState<tmijs.Client | null>(null);
   const initializingRef = useRef<boolean>(false);
   const initializedChannelRef = useRef<string | null>(null);
+  const isMountedRef = useRef<boolean>(true);
+  const isNavigatingAwayRef = useRef<boolean>(false);
+  const loadingAbortRef = useRef<AbortController | null>(null);
 
-  // Add ref to track current emote set ID
   const currentEmoteSetIdRef = useRef<string | null>(null);
 
   const {
@@ -59,16 +69,422 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     loadingState,
     clearTtvUsers,
     addMessage,
+    addMessages,
     clearMessages,
     getCurrentEmoteData,
     getSevenTvEmoteSetId,
-    updateSevenTvEmotes,
+    messages,
   } = useChatContext();
 
   const sevenTvEmoteSetId = useMemo(() => {
     return getSevenTvEmoteSetId(channelId) || undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channelId]); // Only depend on channelId, not getSevenTvEmoteSetId
+  }, [channelId]);
+
+  useTwitchWs();
+
+  // Initialize emote processor with current emote data
+  const currentEmotes = getCurrentEmoteData(channelId);
+  const emoteProcessor = useEmoteProcessor({
+    sevenTvGlobalEmotes: currentEmotes?.sevenTvGlobalEmotes || [],
+    sevenTvChannelEmotes: currentEmotes?.sevenTvChannelEmotes || [],
+    twitchGlobalEmotes: currentEmotes?.twitchGlobalEmotes || [],
+    twitchChannelEmotes: currentEmotes?.twitchChannelEmotes || [],
+    ffzChannelEmotes: currentEmotes?.ffzChannelEmotes || [],
+    ffzGlobalEmotes: currentEmotes?.ffzGlobalEmotes || [],
+    bttvChannelEmotes: currentEmotes?.bttvChannelEmotes || [],
+    bttvGlobalEmotes: currentEmotes?.bttvGlobalEmotes || [],
+  });
+
+  const flashListRef = useRef<FlashListRef<AnyChatMessageType>>(null);
+  const messagesRef = useRef<AnyChatMessageType[]>([]);
+  const messageBatchRef = useRef<AnyChatMessageType[]>([]);
+  const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAtBottomRef = useRef<boolean>(true);
+  const [isScrollingToBottom, setIsScrollingToBottom] =
+    useState<boolean>(false);
+
+  const processMessageBatch = useCallback(() => {
+    if (messageBatchRef.current.length === 0) return;
+
+    const batch = [...messageBatchRef.current];
+    messageBatchRef.current = [];
+
+    // Use addMessages for batch processing instead of individual addMessage calls
+    addMessages(batch as ChatMessageType<never>[]);
+
+    messagesRef.current = [...messagesRef.current, ...batch].slice(-500);
+
+    // Update unread count
+    if (!isAtBottomRef.current && !isScrollingToBottom) {
+      setUnreadCount(prev => prev + batch.length);
+    }
+
+    // Force scroll to bottom if we're already at bottom (for fast chats)
+    if (isAtBottomRef.current && !isScrollingToBottom) {
+      setTimeout(() => {
+        void flashListRef.current?.scrollToIndex({
+          index: messages.length - 1,
+          animated: false,
+        });
+      }, 0);
+    }
+  }, [addMessages, isScrollingToBottom, messages.length]);
+
+  const handleNewMessage = useCallback(
+    (newMessage: AnyChatMessageType) => {
+      // Add to batch
+      messageBatchRef.current.push(newMessage);
+
+      // Clear existing timeout
+      if (batchTimeoutRef.current) {
+        clearTimeout(batchTimeoutRef.current);
+      }
+
+      if (messageBatchRef.current.length >= 3) {
+        processMessageBatch();
+      } else {
+        batchTimeoutRef.current = setTimeout(() => {
+          processMessageBatch();
+        }, 10);
+      }
+    },
+    [processMessageBatch],
+  );
+
+  const {
+    isConnected: isChatConnected,
+    partChannel,
+    sendMessage,
+  } = useTwitchChat({
+    channel: channelName,
+    onMessage: useCallback(
+      (_channel: string, tags: Record<string, string>, text: string) => {
+        const badgeData = parseBadges(tags.badges as unknown as string);
+
+        // map irc tags to our custom format
+        const userstate: UserStateTags = {
+          ...tags,
+          username: tags['display-name'] || tags.login || '',
+          login: tags.login || tags['display-name']?.toLowerCase() || '',
+          'badges-raw': badgeData['badges-raw'],
+          badges: badgeData.badges,
+          'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',
+          'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
+          'reply-parent-display-name': tags['reply-parent-display-name'] || '',
+          'reply-parent-user-login': tags['reply-parent-user-login'] || '',
+          'user-type': tags['user-type'],
+        } as UserStateTags;
+
+        const message_id = userstate.id || '0';
+        const replyParentMessageId = tags['reply-parent-msg-id'];
+        const replyParentDisplayName = tags['reply-parent-display-name'];
+        const replyParentUserLogin = tags['reply-parent-user-login'];
+        const replyParentMessageBody = tags['reply-parent-msg-body'];
+
+        let parentColor: string | undefined;
+        if (replyParentDisplayName && replyParentDisplayName.trim()) {
+          // Try to find parent message to get its color
+          if (replyParentMessageId) {
+            const replyParent = messages.find(
+              message => message.message_id === replyParentMessageId,
+            );
+            if (replyParent?.userstate.color) {
+              parentColor = replyParent.userstate.color;
+            } else {
+              parentColor = generateRandomTwitchColor(replyParentDisplayName);
+            }
+          } else {
+            // If no parent message ID, always generate color from username
+            parentColor = generateRandomTwitchColor(replyParentDisplayName);
+          }
+        }
+
+        if (replyParentMessageId && replyParentDisplayName) {
+          const replyParent = messages.find(
+            message => message.message_id === replyParentMessageId,
+          );
+
+          if (replyParent) {
+            setReplyTo({
+              messageId: replyParentMessageId,
+              username: replyParentDisplayName || '',
+              message: replyParentMessageBody || '',
+              replyParentUserLogin: replyParentUserLogin || '',
+            });
+          }
+        }
+
+        const message_nonce = generateNonce();
+
+        const emoteData = getCurrentEmoteData(channelId);
+
+        const msgId = tags['msg-id'];
+
+        const isValidVariant = (
+          id?: string,
+        ): id is keyof UserNoticeVariantMap => {
+          return (
+            id !== undefined &&
+            (id === 'viewermilestone' ||
+              id === 'sub' ||
+              id === 'resub' ||
+              id === 'subgift' ||
+              id === 'anongiftpaidupgrade' ||
+              id === 'raid')
+          );
+        };
+
+        // Narrow the type based on msg-id if it's a known usernotice variant
+        // When msg-id is 'viewermilestone', notice_tags will be narrowed to ViewerMilestoneTags
+        // When msg-id is 'sub', notice_tags will be narrowed to SubscriptionTags, etc.
+        let newMessage: AnyChatMessageType;
+        if (isValidVariant(msgId)) {
+          // Base message fields shared across all variants
+          const baseMessage = {
+            userstate,
+            message: [{ type: 'text' as const, content: text.trimEnd() }],
+            badges: [],
+            channel: channelName,
+            message_id,
+            message_nonce,
+            sender: userstate.username || '',
+            parentDisplayName: tags['reply-parent-display-name'] || '',
+            replyDisplayName: tags['reply-parent-user-login'] || '',
+            replyBody: tags['reply-parent-msg-body'] || '',
+            parentColor: parentColor || undefined,
+          };
+
+          /**
+           * Narrow the msg id so we can match up notice_tags with the correct
+           */
+          switch (msgId) {
+            case 'viewermilestone': {
+              const viewerMilestoneTags =
+                tags as UserNoticeTagsByVariant<'viewermilestone'>;
+
+              const viewerMilestoneMessage: ChatMessageType<
+                'usernotice',
+                'viewermilestone'
+              > = {
+                ...baseMessage,
+                notice_tags: {
+                  'msg-id': viewerMilestoneTags['msg-id'],
+                  'msg-param-category':
+                    viewerMilestoneTags['msg-param-category'],
+                  'msg-param-copoReward':
+                    viewerMilestoneTags['msg-param-copoReward'] ?? '',
+                  'msg-param-id': viewerMilestoneTags['msg-param-id'] ?? '',
+                  'msg-param-value':
+                    viewerMilestoneTags['msg-param-value'] ?? '',
+                  'badge-info': viewerMilestoneTags['badge-info'] ?? '',
+                  'display-name': viewerMilestoneTags['display-name'] ?? '',
+                } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
+              };
+              newMessage = viewerMilestoneMessage;
+              handleNewMessage(viewerMilestoneMessage);
+              break;
+            }
+            case 'sub': {
+              const subTags = tags as UserNoticeTagsByVariant<'sub'>;
+
+              const subMessage: ChatMessageType<'usernotice', 'sub'> = {
+                ...baseMessage,
+                notice_tags: subTags,
+              };
+              newMessage = subMessage;
+              handleNewMessage(subMessage);
+              break;
+            }
+            case 'resub': {
+              const resubTags = tags as UserNoticeTagsByVariant<'resub'>;
+
+              const resubMessage: ChatMessageType<'usernotice', 'resub'> = {
+                ...baseMessage,
+                notice_tags: resubTags,
+              };
+              newMessage = resubMessage;
+              handleNewMessage(resubMessage);
+              break;
+            }
+            case 'subgift': {
+              const subGiftTags = tags as UserNoticeTagsByVariant<'subgift'>;
+
+              const subGiftMessage: ChatMessageType<'usernotice', 'subgift'> = {
+                ...baseMessage,
+                notice_tags: subGiftTags,
+              };
+              newMessage = subGiftMessage;
+              handleNewMessage(subGiftMessage);
+              break;
+            }
+            case 'anongiftpaidupgrade': {
+              const anonGiftPaidUpgradeTags =
+                tags as UserNoticeTagsByVariant<'anongiftpaidupgrade'>;
+
+              const anonGiftPaidUpgradeMessage: ChatMessageType<
+                'usernotice',
+                'anongiftpaidupgrade'
+              > = {
+                ...baseMessage,
+                notice_tags: anonGiftPaidUpgradeTags,
+              };
+              newMessage = anonGiftPaidUpgradeMessage;
+              handleNewMessage(anonGiftPaidUpgradeMessage);
+              break;
+            }
+            case 'raid': {
+              const raidTags = tags as UserNoticeTagsByVariant<'raid'>;
+
+              const raidMessage: ChatMessageType<'usernotice', 'raid'> = {
+                ...baseMessage,
+                notice_tags: raidTags,
+              };
+              newMessage = raidMessage;
+              handleNewMessage(raidMessage);
+              break;
+            }
+            default: {
+              const fallbackMessage: ChatMessageType<'usernotice'> = {
+                ...baseMessage,
+              };
+              newMessage = fallbackMessage;
+              handleNewMessage(newMessage);
+            }
+          }
+        } else {
+          const fallbackMessage: ChatMessageType<'usernotice'> = {
+            userstate,
+            message: [{ type: 'text', content: text.trimEnd() }],
+            badges: [],
+            channel: channelName,
+            message_id,
+            message_nonce,
+            sender: userstate.username || '',
+            parentDisplayName: tags['reply-parent-display-name'] || '',
+            replyDisplayName: tags['reply-parent-user-login'] || '',
+            replyBody: tags['reply-parent-msg-body'] || '',
+            parentColor: parentColor || undefined,
+          };
+          newMessage = fallbackMessage;
+          handleNewMessage(newMessage);
+        }
+
+        if (
+          emoteData &&
+          (emoteData.twitchGlobalEmotes.length > 0 ||
+            emoteData.sevenTvGlobalEmotes.length > 0 ||
+            emoteData.bttvGlobalEmotes.length > 0 ||
+            emoteData.ffzGlobalEmotes.length > 0)
+        ) {
+          emoteProcessor.processEmotes(
+            text.trimEnd(),
+            userstate,
+            replacedMessage => {
+              try {
+                const replacedBadges = findBadges({
+                  userstate,
+                  chatterinoBadges: emoteData.chatterinoBadges,
+                  chatUsers: [], // need to populate from ctx
+                  ffzChannelBadges: emoteData.ffzChannelBadges,
+                  ffzGlobalBadges: emoteData.ffzGlobalBadges,
+                  twitchChannelBadges: emoteData.twitchChannelBadges,
+                  twitchGlobalBadges: emoteData.twitchGlobalBadges,
+                });
+
+                const updatedMessage: AnyChatMessageType = {
+                  ...newMessage,
+                  message: replacedMessage,
+                  badges: replacedBadges,
+                  parentColor: newMessage.parentColor,
+                };
+
+                addMessage(updatedMessage as ChatMessageType<'usernotice'>);
+              } catch (error) {
+                logger.chat.error('Error processing emotes:', error);
+              }
+            },
+          );
+        }
+      },
+      [
+        channelId,
+        channelName,
+        getCurrentEmoteData,
+        emoteProcessor,
+        handleNewMessage,
+        addMessage,
+        messages,
+      ],
+    ),
+    onClearChat: useCallback(() => {
+      clearMessages();
+      messagesRef.current = [];
+      setTimeout(() => {
+        void flashListRef.current?.scrollToIndex({
+          index: messages.length - 1,
+          animated: false,
+        });
+      }, 0);
+    }, [clearMessages, messages.length]),
+    onJoin: useCallback(() => {
+      logger.chat.info('Joined channel:', channelName);
+
+      addMessage({
+        userstate: {
+          'display-name': 'System',
+          login: 'system',
+          username: 'System',
+          'user-id': '',
+          id: '',
+          color: '#808080',
+          badges: {},
+          'badges-raw': '',
+          'user-type': '',
+          mod: '0',
+          subscriber: '0',
+          turbo: '0',
+          'emote-sets': '',
+          'reply-parent-msg-id': '',
+          'reply-parent-msg-body': '',
+          'reply-parent-display-name': '',
+          'reply-parent-user-login': '',
+        },
+        message: [
+          { type: 'text', content: `Connected to ${channelName}'s room` },
+        ],
+        badges: [],
+        channel: channelName,
+        message_id: `system-join-${Date.now()}`,
+        message_nonce: generateNonce(),
+        sender: 'System',
+        parentDisplayName: '',
+        replyDisplayName: '',
+        replyBody: '',
+        parentColor: undefined,
+      });
+    }, [channelName, addMessage]),
+
+    onPart: useCallback(() => {
+      logger.chat.info('Parted from channel:', channelName);
+      clearMessages();
+      messagesRef.current = [];
+    }, [channelName, clearMessages]),
+  });
+
+  const [connected, setConnected] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkConnection = () => {
+      const isConnected = isChatConnected();
+      setConnected(isConnected);
+    };
+
+    checkConnection();
+    const interval = setInterval(checkConnection, 1000);
+
+    return () => clearInterval(interval);
+  }, [isChatConnected]);
 
   const { subscribeToChannel, unsubscribeFromChannel, isConnected } =
     useSeventvWs({
@@ -77,28 +493,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         logger.stvWs.info(
           `Channel ${channelId}: +${added.length} -${removed.length} emotes`,
         );
-
-        updateSevenTvEmotes(channelId, added, removed);
-
-        added.forEach(emote => {
-          handleNewMessage(
-            generateStvEmoteNotice({
-              channelName,
-              emote,
-              type: 'added',
-            }),
-          );
-        });
-
-        removed.forEach(emote => {
-          handleNewMessage(
-            generateStvEmoteNotice({
-              channelName,
-              emote,
-              type: 'removed',
-            }),
-          );
-        });
       },
       onEvent: (eventType, data) => {
         console.log(`SevenTV event: ${eventType}`, data);
@@ -107,10 +501,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       sevenTvEmoteSetId,
     });
 
-  // Add this to track connection state changes
   const [wsConnected, setWsConnected] = useState(false);
 
-  // Add an effect to track connection state changes
   useEffect(() => {
     const checkConnection = () => {
       // eslint-disable-next-line no-shadow
@@ -118,26 +510,21 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       setWsConnected(connected);
     };
 
-    // Check immediately
     checkConnection();
 
-    // Check periodically (since we don't have connection state events)
     const interval = setInterval(checkConnection, 1000);
 
     return () => clearInterval(interval);
   }, [isConnected]);
 
-  // Separate effect for SevenTV WebSocket subscription that waits for loaded state
   useEffect(() => {
     console.log('🔍 SevenTV subscription effect running:', {
       isConnected: wsConnected,
       channelId,
       loadingState,
-      allConditionsMet:
-        wsConnected && channelId && loadingState === 'COMPLETED',
+      allConditionsMet: wsConnected && channelId,
     });
 
-    // Only try to subscribe after channel resources are loaded AND WebSocket is connected
     if (wsConnected && channelId) {
       const emoteSetId = getSevenTvEmoteSetId(channelId);
 
@@ -146,82 +533,116 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       console.log('channelId ->', channelId);
 
       if (emoteSetId) {
-        // Only subscribe if the emote set ID has changed or we haven't subscribed yet
+        if (
+          currentEmoteSetIdRef.current &&
+          currentEmoteSetIdRef.current !== emoteSetId
+        ) {
+          logger.stvWs.info(
+            `Unsubscribing from previous SevenTV emote set: ${currentEmoteSetIdRef.current}`,
+          );
+          unsubscribeFromChannel();
+        }
+
         if (currentEmoteSetIdRef.current !== emoteSetId) {
           currentEmoteSetIdRef.current = emoteSetId;
 
-          // Add a small delay to ensure WebSocket is fully ready
-          setTimeout(() => {
-            if (wsConnected) {
-              logger.stvWs.info(
-                `Subscribing to SevenTV emote set: ${emoteSetId} for channel: ${channelId}`,
-              );
-              subscribeToChannel(emoteSetId);
-            }
-          }, 100);
+          logger.stvWs.info(
+            `Subscribing to SevenTV emote set: ${emoteSetId} for channel: ${channelId}`,
+          );
+          subscribeToChannel(emoteSetId);
         }
 
         return () => {
           logger.stvWs.info(
             `Unsubscribing from SevenTV emote set: ${emoteSetId} for channel: ${channelId}`,
           );
-          unsubscribeFromChannel(channelId);
+          unsubscribeFromChannel();
           currentEmoteSetIdRef.current = null;
         };
       }
-      logger.stvWs.warn(
-        `No SevenTV emote set ID found for channel: ${channelId}, skipping subscription`,
+      logger.stvWs.info(
+        `No SevenTV emote set ID found for channel: ${channelId}, will retry when available`,
       );
     }
 
     return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelId, subscribeToChannel, unsubscribeFromChannel, wsConnected]);
+
+  useEffect(() => {
+    if (wsConnected && channelId && loadingState === 'COMPLETED') {
+      const emoteSetId = getSevenTvEmoteSetId(channelId);
+
+      if (emoteSetId && currentEmoteSetIdRef.current !== emoteSetId) {
+        logger.stvWs.info(
+          `Emote data now available, subscribing to SevenTV emote set: ${emoteSetId}`,
+        );
+        currentEmoteSetIdRef.current = emoteSetId;
+        subscribeToChannel(emoteSetId);
+      }
+    }
   }, [
-    channelId,
-    subscribeToChannel,
-    unsubscribeFromChannel,
     wsConnected,
+    channelId,
     loadingState,
-    // Removed getSevenTvEmoteSetId from dependencies
+    subscribeToChannel,
+    getSevenTvEmoteSetId,
   ]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       console.log('🚪 Screen is being removed, cleaning up chat connection...');
 
-      if (client && !hasPartedRef.current) {
+      // Mark as navigating away immediately to prevent skeleton from showing
+      isNavigatingAwayRef.current = true;
+      isMountedRef.current = false;
+
+      // Reset loading state immediately to allow navigation
+      clearChannelResources();
+
+      // Abort any ongoing loading
+      if (loadingAbortRef.current) {
+        loadingAbortRef.current.abort();
+        loadingAbortRef.current = null;
+      }
+
+      if (!hasPartedRef.current) {
         hasPartedRef.current = true;
         console.log(`👋 Parting channel: ${channelName}`);
-        void client.part(channelName);
+        partChannel(channelName);
       }
 
-      if (client) {
-        console.log('🧹 Removing all TMI listeners');
-        client.removeAllListeners('message');
-        client.removeAllListeners('clearchat');
-        client.removeAllListeners('disconnected');
-        client.removeAllListeners('connected');
-      }
+      // Clear messages when leaving
+      clearMessages();
+      messagesRef.current = [];
+      messageBatchRef.current = [];
 
       setConnected(false);
-      setClient(null);
-
       initializedChannelRef.current = null;
       initializingRef.current = false;
+      currentEmoteSetIdRef.current = null;
     });
 
     return () => {
+      isMountedRef.current = false;
+      isNavigatingAwayRef.current = false;
+      hasPartedRef.current = false;
       unsubscribe();
       clearChannelResources();
       clearTtvUsers();
+      clearMessages();
+      messagesRef.current = [];
+      messageBatchRef.current = [];
+      if (loadingAbortRef.current) {
+        loadingAbortRef.current.abort();
+        loadingAbortRef.current = null;
+      }
+      currentEmoteSetIdRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation, client, channelName]);
+  }, [navigation, channelName, partChannel, clearMessages]);
 
-  const legendListRef = useRef<LegendListRef>(null);
-  const messagesRef = useRef<ChatMessageType[]>([]);
-
-  const [_connectionError, setConnectionError] = useState<string | null>(null);
+  const [_connectionError] = useState<string | null>(null);
   const [showEmotePicker, setShowEmotePicker] = useState<boolean>(false);
 
   const [messageInput, setMessageInput] = useState<string>('');
@@ -237,11 +658,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const BOTTOM_THRESHOLD = 50;
   const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
-  const isAtBottomRef = useRef<boolean>(true);
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [isScrollingToBottom, setIsScrollingToBottom] =
-    useState<boolean>(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -252,7 +670,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD;
 
-      // Clear any existing timeout when user scrolls
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
         scrollTimeoutRef.current = null;
@@ -276,12 +693,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   );
 
   const handleContentSizeChange = useCallback(() => {
-    // More aggressive auto-scrolling for fast chats
     if (isAtBottomRef.current) {
       const lastIndex = messages.length - 1;
       if (lastIndex >= 0) {
-        // Use scrollToEnd for better performance in fast chats
-        legendListRef.current?.scrollToEnd({ animated: false });
+        void flashListRef.current?.scrollToIndex({
+          index: messages.length - 1,
+          animated: false,
+        });
       }
     }
   }, [messages.length]);
@@ -291,11 +709,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     const lastIndex = messages.length - 1;
 
     if (lastIndex >= 0) {
-      // Use scrollToEnd for more reliable scrolling
-      legendListRef.current?.scrollToEnd({ animated: true });
+      void flashListRef.current?.scrollToIndex({
+        index: messages.length - 1,
+        animated: true,
+      });
     }
 
-    // Clear any existing timeout
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
@@ -314,342 +733,122 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
+      if (batchTimeoutRef.current) {
+        clearTimeout(batchTimeoutRef.current);
+      }
     };
   }, []);
 
-  const handleNewMessage = useCallback(
-    (newMessage: ChatMessageType) => {
-      addMessage(newMessage);
-
-      const updatedMessages = [...messagesRef.current, newMessage].slice(-250);
-      messagesRef.current = updatedMessages;
-      setMessages(updatedMessages);
-
-      // Only increment unread count if user is not at bottom and not auto-scrolling
-      if (!isAtBottomRef.current && !isScrollingToBottom) {
-        setUnreadCount(prev => prev + 1);
-      }
-
-      // Force scroll to bottom if we're already at bottom (for fast chats)
-      if (isAtBottomRef.current && !isScrollingToBottom) {
-        // Use requestAnimationFrame for better performance
-        requestAnimationFrame(() => {
-          legendListRef.current?.scrollToEnd({ animated: false });
-        });
-      }
-    },
-    [addMessage, isScrollingToBottom],
-  );
-
-  const setupChatListeners = useCallback(
-    (tmiClient: tmijs.Client) => {
-      // Remove existing listeners first to prevent duplicates
-      tmiClient.removeAllListeners('message');
-      tmiClient.removeAllListeners('clearchat');
-      tmiClient.removeAllListeners('disconnected');
-      tmiClient.removeAllListeners('connected');
-
-      console.log('🎧 Setting up fresh chat listeners');
-
-      tmiClient.on('message', (_channel, tags, text, _self) => {
-        const userstate = tags;
-
-        const message_id = userstate.id || '0';
-        const replyParentMessageId = tags.id;
-
-        const replyParentDisplayName = tags[
-          'reply-parent-display-name'
-        ] as string;
-
-        const replyParentUserLogin = tags['reply-parent-user-login'] as string;
-        const replyParentMessageBody = tags['reply-parent-msg-body'] as string;
-
-        if (replyParentMessageId) {
-          const replyParent = messages.find(
-            message => message.message_id === replyParentMessageId,
-          );
-
-          if (replyParent) {
-            setReplyTo({
-              messageId: replyParentMessageId,
-              username: replyParentDisplayName,
-              message: replyParentMessageBody,
-              replyParentUserLogin,
-            });
-          }
-        }
-
-        const message_nonce = generateNonce();
-
-        const currentEmotes = getCurrentEmoteData(channelId);
-
-        const replacedMessage = replaceTextWithEmotes({
-          bttvChannelEmotes: currentEmotes.bttvChannelEmotes,
-          bttvGlobalEmotes: currentEmotes.bttvGlobalEmotes,
-          ffzChannelEmotes: currentEmotes.ffzChannelEmotes,
-          ffzGlobalEmotes: currentEmotes.ffzGlobalEmotes,
-          inputString: text.trimEnd(),
-          sevenTvChannelEmotes: currentEmotes.sevenTvChannelEmotes,
-          sevenTvGlobalEmotes: currentEmotes.sevenTvGlobalEmotes,
-          twitchChannelEmotes: currentEmotes.twitchChannelEmotes,
-          twitchGlobalEmotes: currentEmotes.twitchGlobalEmotes,
-          userstate,
-        });
-
-        const replacedBadges = findBadges({
-          userstate,
-          chatterinoBadges: currentEmotes.chatterinoBadges,
-          chatUsers: [], // need to populate from ctx
-          ffzChannelBadges: currentEmotes.ffzChannelBadges,
-          ffzGlobalBadges: currentEmotes.ffzGlobalBadges,
-          twitchChannelBadges: currentEmotes.twitchChannelBadges,
-          twitchGlobalBadges: currentEmotes.twitchGlobalBadges,
-        });
-
-        const newMessage: ChatMessageType = {
-          userstate,
-          message: replacedMessage,
-          badges: replacedBadges,
-          channel: channelName,
-          message_id,
-          message_nonce,
-          sender: userstate.username || '',
-          parentDisplayName:
-            (tags['reply-parent-display-name'] as string) || '',
-          replyDisplayName: (tags['reply-parent-user-login'] as string) || '',
-          replyBody: (tags['reply-parent-msg-body'] as string) || '',
-        };
-
-        handleNewMessage(newMessage);
-      });
-
-      tmiClient.on('clearchat', () => {
-        messagesRef.current = [];
-        clearMessages();
-        setTimeout(() => {
-          legendListRef.current?.scrollToEnd({ animated: false });
-        }, 0);
-        void tmiClient.say(channelName, 'Chat cleared by moderator');
-      });
-
-      tmiClient.on('disconnected', reason => {
-        logger.chat.info('Disconnected from chat:', reason);
-        setConnected(false);
-      });
-
-      tmiClient.on('connected', () => {
-        setConnected(true);
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      channelName,
-      handleNewMessage,
-      clearMessages,
-      channelId,
-      getCurrentEmoteData,
-    ],
-  );
-
-  // Add an effect to wait for emote data to be available before setting up listeners
   useEffect(() => {
-    const checkEmoteDataAndSetupListeners = () => {
-      if (!client || !channelId) return;
+    messagesRef.current = messages;
+  }, [messages]);
 
-      const emoteData = getCurrentEmoteData(channelId);
-
-      const hasEmotes =
-        emoteData.twitchGlobalEmotes.length > 0 ||
-        emoteData.sevenTvGlobalEmotes.length > 0 ||
-        emoteData.bttvGlobalEmotes.length > 0 ||
-        emoteData.ffzGlobalEmotes.length > 0;
-
-      if (hasEmotes) {
-        console.log('🎧 Emote data is available, setting up chat listeners');
-        setupChatListeners(client);
-      } else if (loadingState === 'COMPLETED') {
-        console.log(
-          '⏳ Loading completed but no emotes yet, retrying in 200ms...',
-        );
-        setTimeout(() => {
-          checkEmoteDataAndSetupListeners();
-        }, 200);
-      }
-    };
-
-    checkEmoteDataAndSetupListeners();
-  }, [
-    client,
-    channelId,
-    loadingState,
-    getCurrentEmoteData,
-    setupChatListeners,
-  ]);
-
+  // Reset refs on mount and when channelId changes
   useEffect(() => {
-    return () => {
-      if (client) {
-        console.log('🧹 Cleaning up chat listeners (useEffect cleanup)');
+    // Reset all refs when component mounts or channel changes
+    isMountedRef.current = true;
+    isNavigatingAwayRef.current = false;
+    hasPartedRef.current = false;
+    initializingRef.current = false;
+    currentEmoteSetIdRef.current = null;
 
-        if (!hasPartedRef.current) {
-          hasPartedRef.current = true;
-          console.log(`👋 Parting channel: ${channelName} (cleanup)`);
-          void client.part(channelName);
-        }
-
-        client.removeAllListeners('message');
-        client.removeAllListeners('clearchat');
-        client.removeAllListeners('disconnected');
-        client.removeAllListeners('connected');
-      }
-
-      setConnected(false);
-      setMessages([]);
-      messagesRef.current = [];
-    };
-  }, [client, channelId, channelName]);
-
-  useEffect(() => {
-    const initializeChat = async () => {
-      if (initializingRef.current) {
-        console.log('⏸️ Already initializing, skipping...');
-        return;
-      }
-
-      if (initializedChannelRef.current === channelId) {
-        console.log('⏸️ Already initialized for this channel:', channelId);
-        return;
-      }
-
-      try {
-        initializingRef.current = true;
-        console.log('🔄 initializeChat starting for:', channelId);
-
-        logger.chat.info(`Loading resources for channel ${channelId}`);
-
-        const success = await loadChannelResources(channelId);
-
-        console.log('📡 loadChannelResources result:', success);
-
-        if (!success) {
-          console.log('❌ loadChannelResources failed');
-          setConnectionError('Failed to load channel resources');
-          return;
-        }
-
-        console.log('✅ loadChannelResources succeeded, setting up TMI...');
-
-        if (TmiService.isConnected()) {
-          console.log('🔗 TMI already connected, reusing connection');
-          const existingClient = TmiService.getInstance();
-          setClient(existingClient);
-          setConnected(true);
-          await existingClient.join(channelName);
-          console.log('🎉 Chat initialization complete (reused connection)!');
-          initializedChannelRef.current = channelId;
-          return;
-        }
-
-        TmiService.setOptions({
-          options: {
-            clientId: process.env.TWITCH_CLIENT_ID,
-            debug: __DEV__,
-          },
-          channels: [],
-          identity: user
-            ? {
-                username: user.display_name ?? '',
-                password: authState?.token.accessToken,
-              }
-            : undefined,
-          connection: {
-            secure: true,
-            reconnect: true,
-            maxReconnectAttempts: 5,
-            maxReconnectInterval: 30000,
-            reconnectDecay: 1.5,
-            reconnectInterval: 1000,
-          },
-        });
-
-        const tmiClient = TmiService.getInstance();
-        setClient(tmiClient);
-
-        await TmiService.connect();
-        setConnected(true);
-        await tmiClient.join(channelName);
-
-        console.log('🎉 Chat initialization complete!');
-        initializedChannelRef.current = channelId;
-      } catch (error) {
-        console.log('💥 Chat initialization error:', error);
-        logger.chat.error('Failed to initialize chat:', error);
-        setConnectionError('Failed to connect to chat');
-        setConnected(false);
-      } finally {
-        initializingRef.current = false;
-      }
-    };
-
-    if (channelId && channelId.trim() && authState?.token.accessToken) {
-      console.log('🚀 Initializing chat for:', {
-        channelId,
-        hasUser: !!user,
-        hasAuthState: !!authState,
-        alreadyInitialized: initializedChannelRef.current === channelId,
-      });
-      void initializeChat();
-    } else {
-      console.log('⏸️ Skipping initialization:', {
-        channelId,
-        hasUser: !!user,
-        hasAuthToken: !!authState?.token.accessToken,
-      });
+    // Clear any pending timeouts
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = null;
+    }
+    if (batchTimeoutRef.current) {
+      clearTimeout(batchTimeoutRef.current);
+      batchTimeoutRef.current = null;
     }
 
-    // Reset initialization tracking when channel changes
+    // Only clear if we had a previous channel initialized
+    if (
+      initializedChannelRef.current &&
+      initializedChannelRef.current !== channelId
+    ) {
+      clearMessages();
+      messagesRef.current = [];
+      messageBatchRef.current = [];
+    }
+    initializedChannelRef.current = channelId;
+
     return () => {
-      if (initializedChannelRef.current !== channelId) {
-        initializedChannelRef.current = null;
+      // Cleanup on unmount or channel change
+      isMountedRef.current = false;
+      hasPartedRef.current = false;
+      currentEmoteSetIdRef.current = null;
+      // Clear timeouts on cleanup
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
+      if (batchTimeoutRef.current) {
+        clearTimeout(batchTimeoutRef.current);
+        batchTimeoutRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    channelId,
-    loadChannelResources,
-    setupChatListeners,
-    channelName,
-    authState?.token.accessToken,
-  ]);
+  }, [channelId, clearMessages]);
 
-  const handleSendMessage = useCallback(async () => {
-    if (!messageInput.trim() || !client) {
+  // Initialize channel resources when channelId changes
+  useEffect(() => {
+    // Abort any previous loading
+    if (loadingAbortRef.current) {
+      loadingAbortRef.current.abort();
+    }
+
+    if (
+      channelId &&
+      channelId.trim() &&
+      authState?.token.accessToken &&
+      isMountedRef.current
+    ) {
+      loadingAbortRef.current = new AbortController();
+      const abortController = loadingAbortRef.current;
+
+      void loadChannelResources(channelId).then(success => {
+        // Only process result if component is still mounted and not aborted
+        if (isMountedRef.current && !abortController.signal.aborted) {
+          console.log('📡 loadChannelResources result:', success);
+          if (!success) {
+            console.log('❌ loadChannelResources failed');
+          }
+        }
+      });
+
+      return () => {
+        abortController.abort();
+      };
+    }
+
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelId, authState?.token.accessToken]);
+
+  const handleSendMessage = useCallback(() => {
+    if (!messageInput.trim() || !isChatConnected()) {
       return;
     }
 
     if (replyTo) {
       try {
-        await client.say(
+        sendMessage(
           channelName,
           `@${replyTo.username} ${messageInput}`,
-          // @ts-expect-error - upstream types in tmi.js are not up to date
-          {
-            'reply-parent-msg-id': replyTo.messageId,
-            'reply-parent-display-name': replyTo.username,
-            'reply-parent-msg-body': replyTo.message,
-            'reply-parent-user-login': replyTo.replyParentUserLogin,
-          },
+          replyTo.messageId,
+          replyTo.username,
+          replyTo.message,
         );
       } catch (error) {
         logger.chat.error('issue sending reply', error);
       }
     } else {
-      await client.say(channelName, messageInput);
+      sendMessage(channelName, messageInput);
     }
 
     setMessageInput('');
     setReplyTo(null);
-  }, [channelName, client, messageInput, replyTo]);
+  }, [channelName, messageInput, replyTo, sendMessage, isChatConnected]);
 
   const inputContainerRef = useRef<View>(null);
   const [_inputContainerHeight, setInputContainerHeight] = useState(0);
@@ -662,8 +861,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, []);
 
+  const handleReply = useCallback((message: ChatMessageType<'usernotice'>) => {
+    setReplyTo({
+      messageId: message.message_id,
+      username: message.sender,
+      message: message.message
+        .map(part => (part as { content: string }).content)
+        .join(''),
+      replyParentUserLogin: message.userstate.username || '',
+    });
+  }, []);
+
   const renderItem = useCallback(
-    ({ item }: LegendListRenderItemProps<ChatMessageType>) => (
+    // eslint-disable-next-line react/no-unused-prop-types
+    ({ item }: { item: AnyChatMessageType }) => (
       <ChatMessage
         channel={item.channel}
         message={item.message}
@@ -674,21 +885,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         sender={item.sender}
         style={styles.messageContainer}
         parentDisplayName={item.parentDisplayName}
-        onReply={message => {
-          setReplyTo({
-            messageId: message.message_id,
-            username: message.sender,
-            message: message.message
-              .map(part => (part as { content: string }).content)
-              .join(''),
-            replyParentUserLogin: message.userstate.username || '',
-          });
-        }}
+        parentColor={item.parentColor}
+        onReply={handleReply}
         replyDisplayName={item.replyDisplayName}
         replyBody={item.replyBody}
       />
     ),
-    [],
+    [handleReply],
   );
 
   const emojiPickerRef = useRef<BottomSheetModal>(null);
@@ -727,7 +930,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [channelId]);
 
-  if (loadingState === 'LOADING') {
+  // Show skeleton only if loading and not navigating away
+  // This prevents the skeleton from blocking navigation
+  if (loadingState === 'LOADING' && !isNavigatingAwayRef.current) {
     return <ChatSkeleton />;
   }
 
@@ -754,22 +959,33 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             },
           ]}
         >
-          <AnimatedLegendList
+          <FlashList
             data={messages}
-            ref={legendListRef}
-            keyExtractor={item => `${item.message_id}_${item.message_nonce}`}
-            recycleItems
-            waitForInitialLayout={false}
-            estimatedItemSize={80}
+            ref={flashListRef}
+            keyExtractor={item => {
+              const baseKey = `${item.message_id}_${item.message_nonce}`;
+              const additionalUniqueness = `${item.sender}_${item.channel}`;
+              return `${baseKey}_${additionalUniqueness}`;
+            }}
             onScroll={handleScroll}
-            scrollEventThrottle={32}
             onContentSizeChange={handleContentSizeChange}
             renderItem={renderItem}
+            removeClippedSubviews
+            drawDistance={500} // Increased for better performance
+            overrideItemLayout={(layout, item) => {
+              const messageLength = item.message?.length || 0;
+              const estimatedHeight = Math.max(
+                60,
+                Math.min(120, 60 + messageLength * 0.5),
+              );
+              // eslint-disable-next-line no-param-reassign
+              layout.span = estimatedHeight;
+            }}
           />
           {!isAtBottom && !isScrollingToBottom && (
             <ResumeScroll
               isAtBottomRef={isAtBottomRef}
-              legendListRef={legendListRef}
+              flashListRef={flashListRef}
               setIsAtBottom={setIsAtBottom}
               setUnreadCount={setUnreadCount}
               unreadCount={unreadCount}
@@ -837,7 +1053,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           <Button
             style={styles.sendButton}
             onPress={() => void handleSendMessage()}
-            disabled={!messageInput.trim() || !connected || !client}
+            disabled={!messageInput.trim() || !connected}
           >
             <Icon icon="send" size={24} />
           </Button>

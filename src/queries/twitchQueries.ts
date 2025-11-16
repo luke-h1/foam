@@ -38,15 +38,7 @@ export const twitchQueries = {
   getFollowedStreams(userId: string): UseQueryOptions<TwitchStream[]> {
     return {
       queryKey: ['followedStreams', userId],
-      queryFn: async () => {
-        const streams = await twitchService.getFollowedStreams(userId);
-        return Promise.all(
-          streams.map(async stream => ({
-            ...stream,
-            profilePicture: await twitchService.getUserImage(stream.user_login),
-          })),
-        );
-      },
+      queryFn: () => twitchService.getFollowedStreams(userId),
     };
   },
   getUserInfo(token: string): UseQueryOptions<UserInfoResponse> {
@@ -70,19 +62,7 @@ export const twitchQueries = {
   getTopStreams(cursor?: string): UseQueryOptions<PaginatedList<TwitchStream>> {
     return {
       queryKey: ['topStreams', cursor],
-      queryFn: async () => {
-        const result = await twitchService.getTopStreams(cursor);
-        const streamsWithProfilePictures = await Promise.all(
-          result.data.map(async stream => ({
-            ...stream,
-            profilePicture: await twitchService.getUserImage(stream.user_login),
-          })),
-        );
-        return {
-          ...result,
-          data: streamsWithProfilePictures,
-        };
-      },
+      queryFn: () => twitchService.getTopStreams(cursor),
     };
   },
   getTopStreamsInfinite(): {
@@ -95,19 +75,8 @@ export const twitchQueries = {
   } {
     return {
       queryKey: ['topStreamsInfinite'],
-      queryFn: async ({ pageParam }: { pageParam?: string }) => {
-        const result = await twitchService.getTopStreams(pageParam);
-        const streamsWithProfilePictures = await Promise.all(
-          result.data.map(async stream => ({
-            ...stream,
-            profilePicture: await twitchService.getUserImage(stream.user_login),
-          })),
-        );
-        return {
-          ...result,
-          data: streamsWithProfilePictures,
-        };
-      },
+      queryFn: ({ pageParam }: { pageParam?: string }) =>
+        twitchService.getTopStreams(pageParam),
     };
   },
   getCategory(id: string): UseQueryOptions<Category> {

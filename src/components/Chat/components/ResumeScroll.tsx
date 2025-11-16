@@ -2,13 +2,13 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Typography } from '@app/components/Typography';
-import { LegendListRef } from '@legendapp/list';
+import { FlashListRef } from '@shopify/flash-list';
 import { RefObject } from 'react';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 interface ResumeScrollProps {
-  legendListRef: RefObject<LegendListRef | null>;
+  flashListRef: RefObject<FlashListRef<unknown> | null>;
   isAtBottomRef: RefObject<boolean>;
   unreadCount: number;
   setIsAtBottom: (val: boolean) => void;

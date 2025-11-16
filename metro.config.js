@@ -1,3 +1,5 @@
+const { getDefaultConfig } = require('@expo/metro-config');
+const { withRozenite } = require('@rozenite/metro');
 const withStorybook = require('@storybook/react-native/metro/withStorybook');
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
@@ -8,4 +10,8 @@ const config = getSentryExpoConfig(__dirname);
 // such as Firebase that use the extension cjs.
 config.resolver.sourceExts.push('cjs');
 
-module.exports = withStorybook(config);
+const configWithStorybook = withStorybook(config);
+
+module.exports = withRozenite(configWithStorybook, {
+  enabled: process.env.WITH_ROZENITE === 'true', // Required: Rozenite is disabled by default
+});

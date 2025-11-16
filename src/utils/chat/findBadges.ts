@@ -1,9 +1,9 @@
+import { ChatUser } from '@app/context';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatUser } from '@app/store';
-import { ChatUserstate } from 'tmi.js';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
 interface FindBadgesParams {
-  userstate: ChatUserstate;
+  userstate: UserStateTags;
   twitchChannelBadges: SanitisedBadgeSet[];
   twitchGlobalBadges: SanitisedBadgeSet[];
   ffzGlobalBadges: SanitisedBadgeSet[];
@@ -38,10 +38,7 @@ export function findBadges({
   /**
    * Twitch badges
    */
-  if (
-    userstate['badges-raw'] &&
-    Object.keys(userstate['badges-raw']).length > 0
-  ) {
+  if (userstate['badges-raw'] && userstate['badges-raw'].length > 0) {
     const rawBadges = userstate['badges-raw'].split(',');
 
     // eslint-disable-next-line no-restricted-syntax
@@ -58,15 +55,22 @@ export function findBadges({
             );
 
             if (badge) {
-              badges.push({
-                title: badge.title,
-                url: badge.url,
-                type: badge.type || 'Twitch Subscriber Badge',
-                set: badge?.set || '',
-                id: badge.id,
-                color: badge.color,
-                owner_username: badge.owner_username,
-              });
+              // Check if badge already exists to prevent duplicates
+              const existingBadge = badges.find(
+                existing =>
+                  existing.id === badge.id && existing.set === badge.set,
+              );
+              if (!existingBadge) {
+                badges.push({
+                  title: badge.title,
+                  url: badge.url,
+                  type: badge.type || 'Twitch Subscriber Badge',
+                  set: badge?.set || '',
+                  id: badge.id,
+                  color: badge.color,
+                  owner_username: badge.owner_username,
+                });
+              }
               // eslint-disable-next-line no-continue
               continue;
             }
@@ -85,15 +89,22 @@ export function findBadges({
           );
 
           if (badge) {
-            badges.push({
-              title: badge.title,
-              url: badge.url,
-              type: badge.type || 'Twitch Badge',
-              set: badge?.set || '',
-              id: badge.id,
-              color: badge.color,
-              owner_username: badge.owner_username,
-            });
+            // Check if badge already exists to prevent duplicates
+            const existingBadge = badges.find(
+              existing =>
+                existing.id === badge.id && existing.set === badge.set,
+            );
+            if (!existingBadge) {
+              badges.push({
+                title: badge.title,
+                url: badge.url,
+                type: badge.type || 'Twitch Badge',
+                set: badge?.set || '',
+                id: badge.id,
+                color: badge.color,
+                owner_username: badge.owner_username,
+              });
+            }
           }
         }
       }
@@ -106,15 +117,22 @@ export function findBadges({
       );
 
       if (globalBadge) {
-        badges.push({
-          title: globalBadge.title,
-          url: globalBadge.url,
-          type: globalBadge.type || 'Twitch Global Badge',
-          id: globalBadge.id,
-          set: globalBadge.set ?? '',
-          color: globalBadge.color,
-          owner_username: globalBadge.owner_username,
-        });
+        // Check if badge already exists to prevent duplicates
+        const existingBadge = badges.find(
+          existing =>
+            existing.id === globalBadge.id && existing.set === globalBadge.set,
+        );
+        if (!existingBadge) {
+          badges.push({
+            title: globalBadge.title,
+            url: globalBadge.url,
+            type: globalBadge.type || 'Twitch Global Badge',
+            id: globalBadge.id,
+            set: globalBadge.set ?? '',
+            color: globalBadge.color,
+            owner_username: globalBadge.owner_username,
+          });
+        }
       }
 
       /**
@@ -129,15 +147,21 @@ export function findBadges({
       );
 
       globalFfzBadges.forEach(b => {
-        badges.push({
-          title: b.title,
-          id: b.id,
-          set: b.id,
-          type: 'FFZ Global Badge',
-          url: b.url,
-          color: b.color,
-          owner_username: b.owner_username,
-        });
+        // Check if badge already exists to prevent duplicates
+        const existingBadge = badges.find(
+          existing => existing.id === b.id && existing.set === b.id,
+        );
+        if (!existingBadge) {
+          badges.push({
+            title: b.title,
+            id: b.id,
+            set: b.id,
+            type: 'FFZ Global Badge',
+            url: b.url,
+            color: b.color,
+            owner_username: b.owner_username,
+          });
+        }
       });
 
       /**
@@ -155,7 +179,14 @@ export function findBadges({
         );
 
         if (stvBadge) {
-          badges.push(stvBadge);
+          // Check if badge already exists to prevent duplicates
+          const existingBadge = badges.find(
+            existing =>
+              existing.id === stvBadge.id && existing.set === stvBadge.set,
+          );
+          if (!existingBadge) {
+            badges.push(stvBadge);
+          }
         }
       }
 
@@ -167,7 +198,15 @@ export function findBadges({
       );
 
       if (chatterinoBadge) {
-        badges.push(chatterinoBadge);
+        // Check if badge already exists to prevent duplicates
+        const existingBadge = badges.find(
+          existing =>
+            existing.id === chatterinoBadge.id &&
+            existing.set === chatterinoBadge.set,
+        );
+        if (!existingBadge) {
+          badges.push(chatterinoBadge);
+        }
       }
     }
   }
