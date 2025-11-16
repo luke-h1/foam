@@ -66,6 +66,7 @@ jobs:
 
       - name: Write .env file
         run: |
+          echo "EXPO_UNSTABLE_TREE_SHAKING=1" >> .env
           echo "TWITCH_CLIENT_ID=${{ env.TWITCH_CLIENT_ID }}" >> .env
           echo "TWITCH_CLIENT_SECRET=${{ env.TWITCH_CLIENT_SECRET }}" >> .env
           echo "AUTH_PROXY_API_BASE_URL=${{ env.AUTH_PROXY_API_BASE_URL }}" >> .env
