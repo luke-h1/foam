@@ -1,5 +1,6 @@
 name: Deploy testflight
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       variant:
@@ -18,11 +19,6 @@ on:
         options:
           - ios
           - android
-env:
-  TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID_STAGING }}
-  TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET_STAGING }}
-  AUTH_PROXY_API_BASE_URL: ${{ secrets.AUTH_PROXY_API_BASE_URL_STAGING }} 
-  AUTH_PROXY_API_KEY: ${{ secrets.AUTH_PROXY_API_KEY_STAGING }}
 jobs:
   deploy:
     runs-on: macos-latest
@@ -41,7 +37,18 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
+      - name: Load secret
+        id: load_secrets
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SECRET: op://ci-cd/foam-staging
+          OP_ENV_FILE: ".env"
 
+      - name: Print masked secret
+        run: 'echo "Secret: ${{ steps.load_secrets.outputs.SECRET }}"'          
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
