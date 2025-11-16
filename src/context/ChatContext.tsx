@@ -117,7 +117,7 @@ export interface ChatMessageType<
   message_nonce: string;
   sender: string;
   style?: ViewStyle;
-  parentDisplayName: string;
+  parentDisplayName?: string;
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;

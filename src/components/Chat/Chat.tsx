@@ -6,11 +6,11 @@ import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
-  UserNoticeVariantMap,
   UserNoticeTagsByVariant,
+  UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { createHitslop, clearImageCache } from '@app/utils';
+import { createHitslop, clearImageCache, ParsedPart } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
@@ -35,6 +35,7 @@ import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
+import omit from 'lodash/omit';
 
 // Union type representing all possible ChatMessageType variants
 type AnyChatMessageType =
@@ -162,6 +163,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       (_channel: string, tags: Record<string, string>, text: string) => {
         const badgeData = parseBadges(tags.badges as unknown as string);
 
+        console.log('onMessage tag ->', tags);
+
         // map irc tags to our custom format
         const userstate: UserStateTags = {
           ...tags,
@@ -221,154 +224,26 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const msgId = tags['msg-id'];
 
-        const isValidVariant = (
-          id?: string,
-        ): id is keyof UserNoticeVariantMap => {
-          return (
-            id !== undefined &&
-            (id === 'viewermilestone' ||
-              id === 'sub' ||
-              id === 'resub' ||
-              id === 'subgift' ||
-              id === 'anongiftpaidupgrade' ||
-              id === 'raid')
-          );
-        };
-
         // Narrow the type based on msg-id if it's a known usernotice variant
         // When msg-id is 'viewermilestone', notice_tags will be narrowed to ViewerMilestoneTags
         // When msg-id is 'sub', notice_tags will be narrowed to SubscriptionTags, etc.
         let newMessage: AnyChatMessageType;
-        if (isValidVariant(msgId)) {
-          // Base message fields shared across all variants
-          const baseMessage = {
-            userstate,
-            message: [{ type: 'text' as const, content: text.trimEnd() }],
-            badges: [],
-            channel: channelName,
-            message_id,
-            message_nonce,
-            sender: userstate.username || '',
-            parentDisplayName: tags['reply-parent-display-name'] || '',
-            replyDisplayName: tags['reply-parent-user-login'] || '',
-            replyBody: tags['reply-parent-msg-body'] || '',
-            parentColor: parentColor || undefined,
-          };
-
-          /**
-           * Narrow the msg id so we can match up notice_tags with the correct
-           */
-          switch (msgId) {
-            case 'viewermilestone': {
-              const viewerMilestoneTags =
-                tags as UserNoticeTagsByVariant<'viewermilestone'>;
-
-              const viewerMilestoneMessage: ChatMessageType<
-                'usernotice',
-                'viewermilestone'
-              > = {
-                ...baseMessage,
-                notice_tags: {
-                  'msg-id': viewerMilestoneTags['msg-id'],
-                  'msg-param-category':
-                    viewerMilestoneTags['msg-param-category'],
-                  'msg-param-copoReward':
-                    viewerMilestoneTags['msg-param-copoReward'] ?? '',
-                  'msg-param-id': viewerMilestoneTags['msg-param-id'] ?? '',
-                  'msg-param-value':
-                    viewerMilestoneTags['msg-param-value'] ?? '',
-                  'badge-info': viewerMilestoneTags['badge-info'] ?? '',
-                  'display-name': viewerMilestoneTags['display-name'] ?? '',
-                } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
-              };
-              newMessage = viewerMilestoneMessage;
-              handleNewMessage(viewerMilestoneMessage);
-              break;
-            }
-            case 'sub': {
-              const subTags = tags as UserNoticeTagsByVariant<'sub'>;
-
-              const subMessage: ChatMessageType<'usernotice', 'sub'> = {
-                ...baseMessage,
-                notice_tags: subTags,
-              };
-              newMessage = subMessage;
-              handleNewMessage(subMessage);
-              break;
-            }
-            case 'resub': {
-              const resubTags = tags as UserNoticeTagsByVariant<'resub'>;
-
-              const resubMessage: ChatMessageType<'usernotice', 'resub'> = {
-                ...baseMessage,
-                notice_tags: resubTags,
-              };
-              newMessage = resubMessage;
-              handleNewMessage(resubMessage);
-              break;
-            }
-            case 'subgift': {
-              const subGiftTags = tags as UserNoticeTagsByVariant<'subgift'>;
-
-              const subGiftMessage: ChatMessageType<'usernotice', 'subgift'> = {
-                ...baseMessage,
-                notice_tags: subGiftTags,
-              };
-              newMessage = subGiftMessage;
-              handleNewMessage(subGiftMessage);
-              break;
-            }
-            case 'anongiftpaidupgrade': {
-              const anonGiftPaidUpgradeTags =
-                tags as UserNoticeTagsByVariant<'anongiftpaidupgrade'>;
-
-              const anonGiftPaidUpgradeMessage: ChatMessageType<
-                'usernotice',
-                'anongiftpaidupgrade'
-              > = {
-                ...baseMessage,
-                notice_tags: anonGiftPaidUpgradeTags,
-              };
-              newMessage = anonGiftPaidUpgradeMessage;
-              handleNewMessage(anonGiftPaidUpgradeMessage);
-              break;
-            }
-            case 'raid': {
-              const raidTags = tags as UserNoticeTagsByVariant<'raid'>;
-
-              const raidMessage: ChatMessageType<'usernotice', 'raid'> = {
-                ...baseMessage,
-                notice_tags: raidTags,
-              };
-              newMessage = raidMessage;
-              handleNewMessage(raidMessage);
-              break;
-            }
-            default: {
-              const fallbackMessage: ChatMessageType<'usernotice'> = {
-                ...baseMessage,
-              };
-              newMessage = fallbackMessage;
-              handleNewMessage(newMessage);
-            }
-          }
-        } else {
-          const fallbackMessage: ChatMessageType<'usernotice'> = {
-            userstate,
-            message: [{ type: 'text', content: text.trimEnd() }],
-            badges: [],
-            channel: channelName,
-            message_id,
-            message_nonce,
-            sender: userstate.username || '',
-            parentDisplayName: tags['reply-parent-display-name'] || '',
-            replyDisplayName: tags['reply-parent-user-login'] || '',
-            replyBody: tags['reply-parent-msg-body'] || '',
-            parentColor: parentColor || undefined,
-          };
-          newMessage = fallbackMessage;
-          handleNewMessage(newMessage);
-        }
+        const baseMessage: ChatMessageType<'usernotice'> = {
+          userstate,
+          message: [{ type: 'text', content: text.trimEnd() }],
+          badges: [],
+          channel: channelName,
+          message_id,
+          message_nonce,
+          sender: userstate.username || '',
+          parentDisplayName: tags['reply-parent-display-name'] || '',
+          replyDisplayName: tags['reply-parent-user-login'] || '',
+          replyBody: tags['reply-parent-msg-body'] || '',
+          parentColor: parentColor || undefined,
+        };
+        // eslint-disable-next-line prefer-const
+        newMessage = baseMessage;
+        handleNewMessage(newMessage);
 
         if (
           emoteData &&
@@ -416,6 +291,246 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         addMessage,
         messages,
       ],
+    ),
+    onUserNotice: useCallback(
+      (_channel: string, tags: UserNoticeTags, text: string) => {
+        // Handle user notice events (subs, raids, etc.)
+        console.log('onUserNotice', tags['msg-id'], text);
+
+        // viewermilestone
+        /***
+         *  LOG  userNoticeTags -> {
+  "badge-info": "subscriber/62",
+  "badges": "vip/1,subscriber/60,social-sharing/1",
+  "color": "#53FFAB",
+  "display-name": "LimeTitanTV",
+  "emotes": "",
+  "flags": "",
+  "id": "889b45cc-be97-4abb-a820-b94e14a5ccae",
+  "login": "limetitantv",
+  "mod": "0",
+  "msg-id": "viewermilestone",
+  "msg-param-category": "watch-streak",
+  "msg-param-copoReward": "450",
+  "msg-param-id": "4cc8144a-73fb-4e7a-983f-a5291f2eee57",
+  "msg-param-value": "20",
+  "room-id": "146110596",
+  "subscriber": "1",
+  "system-msg": "LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
+  "tmi-sent-ts": "1763323766846",
+  "user-id": "63102149",
+  "user-type": "",
+  "vip": "1"
+}
+         */
+        const message_nonce = generateNonce();
+
+        console.log('userNoticeTags ->', JSON.stringify(tags, null, 2));
+        let newMessage: AnyChatMessageType;
+
+        const userstate: UserStateTags = {
+          ...tags,
+          username: tags['display-name'] || tags.login || '',
+          login: tags.login || tags['display-name']?.toLowerCase() || '',
+          'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',
+          'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
+          'reply-parent-display-name': tags['reply-parent-display-name'] || '',
+          'reply-parent-user-login': tags['reply-parent-user-login'] || '',
+          'user-type': tags['user-type'],
+        } as UserStateTags;
+
+        const baseMessage = {
+          message: [{ type: 'text' as const, content: text.trimEnd() }],
+          badges: {},
+          channel: channelName,
+          message_id: tags['msg-id'] ?? '0',
+          message_nonce,
+          sender: userstate.username || '',
+          parentDisplayName:
+            typeof tags['reply-parent-display-name'] === 'string'
+              ? tags['reply-parent-display-name']
+              : '',
+          replyDisplayName: tags['reply-parent-user-login'] || '',
+          replyBody: tags['reply-parent-msg-body'] || '',
+          ...omit(userstate, 'message'),
+        };
+
+        /**
+         * Narrow the msg id so we can match up notice_tags with the correct
+         */
+        switch (tags['msg-id']) {
+          case 'viewermilestone': {
+            const viewerMilestoneMessage: ChatMessageType<
+              'usernotice',
+              'viewermilestone'
+            > = {
+              ...baseMessage,
+              badges: [],
+              userstate,
+              notice_tags: {
+                'msg-id': tags['msg-id'],
+                'msg-param-category': tags['msg-param-category'],
+                'msg-param-copoReward': tags['msg-param-copoReward'] ?? '',
+                'msg-param-id': tags['msg-param-id'] ?? '',
+                'msg-param-value': tags['msg-param-value'] ?? '',
+                'badge-info': tags['badge-info'] ?? '',
+                'display-name': tags['display-name'] ?? '',
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+              } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
+            };
+            newMessage = viewerMilestoneMessage;
+            handleNewMessage(viewerMilestoneMessage);
+            break;
+          }
+          case 'sub': {
+            const subTags = tags;
+
+            logger.main.info('subTags', JSON.stringify(subTags, null, 2));
+
+            const subMessage: ChatMessageType<'usernotice', 'sub'> = {
+              ...baseMessage,
+              notice_tags: subTags,
+              message_nonce: generateNonce(),
+              badges: [],
+              message: [],
+              userstate,
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = subMessage;
+            handleNewMessage(subMessage);
+            break;
+          }
+          case 'resub': {
+            const resubTags = tags;
+            logger.main.info('resubTags', JSON.stringify(resubTags, null, 2));
+
+            const resubMessage: ChatMessageType<'usernotice', 'resub'> = {
+              ...baseMessage,
+              badges: [],
+              message: [],
+              userstate,
+              notice_tags: {
+                ...resubTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = resubMessage;
+            handleNewMessage(resubMessage);
+            break;
+          }
+          case 'subgift': {
+            const subGiftTags = tags;
+
+            const subGiftMessage: ChatMessageType<'usernotice', 'subgift'> = {
+              ...baseMessage,
+              badges: [],
+              message: [],
+              userstate,
+              notice_tags: {
+                ...subGiftTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = subGiftMessage;
+            handleNewMessage(subGiftMessage);
+            break;
+          }
+          case 'anongiftpaidupgrade': {
+            const anonGiftPaidUpgradeTags = tags;
+
+            const anonGiftPaidUpgradeMessage: ChatMessageType<
+              'usernotice',
+              'anongiftpaidupgrade'
+            > = {
+              ...baseMessage,
+              badges: [],
+              message: [],
+              userstate,
+              notice_tags: {
+                ...anonGiftPaidUpgradeTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = anonGiftPaidUpgradeMessage;
+            handleNewMessage(anonGiftPaidUpgradeMessage);
+            break;
+          }
+          case 'raid': {
+            const raidTags = tags;
+
+            const raidMessage: ChatMessageType<'usernotice', 'raid'> = {
+              ...baseMessage,
+              userstate,
+              notice_tags: {
+                ...raidTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = raidMessage;
+            handleNewMessage(raidMessage);
+            break;
+          }
+          default: {
+            const fallbackMessage: ChatMessageType<'usernotice'> = {
+              ...baseMessage,
+              userstate,
+              badges: [],
+              message: [],
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = fallbackMessage;
+            handleNewMessage(newMessage);
+          }
+        }
+      },
+      [],
     ),
     onClearChat: useCallback(() => {
       clearMessages();
