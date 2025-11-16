@@ -1,28 +1,6 @@
 name: Deploy testflight
 on:
   workflow_dispatch:
-    inputs:
-      variant:
-        description: The variant to deploy to
-        required: true
-        default: 'preview'
-        type: choice
-        options:
-          - preview
-          - production
-      platform:
-        description: The platform to deploy to
-        required: true
-        default: 'ios'
-        type: choice
-        options:
-          - ios
-          - android
-env:
-  TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID_STAGING }}
-  TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET_STAGING }}
-  AUTH_PROXY_API_BASE_URL: ${{ secrets.AUTH_PROXY_API_BASE_URL_STAGING }} 
-  AUTH_PROXY_API_KEY: ${{ secrets.AUTH_PROXY_API_KEY_STAGING }}
 jobs:
   deploy:
     runs-on: macos-latest
@@ -41,7 +19,23 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
+      - name: Load secret
+        id: load_secrets
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
+          TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
+          AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
+          AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
+          OP_ENV_FILE: ".env"
 
+      - name: Write .env file
+        run: |
+          echo "EXPO_UNSTABLE_TREE_SHAKING=1" >> .env
+       
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -57,21 +51,12 @@ jobs:
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: "26.0"
 
       - name: ☕️ Setup Cocoapods
         uses: maxim-lobanov/setup-cocoapods@v1
         with:
-          version: latest  
-
-      - name: Write .env file
-        run: |
-          echo "EXPO_UNSTABLE_TREE_SHAKING=1" >> .env
-          echo "TWITCH_CLIENT_ID=${{ env.TWITCH_CLIENT_ID }}" >> .env
-          echo "TWITCH_CLIENT_SECRET=${{ env.TWITCH_CLIENT_SECRET }}" >> .env
-          echo "AUTH_PROXY_API_BASE_URL=${{ env.AUTH_PROXY_API_BASE_URL }}" >> .env
-          echo "AUTH_PROXY_API_KEY=${{ env.AUTH_PROXY_API_KEY }}" >> .env
-
+          version: 1.16.2  
       - name: Λ Setup EAS
         uses: expo/expo-github-action@v8
         with:
@@ -80,22 +65,9 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
-
       - name: EAS build
         run: |
-          if [ "${{ inputs.platform }}" = "ios" ]; then
-            bun eas build -p ios --profile ${{ inputs.variant }} --local --output app-${{ inputs.variant }}.abd --non-interactive
-            # bun eas submit -p ios --path ./app-${{ inputs.variant }}.abd
-
-          else
-            bun eas build -p android --profile ${{ inputs.variant }} --local --output app-${{ inputs.variant }}.apk --non-interactive
-            # bun eas submit -p android --path ./app-${{ inputs.variant }}.apk
-          fi
-
+          bun eas build -p ios --profile production --local --output app-production.abd --non-interactive
       - name: Deploy 🚀
         run: |
-          if [ "${{ inputs.platform }}" = "ios" ]; then
-            bun eas submit -p ios --path ./app-${{ inputs.variant }}.abd
-          else
-            bun eas submit -p android --path ./app-${{ inputs.variant }}.apk
-          fi
+          bun eas submit -p ios --path ./app-production.abd
