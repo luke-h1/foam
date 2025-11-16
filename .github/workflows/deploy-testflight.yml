@@ -48,15 +48,11 @@ jobs:
           TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
           AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
           AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
-          # OP_ENV_FILE: ".env"
+          OP_ENV_FILE: ".env"
 
       - name: Write .env file
         run: |
           echo "EXPO_UNSTABLE_TREE_SHAKING=1" >> .env
-          echo "TWITCH_CLIENT_ID=${{ steps.load_secrets.outputs.TWITCH_CLIENT_ID }}" >> .env
-          echo "TWITCH_CLIENT_SECRET=${{ steps.load_secrets.outputs.TWITCH_CLIENT_SECRET }}" >> .env
-          echo "AUTH_PROXY_API_BASE_URL=${{ steps.load_secrets.outputs.AUTH_PROXY_API_BASE_URL }}" >> .env
-          echo "AUTH_PROXY_API_KEY=${{ steps.load_secrets.outputs.AUTH_PROXY_API_KEY }}" >> .env
        
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
