@@ -132,6 +132,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    '@react-native-firebase/app',
     'react-native-compressor',
     [
       '@sentry/react-native/expo',
