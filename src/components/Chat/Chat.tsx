@@ -10,7 +10,7 @@ import {
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { createHitslop, clearImageCache, ParsedPart } from '@app/utils';
+import { createHitslop, clearImageCache } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
@@ -222,8 +222,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const emoteData = getCurrentEmoteData(channelId);
 
-        const msgId = tags['msg-id'];
-
         // Narrow the type based on msg-id if it's a known usernotice variant
         // When msg-id is 'viewermilestone', notice_tags will be narrowed to ViewerMilestoneTags
         // When msg-id is 'sub', notice_tags will be narrowed to SubscriptionTags, etc.
@@ -365,6 +363,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               'viewermilestone'
             > = {
               ...baseMessage,
+              replyDisplayName:
+                typeof tags['reply-parent-display-name'] === 'string'
+                  ? tags['reply-parent-display-name']
+                  : '',
+              replyBody: '',
               badges: [],
               userstate,
               notice_tags: {
@@ -494,6 +497,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
             const raidMessage: ChatMessageType<'usernotice', 'raid'> = {
               ...baseMessage,
+              badges: [],
+              message: [],
               userstate,
               notice_tags: {
                 ...raidTags,
