@@ -1,6 +1,6 @@
 import { twitchSanitisedChannelBadges } from '@app/services/__fixtures__';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
-import { ChatUserstate } from 'tmi.js';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { findBadges } from '../findBadges';
 
 describe('findBadges', () => {
@@ -8,7 +8,7 @@ describe('findBadges', () => {
     test.each(twitchSanitisedGlobalBadges)(
       'Should find global badge %s',
       badge => {
-        const userstate: ChatUserstate = {
+        const userstate: UserStateTags = {
           'badges-raw': `${badge.set}/${badge.id.split('_').pop()}`,
           badges: {
             [badge.set]: badge.id.split('_').pop(),
@@ -17,11 +17,14 @@ describe('findBadges', () => {
           username: 'testuser',
           'display-name': 'TestUser',
           color: '#FF0000',
-          'tmi-sent-ts': '1234567890',
-          mod: false,
-          subscriber: false,
-          turbo: false,
+          mod: 'false',
+          subscriber: 'false',
+          turbo: 'false',
           'user-type': '',
+          'reply-parent-display-name': '',
+          'reply-parent-msg-body': '',
+          'reply-parent-msg-id': '',
+          'reply-parent-user-login': '',
         };
 
         const result = findBadges({
@@ -51,7 +54,7 @@ describe('findBadges', () => {
     test.each(twitchSanitisedChannelBadges)(
       'should find channel badge %s',
       badge => {
-        const userstate: ChatUserstate = {
+        const userstate: UserStateTags = {
           'badges-raw': `${badge.set}/${badge.id.split('_').pop()}`,
           badges: {
             [badge.set]: badge.id.split('_').pop(),
@@ -60,11 +63,14 @@ describe('findBadges', () => {
           username: 'testuser',
           'display-name': 'TestUser',
           color: '#FF0000',
-          'tmi-sent-ts': '1234567890',
-          mod: false,
-          subscriber: false,
-          turbo: false,
+          mod: 'false',
+          subscriber: 'false',
+          turbo: 'false',
           'user-type': '',
+          'reply-parent-display-name': '',
+          'reply-parent-msg-body': '',
+          'reply-parent-msg-id': '',
+          'reply-parent-user-login': '',
         };
 
         const result = findBadges({

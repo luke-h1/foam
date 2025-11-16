@@ -1,5 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
+import { Typography } from '@app/components/Typography';
 import { calculateAspectRatio, ParsedPart } from '@app/utils';
 
 type PartVariant = ParsedPart<'emote'>;
@@ -18,10 +19,21 @@ export const EmoteRenderer = ({
     part.height || 20,
     30,
   );
+  // Add error handling for missing URLs
+  if (!part.url) {
+    return (
+      <Button onLongPress={() => handleEmotePress(part)}>
+        <Typography style={{ width, height, textAlign: 'center' }}>
+          {part.name || '?'}
+        </Typography>
+      </Button>
+    );
+  }
+
   return (
     <Button onLongPress={() => handleEmotePress(part)}>
       <Image
-        source={part.url ?? ''}
+        source={part.url}
         cachePolicy="memory-disk"
         decodeFormat="rgb"
         useAppleWebpCodec
@@ -29,6 +41,9 @@ export const EmoteRenderer = ({
         style={{
           width,
           height,
+        }}
+        onError={error => {
+          console.warn('Failed to load emote image:', part.url, error);
         }}
       />
     </Button>

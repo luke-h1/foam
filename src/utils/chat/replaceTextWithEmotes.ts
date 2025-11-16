@@ -1,5 +1,5 @@
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUserstate } from 'tmi.js';
+import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
@@ -36,11 +36,32 @@ export type PartVariant =
   /**
    * stv emote removed from set
    */
-  | 'stv_emote_removed';
+  | 'stv_emote_removed'
+  /**
+   * Twitch subscription notice (sub, resub, subgift, etc.)
+   */
+  | 'twitch_subscription';
 
 export type TwitchAnd7TVVariant = Extract<
   PartVariant,
-  'stvEmote' | 'twitchClip'
+  | 'stvEmote'
+  | 'twitchClip'
+  | 'twitch_subscription'
+
+  /**
+   * Twitch notices
+   */
+  | 'viewermilestone'
+  | 'sub'
+  | 'resub'
+  | 'subgift'
+  | 'submysterygift'
+  | 'giftpaidupgrade'
+  | 'rewardgift'
+  | 'anongiftpaidupgrade'
+  | 'raid'
+  | 'unraid'
+  | 'sharedchatnotice'
 >;
 
 export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
@@ -53,24 +74,53 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
         data: SanitisiedEmoteSet;
       };
     }
-  : Pick<
-      Partial<SanitisiedEmoteSet>,
-      'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
-    > & {
-      id?: string;
-      name?: string;
-      flags?: number;
-      type: TType;
-      content: string;
-      color?: string;
-      width?: number;
-      height?: number;
+  : TType extends 'twitch_subscription'
+    ? {
+        type: TType;
+        subscriptionEvent: {
+          msgId: string; // msg-id tag (sub, resub, subgift, etc.)
+          displayName: string;
+          message?: string;
+          months?: number; // for resub
+          plan?: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
+          planName?: string; // Prime, Tier 1, Tier 2, Tier 3
+          recipientDisplayName?: string; // for subgift
+          recipientId?: string; // for subgift
+          giftMonths?: number; // for submysterygift
+          viewerCount?: number; // for raid
+          gifterDisplayName?: string; // for subgift
+          gifterId?: string; // for subgift
+        };
+      }
+    : TType extends 'viewermilestone'
+      ? {
+          type: TType;
+          category: string;
+          reward: string;
+          value: string;
+          content: string;
+        }
+      : /**
+         * Normal message
+         */
+        Pick<
+          Partial<SanitisiedEmoteSet>,
+          'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
+        > & {
+          id?: string;
+          name?: string;
+          flags?: number;
+          type: TType;
+          content: string;
+          color?: string;
+          width?: number;
+          height?: number;
 
-      /**
-       * Used for emote and twitch clip previews
-       */
-      thumbnail?: string;
-    };
+          /**
+           * Used for emote and twitch clip previews
+           */
+          thumbnail?: string;
+        };
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
@@ -265,7 +315,7 @@ export function replaceTextWithEmotes({
   userstate,
 }: {
   inputString: string;
-  userstate: ChatUserstate | null;
+  userstate: UserStateTags | null;
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];
   sevenTvChannelEmotes: SanitisiedEmoteSet[];
   twitchGlobalEmotes: SanitisiedEmoteSet[];

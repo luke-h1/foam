@@ -1,5 +1,5 @@
+import { ChatUser, useChatContext } from '@app/context';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatUser, useChatStore } from '@app/store';
 
 import {
   useCallback,
@@ -141,7 +141,7 @@ export const ChatAutoCompleteInput = forwardRef<
       twitchChannelEmotes,
       ttvUsers,
       twitchGlobalEmotes,
-    } = useChatStore();
+    } = useChatContext();
 
     /**
      * ref to measure input position

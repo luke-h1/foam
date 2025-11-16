@@ -14,10 +14,6 @@ import {
   storageService,
 } from '@app/services/storage-service';
 import { twitchService } from '@app/services/twitch-service';
-import {
-  startLiveActivity,
-  stopLiveActivity,
-} from '@modules/activity-controller';
 import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -197,25 +193,6 @@ export function DebugScreen() {
           return storageService.set('ReactQueryDebug', value);
         },
         type: 'switch',
-      },
-      {
-        title: 'Enable/stop live activity',
-        description: 'Enable live activity test',
-        onPress: () => {
-          void startLiveActivity({
-            customString: 'My test activity',
-            customNumber: 123,
-          });
-        },
-        type: 'button',
-      },
-      {
-        title: 'Stop live activity',
-        description: 'Stop live activity test',
-        onPress: () => {
-          void stopLiveActivity();
-        },
-        type: 'button',
       },
     ],
     [],
