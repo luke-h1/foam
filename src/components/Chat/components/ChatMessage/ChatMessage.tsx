@@ -55,7 +55,7 @@ function ChatMessageComponent<
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
 }) {
-  const isSubscriptionMessage = message.some(
+  const isSubscriptionNotice = message.some(
     part =>
       part.type === 'sub' ||
       part.type === 'resub' ||
@@ -63,12 +63,14 @@ function ChatMessageComponent<
       part.type === 'anongift',
   );
 
-  if (isSubscriptionMessage) {
+  if (isSubscriptionNotice) {
     console.log('🔔 ChatMessage received subscription:', {
       message_id,
       hasNoticeTags: !!notice_tags,
       noticeTagsType: notice_tags ? typeof notice_tags : 'undefined',
       messageTypes: message.map(m => m.type),
+      isSubscriptionNotice,
+      noticeTagsKeys: notice_tags ? Object.keys(notice_tags) : [],
     });
   }
 
@@ -216,14 +218,6 @@ function ChatMessageComponent<
   }, [onReply]);
 
   const isReply = Boolean(parentDisplayName);
-
-  const isSubscriptionNotice = message.some(
-    part =>
-      part.type === 'sub' ||
-      part.type === 'resub' ||
-      part.type === 'anongiftpaidupgrade' ||
-      part.type === 'anongift',
-  );
 
   const isSystemNotice = message.some(
     part =>
