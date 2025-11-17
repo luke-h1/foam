@@ -15,7 +15,6 @@ import { findBadges } from '@app/utils/chat/findBadges';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
