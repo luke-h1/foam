@@ -7,12 +7,7 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 export function createSubscriptionPart(
   tags: UserNoticeTags,
   messageText?: string,
-): ParsedPart<
-  | 'twitch_sub'
-  | 'twitch_resub'
-  | 'twitch_anongiftpaidupgrade'
-  | 'twitch_anongift'
-> {
+): ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'> {
   const msgId = typeof tags['msg-id'] === 'string' ? tags['msg-id'] : '';
   const displayName =
     (typeof tags['display-name'] === 'string' ? tags['display-name'] : '') ||
@@ -58,7 +53,7 @@ export function createSubscriptionPart(
           : undefined;
 
       return {
-        type: 'twitch_sub' as const,
+        type: 'sub',
         subscriptionEvent: {
           msgId: 'sub' as const,
           displayName,
@@ -93,7 +88,7 @@ export function createSubscriptionPart(
           : undefined;
 
       return {
-        type: 'twitch_resub' as const,
+        type: 'resub',
         subscriptionEvent: {
           msgId: 'resub' as const,
           displayName,
@@ -127,7 +122,7 @@ export function createSubscriptionPart(
         typeof monthsParam === 'string' ? parseInt(monthsParam, 10) : 0;
 
       return {
-        type: 'twitch_anongift' as const,
+        type: 'anongift' as const,
         subscriptionEvent: {
           msgId: 'subgift' as const,
           displayName,
@@ -152,7 +147,7 @@ export function createSubscriptionPart(
           : '';
 
       return {
-        type: 'twitch_anongiftpaidupgrade' as const,
+        type: 'anongiftpaidupgrade' as const,
         subscriptionEvent: {
           msgId: 'anongiftpaidupgrade' as const,
           displayName,
@@ -163,7 +158,6 @@ export function createSubscriptionPart(
       };
     }
     default: {
-      // Fallback to sub
       const plan =
         typeof tags['msg-param-sub-plan'] === 'string'
           ? tags['msg-param-sub-plan']
@@ -175,7 +169,7 @@ export function createSubscriptionPart(
           : undefined;
 
       return {
-        type: 'twitch_sub' as const,
+        type: 'sub' as const,
         subscriptionEvent: {
           msgId: 'sub' as const,
           displayName,

@@ -5,12 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 interface SubscriptionNoticeProps {
-  part: ParsedPart<
-    | 'twitch_sub'
-    | 'twitch_resub'
-    | 'twitch_anongiftpaidupgrade'
-    | 'twitch_anongift'
-  >;
+  part: ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'>;
   notice_tags?: UserNoticeTags;
 }
 

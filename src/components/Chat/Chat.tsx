@@ -165,8 +165,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       (_channel: string, tags: Record<string, string>, text: string) => {
         const badgeData = parseBadges(tags.badges as unknown as string);
 
-        console.log('onMessage tag ->', tags);
-
         // map irc tags to our custom format
         const userstate: UserStateTags = {
           ...tags,
@@ -295,7 +293,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     onUserNotice: useCallback(
       (_channel: string, tags: UserNoticeTags, text: string) => {
         // Handle user notice events (subs, raids, etc.)
-        console.log('onUserNotice', tags['msg-id'], text);
 
         // viewermilestone
         /***
@@ -339,11 +336,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           'user-type': tags['user-type'],
         } as UserStateTags;
 
+        const tagId = 'id' in tags ? (tags as { id?: string }).id : undefined;
         const baseMessage = {
           message: [{ type: 'text' as const, content: text.trimEnd() }],
           badges: {},
           channel: channelName,
-          message_id: tags['msg-id'] ?? '0',
+          message_id: tags['msg-id'] || tagId || generateNonce(),
           message_nonce,
           sender: userstate.username || '',
           parentDisplayName:
@@ -390,30 +388,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             handleNewMessage(viewerMilestoneMessage);
             break;
           }
-          case 'sub': {
-            const subTags = tags;
 
-            logger.main.info('subTags', JSON.stringify(subTags, null, 2));
-
-            const subscriptionPart = createSubscriptionPart(subTags, text);
-
-            const subMessage: ChatMessageType<'usernotice', 'sub'> = {
-              ...baseMessage,
-              notice_tags: subTags,
-              message_nonce: generateNonce(),
-              badges: [],
-              message: [subscriptionPart],
-              userstate,
-              sender: '',
-              replyDisplayName: '',
-              replyBody: '',
-              channel: '',
-              parentDisplayName: '',
-            };
-            newMessage = subMessage;
-            handleNewMessage(subMessage);
-            break;
-          }
           case 'resub': {
             const resubTags = tags;
             logger.main.info('resubTags', JSON.stringify(resubTags, null, 2));
@@ -439,8 +414,40 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               channel: '',
               parentDisplayName: '',
             };
+            console.log('🔔 Resub message created:', {
+              message_id: resubMessage.message_id,
+              hasNoticeTags: !!resubMessage.notice_tags,
+              messageTypes: resubMessage.message.map(m => m.type),
+              noticeTagsKeys: resubMessage.notice_tags
+                ? Object.keys(resubMessage.notice_tags)
+                : [],
+            });
             newMessage = resubMessage;
             handleNewMessage(resubMessage);
+            break;
+          }
+
+          case 'sub': {
+            console.log('sub hit', JSON.stringify(tags, null, 2));
+            const subTags = tags;
+
+            const subscriptionPart = createSubscriptionPart(subTags, text);
+
+            const subMessage: ChatMessageType<'usernotice', 'sub'> = {
+              ...baseMessage,
+              notice_tags: subTags,
+              message_nonce: generateNonce(),
+              badges: [],
+              message: [subscriptionPart],
+              userstate,
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = subMessage;
+            handleNewMessage(subMessage);
             break;
           }
           case 'subgift': {
@@ -1023,6 +1030,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onReply={handleReply}
         replyDisplayName={item.replyDisplayName}
         replyBody={item.replyBody}
+        // @ts-expect-error ignore for time being
+        notice_tags={
+          'notice_tags' in item && item.notice_tags
+            ? item.notice_tags
+            : undefined
+        }
       />
     ),
     [handleReply],

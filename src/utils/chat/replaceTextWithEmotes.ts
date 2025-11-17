@@ -4,6 +4,23 @@ import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
 
+export type TwitchNotices =
+  /**
+   * Twitch notices
+   */
+  | 'viewermilestone'
+  | 'sub'
+  | 'resub'
+  | 'subgift'
+  | 'anongift'
+  | 'submysterygift'
+  | 'giftpaidupgrade'
+  | 'rewardgift'
+  | 'anongiftpaidupgrade'
+  | 'raid'
+  | 'unraid'
+  | 'sharedchatnotice';
+
 export type PartVariant =
   /**
    * Plain text
@@ -37,46 +54,11 @@ export type PartVariant =
    * stv emote removed from set
    */
   | 'stv_emote_removed'
-  /**
-   * Twitch subscription notice (sub)
-   */
-  | 'twitch_sub'
-  /**
-   * Twitch resubscription notice (resub)
-   */
-  | 'twitch_resub'
-  /**
-   * Twitch anonymous gift notice (anongiftpaidupgrade)
-   */
-  | 'twitch_anongiftpaidupgrade'
-  /**
-   * Twitch gift subscription notice (subgift)
-   */
-  | 'twitch_anongift';
+  | TwitchNotices;
 
 export type TwitchAnd7TVVariant = Extract<
   PartVariant,
-  | 'stvEmote'
-  | 'twitchClip'
-  | 'twitch_sub'
-  | 'twitch_resub'
-  | 'twitch_anongiftpaidupgrade'
-  | 'twitch_anongift'
-
-  /**
-   * Twitch notices
-   */
-  | 'viewermilestone'
-  | 'sub'
-  | 'resub'
-  | 'subgift'
-  | 'submysterygift'
-  | 'giftpaidupgrade'
-  | 'rewardgift'
-  | 'anongiftpaidupgrade'
-  | 'raid'
-  | 'unraid'
-  | 'sharedchatnotice'
+  'stvEmote' | 'twitchClip'
 >;
 
 export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
@@ -89,7 +71,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
         data: SanitisiedEmoteSet;
       };
     }
-  : TType extends 'twitch_sub'
+  : TType extends 'sub'
     ? {
         type: TType;
         subscriptionEvent: {
@@ -103,7 +85,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
           shouldShareStreak?: boolean; // should-share-streak
         };
       }
-    : TType extends 'twitch_resub'
+    : TType extends 'resub'
       ? {
           type: TType;
           subscriptionEvent: {
@@ -117,7 +99,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
             shouldShareStreak?: boolean; // should-share-streak
           };
         }
-      : TType extends 'twitch_anongift'
+      : TType extends 'anongift'
         ? {
             type: TType;
             subscriptionEvent: {
@@ -132,7 +114,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
               months: number; // months (required for subgift)
             };
           }
-        : TType extends 'twitch_anongiftpaidupgrade'
+        : TType extends 'anongiftpaidupgrade'
           ? {
               type: TType;
               subscriptionEvent: {

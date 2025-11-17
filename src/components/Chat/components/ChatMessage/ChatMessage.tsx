@@ -55,7 +55,23 @@ function ChatMessageComponent<
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
 }) {
-  console.log('messageid ->', message_id);
+  const isSubscriptionMessage = message.some(
+    part =>
+      part.type === 'sub' ||
+      part.type === 'resub' ||
+      part.type === 'anongiftpaidupgrade' ||
+      part.type === 'anongift',
+  );
+
+  if (isSubscriptionMessage) {
+    console.log('🔔 ChatMessage received subscription:', {
+      message_id,
+      hasNoticeTags: !!notice_tags,
+      noticeTagsType: notice_tags ? typeof notice_tags : 'undefined',
+      messageTypes: message.map(m => m.type),
+    });
+  }
+
   const emoteSheetRef = useRef<BottomSheetModal>(null);
   const badgeSheetRef = useRef<BottomSheetModal>(null);
   const actionSheetRef = useRef<BottomSheetModal>(null);
@@ -133,12 +149,13 @@ function ChatMessageComponent<
           return <StvEmoteEvent part={part} />;
         }
 
-        case 'twitch_sub':
-        case 'twitch_resub':
-        case 'twitch_anongiftpaidupgrade':
-        case 'twitch_anongift': {
+        case 'sub':
+        case 'resub':
+        case 'anongiftpaidupgrade':
+        case 'anongift': {
+          console.log('hit sub type', part.type);
           // If message_id is a notice type (sub, resub, etc.), pass notice_tags
-          if (message_id && notice_tags) {
+          if (notice_tags) {
             return (
               <SubscriptionNotice
                 part={part}
@@ -200,6 +217,19 @@ function ChatMessageComponent<
 
   const isReply = Boolean(parentDisplayName);
 
+  const isSubscriptionNotice = message.some(
+    part =>
+      part.type === 'sub' ||
+      part.type === 'resub' ||
+      part.type === 'anongiftpaidupgrade' ||
+      part.type === 'anongift',
+  );
+
+  const isSystemNotice = message.some(
+    part =>
+      part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
+  );
+
   return (
     <Button
       onLongPress={handleLongPress}
@@ -232,37 +262,35 @@ function ChatMessageComponent<
         </View>
       )}
 
-      <View style={styles.messageLine}>
-        {!message.some(
-          part =>
-            part.type === 'stv_emote_added' ||
-            part.type === 'stv_emote_removed' ||
-            part.type === 'twitch_sub' ||
-            part.type === 'twitch_resub' ||
-            part.type === 'twitch_anongiftpaidupgrade' ||
-            part.type === 'twitch_anongift',
-        ) && (
-          <Typography style={styles.timestamp}>
-            {formatDate(new Date(), 'HH:mm')}:
-          </Typography>
-        )}
-        {renderBadges()}
-        {userstate.username && (
-          <Typography
-            style={[
-              styles.username,
-              {
-                color: userstate.color
-                  ? lightenColor(userstate.color)
-                  : '#FFFFFF',
-              },
-            ]}
-          >
-            {userstate.username}:
-          </Typography>
-        )}
-        {message.map(renderMessagePart)}
-      </View>
+      {isSubscriptionNotice ? (
+        <View style={styles.subscriptionNoticeContainer}>
+          {message.map(renderMessagePart)}
+        </View>
+      ) : (
+        <View style={styles.messageLine}>
+          {!isSystemNotice && (
+            <Typography style={styles.timestamp}>
+              {formatDate(new Date(), 'HH:mm')}:
+            </Typography>
+          )}
+          {renderBadges()}
+          {userstate.username && (
+            <Typography
+              style={[
+                styles.username,
+                {
+                  color: userstate.color
+                    ? lightenColor(userstate.color)
+                    : '#FFFFFF',
+                },
+              ]}
+            >
+              {userstate.username}:
+            </Typography>
+          )}
+          {message.map(renderMessagePart)}
+        </View>
+      )}
 
       {selectedEmote && selectedEmote.type === 'emote' && (
         <EmotePreviewSheet ref={emoteSheetRef} selectedEmote={selectedEmote} />
@@ -412,5 +440,8 @@ const styles = StyleSheet.create(theme => ({
   },
   replyToText: {
     // Styles applied via inline styles
+  },
+  subscriptionNoticeContainer: {
+    width: '100%',
   },
 }));
