@@ -2,7 +2,10 @@
 import { ChatMessageType } from '@app/context';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+import {
+  UserNoticeVariantMap,
+  UserNoticeTags,
+} from '@app/types/chat/irc-tags/usernotice';
 import { lightenColor, replaceEmotesWithText } from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatDate } from '@app/utils/date-time';
@@ -47,6 +50,7 @@ function ChatMessageComponent<
   replyBody,
   replyDisplayName,
   parentColor,
+  notice_tags,
   onReply,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
@@ -129,7 +133,19 @@ function ChatMessageComponent<
           return <StvEmoteEvent part={part} />;
         }
 
-        case 'twitch_subscription': {
+        case 'twitch_sub':
+        case 'twitch_resub':
+        case 'twitch_anongiftpaidupgrade':
+        case 'twitch_anongift': {
+          // If message_id is a notice type (sub, resub, etc.), pass notice_tags
+          if (message_id && notice_tags) {
+            return (
+              <SubscriptionNotice
+                part={part}
+                notice_tags={notice_tags as UserNoticeTags}
+              />
+            );
+          }
           return <SubscriptionNotice part={part} />;
         }
 
@@ -140,7 +156,13 @@ function ChatMessageComponent<
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [userstate.username, userstate.color, handleEmotePress],
+    [
+      userstate.username,
+      userstate.color,
+      handleEmotePress,
+      message_id,
+      notice_tags,
+    ],
   );
 
   const renderBadges = useCallback(() => {
@@ -215,7 +237,10 @@ function ChatMessageComponent<
           part =>
             part.type === 'stv_emote_added' ||
             part.type === 'stv_emote_removed' ||
-            part.type === 'twitch_subscription',
+            part.type === 'twitch_sub' ||
+            part.type === 'twitch_resub' ||
+            part.type === 'twitch_anongiftpaidupgrade' ||
+            part.type === 'twitch_anongift',
         ) && (
           <Typography style={styles.timestamp}>
             {formatDate(new Date(), 'HH:mm')}:

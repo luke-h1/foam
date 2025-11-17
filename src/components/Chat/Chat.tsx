@@ -12,8 +12,10 @@ import {
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { createHitslop, clearImageCache } from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
+import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -393,12 +395,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
             logger.main.info('subTags', JSON.stringify(subTags, null, 2));
 
+            const subscriptionPart = createSubscriptionPart(subTags, text);
+
             const subMessage: ChatMessageType<'usernotice', 'sub'> = {
               ...baseMessage,
               notice_tags: subTags,
               message_nonce: generateNonce(),
               badges: [],
-              message: [],
+              message: [subscriptionPart],
               userstate,
               sender: '',
               replyDisplayName: '',
@@ -414,10 +418,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             const resubTags = tags;
             logger.main.info('resubTags', JSON.stringify(resubTags, null, 2));
 
+            const subscriptionPart = createSubscriptionPart(resubTags, text);
+
             const resubMessage: ChatMessageType<'usernotice', 'resub'> = {
               ...baseMessage,
               badges: [],
-              message: [],
+              message: [subscriptionPart],
               userstate,
               notice_tags: {
                 ...resubTags,
@@ -440,10 +446,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           case 'subgift': {
             const subGiftTags = tags;
 
+            const subscriptionPart = createSubscriptionPart(subGiftTags, text);
+
             const subGiftMessage: ChatMessageType<'usernotice', 'subgift'> = {
               ...baseMessage,
               badges: [],
-              message: [],
+              message: [subscriptionPart],
               userstate,
               notice_tags: {
                 ...subGiftTags,
@@ -466,13 +474,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           case 'anongiftpaidupgrade': {
             const anonGiftPaidUpgradeTags = tags;
 
+            const subscriptionPart = createSubscriptionPart(
+              anonGiftPaidUpgradeTags,
+              text,
+            );
+
             const anonGiftPaidUpgradeMessage: ChatMessageType<
               'usernotice',
               'anongiftpaidupgrade'
             > = {
               ...baseMessage,
               badges: [],
-              message: [],
+              message: [subscriptionPart],
               userstate,
               notice_tags: {
                 ...anonGiftPaidUpgradeTags,
@@ -535,6 +548,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           }
         }
       },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       [],
     ),
     onClearChat: useCallback(() => {
