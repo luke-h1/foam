@@ -6,7 +6,7 @@ import {
   UserNoticeVariantMap,
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import { lightenColor, replaceEmotesWithText } from '@app/utils';
+import { lightenColor, replaceEmotesWithText, truncate } from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatDate } from '@app/utils/date-time';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -168,6 +168,11 @@ function ChatMessageComponent<
           return <SubscriptionNotice part={part} />;
         }
 
+        case 'viewermilestone': {
+          console.log('hit viewer mileston', part);
+          break;
+        }
+
         // todo: need more notice types here.
 
         default:
@@ -232,10 +237,12 @@ function ChatMessageComponent<
       {isReply && (
         <View style={styles.replyIndicator}>
           <Icon icon="corner-down-left" size={16} />
-          <View style={styles.replyToTextContainer}>
-            <Typography color="gray.accent" style={styles.replyToText}>
-              Replying to{' '}
-            </Typography>
+          <Typography
+            color="gray.accent"
+            style={styles.replyToText}
+            numberOfLines={1}
+          >
+            Replying to{' '}
             {parentColor ? (
               <Typography
                 style={[
@@ -252,7 +259,8 @@ function ChatMessageComponent<
                 {parentDisplayName}
               </Typography>
             )}
-          </View>
+            {replyBody && ` ${truncate(replyBody.trim() || replyBody, 50)}`}
+          </Typography>
         </View>
       )}
 
@@ -428,12 +436,13 @@ const styles = StyleSheet.create(theme => ({
     marginBottom: theme.spacing.xs,
   },
   replyToTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flex: 1,
     marginLeft: theme.spacing.xs,
   },
   replyToText: {
-    // Styles applied via inline styles
+    marginLeft: theme.spacing.xs,
+    opacity: 0.7,
+    fontSize: theme.font.fontSize.xs,
   },
   subscriptionNoticeContainer: {
     width: '100%',

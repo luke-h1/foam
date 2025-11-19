@@ -10,7 +10,13 @@ import {
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { createHitslop, clearImageCache } from '@app/utils';
+import {
+  createHitslop,
+  clearImageCache,
+  truncate,
+  replaceEmotesWithText,
+  ParsedPart,
+} from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
@@ -213,6 +219,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               username: replyParentDisplayName || '',
               message: replyParentMessageBody || '',
               replyParentUserLogin: replyParentUserLogin || '',
+              parentMessage: replyParent,
             });
           }
         }
@@ -792,6 +799,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     username: string;
     message: string;
     replyParentUserLogin: string;
+    parentMessage: string;
   } | null>(null);
 
   const [, setIsInputFocused] = useState<boolean>(false);
@@ -1002,14 +1010,30 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }, []);
 
   const handleReply = useCallback((message: ChatMessageType<'usernotice'>) => {
+    const messageText = replaceEmotesWithText(message.message);
+    console.log('🔍 handleReply called:', {
+      messageId: message.message_id,
+      username: message.sender,
+      messageParts: message.message,
+      extractedText: messageText,
+      messageLength: messageText.length,
+    });
+
+    const parentMessageText = messages.find(
+      m => m.message_id === message.message_id,
+    );
+
     setReplyTo({
       messageId: message.message_id,
       username: message.sender,
-      message: message.message
-        .map(part => (part as { content: string }).content)
-        .join(''),
+      message: messageText,
       replyParentUserLogin: message.userstate.username || '',
+      parentMessage: replaceEmotesWithText(
+        parentMessageText?.message as ParsedPart[],
+      ),
     });
+
+    console.log('replyTo', replyTo);
   }, []);
 
   const renderItem = useCallback(
@@ -1147,9 +1171,16 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         >
           {replyTo && (
             <View style={styles.replyContainer}>
-              <Typography style={styles.replyText}>
-                Replying to {replyTo.username}
-              </Typography>
+              <View style={styles.replyContent}>
+                <Typography style={styles.replyText}>
+                  Replying to {replyTo.username}
+                </Typography>
+                {replyTo.message && (
+                  <Typography style={styles.replyMessageText} numberOfLines={1}>
+                    {truncate(replyTo.message.trim() || replyTo.message, 50)}
+                  </Typography>
+                )}
+              </View>
               <Button
                 style={styles.cancelReplyButton}
                 onPress={() => setReplyTo(null)}
@@ -1292,8 +1323,17 @@ const styles = StyleSheet.create(theme => ({
     borderTopWidth: 1,
     borderCurve: 'continuous',
   },
-  replyText: {
+  replyContent: {
     flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  replyText: {
+    // color: theme.colors.text,
+  },
+  replyMessageText: {
+    marginTop: theme.spacing.xs / 2,
+    opacity: 0.7,
+    fontSize: theme.font.fontSize.xs,
     // color: theme.colors.text,
   },
   cancelReplyButton: {
