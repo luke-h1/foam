@@ -476,7 +476,6 @@ export function replaceTextWithEmotes({
                 site: emoteInMention.site,
               });
             }
-
             replacedParts.push({
               type: 'mention',
               content: mentionText,

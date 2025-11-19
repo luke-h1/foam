@@ -219,7 +219,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               username: replyParentDisplayName || '',
               message: replyParentMessageBody || '',
               replyParentUserLogin: replyParentUserLogin || '',
-              parentMessage: replyParent,
+              parentMessage: replaceEmotesWithText(replyParent.message),
             });
           }
         }
@@ -1009,32 +1009,26 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, []);
 
-  const handleReply = useCallback((message: ChatMessageType<'usernotice'>) => {
-    const messageText = replaceEmotesWithText(message.message);
-    console.log('🔍 handleReply called:', {
-      messageId: message.message_id,
-      username: message.sender,
-      messageParts: message.message,
-      extractedText: messageText,
-      messageLength: messageText.length,
-    });
+  const handleReply = useCallback(
+    (message: ChatMessageType<'usernotice'>) => {
+      const messageText = replaceEmotesWithText(message.message);
+      const parentMessageText = messages.find(
+        m => m.message_id === message.message_id,
+      );
 
-    const parentMessageText = messages.find(
-      m => m.message_id === message.message_id,
-    );
-
-    setReplyTo({
-      messageId: message.message_id,
-      username: message.sender,
-      message: messageText,
-      replyParentUserLogin: message.userstate.username || '',
-      parentMessage: replaceEmotesWithText(
-        parentMessageText?.message as ParsedPart[],
-      ),
-    });
-
-    console.log('replyTo', replyTo);
-  }, []);
+      setReplyTo({
+        messageId: message.message_id,
+        username: message.sender,
+        message: messageText,
+        replyParentUserLogin: message.userstate.username || '',
+        parentMessage: replaceEmotesWithText(
+          parentMessageText?.message as ParsedPart[],
+        ),
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [messages],
+  );
 
   const renderItem = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
@@ -1053,6 +1047,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onReply={handleReply}
         replyDisplayName={item.replyDisplayName}
         replyBody={item.replyBody}
+        allMessages={messages}
         // @ts-expect-error ignore for time being
         notice_tags={
           'notice_tags' in item && item.notice_tags
@@ -1061,7 +1056,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         }
       />
     ),
-    [handleReply],
+    [handleReply, messages],
   );
 
   const emojiPickerRef = useRef<BottomSheetModal>(null);

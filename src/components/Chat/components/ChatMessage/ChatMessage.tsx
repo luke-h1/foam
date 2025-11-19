@@ -6,7 +6,12 @@ import {
   UserNoticeVariantMap,
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import { lightenColor, replaceEmotesWithText, truncate } from '@app/utils';
+import {
+  lightenColor,
+  replaceEmotesWithText,
+  truncate,
+  generateRandomTwitchColor,
+} from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatDate } from '@app/utils/date-time';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -52,8 +57,10 @@ function ChatMessageComponent<
   parentColor,
   notice_tags,
   onReply,
+  allMessages,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
+  allMessages?: ChatMessageType<never>[];
 }) {
   const isSubscriptionNotice = message.some(
     part =>
@@ -131,10 +138,47 @@ function ChatMessageComponent<
         }
 
         case 'mention': {
+          const mentionedUsername = part.content.replace(/^@/, '').trim();
+
+          let mentionColor: string | undefined;
+
+          if (allMessages && mentionedUsername) {
+            const mentionedUserMessage = [...allMessages]
+              .reverse()
+              .find(msg => {
+                const msgUsername = msg.userstate.username?.toLowerCase();
+                const msgLogin = msg.userstate.login?.toLowerCase();
+                const msgSender = msg.sender?.toLowerCase();
+                const searchUsername = mentionedUsername.toLowerCase();
+
+                return (
+                  msgUsername === searchUsername ||
+                  msgLogin === searchUsername ||
+                  msgSender === searchUsername
+                );
+              });
+
+            if (mentionedUserMessage?.userstate.color) {
+              mentionColor = mentionedUserMessage.userstate.color;
+            } else {
+              mentionColor = generateRandomTwitchColor(mentionedUsername);
+            }
+          } else if (mentionedUsername) {
+            mentionColor = generateRandomTwitchColor(mentionedUsername);
+          }
+
+          const finalColor =
+            mentionColor || generateRandomTwitchColor(mentionedUsername);
+
           return (
             <Typography key={`message-${index}`}>
               <Typography
-                style={[styles.mention, { color: part.color ?? '#FFFFFF' }]}
+                style={[
+                  styles.mention,
+                  {
+                    color: lightenColor(finalColor),
+                  },
+                ]}
               >
                 {part.content}
               </Typography>
@@ -156,7 +200,6 @@ function ChatMessageComponent<
         case 'anongiftpaidupgrade':
         case 'anongift': {
           console.log('hit sub type', part.type);
-          // If message_id is a notice type (sub, resub, etc.), pass notice_tags
           if (notice_tags) {
             return (
               <SubscriptionNotice
@@ -169,8 +212,8 @@ function ChatMessageComponent<
         }
 
         case 'viewermilestone': {
-          console.log('hit viewer mileston', part);
-          break;
+          console.log('hit viewer milestone', part);
+          return null;
         }
 
         // todo: need more notice types here.
