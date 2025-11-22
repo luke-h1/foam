@@ -1387,7 +1387,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
 
               await new Promise<void>(resolve => {
                 let attempts = 0;
-                const maxAttempts = 50;
+                const maxAttempts = 150;
 
                 const checkState = () => {
                   attempts += 1;
@@ -1649,7 +1649,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
 
         await new Promise<void>(resolve => {
           let attempts = 0;
-          const maxAttempts = 50;
+          const maxAttempts = 150;
 
           const checkState = () => {
             attempts += 1;
