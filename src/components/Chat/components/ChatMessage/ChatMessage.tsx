@@ -116,7 +116,11 @@ function ChatMessageComponent<
     (part: ParsedPart, index: number) => {
       switch (part.type) {
         case 'text': {
-          return <Typography color="gray.text">{part.content}</Typography>;
+          return (
+            <Typography color="gray.text" style={styles.messageText}>
+              {part.content}
+            </Typography>
+          );
         }
 
         case 'stvEmote': {
@@ -435,9 +439,8 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: 'bold',
   },
   timestamp: {
-    // color: theme.colors.border,
+    color: theme.colors.gray.accentAlpha,
     fontSize: theme.font.fontSize.xs,
-    marginRight: 2,
   },
   mention: {
     marginHorizontal: 2,
@@ -470,7 +473,6 @@ const styles = StyleSheet.create(theme => ({
     marginLeft: theme.spacing.md,
     borderCurve: 'continuous',
     borderLeftWidth: 2,
-    // borderLeftColor: theme.colors.border,
     paddingLeft: theme.spacing.sm,
   },
   replyIndicator: {
@@ -489,5 +491,8 @@ const styles = StyleSheet.create(theme => ({
   },
   subscriptionNoticeContainer: {
     width: '100%',
+  },
+  messageText: {
+    lineHeight: theme.spacing['2xl'],
   },
 }));
