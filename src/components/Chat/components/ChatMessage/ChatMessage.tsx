@@ -2,8 +2,16 @@
 import { ChatMessageType } from '@app/context';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import { lightenColor, replaceEmotesWithText } from '@app/utils';
+import {
+  UserNoticeVariantMap,
+  UserNoticeTags,
+} from '@app/types/chat/irc-tags/usernotice';
+import {
+  lightenColor,
+  replaceEmotesWithText,
+  truncate,
+  generateRandomTwitchColor,
+} from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatDate } from '@app/utils/date-time';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -47,11 +55,32 @@ function ChatMessageComponent<
   replyBody,
   replyDisplayName,
   parentColor,
+  notice_tags,
   onReply,
+  allMessages,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
+  allMessages?: ChatMessageType<never>[];
 }) {
-  console.log('messageid ->', message_id);
+  const isSubscriptionNotice = message.some(
+    part =>
+      part.type === 'sub' ||
+      part.type === 'resub' ||
+      part.type === 'anongiftpaidupgrade' ||
+      part.type === 'anongift',
+  );
+
+  if (isSubscriptionNotice) {
+    console.log('🔔 ChatMessage received subscription:', {
+      message_id,
+      hasNoticeTags: !!notice_tags,
+      noticeTagsType: notice_tags ? typeof notice_tags : 'undefined',
+      messageTypes: message.map(m => m.type),
+      isSubscriptionNotice,
+      noticeTagsKeys: notice_tags ? Object.keys(notice_tags) : [],
+    });
+  }
+
   const emoteSheetRef = useRef<BottomSheetModal>(null);
   const badgeSheetRef = useRef<BottomSheetModal>(null);
   const actionSheetRef = useRef<BottomSheetModal>(null);
@@ -87,7 +116,11 @@ function ChatMessageComponent<
     (part: ParsedPart, index: number) => {
       switch (part.type) {
         case 'text': {
-          return <Typography color="gray.text">{part.content}</Typography>;
+          return (
+            <Typography color="gray.text" style={styles.messageText}>
+              {part.content}
+            </Typography>
+          );
         }
 
         case 'stvEmote': {
@@ -109,10 +142,47 @@ function ChatMessageComponent<
         }
 
         case 'mention': {
+          const mentionedUsername = part.content.replace(/^@/, '').trim();
+
+          let mentionColor: string | undefined;
+
+          if (allMessages && mentionedUsername) {
+            const mentionedUserMessage = [...allMessages]
+              .reverse()
+              .find(msg => {
+                const msgUsername = msg.userstate.username?.toLowerCase();
+                const msgLogin = msg.userstate.login?.toLowerCase();
+                const msgSender = msg.sender?.toLowerCase();
+                const searchUsername = mentionedUsername.toLowerCase();
+
+                return (
+                  msgUsername === searchUsername ||
+                  msgLogin === searchUsername ||
+                  msgSender === searchUsername
+                );
+              });
+
+            if (mentionedUserMessage?.userstate.color) {
+              mentionColor = mentionedUserMessage.userstate.color;
+            } else {
+              mentionColor = generateRandomTwitchColor(mentionedUsername);
+            }
+          } else if (mentionedUsername) {
+            mentionColor = generateRandomTwitchColor(mentionedUsername);
+          }
+
+          const finalColor =
+            mentionColor || generateRandomTwitchColor(mentionedUsername);
+
           return (
             <Typography key={`message-${index}`}>
               <Typography
-                style={[styles.mention, { color: part.color ?? '#FFFFFF' }]}
+                style={[
+                  styles.mention,
+                  {
+                    color: lightenColor(finalColor),
+                  },
+                ]}
               >
                 {part.content}
               </Typography>
@@ -129,8 +199,25 @@ function ChatMessageComponent<
           return <StvEmoteEvent part={part} />;
         }
 
-        case 'twitch_subscription': {
+        case 'sub':
+        case 'resub':
+        case 'anongiftpaidupgrade':
+        case 'anongift': {
+          console.log('hit sub type', part.type);
+          if (notice_tags) {
+            return (
+              <SubscriptionNotice
+                part={part}
+                notice_tags={notice_tags as UserNoticeTags}
+              />
+            );
+          }
           return <SubscriptionNotice part={part} />;
+        }
+
+        case 'viewermilestone': {
+          console.log('hit viewer milestone', part);
+          return null;
         }
 
         // todo: need more notice types here.
@@ -140,7 +227,13 @@ function ChatMessageComponent<
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [userstate.username, userstate.color, handleEmotePress],
+    [
+      userstate.username,
+      userstate.color,
+      handleEmotePress,
+      message_id,
+      notice_tags,
+    ],
   );
 
   const renderBadges = useCallback(() => {
@@ -178,6 +271,11 @@ function ChatMessageComponent<
 
   const isReply = Boolean(parentDisplayName);
 
+  const isSystemNotice = message.some(
+    part =>
+      part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
+  );
+
   return (
     <Button
       onLongPress={handleLongPress}
@@ -186,10 +284,12 @@ function ChatMessageComponent<
       {isReply && (
         <View style={styles.replyIndicator}>
           <Icon icon="corner-down-left" size={16} />
-          <View style={styles.replyToTextContainer}>
-            <Typography color="gray.accent" style={styles.replyToText}>
-              Replying to{' '}
-            </Typography>
+          <Typography
+            color="gray.accent"
+            style={styles.replyToText}
+            numberOfLines={1}
+          >
+            Replying to{' '}
             {parentColor ? (
               <Typography
                 style={[
@@ -206,38 +306,40 @@ function ChatMessageComponent<
                 {parentDisplayName}
               </Typography>
             )}
-          </View>
+            {replyBody && ` ${truncate(replyBody.trim() || replyBody, 50)}`}
+          </Typography>
         </View>
       )}
 
-      <View style={styles.messageLine}>
-        {!message.some(
-          part =>
-            part.type === 'stv_emote_added' ||
-            part.type === 'stv_emote_removed' ||
-            part.type === 'twitch_subscription',
-        ) && (
-          <Typography style={styles.timestamp}>
-            {formatDate(new Date(), 'HH:mm')}:
-          </Typography>
-        )}
-        {renderBadges()}
-        {userstate.username && (
-          <Typography
-            style={[
-              styles.username,
-              {
-                color: userstate.color
-                  ? lightenColor(userstate.color)
-                  : '#FFFFFF',
-              },
-            ]}
-          >
-            {userstate.username}:
-          </Typography>
-        )}
-        {message.map(renderMessagePart)}
-      </View>
+      {isSubscriptionNotice ? (
+        <View style={styles.subscriptionNoticeContainer}>
+          {message.map(renderMessagePart)}
+        </View>
+      ) : (
+        <View style={styles.messageLine}>
+          {!isSystemNotice && (
+            <Typography style={styles.timestamp}>
+              {formatDate(new Date(), 'HH:mm')}:
+            </Typography>
+          )}
+          {renderBadges()}
+          {userstate.username && (
+            <Typography
+              style={[
+                styles.username,
+                {
+                  color: userstate.color
+                    ? lightenColor(userstate.color)
+                    : '#FFFFFF',
+                },
+              ]}
+            >
+              {userstate.username}:
+            </Typography>
+          )}
+          {message.map(renderMessagePart)}
+        </View>
+      )}
 
       {selectedEmote && selectedEmote.type === 'emote' && (
         <EmotePreviewSheet ref={emoteSheetRef} selectedEmote={selectedEmote} />
@@ -337,9 +439,8 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: 'bold',
   },
   timestamp: {
-    // color: theme.colors.border,
+    color: theme.colors.gray.accentAlpha,
     fontSize: theme.font.fontSize.xs,
-    marginRight: 2,
   },
   mention: {
     marginHorizontal: 2,
@@ -372,7 +473,6 @@ const styles = StyleSheet.create(theme => ({
     marginLeft: theme.spacing.md,
     borderCurve: 'continuous',
     borderLeftWidth: 2,
-    // borderLeftColor: theme.colors.border,
     paddingLeft: theme.spacing.sm,
   },
   replyIndicator: {
@@ -381,11 +481,18 @@ const styles = StyleSheet.create(theme => ({
     marginBottom: theme.spacing.xs,
   },
   replyToTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flex: 1,
     marginLeft: theme.spacing.xs,
   },
   replyToText: {
-    // Styles applied via inline styles
+    marginLeft: theme.spacing.xs,
+    opacity: 0.7,
+    fontSize: theme.font.fontSize.xs,
+  },
+  subscriptionNoticeContainer: {
+    width: '100%',
+  },
+  messageText: {
+    lineHeight: theme.spacing['2xl'],
   },
 }));

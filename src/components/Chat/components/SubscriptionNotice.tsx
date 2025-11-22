@@ -1,45 +1,49 @@
 import { Typography } from '@app/components/Typography';
+import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 interface SubscriptionNoticeProps {
-  part: ParsedPart<'twitch_subscription'>;
+  part: ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'>;
+  notice_tags?: UserNoticeTags;
 }
 
-export function SubscriptionNotice({ part }: SubscriptionNoticeProps) {
+export function SubscriptionNotice({
+  part,
+  notice_tags: _,
+}: SubscriptionNoticeProps) {
   const { subscriptionEvent } = part;
-  const {
-    msgId,
-    displayName,
-    message,
-    months,
-    planName,
-    recipientDisplayName,
-  } = subscriptionEvent;
+  const { msgId, displayName, message } = subscriptionEvent;
 
   const getSubscriptionText = () => {
     switch (msgId) {
       case 'sub':
         return `subscribed`;
-      case 'resub':
-        return `resubscribed for ${months || 0} month${months && months > 1 ? 's' : ''}`;
-      case 'subgift':
-        return `gifted a subscription to ${recipientDisplayName || 'someone'}`;
-      case 'submysterygift':
-        return `gifted ${subscriptionEvent.giftMonths || 0} subscription${subscriptionEvent.giftMonths && subscriptionEvent.giftMonths > 1 ? 's' : ''}`;
-      case 'raid':
-        return `raided with ${subscriptionEvent.viewerCount || 0} viewer${subscriptionEvent.viewerCount && subscriptionEvent.viewerCount > 1 ? 's' : ''}`;
+      case 'resub': {
+        const months =
+          'months' in subscriptionEvent ? subscriptionEvent.months : 0;
+        return `resubscribed for ${months} month${months > 1 ? 's' : ''}`;
+      }
+      case 'subgift': {
+        const recipientDisplayName =
+          'recipientDisplayName' in subscriptionEvent
+            ? subscriptionEvent.recipientDisplayName
+            : 'someone';
+        return `gifted a subscription to ${recipientDisplayName}`;
+      }
+      case 'anongiftpaidupgrade':
+        return `gifted a subscription`;
       default:
         return `subscription event`;
     }
   };
 
   const getPlanDisplay = () => {
-    if (planName) {
-      return planName;
+    if ('planName' in subscriptionEvent && subscriptionEvent.planName) {
+      return subscriptionEvent.planName;
     }
-    if (subscriptionEvent.plan) {
+    if ('plan' in subscriptionEvent && subscriptionEvent.plan) {
       switch (subscriptionEvent.plan) {
         case '1000':
           return 'Prime';

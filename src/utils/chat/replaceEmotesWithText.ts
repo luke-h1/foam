@@ -10,6 +10,7 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
     return '';
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return parts
     .map(part => {
       switch (part.type) {
@@ -32,17 +33,21 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
            */
           return part.content;
 
+        /**
+         * Our custom types
+         */
         case 'notice':
         case 'stvEmote':
         case 'stv_emote_added':
         case 'stv_emote_removed':
         case 'twitchClip':
-        case 'twitch_subscription':
+        case 'sub':
+        case 'resub':
+        case 'anongiftpaidupgrade':
+        case 'anongift':
           return part;
 
         default:
-          // @ts-expect-error - ts struggling to narrow type of part
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return part.content;
       }
     })
