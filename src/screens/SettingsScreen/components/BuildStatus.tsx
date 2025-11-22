@@ -12,11 +12,7 @@ export function BuildStatus() {
         {Application.nativeBuildVersion ?? ''})
       </Typography>
       <Typography size="xs" color="gray.accent">
-        OTA: {Updates.runtimeVersion} (
-        {(Updates.createdAt ?? new Date()).toLocaleString('en-US', {
-          timeZoneName: 'short',
-        })}
-        )
+        OTA: {Updates.updateId ?? 'Embedded'}
       </Typography>
     </View>
   );
