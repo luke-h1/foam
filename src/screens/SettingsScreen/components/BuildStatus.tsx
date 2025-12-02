@@ -7,12 +7,10 @@ import { StyleSheet } from 'react-native-unistyles';
 export function BuildStatus() {
   return (
     <View style={styles.buildContainer}>
-      <Typography size="xs" color="gray.accent">
+      <Typography size="xs" color="gray.border">
         v:{Application.nativeApplicationVersion ?? ''} (
-        {Application.nativeBuildVersion ?? ''})
-      </Typography>
-      <Typography size="xs" color="gray.accent">
-        OTA: {Updates.updateId ?? 'Embedded'}
+        {Application.nativeBuildVersion ?? ''}) • OTA:{' '}
+        {Updates.updateId ?? 'Embedded'}
       </Typography>
     </View>
   );
@@ -20,11 +18,7 @@ export function BuildStatus() {
 
 const styles = StyleSheet.create(theme => ({
   buildContainer: {
-    borderTopColor: theme.colors.gray.accent,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    justifyContent: 'center',
-    borderCurve: 'continuous',
-    paddingVertical: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
   },
 }));

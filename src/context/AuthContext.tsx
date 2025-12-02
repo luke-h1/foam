@@ -1,4 +1,5 @@
 import { queryClient } from '@app/Providers';
+import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchApi } from '@app/services/api';
 import {
   DefaultTokenResponse,
@@ -17,6 +18,18 @@ import {
   useState,
 } from 'react';
 import { toast } from 'sonner-native';
+
+/**
+ * Prefetch initial data for faster startup
+ */
+const prefetchInitialData = (userId?: string) => {
+  if (userId) {
+    const followedQuery = twitchQueries.getFollowedStreams(userId);
+    void queryClient.prefetchQuery(followedQuery);
+  }
+  void queryClient.prefetchQuery(twitchQueries.getTopStreams());
+  void queryClient.prefetchQuery(twitchQueries.getTopCategories());
+};
 
 export const storageKeys = {
   anon: 'V1_foam-anon', // anon token
@@ -111,6 +124,8 @@ export const AuthContextProvider = ({
         }),
       );
       twitchApi.setAuthToken(result.access_token);
+
+      prefetchInitialData();
     } catch (e) {
       logger.auth.error('Failed to get anon auth', e);
       // eslint-disable-next-line no-useless-return
@@ -139,6 +154,10 @@ export const AuthContextProvider = ({
     const u = await twitchService.getUserInfo(token.accessToken);
     setUser(u);
     twitchApi.setAuthToken(token.accessToken);
+
+    // Prefetch initial data immediately after auth
+    prefetchInitialData(u.id);
+
     await SecureStore.setItemAsync(
       storageKeys.user,
       JSON.stringify({
@@ -196,6 +215,9 @@ export const AuthContextProvider = ({
     );
     setUser(u);
 
+    // Prefetch initial data immediately after login
+    prefetchInitialData(u.id);
+
     // evict cached anon details
     await SecureStore.deleteItemAsync(storageKeys.anon);
 
@@ -237,6 +259,9 @@ export const AuthContextProvider = ({
           },
         });
         twitchApi.setAuthToken(token.accessToken);
+
+        // Prefetch top streams for anonymous users with cached token
+        prefetchInitialData();
       }
     }
   };

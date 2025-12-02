@@ -36,6 +36,9 @@ export interface ScreenHeaderProps {
   children?: ReactNode;
   /**
    * Size variant for the header
+   * - large: Large title below nav row
+   * - medium: Inline title in nav row
+   * - compact: Smaller inline title
    */
   size?: 'large' | 'medium' | 'compact';
   /**
@@ -56,46 +59,86 @@ export function ScreenHeader({
 }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
 
+  const isInline = size === 'medium' || size === 'compact';
+
   const getTitleSize = () => {
     if (size === 'large') return '2xl';
-    if (size === 'medium') return 'xl';
-    return 'lg';
+    if (size === 'medium') return 'lg';
+    return 'md';
   };
 
   const titleSize = getTitleSize();
   const subtitleSize = size === 'compact' ? 'xs' : 'sm';
 
+  // Only show nav row if there's something to display (back button, inline title, or trailing)
+  const showNavRow = back || isInline || trailing;
+
   return (
     <View
-      style={[styles.container, safeArea && { paddingTop: insets.top + 12 }]}
+      style={[styles.container, safeArea && { paddingTop: insets.top + 8 }]}
     >
-      <View style={styles.navRow}>
-        {back && (
-          <IconButton icon="arrowLeft" label="goBack" onPress={onBack} />
-        )}
-        <View style={styles.navSpacer} />
-        {trailing}
-      </View>
+      {showNavRow && (
+        <View style={styles.navRow}>
+          {back && (
+            <IconButton
+              icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
+              label="goBack"
+              onPress={onBack}
+              size="2xl"
+              hitSlop={12}
+              style={styles.backButton}
+            />
+          )}
 
-      <View style={styles.titleSection}>
-        <Typography
-          size={titleSize}
-          fontWeight="bold"
-          style={styles.title}
-          numberOfLines={2}
+          {isInline ? (
+            <View style={styles.inlineTitleSection}>
+              <Typography
+                size={titleSize}
+                fontWeight="semiBold"
+                numberOfLines={1}
+              >
+                {title}
+              </Typography>
+              {subtitle && (
+                <Typography size={subtitleSize} color="gray.textLow">
+                  {subtitle}
+                </Typography>
+              )}
+            </View>
+          ) : (
+            <View style={styles.navSpacer} />
+          )}
+
+          {trailing}
+        </View>
+      )}
+
+      {!isInline && (
+        <View
+          style={[
+            styles.titleSection,
+            showNavRow ? styles.titleSectionWithNav : null,
+          ]}
         >
-          {title}
-        </Typography>
-        {subtitle && (
           <Typography
-            size={subtitleSize}
-            color="gray.textLow"
-            style={styles.subtitle}
+            size={titleSize}
+            fontWeight="bold"
+            style={styles.title}
+            numberOfLines={2}
           >
-            {subtitle}
+            {title}
           </Typography>
-        )}
-      </View>
+          {subtitle && (
+            <Typography
+              size={subtitleSize}
+              color="gray.textLow"
+              style={styles.subtitle}
+            >
+              {subtitle}
+            </Typography>
+          )}
+        </View>
+      )}
 
       {children}
     </View>
@@ -105,18 +148,29 @@ export function ScreenHeader({
 const styles = StyleSheet.create(theme => ({
   container: {
     paddingHorizontal: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
   },
   navRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    minHeight: 44,
+  },
+  backButton: {
+    marginLeft: -theme.spacing.xs,
+    justifyContent: 'center',
   },
   navSpacer: {
     flex: 1,
   },
+  inlineTitleSection: {
+    flex: 1,
+    marginLeft: theme.spacing.xs,
+  },
   titleSection: {
     gap: theme.spacing.xs,
+  },
+  titleSectionWithNav: {
+    marginTop: theme.spacing.xs,
   },
   title: {
     lineHeight: 34,
