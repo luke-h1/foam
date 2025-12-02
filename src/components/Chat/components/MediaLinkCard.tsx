@@ -108,7 +108,7 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
         <View style={styles.info}>
           <View style={styles.titleRow}>
             {getBrandIcon()}
-            <Typography style={{ flex: 1, flexShrink: 1 }}>{title}</Typography>
+            <Typography style={styles.iconName}>{title}</Typography>
           </View>
           <Typography>By {createdBy}</Typography>
         </View>
@@ -119,6 +119,10 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
 }
 
 const styles = StyleSheet.create(theme => ({
+  iconName: {
+    flex: 1,
+    flexShrink: 1,
+  },
   container: {
     marginVertical: theme.spacing.xs,
   },

@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import {
   DEFAULT_RECONNECT_INTERVAL_MS,
   DEFAULT_RECONNECT_LIMIT,

@@ -188,7 +188,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
 
     if (data.length === 0) {
       return (
-        <View style={[{ width: PICKER_WIDTH }]}>
+        <View style={{ width: PICKER_WIDTH }}>
           <Typography>No emotes available</Typography>
         </View>
       );
@@ -204,15 +204,8 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
         maxDynamicContentSize={maxDynamicContentSize}
       >
         <BottomSheetView style={styles.wrapper}>
-          <View
-            style={{
-              // backgroundColor: theme.colors.borderNeutral,
-              paddingHorizontal: PICKER_PAD,
-              borderRadius: PICKER_RADIUS,
-              borderCurve: 'continuous',
-            }}
-          >
-            <View style={[{ width: PICKER_WIDTH }]}>
+          <View style={styles.pickerPad}>
+            <View style={{ width: PICKER_WIDTH }}>
               {showSubNavigation && subNavigationOptions.length > 0 && (
                 <SubNavigationBar
                   options={subNavigationOptions}
@@ -250,5 +243,11 @@ const styles = StyleSheet.create(theme => ({
   },
   bottomSheet: {
     // backgroundColor: theme.colors.borderNeutral,
+  },
+  pickerPad: {
+    // backgroundColor: theme.colors.borderNeutral,
+    paddingHorizontal: PICKER_PAD,
+    borderRadius: PICKER_RADIUS,
+    borderCurve: 'continuous',
   },
 }));

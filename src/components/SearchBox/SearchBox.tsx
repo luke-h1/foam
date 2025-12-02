@@ -44,7 +44,7 @@ export function SearchBox({
           onPress={() => rightOnPress?.()}
           style={[
             styles.clearButton,
-            { opacity: value && value.length > 0 ? 1 : 0 },
+            { opacity: value && value.length > 0 ? 1 : 0 } as const,
           ]}
           disabled={!value || value.length === 0}
         >

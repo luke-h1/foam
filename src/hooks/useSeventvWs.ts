@@ -229,7 +229,7 @@ export function useSeventvWs(
 
   const handleEmoteSetUpdate = useCallback((data: SevenTvEventData) => {
     try {
-      logger.stvWs.info('💚 Handling emote set update event', data);
+      // logger.stvWs.info('💚 Handling emote set update event', data);
 
       // Filter out historical events
       if (connectionTimestampRef.current) {
@@ -475,9 +475,9 @@ export function useSeventvWs(
           }
 
           case 6: {
-            logger.stvWs.warn(
-              `💚 Received invalid subscription condition: ${JSON.stringify(message.d)}`,
-            );
+            // logger.stvWs.warn(
+            //   `💚 Received invalid subscription condition: ${JSON.stringify(message.d)}`,
+            // );
             break;
           }
 

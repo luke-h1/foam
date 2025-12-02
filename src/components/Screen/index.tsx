@@ -24,7 +24,7 @@ import {
   SystemBarStyle,
 } from 'react-native-edge-to-edge';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
-import { useUnistyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export const DEFAULT_BOTTOM_OFFSET = 50;
 
@@ -307,7 +307,7 @@ export function Screen(props: ScreenProps) {
         behavior={isIos ? 'padding' : 'height'}
         keyboardVerticalOffset={keyboardOffset}
         {...KeyboardAvoidingViewProps}
-        style={[{ flex: 1 }, KeyboardAvoidingViewProps?.style]}
+        style={[styles.screen, KeyboardAvoidingViewProps?.style]}
       >
         {isNonScrolling(props.preset) ? (
           <ScreenWithoutScrolling {...props} />
@@ -339,3 +339,9 @@ const $innerStyle: ViewStyle = {
 const $innerContainerFixed: ViewStyle = {
   flex: 1,
 };
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+});

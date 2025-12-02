@@ -55,7 +55,7 @@ function TwitchUsernameConverter() {
   return (
     <KeyboardAvoidingView
       behavior="padding"
-      style={{ flex: 1 }}
+      style={styles.keyboardAvoidingView}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.twitchSection}>
@@ -142,7 +142,7 @@ function NavigateToChat() {
   return (
     <KeyboardAvoidingView
       behavior="padding"
-      style={{ flex: 1 }}
+      style={styles.keyboardAvoidingView}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.navigateToChatContainer}>
@@ -297,6 +297,9 @@ export function DebugScreen() {
 }
 
 const styles = StyleSheet.create(theme => ({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   twitchSection: {
     marginTop: theme.spacing.lg,
     padding: theme.spacing.md,

@@ -66,8 +66,8 @@ export function TabBarButton({
 
 const styles = StyleSheet.create({
   pressable: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
 });

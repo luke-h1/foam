@@ -44,6 +44,9 @@ export default [
       parserOptions: {
         project: './tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
+        ecmaFeatures: {
+          jsx: true,
+        },
       },
     },
   },
@@ -56,6 +59,7 @@ export default [
       'plugin:@typescript-eslint/strict',
       'plugin:react/recommended',
       'plugin:react-hooks/recommended',
+      'plugin:react-native/all',
       'prettier',
       'prettier/prettier',
     ),
@@ -100,6 +104,12 @@ export default [
       ],
       'refined/avoid-touchable-opacity': 'error',
       'import/no-cycle': 'off',
+      'react-native/no-unused-styles': 'error',
+      'react-native/split-platform-components': 'error',
+      'react-native/no-inline-styles': 'error',
+      'react-native/no-color-literals': 'off',
+      'react-native/no-raw-text': 'off',
+      'react-native/no-single-element-style-arrays': 'error',
       'import/no-unresolved': ['error'],
       'import/extensions': [
         'error',
@@ -136,6 +146,7 @@ export default [
       'react/function-component-definition': 'off',
       'import/prefer-default-export': 'off',
       'no-unsafe-finally': 'off',
+      'no-param-reassign': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -255,6 +266,12 @@ export default [
           ],
         },
       ],
+    },
+  },
+  {
+    files: ['**/*.stories.tsx'],
+    rules: {
+      'react-native/no-inline-styles': 'off',
     },
   },
 ];

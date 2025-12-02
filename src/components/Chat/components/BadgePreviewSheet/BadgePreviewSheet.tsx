@@ -8,6 +8,7 @@ import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 import { styles } from '../EmotePreviewSheet';
 
@@ -41,10 +42,7 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
             <Image
               source={selectedBadge.url ?? ''}
               transition={50}
-              style={{
-                width: 50,
-                height: 50,
-              }}
+              style={badgetyles.badge}
             />
             <View style={styles.emoteInfo}>
               <Typography style={styles.emoteName}>
@@ -103,5 +101,12 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
     );
   },
 );
+
+const badgetyles = StyleSheet.create({
+  badge: {
+    height: 50,
+    width: 50,
+  },
+});
 
 BadgePreviewSheet.displayName = 'BadgePreviewSheet';

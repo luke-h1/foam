@@ -3,7 +3,7 @@ import { Screen } from '@app/components/Screen';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { StyleSheet } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
@@ -23,12 +23,10 @@ export function TopScreen() {
     categories: TopCategoriesScreen,
   });
 
-  const { theme } = useUnistyles();
-
   return (
     <Screen preset="fixed" safeAreaEdges={['top']}>
       <TabView
-        style={{ flex: 1 }}
+        style={styles.tabViewWrapper}
         navigationState={{ index, routes }}
         renderScene={renderScene}
         onIndexChange={setIndex}
@@ -44,16 +42,7 @@ export function TopScreen() {
                       props.jumpTo(route.key);
                       setCurrentTitle(route.title);
                     }}
-                    style={[
-                      styles.tab,
-                      {
-                        borderBottomColor:
-                          index === i
-                            ? theme.colors.plum.border
-                            : 'transparent',
-                        borderCurve: 'continuous',
-                      },
-                    ]}
+                    style={[styles.tab, styles.line(index, i)]}
                   >
                     <Typography>{route.title}</Typography>
                   </Button>
@@ -67,7 +56,7 @@ export function TopScreen() {
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create(theme => ({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -79,5 +68,13 @@ const styles = StyleSheet.create(() => ({
     borderBottomWidth: 2.15,
     padding: 5,
     marginHorizontal: 10,
+  },
+  line: (index: number, currIndex: number) => ({
+    borderBottomColor:
+      index === currIndex ? theme.colors.plum.border : 'transparent',
+    borderCurve: 'continuous',
+  }),
+  tabViewWrapper: {
+    flex: 1,
   },
 }));

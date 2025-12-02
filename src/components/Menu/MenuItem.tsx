@@ -66,13 +66,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
         ) : null}
 
         {!item.icon && item.image && (
-          <Image
-            source={item.image}
-            style={{
-              width: 20,
-              height: 20,
-            }}
-          />
+          <Image source={item.image} style={styles.image} />
         )}
 
         <View style={styles.contentContainer}>
@@ -176,5 +170,9 @@ const styles = StyleSheet.create(theme => ({
   },
   separator: {
     marginVertical: theme.spacing.xs,
+  },
+  image: {
+    width: 20,
+    height: 20,
   },
 }));

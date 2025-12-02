@@ -543,7 +543,7 @@ export const ChatAutoCompleteInput = forwardRef<
               pointerEvents="box-none"
             >
               <FlashList
-                style={{ height: 280 }}
+                style={styles.list}
                 keyboardShouldPersistTaps="handled"
                 data={filteredEmotes}
                 keyExtractor={item => item.id}
@@ -560,6 +560,7 @@ export const ChatAutoCompleteInput = forwardRef<
 );
 
 const styles = StyleSheet.create(theme => ({
+  list: { height: 280 },
   container: {
     flex: 1,
     position: 'relative',

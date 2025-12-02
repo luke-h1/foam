@@ -70,10 +70,7 @@ export function EmoteBadgePreview({
               <Image
                 source={selectedEmote.url ?? ''}
                 transition={50}
-                style={{
-                  width: width - 50,
-                  height: height - 50,
-                }}
+                style={styles.emoteImage(width - 50, height - 50)}
               />
             </View>
             <View style={styles.metadataContainer}>
@@ -118,10 +115,7 @@ export function EmoteBadgePreview({
               <Image
                 source={selectedBadge.url}
                 transition={50}
-                style={{
-                  width: 50,
-                  height: 50,
-                }}
+                style={styles.badgeImage}
               />
             </View>
             <View style={styles.metadataContainer}>
@@ -278,5 +272,13 @@ const styles = StyleSheet.create(theme => ({
   },
   actionText: {
     marginLeft: theme.spacing.xs,
+  },
+  emoteImage: (width: number, height: number) => ({
+    width,
+    height,
+  }),
+  badgeImage: {
+    width: 50,
+    height: 50,
   },
 }));

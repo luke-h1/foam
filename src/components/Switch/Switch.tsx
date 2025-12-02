@@ -84,23 +84,23 @@ export function Switch({ onValueChange, value }: Props) {
 }
 
 const styles = StyleSheet.create({
-  track: {
-    width: SWITCH_WIDTH,
-    height: SWITCH_HEIGHT,
-    borderRadius: SWITCH_HEIGHT / 2,
-    paddingHorizontal: SWITCH_HORIZONTAL_PADDING,
-    paddingVertical: SWITCH_VERTICAL_PADDING,
-    borderCurve: 'continuous',
+  center: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   thumb: {
-    width: SWITCH_THUMB_SIZE,
-    height: SWITCH_THUMB_SIZE,
-    borderRadius: SWITCH_THUMB_SIZE / 2,
     backgroundColor: THUMB_COLOR,
     borderCurve: 'continuous',
+    borderRadius: SWITCH_THUMB_SIZE / 2,
+    height: SWITCH_THUMB_SIZE,
+    width: SWITCH_THUMB_SIZE,
   },
-  center: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  track: {
+    borderCurve: 'continuous',
+    borderRadius: SWITCH_HEIGHT / 2,
+    height: SWITCH_HEIGHT,
+    paddingHorizontal: SWITCH_HORIZONTAL_PADDING,
+    paddingVertical: SWITCH_VERTICAL_PADDING,
+    width: SWITCH_WIDTH,
   },
 });

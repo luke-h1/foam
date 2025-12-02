@@ -4,13 +4,30 @@ import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
 
+export type TwitchNotices =
+  /**
+   * Twitch notices
+   */
+  | 'viewermilestone'
+  | 'sub'
+  | 'resub'
+  | 'subgift'
+  | 'anongift'
+  | 'submysterygift'
+  | 'giftpaidupgrade'
+  | 'rewardgift'
+  | 'anongiftpaidupgrade'
+  | 'raid'
+  | 'unraid'
+  | 'sharedchatnotice';
+
 export type PartVariant =
   /**
    * Plain text
    */
   | 'text'
   /**
-   * Emoji i.e. 🚀
+   * Emoji i.e. a normal unicode emoji 🚀
    */
   | 'emote'
   /**
@@ -37,31 +54,11 @@ export type PartVariant =
    * stv emote removed from set
    */
   | 'stv_emote_removed'
-  /**
-   * Twitch subscription notice (sub, resub, subgift, etc.)
-   */
-  | 'twitch_subscription';
+  | TwitchNotices;
 
 export type TwitchAnd7TVVariant = Extract<
   PartVariant,
-  | 'stvEmote'
-  | 'twitchClip'
-  | 'twitch_subscription'
-
-  /**
-   * Twitch notices
-   */
-  | 'viewermilestone'
-  | 'sub'
-  | 'resub'
-  | 'subgift'
-  | 'submysterygift'
-  | 'giftpaidupgrade'
-  | 'rewardgift'
-  | 'anongiftpaidupgrade'
-  | 'raid'
-  | 'unraid'
-  | 'sharedchatnotice'
+  'stvEmote' | 'twitchClip'
 >;
 
 export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
@@ -74,53 +71,92 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
         data: SanitisiedEmoteSet;
       };
     }
-  : TType extends 'twitch_subscription'
+  : TType extends 'sub'
     ? {
         type: TType;
         subscriptionEvent: {
-          msgId: string; // msg-id tag (sub, resub, subgift, etc.)
+          msgId: 'sub';
           displayName: string;
           message?: string;
-          months?: number; // for resub
-          plan?: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
+          plan: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
           planName?: string; // Prime, Tier 1, Tier 2, Tier 3
-          recipientDisplayName?: string; // for subgift
-          recipientId?: string; // for subgift
-          giftMonths?: number; // for submysterygift
-          viewerCount?: number; // for raid
-          gifterDisplayName?: string; // for subgift
-          gifterId?: string; // for subgift
+          months?: number; // cumulative-months
+          streakMonths?: number; // streak-months
+          shouldShareStreak?: boolean; // should-share-streak
         };
       }
-    : TType extends 'viewermilestone'
+    : TType extends 'resub'
       ? {
           type: TType;
-          category: string;
-          reward: string;
-          value: string;
-          content: string;
+          subscriptionEvent: {
+            msgId: 'resub';
+            displayName: string;
+            message?: string;
+            plan: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
+            planName?: string; // Prime, Tier 1, Tier 2, Tier 3
+            months: number; // cumulative-months
+            streakMonths?: number; // streak-months
+            shouldShareStreak?: boolean; // should-share-streak
+          };
         }
-      : /**
-         * Normal message
-         */
-        Pick<
-          Partial<SanitisiedEmoteSet>,
-          'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
-        > & {
-          id?: string;
-          name?: string;
-          flags?: number;
-          type: TType;
-          content: string;
-          color?: string;
-          width?: number;
-          height?: number;
+      : TType extends 'anongift'
+        ? {
+            type: TType;
+            subscriptionEvent: {
+              msgId: 'subgift';
+              displayName: string;
+              message?: string;
+              plan: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
+              planName?: string; // Prime, Tier 1, Tier 2, Tier 3
+              recipientDisplayName: string; // recipient-display-name
+              recipientId: string; // recipient-id
+              giftMonths: number; // gift-months
+              months: number; // months
+            };
+          }
+        : TType extends 'anongiftpaidupgrade'
+          ? {
+              type: TType;
+              subscriptionEvent: {
+                msgId: 'anongiftpaidupgrade';
+                displayName: string;
+                message?: string;
+                promoName: string; // promo-name
+                promoGiftTotal: string; // promo-gift-total
+              };
+            }
+          : TType extends 'viewermilestone'
+            ? {
+                type: TType;
+                category: string;
+                reward: string;
+                value: string;
+                content: string;
+                systemMsg: string; //"LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
+                login: string;
+                displayName: string;
+              }
+            : /**
+               * Normal message
+               */
+              Pick<
+                Partial<SanitisiedEmoteSet>,
+                'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
+              > & {
+                id?: string;
+                name?: string;
+                flags?: number;
+                type: TType;
+                content: string;
+                color?: string;
+                width?: number;
+                height?: number;
 
-          /**
-           * Used for emote and twitch clip previews
-           */
-          thumbnail?: string;
-        };
+                /**
+                 * Used for emote and twitch clip previews
+                 */
+                thumbnail?: string;
+              };
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
@@ -443,7 +479,6 @@ export function replaceTextWithEmotes({
                 site: emoteInMention.site,
               });
             }
-
             replacedParts.push({
               type: 'mention',
               content: mentionText,

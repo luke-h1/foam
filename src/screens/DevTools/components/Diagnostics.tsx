@@ -3,6 +3,7 @@ import * as Form from '@app/components/Form/Form';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
 import * as AC from '@bacons/apple-colors';
 import { Linking } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import { AppStoreSection } from './AppStoreSection';
 import { ExpoSection } from './ExpoSection';
 import { OTADynamicSection } from './OTADynamicSection';
@@ -10,7 +11,7 @@ import { OTASection } from './OTASection';
 
 export function Diagnostics() {
   return (
-    <BodyScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+    <BodyScrollView contentContainerStyle={styles.contentContainer}>
       <AppStoreSection />
       <ExpoSection />
       <Form.Section title="Views">
@@ -30,3 +31,9 @@ export function Diagnostics() {
     </BodyScrollView>
   );
 }
+
+const styles = StyleSheet.create(() => ({
+  contentContainer: {
+    paddingBottom: 100,
+  },
+}));

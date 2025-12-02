@@ -24,11 +24,8 @@ export function EmojiCategoryBar({
 }) {
   return (
     <ScrollView
-      // style={[styles.topbar, { backgroundColor: theme.colors.underline }]}
-      contentContainerStyle={{
-        padding: PICKER_PAD,
-        gap: 4,
-      }}
+      style={styles.topbar}
+      contentContainerStyle={styles.containerStyle}
       horizontal
       showsHorizontalScrollIndicator={false}
     >
@@ -39,12 +36,7 @@ export function EmojiCategoryBar({
             onPress={() => onPress(index)}
             style={[
               styles.categoryButton,
-              activeSection === index && {
-                // backgroundColor: theme.colors.borderNeutral,
-                borderWidth: 1,
-                borderCurve: 'continuous',
-                // borderColor: theme.colors.foregroundNeutral,
-              },
+              styles.activeSection(activeSection, index),
             ]}
           >
             {isBrandIcon(section.icon) ? (
@@ -63,7 +55,15 @@ export function EmojiCategoryBar({
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create(theme => ({
+  containerStyle: {
+    padding: PICKER_PAD,
+    gap: 4,
+  },
+  activeSection: (activeSection: number, index: number) => ({
+    borderWidth: activeSection === index ? 1 : 0,
+    borderCurve: 'continuous',
+  }),
   topbar: {
     position: 'absolute',
     top: 0,
@@ -74,6 +74,7 @@ const styles = StyleSheet.create(() => ({
     borderTopLeftRadius: PICKER_RADIUS,
     borderTopRightRadius: PICKER_RADIUS,
     borderCurve: 'continuous',
+    backgroundColor: theme.colors.accent.accent,
   },
   categoryButton: {
     height: '100%',

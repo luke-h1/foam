@@ -6,7 +6,7 @@ export function lightenColor(hex: string): string {
   const min = 60;
 
   // Convert to hex format if it's in RGB format
-  // eslint-disable-next-line no-param-reassign
+
   hex = rgbToHex(hex);
 
   // Validate the hex color format

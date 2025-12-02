@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 export function hexToRgb(
   hex: string,
 ): { r: number; g: number; b: number } | null {

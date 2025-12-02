@@ -131,19 +131,19 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   indicator: {
+    backgroundColor: '#999',
+    height: 4,
     position: 'absolute',
     width: 10,
-    height: 4,
-    backgroundColor: '#999',
   },
   leftIndicator: {
-    borderTopStartRadius: 2,
     borderBottomStartRadius: 2,
     borderCurve: 'continuous',
+    borderTopStartRadius: 2,
   },
   rightIndicator: {
-    borderTopEndRadius: 2,
     borderBottomEndRadius: 2,
     borderCurve: 'continuous',
+    borderTopEndRadius: 2,
   },
 });

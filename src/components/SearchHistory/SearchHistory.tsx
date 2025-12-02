@@ -55,7 +55,7 @@ export function SearchHistory({
       </View>
       <FlashList<string>
         data={results}
-        style={{ flex: 1 }}
+        style={styles.item}
         keyExtractor={item => item}
         showsVerticalScrollIndicator={false}
         renderItem={renderItem}

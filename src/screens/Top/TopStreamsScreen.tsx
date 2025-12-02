@@ -8,6 +8,7 @@ import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
 import { RefreshControl } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 export function TopStreamsScreen() {
   const [cursor, setCursor] = useState<string>('');
@@ -75,7 +76,7 @@ export function TopStreamsScreen() {
   return (
     <FlashList
       ref={flashListRef}
-      style={{ flex: 1 }}
+      style={styles.container}
       data={allStreams}
       renderItem={renderItem}
       keyExtractor={item => `${item.game_id}-${item.title}`}
@@ -95,3 +96,9 @@ export function TopStreamsScreen() {
     />
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

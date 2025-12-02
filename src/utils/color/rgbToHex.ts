@@ -1,6 +1,5 @@
 export function rgbToHex(rgb: string): string {
   if (rgb.startsWith('rgb(') && rgb.endsWith(')')) {
-    // eslint-disable-next-line no-param-reassign
     rgb = rgb.replace('rgb(', '').replace(')', '');
 
     const [r, g, b] = rgb.split(',').map(value => {

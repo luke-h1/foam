@@ -6,18 +6,31 @@ import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
-  UserNoticeVariantMap,
   UserNoticeTagsByVariant,
+  UserNoticeTags,
+  SubscriptionTags,
+  ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { createHitslop, clearImageCache } from '@app/utils';
+import {
+  createHitslop,
+  clearImageCache,
+  truncate,
+  replaceEmotesWithText,
+  ParsedPart,
+} from '@app/utils';
 import { findBadges } from '@app/utils/chat/findBadges';
+import {
+  createSubscriptionPart,
+  createViewerMilestonePart,
+} from '@app/utils/chat/formatSubscriptionNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { logger } from '@app/utils/logger';
 import { generateNonce } from '@app/utils/string/generateNonce';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { FlashListRef } from '@shopify/flash-list';
+import omit from 'lodash/omit';
 import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
@@ -26,17 +39,25 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { ChatAutoCompleteInput } from '../ChatAutoCompleteInput';
 import { FlashList } from '../FlashList';
 import { Icon } from '../Icon';
-import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
 import { Typography } from '../Typography';
+
 import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
+import {
+  createTestPrimeSubNotice,
+  createTestTier1SubNotice,
+  createTestTier2SubNotice,
+  createTestTier3SubNotice,
+  createTestSubNotice,
+  createTestViewerMilestoneNotice,
+} from './util/createTestUserNotices';
 
-// Union type representing all possible ChatMessageType variants
 type AnyChatMessageType =
   | ChatMessageType<'usernotice', 'viewermilestone'>
   | ChatMessageType<'usernotice', 'sub'>
@@ -52,8 +73,9 @@ interface ChatProps {
 }
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
-  const { authState } = useAuthContext();
+  const { authState, user } = useAuthContext();
   const navigation = useAppNavigation();
+  const insets = useSafeAreaInsets();
   const hasPartedRef = useRef<boolean>(false);
   const initializingRef = useRef<boolean>(false);
   const initializedChannelRef = useRef<string | null>(null);
@@ -110,10 +132,51 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     const batch = [...messageBatchRef.current];
     messageBatchRef.current = [];
 
-    // Use addMessages for batch processing instead of individual addMessage calls
-    addMessages(batch as ChatMessageType<never>[]);
+    console.log('📦 processMessageBatch:', {
+      batchSize: batch.length,
+      messages: batch.map(m => ({
+        message_id: m.message_id,
+        message_nonce: m.message_nonce,
+        sender: m.sender,
+        channel: m.channel,
+      })),
+    });
 
-    messagesRef.current = [...messagesRef.current, ...batch].slice(-500);
+    // Deduplicate messages within the batch by message_id + message_nonce
+    // If a message with the same key exists in batch, keep the newer one (with processed emotes)
+    const deduplicatedBatch = batch.reduce((acc, message) => {
+      const key = `${message.message_id}_${message.message_nonce}`;
+
+      // Check if message already exists in the batch we're building
+      const existingInBatchIndex = acc.findIndex(
+        m => `${m.message_id}_${m.message_nonce}` === key,
+      );
+
+      if (existingInBatchIndex >= 0) {
+        // Replace existing message in batch with newer one (which might have processed emotes)
+        acc[existingInBatchIndex] = message;
+      } else {
+        // New message in batch, add it
+        acc.push(message);
+      }
+
+      return acc;
+    }, [] as AnyChatMessageType[]);
+
+    console.log('📦 After deduplication:', {
+      deduplicatedSize: deduplicatedBatch.length,
+      messages: deduplicatedBatch.map(m => ({
+        message_id: m.message_id,
+        message_nonce: m.message_nonce,
+        sender: m.sender,
+      })),
+    });
+
+    addMessages(deduplicatedBatch as ChatMessageType<never>[]);
+
+    messagesRef.current = [...messagesRef.current, ...deduplicatedBatch].slice(
+      -500,
+    );
 
     // Update unread count
     if (!isAtBottomRef.current && !isScrollingToBottom) {
@@ -133,6 +196,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const handleNewMessage = useCallback(
     (newMessage: AnyChatMessageType) => {
+      console.log('📨 handleNewMessage called:', {
+        message_id: newMessage.message_id,
+        message_nonce: newMessage.message_nonce,
+        sender: newMessage.sender,
+        channel: newMessage.channel,
+        messageTypes: newMessage.message.map(m => m.type),
+        batchSize: messageBatchRef.current.length,
+      });
+
       // Add to batch
       messageBatchRef.current.push(newMessage);
 
@@ -156,10 +228,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     isConnected: isChatConnected,
     partChannel,
     sendMessage,
+    getUserState,
   } = useTwitchChat({
     channel: channelName,
     onMessage: useCallback(
       (_channel: string, tags: Record<string, string>, text: string) => {
+        console.log('📨 onMessage callback triggered:', {
+          channel: _channel,
+          text: text.substring(0, 50),
+          tags: Object.keys(tags),
+          displayName: tags['display-name'],
+          login: tags.login,
+          id: tags.id,
+        });
+
         const badgeData = parseBadges(tags.badges as unknown as string);
 
         // map irc tags to our custom format
@@ -177,6 +259,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         } as UserStateTags;
 
         const message_id = userstate.id || '0';
+        console.log('📨 Creating message with:', {
+          message_id,
+          username: userstate.username,
+          text: text.substring(0, 50),
+        });
         const replyParentMessageId = tags['reply-parent-msg-id'];
         const replyParentDisplayName = tags['reply-parent-display-name'];
         const replyParentUserLogin = tags['reply-parent-user-login'];
@@ -211,6 +298,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               username: replyParentDisplayName || '',
               message: replyParentMessageBody || '',
               replyParentUserLogin: replyParentUserLogin || '',
+              parentMessage: replaceEmotesWithText(replyParent.message),
             });
           }
         }
@@ -219,157 +307,31 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         const emoteData = getCurrentEmoteData(channelId);
 
-        const msgId = tags['msg-id'];
-
-        const isValidVariant = (
-          id?: string,
-        ): id is keyof UserNoticeVariantMap => {
-          return (
-            id !== undefined &&
-            (id === 'viewermilestone' ||
-              id === 'sub' ||
-              id === 'resub' ||
-              id === 'subgift' ||
-              id === 'anongiftpaidupgrade' ||
-              id === 'raid')
-          );
-        };
-
         // Narrow the type based on msg-id if it's a known usernotice variant
         // When msg-id is 'viewermilestone', notice_tags will be narrowed to ViewerMilestoneTags
         // When msg-id is 'sub', notice_tags will be narrowed to SubscriptionTags, etc.
         let newMessage: AnyChatMessageType;
-        if (isValidVariant(msgId)) {
-          // Base message fields shared across all variants
-          const baseMessage = {
-            userstate,
-            message: [{ type: 'text' as const, content: text.trimEnd() }],
-            badges: [],
-            channel: channelName,
-            message_id,
-            message_nonce,
-            sender: userstate.username || '',
-            parentDisplayName: tags['reply-parent-display-name'] || '',
-            replyDisplayName: tags['reply-parent-user-login'] || '',
-            replyBody: tags['reply-parent-msg-body'] || '',
-            parentColor: parentColor || undefined,
-          };
+        const baseMessage: ChatMessageType<'usernotice'> = {
+          userstate,
+          message: [{ type: 'text', content: text.trimEnd() }],
+          badges: [],
+          channel: channelName,
+          message_id,
+          message_nonce,
+          sender: userstate.username || '',
+          parentDisplayName: tags['reply-parent-display-name'] || '',
+          replyDisplayName: tags['reply-parent-user-login'] || '',
+          replyBody: tags['reply-parent-msg-body'] || '',
+          parentColor: parentColor || undefined,
+        };
+        // eslint-disable-next-line prefer-const
+        newMessage = baseMessage;
 
-          /**
-           * Narrow the msg id so we can match up notice_tags with the correct
-           */
-          switch (msgId) {
-            case 'viewermilestone': {
-              const viewerMilestoneTags =
-                tags as UserNoticeTagsByVariant<'viewermilestone'>;
+        // Always add message immediately to ensure it renders
+        // Emote processing will happen async and update if successful
+        handleNewMessage(newMessage);
 
-              const viewerMilestoneMessage: ChatMessageType<
-                'usernotice',
-                'viewermilestone'
-              > = {
-                ...baseMessage,
-                notice_tags: {
-                  'msg-id': viewerMilestoneTags['msg-id'],
-                  'msg-param-category':
-                    viewerMilestoneTags['msg-param-category'],
-                  'msg-param-copoReward':
-                    viewerMilestoneTags['msg-param-copoReward'] ?? '',
-                  'msg-param-id': viewerMilestoneTags['msg-param-id'] ?? '',
-                  'msg-param-value':
-                    viewerMilestoneTags['msg-param-value'] ?? '',
-                  'badge-info': viewerMilestoneTags['badge-info'] ?? '',
-                  'display-name': viewerMilestoneTags['display-name'] ?? '',
-                } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
-              };
-              newMessage = viewerMilestoneMessage;
-              handleNewMessage(viewerMilestoneMessage);
-              break;
-            }
-            case 'sub': {
-              const subTags = tags as UserNoticeTagsByVariant<'sub'>;
-
-              const subMessage: ChatMessageType<'usernotice', 'sub'> = {
-                ...baseMessage,
-                notice_tags: subTags,
-              };
-              newMessage = subMessage;
-              handleNewMessage(subMessage);
-              break;
-            }
-            case 'resub': {
-              const resubTags = tags as UserNoticeTagsByVariant<'resub'>;
-
-              const resubMessage: ChatMessageType<'usernotice', 'resub'> = {
-                ...baseMessage,
-                notice_tags: resubTags,
-              };
-              newMessage = resubMessage;
-              handleNewMessage(resubMessage);
-              break;
-            }
-            case 'subgift': {
-              const subGiftTags = tags as UserNoticeTagsByVariant<'subgift'>;
-
-              const subGiftMessage: ChatMessageType<'usernotice', 'subgift'> = {
-                ...baseMessage,
-                notice_tags: subGiftTags,
-              };
-              newMessage = subGiftMessage;
-              handleNewMessage(subGiftMessage);
-              break;
-            }
-            case 'anongiftpaidupgrade': {
-              const anonGiftPaidUpgradeTags =
-                tags as UserNoticeTagsByVariant<'anongiftpaidupgrade'>;
-
-              const anonGiftPaidUpgradeMessage: ChatMessageType<
-                'usernotice',
-                'anongiftpaidupgrade'
-              > = {
-                ...baseMessage,
-                notice_tags: anonGiftPaidUpgradeTags,
-              };
-              newMessage = anonGiftPaidUpgradeMessage;
-              handleNewMessage(anonGiftPaidUpgradeMessage);
-              break;
-            }
-            case 'raid': {
-              const raidTags = tags as UserNoticeTagsByVariant<'raid'>;
-
-              const raidMessage: ChatMessageType<'usernotice', 'raid'> = {
-                ...baseMessage,
-                notice_tags: raidTags,
-              };
-              newMessage = raidMessage;
-              handleNewMessage(raidMessage);
-              break;
-            }
-            default: {
-              const fallbackMessage: ChatMessageType<'usernotice'> = {
-                ...baseMessage,
-              };
-              newMessage = fallbackMessage;
-              handleNewMessage(newMessage);
-            }
-          }
-        } else {
-          const fallbackMessage: ChatMessageType<'usernotice'> = {
-            userstate,
-            message: [{ type: 'text', content: text.trimEnd() }],
-            badges: [],
-            channel: channelName,
-            message_id,
-            message_nonce,
-            sender: userstate.username || '',
-            parentDisplayName: tags['reply-parent-display-name'] || '',
-            replyDisplayName: tags['reply-parent-user-login'] || '',
-            replyBody: tags['reply-parent-msg-body'] || '',
-            parentColor: parentColor || undefined,
-          };
-          newMessage = fallbackMessage;
-          handleNewMessage(newMessage);
-        }
-
+        // Process emotes if available and update message when complete
         if (
           emoteData &&
           (emoteData.twitchGlobalEmotes.length > 0 ||
@@ -399,9 +361,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
                   parentColor: newMessage.parentColor,
                 };
 
-                addMessage(updatedMessage as ChatMessageType<'usernotice'>);
+                // Update the message with processed emotes
+                // Note: This will add a second message, but with the same message_id
+                // The FlashList keyExtractor should handle deduplication
+                handleNewMessage(updatedMessage);
               } catch (error) {
                 logger.chat.error('Error processing emotes:', error);
+                // Message already added above, so no need to add again
               }
             },
           );
@@ -413,9 +379,303 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         getCurrentEmoteData,
         emoteProcessor,
         handleNewMessage,
-        addMessage,
         messages,
       ],
+    ),
+    onUserNotice: useCallback(
+      (_channel: string, tags: UserNoticeTags, text: string) => {
+        // Handle user notice events (subs, raids, etc.)
+
+        // viewermilestone
+        /***
+         *  LOG  userNoticeTags -> {
+  "badge-info": "subscriber/62",
+  "badges": "vip/1,subscriber/60,social-sharing/1",
+  "color": "#53FFAB",
+  "display-name": "LimeTitanTV",
+  "emotes": "",
+  "flags": "",
+  "id": "889b45cc-be97-4abb-a820-b94e14a5ccae",
+  "login": "limetitantv",
+  "mod": "0",
+  "msg-id": "viewermilestone",
+  "msg-param-category": "watch-streak",
+  "msg-param-copoReward": "450",
+  "msg-param-id": "4cc8144a-73fb-4e7a-983f-a5291f2eee57",
+  "msg-param-value": "20",
+  "room-id": "146110596",
+  "subscriber": "1",
+  "system-msg": "LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
+  "tmi-sent-ts": "1763323766846",
+  "user-id": "63102149",
+  "user-type": "",
+  "vip": "1"
+}
+         */
+        const message_nonce = generateNonce();
+
+        console.log('userNoticeTags ->', JSON.stringify(tags, null, 2));
+        let newMessage: AnyChatMessageType;
+
+        const userstate: UserStateTags = {
+          ...tags,
+          username: tags['display-name'] || tags.login || '',
+          login: tags.login || tags['display-name']?.toLowerCase() || '',
+          'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',
+          'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
+          'reply-parent-display-name': tags['reply-parent-display-name'] || '',
+          'reply-parent-user-login': tags['reply-parent-user-login'] || '',
+          'user-type': tags['user-type'],
+        } as UserStateTags;
+
+        const tagId = 'id' in tags ? (tags as { id?: string }).id : undefined;
+        const baseMessage = {
+          message: [{ type: 'text' as const, content: text.trimEnd() }],
+          badges: {},
+          channel: channelName,
+          message_id: tags['msg-id'] || tagId || generateNonce(),
+          message_nonce,
+          sender: userstate.username || '',
+          parentDisplayName:
+            typeof tags['reply-parent-display-name'] === 'string'
+              ? tags['reply-parent-display-name']
+              : '',
+          replyDisplayName: tags['reply-parent-user-login'] || '',
+          replyBody: tags['reply-parent-msg-body'] || '',
+          ...omit(userstate, 'message'),
+        };
+
+        /**
+         * Narrow the msg id so we can match up notice_tags with the correct
+         */
+        switch (tags['msg-id']) {
+          case 'viewermilestone': {
+            const viewerMilestoneTags: ViewerMilestoneTags = {
+              'msg-id': 'viewermilestone' as const,
+              'msg-param-category': (tags['msg-param-category'] ??
+                'watch-streak') as 'watch-streak',
+              'msg-param-copoReward': tags['msg-param-copoReward'] ?? '',
+              'msg-param-id': tags['msg-param-id'] ?? '',
+              'msg-param-value': tags['msg-param-value'] ?? '',
+              'badge-info': tags['badge-info'] ?? '',
+              'display-name': tags['display-name'] ?? '',
+              'system-msg': tags['system-msg'] ?? '',
+              login: tags.login ?? '',
+              'user-id': tags['user-id'] ?? '',
+              'user-type': tags['user-type'] ?? '',
+              color: tags.color ?? '',
+              badges: tags.badges ?? '',
+              emotes: tags.emotes ?? '',
+              flags: tags.flags ?? '',
+              mod: tags.mod ?? '',
+            } satisfies ViewerMilestoneTags;
+
+            const viewerMilestonePart = createViewerMilestonePart(
+              viewerMilestoneTags,
+              text,
+            );
+
+            const viewerMilestoneMessage: ChatMessageType<
+              'usernotice',
+              'viewermilestone'
+            > = {
+              ...baseMessage,
+              replyDisplayName:
+                typeof tags['reply-parent-display-name'] === 'string'
+                  ? tags['reply-parent-display-name']
+                  : '',
+              replyBody: '',
+              badges: [],
+              userstate,
+              message: [viewerMilestonePart],
+              notice_tags: {
+                'msg-id': tags['msg-id'],
+                'msg-param-category': tags['msg-param-category'],
+                'msg-param-copoReward': tags['msg-param-copoReward'] ?? '',
+                'msg-param-id': tags['msg-param-id'] ?? '',
+                'msg-param-value': tags['msg-param-value'] ?? '',
+                'badge-info': tags['badge-info'] ?? '',
+                'display-name': tags['display-name'] ?? '',
+                'system-msg': tags['system-msg'] ?? '',
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+              } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
+            };
+            newMessage = viewerMilestoneMessage;
+            handleNewMessage(viewerMilestoneMessage);
+            break;
+          }
+
+          case 'resub': {
+            const resubTags = tags;
+            logger.main.info('resubTags', JSON.stringify(resubTags, null, 2));
+
+            const subscriptionPart = createSubscriptionPart(resubTags, text);
+
+            const resubMessage: ChatMessageType<'usernotice', 'resub'> = {
+              ...baseMessage,
+              badges: [],
+              message: [subscriptionPart],
+              userstate,
+              notice_tags: {
+                ...resubTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            console.log('🔔 Resub message created:', {
+              message_id: resubMessage.message_id,
+              hasNoticeTags: !!resubMessage.notice_tags,
+              messageTypes: resubMessage.message.map(m => m.type),
+              noticeTagsKeys: resubMessage.notice_tags
+                ? Object.keys(resubMessage.notice_tags)
+                : [],
+            });
+            newMessage = resubMessage;
+            handleNewMessage(resubMessage);
+            break;
+          }
+
+          case 'sub': {
+            console.log('sub hit', JSON.stringify(tags, null, 2));
+            const subTags = tags;
+
+            const subscriptionPart = createSubscriptionPart(subTags, text);
+
+            const subMessage: ChatMessageType<'usernotice', 'sub'> = {
+              ...baseMessage,
+              notice_tags: subTags,
+              message_nonce: generateNonce(),
+              badges: [],
+              message: [subscriptionPart],
+              userstate,
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = subMessage;
+            handleNewMessage(subMessage);
+            break;
+          }
+          case 'subgift': {
+            const subGiftTags = tags;
+
+            const subscriptionPart = createSubscriptionPart(subGiftTags, text);
+
+            const subGiftMessage: ChatMessageType<'usernotice', 'subgift'> = {
+              ...baseMessage,
+              badges: [],
+              message: [subscriptionPart],
+              userstate,
+              notice_tags: {
+                ...subGiftTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = subGiftMessage;
+            handleNewMessage(subGiftMessage);
+            break;
+          }
+          case 'anongiftpaidupgrade': {
+            const anonGiftPaidUpgradeTags = tags;
+
+            const subscriptionPart = createSubscriptionPart(
+              anonGiftPaidUpgradeTags,
+              text,
+            );
+
+            const anonGiftPaidUpgradeMessage: ChatMessageType<
+              'usernotice',
+              'anongiftpaidupgrade'
+            > = {
+              ...baseMessage,
+              badges: [],
+              message: [subscriptionPart],
+              userstate,
+              notice_tags: {
+                ...anonGiftPaidUpgradeTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = anonGiftPaidUpgradeMessage;
+            handleNewMessage(anonGiftPaidUpgradeMessage);
+            break;
+          }
+          case 'raid': {
+            const raidTags = tags;
+
+            const raidMessage: ChatMessageType<'usernotice', 'raid'> = {
+              ...baseMessage,
+              badges: [],
+              message: [],
+              userstate,
+              notice_tags: {
+                ...raidTags,
+                sender: '',
+                replyDisplayName: '',
+                replyBody: '',
+                channel: '',
+                parentDisplayName: '',
+              },
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = raidMessage;
+            handleNewMessage(raidMessage);
+            break;
+          }
+          default: {
+            const fallbackMessage: ChatMessageType<'usernotice'> = {
+              ...baseMessage,
+              userstate,
+              badges: [],
+              message: [],
+              sender: '',
+              replyDisplayName: '',
+              replyBody: '',
+              channel: '',
+              parentDisplayName: '',
+            };
+            newMessage = fallbackMessage;
+            handleNewMessage(newMessage);
+          }
+        }
+      },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
     ),
     onClearChat: useCallback(() => {
       clearMessages();
@@ -643,7 +903,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }, [navigation, channelName, partChannel, clearMessages]);
 
   const [_connectionError] = useState<string | null>(null);
-  const [showEmotePicker, setShowEmotePicker] = useState<boolean>(false);
 
   const [messageInput, setMessageInput] = useState<string>('');
 
@@ -652,6 +911,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     username: string;
     message: string;
     replyParentUserLogin: string;
+    parentMessage: string;
   } | null>(null);
 
   const [, setIsInputFocused] = useState<boolean>(false);
@@ -830,11 +1090,120 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       return;
     }
 
+    const messageText = replyTo
+      ? `@${replyTo.username} ${messageInput}`
+      : messageInput;
+
+    // Get current user state (color, badges, etc.)
+    const currentUserState = getUserState();
+    const badgeData = parseBadges(
+      (currentUserState.badges as unknown as string) || '',
+    );
+
+    const optimisticUserstate: UserStateTags = {
+      ...currentUserState,
+      'display-name':
+        user?.display_name || currentUserState['display-name'] || '',
+      login: user?.login || currentUserState.login || '',
+      username:
+        user?.display_name ||
+        user?.login ||
+        currentUserState['display-name'] ||
+        currentUserState.login ||
+        '',
+      'badges-raw': badgeData['badges-raw'],
+      badges: badgeData.badges,
+      // Generate color if not available
+      color:
+        currentUserState.color ||
+        (user?.login ? generateRandomTwitchColor(user.login) : undefined),
+      'reply-parent-msg-id': replyTo?.messageId || '',
+      'reply-parent-msg-body': replyTo?.message || '',
+      'reply-parent-display-name': replyTo?.username || '',
+      'reply-parent-user-login': replyTo?.replyParentUserLogin || '',
+    } as UserStateTags;
+
+    const emoteData = getCurrentEmoteData(channelId);
+    const senderName = user?.display_name || user?.login || '';
+
+    const userBadges = emoteData
+      ? findBadges({
+          userstate: optimisticUserstate,
+          chatterinoBadges: emoteData.chatterinoBadges,
+          chatUsers: [], // need to populate from ctx
+          ffzChannelBadges: emoteData.ffzChannelBadges,
+          ffzGlobalBadges: emoteData.ffzGlobalBadges,
+          twitchChannelBadges: emoteData.twitchChannelBadges,
+          twitchGlobalBadges: emoteData.twitchGlobalBadges,
+        })
+      : [];
+
+    // Create optimistic message immediately (without emotes) so it renders right away (as text)
+    const optimisticMessageId = generateNonce();
+    const optimisticNonce = generateNonce();
+    const optimisticMessage: AnyChatMessageType = {
+      userstate: optimisticUserstate,
+      message: [{ type: 'text', content: messageText.trimEnd() }],
+      badges: userBadges,
+      channel: channelName,
+      message_id: optimisticMessageId,
+      message_nonce: optimisticNonce,
+      sender: senderName,
+      parentDisplayName: replyTo?.username || '',
+      replyDisplayName: replyTo?.replyParentUserLogin || '',
+      replyBody: replyTo?.message || '',
+      parentColor: undefined,
+    };
+
+    console.log('📤 Sending message optimistically:', {
+      message_id: optimisticMessageId,
+      message_nonce: optimisticNonce,
+      sender: optimisticMessage.sender,
+      text: messageText.substring(0, 50),
+      badgesCount: userBadges.length,
+      color: optimisticUserstate.color,
+    });
+
+    handleNewMessage(optimisticMessage);
+
+    // Process emotes if available and update message when complete
+    if (
+      emoteData &&
+      (emoteData.twitchGlobalEmotes.length > 0 ||
+        emoteData.sevenTvGlobalEmotes.length > 0 ||
+        emoteData.bttvGlobalEmotes.length > 0 ||
+        emoteData.ffzGlobalEmotes.length > 0)
+    ) {
+      emoteProcessor.processEmotes(
+        messageText.trimEnd(),
+        optimisticUserstate,
+        replacedMessage => {
+          try {
+            // Update the optimistic message with processed emotes
+            const updatedMessage: AnyChatMessageType = {
+              ...optimisticMessage,
+              message: replacedMessage,
+            };
+
+            // Replace the existing message with the emote-processed one
+            handleNewMessage(updatedMessage);
+          } catch (error) {
+            logger.chat.error(
+              'Error processing emotes for optimistic message:',
+              error,
+            );
+            // If emote processing fails, the original message is already added.
+          }
+        },
+      );
+    }
+
+    // Then send via IRC (it will come back and we'll deduplicate)
     if (replyTo) {
       try {
         sendMessage(
           channelName,
-          `@${replyTo.username} ${messageInput}`,
+          messageText,
           replyTo.messageId,
           replyTo.username,
           replyTo.message,
@@ -843,12 +1212,24 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         logger.chat.error('issue sending reply', error);
       }
     } else {
-      sendMessage(channelName, messageInput);
+      sendMessage(channelName, messageText);
     }
 
     setMessageInput('');
     setReplyTo(null);
-  }, [channelName, messageInput, replyTo, sendMessage, isChatConnected]);
+  }, [
+    channelName,
+    messageInput,
+    replyTo,
+    sendMessage,
+    isChatConnected,
+    user,
+    handleNewMessage,
+    getUserState,
+    getCurrentEmoteData,
+    channelId,
+    emoteProcessor,
+  ]);
 
   const inputContainerRef = useRef<View>(null);
   const [_inputContainerHeight, setInputContainerHeight] = useState(0);
@@ -861,16 +1242,25 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, []);
 
-  const handleReply = useCallback((message: ChatMessageType<'usernotice'>) => {
-    setReplyTo({
-      messageId: message.message_id,
-      username: message.sender,
-      message: message.message
-        .map(part => (part as { content: string }).content)
-        .join(''),
-      replyParentUserLogin: message.userstate.username || '',
-    });
-  }, []);
+  const handleReply = useCallback(
+    (message: ChatMessageType<'usernotice'>) => {
+      const messageText = replaceEmotesWithText(message.message);
+      const parentMessageText = messages.find(
+        m => m.message_id === message.message_id,
+      );
+
+      setReplyTo({
+        messageId: message.message_id,
+        username: message.sender,
+        message: messageText,
+        replyParentUserLogin: message.userstate.username || '',
+        parentMessage: replaceEmotesWithText(
+          parentMessageText?.message as ParsedPart[],
+        ),
+      });
+    },
+    [messages],
+  );
 
   const renderItem = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
@@ -889,21 +1279,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onReply={handleReply}
         replyDisplayName={item.replyDisplayName}
         replyBody={item.replyBody}
+        allMessages={messages}
+        // @ts-expect-error ignore for time being
+        notice_tags={
+          'notice_tags' in item && item.notice_tags
+            ? item.notice_tags
+            : undefined
+        }
       />
     ),
-    [handleReply],
+    [handleReply, messages],
   );
 
   const emojiPickerRef = useRef<BottomSheetModal>(null);
-
-  const handleEmojiPickerToggle = useCallback(() => {
-    if (showEmotePicker) {
-      emojiPickerRef.current?.dismiss();
-    } else {
-      emojiPickerRef.current?.present();
-    }
-    setShowEmotePicker(!showEmotePicker);
-  }, [showEmotePicker]);
+  const debugModalRef = useRef<BottomSheetModal>(null);
 
   const handleEmojiSelect = useCallback((item: PickerItem) => {
     /**
@@ -918,8 +1307,148 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       setMessageInput(prev => `${prev}${' '}${item.name} `);
     }
     emojiPickerRef.current?.dismiss();
-    setShowEmotePicker(false);
   }, []);
+
+  const handleTestMessageSelect = useCallback(
+    (option: string) => {
+      // Determine message type and create test message
+      let testMessage: AnyChatMessageType;
+      let msgId: string;
+
+      switch (option) {
+        case 'Prime Sub':
+          testMessage = createTestPrimeSubNotice(1);
+          msgId = 'sub';
+          break;
+        case 'Tier 1 Sub':
+          testMessage = createTestTier1SubNotice(1);
+          msgId = 'sub';
+          break;
+        case 'Tier 2 Sub':
+          testMessage = createTestTier2SubNotice(1);
+          msgId = 'sub';
+          break;
+        case 'Tier 3 Sub':
+          testMessage = createTestTier3SubNotice(1);
+          msgId = 'sub';
+          break;
+        case 'Default Sub':
+          testMessage = createTestSubNotice();
+          msgId = 'sub';
+          break;
+        case 'Viewer Milestone':
+          testMessage = createTestViewerMilestoneNotice();
+          msgId = 'viewermilestone';
+          break;
+        default:
+          testMessage = createTestSubNotice();
+          msgId = 'sub';
+      }
+
+      // Create message part based on message type
+      let updatedMessage: AnyChatMessageType;
+
+      switch (msgId) {
+        case 'viewermilestone': {
+          // Handle viewermilestone messages
+          const viewerMilestoneTestMessage = testMessage as ChatMessageType<
+            'usernotice',
+            'viewermilestone'
+          >;
+          if (!viewerMilestoneTestMessage.notice_tags) {
+            throw new Error(
+              'Viewer milestone test message must have notice_tags',
+            );
+          }
+          const baseTags = viewerMilestoneTestMessage.notice_tags;
+          const viewerMilestoneTags = {
+            'msg-id': 'viewermilestone' as const,
+            'msg-param-category': (baseTags?.['msg-param-category'] ??
+              'watch-streak') as 'watch-streak',
+            'msg-param-copoReward': baseTags?.['msg-param-copoReward'] ?? '100',
+            'msg-param-id': baseTags?.['msg-param-id'] ?? '',
+            'msg-param-value': baseTags?.['msg-param-value'] ?? '10',
+            'room-id': channelId,
+            'display-name': baseTags?.['display-name'] ?? '',
+            'user-id': baseTags?.['user-id'] ?? '',
+            'user-type': baseTags?.['user-type'] ?? '',
+            color: baseTags?.color ?? '',
+            badges: baseTags?.badges ?? '',
+            emotes: baseTags?.emotes ?? '',
+            flags: baseTags?.flags ?? '',
+            mod: baseTags?.mod ?? '',
+          } satisfies ViewerMilestoneTags;
+          const viewerMilestonePart = createViewerMilestonePart(
+            viewerMilestoneTags,
+            '',
+          );
+
+          updatedMessage = {
+            ...viewerMilestoneTestMessage,
+            channel: channelName,
+            notice_tags: viewerMilestoneTags,
+            message: [viewerMilestonePart] as ParsedPart[],
+            userstate: {
+              ...viewerMilestoneTestMessage.userstate,
+              username: viewerMilestoneTestMessage.sender,
+              login: viewerMilestoneTestMessage.sender.toLowerCase(),
+              'display-name': viewerMilestoneTestMessage.sender,
+            },
+          };
+          break;
+        }
+
+        case 'sub':
+        case 'resub':
+        case 'subgift':
+        case 'anongiftpaidupgrade':
+        default: {
+          // Handle subscription types (sub, resub, subgift, etc.)
+          const subscriptionTestMessage = testMessage as ChatMessageType<
+            'usernotice',
+            'sub'
+          >;
+          const subscriptionTags: SubscriptionTags =
+            subscriptionTestMessage.notice_tags
+              ? {
+                  ...subscriptionTestMessage.notice_tags,
+                  'room-id': channelId,
+                }
+              : {
+                  'msg-id': 'sub',
+                  'msg-param-cumulative-months': '1',
+                  'msg-param-should-share-streak': '1',
+                  'msg-param-streak-months': '1',
+                  'msg-param-sub-plan': 'Prime',
+                  'msg-param-sub-plan-name': 'Prime',
+                  'room-id': channelId,
+                  'display-name': subscriptionTestMessage.sender,
+                  login: subscriptionTestMessage.sender.toLowerCase(),
+                  username: subscriptionTestMessage.sender,
+                };
+          const subscriptionPart = createSubscriptionPart(subscriptionTags, '');
+
+          updatedMessage = {
+            ...subscriptionTestMessage,
+            channel: channelName,
+            notice_tags: subscriptionTags,
+            message: [subscriptionPart],
+            userstate: {
+              ...subscriptionTestMessage.userstate,
+              username: subscriptionTestMessage.sender,
+              login: subscriptionTestMessage.sender.toLowerCase(),
+              'display-name': subscriptionTestMessage.sender,
+            },
+          };
+          break;
+        }
+      }
+
+      handleNewMessage(updatedMessage);
+      debugModalRef.current?.dismiss();
+    },
+    [channelName, channelId, handleNewMessage],
+  );
 
   const handleClearImageCache = useCallback(async () => {
     try {
@@ -929,6 +1458,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       logger.chat.error('Failed to clear image cache:', error);
     }
   }, [channelId]);
+
+  // Deduplicate messages by message_id + message_nonce
+  // Keep the last occurrence (which would be the updated one with processed emotes)
+  const deduplicatedMessages = useMemo(() => {
+    const messageMap = new Map<string, AnyChatMessageType>();
+
+    messages.forEach(message => {
+      const key = `${message.message_id}_${message.message_nonce}`;
+      // Always keep the latest occurrence (for updates with processed emotes)
+      messageMap.set(key, message);
+    });
+
+    return Array.from(messageMap.values());
+  }, [messages]);
 
   // Show skeleton only if loading and not navigating away
   // This prevents the skeleton from blocking navigation
@@ -941,44 +1484,34 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }
 
   return (
-    <SafeAreaViewFixed style={styles.safeArea}>
+    <View style={[styles.wrapper, { paddingTop: insets.top }]}>
       <Typography style={styles.header}>CHAT</Typography>
       <KeyboardAvoidingView
         behavior="padding"
-        style={{ flex: 1 }}
+        style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <View
-          style={[
-            styles.chatContainer,
-            {
-              flex: 1,
-              width: '100%',
-              overflow: 'hidden',
-              maxWidth: '100%',
-            },
-          ]}
-        >
+        <View style={styles.chatContainer}>
           <FlashList
-            data={messages}
+            data={deduplicatedMessages}
             ref={flashListRef}
             keyExtractor={item => {
-              const baseKey = `${item.message_id}_${item.message_nonce}`;
-              const additionalUniqueness = `${item.sender}_${item.channel}`;
-              return `${baseKey}_${additionalUniqueness}`;
+              // Use message_id + message_nonce as the key
+              // These should be unique per message, allowing FlashList to update
+              // existing items when we add a message with the same key (e.g., after emote processing)
+              return `${item.message_id}_${item.message_nonce}`;
             }}
             onScroll={handleScroll}
             onContentSizeChange={handleContentSizeChange}
             renderItem={renderItem}
             removeClippedSubviews
-            drawDistance={500} // Increased for better performance
+            drawDistance={500}
             overrideItemLayout={(layout, item) => {
               const messageLength = item.message?.length || 0;
               const estimatedHeight = Math.max(
                 60,
                 Math.min(120, 60 + messageLength * 0.5),
               );
-              // eslint-disable-next-line no-param-reassign
               layout.span = estimatedHeight;
             }}
           />
@@ -996,14 +1529,21 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         <View
           ref={inputContainerRef}
-          style={[styles.inputContainer, { zIndex: 2 }]}
+          style={styles.inputContainer}
           onLayout={measureInputContainer}
         >
           {replyTo && (
             <View style={styles.replyContainer}>
-              <Typography style={styles.replyText}>
-                Replying to {replyTo.username}
-              </Typography>
+              <View style={styles.replyContent}>
+                <Typography style={styles.replyText}>
+                  Replying to {replyTo.username}
+                </Typography>
+                {replyTo.message && (
+                  <Typography style={styles.replyMessageText} numberOfLines={1}>
+                    {truncate(replyTo.message.trim() || replyTo.message, 50)}
+                  </Typography>
+                )}
+              </View>
               <Button
                 style={styles.cancelReplyButton}
                 onPress={() => setReplyTo(null)}
@@ -1012,12 +1552,21 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               </Button>
             </View>
           )}
-          <Button
+          {/* <Button
             style={styles.sendButton}
             onPress={handleEmojiPickerToggle}
             hitSlop={createHitslop(40)}
           >
             <Icon icon="smile" size={24} />
+          </Button> */}
+          <Button
+            style={styles.sendButton}
+            onPress={() => {
+              debugModalRef.current?.present();
+            }}
+            hitSlop={createHitslop(40)}
+          >
+            <Icon icon="zap" size={24} />
           </Button>
           <ChatAutoCompleteInput
             value={messageInput}
@@ -1064,16 +1613,114 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onItemPress={handleEmojiSelect}
           />
         )}
+        <BottomSheetModal
+          ref={debugModalRef}
+          backgroundStyle={styles.debugModalBackground}
+          handleIndicatorStyle={styles.debugModalHandle}
+          enablePanDownToClose
+          snapPoints={['50%']}
+        >
+          <BottomSheetView style={styles.debugModalContent}>
+            <View style={styles.debugModalHeader}>
+              <Typography fontWeight="bold" style={styles.debugModalTitle}>
+                Debug Test Messages
+              </Typography>
+            </View>
+            <Button
+              onPress={() => {
+                handleTestMessageSelect('Prime Sub');
+                debugModalRef.current?.dismiss();
+              }}
+              style={styles.debugModalItem}
+            >
+              <Typography>Prime Sub</Typography>
+            </Button>
+            <Button
+              onPress={() => {
+                handleTestMessageSelect('Tier 1 Sub');
+                debugModalRef.current?.dismiss();
+              }}
+              style={styles.debugModalItem}
+            >
+              <Typography>Tier 1 Sub</Typography>
+            </Button>
+            <Button
+              onPress={() => {
+                handleTestMessageSelect('Tier 2 Sub');
+                debugModalRef.current?.dismiss();
+              }}
+              style={styles.debugModalItem}
+            >
+              <Typography>Tier 2 Sub</Typography>
+            </Button>
+            <Button
+              onPress={() => {
+                handleTestMessageSelect('Tier 3 Sub');
+                debugModalRef.current?.dismiss();
+              }}
+              style={styles.debugModalItem}
+            >
+              <Typography>Tier 3 Sub</Typography>
+            </Button>
+            <Button
+              onPress={() => {
+                handleTestMessageSelect('Default Sub');
+                debugModalRef.current?.dismiss();
+              }}
+              style={styles.debugModalItem}
+            >
+              <Typography>Default Sub</Typography>
+            </Button>
+            <Button
+              onPress={() => {
+                handleTestMessageSelect('Viewer Milestone');
+                debugModalRef.current?.dismiss();
+              }}
+              style={styles.debugModalItem}
+            >
+              <Typography>Viewer Milestone</Typography>
+            </Button>
+          </BottomSheetView>
+        </BottomSheetModal>
       </KeyboardAvoidingView>
-    </SafeAreaViewFixed>
+    </View>
   );
 });
 
 Chat.displayName = 'Chat';
 
 const styles = StyleSheet.create(theme => ({
-  safeArea: {
+  wrapper: {
     flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  debugModalBackground: {
+    backgroundColor: theme.colors.black.bgAlpha,
+  },
+  debugModalHandle: {
+    backgroundColor: theme.colors.gray.accent,
+    width: 36,
+    height: 4,
+    borderRadius: theme.radii.full,
+  },
+  debugModalContent: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.spacing['2xl'],
+  },
+  debugModalHeader: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  debugModalTitle: {
+    fontSize: theme.font.fontSize.lg,
+  },
+  debugModalItem: {
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.xs,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -1082,6 +1729,7 @@ const styles = StyleSheet.create(theme => ({
     borderTopColor: '#2d2d2d',
     position: 'relative',
     borderCurve: 'continuous',
+    zIndex: 2,
   },
   input: {
     flex: 1,
@@ -1104,6 +1752,29 @@ const styles = StyleSheet.create(theme => ({
     width: theme.spacing['2xl'],
     marginRight: theme.spacing.xs,
   },
+  debugButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: theme.spacing['2xl'],
+    marginRight: theme.spacing.xs,
+  },
+  dropdownContent: {
+    minWidth: 180,
+    backgroundColor: '#1f1f1f',
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.xs,
+    borderWidth: 1,
+    borderColor: '#2d2d2d',
+    // eslint-disable-next-line refined/prefer-box-shadow
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
   container: {
     flex: 1,
     justifyContent: 'flex-start',
@@ -1115,6 +1786,9 @@ const styles = StyleSheet.create(theme => ({
   },
   chatContainer: {
     flex: 1,
+    width: '100%',
+    overflow: 'hidden',
+    maxWidth: '100%',
   },
   messageContainer: {
     flexDirection: 'row',
@@ -1146,8 +1820,17 @@ const styles = StyleSheet.create(theme => ({
     borderTopWidth: 1,
     borderCurve: 'continuous',
   },
-  replyText: {
+  replyContent: {
     flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  replyText: {
+    // color: theme.colors.text,
+  },
+  replyMessageText: {
+    marginTop: theme.spacing.xs / 2,
+    opacity: 0.7,
+    fontSize: theme.font.fontSize.xs,
     // color: theme.colors.text,
   },
   cancelReplyButton: {

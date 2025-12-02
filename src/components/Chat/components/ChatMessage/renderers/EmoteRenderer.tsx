@@ -2,6 +2,7 @@ import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
 import { calculateAspectRatio, ParsedPart } from '@app/utils';
+import { StyleSheet } from 'react-native-unistyles';
 
 type PartVariant = ParsedPart<'emote'>;
 
@@ -23,7 +24,7 @@ export const EmoteRenderer = ({
   if (!part.url) {
     return (
       <Button onLongPress={() => handleEmotePress(part)}>
-        <Typography style={{ width, height, textAlign: 'center' }}>
+        <Typography style={styles.name(width, height)}>
           {part.name || '?'}
         </Typography>
       </Button>
@@ -49,3 +50,11 @@ export const EmoteRenderer = ({
     </Button>
   );
 };
+
+const styles = StyleSheet.create({
+  name: (width: number, height: number) => ({
+    width,
+    height,
+    textAlign: 'center',
+  }),
+});
