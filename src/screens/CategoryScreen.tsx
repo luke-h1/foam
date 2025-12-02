@@ -8,7 +8,7 @@ import {
 import { useAppNavigation } from '@app/hooks';
 import { AppStackParamList } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
-import { TwitchStream, twitchService } from '@app/services/twitch-service';
+import { TwitchStream } from '@app/services/twitch-service';
 import {
   formatViewCount,
   getNextPageParam,
@@ -25,7 +25,6 @@ export const CategoryScreen: FC<
   StackScreenProps<AppStackParamList, 'Category'>
 > = ({ route: { params } }) => {
   const { id } = params;
-  const [previousCursor, setPreviousCursor] = useState<string>('');
   const [cursor, setCursor] = useState<string>('');
   const flashListRef = useRef(null);
   const navigation = useAppNavigation();
@@ -46,20 +45,19 @@ export const CategoryScreen: FC<
     isLoading: isLoadingStreams,
     isError: isErrorStreams,
   } = useInfiniteQuery({
-    queryFn: ({ pageParam }) =>
-      twitchService.getStreamsByCategory(id, pageParam),
-    queryKey: ['Category', id],
+    initialPageParam: cursor,
     getNextPageParam,
     getPreviousPageParam,
-    initialPageParam: previousCursor,
+    ...twitchQueries.getStreamsByCategory(id),
   });
 
   const handleLoadMore = useCallback(async () => {
-    setPreviousCursor(cursor);
-    const nextCursor =
-      streams?.pages[streams.pages.length - 1]?.pagination.cursor;
-    setCursor(nextCursor as string);
-    await fetchNextPage();
+    if (hasNextPage) {
+      const nextCursor =
+        streams?.pages[streams.pages.length - 1]?.pagination.cursor;
+      setCursor(nextCursor as string);
+      await fetchNextPage();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasNextPage]);
 

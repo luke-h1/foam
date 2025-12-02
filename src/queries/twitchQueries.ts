@@ -59,13 +59,7 @@ export const twitchQueries = {
       queryFn: () => twitchService.searchChannels(query),
     };
   },
-  getTopStreams(cursor?: string): UseQueryOptions<PaginatedList<TwitchStream>> {
-    return {
-      queryKey: ['topStreams', cursor],
-      queryFn: () => twitchService.getTopStreams(cursor),
-    };
-  },
-  getTopStreamsInfinite(): {
+  getTopStreams(): {
     queryKey: string[];
     queryFn: ({
       pageParam,
@@ -74,7 +68,7 @@ export const twitchQueries = {
     }) => Promise<PaginatedList<TwitchStream>>;
   } {
     return {
-      queryKey: ['topStreamsInfinite'],
+      queryKey: ['topStreams'],
       queryFn: ({ pageParam }: { pageParam?: string }) =>
         twitchService.getTopStreams(pageParam),
     };
@@ -85,13 +79,18 @@ export const twitchQueries = {
       queryFn: () => twitchService.getCategory(id),
     };
   },
-  getStreamsByCategory(
-    id: string,
-    cursor?: string,
-  ): UseQueryOptions<PaginatedList<TwitchStream>> {
+  getStreamsByCategory(id: string): {
+    queryKey: string[];
+    queryFn: ({
+      pageParam,
+    }: {
+      pageParam?: string;
+    }) => Promise<PaginatedList<TwitchStream>>;
+  } {
     return {
-      queryKey: ['streamsByCategory', id, cursor],
-      queryFn: () => twitchService.getStreamsByCategory(id, cursor),
+      queryKey: ['streamsByCategory', id],
+      queryFn: ({ pageParam }: { pageParam?: string }) =>
+        twitchService.getStreamsByCategory(id, pageParam),
     };
   },
 } as const;

@@ -26,7 +26,7 @@ export function TopStreamsScreen() {
     initialPageParam: cursor,
     getNextPageParam,
     getPreviousPageParam,
-    ...twitchQueries.getTopStreamsInfinite(),
+    ...twitchQueries.getTopStreams(),
   });
 
   const handleLoadMore = useCallback(async () => {
