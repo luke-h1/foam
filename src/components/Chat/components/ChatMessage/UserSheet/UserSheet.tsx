@@ -1,6 +1,6 @@
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { twitchService } from '@app/services/twitch-service';
+import { twitchQueries } from '@app/queries';
 import { formatDate } from '@app/utils';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQuery } from '@tanstack/react-query';
@@ -17,11 +17,9 @@ export const UserSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
 
   const snapPoints = useMemo(() => ['25%', '50%', '60%'], []);
 
-  const { data, isPending, error } = useQuery({
-    queryKey: ['user', userId],
-    queryFn: () => twitchService.getUser(userId),
-    enabled: !!userId, // Only fetch when userId is provided
-  });
+  const { data, isPending, error } = useQuery(
+    twitchQueries.getUser(userId as string),
+  );
 
   /**
    * Todo fetch badges
