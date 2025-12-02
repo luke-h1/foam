@@ -48,6 +48,18 @@ export default function FollowingScreen() {
     return <LiveStreamCard stream={item} />;
   }, []);
 
+  const renderHeader = useCallback(
+    () => (
+      <ScreenHeader
+        title="Following"
+        subtitle={`${streams?.length ?? 0} channel${streams?.length !== 1 ? 's' : ''} live`}
+        back={false}
+        size="large"
+      />
+    ),
+    [streams?.length],
+  );
+
   if (refreshing || isLoading) {
     return (
       <>
@@ -76,17 +88,6 @@ export default function FollowingScreen() {
       />
     );
   }
-
-  const liveCount = streams?.length ?? 0;
-
-  const renderHeader = () => (
-    <ScreenHeader
-      title="Following"
-      subtitle={`${liveCount} channel${liveCount !== 1 ? 's' : ''} live`}
-      back={false}
-      size="large"
-    />
-  );
 
   return (
     <View style={styles.container}>

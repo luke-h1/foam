@@ -297,7 +297,13 @@ export function Screen(props: ScreenProps) {
   const $containerInsets = useSafeAreaInsetsStyle(safeAreaEdges);
 
   return (
-    <View style={[$containerStyle, $containerInsets]}>
+    <View
+      style={[
+        $containerStyle,
+        { backgroundColor: theme.colors.gray.bg },
+        $containerInsets,
+      ]}
+    >
       <SystemBars
         style={systemBarStyle || (theme.name === 'dark' ? 'light' : 'dark')}
         {...SystemBarsProps}
@@ -340,8 +346,9 @@ const $innerContainerFixed: ViewStyle = {
   flex: 1,
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(theme => ({
   screen: {
     flex: 1,
+    backgroundColor: theme.colors.gray.bg,
   },
-});
+}));

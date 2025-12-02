@@ -1,5 +1,6 @@
-import { Slider, SafeAreaViewFixed } from '@app/components';
+import { ScreenHeader, Slider } from '@app/components';
 import { Menu, MenuItem } from '@app/components/Menu';
+import { Screen } from '@app/components/Screen';
 import { Preferences, usePreferences } from '@app/store';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -8,8 +9,15 @@ export function SettingsAppearanceScreen() {
   const { fontScaling, systemScaling, theme, update } = usePreferences();
 
   return (
-    <SafeAreaViewFixed avoidTabBar style={styles.flex}>
+    <Screen safeAreaEdges={[]} preset="fixed">
       <Menu
+        header={
+          <ScreenHeader
+            title="Appearance"
+            subtitle="Theme, colors & display"
+            size="medium"
+          />
+        }
         items={[
           'Theme',
           {
@@ -30,7 +38,7 @@ export function SettingsAppearanceScreen() {
             value: theme,
           },
           null,
-          'Font',
+          'Font Size',
           {
             key: 'fontScaling',
             value: fontScaling,
@@ -102,7 +110,7 @@ export function SettingsAppearanceScreen() {
           } satisfies MenuItem;
         })}
       />
-    </SafeAreaViewFixed>
+    </Screen>
   );
 }
 
@@ -115,8 +123,5 @@ const styles = StyleSheet.create(theme => ({
   },
   slider: {
     marginHorizontal: theme.spacing.lg,
-  },
-  flex: {
-    flex: 1,
   },
 }));
