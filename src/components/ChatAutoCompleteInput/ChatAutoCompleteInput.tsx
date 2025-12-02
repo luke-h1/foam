@@ -543,6 +543,7 @@ export const ChatAutoCompleteInput = forwardRef<
               pointerEvents="box-none"
             >
               <FlashList
+                // eslint-disable-next-line react-native/no-inline-styles
                 style={{ height: 280 }}
                 keyboardShouldPersistTaps="handled"
                 data={filteredEmotes}

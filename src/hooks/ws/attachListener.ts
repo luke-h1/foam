@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable no-undef */
 import { RefObject } from 'react';
 import {

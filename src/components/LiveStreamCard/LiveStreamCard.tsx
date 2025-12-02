@@ -30,6 +30,7 @@ export function LiveStreamCard({ stream }: Props) {
             source={stream?.thumbnail_url
               .replace('{width}', '1920')
               .replace('{height}', '1080')}
+            // eslint-disable-next-line react-native/no-inline-styles
             style={{
               width: 150,
               height: 100,

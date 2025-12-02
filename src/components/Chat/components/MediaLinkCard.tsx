@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import { BrandIcon } from '@app/components/BrandIcon';
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';

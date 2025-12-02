@@ -1,37 +1,21 @@
-import { ChatMessageType } from '@app/context';
+import {
+  UserNoticeTags,
+  ViewerMilestoneTags,
+} from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { generateNonce } from '@app/utils/string/generateNonce';
-
-interface FormatSubscriptionNoticeParams {
-  channel: string;
-  tags: Record<string, string>;
-  message?: string;
-}
 
 /**
- * Formats a USERNOTICE message (subscription events) into a ChatMessageType
+ * Creates a subscription part from notice_tags
  */
-export function formatSubscriptionNotice({
-  channel,
-  tags,
-  message,
-}: FormatSubscriptionNoticeParams): ChatMessageType<never, never> {
-  const msgId = tags['msg-id'] || '';
-  const displayName = tags['display-name'] || tags.login || 'Anonymous';
-  const months = tags['msg-param-months']
-    ? parseInt(tags['msg-param-months'], 10)
-    : undefined;
-  const plan = tags['msg-param-sub-plan'] || '';
-  const recipientDisplayName = tags['msg-param-recipient-display-name'];
-  const recipientId = tags['msg-param-recipient-id'];
-  const giftMonths = tags['msg-param-gift-months']
-    ? parseInt(tags['msg-param-gift-months'], 10)
-    : undefined;
-  const gifterDisplayName = tags['msg-param-gifter-display-name'];
-  const gifterId = tags['msg-param-gifter-id'];
-  const viewerCount = tags['msg-param-viewer-count']
-    ? parseInt(tags['msg-param-viewer-count'], 10)
-    : undefined;
+export function createSubscriptionPart(
+  tags: UserNoticeTags,
+  messageText?: string,
+): ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'> {
+  const msgId = typeof tags['msg-id'] === 'string' ? tags['msg-id'] : '';
+  const displayName =
+    (typeof tags['display-name'] === 'string' ? tags['display-name'] : '') ||
+    (typeof tags.login === 'string' ? tags.login : '') ||
+    'Anonymous';
 
   const getPlanName = (planCode: string): string | undefined => {
     switch (planCode) {
@@ -48,43 +32,201 @@ export function formatSubscriptionNotice({
     }
   };
 
-  const subscriptionPart: ParsedPart<'twitch_subscription'> = {
-    type: 'twitch_subscription',
-    subscriptionEvent: {
-      msgId,
-      displayName,
-      message: message || undefined,
-      months,
-      plan,
-      planName: getPlanName(plan),
-      recipientDisplayName,
-      recipientId,
-      giftMonths,
-      viewerCount,
-      gifterDisplayName,
-      gifterId,
-    },
-  };
+  switch (msgId) {
+    case 'sub': {
+      const plan =
+        typeof tags['msg-param-sub-plan'] === 'string'
+          ? tags['msg-param-sub-plan']
+          : '';
+      const cumulativeMonths = tags['msg-param-cumulative-months'];
+      const months =
+        typeof cumulativeMonths === 'string'
+          ? parseInt(cumulativeMonths, 10)
+          : undefined;
+      const streakMonthsParam = tags['msg-param-streak-months'];
+      const streakMonths =
+        typeof streakMonthsParam === 'string'
+          ? parseInt(streakMonthsParam, 10)
+          : undefined;
+      const shouldShareStreakParam = tags['msg-param-should-share-streak'];
+      const shouldShareStreak =
+        typeof shouldShareStreakParam === 'string'
+          ? shouldShareStreakParam === '1'
+          : undefined;
+
+      return {
+        type: 'sub',
+        subscriptionEvent: {
+          msgId: 'sub' as const,
+          displayName,
+          message: messageText || undefined,
+          plan,
+          planName: getPlanName(plan),
+          months,
+          streakMonths,
+          shouldShareStreak,
+        },
+      };
+    }
+    case 'resub': {
+      const plan =
+        typeof tags['msg-param-sub-plan'] === 'string'
+          ? tags['msg-param-sub-plan']
+          : '';
+      const cumulativeMonths = tags['msg-param-cumulative-months'];
+      const months =
+        typeof cumulativeMonths === 'string'
+          ? parseInt(cumulativeMonths, 10)
+          : 0; // Default to 0 if not provided
+      const streakMonthsParam = tags['msg-param-streak-months'];
+      const streakMonths =
+        typeof streakMonthsParam === 'string'
+          ? parseInt(streakMonthsParam, 10)
+          : undefined;
+      const shouldShareStreakParam = tags['msg-param-should-share-streak'];
+      const shouldShareStreak =
+        typeof shouldShareStreakParam === 'string'
+          ? shouldShareStreakParam === '1'
+          : undefined;
+
+      return {
+        type: 'resub',
+        subscriptionEvent: {
+          msgId: 'resub' as const,
+          displayName,
+          message: messageText || undefined,
+          plan,
+          planName: getPlanName(plan),
+          months,
+          streakMonths,
+          shouldShareStreak,
+        },
+      };
+    }
+    case 'subgift': {
+      const plan =
+        typeof tags['msg-param-sub-plan'] === 'string'
+          ? tags['msg-param-sub-plan']
+          : '';
+      const recipientDisplayName =
+        typeof tags['msg-param-recipient-display-name'] === 'string'
+          ? tags['msg-param-recipient-display-name']
+          : '';
+      const recipientId =
+        typeof tags['msg-param-recipient-id'] === 'string'
+          ? tags['msg-param-recipient-id']
+          : '';
+      const giftMonthsParam = tags['msg-param-gift-months'];
+      const giftMonths =
+        typeof giftMonthsParam === 'string' ? parseInt(giftMonthsParam, 10) : 0;
+      const monthsParam = tags['msg-param-months'];
+      const months =
+        typeof monthsParam === 'string' ? parseInt(monthsParam, 10) : 0;
+
+      return {
+        type: 'anongift' as const,
+        subscriptionEvent: {
+          msgId: 'subgift' as const,
+          displayName,
+          message: messageText || undefined,
+          plan,
+          planName: getPlanName(plan),
+          recipientDisplayName,
+          recipientId,
+          giftMonths,
+          months,
+        },
+      };
+    }
+    case 'anongiftpaidupgrade': {
+      const promoName =
+        typeof tags['msg-param-promo-name'] === 'string'
+          ? tags['msg-param-promo-name']
+          : '';
+      const promoGiftTotal =
+        typeof tags['msg-param-promo-gift-total'] === 'string'
+          ? tags['msg-param-promo-gift-total']
+          : '';
+
+      return {
+        type: 'anongiftpaidupgrade' as const,
+        subscriptionEvent: {
+          msgId: 'anongiftpaidupgrade' as const,
+          displayName,
+          message: messageText || undefined,
+          promoName,
+          promoGiftTotal,
+        },
+      };
+    }
+    default: {
+      const plan =
+        typeof tags['msg-param-sub-plan'] === 'string'
+          ? tags['msg-param-sub-plan']
+          : '';
+      const cumulativeMonths = tags['msg-param-cumulative-months'];
+      const months =
+        typeof cumulativeMonths === 'string'
+          ? parseInt(cumulativeMonths, 10)
+          : undefined;
+
+      return {
+        type: 'sub' as const,
+        subscriptionEvent: {
+          msgId: 'sub' as const,
+          displayName,
+          message: messageText || undefined,
+          plan,
+          planName: getPlanName(plan),
+          months,
+        },
+      };
+    }
+  }
+}
+
+/**
+ * Creates a viewermilestone part from notice_tags
+ */
+export function createViewerMilestonePart(
+  tags: ViewerMilestoneTags,
+  messageText?: string,
+): ParsedPart<'viewermilestone'> {
+  const category =
+    typeof tags['msg-param-category'] === 'string'
+      ? tags['msg-param-category']
+      : '';
+  const reward =
+    typeof tags['msg-param-copoReward'] === 'string'
+      ? tags['msg-param-copoReward']
+      : '';
+  const value =
+    typeof tags['msg-param-value'] === 'string' ? tags['msg-param-value'] : '';
+  const content = messageText || '';
+
+  const systemMsg = tags['system-msg'] ?? '';
+  const login = tags.login ?? '';
+  const displayName = tags['display-name'] ?? '';
+
+  // Construct the message based on category and value
+  let constructedMessage = '';
+  if (category === 'watch-streak' && displayName && value) {
+    const streamCount = parseInt(value, 10);
+    const streamText = streamCount === 1 ? 'stream' : 'streams';
+    constructedMessage = `${displayName} watched ${value} consecutive ${streamText} and sparked a watch streak!`;
+  } else if (systemMsg) {
+    // Fallback to system-msg if we can't construct one
+    constructedMessage = systemMsg;
+  }
 
   return {
-    userstate: {
-      ...tags,
-      username: displayName,
-      login: tags.login || displayName.toLowerCase(),
-      'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',
-      'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
-      'reply-parent-display-name': tags['reply-parent-display-name'] || '',
-      'reply-parent-user-login': tags['reply-parent-user-login'] || '',
-    },
-
-    message: [subscriptionPart],
-    badges: [],
-    channel,
-    message_id: tags.id || generateNonce(),
-    message_nonce: generateNonce(),
-    sender: displayName,
-    parentDisplayName: '',
-    replyDisplayName: '',
-    replyBody: '',
+    type: 'viewermilestone',
+    category,
+    reward,
+    value,
+    content,
+    systemMsg: constructedMessage || systemMsg,
+    login,
+    displayName,
   };
 }

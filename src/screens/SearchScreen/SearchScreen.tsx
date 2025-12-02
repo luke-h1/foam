@@ -192,6 +192,7 @@ export function SearchScreen() {
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior="automatic"
       data={searchResults}
+      // eslint-disable-next-line react-native/no-inline-styles
       style={{ flex: 1 }}
       ListFooterComponent={ListFooterComponent}
       ListHeaderComponent={ListHeaderComponent}

@@ -117,7 +117,7 @@ export interface ChatMessageType<
   message_nonce: string;
   sender: string;
   style?: ViewStyle;
-  parentDisplayName: string;
+  parentDisplayName?: string;
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;
@@ -1387,7 +1387,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
 
               await new Promise<void>(resolve => {
                 let attempts = 0;
-                const maxAttempts = 50;
+                const maxAttempts = 150;
 
                 const checkState = () => {
                   attempts += 1;
@@ -1649,7 +1649,7 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
 
         await new Promise<void>(resolve => {
           let attempts = 0;
-          const maxAttempts = 50;
+          const maxAttempts = 150;
 
           const checkState = () => {
             attempts += 1;
@@ -1758,6 +1758,26 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       return {
         ...prevState,
         messages: newMessages,
+      };
+    });
+  }, []);
+
+  const addMessages = useCallback((newMessages: ChatMessageType<never>[]) => {
+    if (newMessages.length === 0) return;
+
+    setTransientState(prevState => {
+      const updatedMessages = [...prevState.messages, ...newMessages];
+      if (updatedMessages.length > MAX_MESSAGES_PER_CHANNEL) {
+        // Remove oldest chunk at once for better performance
+        const removeCount = Math.floor(MAX_MESSAGES_PER_CHANNEL * 0.2); // Remove 20% at a time
+        return {
+          ...prevState,
+          messages: updatedMessages.slice(removeCount),
+        };
+      }
+      return {
+        ...prevState,
+        messages: updatedMessages,
       };
     });
   }, []);
@@ -1976,9 +1996,9 @@ export const ChatContextProvider = ({ children }: ChatContextProviderProps) => {
       messages: state.messages,
       addMessage,
       clearMessages,
-      addMessages: () => [],
+      addMessages,
     }),
-    [state.messages, addMessage, clearMessages],
+    [state.messages, addMessage, clearMessages, addMessages],
   );
 
   const userData = useMemo(

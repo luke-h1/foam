@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 import { RefObject } from 'react';
 import { attachListeners } from './attachListener';
 import { attachSharedListeners } from './attachedSharedListeners';

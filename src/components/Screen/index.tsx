@@ -307,6 +307,7 @@ export function Screen(props: ScreenProps) {
         behavior={isIos ? 'padding' : 'height'}
         keyboardVerticalOffset={keyboardOffset}
         {...KeyboardAvoidingViewProps}
+        // eslint-disable-next-line react-native/no-inline-styles
         style={[{ flex: 1 }, KeyboardAvoidingViewProps?.style]}
       >
         {isNonScrolling(props.preset) ? (

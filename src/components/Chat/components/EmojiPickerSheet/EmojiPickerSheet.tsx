@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-restricted-syntax */
 
 import { Typography } from '@app/components/Typography';
@@ -188,7 +189,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
 
     if (data.length === 0) {
       return (
-        <View style={[{ width: PICKER_WIDTH }]}>
+        <View style={{ width: PICKER_WIDTH }}>
           <Typography>No emotes available</Typography>
         </View>
       );
@@ -212,7 +213,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
               borderCurve: 'continuous',
             }}
           >
-            <View style={[{ width: PICKER_WIDTH }]}>
+            <View style={{ width: PICKER_WIDTH }}>
               {showSubNavigation && subNavigationOptions.length > 0 && (
                 <SubNavigationBar
                   options={subNavigationOptions}

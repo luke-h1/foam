@@ -39,7 +39,6 @@ export function EmojiLegendList({
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      // eslint-disable-next-line no-param-reassign
       scrollY.value = event.contentOffset.y;
     },
   });

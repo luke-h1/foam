@@ -68,6 +68,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
         {!item.icon && item.image && (
           <Image
             source={item.image}
+            // eslint-disable-next-line react-native/no-inline-styles
             style={{
               width: 20,
               height: 20,

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import { BodyScrollView } from '@app/components';
 import * as Form from '@app/components/Form/Form';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';

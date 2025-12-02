@@ -180,7 +180,7 @@ export const useWebsocket = (
         if (!expectClose) {
           if (webSocketProxy.current) webSocketProxy.current = null;
           removeListeners?.();
-          start();
+          void start();
         }
       };
 

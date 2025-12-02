@@ -7,7 +7,7 @@ declare global {
       AUTH_PROXY_API_BASE_URL: string;
       AUTH_PROXY_API_KEY: string;
 
-      ENABLE_WDYR: boolean;
+      ENABLE_WDYR: 'true' | 'false';
 
       WITH_ROZENITE: boolean;
     }

@@ -448,7 +448,7 @@ export default class SevenTvWsService {
         case 0: {
           switch (message.d.type) {
             case 'emote_set.update': {
-              logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
+              // logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
               SevenTvWsService.handleEmoteSetUpdate(message.d);
               break;
             }
@@ -507,7 +507,7 @@ export default class SevenTvWsService {
 
   private static handleEmoteSetUpdate(data: SevenTvEventData): void {
     try {
-      logger.stvWs.info('💚 Handling emote set update event', data);
+      // logger.stvWs.info('💚 Handling emote set update event', data);
 
       // Filter out historical events by checking if this is within the first few seconds of connection
       // This helps filter out the initial historical events that come when first subscribing
@@ -674,7 +674,7 @@ export default class SevenTvWsService {
         JSON.stringify(subscribeEntitlementCreateMessage),
       );
 
-      logger.stvWs.info('💚 Subscribed to entitlement.create events');
+      // logger.stvWs.info('💚 Subscribed to entitlement.create events');
     }
 
     // Reset wait timer for next set of IDs
@@ -705,7 +705,7 @@ export default class SevenTvWsService {
       };
 
       SevenTvWsService.instance.send(JSON.stringify(subscribeEmoteSetMessage));
-      logger.stvWs.info('💚 Subscribed to emote_set.update events');
+      // logger.stvWs.info('💚 Subscribed to emote_set.update events');
     }
   }
 
@@ -713,7 +713,7 @@ export default class SevenTvWsService {
    * Send subscription payload for a specific emote set
    */
   private static sendSubscription(emoteSetId: string): void {
-    logger.stvWs.info(`💚 Attempting to subscribe to emote set: ${emoteSetId}`);
+    // logger.stvWs.info(`💚 Attempting to subscribe to emote set: ${emoteSetId}`);
 
     if (!SevenTvWsService.isConnected()) {
       logger.stvWs.warn(

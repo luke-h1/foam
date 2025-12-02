@@ -4,16 +4,17 @@ import { Category, twitchService } from '@app/services/twitch-service';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
-import { RefreshControl, View, type ViewStyle } from 'react-native';
+import { RefreshControl, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 const SKELETON_COUNT = 9;
 const SKELETON_COLUMNS = 3;
 
 function CategoryCardSkeleton() {
   return (
-    <View style={$categoryCardContainer}>
-      <Skeleton style={$skeletonImage} />
-      <Skeleton style={$skeletonTitle} />
+    <View style={styles.cardContainer}>
+      <Skeleton style={styles.skeletonImage} />
+      <Skeleton style={styles.skeletonTitle} />
     </View>
   );
 }
@@ -53,7 +54,7 @@ export function TopCategoriesScreen() {
 
   const renderItem: ListRenderItem<Category> = useCallback(({ item }) => {
     return (
-      <View style={$categoryCardContainer}>
+      <View style={styles.cardContainer}>
         <CategoryCard category={item} />
       </View>
     );
@@ -66,7 +67,7 @@ export function TopCategoriesScreen() {
   if (isLoading || refreshing) {
     return (
       <FlashList
-        style={{ flex: 1 }}
+        style={styles.wrapper}
         data={Array.from({ length: SKELETON_COUNT })}
         keyExtractor={(_, idx) => `skeleton-${idx}`}
         numColumns={SKELETON_COLUMNS}
@@ -104,7 +105,7 @@ export function TopCategoriesScreen() {
   return (
     <FlashList<Category>
       data={allCategories}
-      style={{ flex: 1 }}
+      style={styles.wrapper}
       numColumns={3}
       ref={flashListRef}
       renderItem={renderItem}
@@ -126,24 +127,27 @@ export function TopCategoriesScreen() {
   );
 }
 
-const $categoryCardContainer: ViewStyle = {
-  flex: 1,
-  margin: 5,
-};
-
-const $skeletonImage: ViewStyle = {
-  width: 110,
-  height: 150,
-  borderRadius: 8,
-  borderCurve: 'continuous',
-  alignSelf: 'center',
-  marginBottom: 8,
-};
-
-const $skeletonTitle: ViewStyle = {
-  width: 80,
-  height: 18,
-  borderRadius: 4,
-  borderCurve: 'continuous',
-  alignSelf: 'center',
-};
+const styles = StyleSheet.create({
+  cardContainer: {
+    flex: 1,
+    margin: 5,
+  },
+  skeletonImage: {
+    alignSelf: 'center',
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    height: 150,
+    marginBottom: 8,
+    width: 110,
+  },
+  skeletonTitle: {
+    alignSelf: 'center',
+    borderCurve: 'continuous',
+    borderRadius: 4,
+    height: 18,
+    width: 80,
+  },
+  wrapper: {
+    flex: 1,
+  },
+});

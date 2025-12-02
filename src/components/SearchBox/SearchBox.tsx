@@ -44,6 +44,7 @@ export function SearchBox({
           onPress={() => rightOnPress?.()}
           style={[
             styles.clearButton,
+            // eslint-disable-next-line react-native/no-inline-styles
             { opacity: value && value.length > 0 ? 1 : 0 },
           ]}
           disabled={!value || value.length === 0}

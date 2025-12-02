@@ -41,24 +41,26 @@ const Shimmer = ({ style }: { style: ViewStyle }) => {
   });
 
   return (
-    <View style={[style, { overflow: 'hidden' }]}>
-      <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            transform: [{ skewX: '-15deg' }],
-          },
-          animatedStyle,
-        ]}
-      />
+    <View style={[style, shimmerStyles.container]}>
+      <Animated.View style={(shimmerStyles.shimmer, animatedStyle)} />
     </View>
   );
 };
+
+const shimmerStyles = StyleSheet.create({
+  container: {
+    overflow: 'hidden',
+  },
+  shimmer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    transform: [{ skewX: '-15deg' }],
+  },
+});
 
 export function ChatSkeleton() {
   const { width, height } = useWindowDimensions();

@@ -25,6 +25,7 @@ export function EmojiCategoryBar({
   return (
     <ScrollView
       // style={[styles.topbar, { backgroundColor: theme.colors.underline }]}
+      // eslint-disable-next-line react-native/no-inline-styles
       contentContainerStyle={{
         padding: PICKER_PAD,
         gap: 4,
@@ -39,6 +40,7 @@ export function EmojiCategoryBar({
             onPress={() => onPress(index)}
             style={[
               styles.categoryButton,
+              // eslint-disable-next-line react-native/no-inline-styles
               activeSection === index && {
                 // backgroundColor: theme.colors.borderNeutral,
                 borderWidth: 1,

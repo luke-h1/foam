@@ -10,6 +10,7 @@ export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
   console.log('🏠 ChatScreen render:', { channelId, channelName });
 
   return (
+    // eslint-disable-next-line react-native/no-inline-styles
     <SafeAreaViewFixed avoidTabBar style={{ flex: 1 }}>
       <Chat channelName={channelName} channelId={channelId} />
     </SafeAreaViewFixed>
