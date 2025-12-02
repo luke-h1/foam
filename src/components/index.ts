@@ -15,6 +15,7 @@ export * from './ModalHandle';
 export * from './NavigationSectionList';
 export * from './OTAUpdates';
 export * from './SafeAreaViewFixed';
+export * from './ScreenHeader';
 export * from './SearchBox';
 export * from './SearchHistory';
 export * from './Seperator';

@@ -3,15 +3,17 @@ import {
   LiveStreamCard,
   AnimatedFlashList,
   ListRenderItem,
+  ScreenHeader,
 } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshControl } from '@app/components/RefreshControl';
-import { Screen } from '@app/components/Screen';
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, JSX, useCallback } from 'react';
+import { View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { toast } from 'sonner-native';
 
@@ -75,14 +77,33 @@ export default function FollowingScreen() {
     );
   }
 
+  const liveCount = streams?.length ?? 0;
+
+  const renderHeader = () => (
+    <ScreenHeader
+      title="Following"
+      subtitle={`${liveCount} channel${liveCount !== 1 ? 's' : ''} live`}
+      back={false}
+      size="large"
+    />
+  );
+
   return (
-    <Screen preset="fixed" safeAreaEdges={['top']}>
+    <View style={styles.container}>
       <AnimatedFlashList<TwitchStream>
         data={streams}
         keyExtractor={item => item.id}
         renderItem={renderItem}
+        ListHeaderComponent={renderHeader}
         refreshControl={<RefreshControl onRefresh={onRefresh} />}
       />
-    </Screen>
+    </View>
   );
 }
+
+const styles = StyleSheet.create(theme => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
+}));

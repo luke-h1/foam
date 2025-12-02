@@ -1,20 +1,24 @@
 import {
   EmptyState,
-  Image,
+  HeroHeader,
   LiveStreamCard,
   Spinner,
   Typography,
 } from '@app/components';
+import { useAppNavigation } from '@app/hooks';
 import { AppStackParamList } from '@app/navigators';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
-import { getNextPageParam, getPreviousPageParam } from '@app/utils';
+import {
+  formatViewCount,
+  getNextPageParam,
+  getPreviousPageParam,
+} from '@app/utils';
 import { StackScreenProps } from '@react-navigation/stack';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 export const CategoryScreen: FC<
@@ -24,6 +28,7 @@ export const CategoryScreen: FC<
   const [previousCursor, setPreviousCursor] = useState<string>('');
   const [cursor, setCursor] = useState<string>('');
   const flashListRef = useRef(null);
+  const navigation = useAppNavigation();
 
   const categoryQuery = useMemo(() => twitchQueries.getCategory(id), [id]);
 
@@ -78,27 +83,41 @@ export const CategoryScreen: FC<
   }
 
   const allStreams = streams?.pages.flatMap(page => page.data) ?? [];
+  const totalViewers = allStreams.reduce(
+    (acc, stream) => acc + stream.viewer_count,
+    0,
+  );
 
   if (allStreams.length === 0) {
     return <EmptyState content="No Top Streams found" />;
   }
 
   const renderHeader = () => (
-    <View style={styles.headerContent}>
-      <Image
-        source={
-          category?.box_art_url
-            .replace('{width}', '600')
-            .replace('{height}', '1080') ?? ''
-        }
-        style={styles.categoryLogo}
-      />
-      <Typography>{category?.name}</Typography>
-    </View>
+    <HeroHeader
+      title={category?.name ?? ''}
+      subtitle={`${formatViewCount(totalViewers)} viewers`}
+      backgroundImage={
+        category?.box_art_url
+          .replace('{width}', '600')
+          .replace('{height}', '800') ?? ''
+      }
+      featuredImage={
+        category?.box_art_url
+          .replace('{width}', '300')
+          .replace('{height}', '400') ?? ''
+      }
+      onBack={() => navigation.goBack()}
+    >
+      <View style={styles.sectionHeader}>
+        <Typography size="sm" fontWeight="semiBold" color="gray.textLow">
+          Live Channels
+        </Typography>
+      </View>
+    </HeroHeader>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <FlashList<TwitchStream>
         ref={flashListRef}
         data={allStreams}
@@ -109,32 +128,19 @@ export const CategoryScreen: FC<
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.gray.bg,
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    display: 'flex',
+  sectionHeader: {
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing['2xl'],
-  },
-  categoryLogo: {
-    width: 105,
-    height: 140,
-    borderRadius: 12,
-    resizeMode: 'cover',
-    marginRight: theme.spacing.sm,
-  },
-  categoryTitle: {
-    textAlign: 'center',
-    marginLeft: theme.spacing.md,
-    fontWeight: 'bold',
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.colors.gray.border,
   },
 }));
