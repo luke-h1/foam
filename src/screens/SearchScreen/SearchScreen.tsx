@@ -192,8 +192,7 @@ export function SearchScreen() {
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior="automatic"
       data={searchResults}
-      // eslint-disable-next-line react-native/no-inline-styles
-      style={{ flex: 1 }}
+      style={styles.flex}
       ListFooterComponent={ListFooterComponent}
       ListHeaderComponent={ListHeaderComponent}
       renderItem={renderItem}
@@ -202,6 +201,9 @@ export function SearchScreen() {
 }
 
 const styles = StyleSheet.create(theme => ({
+  flex: {
+    flex: 1,
+  },
   searchResultsWrapper: {
     marginTop: theme.spacing.md,
     marginLeft: theme.spacing.md,

@@ -8,8 +8,7 @@ export function SettingsAppearanceScreen() {
   const { fontScaling, systemScaling, theme, update } = usePreferences();
 
   return (
-    // eslint-disable-next-line react-native/no-inline-styles
-    <SafeAreaViewFixed avoidTabBar style={{ flex: 1 }}>
+    <SafeAreaViewFixed avoidTabBar style={styles.flex}>
       <Menu
         items={[
           'Theme',
@@ -116,5 +115,8 @@ const styles = StyleSheet.create(theme => ({
   },
   slider: {
     marginHorizontal: theme.spacing.lg,
+  },
+  flex: {
+    flex: 1,
   },
 }));

@@ -1,10 +1,10 @@
-/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-undef */
 import * as Form from '@app/components/Form/Form';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
 import { ActivityIndicator, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import { ENV_SUPPORTS_OTA } from '../utils/envSupportsOta';
 
 export function OTADynamicSection() {
@@ -40,6 +40,9 @@ export function OTADynamicSection() {
   }
 
   const isLoading = updates.isChecking || updates.isDownloading;
+  const textColor =
+    updates.availableUpdate || !isLoading ? AC.systemBlue : AC.label;
+
   return (
     <Form.Section
       title={
@@ -48,10 +51,7 @@ export function OTADynamicSection() {
       titleHint={isLoading ? <ActivityIndicator animating /> : lastCheckTime}
     >
       <Form.Text
-        style={{
-          color:
-            updates.availableUpdate || !isLoading ? AC.systemBlue : AC.label,
-        }}
+        style={{ color: textColor }}
         onPress={() => {
           if (__DEV__ && !ENV_SUPPORTS_OTA) {
             // eslint-disable-next-line no-alert
@@ -75,12 +75,10 @@ export function OTADynamicSection() {
         {fetchingTitle}
       </Form.Text>
       {checkError && (
-        <Form.HStack style={{ flexWrap: 'wrap' }}>
-          <Form.Text style={{ color: AC.systemRed }}>
-            Error checking status
-          </Form.Text>
-          <View style={{ flex: 1 }} />
-          <Form.Text style={{ flexShrink: 1, color: AC.secondaryLabel }}>
+        <Form.HStack style={styles.errorContainer}>
+          <Form.Text style={styles.errorText}>Error checking status</Form.Text>
+          <View style={styles.spacer} />
+          <Form.Text style={styles.errorMessage}>
             {checkError.message}
           </Form.Text>
         </Form.HStack>
@@ -88,3 +86,19 @@ export function OTADynamicSection() {
     </Form.Section>
   );
 }
+
+const styles = StyleSheet.create(() => ({
+  errorContainer: {
+    flexWrap: 'wrap',
+  },
+  errorText: {
+    color: AC.systemRed,
+  },
+  spacer: {
+    flex: 1,
+  },
+  errorMessage: {
+    flexShrink: 1,
+    color: AC.secondaryLabel,
+  },
+}));

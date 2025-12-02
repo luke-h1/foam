@@ -1,6 +1,7 @@
 import { SFSymbol } from 'expo-symbols';
 import { ReactElement } from 'react';
 import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import { FlashList, FlashListProps } from '../FlashList';
 import { RefreshControl } from '../RefreshControl';
 import { Typography } from '../Typography';
@@ -93,7 +94,7 @@ export function Menu({
       }
       renderItem={({ item }) => {
         if (item === null) {
-          return <View style={{ height: 4 }} />;
+          return <View style={menuStyles.menu} />;
         }
 
         if (typeof item === 'string') {
@@ -113,3 +114,7 @@ export function Menu({
     />
   );
 }
+
+const menuStyles = StyleSheet.create({
+  menu: { height: 4 },
+});

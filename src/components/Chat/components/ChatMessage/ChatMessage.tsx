@@ -184,9 +184,8 @@ function ChatMessageComponent<
               <Typography
                 style={[
                   styles.mention,
-                  {
-                    color: lightenColor(finalColor),
-                  },
+                  styles.mentionDefaultColor,
+                  finalColor && { color: lightenColor(finalColor) },
                 ]}
               >
                 {part.content}
@@ -295,9 +294,8 @@ function ChatMessageComponent<
               <Typography
                 style={[
                   styles.replyToText,
-                  {
-                    color: lightenColor(parentColor),
-                  },
+                  styles.replyToDefaultColor,
+                  parentColor && { color: lightenColor(parentColor) },
                 ]}
               >
                 {parentDisplayName}
@@ -330,11 +328,9 @@ function ChatMessageComponent<
             <Typography
               style={[
                 styles.username,
-                {
-                  color: userstate.color
-                    ? lightenColor(userstate.color)
-                    : '#FFFFFF',
-                },
+                styles.usernameDefaultColor,
+                // eslint-disable next-line react-native/no-inline-styles
+                userstate.color && { color: lightenColor(userstate.color) },
               ]}
             >
               {userstate.username}:
@@ -441,12 +437,18 @@ const styles = StyleSheet.create(theme => ({
     marginRight: 5,
     fontWeight: 'bold',
   },
+  usernameDefaultColor: {
+    color: '#FFFFFF',
+  },
   timestamp: {
     color: theme.colors.gray.accentAlpha,
     fontSize: theme.font.fontSize.xs,
   },
   mention: {
     marginHorizontal: 2,
+  },
+  mentionDefaultColor: {
+    color: '#FFFFFF',
   },
   emote: {
     width: 25,
@@ -491,6 +493,9 @@ const styles = StyleSheet.create(theme => ({
     marginLeft: theme.spacing.xs,
     opacity: 0.7,
     fontSize: theme.font.fontSize.xs,
+  },
+  replyToDefaultColor: {
+    color: '#FFFFFF',
   },
   subscriptionNoticeContainer: {
     width: '100%',

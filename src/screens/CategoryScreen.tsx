@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import {
   EmptyState,
   Image,
@@ -100,11 +99,11 @@ export const CategoryScreen: FC<
   );
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.container}>
       <FlashList<TwitchStream>
         ref={flashListRef}
         data={allStreams}
-        style={{ flex: 1 }}
+        style={styles.list}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
@@ -116,6 +115,12 @@ export const CategoryScreen: FC<
 };
 
 const styles = StyleSheet.create(theme => ({
+  container: {
+    flex: 1,
+  },
+  list: {
+    flex: 1,
+  },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'flex-start',

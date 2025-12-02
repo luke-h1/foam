@@ -1488,20 +1488,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       <Typography style={styles.header}>CHAT</Typography>
       <KeyboardAvoidingView
         behavior="padding"
-        style={{ flex: 1 }}
+        style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <View
-          style={[
-            styles.chatContainer,
-            {
-              flex: 1,
-              width: '100%',
-              overflow: 'hidden',
-              maxWidth: '100%',
-            },
-          ]}
-        >
+        <View style={styles.chatContainer}>
           <FlashList
             data={deduplicatedMessages}
             ref={flashListRef}
@@ -1539,7 +1529,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         <View
           ref={inputContainerRef}
-          style={[styles.inputContainer, { zIndex: 2 }]}
+          style={styles.inputContainer}
           onLayout={measureInputContainer}
         >
           {replyTo && (
@@ -1703,6 +1693,9 @@ const styles = StyleSheet.create(theme => ({
   wrapper: {
     flex: 1,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   debugModalBackground: {
     backgroundColor: theme.colors.black.bgAlpha,
   },
@@ -1736,6 +1729,7 @@ const styles = StyleSheet.create(theme => ({
     borderTopColor: '#2d2d2d',
     position: 'relative',
     borderCurve: 'continuous',
+    zIndex: 2,
   },
   input: {
     flex: 1,
@@ -1792,6 +1786,9 @@ const styles = StyleSheet.create(theme => ({
   },
   chatContainer: {
     flex: 1,
+    width: '100%',
+    overflow: 'hidden',
+    maxWidth: '100%',
   },
   messageContainer: {
     flexDirection: 'row',
