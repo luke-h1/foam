@@ -1,10 +1,12 @@
 import { useAppNavigation } from '@app/hooks';
 import { TwitchStream } from '@app/services/twitch-service';
 import { elapsedStreamTime, formatViewCount } from '@app/utils';
+import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
+import { PressableArea } from '../PressableArea';
 import { Typography } from '../Typography';
 
 interface Props {
@@ -13,17 +15,33 @@ interface Props {
 
 export function LiveStreamCard({ stream }: Props) {
   const { navigate } = useAppNavigation();
+
+  const handleStreamPress = useCallback(() => {
+    navigate('Streams', {
+      screen: 'LiveStream',
+      params: {
+        id: stream.user_login,
+      },
+    });
+  }, [navigate, stream.user_login]);
+
+  const handleStreamerPress = useCallback(() => {
+    navigate('Streams', {
+      screen: 'StreamerProfile',
+      params: {
+        id: stream.user_login,
+      },
+    });
+  }, [navigate, stream.user_login]);
+
+  const handleCategoryPress = useCallback(() => {
+    navigate('Category', {
+      id: stream.game_id,
+    });
+  }, [navigate, stream.game_id]);
+
   return (
-    <Button
-      onPress={() => {
-        navigate('Streams', {
-          screen: 'LiveStream',
-          params: {
-            id: stream.user_login,
-          },
-        });
-      }}
-    >
+    <Button onPress={handleStreamPress}>
       <View style={styles.container}>
         <View style={styles.imageContainer}>
           <Image
@@ -41,21 +59,35 @@ export function LiveStreamCard({ stream }: Props) {
           </View>
         </View>
         <View style={styles.details}>
-          <View style={styles.metadata}>
-            <View style={styles.info}>
-              <Image
-                source={stream.profilePicture}
-                style={styles.avatar}
-                testID="LiveStreamCard-avatar"
-              />
-              <Typography size="xs">{stream.user_name}</Typography>
+          <View style={styles.headerRow}>
+            <PressableArea
+              onPress={handleStreamerPress}
+              style={styles.usernameButton}
+              hitSlop={8}
+            >
+              <Typography size="sm" style={styles.username}>
+                {stream.user_name}
+              </Typography>
+            </PressableArea>
+            <View style={styles.viewersBadge}>
+              <View style={styles.viewersDot} />
+              <Typography size="xxs" style={styles.viewersText}>
+                {formatViewCount(stream.viewer_count)}
+              </Typography>
             </View>
-            <Typography size="xxs" style={styles.viewers}>
-              {formatViewCount(stream.viewer_count)} viewers
-            </Typography>
           </View>
-          <Typography size="xxs">{stream.game_name}</Typography>
-          <Typography size="sm">{stream.title}</Typography>
+          <PressableArea
+            onPress={handleCategoryPress}
+            style={styles.categoryBadge}
+            hitSlop={4}
+          >
+            <Typography size="xxs" style={styles.categoryText}>
+              {stream.game_name}
+            </Typography>
+          </PressableArea>
+          <Typography size="xs" style={styles.title} numberOfLines={2}>
+            {stream.title}
+          </Typography>
         </View>
       </View>
     </Button>
@@ -66,63 +98,88 @@ const styles = StyleSheet.create(theme => ({
   image: {
     width: 150,
     height: 100,
+    borderRadius: 8,
   },
   container: {
     flexDirection: 'row',
-    paddingVertical: theme.spacing.xl,
+    paddingVertical: theme.spacing.lg,
     paddingHorizontal: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
-    columnGap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+    columnGap: theme.spacing.md,
     flex: 1,
-  },
-  tagWrapper: {
-    width: '85%',
   },
   imageContainer: {
     position: 'relative',
   },
   overlay: {
     position: 'absolute',
-    top: 3,
-    left: 3,
+    top: 6,
+    left: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 5,
+    borderRadius: 4,
     borderCurve: 'continuous',
   },
   redDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'red',
+    backgroundColor: '#ff4444',
     marginRight: 5,
   },
-  liveText: {},
   details: {
     flex: 1,
     justifyContent: 'flex-start',
-    marginLeft: theme.spacing.sm,
+    gap: theme.spacing.xs,
   },
-  viewers: {},
-  title: {},
-  metadata: {
-    marginVertical: theme.spacing.sm,
-  },
-  info: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
   },
-  avatar: {
-    width: 20,
-    height: 20,
-    borderRadius: theme.spacing.lg,
-    marginRight: theme.spacing.sm,
+  usernameButton: {
+    flex: 1,
   },
-  tagsContainer: {
+  username: {
+    fontWeight: '600',
+  },
+  viewersBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 68, 68, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 5,
+  },
+  viewersDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#ff4444',
+  },
+  viewersText: {
+    color: '#ff6b6b',
+    fontWeight: '600',
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(145, 70, 255, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  categoryText: {
+    color: '#bf94ff',
+    fontWeight: '500',
+  },
+  title: {
+    opacity: 0.85,
     marginTop: theme.spacing.xs,
+    lineHeight: 18,
   },
 }));

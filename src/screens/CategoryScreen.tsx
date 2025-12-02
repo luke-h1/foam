@@ -3,7 +3,6 @@ import {
   Image,
   LiveStreamCard,
   Spinner,
-  FlashList,
   Typography,
 } from '@app/components';
 import { AppStackParamList } from '@app/navigators';
@@ -11,7 +10,7 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
 import { getNextPageParam, getPreviousPageParam } from '@app/utils';
 import { StackScreenProps } from '@react-navigation/stack';
-import { ListRenderItem } from '@shopify/flash-list';
+import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { FC, useCallback, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
@@ -103,10 +102,10 @@ export const CategoryScreen: FC<
       <FlashList<TwitchStream>
         ref={flashListRef}
         data={allStreams}
-        style={styles.list}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
+        onEndReachedThreshold={0.3}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
       />
@@ -116,9 +115,6 @@ export const CategoryScreen: FC<
 
 const styles = StyleSheet.create(theme => ({
   container: {
-    flex: 1,
-  },
-  list: {
     flex: 1,
   },
   headerContent: {
