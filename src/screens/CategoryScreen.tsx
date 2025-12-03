@@ -7,8 +7,7 @@ import {
 } from '@app/components';
 import { useAppNavigation } from '@app/hooks';
 import { AppStackParamList } from '@app/navigators';
-import { twitchQueries } from '@app/queries/twitchQueries';
-import { TwitchStream } from '@app/services/twitch-service';
+import { TwitchStream, twitchService } from '@app/services/twitch-service';
 import {
   formatViewCount,
   getNextPageParam,
@@ -17,7 +16,7 @@ import {
 import { StackScreenProps } from '@react-navigation/stack';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { FC, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useRef } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -25,17 +24,17 @@ export const CategoryScreen: FC<
   StackScreenProps<AppStackParamList, 'Category'>
 > = ({ route: { params } }) => {
   const { id } = params;
-  const [cursor, setCursor] = useState<string>('');
   const flashListRef = useRef(null);
   const navigation = useAppNavigation();
-
-  const categoryQuery = useMemo(() => twitchQueries.getCategory(id), [id]);
 
   const {
     data: category,
     isLoading: isCategoryLoading,
     isError: isCategoryError,
-  } = useQuery(categoryQuery);
+  } = useQuery({
+    queryKey: ['category', id],
+    queryFn: () => twitchService.getCategory(id),
+  });
 
   const {
     data: streams,
@@ -45,21 +44,19 @@ export const CategoryScreen: FC<
     isLoading: isLoadingStreams,
     isError: isErrorStreams,
   } = useInfiniteQuery({
-    initialPageParam: cursor,
+    queryKey: ['streamsByCategory', id],
+    queryFn: ({ pageParam }: { pageParam?: string }) =>
+      twitchService.getStreamsByCategory(id, pageParam),
+    initialPageParam: undefined,
     getNextPageParam,
     getPreviousPageParam,
-    ...twitchQueries.getStreamsByCategory(id),
   });
 
   const handleLoadMore = useCallback(async () => {
     if (hasNextPage) {
-      const nextCursor =
-        streams?.pages[streams.pages.length - 1]?.pagination.cursor;
-      setCursor(nextCursor as string);
       await fetchNextPage();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasNextPage]);
+  }, [hasNextPage, fetchNextPage]);
 
   const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
     return <LiveStreamCard stream={item} />;
@@ -80,7 +77,12 @@ export const CategoryScreen: FC<
     );
   }
 
-  const allStreams = streams?.pages.flatMap(page => page.data) ?? [];
+  if (!streams || !streams.pages) {
+    return <Spinner />;
+  }
+
+  const allStreams =
+    streams.pages.flatMap(page => (page?.data ? page.data : [])) ?? [];
   const totalViewers = allStreams.reduce(
     (acc, stream) => acc + stream.viewer_count,
     0,

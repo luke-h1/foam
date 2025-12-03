@@ -1,7 +1,7 @@
 import { EmptyState, LiveStreamCard, FlashList } from '@app/components';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useDebouncedCallback } from '@app/hooks';
-import { twitchQueries } from '@app/queries/twitchQueries';
+import { twitchQueries } from '@app/queries';
 import { TwitchStream } from '@app/services/twitch-service';
 import { getNextPageParam, getPreviousPageParam } from '@app/utils';
 import { ListRenderItem } from '@shopify/flash-list';
@@ -11,9 +11,9 @@ import { RefreshControl } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function TopStreamsScreen() {
+  const [cursor, setCursor] = useState<string>('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const flashListRef = useRef(null);
-  const [cursor, setCursor] = useState<string>('');
 
   const {
     data: streams,
@@ -26,18 +26,18 @@ export function TopStreamsScreen() {
     initialPageParam: cursor,
     getNextPageParam,
     getPreviousPageParam,
-    ...twitchQueries.getTopStreams(),
+    ...twitchQueries.getTopStreamsInfinite(),
   });
 
   const handleLoadMore = useCallback(async () => {
     if (hasNextPage && !isFetchingNextPage) {
       const nextCursor =
         streams?.pages[streams.pages.length - 1]?.pagination.cursor;
-      setCursor(nextCursor ?? '');
+      setCursor(nextCursor as string);
       await fetchNextPage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage]);
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [debouncedHandleLoadMore] = useDebouncedCallback(handleLoadMore, 150);
@@ -64,7 +64,15 @@ export function TopStreamsScreen() {
     );
   }
 
-  const allStreams = streams?.pages?.flatMap(page => page.data) ?? [];
+  if (!streams || !streams.pages) {
+    return (
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+    );
+  }
+
+  const allStreams =
+    streams.pages.flatMap(page => (page?.data ? page.data : [])) ?? [];
 
   if (allStreams.length === 0) {
     return (
