@@ -43,6 +43,18 @@ export function SettingsDevtoolsScreen() {
               color: theme.colors.orange.accent,
             },
           },
+          null,
+          {
+            arrow: true,
+            label: 'Cached Images',
+            description: 'View & manage emote image cache',
+            onPress: () => navigate('CachedImages'),
+            icon: {
+              type: 'symbol',
+              name: 'photo.stack',
+              color: theme.colors.green.accent,
+            },
+          },
         ]}
       />
     </Screen>
