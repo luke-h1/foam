@@ -1,10 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
-import { ChatMessageType, useChatContext } from '@app/context/ChatContext';
 import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
+import {
+  ChatMessageType,
+  useLoadingState,
+  useMessages,
+  useChannelEmoteData,
+  loadChannelResources,
+  clearChannelResources,
+  clearTtvUsers,
+  addMessage,
+  addMessages,
+  clearMessages,
+  getCurrentEmoteData,
+  getSevenTvEmoteSetId,
+} from '@app/store';
 import {
   UserNoticeTagsByVariant,
   UserNoticeTags,
@@ -85,18 +98,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const currentEmoteSetIdRef = useRef<string | null>(null);
 
-  const {
-    loadChannelResources,
-    clearChannelResources,
-    loadingState,
-    clearTtvUsers,
-    addMessage,
-    addMessages,
-    clearMessages,
-    getCurrentEmoteData,
-    getSevenTvEmoteSetId,
-    messages,
-  } = useChatContext();
+  // Use legend-state hooks and actions
+  const loadingState = useLoadingState();
+  const messages = useMessages();
+
+  // Actions are imported directly from store
 
   const sevenTvEmoteSetId = useMemo(() => {
     return getSevenTvEmoteSetId(channelId) || undefined;
@@ -105,17 +111,19 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   useTwitchWs();
 
+  // Use reactive hook for channel-specific emote data - re-renders when emotes load for this channel
+  const channelEmoteData = useChannelEmoteData(channelId);
+
   // Initialize emote processor with current emote data
-  const currentEmotes = getCurrentEmoteData(channelId);
   const emoteProcessor = useEmoteProcessor({
-    sevenTvGlobalEmotes: currentEmotes?.sevenTvGlobalEmotes || [],
-    sevenTvChannelEmotes: currentEmotes?.sevenTvChannelEmotes || [],
-    twitchGlobalEmotes: currentEmotes?.twitchGlobalEmotes || [],
-    twitchChannelEmotes: currentEmotes?.twitchChannelEmotes || [],
-    ffzChannelEmotes: currentEmotes?.ffzChannelEmotes || [],
-    ffzGlobalEmotes: currentEmotes?.ffzGlobalEmotes || [],
-    bttvChannelEmotes: currentEmotes?.bttvChannelEmotes || [],
-    bttvGlobalEmotes: currentEmotes?.bttvGlobalEmotes || [],
+    sevenTvGlobalEmotes: channelEmoteData.sevenTvGlobalEmotes,
+    sevenTvChannelEmotes: channelEmoteData.sevenTvChannelEmotes,
+    twitchGlobalEmotes: channelEmoteData.twitchGlobalEmotes,
+    twitchChannelEmotes: channelEmoteData.twitchChannelEmotes,
+    ffzChannelEmotes: channelEmoteData.ffzChannelEmotes,
+    ffzGlobalEmotes: channelEmoteData.ffzGlobalEmotes,
+    bttvChannelEmotes: channelEmoteData.bttvChannelEmotes,
+    bttvGlobalEmotes: channelEmoteData.bttvGlobalEmotes,
   });
 
   const flashListRef = useRef<FlashListRef<AnyChatMessageType>>(null);
@@ -131,16 +139,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
     const batch = [...messageBatchRef.current];
     messageBatchRef.current = [];
-
-    console.log('📦 processMessageBatch:', {
-      batchSize: batch.length,
-      messages: batch.map(m => ({
-        message_id: m.message_id,
-        message_nonce: m.message_nonce,
-        sender: m.sender,
-        channel: m.channel,
-      })),
-    });
 
     // Deduplicate messages within the batch by message_id + message_nonce
     // If a message with the same key exists in batch, keep the newer one (with processed emotes)
@@ -163,15 +161,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       return acc;
     }, [] as AnyChatMessageType[]);
 
-    console.log('📦 After deduplication:', {
-      deduplicatedSize: deduplicatedBatch.length,
-      messages: deduplicatedBatch.map(m => ({
-        message_id: m.message_id,
-        message_nonce: m.message_nonce,
-        sender: m.sender,
-      })),
-    });
-
     addMessages(deduplicatedBatch as ChatMessageType<never>[]);
 
     messagesRef.current = [...messagesRef.current, ...deduplicatedBatch].slice(
@@ -192,19 +181,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         });
       }, 0);
     }
-  }, [addMessages, isScrollingToBottom, messages.length]);
+  }, [isScrollingToBottom, messages.length]);
 
   const handleNewMessage = useCallback(
     (newMessage: AnyChatMessageType) => {
-      console.log('📨 handleNewMessage called:', {
-        message_id: newMessage.message_id,
-        message_nonce: newMessage.message_nonce,
-        sender: newMessage.sender,
-        channel: newMessage.channel,
-        messageTypes: newMessage.message.map(m => m.type),
-        batchSize: messageBatchRef.current.length,
-      });
-
       // Add to batch
       messageBatchRef.current.push(newMessage);
 
@@ -233,15 +213,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     channel: channelName,
     onMessage: useCallback(
       (_channel: string, tags: Record<string, string>, text: string) => {
-        console.log('📨 onMessage callback triggered:', {
-          channel: _channel,
-          text: text.substring(0, 50),
-          tags: Object.keys(tags),
-          displayName: tags['display-name'],
-          login: tags.login,
-          id: tags.id,
-        });
-
         const badgeData = parseBadges(tags.badges as unknown as string);
 
         // map irc tags to our custom format
@@ -259,11 +230,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         } as UserStateTags;
 
         const message_id = userstate.id || '0';
-        console.log('📨 Creating message with:', {
-          message_id,
-          username: userstate.username,
-          text: text.substring(0, 50),
-        });
+
         const replyParentMessageId = tags['reply-parent-msg-id'];
         const replyParentDisplayName = tags['reply-parent-display-name'];
         const replyParentUserLogin = tags['reply-parent-user-login'];
@@ -274,7 +241,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           // Try to find parent message to get its color
           if (replyParentMessageId) {
             const replyParent = messages.find(
-              message => message.message_id === replyParentMessageId,
+              message => message?.message_id === replyParentMessageId,
             );
             if (replyParent?.userstate.color) {
               parentColor = replyParent.userstate.color;
@@ -289,7 +256,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         if (replyParentMessageId && replyParentDisplayName) {
           const replyParent = messages.find(
-            message => message.message_id === replyParentMessageId,
+            message => message?.message_id === replyParentMessageId,
           );
 
           if (replyParent) {
@@ -373,14 +340,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           );
         }
       },
-      [
-        channelId,
-        channelName,
-        getCurrentEmoteData,
-        emoteProcessor,
-        handleNewMessage,
-        messages,
-      ],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [channelId, channelName, emoteProcessor, handleNewMessage, messages],
     ),
     onUserNotice: useCallback(
       (_channel: string, tags: UserNoticeTags, text: string) => {
@@ -414,7 +375,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
          */
         const message_nonce = generateNonce();
 
-        console.log('userNoticeTags ->', JSON.stringify(tags, null, 2));
         let newMessage: AnyChatMessageType;
 
         const userstate: UserStateTags = {
@@ -533,21 +493,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               channel: '',
               parentDisplayName: '',
             };
-            console.log('🔔 Resub message created:', {
-              message_id: resubMessage.message_id,
-              hasNoticeTags: !!resubMessage.notice_tags,
-              messageTypes: resubMessage.message.map(m => m.type),
-              noticeTagsKeys: resubMessage.notice_tags
-                ? Object.keys(resubMessage.notice_tags)
-                : [],
-            });
             newMessage = resubMessage;
             handleNewMessage(resubMessage);
             break;
           }
 
           case 'sub': {
-            console.log('sub hit', JSON.stringify(tags, null, 2));
             const subTags = tags;
 
             const subscriptionPart = createSubscriptionPart(subTags, text);
@@ -686,7 +637,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           animated: false,
         });
       }, 0);
-    }, [clearMessages, messages.length]),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [messages.length]),
     onJoin: useCallback(() => {
       logger.chat.info('Joined channel:', channelName);
 
@@ -723,13 +675,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         replyBody: '',
         parentColor: undefined,
       });
-    }, [channelName, addMessage]),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [channelName]),
 
     onPart: useCallback(() => {
       logger.chat.info('Parted from channel:', channelName);
       clearMessages();
       messagesRef.current = [];
-    }, [channelName, clearMessages]),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [channelName]),
   });
 
   const [connected, setConnected] = useState<boolean>(false);
@@ -754,8 +708,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           `Channel ${channelId}: +${added.length} -${removed.length} emotes`,
         );
       },
-      onEvent: (eventType, data) => {
-        console.log(`SevenTV event: ${eventType}`, data);
+      onEvent: (eventType, _data) => {
+        console.log(`SevenTV event: ${eventType}`);
       },
       twitchChannelId: channelId,
       sevenTvEmoteSetId,
@@ -841,13 +795,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         subscribeToChannel(emoteSetId);
       }
     }
-  }, [
-    wsConnected,
-    channelId,
-    loadingState,
-    subscribeToChannel,
-    getSevenTvEmoteSetId,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wsConnected, channelId, loadingState, subscribeToChannel]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
@@ -1000,7 +949,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }, []);
 
   useEffect(() => {
-    messagesRef.current = messages;
+    messagesRef.current = messages as AnyChatMessageType[];
   }, [messages]);
 
   // Reset refs on mount and when channelId changes
@@ -1034,23 +983,21 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     initializedChannelRef.current = channelId;
 
     return () => {
-      // Cleanup on unmount or channel change
       isMountedRef.current = false;
       hasPartedRef.current = false;
       currentEmoteSetIdRef.current = null;
-      // Clear timeouts on cleanup
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
         scrollTimeoutRef.current = null;
       }
+
       if (batchTimeoutRef.current) {
         clearTimeout(batchTimeoutRef.current);
         batchTimeoutRef.current = null;
       }
     };
-  }, [channelId, clearMessages]);
+  }, [channelId]);
 
-  // Initialize channel resources when channelId changes
   useEffect(() => {
     // Abort any previous loading
     if (loadingAbortRef.current) {
@@ -1082,7 +1029,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
 
     return undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId, authState?.token.accessToken]);
 
   const handleSendMessage = useCallback(() => {
@@ -1113,7 +1059,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         '',
       'badges-raw': badgeData['badges-raw'],
       badges: badgeData.badges,
-      // Generate color if not available
       color:
         currentUserState.color ||
         (user?.login ? generateRandomTwitchColor(user.login) : undefined),
@@ -1130,7 +1075,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       ? findBadges({
           userstate: optimisticUserstate,
           chatterinoBadges: emoteData.chatterinoBadges,
-          chatUsers: [], // need to populate from ctx
+          chatUsers: [],
           ffzChannelBadges: emoteData.ffzChannelBadges,
           ffzGlobalBadges: emoteData.ffzGlobalBadges,
           twitchChannelBadges: emoteData.twitchChannelBadges,
@@ -1139,6 +1084,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       : [];
 
     // Create optimistic message immediately (without emotes) so it renders right away (as text)
+    // if we haven't loaded emote/badge data yet
     const optimisticMessageId = generateNonce();
     const optimisticNonce = generateNonce();
     const optimisticMessage: AnyChatMessageType = {
@@ -1154,15 +1100,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       replyBody: replyTo?.message || '',
       parentColor: undefined,
     };
-
-    console.log('📤 Sending message optimistically:', {
-      message_id: optimisticMessageId,
-      message_nonce: optimisticNonce,
-      sender: optimisticMessage.sender,
-      text: messageText.substring(0, 50),
-      badgesCount: userBadges.length,
-      color: optimisticUserstate.color,
-    });
 
     handleNewMessage(optimisticMessage);
 
@@ -1198,7 +1135,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       );
     }
 
-    // Then send via IRC (it will come back and we'll deduplicate)
+    // Then send up to Twitch IRC
     if (replyTo) {
       try {
         sendMessage(
@@ -1226,7 +1163,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     user,
     handleNewMessage,
     getUserState,
-    getCurrentEmoteData,
     channelId,
     emoteProcessor,
   ]);
@@ -1246,7 +1182,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     (message: ChatMessageType<'usernotice'>) => {
       const messageText = replaceEmotesWithText(message.message);
       const parentMessageText = messages.find(
-        m => m.message_id === message.message_id,
+        m => m?.message_id === message.message_id,
       );
 
       setReplyTo({
@@ -1280,7 +1216,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         replyDisplayName={item.replyDisplayName}
         replyBody={item.replyBody}
         allMessages={messages}
-        // @ts-expect-error ignore for time being
+        // @ts-expect-error - notice_tags having issues being narrowed down
         notice_tags={
           'notice_tags' in item && item.notice_tags
             ? item.notice_tags
@@ -1311,7 +1247,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const handleTestMessageSelect = useCallback(
     (option: string) => {
-      // Determine message type and create test message
       let testMessage: AnyChatMessageType;
       let msgId: string;
 
@@ -1345,7 +1280,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           msgId = 'sub';
       }
 
-      // Create message part based on message type
       let updatedMessage: AnyChatMessageType;
 
       switch (msgId) {
@@ -1465,9 +1399,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     const messageMap = new Map<string, AnyChatMessageType>();
 
     messages.forEach(message => {
-      const key = `${message.message_id}_${message.message_nonce}`;
+      const key = `${message?.message_id}_${message?.message_nonce}`;
       // Always keep the latest occurrence (for updates with processed emotes)
-      messageMap.set(key, message);
+      messageMap.set(key, message as AnyChatMessageType);
     });
 
     return Array.from(messageMap.values());

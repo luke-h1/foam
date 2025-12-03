@@ -1,4 +1,4 @@
-import { AuthContextProvider, ChatContextProvider } from '@app/context';
+import { AuthContextProvider } from '@app/context';
 import { useDebugOptions, useRecoveredFromError } from '@app/hooks';
 import { BaseConfig, navigationRef } from '@app/navigators';
 import { ErrorBoundary } from '@app/screens';
@@ -55,39 +55,37 @@ export function Providers({ children }: PropsWithChildren) {
   return (
     <AuthContextProvider>
       <ScreenDimensionsProvider>
-        <ChatContextProvider>
-          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-            <ErrorBoundary
-              catchErrors={BaseConfig.catchErrors}
-              onReset={() => setRecoveredFromError(true)}
-            >
-              <KeyboardProvider>
-                <GestureHandlerRootView style={styles.gestureContainer}>
-                  <BottomSheetModalProvider>
-                    <QueryClientProvider client={queryClient}>
-                      <Toaster />
-                      {children}
-                      {ReactQueryDebug?.enabled && (
-                        <DevToolsBubble
-                          queryClient={queryClient}
-                          onCopy={async text => {
-                            try {
-                              await Clipboard.setStringAsync(text);
-                              return true;
-                              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                            } catch (error) {
-                              return false;
-                            }
-                          }}
-                        />
-                      )}
-                    </QueryClientProvider>
-                  </BottomSheetModalProvider>
-                </GestureHandlerRootView>
-              </KeyboardProvider>
-            </ErrorBoundary>
-          </SafeAreaProvider>
-        </ChatContextProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <ErrorBoundary
+            catchErrors={BaseConfig.catchErrors}
+            onReset={() => setRecoveredFromError(true)}
+          >
+            <KeyboardProvider>
+              <GestureHandlerRootView style={styles.gestureContainer}>
+                <BottomSheetModalProvider>
+                  <QueryClientProvider client={queryClient}>
+                    <Toaster />
+                    {children}
+                    {ReactQueryDebug?.enabled && (
+                      <DevToolsBubble
+                        queryClient={queryClient}
+                        onCopy={async text => {
+                          try {
+                            await Clipboard.setStringAsync(text);
+                            return true;
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                          } catch (error) {
+                            return false;
+                          }
+                        }}
+                      />
+                    )}
+                  </QueryClientProvider>
+                </BottomSheetModalProvider>
+              </GestureHandlerRootView>
+            </KeyboardProvider>
+          </ErrorBoundary>
+        </SafeAreaProvider>
       </ScreenDimensionsProvider>
     </AuthContextProvider>
   );

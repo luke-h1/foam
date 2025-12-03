@@ -27,7 +27,11 @@ const prefetchInitialData = (userId?: string) => {
     const followedQuery = twitchQueries.getFollowedStreams(userId);
     void queryClient.prefetchQuery(followedQuery);
   }
-  void queryClient.prefetchQuery(twitchQueries.getTopStreams());
+  void queryClient.prefetchQuery({
+    ...twitchQueries.getTopStreams(),
+    queryKey: twitchQueries.getTopStreams().queryKey,
+    queryFn: () => twitchQueries.getTopStreams().queryFn({}),
+  });
   void queryClient.prefetchQuery(twitchQueries.getTopCategories());
 };
 

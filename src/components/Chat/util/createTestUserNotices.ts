@@ -1,5 +1,5 @@
 /* eslint-disable no-useless-escape */
-import { ChatMessageType } from '@app/context';
+import { ChatMessageType } from '@app/store';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 function createBaseSubNotice(

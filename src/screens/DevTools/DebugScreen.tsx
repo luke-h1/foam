@@ -168,7 +168,6 @@ function NavigateToChat() {
   );
 }
 
-// Move debugItems creation inside the component to access useChatContext
 export function DebugScreen() {
   const debugOptions = useDebugOptions();
   const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(

@@ -1,5 +1,10 @@
-import { ChatUser, useChatContext } from '@app/context';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import {
+  ChatUser,
+  useCurrentEmoteData,
+  useEmojis,
+  useTtvUsers,
+} from '@app/store';
 
 import {
   useCallback,
@@ -133,15 +138,15 @@ export const ChatAutoCompleteInput = forwardRef<
     const {
       bttvChannelEmotes,
       bttvGlobalEmotes,
-      emojis,
       ffzChannelEmotes,
       ffzGlobalEmotes,
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
-      ttvUsers,
       twitchGlobalEmotes,
-    } = useChatContext();
+    } = useCurrentEmoteData();
+    const emojis = useEmojis();
+    const ttvUsers = useTtvUsers();
 
     /**
      * ref to measure input position
@@ -186,7 +191,9 @@ export const ChatAutoCompleteInput = forwardRef<
        * Add global emotes first
        */
       globalEmotes.forEach(emote => {
-        emoteMap.set(emote.name.toLowerCase(), emote);
+        if (emote) {
+          emoteMap.set(emote.name.toLowerCase(), emote);
+        }
       });
 
       /**
@@ -496,14 +503,17 @@ export const ChatAutoCompleteInput = forwardRef<
               >
                 {filteredUsers.map(user => (
                   <Button
-                    key={user.userId}
+                    key={user?.userId}
                     style={styles.userSuggestionItem}
-                    onPress={() => handleUserSelect(user)}
+                    onPress={() => handleUserSelect(user as ChatUser)}
                   >
                     <Typography
-                      style={[styles.userSuggestionText, { color: user.color }]}
+                      style={[
+                        styles.userSuggestionText,
+                        { color: user?.color },
+                      ]}
                     >
-                      {user.name}
+                      {user?.name}
                     </Typography>
                   </Button>
                 ))}
