@@ -8,12 +8,18 @@ export const getNextPageParam: GetNextPageParamFunction<
   string,
   PaginatedList<TwitchStream>
 > = lastPage => {
-  return lastPage?.pagination?.cursor ?? '';
+  if (!lastPage || !lastPage.pagination) {
+    return undefined;
+  }
+  return lastPage.pagination.cursor || undefined;
 };
 
 export const getPreviousPageParam: GetPreviousPageParamFunction<
   string,
   PaginatedList<TwitchStream>
 > = firstPage => {
-  return firstPage?.pagination?.cursor ?? '';
+  if (!firstPage || !firstPage.pagination) {
+    return undefined;
+  }
+  return firstPage.pagination.cursor || undefined;
 };

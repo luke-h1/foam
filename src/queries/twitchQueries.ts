@@ -53,6 +53,21 @@ export const twitchQueries = {
       queryFn: () => twitchService.getUser(userId),
     };
   },
+  getTopStreamsInfinite(): {
+    queryKey: string[];
+    queryFn: ({
+      pageParam,
+    }: {
+      pageParam?: string;
+    }) => Promise<PaginatedList<TwitchStream>>;
+  } {
+    return {
+      queryKey: ['topStreamsInfinite'],
+      queryFn: async ({ pageParam }: { pageParam?: string }) => {
+        return twitchService.getTopStreams(pageParam);
+      },
+    };
+  },
   searchChannels(query: string): UseQueryOptions<SearchChannelResponse[]> {
     return {
       queryKey: ['searchChannels', query],

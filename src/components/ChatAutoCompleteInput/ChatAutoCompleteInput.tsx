@@ -213,8 +213,12 @@ export const ChatAutoCompleteInput = forwardRef<
           const aIsChannel = channelEmotes.some(ce => ce.id === a.id);
           const bIsChannel = channelEmotes.some(ce => ce.id === b.id);
 
-          if (aIsChannel && !bIsChannel) return -1;
-          if (!aIsChannel && bIsChannel) return 1;
+          if (aIsChannel && !bIsChannel) {
+            return -1;
+          }
+          if (!aIsChannel && bIsChannel) {
+            return 1;
+          }
 
           return a.name.localeCompare(b.name);
         });
