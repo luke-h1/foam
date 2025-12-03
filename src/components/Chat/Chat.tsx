@@ -708,7 +708,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           `Channel ${channelId}: +${added.length} -${removed.length} emotes`,
         );
       },
-      onEvent: (eventType, data) => {
+      onEvent: (eventType, _data) => {
         console.log(`SevenTV event: ${eventType}`);
       },
       twitchChannelId: channelId,
