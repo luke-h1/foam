@@ -84,14 +84,12 @@ export function Menu({
       {...listProps}
       ListFooterComponent={footer}
       ListHeaderComponent={header}
-      // contentContainerStyle={[styles.content, style]}
       data={items}
-      // initialNumToRender={100}
       keyExtractor={(_item, index) => String(index)}
-      // ref={list}
       refreshControl={
         onRefresh ? <RefreshControl onRefresh={onRefresh} /> : undefined
       }
+      // todo @luke-h1: move out of func body and create a lint rule for this
       renderItem={({ item }) => {
         if (item === null) {
           return <View style={menuStyles.menu} />;
@@ -107,7 +105,6 @@ export function Menu({
         }
 
         // @ts-expect-error fix me being unknown
-
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         return <MenuItem item={item} style={item.style} />;
       }}

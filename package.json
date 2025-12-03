@@ -68,6 +68,7 @@
     "@expo/webpack-config": "^19.0.0",
     "@gorhom/bottom-sheet": "^5.1.8",
     "@legendapp/list": "^1.1.4",
+    "@legendapp/state": "^2.1.15",
     "@paralleldrive/cuid2": "^2.2.2",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.11",
     "@radix-ui/colors": "^3.0.0",

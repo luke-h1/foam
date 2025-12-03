@@ -11,9 +11,9 @@ import { RefreshControl } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function TopStreamsScreen() {
-  const [cursor, setCursor] = useState<string>('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const flashListRef = useRef(null);
+  const [cursor, setCursor] = useState<string>('');
 
   const {
     data: streams,
@@ -33,11 +33,11 @@ export function TopStreamsScreen() {
     if (hasNextPage && !isFetchingNextPage) {
       const nextCursor =
         streams?.pages[streams.pages.length - 1]?.pagination.cursor;
-      setCursor(nextCursor as string);
+      setCursor(nextCursor ?? '');
       await fetchNextPage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasNextPage, isFetchingNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [debouncedHandleLoadMore] = useDebouncedCallback(handleLoadMore, 150);
@@ -64,7 +64,7 @@ export function TopStreamsScreen() {
     );
   }
 
-  const allStreams = streams?.pages.flatMap(page => page.data) ?? [];
+  const allStreams = streams?.pages?.flatMap(page => page.data) ?? [];
 
   if (allStreams.length === 0) {
     return (

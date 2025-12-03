@@ -44,6 +44,8 @@ export default function FollowingScreen() {
 
   const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
 
+  const streamsArray = Array.isArray(streams) ? streams : [];
+
   const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
     return <LiveStreamCard stream={item} />;
   }, []);
@@ -52,12 +54,12 @@ export default function FollowingScreen() {
     () => (
       <ScreenHeader
         title="Following"
-        subtitle={`${streams?.length ?? 0} channel${streams?.length !== 1 ? 's' : ''} live`}
+        subtitle={`${streamsArray.length} channel${streamsArray.length !== 1 ? 's' : ''} live`}
         back={false}
         size="large"
       />
     ),
-    [streams?.length],
+    [streamsArray.length],
   );
 
   if (refreshing || isLoading) {
@@ -80,7 +82,7 @@ export default function FollowingScreen() {
     );
   }
 
-  if (streams && streams.length === 0) {
+  if (streamsArray.length === 0) {
     return (
       <EmptyState
         content="None of your followed streamers are live"
@@ -92,7 +94,7 @@ export default function FollowingScreen() {
   return (
     <View style={styles.container}>
       <AnimatedFlashList<TwitchStream>
-        data={streams}
+        data={streamsArray}
         keyExtractor={item => item.id}
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}

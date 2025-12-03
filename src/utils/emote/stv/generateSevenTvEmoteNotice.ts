@@ -1,4 +1,4 @@
-import { ChatMessageType } from '@app/context';
+import { ChatMessageType } from '@app/store';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { ParsedPart } from '@app/utils/chat';
 import { generateNonce } from '@app/utils/string/generateNonce';

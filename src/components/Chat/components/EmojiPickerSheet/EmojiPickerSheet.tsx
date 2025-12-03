@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 
 import { Typography } from '@app/components/Typography';
-import { useChatContext } from '@app/context';
+import { useCurrentEmoteData } from '@app/store';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { LegendListRef } from '@legendapp/list';
 import { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
@@ -93,7 +93,7 @@ export const EmojiPickerSheet = forwardRef<BottomSheetModal, EmojiPickerProps>(
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
       twitchGlobalEmotes,
-    } = useChatContext();
+    } = useCurrentEmoteData();
 
     const legendListRef = useRef<LegendListRef>(null);
     const scrollY = useSharedValue<number>(0);
