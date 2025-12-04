@@ -17,6 +17,7 @@ import {
   clearMessages,
   getCurrentEmoteData,
   getSevenTvEmoteSetId,
+  clearCache,
 } from '@app/store';
 import {
   UserNoticeTagsByVariant,
@@ -1393,6 +1394,16 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [channelId]);
 
+  const handleClearChatCache = useCallback(() => {
+    try {
+      clearCache(channelId);
+      logger.chat.info('Chat cache cleared successfully');
+      debugModalRef.current?.dismiss();
+    } catch (error) {
+      logger.chat.error('Failed to clear chat cache:', error);
+    }
+  }, [channelId]);
+
   // Deduplicate messages by message_id + message_nonce
   // Keep the last occurrence (which would be the updated one with processed emotes)
   const deduplicatedMessages = useMemo(() => {
@@ -1613,6 +1624,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               style={styles.debugModalItem}
             >
               <Typography>Viewer Milestone</Typography>
+            </Button>
+            <Button
+              onPress={handleClearChatCache}
+              style={styles.debugModalItem}
+            >
+              <Typography>Clear Chat Cache</Typography>
             </Button>
           </BottomSheetView>
         </BottomSheetModal>

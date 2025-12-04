@@ -24,7 +24,11 @@ export function useDownloadImages() {
 
       const directory = new Directory(Paths.cache, createId());
 
-      directory.create();
+      directory.create({
+        intermediates: true,
+        idempotent: true,
+        overwrite: true,
+      });
 
       const assets = await Promise.all(
         urls.map(async url => {

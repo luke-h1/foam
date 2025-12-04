@@ -2,6 +2,11 @@ import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
 import { calculateAspectRatio, ParsedPart } from '@app/utils';
+import {
+  getCompressedEmoteUrl,
+  compressEmoteUrl,
+} from '@app/utils/image/emoteCompression';
+import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native-unistyles';
 
 type PartVariant = ParsedPart<'emote'>;
@@ -20,6 +25,45 @@ export const EmoteRenderer = ({
     part.height || 20,
     30,
   );
+
+  // Use lazy compression - track compressed URL, default to original
+  const [compressedUrl, setCompressedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Reset if URL is cleared
+    if (!part.url) {
+      setCompressedUrl(null);
+      return;
+    }
+
+    // If already compressed (data URI), no need to compress again
+    if (part.url.startsWith('data:')) {
+      setCompressedUrl(null);
+      return;
+    }
+
+    // Check if already compressed in cache
+    const cached = getCompressedEmoteUrl(part.url);
+    if (cached && cached !== part.url) {
+      setCompressedUrl(cached);
+      return;
+    }
+
+    // No cache - reset compressed URL and start compression in background
+    setCompressedUrl(null);
+
+    // Start compression in background
+    void compressEmoteUrl(part.url).then(compressed => {
+      // Update to compressed version when ready
+      if (compressed && compressed !== part.url) {
+        setCompressedUrl(compressed);
+      }
+    });
+  }, [part.url]);
+
+  // Use compressed URL if available, otherwise use original URL
+  const imageUrl = compressedUrl || part.url || '';
+
   // Add error handling for missing URLs
   if (!part.url) {
     return (
@@ -34,9 +78,11 @@ export const EmoteRenderer = ({
   return (
     <Button onLongPress={() => handleEmotePress(part)}>
       <Image
-        source={part.url}
+        source={{
+          uri: imageUrl,
+        }}
         cachePolicy="memory-disk"
-        decodeFormat="rgb"
+        decodeFormat="argb"
         useAppleWebpCodec
         transition={50}
         style={{
@@ -44,7 +90,7 @@ export const EmoteRenderer = ({
           height,
         }}
         onError={error => {
-          console.warn('Failed to load emote image:', part.url, error);
+          console.warn('Failed to load emote image:', imageUrl, error);
         }}
       />
     </Button>
