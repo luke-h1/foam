@@ -552,7 +552,6 @@ export const clearAllCache = () => {
     chatStore$.ttvUsers.set([]);
     chatStore$.messages.set([]);
   });
-  // Clear the image cache as well
   clearEmoteImageCache();
   logger.chat.info('All chat cache cleared successfully');
 };
@@ -560,10 +559,10 @@ export const clearAllCache = () => {
 /**
  * Cache an emote image URL to disk asynchronously
  * Returns the cached file URI if successful, or the original URL on failure
- * Uses deduplication to prevent multiple simultaneous downloads of the same URL
+ * Uses deduping to prevent multiple simultaneous downloads of the same URL
  */
 export const cacheEmoteImage = async (emoteUrl: string): Promise<string> => {
-  // Skip if already a file URI or data URI
+  // already cached
   if (
     !emoteUrl ||
     emoteUrl.startsWith('data:') ||
@@ -572,19 +571,16 @@ export const cacheEmoteImage = async (emoteUrl: string): Promise<string> => {
     return emoteUrl;
   }
 
-  // Check if file already exists on disk
   const existingFileUri = getCachedImageUri(emoteUrl);
   if (existingFileUri) {
     return existingFileUri;
   }
 
-  // Check if caching is already in progress for this URL
   const inProgress = emoteImageCachePromises.get(emoteUrl);
   if (inProgress) {
     return inProgress;
   }
 
-  // Start caching to disk
   const cachePromise = (async () => {
     try {
       const fileUri = await cacheImageFromUrl(emoteUrl);
@@ -622,7 +618,7 @@ export const getCachedEmoteUri = (emoteUrl: string): string => {
 };
 
 /**
- * Cache multiple emote images in parallel (non-blocking)
+ * Cache multiple emote images
  * This is called after loading channel resources to pre-cache all emote images
  */
 export const cacheEmoteImages = async (
@@ -635,8 +631,12 @@ export const cacheEmoteImages = async (
 
   // Filter out already cached URLs
   const urlsToCache = urls.filter(url => {
-    if (url.startsWith('data:') || url.startsWith('file://')) return false;
-    if (getCachedImageUri(url)) return false;
+    if (url.startsWith('data:') || url.startsWith('file://')) {
+      return false;
+    }
+    if (getCachedImageUri(url)) {
+      return false;
+    }
     return true;
   });
 
@@ -649,7 +649,6 @@ export const cacheEmoteImages = async (
     `Starting background cache of ${urlsToCache.length} emote images...`,
   );
 
-  // Cache all images in parallel
   await Promise.allSettled(urlsToCache.map(url => cacheEmoteImage(url)));
 
   const duration = performance.now() - startTime;
@@ -658,9 +657,6 @@ export const cacheEmoteImages = async (
   );
 };
 
-/**
- * Clear the emote image disk cache
- */
 export const clearEmoteImageCache = (): void => {
   emoteImageCachePromises.clear();
   clearSessionCache();
@@ -679,11 +675,15 @@ export const refreshChannelResources = async (
 
 export const getCurrentEmoteData = (channelId?: string) => {
   const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
-  if (!targetChannelId) return emptyEmoteData;
+  if (!targetChannelId) {
+    return emptyEmoteData;
+  }
 
   const caches = chatStore$.persisted.channelCaches.peek();
   const cache = caches?.[targetChannelId];
-  if (!cache) return emptyEmoteData;
+  if (!cache) {
+    return emptyEmoteData;
+  }
 
   return {
     twitchChannelEmotes: cache.twitchChannelEmotes ?? [],
@@ -804,7 +804,6 @@ export const useCurrentEmoteData = () => {
 };
 
 export const useChannelEmoteData = (channelId: string | null) => {
-  // Subscribe to the entire channelCaches to ensure we get updates
   const caches = useSelector(chatStore$.persisted.channelCaches);
 
   if (!channelId) {

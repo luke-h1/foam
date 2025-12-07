@@ -189,6 +189,8 @@ export function getCachedImageUri(url: string): string | null {
 export function getCachedImageAsBase64(fileUri: string): string {
   const file = new File(fileUri);
   const base64 = file.base64() ?? '';
+  
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
   return `data:image/png;base64,${base64}`;
 }
 

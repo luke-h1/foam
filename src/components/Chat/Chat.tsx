@@ -107,7 +107,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const sevenTvEmoteSetId = useMemo(() => {
     return getSevenTvEmoteSetId(channelId) || undefined;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [channelId]);
 
   useTwitchWs();
@@ -341,7 +341,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           );
         }
       },
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
       [channelId, channelName, emoteProcessor, handleNewMessage, messages],
     ),
     onUserNotice: useCallback(
@@ -638,7 +638,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           animated: false,
         });
       }, 0);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
     }, [messages.length]),
     onJoin: useCallback(() => {
       logger.chat.info('Joined channel:', channelName);
@@ -676,14 +676,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         replyBody: '',
         parentColor: undefined,
       });
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
     }, [channelName]),
 
     onPart: useCallback(() => {
       logger.chat.info('Parted from channel:', channelName);
       clearMessages();
       messagesRef.current = [];
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
     }, [channelName]),
   });
 
@@ -796,7 +796,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         subscribeToChannel(emoteSetId);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [wsConnected, channelId, loadingState, subscribeToChannel]);
 
   useEffect(() => {
