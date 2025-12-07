@@ -107,7 +107,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const sevenTvEmoteSetId = useMemo(() => {
     return getSevenTvEmoteSetId(channelId) || undefined;
-     
   }, [channelId]);
 
   useTwitchWs();
@@ -341,7 +340,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           );
         }
       },
-       
+
       [channelId, channelName, emoteProcessor, handleNewMessage, messages],
     ),
     onUserNotice: useCallback(
@@ -638,7 +637,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           animated: false,
         });
       }, 0);
-       
     }, [messages.length]),
     onJoin: useCallback(() => {
       logger.chat.info('Joined channel:', channelName);
@@ -676,14 +674,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         replyBody: '',
         parentColor: undefined,
       });
-       
     }, [channelName]),
 
     onPart: useCallback(() => {
       logger.chat.info('Parted from channel:', channelName);
       clearMessages();
       messagesRef.current = [];
-       
     }, [channelName]),
   });
 
@@ -796,7 +792,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         subscribeToChannel(emoteSetId);
       }
     }
-     
   }, [wsConnected, channelId, loadingState, subscribeToChannel]);
 
   useEffect(() => {
