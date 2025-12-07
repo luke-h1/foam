@@ -23,7 +23,11 @@ export function useDownloadImage() {
 
       const directory = new Directory(Paths.cache, createId());
 
-      directory.create();
+      directory.create({
+        intermediates: true,
+        idempotent: true,
+        overwrite: true,
+      });
 
       const file = await File.downloadFileAsync(url, directory);
 

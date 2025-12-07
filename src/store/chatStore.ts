@@ -23,6 +23,11 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils';
+import {
+  cacheImageFromUrl,
+  clearSessionCache,
+  getCachedImageUri,
+} from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
 import { batch, observable } from '@legendapp/state';
 import {
@@ -147,6 +152,9 @@ export interface ChannelCacheType {
 const MAX_MESSAGES = 500;
 const MAX_CACHED_CHANNELS = 10;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
+
+// Track in-progress downloads to prevent duplicate requests
+const emoteImageCachePromises = new Map<string, Promise<string>>();
 
 const emptyEmoteData = {
   twitchChannelEmotes: [] as SanitisiedEmoteSet[],
@@ -461,6 +469,11 @@ export const loadChannelResources = async (
       `Loaded ${allEmotes.length} emotes and ${allBadges.length} badges`,
     );
 
+    // Cache emote images in the background (non-blocking)
+    cacheEmoteImages(allEmotes).catch(error => {
+      logger.chat.warn('Background emote image caching failed:', error);
+    });
+
     return true;
   } catch (error) {
     logger.chat.error('Error loading channel resources:', error);
@@ -539,7 +552,115 @@ export const clearAllCache = () => {
     chatStore$.ttvUsers.set([]);
     chatStore$.messages.set([]);
   });
+  clearEmoteImageCache();
   logger.chat.info('All chat cache cleared successfully');
+};
+
+/**
+ * Cache an emote image URL to disk asynchronously
+ * Returns the cached file URI if successful, or the original URL on failure
+ * Uses deduping to prevent multiple simultaneous downloads of the same URL
+ */
+export const cacheEmoteImage = async (emoteUrl: string): Promise<string> => {
+  // already cached
+  if (
+    !emoteUrl ||
+    emoteUrl.startsWith('data:') ||
+    emoteUrl.startsWith('file://')
+  ) {
+    return emoteUrl;
+  }
+
+  const existingFileUri = getCachedImageUri(emoteUrl);
+  if (existingFileUri) {
+    return existingFileUri;
+  }
+
+  const inProgress = emoteImageCachePromises.get(emoteUrl);
+  if (inProgress) {
+    return inProgress;
+  }
+
+  const cachePromise = (async () => {
+    try {
+      const fileUri = await cacheImageFromUrl(emoteUrl);
+      emoteImageCachePromises.delete(emoteUrl);
+      return fileUri;
+    } catch (error) {
+      emoteImageCachePromises.delete(emoteUrl);
+      logger.chat.warn(
+        `Failed to cache emote image ${emoteUrl.substring(0, 50)}...:`,
+        error,
+      );
+      return emoteUrl; // Fallback to original URL
+    }
+  })();
+
+  emoteImageCachePromises.set(emoteUrl, cachePromise);
+  return cachePromise;
+};
+
+/**
+ * Get the cached file URI for an emote URL synchronously
+ * Returns the cached URI if available, otherwise the original URL
+ */
+export const getCachedEmoteUri = (emoteUrl: string): string => {
+  if (
+    !emoteUrl ||
+    emoteUrl.startsWith('data:') ||
+    emoteUrl.startsWith('file://')
+  ) {
+    return emoteUrl;
+  }
+
+  const cachedUri = getCachedImageUri(emoteUrl);
+  return cachedUri ?? emoteUrl;
+};
+
+/**
+ * Cache multiple emote images
+ * This is called after loading channel resources to pre-cache all emote images
+ */
+export const cacheEmoteImages = async (
+  emotes: SanitisiedEmoteSet[],
+): Promise<void> => {
+  if (emotes.length === 0) return;
+
+  const startTime = performance.now();
+  const urls = emotes.map(e => e.url).filter(Boolean);
+
+  // Filter out already cached URLs
+  const urlsToCache = urls.filter(url => {
+    if (url.startsWith('data:') || url.startsWith('file://')) {
+      return false;
+    }
+    if (getCachedImageUri(url)) {
+      return false;
+    }
+    return true;
+  });
+
+  if (urlsToCache.length === 0) {
+    logger.chat.debug('All emote images already cached');
+    return;
+  }
+
+  logger.chat.info(
+    `Starting background cache of ${urlsToCache.length} emote images...`,
+  );
+
+  await Promise.allSettled(urlsToCache.map(url => cacheEmoteImage(url)));
+
+  const duration = performance.now() - startTime;
+  logger.performance.debug(
+    `⏳ Cached ${urlsToCache.length} emote images -- time: ${duration.toFixed(2)} ms`,
+  );
+};
+
+export const clearEmoteImageCache = (): void => {
+  emoteImageCachePromises.clear();
+  clearSessionCache();
+  logger.chat.info('Emote image cache cleared');
 };
 
 export const refreshChannelResources = async (
@@ -554,11 +675,15 @@ export const refreshChannelResources = async (
 
 export const getCurrentEmoteData = (channelId?: string) => {
   const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
-  if (!targetChannelId) return emptyEmoteData;
+  if (!targetChannelId) {
+    return emptyEmoteData;
+  }
 
   const caches = chatStore$.persisted.channelCaches.peek();
   const cache = caches?.[targetChannelId];
-  if (!cache) return emptyEmoteData;
+  if (!cache) {
+    return emptyEmoteData;
+  }
 
   return {
     twitchChannelEmotes: cache.twitchChannelEmotes ?? [],
@@ -679,7 +804,6 @@ export const useCurrentEmoteData = () => {
 };
 
 export const useChannelEmoteData = (channelId: string | null) => {
-  // Subscribe to the entire channelCaches to ensure we get updates
   const caches = useSelector(chatStore$.persisted.channelCaches);
 
   if (!channelId) {

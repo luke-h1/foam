@@ -6,7 +6,11 @@ import {
   SettingsProfileScreen,
 } from '@app/screens';
 import { ChatScreen } from '@app/screens/ChatScreen';
-import { DebugScreen, DiagnosticsScreen } from '@app/screens/DevTools';
+import {
+  CachedImagesScreen,
+  DebugScreen,
+  DiagnosticsScreen,
+} from '@app/screens/DevTools';
 import { AboutScreen, FaqScreen, LicensesScreen } from '@app/screens/Other';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -19,6 +23,7 @@ export type SettingsStackParamList = {
   Other: undefined;
 
   About: undefined;
+  CachedImages: undefined;
   Diagnostics: undefined;
   Licenses: undefined;
   Faq: undefined;
@@ -48,6 +53,7 @@ export function SettingsStackNavigator() {
       <Stack.Screen name="Appearance" component={SettingsAppearanceScreen} />
       <Stack.Screen name="DevTools" component={SettingsDevtoolsScreen} />
       <Stack.Screen name="Other" component={SettingsOtherScreen} />
+      <Stack.Screen name="CachedImages" component={CachedImagesScreen} />
       <Stack.Screen name="Diagnostics" component={DiagnosticsScreen} />
       <Stack.Screen name="Debug" component={DebugScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
