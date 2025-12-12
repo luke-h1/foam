@@ -13,6 +13,7 @@ import {
   generateRandomTwitchColor,
 } from '@app/utils';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { formatDate } from '@app/utils/date-time';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
@@ -305,7 +306,7 @@ function ChatMessageComponent<
                 {parentDisplayName}
               </Typography>
             )}
-            {replyBody && ` ${truncate(replyBody.trim() || replyBody, 50)}`}
+            {replyBody && ` ${truncate(unescapeIrcTag(replyBody).trim(), 50)}`}
           </Typography>
         </View>
       )}
