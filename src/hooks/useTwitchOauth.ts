@@ -1,4 +1,4 @@
-import { useAuthContext } from '@app/context';
+import { useAuthContext } from '@app/context/AuthContext';
 import { logger } from '@app/utils/logger';
 import {
   AuthRequestConfig,

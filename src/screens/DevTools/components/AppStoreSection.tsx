@@ -1,5 +1,5 @@
 import * as Form from '@app/components/Form/Form';
-import { openLinkInBrowser } from '@app/utils';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as AC from '@bacons/apple-colors';
 import * as Application from 'expo-application';
 import { useState } from 'react';

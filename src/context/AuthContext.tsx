@@ -1,4 +1,4 @@
-import { queryClient } from '@app/Providers';
+import { queryClient } from '@app/Providers/Providers';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchApi } from '@app/services/api';
 import {

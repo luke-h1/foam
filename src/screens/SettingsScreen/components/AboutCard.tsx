@@ -1,6 +1,6 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { IconButton } from '@app/components/IconButton';
-import { openLinkInBrowser } from '@app/utils';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { SFSymbol } from 'expo-symbols';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';

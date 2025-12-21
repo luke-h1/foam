@@ -1,4 +1,4 @@
-import { OpenStringUnion } from '@app/utils';
+import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import EventEmitter from 'eventemitter3';
 import { MMKV } from 'react-native-mmkv';
 

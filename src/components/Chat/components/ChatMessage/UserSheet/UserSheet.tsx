@@ -1,7 +1,7 @@
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { twitchQueries } from '@app/queries';
-import { formatDate } from '@app/utils';
+import { twitchQueries } from '@app/queries/twitchQueries';
+import { formatDate } from '@app/utils/date-time/date';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useQuery } from '@tanstack/react-query';
 import { forwardRef, useMemo } from 'react';

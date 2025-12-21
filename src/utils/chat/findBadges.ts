@@ -1,5 +1,5 @@
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatUser } from '@app/store';
+import { ChatUser } from '@app/store/chatStore';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
 interface FindBadgesParams {

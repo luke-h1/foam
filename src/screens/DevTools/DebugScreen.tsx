@@ -1,13 +1,12 @@
-import {
-  Button,
-  TextField,
-  FlashList,
-  Switch,
-  Typography,
-} from '@app/components';
+import { Button } from '@app/components/Button';
+import { TextField } from '@app/components/TextField';
+import { FlashList } from '@app/components/FlashList';
+import { Switch } from '@app/components/Switch';
+import { Typography } from '@app/components/Typography';
 import { Screen } from '@app/components/Screen';
-import { useAuthContext } from '@app/context';
-import { useAppNavigation, useDebugOptions } from '@app/hooks';
+import { useAuthContext } from '@app/context/AuthContext';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
+import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import {
   AllowedKey,
   NAMESPACE,

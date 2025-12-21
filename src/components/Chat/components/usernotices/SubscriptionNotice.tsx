@@ -1,6 +1,6 @@
 import { Typography } from '@app/components/Typography';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { ParsedPart } from '@app/utils';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import React, { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

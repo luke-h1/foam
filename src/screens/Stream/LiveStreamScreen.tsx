@@ -1,5 +1,7 @@
-import { Chat, Spinner, Typography } from '@app/components';
-import { StreamStackScreenProps } from '@app/navigators';
+import { Chat } from '@app/components/Chat';
+import { Spinner } from '@app/components/Spinner';
+import { Typography } from '@app/components/Typography';
+import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useCallback, useEffect, useState } from 'react';

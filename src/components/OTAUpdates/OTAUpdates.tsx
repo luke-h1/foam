@@ -1,4 +1,4 @@
-import { useAppState } from '@app/hooks';
+import { useAppState } from '@app/hooks/useAppState';
 import { reportCrash } from '@app/utils/reportCrash';
 import * as Updates from 'expo-updates';
 import { useState } from 'react';

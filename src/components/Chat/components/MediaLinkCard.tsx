@@ -11,7 +11,7 @@ import {
   TWITCH_CHANNEL_CLIP_REGEX,
   TWITCH_CLIP_REGEX,
   TwitchAnd7TVVariant,
-} from '@app/utils';
+} from '@app/utils/chat/replaceTextWithEmotes';
 import { useQueries } from '@tanstack/react-query';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

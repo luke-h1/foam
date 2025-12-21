@@ -1,8 +1,8 @@
-import { ScreenHeader } from '@app/components';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Menu } from '@app/components/Menu';
 import { Screen } from '@app/components/Screen';
-import { useAppNavigation } from '@app/hooks';
-import { SettingsStackParamList } from '@app/navigators';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
+import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
 import { useUnistyles } from 'react-native-unistyles';
 
 export function SettingsDevtoolsScreen() {

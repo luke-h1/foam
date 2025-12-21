@@ -1,16 +1,12 @@
-import {
-  Button,
-  FlashList,
-  SearchHistoryV2,
-  Typography,
-} from '@app/components';
+import { Button } from '@app/components/Button';
+import { FlashList } from '@app/components/FlashList';
+import { SearchHistoryV2 } from '@app/components/SearchHistory';
+import { Typography } from '@app/components/Typography';
 import { Icon } from '@app/components/Icon';
 import { PressableArea } from '@app/components/PressableArea';
-import {
-  useAppNavigation,
-  useDebouncedCallback,
-  useDebouncedEffect,
-} from '@app/hooks';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
+import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
+import { useDebouncedEffect } from '@app/hooks/useDebouncedEffect';
 import { storageService } from '@app/services/storage-service';
 import {
   Category,

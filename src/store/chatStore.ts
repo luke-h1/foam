@@ -22,7 +22,7 @@ import {
   UserNoticeVariantMap,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { ParsedPart } from '@app/utils';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import {
   cacheImageFromUrl,
   clearSessionCache,

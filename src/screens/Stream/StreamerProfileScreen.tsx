@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { View } from 'react-native';
 
 export function StreamerProfileScreen() {

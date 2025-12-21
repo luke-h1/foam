@@ -1,4 +1,4 @@
-import { useAuthContext } from '@app/context';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useEffect } from 'react';
 import { useAppNavigation } from './useAppNavigation';
 

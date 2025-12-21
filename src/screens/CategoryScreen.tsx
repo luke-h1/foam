@@ -1,18 +1,13 @@
-import {
-  EmptyState,
-  HeroHeader,
-  LiveStreamCard,
-  Spinner,
-  Typography,
-} from '@app/components';
-import { useAppNavigation } from '@app/hooks';
-import { AppStackParamList } from '@app/navigators';
+import { EmptyState } from '@app/components/EmptyState';
+import { HeroHeader } from '@app/components/ScreenHeader/HeroHeader';
+import { LiveStreamCard } from '@app/components/LiveStreamCard';
+import { Spinner } from '@app/components/Spinner';
+import { Typography } from '@app/components/Typography';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
+import { AppStackParamList } from '@app/navigators/AppNavigator';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
-import {
-  formatViewCount,
-  getNextPageParam,
-  getPreviousPageParam,
-} from '@app/utils';
+import { formatViewCount } from '@app/utils/string/formatViewCount';
+import { getNextPageParam, getPreviousPageParam } from '@app/utils/pagination/pagination';
 import { StackScreenProps } from '@react-navigation/stack';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';

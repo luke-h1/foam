@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-imports */
-import { createHitslop } from '@app/utils';
+import { createHitslop } from '@app/utils/string/createHitSlop';
 import { forwardRef } from 'react';
 import { Pressable, PressableProps, View } from 'react-native';
 

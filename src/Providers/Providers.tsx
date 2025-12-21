@@ -1,10 +1,12 @@
-import { AuthContextProvider } from '@app/context';
-import { useDebugOptions, useRecoveredFromError } from '@app/hooks';
-import { BaseConfig, navigationRef } from '@app/navigators';
-import { ErrorBoundary } from '@app/screens';
+import { AuthContextProvider } from '@app/context/AuthContext';
+import { useDebugOptions } from '@app/hooks/useDebugOptions';
+import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
+import { BaseConfig } from '@app/navigators/config';
+import { navigationRef } from '@app/navigators/navigationUtilities';
+import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api';
 import { storage } from '@app/services/storage-service';
-import { deleteTokens } from '@app/utils';
+import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useMMKVDevTools } from '@rozenite/mmkv-plugin';
 import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';

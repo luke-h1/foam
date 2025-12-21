@@ -1,6 +1,8 @@
-import { Button, Icon, Typography } from '@app/components';
+import { Button } from '@app/components/Button';
+import { Icon } from '@app/components/Icon';
+import { Typography } from '@app/components/Typography';
 import { sentryService } from '@app/services/sentry-service';
-import { openLinkInBrowser } from '@app/utils';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { type ErrorInfo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

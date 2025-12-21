@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { twitchApi as _twitchApi } from '@app/services/api';
 import {
   twitchService as _twitchService,

@@ -1,5 +1,5 @@
 import { BrandIconName } from '@app/components/BrandIcon';
-import { chunkArray } from '@app/utils/array';
+import { chunkArray } from '@app/utils/array/chunkArray';
 import { PickerCell } from '../EmojiPickerSheet';
 import { EmojiSection } from '../config';
 

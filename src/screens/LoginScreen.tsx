@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Button, Typography, Image } from '@app/components';
+import { Button } from '@app/components/Button';
+import { Typography } from '@app/components/Typography';
+import { Image } from '@app/components/Image';
 import { BrandIcon } from '@app/components/BrandIcon';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { sentryService } from '@app/services/sentry-service';
 import { useAuthRequest } from 'expo-auth-session';
 import { useEffect } from 'react';

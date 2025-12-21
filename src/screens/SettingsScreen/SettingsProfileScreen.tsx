@@ -1,4 +1,4 @@
-import { ScreenHeader } from '@app/components';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Screen } from '@app/components/Screen';
 import { ProfileCard } from './components/profile/ProfileCard';
 

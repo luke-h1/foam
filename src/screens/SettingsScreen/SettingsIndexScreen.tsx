@@ -1,10 +1,11 @@
-import { ScreenHeader, Typography } from '@app/components';
+import { ScreenHeader } from '@app/components/ScreenHeader';
+import { Typography } from '@app/components/Typography';
 import { Menu } from '@app/components/Menu';
 import { PressableArea } from '@app/components/PressableArea';
 import { Screen } from '@app/components/Screen';
-import { useAppNavigation } from '@app/hooks';
-import { SettingsStackParamList } from '@app/navigators';
-import { openLinkInBrowser } from '@app/utils';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
+import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';

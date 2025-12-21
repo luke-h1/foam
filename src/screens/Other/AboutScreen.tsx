@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function AboutScreen() {

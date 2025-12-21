@@ -1,20 +1,18 @@
 /* eslint-disable camelcase */
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType } from '@app/store';
+import { ChatMessageType } from '@app/store/chatStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import {
   UserNoticeVariantMap,
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import {
-  lightenColor,
-  replaceEmotesWithText,
-  truncate,
-  generateRandomTwitchColor,
-} from '@app/utils';
+import { lightenColor } from '@app/utils/color/lightenColor';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { truncate } from '@app/utils/string/truncate';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
-import { formatDate } from '@app/utils/date-time';
+import { formatDate } from '@app/utils/date-time/date';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import React, { useRef, useCallback, memo, useState } from 'react';

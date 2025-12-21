@@ -1,4 +1,5 @@
-import { LiveStreamImage, Typography } from '@app/components';
+import { LiveStreamImage } from '@app/components/LiveStreamImage';
+import { Typography } from '@app/components/Typography';
 import { SearchChannelResponse } from '@app/services/twitch-service';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

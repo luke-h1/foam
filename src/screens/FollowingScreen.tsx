@@ -1,10 +1,7 @@
-import {
-  EmptyState,
-  LiveStreamCard,
-  AnimatedFlashList,
-  ListRenderItem,
-  ScreenHeader,
-} from '@app/components';
+import { EmptyState } from '@app/components/EmptyState';
+import { LiveStreamCard } from '@app/components/LiveStreamCard';
+import { AnimatedFlashList, ListRenderItem } from '@app/components/FlashList';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshControl } from '@app/components/RefreshControl';
 import { useAuthContext } from '@app/context/AuthContext';
