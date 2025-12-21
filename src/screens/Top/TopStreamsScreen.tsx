@@ -5,7 +5,10 @@ import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStrea
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
-import { getNextPageParam, getPreviousPageParam } from '@app/utils/pagination/pagination';
+import {
+  getNextPageParam,
+  getPreviousPageParam,
+} from '@app/utils/pagination/pagination';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
