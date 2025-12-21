@@ -1,8 +1,6 @@
-import {
-  ChatPreferenceScreen,
-  ThemePreferenceScreen,
-  VideoPreferenceScreen,
-} from '@app/screens/Preferences';
+import { ChatPreferenceScreen } from '@app/screens/Preferences/ChatPreferenceScreen';
+import { ThemePreferenceScreen } from '@app/screens/Preferences/ThemePreferenceScreen';
+import { VideoPreferenceScreen } from '@app/screens/Preferences/VideoPreferenceScreen';
 import { BlockedUsersScreen } from '@app/screens/Preferences/BlockedUsersScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';

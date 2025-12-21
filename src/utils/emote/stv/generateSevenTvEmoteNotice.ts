@@ -1,6 +1,6 @@
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { ChatMessageType } from '@app/store';
-import { ParsedPart } from '@app/utils/chat';
+import { ChatMessageType } from '@app/store/chatStore';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 interface GenerateStvEmoteNoticeArgs {

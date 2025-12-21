@@ -1,6 +1,7 @@
-import { useAppNavigation } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { TwitchStream } from '@app/services/twitch-service';
-import { elapsedStreamTime, formatViewCount } from '@app/utils';
+import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
+import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

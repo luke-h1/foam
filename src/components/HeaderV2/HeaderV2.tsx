@@ -1,4 +1,4 @@
-import { useAppNavigation } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { BlurView } from 'expo-blur';
 import { UnistylesValues } from 'node_modules/react-native-unistyles/lib/typescript/src/types';
 import { ReactNode } from 'react';

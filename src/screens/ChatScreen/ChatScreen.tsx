@@ -1,5 +1,6 @@
-import { Chat, SafeAreaViewFixed } from '@app/components';
-import { SettingsStackScreenProps } from '@app/navigators';
+import { Chat } from '@app/components/Chat';
+import { SafeAreaViewFixed } from '@app/components/SafeAreaViewFixed';
+import { SettingsStackScreenProps } from '@app/navigators/SettingsStackNavigator';
 import { FC } from 'react';
 import { StyleSheet } from 'react-native-unistyles';
 

@@ -4,7 +4,7 @@ import {
   useCurrentEmoteData,
   useEmojis,
   useTtvUsers,
-} from '@app/store';
+} from '@app/store/chatStore';
 
 import {
   useCallback,
@@ -34,7 +34,7 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-import { InputProps } from '..';
+import { InputProps } from '../Input/Input';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
 import { Image } from '../Image';

@@ -1,17 +1,15 @@
-import {
-  SettingsAppearanceScreen,
-  SettingsDevtoolsScreen,
-  SettingsIndexScreen,
-  SettingsOtherScreen,
-  SettingsProfileScreen,
-} from '@app/screens';
-import { ChatScreen } from '@app/screens/ChatScreen';
-import {
-  CachedImagesScreen,
-  DebugScreen,
-  DiagnosticsScreen,
-} from '@app/screens/DevTools';
-import { AboutScreen, FaqScreen, LicensesScreen } from '@app/screens/Other';
+import { SettingsAppearanceScreen } from '@app/screens/SettingsScreen/SettingsApperanceScreen';
+import { SettingsDevtoolsScreen } from '@app/screens/SettingsScreen/SettingsDevtoolsScreen';
+import { SettingsIndexScreen } from '@app/screens/SettingsScreen/SettingsIndexScreen';
+import { SettingsOtherScreen } from '@app/screens/SettingsScreen/SettingsOtherScreen';
+import { SettingsProfileScreen } from '@app/screens/SettingsScreen/SettingsProfileScreen';
+import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
+import { CachedImagesScreen } from '@app/screens/DevTools/CachedImagesScreen';
+import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
+import { Diagnostics as DiagnosticsScreen } from '@app/screens/DevTools/components/Diagnostics';
+import { AboutScreen } from '@app/screens/Other/AboutScreen';
+import { FaqScreen } from '@app/screens/Other/FaqScreen';
+import { LicensesScreen } from '@app/screens/Other/LicensesScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 

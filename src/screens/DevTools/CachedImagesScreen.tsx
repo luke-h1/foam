@@ -1,10 +1,7 @@
-import {
-  Button,
-  FlashList,
-  ListRenderItem,
-  ScreenHeader,
-  Typography,
-} from '@app/components';
+import { Button } from '@app/components/Button';
+import { FlashList, ListRenderItem } from '@app/components/FlashList';
+import { ScreenHeader } from '@app/components/ScreenHeader';
+import { Typography } from '@app/components/Typography';
 import { Image } from '@app/components/Image';
 import { Screen } from '@app/components/Screen';
 import { clearEmoteImageCache } from '@app/store/chatStore';

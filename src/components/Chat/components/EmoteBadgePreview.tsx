@@ -1,9 +1,7 @@
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import {
-  calculateAspectRatio,
-  openLinkInBrowser,
-  ParsedPart,
-} from '@app/utils';
+import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { BottomSheetSectionList } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { View, SectionListRenderItem } from 'react-native';

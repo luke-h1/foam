@@ -1,5 +1,5 @@
 import { Typography } from '@app/components/Typography';
-import { ParsedPart } from '@app/utils';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { useMemo } from 'react';
 import { View } from 'react-native';

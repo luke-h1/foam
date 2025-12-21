@@ -1,4 +1,4 @@
-import { Typography } from '@app/components';
+import { Typography } from '@app/components/Typography';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import { View } from 'react-native';

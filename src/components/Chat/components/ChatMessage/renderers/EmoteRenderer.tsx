@@ -1,7 +1,8 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { calculateAspectRatio, ParsedPart } from '@app/utils';
+import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import {
   getCompressedEmoteUrl,
   compressEmoteUrl,

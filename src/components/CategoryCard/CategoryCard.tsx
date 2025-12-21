@@ -1,4 +1,4 @@
-import { useAppNavigation } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { Category } from '@app/services/twitch-service';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

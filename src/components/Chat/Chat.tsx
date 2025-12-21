@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation, useSeventvWs, useTwitchWs } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
+import { useSeventvWs } from '@app/hooks/useSeventvWs';
+import { useTwitchWs } from '@app/hooks/useTwitchWs';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
@@ -18,7 +20,7 @@ import {
   getCurrentEmoteData,
   getSevenTvEmoteSetId,
   clearCache,
-} from '@app/store';
+} from '@app/store/chatStore';
 import {
   UserNoticeTagsByVariant,
   UserNoticeTags,
@@ -26,13 +28,11 @@ import {
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import {
-  createHitslop,
-  clearImageCache,
-  truncate,
-  replaceEmotesWithText,
-  ParsedPart,
-} from '@app/utils';
+import { createHitslop } from '@app/utils/string/createHitSlop';
+import { clearImageCache } from '@app/utils/image/clearImageCache';
+import { truncate } from '@app/utils/string/truncate';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { findBadges } from '@app/utils/chat/findBadges';
 import {
   createSubscriptionPart,

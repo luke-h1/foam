@@ -1,4 +1,4 @@
-import { typedObjectKeys } from '@app/utils';
+import { typedObjectKeys } from '@app/utils/typescript/typedObjectKeys';
 import { memo } from 'react';
 import { DimensionValue, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

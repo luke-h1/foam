@@ -8,16 +8,15 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
 import { enableFreeze } from 'react-native-screens';
-import { Providers } from './Providers';
-import { OTAUpdates } from './components';
-import {
-  useChangeScreenOrientation,
-  useClearExpiredStorageItems,
-  useOnAppStateChange,
-  useOnReconnect,
-  useRecoveredFromError,
-} from './hooks';
-import { AppNavigator, useNavigationPersistence } from './navigators';
+import { Providers } from './Providers/Providers';
+import { OTAUpdates } from './components/OTAUpdates';
+import { useChangeScreenOrientation } from './hooks/useChangeScreenOrientation';
+import { useClearExpiredStorageItems } from './hooks/useClearExpiredStorageItems';
+import { useOnAppStateChange } from './hooks/useOnAppStateChange';
+import { useOnReconnect } from './hooks/useOnReconnect';
+import { useRecoveredFromError } from './hooks/useRecoveredFromError';
+import { AppNavigator } from './navigators/AppNavigator';
+import { useNavigationPersistence } from './navigators/navigationUtilities';
 import { twitchApi } from './services/api';
 import { navigationIntegration } from './services/sentry-service';
 import * as storage from './utils/async-storage/async-storage';

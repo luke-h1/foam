@@ -1,4 +1,4 @@
-import { useAppNavigation } from '@app/hooks';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useCallback } from 'react';
 import { View } from 'react-native';

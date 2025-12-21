@@ -1,4 +1,4 @@
-import { getAppAlbum } from '@app/utils';
+import { getAppAlbum } from '@app/utils/image/getAppAlbum';
 import { createId } from '@paralleldrive/cuid2';
 import { useMutation } from '@tanstack/react-query';
 import { Directory, File, Paths } from 'expo-file-system/next';

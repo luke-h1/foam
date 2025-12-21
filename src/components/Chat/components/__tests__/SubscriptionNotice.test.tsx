@@ -1,5 +1,5 @@
 import render from '@app/test/render';
-import { ParsedPart } from '@app/utils';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { screen } from '@testing-library/react-native';
 import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
 

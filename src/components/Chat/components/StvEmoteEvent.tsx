@@ -1,7 +1,7 @@
 import { BrandIcon } from '@app/components/BrandIcon';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { ParsedPart } from '@app/utils';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 

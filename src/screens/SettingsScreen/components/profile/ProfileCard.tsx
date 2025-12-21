@@ -1,8 +1,9 @@
-import { Button, FlashList } from '@app/components';
+import { Button } from '@app/components/Button';
+import { FlashList } from '@app/components/FlashList';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
-import { useAuthContext } from '@app/context';
-import { useAppNavigation } from '@app/hooks';
+import { useAuthContext } from '@app/context/AuthContext';
+import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { resetRoot } from '@app/navigators/navigationUtilities';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { ListRenderItem } from '@shopify/flash-list';

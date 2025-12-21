@@ -8,7 +8,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, Linking, Platform } from 'react-native';
 import { BaseConfig, type PersistNavigationConfig } from './config';
-import { AppStackParamList } from '.';
+import { AppStackParamList } from './AppNavigator';
 
 type Storage = typeof storage;
 

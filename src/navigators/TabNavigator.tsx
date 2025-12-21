@@ -4,7 +4,7 @@ import {
   IconSymbolName,
 } from '@app/components/IconSymbol/IconSymbol';
 import { useAuthContext } from '@app/context/AuthContext';
-import { SearchScreen } from '@app/screens';
+import { SearchScreen } from '@app/screens/SearchScreen/SearchScreen';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import {
   BottomTabScreenProps,

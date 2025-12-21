@@ -1,4 +1,5 @@
-import { Button, Typography } from '@app/components';
+import { Button } from '@app/components/Button';
+import { Typography } from '@app/components/Typography';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 

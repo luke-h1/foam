@@ -1,4 +1,4 @@
-import { useScrollToTop } from '@app/hooks';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { forwardRef } from 'react';
 import { ScrollViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';

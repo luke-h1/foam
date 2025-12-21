@@ -1,7 +1,9 @@
-import { useAuthContext } from '@app/context';
-import { usePopulateAuth } from '@app/hooks';
-import { CategoryScreen, LoginScreen, StorybookScreen } from '@app/screens';
-import { ChatScreen } from '@app/screens/ChatScreen';
+import { useAuthContext } from '@app/context/AuthContext';
+import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
+import { CategoryScreen } from '@app/screens/CategoryScreen';
+import { LoginScreen } from '@app/screens/LoginScreen';
+import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
+import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import {
   DarkTheme,
   DefaultTheme,

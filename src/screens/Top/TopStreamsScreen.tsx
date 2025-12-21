@@ -1,9 +1,14 @@
-import { EmptyState, LiveStreamCard, FlashList } from '@app/components';
+import { EmptyState } from '@app/components/EmptyState';
+import { LiveStreamCard } from '@app/components/LiveStreamCard';
+import { FlashList } from '@app/components/FlashList';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { useDebouncedCallback } from '@app/hooks';
-import { twitchQueries } from '@app/queries';
+import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
+import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
-import { getNextPageParam, getPreviousPageParam } from '@app/utils';
+import {
+  getNextPageParam,
+  getPreviousPageParam,
+} from '@app/utils/pagination/pagination';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';

@@ -1,4 +1,5 @@
-import { Button, Typography } from '@app/components';
+import { Button } from '@app/components/Button';
+import { Typography } from '@app/components/Typography';
 import { ReactNativeLegal } from 'react-native-legal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
