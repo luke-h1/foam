@@ -1,5 +1,5 @@
-import { ChangelogScreen } from '@app/screens/Other/ChangelogScreen';
 import { AboutScreen } from '@app/screens/Other/AboutScreen';
+import { ChangelogScreen } from '@app/screens/Other/ChangelogScreen';
 import { FaqScreen } from '@app/screens/Other/FaqScreen';
 import { LicensesScreen } from '@app/screens/Other/LicensesScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';

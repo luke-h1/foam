@@ -1,9 +1,9 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
 import { CategoryScreen } from '@app/screens/CategoryScreen';
+import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { LoginScreen } from '@app/screens/LoginScreen';
 import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
-import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import {
   DarkTheme,
   DefaultTheme,

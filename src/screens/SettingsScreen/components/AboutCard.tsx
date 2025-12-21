@@ -1,5 +1,5 @@
-import { Typography } from '@app/components/Typography';
 import { IconButton } from '@app/components/IconButton';
+import { Typography } from '@app/components/Typography';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { SFSymbol } from 'expo-symbols';
 import { View } from 'react-native';

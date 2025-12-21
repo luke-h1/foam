@@ -6,13 +6,13 @@ import {
   UserNoticeVariantMap,
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import { lightenColor } from '@app/utils/color/lightenColor';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { truncate } from '@app/utils/string/truncate';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
+import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
+import { truncate } from '@app/utils/string/truncate';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import React, { useRef, useCallback, memo, useState } from 'react';

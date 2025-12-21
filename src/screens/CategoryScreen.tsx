@@ -119,6 +119,7 @@ export const CategoryScreen: FC<
       <FlashList<TwitchStream>
         ref={flashListRef}
         data={allStreams}
+        contentInsetAdjustmentBehavior="automatic"
         keyExtractor={item => item.id}
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}

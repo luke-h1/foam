@@ -63,6 +63,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
 
   return (
     <FlashList<Content>
+      contentInsetAdjustmentBehavior="automatic"
       data={contents}
       keyExtractor={item => item.id}
       renderItem={renderSectionItem}

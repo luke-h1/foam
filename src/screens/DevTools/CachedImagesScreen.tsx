@@ -1,9 +1,9 @@
 import { Button } from '@app/components/Button';
 import { FlashList, ListRenderItem } from '@app/components/FlashList';
-import { ScreenHeader } from '@app/components/ScreenHeader';
-import { Typography } from '@app/components/Typography';
 import { Image } from '@app/components/Image';
 import { Screen } from '@app/components/Screen';
+import { ScreenHeader } from '@app/components/ScreenHeader';
+import { Typography } from '@app/components/Typography';
 import { clearEmoteImageCache } from '@app/store/chatStore';
 import {
   CachedImageInfo,
@@ -128,6 +128,7 @@ export function CachedImagesScreen() {
         ) : (
           <FlashList
             data={images}
+            contentInsetAdjustmentBehavior="automatic"
             renderItem={renderItem}
             keyExtractor={item => item.uri}
             contentContainerStyle={styles.listContent}

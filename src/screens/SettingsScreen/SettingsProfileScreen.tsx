@@ -1,5 +1,5 @@
-import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Screen } from '@app/components/Screen';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { ProfileCard } from './components/profile/ProfileCard';
 
 export function SettingsProfileScreen() {

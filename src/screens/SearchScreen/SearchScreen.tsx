@@ -1,9 +1,9 @@
 import { Button } from '@app/components/Button';
 import { FlashList } from '@app/components/FlashList';
-import { SearchHistoryV2 } from '@app/components/SearchHistory';
-import { Typography } from '@app/components/Typography';
 import { Icon } from '@app/components/Icon';
 import { PressableArea } from '@app/components/PressableArea';
+import { SearchHistoryV2 } from '@app/components/SearchHistory';
+import { Typography } from '@app/components/Typography';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useDebouncedEffect } from '@app/hooks/useDebouncedEffect';
@@ -27,8 +27,9 @@ interface SearchHistoryItem {
   query: string;
   date: string;
 }
+
 /**
- * TODO: use swipe to delete
+ * Search screen with large title header style (like Settings)
  */
 export function SearchScreen() {
   const { navigate } = useAppNavigation();
