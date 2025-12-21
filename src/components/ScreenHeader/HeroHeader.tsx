@@ -89,7 +89,7 @@ export function HeroHeader({
       )}
 
       {(back || trailing) && (
-        <View style={[styles.navRow, { top: safeArea ? insets.top + 8 : 8 }]}>
+        <View style={styles.navRow(safeArea ? insets.top + 8 : 8)}>
           {back && (
             <IconButton icon="arrowLeft" label="goBack" onPress={onBack} />
           )}
@@ -155,14 +155,15 @@ const styles = StyleSheet.create(theme => ({
     right: 0,
     bottom: 0,
   },
-  navRow: {
+  navRow: (top: number) => ({
     position: 'absolute',
+    top,
     left: theme.spacing.sm,
     right: theme.spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     zIndex: 10,
-  },
+  }),
   navSpacer: {
     flex: 1,
   },
