@@ -10,8 +10,15 @@ const config = getSentryExpoConfig(__dirname);
 // such as Firebase that use the extension cjs.
 config.resolver.sourceExts.push('cjs');
 
-const configWithStorybook = withStorybook(config);
+config.transformer = {
+  ...config.transformer,
+  inlineRequires: true,
+}
+
+const configWithStorybook = withStorybook(config, {
+  enabled: process.env.WITH_STORYBOOK === 'true',
+});
 
 module.exports = withRozenite(configWithStorybook, {
-  enabled: process.env.WITH_ROZENITE === 'true', // Required: Rozenite is disabled by default
+  enabled: process.env.WITH_ROZENITE === 'true', 
 });

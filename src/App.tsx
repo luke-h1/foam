@@ -7,7 +7,7 @@ import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
-import { enableFreeze } from 'react-native-screens';
+import { enableFreeze, enableScreens } from 'react-native-screens';
 import { Providers } from './Providers/Providers';
 import { OTAUpdates } from './components/OTAUpdates';
 import { useChangeScreenOrientation } from './hooks/useChangeScreenOrientation';
@@ -23,6 +23,7 @@ import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
 
 enableFreeze(true);
+enableScreens(true);
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 

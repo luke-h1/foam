@@ -111,6 +111,7 @@ export function TopCategoriesScreen() {
       style={styles.wrapper}
       numColumns={3}
       ref={flashListRef}
+      contentInsetAdjustmentBehavior="automatic"
       renderItem={renderItem}
       keyExtractor={(_item, index) => index.toString()}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
