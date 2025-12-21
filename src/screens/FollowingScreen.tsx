@@ -54,6 +54,7 @@ export default function FollowingScreen() {
         subtitle={`${streamsArray.length} channel${streamsArray.length !== 1 ? 's' : ''} live`}
         back={false}
         size="large"
+        safeArea={false}
       />
     ),
     [streamsArray.length],

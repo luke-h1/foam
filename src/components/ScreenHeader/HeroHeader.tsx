@@ -49,6 +49,11 @@ export interface HeroHeaderProps {
    * Height of the hero background
    */
   heroHeight?: number;
+  /**
+   * Whether to add top safe area padding
+   * Set to false when used inside a list with contentInsetAdjustmentBehavior="automatic"
+   */
+  safeArea?: boolean;
 }
 
 export function HeroHeader({
@@ -62,6 +67,7 @@ export function HeroHeader({
   badges,
   children,
   heroHeight = 280,
+  safeArea = true,
 }: HeroHeaderProps) {
   const insets = useSafeAreaInsets();
 
@@ -83,7 +89,7 @@ export function HeroHeader({
       )}
 
       {(back || trailing) && (
-        <View style={[styles.navRow, { top: insets.top + 8 }]}>
+        <View style={styles.navRow(safeArea ? insets.top + 8 : 8)}>
           {back && (
             <IconButton icon="arrowLeft" label="goBack" onPress={onBack} />
           )}
@@ -149,14 +155,15 @@ const styles = StyleSheet.create(theme => ({
     right: 0,
     bottom: 0,
   },
-  navRow: {
+  navRow: (top: number) => ({
     position: 'absolute',
+    top,
     left: theme.spacing.sm,
     right: theme.spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     zIndex: 10,
-  },
+  }),
   navSpacer: {
     flex: 1,
   },

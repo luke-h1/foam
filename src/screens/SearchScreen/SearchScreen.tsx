@@ -19,7 +19,6 @@ import { Image } from 'expo-image';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { StreamerCard } from './components';
 
@@ -33,7 +32,6 @@ interface SearchHistoryItem {
  */
 export function SearchScreen() {
   const { navigate } = useAppNavigation();
-  const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
 
   const [query, setQuery] = useState<string>('');
@@ -199,7 +197,7 @@ export function SearchScreen() {
 
   const ListHeaderComponent = useMemo(
     () => (
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
         <Typography size="2xl" fontWeight="bold" style={styles.title}>
           Search
         </Typography>
@@ -297,7 +295,6 @@ export function SearchScreen() {
       </View>
     ),
     [
-      insets.top,
       query,
       handleTextChange,
       handleFocus,
@@ -315,6 +312,7 @@ export function SearchScreen() {
     <View style={styles.container}>
       <FlashList
         showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
         data={searchResults}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"

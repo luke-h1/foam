@@ -105,6 +105,7 @@ export const CategoryScreen: FC<
           .replace('{height}', '400') ?? ''
       }
       onBack={() => navigation.goBack()}
+      safeArea={false}
     >
       <View style={styles.sectionHeader}>
         <Typography size="sm" fontWeight="semiBold" color="gray.textLow">
