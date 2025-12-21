@@ -1,8 +1,8 @@
-import { ScreenHeader } from '@app/components/ScreenHeader';
-import { Typography } from '@app/components/Typography';
 import { Menu } from '@app/components/Menu';
 import { PressableArea } from '@app/components/PressableArea';
 import { Screen } from '@app/components/Screen';
+import { ScreenHeader } from '@app/components/ScreenHeader';
+import { Typography } from '@app/components/Typography';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
@@ -81,7 +81,7 @@ export function SettingsIndexScreen() {
           ]}
         />
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 90 }]}>
           <View style={styles.quickLinks}>
             <PressableArea
               onPress={() => openLinkInBrowser('https://foam-app.com')}

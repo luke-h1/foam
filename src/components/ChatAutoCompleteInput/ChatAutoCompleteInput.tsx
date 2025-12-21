@@ -34,11 +34,10 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-import { InputProps } from '../Input/Input';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
 import { Image } from '../Image';
-import Input from '../Input/Input';
+import Input, { InputProps } from '../Input/Input';
 import { Typography } from '../Typography';
 
 // Add this type for user suggestions
@@ -561,6 +560,7 @@ export const ChatAutoCompleteInput = forwardRef<
                 keyboardShouldPersistTaps="handled"
                 data={filteredEmotes}
                 keyExtractor={item => item.id}
+                contentInsetAdjustmentBehavior="automatic"
                 renderItem={renderEmoteItem}
                 removeClippedSubviews
                 showsVerticalScrollIndicator={false}

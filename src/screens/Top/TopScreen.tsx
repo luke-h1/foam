@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
 import { Screen } from '@app/components/Screen';
+import { Typography } from '@app/components/Typography';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';

@@ -1,9 +1,9 @@
 import { EmptyState } from '@app/components/EmptyState';
-import { LiveStreamCard } from '@app/components/LiveStreamCard';
 import { AnimatedFlashList, ListRenderItem } from '@app/components/FlashList';
-import { ScreenHeader } from '@app/components/ScreenHeader';
+import { LiveStreamCard } from '@app/components/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshControl } from '@app/components/RefreshControl';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
@@ -93,6 +93,7 @@ export default function FollowingScreen() {
       <AnimatedFlashList<TwitchStream>
         data={streamsArray}
         keyExtractor={item => item.id}
+        contentInsetAdjustmentBehavior="automatic"
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
         refreshControl={<RefreshControl onRefresh={onRefresh} />}

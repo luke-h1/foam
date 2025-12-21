@@ -113,6 +113,7 @@ export function ProfileCard() {
   return (
     <View style={styles.main}>
       <FlashList<ProfileItem>
+        contentInsetAdjustmentBehavior="automatic"
         renderItem={renderItem}
         data={items}
         keyExtractor={(item, index) => `${item.title}-${index}`}

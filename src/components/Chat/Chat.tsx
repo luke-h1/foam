@@ -2,9 +2,9 @@
 /* eslint-disable camelcase */
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
+import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { useTwitchWs } from '@app/hooks/useTwitchWs';
-import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
   ChatMessageType,
@@ -28,11 +28,6 @@ import {
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { createHitslop } from '@app/utils/string/createHitSlop';
-import { clearImageCache } from '@app/utils/image/clearImageCache';
-import { truncate } from '@app/utils/string/truncate';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { findBadges } from '@app/utils/chat/findBadges';
 import {
   createSubscriptionPart,
@@ -40,8 +35,13 @@ import {
 } from '@app/utils/chat/formatSubscriptionNotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
+import { createHitslop } from '@app/utils/string/createHitSlop';
 import { generateNonce } from '@app/utils/string/generateNonce';
+import { truncate } from '@app/utils/string/truncate';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { FlashListRef } from '@shopify/flash-list';
 import omit from 'lodash/omit';
@@ -1445,6 +1445,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onContentSizeChange={handleContentSizeChange}
             renderItem={renderItem}
             removeClippedSubviews
+            contentInsetAdjustmentBehavior="automatic"
             drawDistance={500}
             overrideItemLayout={(layout, item) => {
               const messageLength = item.message?.length || 0;

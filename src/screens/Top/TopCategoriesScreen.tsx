@@ -69,6 +69,7 @@ export function TopCategoriesScreen() {
   if (isLoading || refreshing) {
     return (
       <FlashList
+        contentInsetAdjustmentBehavior="automatic"
         style={styles.wrapper}
         data={Array.from({ length: SKELETON_COUNT })}
         keyExtractor={(_, idx) => `skeleton-${idx}`}

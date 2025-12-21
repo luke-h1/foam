@@ -1,17 +1,16 @@
 import { HapticTab } from '@app/components/HapticTab';
-import {
-  IconSymbol,
-  IconSymbolName,
-} from '@app/components/IconSymbol/IconSymbol';
+import { IconSymbolName } from '@app/components/IconSymbol/IconSymbol';
 import { useAuthContext } from '@app/context/AuthContext';
-import { SearchScreen } from '@app/screens/SearchScreen/SearchScreen';
 import FollowingScreen from '@app/screens/FollowingScreen';
+import { SearchScreen } from '@app/screens/SearchScreen/SearchScreen';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import {
-  BottomTabScreenProps,
-  createBottomTabNavigator,
-} from '@react-navigation/bottom-tabs';
+  createNativeBottomTabNavigator,
+  NativeBottomTabNavigationOptions,
+} from '@react-navigation/bottom-tabs/unstable';
 import { CompositeScreenProps } from '@react-navigation/native';
-import { ComponentType, FC } from 'react';
+import { ComponentType, FC, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
@@ -30,7 +29,7 @@ export type TabScreenProps<TParam extends keyof TabParamList> =
     AppStackScreenProps<keyof AppStackParamList>
   >;
 
-const Tab = createBottomTabNavigator<TabParamList>();
+const Tab = createNativeBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
@@ -41,33 +40,46 @@ type ScreenComponentType =
 interface Screen {
   name: keyof TabParamList;
   component: ScreenComponentType;
-  symbol: IconSymbolName;
+  sfSymbol: IconSymbolName;
+  sfSymbolFocused: IconSymbolName;
+  drawableResource: string;
   requiresAuth?: boolean;
+  /** iOS only: use system tab bar item */
+  tabBarSystemItem?: 'search';
 }
 
 const screens: Screen[] = [
   {
     name: 'Following',
     component: FollowingScreen,
-    symbol: 'person.2',
+    sfSymbol: 'person.2',
+    sfSymbolFocused: 'person.2.fill',
+    drawableResource: '',
     requiresAuth: true,
   },
   {
     name: 'Top',
     component: TopStackNavigator,
-    symbol: 'chart.bar',
+    sfSymbol: 'chart.bar',
+    sfSymbolFocused: 'chart.bar.fill',
+    drawableResource: '',
     requiresAuth: false,
   },
   {
     name: 'Search',
     component: SearchScreen,
-    symbol: 'magnifyingglass',
+    sfSymbol: 'magnifyingglass',
+    sfSymbolFocused: 'magnifyingglass',
+    drawableResource: '',
     requiresAuth: false,
+    tabBarSystemItem: 'search',
   },
   {
     name: 'Settings',
     component: SettingsStackNavigator,
-    symbol: 'gearshape',
+    sfSymbol: 'gearshape',
+    sfSymbolFocused: 'gearshape.fill',
+    drawableResource: '',
     requiresAuth: false,
   },
 ];
@@ -75,6 +87,40 @@ const screens: Screen[] = [
 export function TabNavigator() {
   const { user } = useAuthContext();
   const { theme } = useUnistyles();
+
+  const getScreenOptions = useCallback(
+    (screen: Screen): NativeBottomTabNavigationOptions => {
+      const baseOptions: NativeBottomTabNavigationOptions = {
+        lazy: true,
+        headerShown: false,
+        tabBarIcon: ({ focused }) =>
+          Platform.select({
+            ios: {
+              type: 'sfSymbol' as const,
+              name: focused ? screen.sfSymbolFocused : screen.sfSymbol,
+            },
+            default: {
+              type: 'drawableResource' as const,
+              name: screen.drawableResource,
+            },
+          }),
+      };
+
+      // iOS: Use system search tab for native tab bar styling
+      // See: https://reactnavigation.org/docs/native-bottom-tab-navigator/
+      if (screen.tabBarSystemItem === 'search' && Platform.OS === 'ios') {
+        return {
+          ...baseOptions,
+          tabBarSystemItem: 'search',
+          // Use undefined to let system handle icon for search tab
+          tabBarIcon: undefined,
+        };
+      }
+
+      return baseOptions;
+    },
+    [],
+  );
 
   return (
     <Tab.Navigator
@@ -96,19 +142,7 @@ export function TabNavigator() {
             key={screen.name}
             name={screen.name}
             component={screen.component as ComponentType}
-            options={{
-              lazy: true,
-              headerShown: false,
-              // eslint-disable-next-line react/no-unstable-nested-components
-              tabBarIcon: ({ focused, color, size }) => (
-                <IconSymbol
-                  name={screen.symbol}
-                  color={color}
-                  size={size}
-                  weight={focused ? 'semibold' : 'regular'}
-                />
-              ),
-            }}
+            options={getScreenOptions(screen)}
           />
         );
       })}

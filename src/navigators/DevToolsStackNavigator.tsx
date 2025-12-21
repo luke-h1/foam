@@ -1,7 +1,7 @@
 import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
-import { Diagnostics as DiagnosticsScreen } from '@app/screens/DevTools/components/Diagnostics';
 import { SentryDemoScreen } from '@app/screens/DevTools/SentryDemoScreen';
+import { Diagnostics as DiagnosticsScreen } from '@app/screens/DevTools/components/Diagnostics';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 

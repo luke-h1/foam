@@ -60,11 +60,11 @@ Core dependencies:
 | Library                                          | Category                       | Version | Description                                             |
 | ------------------------------------------------ | ------------------------------ | ------- | ------------------------------------------------------- |
 | [bun](https://bun.sh/)                           | Package manager & node runtime | 1.2.5   | Fastest package manager and node runtime                |
-| [React Native](https://reactnative.dev/)         | Mobile framework               | 0.79.4  | Cross-platform mobile framework                         |
-| [React](https://react.dev/)                      | UI framework                   | 19.0.0  | Most popular UI framework worldwide                     |
-| [TypeScript](https://www.typescriptlang.org/)    | Language                       | 5.8.3   | Static typechecking                                     |
-| [Expo](https://expo.dev/)                        | SDK                            | 53.0.13 | React native framework / Expo modules                   |
-| [React Navigation](https://reactnavigation.org/) | Navigation                     | 7.0.14  | Routing and navigation library                          |
+| [React Native](https://reactnative.dev/)         | Mobile framework               | 0.81.4  | Cross-platform mobile framework                         |
+| [React](https://react.dev/)                      | UI framework                   | 19.1.0  | Most popular UI framework worldwide                     |
+| [TypeScript](https://www.typescriptlang.org/)    | Language                       | 5.9.2   | Static typechecking                                     |
+| [Expo](https://expo.dev/)                        | SDK                            | 54.0.25 | React native framework / Expo modules                   |
+| [React Navigation](https://reactnavigation.org/) | Navigation                     | 7.1.26  | Routing and navigation library                          |
 | [Maestro](https://maestro.mobile.dev/)           | E2E testing                    | 1.40.1  | Declarative UI testing                                  |
 | [EAS](https://expo.dev/eas)                      | CI/CD                          | N/A     | Build the app binaries and submit the app to the stores |
 | [Storybook](https://storybook.js.org/)           | UI preview                     | 8.4.4   | UI development & preview tool for React Native          |

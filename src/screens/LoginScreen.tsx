@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
-import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
-import { Image } from '@app/components/Image';
 import { BrandIcon } from '@app/components/BrandIcon';
+import { Button } from '@app/components/Button';
+import { Image } from '@app/components/Image';
+import { Typography } from '@app/components/Typography';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { sentryService } from '@app/services/sentry-service';

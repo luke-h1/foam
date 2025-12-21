@@ -56,6 +56,7 @@ export function SearchHistory({
       <FlashList<string>
         data={results}
         style={styles.item}
+        contentInsetAdjustmentBehavior="automatic"
         keyExtractor={item => item}
         showsVerticalScrollIndicator={false}
         renderItem={renderItem}

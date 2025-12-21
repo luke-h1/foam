@@ -1,6 +1,6 @@
-import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Menu } from '@app/components/Menu';
 import { Screen } from '@app/components/Screen';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
 import { useUnistyles } from 'react-native-unistyles';

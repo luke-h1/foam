@@ -1,6 +1,6 @@
 import { EmptyState } from '@app/components/EmptyState';
-import { LiveStreamCard } from '@app/components/LiveStreamCard';
 import { FlashList } from '@app/components/FlashList';
+import { LiveStreamCard } from '@app/components/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { twitchQueries } from '@app/queries/twitchQueries';
@@ -89,6 +89,7 @@ export function TopStreamsScreen() {
   return (
     <FlashList
       ref={flashListRef}
+      contentInsetAdjustmentBehavior="automatic"
       style={styles.container}
       data={allStreams}
       renderItem={renderItem}

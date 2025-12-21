@@ -1,8 +1,8 @@
-import { Typography } from '@app/components/Typography';
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { Typography } from '@app/components/Typography';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { View } from 'react-native';
