@@ -29,7 +29,6 @@ export type TabScreenProps<TParam extends keyof TabParamList> =
     AppStackScreenProps<keyof AppStackParamList>
   >;
 
- 
 const Tab = createNativeBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
@@ -143,7 +142,6 @@ export function TabNavigator() {
             key={screen.name}
             name={screen.name}
             component={screen.component as ComponentType}
-             
             options={getScreenOptions(screen)}
           />
         );
