@@ -15,6 +15,8 @@ const scopes = [
   'tooling',
   'documentation',
   'security',
+  'sentry',
+  'monitoring'
 ];
 
 module.exports = {
