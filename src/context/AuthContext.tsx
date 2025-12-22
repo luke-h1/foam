@@ -1,4 +1,3 @@
-import { queryClient } from '@app/Providers/Providers';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchApi } from '@app/services/api';
 import {
@@ -7,6 +6,7 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
+import { queryClient } from '@app/utils/react-query/reacy-query';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
 import {
