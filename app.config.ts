@@ -25,8 +25,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam.dev',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile: './GoogleService-Info-dev.plist',
-    androidGoogleServicesFile: './google-services-dev.json',
+    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
+    androidGoogleServicesFile: './google-services-prod.json',
   },
   preview: {
     name: 'Foam (preview)',
@@ -35,8 +35,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam.preview',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile: './GoogleService-Info-preview.plist',
-    androidGoogleServicesFile: './google-services-preview.json',
+    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
+    androidGoogleServicesFile: './google-services-prod.json',
   },
   test: {
     name: 'Foam (test)',
@@ -45,8 +45,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam.test',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile: './GoogleService-Info-preview.plist',
-    androidGoogleServicesFile: './google-services-preview.json',
+    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
+    androidGoogleServicesFile: './google-services-prod.json',
   },
   production: {
     name: 'Foam',
@@ -57,14 +57,14 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     splashBackgroundColor: '#000000',
     iosGoogleServicesFile:
       (process.env.IOS_GOOGLE_SERVICES_JSON as string) ||
-      './GoogleService-Info-production.plist',
+      './GoogleService-Info-prod.plist',
     androidGoogleServicesFile: './google-services-prod.json',
   },
 } as const;
 
 const variant = (process.env.APP_VARIANT as Variant) || 'production';
 
-const VERSION = '0.0.32';
+export const VERSION = '0.0.32';
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 
@@ -196,12 +196,15 @@ const config: ExpoConfig = {
     // '@bacons/apple-targets',
     'react-native-legal',
     'react-native-edge-to-edge',
+    '@react-native-firebase/app',
+
     [
       'expo-build-properties',
       {
         ios: {
           useFrameworks: 'static',
           extraPods: [],
+          forceStaticLinking: ['RNFBApp'],
         },
       },
     ],

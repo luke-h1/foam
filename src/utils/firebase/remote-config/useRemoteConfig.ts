@@ -1,34 +1,81 @@
 import '@react-native-firebase/installations';
-import { useEffectOnce } from '@app/hooks/useEffectOnce';
 import { sentryService } from '@app/services/sentry-service';
 import { logger } from '@app/utils/logger';
-import { OpenStringUnion } from '@app/utils/typescript';
 import { getApp } from '@react-native-firebase/app';
 import {
   fetchAndActivate,
   getAll,
   getRemoteConfig,
-  onConfigUpdated,
+  setConfigSettings,
 } from '@react-native-firebase/remote-config';
-import { useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const remoteConfig = getRemoteConfig(getApp());
 
-const defaultRemoteConfig = {
-  /**
-   * Maintenance config
-   */
-  splash: '{"7tvUnavailable": false, "foamMaintenance": false}',
-  /**
-   * Minimum version constraint to force users to update
-   */
-  minimumVersion: '0.0.0',
+void setConfigSettings(remoteConfig, {
+  // 1 minute in dev, 10 minutes in prod
+  minimumFetchIntervalMillis: __DEV__ ? 60 : 600,
+});
 
+export interface RemoteConfigSchema {
+  splash: { '7tvUnavailable': boolean; app: boolean };
+  minimumVersion: string;
+  statusPageUrl: string;
+  websiteUrl: string;
+}
+
+export type RemoteConfigKey = keyof RemoteConfigSchema;
+
+type ConfigSource = 'default' | 'remote' | 'static';
+
+export type RemoteConfigEntry<T> = {
+  raw: string;
+  value: T;
+  source: ConfigSource;
+};
+
+export type RemoteConfigType = {
+  [K in RemoteConfigKey]: RemoteConfigEntry<RemoteConfigSchema[K]>;
+};
+
+const defaultRemoteConfig: Record<RemoteConfigKey, string> = {
+  splash: '{"7tvUnavailable": false, "app": false}',
+  minimumVersion: '',
   statusPageUrl: 'https://status.foam-app.com',
   websiteUrl: 'https://foam-app.com',
 };
 
-export type RemoteConfigKey = OpenStringUnion<keyof typeof defaultRemoteConfig>;
+const jsonKeys: RemoteConfigKey[] = ['splash'];
+
+function parseConfigValue<K extends RemoteConfigKey>(
+  key: K,
+  raw: string,
+): RemoteConfigSchema[K] {
+  if (jsonKeys.includes(key)) {
+    try {
+      return JSON.parse(raw) as RemoteConfigSchema[K];
+    } catch {
+      return JSON.parse(defaultRemoteConfig[key]) as RemoteConfigSchema[K];
+    }
+  }
+  return raw as RemoteConfigSchema[K];
+}
+
+function buildConfigFromDefaults(): RemoteConfigType {
+  return Object.fromEntries(
+    (Object.keys(defaultRemoteConfig) as RemoteConfigKey[]).map(key => {
+      const raw = defaultRemoteConfig[key];
+      return [
+        key,
+        {
+          raw,
+          value: parseConfigValue(key, raw),
+          source: 'default' as ConfigSource,
+        },
+      ];
+    }),
+  ) as RemoteConfigType;
+}
 
 remoteConfig.setDefaults(defaultRemoteConfig).catch(e => {
   sentryService.addBreadcrumb({
@@ -39,30 +86,42 @@ remoteConfig.setDefaults(defaultRemoteConfig).catch(e => {
   sentryService.captureException(e);
 });
 
-export type RemoteConfigType = Record<
-  RemoteConfigKey,
-  { value: string; source: 'default' | 'remote' | 'static' }
->;
-
 export function useRemoteConfig(): RemoteConfigType {
-  const [config, setConfig] = useState<RemoteConfigType>();
+  const [config, setConfig] = useState<RemoteConfigType>(
+    buildConfigFromDefaults,
+  );
 
-  const updateConfig = useCallback(() => {
-    const newConfig = Object.fromEntries(
-      Object.entries(getAll(remoteConfig)).map(([key, value]) => [
-        key,
-        { value: value.asString(), source: value.getSource() },
-      ]),
-    ) as RemoteConfigType;
-    setConfig(newConfig);
-  }, []);
+  useEffect(() => {
+    const updateConfig = () => {
+      const allConfig = getAll(remoteConfig);
+      const newConfig = Object.fromEntries(
+        Object.entries(allConfig)
+          .filter(([key]) => key in defaultRemoteConfig)
+          .map(([key, entry]) => [
+            key,
+            {
+              raw: entry.asString(),
+              value: parseConfigValue(key as RemoteConfigKey, entry.asString()),
+              source: entry.getSource(),
+            },
+          ]),
+      ) as RemoteConfigType;
+      logger.remoteConfig.info('new config', newConfig);
+      setConfig(newConfig);
+    };
 
-  useEffectOnce(() => {
     const initRemoteConfig = async () => {
       try {
-        await fetchAndActivate(remoteConfig);
+        const activated = await fetchAndActivate(remoteConfig);
+        logger.remoteConfig.info('fetchAndActivate', {
+          activated,
+          message: activated
+            ? 'Fetched new config from server'
+            : 'Using cached config (no new data)',
+        });
         updateConfig();
       } catch (error) {
+        logger.remoteConfig.error('fetchAndActivate failed', error);
         sentryService.addBreadcrumb({
           message: 'Failed to update remote config values',
           category: 'firebase.remote-config.update-values',
@@ -71,16 +130,9 @@ export function useRemoteConfig(): RemoteConfigType {
         sentryService.captureException(error);
       }
     };
+
     void initRemoteConfig();
+  }, []);
 
-    // eslint-disable-next-line no-shadow
-    const unsub = onConfigUpdated(remoteConfig, config => {
-      void initRemoteConfig();
-      logger.remoteConfig.info('updated remote config', config);
-    });
-
-    return () => unsub();
-  });
-
-  return config as RemoteConfigType;
+  return config;
 }

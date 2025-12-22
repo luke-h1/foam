@@ -10,11 +10,16 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { BuildStatus } from './components';
+import { useRemoteConfig } from '@app/utils/firebase/remote-config/useRemoteConfig';
 
 export function SettingsIndexScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
+
+  const { statusPageUrl, websiteUrl } = useRemoteConfig();
+
+  console.log(statusPageUrl.value, websiteUrl.value);
 
   return (
     <Screen safeAreaEdges={[]} preset="fixed">
@@ -84,7 +89,7 @@ export function SettingsIndexScreen() {
         <View style={[styles.footer, { paddingBottom: insets.bottom + 90 }]}>
           <View style={styles.quickLinks}>
             <PressableArea
-              onPress={() => openLinkInBrowser('https://foam-app.com')}
+              onPress={() => openLinkInBrowser(websiteUrl.value)}
               hitSlop={8}
             >
               <Typography size="sm" color="gray.textLow">
@@ -95,7 +100,7 @@ export function SettingsIndexScreen() {
               •
             </Typography>
             <PressableArea
-              onPress={() => openLinkInBrowser('https://status.foam-app.com')}
+              onPress={() => openLinkInBrowser(statusPageUrl.value)}
               hitSlop={8}
             >
               <Typography size="sm" color="gray.textLow">
