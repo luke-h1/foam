@@ -274,5 +274,8 @@
     "esbuild",
     "nx",
     "protobufjs"
-  ]
+  ],
+  "patchedDependencies": {
+    "expo-file-system@19.0.19": "patches/expo-file-system@19.0.19.patch"
+  }
 }
