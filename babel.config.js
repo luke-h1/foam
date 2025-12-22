@@ -2,6 +2,7 @@ module.exports = api => {
   api.cache(true);
 
   const plugins = [
+    '@babel/plugin-transform-class-static-block',
     [
       'react-native-unistyles/plugin',
       {
