@@ -1,4 +1,4 @@
-import { AuthContextProvider } from '@app/context/AuthContext';
+import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { BaseConfig } from '@app/navigators/config';
@@ -7,13 +7,14 @@ import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api';
 import { storage } from '@app/services/storage-service';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
+import { QueryProvider } from '@app/utils/react-query/reacy-query';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useMMKVDevTools } from '@rozenite/mmkv-plugin';
 import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
 import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
 import { useReactNavigationDevTools } from '@rozenite/react-navigation-plugin';
 import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { PropsWithChildren } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -27,20 +28,45 @@ import { StyleSheet } from 'react-native-unistyles';
 import { Toaster } from 'sonner-native';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider';
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 5,
-      refetchOnReconnect: true,
-      retryDelay: 3000,
-    },
-  },
-});
+function QueryProviderWithAuth({ children }: PropsWithChildren) {
+  const { user } = useAuthContext();
+
+  return (
+    <QueryProvider currentUserId={user?.id}>
+      <QueryDevTools>{children}</QueryDevTools>
+    </QueryProvider>
+  );
+}
+
+function QueryDevTools({ children }: PropsWithChildren) {
+  const queryClient = useQueryClient();
+  const { ReactQueryDebug } = useDebugOptions();
+  useTanStackQueryDevTools(queryClient);
+
+  return (
+    <>
+      <Toaster />
+      {children}
+      {ReactQueryDebug?.enabled && (
+        <DevToolsBubble
+          queryClient={queryClient}
+          onCopy={async text => {
+            try {
+              await Clipboard.setStringAsync(text);
+              return true;
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (error) {
+              return false;
+            }
+          }}
+        />
+      )}
+    </>
+  );
+}
 
 export function Providers({ children }: PropsWithChildren) {
   const { setRecoveredFromError } = useRecoveredFromError();
-  useTanStackQueryDevTools(queryClient);
-  const { ReactQueryDebug } = useDebugOptions();
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   useReactNavigationDevTools({ ref: navigationRef });
@@ -67,24 +93,7 @@ export function Providers({ children }: PropsWithChildren) {
             <KeyboardProvider>
               <GestureHandlerRootView style={styles.gestureContainer}>
                 <BottomSheetModalProvider>
-                  <QueryClientProvider client={queryClient}>
-                    <Toaster />
-                    {children}
-                    {ReactQueryDebug?.enabled && (
-                      <DevToolsBubble
-                        queryClient={queryClient}
-                        onCopy={async text => {
-                          try {
-                            await Clipboard.setStringAsync(text);
-                            return true;
-                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                          } catch (error) {
-                            return false;
-                          }
-                        }}
-                      />
-                    )}
-                  </QueryClientProvider>
+                  <QueryProviderWithAuth>{children}</QueryProviderWithAuth>
                 </BottomSheetModalProvider>
               </GestureHandlerRootView>
             </KeyboardProvider>
