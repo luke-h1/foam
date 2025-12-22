@@ -252,7 +252,7 @@
     "ts-jest": "^29.4.0",
     "ts-migrate": "^0.1.35",
     "tsx": "^4.20.3",
-    "typescript": "~5.9.2",
+    "typescript": "5.9.3",
     "typescript-eslint": "^8.38.0",
     "url-loader": "^4.1.1",
     "uuid": "^11.1.0"
@@ -282,5 +282,8 @@
   ],
   "patchedDependencies": {
     "expo-file-system@19.0.19": "patches/expo-file-system@19.0.19.patch"
+  },
+  "resolutions": {
+    "@types/minimatch": "6.0.0"
   }
 }

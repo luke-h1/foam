@@ -5,9 +5,11 @@ import express, { Request, Response } from 'express';
 
 dotenv.config();
 
+// eslint-disable-next-line @typescript-eslint/require-await
 const main = async () => {
   const app = express();
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   app.get('/api/proxy-expo-go', async (req: Request, res: Response) => {
     // This is fragile and won't work in many cases. It's just an example. Physical devices, and android emulators will need the full IP address instead of localhost.
     // This also assumes the dev server is running on port 8081.
@@ -18,6 +20,7 @@ const main = async () => {
     return res.status(302).redirect(redirectUri);
   });
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   app.get('/api/proxy', async (req: Request, res: Response) => {
     // const redirectUri = `${APP_SCHEME_NAME}://?${new URL(req.url, `foam://`).searchParams}`;
     const redirectUri = `foam://?${new URL(req.url, 'http://a').searchParams}`;
@@ -31,6 +34,7 @@ const main = async () => {
     '/api/proxy/default-token',
     // @ts-expect-error express type issue
     async (req: Request, res: Response) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const { data } = await axios.post(
         'https://id.twitch.tv/oauth2/token',
         null,
@@ -51,7 +55,7 @@ const main = async () => {
     },
   );
 
-  // @ts-expect-error - express type definitions are incorrect
+  // eslint-disable-next-line @typescript-eslint/require-await
   app.get('/api/pending', async (req: Request, res: Response) => {
     return res.status(200).send(`
       <html>
@@ -77,4 +81,4 @@ const main = async () => {
   });
 };
 
-main();
+void main();
