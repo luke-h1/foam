@@ -6,11 +6,11 @@ import { Typography } from '@app/components/Typography';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { useRemoteConfig } from '@app/utils/firebase/remote-config/useRemoteConfig';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { BuildStatus } from './components';
-import { useRemoteConfig } from '@app/utils/firebase/remote-config/useRemoteConfig';
 
 export function SettingsIndexScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();

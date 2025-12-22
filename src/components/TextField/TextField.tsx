@@ -26,8 +26,10 @@ export interface TextFieldAccessoryProps {
   editable: boolean;
 }
 
-export interface TextFieldProps
-  extends Omit<TextInputProps, 'ref' | 'placeholder'> {
+export interface TextFieldProps extends Omit<
+  TextInputProps,
+  'ref' | 'placeholder'
+> {
   status?: 'error' | 'disabled';
   label?: TextProps['children'];
   LabelTextProps?: TextProps;

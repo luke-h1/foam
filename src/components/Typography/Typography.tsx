@@ -49,8 +49,7 @@ export type TypographyStyleProps = {
 } & MarginProps;
 
 export interface TypographyProps
-  extends TextProps,
-    Partial<TypographyStyleProps> {
+  extends TextProps, Partial<TypographyStyleProps> {
   children: ReactNode;
   animated?: boolean;
 }

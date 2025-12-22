@@ -43,8 +43,10 @@ import { Typography } from '../Typography';
 // Add this type for user suggestions
 type SuggestionType = 'emote' | 'user';
 
-export interface EmoteAutoCompleteProps
-  extends Omit<InputProps, 'onChangeText' | 'isFocused'> {
+export interface EmoteAutoCompleteProps extends Omit<
+  InputProps,
+  'onChangeText' | 'isFocused'
+> {
   onEmoteSelect?: (emote: SanitisiedEmoteSet) => void;
   onChangeText?: (text: string) => void;
   suggestionContainerStyle?: StyleProp<ViewStyle>;

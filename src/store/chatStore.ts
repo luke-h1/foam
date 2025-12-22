@@ -401,6 +401,7 @@ export const loadChannelResources = async (
       twitchBadgeService.listSanitisedGlobalBadges(),
       ffzService.getSanitisedGlobalBadges(),
       ffzService.getSanitisedChannelBadges(channelId),
+      // eslint-disable-next-line @typescript-eslint/await-thenable
       chatterinoService.listSanitisedBadges(),
     ]);
 

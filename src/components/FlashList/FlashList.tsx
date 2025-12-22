@@ -7,8 +7,9 @@ import {
 import { ReactNode, Ref, RefObject, forwardRef } from 'react';
 import Animated from 'react-native-reanimated';
 
-export interface FlashListProps<TItem = unknown>
-  extends ShopifyFlashListProps<TItem> {
+export interface FlashListProps<
+  TItem = unknown,
+> extends ShopifyFlashListProps<TItem> {
   ref?: RefObject<FlashListRef<TItem> | null>;
 }
 

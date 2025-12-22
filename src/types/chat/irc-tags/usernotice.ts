@@ -2,8 +2,10 @@
  * Base interface for common USERNOTICE tags
  * All USERNOTICE messages share these common tags
  */
-export interface BaseUserNoticeTags
-  extends Record<string, string | boolean | undefined> {
+export interface BaseUserNoticeTags extends Record<
+  string,
+  string | boolean | undefined
+> {
   'msg-id': string;
   id?: string;
   'display-name'?: string;
