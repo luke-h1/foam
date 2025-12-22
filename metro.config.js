@@ -1,7 +1,14 @@
+const startHermesProfilerServer = require('@sleeperhq/rozenite-hermes-profiler/server/registerDevServerMiddleware.cjs');
 const { getDefaultConfig } = require('@expo/metro-config');
 const { withRozenite } = require('@rozenite/metro');
 const withStorybook = require('@storybook/react-native/metro/withStorybook');
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
+
+
+if (__DEV__) {
+  startHermesProfilerServer();
+
+}
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getSentryExpoConfig(__dirname);

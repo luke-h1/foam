@@ -93,3 +93,5 @@ FOAM_ANDROID_TESTFLIGHT_KEY.json
 .vscode
 
 .env
+
+profile-*.json
