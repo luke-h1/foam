@@ -65,6 +65,10 @@ const loggingConfig = {
     enabled: true,
     color: 'cyanBright',
   },
+  remoteConfig: {
+    enabled: true,
+    color: 'blueBright',
+  },
 } satisfies Record<
   string,
   {
