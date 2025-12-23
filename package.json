@@ -87,7 +87,6 @@
     "@react-navigation/stack": "^7.6.13",
     "@sentry/react-native": "~7.2.0",
     "@shopify/flash-list": "2.0.2",
-    "@sleeperhq/rozenite-hermes-profiler": "^0.1.4",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "@svgr/plugin-svgo": "^8.1.0",
@@ -281,6 +280,7 @@
     "protobufjs"
   ],
   "patchedDependencies": {
-    "expo-file-system@19.0.19": "patches/expo-file-system@19.0.19.patch"
+    "expo-file-system@19.0.19": "patches/expo-file-system@19.0.19.patch",
+    "react-native-unistyles@3.0.10": "patches/react-native-unistyles@3.0.10.patch"
   }
 }

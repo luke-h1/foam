@@ -25,8 +25,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam.dev',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
-    androidGoogleServicesFile: './google-services-prod.json',
+    iosGoogleServicesFile: './GoogleService-Info-dev.plist',
+    androidGoogleServicesFile: './google-services-dev.json',
   },
   preview: {
     name: 'Foam (preview)',
@@ -35,8 +35,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam.preview',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
-    androidGoogleServicesFile: './google-services-prod.json',
+    iosGoogleServicesFile: './GoogleService-Info-preview.plist',
+    androidGoogleServicesFile: './google-services-preview.json',
   },
   test: {
     name: 'Foam (test)',
@@ -45,8 +45,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam.test',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
-    androidGoogleServicesFile: './google-services-prod.json',
+    iosGoogleServicesFile: './GoogleService-Info-test.plist',
+    androidGoogleServicesFile: './google-services-test.json',
   },
   production: {
     name: 'Foam',
@@ -200,10 +200,12 @@ const config: ExpoConfig = {
       {
         ios: {
           useFrameworks: 'static',
-          extraPods: [],
+          // buildReactNativeFromSource: true,
+          forceStaticLinking: ['RNFBApp'],
         },
       },
     ],
+    '@react-native-firebase/app',
     [
       'expo-video',
       {

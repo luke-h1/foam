@@ -1,0 +1,172 @@
+diff --git a/node_modules/react-native-unistyles/.bun-tag-1ba8a7d525f2ce68 b/.bun-tag-1ba8a7d525f2ce68
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/lib/commonjs/specs/StatusBar/index.js b/lib/commonjs/specs/StatusBar/index.js
+index d64487948e24185c3c1305cdad7cb3eac09eaf0d..de07a3aefeda465521c2a5da2bf8f7d9c081e341 100644
+--- a/lib/commonjs/specs/StatusBar/index.js
++++ b/lib/commonjs/specs/StatusBar/index.js
+@@ -7,22 +7,34 @@ exports.attachStatusBarJSMethods = void 0;
+ var _reactNative = require("react-native");
+ var _types = require("../types");
+ const attachStatusBarJSMethods = hybridObject => {
+-  hybridObject.setStyle = (style, animated) => {
+-    switch (style) {
+-      case _types.StatusBarStyle.Light:
+-        return _reactNative.StatusBar.setBarStyle('light-content', animated);
+-      case _types.StatusBarStyle.Dark:
+-        return _reactNative.StatusBar.setBarStyle('dark-content', animated);
+-      case _types.StatusBarStyle.Default:
+-        return _reactNative.StatusBar.setBarStyle('default', animated);
+-    }
+-  };
++  Object.defineProperty(hybridObject, 'setStyle', {
++    value: (style, animated) => {
++      switch (style) {
++        case _types.StatusBarStyle.Light:
++          return _reactNative.StatusBar.setBarStyle('light-content', animated);
++        case _types.StatusBarStyle.Dark:
++          return _reactNative.StatusBar.setBarStyle('dark-content', animated);
++        case _types.StatusBarStyle.Default:
++          return _reactNative.StatusBar.setBarStyle('default', animated);
++      }
++    },
++    writable: true,
++    configurable: true,
++  });
+   const privateHybrid = hybridObject;
+-  privateHybrid._setHidden = hybridObject.setHidden;
+-  hybridObject.setHidden = (isHidden, animation) => {
+-    _reactNative.StatusBar.setHidden(isHidden, animation);
+-    privateHybrid._setHidden(isHidden);
+-  };
++  Object.defineProperty(privateHybrid, '_setHidden', {
++    value: hybridObject.setHidden,
++    writable: true,
++    configurable: true,
++  });
++  Object.defineProperty(hybridObject, 'setHidden', {
++    value: (isHidden, animation) => {
++      _reactNative.StatusBar.setHidden(isHidden, animation);
++      privateHybrid._setHidden(isHidden);
++    },
++    writable: true,
++    configurable: true,
++  });
+ };
+ exports.attachStatusBarJSMethods = attachStatusBarJSMethods;
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/lib/commonjs/specs/UnistylesRuntime/index.js b/lib/commonjs/specs/UnistylesRuntime/index.js
+index 7641aedea57c65db259c47db244fcd77f2b1b8b5..7a3362c2c12d3cfd757fb155699dc1cf4127681f 100644
+--- a/lib/commonjs/specs/UnistylesRuntime/index.js
++++ b/lib/commonjs/specs/UnistylesRuntime/index.js
+@@ -11,12 +11,20 @@ var _StatusBar = require("../StatusBar");
+ const HybridUnistylesRuntime = _reactNativeNitroModules.NitroModules.createHybridObject('UnistylesRuntime');
+ HybridUnistylesRuntime.statusBar = HybridUnistylesRuntime.createHybridStatusBar();
+ HybridUnistylesRuntime.navigationBar = HybridUnistylesRuntime.createHybridNavigationBar();
+-HybridUnistylesRuntime.setRootViewBackgroundColor = color => {
+-  const parsedColor = (0, _reactNative.processColor)(color) ?? 0;
+-  HybridUnistylesRuntime.nativeSetRootViewBackgroundColor(parsedColor);
+-};
++Object.defineProperty(HybridUnistylesRuntime, 'setRootViewBackgroundColor', {
++  value: color => {
++    const parsedColor = (0, _reactNative.processColor)(color) ?? 0;
++    HybridUnistylesRuntime.nativeSetRootViewBackgroundColor(parsedColor);
++  },
++  writable: true,
++  configurable: true,
++});
+ if (_common.isIOS) {
+-  HybridUnistylesRuntime.setImmersiveMode = isEnabled => HybridUnistylesRuntime.statusBar.setHidden(isEnabled, 'fade');
++  Object.defineProperty(HybridUnistylesRuntime, 'setImmersiveMode', {
++    value: isEnabled => HybridUnistylesRuntime.statusBar.setHidden(isEnabled, 'fade'),
++    writable: true,
++    configurable: true,
++  });
+ }
+ (0, _StatusBar.attachStatusBarJSMethods)(HybridUnistylesRuntime.statusBar);
+ const Runtime = exports.Runtime = HybridUnistylesRuntime;
+diff --git a/lib/module/specs/StatusBar/index.js b/lib/module/specs/StatusBar/index.js
+index 401c78f71dd513c4a35e6ba05edf9e768a126b9a..764ac8259ec648189bbce25a84e0b3657f47679b 100644
+--- a/lib/module/specs/StatusBar/index.js
++++ b/lib/module/specs/StatusBar/index.js
+@@ -3,21 +3,33 @@
+ import { StatusBar as NativeStatusBar } from 'react-native';
+ import { StatusBarStyle } from '../types';
+ export const attachStatusBarJSMethods = hybridObject => {
+-  hybridObject.setStyle = (style, animated) => {
+-    switch (style) {
+-      case StatusBarStyle.Light:
+-        return NativeStatusBar.setBarStyle('light-content', animated);
+-      case StatusBarStyle.Dark:
+-        return NativeStatusBar.setBarStyle('dark-content', animated);
+-      case StatusBarStyle.Default:
+-        return NativeStatusBar.setBarStyle('default', animated);
+-    }
+-  };
++  Object.defineProperty(hybridObject, 'setStyle', {
++    value: (style, animated) => {
++      switch (style) {
++        case StatusBarStyle.Light:
++          return NativeStatusBar.setBarStyle('light-content', animated);
++        case StatusBarStyle.Dark:
++          return NativeStatusBar.setBarStyle('dark-content', animated);
++        case StatusBarStyle.Default:
++          return NativeStatusBar.setBarStyle('default', animated);
++      }
++    },
++    writable: true,
++    configurable: true,
++  });
+   const privateHybrid = hybridObject;
+-  privateHybrid._setHidden = hybridObject.setHidden;
+-  hybridObject.setHidden = (isHidden, animation) => {
+-    NativeStatusBar.setHidden(isHidden, animation);
+-    privateHybrid._setHidden(isHidden);
+-  };
++  Object.defineProperty(privateHybrid, '_setHidden', {
++    value: hybridObject.setHidden,
++    writable: true,
++    configurable: true,
++  });
++  Object.defineProperty(hybridObject, 'setHidden', {
++    value: (isHidden, animation) => {
++      NativeStatusBar.setHidden(isHidden, animation);
++      privateHybrid._setHidden(isHidden);
++    },
++    writable: true,
++    configurable: true,
++  });
+ };
+ //# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/lib/module/specs/UnistylesRuntime/index.js b/lib/module/specs/UnistylesRuntime/index.js
+index 193e44a74a45bd2830f1d27acacd7dba4d6ce4ad..116473499d666f69642594a91dd77e9c8bc77b8a 100644
+--- a/lib/module/specs/UnistylesRuntime/index.js
++++ b/lib/module/specs/UnistylesRuntime/index.js
+@@ -7,12 +7,20 @@ import { attachStatusBarJSMethods } from '../StatusBar';
+ const HybridUnistylesRuntime = NitroModules.createHybridObject('UnistylesRuntime');
+ HybridUnistylesRuntime.statusBar = HybridUnistylesRuntime.createHybridStatusBar();
+ HybridUnistylesRuntime.navigationBar = HybridUnistylesRuntime.createHybridNavigationBar();
+-HybridUnistylesRuntime.setRootViewBackgroundColor = color => {
+-  const parsedColor = processColor(color) ?? 0;
+-  HybridUnistylesRuntime.nativeSetRootViewBackgroundColor(parsedColor);
+-};
++Object.defineProperty(HybridUnistylesRuntime, 'setRootViewBackgroundColor', {
++  value: color => {
++    const parsedColor = processColor(color) ?? 0;
++    HybridUnistylesRuntime.nativeSetRootViewBackgroundColor(parsedColor);
++  },
++  writable: true,
++  configurable: true,
++});
+ if (isIOS) {
+-  HybridUnistylesRuntime.setImmersiveMode = isEnabled => HybridUnistylesRuntime.statusBar.setHidden(isEnabled, 'fade');
++  Object.defineProperty(HybridUnistylesRuntime, 'setImmersiveMode', {
++    value: isEnabled => HybridUnistylesRuntime.statusBar.setHidden(isEnabled, 'fade'),
++    writable: true,
++    configurable: true,
++  });
+ }
+ attachStatusBarJSMethods(HybridUnistylesRuntime.statusBar);
+ export const Runtime = HybridUnistylesRuntime;

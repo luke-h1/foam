@@ -213,6 +213,7 @@
     "@sentry/cli",
   ],
   "patchedDependencies": {
+    "react-native-unistyles@3.0.10": "patches/react-native-unistyles@3.0.10.patch",
     "expo-file-system@19.0.19": "patches/expo-file-system@19.0.19.patch",
   },
   "packages": {

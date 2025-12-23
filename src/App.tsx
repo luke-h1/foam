@@ -4,7 +4,6 @@ import './styles/unistyles';
 import { createNavigationContainerRef } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import 'expo-dev-client';
-import { useHermesProfilerDevTools } from '@sleeperhq/rozenite-hermes-profiler';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
@@ -33,7 +32,6 @@ function App() {
   useOnReconnect();
   useChangeScreenOrientation();
   useClearExpiredStorageItems();
-  useHermesProfilerDevTools();
 
   const containerRef = createNavigationContainerRef();
 
