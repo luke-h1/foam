@@ -124,6 +124,7 @@ export function TabNavigator() {
 
   return (
     <Tab.Navigator
+      initialRouteName="Top"
       screenOptions={{
         tabBarActiveTintColor: theme.colors.grass.accentAlpha,
         tabBarInactiveTintColor: theme.colors.gray.accent,

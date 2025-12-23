@@ -19,6 +19,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "skipLibCheck": true,
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@app/*": ["./src/*"]

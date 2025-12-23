@@ -39,7 +39,14 @@ export default function FollowingScreen() {
     [user],
   );
 
-  const { data: streams, isLoading, isError } = useQuery(followingStreamsQuery);
+  const {
+    data: streams,
+    isLoading,
+    isError,
+  } = useQuery({
+    ...followingStreamsQuery,
+    enabled: !!user?.id,
+  });
 
   const streamsArray = Array.isArray(streams) ? streams : [];
 
@@ -71,7 +78,10 @@ export default function FollowingScreen() {
     );
   }
   if ((!isLoading && !streams) || isError) {
-    toast.error('Failed to fetch followed streams');
+    // Only show error toast if user is logged in (query was enabled)
+    if (user?.id) {
+      toast.error('Failed to fetch followed streams');
+    }
     return (
       <EmptyState
         content="Failed to fetch followed streams"
