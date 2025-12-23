@@ -33,11 +33,29 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   };
 
   return (
-    <>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.topSection}>
-        <Icon icon="alert-circle" size={30} />
-        <Typography style={styles.heading}>Something went wrong</Typography>
-        <Typography>
+        <View style={styles.iconContainer}>
+          <Icon icon="alert-circle" size={48} />
+        </View>
+        <Typography
+          size="xl"
+          fontWeight="semiBold"
+          style={styles.heading}
+          align="center"
+        >
+          Something went wrong
+        </Typography>
+        <Typography
+          size="md"
+          color="gray"
+          align="center"
+          style={styles.description}
+        >
           Try resetting or restarting the app & see if that helps. If not, feel
           free to file an issue on GitHub and we'll take a look
         </Typography>
@@ -45,87 +63,180 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
       <View style={styles.buttonContainer}>
         <Button
-          style={styles.button}
+          style={styles.primaryButton}
           onPress={() => openLinkInBrowser(githubURL)}
         >
-          GitHub
+          <Typography
+            size="md"
+            fontWeight="semiBold"
+            color="blue"
+            contrast
+            align="center"
+          >
+            GitHub
+          </Typography>
         </Button>
-        <Button style={styles.button} onPress={handleShowFeedback}>
-          <Typography style={styles.buttonText}>Send Feedback</Typography>
+        <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
+          <Typography
+            size="md"
+            fontWeight="semiBold"
+            color="gray"
+            contrast
+            align="center"
+          >
+            Send Feedback
+          </Typography>
         </Button>
       </View>
 
-      <Button onPress={() => setShowStackTrace(!showStackTrace)}>
-        <Typography style={styles.toggleStackTrace}>
+      <Button
+        style={styles.toggleButton}
+        onPress={() => setShowStackTrace(!showStackTrace)}
+      >
+        <Typography
+          size="sm"
+          color="blue"
+          align="center"
+          style={styles.toggleText}
+        >
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
         </Typography>
       </Button>
 
       {showStackTrace && (
-        <ScrollView
-          style={styles.errorSection}
-          contentContainerStyle={styles.errorSectionContentContainer}
-        >
-          <Typography>{error?.message.trim()}</Typography>
-          <Typography selectable style={styles.errorBackTrace}>
-            {errorInfo?.componentStack?.trim()}
-          </Typography>
-        </ScrollView>
+        <View style={styles.errorCard}>
+          <ScrollView
+            style={styles.errorScrollView}
+            contentContainerStyle={styles.errorContentContainer}
+            showsVerticalScrollIndicator
+          >
+            {error?.message && (
+              <Typography
+                size="sm"
+                fontWeight="semiBold"
+                color="red"
+                style={styles.errorMessage}
+              >
+                {error.message.trim()}
+              </Typography>
+            )}
+            {errorInfo?.componentStack && (
+              <Typography
+                selectable
+                size="xs"
+                color="gray"
+                style={styles.errorBackTrace}
+              >
+                {errorInfo.componentStack.trim()}
+              </Typography>
+            )}
+          </ScrollView>
+        </View>
       )}
 
       <Button style={styles.resetButton} onPress={onReset}>
-        Reset
+        <Typography
+          size="md"
+          fontWeight="semiBold"
+          color="red"
+          contrast
+          align="center"
+        >
+          Reset App
+        </Typography>
       </Button>
-    </>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
   container: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
+  contentContainer: {
+    paddingHorizontal: theme.spacing['2xl'],
+    paddingTop: theme.spacing['4xl'],
+    paddingBottom: theme.spacing['3xl'],
   },
   topSection: {
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing['3xl'],
+  },
+  iconContainer: {
+    marginBottom: theme.spacing.xl,
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.gray.bgAlt,
+    borderRadius: theme.spacing['2xl'],
+    borderWidth: 2,
+    borderColor: theme.colors.red.accent,
   },
   heading: {
     marginBottom: theme.spacing.md,
   },
+  description: {
+    lineHeight: theme.font.fontSize.md * 1.5,
+    paddingHorizontal: theme.spacing.md,
+  },
   buttonContainer: {
     flexDirection: 'row',
     gap: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
   },
-  button: {
+  primaryButton: {
     flex: 1,
     backgroundColor: theme.colors.blue.accent,
-    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonText: {
-    color: theme.colors.gray.accent,
-    textAlign: 'center',
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.accent,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  toggleStackTrace: {
-    color: 'blue',
-    marginVertical: theme.spacing.md,
+  toggleButton: {
+    marginBottom: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
   },
-  errorSection: {
-    flex: 2,
-    backgroundColor: theme.colors.accent.accent,
+  toggleText: {
+    textDecorationLine: 'underline',
+  },
+  errorCard: {
+    backgroundColor: theme.colors.gray.bgAlt,
+    borderRadius: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.gray.accentAlpha,
+    overflow: 'hidden',
+  },
+  errorScrollView: {
+    maxHeight: 300,
+  },
+  errorContentContainer: {
+    padding: theme.spacing.lg,
+  },
+  errorMessage: {
     marginBottom: theme.spacing.md,
-    marginTop: theme.spacing.lg,
-    borderCurve: 'continuous',
-    borderRadius: 6,
-  },
-  errorSectionContentContainer: {
-    // padding: theme.spacing.md,
+    lineHeight: theme.font.fontSize.sm * 1.4,
   },
   errorBackTrace: {
-    marginTop: theme.spacing.md,
+    fontFamily: 'monospace',
+    lineHeight: theme.font.fontSize.xs * 1.5,
   },
   resetButton: {
     backgroundColor: theme.colors.red.accent,
-    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing['2xl'],
+    borderRadius: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: theme.spacing.md,
   },
 }));
