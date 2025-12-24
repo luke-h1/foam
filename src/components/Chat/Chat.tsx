@@ -61,7 +61,7 @@ import { FlashList } from '../FlashList';
 import { Icon } from '../Icon';
 import { Typography } from '../Typography';
 
-import { ChatSkeleton, ChatMessage, ResumeScroll } from './components';
+import { ChatMessage, ResumeScroll } from './components';
 import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
 import {
   createTestPrimeSubNotice,
@@ -98,6 +98,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const loadingAbortRef = useRef<AbortController | null>(null);
 
   const currentEmoteSetIdRef = useRef<string | null>(null);
+  const emoteReprocessAttemptedRef = useRef<string | null>(null);
 
   // Use legend-state hooks and actions
   const loadingState = useLoadingState();
@@ -948,6 +949,104 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     messagesRef.current = messages as AnyChatMessageType[];
   }, [messages]);
 
+  /**
+   * Reprocess existing messages when emote data becomes available
+   * This effect also triggers when messages arrive, so we can catch messages
+   * that arrived before emotes loaded. The ref check ensures we only reprocess once.
+   */
+  useEffect(() => {
+    const hasEmotes =
+      channelEmoteData.sevenTvGlobalEmotes.length > 0 ||
+      channelEmoteData.sevenTvChannelEmotes.length > 0 ||
+      channelEmoteData.twitchGlobalEmotes.length > 0 ||
+      channelEmoteData.twitchChannelEmotes.length > 0 ||
+      channelEmoteData.bttvGlobalEmotes.length > 0 ||
+      channelEmoteData.bttvChannelEmotes.length > 0 ||
+      channelEmoteData.ffzGlobalEmotes.length > 0 ||
+      channelEmoteData.ffzChannelEmotes.length > 0;
+
+    /**
+     * Only reprocess once per channel when emotes are available and we have messages
+     */
+    if (
+      hasEmotes &&
+      emoteReprocessAttemptedRef.current !== channelId &&
+      messages.length > 0
+    ) {
+      /**
+       * find messages that haven't had emotes processed yet (text-only)
+       */
+      const textOnlyMessages = (messages as AnyChatMessageType[]).filter(
+        msg => {
+          // Skip system messages and notices
+          if (msg.sender === 'System' || 'notice_tags' in msg) {
+            return false;
+          }
+          /**
+           * Check if all parts are text (no emotes processed)
+           */
+          return msg.message.every((part: ParsedPart) => part.type === 'text');
+        },
+      );
+
+      /**
+       * Only mark as attempted and reprocess if we have text-only messages
+       */
+      if (textOnlyMessages.length > 0) {
+        emoteReprocessAttemptedRef.current = channelId;
+
+        logger.chat.info(
+          `Reprocessing ${textOnlyMessages.length} messages with newly loaded emotes`,
+        );
+
+        const emoteData = getCurrentEmoteData(channelId);
+
+        textOnlyMessages.forEach(msg => {
+          const textContent = msg.message
+            .filter((p: ParsedPart) => p.type === 'text')
+            .map((p: ParsedPart) => (p as { content: string }).content)
+            .join('');
+
+          if (textContent.trim()) {
+            emoteProcessor.processEmotes(
+              textContent,
+              msg.userstate,
+              replacedMessage => {
+                try {
+                  const replacedBadges = findBadges({
+                    userstate: msg.userstate,
+                    chatterinoBadges: emoteData.chatterinoBadges || [],
+                    chatUsers: [],
+                    ffzChannelBadges: emoteData.ffzChannelBadges || [],
+                    ffzGlobalBadges: emoteData.ffzGlobalBadges || [],
+                    twitchChannelBadges: emoteData.twitchChannelBadges || [],
+                    twitchGlobalBadges: emoteData.twitchGlobalBadges || [],
+                  });
+
+                  handleNewMessage({
+                    ...msg,
+                    message: replacedMessage,
+                    badges: replacedBadges,
+                  });
+                } catch (error) {
+                  logger.chat.error(
+                    'Error reprocessing message emotes:',
+                    error,
+                  );
+                }
+              },
+            );
+          }
+        });
+      } else if (messages.length > 0) {
+        /**
+         * All existing messages already have emotes processed, mark as done
+         */
+        emoteReprocessAttemptedRef.current = channelId;
+      }
+    }
+  }, [channelId, channelEmoteData, emoteProcessor, handleNewMessage, messages]);
+
   // Reset refs on mount and when channelId changes
   useEffect(() => {
     // Reset all refs when component mounts or channel changes
@@ -956,6 +1055,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     hasPartedRef.current = false;
     initializingRef.current = false;
     currentEmoteSetIdRef.current = null;
+    emoteReprocessAttemptedRef.current = null;
 
     // Clear any pending timeouts
     if (scrollTimeoutRef.current) {
@@ -1036,7 +1136,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       ? `@${replyTo.username} ${messageInput}`
       : messageInput;
 
-    // Get current user state (color, badges, etc.)
     const currentUserState = getUserState();
     const badgeData = parseBadges(
       (currentUserState.badges as unknown as string) || '',
@@ -1099,7 +1198,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
     handleNewMessage(optimisticMessage);
 
-    // Process emotes if available and update message when complete
+    /**
+     * Process emotes if available and update message when complete
+     */
     if (
       emoteData &&
       (emoteData.twitchGlobalEmotes.length > 0 ||
@@ -1413,12 +1514,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     return Array.from(messageMap.values());
   }, [messages]);
 
-  // Show skeleton only if loading and not navigating away
-  // This prevents the skeleton from blocking navigation
-  if (loadingState === 'LOADING' && !isNavigatingAwayRef.current) {
-    return <ChatSkeleton />;
-  }
-
+  // Don't block rendering while emotes are loading - show messages as text
+  // and reprocess them when emotes become available
   if (loadingState === 'ERROR') {
     // log to sentry
   }
@@ -1762,7 +1859,6 @@ const styles = StyleSheet.create(theme => ({
   replyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    // backgroundColor: theme.colors.foregroundInverted,
     padding: theme.spacing.sm,
     borderTopWidth: 1,
     borderCurve: 'continuous',
@@ -1771,9 +1867,7 @@ const styles = StyleSheet.create(theme => ({
     flex: 1,
     marginRight: theme.spacing.sm,
   },
-  replyText: {
-    // color: theme.colors.text,
-  },
+  replyText: {},
   replyMessageText: {
     marginTop: theme.spacing.xs / 2,
     opacity: 0.7,
@@ -1785,9 +1879,7 @@ const styles = StyleSheet.create(theme => ({
   },
   emojiPickerContainer: {
     borderTopWidth: 1,
-    // borderTopColor: theme.colors.border,
     borderBottomWidth: 1,
-    // borderBottomColor: theme.colors.border,
     padding: theme.spacing.sm,
     shadowColor: '#000',
     shadowOffset: {
