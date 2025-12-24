@@ -43,6 +43,7 @@ import { createHitslop } from '@app/utils/string/createHitSlop';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import { truncate } from '@app/utils/string/truncate';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { FlashListRef } from '@shopify/flash-list';
 import omit from 'lodash/omit';
 import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
@@ -51,8 +52,10 @@ import {
   Platform,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  TextInput,
 } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
@@ -62,7 +65,7 @@ import { Icon } from '../Icon';
 import { Typography } from '../Typography';
 
 import { ChatMessage, ResumeScroll } from './components';
-import { EmojiPickerSheet, PickerItem } from './components/EmojiPickerSheet';
+import { EmoteSheet, EmotePickerItem } from './components/EmoteSheet';
 import {
   createTestPrimeSubNotice,
   createTestTier1SubNotice,
@@ -1324,22 +1327,23 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [handleReply, messages],
   );
 
-  const emojiPickerRef = useRef<BottomSheetModal>(null);
+  const emoteSheetRef = useRef<TrueSheet>(null);
   const debugModalRef = useRef<BottomSheetModal>(null);
+  const chatInputRef = useRef<TextInput>(null);
 
-  const handleEmojiSelect = useCallback((item: PickerItem) => {
-    /**
-     * Regular emoji
-     */
+  const handleEmoteSelect = useCallback((item: EmotePickerItem) => {
     if (typeof item === 'string') {
-      setMessageInput(prev => `${prev}${' '}${item} `);
+      setMessageInput(prev => `${prev}${prev.length > 0 ? ' ' : ''}${item} `);
     } else {
-      /**
-       * Third party emote
-       */
-      setMessageInput(prev => `${prev}${' '}${item.name} `);
+      setMessageInput(
+        prev => `${prev}${prev.length > 0 ? ' ' : ''}${item.name} `,
+      );
     }
-    emojiPickerRef.current?.dismiss();
+    void emoteSheetRef.current?.dismiss();
+  }, []);
+
+  const handleOpenEmoteSheet = useCallback(async () => {
+    await emoteSheetRef.current?.present();
   }, []);
 
   const handleTestMessageSelect = useCallback(
@@ -1521,8 +1525,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }
 
   return (
-    <View style={[styles.wrapper, { paddingTop: insets.top }]}>
-      <Typography style={styles.header}>CHAT</Typography>
+    <View style={styles.wrapper}>
+      <View style={{ paddingTop: insets.top }}>
+        <Typography style={styles.header}>CHAT</Typography>
+      </View>
       <KeyboardAvoidingView
         behavior="padding"
         style={styles.keyboardAvoidingView}
@@ -1567,89 +1573,118 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         <View
           ref={inputContainerRef}
-          style={styles.inputContainer}
+          style={[styles.inputWrapper, { paddingBottom: insets.bottom }]}
           onLayout={measureInputContainer}
         >
+          {/* Reply Preview */}
           {replyTo && (
-            <View style={styles.replyContainer}>
+            <Animated.View
+              entering={FadeIn.duration(150)}
+              exiting={FadeOut.duration(100)}
+              style={styles.replyPreview}
+            >
+              <View style={styles.replyIndicator} />
               <View style={styles.replyContent}>
-                <Typography style={styles.replyText}>
-                  Replying to {replyTo.username}
+                <Typography style={styles.replyLabel}>
+                  Replying to{' '}
+                  <Typography style={styles.replyUsername}>
+                    {replyTo.username}
+                  </Typography>
                 </Typography>
                 {replyTo.message && (
-                  <Typography style={styles.replyMessageText} numberOfLines={1}>
-                    {truncate(replyTo.message.trim() || replyTo.message, 50)}
+                  <Typography
+                    style={styles.replyMessagePreview}
+                    numberOfLines={1}
+                  >
+                    {truncate(replyTo.message.trim() || replyTo.message, 60)}
                   </Typography>
                 )}
               </View>
               <Button
-                style={styles.cancelReplyButton}
+                style={styles.replyDismissButton}
                 onPress={() => setReplyTo(null)}
+                hitSlop={createHitslop(20)}
               >
-                <Icon icon="x" size={16} />
+                <Icon icon="x" size={18} />
               </Button>
-            </View>
+            </Animated.View>
           )}
-          {/* <Button
-            style={styles.sendButton}
-            onPress={handleEmojiPickerToggle}
-            hitSlop={createHitslop(40)}
-          >
-            <Icon icon="smile" size={24} />
-          </Button> */}
-          <Button
-            style={styles.sendButton}
-            onPress={() => {
-              debugModalRef.current?.present();
-            }}
-            hitSlop={createHitslop(40)}
-          >
-            <Icon icon="zap" size={24} />
-          </Button>
-          <ChatAutoCompleteInput
-            value={messageInput}
-            onChangeText={setMessageInput}
-            onEmoteSelect={emote => {
-              setMessageInput(prev => `${prev + emote.name} `);
-            }}
-            onFocus={() => {
-              setIsInputFocused(true);
-            }}
-            onBlur={() => {
-              setIsInputFocused(false);
-            }}
-            placeholder={
-              replyTo ? `Reply to ${replyTo.username}` : 'Send a message'
-            }
-            editable
-            autoComplete="off"
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholderTextColor="#666"
-            onSubmitEditing={() => void handleSendMessage()}
-            returnKeyType="send"
-            prioritizeChannelEmotes
-          />
-          <Button
-            style={styles.clearCacheButton}
-            onPress={() => void handleClearImageCache()}
-            hitSlop={createHitslop(40)}
-          >
-            <Icon icon="trash-2" size={20} />
-          </Button>
-          <Button
-            style={styles.sendButton}
-            onPress={() => void handleSendMessage()}
-            disabled={!messageInput.trim() || !connected}
-          >
-            <Icon icon="send" size={24} />
-          </Button>
+
+          {/* Input Row */}
+          <View style={styles.inputRow}>
+            {/* Emote Button */}
+            <Button
+              style={styles.inputActionButton}
+              onPress={() => void handleOpenEmoteSheet()}
+              hitSlop={createHitslop(30)}
+            >
+              <Icon icon="smile" size={22} />
+            </Button>
+
+            {/* Chat Input */}
+            <View style={styles.inputFieldContainer}>
+              <ChatAutoCompleteInput
+                ref={chatInputRef}
+                value={messageInput}
+                onChangeText={setMessageInput}
+                onEmoteSelect={emote => {
+                  setMessageInput(
+                    prev =>
+                      `${prev}${prev.length > 0 ? ' ' : ''}${emote.name} `,
+                  );
+                }}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
+                placeholder={
+                  replyTo
+                    ? `Reply to ${replyTo.username}...`
+                    : 'Send a message...'
+                }
+                editable
+                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholderTextColor="#666"
+                onSubmitEditing={() => void handleSendMessage()}
+                returnKeyType="send"
+                prioritizeChannelEmotes
+              />
+            </View>
+
+            {/* Debug Button (Dev only) */}
+            {__DEV__ && (
+              <Button
+                style={styles.inputActionButton}
+                onPress={() => debugModalRef.current?.present()}
+                hitSlop={createHitslop(20)}
+              >
+                <Icon icon="zap" size={20} />
+              </Button>
+            )}
+
+            {/* Send Button */}
+            <Button
+              style={[
+                styles.sendButton,
+                (!messageInput.trim() || !connected) &&
+                  styles.sendButtonDisabled,
+              ]}
+              onPress={() => void handleSendMessage()}
+              disabled={!messageInput.trim() || !connected}
+              hitSlop={createHitslop(20)}
+            >
+              <Icon
+                icon="arrow-up"
+                size={20}
+                color={messageInput.trim() && connected ? '#fff' : undefined}
+              />
+            </Button>
+          </View>
         </View>
+
+        {/* Emote Sheet */}
         {connected && (
-          <EmojiPickerSheet
-            ref={emojiPickerRef}
-            onItemPress={handleEmojiSelect}
-          />
+          <EmoteSheet ref={emoteSheetRef} onEmoteSelect={handleEmoteSelect} />
         )}
         <BottomSheetModal
           ref={debugModalRef}
@@ -1724,6 +1759,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             >
               <Typography>Clear Chat Cache</Typography>
             </Button>
+            <Button
+              onPress={() => void handleClearImageCache()}
+              style={styles.debugModalItem}
+            >
+              <Typography>Clear Image Cache</Typography>
+            </Button>
           </BottomSheetView>
         </BottomSheetModal>
       </KeyboardAvoidingView>
@@ -1766,41 +1807,77 @@ const styles = StyleSheet.create(theme => ({
     paddingHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.xs,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: theme.spacing.md,
+  inputWrapper: {
     borderTopWidth: 1,
-    borderTopColor: '#2d2d2d',
-    position: 'relative',
-    borderCurve: 'continuous',
-    zIndex: 2,
+    borderTopColor: theme.colors.gray.border,
+    backgroundColor: theme.colors.accent.bgAlt,
   },
-  input: {
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  inputFieldContainer: {
     flex: 1,
-    backgroundColor: '#2d2d2d',
-    borderRadius: theme.radii.lg,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: 8,
-    color: '#efeff1',
-    marginRight: theme.spacing.md,
-    borderCurve: 'continuous',
+  },
+  inputActionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   sendButton: {
-    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-    width: theme.spacing['3xl'],
+    justifyContent: 'center',
+    backgroundColor: theme.colors.violet.accent,
   },
-  clearCacheButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: theme.spacing['2xl'],
-    marginRight: theme.spacing.xs,
+  sendButtonDisabled: {
+    backgroundColor: theme.colors.gray.ui,
   },
-  debugButton: {
-    justifyContent: 'center',
+  replyPreview: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: theme.spacing['2xl'],
-    marginRight: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.accent.ui,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.gray.border,
+  },
+  replyIndicator: {
+    width: 3,
+    height: '100%',
+    minHeight: 32,
+    backgroundColor: theme.colors.violet.accent,
+    borderRadius: 2,
+    marginRight: theme.spacing.sm,
+  },
+  replyLabel: {
+    fontSize: theme.font.fontSize.xs,
+    opacity: 0.7,
+  },
+  replyUsername: {
+    fontWeight: '600',
+    opacity: 1,
+  },
+  replyMessagePreview: {
+    fontSize: theme.font.fontSize.sm,
+    opacity: 0.6,
+    marginTop: 2,
+  },
+  replyDismissButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto',
   },
   dropdownContent: {
     minWidth: 180,
@@ -1809,14 +1886,7 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing.xs,
     borderWidth: 1,
     borderColor: '#2d2d2d',
-    // eslint-disable-next-line refined/prefer-box-shadow
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
     elevation: 8,
   },
   container: {
@@ -1856,35 +1926,7 @@ const styles = StyleSheet.create(theme => ({
     color: 'white',
     marginBottom: theme.spacing.md,
   },
-  replyContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderCurve: 'continuous',
-  },
   replyContent: {
     flex: 1,
-    marginRight: theme.spacing.sm,
-  },
-  replyText: {},
-  replyMessageText: {
-    marginTop: theme.spacing.xs / 2,
-    opacity: 0.7,
-    fontSize: theme.font.fontSize.xs,
-    // color: theme.colors.text,
-  },
-  cancelReplyButton: {
-    padding: theme.spacing.xs,
-  },
-  emojiPickerContainer: {
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    padding: theme.spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
   },
 }));

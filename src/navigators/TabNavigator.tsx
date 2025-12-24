@@ -9,6 +9,7 @@ import {
   NativeBottomTabNavigationOptions,
 } from '@react-navigation/bottom-tabs/unstable';
 import { CompositeScreenProps } from '@react-navigation/native';
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { ComponentType, FC, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
@@ -106,9 +107,14 @@ export function TabNavigator() {
           }),
       };
 
-      // iOS: Use system search tab for native tab bar styling
+      // iOS 26+: Use system search tab for native Liquid Glass tab bar styling
+      // iOS 18 and earlier: Use SF Symbol for search icon
       // See: https://reactnavigation.org/docs/native-bottom-tab-navigator/
-      if (screen.tabBarSystemItem === 'search' && Platform.OS === 'ios') {
+      if (
+        screen.tabBarSystemItem === 'search' &&
+        Platform.OS === 'ios' &&
+        isLiquidGlassAvailable()
+      ) {
         return {
           ...baseOptions,
           tabBarSystemItem: 'search',
