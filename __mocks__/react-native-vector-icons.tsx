@@ -1,4 +1,4 @@
-import React from 'react';
+// eslint-disable-next-line no-restricted-imports
 import { View, Text } from 'react-native';
 
 // Mock all icon sets
@@ -29,4 +29,3 @@ export default {
   Zocial: createMockIconSet('Zocial'),
   // Add any other icon sets you use
 };
-
