@@ -10,6 +10,7 @@ import { SettingsDevtoolsScreen } from '@app/screens/SettingsScreen/SettingsDevt
 import { SettingsIndexScreen } from '@app/screens/SettingsScreen/SettingsIndexScreen';
 import { SettingsOtherScreen } from '@app/screens/SettingsScreen/SettingsOtherScreen';
 import { SettingsProfileScreen } from '@app/screens/SettingsScreen/SettingsProfileScreen';
+import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 
@@ -27,6 +28,7 @@ export type SettingsStackParamList = {
   Faq: undefined;
   Changelog: undefined;
   Debug: undefined;
+  Storybook: undefined;
   Chat: {
     channelId: string;
     channelName: string;
@@ -54,6 +56,7 @@ export function SettingsStackNavigator() {
       <Stack.Screen name="CachedImages" component={CachedImagesScreen} />
       <Stack.Screen name="Diagnostics" component={DiagnosticsScreen} />
       <Stack.Screen name="Debug" component={DebugScreen} />
+      <Stack.Screen name="Storybook" component={StorybookScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Licenses" component={LicensesScreen} />
       <Stack.Screen name="About" component={AboutScreen} />

@@ -57,7 +57,8 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           style={styles.description}
         >
           Try resetting or restarting the app & see if that helps. If not, feel
-          free to file an issue on GitHub and we'll take a look
+          free to click the 'send feedback' button to report the issue to the
+          developers.
         </Typography>
       </View>
 

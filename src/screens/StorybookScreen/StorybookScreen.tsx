@@ -1,10 +1,10 @@
-import { View } from 'react-native';
+import { Screen } from '@app/components/Screen';
 import StoryBook from '../../../.storybook';
 
 export function StorybookScreen() {
   return (
-    <View>
+    <Screen safeAreaEdges={[]} preset="fixed">
       <StoryBook />
-    </View>
+    </Screen>
   );
 }

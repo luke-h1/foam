@@ -55,6 +55,18 @@ export function SettingsDevtoolsScreen() {
               color: theme.colors.green.accent,
             },
           },
+          null,
+          {
+            arrow: true,
+            label: 'Storybook',
+            description: 'UI preview',
+            onPress: () => navigate('Storybook'),
+            icon: {
+              type: 'symbol',
+              name: 'book.closed',
+              color: theme.colors.green.accent,
+            },
+          },
         ]}
       />
     </Screen>
