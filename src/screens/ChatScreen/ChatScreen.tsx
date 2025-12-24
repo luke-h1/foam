@@ -10,7 +10,7 @@ export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
   const { channelId, channelName } = params;
 
   return (
-    <SafeAreaViewFixed avoidTabBar style={styles.container}>
+    <SafeAreaViewFixed edges={['top']} style={styles.container}>
       <Chat channelName={channelName} channelId={channelId} />
     </SafeAreaViewFixed>
   );
