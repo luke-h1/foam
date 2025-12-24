@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -57,7 +58,10 @@ export function ScreenHeader({
   size = 'large',
   safeArea = true,
 }: ScreenHeaderProps) {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+
+  const handleBack = onBack ?? (() => navigation.goBack());
 
   const isInline = size === 'medium' || size === 'compact';
 
@@ -83,7 +87,7 @@ export function ScreenHeader({
             <IconButton
               icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
               label="goBack"
-              onPress={onBack}
+              onPress={handleBack}
               size="2xl"
               hitSlop={12}
               style={styles.backButton}

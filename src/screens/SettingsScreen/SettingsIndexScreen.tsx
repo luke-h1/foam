@@ -65,7 +65,7 @@ export function SettingsIndexScreen() {
                 color: theme.colors.green.accent,
               },
               label: 'Chat',
-              description: 'Message display options',
+              description: 'Chat options',
               onPress: () => navigate('ChatPreferences'),
             },
             null,

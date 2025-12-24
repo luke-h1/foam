@@ -6,6 +6,7 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { BrandIcon } from '../BrandIcon';
 import { Icon } from '../Icon';
 import { Image } from '../Image';
 import { Switch } from '../Switch';
@@ -59,9 +60,11 @@ export function MenuItem({ item, style }: MenuItemProps) {
               tintColor={item.icon.color ?? theme.colors.gray.border}
             />
           ) : (
-            // <Icon icon={'} />
-            // eslint-disable-next-line react/jsx-no-useless-fragment
-            <></>
+            <BrandIcon
+              name={item.icon.name}
+              color={item.icon.color ?? theme.colors.gray.border}
+              size="md"
+            />
           )
         ) : null}
 
@@ -70,10 +73,10 @@ export function MenuItem({ item, style }: MenuItemProps) {
         )}
 
         <View style={styles.contentContainer}>
-          <Typography fontWeight="bold">{item.label}</Typography>
+          <Typography fontWeight="semiBold">{item.label}</Typography>
 
           {item.description ? (
-            <Typography color="gray" highContrast={false}>
+            <Typography size="xs" color="gray.textLow">
               {item.description}
             </Typography>
           ) : null}
@@ -162,7 +165,11 @@ const styles = StyleSheet.create(theme => ({
     gap: theme.spacing.lg,
     minHeight: theme.spacing['6xl'],
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    marginHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderRadius: theme.radii.md,
+    marginBottom: theme.spacing.xs,
   },
   contentContainer: {
     flex: 1,
