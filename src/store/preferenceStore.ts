@@ -10,6 +10,8 @@ export interface Preferences {
   theme: Theme;
   fontScaling: number;
   systemScaling: boolean;
+  hapticFeedback: boolean;
+  chatTimestamps: boolean;
 }
 
 interface PreferenceState extends Preferences {
@@ -25,6 +27,8 @@ const preferenceStoreCreator: StateCreator<
   theme: 'foam-dark',
   fontScaling: 1,
   systemScaling: false,
+  hapticFeedback: true,
+  chatTimestamps: true,
   update: payload => {
     set(payload);
   },
