@@ -9,12 +9,13 @@ export function ChatPreferenceScreen() {
   const {
     chatTimestamps,
     show7TvEmotes,
+    show7tvBadges,
     showBttvEmotes,
-    showFFzBadges,
-    showFFzEmotes,
-    showTwitchBadges,
-    showTwitchEmotes,
     showBttvBadges,
+    showFFzEmotes,
+    showFFzBadges,
+    showTwitchEmotes,
+    showTwitchBadges,
     update,
   } = usePreferences();
   const { theme } = useUnistyles();
@@ -63,7 +64,7 @@ export function ChatPreferenceScreen() {
           update({ show7tvBadges: value });
         },
         type: 'switch',
-        value: show7TvEmotes,
+        value: show7tvBadges,
       },
 
       'BTTV',
@@ -154,8 +155,19 @@ export function ChatPreferenceScreen() {
         value: showTwitchBadges,
       },
     ] satisfies (MenuItem | string | null)[];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatTimestamps]);
+  }, [
+    chatTimestamps,
+    show7TvEmotes,
+    show7tvBadges,
+    showBttvEmotes,
+    showBttvBadges,
+    showFFzEmotes,
+    showFFzBadges,
+    showTwitchEmotes,
+    showTwitchBadges,
+    theme.colors,
+    update,
+  ]);
 
   return (
     <Screen safeAreaEdges={[]} preset="fixed">
