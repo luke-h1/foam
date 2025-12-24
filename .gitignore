@@ -95,3 +95,5 @@ FOAM_ANDROID_TESTFLIGHT_KEY.json
 .env
 
 profile-*.json
+
+storybook-static/

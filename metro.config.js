@@ -15,7 +15,7 @@ config.transformer = {
 }
 
 const configWithStorybook = withStorybook(config, {
-  enabled: process.env.WITH_STORYBOOK === 'true',
+  enabled: process.env.WITH_STORYBOOK === 'true' || process.env.EXPO_PUBLIC_STORYBOOK === 'true',
 });
 
 module.exports = withRozenite(configWithStorybook, {

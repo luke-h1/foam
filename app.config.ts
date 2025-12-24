@@ -14,10 +14,20 @@ interface AppVariantConfig {
   androidGoogleServicesFile: string;
 }
 
-type Variant = 'development' | 'preview' | 'test' | 'production';
+type Variant = 'development' | 'preview' | 'test' | 'production' | 'storybook';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
 const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
+  storybook: {
+    name: 'Foam (storybook)',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv-storybook',
+    androidPackageName: 'com.lhowsam.foam.storybook',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
+    iosGoogleServicesFile: './GoogleService-Info-dev.plist',
+    androidGoogleServicesFile: './google-services-dev.json',
+  },
   development: {
     name: 'Foam (dev)',
     icon: './assets/splash/splash-image-production.png',

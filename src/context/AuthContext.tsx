@@ -1,3 +1,4 @@
+import { navigate } from '@app/navigators/navigationUtilities';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchApi } from '@app/services/api';
 import {
@@ -293,6 +294,13 @@ export const AuthContextProvider = ({
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // Navigate to Storybook when ready and Storybook is enabled
+    if (process.env.EXPO_PUBLIC_STORYBOOK === 'true' && state.ready) {
+      navigate('Storybook');
+    }
+  }, [state.ready]);
 
   const contextState: AuthContextState = useMemo(() => {
     return {

@@ -1,6 +1,6 @@
 import { registerRootComponent } from 'expo';
-import App from './src/App';
 
 import './src/styles/unistyles';
+import App from './src/App';
 
 registerRootComponent(App);

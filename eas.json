@@ -31,6 +31,14 @@
         "simulator": true
       }
     },
+    "storybook": {
+      "extends": "development",
+      "env": {
+        "APP_VARIANT": "storybook",
+        "EXPO_PUBLIC_STORYBOOK": "true"
+      },
+      "channel": "storybook"
+    },
     "preview": {
       "environment": "preview",
       "env": {

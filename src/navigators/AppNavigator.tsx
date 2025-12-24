@@ -91,8 +91,6 @@ const AppStack = () => {
   usePopulateAuth();
   const { ready } = useAuthContext();
 
-  console.log('ready ->', ready);
-
   /**
    * Todo: add loading state + fallback here if auth down
    */
@@ -105,6 +103,9 @@ const AppStack = () => {
       screenOptions={{
         headerShown: false,
       }}
+      initialRouteName={
+        process.env.EXPO_PUBLIC_STORYBOOK === 'true' ? 'Storybook' : 'Tabs'
+      }
     >
       {/* Tab stack */}
       <Stack.Screen name="Tabs" component={TabNavigator} />

@@ -8,6 +8,11 @@ export function usePopulateAuth() {
 
   useEffect(() => {
     void populateAuthState().then(() => {
+      // Skip navigation if Storybook is enabled
+      if (process.env.EXPO_PUBLIC_STORYBOOK === 'true') {
+        return;
+      }
+
       /**
        * Logged in - navigate user to following tab
        */

@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "APP_VARIANT=development expo start --dev-client",
+    "start:storybook": "EXPO_PUBLIC_STORYBOOK=true APP_VARIANT=storybook expo start --dev-client",
     "start:atlas": "EXPO_UNSTABLE_ATLAS=true APP_VARIANT=development expo start --dev-client",
     "start:atlas:production": "EXPO_UNSTABLE_ATLAS=true APP_VARIANT=development expo start --no-dev",
     "atlas:export": "EXPO_UNSTABLE_ATLAS=true expo export --platform all",
