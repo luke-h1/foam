@@ -176,13 +176,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       setUnreadCount(prev => prev + batch.length);
     }
 
-    // Force scroll to bottom if we're already at bottom (for fast chats)
     if (isAtBottomRef.current && !isScrollingToBottom) {
       setTimeout(() => {
-        void flashListRef.current?.scrollToIndex({
-          index: messages.length - 1,
-          animated: false,
-        });
+        // Double-check we're still at bottom before scrolling (user might have scrolled up)
+        if (isAtBottomRef.current && !isScrollingToBottom) {
+          const lastIndex = messages.length - 1;
+          if (lastIndex >= 0) {
+            void flashListRef.current?.scrollToIndex({
+              index: lastIndex,
+              animated: false,
+            });
+          }
+        }
       }, 0);
     }
   }, [isScrollingToBottom, messages.length]);
@@ -884,9 +889,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         scrollTimeoutRef.current = null;
       }
 
+      // Always update the ref immediately to reflect current scroll position
+      // This prevents auto-scroll from happening when user has scrolled up
+      isAtBottomRef.current = atBottom;
+
       // Only update state if not currently auto-scrolling, or if we've reached the bottom
       if (!isScrollingToBottom || atBottom) {
-        isAtBottomRef.current = atBottom;
         setIsAtBottom(atBottom);
 
         if (isScrollingToBottom && atBottom) {
@@ -902,16 +910,24 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   );
 
   const handleContentSizeChange = useCallback(() => {
-    if (isAtBottomRef.current) {
+    // Only auto-scroll if we're at the bottom AND not currently scrolling to bottom
+    // This prevents jumping when user has scrolled up
+    if (isAtBottomRef.current && !isScrollingToBottom) {
       const lastIndex = messages.length - 1;
       if (lastIndex >= 0) {
-        void flashListRef.current?.scrollToIndex({
-          index: messages.length - 1,
-          animated: false,
-        });
+        // Use setTimeout to ensure the scroll happens after layout
+        // Double-check we're still at bottom before scrolling (user might have scrolled up)
+        setTimeout(() => {
+          if (isAtBottomRef.current && !isScrollingToBottom) {
+            void flashListRef.current?.scrollToIndex({
+              index: messages.length - 1,
+              animated: false,
+            });
+          }
+        }, 0);
       }
     }
-  }, [messages.length]);
+  }, [messages.length, isScrollingToBottom]);
 
   const scrollToBottom = useCallback(() => {
     setIsScrollingToBottom(true);
