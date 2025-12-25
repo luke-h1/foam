@@ -106,7 +106,6 @@ export function useRemoteConfig(): RemoteConfigType {
             },
           ]),
       ) as RemoteConfigType;
-      logger.remoteConfig.info('new config', newConfig);
       setConfig(newConfig);
     };
 
