@@ -18,8 +18,13 @@ export type Icon =
     }
   | {
       color?: string;
-      name: BrandIconName;
+      name: string;
       type: 'icon';
+    }
+  | {
+      color?: string;
+      name: BrandIconName;
+      type: 'brandIcon';
     };
 
 export interface MenuItemOption {

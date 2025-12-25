@@ -40,7 +40,7 @@ export function ChatPreferenceScreen() {
       '7TV',
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'stv',
           color: theme.colors.plum.accent,
         },
@@ -54,7 +54,7 @@ export function ChatPreferenceScreen() {
       },
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'stv',
           color: theme.colors.plum.accent,
         },
@@ -70,7 +70,7 @@ export function ChatPreferenceScreen() {
       'BTTV',
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'bttv',
           color: theme.colors.orange.accent,
         },
@@ -84,7 +84,7 @@ export function ChatPreferenceScreen() {
       },
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'bttv',
           color: theme.colors.orange.accent,
         },
@@ -99,7 +99,7 @@ export function ChatPreferenceScreen() {
       'FFZ',
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'ffz',
           color: theme.colors.green.accent,
         },
@@ -113,7 +113,7 @@ export function ChatPreferenceScreen() {
       },
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'ffz',
           color: theme.colors.green.accent,
         },
@@ -128,7 +128,7 @@ export function ChatPreferenceScreen() {
       'Twitch',
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'twitch',
           color: theme.colors.plum.accent,
         },
@@ -142,7 +142,7 @@ export function ChatPreferenceScreen() {
       },
       {
         icon: {
-          type: 'icon',
+          type: 'brandIcon',
           name: 'twitch',
           color: theme.colors.plum.accent,
         },

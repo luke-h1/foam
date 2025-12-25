@@ -13,11 +13,31 @@ import { Switch } from '../Switch';
 import { Typography } from '../Typography';
 import { SheetItem } from '../sheets/SheetItem';
 import { SheetModal } from '../sheets/SheetModal';
-import { type MenuItem } from './Menu';
+import { type Icon as IconType, type MenuItem } from './Menu';
 
 interface MenuItemProps {
   item: MenuItem;
   style?: StyleProp<ViewStyle>;
+}
+
+function renderIcon(icon: IconType, defaultColor: string) {
+  if (icon.type === 'symbol') {
+    return (
+      <SymbolView name={icon.name} tintColor={icon.color ?? defaultColor} />
+    );
+  }
+
+  if (icon.type === 'brandIcon') {
+    return (
+      <BrandIcon
+        name={icon.name}
+        color={icon.color ?? defaultColor}
+        size="md"
+      />
+    );
+  }
+
+  return <Icon icon={icon.name} color={icon.color ?? defaultColor} />;
 }
 
 export function MenuItem({ item, style }: MenuItemProps) {
@@ -53,20 +73,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
         }}
         style={[styles.component, style]}
       >
-        {item.icon ? (
-          item.icon.type === 'symbol' ? (
-            <SymbolView
-              name={item.icon.name}
-              tintColor={item.icon.color ?? theme.colors.gray.border}
-            />
-          ) : (
-            <BrandIcon
-              name={item.icon.name}
-              color={item.icon.color ?? theme.colors.gray.border}
-              size="md"
-            />
-          )
-        ) : null}
+        {item.icon ? renderIcon(item.icon, theme.colors.gray.border) : null}
 
         {!item.icon && item.image && (
           <Image source={item.image} style={styles.image} />
