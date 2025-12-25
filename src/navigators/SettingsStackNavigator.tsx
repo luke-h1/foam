@@ -1,7 +1,7 @@
 import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { CachedImagesScreen } from '@app/screens/DevTools/CachedImagesScreen';
 import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
-import { Diagnostics as DiagnosticsScreen } from '@app/screens/DevTools/components/Diagnostics';
+import { DiagnosticsScreen } from '@app/screens/DevTools/DiagnosticsScreen';
 import { AboutScreen } from '@app/screens/Other/AboutScreen';
 import { FaqScreen } from '@app/screens/Other/FaqScreen';
 import { LicensesScreen } from '@app/screens/Other/LicensesScreen';

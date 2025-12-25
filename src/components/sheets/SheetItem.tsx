@@ -98,8 +98,9 @@ const styles = StyleSheet.create(theme => ({
   pressable: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 3,
-    height: theme.spacing.md,
+    gap: theme.spacing.md,
+    minHeight: theme.spacing['6xl'],
+    paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
   },
   label: {

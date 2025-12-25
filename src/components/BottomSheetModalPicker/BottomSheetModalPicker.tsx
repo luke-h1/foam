@@ -1,5 +1,5 @@
+import { NonEmptyArray } from '@app/utils/typescript/NonEmptyArray';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-
 import { Picker } from '@react-native-picker/picker';
 import { useCallback, useRef } from 'react';
 import { View } from 'react-native';
@@ -12,7 +12,7 @@ import { Typography } from '../Typography';
 
 export interface BottomSheetModalPickerProps<TOption extends string> {
   value: TOption;
-  options: TOption[];
+  options: Readonly<NonEmptyArray<TOption>> | TOption[];
   onOptionSelect: (option: TOption) => void;
   isVisible: SharedValue<boolean>;
 }
@@ -40,8 +40,9 @@ export function BottomSheetModalPicker<TOption extends string>({
   useAnimatedReaction(
     () => isVisible.value,
     visible => {
-      scheduleOnUI(toggleBottomSheet, visible);
+      scheduleOnUI(() => toggleBottomSheet(visible));
     },
+    [toggleBottomSheet],
   );
 
   const handleClose = useCallback(() => {

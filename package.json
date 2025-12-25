@@ -40,6 +40,7 @@
     "prebuild:android": "npx expo prebuild -p android",
     "prebuild:ios": "npx expo prebuild -p ios",
     "preinstall": "only-allow bun && node ./scripts/commit-hooks",
+    "postinstall": "lefthook install",
     "ts:check": "tsc --noEmit",
     "start:proxy": "ts-node-dev -P tsconfig.proxy.json --respawn --transpile-only proxy.ts",
     "test": "jest",
