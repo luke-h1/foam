@@ -5,6 +5,7 @@ import { Diagnostics as DiagnosticsScreen } from '@app/screens/DevTools/componen
 import { AboutScreen } from '@app/screens/Other/AboutScreen';
 import { FaqScreen } from '@app/screens/Other/FaqScreen';
 import { LicensesScreen } from '@app/screens/Other/LicensesScreen';
+import { ChatPreferenceScreen } from '@app/screens/Preferences/ChatPreferenceScreen';
 import { SettingsAppearanceScreen } from '@app/screens/SettingsScreen/SettingsApperanceScreen';
 import { SettingsDevtoolsScreen } from '@app/screens/SettingsScreen/SettingsDevtoolsScreen';
 import { SettingsIndexScreen } from '@app/screens/SettingsScreen/SettingsIndexScreen';
@@ -18,6 +19,7 @@ export type SettingsStackParamList = {
   Index: undefined;
   Profile: undefined;
   Appearance: undefined;
+  ChatPreferences: undefined;
   DevTools: undefined;
   Other: undefined;
 
@@ -51,6 +53,7 @@ export function SettingsStackNavigator() {
       <Stack.Screen name="Index" component={SettingsIndexScreen} />
       <Stack.Screen name="Profile" component={SettingsProfileScreen} />
       <Stack.Screen name="Appearance" component={SettingsAppearanceScreen} />
+      <Stack.Screen name="ChatPreferences" component={ChatPreferenceScreen} />
       <Stack.Screen name="DevTools" component={SettingsDevtoolsScreen} />
       <Stack.Screen name="Other" component={SettingsOtherScreen} />
       <Stack.Screen name="CachedImages" component={CachedImagesScreen} />

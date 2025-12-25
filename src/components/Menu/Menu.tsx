@@ -2,6 +2,7 @@ import { SFSymbol } from 'expo-symbols';
 import { ReactElement } from 'react';
 import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+import { BrandIconName } from '../BrandIcon';
 import { FlashList, FlashListProps } from '../FlashList';
 import { RefreshControl } from '../RefreshControl';
 import { Typography } from '../Typography';
@@ -19,6 +20,11 @@ export type Icon =
       color?: string;
       name: string;
       type: 'icon';
+    }
+  | {
+      color?: string;
+      name: BrandIconName;
+      type: 'brandIcon';
     };
 
 export interface MenuItemOption {
@@ -82,6 +88,7 @@ export function Menu({
   return (
     <FlashList
       {...listProps}
+      contentInsetAdjustmentBehavior="automatic"
       ListFooterComponent={footer}
       ListHeaderComponent={header}
       data={items}
@@ -96,7 +103,18 @@ export function Menu({
         }
 
         if (typeof item === 'string') {
-          return <Typography>{item}</Typography>;
+          return (
+            <View style={menuStyles.sectionHeader}>
+              <Typography
+                size="sm"
+                fontWeight="bold"
+                color="gray.text"
+                style={menuStyles.sectionTitle}
+              >
+                {item}
+              </Typography>
+            </View>
+          );
         }
 
         if (typeof item === 'function') {
@@ -112,6 +130,15 @@ export function Menu({
   );
 }
 
-const menuStyles = StyleSheet.create({
-  menu: { height: 4 },
-});
+const menuStyles = StyleSheet.create(theme => ({
+  menu: { height: theme.spacing.xs },
+  sectionHeader: {
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  sectionTitle: {
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+}));

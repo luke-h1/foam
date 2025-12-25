@@ -3,6 +3,7 @@ import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
 import { type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { BrandIcon, type BrandIconName } from '../BrandIcon';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
 import { Typography } from '../Typography';
@@ -19,6 +20,12 @@ type Icon =
       name: string;
       size?: number;
       type: 'icon';
+    }
+  | {
+      color?: string;
+      name: BrandIconName;
+      size?: number;
+      type: 'brandIcon';
     };
 
 export type SheetItemProps = {
@@ -61,8 +68,14 @@ export function SheetItem({
             size={icon.size ?? theme.spacing.md}
             tintColor={icon.color ?? theme.colors.black.bgAltAlpha}
           />
+        ) : icon.type === 'brandIcon' ? (
+          <BrandIcon
+            name={icon.name}
+            color={icon.color ?? theme.colors.black.bgAltAlpha}
+            size="md"
+          />
         ) : (
-          <Icon icon={icon.name} />
+          <Icon icon={icon.name} color={icon.color} />
         )
       ) : (
         left

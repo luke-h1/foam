@@ -6,17 +6,38 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { BrandIcon } from '../BrandIcon';
 import { Icon } from '../Icon';
 import { Image } from '../Image';
 import { Switch } from '../Switch';
 import { Typography } from '../Typography';
 import { SheetItem } from '../sheets/SheetItem';
 import { SheetModal } from '../sheets/SheetModal';
-import { type MenuItem } from './Menu';
+import { type Icon as IconType, type MenuItem } from './Menu';
 
 interface MenuItemProps {
   item: MenuItem;
   style?: StyleProp<ViewStyle>;
+}
+
+function renderIcon(icon: IconType, defaultColor: string) {
+  if (icon.type === 'symbol') {
+    return (
+      <SymbolView name={icon.name} tintColor={icon.color ?? defaultColor} />
+    );
+  }
+
+  if (icon.type === 'brandIcon') {
+    return (
+      <BrandIcon
+        name={icon.name}
+        color={icon.color ?? defaultColor}
+        size="md"
+      />
+    );
+  }
+
+  return <Icon icon={icon.name} color={icon.color ?? defaultColor} />;
 }
 
 export function MenuItem({ item, style }: MenuItemProps) {
@@ -52,28 +73,17 @@ export function MenuItem({ item, style }: MenuItemProps) {
         }}
         style={[styles.component, style]}
       >
-        {item.icon ? (
-          item.icon.type === 'symbol' ? (
-            <SymbolView
-              name={item.icon.name}
-              tintColor={item.icon.color ?? theme.colors.gray.border}
-            />
-          ) : (
-            // <Icon icon={'} />
-            // eslint-disable-next-line react/jsx-no-useless-fragment
-            <></>
-          )
-        ) : null}
+        {item.icon ? renderIcon(item.icon, theme.colors.gray.border) : null}
 
         {!item.icon && item.image && (
           <Image source={item.image} style={styles.image} />
         )}
 
         <View style={styles.contentContainer}>
-          <Typography fontWeight="bold">{item.label}</Typography>
+          <Typography fontWeight="semiBold">{item.label}</Typography>
 
           {item.description ? (
-            <Typography color="gray" highContrast={false}>
+            <Typography size="xs" color="gray.textLow">
               {item.description}
             </Typography>
           ) : null}
@@ -162,7 +172,11 @@ const styles = StyleSheet.create(theme => ({
     gap: theme.spacing.lg,
     minHeight: theme.spacing['6xl'],
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    marginHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderRadius: theme.radii.md,
+    marginBottom: theme.spacing.xs,
   },
   contentContainer: {
     flex: 1,

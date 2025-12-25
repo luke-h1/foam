@@ -37,6 +37,7 @@ import {
 import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv';
 import { useSelector } from '@legendapp/state/react';
 import { ViewStyle } from 'react-native';
+import { usePreferences } from './preferenceStore';
 
 configureObservablePersistence({
   pluginLocal: ObservablePersistMMKV,
@@ -685,20 +686,48 @@ export const getCurrentEmoteData = (channelId?: string) => {
     return emptyEmoteData;
   }
 
+  const preferences = usePreferences.getState();
+
   return {
-    twitchChannelEmotes: cache.twitchChannelEmotes ?? [],
-    twitchGlobalEmotes: cache.twitchGlobalEmotes ?? [],
-    sevenTvChannelEmotes: cache.sevenTvChannelEmotes ?? [],
-    sevenTvGlobalEmotes: cache.sevenTvGlobalEmotes ?? [],
-    ffzChannelEmotes: cache.ffzChannelEmotes ?? [],
-    ffzGlobalEmotes: cache.ffzGlobalEmotes ?? [],
-    bttvGlobalEmotes: cache.bttvGlobalEmotes ?? [],
-    bttvChannelEmotes: cache.bttvChannelEmotes ?? [],
-    twitchChannelBadges: cache.twitchChannelBadges ?? [],
-    twitchGlobalBadges: cache.twitchGlobalBadges ?? [],
-    ffzChannelBadges: cache.ffzChannelBadges ?? [],
-    ffzGlobalBadges: cache.ffzGlobalBadges ?? [],
-    chatterinoBadges: cache.chatterinoBadges ?? [],
+    twitchChannelEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchChannelEmotes ?? [])
+      : [],
+    twitchGlobalEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchGlobalEmotes ?? [])
+      : [],
+    sevenTvChannelEmotes: preferences.show7TvEmotes
+      ? (cache.sevenTvChannelEmotes ?? [])
+      : [],
+    sevenTvGlobalEmotes: preferences.show7TvEmotes
+      ? (cache.sevenTvGlobalEmotes ?? [])
+      : [],
+    ffzChannelEmotes: preferences.showFFzEmotes
+      ? (cache.ffzChannelEmotes ?? [])
+      : [],
+    ffzGlobalEmotes: preferences.showFFzEmotes
+      ? (cache.ffzGlobalEmotes ?? [])
+      : [],
+    bttvGlobalEmotes: preferences.showBttvEmotes
+      ? (cache.bttvGlobalEmotes ?? [])
+      : [],
+    bttvChannelEmotes: preferences.showBttvEmotes
+      ? (cache.bttvChannelEmotes ?? [])
+      : [],
+    twitchChannelBadges: preferences.showTwitchBadges
+      ? (cache.twitchChannelBadges ?? [])
+      : [],
+    twitchGlobalBadges: preferences.showTwitchBadges
+      ? (cache.twitchGlobalBadges ?? [])
+      : [],
+    ffzChannelBadges: preferences.showFFzBadges
+      ? (cache.ffzChannelBadges ?? [])
+      : [],
+    ffzGlobalBadges: preferences.showFFzBadges
+      ? (cache.ffzGlobalBadges ?? [])
+      : [],
+    chatterinoBadges: preferences.showChatterinoEmotes
+      ? (cache.chatterinoBadges ?? [])
+      : [],
   };
 };
 
@@ -773,9 +802,10 @@ export const useBits = () => useSelector(chatStore$.bits);
 export const useEmojis = () => useSelector(chatStore$.emojis);
 
 export const useCurrentEmoteData = () => {
-  // Subscribe to both observables to ensure we get updates for either change
+  // Subscribe to observables and preferences to ensure we get updates for any change
   const channelId = useSelector(chatStore$.currentChannelId);
   const caches = useSelector(chatStore$.persisted.channelCaches);
+  const preferences = usePreferences();
 
   if (!channelId) {
     return emptyEmoteData;
@@ -787,24 +817,51 @@ export const useCurrentEmoteData = () => {
   }
 
   return {
-    twitchChannelEmotes: cache.twitchChannelEmotes ?? [],
-    twitchGlobalEmotes: cache.twitchGlobalEmotes ?? [],
-    sevenTvChannelEmotes: cache.sevenTvChannelEmotes ?? [],
-    sevenTvGlobalEmotes: cache.sevenTvGlobalEmotes ?? [],
-    ffzChannelEmotes: cache.ffzChannelEmotes ?? [],
-    ffzGlobalEmotes: cache.ffzGlobalEmotes ?? [],
-    bttvGlobalEmotes: cache.bttvGlobalEmotes ?? [],
-    bttvChannelEmotes: cache.bttvChannelEmotes ?? [],
-    twitchChannelBadges: cache.twitchChannelBadges ?? [],
-    twitchGlobalBadges: cache.twitchGlobalBadges ?? [],
-    ffzChannelBadges: cache.ffzChannelBadges ?? [],
-    ffzGlobalBadges: cache.ffzGlobalBadges ?? [],
-    chatterinoBadges: cache.chatterinoBadges ?? [],
+    twitchChannelEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchChannelEmotes ?? [])
+      : [],
+    twitchGlobalEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchGlobalEmotes ?? [])
+      : [],
+    sevenTvChannelEmotes: preferences.show7TvEmotes
+      ? (cache.sevenTvChannelEmotes ?? [])
+      : [],
+    sevenTvGlobalEmotes: preferences.show7TvEmotes
+      ? (cache.sevenTvGlobalEmotes ?? [])
+      : [],
+    ffzChannelEmotes: preferences.showFFzEmotes
+      ? (cache.ffzChannelEmotes ?? [])
+      : [],
+    ffzGlobalEmotes: preferences.showFFzEmotes
+      ? (cache.ffzGlobalEmotes ?? [])
+      : [],
+    bttvGlobalEmotes: preferences.showBttvEmotes
+      ? (cache.bttvGlobalEmotes ?? [])
+      : [],
+    bttvChannelEmotes: preferences.showBttvEmotes
+      ? (cache.bttvChannelEmotes ?? [])
+      : [],
+    twitchChannelBadges: preferences.showTwitchBadges
+      ? (cache.twitchChannelBadges ?? [])
+      : [],
+    twitchGlobalBadges: preferences.showTwitchBadges
+      ? (cache.twitchGlobalBadges ?? [])
+      : [],
+    ffzChannelBadges: preferences.showFFzBadges
+      ? (cache.ffzChannelBadges ?? [])
+      : [],
+    ffzGlobalBadges: preferences.showFFzBadges
+      ? (cache.ffzGlobalBadges ?? [])
+      : [],
+    chatterinoBadges: preferences.showChatterinoEmotes
+      ? (cache.chatterinoBadges ?? [])
+      : [],
   };
 };
 
 export const useChannelEmoteData = (channelId: string | null) => {
   const caches = useSelector(chatStore$.persisted.channelCaches);
+  const preferences = usePreferences();
 
   if (!channelId) {
     return emptyEmoteData;
@@ -816,18 +873,44 @@ export const useChannelEmoteData = (channelId: string | null) => {
   }
 
   return {
-    twitchChannelEmotes: cache.twitchChannelEmotes ?? [],
-    twitchGlobalEmotes: cache.twitchGlobalEmotes ?? [],
-    sevenTvChannelEmotes: cache.sevenTvChannelEmotes ?? [],
-    sevenTvGlobalEmotes: cache.sevenTvGlobalEmotes ?? [],
-    ffzChannelEmotes: cache.ffzChannelEmotes ?? [],
-    ffzGlobalEmotes: cache.ffzGlobalEmotes ?? [],
-    bttvGlobalEmotes: cache.bttvGlobalEmotes ?? [],
-    bttvChannelEmotes: cache.bttvChannelEmotes ?? [],
-    twitchChannelBadges: cache.twitchChannelBadges ?? [],
-    twitchGlobalBadges: cache.twitchGlobalBadges ?? [],
-    ffzChannelBadges: cache.ffzChannelBadges ?? [],
-    ffzGlobalBadges: cache.ffzGlobalBadges ?? [],
-    chatterinoBadges: cache.chatterinoBadges ?? [],
+    twitchChannelEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchChannelEmotes ?? [])
+      : [],
+    twitchGlobalEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchGlobalEmotes ?? [])
+      : [],
+    sevenTvChannelEmotes: preferences.show7TvEmotes
+      ? (cache.sevenTvChannelEmotes ?? [])
+      : [],
+    sevenTvGlobalEmotes: preferences.show7TvEmotes
+      ? (cache.sevenTvGlobalEmotes ?? [])
+      : [],
+    ffzChannelEmotes: preferences.showFFzEmotes
+      ? (cache.ffzChannelEmotes ?? [])
+      : [],
+    ffzGlobalEmotes: preferences.showFFzEmotes
+      ? (cache.ffzGlobalEmotes ?? [])
+      : [],
+    bttvGlobalEmotes: preferences.showBttvEmotes
+      ? (cache.bttvGlobalEmotes ?? [])
+      : [],
+    bttvChannelEmotes: preferences.showBttvEmotes
+      ? (cache.bttvChannelEmotes ?? [])
+      : [],
+    twitchChannelBadges: preferences.showTwitchBadges
+      ? (cache.twitchChannelBadges ?? [])
+      : [],
+    twitchGlobalBadges: preferences.showTwitchBadges
+      ? (cache.twitchGlobalBadges ?? [])
+      : [],
+    ffzChannelBadges: preferences.showFFzBadges
+      ? (cache.ffzChannelBadges ?? [])
+      : [],
+    ffzGlobalBadges: preferences.showFFzBadges
+      ? (cache.ffzGlobalBadges ?? [])
+      : [],
+    chatterinoBadges: preferences.showChatterinoEmotes
+      ? (cache.chatterinoBadges ?? [])
+      : [],
   };
 };

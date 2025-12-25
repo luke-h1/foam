@@ -10,6 +10,20 @@ export interface Preferences {
   theme: Theme;
   fontScaling: number;
   systemScaling: boolean;
+  hapticFeedback: boolean;
+  chatTimestamps: boolean;
+  /**
+   * Emote providers
+   */
+  show7TvEmotes: boolean;
+  showBttvEmotes: boolean;
+  showFFzEmotes: boolean;
+  showChatterinoEmotes: boolean;
+  showTwitchEmotes: boolean;
+  showTwitchBadges: boolean;
+  show7tvBadges: boolean;
+  showFFzBadges: boolean;
+  showBttvBadges: boolean;
 }
 
 interface PreferenceState extends Preferences {
@@ -25,6 +39,17 @@ const preferenceStoreCreator: StateCreator<
   theme: 'foam-dark',
   fontScaling: 1,
   systemScaling: false,
+  hapticFeedback: true,
+  chatTimestamps: true,
+  show7TvEmotes: true,
+  showBttvEmotes: true,
+  showFFzEmotes: true,
+  showChatterinoEmotes: true,
+  showTwitchEmotes: true,
+  showTwitchBadges: true,
+  show7tvBadges: true,
+  showFFzBadges: true,
+  showBttvBadges: true,
   update: payload => {
     set(payload);
   },

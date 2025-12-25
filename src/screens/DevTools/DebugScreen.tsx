@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button';
-import { FlashList } from '@app/components/FlashList';
+import { Icon } from '@app/components/Icon';
 import { Screen } from '@app/components/Screen';
 import { Switch } from '@app/components/Switch';
 import { TextField } from '@app/components/TextField';
@@ -7,383 +7,296 @@ import { Typography } from '@app/components/Typography';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
-import {
-  AllowedKey,
-  NAMESPACE,
-  storageService,
-} from '@app/services/storage-service';
+import { NAMESPACE, storageService } from '@app/services/storage-service';
 import { twitchService } from '@app/services/twitch-service';
-import { ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Alert, Platform, View } from 'react-native';
+import { useState, useEffect } from 'react';
+import { Alert, Platform, ScrollView, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-type DebugItem = {
-  title: string;
-  description: string;
-  onPress: (value?: boolean) => void;
-  type: 'button' | 'switch';
-  storageKey?: AllowedKey;
-};
-
-function TwitchUsernameConverter() {
-  const [twitchUsername, setTwitchUsername] = useState<string>('');
-  const [twitchUserId, setTwitchUserId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleConvert = async () => {
-    if (!twitchUsername.trim()) {
-      Alert.alert('Error', 'Please enter a Twitch username');
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const result = await twitchService.getUser(twitchUsername, undefined);
-      if ('id' in result) {
-        setTwitchUserId(result.id);
-      }
-    } catch {
-      Alert.alert('Error', 'Failed to convert username');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={styles.keyboardAvoidingView}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <View style={styles.twitchSection}>
-        <Typography style={styles.sectionTitle}>
-          Convert Twitch Username to User ID
-        </Typography>
-        <TextField
-          placeholder="Enter Twitch username"
-          value={twitchUsername}
-          onChangeText={setTwitchUsername}
-        />
-        <Button onPress={() => void handleConvert()} style={styles.button}>
-          <Typography>
-            {isLoading ? 'Converting...' : 'Convert and Copy'}
-          </Typography>
-        </Button>
-        {twitchUserId ? (
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          <Button onPress={() => Clipboard.setStringAsync(twitchUserId)}>
-            <Typography style={styles.userId}>
-              User ID: {twitchUserId}
-            </Typography>
-          </Button>
-        ) : null}
-      </View>
-    </KeyboardAvoidingView>
-  );
-}
-
-function DisplayAccessToken() {
-  const { authState } = useAuthContext();
-
-  const handleCopyToClipboard = async () => {
-    await Clipboard.setStringAsync(authState?.token?.accessToken || '');
-  };
-
-  return (
-    <View style={styles.accessTokenContainer}>
-      <Typography style={styles.accessTokenLabel}>
-        Auth Token ({authState?.isAnonAuth ? 'ANON' : 'USER'}):
-      </Typography>
-      <View style={styles.accessTokenRow}>
-        <Typography style={styles.accessTokenValue} numberOfLines={1}>
-          {authState?.token.accessToken || 'No token available'}
-        </Typography>
-        {authState?.token.accessToken && (
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          <Button onPress={handleCopyToClipboard} style={styles.copyButton}>
-            <Typography style={styles.copyButtonText}>Copy</Typography>
-          </Button>
-        )}
-      </View>
-    </View>
-  );
-}
-
-function NavigateToChat() {
+export function DebugScreen() {
+  const { theme } = useUnistyles();
+  const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
   const { navigate } = useAppNavigation();
-  const [channelName, setChannelName] = useState<string>('');
-  const [twitchUserId, setTwitchUserId] = useState<string>('');
 
-  const toUserId = async (username: string) => {
-    const result = await twitchService.getUser(username);
-    setTwitchUserId(result.id);
-  };
+  const [reactQueryEnabled, setReactQueryEnabled] = useState(false);
+  const [username, setUsername] = useState('');
+  const [channelName, setChannelName] = useState('');
+  const [channelId, setChannelId] = useState('');
 
   useEffect(() => {
-    void toUserId(channelName);
+    setReactQueryEnabled(debugOptions.ReactQueryDebug?.enabled ?? false);
+  }, [debugOptions]);
+
+  useEffect(() => {
+    if (!channelName.trim()) return;
+    const t = setTimeout(() => {
+      void twitchService.getUser(channelName).then(r => setChannelId(r.id));
+    }, 400);
+    return () => clearTimeout(t);
   }, [channelName]);
+
+  const handleClearStorage = () => {
+    Alert.alert('Clear storage?', `This will wipe ${NAMESPACE}`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: () => storageService.clear(),
+      },
+    ]);
+  };
+
+  const handleToggleRQ = (val: boolean) => {
+    setReactQueryEnabled(val);
+    storageService.set('ReactQueryDebug', val);
+  };
+
+  const handleConvertUsername = async () => {
+    if (!username.trim()) return;
+    try {
+      const res = await twitchService.getUser(username);
+      await Clipboard.setStringAsync(res.id);
+      Alert.alert('Copied', res.id);
+    } catch {
+      Alert.alert('Not found');
+    }
+  };
+
+  const handleCopyToken = async () => {
+    if (authState?.token?.accessToken) {
+      await Clipboard.setStringAsync(authState.token.accessToken);
+    }
+  };
 
   const handleJoinChannel = () => {
     if (!channelName.trim()) {
-      Alert.alert('Enter a channel name');
       return;
     }
-
-    navigate('Chat', {
-      channelName,
-      channelId: twitchUserId,
-    });
+    navigate('Chat', { channelName, channelId });
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior="padding"
-      style={styles.keyboardAvoidingView}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <View style={styles.navigateToChatContainer}>
-        <Typography style={styles.sectionTitle}>Join a Chat Channel</Typography>
-        <TextField
-          placeholder="Enter channel name"
-          value={channelName}
-          onChangeText={e => setChannelName(e)}
-          autoComplete="off"
-          autoCapitalize="none"
-        />
-        <Button onPress={handleJoinChannel} style={styles.button}>
-          <Typography>Join Channel</Typography>
-        </Button>
-        {authState?.token?.accessToken && (
-          <Typography style={styles.loggedInUser}>
-            Logged in as:{' '}
-            {authState.isAnonAuth ? 'Anonymous' : user?.display_name}
+    <Screen safeAreaEdges={['top']} preset="fixed">
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={styles.flex}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Typography size="xl" fontWeight="bold" style={styles.title}>
+            Debug
           </Typography>
-        )}
-      </View>
-    </KeyboardAvoidingView>
-  );
-}
 
-export function DebugScreen() {
-  const debugOptions = useDebugOptions();
-  const [switchOptions, setSwitchOptions] = useState<Record<string, boolean>>(
-    {},
-  );
-
-  const debugItems: DebugItem[] = useMemo(
-    () => [
-      {
-        title: 'Clear storage',
-        description: `Clear all items within our namespace ${NAMESPACE}`,
-        onPress: () => {
-          storageService.clear();
-        },
-        type: 'button',
-      },
-      {
-        title: 'Enable React Query DevTools',
-        description: 'Enable the React Query DevTools for debugging queries.',
-        storageKey: 'ReactQueryDebug',
-        onPress: (value?: boolean) => {
-          return storageService.set('ReactQueryDebug', value);
-        },
-        type: 'switch',
-      },
-    ],
-    [],
-  );
-
-  useEffect(() => {
-    const newSwitchOptions = debugItems.reduce(
-      (acc, item) => {
-        if (item.type === 'switch' && item.storageKey) {
-          acc[item.title] = debugOptions[item.storageKey]?.enabled ?? false;
-        }
-        return acc;
-      },
-      {} as Record<string, boolean>,
-    );
-    setSwitchOptions(newSwitchOptions);
-  }, [debugOptions, debugItems]);
-
-  const handleToggleSwitch = (
-    title: string,
-    value: boolean,
-    onPress: (value?: boolean) => void,
-    storageKey?: AllowedKey,
-  ) => {
-    setSwitchOptions(prevState => ({ ...prevState, [title]: value }));
-    if (storageKey) {
-      onPress(value);
-    }
-  };
-
-  const renderFooter = () => (
-    <>
-      <TwitchUsernameConverter />
-      <DisplayAccessToken />
-      <NavigateToChat />
-    </>
-  );
-
-  const renderListFooter = useCallback(() => {
-    return (
-      <>
-        <View style={[styles.sectionHeader, styles.storageState]}>
-          <Typography style={styles.sectionTitle}>Debug Options</Typography>
-          <Typography style={styles.storageValue}>
-            {JSON.stringify(debugOptions, null, 2)}
-          </Typography>
-        </View>
-        {renderFooter()}
-      </>
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const renderListItem: ListRenderItem<DebugItem> = useCallback(
-    ({ item }) => {
-      return (
-        <View style={styles.itemContainer}>
-          <View style={styles.itemHeader}>
-            <Typography style={styles.itemTitle}>{item.title}</Typography>
-            {item.type === 'switch' ? (
-              <Switch
-                value={switchOptions[item.title] ?? false}
-                onValueChange={value => {
-                  handleToggleSwitch(
-                    item.title,
-                    value,
-                    item.onPress,
-                    item.storageKey,
-                  );
-                }}
-              />
-            ) : (
-              <Button
-                onPress={() => {
-                  item.onPress();
-                }}
-              >
-                <Typography>
-                  {item.title.includes('Clear') ? 'Clear' : 'Action'}
-                </Typography>
-              </Button>
-            )}
+          {/* Storage */}
+          <View style={styles.row}>
+            <View style={styles.rowText}>
+              <Typography fontWeight="semiBold">Clear storage</Typography>
+              <Typography size="xs" color="gray.textLow">
+                Wipe {NAMESPACE}
+              </Typography>
+            </View>
+            <Button onPress={handleClearStorage} style={styles.destructiveBtn}>
+              <Typography size="sm" fontWeight="semiBold" color="red.accent">
+                Clear
+              </Typography>
+            </Button>
           </View>
-          <Typography>{item.description}</Typography>
-        </View>
-      );
-    },
-    [switchOptions],
-  );
 
-  return (
-    <Screen safeAreaEdges={['top', 'bottom']} preset="scroll">
-      <FlashList<DebugItem>
-        data={debugItems}
-        keyExtractor={item => item.title}
-        renderItem={renderListItem}
-        ListFooterComponent={renderListFooter}
-        contentInsetAdjustmentBehavior="automatic"
-      />
+          <View style={styles.row}>
+            <View style={styles.rowText}>
+              <Typography fontWeight="semiBold">RQ DevTools</Typography>
+              <Typography size="xs" color="gray.textLow">
+                Shows React Query debugger
+              </Typography>
+            </View>
+            <Switch value={reactQueryEnabled} onValueChange={handleToggleRQ} />
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Username converter */}
+          <Typography fontWeight="semiBold" style={styles.label}>
+            Username → ID
+          </Typography>
+          <View style={styles.inputRow}>
+            <TextField
+              placeholder="username"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              autoCorrect={false}
+              containerStyle={styles.inputFlex}
+            />
+            <Button
+              onPress={() => void handleConvertUsername()}
+              style={styles.goBtn}
+            >
+              <Icon icon="copy" size={16} color={theme.colors.gray.text} />
+            </Button>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Token */}
+          <Typography fontWeight="semiBold" style={styles.label}>
+            Token{' '}
+            <Typography size="sm" color="gray.textLow">
+              ({authState?.isAnonAuth ? 'anon' : 'user'})
+            </Typography>
+          </Typography>
+          <View style={styles.tokenBox}>
+            <Typography size="xs" numberOfLines={1} style={styles.tokenText}>
+              {authState?.token?.accessToken ?? '—'}
+            </Typography>
+            <Button
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
+              onPress={handleCopyToken}
+              style={styles.copyBtn}
+            >
+              <Typography size="xs" fontWeight="semiBold">
+                copy
+              </Typography>
+            </Button>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Join channel */}
+          <Typography fontWeight="semiBold" style={styles.label}>
+            Join channel
+          </Typography>
+          <View style={styles.inputRow}>
+            <TextField
+              placeholder="channel"
+              value={channelName}
+              onChangeText={setChannelName}
+              autoCapitalize="none"
+              autoCorrect={false}
+              containerStyle={styles.inputFlex}
+            />
+            <Button onPress={handleJoinChannel} style={styles.joinBtn}>
+              <Typography
+                size="sm"
+                fontWeight="semiBold"
+                style={styles.joinBtnText}
+              >
+                Go
+              </Typography>
+            </Button>
+          </View>
+
+          {user && (
+            <Typography size="xs" color="gray.textLow" style={styles.hint}>
+              logged in as {user.display_name}
+            </Typography>
+          )}
+
+          <View style={styles.divider} />
+
+          {/* Storage state */}
+          <Typography fontWeight="semiBold" style={styles.label}>
+            Storage state
+          </Typography>
+          <View style={styles.codeBlock}>
+            <Typography size="xs" style={styles.codeText}>
+              {JSON.stringify(debugOptions, null, 2)}
+            </Typography>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
-  keyboardAvoidingView: {
+  flex: {
     flex: 1,
   },
-  twitchSection: {
-    marginTop: theme.spacing.lg,
-    padding: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.gray.accent,
+  content: {
+    padding: theme.spacing.lg,
+    paddingBottom: 100,
   },
-  userId: {
-    marginTop: theme.spacing.sm,
-    fontWeight: 'bold',
+  title: {
+    marginBottom: theme.spacing.xl,
   },
-  storageState: {
-    marginTop: theme.spacing.lg,
-  },
-  itemContainer: {
-    padding: theme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray.accent,
-    borderCurve: 'continuous',
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  itemTitle: {
-    fontWeight: 'bold',
-  },
-  sectionHeader: {
-    padding: theme.spacing.md,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-  },
-  storageValue: {
-    color: theme.colors.grass.accent,
-  },
-  button: {
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.blue.accent,
-    color: theme.colors.plum.accentAlpha,
-    borderRadius: theme.spacing.sm,
-    alignSelf: 'flex-start',
-    marginTop: theme.spacing.md,
-  },
-  accessTokenContainer: {
-    marginTop: theme.spacing.lg,
-    padding: theme.spacing.md,
-    borderWidth: 1,
-    borderCurve: 'continuous',
-    borderColor: theme.colors.gray.accent,
-    borderRadius: theme.radii.md,
-  },
-  accessTokenLabel: {
-    fontWeight: 'bold',
-    marginBottom: theme.spacing.sm,
-    color: theme.colors.gray.text,
-  },
-  accessTokenRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: theme.spacing.md,
   },
-  accessTokenValue: {
+  rowText: {
     flex: 1,
-    marginRight: theme.spacing.sm,
-    color: theme.colors.gray.text,
   },
-  copyButton: {
-    paddingVertical: theme.spacing.xs,
+  destructiveBtn: {
     paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.gray.borderAlpha,
+    marginVertical: theme.spacing.md,
+  },
+  label: {
+    marginBottom: theme.spacing.sm,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  inputFlex: {
+    flex: 1,
+  },
+  goBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.gray.uiAlpha,
     borderRadius: theme.radii.sm,
-    borderCurve: 'continuous',
   },
-  copyButtonText: {
-    fontWeight: 'bold',
+  tokenBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.bgAltAlpha,
+    borderRadius: theme.radii.sm,
+    padding: theme.spacing.sm,
+    gap: theme.spacing.sm,
   },
-  navigateToChatContainer: {
-    marginTop: theme.spacing.lg,
-    padding: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.gray.accent,
-    borderCurve: 'continuous',
-  },
-  loggedInUser: {
-    marginTop: theme.spacing.sm,
-    fontWeight: 'bold',
+  tokenText: {
+    flex: 1,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     color: theme.colors.gray.text,
+  },
+  copyBtn: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  joinBtn: {
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.blue.accent,
+    borderRadius: theme.radii.sm,
+    justifyContent: 'center',
+  },
+  joinBtnText: {
+    color: '#fff',
+  },
+  hint: {
+    marginTop: theme.spacing.sm,
+  },
+  codeBlock: {
+    backgroundColor: theme.colors.gray.bgAltAlpha,
+    borderRadius: theme.radii.sm,
+    padding: theme.spacing.md,
+  },
+  codeText: {
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
+    color: theme.colors.grass.accent,
   },
 }));

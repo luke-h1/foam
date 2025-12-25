@@ -7,7 +7,8 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function SettingsAppearanceScreen() {
-  const { fontScaling, systemScaling, theme, update } = usePreferences();
+  const { fontScaling, systemScaling, theme, hapticFeedback, update } =
+    usePreferences();
 
   return (
     <Screen safeAreaEdges={[]} preset="fixed">
@@ -43,6 +44,12 @@ export function SettingsAppearanceScreen() {
           {
             key: 'fontScaling',
             value: fontScaling,
+          },
+          null,
+          'Feedback',
+          {
+            key: 'hapticFeedback',
+            value: hapticFeedback,
           },
         ].map(item => {
           if (item === null || typeof item === 'string') {
@@ -96,6 +103,22 @@ export function SettingsAppearanceScreen() {
                 />
               );
             };
+          }
+
+          if (item.key === 'hapticFeedback') {
+            return {
+              icon: {
+                name: 'hand.tap',
+                type: 'symbol',
+              },
+              label: 'Haptic Feedback',
+              description: 'Vibration on interactions',
+              onSelect: (value: boolean) => {
+                update({ hapticFeedback: value });
+              },
+              type: 'switch',
+              value: hapticFeedback,
+            } satisfies MenuItem;
           }
 
           return {

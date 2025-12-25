@@ -60,6 +60,18 @@ export function SettingsIndexScreen() {
             {
               arrow: true,
               icon: {
+                name: 'bubble.left.and.bubble.right',
+                type: 'symbol',
+                color: theme.colors.green.accent,
+              },
+              label: 'Chat',
+              description: 'Chat options',
+              onPress: () => navigate('ChatPreferences'),
+            },
+            null,
+            {
+              arrow: true,
+              icon: {
                 name: 'hammer',
                 type: 'symbol',
                 color: theme.colors.orange.accent,
