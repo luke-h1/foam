@@ -81,7 +81,6 @@ export function ProfileCard() {
             ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.loginGradient}
           />
           <View style={styles.loginIconContainer}>
             <View style={styles.loginIconCircle}>
@@ -247,14 +246,7 @@ const styles = StyleSheet.create(theme => ({
     borderWidth: 1,
     borderColor: theme.colors.gray.borderAlpha,
   },
-  loginGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    opacity: 0.5,
-  },
+
   loginIconContainer: {
     marginBottom: theme.spacing.xl,
   },
@@ -262,7 +254,6 @@ const styles = StyleSheet.create(theme => ({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: theme.colors.accent.uiAlpha,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
