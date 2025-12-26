@@ -1,7 +1,7 @@
 import { Chat } from '@app/components/Chat';
-import { SafeAreaViewFixed } from '@app/components/SafeAreaViewFixed';
 import { SettingsStackScreenProps } from '@app/navigators/SettingsStackNavigator';
 import { FC } from 'react';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
@@ -10,9 +10,9 @@ export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
   const { channelId, channelName } = params;
 
   return (
-    <SafeAreaViewFixed edges={['top']} style={styles.container}>
+    <View style={styles.container}>
       <Chat channelName={channelName} channelId={channelId} />
-    </SafeAreaViewFixed>
+    </View>
   );
 };
 

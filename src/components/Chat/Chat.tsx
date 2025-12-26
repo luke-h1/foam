@@ -967,10 +967,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   /**
    * Reprocess existing messages when emote data becomes available
-   * This effect also triggers when messages arrive, so we can catch messages
-   * that arrived before emotes loaded. The ref check ensures we only reprocess once.
+   * This effect triggers when loadingState changes to COMPLETED, ensuring
+   * all emotes are fully loaded before reprocessing messages.
    */
   useEffect(() => {
+    // Only reprocess when emotes are FULLY loaded
+    if (loadingState !== 'COMPLETED') {
+      return;
+    }
+
     const hasEmotes =
       channelEmoteData.sevenTvGlobalEmotes.length > 0 ||
       channelEmoteData.sevenTvChannelEmotes.length > 0 ||
@@ -1015,8 +1020,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           `Reprocessing ${textOnlyMessages.length} messages with newly loaded emotes`,
         );
 
-        const emoteData = getCurrentEmoteData(channelId);
-
+        // Use channelEmoteData directly (from the reactive hook) for consistent data
         textOnlyMessages.forEach(msg => {
           const textContent = msg.message
             .filter((p: ParsedPart) => p.type === 'text')
@@ -1031,12 +1035,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
                 try {
                   const replacedBadges = findBadges({
                     userstate: msg.userstate,
-                    chatterinoBadges: emoteData.chatterinoBadges || [],
+                    chatterinoBadges: channelEmoteData.chatterinoBadges || [],
                     chatUsers: [],
-                    ffzChannelBadges: emoteData.ffzChannelBadges || [],
-                    ffzGlobalBadges: emoteData.ffzGlobalBadges || [],
-                    twitchChannelBadges: emoteData.twitchChannelBadges || [],
-                    twitchGlobalBadges: emoteData.twitchGlobalBadges || [],
+                    ffzChannelBadges: channelEmoteData.ffzChannelBadges || [],
+                    ffzGlobalBadges: channelEmoteData.ffzGlobalBadges || [],
+                    twitchChannelBadges:
+                      channelEmoteData.twitchChannelBadges || [],
+                    twitchGlobalBadges:
+                      channelEmoteData.twitchGlobalBadges || [],
                   });
 
                   handleNewMessage({
@@ -1061,7 +1067,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         emoteReprocessAttemptedRef.current = channelId;
       }
     }
-  }, [channelId, channelEmoteData, emoteProcessor, handleNewMessage, messages]);
+  }, [
+    channelId,
+    channelEmoteData,
+    emoteProcessor,
+    handleNewMessage,
+    messages,
+    loadingState,
+  ]);
 
   // Reset refs on mount and when channelId changes
   useEffect(() => {
@@ -1627,6 +1640,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.chatContainer}>
+          {/* Show connecting message before websocket connects */}
+          {!connected && deduplicatedMessages.length === 0 && (
+            <View style={styles.connectingContainer}>
+              <Typography style={styles.connectingText}>
+                Connecting to {channelName}&apos;s chat...
+              </Typography>
+            </View>
+          )}
           <FlashList
             data={deduplicatedMessages}
             ref={flashListRef}
@@ -1665,7 +1686,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         <View
           ref={inputContainerRef}
-          style={[styles.inputWrapper, { paddingBottom: insets.bottom }]}
+          style={styles.inputWrapper}
           onLayout={measureInputContainer}
         >
           {/* Reply Preview */}
@@ -1995,6 +2016,14 @@ const styles = StyleSheet.create(theme => ({
     width: '100%',
     overflow: 'hidden',
     maxWidth: '100%',
+  },
+  connectingContainer: {
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  connectingText: {
+    color: theme.colors.gray.accent,
+    fontSize: theme.font.fontSize.sm,
   },
   messageContainer: {
     flexDirection: 'row',
