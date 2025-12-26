@@ -2,6 +2,7 @@ import { Button } from '@app/components/Button';
 import { Typography } from '@app/components/Typography';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { StyleSheet } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
@@ -24,7 +25,7 @@ export function TopScreen() {
   });
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <TabView
         style={styles.tabViewWrapper}
         navigationState={{ index, routes }}
@@ -52,7 +53,7 @@ export function TopScreen() {
           </View>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

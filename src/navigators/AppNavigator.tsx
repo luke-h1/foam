@@ -91,8 +91,6 @@ const AppStack = () => {
   usePopulateAuth();
   const { ready } = useAuthContext();
 
-  console.log('ready ->', ready);
-
   /**
    * Todo: add loading state + fallback here if auth down
    */
@@ -113,7 +111,15 @@ const AppStack = () => {
       <Stack.Screen name="Streams" component={StreamStackNavigator} />
 
       {/* Top stack */}
-      <Stack.Screen name="Top" component={TopStackNavigator} />
+      <Stack.Screen
+        name="Top"
+        component={TopStackNavigator}
+        options={{
+          headerShown: true,
+          headerTransparent: true,
+          headerTitle: '',
+        }}
+      />
 
       {/* category slug */}
       <Stack.Screen name="Category" component={CategoryScreen} />
