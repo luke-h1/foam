@@ -20,6 +20,9 @@ const compat = new FlatCompat({
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
+    ignores: ['commitlint.config.js'],
+  },
+  {
     files: ['src/**/*.{js,mjs,cjs,ts,jsx,tsx}'],
     ignores: [
       '**/node_modules',
@@ -33,6 +36,7 @@ export default [
       '.expo',
       '.storybook/storybook.requires.ts',
       'metro.config.js',
+      'commitlint.config.js',
     ],
     languageOptions: {
       globals: {
