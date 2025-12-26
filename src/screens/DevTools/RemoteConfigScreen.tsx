@@ -86,6 +86,9 @@ export function RemoteConfigScreen() {
         >
           CONFIG VALUES
         </Typography>
+        <Typography size="xs" color="gray.textLow" style={styles.appVariant}>
+          App variant: {process.env.APP_VARIANT}
+        </Typography>
         <View style={styles.card}>
           {configKeys.map((key, index) => {
             const entry = config[key];
@@ -190,6 +193,9 @@ export function RemoteConfigScreen() {
 }
 
 const styles = StyleSheet.create(theme => ({
+  appVariant: {
+    marginBottom: theme.spacing.sm,
+  },
   contentContainer: {
     padding: theme.spacing.lg,
     paddingBottom: 100,
