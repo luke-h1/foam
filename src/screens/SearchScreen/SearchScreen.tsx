@@ -198,10 +198,6 @@ export function SearchScreen() {
   const ListHeaderComponent = useMemo(
     () => (
       <View style={styles.header}>
-        <Typography size="2xl" fontWeight="bold" style={styles.title}>
-          Search
-        </Typography>
-
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
             <Icon icon="search" size={16} style={styles.searchIcon} />

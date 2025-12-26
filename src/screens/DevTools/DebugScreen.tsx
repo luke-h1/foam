@@ -1,6 +1,5 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Screen } from '@app/components/Screen';
 import { Switch } from '@app/components/Switch';
 import { TextField } from '@app/components/TextField';
 import { Typography } from '@app/components/Typography';
@@ -79,7 +78,7 @@ export function DebugScreen() {
   };
 
   return (
-    <Screen safeAreaEdges={['top']} preset="fixed">
+    <View style={styles.screenContainer}>
       <KeyboardAvoidingView
         behavior="padding"
         style={styles.flex}
@@ -210,11 +209,15 @@ export function DebugScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
   flex: {
     flex: 1,
   },

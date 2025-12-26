@@ -1,8 +1,8 @@
 import { Menu, MenuItem } from '@app/components/Menu';
-import { Screen } from '@app/components/Screen';
 import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Slider } from '@app/components/Slider';
 import { Preferences, usePreferences } from '@app/store/preferenceStore';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 function FontScaleSlider() {
@@ -33,7 +33,7 @@ export function SettingsAppearanceScreen() {
   const { theme, hapticFeedback, update } = usePreferences();
 
   return (
-    <Screen safeAreaEdges={[]} preset="fixed">
+    <View style={styles.container}>
       <Menu
         header={
           <ScreenHeader
@@ -81,11 +81,15 @@ export function SettingsAppearanceScreen() {
           } satisfies MenuItem,
         ]}
       />
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
   slider: {
     marginHorizontal: theme.spacing.lg,
   },

@@ -1,8 +1,9 @@
 import { Menu } from '@app/components/Menu';
-import { Screen } from '@app/components/Screen';
 import { ScreenHeader } from '@app/components/ScreenHeader';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
+import { View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import { useUnistyles } from 'react-native-unistyles';
 
 export function SettingsOtherScreen() {
@@ -10,7 +11,7 @@ export function SettingsOtherScreen() {
   const { theme } = useUnistyles();
 
   return (
-    <Screen safeAreaEdges={[]} preset="fixed">
+    <View style={styles.container}>
       <Menu
         header={
           <ScreenHeader
@@ -69,6 +70,13 @@ export function SettingsOtherScreen() {
           },
         ]}
       />
-    </Screen>
+    </View>
   );
 }
+
+const styles = StyleSheet.create(theme => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
+}));

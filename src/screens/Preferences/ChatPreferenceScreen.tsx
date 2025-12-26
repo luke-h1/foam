@@ -1,8 +1,9 @@
 import { Menu, MenuItem } from '@app/components/Menu';
-import { Screen } from '@app/components/Screen';
 import { ScreenHeader } from '@app/components/ScreenHeader';
 import { usePreferences } from '@app/store/preferenceStore';
 import { useMemo } from 'react';
+import { View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import { useUnistyles } from 'react-native-unistyles';
 
 export function ChatPreferenceScreen() {
@@ -170,11 +171,18 @@ export function ChatPreferenceScreen() {
   ]);
 
   return (
-    <Screen safeAreaEdges={[]} preset="fixed">
+    <View style={styles.container}>
       <Menu
         header={<ScreenHeader title="Chat" subtitle="" size="medium" />}
         items={items}
       />
-    </Screen>
+    </View>
   );
 }
+
+const styles = StyleSheet.create(theme => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
+}));
