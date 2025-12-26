@@ -3,8 +3,7 @@ import { ScreenHeader } from '@app/components/ScreenHeader';
 import { usePreferences } from '@app/store/preferenceStore';
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-import { useUnistyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export function ChatPreferenceScreen() {
   const {
