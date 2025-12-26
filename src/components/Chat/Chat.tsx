@@ -1110,38 +1110,65 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     };
   }, [channelId]);
 
-  useEffect(() => {
-    // Abort any previous loading
-    if (loadingAbortRef.current) {
-      loadingAbortRef.current.abort();
-    }
+  // Track if we've started loading emotes to avoid duplicate loads
+  const emoteLoadingStartedRef = useRef<boolean>(false);
 
+  useEffect(() => {
+    // Load channel resources (emotes) in the background without blocking websocket connection
+    // CRITICAL: Wait for websocket to connect first, then load emotes
+    // This ensures the websocket connection is not blocked by emote loading
     if (
       channelId &&
       channelId.trim() &&
       authState?.token.accessToken &&
-      isMountedRef.current
+      isMountedRef.current &&
+      !emoteLoadingStartedRef.current
     ) {
+      // Abort any previous loading
+      if (loadingAbortRef.current) {
+        loadingAbortRef.current.abort();
+      }
+
       loadingAbortRef.current = new AbortController();
       const abortController = loadingAbortRef.current;
 
-      void loadChannelResources(channelId).then(success => {
-        // Only process result if component is still mounted and not aborted
+      // Wait for websocket to connect before loading emotes
+      // This prevents emote loading from blocking the websocket connection
+      const checkAndLoad = () => {
         if (isMountedRef.current && !abortController.signal.aborted) {
-          console.log('📡 loadChannelResources result:', success);
-          if (!success) {
-            console.log('❌ loadChannelResources failed');
+          const chatConnected = isChatConnected();
+
+          if (chatConnected) {
+            // Websocket is connected, safe to load emotes now
+            emoteLoadingStartedRef.current = true;
+            void loadChannelResources(channelId).then(success => {
+              // Only process result if component is still mounted and not aborted
+              if (isMountedRef.current && !abortController.signal.aborted) {
+                console.log('📡 loadChannelResources result:', success);
+                if (!success) {
+                  console.log('❌ loadChannelResources failed');
+                }
+              }
+            });
+          } else {
+            // Websocket not connected yet, check again in 50ms
+            setTimeout(checkAndLoad, 50);
           }
         }
-      });
+      };
+
+      // Start checking after a small delay to let websocket initialization begin
+      const initialDelay = setTimeout(checkAndLoad, 50);
 
       return () => {
+        clearTimeout(initialDelay);
         abortController.abort();
+        emoteLoadingStartedRef.current = false;
       };
     }
 
     return undefined;
-  }, [channelId, authState?.token.accessToken]);
+  }, [channelId, authState?.token.accessToken, isChatConnected]);
 
   const handleSendMessage = useCallback(() => {
     if (!messageInput.trim() || !isChatConnected()) {
