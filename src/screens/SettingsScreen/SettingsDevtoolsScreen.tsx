@@ -3,7 +3,7 @@ import { ScreenHeader } from '@app/components/ScreenHeader';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
 import { View } from 'react-native';
-import { StyleSheet , useUnistyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export function SettingsDevtoolsScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();

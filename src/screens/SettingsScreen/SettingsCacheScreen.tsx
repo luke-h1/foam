@@ -1,6 +1,6 @@
 import { Menu } from '@app/components/Menu';
 import { View } from 'react-native';
-import { StyleSheet , useUnistyles } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export function SettingsCacheScreen() {
   const { theme } = useUnistyles();
