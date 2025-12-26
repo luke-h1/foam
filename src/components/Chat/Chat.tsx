@@ -1072,6 +1072,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     initializingRef.current = false;
     currentEmoteSetIdRef.current = null;
     emoteReprocessAttemptedRef.current = null;
+    emoteLoadingStartedRef.current = false;
 
     // Clear any pending timeouts
     if (scrollTimeoutRef.current) {
@@ -1134,6 +1135,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       // Wait for websocket to connect before loading emotes
       // This prevents emote loading from blocking the websocket connection
+      let retryCount = 0;
+      const MAX_RETRIES = 100; // Maximum 10 seconds (100 * 100ms)
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
       const checkAndLoad = () => {
         if (isMountedRef.current && !abortController.signal.aborted) {
           const chatConnected = isChatConnected();
@@ -1147,28 +1152,75 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
                 console.log('📡 loadChannelResources result:', success);
                 if (!success) {
                   console.log('❌ loadChannelResources failed');
+                  // Reset the ref on failure so we can retry
+                  emoteLoadingStartedRef.current = false;
                 }
               }
             });
           } else {
-            // Websocket not connected yet, check again in 50ms
-            setTimeout(checkAndLoad, 50);
+            // Websocket not connected yet, check again in 100ms
+            retryCount += 1;
+            if (retryCount < MAX_RETRIES) {
+              timeoutId = setTimeout(checkAndLoad, 100);
+            } else {
+              // Max retries reached, reset ref to allow retry when connection state changes
+              console.log(
+                '⚠️ Max retries reached waiting for websocket connection',
+              );
+              emoteLoadingStartedRef.current = false;
+            }
           }
         }
       };
 
       // Start checking after a small delay to let websocket initialization begin
-      const initialDelay = setTimeout(checkAndLoad, 50);
+      // Always start the check loop - it will handle connection state
+      timeoutId = setTimeout(checkAndLoad, 50);
 
       return () => {
-        clearTimeout(initialDelay);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
         abortController.abort();
         emoteLoadingStartedRef.current = false;
       };
     }
 
-    return undefined;
-  }, [channelId, authState?.token.accessToken, isChatConnected]);
+    return () => {
+      if (loadingAbortRef.current) {
+        loadingAbortRef.current.abort();
+        loadingAbortRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelId, authState?.token.accessToken]);
+
+  // Backup: Also trigger loading when connection becomes available
+  // This ensures we load emotes even if the retry loop hasn't caught it yet
+  useEffect(() => {
+    if (
+      connected &&
+      channelId &&
+      channelId.trim() &&
+      authState?.token.accessToken &&
+      isMountedRef.current &&
+      !emoteLoadingStartedRef.current
+    ) {
+      emoteLoadingStartedRef.current = true;
+      void loadChannelResources(channelId).then(success => {
+        if (isMountedRef.current) {
+          console.log(
+            '📡 loadChannelResources result (from connected state):',
+            success,
+          );
+          if (!success) {
+            console.log('❌ loadChannelResources failed');
+            emoteLoadingStartedRef.current = false;
+          }
+        }
+      });
+    }
+  }, [connected, channelId, authState?.token.accessToken]);
 
   const handleSendMessage = useCallback(() => {
     if (!messageInput.trim() || !isChatConnected()) {
