@@ -807,14 +807,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       console.log('🚪 Screen is being removed, cleaning up chat connection...');
 
-      // Mark as navigating away immediately to prevent skeleton from showing
       isNavigatingAwayRef.current = true;
       isMountedRef.current = false;
 
-      // Reset loading state immediately to allow navigation
       clearChannelResources();
 
-      // Abort any ongoing loading
       if (loadingAbortRef.current) {
         loadingAbortRef.current.abort();
         loadingAbortRef.current = null;
