@@ -3,12 +3,11 @@ import { AnimatedFlashList, ListRenderItem } from '@app/components/FlashList';
 import { LiveStreamCard } from '@app/components/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshControl } from '@app/components/RefreshControl';
-import { ScreenHeader } from '@app/components/ScreenHeader';
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState, JSX, useCallback } from 'react';
+import { useMemo, useState, useCallback, type JSX } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -54,19 +53,6 @@ export default function FollowingScreen() {
     return <LiveStreamCard stream={item} />;
   }, []);
 
-  const renderHeader = useCallback(
-    () => (
-      <ScreenHeader
-        title="Following"
-        subtitle={`${streamsArray.length} channel${streamsArray.length !== 1 ? 's' : ''} live`}
-        back={false}
-        size="large"
-        safeArea={false}
-      />
-    ),
-    [streamsArray.length],
-  );
-
   if (refreshing || isLoading) {
     return (
       <>
@@ -106,7 +92,6 @@ export default function FollowingScreen() {
         keyExtractor={item => item.id}
         contentInsetAdjustmentBehavior="automatic"
         renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
         refreshControl={<RefreshControl onRefresh={onRefresh} />}
       />
     </View>

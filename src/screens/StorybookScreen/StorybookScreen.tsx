@@ -1,10 +1,18 @@
-import { Screen } from '@app/components/Screen';
+import { View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 import StoryBook from '../../../.storybook';
 
 export function StorybookScreen() {
   return (
-    <Screen safeAreaEdges={[]} preset="fixed">
+    <View style={styles.container}>
       <StoryBook />
-    </Screen>
+    </View>
   );
 }
+
+const styles = StyleSheet.create(theme => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
+}));

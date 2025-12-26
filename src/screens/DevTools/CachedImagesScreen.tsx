@@ -1,7 +1,6 @@
 import { Button } from '@app/components/Button';
 import { FlashList, ListRenderItem } from '@app/components/FlashList';
 import { Image } from '@app/components/Image';
-import { Screen } from '@app/components/Screen';
 import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Typography } from '@app/components/Typography';
 import { clearEmoteImageCache } from '@app/store/chatStore';
@@ -79,7 +78,7 @@ export function CachedImagesScreen() {
   );
 
   return (
-    <Screen safeAreaEdges={['bottom']} preset="fixed">
+    <View style={styles.screenContainer}>
       <View style={styles.container}>
         <ScreenHeader
           title="Cached Images"
@@ -135,11 +134,15 @@ export function CachedImagesScreen() {
           />
         )}
       </View>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
   container: {
     flex: 1,
   },

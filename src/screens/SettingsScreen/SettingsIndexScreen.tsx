@@ -1,7 +1,5 @@
 import { Menu } from '@app/components/Menu';
 import { PressableArea } from '@app/components/PressableArea';
-import { Screen } from '@app/components/Screen';
-import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Typography } from '@app/components/Typography';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
@@ -19,108 +17,96 @@ export function SettingsIndexScreen() {
   const { statusPageUrl, websiteUrl } = useRemoteConfig();
 
   return (
-    <Screen safeAreaEdges={[]} preset="fixed">
-      <View style={styles.container}>
-        <Menu
-          header={
-            <View>
-              <ScreenHeader
-                title="Settings"
-                subtitle="Customize your experience"
-                back={false}
-                size="large"
-              />
-            </View>
-          }
-          items={[
-            {
-              arrow: true,
-              icon: {
-                name: 'person.circle',
-                type: 'symbol',
-                color: theme.colors.blue.accent,
-              },
-              label: 'Profile',
-              description: 'Account info & preferences',
-              onPress: () => navigate('Profile'),
+    <View style={styles.container}>
+      <Menu
+        items={[
+          {
+            arrow: true,
+            icon: {
+              name: 'person.circle',
+              type: 'symbol',
+              color: theme.colors.blue.accent,
             },
-            null,
-            {
-              arrow: true,
-              icon: {
-                name: 'paintpalette',
-                type: 'symbol',
-                color: theme.colors.violet.accent,
-              },
-              label: 'Appearance',
-              description: 'Theme, colors & display',
-              onPress: () => navigate('Appearance'),
+            label: 'Profile',
+            description: 'Account info & preferences',
+            onPress: () => navigate('Profile'),
+          },
+          null,
+          {
+            arrow: true,
+            icon: {
+              name: 'paintpalette',
+              type: 'symbol',
+              color: theme.colors.violet.accent,
             },
-            null,
-            {
-              arrow: true,
-              icon: {
-                name: 'bubble.left.and.bubble.right',
-                type: 'symbol',
-                color: theme.colors.green.accent,
-              },
-              label: 'Chat',
-              description: 'Chat options',
-              onPress: () => navigate('ChatPreferences'),
+            label: 'Appearance',
+            description: 'Theme, colors & display',
+            onPress: () => navigate('Appearance'),
+          },
+          null,
+          {
+            arrow: true,
+            icon: {
+              name: 'bubble.left.and.bubble.right',
+              type: 'symbol',
+              color: theme.colors.green.accent,
             },
-            null,
-            {
-              arrow: true,
-              icon: {
-                name: 'hammer',
-                type: 'symbol',
-                color: theme.colors.orange.accent,
-              },
-              label: 'Dev Tools',
-              description: 'Debug options & diagnostics',
-              onPress: () => navigate('DevTools'),
+            label: 'Chat',
+            description: 'Chat options',
+            onPress: () => navigate('ChatPreferences'),
+          },
+          null,
+          {
+            arrow: true,
+            icon: {
+              name: 'hammer',
+              type: 'symbol',
+              color: theme.colors.orange.accent,
             },
-            null,
-            {
-              arrow: true,
-              icon: {
-                name: 'ellipsis.circle',
-                type: 'symbol',
-                color: theme.colors.teal.accent,
-              },
-              label: 'Other',
-              description: 'Privacy, licenses & more',
-              onPress: () => navigate('Other'),
+            label: 'Dev Tools',
+            description: 'Debug options & diagnostics',
+            onPress: () => navigate('DevTools'),
+          },
+          null,
+          {
+            arrow: true,
+            icon: {
+              name: 'ellipsis.circle',
+              type: 'symbol',
+              color: theme.colors.teal.accent,
             },
-          ]}
-        />
+            label: 'Other',
+            description: 'Privacy, licenses & more',
+            onPress: () => navigate('Other'),
+          },
+        ]}
+      />
 
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 90 }]}>
-          <View style={styles.quickLinks}>
-            <PressableArea
-              onPress={() => openLinkInBrowser(websiteUrl.value)}
-              hitSlop={8}
-            >
-              <Typography size="sm" color="gray.textLow">
-                Website
-              </Typography>
-            </PressableArea>
-            <Typography size="sm" color="gray.border">
-              •
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 90 }]}>
+        <View style={styles.quickLinks}>
+          <PressableArea
+            onPress={() => openLinkInBrowser(websiteUrl.value)}
+            hitSlop={8}
+          >
+            <Typography size="sm" color="gray.textLow">
+              Website
             </Typography>
-            <PressableArea
-              onPress={() => openLinkInBrowser(statusPageUrl.value)}
-              hitSlop={8}
-            >
-              <Typography size="sm" color="gray.textLow">
-                Status
-              </Typography>
-            </PressableArea>
-          </View>
-          <BuildStatus />
+          </PressableArea>
+          <Typography size="sm" color="gray.border">
+            •
+          </Typography>
+          <PressableArea
+            onPress={() => openLinkInBrowser(statusPageUrl.value)}
+            hitSlop={8}
+          >
+            <Typography size="sm" color="gray.textLow">
+              Status
+            </Typography>
+          </PressableArea>
         </View>
+        <BuildStatus />
       </View>
-    </Screen>
+    </View>
   );
 }
 

@@ -1,5 +1,4 @@
 import { Button } from '@app/components/Button';
-import { Screen } from '@app/components/Screen';
 import { Typography } from '@app/components/Typography';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -25,7 +24,7 @@ export function TopScreen() {
   });
 
   return (
-    <Screen preset="fixed" safeAreaEdges={['top']}>
+    <View style={styles.container}>
       <TabView
         style={styles.tabViewWrapper}
         navigationState={{ index, routes }}
@@ -53,11 +52,15 @@ export function TopScreen() {
           </View>
         )}
       />
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.gray.bg,
+  },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
