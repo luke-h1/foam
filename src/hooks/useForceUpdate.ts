@@ -26,7 +26,7 @@ function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
 }
 
 export function useForceUpdate() {
-  const remoteConfig = useRemoteConfig();
+  const { config: remoteConfig } = useRemoteConfig();
   const variant = process.env.APP_VARIANT as Variant;
 
   const minimumVersion = getMinimumVersion(variant, remoteConfig);

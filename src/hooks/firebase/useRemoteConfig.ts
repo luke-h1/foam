@@ -8,7 +8,7 @@ import {
   getRemoteConfig,
   setConfigSettings,
 } from '@react-native-firebase/remote-config';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const remoteConfig = getRemoteConfig(getApp());
 
@@ -51,10 +51,10 @@ export type RemoteConfigType = {
   [K in RemoteConfigKey]: RemoteConfigEntry<RemoteConfigSchema[K]>;
 };
 
-const defaultRemoteConfig = {
+export const defaultRemoteConfig = {
   splash: '{"7tvUnavailable": false, "app": false}',
-  minimumPreviewVersion: '',
-  minimumProductionVersion: '',
+  minimumPreviewVersion: '0.0.0',
+  minimumProductionVersion: '0.0.0',
   statusPageUrl: 'https://status.foam-app.com',
   websiteUrl: 'https://foam-app.com',
 } satisfies Record<RemoteConfigKey, string>;
@@ -100,52 +100,64 @@ remoteConfig.setDefaults(defaultRemoteConfig).catch(e => {
   sentryService.captureException(e);
 });
 
-export function useRemoteConfig(): RemoteConfigType {
+export type UseRemoteConfigResult = {
+  config: RemoteConfigType;
+  refetch: () => Promise<boolean>;
+  isRefetching: boolean;
+};
+
+export function useRemoteConfig(): UseRemoteConfigResult {
   const [config, setConfig] = useState<RemoteConfigType>(
     buildConfigFromDefaults,
   );
+  const [isRefetching, setIsRefetching] = useState(false);
 
-  useEffect(() => {
-    const updateConfig = () => {
-      const allConfig = getAll(remoteConfig);
-      const newConfig = Object.fromEntries(
-        Object.entries(allConfig)
-          .filter(([key]) => key in defaultRemoteConfig)
-          .map(([key, entry]) => [
-            key,
-            {
-              raw: entry.asString(),
-              value: parseConfigValue(key as RemoteConfigKey, entry.asString()),
-              source: entry.getSource(),
-            },
-          ]),
-      ) as RemoteConfigType;
-      setConfig(newConfig);
-    };
-
-    const initRemoteConfig = async () => {
-      try {
-        const activated = await fetchAndActivate(remoteConfig);
-        logger.remoteConfig.info('fetchAndActivate', {
-          activated,
-          message: activated
-            ? 'Fetched new config from server'
-            : 'Using cached config (no new data)',
-        });
-        updateConfig();
-      } catch (error) {
-        logger.remoteConfig.error('fetchAndActivate failed', error);
-        sentryService.addBreadcrumb({
-          message: 'Failed to update remote config values',
-          category: 'firebase.remote-config.update-values',
-        });
-
-        sentryService.captureException(error);
-      }
-    };
-
-    void initRemoteConfig();
+  const updateConfig = useCallback(() => {
+    const allConfig = getAll(remoteConfig);
+    const newConfig = Object.fromEntries(
+      Object.entries(allConfig)
+        .filter(([key]) => key in defaultRemoteConfig)
+        .map(([key, entry]) => [
+          key,
+          {
+            raw: entry.asString(),
+            value: parseConfigValue(key as RemoteConfigKey, entry.asString()),
+            source: entry.getSource(),
+          },
+        ]),
+    ) as RemoteConfigType;
+    setConfig(newConfig);
   }, []);
 
-  return config;
+  const refetch = useCallback(async (): Promise<boolean> => {
+    setIsRefetching(true);
+    try {
+      const activated = await fetchAndActivate(remoteConfig);
+      logger.remoteConfig.info('fetchAndActivate (manual)', {
+        activated,
+        message: activated
+          ? 'Fetched new config from server'
+          : 'Using cached config (no new data)',
+      });
+      updateConfig();
+      return activated;
+    } catch (error) {
+      logger.remoteConfig.error('fetchAndActivate failed', error);
+      sentryService.addBreadcrumb({
+        message: 'Failed to update remote config values',
+        category: 'firebase.remote-config.update-values',
+      });
+      sentryService.captureException(error);
+      return false;
+    } finally {
+      setIsRefetching(false);
+    }
+  }, [updateConfig]);
+
+  useEffect(() => {
+    void refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { config, refetch, isRefetching };
 }

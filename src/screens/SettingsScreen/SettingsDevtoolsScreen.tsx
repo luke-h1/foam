@@ -58,6 +58,18 @@ export function SettingsDevtoolsScreen() {
           null,
           {
             arrow: true,
+            label: 'Remote Config',
+            description: 'View remote & local config values',
+            onPress: () => navigate('RemoteConfig'),
+            icon: {
+              type: 'symbol',
+              name: 'cloud',
+              color: theme.colors.plum.accent,
+            },
+          },
+          null,
+          {
+            arrow: true,
             label: 'Storybook',
             description: 'UI preview',
             onPress: () => navigate('Storybook'),

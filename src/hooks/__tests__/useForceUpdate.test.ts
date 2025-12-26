@@ -1,4 +1,7 @@
-import type { RemoteConfigType } from '@app/hooks/firebase/useRemoteConfig';
+import type {
+  RemoteConfigType,
+  UseRemoteConfigResult,
+} from '@app/hooks/firebase/useRemoteConfig';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { renderHook } from '@testing-library/react-native';
 import type { Variant } from '../../../app.config';
@@ -24,8 +27,8 @@ type ForceUpdateResult = {
 const createMockRemoteConfig = (
   previewMinimumVersion: string,
   productionMinimumVersion: string,
-): RemoteConfigType =>
-  ({
+): UseRemoteConfigResult => ({
+  config: {
     minimumPreviewVersion: {
       raw: previewMinimumVersion,
       value: previewMinimumVersion,
@@ -36,7 +39,10 @@ const createMockRemoteConfig = (
       value: productionMinimumVersion,
       source: 'remote',
     },
-  }) as RemoteConfigType;
+  } as RemoteConfigType,
+  refetch: jest.fn().mockResolvedValue(true),
+  isRefetching: false,
+});
 
 describe('useForceUpdate', () => {
   const originalEnv = process.env;

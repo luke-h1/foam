@@ -2,6 +2,7 @@ import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { CachedImagesScreen } from '@app/screens/DevTools/CachedImagesScreen';
 import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
 import { DiagnosticsScreen } from '@app/screens/DevTools/DiagnosticsScreen';
+import { RemoteConfigScreen } from '@app/screens/DevTools/RemoteConfigScreen';
 import { AboutScreen } from '@app/screens/Other/AboutScreen';
 import { FaqScreen } from '@app/screens/Other/FaqScreen';
 import { LicensesScreen } from '@app/screens/Other/LicensesScreen';
@@ -26,6 +27,7 @@ export type SettingsStackParamList = {
   About: undefined;
   CachedImages: undefined;
   Diagnostics: undefined;
+  RemoteConfig: undefined;
   Licenses: undefined;
   Faq: undefined;
   Changelog: undefined;
@@ -58,6 +60,7 @@ export function SettingsStackNavigator() {
       <Stack.Screen name="Other" component={SettingsOtherScreen} />
       <Stack.Screen name="CachedImages" component={CachedImagesScreen} />
       <Stack.Screen name="Diagnostics" component={DiagnosticsScreen} />
+      <Stack.Screen name="RemoteConfig" component={RemoteConfigScreen} />
       <Stack.Screen name="Debug" component={DebugScreen} />
       <Stack.Screen name="Storybook" component={StorybookScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />

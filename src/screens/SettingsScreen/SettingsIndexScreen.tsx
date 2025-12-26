@@ -14,7 +14,8 @@ export function SettingsIndexScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();
   const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
-  const { statusPageUrl, websiteUrl } = useRemoteConfig();
+  const { config } = useRemoteConfig();
+  const { statusPageUrl, websiteUrl } = config;
 
   return (
     <View style={styles.container}>
