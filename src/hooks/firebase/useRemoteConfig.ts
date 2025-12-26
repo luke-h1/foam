@@ -19,7 +19,20 @@ void setConfigSettings(remoteConfig, {
 
 export interface RemoteConfigSchema {
   splash: { '7tvUnavailable': boolean; app: boolean };
-  minimumVersion: string;
+
+  /**
+   * Minimum version of the app required for preview track (TestFlight/internal testing)
+   */
+  minimumPreviewVersion: string;
+
+  /**
+   * Minimum version of the app required for production track (App Store/Play Store)
+   */
+  minimumProductionVersion: string;
+
+  /**
+   * Url
+   */
   statusPageUrl: string;
   websiteUrl: string;
 }
@@ -38,12 +51,13 @@ export type RemoteConfigType = {
   [K in RemoteConfigKey]: RemoteConfigEntry<RemoteConfigSchema[K]>;
 };
 
-const defaultRemoteConfig: Record<RemoteConfigKey, string> = {
+const defaultRemoteConfig = {
   splash: '{"7tvUnavailable": false, "app": false}',
-  minimumVersion: '',
+  minimumPreviewVersion: '',
+  minimumProductionVersion: '',
   statusPageUrl: 'https://status.foam-app.com',
   websiteUrl: 'https://foam-app.com',
-};
+} satisfies Record<RemoteConfigKey, string>;
 
 const jsonKeys: RemoteConfigKey[] = ['splash'];
 

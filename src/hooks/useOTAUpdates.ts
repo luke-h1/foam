@@ -10,7 +10,7 @@ import {
 import React, { useEffect, useRef } from 'react';
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 
-const MINIMUM_MINIMIZE_TIME = 15 * 60e3;
+const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 
 async function setExtraParams() {
   await setExtraParamAsync(
@@ -97,6 +97,7 @@ export function useOTAUpdates() {
     // For Testflight users, we can prompt the user to update immediately whenever there's an available update. This
     // is suspect however with the Apple App Store guidelines, so we don't want to prompt production users to update
     // immediately.
+    // todo change this to use preview track when we have it set up
     if (process.env.APP_VARIANT === 'production') {
       void onIsTestFlight();
       return;
