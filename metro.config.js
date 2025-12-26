@@ -12,12 +12,14 @@ config.resolver.sourceExts.push('cjs');
 config.transformer = {
   ...config.transformer,
   inlineRequires: true,
-}
+};
 
 const configWithStorybook = withStorybook(config, {
-  enabled: process.env.WITH_STORYBOOK === 'true',
+  enabled:
+    process.env.WITH_STORYBOOK === 'true' ||
+    process.env.APP_VARIANT === 'preview',
 });
 
 module.exports = withRozenite(configWithStorybook, {
-  enabled: process.env.WITH_ROZENITE === 'true', 
+  enabled: process.env.WITH_ROZENITE === 'true',
 });

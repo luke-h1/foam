@@ -1,11 +1,5 @@
-import { AppStackParamList } from '@app/navigators/AppNavigator';
-import {
-  EventArg,
-  NavigationProp,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/core';
-import * as React from 'react';
+import { navigationRef } from '@app/navigators/navigationUtilities';
+import { ReactNode, Ref, RefObject, useEffect, useRef } from 'react';
 import type { ScrollView } from 'react-native';
 import type { WebView } from 'react-native-webview';
 
@@ -23,12 +17,12 @@ type ScrollableView =
   | { scrollResponderScrollTo: (options: ScrollOptions) => void };
 
 type ScrollableWrapper =
-  | { getScrollResponder: () => React.ReactNode | ScrollView }
+  | { getScrollResponder: () => ReactNode | ScrollView }
   | { getNode: () => ScrollableView }
   | ScrollableView;
 
 function getScrollableNode(
-  ref: React.RefObject<ScrollableWrapper> | React.RefObject<WebView>,
+  ref: RefObject<ScrollableWrapper> | RefObject<WebView>,
 ) {
   if (ref?.current == null) {
     return null;
@@ -60,99 +54,62 @@ function getScrollableNode(
 
 export function useScrollToTop(
   ref:
-    | React.RefObject<ScrollableWrapper>
-    | React.RefObject<WebView>
+    | RefObject<ScrollableWrapper>
+    | RefObject<WebView>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | React.Ref<any>,
+    | Ref<any>,
   offset: number = 0,
 ) {
-  const navigation = useNavigation();
-  const route = useRoute();
-
-  React.useEffect(() => {
-    const tabNavigations: NavigationProp<AppStackParamList>[] = [];
-    let currentNavigation = navigation;
-
-    // If the screen is nested inside multiple tab navigators, we should scroll to top for any of them
-    // So we need to find all the parent tab navigators and add the listeners there
-    while (currentNavigation) {
-      if (currentNavigation.getState()?.type === 'tab') {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        tabNavigations.push(currentNavigation);
-      }
-
-      currentNavigation = currentNavigation.getParent();
-    }
-
-    if (tabNavigations.length === 0) {
+  useEffect(() => {
+    // Check if navigation is ready before setting up listeners
+    if (!navigationRef.isReady()) {
       return;
     }
 
-    const unsubscribers = tabNavigations.map(tab => {
-      return tab.addListener(
-        // We don't wanna import tab types here to avoid extra deps
-        // in addition, there are multiple tab implementations
-        // @ts-expect-error ignore for now
-        'tabPress',
-        (e: EventArg<'tabPress', true>) => {
-          // We should scroll to top only when the screen is focused
-          const isFocused = navigation.isFocused();
+    // Listen to navigation state changes to detect tab presses
+    const unsubscribe = navigationRef.addListener('state', () => {
+      if (!navigationRef.isReady()) {
+        return;
+      }
 
-          // In a nested stack navigator, tab press resets the stack to first screen
-          // So we should scroll to top only when we are on first screen
-          const isFirst =
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            tabNavigations.includes(navigation) ||
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            navigation.getState()?.routes[0].key === route.key;
+      // eslint-disable-next-line no-undef
+      requestAnimationFrame(() => {
+        const scrollable = getScrollableNode(
+          ref as RefObject<ScrollableWrapper> | RefObject<WebView>,
+        ) as ScrollableWrapper | WebView;
 
-          // Run the operation in the next frame so we're sure all listeners have been run
-          // This is necessary to know if preventDefault() has been called
-          // eslint-disable-next-line no-undef
-          requestAnimationFrame(() => {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            const scrollable = getScrollableNode(ref) as
-              | ScrollableWrapper
-              | WebView;
-
-            if (isFocused && isFirst && scrollable && !e.defaultPrevented) {
-              if ('scrollToTop' in scrollable) {
-                scrollable.scrollToTop();
-              } else if ('scrollTo' in scrollable) {
-                scrollable.scrollTo({ y: offset, animated: true });
-              } else if ('scrollToOffset' in scrollable) {
-                scrollable.scrollToOffset({ offset, animated: true });
-              } else if ('scrollResponderScrollTo' in scrollable) {
-                scrollable.scrollResponderScrollTo({
-                  y: offset,
-                  animated: true,
-                });
-              } else if ('injectJavaScript' in scrollable) {
-                scrollable.injectJavaScript(
-                  `;window.scrollTo({ top: ${offset}, behavior: 'smooth' }); true;`,
-                );
-              }
-            }
-          });
-        },
-      );
+        if (scrollable) {
+          if ('scrollToTop' in scrollable) {
+            scrollable.scrollToTop();
+          } else if ('scrollTo' in scrollable) {
+            scrollable.scrollTo({ y: offset, animated: true });
+          } else if ('scrollToOffset' in scrollable) {
+            scrollable.scrollToOffset({ offset, animated: true });
+          } else if ('scrollResponderScrollTo' in scrollable) {
+            scrollable.scrollResponderScrollTo({
+              y: offset,
+              animated: true,
+            });
+          } else if ('injectJavaScript' in scrollable) {
+            scrollable.injectJavaScript(
+              `;window.scrollTo({ top: ${offset}, behavior: 'smooth' }); true;`,
+            );
+          }
+        }
+      });
     });
 
     return () => {
-      unsubscribers.forEach(unsubscribe => unsubscribe());
+      unsubscribe();
     };
-  }, [navigation, ref, offset, route.key]);
+  }, [ref, offset]);
 }
 
 export const useScrollRef =
   process.env.EXPO_OS === 'web'
     ? () => undefined
     : () => {
-        const ref = React.useRef(null);
+        const ref = useRef(null);
 
         useScrollToTop(ref);
 

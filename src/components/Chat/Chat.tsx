@@ -176,13 +176,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       setUnreadCount(prev => prev + batch.length);
     }
 
-    // Force scroll to bottom if we're already at bottom (for fast chats)
     if (isAtBottomRef.current && !isScrollingToBottom) {
       setTimeout(() => {
-        void flashListRef.current?.scrollToIndex({
-          index: messages.length - 1,
-          animated: false,
-        });
+        // Double-check we're still at bottom before scrolling (user might have scrolled up)
+        if (isAtBottomRef.current && !isScrollingToBottom) {
+          const lastIndex = messages.length - 1;
+          if (lastIndex >= 0) {
+            void flashListRef.current?.scrollToIndex({
+              index: lastIndex,
+              animated: false,
+            });
+          }
+        }
       }, 0);
     }
   }, [isScrollingToBottom, messages.length]);
@@ -802,14 +807,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       console.log('🚪 Screen is being removed, cleaning up chat connection...');
 
-      // Mark as navigating away immediately to prevent skeleton from showing
       isNavigatingAwayRef.current = true;
       isMountedRef.current = false;
 
-      // Reset loading state immediately to allow navigation
       clearChannelResources();
 
-      // Abort any ongoing loading
       if (loadingAbortRef.current) {
         loadingAbortRef.current.abort();
         loadingAbortRef.current = null;
@@ -884,9 +886,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         scrollTimeoutRef.current = null;
       }
 
+      // Always update the ref immediately to reflect current scroll position
+      // This prevents auto-scroll from happening when user has scrolled up
+      isAtBottomRef.current = atBottom;
+
       // Only update state if not currently auto-scrolling, or if we've reached the bottom
       if (!isScrollingToBottom || atBottom) {
-        isAtBottomRef.current = atBottom;
         setIsAtBottom(atBottom);
 
         if (isScrollingToBottom && atBottom) {
@@ -902,16 +907,24 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   );
 
   const handleContentSizeChange = useCallback(() => {
-    if (isAtBottomRef.current) {
+    // Only auto-scroll if we're at the bottom AND not currently scrolling to bottom
+    // This prevents jumping when user has scrolled up
+    if (isAtBottomRef.current && !isScrollingToBottom) {
       const lastIndex = messages.length - 1;
       if (lastIndex >= 0) {
-        void flashListRef.current?.scrollToIndex({
-          index: messages.length - 1,
-          animated: false,
-        });
+        // Use setTimeout to ensure the scroll happens after layout
+        // Double-check we're still at bottom before scrolling (user might have scrolled up)
+        setTimeout(() => {
+          if (isAtBottomRef.current && !isScrollingToBottom) {
+            void flashListRef.current?.scrollToIndex({
+              index: messages.length - 1,
+              animated: false,
+            });
+          }
+        }, 0);
       }
     }
-  }, [messages.length]);
+  }, [messages.length, isScrollingToBottom]);
 
   const scrollToBottom = useCallback(() => {
     setIsScrollingToBottom(true);
@@ -1097,38 +1110,65 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     };
   }, [channelId]);
 
-  useEffect(() => {
-    // Abort any previous loading
-    if (loadingAbortRef.current) {
-      loadingAbortRef.current.abort();
-    }
+  // Track if we've started loading emotes to avoid duplicate loads
+  const emoteLoadingStartedRef = useRef<boolean>(false);
 
+  useEffect(() => {
+    // Load channel resources (emotes) in the background without blocking websocket connection
+    // CRITICAL: Wait for websocket to connect first, then load emotes
+    // This ensures the websocket connection is not blocked by emote loading
     if (
       channelId &&
       channelId.trim() &&
       authState?.token.accessToken &&
-      isMountedRef.current
+      isMountedRef.current &&
+      !emoteLoadingStartedRef.current
     ) {
+      // Abort any previous loading
+      if (loadingAbortRef.current) {
+        loadingAbortRef.current.abort();
+      }
+
       loadingAbortRef.current = new AbortController();
       const abortController = loadingAbortRef.current;
 
-      void loadChannelResources(channelId).then(success => {
-        // Only process result if component is still mounted and not aborted
+      // Wait for websocket to connect before loading emotes
+      // This prevents emote loading from blocking the websocket connection
+      const checkAndLoad = () => {
         if (isMountedRef.current && !abortController.signal.aborted) {
-          console.log('📡 loadChannelResources result:', success);
-          if (!success) {
-            console.log('❌ loadChannelResources failed');
+          const chatConnected = isChatConnected();
+
+          if (chatConnected) {
+            // Websocket is connected, safe to load emotes now
+            emoteLoadingStartedRef.current = true;
+            void loadChannelResources(channelId).then(success => {
+              // Only process result if component is still mounted and not aborted
+              if (isMountedRef.current && !abortController.signal.aborted) {
+                console.log('📡 loadChannelResources result:', success);
+                if (!success) {
+                  console.log('❌ loadChannelResources failed');
+                }
+              }
+            });
+          } else {
+            // Websocket not connected yet, check again in 50ms
+            setTimeout(checkAndLoad, 50);
           }
         }
-      });
+      };
+
+      // Start checking after a small delay to let websocket initialization begin
+      const initialDelay = setTimeout(checkAndLoad, 50);
 
       return () => {
+        clearTimeout(initialDelay);
         abortController.abort();
+        emoteLoadingStartedRef.current = false;
       };
     }
 
     return undefined;
-  }, [channelId, authState?.token.accessToken]);
+  }, [channelId, authState?.token.accessToken, isChatConnected]);
 
   const handleSendMessage = useCallback(() => {
     if (!messageInput.trim() || !isChatConnected()) {

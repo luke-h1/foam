@@ -51,7 +51,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
         .filter(option => typeof option === 'object')
         .find(option => option?.value === item.value);
 
-      return $selected?.right ?? $selected?.value;
+      return $selected?.right ?? $selected?.label ?? $selected?.value;
     }
 
     return null;

@@ -3,7 +3,7 @@ import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
 import { Typography } from '@app/components/Typography';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
-import { useCurrentEmoteData } from '@app/store/chatStore';
+import { useCurrentEmoteData, getCachedEmoteUri } from '@app/store/chatStore';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
@@ -14,6 +14,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useEffect,
 } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -125,16 +126,22 @@ const EmoteCell = memo(({ item, onPress }: EmoteCellProps) => {
     onPress(item);
   }, [item, onPress]);
 
+  const imageSource = useMemo(() => {
+    if (typeof item === 'object') {
+      return getCachedEmoteUri(item.url);
+    }
+    return null;
+  }, [item]);
+
   if (typeof item === 'object') {
     return (
       <Button style={styles.emoteCell} onPress={handlePress}>
         <Image
-          source={item.url}
+          source={imageSource || item.url}
           style={styles.emoteImage}
           contentFit="contain"
-          cachePolicy="memory"
+          cachePolicy="memory-disk"
           recyclingKey={item.id}
-          priority="low"
         />
       </Button>
     );
@@ -312,7 +319,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // Add standard emojis at the end
       result.push(...EMOJI_SECTIONS);
 
       return result;
@@ -332,7 +338,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
       const items: ListItem[] = [];
 
       sections.forEach((section, sectionIndex) => {
-        // Add section header
         items.push({
           type: 'header',
           title: section.title,
@@ -345,7 +350,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
           rows.push(section.data.slice(i, i + GRID_COLUMNS));
         }
 
-        // Add each row
         rows.forEach((row, rowIndex) => {
           items.push({
             type: 'row',
@@ -358,7 +362,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
       return items;
     }, [sections]);
 
-    // Track section indices in flat data for quick scrolling
     const sectionIndices = useMemo(() => {
       const indices: number[] = [];
       flatData.forEach((item, index) => {
@@ -405,6 +408,23 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
     const getItemType = useCallback((item: ListItem) => item.type, []);
 
     const keyExtractor = useCallback((item: ListItem) => item.key, []);
+
+    useEffect(() => {
+      if (sections.length > 0) {
+        const firstSection = sections[0];
+        if (firstSection && firstSection.data.length > 0) {
+          const emotesToPreload = firstSection.data
+            .filter(
+              (item): item is SanitisiedEmoteSet => typeof item === 'object',
+            )
+            .slice(0, GRID_COLUMNS * 3); // Preload first 3 rows
+
+          emotesToPreload.forEach(emote => {
+            getCachedEmoteUri(emote.url);
+          });
+        }
+      }
+    }, [sections]);
 
     if (sections.length === 0) {
       return null;
