@@ -14,7 +14,7 @@ interface AppVariantConfig {
   androidGoogleServicesFile: string;
 }
 
-type Variant = 'development' | 'preview' | 'test' | 'production';
+export type Variant = 'development' | 'preview' | 'test' | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
 const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
@@ -64,7 +64,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 
 const variant = (process.env.APP_VARIANT as Variant) || 'production';
 
-const VERSION = '0.0.35';
+const VERSION = '0.0.36';
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 

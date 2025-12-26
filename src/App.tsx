@@ -9,9 +9,11 @@ import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
 import { enableFreeze, enableScreens } from 'react-native-screens';
 import { Providers } from './Providers/Providers';
+import { ForceUpdateModal } from './components/ForceUpdateModal/ForceUpdateModal';
 import { OTAUpdates } from './components/OTAUpdates';
 import { useChangeScreenOrientation } from './hooks/useChangeScreenOrientation';
 import { useClearExpiredStorageItems } from './hooks/useClearExpiredStorageItems';
+import { useForceUpdate } from './hooks/useForceUpdate';
 import { useOnAppStateChange } from './hooks/useOnAppStateChange';
 import { useOnReconnect } from './hooks/useOnReconnect';
 import { useRecoveredFromError } from './hooks/useRecoveredFromError';
@@ -60,6 +62,8 @@ function App() {
     }
   });
 
+  const { updateRequired, minimumVersion } = useForceUpdate();
+
   /**
    * Before we show the app, we have to wait for our state to be ready
    * In the meantime, don't render anything. This will be the background color set in
@@ -69,6 +73,10 @@ function App() {
    */
   return (
     <Providers>
+      <ForceUpdateModal
+        isVisible={updateRequired}
+        minimumVersion={minimumVersion}
+      />
       <AppNavigator
         onStateChange={onNavigationStateChange}
         onReady={() => {

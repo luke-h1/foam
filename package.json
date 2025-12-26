@@ -249,7 +249,6 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-test-renderer": "19.1.0",
     "reassure": "^1.4.0",
-    "semver": "^7.7.2",
     "sharp-cli": "^5.2.0",
     "svgo": "^4.0.0",
     "ts-jest": "^29.4.0",
