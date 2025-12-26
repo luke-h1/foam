@@ -21,7 +21,6 @@ module.exports = api => {
     ],
     'react-native-worklets/plugin',
   ];
-
   return {
     presets: [['babel-preset-expo']],
     plugins,

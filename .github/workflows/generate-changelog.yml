@@ -1,0 +1,48 @@
+name: Generate Changelog
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on tags like v0.0.34, v1.0.0, etc.
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 📝 Generate full changelog from git history
+        run: bun run changelog
+
+      - name: 📤 Commit changelog
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          if git diff --staged --quiet; then
+            echo "No changes to CHANGELOG.md"
+          else
+            git commit -m "chore: update changelog for ${GITHUB_REF#refs/tags/}"
+            git push
+          fi
+

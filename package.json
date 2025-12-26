@@ -1,6 +1,6 @@
 {
   "name": "foam",
-  "version": "0.1.0",
+  "version": "0.0.34",
   "private": true,
   "engineStrict": true,
   "main": "index.ts",
@@ -56,7 +56,12 @@
     "fingerprint:ios": "npx expo-updates fingerprint:generate --platform ios | jq -r '.hash' | xargs -n 1 echo 'fingerprint:'",
     "build:debug:android": "cd android && ./gradlew assembleDebug -DtestBuildType=debug -Dorg.gradle.jvmargs=-Xmx4g",
     "build:debug:ios": "cd ios && pod install && cd .. && xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/Foam.xcworkspace -UseNewBuildSystem=YES -scheme Foam -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build -quiet",
-    "maestro:test": "maestro test --debug-output maestro-debug-output .maestro"
+    "maestro:test": "maestro test --debug-output maestro-debug-output .maestro",
+    "release": "release-it --no-increment",
+    "release:patch": "release-it patch",
+    "release:minor": "release-it minor",
+    "release:major": "release-it major",
+    "changelog": "node scripts/generate-full-changelog.js"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.2",
@@ -251,6 +256,7 @@
     "reassure": "^1.4.0",
     "semver": "^7.7.2",
     "sharp-cli": "^5.2.0",
+    "release-it": "^17.10.0",
     "svgo": "^4.0.0",
     "ts-jest": "^29.4.0",
     "ts-migrate": "^0.1.35",

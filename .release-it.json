@@ -1,0 +1,22 @@
+{
+  "git": {
+    "commitMessage": "release: ${version}",
+    "tagName": "v${version}",
+    "requireCleanWorkingDir": false,
+    "requireUpstream": false,
+    "push": true,
+    "tag": true
+  },
+  "github": {
+    "release": false
+  },
+  "npm": {
+    "publish": false
+  },
+  "hooks": {
+    "before:init": ["node scripts/sync-version-to-package.js"],
+    "after:bump": ["node scripts/update-app-version.js"],
+    "after:release": "echo 'Successfully released ${name} v${version}'"
+  }
+}
+
