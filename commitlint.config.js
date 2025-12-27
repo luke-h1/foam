@@ -39,6 +39,8 @@ module.exports = {
         'style',
         'test',
         'release',
+        'firebase',
+        'remote-config',
       ],
     ],
   },

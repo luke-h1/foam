@@ -175,16 +175,16 @@ export function SubscriptionNotice({
     streakMonths,
   ]);
 
-  if (!shouldShareStreak) {
-    return null;
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.notice}>
-        {isResub && (
+        {isResub ? (
           <View style={styles.resubBadge}>
             <Typography style={styles.resubBadgeText}>RESUB</Typography>
+          </View>
+        ) : (
+          <View style={styles.newSubBadge}>
+            <Typography style={styles.newSubBadgeText}>NEW</Typography>
           </View>
         )}
         <Typography style={styles.subscriptionText}>

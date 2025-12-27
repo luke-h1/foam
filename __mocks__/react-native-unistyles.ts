@@ -1,42 +1,63 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-extraneous-class */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// Mock for react-native-unistyles - mainly for reassure tests
+// Default color structure for each color token
+const createColorScale = (base: string) => ({
+  bg: base,
+  bgAlt: base,
+  ui: base,
+  uiHover: base,
+  uiActive: base,
+  border: base,
+  borderUi: base,
+  borderHover: base,
+  accent: base,
+  accentHover: base,
+  textLow: base,
+  text: base,
+  bgAlpha: base,
+  bgAltAlpha: base,
+  uiAlpha: base,
+  uiHoverAlpha: base,
+  uiActiveAlpha: base,
+  borderAlpha: base,
+  borderUiAlpha: base,
+  borderHoverAlpha: base,
+  accentAlpha: base,
+  accentHoverAlpha: base,
+  textLowAlpha: base,
+  textAlpha: base,
+  contrast: '#FFFFFF',
+});
 
 const mockTheme = {
   colors: {
-    gray: {
-      text: '#000000',
-      textLow: '#666666',
-      contrast: '#FFFFFF',
-      accent: '#8E8E93',
-      accentAlpha: 'rgba(142, 142, 147, 0.5)',
-      bgAltAlpha: 'rgba(142, 142, 147, 0.1)',
-    },
-    blue: {
-      text: '#007AFF',
-      textLow: '#0051D5',
-      contrast: '#FFFFFF',
-      accent: '#007AFF',
-      accentAlpha: 'rgba(0, 122, 255, 0.5)',
-    },
-    red: {
-      text: '#FF3B30',
-      textLow: '#D70015',
-      contrast: '#FFFFFF',
-    },
-    green: {
-      text: '#34C759',
-      textLow: '#248A3D',
-      contrast: '#FFFFFF',
-    },
-    grass: {
-      accentAlpha: '#34C759',
-    },
-    black: {
-      bgAltAlpha: 'rgba(0, 0, 0, 0.1)',
-    },
+    accent: createColorScale('#007AFF'),
+    gray: createColorScale('#8E8E93'),
+    blue: createColorScale('#007AFF'),
+    sky: createColorScale('#0EA5E9'),
+    cyan: createColorScale('#06B6D4'),
+    indigo: createColorScale('#6366F1'),
+    iris: createColorScale('#5B5BD6'),
+    violet: createColorScale('#8B5CF6'),
+    purple: createColorScale('#A855F7'),
+    plum: createColorScale('#D946EF'),
+    red: createColorScale('#EF4444'),
+    green: createColorScale('#22C55E'),
+    amber: createColorScale('#F59E0B'),
+    crimson: createColorScale('#DC2626'),
+    gold: createColorScale('#CA8A04'),
+    grass: createColorScale('#22C55E'),
+    jade: createColorScale('#10B981'),
+    orange: createColorScale('#F97316'),
+    ruby: createColorScale('#E11D48'),
+    teal: createColorScale('#14B8A6'),
+    tomato: createColorScale('#EF4444'),
+    black: createColorScale('#000000'),
+    white: createColorScale('#FFFFFF'),
   },
   font: {
     fontSize: {
@@ -74,6 +95,14 @@ const mockTheme = {
     headerHeight: 56,
     tabBarHeight: 70,
   },
+  radii: {
+    xs: 2,
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
+    full: 9999,
+  },
 };
 
 // Mock HybridUnistylesStyleSheet class
@@ -84,7 +113,15 @@ class HybridUnistylesStyleSheet {
 }
 
 const mockStyleSheet = {
-  create: jest.fn((styles: any) => styles),
+  create: jest.fn((styles: any) => {
+    // If styles is a function, call it with mockTheme
+    const resolvedStyles =
+      typeof styles === 'function' ? styles(mockTheme) : styles;
+    // Add useVariants method to the returned styles object
+    return Object.assign(resolvedStyles, {
+      useVariants: jest.fn(),
+    });
+  }),
   flatten: jest.fn((style: any) => style),
   configure: jest.fn(() => {
     // Call init when configure is called (mimicking real behavior)
