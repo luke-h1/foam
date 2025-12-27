@@ -1,4 +1,5 @@
 import * as Application from 'expo-application';
+import { Linking } from 'react-native';
 import { getAppStoreLink } from './getAppStoreLink';
 
 /**
@@ -15,11 +16,13 @@ export async function getStoreUrlAsync() {
       releaseType !== Application.ApplicationReleaseType.APP_STORE &&
       releaseType !== Application.ApplicationReleaseType.SIMULATOR;
 
-    /**
-     * Open TestFlight
-     */
     if (isTestFlight) {
-      return `itms-beta://beta.itunes.apple.com/v1/app/${Application.applicationId}`;
+      const testFlightUrl = 'itms-beta://';
+      const canOpen = await Linking.canOpenURL(testFlightUrl);
+      if (canOpen) {
+        return testFlightUrl;
+      }
+      return 'https://testflight.apple.com';
     }
 
     return getAppStoreLink(Application.applicationId as string);
