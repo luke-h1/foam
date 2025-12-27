@@ -1,5 +1,7 @@
 module.exports = api => {
-  api.cache(true);
+  api.cache.using(() => process.env.NODE_ENV);
+
+  const isTest = process.env.NODE_ENV === 'test';
 
   const plugins = [
     [
@@ -8,7 +10,8 @@ module.exports = api => {
         root: 'src',
       },
     ],
-    'transform-inline-environment-variables',
+    // Don't inline env vars in tests so they can be mocked
+    !isTest && 'transform-inline-environment-variables',
     [
       'module-resolver',
       {
@@ -20,7 +23,7 @@ module.exports = api => {
       },
     ],
     'react-native-worklets/plugin',
-  ];
+  ].filter(Boolean);
 
   return {
     presets: [['babel-preset-expo']],

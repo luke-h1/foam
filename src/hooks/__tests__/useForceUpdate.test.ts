@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import type {
+  RemoteConfigSchema,
   RemoteConfigType,
   UseRemoteConfigResult,
 } from '@app/hooks/firebase/useRemoteConfig';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { renderHook } from '@testing-library/react-native';
-import type { Variant } from '../../../app.config';
+import { Platform } from 'react-native';
 import { useForceUpdate } from '../useForceUpdate';
 
 jest.mock('@react-native-firebase/installations');
@@ -15,28 +17,17 @@ jest.mock('expo-application', () => ({
   nativeApplicationVersion: '1.0.0',
 }));
 
+const mockPlatform = Platform as { OS: 'ios' | 'android' };
+
 const mockUseRemoteConfig = jest.mocked(useRemoteConfig);
 
-type ForceUpdateResult = {
-  updateRequired: boolean;
-  minimumVersion: string;
-  currentVersion: string | null;
-  variant: Variant;
-};
-
 const createMockRemoteConfig = (
-  previewMinimumVersion: string,
-  productionMinimumVersion: string,
+  versions: RemoteConfigSchema['minimumVersion'],
 ): UseRemoteConfigResult => ({
   config: {
-    minimumPreviewVersion: {
-      raw: previewMinimumVersion,
-      value: previewMinimumVersion,
-      source: 'remote',
-    },
-    minimumProductionVersion: {
-      raw: productionMinimumVersion,
-      value: productionMinimumVersion,
+    minimumVersion: {
+      raw: JSON.stringify(versions),
+      value: versions,
       source: 'remote',
     },
   } as RemoteConfigType,
@@ -44,27 +35,54 @@ const createMockRemoteConfig = (
   isRefetching: false,
 });
 
+const createSimpleMockConfig = ({
+  preview = '0.0.0',
+  production = '0.0.0',
+  development = '0.0.0',
+}: {
+  preview?: string;
+  production?: string;
+  development?: string;
+}): UseRemoteConfigResult =>
+  createMockRemoteConfig({
+    android: {
+      development,
+      preview,
+      production,
+    },
+    ios: {
+      development,
+      preview,
+      production,
+    },
+  });
+
 describe('useForceUpdate', () => {
-  const originalEnv = process.env;
+  const originalAppVariant = process.env.APP_VARIANT;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env = { ...originalEnv };
+    delete process.env.APP_VARIANT;
   });
 
-  afterEach(() => {
-    process.env = originalEnv;
+  afterAll(() => {
+    if (originalAppVariant !== undefined) {
+      process.env.APP_VARIANT = originalAppVariant;
+    } else {
+      delete process.env.APP_VARIANT;
+    }
   });
 
   describe('development variant', () => {
     test('should return updateRequired=false for development variant', () => {
       process.env.APP_VARIANT = 'development';
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('2.0.0', '2.0.0'),
+        createSimpleMockConfig({ preview: '2.0.0', production: '2.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('');
@@ -79,11 +97,12 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=true when current version is below preview minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('2.0.0', '1.0.0'),
+        createSimpleMockConfig({ preview: '2.0.0', production: '1.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(true);
       expect(current.minimumVersion).toBe('2.0.0');
@@ -93,11 +112,12 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when current version equals preview minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('1.0.0', '2.0.0'),
+        createSimpleMockConfig({ preview: '1.0.0', production: '2.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('1.0.0');
@@ -106,11 +126,12 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when current version is above preview minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('0.9.0', '2.0.0'),
+        createSimpleMockConfig({ preview: '0.9.0', production: '2.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('0.9.0');
@@ -118,10 +139,13 @@ describe('useForceUpdate', () => {
     });
 
     test('should return updateRequired=false when preview minimum version is empty', () => {
-      mockUseRemoteConfig.mockReturnValue(createMockRemoteConfig('', '1.0.0'));
+      mockUseRemoteConfig.mockReturnValue(
+        createSimpleMockConfig({ preview: '', production: '1.0.0' }),
+      );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('');
@@ -135,11 +159,12 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=true when current version is below production minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('1.0.0', '2.0.0'),
+        createSimpleMockConfig({ preview: '1.0.0', production: '2.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(true);
       expect(current.minimumVersion).toBe('2.0.0');
@@ -149,11 +174,12 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when current version equals production minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('2.0.0', '1.0.0'),
+        createSimpleMockConfig({ preview: '2.0.0', production: '1.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('1.0.0');
@@ -162,11 +188,12 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when current version is above production minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('2.0.0', '0.9.0'),
+        createSimpleMockConfig({ preview: '2.0.0', production: '0.9.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('0.9.0');
@@ -174,10 +201,13 @@ describe('useForceUpdate', () => {
     });
 
     test('should return updateRequired=false when production minimum version is empty', () => {
-      mockUseRemoteConfig.mockReturnValue(createMockRemoteConfig('1.0.0', ''));
+      mockUseRemoteConfig.mockReturnValue(
+        createSimpleMockConfig({ preview: '1.0.0', production: '' }),
+      );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('');
@@ -188,11 +218,12 @@ describe('useForceUpdate', () => {
     test('should return updateRequired=false for unknown variant', () => {
       process.env.APP_VARIANT = 'unknown';
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('2.0.0', '2.0.0'),
+        createSimpleMockConfig({ preview: '2.0.0', production: '2.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('');
@@ -206,42 +237,48 @@ describe('useForceUpdate', () => {
 
     test('should correctly identify when patch version update is required', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('1.0.1', '1.0.0'),
+        createSimpleMockConfig({ preview: '1.0.1', production: '1.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(true);
     });
 
     test('should correctly identify when minor version update is required', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('1.1.0', '1.0.0'),
+        createSimpleMockConfig({ preview: '1.1.0', production: '1.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(true);
     });
 
     test('should correctly identify when major version update is required', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('2.0.0', '1.0.0'),
+        createSimpleMockConfig({ preview: '2.0.0', production: '1.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(true);
     });
 
     test('should return updateRequired=false when both versions are empty', () => {
-      mockUseRemoteConfig.mockReturnValue(createMockRemoteConfig('', ''));
+      mockUseRemoteConfig.mockReturnValue(
+        createSimpleMockConfig({ preview: '', production: '' }),
+      );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
     });
@@ -254,11 +291,12 @@ describe('useForceUpdate', () => {
 
     test('should return all expected properties', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('1.0.0', '2.0.0'),
+        createSimpleMockConfig({ preview: '1.0.0', production: '2.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current).toHaveProperty('updateRequired');
       expect(current).toHaveProperty('minimumVersion');
@@ -268,13 +306,130 @@ describe('useForceUpdate', () => {
 
     test('should return current version from Application', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createMockRemoteConfig('1.0.0', '1.0.0'),
+        createSimpleMockConfig({ preview: '1.0.0', production: '1.0.0' }),
       );
 
-      const { result } = renderHook(() => useForceUpdate());
-      const current = result.current as ForceUpdateResult;
+      const {
+        result: { current },
+      } = renderHook(() => useForceUpdate());
 
       expect(current.currentVersion).toBe('1.0.0');
+    });
+  });
+
+  describe('platform-specific versions', () => {
+    beforeEach(() => {
+      process.env.APP_VARIANT = 'preview';
+    });
+
+    describe('iOS platform', () => {
+      beforeEach(() => {
+        mockPlatform.OS = 'ios';
+      });
+
+      test('should use iOS preview version when on iOS', () => {
+        mockUseRemoteConfig.mockReturnValue(
+          createMockRemoteConfig({
+            android: {
+              development: '0.0.0',
+              preview: '1.0.0',
+              production: '1.0.0',
+            },
+            ios: {
+              development: '0.0.0',
+              preview: '2.0.0',
+              production: '1.0.0',
+            },
+          }),
+        );
+
+        const {
+          result: { current },
+        } = renderHook(() => useForceUpdate());
+
+        expect(current.updateRequired).toBe(true);
+        expect(current.minimumVersion).toBe('2.0.0');
+      });
+
+      test('should use iOS production version when on iOS with production variant', () => {
+        process.env.APP_VARIANT = 'production';
+        mockUseRemoteConfig.mockReturnValue(
+          createMockRemoteConfig({
+            android: {
+              development: '0.0.0',
+              preview: '1.0.0',
+              production: '1.0.0',
+            },
+            ios: {
+              development: '0.0.0',
+              preview: '1.0.0',
+              production: '2.0.0',
+            },
+          }),
+        );
+
+        const {
+          result: { current },
+        } = renderHook(() => useForceUpdate());
+
+        expect(current.updateRequired).toBe(true);
+        expect(current.minimumVersion).toBe('2.0.0');
+      });
+    });
+
+    describe('Android platform', () => {
+      beforeEach(() => {
+        mockPlatform.OS = 'android';
+      });
+
+      test('should use Android preview version when on Android', () => {
+        mockUseRemoteConfig.mockReturnValue(
+          createMockRemoteConfig({
+            android: {
+              development: '0.0.0',
+              preview: '2.0.0',
+              production: '1.0.0',
+            },
+            ios: {
+              development: '0.0.0',
+              preview: '1.0.0',
+              production: '1.0.0',
+            },
+          }),
+        );
+
+        const {
+          result: { current },
+        } = renderHook(() => useForceUpdate());
+
+        expect(current.updateRequired).toBe(true);
+        expect(current.minimumVersion).toBe('2.0.0');
+      });
+
+      test('should use Android production version when on Android with production variant', () => {
+        process.env.APP_VARIANT = 'production';
+        mockUseRemoteConfig.mockReturnValue(
+          createMockRemoteConfig({
+            android: {
+              development: '0.0.0',
+              preview: '1.0.0',
+              production: '2.0.0',
+            },
+            ios: {
+              development: '0.0.0',
+              preview: '1.0.0',
+              production: '1.0.0',
+            },
+          }),
+        );
+
+        const {
+          result: { current },
+        } = renderHook(() => useForceUpdate());
+
+        expect(current.updateRequired).toBe(true);
+        expect(current.minimumVersion).toBe('2.0.0');
+      });
     });
   });
 });

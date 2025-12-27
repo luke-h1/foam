@@ -4,28 +4,39 @@ import {
 } from '@app/hooks/firebase/useRemoteConfig';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import * as Application from 'expo-application';
+import { Platform } from 'react-native';
 import { Variant } from '../../app.config';
 
 /**
  * Hook to check if a forced update is required based on Firebase Remote Config
- * Uses separate minimum versions for preview and production tracks
+ * Uses separate minimum versions for preview and production tracks per platform
  * @returns Object containing whether update is required, minimum version, and optional custom update URL
  */
 
 function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
+  const platform = Platform.OS === 'ios' ? 'ios' : 'android';
+  const platformConfig = remoteConfig.minimumVersion.value[platform];
+
   switch (variant) {
     case 'development':
-      return '';
+      return platformConfig?.development ?? '';
     case 'production':
-      return remoteConfig.minimumProductionVersion.value;
+      return platformConfig?.production ?? '';
     case 'preview':
-      return remoteConfig.minimumPreviewVersion.value;
+      return platformConfig?.preview ?? '';
     default:
       return '';
   }
 }
 
-export function useForceUpdate() {
+export type UseForceUpdateResult = {
+  updateRequired: boolean;
+  minimumVersion: string;
+  currentVersion: string | null;
+  variant: Variant;
+};
+
+export function useForceUpdate(): UseForceUpdateResult {
   const { config: remoteConfig } = useRemoteConfig();
   const variant = process.env.APP_VARIANT as Variant;
 

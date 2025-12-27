@@ -21,7 +21,7 @@ import {
   useAuthContext,
 } from '../AuthContext';
 
-jest.mock('@app/services/twitchService');
+jest.mock('@app/services/twitch-service');
 jest.mock('@app/services/api');
 jest.mock('expo-secure-store');
 

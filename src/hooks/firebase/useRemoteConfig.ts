@@ -13,22 +13,19 @@ import { useCallback, useEffect, useState } from 'react';
 const remoteConfig = getRemoteConfig(getApp());
 
 void setConfigSettings(remoteConfig, {
-  // 1 minute in dev, 10 minutes in prod
-  minimumFetchIntervalMillis: __DEV__ ? 60 : 600,
+  minimumFetchIntervalMillis: 300,
 });
 
 export interface RemoteConfigSchema {
   splash: { '7tvUnavailable': boolean; app: boolean };
 
   /**
-   * Minimum version of the app required for preview track (TestFlight/internal testing)
+   * Minimum version of the app required per platform and track
    */
-  minimumPreviewVersion: string;
-
-  /**
-   * Minimum version of the app required for production track (App Store/Play Store)
-   */
-  minimumProductionVersion: string;
+  minimumVersion: {
+    android: { development: string; preview: string; production: string };
+    ios: { development: string; preview: string; production: string };
+  };
 
   /**
    * Url
@@ -53,15 +50,16 @@ export type RemoteConfigType = {
 
 export const defaultRemoteConfig = {
   splash: '{"7tvUnavailable": false, "app": false}',
-  minimumPreviewVersion: '0.0.0',
-  minimumProductionVersion: '0.0.0',
+  minimumVersion:
+    '{"android": {"development": "0.0.0", "preview": "0.0.0", "production": "0.0.0"}, "ios": {"development": "0.0.0", "preview": "0.0.0", "production": "0.0.0"}}',
   statusPageUrl: 'https://status.foam-app.com',
   websiteUrl: 'https://foam-app.com',
 } satisfies Record<RemoteConfigKey, string>;
 
-const jsonKeys: RemoteConfigKey[] = ['splash'];
+// Keys that contain JSON and need parsing
+const jsonKeys: RemoteConfigKey[] = ['splash', 'minimumVersion'];
 
-function parseConfigValue<K extends RemoteConfigKey>(
+function parseValue<K extends RemoteConfigKey>(
   key: K,
   raw: string,
 ): RemoteConfigSchema[K] {
@@ -69,6 +67,10 @@ function parseConfigValue<K extends RemoteConfigKey>(
     try {
       return JSON.parse(raw) as RemoteConfigSchema[K];
     } catch {
+      logger.remoteConfig.error(`Failed to parse JSON for key: ${key}`, {
+        raw,
+      });
+      // Return parsed default as fallback
       return JSON.parse(defaultRemoteConfig[key]) as RemoteConfigSchema[K];
     }
   }
@@ -83,7 +85,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
         key,
         {
           raw,
-          value: parseConfigValue(key, raw),
+          value: parseValue(key, raw),
           source: 'default' as ConfigSource,
         },
       ];
@@ -117,15 +119,19 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     const newConfig = Object.fromEntries(
       Object.entries(allConfig)
         .filter(([key]) => key in defaultRemoteConfig)
-        .map(([key, entry]) => [
-          key,
-          {
-            raw: entry.asString(),
-            value: parseConfigValue(key as RemoteConfigKey, entry.asString()),
-            source: entry.getSource(),
-          },
-        ]),
+        .map(([key, entry]) => {
+          const raw = entry.asString();
+          return [
+            key,
+            {
+              raw,
+              value: parseValue(key as RemoteConfigKey, raw),
+              source: entry.getSource(),
+            },
+          ];
+        }),
     ) as RemoteConfigType;
+
     setConfig(newConfig);
   }, []);
 
