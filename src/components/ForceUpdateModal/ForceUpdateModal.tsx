@@ -6,7 +6,7 @@ import { getStoreUrlAsync } from '@app/screens/DevTools/utils/getStoreUrlAsync';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import * as Application from 'expo-application';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Modal as RNModal, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
