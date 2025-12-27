@@ -38,6 +38,8 @@ export interface UserStateTags {
   turbo?: string;
   /** Emote sets (comma-separated list of emote set IDs) */
   'emote-sets'?: string;
+  /** Whether this is the user's first message in the channel */
+  'first-msg'?: string;
 
   /**
    * Custom tags we're adding to the response to

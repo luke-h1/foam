@@ -275,10 +275,17 @@ function ChatMessageComponent<
       part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
   );
 
+  const isFirstMessage = userstate['first-msg'] === '1';
+
   return (
     <Button
       onLongPress={handleLongPress}
-      style={[styles.chatContainer, style, isReply && styles.replyContainer]}
+      style={[
+        styles.chatContainer,
+        style,
+        isReply && styles.replyContainer,
+        isFirstMessage && styles.firstMessageContainer,
+      ]}
     >
       {isReply && (
         <View style={styles.replyIndicator}>
@@ -306,6 +313,12 @@ function ChatMessageComponent<
             )}
             {replyBody && ` ${truncate(unescapeIrcTag(replyBody).trim(), 50)}`}
           </Typography>
+        </View>
+      )}
+
+      {isFirstMessage && (
+        <View style={styles.firstMessageIndicator}>
+          <Typography style={styles.firstMessageText}>first message</Typography>
         </View>
       )}
 
@@ -373,6 +386,14 @@ export const ChatMessage = MemoizedChatMessage as <
 const styles = StyleSheet.create(theme => ({
   chatContainer: {
     // backgroundColor: theme.colors.foregroundInverted,
+  },
+  firstMessageContainer: {
+    backgroundColor: 'rgba(0, 210, 106, 0.15)',
+    padding: theme.spacing.sm,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 210, 106, 0.3)',
+    marginBottom: theme.spacing.xs,
   },
   messageLine: {
     flexDirection: 'row',
@@ -501,5 +522,14 @@ const styles = StyleSheet.create(theme => ({
   },
   messageText: {
     lineHeight: theme.spacing['2xl'],
+  },
+  firstMessageIndicator: {
+    marginBottom: theme.spacing.xs,
+  },
+  firstMessageText: {
+    color: '#00D26A',
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
 }));
