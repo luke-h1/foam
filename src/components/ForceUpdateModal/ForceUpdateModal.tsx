@@ -1,45 +1,61 @@
+import {
+  RemoteConfigType,
+  useRemoteConfig,
+} from '@app/hooks/firebase/useRemoteConfig';
 import { getStoreUrlAsync } from '@app/screens/DevTools/utils/getStoreUrlAsync';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import * as Application from 'expo-application';
-import { useState } from 'react';
-import { Modal as RNModal, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Modal as RNModal, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
+import { Variant } from '../../../app.config';
 import { Button } from '../Button';
 import { IconSymbol } from '../IconSymbol/IconSymbol';
 import { Typography } from '../Typography';
 
-interface ForceUpdateModalProps {
-  isVisible: boolean;
-  minimumVersion: string;
+function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
+  const platform = Platform.OS === 'ios' ? 'ios' : 'android';
+  const platformConfig = remoteConfig.minimumVersion.value[platform];
+
+  switch (variant) {
+    case 'development':
+      return platformConfig?.development ?? '';
+    case 'production':
+      return platformConfig?.production ?? '';
+    case 'preview':
+      return platformConfig?.preview ?? '';
+    default:
+      return '';
+  }
 }
 
-export function ForceUpdateModal({
-  isVisible,
-  minimumVersion,
-}: ForceUpdateModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export function ForceUpdateModal() {
+  const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
 
-  const handleUpdatePress = async () => {
-    setIsLoading(true);
-    try {
-      const storeUrl = await getStoreUrlAsync();
-      if (storeUrl) {
-        openLinkInBrowser(storeUrl);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  const variant = (process.env.APP_VARIANT ?? 'development') as Variant;
+  const minimumVersion = getMinimumVersion(variant, remoteConfig);
   const currentVersion = Application.nativeApplicationVersion ?? 'Unknown';
+
+  const updateRequired =
+    minimumVersion && currentVersion && currentVersion !== 'Unknown'
+      ? (isUpdateRequired(currentVersion, minimumVersion) ?? false)
+      : false;
+
+  const handleUpdatePress = useCallback(async () => {
+    const storeUrl = await getStoreUrlAsync();
+    if (storeUrl) {
+      openLinkInBrowser(storeUrl);
+    }
+  }, []);
 
   return (
     <RNModal
       animationType="fade"
       transparent
-      visible={isVisible}
+      visible={updateRequired}
       statusBarTranslucent
     >
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
@@ -85,10 +101,9 @@ export function ForceUpdateModal({
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onPress={handleUpdatePress}
             style={styles.updateButton}
-            disabled={isLoading}
           >
             <Typography color="accent" contrast size="md" fontWeight="semiBold">
-              {isLoading ? 'Opening Store...' : 'Update Now'}
+              Update Now
             </Typography>
           </Button>
         </View>
