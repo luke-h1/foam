@@ -1,5 +1,8 @@
+import { ffzSanitiisedChannelBadges } from '@app/services/__fixtures__/badges/ffz/ffzSanitisedChannelBadges.fixture';
+import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
 import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedChannelEmoteSet.fixture';
 import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
+import { chatterinoService } from '@app/services/chatterino-service';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { ChatMessageType } from '@app/store/chatStore';
 import { SubscriptionTags } from '@app/types/chat/irc-tags/usernotice';
@@ -67,32 +70,36 @@ const createBaseMessage = (
   replyBody: '',
 });
 
-const mockBadges: SanitisedBadgeSet[] = [
-  {
-    id: 'subscriber',
-    url: 'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adf6f4e8/1',
-    type: 'Twitch Subscriber Badge',
-    title: 'Subscriber',
-    set: 'subscriber',
-  },
-  {
-    id: 'premium',
-    url: 'https://static-cdn.jtvnw.net/badges/v1/a1f5e0c8-9e78-11e7-8c0f-6f8b0e8b0e8b/1',
-    type: 'Twitch Global Badge',
-    title: 'Premium',
-    set: 'premium',
-  },
-];
+const subscriberBadge = twitchSanitisedGlobalBadges.find(
+  badge => badge.id === 'subscriber_0',
+);
+const premiumBadge = twitchSanitisedGlobalBadges.find(
+  badge => badge.id === 'premium_1',
+);
+const moderatorBadge = twitchSanitisedGlobalBadges.find(
+  badge => badge.id === 'moderator_1',
+);
 
-const mockModBadges: SanitisedBadgeSet[] = [
-  {
-    id: 'moderator',
-    url: 'https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f9231274d535/1',
-    type: 'Twitch Global Badge',
-    title: 'Moderator',
-    set: 'moderator',
-  },
-];
+if (!subscriberBadge || !premiumBadge || !moderatorBadge) {
+  throw new Error('Required badge fixtures are missing');
+}
+
+const mockBadges: SanitisedBadgeSet[] = [subscriberBadge, premiumBadge];
+
+const mockModBadges: SanitisedBadgeSet[] = [moderatorBadge];
+
+const ffzVipBadge = ffzSanitiisedChannelBadges.find(
+  badge => badge.id === 'vip_badge',
+);
+const ffzModBadge = ffzSanitiisedChannelBadges.find(
+  badge => badge.id === 'mod_badge',
+);
+const chatterinoBadges = chatterinoService.listSanitisedBadges();
+const chatterinoBadge = chatterinoBadges[0];
+
+if (!ffzVipBadge || !ffzModBadge || !chatterinoBadge) {
+  throw new Error('Required badge fixtures are missing');
+}
 
 export const BasicText: Story = {
   args: {
@@ -220,6 +227,54 @@ export const ModeratorMessage: Story = {
       ],
       { color: '#00D9FF', mod: '1' },
       mockModBadges,
+    ),
+    onReply: () => {},
+  },
+};
+
+export const FfzVipBadge: Story = {
+  args: {
+    ...createBaseMessage(
+      [
+        {
+          type: 'text',
+          content: 'This message has an FFZ VIP badge!',
+        },
+      ],
+      { color: '#FF6B6B' },
+      [ffzVipBadge],
+    ),
+    onReply: () => {},
+  },
+};
+
+export const FfzModBadge: Story = {
+  args: {
+    ...createBaseMessage(
+      [
+        {
+          type: 'text',
+          content: 'This message has an FFZ Moderator badge!',
+        },
+      ],
+      { color: '#00D9FF' },
+      [ffzModBadge],
+    ),
+    onReply: () => {},
+  },
+};
+
+export const ChatterinoBadge: Story = {
+  args: {
+    ...createBaseMessage(
+      [
+        {
+          type: 'text',
+          content: 'This message has a Chatterino badge!',
+        },
+      ],
+      { color: '#9B59B6' },
+      [chatterinoBadge],
     ),
     onReply: () => {},
   },

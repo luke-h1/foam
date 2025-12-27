@@ -19,6 +19,7 @@ const scopes = [
   'monitoring',
   'firebase',
   'remote-config',
+  'storybook',
 ];
 
 module.exports = {
