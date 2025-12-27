@@ -17,6 +17,8 @@ const scopes = [
   'security',
   'sentry',
   'monitoring',
+  'firebase',
+  'remote-config',
 ];
 
 module.exports = {
@@ -39,8 +41,6 @@ module.exports = {
         'style',
         'test',
         'release',
-        'firebase',
-        'remote-config',
       ],
     ],
   },
