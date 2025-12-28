@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 
 export type TopStackParamList = {
-  Top: undefined;
+  TopHome: undefined;
   TopCategories: undefined;
   TopStreams: undefined;
 };
@@ -18,13 +18,13 @@ export type TopStackScreenProps<T extends keyof TopStackParamList> =
 export function TopStackNavigator() {
   return (
     <Stack.Navigator
-      initialRouteName="Top"
+      initialRouteName="TopHome"
       screenOptions={{
         headerShown: false,
       }}
     >
       <Stack.Screen
-        name="Top"
+        name="TopHome"
         component={TopScreen}
         options={{
           orientation: 'portrait_up',

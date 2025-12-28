@@ -43,6 +43,7 @@ function ChatMessageComponent<
     ? keyof UserNoticeVariantMap
     : never = never,
 >({
+  id,
   userstate,
   message,
   badges,
@@ -253,6 +254,7 @@ function ChatMessageComponent<
 
   const handleReply = useCallback(() => {
     onReply?.({
+      id,
       userstate,
       message,
       badges,
@@ -266,7 +268,7 @@ function ChatMessageComponent<
     });
     actionSheetRef.current?.dismiss();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onReply]);
+  }, [onReply, id]);
 
   const isReply = Boolean(parentDisplayName);
 

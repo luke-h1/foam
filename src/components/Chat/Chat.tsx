@@ -39,7 +39,10 @@ import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
-import { createHitslop } from '@app/utils/string/createHitSlop';
+import {
+  createHitslop,
+  createHorizontalHitslop,
+} from '@app/utils/string/createHitSlop';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import { truncate } from '@app/utils/string/truncate';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -66,6 +69,7 @@ import { Typography } from '../Typography';
 
 import { ChatMessage, ResumeScroll } from './components';
 import { EmoteSheet, EmotePickerItem } from './components/EmoteSheet';
+import { SettingsSheet } from './components/SettingsSheet/SettingsSheet';
 import {
   createTestPrimeSubNotice,
   createTestTier1SubNotice,
@@ -288,6 +292,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         // When msg-id is 'sub', notice_tags will be narrowed to SubscriptionTags, etc.
         let newMessage: AnyChatMessageType;
         const baseMessage: ChatMessageType<'usernotice'> = {
+          id: `${message_id}_${message_nonce}`,
           userstate,
           message: [{ type: 'text', content: text.trimEnd() }],
           badges: [],
@@ -398,11 +403,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         } as UserStateTags;
 
         const tagId = 'id' in tags ? (tags as { id?: string }).id : undefined;
+        const message_id = tags['msg-id'] || tagId || generateNonce();
         const baseMessage = {
+          id: `${message_id}_${message_nonce}`,
           message: [{ type: 'text' as const, content: text.trimEnd() }],
           badges: {},
           channel: channelName,
-          message_id: tags['msg-id'] || tagId || generateNonce(),
+          message_id,
           message_nonce,
           sender: userstate.username || '',
           parentDisplayName:
@@ -650,7 +657,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     onJoin: useCallback(() => {
       logger.chat.info('Joined channel:', channelName);
 
+      const systemMessageId = `system-join-${Date.now()}`;
+      const systemMessageNonce = generateNonce();
       addMessage({
+        id: `${systemMessageId}_${systemMessageNonce}`,
         userstate: {
           'display-name': 'System',
           login: 'system',
@@ -675,8 +685,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         ],
         badges: [],
         channel: channelName,
-        message_id: `system-join-${Date.now()}`,
-        message_nonce: generateNonce(),
+        message_id: systemMessageId,
+        message_nonce: systemMessageNonce,
         sender: 'System',
         parentDisplayName: '',
         replyDisplayName: '',
@@ -1188,7 +1198,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       // Start checking after a small delay to let websocket initialization begin
       // Always start the check loop - it will handle connection state
-      timeoutId = setTimeout(checkAndLoad, 50);
+      timeoutId = setTimeout(checkAndLoad, 100);
 
       return () => {
         if (timeoutId) {
@@ -1208,8 +1218,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId, authState?.token.accessToken]);
 
-  // Backup: Also trigger loading when connection becomes available
-  // This ensures we load emotes even if the retry loop hasn't caught it yet
+  /**
+   * Also trigger loading when connection becomes available
+   * This ensures we load emotes even if the retry loop hasn't caught it yet
+   */
   useEffect(() => {
     if (
       connected &&
@@ -1286,11 +1298,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         })
       : [];
 
-    // Create optimistic message immediately (without emotes) so it renders right away (as text)
-    // if we haven't loaded emote/badge data yet
+    /**
+     * Create optimistic message immediately (without emotes) so it renders right away (as text)
+     * if we haven't loaded emote/badge data yet
+     */
     const optimisticMessageId = generateNonce();
     const optimisticNonce = generateNonce();
     const optimisticMessage: AnyChatMessageType = {
+      id: `${optimisticMessageId}_${optimisticNonce}`,
       userstate: optimisticUserstate,
       message: [{ type: 'text', content: messageText.trimEnd() }],
       badges: userBadges,
@@ -1433,6 +1448,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   );
 
   const emoteSheetRef = useRef<TrueSheet>(null);
+  const settingsSheetRef = useRef<TrueSheet>(null);
   const debugModalRef = useRef<BottomSheetModal>(null);
   const chatInputRef = useRef<TextInput>(null);
 
@@ -1450,6 +1466,19 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const handleOpenEmoteSheet = useCallback(async () => {
     await emoteSheetRef.current?.present();
   }, []);
+
+  const handleOpenSettingsSheet = useCallback(async () => {
+    await settingsSheetRef.current?.present();
+  }, []);
+
+  const handleRefetchEmotes = useCallback(() => {
+    void loadChannelResources(channelId, true);
+  }, [channelId]);
+
+  const handleReconnect = useCallback(() => {
+    partChannel(channelName);
+    setTimeout(() => {}, 1000);
+  }, [channelName, partChannel]);
 
   const handleTestMessageSelect = useCallback(
     (option: string) => {
@@ -1490,7 +1519,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       switch (msgId) {
         case 'viewermilestone': {
-          // Handle viewermilestone messages
           const viewerMilestoneTestMessage = testMessage as ChatMessageType<
             'usernotice',
             'viewermilestone'
@@ -1525,6 +1553,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
           updatedMessage = {
             ...viewerMilestoneTestMessage,
+            id: `${viewerMilestoneTestMessage.message_id}_${viewerMilestoneTestMessage.message_nonce}`,
             channel: channelName,
             notice_tags: viewerMilestoneTags,
             message: [viewerMilestonePart] as ParsedPart[],
@@ -1543,7 +1572,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         case 'subgift':
         case 'anongiftpaidupgrade':
         default: {
-          // Handle subscription types (sub, resub, subgift, etc.)
           const subscriptionTestMessage = testMessage as ChatMessageType<
             'usernotice',
             'sub'
@@ -1570,6 +1598,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
           updatedMessage = {
             ...subscriptionTestMessage,
+            id: `${subscriptionTestMessage.message_id}_${subscriptionTestMessage.message_nonce}`,
             channel: channelName,
             notice_tags: subscriptionTags,
             message: [subscriptionPart],
@@ -1623,8 +1652,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     return Array.from(messageMap.values());
   }, [messages]);
 
-  // Don't block rendering while emotes are loading - show messages as text
-  // and reprocess them when emotes become available
   if (loadingState === 'ERROR') {
     // log to sentry
   }
@@ -1723,18 +1750,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             </Animated.View>
           )}
 
-          {/* Input Row */}
           <View style={styles.inputRow}>
-            {/* Emote Button */}
             <Button
               style={styles.inputActionButton}
               onPress={() => void handleOpenEmoteSheet()}
-              hitSlop={createHitslop(30)}
+              hitSlop={createHorizontalHitslop(44)}
             >
               <Icon icon="smile" size={22} />
             </Button>
 
-            {/* Chat Input */}
             <View style={styles.inputFieldContainer}>
               <ChatAutoCompleteInput
                 ref={chatInputRef}
@@ -1764,18 +1788,22 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               />
             </View>
 
-            {/* Debug Button (Dev only) */}
-            {__DEV__ && (
-              <Button
-                style={styles.inputActionButton}
-                onPress={() => debugModalRef.current?.present()}
-                hitSlop={createHitslop(20)}
-              >
-                <Icon icon="zap" size={20} />
-              </Button>
-            )}
+            <Button
+              style={styles.inputActionButton}
+              onPress={() => void handleOpenSettingsSheet()}
+              hitSlop={createHorizontalHitslop(44)}
+            >
+              <Icon icon="settings" size={22} />
+            </Button>
 
-            {/* Send Button */}
+            <Button
+              style={styles.inputActionButton}
+              onPress={() => debugModalRef.current?.present()}
+              hitSlop={createHitslop(20)}
+            >
+              <Icon icon="zap" size={20} />
+            </Button>
+
             <Button
               style={[
                 styles.sendButton,
@@ -1795,10 +1823,16 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           </View>
         </View>
 
-        {/* Emote Sheet */}
         {connected && (
           <EmoteSheet ref={emoteSheetRef} onEmoteSelect={handleEmoteSelect} />
         )}
+
+        <SettingsSheet
+          ref={settingsSheetRef}
+          onRefetchEmotes={handleRefetchEmotes}
+          onReconnect={handleReconnect}
+        />
+
         <BottomSheetModal
           ref={debugModalRef}
           backgroundStyle={styles.debugModalBackground}
@@ -1942,6 +1976,7 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    zIndex: 10,
   },
   sendButton: {
     width: 36,

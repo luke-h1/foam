@@ -3,7 +3,7 @@ import { logger } from '../logger';
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 export const shouldEnableWhyDidYouRender =
-  __DEV__ && process.env.ENABLE_WDYR === 'true';
+  __DEV__ && process.env.EXPO_PUBLIC_ENABLE_WDYR === true;
 
 if (shouldEnableWhyDidYouRender) {
   const React = require('react');

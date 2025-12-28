@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { ChatMessageType } from '@app/store/chatStore';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
@@ -16,7 +17,10 @@ export function generateStvEmoteNotice({
 }: GenerateStvEmoteNoticeArgs): ChatMessageType<never, never> {
   console.log('type');
   if (type === 'removed') {
+    const message_id = generateNonce();
+    const message_nonce = generateNonce();
     return {
+      id: `${message_id}_${message_nonce}`,
       userstate: {
         'reply-parent-msg-id': '',
         'reply-parent-msg-body': '',
@@ -34,8 +38,8 @@ export function generateStvEmoteNotice({
       ],
       badges: [],
       channel: channelName,
-      message_id: generateNonce(),
-      message_nonce: generateNonce(),
+      message_id,
+      message_nonce,
       parentDisplayName: '',
       replyBody: '',
       replyDisplayName: '',
@@ -44,7 +48,10 @@ export function generateStvEmoteNotice({
   }
 
   if (type === 'added') {
+    const message_id = generateNonce();
+    const message_nonce = generateNonce();
     return {
+      id: `${message_id}_${message_nonce}`,
       userstate: {
         'reply-parent-msg-id': '',
         'reply-parent-msg-body': '',
@@ -62,8 +69,8 @@ export function generateStvEmoteNotice({
       ],
       badges: [],
       channel: channelName,
-      message_id: generateNonce(),
-      message_nonce: generateNonce(),
+      message_id,
+      message_nonce,
       parentDisplayName: '',
       replyBody: '',
       replyDisplayName: '',
