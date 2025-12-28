@@ -1,4 +1,4 @@
-import { Modal as RNModal, View, ViewStyle } from 'react-native';
+import { Modal as RNModal, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { Typography } from '../Typography';
@@ -24,18 +24,38 @@ export function Modal({
   subtitle,
 }: ModalProps) {
   return (
-    <RNModal animationType="slide" transparent visible={isVisible}>
-      <View style={$wrapper}>
+    <RNModal animationType="fade" transparent visible={isVisible}>
+      <View style={styles.overlay}>
         <View style={styles.card}>
           <Typography style={styles.text}>{title}</Typography>
           {subtitle ? (
             <Typography style={styles.subtitle}>{subtitle}</Typography>
           ) : null}
-          <Button onPress={confirmOnPress.cta} style={styles.confirmButton}>
-            {confirmOnPress.label}
+          <Button
+            onPress={confirmOnPress.cta}
+            style={styles.confirmButton}
+            disabled={confirmOnPress.disabled}
+          >
+            <Typography
+              fontWeight="semiBold"
+              color="red"
+              style={styles.buttonText}
+            >
+              {confirmOnPress.label}
+            </Typography>
           </Button>
-          <Button style={styles.cancelButton} onPress={cancelOnPress.cta}>
-            {cancelOnPress.label}
+          <Button
+            style={styles.cancelButton}
+            onPress={cancelOnPress.cta}
+            disabled={cancelOnPress.disabled}
+          >
+            <Typography
+              fontWeight="semiBold"
+              color="gray"
+              style={styles.buttonText}
+            >
+              {cancelOnPress.label}
+            </Typography>
           </Button>
         </View>
       </View>
@@ -43,30 +63,58 @@ export function Modal({
   );
 }
 
-const $wrapper: ViewStyle = {
-  flex: 1,
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
 const styles = StyleSheet.create(theme => ({
-  card: {
-    borderRadius: theme.radii.md,
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: theme.spacing.lg,
+  },
+  card: {
+    backgroundColor: theme.colors.gray.bgAlt,
+    borderRadius: theme.radii.xl,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.xl,
     borderCurve: 'continuous',
-    width: '80%',
+    width: '100%',
+    maxWidth: 340,
+    borderWidth: 1,
+    borderColor: theme.colors.gray.borderAlpha,
   },
   text: {
-    color: theme.colors.black.bgAlpha,
+    color: theme.colors.gray.text,
+    marginBottom: theme.spacing.sm,
   },
   subtitle: {
-    marginTop: theme.spacing.md,
-    color: theme.colors.black.accentAlpha,
+    color: theme.colors.gray.textLow,
+    marginBottom: theme.spacing.lg,
   },
   confirmButton: {
     marginTop: theme.spacing.md,
+    backgroundColor: theme.colors.red.uiAlpha,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.red.borderAlpha,
+    minHeight: 44,
   },
   cancelButton: {
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+    backgroundColor: theme.colors.gray.uiAlpha,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.gray.borderAlpha,
+    minHeight: 44,
+  },
+  buttonText: {
+    textAlign: 'center',
   },
 }));
