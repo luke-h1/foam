@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable no-useless-escape */
 import { ChatMessageType } from '@app/store/chatStore';
 import { generateNonce } from '@app/utils/string/generateNonce';
@@ -8,10 +9,13 @@ function createBaseSubNotice(
   months: number,
 ): ChatMessageType<'usernotice', 'sub'> {
   const monthsStr = months.toString();
+  const message_id = generateNonce();
+  const message_nonce = generateNonce();
   return {
-    message_nonce: generateNonce(),
+    id: `${message_id}_${message_nonce}`,
+    message_nonce,
     badges: [],
-    message_id: generateNonce(),
+    message_id,
     userstate: {
       'reply-parent-msg-id': '',
       'reply-parent-msg-body': '',
@@ -56,10 +60,13 @@ function createBaseViewerMilestoneNotice(): ChatMessageType<
   'usernotice',
   'viewermilestone'
 > {
+  const message_id = generateNonce();
+  const message_nonce = generateNonce();
   return {
-    message_nonce: generateNonce(),
+    id: `${message_id}_${message_nonce}`,
+    message_nonce,
     badges: [],
-    message_id: generateNonce(),
+    message_id,
     userstate: {
       'reply-parent-msg-id': '',
       'reply-parent-msg-body': '',

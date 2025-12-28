@@ -91,6 +91,7 @@ export interface ChatMessageType<
     ? keyof UserNoticeVariantMap
     : never = never,
 > {
+  id: string;
   userstate: UserStateTags;
   message: ParsedPart[];
   badges: SanitisedBadgeSet[];
@@ -413,7 +414,12 @@ export const loadChannelResources = async (
     const getValue = <T>(result: PromiseSettledResult<T[]>): T[] =>
       result.status === 'fulfilled' ? result.value : [];
 
-    const allEmotes = [
+    // Helper to deduplicate arrays by id to prevent legend-state duplicate ID warnings
+    const deduplicateById = <T extends { id: string }>(items: T[]): T[] =>
+      Array.from(new Map(items.map(item => [item.id, item])).values());
+
+    // Deduplicate emotes by id to prevent legend-state duplicate ID warnings
+    const allEmotesRaw = [
       ...getValue(sevenTvChannelEmotes),
       ...getValue(sevenTvGlobalEmotes),
       ...getValue(twitchChannelEmotes),
@@ -424,7 +430,10 @@ export const loadChannelResources = async (
       ...getValue(ffzGlobalEmotes),
     ] satisfies SanitisiedEmoteSet[];
 
-    const allBadges = [
+    const allEmotes = deduplicateById(allEmotesRaw);
+
+    // Deduplicate badges by id to prevent legend-state duplicate ID warnings
+    const allBadgesRaw = [
       ...getValue(twitchChannelBadges),
       ...getValue(twitchGlobalBadges),
       ...getValue(ffzGlobalBadges),
@@ -432,23 +441,25 @@ export const loadChannelResources = async (
       ...getValue(chatterinoBadges),
     ] satisfies SanitisedBadgeSet[];
 
+    const allBadges = deduplicateById(allBadgesRaw);
+
     const channelData: ChannelCacheType = {
       emotes: allEmotes,
       badges: allBadges,
       lastUpdated: Date.now(),
-      twitchChannelEmotes: getValue(twitchChannelEmotes),
-      twitchGlobalEmotes: getValue(twitchGlobalEmotes),
-      sevenTvChannelEmotes: getValue(sevenTvChannelEmotes),
-      sevenTvGlobalEmotes: getValue(sevenTvGlobalEmotes),
-      bttvGlobalEmotes: getValue(bttvGlobalEmotes),
-      bttvChannelEmotes: getValue(bttvChannelEmotes),
-      ffzChannelEmotes: getValue(ffzChannelEmotes),
-      ffzGlobalEmotes: getValue(ffzGlobalEmotes),
-      twitchChannelBadges: getValue(twitchChannelBadges),
-      twitchGlobalBadges: getValue(twitchGlobalBadges),
-      ffzGlobalBadges: getValue(ffzGlobalBadges),
-      ffzChannelBadges: getValue(ffzChannelBadges),
-      chatterinoBadges: getValue(chatterinoBadges),
+      twitchChannelEmotes: deduplicateById(getValue(twitchChannelEmotes)),
+      twitchGlobalEmotes: deduplicateById(getValue(twitchGlobalEmotes)),
+      sevenTvChannelEmotes: deduplicateById(getValue(sevenTvChannelEmotes)),
+      sevenTvGlobalEmotes: deduplicateById(getValue(sevenTvGlobalEmotes)),
+      bttvGlobalEmotes: deduplicateById(getValue(bttvGlobalEmotes)),
+      bttvChannelEmotes: deduplicateById(getValue(bttvChannelEmotes)),
+      ffzChannelEmotes: deduplicateById(getValue(ffzChannelEmotes)),
+      ffzGlobalEmotes: deduplicateById(getValue(ffzGlobalEmotes)),
+      twitchChannelBadges: deduplicateById(getValue(twitchChannelBadges)),
+      twitchGlobalBadges: deduplicateById(getValue(twitchGlobalBadges)),
+      ffzGlobalBadges: deduplicateById(getValue(ffzGlobalBadges)),
+      ffzChannelBadges: deduplicateById(getValue(ffzChannelBadges)),
+      chatterinoBadges: deduplicateById(getValue(chatterinoBadges)),
       sevenTvEmoteSetId: sevenTvSetId !== 'global' ? sevenTvSetId : undefined,
     };
 

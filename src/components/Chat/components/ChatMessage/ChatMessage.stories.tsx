@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { ffzSanitiisedChannelBadges } from '@app/services/__fixtures__/badges/ffz/ffzSanitisedChannelBadges.fixture';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
 import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedChannelEmoteSet.fixture';
@@ -51,24 +52,29 @@ const createBaseMessage = (
   message: ParsedPart[],
   userstate: Partial<UserStateTags> = {},
   badges: SanitisedBadgeSet[] = [],
-): ChatMessageType<'userstate'> => ({
-  userstate: {
-    username: 'testuser',
-    'display-name': 'TestUser',
-    login: 'testuser',
-    color: '#FF0000',
-    'user-id': '123456',
-    ...userstate,
-  } as UserStateTags,
-  message,
-  badges,
-  channel: 'testchannel',
-  message_id: 'msg-123',
-  message_nonce: 'nonce-123',
-  sender: 'testuser',
-  replyDisplayName: '',
-  replyBody: '',
-});
+): ChatMessageType<'userstate'> => {
+  const message_id = 'msg-123';
+  const message_nonce = 'nonce-123';
+  return {
+    id: `${message_id}_${message_nonce}`,
+    userstate: {
+      username: 'testuser',
+      'display-name': 'TestUser',
+      login: 'testuser',
+      color: '#FF0000',
+      'user-id': '123456',
+      ...userstate,
+    } as UserStateTags,
+    message,
+    badges,
+    channel: 'testchannel',
+    message_id,
+    message_nonce,
+    sender: 'testuser',
+    replyDisplayName: '',
+    replyBody: '',
+  };
+};
 
 const subscriberBadge = twitchSanitisedGlobalBadges.find(
   badge => badge.id === 'subscriber_0',

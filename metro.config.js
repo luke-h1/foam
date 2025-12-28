@@ -16,10 +16,10 @@ config.transformer = {
 
 const configWithStorybook = withStorybook(config, {
   enabled:
-    process.env.WITH_STORYBOOK === 'true' ||
+    process.env.EXPO_PUBLIC_WITH_STORYBOOK === 'true' ||
     process.env.APP_VARIANT === 'preview',
 });
 
 module.exports = withRozenite(configWithStorybook, {
-  enabled: process.env.WITH_ROZENITE === 'true',
+  enabled: process.env.EXPO_PUBLIC_WITH_ROZENITE === 'true',
 });
