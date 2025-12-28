@@ -1198,7 +1198,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       // Start checking after a small delay to let websocket initialization begin
       // Always start the check loop - it will handle connection state
-      timeoutId = setTimeout(checkAndLoad, 50);
+      timeoutId = setTimeout(checkAndLoad, 100);
 
       return () => {
         if (timeoutId) {
@@ -1218,8 +1218,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channelId, authState?.token.accessToken]);
 
-  // Backup: Also trigger loading when connection becomes available
-  // This ensures we load emotes even if the retry loop hasn't caught it yet
+  /**
+   * Also trigger loading when connection becomes available
+   * This ensures we load emotes even if the retry loop hasn't caught it yet
+   */
   useEffect(() => {
     if (
       connected &&
@@ -1296,8 +1298,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         })
       : [];
 
-    // Create optimistic message immediately (without emotes) so it renders right away (as text)
-    // if we haven't loaded emote/badge data yet
+    /**
+     * Create optimistic message immediately (without emotes) so it renders right away (as text)
+     * if we haven't loaded emote/badge data yet
+     */
     const optimisticMessageId = generateNonce();
     const optimisticNonce = generateNonce();
     const optimisticMessage: AnyChatMessageType = {
@@ -1515,7 +1519,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       switch (msgId) {
         case 'viewermilestone': {
-          // Handle viewermilestone messages
           const viewerMilestoneTestMessage = testMessage as ChatMessageType<
             'usernotice',
             'viewermilestone'
@@ -1569,7 +1572,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         case 'subgift':
         case 'anongiftpaidupgrade':
         default: {
-          // Handle subscription types (sub, resub, subgift, etc.)
           const subscriptionTestMessage = testMessage as ChatMessageType<
             'usernotice',
             'sub'
@@ -1650,8 +1652,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     return Array.from(messageMap.values());
   }, [messages]);
 
-  // Don't block rendering while emotes are loading - show messages as text
-  // and reprocess them when emotes become available
   if (loadingState === 'ERROR') {
     // log to sentry
   }
@@ -1750,9 +1750,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             </Animated.View>
           )}
 
-          {/* Input Row */}
           <View style={styles.inputRow}>
-            {/* Emote Button */}
             <Button
               style={styles.inputActionButton}
               onPress={() => void handleOpenEmoteSheet()}
@@ -1761,7 +1759,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               <Icon icon="smile" size={22} />
             </Button>
 
-            {/* Chat Input */}
             <View style={styles.inputFieldContainer}>
               <ChatAutoCompleteInput
                 ref={chatInputRef}
@@ -1791,7 +1788,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               />
             </View>
 
-            {/* Settings Button */}
             <Button
               style={styles.inputActionButton}
               onPress={() => void handleOpenSettingsSheet()}
@@ -1800,18 +1796,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               <Icon icon="settings" size={22} />
             </Button>
 
-            {/* Debug Button (Dev only) */}
-            {__DEV__ && (
-              <Button
-                style={styles.inputActionButton}
-                onPress={() => debugModalRef.current?.present()}
-                hitSlop={createHitslop(20)}
-              >
-                <Icon icon="zap" size={20} />
-              </Button>
-            )}
+            <Button
+              style={styles.inputActionButton}
+              onPress={() => debugModalRef.current?.present()}
+              hitSlop={createHitslop(20)}
+            >
+              <Icon icon="zap" size={20} />
+            </Button>
 
-            {/* Send Button */}
             <Button
               style={[
                 styles.sendButton,
@@ -1831,12 +1823,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           </View>
         </View>
 
-        {/* Emote Sheet */}
         {connected && (
           <EmoteSheet ref={emoteSheetRef} onEmoteSelect={handleEmoteSelect} />
         )}
 
-        {/* Settings Sheet */}
         <SettingsSheet
           ref={settingsSheetRef}
           onRefetchEmotes={handleRefetchEmotes}
