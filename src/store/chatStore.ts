@@ -414,11 +414,9 @@ export const loadChannelResources = async (
     const getValue = <T>(result: PromiseSettledResult<T[]>): T[] =>
       result.status === 'fulfilled' ? result.value : [];
 
-    // Helper to deduplicate arrays by id to prevent legend-state duplicate ID warnings
     const deduplicateById = <T extends { id: string }>(items: T[]): T[] =>
       Array.from(new Map(items.map(item => [item.id, item])).values());
 
-    // Deduplicate emotes by id to prevent legend-state duplicate ID warnings
     const allEmotesRaw = [
       ...getValue(sevenTvChannelEmotes),
       ...getValue(sevenTvGlobalEmotes),
@@ -432,7 +430,6 @@ export const loadChannelResources = async (
 
     const allEmotes = deduplicateById(allEmotesRaw);
 
-    // Deduplicate badges by id to prevent legend-state duplicate ID warnings
     const allBadgesRaw = [
       ...getValue(twitchChannelBadges),
       ...getValue(twitchGlobalBadges),
