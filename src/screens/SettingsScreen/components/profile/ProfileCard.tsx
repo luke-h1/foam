@@ -1,5 +1,6 @@
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
+import { Modal } from '@app/components/Modal';
 import { PressableArea } from '@app/components/PressableArea';
 import { Typography } from '@app/components/Typography';
 import { useAuthContext } from '@app/context/AuthContext';
@@ -7,7 +8,7 @@ import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { resetRoot } from '@app/navigators/navigationUtilities';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -26,8 +27,14 @@ export function ProfileCard() {
   const { theme } = useUnistyles();
 
   const sheetRef = useRef<BottomSheetModal>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
     void logout();
 
     setTimeout(() => {
@@ -118,111 +125,127 @@ export function ProfileCard() {
   }
 
   return (
-    <ScrollView
-      style={styles.main}
-      contentContainerStyle={styles.scrollContent}
-    >
-      {/* Profile Header */}
-      <PressableArea
-        style={styles.profileHeader}
-        onPress={() => sheetRef.current?.present()}
+    <>
+      <ScrollView
+        style={styles.main}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.avatarContainer}>
-          {user.profile_image_url ? (
-            <Image
-              source={{ uri: user.profile_image_url }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Icon icon="user" size={28} color={theme.colors.gray.textLow} />
-            </View>
-          )}
-        </View>
-        <View style={styles.profileInfo}>
-          <Typography size="lg" fontWeight="bold">
-            {user.display_name}
-          </Typography>
-          <Typography size="sm" color="gray.textLow">
-            Signed in • Tap to view profile
-          </Typography>
-        </View>
-        <Icon
-          icon="chevron-right"
-          size={20}
-          color={theme.colors.gray.textLow}
-        />
-      </PressableArea>
-
-      {/* Menu Section */}
-      <View style={styles.section}>
-        <Typography
-          size="xs"
-          fontWeight="semiBold"
-          color="gray.textLow"
-          style={styles.sectionTitle}
+        {/* Profile Header */}
+        <PressableArea
+          style={styles.profileHeader}
+          onPress={() => sheetRef.current?.present()}
         >
-          ACCOUNT
-        </Typography>
-        <View style={styles.menuCard}>
-          {menuItems.map((item, index) => (
-            <PressableArea
-              key={item.title}
-              style={[
-                styles.menuItem,
-                index < menuItems.length - 1 && styles.menuItemBorder,
-              ]}
-              onPress={item.onPress}
-            >
-              <View
-                style={[
-                  styles.menuIconContainer,
-                  item.variant === 'danger' && styles.menuIconDanger,
-                ]}
-              >
-                <Icon
-                  icon={item.icon}
-                  iconFamily={item.iconFamily}
-                  size={18}
-                  color={
-                    item.variant === 'danger'
-                      ? theme.colors.red.accent
-                      : theme.colors.accent.accent
-                  }
-                />
-              </View>
-              <View style={styles.menuContent}>
-                <Typography
-                  fontWeight="semiBold"
-                  color={item.variant === 'danger' ? 'red' : 'gray'}
-                >
-                  {item.title}
-                </Typography>
-                {item.description && (
-                  <Typography size="xs" color="gray.textLow">
-                    {item.description}
-                  </Typography>
-                )}
-              </View>
-              <Icon
-                icon="chevron-right"
-                size={18}
-                color={theme.colors.gray.border}
+          <View style={styles.avatarContainer}>
+            {user.profile_image_url ? (
+              <Image
+                source={{ uri: user.profile_image_url }}
+                style={styles.avatar}
               />
-            </PressableArea>
-          ))}
-        </View>
-      </View>
-
-      {/* Logout Section */}
-      <View style={styles.section}>
-        <PressableArea style={styles.logoutButton} onPress={handleLogout}>
-          <Typography fontWeight="semiBold" color="red">
-            Sign Out
-          </Typography>
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Icon icon="user" size={28} color={theme.colors.gray.textLow} />
+              </View>
+            )}
+          </View>
+          <View style={styles.profileInfo}>
+            <Typography size="lg" fontWeight="bold">
+              {user.display_name}
+            </Typography>
+            <Typography size="sm" color="gray.textLow">
+              Signed in • Tap to view profile
+            </Typography>
+          </View>
+          <Icon
+            icon="chevron-right"
+            size={20}
+            color={theme.colors.gray.textLow}
+          />
         </PressableArea>
-      </View>
-    </ScrollView>
+
+        {/* Menu Section */}
+        <View style={styles.section}>
+          <Typography
+            size="xs"
+            fontWeight="semiBold"
+            color="gray.textLow"
+            style={styles.sectionTitle}
+          >
+            ACCOUNT
+          </Typography>
+          <View style={styles.menuCard}>
+            {menuItems.map((item, index) => (
+              <PressableArea
+                key={item.title}
+                style={[
+                  styles.menuItem,
+                  index < menuItems.length - 1 && styles.menuItemBorder,
+                ]}
+                onPress={item.onPress}
+              >
+                <View
+                  style={[
+                    styles.menuIconContainer,
+                    item.variant === 'danger' && styles.menuIconDanger,
+                  ]}
+                >
+                  <Icon
+                    icon={item.icon}
+                    iconFamily={item.iconFamily}
+                    size={18}
+                    color={
+                      item.variant === 'danger'
+                        ? theme.colors.red.accent
+                        : theme.colors.accent.accent
+                    }
+                  />
+                </View>
+                <View style={styles.menuContent}>
+                  <Typography
+                    fontWeight="semiBold"
+                    color={item.variant === 'danger' ? 'red' : 'gray'}
+                  >
+                    {item.title}
+                  </Typography>
+                  {item.description && (
+                    <Typography size="xs" color="gray.textLow">
+                      {item.description}
+                    </Typography>
+                  )}
+                </View>
+                <Icon
+                  icon="chevron-right"
+                  size={18}
+                  color={theme.colors.gray.border}
+                />
+              </PressableArea>
+            ))}
+          </View>
+        </View>
+
+        {/* Logout Section */}
+        <View style={styles.section}>
+          <PressableArea style={styles.logoutButton} onPress={handleLogout}>
+            <Typography fontWeight="semiBold" color="red">
+              Sign Out
+            </Typography>
+          </PressableArea>
+        </View>
+      </ScrollView>
+
+      <Modal
+        title="Sign Out"
+        subtitle="Are you sure you want to sign out of your account?"
+        confirmOnPress={{
+          cta: confirmLogout,
+          label: 'Sign Out',
+        }}
+        cancelOnPress={{
+          cta: () => setShowLogoutModal(false),
+          label: 'Cancel',
+        }}
+        isVisible={showLogoutModal}
+      />
+    </>
   );
 }
 
