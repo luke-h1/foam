@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable no-console */
 import axios from 'axios';
 import dotenv from 'dotenv';
