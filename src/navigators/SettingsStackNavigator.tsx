@@ -1,4 +1,3 @@
-import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { CachedImagesScreen } from '@app/screens/DevTools/CachedImagesScreen';
 import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
 import { DiagnosticsScreen } from '@app/screens/DevTools/DiagnosticsScreen';
@@ -33,10 +32,6 @@ export type SettingsStackParamList = {
   Changelog: undefined;
   Debug: undefined;
   Storybook: undefined;
-  Chat: {
-    channelId: string;
-    channelName: string;
-  };
 };
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
@@ -63,7 +58,6 @@ export function SettingsStackNavigator() {
       <Stack.Screen name="RemoteConfig" component={RemoteConfigScreen} />
       <Stack.Screen name="Debug" component={DebugScreen} />
       <Stack.Screen name="Storybook" component={StorybookScreen} />
-      <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Licenses" component={LicensesScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="Faq" component={FaqScreen} />

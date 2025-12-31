@@ -149,7 +149,9 @@ export function TabNavigator() {
             key={screen.name}
             name={screen.name}
             component={screen.component as ComponentType}
-            options={getScreenOptions(screen)}
+            options={() => ({
+              ...getScreenOptions(screen),
+            })}
           />
         );
       })}

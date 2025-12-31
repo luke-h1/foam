@@ -1,10 +1,10 @@
 import { Chat } from '@app/components/Chat';
-import { SettingsStackScreenProps } from '@app/navigators/SettingsStackNavigator';
+import { AppStackScreenProps } from '@app/navigators/AppNavigator';
 import { FC } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-export const ChatScreen: FC<SettingsStackScreenProps<'Chat'>> = ({
+export const ChatScreen: FC<AppStackScreenProps<'Chat'>> = ({
   route: { params },
 }) => {
   const { channelId, channelName } = params;

@@ -17,7 +17,7 @@ Sentry.init({
   enableCaptureFailedRequests: true,
   spotlight: __DEV__,
   appHangTimeoutInterval: 1,
-  enabled: !__DEV__,
+  enabled: true,
   profilesSampleRate: sampleRate,
   tracesSampleRate: sampleRate,
 
