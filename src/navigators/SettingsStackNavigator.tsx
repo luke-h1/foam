@@ -1,19 +1,138 @@
-import { CachedImagesScreen } from '@app/screens/DevTools/CachedImagesScreen';
-import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
-import { DiagnosticsScreen } from '@app/screens/DevTools/DiagnosticsScreen';
-import { RemoteConfigScreen } from '@app/screens/DevTools/RemoteConfigScreen';
-import { AboutScreen } from '@app/screens/Other/AboutScreen';
-import { FaqScreen } from '@app/screens/Other/FaqScreen';
-import { LicensesScreen } from '@app/screens/Other/LicensesScreen';
-import { ChatPreferenceScreen } from '@app/screens/Preferences/ChatPreferenceScreen';
-import { SettingsAppearanceScreen } from '@app/screens/SettingsScreen/SettingsApperanceScreen';
-import { SettingsDevtoolsScreen } from '@app/screens/SettingsScreen/SettingsDevtoolsScreen';
+import { ScreenSuspense } from '@app/components/ScreenSuspense';
 import { SettingsIndexScreen } from '@app/screens/SettingsScreen/SettingsIndexScreen';
-import { SettingsOtherScreen } from '@app/screens/SettingsScreen/SettingsOtherScreen';
-import { SettingsProfileScreen } from '@app/screens/SettingsScreen/SettingsProfileScreen';
-import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
+import { lazy } from 'react';
+
+const LazyCachedImagesScreen = lazy(() =>
+  import('@app/screens/DevTools/CachedImagesScreen').then(m => ({
+    default: m.CachedImagesScreen,
+  })),
+);
+const LazyDebugScreen = lazy(() =>
+  import('@app/screens/DevTools/DebugScreen').then(m => ({
+    default: m.DebugScreen,
+  })),
+);
+const LazyDiagnosticsScreen = lazy(() =>
+  import('@app/screens/DevTools/DiagnosticsScreen').then(m => ({
+    default: m.DiagnosticsScreen,
+  })),
+);
+const LazyRemoteConfigScreen = lazy(() =>
+  import('@app/screens/DevTools/RemoteConfigScreen').then(m => ({
+    default: m.RemoteConfigScreen,
+  })),
+);
+const LazyAboutScreen = lazy(() =>
+  import('@app/screens/Other/AboutScreen').then(m => ({
+    default: m.AboutScreen,
+  })),
+);
+const LazyFaqScreen = lazy(() =>
+  import('@app/screens/Other/FaqScreen').then(m => ({ default: m.FaqScreen })),
+);
+const LazyLicensesScreen = lazy(() =>
+  import('@app/screens/Other/LicensesScreen').then(m => ({
+    default: m.LicensesScreen,
+  })),
+);
+const LazyChatPreferenceScreen = lazy(() =>
+  import('@app/screens/Preferences/ChatPreferenceScreen').then(m => ({
+    default: m.ChatPreferenceScreen,
+  })),
+);
+const LazySettingsAppearanceScreen = lazy(() =>
+  import('@app/screens/SettingsScreen/SettingsApperanceScreen').then(m => ({
+    default: m.SettingsAppearanceScreen,
+  })),
+);
+const LazySettingsDevtoolsScreen = lazy(() =>
+  import('@app/screens/SettingsScreen/SettingsDevtoolsScreen').then(m => ({
+    default: m.SettingsDevtoolsScreen,
+  })),
+);
+const LazySettingsOtherScreen = lazy(() =>
+  import('@app/screens/SettingsScreen/SettingsOtherScreen').then(m => ({
+    default: m.SettingsOtherScreen,
+  })),
+);
+const LazySettingsProfileScreen = lazy(() =>
+  import('@app/screens/SettingsScreen/SettingsProfileScreen').then(m => ({
+    default: m.SettingsProfileScreen,
+  })),
+);
+const LazyStorybookScreen = lazy(() =>
+  import('@app/screens/StorybookScreen/StorybookScreen').then(m => ({
+    default: m.StorybookScreen,
+  })),
+);
+
+const CachedImagesScreen = () => (
+  <ScreenSuspense>
+    <LazyCachedImagesScreen />
+  </ScreenSuspense>
+);
+const DebugScreen = () => (
+  <ScreenSuspense>
+    <LazyDebugScreen />
+  </ScreenSuspense>
+);
+const DiagnosticsScreen = () => (
+  <ScreenSuspense>
+    <LazyDiagnosticsScreen />
+  </ScreenSuspense>
+);
+const RemoteConfigScreen = () => (
+  <ScreenSuspense>
+    <LazyRemoteConfigScreen />
+  </ScreenSuspense>
+);
+const AboutScreen = () => (
+  <ScreenSuspense>
+    <LazyAboutScreen />
+  </ScreenSuspense>
+);
+const FaqScreen = () => (
+  <ScreenSuspense>
+    <LazyFaqScreen />
+  </ScreenSuspense>
+);
+const LicensesScreen = () => (
+  <ScreenSuspense>
+    <LazyLicensesScreen />
+  </ScreenSuspense>
+);
+const ChatPreferenceScreen = () => (
+  <ScreenSuspense>
+    <LazyChatPreferenceScreen />
+  </ScreenSuspense>
+);
+const SettingsAppearanceScreen = () => (
+  <ScreenSuspense>
+    <LazySettingsAppearanceScreen />
+  </ScreenSuspense>
+);
+const SettingsDevtoolsScreen = () => (
+  <ScreenSuspense>
+    <LazySettingsDevtoolsScreen />
+  </ScreenSuspense>
+);
+const SettingsOtherScreen = () => (
+  <ScreenSuspense>
+    <LazySettingsOtherScreen />
+  </ScreenSuspense>
+);
+const SettingsProfileScreen = () => (
+  <ScreenSuspense>
+    <LazySettingsProfileScreen />
+  </ScreenSuspense>
+);
+const StorybookScreen = () => (
+  <ScreenSuspense>
+    <LazyStorybookScreen />
+  </ScreenSuspense>
+);
 
 export type SettingsStackParamList = {
   Index: undefined;

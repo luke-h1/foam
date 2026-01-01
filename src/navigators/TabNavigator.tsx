@@ -1,8 +1,7 @@
 import { HapticTab } from '@app/components/HapticTab';
 import { IconSymbolName } from '@app/components/IconSymbol/IconSymbol';
+import { ScreenSuspense } from '@app/components/ScreenSuspense';
 import { useAuthContext } from '@app/context/AuthContext';
-import FollowingScreen from '@app/screens/FollowingScreen';
-import { SearchScreen } from '@app/screens/SearchScreen/SearchScreen';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import {
   createNativeBottomTabNavigator,
@@ -10,12 +9,59 @@ import {
 } from '@react-navigation/bottom-tabs/unstable';
 import { CompositeScreenProps } from '@react-navigation/native';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import { ComponentType, FC, useCallback } from 'react';
+import { ComponentType, FC, lazy, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
-import { SettingsStackNavigator } from './SettingsStackNavigator';
-import { TopStackNavigator } from './TopStackNavigator';
+
+const LazyFollowingScreen = lazy(() => import('@app/screens/FollowingScreen'));
+const LazySearchScreen = lazy(() =>
+  import('@app/screens/SearchScreen/SearchScreen').then(m => ({
+    default: m.SearchScreen,
+  })),
+);
+const LazySettingsStackNavigator = lazy(() =>
+  import('./SettingsStackNavigator').then(m => ({
+    default: m.SettingsStackNavigator,
+  })),
+);
+const LazyTopStackNavigator = lazy(() =>
+  import('./TopStackNavigator').then(m => ({
+    default: m.TopStackNavigator,
+  })),
+);
+
+function FollowingScreen() {
+  return (
+    <ScreenSuspense>
+      <LazyFollowingScreen />
+    </ScreenSuspense>
+  );
+}
+
+function SearchScreen() {
+  return (
+    <ScreenSuspense>
+      <LazySearchScreen />
+    </ScreenSuspense>
+  );
+}
+
+function SettingsStackNavigator() {
+  return (
+    <ScreenSuspense>
+      <LazySettingsStackNavigator />
+    </ScreenSuspense>
+  );
+}
+
+function TopStackNavigator() {
+  return (
+    <ScreenSuspense>
+      <LazyTopStackNavigator />
+    </ScreenSuspense>
+  );
+}
 
 export type TabParamList = {
   Following: undefined;
@@ -89,6 +135,12 @@ export function TabNavigator() {
   const { user } = useAuthContext();
   const { theme } = useUnistyles();
 
+  // Get the screens that are currently rendered
+  const availableScreens = useMemo(
+    () => screens.filter(screen => !screen.requiresAuth || user),
+    [user],
+  );
+
   const getScreenOptions = useCallback(
     (screen: Screen): NativeBottomTabNavigationOptions => {
       const baseOptions: NativeBottomTabNavigationOptions = {
@@ -139,22 +191,16 @@ export function TabNavigator() {
         tabBarButton: HapticTab,
       }}
     >
-      {screens.map(screen => {
-        if (screen.requiresAuth && !user) {
-          return null;
-        }
-
-        return (
-          <Tab.Screen
-            key={screen.name}
-            name={screen.name}
-            component={screen.component as ComponentType}
-            options={() => ({
-              ...getScreenOptions(screen),
-            })}
-          />
-        );
-      })}
+      {availableScreens.map(screen => (
+        <Tab.Screen
+          key={screen.name}
+          name={screen.name}
+          component={screen.component as ComponentType}
+          options={() => ({
+            ...getScreenOptions(screen),
+          })}
+        />
+      ))}
     </Tab.Navigator>
   );
 }

@@ -1,9 +1,47 @@
-import { AboutScreen } from '@app/screens/Other/AboutScreen';
-import { ChangelogScreen } from '@app/screens/Other/ChangelogScreen';
-import { FaqScreen } from '@app/screens/Other/FaqScreen';
-import { LicensesScreen } from '@app/screens/Other/LicensesScreen';
+import { ScreenSuspense } from '@app/components/ScreenSuspense';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
+import { lazy } from 'react';
+
+const LazyAboutScreen = lazy(() =>
+  import('@app/screens/Other/AboutScreen').then(m => ({
+    default: m.AboutScreen,
+  })),
+);
+const LazyChangelogScreen = lazy(() =>
+  import('@app/screens/Other/ChangelogScreen').then(m => ({
+    default: m.ChangelogScreen,
+  })),
+);
+const LazyFaqScreen = lazy(() =>
+  import('@app/screens/Other/FaqScreen').then(m => ({ default: m.FaqScreen })),
+);
+const LazyLicensesScreen = lazy(() =>
+  import('@app/screens/Other/LicensesScreen').then(m => ({
+    default: m.LicensesScreen,
+  })),
+);
+
+const AboutScreen = () => (
+  <ScreenSuspense>
+    <LazyAboutScreen />
+  </ScreenSuspense>
+);
+const ChangelogScreen = () => (
+  <ScreenSuspense>
+    <LazyChangelogScreen />
+  </ScreenSuspense>
+);
+const FaqScreen = () => (
+  <ScreenSuspense>
+    <LazyFaqScreen />
+  </ScreenSuspense>
+);
+const LicensesScreen = () => (
+  <ScreenSuspense>
+    <LazyLicensesScreen />
+  </ScreenSuspense>
+);
 
 export type OtherStackParamList = {
   About: undefined;

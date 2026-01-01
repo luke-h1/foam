@@ -17,6 +17,7 @@ const scopes = [
   'security',
   'sentry',
   'monitoring',
+  'perf',
   'firebase',
   'remote-config',
   'storybook',

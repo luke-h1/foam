@@ -15,34 +15,42 @@ interface Props {
 }
 
 export function LiveStreamCard({ stream }: Props) {
-  const { navigate } = useAppNavigation();
+  const navigation = useAppNavigation();
+
+  const handleStreamPressIn = useCallback(() => {
+    // Preload the stream screen when user starts pressing
+    navigation.preload('Streams', {
+      screen: 'LiveStream',
+      params: { id: stream.user_login },
+    });
+  }, [navigation, stream.user_login]);
 
   const handleStreamPress = useCallback(() => {
-    navigate('Streams', {
+    navigation.navigate('Streams', {
       screen: 'LiveStream',
       params: {
         id: stream.user_login,
       },
     });
-  }, [navigate, stream.user_login]);
+  }, [navigation, stream.user_login]);
 
   const handleStreamerPress = useCallback(() => {
-    navigate('Streams', {
+    navigation.navigate('Streams', {
       screen: 'StreamerProfile',
       params: {
         id: stream.user_login,
       },
     });
-  }, [navigate, stream.user_login]);
+  }, [navigation, stream.user_login]);
 
   const handleCategoryPress = useCallback(() => {
-    navigate('Category', {
+    navigation.navigate('Category', {
       id: stream.game_id,
     });
-  }, [navigate, stream.game_id]);
+  }, [navigation, stream.game_id]);
 
   return (
-    <Button onPress={handleStreamPress}>
+    <Button onPress={handleStreamPress} onPressIn={handleStreamPressIn}>
       <View style={styles.container}>
         <View style={styles.imageContainer}>
           <Image
