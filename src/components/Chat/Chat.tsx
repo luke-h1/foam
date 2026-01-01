@@ -209,6 +209,25 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [channelId, emoteProcessor, handleNewMessage],
   );
 
+  // Reprocess all existing messages with current emote data (for refresh)
+  const reprocessAllMessages = useCallback(() => {
+    if (messages.length === 0) return;
+
+    logger.chat.info('🔄 Reprocessing all messages with new emote data');
+
+    (messages as AnyChatMessageType[]).forEach(msg => {
+      // Skip system messages and notices
+      if (msg.sender === 'System' || 'notice_tags' in msg) return;
+
+      // Convert processed message back to text
+      const textContent = replaceEmotesWithText(msg.message);
+
+      if (textContent.trim()) {
+        processMessageEmotes(textContent, msg.userstate, msg);
+      }
+    });
+  }, [messages, processMessageEmotes]);
+
   // Chat handlers
   const onMessage = useCallback(
     (_channel: string, tags: Record<string, string>, text: string) => {
@@ -276,6 +295,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const {
     isConnected: isChatConnected,
     partChannel,
+    joinChannel,
     sendMessage,
     getUserState,
   } = useTwitchChat({
@@ -774,10 +794,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         <SettingsSheet
           ref={settingsSheetRef}
-          onRefetchEmotes={() => void refetchEmotes()}
+          onRefetchEmotes={() => {
+            void refetchEmotes().then(() => {
+              // Reprocess existing messages with new emote/badge data
+              reprocessAllMessages();
+            });
+          }}
           onReconnect={() => {
             partChannel(channelName);
-            setTimeout(() => {}, 1000);
+            setTimeout(() => {
+              joinChannel(channelName);
+            }, 1000);
           }}
         />
 
