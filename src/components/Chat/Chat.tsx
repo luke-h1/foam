@@ -63,6 +63,7 @@ import {
   createUserNoticeMessage,
   createSystemMessage,
 } from './util/messageHandlers';
+import { reprocessMessages } from './util/reprocessMessages';
 
 interface ChatProps {
   channelId: string;
@@ -211,21 +212,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   // Reprocess all existing messages with current emote data (for refresh)
   const reprocessAllMessages = useCallback(() => {
-    if (messages.length === 0) return;
-
-    logger.chat.info('🔄 Reprocessing all messages with new emote data');
-
-    (messages as AnyChatMessageType[]).forEach(msg => {
-      // Skip system messages and notices
-      if (msg.sender === 'System' || 'notice_tags' in msg) return;
-
-      // Convert processed message back to text
-      const textContent = replaceEmotesWithText(msg.message);
-
-      if (textContent.trim()) {
-        processMessageEmotes(textContent, msg.userstate, msg);
-      }
-    });
+    reprocessMessages(messages as AnyChatMessageType[], processMessageEmotes);
   }, [messages, processMessageEmotes]);
 
   // Chat handlers
