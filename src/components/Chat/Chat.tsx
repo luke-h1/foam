@@ -122,6 +122,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     bttvGlobalEmotes: channelEmoteData.bttvGlobalEmotes,
   });
 
+  // Track messages length in a ref for immediate access in callbacks
+  const messagesLengthRef = useRef(messages.length);
+  messagesLengthRef.current = messages.length;
+
   // Scroll management
   const {
     isAtBottom,
@@ -136,9 +140,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   } = useChatScroll({ flashListRef, messagesLength: messages.length });
 
   // Auto-scroll callback for message handler
+  // Uses ref to get the latest messages length immediately after store update
   const handleAutoScroll = useCallback(() => {
     if (isAtBottomRef.current && !isScrollingToBottom) {
-      const lastIndex = messages.length - 1;
+      // Use ref to get latest length (updated synchronously with store)
+      const lastIndex = messagesLengthRef.current - 1;
       if (lastIndex >= 0) {
         void flashListRef.current?.scrollToIndex({
           index: lastIndex,
@@ -146,7 +152,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         });
       }
     }
-  }, [messages.length, isScrollingToBottom, isAtBottomRef]);
+  }, [isScrollingToBottom, isAtBottomRef]);
 
   // Message management
   const {

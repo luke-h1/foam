@@ -23,10 +23,7 @@ export function CategoryCard({ category }: Props) {
   }, [navigation, category.id]);
 
   return (
-    <Button
-      onPress={handlePress}
-      style={styles.container}
-    >
+    <Button onPress={handlePress} style={styles.container}>
       <View style={styles.wrapper}>
         <Image
           source={category.box_art_url

@@ -389,6 +389,68 @@ describe('useChatScroll', () => {
       // Should not call again during manual scroll
       expect(mocks.scrollToIndex).not.toHaveBeenCalled();
     });
+
+    test('should use updated messagesLength when content size changes after rerender', () => {
+      const { ref: flashListRef, mocks } = createMockFlashListRef();
+
+      const { result, rerender } = renderHook(
+        ({ messagesLength }) =>
+          useChatScroll({
+            flashListRef,
+            messagesLength,
+          }),
+        { initialProps: { messagesLength: 50 } },
+      );
+
+      // Ensure we're at bottom
+      expect(result.current.isAtBottomRef.current).toBe(true);
+
+      // Simulate new messages arriving - rerender with new length
+      rerender({ messagesLength: 55 });
+
+      mocks.scrollToIndex.mockClear();
+
+      act(() => {
+        result.current.handleContentSizeChange();
+        jest.advanceTimersByTime(10);
+      });
+
+      // Should scroll to the new last index (55 - 1 = 54)
+      expect(mocks.scrollToIndex).toHaveBeenCalledWith({
+        index: 54,
+        animated: false,
+      });
+    });
+
+    test('should immediately reflect messagesLength changes in scroll callbacks', () => {
+      const { ref: flashListRef, mocks } = createMockFlashListRef();
+
+      const { result, rerender } = renderHook(
+        ({ messagesLength }) =>
+          useChatScroll({
+            flashListRef,
+            messagesLength,
+          }),
+        { initialProps: { messagesLength: 10 } },
+      );
+
+      // Update messages length multiple times rapidly
+      rerender({ messagesLength: 15 });
+      rerender({ messagesLength: 20 });
+      rerender({ messagesLength: 25 });
+
+      mocks.scrollToIndex.mockClear();
+
+      act(() => {
+        result.current.scrollToBottom();
+      });
+
+      // Should use the latest messagesLength (25 - 1 = 24)
+      expect(mocks.scrollToIndex).toHaveBeenCalledWith({
+        index: 24,
+        animated: true,
+      });
+    });
   });
 
   describe('Cleanup', () => {

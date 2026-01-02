@@ -19,6 +19,10 @@ export const useChatScroll = <T>({
   const [isScrollingToBottom, setIsScrollingToBottom] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Track messages length in ref for immediate access
+  const messagesLengthRef = useRef(messagesLength);
+  messagesLengthRef.current = messagesLength;
+
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
@@ -50,27 +54,27 @@ export const useChatScroll = <T>({
 
   const handleContentSizeChange = useCallback(() => {
     if (isAtBottomRef.current && !isScrollingToBottom) {
-      const lastIndex = messagesLength - 1;
+      const lastIndex = messagesLengthRef.current - 1;
       if (lastIndex >= 0) {
         setTimeout(() => {
           if (isAtBottomRef.current && !isScrollingToBottom) {
             void flashListRef.current?.scrollToIndex({
-              index: messagesLength - 1,
+              index: messagesLengthRef.current - 1,
               animated: false,
             });
           }
         }, 0);
       }
     }
-  }, [messagesLength, isScrollingToBottom, flashListRef]);
+  }, [isScrollingToBottom, flashListRef]);
 
   const scrollToBottom = useCallback(() => {
     setIsScrollingToBottom(true);
-    const lastIndex = messagesLength - 1;
+    const lastIndex = messagesLengthRef.current - 1;
 
     if (lastIndex >= 0) {
       void flashListRef.current?.scrollToIndex({
-        index: messagesLength - 1,
+        index: lastIndex,
         animated: true,
       });
     }
@@ -86,7 +90,7 @@ export const useChatScroll = <T>({
       setIsScrollingToBottom(false);
       scrollTimeoutRef.current = null;
     }, 100);
-  }, [messagesLength, flashListRef]);
+  }, [flashListRef]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);
