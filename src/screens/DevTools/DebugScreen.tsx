@@ -1,8 +1,8 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Switch } from '@app/components/Switch';
+import { Text } from '@app/components/Text';
 import { TextField } from '@app/components/TextField';
-import { Typography } from '@app/components/Typography';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { AppStackParamList } from '@app/navigators/AppNavigator';
@@ -95,31 +95,31 @@ export function DebugScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Typography size="xl" fontWeight="bold" style={styles.title}>
+          <Text type="xl" weight="bold" style={styles.title}>
             Debug
-          </Typography>
+          </Text>
 
           {/* Storage */}
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Typography fontWeight="semiBold">Clear storage</Typography>
-              <Typography size="xs" color="gray.textLow">
+              <Text weight="semibold">Clear storage</Text>
+              <Text type="xs" color="gray.textLow">
                 Wipe {NAMESPACE}
-              </Typography>
+              </Text>
             </View>
             <Button onPress={handleClearStorage} style={styles.destructiveBtn}>
-              <Typography size="sm" fontWeight="semiBold" color="red.accent">
+              <Text type="sm" weight="semibold" color="red.accent">
                 Clear
-              </Typography>
+              </Text>
             </Button>
           </View>
 
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Typography fontWeight="semiBold">RQ DevTools</Typography>
-              <Typography size="xs" color="gray.textLow">
+              <Text weight="semibold">RQ DevTools</Text>
+              <Text type="xs" color="gray.textLow">
                 Shows React Query debugger
-              </Typography>
+              </Text>
             </View>
             <Switch value={reactQueryEnabled} onValueChange={handleToggleRQ} />
           </View>
@@ -127,9 +127,9 @@ export function DebugScreen() {
           <View style={styles.divider} />
 
           {/* Username converter */}
-          <Typography fontWeight="semiBold" style={styles.label}>
+          <Text weight="semibold" style={styles.label}>
             Username → ID
-          </Typography>
+          </Text>
           <View style={styles.inputRow}>
             <TextField
               placeholder="username"
@@ -150,33 +150,33 @@ export function DebugScreen() {
           <View style={styles.divider} />
 
           {/* Token */}
-          <Typography fontWeight="semiBold" style={styles.label}>
+          <Text weight="semibold" style={styles.label}>
             Token{' '}
-            <Typography size="sm" color="gray.textLow">
+            <Text type="sm" color="gray.textLow">
               ({authState?.isAnonAuth ? 'anon' : 'user'})
-            </Typography>
-          </Typography>
+            </Text>
+          </Text>
           <View style={styles.tokenBox}>
-            <Typography size="xs" numberOfLines={1} style={styles.tokenText}>
+            <Text type="xs" numberOfLines={1} style={styles.tokenText}>
               {authState?.token?.accessToken ?? '—'}
-            </Typography>
+            </Text>
             <Button
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
               onPress={handleCopyToken}
               style={styles.copyBtn}
             >
-              <Typography size="xs" fontWeight="semiBold">
+              <Text type="xs" weight="semibold">
                 copy
-              </Typography>
+              </Text>
             </Button>
           </View>
 
           <View style={styles.divider} />
 
           {/* Join channel */}
-          <Typography fontWeight="semiBold" style={styles.label}>
+          <Text weight="semibold" style={styles.label}>
             Join channel
-          </Typography>
+          </Text>
           <View style={styles.inputRow}>
             <TextField
               placeholder="channel"
@@ -187,32 +187,28 @@ export function DebugScreen() {
               containerStyle={styles.inputFlex}
             />
             <Button onPress={handleJoinChannel} style={styles.joinBtn}>
-              <Typography
-                size="sm"
-                fontWeight="semiBold"
-                style={styles.joinBtnText}
-              >
+              <Text type="sm" weight="semibold" style={styles.joinBtnText}>
                 Go
-              </Typography>
+              </Text>
             </Button>
           </View>
 
           {user && (
-            <Typography size="xs" color="gray.textLow" style={styles.hint}>
+            <Text type="xs" color="gray.textLow" style={styles.hint}>
               logged in as {user.display_name}
-            </Typography>
+            </Text>
           )}
 
           <View style={styles.divider} />
 
           {/* Storage state */}
-          <Typography fontWeight="semiBold" style={styles.label}>
+          <Text weight="semibold" style={styles.label}>
             Storage state
-          </Typography>
+          </Text>
           <View style={styles.codeBlock}>
-            <Typography size="xs" style={styles.codeText}>
+            <Text type="xs" style={styles.codeText}>
               {JSON.stringify(debugOptions, null, 2)}
-            </Typography>
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

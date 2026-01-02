@@ -1,5 +1,5 @@
 import { LiveStreamImage } from '@app/components/LiveStreamImage';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { SearchChannelResponse } from '@app/services/twitch-service';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -16,25 +16,25 @@ export function StreamerCard({ stream }: Props) {
       <LiveStreamImage thumbnail={stream.thumbnail_url} animated size="sm" />
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Typography size="sm" fontWeight="semiBold" numberOfLines={1}>
+          <Text type="sm" weight="semibold" numberOfLines={1}>
             {stream.display_name}
-          </Typography>
+          </Text>
           {isLive && (
             <View style={styles.liveBadge}>
-              <Typography size="xxs" style={styles.liveText}>
+              <Text type="xxs" style={styles.liveText}>
                 LIVE
-              </Typography>
+              </Text>
             </View>
           )}
         </View>
         {stream.game_name ? (
-          <Typography size="xs" color="gray.textLow" numberOfLines={1}>
+          <Text type="xs" color="gray.textLow" numberOfLines={1}>
             {stream.game_name}
-          </Typography>
+          </Text>
         ) : (
-          <Typography size="xs" color="gray.textLow" numberOfLines={1}>
+          <Text type="xs" color="gray.textLow" numberOfLines={1}>
             {isLive ? 'Streaming' : 'Offline'}
-          </Typography>
+          </Text>
         )}
       </View>
     </View>

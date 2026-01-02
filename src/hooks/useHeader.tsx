@@ -1,4 +1,4 @@
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -61,7 +61,7 @@ export function useHeader({ offsetY, title }: Props) {
       headerTitle: () => (
         <View style={styles.titleContainer}>
           <Animated.View style={rightStyle}>
-            <Typography style={styles.titleText}>{title}</Typography>
+            <Text style={styles.titleText}>{title}</Text>
           </Animated.View>
         </View>
       ),

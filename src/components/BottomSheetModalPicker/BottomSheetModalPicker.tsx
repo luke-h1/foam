@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { scheduleOnUI } from 'react-native-worklets';
 import { Button } from '../Button';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 export interface BottomSheetModalPickerProps<TOption extends string> {
   value: TOption;
@@ -55,7 +55,7 @@ export function BottomSheetModalPicker<TOption extends string>({
         <SafeAreaView edges={['bottom']} style={styles.container}>
           <View>
             <Button onPress={handleClose}>
-              <Typography color="blue.accent">Cancel</Typography>
+              <Text color="blue.accent">Cancel</Text>
             </Button>
           </View>
           <Picker onValueChange={onOptionSelect} selectedValue={value}>

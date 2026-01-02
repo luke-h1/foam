@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<unknown>;
@@ -112,9 +112,9 @@ export const TextField = forwardRef(function TextField(
       accessibilityState={{ disabled }}
     >
       {!!label && (
-        <Typography {...LabelTextProps} style={$labelStyles}>
+        <Text {...LabelTextProps} style={$labelStyles}>
           {label}
-        </Typography>
+        </Text>
       )}
       <View style={$inputWrapperStyles}>
         {!!LeftAccessory && (
@@ -147,9 +147,9 @@ export const TextField = forwardRef(function TextField(
         )}
       </View>
       {!!helper && (
-        <Typography {...HelperTextProps} style={$helperStyles}>
+        <Text {...HelperTextProps} style={$helperStyles}>
           {helper}
-        </Typography>
+        </Text>
       )}
     </Button>
   );

@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { IconButton } from '../IconButton';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 /**
  * TODO: unify heroheader props with this type
@@ -96,17 +96,13 @@ export function ScreenHeader({
 
           {isInline ? (
             <View style={styles.inlineTitleSection}>
-              <Typography
-                size={titleSize}
-                fontWeight="semiBold"
-                numberOfLines={1}
-              >
+              <Text type={titleSize} weight="semibold" numberOfLines={1}>
                 {title}
-              </Typography>
+              </Text>
               {subtitle && (
-                <Typography size={subtitleSize} color="gray.textLow">
+                <Text type={subtitleSize} color="gray.textLow">
                   {subtitle}
-                </Typography>
+                </Text>
               )}
             </View>
           ) : (
@@ -124,22 +120,22 @@ export function ScreenHeader({
             showNavRow ? styles.titleSectionWithNav : null,
           ]}
         >
-          <Typography
-            size={titleSize}
-            fontWeight="bold"
+          <Text
+            type={titleSize}
+            weight="bold"
             style={styles.title}
             numberOfLines={2}
           >
             {title}
-          </Typography>
+          </Text>
           {subtitle && (
-            <Typography
-              size={subtitleSize}
+            <Text
+              type={subtitleSize}
               color="gray.textLow"
               style={styles.subtitle}
             >
               {subtitle}
-            </Typography>
+            </Text>
           )}
         </View>
       )}

@@ -1,6 +1,6 @@
 import { Menu } from '@app/components/Menu';
 import { PressableArea } from '@app/components/PressableArea';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
@@ -89,20 +89,20 @@ export function SettingsIndexScreen() {
             onPress={() => openLinkInBrowser(websiteUrl.value)}
             hitSlop={8}
           >
-            <Typography size="sm" color="gray.textLow">
+            <Text type="sm" color="gray.textLow">
               Website
-            </Typography>
+            </Text>
           </PressableArea>
-          <Typography size="sm" color="gray.border">
+          <Text type="sm" color="gray.border">
             •
-          </Typography>
+          </Text>
           <PressableArea
             onPress={() => openLinkInBrowser(statusPageUrl.value)}
             hitSlop={8}
           >
-            <Typography size="sm" color="gray.textLow">
+            <Text type="sm" color="gray.textLow">
               Status
-            </Typography>
+            </Text>
           </PressableArea>
         </View>
         <BuildStatus />

@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 type Props = {
   left?: ReactNode;
@@ -14,7 +14,7 @@ export function SheetHeader({ left, right, style, title }: Props) {
   return (
     <View style={[styles.main, style]}>
       {left ? <View style={styles.left}>{left}</View> : null}
-      <Typography fontWeight="bold">{title}</Typography>
+      <Text weight="bold">{title}</Text>
       {right ? <View style={styles.right}>{right}</View> : null}
     </View>
   );

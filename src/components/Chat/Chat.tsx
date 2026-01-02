@@ -34,8 +34,8 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { FlashList } from '../FlashList/FlashList';
-import { Typography } from '../Typography/Typography';
 
+import { Text } from '../Text';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
 import { ChatMessage } from './components/ChatMessage/ChatMessage';
@@ -713,7 +713,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   return (
     <View style={styles.wrapper}>
       <View style={{ paddingTop: insets.top }}>
-        <Typography style={styles.header}>CHAT</Typography>
+        <Text style={styles.header}>CHAT</Text>
       </View>
 
       <KeyboardAvoidingView
@@ -724,9 +724,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         <View style={styles.chatContainer}>
           {!connected && deduplicatedMessages.length === 0 && (
             <View style={styles.connectingContainer}>
-              <Typography style={styles.connectingText}>
+              <Text style={styles.connectingText}>
                 Connecting to {channelName}&apos;s chat...
-              </Typography>
+              </Text>
             </View>
           )}
 

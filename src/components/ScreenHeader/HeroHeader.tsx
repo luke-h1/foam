@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { IconButton } from '../IconButton';
 import { Image } from '../Image';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 export interface HeroHeaderProps {
   /**
@@ -105,22 +105,18 @@ export function HeroHeader({
             <Image source={featuredImage} style={styles.featuredImage} />
           )}
           <View style={styles.textContent}>
-            <Typography
-              size="xl"
-              fontWeight="bold"
+            <Text
+              type="xl"
+              weight="bold"
               style={styles.title}
               numberOfLines={2}
             >
               {title}
-            </Typography>
+            </Text>
             {subtitle && (
-              <Typography
-                size="sm"
-                color="gray.textLow"
-                style={styles.subtitle}
-              >
+              <Text type="sm" color="gray.textLow" style={styles.subtitle}>
                 {subtitle}
-              </Typography>
+              </Text>
             )}
             {badges}
           </View>

@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -35,28 +35,28 @@ export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
     >
       <BottomSheetView style={styles.wrapper}>
         <View style={styles.info}>
-          <Typography>
+          <Text>
             {username} : {messageText()}
-          </Typography>
+          </Text>
         </View>
 
         <View style={styles.actions}>
           <Button onPress={handleCopy} style={styles.actionButton}>
             <View style={styles.actionContent}>
               <Icon icon="copy" color="#fff" size={16} />
-              <Typography style={styles.actionText}>Copy Message</Typography>
+              <Text style={styles.actionText}>Copy Message</Text>
             </View>
           </Button>
           <Button onPress={handleReply} style={styles.actionButton}>
             <View style={styles.actionContent}>
               <Icon icon="copy" color="#fff" size={16} />
-              <Typography style={styles.actionText}>Reply</Typography>
+              <Text style={styles.actionText}>Reply</Text>
             </View>
           </Button>
           <Button onPress={() => {}} style={styles.actionButton}>
             <View style={styles.actionContent}>
               <Icon icon="external-link" color="#fff" size={16} />
-              <Typography style={styles.actionText}>Report message</Typography>
+              <Text style={styles.actionText}>Report message</Text>
             </View>
           </Button>
         </View>

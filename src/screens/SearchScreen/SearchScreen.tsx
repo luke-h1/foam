@@ -3,7 +3,7 @@ import { FlashList } from '@app/components/FlashList';
 import { Icon } from '@app/components/Icon';
 import { PressableArea } from '@app/components/PressableArea';
 import { SearchHistoryV2 } from '@app/components/SearchHistory';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useDebouncedEffect } from '@app/hooks/useDebouncedEffect';
@@ -230,7 +230,7 @@ export function SearchScreen() {
           </View>
           {isFocused && (
             <PressableArea onPress={handleCancel} style={styles.cancelButton}>
-              <Typography color="violet.accent">Cancel</Typography>
+              <Text color="violet.accent">Cancel</Text>
             </PressableArea>
           )}
         </View>
@@ -238,14 +238,14 @@ export function SearchScreen() {
         {/* Categories carousel */}
         {categoryResults.length > 0 && (
           <View style={styles.categoriesSection}>
-            <Typography
-              size="xs"
-              fontWeight="semiBold"
+            <Text
+              type="xs"
+              weight="semibold"
               color="gray.textLow"
               style={styles.sectionTitle}
             >
               CATEGORIES
-            </Typography>
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -265,13 +265,13 @@ export function SearchScreen() {
                       style={styles.categoryImage}
                     />
                   </View>
-                  <Typography
-                    size="xxs"
+                  <Text
+                    type="xxs"
                     numberOfLines={2}
                     style={styles.categoryName}
                   >
                     {category.name}
-                  </Typography>
+                  </Text>
                 </PressableArea>
               ))}
             </ScrollView>
@@ -281,14 +281,14 @@ export function SearchScreen() {
         {/* Channels section header */}
         {searchResults.length > 0 && (
           <View style={styles.sectionHeader}>
-            <Typography
-              size="xs"
-              fontWeight="semiBold"
+            <Text
+              type="xs"
+              weight="semibold"
               color="gray.textLow"
               style={styles.sectionTitle}
             >
               CHANNELS
-            </Typography>
+            </Text>
           </View>
         )}
       </View>

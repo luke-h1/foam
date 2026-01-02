@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 interface ContentItem {
   onPress?: () => void;
@@ -34,8 +34,8 @@ export function SettingsItem({ contents }: SettingsItemProps) {
         <Button style={styles.button} onPress={item.onPress}>
           <View style={styles.iconLeft}>{item.iconLeft}</View>
           <View style={styles.textContainer}>
-            <Typography>{item.title}</Typography>
-            <Typography>{item.content}</Typography>
+            <Text>{item.title}</Text>
+            <Text>{item.content}</Text>
           </View>
           {item.showRightArrow && (
             <View style={styles.iconRight}>{item.iconRight}</View>
@@ -50,7 +50,7 @@ export function SettingsItem({ contents }: SettingsItemProps) {
   const renderSectionItem: ListRenderItem<Content> = useCallback(
     ({ item }) => (
       <View style={styles.section}>
-        <Typography style={styles.ctaTitle}>{item.ctaTitle}</Typography>
+        <Text style={styles.ctaTitle}>{item.ctaTitle}</Text>
         <FlashList<ContentItem>
           data={item.items}
           keyExtractor={item => item.title}

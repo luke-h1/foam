@@ -22,7 +22,7 @@ import { toast } from 'sonner-native';
 import { Button } from '../../../Button';
 import { Icon } from '../../../Icon';
 import { Image } from '../../../Image';
-import { Typography } from '../../../Typography';
+import { Text } from '../../../Text';
 import { ActionSheet } from '../ActionSheet';
 import { BadgePreviewSheet } from '../BadgePreviewSheet';
 import { EmotePreviewSheet } from '../EmotePreviewSheet';
@@ -118,13 +118,9 @@ function ChatMessageComponent<
       switch (part.type) {
         case 'text': {
           return (
-            <Typography
-              key={index}
-              color="gray.text"
-              style={styles.messageText}
-            >
+            <Text key={index} color="gray.text" style={styles.messageText}>
               {part.content}
-            </Typography>
+            </Text>
           );
         }
 
@@ -180,8 +176,8 @@ function ChatMessageComponent<
             mentionColor || generateRandomTwitchColor(mentionedUsername);
 
           return (
-            <Typography key={`message-${index}`}>
-              <Typography
+            <Text key={`message-${index}`}>
+              <Text
                 style={[
                   styles.mention,
                   styles.mentionDefaultColor,
@@ -189,8 +185,8 @@ function ChatMessageComponent<
                 ]}
               >
                 {part.content}
-              </Typography>
-            </Typography>
+              </Text>
+            </Text>
           );
         }
 
@@ -292,14 +288,14 @@ function ChatMessageComponent<
       {isReply && (
         <View style={styles.replyIndicator}>
           <Icon icon="corner-down-left" size={16} />
-          <Typography
+          <Text
             color="gray.accent"
             style={styles.replyToText}
             numberOfLines={1}
           >
             Replying to{' '}
             {parentColor ? (
-              <Typography
+              <Text
                 style={[
                   styles.replyToText,
                   styles.replyToDefaultColor,
@@ -307,20 +303,20 @@ function ChatMessageComponent<
                 ]}
               >
                 {parentDisplayName}
-              </Typography>
+              </Text>
             ) : (
-              <Typography color="gray.accent" style={styles.replyToText}>
+              <Text color="gray.accent" style={styles.replyToText}>
                 {parentDisplayName}
-              </Typography>
+              </Text>
             )}
             {replyBody && ` ${truncate(unescapeIrcTag(replyBody).trim(), 50)}`}
-          </Typography>
+          </Text>
         </View>
       )}
 
       {isFirstMessage && (
         <View style={styles.firstMessageIndicator}>
-          <Typography style={styles.firstMessageText}>first message</Typography>
+          <Text style={styles.firstMessageText}>first message</Text>
         </View>
       )}
 
@@ -333,13 +329,13 @@ function ChatMessageComponent<
       {!isSubscriptionNotice && (
         <View style={styles.messageLine}>
           {!isSystemNotice && (
-            <Typography style={styles.timestamp}>
+            <Text style={styles.timestamp}>
               {formatDate(new Date(), 'HH:mm')}:
-            </Typography>
+            </Text>
           )}
           {renderBadges()}
           {userstate.username && (
-            <Typography
+            <Text
               style={[
                 styles.username,
                 styles.usernameDefaultColor,
@@ -348,7 +344,7 @@ function ChatMessageComponent<
               ]}
             >
               {userstate.username}:
-            </Typography>
+            </Text>
           )}
           {message.map(renderMessagePart)}
         </View>

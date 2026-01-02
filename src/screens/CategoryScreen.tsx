@@ -2,7 +2,7 @@ import { EmptyState } from '@app/components/EmptyState';
 import { LiveStreamCard } from '@app/components/LiveStreamCard';
 import { HeroHeader } from '@app/components/ScreenHeader/HeroHeader';
 import { Spinner } from '@app/components/Spinner';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { AppStackParamList } from '@app/navigators/AppNavigator';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
@@ -108,9 +108,9 @@ export const CategoryScreen: FC<
       safeArea={false}
     >
       <View style={styles.sectionHeader}>
-        <Typography size="sm" fontWeight="semiBold" color="gray.textLow">
+        <Text type="sm" weight="semibold" color="gray.textLow">
           Live Channels
-        </Typography>
+        </Text>
       </View>
     </HeroHeader>
   );

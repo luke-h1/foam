@@ -11,7 +11,7 @@ import { BrandIcon } from '../../BrandIcon';
 import { Button } from '../../Button';
 import { Icon } from '../../Icon';
 import { Image } from '../../Image';
-import { Typography } from '../../Typography';
+import { Text } from '../../Text';
 
 interface EmoteAction {
   title: string;
@@ -46,7 +46,7 @@ export function EmoteBadgePreview({
       onPress={item.onPress}
     >
       <Icon icon={item.icon} />
-      <Typography style={styles.actionText}>{item.title}</Typography>
+      <Text style={styles.actionText}>{item.title}</Text>
     </Button>
   );
 
@@ -73,33 +73,29 @@ export function EmoteBadgePreview({
             </View>
             <View style={styles.metadataContainer}>
               <View style={styles.metadataRow}>
-                <Typography style={styles.metadataValue}>
+                <Text style={styles.metadataValue}>
                   {selectedEmote.original_name}
-                </Typography>
+                </Text>
               </View>
               <View style={styles.metadataRow}>
-                <Typography style={styles.metadataValue}>
-                  {selectedEmote.site}
-                </Typography>
+                <Text style={styles.metadataValue}>{selectedEmote.site}</Text>
                 {selectedEmote.site?.includes('7tv') && (
                   <BrandIcon name="stv" size="md" />
                 )}
               </View>
               {selectedEmote.creator && (
                 <View style={styles.metadataRow}>
-                  <Typography style={styles.metadataValue}>
+                  <Text style={styles.metadataValue}>
                     Created by: {selectedEmote.creator}
-                  </Typography>
+                  </Text>
                 </View>
               )}
               {selectedEmote.original_name && (
                 <View style={styles.metadataRow}>
-                  <Typography style={styles.metadataLabel}>
-                    Original Name:
-                  </Typography>
-                  <Typography style={styles.metadataValue}>
+                  <Text style={styles.metadataLabel}>Original Name:</Text>
+                  <Text style={styles.metadataValue}>
                     {selectedEmote.original_name}
-                  </Typography>
+                  </Text>
                 </View>
               )}
             </View>
@@ -118,27 +114,21 @@ export function EmoteBadgePreview({
             </View>
             <View style={styles.metadataContainer}>
               <View style={styles.metadataRow}>
-                <Typography style={styles.metadataValue}>
-                  {selectedBadge.title}
-                </Typography>
+                <Text style={styles.metadataValue}>{selectedBadge.title}</Text>
               </View>
               <View style={styles.metadataRow}>
-                <Typography style={styles.metadataValue}>
-                  {selectedBadge.type}
-                </Typography>
+                <Text style={styles.metadataValue}>{selectedBadge.type}</Text>
               </View>
               {selectedBadge.owner_username && (
                 <View style={styles.metadataRow}>
-                  <Typography style={styles.metadataValue}>
+                  <Text style={styles.metadataValue}>
                     Owner: {selectedBadge.owner_username}
-                  </Typography>
+                  </Text>
                 </View>
               )}
               <View style={styles.metadataRow}>
-                <Typography style={styles.metadataLabel}>Set:</Typography>
-                <Typography style={styles.metadataValue}>
-                  {selectedBadge.set}
-                </Typography>
+                <Text style={styles.metadataLabel}>Set:</Text>
+                <Text style={styles.metadataValue}>{selectedBadge.set}</Text>
               </View>
             </View>
           </View>

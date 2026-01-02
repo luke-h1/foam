@@ -1,5 +1,5 @@
 import { IconButton } from '@app/components/IconButton';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { SFSymbol } from 'expo-symbols';
 import { View } from 'react-native';
@@ -33,7 +33,7 @@ export function AboutCard() {
     <View style={styles.main}>
       <View style={styles.wrapper}>
         <View style={styles.info}>
-          <Typography fontWeight="bold">Foam</Typography>
+          <Text weight="bold">Foam</Text>
         </View>
 
         <View style={styles.linkWrapper}>
@@ -52,9 +52,9 @@ export function AboutCard() {
                 }}
                 style={styles.link}
               />
-              <Typography color="gray" size="sm" style={styles.linkLabel}>
+              <Text color="gray" type="sm" style={styles.linkLabel}>
                 {link.label}
-              </Typography>
+              </Text>
             </View>
           ))}
         </View>

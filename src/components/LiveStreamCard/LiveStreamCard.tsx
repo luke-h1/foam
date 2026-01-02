@@ -8,7 +8,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
 import { PressableArea } from '../PressableArea';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 interface Props {
   stream: TwitchStream;
@@ -62,9 +62,7 @@ export function LiveStreamCard({ stream }: Props) {
           />
           <View style={styles.overlay}>
             <View style={styles.redDot} />
-            <Typography size="xxs">
-              {elapsedStreamTime(stream.started_at)}
-            </Typography>
+            <Text type="xxs">{elapsedStreamTime(stream.started_at)}</Text>
           </View>
         </View>
         <View style={styles.details}>
@@ -75,15 +73,15 @@ export function LiveStreamCard({ stream }: Props) {
               style={styles.usernameButton}
               hitSlop={8}
             >
-              <Typography size="sm" style={styles.username}>
+              <Text type="sm" style={styles.username}>
                 {stream.user_name}
-              </Typography>
+              </Text>
             </PressableArea>
             <View style={styles.viewersBadge}>
               <View style={styles.viewersDot} />
-              <Typography size="xxs" style={styles.viewersText}>
+              <Text type="xxs" style={styles.viewersText}>
                 {formatViewCount(stream.viewer_count)}
-              </Typography>
+              </Text>
             </View>
           </View>
           <PressableArea
@@ -91,13 +89,13 @@ export function LiveStreamCard({ stream }: Props) {
             style={styles.categoryBadge}
             hitSlop={4}
           >
-            <Typography size="xxs" style={styles.categoryText}>
+            <Text type="xxs" style={styles.categoryText}>
               {stream.game_name}
-            </Typography>
+            </Text>
           </PressableArea>
-          <Typography size="xs" style={styles.title} numberOfLines={2}>
+          <Text type="xs" style={styles.title} numberOfLines={2}>
             {stream.title}
-          </Typography>
+          </Text>
         </View>
       </View>
     </Button>

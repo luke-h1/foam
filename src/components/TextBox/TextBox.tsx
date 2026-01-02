@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 type TextBoxProps = Pick<
   TextInputProps,
@@ -72,9 +72,9 @@ export function TextBox({
   return (
     <View style={[styles.main, style]}>
       {label && (
-        <Typography size="xs" fontWeight="semiBold">
+        <Text type="xs" weight="semibold">
           {label}
-        </Typography>
+        </Text>
       )}
 
       <View style={[styles.wrapper(focused, Boolean(error)), styleContent]}>
@@ -110,14 +110,14 @@ export function TextBox({
         {right}
       </View>
       {hint && (
-        <Typography color="gray" size="sm">
+        <Text color="gray" type="sm">
           {hint}
-        </Typography>
+        </Text>
       )}
       {error && (
-        <Typography color="red" size="sm">
+        <Text color="red" type="sm">
           {error}
-        </Typography>
+        </Text>
       )}
     </View>
   );

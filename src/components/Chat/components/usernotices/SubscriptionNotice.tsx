@@ -1,4 +1,4 @@
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import React, { useCallback } from 'react';
@@ -79,9 +79,9 @@ export function SubscriptionNotice({
     const parts: React.ReactNode[] = [];
 
     parts.push(
-      <Typography key="name" color="violet.accent">
+      <Text key="name" color="violet.accent">
         {displayName}
-      </Typography>,
+      </Text>,
     );
 
     let actionText = '';
@@ -135,7 +135,7 @@ export function SubscriptionNotice({
         actionText = 'subscription event';
     }
 
-    parts.push(<Typography key="action"> {actionText}</Typography>);
+    parts.push(<Text key="action"> {actionText}</Text>);
 
     // Streak information (for sub/resub)
     if (
@@ -145,18 +145,18 @@ export function SubscriptionNotice({
       shouldShareStreak
     ) {
       parts.push(
-        <Typography key="streak" color="gray.accentHover">
+        <Text key="streak" color="gray.accentHover">
           , {streakMonths} month{streakMonths > 1 ? 's' : ''} in a row
-        </Typography>,
+        </Text>,
       );
     }
 
     if (planDisplay && !isPrime) {
       parts.push(
-        <Typography key="plan" color="gray.accentHover">
+        <Text key="plan" color="gray.accentHover">
           {' '}
           ({planDisplay})
-        </Typography>,
+        </Text>,
       );
     }
 
@@ -180,21 +180,19 @@ export function SubscriptionNotice({
       <View style={styles.notice}>
         {isResub ? (
           <View style={styles.resubBadge}>
-            <Typography style={styles.resubBadgeText}>RESUB</Typography>
+            <Text style={styles.resubBadgeText}>RESUB</Text>
           </View>
         ) : (
           <View style={styles.newSubBadge}>
-            <Typography style={styles.newSubBadgeText}>NEW</Typography>
+            <Text style={styles.newSubBadgeText}>NEW</Text>
           </View>
         )}
-        <Typography style={styles.subscriptionText}>
-          {buildSubMessage()}
-        </Typography>
+        <Text style={styles.subscriptionText}>{buildSubMessage()}</Text>
       </View>
 
       {message && (
         <View style={styles.messageContainer}>
-          <Typography style={styles.messageText}>{message.trim()}</Typography>
+          <Text style={styles.messageText}>{message.trim()}</Text>
         </View>
       )}
     </View>

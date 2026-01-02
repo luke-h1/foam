@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { memo, useCallback, forwardRef } from 'react';
 import { View } from 'react-native';
@@ -72,9 +72,9 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
           </View>
 
           <View style={styles.header}>
-            <Typography style={styles.headerTitle} fontWeight="semiBold">
+            <Text style={styles.headerTitle} weight="semibold">
               Settings
-            </Typography>
+            </Text>
           </View>
 
           <View style={styles.menuContainer}>
@@ -86,9 +86,9 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               onPress={handleRefetchEmotes}
             >
               <Icon icon="refresh-cw" color={theme.colors.gray.borderHover} />
-              <Typography style={styles.menuItemText} fontWeight="semiBold">
+              <Text style={styles.menuItemText} weight="semibold">
                 Refetch Emotes & Badges
-              </Typography>
+              </Text>
             </Button>
 
             <Button
@@ -99,22 +99,22 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               onPress={handleReconnect}
             >
               <Icon icon="wifi" color={theme.colors.gray.borderHover} />
-              <Typography style={styles.menuItemText} fontWeight="semiBold">
+              <Text style={styles.menuItemText} weight="semibold">
                 Reconnect
-              </Typography>
+              </Text>
             </Button>
 
             <View style={styles.menuItem}>
               <Icon icon="activity" color={theme.colors.gray.borderHover} />
               <View style={styles.menuItemTextContainer}>
-                <Typography style={styles.menuItemText} fontWeight="semiBold">
+                <Text style={styles.menuItemText} weight="semibold">
                   Display Latency
-                </Typography>
-                <Typography style={styles.menuItemValue} fontWeight="bold">
+                </Text>
+                <Text style={styles.menuItemValue} weight="bold">
                   {latency !== null && latency !== undefined
                     ? `${latency}ms`
                     : 'N/A'}
-                </Typography>
+                </Text>
               </View>
             </View>
 
@@ -126,20 +126,20 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               onPress={handleRefreshVideo}
             >
               <Icon icon="video" color={theme.colors.gray.borderHover} />
-              <Typography style={styles.menuItemText} fontWeight="semiBold">
+              <Text style={styles.menuItemText} weight="semibold">
                 Refresh Video
-              </Typography>
+              </Text>
             </Button>
 
             <View style={styles.menuItem}>
               <Icon icon="repeat" color={theme.colors.gray.borderHover} />
               <View style={styles.menuItemTextContainer}>
-                <Typography style={styles.menuItemText} fontWeight="semiBold">
+                <Text style={styles.menuItemText} weight="semibold">
                   Reconnection Attempts
-                </Typography>
-                <Typography style={styles.menuItemValue} fontWeight="bold">
+                </Text>
+                <Text style={styles.menuItemValue} weight="bold">
                   {reconnectionAttempts ?? 0}
-                </Typography>
+                </Text>
               </View>
             </View>
           </View>

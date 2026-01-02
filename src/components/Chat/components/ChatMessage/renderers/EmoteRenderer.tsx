@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import {
@@ -69,9 +69,7 @@ export const EmoteRenderer = ({
   if (!part.url) {
     return (
       <Button onLongPress={() => handleEmotePress(part)}>
-        <Typography style={styles.name(width, height)}>
-          {part.name || '?'}
-        </Typography>
+        <Text style={styles.name(width, height)}>{part.name || '?'}</Text>
       </Button>
     );
   }

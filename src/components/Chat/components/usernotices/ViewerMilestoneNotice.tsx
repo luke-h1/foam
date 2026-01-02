@@ -1,4 +1,4 @@
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { useMemo } from 'react';
@@ -23,9 +23,9 @@ export function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
 
   return (
     <View style={styles.container}>
-      <Typography color="gray.text" style={styles.messageText}>
+      <Text color="gray.text" style={styles.messageText}>
         {unescapedSystemMsg}
-      </Typography>
+      </Text>
     </View>
   );
 }

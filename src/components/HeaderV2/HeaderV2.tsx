@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { IconButton } from '../IconButton';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 export interface HeaderV2Props {
   back?: boolean;
@@ -55,9 +55,9 @@ export function HeaderV2({
         ) : null}
 
         {typeof title === 'string' ? (
-          <Typography numberOfLines={1} style={styles.title} fontWeight="bold">
+          <Text numberOfLines={1} style={styles.title} weight="bold">
             {title}
-          </Typography>
+          </Text>
         ) : (
           <View style={styles.titleWrapper}>{title}</View>
         )}

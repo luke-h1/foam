@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import {
   createHitslop,
@@ -79,19 +79,14 @@ export const ChatInputSection = memo(
           >
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
-              <Typography style={styles.replyLabel}>
+              <Text style={styles.replyLabel}>
                 Replying to{' '}
-                <Typography style={styles.replyUsername}>
-                  {replyTo.username}
-                </Typography>
-              </Typography>
+                <Text style={styles.replyUsername}>{replyTo.username}</Text>
+              </Text>
               {replyTo.message && (
-                <Typography
-                  style={styles.replyMessagePreview}
-                  numberOfLines={1}
-                >
+                <Text style={styles.replyMessagePreview} numberOfLines={1}>
                   {truncate(replyTo.message.trim() || replyTo.message, 60)}
-                </Typography>
+                </Text>
               )}
             </View>
             <Button

@@ -6,7 +6,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { BrandIcon, type BrandIconName } from '../BrandIcon';
 import { Button } from '../Button';
 import { Icon } from '../Icon';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 type Icon =
   | {
@@ -81,13 +81,13 @@ export function SheetItem({
         left
       )}
 
-      <Typography
+      <Text
         numberOfLines={1}
         style={[styles.label, labelStyle]}
-        fontWeight="semiBold"
+        weight="semibold"
       >
         {label}
-      </Typography>
+      </Text>
 
       {navigate ? <Icon icon="CaretRight" /> : right}
     </Button>

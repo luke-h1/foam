@@ -14,7 +14,7 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Icon } from '../Icon';
 import { PressableArea } from '../PressableArea';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;
@@ -125,9 +125,9 @@ function SwipeableHistoryItem({
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.historyItem, animatedRowStyle]}>
             <Icon icon="clock" color={theme.colors.gray.textLow} size={16} />
-            <Typography style={styles.query} numberOfLines={1}>
+            <Text style={styles.query} numberOfLines={1}>
               {query}
-            </Typography>
+            </Text>
             <Icon
               icon="arrow-up-left"
               color={theme.colors.gray.textLow}
@@ -178,18 +178,18 @@ export function SearchHistoryV2({
   return (
     <View style={styles.wrapper}>
       <View style={styles.headerRow}>
-        <Typography
-          size="xs"
-          fontWeight="semiBold"
+        <Text
+          type="xs"
+          weight="semibold"
           color="gray.textLow"
           style={styles.sectionTitle}
         >
           RECENT SEARCHES
-        </Typography>
+        </Text>
         <PressableArea onPress={handleClearAll} hitSlop={8}>
-          <Typography size="xs" color="red.accent">
+          <Text type="xs" color="red.accent">
             Clear All
-          </Typography>
+          </Text>
         </PressableArea>
       </View>
 
@@ -204,9 +204,9 @@ export function SearchHistoryV2({
         ))}
       </View>
 
-      <Typography size="xxs" color="gray.textLow" style={styles.hint}>
+      <Text type="xxs" color="gray.textLow" style={styles.hint}>
         Swipe left to delete
-      </Typography>
+      </Text>
     </View>
   );
 }

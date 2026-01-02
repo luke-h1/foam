@@ -13,7 +13,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { Variant } from '../../../app.config';
 import { Button } from '../Button';
 import { IconSymbol } from '../IconSymbol/IconSymbol';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
   const platform = Platform.OS === 'ios' ? 'ios' : 'android';
@@ -64,36 +64,36 @@ export function ForceUpdateModal() {
             <IconSymbol name="arrow.up" />
           </View>
 
-          <Typography color="gray" size="xl" fontWeight="bold" align="center">
+          <Text color="gray" type="xl" weight="bold" align="center">
             Update Required
-          </Typography>
+          </Text>
 
-          <Typography
+          <Text
             color="gray.textLow"
-            size="sm"
+            type="sm"
             align="left"
             style={styles.subtitle}
           >
             A new version of Foam is available. Please update to continue using
             the app.
-          </Typography>
+          </Text>
 
           <View style={styles.versionInfo}>
             <View style={styles.versionRow}>
-              <Typography color="gray.textLow" size="xs">
+              <Text color="gray.textLow" type="xs">
                 Current version
-              </Typography>
-              <Typography color="gray" size="xs" fontWeight="semiBold">
+              </Text>
+              <Text color="gray" type="xs" weight="semibold">
                 {currentVersion}
-              </Typography>
+              </Text>
             </View>
             <View style={styles.versionRow}>
-              <Typography color="gray.textLow" size="xs">
+              <Text color="gray.textLow" type="xs">
                 Minimum required
-              </Typography>
-              <Typography color="gray" size="xs" fontWeight="semiBold">
+              </Text>
+              <Text color="gray" type="xs" weight="semibold">
                 {minimumVersion}
-              </Typography>
+              </Text>
             </View>
           </View>
 
@@ -102,9 +102,9 @@ export function ForceUpdateModal() {
             onPress={handleUpdatePress}
             style={styles.updateButton}
           >
-            <Typography color="accent" contrast size="md" fontWeight="semiBold">
+            <Text color="accent" contrast type="md" weight="semibold">
               Update Now
-            </Typography>
+            </Text>
           </Button>
         </View>
       </View>

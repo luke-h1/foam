@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -119,24 +119,22 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
             </View>
 
             <View style={styles.emoteInfo}>
-              <Typography style={styles.emoteName} numberOfLines={2}>
+              <Text style={styles.emoteName} numberOfLines={2}>
                 {selectedEmote?.name}
-              </Typography>
+              </Text>
 
               <View style={styles.metadataContainer}>
-                <Typography style={styles.emoteMetadata}>
-                  {selectedEmote.site}
-                </Typography>
+                <Text style={styles.emoteMetadata}>{selectedEmote.site}</Text>
                 {selectedEmote.creator && (
-                  <Typography style={styles.emoteMetadata}>
+                  <Text style={styles.emoteMetadata}>
                     By {selectedEmote.creator}
-                  </Typography>
+                  </Text>
                 )}
                 {selectedEmote.original_name &&
                   selectedEmote.original_name !== selectedEmote.name && (
-                    <Typography style={styles.emoteMetadata}>
+                    <Text style={styles.emoteMetadata}>
                       Original: {selectedEmote.original_name}
-                    </Typography>
+                    </Text>
                   )}
               </View>
             </View>
@@ -153,9 +151,7 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
               >
                 <View style={styles.actionContent}>
                   <Icon icon={action.icon} color="#fff" size={18} />
-                  <Typography style={styles.actionText}>
-                    {action.label}
-                  </Typography>
+                  <Text style={styles.actionText}>{action.label}</Text>
                 </View>
               </Button>
             ))}

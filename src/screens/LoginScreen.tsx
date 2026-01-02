@@ -2,7 +2,7 @@
 import { BrandIcon } from '@app/components/BrandIcon';
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { sentryService } from '@app/services/sentry-service';
@@ -114,25 +114,15 @@ export function LoginScreen() {
             />
 
             <View style={styles.titleContainer}>
-              <Typography
-                size="4xl"
-                fontWeight="bold"
-                color="accent"
-                align="center"
-              >
+              <Text type="4xl" weight="bold" color="accent" align="center">
                 Welcome to Foam
-              </Typography>
+              </Text>
             </View>
 
-            <Typography
-              size="lg"
-              color="gray"
-              align="center"
-              style={styles.subtitle}
-            >
+            <Text type="lg" color="gray" align="center" style={styles.subtitle}>
               Experience Twitch like never before.{'\n'}
               Enhanced chat • Third-party emotes • Clean UI
-            </Typography>
+            </Text>
           </View>
 
           <View style={styles.actionSection}>
@@ -149,9 +139,9 @@ export function LoginScreen() {
             >
               <View style={styles.buttonContent}>
                 <BrandIcon name="twitch" />
-                <Typography size="lg" color="gray.text" fontWeight="semiBold">
+                <Text type="lg" color="gray.text" weight="semibold">
                   Continue with Twitch
-                </Typography>
+                </Text>
               </View>
             </Button>
           </View>
@@ -160,21 +150,21 @@ export function LoginScreen() {
             <View style={styles.featuresList}>
               <View style={styles.featureItem}>
                 <View style={styles.featureDot} />
-                <Typography size="sm" color="gray">
+                <Text type="sm" color="gray">
                   BTTV, FFZ & 7TV emotes
-                </Typography>
+                </Text>
               </View>
               <View style={styles.featureItem}>
                 <View style={styles.featureDot} />
-                <Typography size="sm" color="gray">
+                <Text type="sm" color="gray">
                   Enhanced chat experience
-                </Typography>
+                </Text>
               </View>
               <View style={styles.featureItem}>
                 <View style={styles.featureDot} />
-                <Typography size="sm" color="gray">
+                <Text type="sm" color="gray">
                   Intuitive mobile interface
-                </Typography>
+                </Text>
               </View>
             </View>
           </View>

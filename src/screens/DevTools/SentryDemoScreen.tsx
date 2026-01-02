@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -7,10 +7,10 @@ export function SentryDemoScreen() {
   return (
     <View style={styles.container}>
       <Button style={[styles.buttonText, styles.button]}>
-        <Typography>Log 'test error' error</Typography>
+        <Text>Log 'test error' error</Text>
       </Button>
       <Button style={[styles.buttonText, styles.button]}>
-        <Typography>Log 'test_event' event</Typography>
+        <Text>Log 'test_event' event</Text>
       </Button>
     </View>
   );

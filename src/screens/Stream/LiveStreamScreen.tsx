@@ -1,6 +1,6 @@
 import { Chat } from '@app/components/Chat';
 import { Spinner } from '@app/components/Spinner';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
@@ -132,7 +132,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   if (!stream) {
     return (
       <View style={styles.container}>
-        <Typography style={styles.videoUser}>User Offline</Typography>
+        <Text style={styles.videoUser}>User Offline</Text>
       </View>
     );
   }
