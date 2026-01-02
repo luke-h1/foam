@@ -13,24 +13,24 @@ interface Props {
 }
 
 export function Tags({ tags, limit = 10 }: Props) {
-  const { navigate } = useAppNavigation();
+  const navigation = useAppNavigation();
 
-  const renderItem: ListRenderItem<string> = useCallback(({ item }) => {
-    return (
-      <Button
-        onPress={() => {
-          navigate('Category', {
-            id: item,
-          });
-        }}
-      >
-        <View style={styles.tag}>
-          <Typography>{item}</Typography>
-        </View>
-      </Button>
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const renderItem: ListRenderItem<string> = useCallback(
+    ({ item }) => {
+      return (
+        <Button
+          onPress={() => {
+            navigation.navigate('Category', { id: item });
+          }}
+        >
+          <View style={styles.tag}>
+            <Typography>{item}</Typography>
+          </View>
+        </Button>
+      );
+    },
+    [navigation],
+  );
 
   if (tags.length === 0) {
     return null;
