@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { Image } from '../Image';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 interface Props {
   category: Category;
@@ -32,7 +32,7 @@ export function CategoryCard({ category }: Props) {
           style={styles.image}
           contentFit="contain"
         />
-        <Typography style={styles.title}>{category.name}</Typography>
+        <Text style={styles.title}>{category.name}</Text>
       </View>
     </Button>
   );

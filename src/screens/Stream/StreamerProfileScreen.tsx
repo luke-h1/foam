@@ -1,10 +1,10 @@
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { View } from 'react-native';
 
 export function StreamerProfileScreen() {
   return (
     <View>
-      <Typography>Streamer profile</Typography>
+      <Text>Streamer profile</Text>
     </View>
   );
 }

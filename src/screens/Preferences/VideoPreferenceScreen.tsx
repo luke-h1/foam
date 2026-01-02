@@ -1,5 +1,5 @@
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 
 export function VideoPreferenceScreen() {
-  return <Typography>Video preferences</Typography>;
+  return <Text>Video preferences</Text>;
 }

@@ -2,7 +2,7 @@ import { Button } from '@app/components/Button';
 import { FlashList, ListRenderItem } from '@app/components/FlashList';
 import { Image } from '@app/components/Image';
 import { ScreenHeader } from '@app/components/ScreenHeader';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { clearEmoteImageCache } from '@app/store/chatStore';
 import {
   CachedImageInfo,
@@ -64,13 +64,11 @@ export function CachedImagesScreen() {
           contentFit="contain"
         />
         <View style={styles.imageInfo}>
-          <Typography style={styles.imageName}>{item.name}</Typography>
-          <Typography style={styles.imageSize}>
-            {formatBytes(item.size)}
-          </Typography>
-          <Typography style={styles.imagePath} selectable>
+          <Text style={styles.imageName}>{item.name}</Text>
+          <Text style={styles.imageSize}>{formatBytes(item.size)}</Text>
+          <Text style={styles.imagePath} selectable>
             {item.uri}
-          </Typography>
+          </Text>
         </View>
       </View>
     ),
@@ -87,10 +85,10 @@ export function CachedImagesScreen() {
         />
 
         <View style={styles.pathContainer}>
-          <Typography style={styles.pathLabel}>Cache Location:</Typography>
-          <Typography style={styles.pathValue} numberOfLines={2}>
+          <Text style={styles.pathLabel}>Cache Location:</Text>
+          <Text style={styles.pathValue} numberOfLines={2}>
             {getCacheDirectoryPath()}
-          </Typography>
+          </Text>
         </View>
 
         <View style={styles.actions}>
@@ -101,7 +99,7 @@ export function CachedImagesScreen() {
               { backgroundColor: theme.colors.blue.accent },
             ]}
           >
-            <Typography style={styles.buttonText}>Refresh</Typography>
+            <Text style={styles.buttonText}>Refresh</Text>
           </Button>
           <Button
             onPress={handleClearCache}
@@ -111,18 +109,16 @@ export function CachedImagesScreen() {
             ]}
             disabled={images.length === 0}
           >
-            <Typography style={styles.buttonText}>Clear All</Typography>
+            <Text style={styles.buttonText}>Clear All</Text>
           </Button>
         </View>
 
         {images.length === 0 ? (
           <View style={styles.emptyState}>
-            <Typography style={styles.emptyText}>
-              No cached images found
-            </Typography>
-            <Typography style={styles.emptySubtext}>
+            <Text style={styles.emptyText}>No cached images found</Text>
+            <Text style={styles.emptySubtext}>
               Emote images will appear here after visiting a chat
-            </Typography>
+            </Text>
           </View>
         ) : (
           <FlashList

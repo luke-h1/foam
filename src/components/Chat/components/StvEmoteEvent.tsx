@@ -1,6 +1,6 @@
 import { BrandIcon } from '@app/components/BrandIcon';
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -27,14 +27,14 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
       <View style={styles.notice}>
         <View style={styles.noticeHeader}>
           <BrandIcon name="stv" size="lg" />
-          <Typography style={styles.status}>
-            <Typography color={removed ? 'red' : 'green'}>{status}</Typography>
-            <Typography> Emote</Typography>
-          </Typography>
+          <Text style={styles.status}>
+            <Text color={removed ? 'red' : 'green'}>{status}</Text>
+            <Text> Emote</Text>
+          </Text>
           {part.stvEvents.data.actor?.display_name && (
-            <Typography style={styles.userText}>
+            <Text style={styles.userText}>
               {part.stvEvents.data.actor?.display_name}
-            </Typography>
+            </Text>
           )}
         </View>
       </View>
@@ -46,11 +46,11 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
           contentFit="contain"
         />
         <View style={styles.textContainer}>
-          <Typography style={styles.emoteName}>{content.name}</Typography>
+          <Text style={styles.emoteName}>{content.name}</Text>
           {content.creator && (
-            <Typography size="xs" color="gray.accentHover">
+            <Text type="xs" color="gray.accentHover">
               By {content.creator}
-            </Typography>
+            </Text>
           )}
         </View>
       </View>

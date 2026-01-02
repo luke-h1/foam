@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { ReactNativeLegal } from 'react-native-legal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
@@ -10,7 +10,7 @@ export function LicensesScreen() {
       <Button
         onPress={() => ReactNativeLegal.launchLicenseListScreen('OSS licenses')}
       >
-        <Typography>OSS licenses</Typography>
+        <Text>OSS licenses</Text>
       </Button>
     </SafeAreaView>
   );

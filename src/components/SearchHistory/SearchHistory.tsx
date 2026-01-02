@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button';
 import { FlashList } from '../FlashList';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 interface Props {
   results: string[];
@@ -26,7 +26,7 @@ export function SearchHistory({
     ({ item }) => (
       <View style={styles.itemContainer}>
         <Button style={styles.item} onPress={() => onSelectItem(item)}>
-          <Typography>{item}</Typography>
+          <Text>{item}</Text>
         </Button>
         <Button onPress={() => onClearItem(item)}>
           <Entypo
@@ -46,9 +46,9 @@ export function SearchHistory({
       <View style={styles.header}>
         {results.length > 0 && (
           <>
-            <Typography>Search History</Typography>
+            <Text>Search History</Text>
             <Button onPress={onClearAll}>
-              <Typography style={styles.clearAll}>Clear All</Typography>
+              <Text style={styles.clearAll}>Clear All</Text>
             </Button>
           </>
         )}

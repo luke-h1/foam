@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useCallback } from 'react';
@@ -68,20 +68,20 @@ export function EmoteSuggestions({
               />
             </View>
             <View style={styles.emoteTextContainer}>
-              <Typography
+              <Text
                 style={styles.emoteName}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 {item.name}
-              </Typography>
-              <Typography
+              </Text>
+              <Text
                 style={styles.emoteSite}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 {item.site}
-              </Typography>
+              </Text>
             </View>
           </View>
         </Button>

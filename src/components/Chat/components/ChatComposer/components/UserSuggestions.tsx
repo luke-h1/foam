@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { ChatUser } from '@app/store/chatStore';
 import { ScrollView, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -34,11 +34,9 @@ export function UserSuggestions({
               style={styles.userSuggestionItem}
               onPress={() => handleUserSelect(user)}
             >
-              <Typography
-                style={[styles.userSuggestionText, { color: user?.color }]}
-              >
+              <Text style={[styles.userSuggestionText, { color: user?.color }]}>
                 {user?.name}
-              </Typography>
+              </Text>
             </Button>
           ))}
         </ScrollView>

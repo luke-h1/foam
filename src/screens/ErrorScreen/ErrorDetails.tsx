@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { sentryService } from '@app/services/sentry-service';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { type ErrorInfo, useState } from 'react';
@@ -42,24 +42,14 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         <View style={styles.iconContainer}>
           <Icon icon="alert-circle" size={48} />
         </View>
-        <Typography
-          size="xl"
-          fontWeight="semiBold"
-          style={styles.heading}
-          align="center"
-        >
+        <Text type="xl" weight="semibold" style={styles.heading} align="center">
           Something went wrong
-        </Typography>
-        <Typography
-          size="md"
-          color="gray"
-          align="center"
-          style={styles.description}
-        >
+        </Text>
+        <Text type="md" color="gray" align="center" style={styles.description}>
           Try resetting or restarting the app & see if that helps. If not, feel
           free to click the 'send feedback' button to report the issue to the
           developers.
-        </Typography>
+        </Text>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -67,26 +57,26 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           style={styles.primaryButton}
           onPress={() => openLinkInBrowser(githubURL)}
         >
-          <Typography
-            size="md"
-            fontWeight="semiBold"
+          <Text
+            type="md"
+            weight="semibold"
             color="blue"
             contrast
             align="center"
           >
             GitHub
-          </Typography>
+          </Text>
         </Button>
         <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
-          <Typography
-            size="md"
-            fontWeight="semiBold"
+          <Text
+            type="md"
+            weight="semibold"
             color="gray"
             contrast
             align="center"
           >
             Send Feedback
-          </Typography>
+          </Text>
         </Button>
       </View>
 
@@ -94,14 +84,9 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         style={styles.toggleButton}
         onPress={() => setShowStackTrace(!showStackTrace)}
       >
-        <Typography
-          size="sm"
-          color="blue"
-          align="center"
-          style={styles.toggleText}
-        >
+        <Text type="sm" color="blue" align="center" style={styles.toggleText}>
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
-        </Typography>
+        </Text>
       </Button>
 
       {showStackTrace && (
@@ -112,39 +97,33 @@ export function ErrorDetails(props: ErrorDetailsProps) {
             showsVerticalScrollIndicator
           >
             {error?.message && (
-              <Typography
-                size="sm"
-                fontWeight="semiBold"
+              <Text
+                type="sm"
+                weight="semibold"
                 color="red"
                 style={styles.errorMessage}
               >
                 {error.message.trim()}
-              </Typography>
+              </Text>
             )}
             {errorInfo?.componentStack && (
-              <Typography
+              <Text
                 selectable
-                size="xs"
+                type="xs"
                 color="gray"
                 style={styles.errorBackTrace}
               >
                 {errorInfo.componentStack.trim()}
-              </Typography>
+              </Text>
             )}
           </ScrollView>
         </View>
       )}
 
       <Button style={styles.resetButton} onPress={onReset}>
-        <Typography
-          size="md"
-          fontWeight="semiBold"
-          color="red"
-          contrast
-          align="center"
-        >
+        <Text type="md" weight="semibold" color="red" contrast align="center">
           Reset App
-        </Typography>
+        </Text>
       </Button>
     </ScrollView>
   );

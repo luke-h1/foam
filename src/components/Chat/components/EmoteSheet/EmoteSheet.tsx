@@ -1,7 +1,7 @@
 import { BrandIcon, BrandIconName } from '@app/components/BrandIcon';
 import { Button } from '@app/components/Button';
 import { Image } from '@app/components/Image';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { useCurrentEmoteData, getCachedEmoteUri } from '@app/store/chatStore';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
@@ -149,7 +149,7 @@ const EmoteCell = memo(({ item, onPress }: EmoteCellProps) => {
 
   return (
     <Button style={styles.emoteCell} onPress={handlePress}>
-      <Typography style={styles.emojiText}>{item}</Typography>
+      <Text style={styles.emojiText}>{item}</Text>
     </Button>
   );
 });
@@ -183,7 +183,7 @@ interface SectionHeaderProps {
 
 const SectionHeader = memo(({ title }: SectionHeaderProps) => (
   <View style={styles.sectionHeader}>
-    <Typography style={styles.sectionTitle}>{title}</Typography>
+    <Text style={styles.sectionTitle}>{title}</Text>
   </View>
 ));
 
@@ -216,7 +216,7 @@ const CategoryButton = memo(
             color={isActive ? 'text' : undefined}
           />
         ) : (
-          <Typography style={styles.categoryEmoji}>{displayIcon}</Typography>
+          <Text style={styles.categoryEmoji}>{displayIcon}</Text>
         )}
       </Button>
     );

@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { forwardRef, memo, useCallback } from 'react';
 import { View } from 'react-native';
@@ -56,9 +56,9 @@ const ChatDebugModalComponent = forwardRef<
     >
       <BottomSheetView style={styles.content}>
         <View style={styles.header}>
-          <Typography fontWeight="bold" style={styles.title}>
+          <Text weight="bold" style={styles.title}>
             Debug Test Messages
-          </Typography>
+          </Text>
         </View>
 
         {DEBUG_OPTIONS.map(option => (
@@ -67,16 +67,16 @@ const ChatDebugModalComponent = forwardRef<
             onPress={() => handleTestMessage(option.type)}
             style={styles.item}
           >
-            <Typography>{option.label}</Typography>
+            <Text>{option.label}</Text>
           </Button>
         ))}
 
         <Button onPress={onClearChatCache} style={styles.item}>
-          <Typography>Clear Chat Cache</Typography>
+          <Text>Clear Chat Cache</Text>
         </Button>
 
         <Button onPress={onClearImageCache} style={styles.item}>
-          <Typography>Clear Image Cache</Typography>
+          <Text>Clear Image Cache</Text>
         </Button>
       </BottomSheetView>
     </BottomSheetModal>

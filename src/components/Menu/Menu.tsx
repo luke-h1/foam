@@ -5,7 +5,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { BrandIconName } from '../BrandIcon';
 import { FlashList, FlashListProps } from '../FlashList';
 import { RefreshControl } from '../RefreshControl';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 import { MenuItem } from './MenuItem';
 
 export type Item = MenuItem | string | null | (() => ReactElement);
@@ -105,14 +105,14 @@ export function Menu({
         if (typeof item === 'string') {
           return (
             <View style={menuStyles.sectionHeader}>
-              <Typography
-                size="sm"
-                fontWeight="bold"
+              <Text
+                type="sm"
+                weight="bold"
                 color="gray.text"
                 style={menuStyles.sectionTitle}
               >
                 {item}
-              </Typography>
+              </Text>
             </View>
           );
         }

@@ -10,7 +10,7 @@ import { BrandIcon } from '../BrandIcon';
 import { Icon } from '../Icon';
 import { Image } from '../Image';
 import { Switch } from '../Switch';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 import { SheetItem } from '../sheets/SheetItem';
 import { SheetModal } from '../sheets/SheetModal';
 import { type Icon as IconType, type MenuItem } from './Menu';
@@ -80,19 +80,19 @@ export function MenuItem({ item, style }: MenuItemProps) {
         )}
 
         <View style={styles.contentContainer}>
-          <Typography fontWeight="semiBold">{item.label}</Typography>
+          <Text weight="semibold">{item.label}</Text>
 
           {item.description ? (
-            <Typography size="xs" color="gray.textLow">
+            <Text type="xs" color="gray.textLow">
               {item.description}
-            </Typography>
+            </Text>
           ) : null}
         </View>
 
         {item.hideSelected ? null : typeof selected === 'string' ? (
-          <Typography color="gray" fontWeight="bold">
+          <Text color="gray" weight="bold">
             {selected}
-          </Typography>
+          </Text>
         ) : (
           selected
         )}
@@ -128,17 +128,17 @@ export function MenuItem({ item, style }: MenuItemProps) {
 
             if (typeof option === 'string') {
               return (
-                <Typography
+                <Text
                   highContrast={false}
                   key={option}
                   mb="sm"
                   mt="sm"
                   mx="sm"
-                  size="md"
-                  fontWeight="semiBold"
+                  type="md"
+                  weight="semibold"
                 >
                   {option}
-                </Typography>
+                </Text>
               );
             }
             return (

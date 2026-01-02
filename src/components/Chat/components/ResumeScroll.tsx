@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unused-prop-types */
 import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { FlashListRef } from '@shopify/flash-list';
 import { RefObject } from 'react';
 import { View } from 'react-native';
@@ -29,7 +29,7 @@ export function ResumeScroll({
           size={16}
           color={theme.colors.amber.accentAlpha}
         />
-        {unreadCount > 0 && <Typography>{unreadCount}</Typography>}
+        {unreadCount > 0 && <Text>{unreadCount}</Text>}
       </Button>
     </View>
   );

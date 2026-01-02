@@ -26,7 +26,6 @@ import {
 import Animated from 'react-native-reanimated';
 import { BodyScrollView } from '../BodyScrollView';
 import { IconSymbol, IconSymbolName } from '../IconSymbol/IconSymbol';
-import { Typography } from '../Typography';
 
 type ListStyle = 'grouped' | 'auto';
 
@@ -564,9 +563,9 @@ export function Section({
           }
           if (typeof child === 'string') {
             return (
-              <Typography selectable style={FormFont.secondary}>
+              <Text selectable style={FormFont.secondary}>
                 {child}
-              </Typography>
+              </Text>
             );
           }
 

@@ -7,7 +7,7 @@ import {
   IconSymbol,
   IconSymbolName,
 } from '@app/components/IconSymbol/IconSymbol';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import {
   defaultRemoteConfig,
   RemoteConfigKey,
@@ -71,24 +71,24 @@ export function RemoteConfigScreen() {
           ) : (
             <IconSymbol name="arrow.clockwise" size={16} color="#fff" />
           )}
-          <Typography size="sm" fontWeight="semiBold" style={styles.buttonText}>
+          <Text type="sm" weight="semibold" style={styles.buttonText}>
             {isRefetching ? 'Fetching...' : 'Fetch from Remote'}
-          </Typography>
+          </Text>
         </Button>
       </View>
 
       <View style={styles.section}>
-        <Typography
-          size="xs"
-          fontWeight="semiBold"
+        <Text
+          type="xs"
+          weight="semibold"
           color="gray.textLow"
           style={styles.sectionTitle}
         >
           CONFIG VALUES
-        </Typography>
-        <Typography size="xs" color="gray.textLow" style={styles.appVariant}>
+        </Text>
+        <Text type="xs" color="gray.textLow" style={styles.appVariant}>
           App variant: {process.env.APP_VARIANT}
-        </Typography>
+        </Text>
         <View style={styles.card}>
           {configKeys.map((key, index) => {
             const entry = config[key];
@@ -112,45 +112,45 @@ export function RemoteConfigScreen() {
                           : AC.systemOrange
                       }
                     />
-                    <Typography size="sm" fontWeight="semiBold">
+                    <Text type="sm" weight="semibold">
                       {key}
-                    </Typography>
+                    </Text>
                   </View>
                   <View style={styles.sourceTag(entry.source)}>
-                    <Typography size="xs" fontWeight="semiBold" color="gray.bg">
+                    <Text type="xs" weight="semibold" color="gray.bg">
                       {entry.source}
-                    </Typography>
+                    </Text>
                   </View>
                 </View>
 
                 <View style={styles.valuesContainer}>
                   <View style={styles.valueRow}>
-                    <Typography
-                      size="xs"
+                    <Text
+                      type="xs"
                       color="gray.textLow"
                       style={styles.valueLabel}
                     >
                       Server
-                    </Typography>
+                    </Text>
                     <View style={styles.valueBox}>
-                      <Typography style={styles.valueText}>
+                      <Text style={styles.valueText}>
                         {serverValue || '(empty)'}
-                      </Typography>
+                      </Text>
                     </View>
                   </View>
 
                   <View style={styles.valueRow}>
-                    <Typography
-                      size="xs"
+                    <Text
+                      type="xs"
                       color="gray.textLow"
                       style={styles.valueLabel}
                     >
                       Default
-                    </Typography>
+                    </Text>
                     <View style={styles.defaultValueBox}>
-                      <Typography style={styles.defaultValueText}>
+                      <Text style={styles.defaultValueText}>
                         {defaultValue || '(empty)'}
-                      </Typography>
+                      </Text>
                     </View>
                   </View>
                 </View>
@@ -161,20 +161,20 @@ export function RemoteConfigScreen() {
       </View>
 
       <View style={styles.section}>
-        <Typography
-          size="xs"
-          fontWeight="semiBold"
+        <Text
+          type="xs"
+          weight="semibold"
           color="gray.textLow"
           style={styles.sectionTitle}
         >
           LEGEND
-        </Typography>
+        </Text>
         <View style={styles.card}>
           <View style={[styles.legendItem, styles.configItemBorder]}>
             <IconSymbol name="cloud.fill" size={16} color={AC.systemGreen} />
-            <Typography size="sm" color="gray.text">
+            <Text type="sm" color="gray.text">
               Remote - fetched from Firebase
-            </Typography>
+            </Text>
           </View>
           <View style={styles.legendItem}>
             <IconSymbol
@@ -182,9 +182,9 @@ export function RemoteConfigScreen() {
               size={16}
               color={AC.systemOrange}
             />
-            <Typography size="sm" color="gray.text">
+            <Text type="sm" color="gray.text">
               Default - using local fallback
-            </Typography>
+            </Text>
           </View>
         </View>
       </View>

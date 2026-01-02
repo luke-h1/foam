@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,7 +45,7 @@ export function TopScreen() {
                     }}
                     style={[styles.tab, styles.line(index, i)]}
                   >
-                    <Typography>{route.title}</Typography>
+                    <Text>{route.title}</Text>
                   </Button>
                 );
               },

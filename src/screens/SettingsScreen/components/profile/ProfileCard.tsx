@@ -2,7 +2,7 @@ import { Icon } from '@app/components/Icon';
 import { Image } from '@app/components/Image';
 import { Modal } from '@app/components/Modal';
 import { PressableArea } from '@app/components/PressableArea';
-import { Typography } from '@app/components/Typography';
+import { Text } from '@app/components/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { resetRoot } from '@app/navigators/navigationUtilities';
@@ -94,18 +94,18 @@ export function ProfileCard() {
               <Icon icon="user" size={32} color={theme.colors.accent.accent} />
             </View>
           </View>
-          <Typography size="xl" fontWeight="bold" align="center" mb="sm">
+          <Text type="xl" weight="bold" align="center" mb="sm">
             Welcome to Foam
-          </Typography>
-          <Typography
-            size="sm"
+          </Text>
+          <Text
+            type="sm"
             color="gray.textLow"
             align="center"
             style={styles.loginDescription}
           >
             Sign in with your Twitch account to chat, follow streams, and unlock
             all features
-          </Typography>
+          </Text>
           <PressableArea
             style={styles.loginButton}
             onPress={() => navigate('Login')}
@@ -115,9 +115,9 @@ export function ProfileCard() {
               size={20}
               color={theme.colors.accent.contrast}
             />
-            <Typography fontWeight="semiBold" color="accent" contrast size="md">
+            <Text weight="semibold" color="accent" contrast type="md">
               Sign in with Twitch
-            </Typography>
+            </Text>
           </PressableArea>
         </View>
       </ScrollView>
@@ -148,12 +148,12 @@ export function ProfileCard() {
             )}
           </View>
           <View style={styles.profileInfo}>
-            <Typography size="lg" fontWeight="bold">
+            <Text type="lg" weight="bold">
               {user.display_name}
-            </Typography>
-            <Typography size="sm" color="gray.textLow">
+            </Text>
+            <Text type="sm" color="gray.textLow">
               Signed in • Tap to view profile
-            </Typography>
+            </Text>
           </View>
           <Icon
             icon="chevron-right"
@@ -164,14 +164,14 @@ export function ProfileCard() {
 
         {/* Menu Section */}
         <View style={styles.section}>
-          <Typography
-            size="xs"
-            fontWeight="semiBold"
+          <Text
+            type="xs"
+            weight="semibold"
             color="gray.textLow"
             style={styles.sectionTitle}
           >
             ACCOUNT
-          </Typography>
+          </Text>
           <View style={styles.menuCard}>
             {menuItems.map((item, index) => (
               <PressableArea
@@ -200,16 +200,16 @@ export function ProfileCard() {
                   />
                 </View>
                 <View style={styles.menuContent}>
-                  <Typography
-                    fontWeight="semiBold"
+                  <Text
+                    weight="semibold"
                     color={item.variant === 'danger' ? 'red' : 'gray'}
                   >
                     {item.title}
-                  </Typography>
+                  </Text>
                   {item.description && (
-                    <Typography size="xs" color="gray.textLow">
+                    <Text type="xs" color="gray.textLow">
                       {item.description}
-                    </Typography>
+                    </Text>
                   )}
                 </View>
                 <Icon
@@ -225,9 +225,9 @@ export function ProfileCard() {
         {/* Logout Section */}
         <View style={styles.section}>
           <PressableArea style={styles.logoutButton} onPress={handleLogout}>
-            <Typography fontWeight="semiBold" color="red">
+            <Text weight="semibold" color="red">
               Sign Out
-            </Typography>
+            </Text>
           </PressableArea>
         </View>
       </ScrollView>

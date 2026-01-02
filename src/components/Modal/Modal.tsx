@@ -1,7 +1,7 @@
 import { Modal as RNModal, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
-import { Typography } from '../Typography';
+import { Text } from '../Text';
 
 interface OnPressProps extends ButtonProps {
   cta: () => void;
@@ -27,35 +27,25 @@ export function Modal({
     <RNModal animationType="fade" transparent visible={isVisible}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <Typography style={styles.text}>{title}</Typography>
-          {subtitle ? (
-            <Typography style={styles.subtitle}>{subtitle}</Typography>
-          ) : null}
+          <Text style={styles.text}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
           <Button
             onPress={confirmOnPress.cta}
             style={styles.confirmButton}
             disabled={confirmOnPress.disabled}
           >
-            <Typography
-              fontWeight="semiBold"
-              color="red"
-              style={styles.buttonText}
-            >
+            <Text weight="semibold" color="red" style={styles.buttonText}>
               {confirmOnPress.label}
-            </Typography>
+            </Text>
           </Button>
           <Button
             style={styles.cancelButton}
             onPress={cancelOnPress.cta}
             disabled={cancelOnPress.disabled}
           >
-            <Typography
-              fontWeight="semiBold"
-              color="gray"
-              style={styles.buttonText}
-            >
+            <Text weight="semibold" color="gray" style={styles.buttonText}>
               {cancelOnPress.label}
-            </Typography>
+            </Text>
           </Button>
         </View>
       </View>
