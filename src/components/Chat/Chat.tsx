@@ -28,17 +28,27 @@ import { logger } from '@app/utils/logger';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { FlashListRef, ListRenderItem } from '@shopify/flash-list';
+import * as Clipboard from 'expo-clipboard';
 import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { View, Platform, TextInput } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
+import { toast } from 'sonner-native';
 import { FlashList } from '../FlashList/FlashList';
 
 import { Text } from '../Text';
+import { ActionSheet } from './components/ActionSheet';
+import { BadgePreviewSheet } from './components/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
-import { ChatMessage } from './components/ChatMessage/ChatMessage';
+import {
+  ChatMessage,
+  EmotePressData,
+  BadgePressData,
+  MessageActionData,
+} from './components/ChatMessage/ChatMessage';
+import { EmotePreviewSheet } from './components/EmotePreviewSheet';
 import {
   EmoteSheet,
   EmotePickerItem,
@@ -91,16 +101,30 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const debugModalRef = useRef<BottomSheetModal>(null);
   const chatInputRef = useRef<TextInput>(null);
 
-  // UI state
+  const emotePreviewSheetRef = useRef<BottomSheetModal>(null);
+  const badgePreviewSheetRef = useRef<BottomSheetModal>(null);
+  const actionSheetRef = useRef<BottomSheetModal>(null);
+
   const [connected, setConnected] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
   const [, setIsInputFocused] = useState(false);
 
-  // Hooks
+  // Shared sheet state (single instances instead of per-message)
+  const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
+    null,
+  );
+  const [selectedBadge, setSelectedBadge] = useState<BadgePressData | null>(
+    null,
+  );
+  const [selectedMessage, setSelectedMessage] =
+    useState<MessageActionData<'usernotice'> | null>(null);
+
+  // Memoized mention color cache to avoid O(n) lookups in each message
+  const mentionColorCache = useRef<Map<string, string>>(new Map());
+
   useTwitchWs();
 
-  // Emote loading with graceful cancellation
   const {
     status: emoteLoadStatus,
     sevenTvEmoteSetId,
@@ -560,7 +584,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       parentDisplayName: replyTo?.username || '',
       replyDisplayName: replyTo?.replyParentUserLogin || '',
       replyBody: replyTo?.message || '',
-      parentColor: undefined,
+      parentColor: replyTo?.color,
     };
 
     handleNewMessage(optimisticMessage);
@@ -613,6 +637,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         parentMessage: replaceEmotesWithText(
           parentMessage?.message as ParsedPart[],
         ),
+        color: message.userstate.color,
       });
     },
     [messages],
@@ -633,6 +658,73 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const handleOpenSettingsSheet = useCallback(() => {
     void settingsSheetRef.current?.present();
   }, []);
+
+  // Shared sheet handlers - lifted from per-message to single instances
+  const handleEmoteLongPress = useCallback((emote: EmotePressData) => {
+    setSelectedEmote(emote);
+    emotePreviewSheetRef.current?.present();
+  }, []);
+
+  const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
+    setSelectedBadge(badge);
+    badgePreviewSheetRef.current?.present();
+  }, []);
+
+  const handleMessageLongPress = useCallback(
+    (data: MessageActionData<'usernotice'>) => {
+      setSelectedMessage(data);
+      actionSheetRef.current?.present();
+    },
+    [],
+  );
+
+  const handleActionSheetReply = useCallback(() => {
+    if (!selectedMessage) return;
+    handleReply(selectedMessage.messageData as ChatMessageType<'usernotice'>);
+    actionSheetRef.current?.dismiss();
+  }, [selectedMessage, handleReply]);
+
+  const handleActionSheetCopy = useCallback(() => {
+    if (!selectedMessage) return;
+    const messageText = replaceEmotesWithText(selectedMessage.message);
+    void Clipboard.setStringAsync(messageText).then(() =>
+      toast.success('Copied to clipboard'),
+    );
+    actionSheetRef.current?.dismiss();
+  }, [selectedMessage]);
+
+  // Cached mention color lookup to avoid O(n) per-message
+  const getMentionColor = useCallback(
+    (username: string): string => {
+      const lowerUsername = username.toLowerCase();
+
+      // Check cache first
+      const cached = mentionColorCache.current.get(lowerUsername);
+      if (cached) return cached;
+
+      // Look up from messages
+      const mentionedUserMessage = messages.find(msg => {
+        const msgUsername = msg?.userstate.username?.toLowerCase();
+        const msgLogin = msg?.userstate.login?.toLowerCase();
+        const msgSender = msg?.sender?.toLowerCase();
+        return (
+          msgUsername === lowerUsername ||
+          msgLogin === lowerUsername ||
+          msgSender === lowerUsername
+        );
+      });
+
+      const color =
+        mentionedUserMessage?.userstate.color ||
+        generateRandomTwitchColor(username);
+
+      // Cache the result
+      mentionColorCache.current.set(lowerUsername, color);
+
+      return color;
+    },
+    [messages],
+  );
 
   const handleTestMessage = useCallback(
     (type: TestMessageType) => {
@@ -695,14 +787,23 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onReply={handleReply}
         replyDisplayName={msg.replyDisplayName}
         replyBody={msg.replyBody}
-        allMessages={messages}
+        onEmotePress={handleEmoteLongPress}
+        onBadgePress={handleBadgeLongPress}
+        onMessageLongPress={handleMessageLongPress}
+        getMentionColor={getMentionColor}
         // @ts-expect-error - notice_tags having issues being narrowed down
         notice_tags={
           'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
         }
       />
     ),
-    [handleReply, messages],
+    [
+      handleReply,
+      handleEmoteLongPress,
+      handleBadgeLongPress,
+      handleMessageLongPress,
+      getMentionColor,
+    ],
   );
 
   const keyExtractor = useCallback(
@@ -807,6 +908,31 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           onClearChatCache={handleClearChatCache}
           onClearImageCache={() => void handleClearImageCache()}
         />
+
+        {/* Shared bottom sheets - single instances instead of per-message */}
+        {selectedEmote && (
+          <EmotePreviewSheet
+            ref={emotePreviewSheetRef}
+            selectedEmote={selectedEmote}
+          />
+        )}
+
+        {selectedBadge && (
+          <BadgePreviewSheet
+            ref={badgePreviewSheetRef}
+            selectedBadge={selectedBadge}
+          />
+        )}
+
+        {selectedMessage && (
+          <ActionSheet
+            ref={actionSheetRef}
+            message={selectedMessage.message}
+            username={selectedMessage.username}
+            handleReply={handleActionSheetReply}
+            handleCopy={handleActionSheetCopy}
+          />
+        )}
       </KeyboardAvoidingView>
     </View>
   );

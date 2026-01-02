@@ -1,8 +1,47 @@
-import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
-import { SentryDemoScreen } from '@app/screens/DevTools/SentryDemoScreen';
-import { Diagnostics as DiagnosticsScreen } from '@app/screens/DevTools/components/Diagnostics';
+import { ScreenSuspense } from '@app/components/ScreenSuspense';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
+import { lazy } from 'react';
+
+const LazyDebugScreen = lazy(() =>
+  import('@app/screens/DevTools/DebugScreen').then(m => ({
+    default: m.DebugScreen,
+  })),
+);
+const LazySentryDemoScreen = lazy(() =>
+  import('@app/screens/DevTools/SentryDemoScreen').then(m => ({
+    default: m.SentryDemoScreen,
+  })),
+);
+const LazyDiagnosticsScreen = lazy(() =>
+  import('@app/screens/DevTools/components/Diagnostics').then(m => ({
+    default: m.Diagnostics,
+  })),
+);
+
+function DebugScreen() {
+  return (
+    <ScreenSuspense>
+      <LazyDebugScreen />
+    </ScreenSuspense>
+  );
+}
+
+function SentryDemoScreen() {
+  return (
+    <ScreenSuspense>
+      <LazySentryDemoScreen />
+    </ScreenSuspense>
+  );
+}
+
+function DiagnosticsScreen() {
+  return (
+    <ScreenSuspense>
+      <LazyDiagnosticsScreen />
+    </ScreenSuspense>
+  );
+}
 
 export type DevToolsParamList = {
   Diagnostics: undefined;

@@ -7,25 +7,18 @@ import {
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
 import { truncate } from '@app/utils/string/truncate';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import * as Clipboard from 'expo-clipboard';
-import React, { useRef, useCallback, memo, useState } from 'react';
+import React, { useCallback, memo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { toast } from 'sonner-native';
 import { Button } from '../../../Button';
 import { Icon } from '../../../Icon';
 import { Image } from '../../../Image';
 import { Text } from '../../../Text';
-import { ActionSheet } from '../ActionSheet';
-import { BadgePreviewSheet } from '../BadgePreviewSheet';
-import { EmotePreviewSheet } from '../EmotePreviewSheet';
 import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
 import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
@@ -36,6 +29,14 @@ type OnReply<TNoticeType extends NoticeVariants> = Omit<
   ChatMessageType<TNoticeType>,
   'style'
 >;
+
+export type EmotePressData = ParsedPart<'emote'>;
+export type BadgePressData = SanitisedBadgeSet;
+export type MessageActionData<TNoticeType extends NoticeVariants> = {
+  message: ParsedPart[];
+  username?: string;
+  messageData: OnReply<TNoticeType>;
+};
 
 function ChatMessageComponent<
   TNoticeType extends NoticeVariants,
@@ -58,10 +59,16 @@ function ChatMessageComponent<
   parentColor,
   notice_tags,
   onReply,
-  allMessages,
+  onEmotePress,
+  onBadgePress,
+  onMessageLongPress,
+  getMentionColor,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
-  allMessages?: ChatMessageType<never>[];
+  onEmotePress?: (data: EmotePressData) => void;
+  onBadgePress?: (data: BadgePressData) => void;
+  onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
+  getMentionColor?: (username: string) => string;
 }) {
   const isSubscriptionNotice = message.some(
     part =>
@@ -82,36 +89,21 @@ function ChatMessageComponent<
     });
   }
 
-  const emoteSheetRef = useRef<BottomSheetModal>(null);
-  const badgeSheetRef = useRef<BottomSheetModal>(null);
-  const actionSheetRef = useRef<BottomSheetModal>(null);
-
-  const [selectedEmote, setSelectedEmote] = useState<ParsedPart | null>(null);
-  const [selectedBadge, setSelectedBadge] = useState<SanitisedBadgeSet | null>(
-    null,
+  const handleEmotePress = useCallback(
+    (part: ParsedPart) => {
+      if (part.type === 'emote') {
+        onEmotePress?.(part);
+      }
+    },
+    [onEmotePress],
   );
 
-  const handleEmotePress = useCallback((part: ParsedPart) => {
-    setSelectedEmote(part);
-    emoteSheetRef.current?.present();
-  }, []);
-
-  const handleBadgePress = useCallback((badge: SanitisedBadgeSet) => {
-    setSelectedBadge(badge);
-    badgeSheetRef.current?.present();
-  }, []);
-
-  const messageText = useCallback(
-    () => replaceEmotesWithText(message),
-    [message],
+  const handleBadgePress = useCallback(
+    (badge: SanitisedBadgeSet) => {
+      onBadgePress?.(badge);
+    },
+    [onBadgePress],
   );
-
-  const handleCopy = useCallback(() => {
-    void Clipboard.setStringAsync(messageText()).then(() =>
-      toast.success('Copied to clipboard'),
-    );
-    actionSheetRef.current?.dismiss();
-  }, [messageText]);
 
   const renderMessagePart = useCallback(
     (part: ParsedPart, index: number) => {
@@ -145,35 +137,10 @@ function ChatMessageComponent<
         case 'mention': {
           const mentionedUsername = part.content.replace(/^@/, '').trim();
 
-          let mentionColor: string | undefined;
-
-          if (allMessages && mentionedUsername) {
-            const mentionedUserMessage = [...allMessages]
-              .reverse()
-              .find(msg => {
-                const msgUsername = msg.userstate.username?.toLowerCase();
-                const msgLogin = msg.userstate.login?.toLowerCase();
-                const msgSender = msg.sender?.toLowerCase();
-                const searchUsername = mentionedUsername.toLowerCase();
-
-                return (
-                  msgUsername === searchUsername ||
-                  msgLogin === searchUsername ||
-                  msgSender === searchUsername
-                );
-              });
-
-            if (mentionedUserMessage?.userstate.color) {
-              mentionColor = mentionedUserMessage.userstate.color;
-            } else {
-              mentionColor = generateRandomTwitchColor(mentionedUsername);
-            }
-          } else if (mentionedUsername) {
-            mentionColor = generateRandomTwitchColor(mentionedUsername);
-          }
-
-          const finalColor =
-            mentionColor || generateRandomTwitchColor(mentionedUsername);
+          // Use the cached/memoized color lookup from Chat component
+          const mentionColor = getMentionColor
+            ? getMentionColor(mentionedUsername)
+            : generateRandomTwitchColor(mentionedUsername);
 
           return (
             <Text key={`message-${index}`}>
@@ -181,7 +148,7 @@ function ChatMessageComponent<
                 style={[
                   styles.mention,
                   styles.mentionDefaultColor,
-                  finalColor && { color: lightenColor(finalColor) },
+                  mentionColor && { color: lightenColor(mentionColor) },
                 ]}
               >
                 {part.content}
@@ -245,11 +212,40 @@ function ChatMessageComponent<
   }, [badges, handleBadgePress]);
 
   const handleLongPress = useCallback(() => {
-    actionSheetRef.current?.present();
-  }, []);
+    onMessageLongPress?.({
+      message,
+      username: userstate.username,
+      messageData: {
+        id,
+        userstate,
+        message,
+        badges,
+        channel,
+        message_id,
+        message_nonce,
+        sender,
+        parentDisplayName,
+        replyBody,
+        replyDisplayName,
+      } as OnReply<TNoticeType>,
+    });
+  }, [
+    onMessageLongPress,
+    message,
+    userstate,
+    id,
+    badges,
+    channel,
+    message_id,
+    message_nonce,
+    sender,
+    parentDisplayName,
+    replyBody,
+    replyDisplayName,
+  ]);
 
   const handleReply = useCallback(() => {
-    onReply?.({
+    onReply({
       id,
       userstate,
       message,
@@ -261,10 +257,25 @@ function ChatMessageComponent<
       parentDisplayName,
       replyBody,
       replyDisplayName,
-    });
-    actionSheetRef.current?.dismiss();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onReply, id]);
+      parentColor,
+      notice_tags,
+    } as OnReply<TNoticeType>);
+  }, [
+    onReply,
+    id,
+    userstate,
+    message,
+    badges,
+    channel,
+    message_id,
+    message_nonce,
+    sender,
+    parentDisplayName,
+    replyBody,
+    replyDisplayName,
+    parentColor,
+    notice_tags,
+  ]);
 
   const isReply = Boolean(parentDisplayName);
 
@@ -274,6 +285,19 @@ function ChatMessageComponent<
   );
 
   const isFirstMessage = userstate['first-msg'] === '1';
+
+  // Don't allow replies to system messages, subscription notices, or system sender
+  const isSystemSender =
+    sender === 'System' ||
+    sender === 'system' ||
+    userstate.username === 'System' ||
+    userstate.username === 'system';
+
+  const canReply =
+    !isSystemNotice &&
+    !isSubscriptionNotice &&
+    !isSystemSender &&
+    Boolean(userstate.username);
 
   return (
     <Button
@@ -286,31 +310,26 @@ function ChatMessageComponent<
       ]}
     >
       {isReply && (
-        <View style={styles.replyIndicator}>
-          <Icon icon="corner-down-left" size={16} />
+        <View style={styles.replyIndicatorWrapper} testID="reply-indicator">
+          <Icon
+            icon="corner-down-right"
+            size={10}
+            color="rgba(255,255,255,0.5)"
+          />
+          <Text style={styles.replyLabel}>replying to</Text>
           <Text
-            color="gray.accent"
-            style={styles.replyToText}
-            numberOfLines={1}
+            style={[
+              styles.replyUsername,
+              parentColor && { color: lightenColor(parentColor) },
+            ]}
           >
-            Replying to{' '}
-            {parentColor ? (
-              <Text
-                style={[
-                  styles.replyToText,
-                  styles.replyToDefaultColor,
-                  parentColor && { color: lightenColor(parentColor) },
-                ]}
-              >
-                {parentDisplayName}
-              </Text>
-            ) : (
-              <Text color="gray.accent" style={styles.replyToText}>
-                {parentDisplayName}
-              </Text>
-            )}
-            {replyBody && ` ${truncate(unescapeIrcTag(replyBody).trim(), 50)}`}
+            @{parentDisplayName}
           </Text>
+          {replyBody && (
+            <Text style={styles.replyBodyText} numberOfLines={1}>
+              {truncate(unescapeIrcTag(replyBody).trim(), 20)}
+            </Text>
+          )}
         </View>
       )}
 
@@ -327,43 +346,39 @@ function ChatMessageComponent<
       )}
 
       {!isSubscriptionNotice && (
-        <View style={styles.messageLine}>
-          {!isSystemNotice && (
-            <Text style={styles.timestamp}>
-              {formatDate(new Date(), 'HH:mm')}:
-            </Text>
-          )}
-          {renderBadges()}
-          {userstate.username && (
-            <Text
-              style={[
-                styles.username,
-                styles.usernameDefaultColor,
-                // eslint-disable next-line react-native/no-inline-styles
-                userstate.color && { color: lightenColor(userstate.color) },
-              ]}
+        <View style={styles.messageRow}>
+          <View style={styles.messageLine}>
+            {!isSystemNotice && (
+              <Text style={styles.timestamp}>
+                {formatDate(new Date(), 'HH:mm')}:
+              </Text>
+            )}
+            {renderBadges()}
+            {userstate.username && (
+              <Text
+                style={[
+                  styles.username,
+                  styles.usernameDefaultColor,
+                  // eslint-disable next-line react-native/no-inline-styles
+                  userstate.color && { color: lightenColor(userstate.color) },
+                ]}
+              >
+                {userstate.username}:
+              </Text>
+            )}
+            {message.map(renderMessagePart)}
+          </View>
+          {canReply && (
+            <Button
+              onPress={handleReply}
+              style={styles.replyButton}
+              testID="reply-button"
             >
-              {userstate.username}:
-            </Text>
+              <Icon icon="corner-up-left" size={14} color="#FFFFFF" />
+            </Button>
           )}
-          {message.map(renderMessagePart)}
         </View>
       )}
-
-      {selectedEmote && selectedEmote.type === 'emote' && (
-        <EmotePreviewSheet ref={emoteSheetRef} selectedEmote={selectedEmote} />
-      )}
-
-      {selectedBadge && (
-        <BadgePreviewSheet ref={badgeSheetRef} selectedBadge={selectedBadge} />
-      )}
-
-      <ActionSheet
-        message={message}
-        ref={actionSheetRef}
-        handleReply={handleReply}
-        handleCopy={handleCopy}
-      />
     </Button>
   );
 }
@@ -379,11 +394,15 @@ export const ChatMessage = MemoizedChatMessage as <
 >(
   props: ChatMessageType<TNoticeType, TVariant> & {
     onReply: (args: OnReply<TNoticeType>) => void;
+    onEmotePress?: (data: EmotePressData) => void;
+    onBadgePress?: (data: BadgePressData) => void;
+    onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
+    getMentionColor?: (username: string) => string;
   },
 ) => React.JSX.Element;
 const styles = StyleSheet.create(theme => ({
   chatContainer: {
-    // backgroundColor: theme.colors.foregroundInverted,
+    paddingVertical: theme.spacing.xs,
   },
   firstMessageContainer: {
     backgroundColor: 'rgba(0, 210, 106, 0.15)',
@@ -397,8 +416,7 @@ const styles = StyleSheet.create(theme => ({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start',
-    width: '100%',
-    marginBottom: 5,
+    flex: 1,
   },
   usernameButton: {
     flexShrink: 0,
@@ -423,8 +441,16 @@ const styles = StyleSheet.create(theme => ({
   messageRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 5,
+  },
+  replyButton: {
+    padding: theme.spacing.sm,
+    marginLeft: theme.spacing.xs,
+    borderRadius: 6,
+    backgroundColor: 'rgba(145, 71, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(145, 71, 255, 0.25)',
   },
   messagePrefix: {
     flexDirection: 'row',
@@ -493,27 +519,33 @@ const styles = StyleSheet.create(theme => ({
     marginLeft: 12,
   },
   replyContainer: {
-    marginLeft: theme.spacing.md,
-    borderCurve: 'continuous',
     borderLeftWidth: 2,
+    borderLeftColor: 'rgba(145, 71, 255, 0.5)',
     paddingLeft: theme.spacing.sm,
+    marginLeft: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
   },
-  replyIndicator: {
+  replyIndicatorWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
+    gap: 4,
+    flexWrap: 'wrap',
   },
-  replyToTextContainer: {
-    flex: 1,
-    marginLeft: theme.spacing.xs,
+  replyLabel: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 11,
   },
-  replyToText: {
-    marginLeft: theme.spacing.xs,
-    opacity: 0.7,
-    fontSize: theme.font.fontSize.xs,
+  replyUsername: {
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 11,
   },
-  replyToDefaultColor: {
-    color: '#FFFFFF',
+  replyBodyText: {
+    color: 'rgba(255, 255, 255, 0.4)',
+    fontSize: 11,
+    fontStyle: 'italic',
+    flexShrink: 1,
   },
   subscriptionNoticeContainer: {
     width: '100%',

@@ -2,6 +2,7 @@ import { Button } from '@app/components/Button';
 import { Icon } from '@app/components/Icon';
 import { Text } from '@app/components/Text';
 import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import { lightenColor } from '@app/utils/color/lightenColor';
 import {
   createHitslop,
   createHorizontalHitslop,
@@ -20,6 +21,7 @@ export interface ReplyToData {
   message: string;
   replyParentUserLogin: string;
   parentMessage: string;
+  color?: string;
 }
 
 interface ChatInputSectionProps {
@@ -81,7 +83,14 @@ export const ChatInputSection = memo(
             <View style={styles.replyContent}>
               <Text style={styles.replyLabel}>
                 Replying to{' '}
-                <Text style={styles.replyUsername}>{replyTo.username}</Text>
+                <Text
+                  style={[
+                    styles.replyUsername,
+                    replyTo.color && { color: lightenColor(replyTo.color) },
+                  ]}
+                >
+                  {replyTo.username}
+                </Text>
               </Text>
               {replyTo.message && (
                 <Text style={styles.replyMessagePreview} numberOfLines={1}>
