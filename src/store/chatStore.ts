@@ -158,6 +158,41 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
 // Track in-progress downloads to prevent duplicate requests
 const emoteImageCachePromises = new Map<string, Promise<string>>();
 
+// AbortController management for cancelling network requests
+let activeLoadController: AbortController | null = null;
+
+/**
+ * Creates a new AbortController for loading channel resources.
+ * Automatically aborts any previous in-flight request.
+ */
+export const createLoadController = (): AbortController => {
+  // Abort any existing request first
+  if (activeLoadController) {
+    activeLoadController.abort();
+    logger.main.info('🚫 Aborted previous load request');
+  }
+  activeLoadController = new AbortController();
+  return activeLoadController;
+};
+
+/**
+ * Aborts the current load request if one exists.
+ */
+export const abortCurrentLoad = (): void => {
+  if (activeLoadController) {
+    activeLoadController.abort();
+    activeLoadController = null;
+    logger.main.info('🚫 Aborted current load request');
+  }
+};
+
+/**
+ * Checks if a load operation has been aborted.
+ */
+export const isLoadAborted = (): boolean => {
+  return activeLoadController?.signal.aborted ?? false;
+};
+
 const emptyEmoteData = {
   twitchChannelEmotes: [] as SanitisiedEmoteSet[],
   twitchGlobalEmotes: [] as SanitisiedEmoteSet[],
@@ -277,22 +312,42 @@ export const clearChannelResources = () => {
   });
 };
 
+export interface LoadChannelResourcesOptions {
+  channelId: string;
+  forceRefresh?: boolean;
+  signal?: AbortSignal;
+}
+
 export const loadChannelResources = async (
-  channelId: string,
+  options: LoadChannelResourcesOptions | string,
   forceRefresh = false,
 ): Promise<boolean> => {
+  // Support both old signature and new options object
+  const opts: LoadChannelResourcesOptions =
+    typeof options === 'string'
+      ? { channelId: options, forceRefresh }
+      : options;
+
+  const { channelId, forceRefresh: shouldForceRefresh = false, signal } = opts;
+
   const startTime = performance.now();
   logger.main.info('🏗️ chatStore loadChannelResources called:', {
     channelId,
-    forceRefresh,
+    forceRefresh: shouldForceRefresh,
+    hasSignal: !!signal,
   });
+
+  if (signal?.aborted) {
+    logger.main.info('🚫 Load aborted before starting');
+    return false;
+  }
 
   chatStore$.loadingState.set('LOADING');
 
   try {
     let reason = '';
 
-    if (!forceRefresh) {
+    if (!shouldForceRefresh) {
       const caches = chatStore$.persisted.channelCaches.peek();
       const existingCache = caches?.[channelId];
       logger.main.info('🗄️ Existing cache check:', {
@@ -331,9 +386,20 @@ export const loadChannelResources = async (
           logger.main.info('✅ Using cached data');
 
           if (missingEmoteSetId) {
+            if (signal?.aborted) {
+              logger.main.info('🚫 Load aborted before 7TV set ID fetch');
+              return false;
+            }
+
             try {
               const sevenTvSetId =
                 await sevenTvService.getEmoteSetId(channelId);
+
+              if (signal?.aborted) {
+                logger.main.info('🚫 Load aborted after 7TV set ID fetch');
+                return false;
+              }
+
               const channelCache =
                 chatStore$.persisted.channelCaches[channelId];
               if (channelCache) {
@@ -342,6 +408,10 @@ export const loadChannelResources = async (
                 });
               }
             } catch (error) {
+              if (signal?.aborted) {
+                logger.main.info('🚫 Load aborted (7TV set ID fetch failed)');
+                return false;
+              }
               logger.chat.warn(
                 'Failed to get 7TV emote set ID for cached data:',
                 error,
@@ -368,11 +438,23 @@ export const loadChannelResources = async (
     logger.main.info('🌐 Fetching from APIs, reason:', reason);
     chatStore$.currentChannelId.set(channelId);
 
+    if (signal?.aborted) {
+      logger.main.info('🚫 Load aborted before API fetch');
+      chatStore$.loadingState.set('IDLE');
+      return false;
+    }
+
     let sevenTvSetId = 'global';
     try {
       sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
     } catch (error) {
       logger.chat.warn('Failed to get 7TV emote set ID:', error);
+    }
+
+    if (signal?.aborted) {
+      logger.main.info('🚫 Load aborted after 7TV set ID fetch');
+      chatStore$.loadingState.set('IDLE');
+      return false;
     }
 
     const parallelFetchStart = performance.now();
@@ -405,6 +487,12 @@ export const loadChannelResources = async (
       ffzService.getSanitisedChannelBadges(channelId),
       chatterinoService.listSanitisedBadges(),
     ]);
+
+    if (signal?.aborted) {
+      logger.main.info('🚫 Load aborted after API fetch - discarding results');
+      chatStore$.loadingState.set('IDLE');
+      return false;
+    }
 
     const parallelFetchDuration = performance.now() - parallelFetchStart;
     logger.performance.debug(
@@ -439,6 +527,12 @@ export const loadChannelResources = async (
     ] satisfies SanitisedBadgeSet[];
 
     const allBadges = deduplicateById(allBadgesRaw);
+
+    if (signal?.aborted) {
+      logger.main.info('🚫 Load aborted before committing to store');
+      chatStore$.loadingState.set('IDLE');
+      return false;
+    }
 
     const channelData: ChannelCacheType = {
       emotes: allEmotes,
@@ -478,13 +572,21 @@ export const loadChannelResources = async (
       `Loaded ${allEmotes.length} emotes and ${allBadges.length} badges`,
     );
 
-    // Cache emote images in the background (non-blocking)
-    cacheEmoteImages(allEmotes).catch(error => {
-      logger.chat.warn('Background emote image caching failed:', error);
+    // Cache emote images in the background (non-blocking but abortable)
+    cacheEmoteImages(allEmotes, signal).catch(error => {
+      if (!signal?.aborted) {
+        logger.chat.warn('Background emote image caching failed:', error);
+      }
     });
 
     return true;
   } catch (error) {
+    if (signal?.aborted) {
+      logger.main.info('🚫 Load aborted (caught error)');
+      chatStore$.loadingState.set('IDLE');
+      return false;
+    }
+
     logger.chat.error('Error loading channel resources:', error);
     chatStore$.loadingState.set('ERROR');
     return false;
@@ -627,13 +729,21 @@ export const getCachedEmoteUri = (emoteUrl: string): string => {
 };
 
 /**
- * Cache multiple emote images
+ * Cache multiple emote images with abort support
  * This is called after loading channel resources to pre-cache all emote images
+ * Respects the AbortSignal to stop caching when navigating away
  */
 export const cacheEmoteImages = async (
   emotes: SanitisiedEmoteSet[],
+  signal?: AbortSignal,
 ): Promise<void> => {
   if (emotes.length === 0) return;
+
+  // Check abort before starting
+  if (signal?.aborted) {
+    logger.chat.info('🚫 Emote image caching aborted before starting');
+    return;
+  }
 
   const startTime = performance.now();
   const urls = emotes.map(e => e.url).filter(Boolean);
@@ -658,7 +768,24 @@ export const cacheEmoteImages = async (
     `Starting background cache of ${urlsToCache.length} emote images...`,
   );
 
-  await Promise.allSettled(urlsToCache.map(url => cacheEmoteImage(url)));
+  // Cache in batches to allow abort checks between batches
+  const BATCH_SIZE = 20;
+  let cachedCount = 0;
+
+  for (let i = 0; i < urlsToCache.length; i += BATCH_SIZE) {
+    // Check abort before each batch
+    if (signal?.aborted) {
+      logger.chat.info(
+        `🚫 Emote image caching aborted after ${cachedCount}/${urlsToCache.length} images`,
+      );
+      return;
+    }
+
+    const urlBatch = urlsToCache.slice(i, i + BATCH_SIZE);
+    // eslint-disable-next-line no-await-in-loop -- Intentional: sequential batches with abort checks
+    await Promise.allSettled(urlBatch.map(url => cacheEmoteImage(url)));
+    cachedCount += urlBatch.length;
+  }
 
   const duration = performance.now() - startTime;
   logger.performance.debug(

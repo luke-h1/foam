@@ -31,7 +31,7 @@ interface SearchHistoryItem {
  * Search screen with large title header style (like Settings)
  */
 export function SearchScreen() {
-  const { navigate } = useAppNavigation();
+  const navigation = useAppNavigation();
   const inputRef = useRef<TextInput>(null);
 
   const [query, setQuery] = useState<string>('');
@@ -164,11 +164,15 @@ export function SearchScreen() {
       return (
         <Button
           onPress={() => {
-            navigate('Streams', {
+            navigation.navigate('Streams', {
               screen: 'LiveStream',
-              params: {
-                id: item.broadcaster_login,
-              },
+              params: { id: item.broadcaster_login },
+            });
+          }}
+          onPressIn={() => {
+            navigation.preload('Streams', {
+              screen: 'LiveStream',
+              params: { id: item.broadcaster_login },
             });
           }}
           style={styles.resultItem}
@@ -177,8 +181,7 @@ export function SearchScreen() {
         </Button>
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [navigation],
   );
 
   const handleFocus = useCallback(() => setIsFocused(true), []);
@@ -190,9 +193,9 @@ export function SearchScreen() {
 
   const handleCategoryPress = useCallback(
     (categoryId: string) => {
-      navigate('Category', { id: categoryId });
+      navigation.navigate('Category', { id: categoryId });
     },
-    [navigate],
+    [navigation],
   );
 
   const ListHeaderComponent = useMemo(

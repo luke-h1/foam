@@ -1,9 +1,6 @@
+import { ScreenSuspense } from '@app/components/ScreenSuspense';
 import { useAuthContext } from '@app/context/AuthContext';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
-import { CategoryScreen } from '@app/screens/CategoryScreen';
-import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
-import { LoginScreen } from '@app/screens/LoginScreen';
-import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
 import {
   DarkTheme,
   DefaultTheme,
@@ -13,23 +10,105 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import { ComponentProps, useMemo } from 'react';
+import { ComponentProps, lazy, useMemo } from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { DevToolsParamList } from './DevToolsStackNavigator';
 import { OtherStackParamList } from './OtherStackNavigator';
-import {
-  PreferenceStackNavigator,
-  PreferenceStackParamList,
-} from './PreferenceStackNavigator';
-import {
-  StreamStackNavigator,
-  StreamStackParamList,
-} from './StreamStackNavigator';
+import type { PreferenceStackParamList } from './PreferenceStackNavigator';
+import type { StreamStackParamList } from './StreamStackNavigator';
 import { TabNavigator, TabParamList } from './TabNavigator';
-import { TopStackNavigator, TopStackParamList } from './TopStackNavigator';
+import type { TopStackParamList } from './TopStackNavigator';
 import { BaseConfig } from './config';
-import { useBackButtonHandler } from './navigationUtilities';
+import { navigationRef, useBackButtonHandler } from './navigationUtilities';
+
+const LazyCategoryScreen = lazy(() =>
+  import('@app/screens/CategoryScreen').then(m => ({
+    default: m.CategoryScreen,
+  })),
+);
+const LazyChatScreen = lazy(() =>
+  import('@app/screens/ChatScreen/ChatScreen').then(m => ({
+    default: m.ChatScreen,
+  })),
+);
+const LazyLoginScreen = lazy(() =>
+  import('@app/screens/LoginScreen').then(m => ({ default: m.LoginScreen })),
+);
+const LazyStorybookScreen = lazy(() =>
+  import('@app/screens/StorybookScreen/StorybookScreen').then(m => ({
+    default: m.StorybookScreen,
+  })),
+);
+const LazyStreamStackNavigator = lazy(() =>
+  import('./StreamStackNavigator').then(m => ({
+    default: m.StreamStackNavigator,
+  })),
+);
+const LazyTopStackNavigator = lazy(() =>
+  import('./TopStackNavigator').then(m => ({ default: m.TopStackNavigator })),
+);
+const LazyPreferenceStackNavigator = lazy(() =>
+  import('./PreferenceStackNavigator').then(m => ({
+    default: m.PreferenceStackNavigator,
+  })),
+);
+
+function CategoryScreen(props: AppStackScreenProps<'Category'>) {
+  return (
+    <ScreenSuspense>
+      <LazyCategoryScreen {...props} />
+    </ScreenSuspense>
+  );
+}
+
+function ChatScreen(props: AppStackScreenProps<'Chat'>) {
+  return (
+    <ScreenSuspense>
+      <LazyChatScreen {...props} />
+    </ScreenSuspense>
+  );
+}
+
+function LoginScreen() {
+  return (
+    <ScreenSuspense>
+      <LazyLoginScreen />
+    </ScreenSuspense>
+  );
+}
+
+function StorybookScreen() {
+  return (
+    <ScreenSuspense>
+      <LazyStorybookScreen />
+    </ScreenSuspense>
+  );
+}
+
+function StreamStackNavigator() {
+  return (
+    <ScreenSuspense>
+      <LazyStreamStackNavigator />
+    </ScreenSuspense>
+  );
+}
+
+function TopStackNavigator() {
+  return (
+    <ScreenSuspense>
+      <LazyTopStackNavigator />
+    </ScreenSuspense>
+  );
+}
+
+function PreferenceStackNavigator() {
+  return (
+    <ScreenSuspense>
+      <LazyPreferenceStackNavigator />
+    </ScreenSuspense>
+  );
+}
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator as
@@ -157,7 +236,8 @@ export const AppNavigator = (props: NavigationProps) => {
   }, [colorScheme]);
 
   return (
-    <NavigationContainer theme={navTheme} {...props}>
+    // @ts-expect-error - navigationRef types are compatible at runtime
+    <NavigationContainer ref={navigationRef} theme={navTheme} {...props}>
       <View style={styles.container}>
         <AppStack />
       </View>

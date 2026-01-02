@@ -1,4 +1,3 @@
-import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
 import { SentryDemoScreen } from '@app/screens/DevTools/SentryDemoScreen';
 import { Diagnostics as DiagnosticsScreen } from '@app/screens/DevTools/components/Diagnostics';
@@ -9,7 +8,6 @@ export type DevToolsParamList = {
   Diagnostics: undefined;
   SentryDemo: undefined;
   Debug: undefined;
-  Chat: { channelName: string; channelId: string };
 };
 
 const Stack = createNativeStackNavigator<DevToolsParamList>();
@@ -40,14 +38,6 @@ export function DevToolsStackNavigator() {
       <Stack.Screen
         name="Debug"
         component={DebugScreen}
-        options={{
-          headerShown: false,
-          orientation: 'portrait_up',
-        }}
-      />
-      <Stack.Screen
-        name="Chat"
-        component={ChatScreen}
         options={{
           headerShown: false,
           orientation: 'portrait_up',

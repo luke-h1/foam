@@ -138,6 +138,9 @@ export function LoginScreen() {
           <View style={styles.actionSection}>
             <Button
               onPress={() => promptAsync()}
+              onPressIn={() => {
+                navigation.preload('Tabs', { screen: 'Following' });
+              }}
               disabled={!request}
               style={[
                 styles.loginButton,

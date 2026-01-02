@@ -1,4 +1,5 @@
 /* eslint-disable no-nested-ternary */
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { StyleProp, View, ViewProps, ViewStyle } from 'react-native';
 import { Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUnistyles } from 'react-native-unistyles';
@@ -20,6 +21,17 @@ interface Props extends ViewProps {
  * [226](https://github.com/th3rdwave/react-native-safe-area-context/issues/226)
  */
 
+function useTabBarHeight() {
+  let tabHeight = 0;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    tabHeight = useBottomTabBarHeight();
+  } catch {
+    /* Not in a tab navigator context */
+  }
+  return tabHeight;
+}
+
 export function SafeAreaViewFixed({
   children,
   style,
@@ -28,11 +40,14 @@ export function SafeAreaViewFixed({
   ...rest
 }: Props) {
   const insets = useSafeAreaInsets();
+  const dynamicTabBarHeight = useTabBarHeight();
   const {
     theme: {
-      spacing: { tabBarHeight },
+      spacing: { tabBarHeight: themeTabBarHeight },
     },
   } = useUnistyles();
+  // Use dynamic height if available, fall back to theme value
+  const tabBarHeight = dynamicTabBarHeight || themeTabBarHeight;
   const defaultEdges = edges === undefined;
 
   return (
@@ -41,14 +56,11 @@ export function SafeAreaViewFixed({
         {
           paddingTop:
             defaultEdges || edges?.includes('top') ? insets.top : undefined,
-          paddingBottom:
-            defaultEdges || edges?.includes('bottom')
-              ? avoidTabBar
-                ? insets.bottom + tabBarHeight
-                : insets.bottom
-              : avoidTabBar
-                ? tabBarHeight
-                : undefined,
+          paddingBottom: avoidTabBar
+            ? tabBarHeight // tabBarHeight from useBottomTabBarHeight already includes safe area
+            : defaultEdges || edges?.includes('bottom')
+              ? insets.bottom
+              : undefined,
           paddingLeft:
             defaultEdges || edges?.includes('left') ? insets.left : undefined,
           paddingRight:

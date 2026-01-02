@@ -1,34 +1,38 @@
 import { useAuthContext } from '@app/context/AuthContext';
-import { useEffect } from 'react';
-import { useAppNavigation } from './useAppNavigation';
+import { navigate } from '@app/navigators/navigationUtilities';
+import { useEffect, useRef } from 'react';
 
 export function usePopulateAuth() {
-  const { populateAuthState, authState } = useAuthContext();
-  const { navigate } = useAppNavigation();
+  const { authState } = useAuthContext();
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
-    void populateAuthState().then(() => {
-      /**
-       * Logged in - navigate user to following tab
-       */
-      if (authState?.isLoggedIn) {
-        navigate('Tabs', {
-          screen: 'Following',
-        });
-      }
+    // Only navigate once when auth state is ready
+    if (hasNavigated.current || !authState) {
+      return;
+    }
 
-      /**
-       * We've acquired a token, and the user is not logged in
-       * Navigate them to the Top stack since `Following` won't
-       * be available
-       */
-      if (authState?.isAnonAuth) {
-        navigate('Tabs', {
-          screen: 'Top',
-        });
-      }
-    });
+    /**
+     * Logged in - navigate user to following tab
+     */
+    if (authState.isLoggedIn) {
+      hasNavigated.current = true;
+      navigate('Tabs', {
+        screen: 'Following',
+      });
+      return;
+    }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    /**
+     * We've acquired a token, and the user is not logged in
+     * Navigate them to the Top stack since `Following` won't
+     * be available
+     */
+    if (authState.isAnonAuth) {
+      hasNavigated.current = true;
+      navigate('Tabs', {
+        screen: 'Top',
+      });
+    }
+  }, [authState]);
 }

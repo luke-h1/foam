@@ -4,10 +4,12 @@ import { Switch } from '@app/components/Switch';
 import { TextField } from '@app/components/TextField';
 import { Typography } from '@app/components/Typography';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
+import { AppStackParamList } from '@app/navigators/AppNavigator';
 import { NAMESPACE, storageService } from '@app/services/storage-service';
 import { twitchService } from '@app/services/twitch-service';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Clipboard from 'expo-clipboard';
 import { useState, useEffect } from 'react';
 import { Alert, Platform, ScrollView, View } from 'react-native';
@@ -18,7 +20,8 @@ export function DebugScreen() {
   const { theme } = useUnistyles();
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
-  const { navigate } = useAppNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   const [reactQueryEnabled, setReactQueryEnabled] = useState(false);
   const [username, setUsername] = useState('');
@@ -74,7 +77,11 @@ export function DebugScreen() {
     if (!channelName.trim()) {
       return;
     }
-    navigate('Chat', { channelName, channelId });
+    // Navigate to root-level Chat (outside tabs) so tab bar is hidden
+    navigation
+      .getParent()
+      ?.getParent()
+      ?.navigate('Chat', { channelName, channelId });
   };
 
   return (

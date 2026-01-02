@@ -1,5 +1,6 @@
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { Category } from '@app/services/twitch-service';
+import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button';
@@ -15,17 +16,14 @@ const IMAGE_HEIGHT = 150;
 const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
 export function CategoryCard({ category }: Props) {
-  const { navigate } = useAppNavigation();
+  const navigation = useAppNavigation();
+
+  const handlePress = useCallback(() => {
+    navigation.navigate('Category', { id: category.id });
+  }, [navigation, category.id]);
 
   return (
-    <Button
-      onPress={() => {
-        navigate('Category', {
-          id: category.id,
-        });
-      }}
-      style={styles.container}
-    >
+    <Button onPress={handlePress} style={styles.container}>
       <View style={styles.wrapper}>
         <Image
           source={category.box_art_url

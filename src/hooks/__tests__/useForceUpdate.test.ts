@@ -85,7 +85,7 @@ describe('useForceUpdate', () => {
       } = renderHook(() => useForceUpdate());
 
       expect(current.updateRequired).toBe(false);
-      expect(current.minimumVersion).toBe('');
+      expect(current.minimumVersion).toBe('0.0.0');
       expect(current.variant).toBe('development');
     });
   });
