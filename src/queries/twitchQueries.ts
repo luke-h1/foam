@@ -6,6 +6,8 @@ import {
   UserInfoResponse,
   SearchChannelResponse,
   PaginatedList,
+  UserBlockListRequestParams,
+  UserBlockList,
 } from '@app/services/twitch-service';
 import { UseQueryOptions } from '@tanstack/react-query';
 
@@ -92,6 +94,14 @@ export const twitchQueries = {
     return {
       queryKey: ['category', id],
       queryFn: () => twitchService.getCategory(id),
+    };
+  },
+  getUserBlockList: (
+    params: UserBlockListRequestParams,
+  ): UseQueryOptions<PaginatedList<UserBlockList>> => {
+    return {
+      queryKey: ['blockList', params.broadcasterId],
+      queryFn: () => twitchService.getUserBlockList(params),
     };
   },
   getStreamsByCategory(id: string): {

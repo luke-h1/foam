@@ -1,6 +1,6 @@
 import { EmptyState } from '@app/components/EmptyState';
 import { LiveStreamCard } from '@app/components/LiveStreamCard';
-import { HeroHeader } from '@app/components/ScreenHeader/HeroHeader';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Spinner } from '@app/components/Spinner';
 import { Text } from '@app/components/Text';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
@@ -14,7 +14,7 @@ import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { StackScreenProps } from '@react-navigation/stack';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { FC, useCallback, useRef } from 'react';
+import { FC, useCallback, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -60,6 +60,42 @@ export const CategoryScreen: FC<
     return <LiveStreamCard stream={item} />;
   }, []);
 
+  const allStreams =
+    streams?.pages?.flatMap(page => (page?.data ? page.data : [])) ?? [];
+  const totalViewers = allStreams.reduce(
+    (acc, stream) => acc + stream.viewer_count,
+    0,
+  );
+
+  const renderHeader = useMemo(
+    () => (
+      <ScreenHeader
+        size="hero"
+        title={category?.name ?? ''}
+        subtitle={`${formatViewCount(totalViewers)} viewers`}
+        backgroundImage={
+          category?.box_art_url
+            ?.replace('{width}', '600')
+            ?.replace('{height}', '800') ?? ''
+        }
+        featuredImage={
+          category?.box_art_url
+            ?.replace('{width}', '300')
+            ?.replace('{height}', '400') ?? ''
+        }
+        onBack={() => navigation.goBack()}
+        safeArea={false}
+      >
+        <View style={styles.sectionHeader}>
+          <Text type="sm" weight="semibold" color="gray.textLow">
+            Live Channels
+          </Text>
+        </View>
+      </ScreenHeader>
+    ),
+    [category?.name, category?.box_art_url, totalViewers, navigation],
+  );
+
   if (isCategoryLoading || isLoadingStreams) {
     return <Spinner />;
   }
@@ -79,41 +115,9 @@ export const CategoryScreen: FC<
     return <Spinner />;
   }
 
-  const allStreams =
-    streams.pages.flatMap(page => (page?.data ? page.data : [])) ?? [];
-  const totalViewers = allStreams.reduce(
-    (acc, stream) => acc + stream.viewer_count,
-    0,
-  );
-
   if (allStreams.length === 0) {
     return <EmptyState content="No Top Streams found" />;
   }
-
-  const renderHeader = () => (
-    <HeroHeader
-      title={category?.name ?? ''}
-      subtitle={`${formatViewCount(totalViewers)} viewers`}
-      backgroundImage={
-        category?.box_art_url
-          .replace('{width}', '600')
-          .replace('{height}', '800') ?? ''
-      }
-      featuredImage={
-        category?.box_art_url
-          .replace('{width}', '300')
-          .replace('{height}', '400') ?? ''
-      }
-      onBack={() => navigation.goBack()}
-      safeArea={false}
-    >
-      <View style={styles.sectionHeader}>
-        <Text type="sm" weight="semibold" color="gray.textLow">
-          Live Channels
-        </Text>
-      </View>
-    </HeroHeader>
-  );
 
   return (
     <View style={styles.container}>

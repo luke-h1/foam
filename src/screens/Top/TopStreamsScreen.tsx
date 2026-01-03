@@ -37,7 +37,7 @@ export function TopStreamsScreen() {
   const handleLoadMore = useCallback(async () => {
     if (hasNextPage && !isFetchingNextPage) {
       const nextCursor =
-        streams?.pages[streams.pages.length - 1]?.pagination.cursor;
+        streams?.pages?.[streams.pages.length - 1]?.pagination?.cursor;
       setCursor(nextCursor as string);
       await fetchNextPage();
     }

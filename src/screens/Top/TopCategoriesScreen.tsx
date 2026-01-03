@@ -41,14 +41,14 @@ export function TopCategoriesScreen() {
     queryFn: ({ pageParam }: { pageParam?: string }) =>
       twitchService.getTopCategories(pageParam as string),
     initialPageParam: cursor,
-    getNextPageParam: lastPage => lastPage.pagination.cursor,
+    getNextPageParam: lastPage => lastPage?.pagination?.cursor,
     getPreviousPageParam: () => previousCursor,
   });
 
   const handleLoadMore = useCallback(async () => {
     setPreviousCursor(cursor);
     const nextCursor =
-      categories?.pages[categories.pages.length - 1]?.pagination.cursor;
+      categories?.pages?.[categories.pages.length - 1]?.pagination?.cursor;
     setCursor(nextCursor);
     await fetchNextPage();
     // eslint-disable-next-line react-hooks/exhaustive-deps

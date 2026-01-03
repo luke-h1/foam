@@ -4,7 +4,7 @@ import { twitchApi } from './api';
 
 export interface PaginatedList<T> {
   data: T[];
-  pagination: {
+  pagination?: {
     cursor: string;
   };
   total?: number;
@@ -227,10 +227,16 @@ interface EventSubscription {
   cost: number;
 }
 
-interface UserBlockList {
+export interface UserBlockList {
   user_id: string;
   user_login: string;
   display_name: string;
+}
+
+export interface UserBlockListRequestParams {
+  broadcasterId: string;
+  first?: number;
+  after?: number;
 }
 
 export const twitchService = {
@@ -576,16 +582,12 @@ export const twitchService = {
     );
   },
 
-  getUserBlockList: async (
-    broadcasterId: string,
-    first?: number,
-    after?: number,
-  ) => {
+  getUserBlockList: async (params: UserBlockListRequestParams) => {
     return twitchApi.get<PaginatedList<UserBlockList>>('/users/blocks', {
       params: {
-        broadcaster_id: broadcasterId,
-        first,
-        after,
+        broadcaster_id: params.broadcasterId,
+        first: params.first,
+        after: params.after,
       },
     });
   },
