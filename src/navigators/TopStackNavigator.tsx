@@ -1,30 +1,8 @@
-import { ScreenSuspense } from '@app/components/ScreenSuspense';
+import { TopCategoriesScreen } from '@app/screens/Top/TopCategoriesScreen';
 import { TopScreen } from '@app/screens/Top/TopScreen';
+import { TopStreamsScreen } from '@app/screens/Top/TopStreamsScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import { lazy } from 'react';
-
-const LazyTopCategoriesScreen = lazy(() =>
-  import('@app/screens/Top/TopCategoriesScreen').then(m => ({
-    default: m.TopCategoriesScreen,
-  })),
-);
-const LazyTopStreamsScreen = lazy(() =>
-  import('@app/screens/Top/TopStreamsScreen').then(m => ({
-    default: m.TopStreamsScreen,
-  })),
-);
-
-const TopCategoriesScreen = () => (
-  <ScreenSuspense>
-    <LazyTopCategoriesScreen />
-  </ScreenSuspense>
-);
-const TopStreamsScreen = () => (
-  <ScreenSuspense>
-    <LazyTopStreamsScreen />
-  </ScreenSuspense>
-);
 
 export type TopStackParamList = {
   TopHome: undefined;

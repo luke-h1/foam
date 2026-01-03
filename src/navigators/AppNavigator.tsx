@@ -20,6 +20,7 @@ import type { PreferenceStackParamList } from './PreferenceStackNavigator';
 import type { StreamStackParamList } from './StreamStackNavigator';
 import { TabNavigator, TabParamList } from './TabNavigator';
 import type { TopStackParamList } from './TopStackNavigator';
+import { TopStackNavigator } from './TopStackNavigator';
 import { BaseConfig } from './config';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
 
@@ -40,9 +41,6 @@ const LazyStreamStackNavigator = lazy(() =>
   import('./StreamStackNavigator').then(m => ({
     default: m.StreamStackNavigator,
   })),
-);
-const LazyTopStackNavigator = lazy(() =>
-  import('./TopStackNavigator').then(m => ({ default: m.TopStackNavigator })),
 );
 const LazyPreferenceStackNavigator = lazy(() =>
   import('./PreferenceStackNavigator').then(m => ({
@@ -78,14 +76,6 @@ function StreamStackNavigator() {
   return (
     <ScreenSuspense>
       <LazyStreamStackNavigator />
-    </ScreenSuspense>
-  );
-}
-
-function TopStackNavigator() {
-  return (
-    <ScreenSuspense>
-      <LazyTopStackNavigator />
     </ScreenSuspense>
   );
 }
