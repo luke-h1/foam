@@ -163,7 +163,6 @@ export function BlockedUsersScreen() {
         userBlockListQuery.queryKey,
       );
 
-      // Optimistically update to remove the unblocked user
       queryClient.setQueryData<{ data: UserBlockList[] }>(
         userBlockListQuery.queryKey,
         old => {
@@ -186,7 +185,6 @@ export function BlockedUsersScreen() {
       toast.success('User unblocked successfully');
     },
     onError: (_error, _targetUserId, context) => {
-      // Rollback to previous data on error
       if (context?.previousData) {
         queryClient.setQueryData(
           userBlockListQuery.queryKey,
@@ -196,7 +194,6 @@ export function BlockedUsersScreen() {
       toast.error('Failed to unblock user');
     },
     onSettled: () => {
-      // Refetch in the background to ensure data is in sync
       void queryClient.invalidateQueries({
         queryKey: userBlockListQuery.queryKey,
       });

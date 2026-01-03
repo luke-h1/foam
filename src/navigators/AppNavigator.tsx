@@ -1,7 +1,7 @@
 import { ScreenSuspense } from '@app/components/ScreenSuspense';
-import { CategoryScreen } from '@app/screens/CategoryScreen';
 import { useAuthContext } from '@app/context/AuthContext';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
+import { CategoryScreen } from '@app/screens/CategoryScreen';
 import {
   DarkTheme,
   DefaultTheme,
@@ -49,7 +49,6 @@ const LazyPreferenceStackNavigator = lazy(() =>
     default: m.PreferenceStackNavigator,
   })),
 );
-
 
 function ChatScreen(props: AppStackScreenProps<'Chat'>) {
   return (
