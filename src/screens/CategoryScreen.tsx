@@ -1,6 +1,6 @@
 import { EmptyState } from '@app/components/EmptyState';
 import { LiveStreamCard } from '@app/components/LiveStreamCard';
-import { HeroHeader } from '@app/components/ScreenHeader/HeroHeader';
+import { ScreenHeader } from '@app/components/ScreenHeader';
 import { Spinner } from '@app/components/Spinner';
 import { Text } from '@app/components/Text';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
@@ -91,7 +91,8 @@ export const CategoryScreen: FC<
   }
 
   const renderHeader = () => (
-    <HeroHeader
+    <ScreenHeader
+      size="hero"
       title={category?.name ?? ''}
       subtitle={`${formatViewCount(totalViewers)} viewers`}
       backgroundImage={
@@ -112,7 +113,7 @@ export const CategoryScreen: FC<
           Live Channels
         </Text>
       </View>
-    </HeroHeader>
+    </ScreenHeader>
   );
 
   return (
