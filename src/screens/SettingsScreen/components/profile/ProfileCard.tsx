@@ -69,9 +69,10 @@ export function ProfileCard() {
           title: 'Blocked Users',
           description: 'Manage blocked users',
           icon: 'user-x',
-          onPress: () => navigate('Preferences', {
-            screen: 'BlockedUsers',
-          }),
+          onPress: () =>
+            navigate('Preferences', {
+              screen: 'BlockedUsers',
+            }),
         },
       ]
     : [];

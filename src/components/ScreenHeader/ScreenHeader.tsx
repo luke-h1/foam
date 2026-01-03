@@ -156,11 +156,7 @@ export function ScreenHeader({
               contentFit="cover"
             />
             <LinearGradient
-              colors={[
-                'rgba(0,0,0,0.3)',
-                'rgba(0,0,0,0.85)',
-                'rgba(0,0,0,1)',
-              ]}
+              colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.85)', 'rgba(0,0,0,1)']}
               locations={[0, 0.6, 1]}
               style={styles.heroGradient}
             />
@@ -310,7 +306,7 @@ const styles = StyleSheet.create(theme => ({
   subtitle: {
     lineHeight: 20,
   },
-  
+
   // Standard variant styles
   standardContainer: {
     paddingHorizontal: theme.spacing.md,
