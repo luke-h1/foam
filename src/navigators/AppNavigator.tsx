@@ -1,4 +1,5 @@
 import { ScreenSuspense } from '@app/components/ScreenSuspense';
+import { CategoryScreen } from '@app/screens/CategoryScreen';
 import { useAuthContext } from '@app/context/AuthContext';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
 import {
@@ -10,7 +11,7 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import { ComponentProps, lazy, useMemo } from 'react';
+import React, { ComponentProps, lazy, useMemo } from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { DevToolsParamList } from './DevToolsStackNavigator';
@@ -22,11 +23,6 @@ import type { TopStackParamList } from './TopStackNavigator';
 import { BaseConfig } from './config';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
 
-const LazyCategoryScreen = lazy(() =>
-  import('@app/screens/CategoryScreen').then(m => ({
-    default: m.CategoryScreen,
-  })),
-);
 const LazyChatScreen = lazy(() =>
   import('@app/screens/ChatScreen/ChatScreen').then(m => ({
     default: m.ChatScreen,
@@ -54,13 +50,6 @@ const LazyPreferenceStackNavigator = lazy(() =>
   })),
 );
 
-function CategoryScreen(props: AppStackScreenProps<'Category'>) {
-  return (
-    <ScreenSuspense>
-      <LazyCategoryScreen {...props} />
-    </ScreenSuspense>
-  );
-}
 
 function ChatScreen(props: AppStackScreenProps<'Chat'>) {
   return (

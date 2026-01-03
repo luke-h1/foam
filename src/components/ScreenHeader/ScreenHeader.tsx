@@ -52,25 +52,10 @@ export interface ScreenHeaderProps {
    * - hero: Hero-style header with background
    */
   size?: 'large' | 'medium' | 'compact' | 'hero';
-  /**
-   * Title text type (aligned with Text component)
-   */
   type?: TextType;
-  /**
-   * Title text weight (aligned with Text component)
-   */
   weight?: TextWeight;
-  /**
-   * Title text color (aligned with Text component)
-   */
   color?: ThemeColor | NestedColorPath;
-  /**
-   * Subtitle text type
-   */
   subtitleType?: TextType;
-  /**
-   * Subtitle text color
-   */
   subtitleColor?: ThemeColor | NestedColorPath;
   /**
    * Whether to add top safe area padding
@@ -116,7 +101,6 @@ export function ScreenHeader({
   const isHero = size === 'hero';
   const isInline = size === 'medium' || size === 'compact';
 
-  // Text type defaults based on size (Text-like API)
   const getTitleType = (): TextType => {
     if (type) return type;
     if (size === 'large') return '2xl';
@@ -144,7 +128,6 @@ export function ScreenHeader({
   // Only show nav row if there's something to display (back button, inline title, or trailing)
   const showNavRow = back || isInline || trailing;
 
-  // Hero variant rendering
   if (isHero) {
     return (
       <View style={styles.container}>
@@ -212,7 +195,6 @@ export function ScreenHeader({
     );
   }
 
-  // Standard variant rendering
   return (
     <View
       style={[
@@ -291,7 +273,6 @@ export function ScreenHeader({
 }
 
 const styles = StyleSheet.create(theme => ({
-  // Shared styles
   navSpacer: {
     flex: 1,
   },
@@ -306,8 +287,6 @@ const styles = StyleSheet.create(theme => ({
   subtitle: {
     lineHeight: 20,
   },
-
-  // Standard variant styles
   standardContainer: {
     paddingHorizontal: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
@@ -332,7 +311,6 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.xs,
   },
 
-  // Hero variant styles
   container: {
     position: 'relative',
   },

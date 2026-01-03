@@ -30,7 +30,6 @@ const createQueryClient = (data: { data: UserBlockList[] }) => {
     },
   });
 
-  // Pre-populate the cache
   const query = twitchQueries.getUserBlockList({
     broadcasterId: userInfoFixture.id,
   });
