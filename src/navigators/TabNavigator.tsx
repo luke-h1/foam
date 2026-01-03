@@ -13,6 +13,7 @@ import { ComponentType, FC, lazy, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
+import { TopStackNavigator } from './TopStackNavigator';
 
 const LazyFollowingScreen = lazy(() => import('@app/screens/FollowingScreen'));
 const LazySearchScreen = lazy(() =>
@@ -23,11 +24,6 @@ const LazySearchScreen = lazy(() =>
 const LazySettingsStackNavigator = lazy(() =>
   import('./SettingsStackNavigator').then(m => ({
     default: m.SettingsStackNavigator,
-  })),
-);
-const LazyTopStackNavigator = lazy(() =>
-  import('./TopStackNavigator').then(m => ({
-    default: m.TopStackNavigator,
   })),
 );
 
@@ -51,14 +47,6 @@ function SettingsStackNavigator() {
   return (
     <ScreenSuspense>
       <LazySettingsStackNavigator />
-    </ScreenSuspense>
-  );
-}
-
-function TopStackNavigator() {
-  return (
-    <ScreenSuspense>
-      <LazyTopStackNavigator />
     </ScreenSuspense>
   );
 }
@@ -132,14 +120,25 @@ const screens: Screen[] = [
 ];
 
 export function TabNavigator() {
-  const { user } = useAuthContext();
+  const { user, authState } = useAuthContext();
   const { theme } = useUnistyles();
 
-  // Get the screens that are currently rendered
   const availableScreens = useMemo(
     () => screens.filter(screen => !screen.requiresAuth || user),
     [user],
   );
+
+  const initialRouteName = useMemo(() => {
+    if (
+      authState?.isLoggedIn &&
+      user &&
+      availableScreens.some(s => s.name === 'Following')
+    ) {
+      return 'Following';
+    }
+    // Otherwise, default to Top
+    return 'Top';
+  }, [authState?.isLoggedIn, user, availableScreens]);
 
   const getScreenOptions = useCallback(
     (screen: Screen): NativeBottomTabNavigationOptions => {
@@ -182,7 +181,7 @@ export function TabNavigator() {
 
   return (
     <Tab.Navigator
-      initialRouteName="Top"
+      initialRouteName={initialRouteName}
       screenOptions={{
         tabBarActiveTintColor: theme.colors.grass.accentAlpha,
         tabBarInactiveTintColor: theme.colors.gray.accent,

@@ -7,32 +7,25 @@ export function usePopulateAuth() {
   const hasNavigated = useRef(false);
 
   useEffect(() => {
-    // Only navigate once when auth state is ready
+    // Only navigate if auth state changes after initial mount (e.g., user logs in)
+    // The initial route is set correctly in TabNavigator based on auth state
     if (hasNavigated.current || !authState) {
-      return;
+      return undefined;
     }
 
-    /**
-     * Logged in - navigate user to following tab
-     */
+    // Only navigate if user logs in after app has started
+    // This handles the case where user logs in from a different screen
     if (authState.isLoggedIn) {
       hasNavigated.current = true;
-      navigate('Tabs', {
-        screen: 'Following',
-      });
-      return;
+      // Use a small delay to ensure TabNavigator has mounted
+      const timer = setTimeout(() => {
+        navigate('Tabs', {
+          screen: 'Following',
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
 
-    /**
-     * We've acquired a token, and the user is not logged in
-     * Navigate them to the Top stack since `Following` won't
-     * be available
-     */
-    if (authState.isAnonAuth) {
-      hasNavigated.current = true;
-      navigate('Tabs', {
-        screen: 'Top',
-      });
-    }
+    return undefined;
   }, [authState]);
 }
