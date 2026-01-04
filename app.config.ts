@@ -117,7 +117,7 @@ const config: ExpoConfig = {
     },
   },
   runtimeVersion: {
-    policy: 'appVersion',
+    policy: 'fingerprint',
   },
   extra: {
     AUTH_PROXY_API_BASE_URL: process.env.AUTH_PROXY_API_BASE_URL,

@@ -1,6 +1,5 @@
 ---
-name: Build and Submit iOS
-
+name: Continuous Deploy iOS (Fingerprint)
 on:
   workflow_dispatch:
     inputs:
@@ -10,15 +9,164 @@ on:
         options:
           - preview
           - production
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
+  fingerprint:
     if: github.repository == 'luke-h1/foam'
-    name: Build and Submit iOS
-    runs-on: foam
+    name: Fingerprint
+    runs-on: ubuntu-latest
+    outputs:
+      fingerprint: ${{ steps.fingerprint.outputs.fingerprint }}
+    concurrency: fingerprint-${{ github.event_name != 'pull_request' && 'main' || github.run_id }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Get Fingerprint
+        id: fingerprint
+        uses: expo/expo-github-action/fingerprint@v8
+
+  determine-deploy-type:
+    name: Determine Deploy Type
+    runs-on: ubuntu-latest
+    needs: fingerprint
+    outputs:
+      build-type: ${{ steps.check-build.outputs.build-type }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+          patch-watchers: false
+
+      - name: 🔍 Check for existing build with fingerprint
+        id: check-build
+        env:
+          FINGERPRINT: ${{ needs.fingerprint.outputs.fingerprint }}
+        run: |
+          echo "Checking for builds matching fingerprint: $FINGERPRINT"
+          
+          # Query EAS for builds with matching runtime version (fingerprint)
+          BUILD_INFO=$(eas build:list --platform ios --status finished --limit 1 --runtimeVersion "$FINGERPRINT" --json 2>/dev/null || echo "[]")
+          
+          if [ "$BUILD_INFO" = "[]" ] || [ -z "$BUILD_INFO" ]; then
+            echo "No existing build found with fingerprint $FINGERPRINT"
+            echo "build-type=build" >> $GITHUB_OUTPUT
+          else
+            echo "Found existing build with fingerprint $FINGERPRINT"
+            echo "build-type=update" >> $GITHUB_OUTPUT
+          fi
+
+  ota-update:
+    name: 🚀 OTA Update
+    runs-on: ubuntu-latest
+    needs: [fingerprint, determine-deploy-type]
+    if: needs.determine-deploy-type.outputs.build-type == 'update'
+    permissions:
+      contents: read
+
     steps:
       - name: Check for EXPO_TOKEN
-        run: >
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+
+      - name: Load secrets
+        id: load_secrets
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
+          TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
+          AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
+          AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
+          SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+          OP_ENV_FILE: ".env"
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+          patch-watchers: false
+
+      - name: 📤 Publish OTA Update
+        run: |
+          echo "📱 Publishing OTA update for fingerprint: ${{ needs.fingerprint.outputs.fingerprint }}"
+          eas update --channel production --message "OTA Update from ${{ github.sha }}" --non-interactive
+
+  native-build:
+    name: 🏗️ Native Build and Submit
+    runs-on: foam
+    needs: [fingerprint, determine-deploy-type]
+    if: needs.determine-deploy-type.outputs.build-type == 'build'
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: |
           if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
             echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
             exit 1
@@ -92,42 +240,10 @@ jobs:
       - name: ⛏️ Setup EAS local builds
         run: bun add -g eas-cli-local-build-plugin
 
-      # - uses: maxim-lobanov/setup-xcode@v1
-      #   with:
-      #     xcode-version: "26.0"
-
       - name: 🏗️ EAS Build
-        run: >
-          bun use-build-number-with-bump
+        run: |
+          echo "🔧 Building with fingerprint: ${{ needs.fingerprint.outputs.fingerprint }}"
           EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun eas build --profile production --platform ios --non-interactive --no-wait --local --output ./app-production.abd
 
-      - name: 🚀 Deploy
+      - name: 🚀 Submit to App Store
         run: eas submit -p ios --non-interactive --path ./app-production.abd
-
-      - name: 📚 Get version from package.json
-        id: get-build-info
-        run: bash scripts/setGitHubOutput.sh
-
-      # - name: 🔔 Notify Slack of Production Build
-      #   if: ${{ inputs.profile == 'production' }}
-      #   uses: slackapi/slack-github-action@v1.25.0
-      #   with:
-      #     payload: |
-      #       {
-      #         "text": "iOS production build for App Store submission is ready!\n```Artifact: Check TestFlight to know when it is available\nVersion Number: ${{ steps.get-build-info.outputs.PACKAGE_VERSION }}\nBuild Number: ${{ steps.get-build-info.outputs.BSKY_IOS_BUILD_NUMBER }}```"
-      #       }
-      #   env:
-      #     SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
-      #     SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-
-      - name: ⬇️ Restore Cache
-        id: get-base-commit
-        uses: actions/cache@v4
-        if: ${{ inputs.profile == 'preview' }}
-        with:
-          path: most-recent-preview-commit.txt
-          key: most-recent-preview-commit
-
-      - name: ✏️ Write commit hash to cache
-        if: ${{ inputs.profile == 'preview' }}
-        run: echo ${{ github.sha }} > most-recent-preview-commit.txt
