@@ -1,11 +1,13 @@
 name: Check self hosted runner
 on:
   pull_request:
+    types: [labeled]
   workflow_dispatch:
 jobs:
   self-hosted-runner:
     name: ESLint
     runs-on: foam-app
+    if: github.repository == 'luke-h1/foam' && (github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'self-hosted-test'))
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@v4
