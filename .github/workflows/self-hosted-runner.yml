@@ -1,7 +1,7 @@
 name: Check self hosted runner
 on:
   pull_request:
-    types: [labeled]
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 jobs:
   self-hosted-runner:
