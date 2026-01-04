@@ -20,6 +20,7 @@ const scopes = [
   'perf',
   'firebase',
   'remote-config',
+  'release',
   'storybook',
 ];
 
