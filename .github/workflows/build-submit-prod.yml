@@ -146,20 +146,6 @@ jobs:
       - name: ⬇️ Checkout
         uses: actions/checkout@v4
 
-      - name: Load secrets
-        id: load_secrets
-        uses: 1password/load-secrets-action@v3
-        with:
-          export-env: true
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
-          TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
-          AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
-          AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
-          SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
-          OP_ENV_FILE: ".env"
-
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -181,10 +167,10 @@ jobs:
           packager: bun
           patch-watchers: false
 
-      - name: 📤 Publish OTA Update
+      - name: 📤 Run EAS Update Workflow
         run: |
-          echo "📱 Publishing OTA update for app version: ${{ needs.fingerprint.outputs.app-version }}"
-          eas update --channel production --message "OTA Update from ${{ github.sha }}" --non-interactive
+          echo "📱 Triggering EAS update workflow for app version: ${{ needs.fingerprint.outputs.app-version }}"
+          eas workflow:run .eas/ota-update.yml --non-interactive
 
   native-build:
     name: 🏗️ Native Build and Submit

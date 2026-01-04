@@ -1,0 +1,7 @@
+name: Send updates
+jobs:
+  send_updates:
+    name: Send updates
+    type: update
+    params:
+      channel: production
