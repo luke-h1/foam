@@ -14,6 +14,7 @@
     "start:atlas:production": "EXPO_UNSTABLE_ATLAS=true APP_VARIANT=development expo start --no-dev",
     "atlas:export": "EXPO_UNSTABLE_ATLAS=true expo export --platform all",
     "atlas:analyze": "expo-atlas",
+    "export": "bunx expo export",
     "atlas:analyze:file": "expo-atlas .expo/atlas.jsonl",
     "ios": "APP_VARIANT=development expo run:ios",
     "ios:production": "APP_VARIANT=production expo run:ios --configuration Release",
