@@ -149,7 +149,7 @@ jobs:
 
       - name: 📦 Package Bundle and 🚀 Deploy
         if: ${{ !steps.fingerprint.outputs.includes-changes }}
-        run: eas update --channel ${{ inputs.channel || 'preview' }} --environment ${{ inputs.environment || 'preview' }}
+        run: eas update --channel ${{ inputs.channel || 'preview' }} --environment ${{ inputs.environment || 'preview' }} --message "release OTA for ${{inputs.environment}}"
 
       - name: ⬇️ Restore Cache
         id: get-base-commit
