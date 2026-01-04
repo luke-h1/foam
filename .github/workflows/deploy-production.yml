@@ -46,12 +46,18 @@ jobs:
           packager: bun
           patch-watchers: false
 
-      - name: 🔍 Check if build is needed
+      - name: 🔍 Check if build is needed (fingerprint check)
         id: fingerprint_check
-        uses: expo/expo-github-action/continuous-deploy-fingerprint@main
+        uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
         with:
           profile: production
           branch: production
+
+      - name: 📊 Debug fingerprint check outputs
+        run: |
+          echo "build-needed: ${{ steps.fingerprint_check.outputs.build-needed }}"
+          echo "ios-build-exists: ${{ steps.fingerprint_check.outputs.ios-build-exists }}"
+          echo "android-build-exists: ${{ steps.fingerprint_check.outputs.android-build-exists }}"
 
       - name: 📝 Bump version in app.config.ts
         if: steps.fingerprint_check.outputs.build-needed == 'true'
