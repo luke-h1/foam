@@ -5,7 +5,7 @@ on:
 
 jobs:
   determine_and_deploy:
-    runs-on: foam-app
+    runs-on: foam
     timeout-minutes: 30
     concurrency: main-deploy-${{ github.run_id }}
     permissions:

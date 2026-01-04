@@ -6,7 +6,7 @@ on:
 jobs:
   self-hosted-runner:
     name: ESLint
-    runs-on: foam-app
+    runs-on: foam
     if: github.repository == 'luke-h1/foam' && (github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'self-hosted-test'))
     steps:
       - name: 🏗 Checkout repository
