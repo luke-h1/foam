@@ -204,7 +204,7 @@ jobs:
       - name: 🏗️ Trigger build
         if: steps.normalize_build_needed.outputs.build-needed == 'true'
         run: |
-          EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun eas build --profile production --platform ios --non-interactive --no-wait --local --path ./app-production.abd
+          EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun eas build --profile production --platform ios --non-interactive --no-wait --local --output ./app-production.abd
 
       - name: Submit build
         if: steps.normalize_build_needed.outputs.build-needed == 'true'
