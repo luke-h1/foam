@@ -8,7 +8,13 @@ import {
   useUpdates,
 } from 'expo-updates';
 import React, { useEffect, useRef } from 'react';
-import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
+import {
+  Alert,
+  AppState,
+  AppStateStatus,
+  InteractionManager,
+  Platform,
+} from 'react-native';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 
@@ -61,36 +67,47 @@ export function useOTAUpdates() {
     }, 10e3);
   }, []);
 
-  const onIsTestFlight = React.useCallback(async () => {
-    try {
-      await setExtraParams();
+  const onIsTestFlight = React.useCallback(() => {
+    // Wait for interactions/animations to complete before checking for updates
+    // This prevents the app from showing a blank screen on startup
+    const task = InteractionManager.runAfterInteractions(() => {
+      // Additional delay to ensure the app is fully rendered
+      setTimeout(() => {
+        void (async () => {
+          try {
+            await setExtraParams();
 
-      const res = await checkForUpdateAsync();
-      if (res.isAvailable) {
-        await fetchUpdateAsync();
+            const res = await checkForUpdateAsync();
+            if (res.isAvailable) {
+              await fetchUpdateAsync();
 
-        Alert.alert(
-          'Update Available',
-          'A new version of the app is available. Relaunch now?',
-          [
-            {
-              text: 'No',
-              style: 'cancel',
-            },
-            {
-              text: 'Relaunch',
-              style: 'default',
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onPress: async () => {
-                await reloadAsync();
-              },
-            },
-          ],
-        );
-      }
-    } catch {
-      console.error('Internal OTA Update Error');
-    }
+              Alert.alert(
+                'Update Available',
+                'A new version of the app is available. Relaunch now?',
+                [
+                  {
+                    text: 'No',
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Relaunch',
+                    style: 'default',
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                    onPress: async () => {
+                      await reloadAsync();
+                    },
+                  },
+                ],
+              );
+            }
+          } catch {
+            console.error('Internal OTA Update Error');
+          }
+        })();
+      }, 5000);
+    });
+
+    return () => task.cancel();
   }, []);
 
   React.useEffect(() => {
@@ -99,15 +116,16 @@ export function useOTAUpdates() {
     // immediately.
     // todo change this to use preview track when we have it set up
     if (process.env.APP_VARIANT === 'production') {
-      void onIsTestFlight();
-      return;
+      const cleanup = onIsTestFlight();
+      return cleanup;
     }
     if (!shouldReceiveUpdates || ranInitialCheck.current) {
-      return;
+      return undefined;
     }
 
     setCheckTimeout();
     ranInitialCheck.current = true;
+    return undefined;
   }, [onIsTestFlight, setCheckTimeout, shouldReceiveUpdates]);
 
   // After the app has been minimized for 15 minutes, we want to either A. install an update if one has become available
