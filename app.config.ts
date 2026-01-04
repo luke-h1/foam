@@ -124,7 +124,6 @@ const config: ExpoConfig = {
     TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET,
     AUTH_PROXY_API_KEY: process.env.AUTH_PROXY_API_KEY,
-    WITH_STORYBOOK: process.env.WITH_STORYBOOK,
     updates: {
       assetPatternsToBeBundled: ['**/*'],
     },

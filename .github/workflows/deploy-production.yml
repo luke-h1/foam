@@ -83,7 +83,7 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add app.config.ts
-          git commit -m "chore: bump version to ${{ env.NEW_VERSION }} [skip ci]" || exit 0
+          git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]" || exit 0
           git push
 
       - name: 🚀 Create OTA update
@@ -94,5 +94,4 @@ jobs:
       - name: 🏗️ Trigger build
         if: steps.fingerprint_check.outputs.build-needed == 'true'
         run: |
-          bun eas build --profile production --platform all --non-interactive --no-wait
-
+          bun eas build --profile production --platform all --non-interactive --no-wait --local
