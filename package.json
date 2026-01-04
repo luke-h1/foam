@@ -50,6 +50,8 @@
     "test:snapshot": "jest --updateSnapshot",
     "test:perf": "reassure measure",
     "web": "expo start --web",
+    "use-build-number": "./scripts/useBuildNumberEnv.sh",
+    "use-build-number-with-bump": "./scripts/useBuildNumberEnvWithBump.sh",
     "storybook:generate": "sb-rn-get-stories",
     "storybook:preview": "APP_VARIANT=development expo start --web",
     "fingerprint:android": "npx expo-updates fingerprint:generate --platform android | jq -r '.hash' | xargs -n 1 echo 'fingerprint:'",
