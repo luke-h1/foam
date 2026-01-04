@@ -132,8 +132,9 @@ jobs:
       - name: 💾 Commit version bump
         if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true'
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --global user.name 'luke-h1'
+          git config --global user.email 'luke-h1@users.noreply.github.com'
+          git config --global github.user 'luke-h1'
           git add app.config.ts
           git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]" || exit 0
           git push
@@ -155,7 +156,7 @@ jobs:
       - name: 🏷️ Create GitHub tag
         if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true' && steps.check_tag.outputs.tag-exists == 'false'
         run: |
-          git tag -a "v${{ env.NEW_VERSION }}" -m "Release v${{ env.NEW_VERSION }}"
+          git tag -a "v${{ env.NEW_VERSION }}" -m "v${{ env.NEW_VERSION }}"
           git push origin "v${{ env.NEW_VERSION }}"
           echo "✅ Created tag v${{ env.NEW_VERSION }}"
 
