@@ -8,13 +8,7 @@ import {
   useUpdates,
 } from 'expo-updates';
 import React, { useEffect, useRef } from 'react';
-import {
-  Alert,
-  AppState,
-  AppStateStatus,
-  InteractionManager,
-  Platform,
-} from 'react-native';
+import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 
@@ -32,7 +26,15 @@ async function setExtraParams() {
   );
 }
 
-export function useOTAUpdates() {
+interface UseOTAUpdatesOptions {
+  /**
+   * Whether the app is ready to check for updates.
+   * Pass true only after auth context and other critical initialization is complete.
+   */
+  isReady: boolean;
+}
+
+export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
   const shouldReceiveUpdates = isEnabled && !__DEV__;
   const appState = React.useRef<AppStateStatus>('active');
   const lastMinimize = React.useRef(0);
@@ -43,95 +45,67 @@ export function useOTAUpdates() {
   // eslint-disable-next-line no-undef
   const timeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  const setCheckTimeout = React.useCallback(() => {
+  const checkForUpdates = React.useCallback(async () => {
+    try {
+      await setExtraParams();
+
+      console.debug('Checking for update...');
+      const res = await checkForUpdateAsync();
+      setLastChecked(new Date());
+
+      if (res.isAvailable) {
+        console.debug('Attempting to fetch update...');
+        await fetchUpdateAsync();
+
+        Alert.alert(
+          'Update Available',
+          'A new version of the app is available. Relaunch now?',
+          [
+            {
+              text: 'No',
+              style: 'cancel',
+            },
+            {
+              text: 'Relaunch',
+              style: 'default',
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
+              onPress: async () => {
+                await reloadAsync();
+              },
+            },
+          ],
+        );
+      } else {
+        console.debug('No update available.');
+      }
+    } catch (e) {
+      console.error('OTA Update Error', { error: `${e}` });
+    }
+  }, []);
+
+  // Initial check - only runs after app is ready
+  React.useEffect(() => {
+    if (!isReady || !shouldReceiveUpdates || ranInitialCheck.current) {
+      return;
+    }
+
+    // Delay the initial check to ensure the app is fully rendered
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    timeout.current = setTimeout(async () => {
-      try {
-        await setExtraParams();
-
-        console.debug('Checking for update...');
-        const res = await checkForUpdateAsync();
-        setLastChecked(new Date());
-
-        if (res.isAvailable) {
-          console.debug('Attempting to fetch update...');
-          await fetchUpdateAsync();
-        } else {
-          console.debug('No update available.');
-        }
-      } catch (e) {
-        console.error('OTA Update Error', { error: `${e}` });
-      }
+    timeout.current = setTimeout(() => {
+      ranInitialCheck.current = true;
+      void checkForUpdates();
     }, 10e3);
-  }, []);
 
-  const onIsTestFlight = React.useCallback(() => {
-    // Wait for interactions/animations to complete before checking for updates
-    // This prevents the app from showing a blank screen on startup
-    const task = InteractionManager.runAfterInteractions(() => {
-      // Additional delay to ensure the app is fully rendered
-      setTimeout(() => {
-        void (async () => {
-          try {
-            await setExtraParams();
-
-            const res = await checkForUpdateAsync();
-            if (res.isAvailable) {
-              await fetchUpdateAsync();
-
-              Alert.alert(
-                'Update Available',
-                'A new version of the app is available. Relaunch now?',
-                [
-                  {
-                    text: 'No',
-                    style: 'cancel',
-                  },
-                  {
-                    text: 'Relaunch',
-                    style: 'default',
-                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                    onPress: async () => {
-                      await reloadAsync();
-                    },
-                  },
-                ],
-              );
-            }
-          } catch {
-            console.error('Internal OTA Update Error');
-          }
-        })();
-      }, 5000);
-    });
-
-    return () => task.cancel();
-  }, []);
-
-  React.useEffect(() => {
-    // For Testflight users, we can prompt the user to update immediately whenever there's an available update. This
-    // is suspect however with the Apple App Store guidelines, so we don't want to prompt production users to update
-    // immediately.
-    // todo change this to use preview track when we have it set up
-    if (process.env.APP_VARIANT === 'production') {
-      const cleanup = onIsTestFlight();
-      return cleanup;
-    }
-    if (!shouldReceiveUpdates || ranInitialCheck.current) {
-      return undefined;
-    }
-
-    setCheckTimeout();
-    ranInitialCheck.current = true;
-    return undefined;
-  }, [onIsTestFlight, setCheckTimeout, shouldReceiveUpdates]);
+    return () => {
+      clearTimeout(timeout.current);
+    };
+  }, [isReady, shouldReceiveUpdates, checkForUpdates]);
 
   // After the app has been minimized for 15 minutes, we want to either A. install an update if one has become available
   // or B check for an update again.
   useEffect(() => {
-    if (!isEnabled) return;
+    if (!isEnabled || !isReady) return;
 
     const subscription = AppState.addEventListener(
       'change',
@@ -147,7 +121,7 @@ export function useOTAUpdates() {
             if (isUpdatePending) {
               await reloadAsync();
             } else {
-              setCheckTimeout();
+              void checkForUpdates();
             }
           }
         } else {
@@ -162,7 +136,7 @@ export function useOTAUpdates() {
       clearTimeout(timeout.current);
       subscription.remove();
     };
-  }, [isUpdatePending, setCheckTimeout]);
+  }, [isUpdatePending, checkForUpdates, isReady]);
 
   return { lastChecked };
 }

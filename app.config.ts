@@ -115,9 +115,13 @@ const config: ExpoConfig = {
     requestHeaders: {
       'expo-channel-name': 'local',
     },
+    // Disable automatic update checks on launch to prevent blank screen issues
+    // Updates are checked manually after the app has fully loaded
+    checkAutomatically: 'NEVER',
+    fallbackToCacheTimeout: 30000,
   },
   runtimeVersion: {
-    policy: 'fingerprint',
+    policy: 'appVersion',
   },
   extra: {
     AUTH_PROXY_API_BASE_URL: process.env.AUTH_PROXY_API_BASE_URL,
