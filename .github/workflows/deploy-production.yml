@@ -111,4 +111,4 @@ jobs:
       - name: 🏗️ Trigger build
         if: steps.normalize_build_needed.outputs.build-needed == 'true'
         run: |
-          bun eas build --profile production --platform all --non-interactive --no-wait --local
+          bun eas build --profile production --platform ios --non-interactive --no-wait --local
