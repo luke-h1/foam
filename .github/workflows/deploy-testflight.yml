@@ -35,6 +35,7 @@ jobs:
       - name: Write .env file
         run: |
           echo "EXPO_UNSTABLE_TREE_SHAKING=1" >> .env
+
        
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -68,6 +69,7 @@ jobs:
       - name: EAS build
         run: |
           bun eas build -p ios --profile production --local --output app-production.abd --non-interactive
+
       - name: Deploy 🚀
         run: |
           bun eas submit -p ios --path ./app-production.abd

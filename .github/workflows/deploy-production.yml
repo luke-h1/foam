@@ -1,0 +1,98 @@
+name: Deploy production (OTA or build)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  determine_and_deploy:
+    runs-on: foam-app
+    timeout-minutes: 30
+    concurrency: main-deploy-${{ github.run_id }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: 🔎 Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/tutorial/eas/using-github/"
+            exit 1
+          fi
+
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+          patch-watchers: false
+
+      - name: 🔍 Check if build is needed
+        id: fingerprint_check
+        uses: expo/expo-github-action/continuous-deploy-fingerprint@v8
+        with:
+          profile: production
+          branch: production
+
+      - name: 📝 Bump version in app.config.ts
+        if: steps.fingerprint_check.outputs.build-needed == 'true'
+        run: |
+          # Read current version using sed (more portable than grep -oP)
+          CURRENT_VERSION=$(sed -n "s/.*const VERSION = '\\([^']*\\)'.*/\\1/p" app.config.ts)
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Parse version parts (assuming semver format like 0.0.36)
+          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          # Increment patch version
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo "New version: $NEW_VERSION"
+          
+          sed -i.bak "s/const VERSION = '$CURRENT_VERSION'/const VERSION = '$NEW_VERSION'/" app.config.ts
+          rm -f app.config.ts.bak
+          
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "VERSION_BUMPED=true" >> $GITHUB_ENV
+
+      - name: 💾 Commit version bump
+        if: steps.fingerprint_check.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add app.config.ts
+          git commit -m "chore: bump version to ${{ env.NEW_VERSION }} [skip ci]" || exit 0
+          git push
+
+      - name: 🚀 Create OTA update
+        if: steps.fingerprint_check.outputs.build-needed == 'false'
+        run: |
+          bun eas update --auto --branch production --non-interactive --local
+
+      - name: 🏗️ Trigger build
+        if: steps.fingerprint_check.outputs.build-needed == 'true'
+        run: |
+          bun eas build --profile production --platform all --non-interactive --no-wait
+
