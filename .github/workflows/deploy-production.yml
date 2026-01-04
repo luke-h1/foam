@@ -90,18 +90,26 @@ jobs:
 
       - name: 📊 Debug fingerprint check outputs
         run: |
+          echo "=== Fingerprint Check Results ==="
           echo "build-needed: ${{ steps.fingerprint_check.outputs.build-needed }}"
           echo "ios-build-exists: ${{ steps.fingerprint_check.outputs.ios-build-exists }}"
           echo "android-build-exists: ${{ steps.fingerprint_check.outputs.android-build-exists }}"
+          echo "ios-fingerprint: ${{ steps.fingerprint_check.outputs.ios-fingerprint }}"
+          echo "android-fingerprint: ${{ steps.fingerprint_check.outputs.android-fingerprint }}"
+          echo "=================================="
 
       - name: 🔧 Normalize build-needed value
         id: normalize_build_needed
         run: |
-          if [ -z "${{ steps.fingerprint_check.outputs.build-needed }}" ]; then
-            echo "build-needed is blank, setting to true"
+          BUILD_NEEDED="${{ steps.fingerprint_check.outputs.build-needed }}"
+          if [ -z "$BUILD_NEEDED" ]; then
+            echo "build-needed is blank, defaulting to true (build needed)"
+            echo "build-needed=true" >> $GITHUB_OUTPUT
+          elif [ "$BUILD_NEEDED" = "true" ]; then
+            echo "build-needed is true (build needed)"
             echo "build-needed=true" >> $GITHUB_OUTPUT
           else
-            echo "build-needed is not blank, setting to false"
+            echo "build-needed is false (builds exist, no build needed)"
             echo "build-needed=false" >> $GITHUB_OUTPUT
           fi
 
