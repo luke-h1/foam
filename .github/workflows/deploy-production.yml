@@ -48,7 +48,7 @@ jobs:
 
       - name: 🔍 Check if build is needed
         id: fingerprint_check
-        uses: expo/expo-github-action/continuous-deploy-fingerprint@v8
+        uses: expo/expo-github-action/continuous-deploy-fingerprint@main
         with:
           profile: production
           branch: production
