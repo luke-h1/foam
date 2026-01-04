@@ -232,15 +232,13 @@ jobs:
           echo "$OUTPUT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
-          # Extract Update group ID as fingerprint
-          UPDATE_GROUP_ID=$(echo "$OUTPUT" | grep -i "Update group ID" | sed 's/.*Update group ID[[:space:]]*//' | xargs)
-          if [ -n "$UPDATE_GROUP_ID" ]; then
+          UPDATE_GROUP_ID=$(echo "$OUTPUT" | grep -i "Update group ID" | awk '{print $NF}' | head -n 1)
+          if [ -n "$UPDATE_GROUP_ID" ] && [ "$UPDATE_GROUP_ID" != "ID" ]; then
             echo "ota-fingerprint=$UPDATE_GROUP_ID" >> $GITHUB_OUTPUT
             echo "Extracted OTA fingerprint: $UPDATE_GROUP_ID"
           else
-            # Fallback: try to extract from error message or use first available ID
-            UPDATE_GROUP_ID=$(echo "$OUTPUT" | grep -i "update.*id" | head -n 1 | sed 's/.*[Ii][Dd][[:space:]]*//' | xargs)
-            if [ -n "$UPDATE_GROUP_ID" ]; then
+            UPDATE_GROUP_ID=$(echo "$OUTPUT" | grep -i "update.*id" | awk '{print $NF}' | head -n 1)
+            if [ -n "$UPDATE_GROUP_ID" ] && [ "$UPDATE_GROUP_ID" != "ID" ] && [ "$UPDATE_GROUP_ID" != "id" ]; then
               echo "ota-fingerprint=$UPDATE_GROUP_ID" >> $GITHUB_OUTPUT
               echo "Extracted OTA fingerprint (fallback): $UPDATE_GROUP_ID"
             else
