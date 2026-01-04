@@ -107,15 +107,25 @@ jobs:
           fi
           
           # Query EAS for builds with matching runtime version (now using appVersion policy)
-          BUILD_INFO=$(eas build:list --platform ios --status finished --limit 1 --runtimeVersion "$APP_VERSION" --json 2>/dev/null || echo "[]")
+          BUILD_INFO=$(eas build:list --platform ios --status finished --limit 1 --runtimeVersion "$APP_VERSION" --json 2>&1 || echo "[]")
           
-          if [ "$BUILD_INFO" = "[]" ] || [ -z "$BUILD_INFO" ]; then
+          # Validate that BUILD_INFO is valid JSON
+          if ! echo "$BUILD_INFO" | jq empty 2>/dev/null; then
+            echo "Warning: eas build:list returned invalid JSON, treating as no builds found"
+            echo "Output was: $BUILD_INFO"
+            BUILD_INFO="[]"
+          fi
+          
+          # Check if we have any builds
+          BUILD_COUNT=$(echo "$BUILD_INFO" | jq 'length // 0' 2>/dev/null || echo "0")
+          
+          if [ "$BUILD_COUNT" = "0" ] || [ -z "$BUILD_INFO" ] || [ "$BUILD_INFO" = "[]" ]; then
             echo "No existing build found with app version $APP_VERSION"
             echo "build-type=build" >> $GITHUB_OUTPUT
           else
             # Check if the fingerprint has changed since the last build
             # If fingerprint changed, we need a native build for native code changes
-            LAST_BUILD_FINGERPRINT=$(echo "$BUILD_INFO" | jq -r '.[0].metadata.fingerprintHash // empty')
+            LAST_BUILD_FINGERPRINT=$(echo "$BUILD_INFO" | jq -r '.[0].metadata.fingerprintHash // empty' 2>/dev/null || echo "")
             
             if [ -n "$LAST_BUILD_FINGERPRINT" ] && [ "$LAST_BUILD_FINGERPRINT" != "$FINGERPRINT" ]; then
               echo "Fingerprint changed from $LAST_BUILD_FINGERPRINT to $FINGERPRINT"
