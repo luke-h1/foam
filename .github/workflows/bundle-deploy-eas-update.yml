@@ -1,5 +1,5 @@
 ---
-name: Bundle and Deploy EAS Update
+name: OTA or native build deploy
 
 on:
   push:
