@@ -205,7 +205,7 @@ jobs:
       - name: 🚀 Create OTA update
         if: steps.normalize_build_needed.outputs.build-needed == 'false'
         run: |
-          bun eas update --auto --branch production --non-interactive --local
+          bun eas update --channel production --environment production --message "release OTA" --non-interactive --clear-cache
 
       - name: 🏗️ Trigger build
         if: steps.normalize_build_needed.outputs.build-needed == 'true'
