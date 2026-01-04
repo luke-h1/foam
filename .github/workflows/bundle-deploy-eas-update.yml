@@ -54,11 +54,10 @@ jobs:
         if: ${{ github.ref != 'refs/heads/main' }}
         run: git fetch origin main:main --depth 100
 
-      - name: 🔧 Setup Node
-        uses: actions/setup-node@v6
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
         with:
           node-version-file: .nvmrc
-          cache: yarn
 
       - name: 📷 Check fingerprint and install dependencies
         id: fingerprint
