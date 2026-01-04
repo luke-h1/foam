@@ -59,8 +59,19 @@ jobs:
           echo "ios-build-exists: ${{ steps.fingerprint_check.outputs.ios-build-exists }}"
           echo "android-build-exists: ${{ steps.fingerprint_check.outputs.android-build-exists }}"
 
+      - name: 🔧 Normalize build-needed value
+        id: normalize_build_needed
+        run: |
+          if [ -z "${{ steps.fingerprint_check.outputs.build-needed }}" ]; then
+            echo "build-needed is blank, setting to true"
+            echo "build-needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build-needed is not blank, setting to false"
+            echo "build-needed=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: 📝 Bump version in app.config.ts
-        if: steps.fingerprint_check.outputs.build-needed == 'true'
+        if: steps.normalize_build_needed.outputs.build-needed == 'true'
         run: |
           # Read current version using sed (more portable than grep -oP)
           CURRENT_VERSION=$(sed -n "s/.*const VERSION = '\\([^']*\\)'.*/\\1/p" app.config.ts)
@@ -84,7 +95,7 @@ jobs:
           echo "VERSION_BUMPED=true" >> $GITHUB_ENV
 
       - name: 💾 Commit version bump
-        if: steps.fingerprint_check.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true'
+        if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true'
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -93,11 +104,11 @@ jobs:
           git push
 
       - name: 🚀 Create OTA update
-        if: steps.fingerprint_check.outputs.build-needed == 'false'
+        if: steps.normalize_build_needed.outputs.build-needed == 'false'
         run: |
           bun eas update --auto --branch production --non-interactive --local
 
       - name: 🏗️ Trigger build
-        if: steps.fingerprint_check.outputs.build-needed == 'true'
+        if: steps.normalize_build_needed.outputs.build-needed == 'true'
         run: |
           bun eas build --profile production --platform all --non-interactive --no-wait --local
