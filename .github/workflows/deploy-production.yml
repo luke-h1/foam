@@ -101,15 +101,12 @@ jobs:
       - name: 🔧 Normalize build-needed value
         id: normalize_build_needed
         run: |
-          BUILD_NEEDED="${{ steps.fingerprint_check.outputs.build-needed }}"
-          if [ -z "$BUILD_NEEDED" ]; then
-            echo "build-needed is blank, defaulting to true (build needed)"
-            echo "build-needed=true" >> $GITHUB_OUTPUT
-          elif [ "$BUILD_NEEDED" = "true" ]; then
-            echo "build-needed is true (build needed)"
+          IOS_FINGERPRINT="${{ steps.fingerprint_check.outputs.ios-fingerprint }}"
+          if [ -z "$IOS_FINGERPRINT" ]; then
+            echo "iOS fingerprint is blank, build needed"
             echo "build-needed=true" >> $GITHUB_OUTPUT
           else
-            echo "build-needed is false (builds exist, no build needed)"
+            echo "iOS fingerprint exists: $IOS_FINGERPRINT, no build needed"
             echo "build-needed=false" >> $GITHUB_OUTPUT
           fi
 
