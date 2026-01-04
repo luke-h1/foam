@@ -10,7 +10,7 @@ import {
 import React, { useEffect, useRef } from 'react';
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 
-const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
+const MINIMUM_MINIMIZE_TIME = 5 * 60e3; // 5 minutes
 
 async function setExtraParams() {
   await setExtraParamAsync(
@@ -102,7 +102,7 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
     };
   }, [isReady, shouldReceiveUpdates, checkForUpdates]);
 
-  // After the app has been minimized for 15 minutes, we want to either A. install an update if one has become available
+  // After the app has been minimized for 5 minutes, we want to either A. install an update if one has become available
   // or B check for an update again.
   useEffect(() => {
     if (!isEnabled || !isReady) return;
@@ -115,7 +115,7 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
           appState.current.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          // If it's been 15 minutes since the last "minimize", we should feel comfortable updating the client since
+          // If it's been 5 minutes since the last "minimize", we should feel comfortable updating the client since
           // chances are that there isn't anything important going on in the current session.
           if (lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME) {
             if (isUpdatePending) {
