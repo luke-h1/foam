@@ -1,5 +1,5 @@
 ---
-name: Continuous Deploy iOS (Fingerprint)
+name: Continuous Deploy iOS
 on:
   workflow_dispatch:
     inputs:
@@ -9,9 +9,10 @@ on:
         options:
           - preview
           - production
-  push:
-    branches:
-      - main
+      force_native_build:
+        type: boolean
+        description: Force a native build (skip fingerprint check)
+        default: false
 
 jobs:
   fingerprint:
@@ -20,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       fingerprint: ${{ steps.fingerprint.outputs.fingerprint }}
+      app-version: ${{ steps.app-version.outputs.version }}
     concurrency: fingerprint-${{ github.event_name != 'pull_request' && 'main' || github.run_id }}
     permissions:
       contents: read
@@ -44,6 +46,14 @@ jobs:
       - name: 🔍 Get Fingerprint
         id: fingerprint
         uses: expo/expo-github-action/fingerprint@v8
+
+      - name: 📱 Get App Version
+        id: app-version
+        run: |
+          # Extract VERSION from app.config.ts
+          VERSION=$(grep "const VERSION = " app.config.ts | sed "s/.*'\(.*\)'.*/\1/")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "App version: $VERSION"
 
   determine-deploy-type:
     name: Determine Deploy Type
@@ -79,22 +89,42 @@ jobs:
           packager: bun
           patch-watchers: false
 
-      - name: 🔍 Check for existing build with fingerprint
+      - name: 🔍 Check for existing build with app version
         id: check-build
         env:
+          APP_VERSION: ${{ needs.fingerprint.outputs.app-version }}
           FINGERPRINT: ${{ needs.fingerprint.outputs.fingerprint }}
+          FORCE_BUILD: ${{ github.event.inputs.force_native_build }}
         run: |
-          echo "Checking for builds matching fingerprint: $FINGERPRINT"
+          echo "Checking for builds matching app version: $APP_VERSION"
+          echo "Current fingerprint: $FINGERPRINT"
           
-          # Query EAS for builds with matching runtime version (fingerprint)
-          BUILD_INFO=$(eas build:list --platform ios --status finished --limit 1 --runtimeVersion "$FINGERPRINT" --json 2>/dev/null || echo "[]")
+          # If force build is requested, always do a native build
+          if [ "$FORCE_BUILD" = "true" ]; then
+            echo "Force build requested"
+            echo "build-type=build" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Query EAS for builds with matching runtime version (now using appVersion policy)
+          BUILD_INFO=$(eas build:list --platform ios --status finished --limit 1 --runtimeVersion "$APP_VERSION" --json 2>/dev/null || echo "[]")
           
           if [ "$BUILD_INFO" = "[]" ] || [ -z "$BUILD_INFO" ]; then
-            echo "No existing build found with fingerprint $FINGERPRINT"
+            echo "No existing build found with app version $APP_VERSION"
             echo "build-type=build" >> $GITHUB_OUTPUT
           else
-            echo "Found existing build with fingerprint $FINGERPRINT"
-            echo "build-type=update" >> $GITHUB_OUTPUT
+            # Check if the fingerprint has changed since the last build
+            # If fingerprint changed, we need a native build for native code changes
+            LAST_BUILD_FINGERPRINT=$(echo "$BUILD_INFO" | jq -r '.[0].metadata.fingerprintHash // empty')
+            
+            if [ -n "$LAST_BUILD_FINGERPRINT" ] && [ "$LAST_BUILD_FINGERPRINT" != "$FINGERPRINT" ]; then
+              echo "Fingerprint changed from $LAST_BUILD_FINGERPRINT to $FINGERPRINT"
+              echo "Native code changes detected, triggering native build"
+              echo "build-type=build" >> $GITHUB_OUTPUT
+            else
+              echo "Found existing build with app version $APP_VERSION and matching fingerprint"
+              echo "build-type=update" >> $GITHUB_OUTPUT
+            fi
           fi
 
   ota-update:
@@ -153,7 +183,7 @@ jobs:
 
       - name: 📤 Publish OTA Update
         run: |
-          echo "📱 Publishing OTA update for fingerprint: ${{ needs.fingerprint.outputs.fingerprint }}"
+          echo "📱 Publishing OTA update for app version: ${{ needs.fingerprint.outputs.app-version }}"
           eas update --channel production --message "OTA Update from ${{ github.sha }}" --non-interactive
 
   native-build:
@@ -242,7 +272,8 @@ jobs:
 
       - name: 🏗️ EAS Build
         run: |
-          echo "🔧 Building with fingerprint: ${{ needs.fingerprint.outputs.fingerprint }}"
+          echo "🔧 Building with app version: ${{ needs.fingerprint.outputs.app-version }}"
+          echo "🔧 Fingerprint: ${{ needs.fingerprint.outputs.fingerprint }}"
           EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun eas build --profile production --platform ios --non-interactive --no-wait --local --output ./app-production.abd
 
       - name: 🚀 Submit to App Store
