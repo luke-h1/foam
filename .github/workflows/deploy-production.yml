@@ -82,6 +82,51 @@ jobs:
           packager: bun
           patch-watchers: false
 
+      - name: 📖 Get current version
+        id: get_current_version
+        run: |
+          CURRENT_VERSION=$(sed -n "s/.*const VERSION = '\\([^']*\\)'.*/\\1/p" app.config.ts)
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "current-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version in app.config.ts: $CURRENT_VERSION"
+
+      - name: 🏷️ Get last built version from tags
+        id: get_last_built_version
+        run: |
+          # Get the latest version tag (check both formats: 0.0.36 and v0.0.36)
+          # First try without 'v' prefix, then with 'v' prefix for backward compatibility
+          LAST_TAG=$(git tag -l "*.*.*" | grep -E "^(v)?[0-9]+\.[0-9]+\.[0-9]+$" | sed 's/^v//' | sort -V | tail -n 1)
+          if [ -z "$LAST_TAG" ]; then
+            echo "No version tags found, assuming first build"
+            echo "last-built-version=" >> $GITHUB_OUTPUT
+            echo "version-changed=true" >> $GITHUB_OUTPUT
+          else
+            # Use tag directly as version (no 'v' prefix)
+            LAST_VERSION="$LAST_TAG"
+            echo "last-built-version=$LAST_VERSION" >> $GITHUB_OUTPUT
+            echo "Last built version from tag: $LAST_VERSION"
+            
+            # Compare versions using semantic versioning
+            CURRENT_VERSION="${{ steps.get_current_version.outputs.current-version }}"
+            
+            # Use sort -V for version comparison (works for semver)
+            # If current version sorts after last version, it's newer
+            HIGHER_VERSION=$(printf "%s\n%s" "$LAST_VERSION" "$CURRENT_VERSION" | sort -V | tail -n 1)
+            
+            if [ "$CURRENT_VERSION" != "$LAST_VERSION" ]; then
+              if [ "$HIGHER_VERSION" = "$CURRENT_VERSION" ]; then
+                echo "Version increased: $LAST_VERSION -> $CURRENT_VERSION (build needed)"
+                echo "version-changed=true" >> $GITHUB_OUTPUT
+              else
+                echo "Version decreased: $LAST_VERSION -> $CURRENT_VERSION (unexpected, but build needed)"
+                echo "version-changed=true" >> $GITHUB_OUTPUT
+              fi
+            else
+              echo "Version unchanged: $CURRENT_VERSION"
+              echo "version-changed=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
       - name: 🔍 Check if build is needed (fingerprint check)
         id: fingerprint_check
         uses: expo/expo-github-action/continuous-deploy-fingerprint-info@main
@@ -97,18 +142,32 @@ jobs:
           echo "android-build-exists: ${{ steps.fingerprint_check.outputs.android-build-exists }}"
           echo "ios-fingerprint: ${{ steps.fingerprint_check.outputs.ios-fingerprint }}"
           echo "android-fingerprint: ${{ steps.fingerprint_check.outputs.android-fingerprint }}"
+          echo "version-changed: ${{ steps.get_last_built_version.outputs.version-changed }}"
+          echo "current-version: ${{ steps.get_current_version.outputs.current-version }}"
+          echo "last-built-version: ${{ steps.get_last_built_version.outputs.last-built-version }}"
           echo "=================================="
 
       - name: 🔧 Normalize build-needed value
         id: normalize_build_needed
         run: |
           IOS_FINGERPRINT="${{ steps.fingerprint_check.outputs.ios-fingerprint }}"
-          if [ -z "$IOS_FINGERPRINT" ]; then
+          VERSION_CHANGED="${{ steps.get_last_built_version.outputs.version-changed }}"
+          
+          # Build needed if:
+          # 1. Version has changed (new version requires new build)
+          # 2. OR fingerprint doesn't exist (no build for current fingerprint)
+          if [ "$VERSION_CHANGED" = "true" ]; then
+            echo "Version changed, build needed"
+            echo "build-needed=true" >> $GITHUB_OUTPUT
+            echo "build-reason=version-changed" >> $GITHUB_OUTPUT
+          elif [ -z "$IOS_FINGERPRINT" ]; then
             echo "iOS fingerprint is blank, build needed"
             echo "build-needed=true" >> $GITHUB_OUTPUT
+            echo "build-reason=no-fingerprint" >> $GITHUB_OUTPUT
           else
-            echo "iOS fingerprint exists: $IOS_FINGERPRINT, no build needed"
+            echo "iOS fingerprint exists: $IOS_FINGERPRINT, version unchanged, no build needed"
             echo "build-needed=false" >> $GITHUB_OUTPUT
+            echo "build-reason=none" >> $GITHUB_OUTPUT
           fi
 
       - name: 📝 Bump version in app.config.ts
@@ -160,7 +219,7 @@ jobs:
         if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true'
         id: check_tag
         run: |
-          TAG_NAME="v${{ env.NEW_VERSION }}"
+          TAG_NAME="${{ env.NEW_VERSION }}"
           if git ls-remote --tags origin "$TAG_NAME" | grep -q "$TAG_NAME"; then
             echo "tag-exists=true" >> $GITHUB_OUTPUT
             echo "Tag $TAG_NAME already exists"
@@ -173,15 +232,15 @@ jobs:
       - name: 🏷️ Create GitHub tag
         if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true' && steps.check_tag.outputs.tag-exists == 'false'
         run: |
-          git tag -a "v${{ env.NEW_VERSION }}" -m "v${{ env.NEW_VERSION }}"
-          git push origin "v${{ env.NEW_VERSION }}"
-          echo "✅ Created tag v${{ env.NEW_VERSION }}"
+          git tag -a "${{ env.NEW_VERSION }}" -m "${{ env.NEW_VERSION }}"
+          git push origin "${{ env.NEW_VERSION }}"
+          echo "✅ Created tag ${{ env.NEW_VERSION }}"
 
       - name: 📦 Check if release exists
         if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true'
         id: check_release
         run: |
-          TAG_NAME="v${{ env.NEW_VERSION }}"
+          TAG_NAME="${{ env.NEW_VERSION }}"
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
@@ -198,7 +257,7 @@ jobs:
       - name: 📦 Create GitHub release
         if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true' && steps.check_release.outputs.release-exists == 'false'
         run: |
-          TAG_NAME="v${{ env.NEW_VERSION }}"
+          TAG_NAME="${{ env.NEW_VERSION }}"
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
@@ -250,6 +309,11 @@ jobs:
           # Check for fingerprint errors
           if echo "$OUTPUT" | grep -q "No compatible builds found for the following fingerprints:"; then
             echo "fingerprint-error=true" >> $GITHUB_OUTPUT
+            echo "⚠️ ERROR: No compatible builds found for fingerprints!"
+            echo "This means the version in app.config.ts has changed but no build exists for the new fingerprint."
+            echo "The workflow should have detected this and triggered a build."
+            echo "Current version: ${{ env.CURRENT_VERSION }}"
+            exit 1
           else
             echo "fingerprint-error=false" >> $GITHUB_OUTPUT
           fi
