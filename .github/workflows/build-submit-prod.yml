@@ -107,19 +107,37 @@ jobs:
           fi
           
           # Query EAS for builds with matching runtime version (now using appVersion policy)
-          BUILD_INFO=$(eas build:list --platform ios --status finished --limit 1 --runtimeVersion "$APP_VERSION" --json 2>&1 || echo "[]")
+          # Capture stdout and stderr separately
+          BUILD_INFO=$(eas build:list --platform ios --status finished --limit 1 --runtimeVersion "$APP_VERSION" --json --non-interactive 2>/dev/null)
+          EAS_EXIT_CODE=$?
+          
+          # Check if command failed or output is not JSON
+          if [ $EAS_EXIT_CODE -ne 0 ] || [ -z "$BUILD_INFO" ]; then
+            echo "eas build:list command failed or returned empty, treating as no builds found"
+            echo "build-type=build" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check if output looks like JSON (starts with [ or {)
+          if ! echo "$BUILD_INFO" | grep -qE '^[\[\{]'; then
+            echo "Warning: eas build:list did not return JSON format, treating as no builds found"
+            echo "Output preview: $(echo "$BUILD_INFO" | head -c 200)"
+            echo "build-type=build" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           
           # Validate that BUILD_INFO is valid JSON
           if ! echo "$BUILD_INFO" | jq empty 2>/dev/null; then
             echo "Warning: eas build:list returned invalid JSON, treating as no builds found"
-            echo "Output was: $BUILD_INFO"
-            BUILD_INFO="[]"
+            echo "Output preview: $(echo "$BUILD_INFO" | head -c 200)"
+            echo "build-type=build" >> $GITHUB_OUTPUT
+            exit 0
           fi
           
           # Check if we have any builds
           BUILD_COUNT=$(echo "$BUILD_INFO" | jq 'length // 0' 2>/dev/null || echo "0")
           
-          if [ "$BUILD_COUNT" = "0" ] || [ -z "$BUILD_INFO" ] || [ "$BUILD_INFO" = "[]" ]; then
+          if [ "$BUILD_COUNT" = "0" ] || [ "$BUILD_INFO" = "[]" ]; then
             echo "No existing build found with app version $APP_VERSION"
             echo "build-type=build" >> $GITHUB_OUTPUT
           else
