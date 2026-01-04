@@ -2,7 +2,6 @@ name: Deploy production (OTA or build)
 
 on:
   workflow_dispatch:
-
 jobs:
   determine_and_deploy:
     runs-on: foam
@@ -24,6 +23,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Load secrets
         id: load_secrets
@@ -39,6 +39,7 @@ jobs:
           SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
           GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
           GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
+          SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
           OP_ENV_FILE: ".env"
 
       - name: 📄 Decode and write Google service files
@@ -127,10 +128,10 @@ jobs:
           NEW_PATCH=$((PATCH + 1))
           NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
           echo "New version: $NEW_VERSION"
-          
+
           sed -i.bak "s/const VERSION = '$CURRENT_VERSION'/const VERSION = '$NEW_VERSION'/" app.config.ts
           rm -f app.config.ts.bak
-          
+
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "VERSION_BUMPED=true" >> $GITHUB_ENV
 
@@ -139,10 +140,21 @@ jobs:
         run: |
           git config --global user.name 'luke-h1'
           git config --global user.email 'luke-h1@users.noreply.github.com'
-          git config --global github.user 'luke-h1'
+          
+          # Check if there are actual changes to commit
           git add app.config.ts
-          git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]" || exit 0
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes to commit in app.config.ts"
+            exit 0
+          fi
+          
+          # Commit the changes
+          git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]"
+          
+          # Push to main branch
+          git push origin main
+          
+          echo "✅ Successfully pushed version bump to GitHub"
 
       - name: 🏷️ Check if tag exists
         if: steps.normalize_build_needed.outputs.build-needed == 'true' && env.VERSION_BUMPED == 'true'
@@ -202,10 +214,176 @@ jobs:
             }"
           echo "✅ Created release $TAG_NAME"
 
+      - name: 📖 Get current version for OTA
+        if: steps.normalize_build_needed.outputs.build-needed == 'false'
+        id: get_ota_version
+        run: |
+          CURRENT_VERSION=$(sed -n "s/.*const VERSION = '\\([^']*\\)'.*/\\1/p" app.config.ts)
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "Current version for OTA: $CURRENT_VERSION"
+
       - name: 🚀 Create OTA update
         if: steps.normalize_build_needed.outputs.build-needed == 'false'
+        id: ota_update
         run: |
-          bun eas update --channel production --environment production --message "release OTA" --non-interactive --clear-cache
+          OUTPUT=$(bun eas update --channel production --environment production --message "release OTA" --non-interactive --clear-cache 2>&1)
+          echo "$OUTPUT"
+          echo "ota-output<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          # Extract Update group ID as fingerprint
+          UPDATE_GROUP_ID=$(echo "$OUTPUT" | grep -i "Update group ID" | sed 's/.*Update group ID[[:space:]]*//' | xargs)
+          if [ -n "$UPDATE_GROUP_ID" ]; then
+            echo "ota-fingerprint=$UPDATE_GROUP_ID" >> $GITHUB_OUTPUT
+            echo "Extracted OTA fingerprint: $UPDATE_GROUP_ID"
+          else
+            # Fallback: try to extract from error message or use first available ID
+            UPDATE_GROUP_ID=$(echo "$OUTPUT" | grep -i "update.*id" | head -n 1 | sed 's/.*[Ii][Dd][[:space:]]*//' | xargs)
+            if [ -n "$UPDATE_GROUP_ID" ]; then
+              echo "ota-fingerprint=$UPDATE_GROUP_ID" >> $GITHUB_OUTPUT
+              echo "Extracted OTA fingerprint (fallback): $UPDATE_GROUP_ID"
+            else
+              echo "ota-fingerprint=unknown" >> $GITHUB_OUTPUT
+              echo "Warning: Could not extract OTA fingerprint"
+            fi
+          fi
+          
+          # Check for fingerprint errors
+          if echo "$OUTPUT" | grep -q "No compatible builds found for the following fingerprints:"; then
+            echo "fingerprint-error=true" >> $GITHUB_OUTPUT
+          else
+            echo "fingerprint-error=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🏷️ Create OTA tag
+        if: steps.normalize_build_needed.outputs.build-needed == 'false'
+        run: |
+          git config --global user.name 'luke-h1'
+          git config --global user.email 'luke-h1@users.noreply.github.com'
+          
+          # Create tag name in format: {VERSION}-{FINGERPRINT}
+          OTA_FINGERPRINT="${{ steps.ota_update.outputs.ota-fingerprint }}"
+          TAG_NAME="${{ env.CURRENT_VERSION }}-${OTA_FINGERPRINT}"
+          
+          # Create tag with OTA output as message
+          OTA_OUTPUT="${{ steps.ota_update.outputs.ota-output }}"
+          TAG_MESSAGE=$(printf "OTA Update %s\n\n%s" "${{ env.CURRENT_VERSION }}" "$OTA_OUTPUT")
+          git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
+          
+          # Push tag
+          git push origin "$TAG_NAME"
+          echo "✅ Created OTA tag $TAG_NAME"
+
+      - name: 📢 Send OTA update to Slack
+        if: steps.normalize_build_needed.outputs.build-needed == 'false' && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not set, skipping Slack notification"
+            exit 0
+          fi
+          
+          OTA_OUTPUT="${{ steps.ota_update.outputs.ota-output }}"
+          
+          # Escape JSON special characters: backslash, quotes, newlines, tabs
+          ESCAPED_OUTPUT=$(echo "$OTA_OUTPUT" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/\t/\\t/g')
+          
+          # Create Slack message payload
+          PAYLOAD=$(cat <<JSON
+          {
+            "text": "🚀 Production OTA Update Published",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "🚀 Production OTA Update Published"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Version:* ${{ env.CURRENT_VERSION }}\n*Branch:* production\n\n\`\`\`${ESCAPED_OUTPUT}\`\`\`"
+                }
+              }
+            ]
+          }
+          JSON
+          )
+          
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
+
+      - name: ⚠️ Send fingerprint warning to Slack
+        if: steps.normalize_build_needed.outputs.build-needed == 'false' && steps.ota_update.outputs.fingerprint-error == 'true' && env.SLACK_WEBHOOK_URL != ''
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL not set, skipping Slack notification"
+            exit 0
+          fi
+          
+          # Extract fingerprint information from output
+          OTA_OUTPUT="${{ steps.ota_update.outputs.ota-output }}"
+          
+          # Extract iOS and Android fingerprints and URLs
+          IOS_FINGERPRINT=$(echo "$OTA_OUTPUT" | grep -A 1 "iOS fingerprint:" | tail -n 1 | xargs)
+          IOS_URL=$(echo "$OTA_OUTPUT" | grep -A 2 "iOS fingerprint:" | grep "URL" | sed 's/.*URL.*: *//' | xargs)
+          ANDROID_FINGERPRINT=$(echo "$OTA_OUTPUT" | grep -A 1 "Android fingerprint:" | tail -n 1 | xargs)
+          ANDROID_URL=$(echo "$OTA_OUTPUT" | grep -A 2 "Android fingerprint:" | grep "URL" | sed 's/.*URL.*: *//' | xargs)
+          
+          # Escape JSON special characters for URLs
+          ESCAPED_IOS_URL=$(echo "$IOS_URL" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+          ESCAPED_ANDROID_URL=$(echo "$ANDROID_URL" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+          
+          # Create Slack warning message payload
+          PAYLOAD=$(cat <<JSON
+          {
+            "text": "⚠️ Warning: No compatible builds found for fingerprints",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "⚠️ Warning: No Compatible Builds Found"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Version:* ${{ env.CURRENT_VERSION }}\n*Branch:* production\n\n*No compatible builds found for the following fingerprints:*"
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*iOS Fingerprint:*\n\`${IOS_FINGERPRINT}\`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Android Fingerprint:*\n\`${ANDROID_FINGERPRINT}\`"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*iOS URL:* <${ESCAPED_IOS_URL}|View fingerprint>\n*Android URL:* <${ESCAPED_ANDROID_URL}|View fingerprint>"
+                }
+              }
+            ]
+          }
+          JSON
+          )
+          
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
 
       - name: 🏗️ Trigger build
         if: steps.normalize_build_needed.outputs.build-needed == 'true'
