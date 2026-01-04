@@ -24,6 +24,11 @@ jobs:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
       - name: Load secrets
         id: load_secrets
         uses: 1password/load-secrets-action@v3
@@ -59,11 +64,6 @@ jobs:
           echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
           
           echo "✅ Google service files written successfully"
-
-      - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version-file: '.bun-version'
 
       - name: Setup Node
         uses: actions/setup-node@v4.1.0

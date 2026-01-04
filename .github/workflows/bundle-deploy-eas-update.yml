@@ -54,6 +54,12 @@ jobs:
         if: ${{ github.ref != 'refs/heads/main' }}
         run: git fetch origin main:main --depth 100
 
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'        
+
       - name: Setup Node
         uses: actions/setup-node@v4.1.0
         with:
@@ -65,6 +71,42 @@ jobs:
         with:
           profile: ${{ inputs.channel || 'preview' }}
           previous-commit-tag: ${{ inputs.runtimeVersion }}
+
+      - name: Load secrets
+        id: load_secrets
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
+          TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
+          AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
+          AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
+          SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+          GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
+          GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
+          SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
+          OP_ENV_FILE: ".env"
+
+      - name: 📄 Decode and write Google service files
+        run: |
+          if [ -z "$GOOGLE_SERVICES_ANDROID_PROD_BS4" ]; then
+            echo "Error: GOOGLE_SERVICES_ANDROID_PROD_BS4 is not set"
+            exit 1
+          fi
+          if [ -z "$GOOGLE_SERVICES_IOS_PROD_BS4" ]; then
+            echo "Error: GOOGLE_SERVICES_IOS_PROD_BS4 is not set"
+            exit 1
+          fi
+          
+          echo "Decoding Android Google Services JSON..."
+          echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > google-services-prod.json
+          
+          echo "Decoding iOS Google Services plist..."
+          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
+          
+          echo "✅ Google service files written successfully"
 
       # - name: Lint check
       #   run: yarn lint
@@ -100,31 +142,10 @@ jobs:
         if: ${{ !steps.fingerprint.outputs.includes-changes }}
         uses: dcarbone/install-jq-action@v2
 
-      # eas.json not used here, set EXPO_PUBLIC_ENV
-      - name: Env
-        id: env
-        if: ${{ !steps.fingerprint.outputs.includes-changes }}
-        run: |
-          export json='${{ secrets.GOOGLE_SERVICES_TOKEN }}'
-          echo "${{ secrets.ENV_TOKEN }}" > .env
-          echo "EXPO_PUBLIC_ENV=${{ inputs.channel || 'testflight' }}" >> .env
-          echo "EXPO_PUBLIC_RELEASE_VERSION=$(jq -r '.version' package.json)" >> .env
-          echo "EXPO_PUBLIC_RELEASE_VERSION=$(jq -r '.version' package.json)" >> $GITHUB_OUTPUT
-          echo "EXPO_PUBLIC_BUNDLE_IDENTIFIER=$(git rev-parse HEAD)" >> .env
-          echo "EXPO_PUBLIC_BUNDLE_IDENTIFIER=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-          echo "EXPO_PUBLIC_BUNDLE_DATE=$(date -u +"%y%m%d%H")" >> .env
-          echo "EXPO_PUBLIC_SENTRY_DSN=${{ secrets.SENTRY_DSN }}" >> .env
-          echo "EXPO_PUBLIC_BITDRIFT_API_KEY=${{ secrets.BITDRIFT_API_KEY }}" >> .env
-          echo "EXPO_PUBLIC_GCP_PROJECT_ID=${{ secrets.EXPO_PUBLIC_GCP_PROJECT_ID }}" >> .env
-          echo "$json" > google-services.json
-
       - name: 🏗️ Create Bundle
         if: ${{ !steps.fingerprint.outputs.includes-changes }}
         run: >
-          SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_RELEASE=${{ steps.env.outputs.EXPO_PUBLIC_RELEASE_VERSION }}
-          SENTRY_DIST=${{ steps.env.outputs.EXPO_PUBLIC_BUNDLE_IDENTIFIER }}
-          yarn export
+          bun export
 
       - name: 📦 Package Bundle and 🚀 Deploy
         if: ${{ !steps.fingerprint.outputs.includes-changes }}
@@ -142,10 +163,9 @@ jobs:
         if: ${{ !steps.fingerprint.outputs.includes-changes }}
         run: echo ${{ github.sha }} > most-recent-testflight-commit.txt
 
-  # GitHub actions are horrible so let's just copy paste this in
   buildIfNecessaryIOS:
     name: Build and Submit iOS
-    runs-on: macos-26
+    runs-on: foam
     concurrency:
       group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}-build-ios
       cancel-in-progress: true
