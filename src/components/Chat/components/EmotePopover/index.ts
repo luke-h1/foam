@@ -1,0 +1,1 @@
+export { EmotePopover } from './EmotePopover';

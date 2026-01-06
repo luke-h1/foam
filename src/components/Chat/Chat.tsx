@@ -48,7 +48,7 @@ import {
   BadgePressData,
   MessageActionData,
 } from './components/ChatMessage/ChatMessage';
-import { EmotePreviewSheet } from './components/EmotePreviewSheet';
+import { EmotePopover } from './components/EmotePopover';
 import {
   EmoteSheet,
   EmotePickerItem,
@@ -101,7 +101,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const debugModalRef = useRef<BottomSheetModal>(null);
   const chatInputRef = useRef<TextInput>(null);
 
-  const emotePreviewSheetRef = useRef<BottomSheetModal>(null);
   const badgePreviewSheetRef = useRef<BottomSheetModal>(null);
   const actionSheetRef = useRef<BottomSheetModal>(null);
 
@@ -114,6 +113,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
     null,
   );
+  const [emoteAnchorPosition, setEmoteAnchorPosition] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [isEmotePopoverVisible, setIsEmotePopoverVisible] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgePressData | null>(
     null,
   );
@@ -660,9 +666,22 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }, []);
 
   // Shared sheet handlers - lifted from per-message to single instances
-  const handleEmoteLongPress = useCallback((emote: EmotePressData) => {
-    setSelectedEmote(emote);
-    emotePreviewSheetRef.current?.present();
+  const handleEmotePress = useCallback(
+    (
+      emote: EmotePressData,
+      position: { x: number; y: number; width: number; height: number },
+    ) => {
+      setSelectedEmote(emote);
+      setEmoteAnchorPosition(position);
+      setIsEmotePopoverVisible(true);
+    },
+    [],
+  );
+
+  const handleEmotePopoverClose = useCallback(() => {
+    setIsEmotePopoverVisible(false);
+    setSelectedEmote(null);
+    setEmoteAnchorPosition(null);
   }, []);
 
   const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
@@ -787,7 +806,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onReply={handleReply}
         replyDisplayName={msg.replyDisplayName}
         replyBody={msg.replyBody}
-        onEmotePress={handleEmoteLongPress}
+        onEmotePress={handleEmotePress}
         onBadgePress={handleBadgeLongPress}
         onMessageLongPress={handleMessageLongPress}
         getMentionColor={getMentionColor}
@@ -799,7 +818,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     ),
     [
       handleReply,
-      handleEmoteLongPress,
+      handleEmotePress,
       handleBadgeLongPress,
       handleMessageLongPress,
       getMentionColor,
@@ -910,12 +929,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         />
 
         {/* Shared bottom sheets - single instances instead of per-message */}
-        {selectedEmote && (
-          <EmotePreviewSheet
-            ref={emotePreviewSheetRef}
-            selectedEmote={selectedEmote}
-          />
-        )}
+        <EmotePopover
+          selectedEmote={selectedEmote}
+          anchorPosition={emoteAnchorPosition}
+          isVisible={isEmotePopoverVisible}
+          onClose={handleEmotePopoverClose}
+        />
 
         {selectedBadge && (
           <BadgePreviewSheet
