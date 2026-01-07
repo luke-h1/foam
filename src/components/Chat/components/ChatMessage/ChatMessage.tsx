@@ -135,7 +135,15 @@ function ChatMessageComponent<
             <EmoteRenderer
               key={index}
               part={part}
-              handleEmotePress={handleEmotePress}
+              handleEmotePress={emotePart => {
+                // Measure the emote to get position, but we don't need it for bottom sheet
+                handleEmotePress(emotePart, {
+                  x: 0,
+                  y: 0,
+                  width: 0,
+                  height: 0,
+                });
+              }}
             />
           );
         }

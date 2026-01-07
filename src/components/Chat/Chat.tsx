@@ -48,7 +48,7 @@ import {
   BadgePressData,
   MessageActionData,
 } from './components/ChatMessage/ChatMessage';
-import { EmotePopover } from './components/EmotePopover';
+import { EmoteDetailSheet } from './components/EmoteDetailSheet';
 import {
   EmoteSheet,
   EmotePickerItem,
@@ -113,12 +113,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
     null,
   );
-  const [emoteAnchorPosition, setEmoteAnchorPosition] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
   const [isEmotePopoverVisible, setIsEmotePopoverVisible] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState<BadgePressData | null>(
     null,
@@ -669,10 +663,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const handleEmotePress = useCallback(
     (
       emote: EmotePressData,
-      position: { x: number; y: number; width: number; height: number },
+      _position?: { x: number; y: number; width: number; height: number },
     ) => {
       setSelectedEmote(emote);
-      setEmoteAnchorPosition(position);
       setIsEmotePopoverVisible(true);
     },
     [],
@@ -681,7 +674,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const handleEmotePopoverClose = useCallback(() => {
     setIsEmotePopoverVisible(false);
     setSelectedEmote(null);
-    setEmoteAnchorPosition(null);
   }, []);
 
   const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
@@ -929,9 +921,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         />
 
         {/* Shared bottom sheets - single instances instead of per-message */}
-        <EmotePopover
+        <EmoteDetailSheet
           selectedEmote={selectedEmote}
-          anchorPosition={emoteAnchorPosition}
           isVisible={isEmotePopoverVisible}
           onClose={handleEmotePopoverClose}
         />
