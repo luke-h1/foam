@@ -7,7 +7,7 @@ import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
-import { enableFreeze, enableScreens } from 'react-native-screens';
+import { enableFreeze } from 'react-native-screens';
 import { Providers } from './Providers/Providers';
 import { ForceUpdateModal } from './components/ForceUpdateModal/ForceUpdateModal';
 import { OTAUpdates } from './components/OTAUpdates';
@@ -24,7 +24,6 @@ import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
 
 enableFreeze(true);
-enableScreens(true);
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
