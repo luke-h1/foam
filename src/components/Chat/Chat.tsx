@@ -16,6 +16,11 @@ import {
   getSevenTvEmoteSetId,
   clearCache,
   abortCurrentLoad,
+  updateSevenTvEmotes,
+  addPaint,
+  setUserPaint,
+  clearPaints,
+  useUserPaints,
 } from '@app/store/chatStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -23,6 +28,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { PaintData } from '@app/utils/color/seventv-ws-service';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -86,15 +92,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const insets = useSafeAreaInsets();
   const messages = useMessages();
   const channelEmoteData = useChannelEmoteData(channelId);
+  const userPaints = useUserPaints();
 
-  // Refs for lifecycle management
   const hasPartedRef = useRef(false);
   const isMountedRef = useRef(true);
   const currentEmoteSetIdRef = useRef<string | null>(null);
   const emoteReprocessAttemptedRef = useRef<string | null>(null);
   const initializedChannelRef = useRef<string | null>(null);
 
-  // UI refs
   const flashListRef = useRef<FlashListRef<AnyChatMessageType>>(null);
   const emoteSheetRef = useRef<TrueSheet>(null);
   const settingsSheetRef = useRef<TrueSheet>(null);
@@ -110,7 +115,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
   const [, setIsInputFocused] = useState(false);
 
-  // Shared sheet state (single instances instead of per-message)
   const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
     null,
   );
@@ -132,7 +136,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     cancel: cancelEmoteLoad,
   } = useChatEmoteLoader({
     channelId,
-    enabled: true, // Load immediately
+    enabled: true,
   });
 
   const emoteProcessor = useEmoteProcessor({
@@ -146,11 +150,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     bttvGlobalEmotes: channelEmoteData.bttvGlobalEmotes,
   });
 
-  // Track messages length in a ref for immediate access in callbacks
-  const messagesLengthRef = useRef(messages.length);
-  messagesLengthRef.current = messages.length;
-
-  // Scroll management
   const {
     isAtBottom,
     isAtBottomRef,
@@ -158,25 +157,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     unreadCount,
     setUnreadCount,
     handleScroll,
-    handleContentSizeChange,
     scrollToBottom,
     cleanup: cleanupScroll,
   } = useChatScroll({ flashListRef, messagesLength: messages.length });
-
-  // Auto-scroll callback for message handler
-  // Uses ref to get the latest messages length immediately after store update
-  const handleAutoScroll = useCallback(() => {
-    if (isAtBottomRef.current && !isScrollingToBottom) {
-      // Use ref to get latest length (updated synchronously with store)
-      const lastIndex = messagesLengthRef.current - 1;
-      if (lastIndex >= 0) {
-        void flashListRef.current?.scrollToIndex({
-          index: lastIndex,
-          animated: false,
-        });
-      }
-    }
-  }, [isScrollingToBottom, isAtBottomRef]);
 
   // Message management
   const {
@@ -190,7 +173,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       (count: number) => setUnreadCount(prev => prev + count),
       [setUnreadCount],
     ),
-    onAutoScroll: handleAutoScroll,
+    onAutoScroll: scrollToBottom,
   });
 
   // Process emotes for a message
@@ -324,7 +307,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     onPart,
   });
 
-  // Connection state polling
   useEffect(() => {
     const checkConnection = () => setConnected(isChatConnected());
     checkConnection();
@@ -332,16 +314,32 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     return () => clearInterval(interval);
   }, [isChatConnected]);
 
-  // SevenTV WebSocket
   const { subscribeToChannel, unsubscribeFromChannel, isConnected } =
     useSeventvWs({
       onEmoteUpdate: ({ added, removed, channelId: cId }) => {
         logger.stvWs.info(
           `Channel ${cId}: +${added.length} -${removed.length} emotes`,
         );
+        updateSevenTvEmotes(cId, added, removed);
       },
       onEvent: eventType => {
         console.log(`SevenTV event: ${eventType}`);
+      },
+      onCosmeticCreate: data => {
+        if (data.kind === 'PAINT') {
+          const paintData = data.cosmetic.object.data as PaintData;
+          addPaint(paintData);
+          logger.stvWs.info(`Added paint to cache: ${paintData.name}`);
+        }
+
+        if (data.kind === 'BADGE') {
+          // TODO: handle badges
+        }
+      },
+      onEntitlementCreate: data => {
+        if (data.ttvUserId && data.paintId) {
+          setUserPaint(data.ttvUserId, data.paintId);
+        }
       },
       twitchChannelId: channelId,
       sevenTvEmoteSetId,
@@ -356,7 +354,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     return () => clearInterval(interval);
   }, [isConnected]);
 
-  // SevenTV subscription management
   useEffect(() => {
     if (!wsConnected || !channelId) return;
 
@@ -386,7 +383,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     };
   }, [channelId, subscribeToChannel, unsubscribeFromChannel, wsConnected]);
 
-  // Subscribe when emote data becomes available
   useEffect(() => {
     if (!wsConnected || !channelId || emoteLoadStatus !== 'success') return;
 
@@ -397,7 +393,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [wsConnected, channelId, emoteLoadStatus, subscribeToChannel]);
 
-  // Navigation cleanup - cancel all loads immediately for fast navigation
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       abortCurrentLoad();
@@ -428,6 +423,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       unsubscribe();
       clearChannelResources();
       clearTtvUsers();
+      clearPaints();
       clearMessages();
       clearLocalMessages();
       cleanupScroll();
@@ -621,7 +617,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     processMessageEmotes,
   ]);
 
-  // Reply handler
   const handleReply = useCallback(
     (message: ChatMessageType<'usernotice'>) => {
       const messageText = replaceEmotesWithText(message.message);
@@ -659,7 +654,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     void settingsSheetRef.current?.present();
   }, []);
 
-  // Shared sheet handlers - lifted from per-message to single instances
   const handleEmoteLongPress = useCallback((emote: EmotePressData) => {
     setSelectedEmote(emote);
     emotePreviewSheetRef.current?.present();
@@ -693,16 +687,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     actionSheetRef.current?.dismiss();
   }, [selectedMessage]);
 
-  // Cached mention color lookup to avoid O(n) per-message
   const getMentionColor = useCallback(
     (username: string): string => {
       const lowerUsername = username.toLowerCase();
 
-      // Check cache first
       const cached = mentionColorCache.current.get(lowerUsername);
       if (cached) return cached;
 
-      // Look up from messages
       const mentionedUserMessage = messages.find(msg => {
         const msgUsername = msg?.userstate.username?.toLowerCase();
         const msgLogin = msg?.userstate.login?.toLowerCase();
@@ -718,12 +709,36 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         mentionedUserMessage?.userstate.color ||
         generateRandomTwitchColor(username);
 
-      // Cache the result
       mentionColorCache.current.set(lowerUsername, color);
 
       return color;
     },
     [messages],
+  );
+
+  // Parse text for emotes synchronously
+  const parseTextForEmotes = useCallback(
+    (text: string): ParsedPart[] => {
+      if (!text || !text.trim()) return [];
+
+      const emoteData = getCurrentEmoteData(channelId);
+      if (!emoteData) return [{ type: 'text', content: text }];
+
+      const hasEmotes =
+        emoteData.twitchGlobalEmotes.length > 0 ||
+        emoteData.sevenTvGlobalEmotes.length > 0 ||
+        emoteData.bttvGlobalEmotes.length > 0 ||
+        emoteData.ffzGlobalEmotes.length > 0;
+
+      if (!hasEmotes) return [{ type: 'text', content: text }];
+
+      let result: ParsedPart[] = [{ type: 'text', content: text }];
+      emoteProcessor.processEmotes(text.trimEnd(), null, parsedParts => {
+        result = parsedParts;
+      });
+      return result;
+    },
+    [channelId, emoteProcessor],
   );
 
   const handleTestMessage = useCallback(
@@ -761,7 +776,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [channelId]);
 
-  // Deduplicated messages for render
   const deduplicatedMessages = useMemo(() => {
     const messageMap = new Map<string, AnyChatMessageType>();
     messages.forEach(message => {
@@ -791,6 +805,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onBadgePress={handleBadgeLongPress}
         onMessageLongPress={handleMessageLongPress}
         getMentionColor={getMentionColor}
+        parseTextForEmotes={parseTextForEmotes}
+        userPaints={userPaints}
         // @ts-expect-error - notice_tags having issues being narrowed down
         notice_tags={
           'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
@@ -803,6 +819,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       handleBadgeLongPress,
       handleMessageLongPress,
       getMentionColor,
+      parseTextForEmotes,
+      userPaints,
     ],
   );
 
@@ -836,9 +854,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             ref={flashListRef}
             keyExtractor={keyExtractor}
             onScroll={handleScroll}
-            onContentSizeChange={handleContentSizeChange}
             renderItem={renderItem}
-            removeClippedSubviews
+            removeClippedSubviews={false}
             contentInsetAdjustmentBehavior="automatic"
             drawDistance={500}
             overrideItemLayout={(layout, msg) => {
@@ -909,7 +926,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           onClearImageCache={() => void handleClearImageCache()}
         />
 
-        {/* Shared bottom sheets - single instances instead of per-message */}
         {selectedEmote && (
           <EmotePreviewSheet
             ref={emotePreviewSheetRef}
@@ -943,6 +959,7 @@ Chat.displayName = 'Chat';
 const styles = StyleSheet.create(theme => ({
   wrapper: {
     flex: 1,
+    backgroundColor: theme.colors.gray.bg,
   },
   keyboardAvoidingView: {
     flex: 1,

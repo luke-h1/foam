@@ -1,150 +1,377 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
+import { CosmeticCreateCallbackData } from '@app/hooks/useSeventvWs';
 import { logger } from '@app/utils/logger';
-import { StvUser, SevenTvEmote, SanitisiedEmoteSet } from '../seventv-service';
+import {
+  StvUser,
+  SevenTvEmote,
+  SanitisiedEmoteSet,
+  SevenTvHost,
+} from '../../services/seventv-service';
+import { IndexedCollection } from '../../services/ws/util/indexedCollection';
 
-interface SevenTvWsBody {
+interface EventObject {
+  id: string;
+  name: string;
+}
+
+interface ChangeValue<TType, TValue, TNested = false> {
+  key: string;
+  index: number;
+  old_value: TType extends 'pulled' | 'updated' ? TValue : null;
+  value: TNested extends true ? ChangeValue<TType, TValue, false>[] : TValue;
+}
+
+export interface ChangeMap<TValue, TNested = false> {
   id: string;
   kind: number;
-  contextual?: boolean;
   actor?: StvUser;
-  pulled?: { [key: string]: SevenTvPulled };
-  pushed?: SevenTvPushed[];
+  pushed?: ChangeValue<'pushed', TValue, TNested>[];
+  pulled?: ChangeValue<'pulled', TValue, TNested>[];
+  updated?: ChangeValue<'updated', TValue, TNested>[];
+  contextual?: boolean;
 }
 
-interface SevenTvPulled {
-  key: string;
-  index: number;
-  old_value: SevenTvEmote & { origin_id: string | null };
-  value: null;
-  op: 0;
-  t: number;
-  s: number;
+/**
+ * Represents a color value from 7TV stored as a signed 32-bit integer in RGBA format.
+ *
+ * The color is packed into 32 bits with the following layout:
+ * - Bits 24-31: Red channel (0-255)
+ * - Bits 16-23: Green channel (0-255)
+ * - Bits 8-15: Blue channel (0-255)
+ * - Bits 0-7: Alpha channel (0-255)
+ *
+ * @example
+ * // Fully opaque red: 0xFF0000FF
+ * // Fully opaque green: 0x00FF00FF
+ * // Semi-transparent blue: 0x0000FF80
+ */
+export type SevenTvColor = number;
+
+/**
+ * Represents a drop shadow effect applied to a 7TV paint cosmetic.
+ *
+ * Shadows are rendered behind the text to create depth and visual effects.
+ * Multiple shadows can be combined for complex glow or outline effects.
+ */
+export interface PaintShadow {
+  /**
+   * The shadow color as a 7TV packed RGBA integer.
+   * @see {@link SevenTvColor} for the color format specification.
+   */
+  color: SevenTvColor;
+
+  /**
+   * The blur radius of the shadow in pixels.
+   * Higher values create a softer, more diffuse shadow effect.
+   */
+  radius: number;
+
+  /**
+   * The horizontal offset of the shadow from the text in pixels.
+   * Positive values move the shadow to the right.
+   */
+  x_offset: number;
+
+  /**
+   * The vertical offset of the shadow from the text in pixels.
+   * Positive values move the shadow downward.
+   */
+  y_offset: number;
 }
 
-interface SevenTvPushed {
-  key: string;
-  index: number;
-  type: string;
-  value: SevenTvEmote & { origin_id: string | null };
-  op: 0;
-  t: number;
-  s: number;
+/**
+ * Represents a single color stop in a gradient paint.
+ *
+ * Gradient stops define the colors and their positions along the gradient axis.
+ * Multiple stops are combined to create smooth color transitions.
+ */
+export interface PaintStop {
+  /**
+   * The color at this stop as a 7TV packed RGBA integer.
+   * @see {@link SevenTvColor} for the color format specification.
+   */
+  color: SevenTvColor;
+
+  /**
+   * The position of this stop along the gradient axis.
+   * Value ranges from 0 (start) to 1 (end).
+   */
+  at: number;
 }
 
-type SevenTvEmoteSetEvents =
+/**
+ * Converts a 7TV packed RGBA color integer to its individual channel components.
+ *
+ * Uses unsigned right shift (`>>>`) to correctly handle signed 32-bit integers,
+ * which is necessary because JavaScript stores numbers as 64-bit floats but
+ * bitwise operations convert to 32-bit signed integers.
+ *
+ * @param color - The packed RGBA color as a 32-bit signed integer.
+ * @returns An object containing the red, green, blue, and alpha channel values (0-255).
+ *
+ * @example
+ * ```typescript
+ * const { r, g, b, a } = sevenTvColorToRgba(-1675056641);
+ * // Result: { r: 156, g: 89, b: 182, a: 255 } (purple, fully opaque)
+ * ```
+ */
+
+/**
+ * Defines the type of gradient or fill function used by a 7TV paint cosmetic.
+ *
+ * - `LINEAR_GRADIENT`: A gradient that transitions colors along a straight line at a specified angle.
+ * - `RADIAL_GRADIENT`: A gradient that radiates colors outward from a center point.
+ * - `URL`: An image-based paint loaded from a URL.
+ */
+export type PaintFunction = 'LINEAR_GRADIENT' | 'RADIAL_GRADIENT' | 'URL';
+
+/**
+ * Defines the shape of a radial gradient paint.
+ *
+ * - `circle`: A perfectly round gradient that extends equally in all directions.
+ * - `ellipse`: An oval gradient that can stretch differently along the horizontal and vertical axes.
+ */
+export type PaintShape = 'circle' | 'ellipse';
+
+/**
+ * Represents a 7TV badge cosmetic with its visual and metadata.
+ */
+export interface BadgeData extends EventObject {
+  /** The CDN host information for badge image URLs. */
+  host: SevenTvHost;
+
+  /** The tooltip text displayed when hovering over the badge. */
+  tooltip: string;
+}
+
+/**
+ * Represents a 7TV paint cosmetic that can be applied to usernames.
+ *
+ * Paints are visual effects that modify how a user's name appears in chat.
+ * They can include gradients (linear or radial), solid colors, images,
+ * and shadow effects for enhanced visual impact.
+ *
+ * @example
+ * ```typescript
+ * // A linear gradient paint (Northern Light)
+ * const paint: PaintData = {
+ *   id: "01KDREVNA4XVTD3G04PWWDQMGF",
+ *   name: "Northern Light",
+ *   function: "LINEAR_GRADIENT",
+ *   angle: 45,
+ *   stops: { "0": { at: 0, color: -1675056641 }, "length": 1 },
+ *   shadows: { "0": { x_offset: 0, y_offset: 0, radius: 0.1, color: 2096885247 }, "length": 1 },
+ *   // ...other fields
+ * };
+ * ```
+ */
+export interface PaintData {
   /**
-   * Emote set has been created
+   * The unique identifier for this paint.
+   * Used to reference the paint in entitlements and cache lookups.
    */
-  | 'emote_set.create'
+  id: string;
 
   /**
-   * Emote set has been updated
+   * The display name of the paint shown to users.
+   * @example "Northern Light", "Galaxy", "Fire"
    */
-  | 'emote_set.update'
+  name: string;
 
   /**
-   * Emote set has been deleted
+   * A solid fallback color used when the paint function is not gradient-based,
+   * or when gradient stops are not available.
+   * @see {@link SevenTvColor} for the color format specification.
    */
-  | 'emote_set.delete'
+  color: SevenTvColor | null;
 
   /**
-   * Subscribe to all emote set events
+   * Legacy gradient layers container.
+   * Currently unused in favor of the `stops` property, kept for API compatibility.
    */
-  | 'emote_set.*';
-
-type SevenTvEmoteEvents =
-  /**
-   * Emote has been created
-   */
-  | 'emote.create'
+  gradients: {
+    length: number;
+  };
 
   /**
-   * Emote has been updated (i.e. renamed)
+   * Drop shadow effects applied behind the painted text.
+   * Multiple shadows can be combined for glow, outline, or depth effects.
    */
-  | 'emote.update'
+  shadows: IndexedCollection<PaintShadow>;
 
   /**
-   * Emote has been deleted from the set
+   * Optional text content associated with the paint.
+   * Rarely used in practice.
    */
-  | 'emote.delete'
+  text: string | null;
 
   /**
-   * Subscribe to all emote events
+   * The type of gradient or fill function used to render this paint.
+   * Determines how the `stops`, `angle`, and `shape` properties are interpreted.
    */
-  | 'emote.*';
-
-type SevenTvCosmeticEvents =
-  /**
-   * Cosmetic has been created
-   */
-  | 'cosmetic.create'
+  function: PaintFunction;
 
   /**
-   * Cosmetic has been updated
+   * Whether the gradient pattern should repeat beyond its natural bounds.
+   * When `true`, the gradient tiles to fill the available space.
    */
-  | 'cosmetic.update'
-  /**
-   * Cosmetic has been deleted
-   */
-  | 'cosmetic.delete'
+  repeat: boolean;
 
   /**
-   * Subscribe to all cosmetic events
+   * The angle of rotation for linear gradients, in degrees.
+   * - `0`: Left to right
+   * - `90`: Bottom to top
+   * - `180`: Right to left
+   * - `270`: Top to bottom
+   *
+   * Only applicable when `function` is `LINEAR_GRADIENT`.
    */
-  | 'cosmetic.*';
-
-type SevenTvUserEvents =
-  /**
-   * User has been created
-   */
-  | 'user.create'
-
-  /**
-   * User has been updated
-   */
-  | 'user.update'
+  angle: number;
 
   /**
-   * User has been deleted
+   * The shape of radial gradients.
+   * Only applicable when `function` is `RADIAL_GRADIENT`.
    */
-  | 'user.delete'
+  shape: PaintShape;
 
   /**
-   * Subscribe to all user events
+   * The URL of an image to use as the paint texture.
+   * Only applicable when `function` is `URL`.
    */
-  | 'user.*';
-
-type SevenTvUserEntitlementEvents =
-  /**
-   * Entitlement has been created
-   */
-  | 'entitlement.create'
-  /**
-   * Entitlement has been updated
-   */
-  | 'entitlement.update'
+  image_url: string;
 
   /**
-   * Entitlement has been deleted
+   * The color stops that define the gradient transition.
+   * Each stop specifies a color and its position (0-1) along the gradient axis.
    */
-  | 'entitlement.delete'
+  stops: IndexedCollection<PaintStop>;
+}
 
-  /**
-   * Subscribe to all entitlement events
-   */
-  | 'entitlement.*';
+interface PaintCosmeticObject {
+  id: string;
+  kind: 'PAINT';
+  data: PaintData;
+}
 
-type SevenTvEventType =
-  | SevenTvEmoteSetEvents
-  | SevenTvEmoteEvents
-  | SevenTvCosmeticEvents
-  | SevenTvUserEvents
-  | SevenTvUserEntitlementEvents;
+interface BadgeCosmeticObject {
+  id: string;
+  kind: 'BADGE';
+  data: BadgeData;
+}
 
-export interface SevenTvEventData {
-  type: SevenTvEventType;
-  body: SevenTvWsBody;
+export interface PaintCosmetic {
+  id: string;
+  kind: number;
+  object: PaintCosmeticObject;
+}
+
+export interface BadgeCosmetic {
+  id: string;
+  kind: number;
+  object: BadgeCosmeticObject;
+}
+
+export type CosmeticCreate = BadgeCosmetic | PaintCosmetic;
+
+type EmoteChange = SevenTvEmote & { origin_id: string | null };
+
+interface EmoteSetCreate extends EventObject {
+  capacity: number;
+  flags: number;
+  immutable: boolean;
+  privileged: boolean;
+  tags: string[];
+  owner: StvUser;
+}
+
+export interface EntitlementUserStyle {
+  color?: number;
+  paint_id?: string;
+  badge_id?: string;
+}
+
+export interface EntitlementUserConnection {
+  id: string;
+  platform: 'TWITCH';
+  username: string;
+  display_name: string;
+  linked_at: number;
+  emote_capacity: number;
+  emote_set_id: string;
+}
+
+export interface EntitlementUser {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+  style: EntitlementUserStyle;
+  role_ids: IndexedCollection<string>;
+  connections: IndexedCollection<EntitlementUserConnection>;
+}
+
+export interface EntitlementObject {
+  id: string;
+  kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
+  ref_id: string;
+  user: EntitlementUser;
+}
+
+export interface EntitlementCreate {
+  id: string;
+  kind: number;
+  object: EntitlementObject;
+}
+
+export interface SevenTvEventMap {
+  // Cosmetic events
+  'cosmetic.create': CosmeticCreate;
+  'cosmetic.update': ChangeMap<CosmeticCreate>;
+  'cosmetic.delete': { id: string };
+  'cosmetic.*': CosmeticCreate | ChangeMap<CosmeticCreate> | { id: string };
+
+  // Emote set events
+  'emote_set.create': EmoteSetCreate;
+  'emote_set.update': ChangeMap<EmoteChange>;
+  'emote_set.delete': { id: string };
+  'emote_set.*': EmoteSetCreate | ChangeMap<EmoteChange> | { id: string };
+
+  // Emote events
+  'emote.create': SevenTvEmote;
+  'emote.update': ChangeMap<SevenTvEmote>;
+  'emote.delete': { id: string };
+  'emote.*': SevenTvEmote | ChangeMap<SevenTvEmote> | { id: string };
+
+  // User events
+  'user.create': StvUser;
+  'user.update': ChangeMap<EventObject | null, true>;
+  'user.delete': { id: string };
+  'user.*': StvUser | ChangeMap<EventObject | null, true> | { id: string };
+
+  // Entitlement events
+  'entitlement.create': EntitlementCreate;
+  'entitlement.update': ChangeMap<EntitlementCreate>;
+  'entitlement.delete': { id: string };
+  'entitlement.*':
+    | EntitlementCreate
+    | ChangeMap<EntitlementCreate>
+    | { id: string };
+}
+
+/**
+ * All possible SevenTV event types
+ */
+export type SevenTvEventType = keyof SevenTvEventMap;
+
+/**
+ * Event data payload with type-safe body based on event type
+ */
+export interface SevenTvEventData<
+  T extends SevenTvEventType = SevenTvEventType,
+> {
+  type: T;
+  body: SevenTvEventMap[T];
 }
 
 /**
@@ -280,7 +507,7 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       op: 35;
       d: {
         type: TEventType;
-        condition: TEventType extends 'entitlement.create'
+        condition: TEventType extends 'entitlement.create' | 'cosmetic.create'
           ? {
               /**
                * valid fields in the condition depend on the subscription type
@@ -357,6 +584,10 @@ export default class SevenTvWsService {
         removed: SanitisiedEmoteSet[];
         channelId: string;
       }) => void)
+    | null = null;
+
+  private static cosmeticCreateCallback:
+    | ((data: CosmeticCreateCallbackData) => void)
     | null = null;
 
   // eslint-disable-next-line no-empty-function
@@ -440,23 +671,42 @@ export default class SevenTvWsService {
 
   private static onMessage(event: MessageEvent) {
     try {
-      const message = JSON.parse(
-        event.data as string,
-      ) as SevenTvWsMessage<SevenTvEventData>;
+      const message = JSON.parse(event.data as string) as SevenTvWsMessage<
+        SevenTvEventData<SevenTvEventType>
+      >;
+
+      logger.stvWs.debug('[onMessage] Received message with op:', message.op);
 
       switch (message.op) {
         case 0: {
+          // Add defensive checks to ensure message.d exists and has the expected structure
+          if (!message.d) {
+            logger.stvWs.error('message.d is undefined or null');
+            break;
+          }
+
+          if (typeof message.d !== 'object' || !('type' in message.d)) {
+            logger.stvWs.error('message.d does not have expected structure');
+            break;
+          }
           switch (message.d.type) {
             case 'emote_set.update': {
-              // logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
-              SevenTvWsService.handleEmoteSetUpdate(message.d);
+              SevenTvWsService.handleEmoteSetUpdate(
+                message.d as SevenTvEventData<'emote_set.update'>,
+              );
+              break;
+            }
+
+            case 'cosmetic.create': {
+              logger.stvWs.debug('cosmetic.create event received');
+              SevenTvWsService.handleCosmeticCreate(
+                message.d as SevenTvEventData<'cosmetic.create'>,
+              );
               break;
             }
 
             default: {
-              // logger.stvWs.info(
-              //   `💚 Received WS unhandled data event: ${message.d.type}`,
-              // );
+              // Unhandled event types
               break;
             }
           }
@@ -505,15 +755,16 @@ export default class SevenTvWsService {
     }
   }
 
-  private static handleEmoteSetUpdate(data: SevenTvEventData): void {
+  private static handleEmoteSetUpdate(
+    data: SevenTvEventData<'emote_set.update'>,
+  ): void {
     try {
-      // logger.stvWs.info('💚 Handling emote set update event', data);
-
       // Filter out historical events by checking if this is within the first few seconds of connection
       // This helps filter out the initial historical events that come when first subscribing
       const timeSinceConnection =
         Date.now() - SevenTvWsService.connectionTimestamp;
-      const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds buffer
+
+      const HISTORICAL_EVENT_BUFFER = 5000; // 5 seconds buffer
 
       if (timeSinceConnection < HISTORICAL_EVENT_BUFFER) {
         logger.stvWs.info(
@@ -525,11 +776,13 @@ export default class SevenTvWsService {
       const addedEmotes: SanitisiedEmoteSet[] = [];
       const removedEmotes: SanitisiedEmoteSet[] = [];
 
+      const { body } = data;
+
       /**
        * New emotes have been added to the set
        */
-      if (data.body.pushed) {
-        data.body.pushed.forEach(emote => {
+      if (body.pushed) {
+        body.pushed.forEach(emote => {
           const emote4x =
             emote.value.data.host.files.find(file => file.name === '4x.avif') ||
             emote.value.data.host.files.find(file => file.name === '3x.avif') ||
@@ -550,15 +803,15 @@ export default class SevenTvWsService {
             site: '7TV Channel Emote',
             height: emote4x?.height,
             width: emote4x?.width,
-            actor: data.body.actor,
+            actor: body.actor,
           });
         });
       }
 
-      if (data.body.pulled) {
-        console.log('actor is ->', data.body.actor?.display_name);
+      if (body.pulled) {
+        logger.stvWs.debug('Emote removed by:', body.actor?.display_name);
 
-        Object.values(data.body.pulled).forEach(emote => {
+        Object.values(body.pulled).forEach(emote => {
           if (emote && emote.old_value) {
             removedEmotes.push({
               name: emote.old_value.data.name,
@@ -569,7 +822,7 @@ export default class SevenTvWsService {
               creator: emote.old_value.data.owner?.display_name,
               emote_link: `https://7tv.app/emotes/${emote.old_value.id}`,
               site: '7TV Channel Emote',
-              actor: data.body.actor,
+              actor: body.actor,
             });
           }
         });
@@ -594,6 +847,23 @@ export default class SevenTvWsService {
       }
     } catch (error) {
       logger.stvWs.error('Error handling emote set update:', error);
+    }
+  }
+
+  private static handleCosmeticCreate(
+    data: SevenTvEventData<'cosmetic.create'>,
+  ): void {
+    try {
+      const { body } = data;
+
+      if (SevenTvWsService.cosmeticCreateCallback) {
+        SevenTvWsService.cosmeticCreateCallback({
+          cosmetic: body,
+          kind: body.object.kind,
+        });
+      }
+    } catch (e) {
+      logger.stvWs.error('Error handling cosmetic create:', e);
     }
   }
 
@@ -862,6 +1132,15 @@ export default class SevenTvWsService {
   }
 
   /**
+   * Set the cosmetic create callback
+   */
+  public static setCosmeticCreateCallback(
+    callback: ((data: CosmeticCreateCallbackData) => void) | null,
+  ): void {
+    SevenTvWsService.cosmeticCreateCallback = callback;
+  }
+
+  /**
    * Remove event listener for a given channel
    */
   public static disconnect(): void {
@@ -877,6 +1156,7 @@ export default class SevenTvWsService {
       SevenTvWsService.hasInitialSubscriptions = false;
       SevenTvWsService.activeSubscriptions.clear();
       SevenTvWsService.emoteUpdateCallback = null;
+      SevenTvWsService.cosmeticCreateCallback = null;
 
       logger.stvWs.info('🟢 SevenTV WebSocket disconnected');
     }

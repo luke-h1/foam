@@ -1,0 +1,818 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid color fallback) 1`] = `
+<RNCMaskedView>
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "transparent",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "lineHeight": 24,
+            },
+            {
+              "color": "#FFFFFF",
+              "fontFamily": undefined,
+              "fontStyle": "normal",
+              "fontVariant": undefined,
+              "fontWeight": "400",
+              "textAlign": "left",
+            },
+            [
+              {
+                "color": "black",
+                "fontSize": 16,
+                "fontWeight": "bold",
+              },
+              {},
+            ],
+          ]
+        }
+        textBreakStrategy="simple"
+      >
+        UrlPaintUser
+        :
+      </Text>
+    </View>
+  </View>
+  <ViewManagerAdapter_ExpoLinearGradient
+    colors={
+      [
+        4294944000,
+        4294944000,
+      ]
+    }
+    endPoint={
+      [
+        1,
+        0,
+      ]
+    }
+    locations={
+      [
+        0,
+        1,
+      ]
+    }
+    startPoint={
+      [
+        0,
+        0,
+      ]
+    }
+    style={
+      {
+        "flexDirection": "row",
+      }
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#FFFFFF",
+            "fontFamily": undefined,
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": "400",
+            "textAlign": "left",
+          },
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "bold",
+              "opacity": 0,
+            },
+            {},
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      UrlPaintUser
+      :
+    </Text>
+  </ViewManagerAdapter_ExpoLinearGradient>
+</RNCMaskedView>
+`;
+
+exports[`PaintedUsername Snapshots should match snapshot with fallback color only 1`] = `
+<RNCMaskedView>
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "transparent",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "lineHeight": 24,
+            },
+            {
+              "color": "#FFFFFF",
+              "fontFamily": undefined,
+              "fontStyle": "normal",
+              "fontVariant": undefined,
+              "fontWeight": "400",
+              "textAlign": "left",
+            },
+            [
+              {
+                "color": "black",
+                "fontSize": 16,
+                "fontWeight": "bold",
+              },
+              {},
+            ],
+          ]
+        }
+        textBreakStrategy="simple"
+      >
+        FallbackUser
+        :
+      </Text>
+    </View>
+  </View>
+  <ViewManagerAdapter_ExpoLinearGradient
+    colors={
+      [
+        4288371126,
+        4288371126,
+      ]
+    }
+    endPoint={
+      [
+        1,
+        0,
+      ]
+    }
+    locations={
+      [
+        0,
+        1,
+      ]
+    }
+    startPoint={
+      [
+        0,
+        0,
+      ]
+    }
+    style={
+      {
+        "flexDirection": "row",
+      }
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#FFFFFF",
+            "fontFamily": undefined,
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": "400",
+            "textAlign": "left",
+          },
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "bold",
+              "opacity": 0,
+            },
+            {},
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      FallbackUser
+      :
+    </Text>
+  </ViewManagerAdapter_ExpoLinearGradient>
+</RNCMaskedView>
+`;
+
+exports[`PaintedUsername Snapshots should match snapshot with linear gradient paint 1`] = `
+<RNCMaskedView>
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "transparent",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "lineHeight": 24,
+            },
+            {
+              "color": "#FFFFFF",
+              "fontFamily": undefined,
+              "fontStyle": "normal",
+              "fontVariant": undefined,
+              "fontWeight": "400",
+              "textAlign": "left",
+            },
+            [
+              {
+                "color": "black",
+                "fontSize": 16,
+                "fontWeight": "bold",
+              },
+              {
+                "textShadowColor": "rgba(254, 118, 148, 1.00)",
+                "textShadowOffset": {
+                  "height": 0,
+                  "width": 0,
+                },
+                "textShadowRadius": 0.1,
+              },
+            ],
+          ]
+        }
+        textBreakStrategy="simple"
+      >
+        RoseGoldUser
+        :
+      </Text>
+    </View>
+  </View>
+  <ViewManagerAdapter_ExpoLinearGradient
+    colors={
+      [
+        4294866580,
+        4294953140,
+        4294921587,
+      ]
+    }
+    endPoint={
+      [
+        1,
+        0.5,
+      ]
+    }
+    locations={
+      [
+        0,
+        0.5,
+        1,
+      ]
+    }
+    startPoint={
+      [
+        0,
+        0.5000000000000001,
+      ]
+    }
+    style={
+      {
+        "flexDirection": "row",
+      }
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#FFFFFF",
+            "fontFamily": undefined,
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": "400",
+            "textAlign": "left",
+          },
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "bold",
+              "opacity": 0,
+            },
+            {
+              "textShadowColor": "rgba(254, 118, 148, 1.00)",
+              "textShadowOffset": {
+                "height": 0,
+                "width": 0,
+              },
+              "textShadowRadius": 0.1,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      RoseGoldUser
+      :
+    </Text>
+  </ViewManagerAdapter_ExpoLinearGradient>
+</RNCMaskedView>
+`;
+
+exports[`PaintedUsername Snapshots should match snapshot with long username 1`] = `
+<RNCMaskedView>
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "transparent",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "lineHeight": 24,
+            },
+            {
+              "color": "#FFFFFF",
+              "fontFamily": undefined,
+              "fontStyle": "normal",
+              "fontVariant": undefined,
+              "fontWeight": "400",
+              "textAlign": "left",
+            },
+            [
+              {
+                "color": "black",
+                "fontSize": 16,
+                "fontWeight": "bold",
+              },
+              {},
+            ],
+          ]
+        }
+        textBreakStrategy="simple"
+      >
+        VeryLongUsernameForTestingPurposes
+        :
+      </Text>
+    </View>
+  </View>
+  <ViewManagerAdapter_ExpoLinearGradient
+    colors={
+      [
+        4291049729,
+        4294940210,
+        4291049729,
+      ]
+    }
+    endPoint={
+      [
+        1,
+        0.5,
+      ]
+    }
+    locations={
+      [
+        0,
+        0.5,
+        1,
+      ]
+    }
+    startPoint={
+      [
+        0,
+        0.5000000000000001,
+      ]
+    }
+    style={
+      {
+        "flexDirection": "row",
+      }
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#FFFFFF",
+            "fontFamily": undefined,
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": "400",
+            "textAlign": "left",
+          },
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "bold",
+              "opacity": 0,
+            },
+            {},
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      VeryLongUsernameForTestingPurposes
+      :
+    </Text>
+  </ViewManagerAdapter_ExpoLinearGradient>
+</RNCMaskedView>
+`;
+
+exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1`] = `
+<RNCMaskedView>
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "transparent",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "lineHeight": 24,
+            },
+            {
+              "color": "#FFFFFF",
+              "fontFamily": undefined,
+              "fontStyle": "normal",
+              "fontVariant": undefined,
+              "fontWeight": "400",
+              "textAlign": "left",
+            },
+            [
+              {
+                "color": "black",
+                "fontSize": 16,
+                "fontWeight": "bold",
+              },
+              {
+                "textShadowColor": "rgba(0, 0, 0, 1.00)",
+                "textShadowOffset": {
+                  "height": 0,
+                  "width": 0,
+                },
+                "textShadowRadius": 0.1,
+              },
+            ],
+          ]
+        }
+        textBreakStrategy="simple"
+      >
+        DivisionUser
+        :
+      </Text>
+    </View>
+  </View>
+  <ViewManagerAdapter_ExpoLinearGradient
+    colors={
+      [
+        4288433174,
+        4291328050,
+        4286725135,
+      ]
+    }
+    endPoint={
+      [
+        1,
+        0.5,
+      ]
+    }
+    locations={
+      [
+        0,
+        0.5,
+        1,
+      ]
+    }
+    startPoint={
+      [
+        0,
+        0.5000000000000001,
+      ]
+    }
+    style={
+      {
+        "flexDirection": "row",
+      }
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#FFFFFF",
+            "fontFamily": undefined,
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": "400",
+            "textAlign": "left",
+          },
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "bold",
+              "opacity": 0,
+            },
+            {
+              "textShadowColor": "rgba(0, 0, 0, 1.00)",
+              "textShadowOffset": {
+                "height": 0,
+                "width": 0,
+              },
+              "textShadowRadius": 0.1,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      DivisionUser
+      :
+    </Text>
+  </ViewManagerAdapter_ExpoLinearGradient>
+</RNCMaskedView>
+`;
+
+exports[`PaintedUsername Snapshots should match snapshot with radial gradient paint 1`] = `
+<RNCMaskedView>
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "transparent",
+        }
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontSize": 16,
+              "lineHeight": 24,
+            },
+            {
+              "color": "#FFFFFF",
+              "fontFamily": undefined,
+              "fontStyle": "normal",
+              "fontVariant": undefined,
+              "fontWeight": "400",
+              "textAlign": "left",
+            },
+            [
+              {
+                "color": "black",
+                "fontSize": 16,
+                "fontWeight": "bold",
+              },
+              {
+                "textShadowColor": "rgba(0, 96, 128, 1.00)",
+                "textShadowOffset": {
+                  "height": 0,
+                  "width": 0,
+                },
+                "textShadowRadius": 0.1,
+              },
+            ],
+          ]
+        }
+        textBreakStrategy="simple"
+      >
+        FlowerchildUser
+        :
+      </Text>
+    </View>
+  </View>
+  <View
+    style={
+      {
+        "flexDirection": "row",
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "bottom": 0,
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        }
+      }
+    >
+      <RNSVGSvgView
+        bbHeight="100%"
+        bbWidth="100%"
+        focusable={false}
+        height="100%"
+        style={
+          [
+            {
+              "backgroundColor": "transparent",
+              "borderWidth": 0,
+            },
+            {
+              "position": "absolute",
+            },
+            {
+              "flex": 0,
+              "height": "100%",
+              "width": "100%",
+            },
+          ]
+        }
+        width="100%"
+      >
+        <RNSVGGroup
+          fill={
+            {
+              "payload": 4278190080,
+              "type": 0,
+            }
+          }
+        >
+          <RNSVGDefs>
+            <RNSVGRadialGradient
+              cx="50%"
+              cy="50%"
+              fx="50%"
+              fy="50%"
+              gradient={
+                [
+                  0,
+                  -10172196,
+                  0.5,
+                  -16738636,
+                  1,
+                  -16752512,
+                ]
+              }
+              gradientTransform={null}
+              gradientUnits={0}
+              name="radialPaint"
+              rx="50%"
+              ry="50%"
+            />
+          </RNSVGDefs>
+          <RNSVGRect
+            fill={
+              {
+                "brushRef": "radialPaint",
+                "type": 1,
+              }
+            }
+            height="100%"
+            propList={
+              [
+                "fill",
+              ]
+            }
+            width="100%"
+            x="0"
+            y="0"
+          />
+        </RNSVGGroup>
+      </RNSVGSvgView>
+    </View>
+    <Text
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#FFFFFF",
+            "fontFamily": undefined,
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": "400",
+            "textAlign": "left",
+          },
+          [
+            {
+              "fontSize": 16,
+              "fontWeight": "bold",
+              "opacity": 0,
+            },
+            {
+              "textShadowColor": "rgba(0, 96, 128, 1.00)",
+              "textShadowOffset": {
+                "height": 0,
+                "width": 0,
+              },
+              "textShadowRadius": 0.1,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      FlowerchildUser
+      :
+    </Text>
+  </View>
+</RNCMaskedView>
+`;
