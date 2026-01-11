@@ -1,8 +1,11 @@
 import { FlashListRef } from '@shopify/flash-list';
-import { RefObject, useCallback, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
-const BOTTOM_THRESHOLD = 50;
+/**
+ * Threshold in pixels from the bottom to consider user "at bottom"
+ */
+const BOTTOM_THRESHOLD = 100;
 
 interface UseChatScrollOptions<T> {
   flashListRef: RefObject<FlashListRef<T> | null>;
@@ -14,26 +17,30 @@ export const useChatScroll = <T>({
   messagesLength,
 }: UseChatScrollOptions<T>) => {
   const isAtBottomRef = useRef(true);
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isScrollingToBottom, setIsScrollingToBottom] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const prevMessagesLengthRef = useRef(messagesLength);
 
-  // Track messages length in ref for immediate access
-  const messagesLengthRef = useRef(messagesLength);
-  messagesLengthRef.current = messagesLength;
+  // Track new messages for unread count
+  useEffect(() => {
+    const newMessageCount = messagesLength - prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = messagesLength;
+
+    // Only increment unread if user has scrolled away from bottom
+    if (newMessageCount > 0 && !isAtBottomRef.current) {
+      setUnreadCount(prev => prev + newMessageCount);
+    }
+  }, [messagesLength]);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
+
+      // At bottom when scrolled near the end of content
       const distanceFromBottom =
         contentSize.height - (contentOffset.y + layoutMeasurement.height);
       const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD;
-
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-        scrollTimeoutRef.current = null;
-      }
 
       isAtBottomRef.current = atBottom;
 
@@ -52,56 +59,27 @@ export const useChatScroll = <T>({
     [isScrollingToBottom],
   );
 
-  const handleContentSizeChange = useCallback(() => {
-    if (isAtBottomRef.current && !isScrollingToBottom) {
-      const lastIndex = messagesLengthRef.current - 1;
-      if (lastIndex >= 0) {
-        setTimeout(() => {
-          if (isAtBottomRef.current && !isScrollingToBottom) {
-            void flashListRef.current?.scrollToIndex({
-              index: messagesLengthRef.current - 1,
-              animated: false,
-            });
-          }
-        }, 0);
-      }
-    }
-  }, [isScrollingToBottom, flashListRef]);
-
   const scrollToBottom = useCallback(() => {
     setIsScrollingToBottom(true);
-    const lastIndex = messagesLengthRef.current - 1;
 
-    if (lastIndex >= 0) {
-      void flashListRef.current?.scrollToIndex({
-        index: lastIndex,
-        animated: true,
-      });
-    }
+    // Scroll to the end of the list to see newest messages
+    void flashListRef.current?.scrollToEnd({
+      animated: true,
+    });
 
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    scrollTimeoutRef.current = setTimeout(() => {
+    setTimeout(() => {
       isAtBottomRef.current = true;
       setIsAtBottom(true);
       setUnreadCount(0);
       setIsScrollingToBottom(false);
-      scrollTimeoutRef.current = null;
-    }, 100);
+    }, 300);
   }, [flashListRef]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);
   }, []);
 
-  const cleanup = useCallback(() => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = null;
-    }
-  }, []);
+  const cleanup = useCallback(() => {}, []);
 
   return {
     isAtBottom,
@@ -110,7 +88,6 @@ export const useChatScroll = <T>({
     unreadCount,
     setUnreadCount,
     handleScroll,
-    handleContentSizeChange,
     scrollToBottom,
     incrementUnread,
     cleanup,

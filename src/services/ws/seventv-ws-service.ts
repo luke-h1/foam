@@ -1,150 +1,264 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
+import { CosmeticCreateCallbackData } from '@app/hooks/useSeventvWs';
 import { logger } from '@app/utils/logger';
-import { StvUser, SevenTvEmote, SanitisiedEmoteSet } from '../seventv-service';
+import {
+  StvUser,
+  SevenTvEmote,
+  SanitisiedEmoteSet,
+  SevenTvHost,
+} from '../seventv-service';
 
-interface SevenTvWsBody {
+interface EventObject {
+  id: string;
+  name: string;
+}
+
+/**
+ * {
+  "id": "01KDREVNA4XVTD3G04PWWDQMGF",
+  "kind": 10,
+  "object": {
+    "id": "01KDREVNA4XVTD3G04PWWDQMGF",
+    "kind": "PAINT",
+    "data": {
+      "id": "01KDREVNA4XVTD3G04PWWDQMGF",
+      "name": "Northern Light",
+      "color": null,
+      "gradients": {
+        "length": 0
+      },
+      "shadows": {
+        "0": {
+          "x_offset": 0,
+          "y_offset": 0,
+          "radius": 0.1,
+          "color": 2096885247
+        },
+        "length": 1
+      },
+      "text": null,
+      "function": "LINEAR_GRADIENT",
+      "repeat": false,
+      "angle": 45,
+      "shape": "circle",
+      "image_url": "",
+      "stops": {
+        "0": {
+          "at": 0,
+          "color": -1675056641
+        },
+        "1": {
+          "at": 0.2,
+          "color": -279117825
+        },
+        "2": {
+          "at": 0.4,
+          "color": 1560255231
+        },
+        "3": {
+          "at": 0.6,
+          "color": 1308618239
+        },
+        "4": {
+          "at": 0.8,
+          "color": 576286207
+        },
+        "5": {
+          "at": 1,
+          "color": 576286207
+        },
+        "length": 6
+      }
+    }
+  }
+}
+ */
+
+interface ChangeValue<TType, TValue, TNested = false> {
+  key: string;
+  index: number;
+  old_value: TType extends 'pulled' | 'updated' ? TValue : null;
+  value: TNested extends true ? ChangeValue<TType, TValue, false>[] : TValue;
+}
+
+export interface ChangeMap<TValue, TNested = false> {
   id: string;
   kind: number;
-  contextual?: boolean;
   actor?: StvUser;
-  pulled?: { [key: string]: SevenTvPulled };
-  pushed?: SevenTvPushed[];
+  pushed?: ChangeValue<'pushed', TValue, TNested>[];
+  pulled?: ChangeValue<'pulled', TValue, TNested>[];
+  updated?: ChangeValue<'updated', TValue, TNested>[];
+  contextual?: boolean;
 }
 
-interface SevenTvPulled {
-  key: string;
-  index: number;
-  old_value: SevenTvEmote & { origin_id: string | null };
-  value: null;
-  op: 0;
-  t: number;
-  s: number;
+export interface PaintShadow {
+  color: number;
+  radius: number;
+  x_offset: number;
+  y_offset: number;
 }
 
-interface SevenTvPushed {
-  key: string;
-  index: number;
-  type: string;
-  value: SevenTvEmote & { origin_id: string | null };
-  op: 0;
-  t: number;
-  s: number;
+export interface PaintStop {
+  color: number;
+  at: number;
 }
 
-type SevenTvEmoteSetEvents =
-  /**
-   * Emote set has been created
-   */
-  | 'emote_set.create'
+/**
+ * A collection of items with numeric indices and a length property
+ * Used for shadows and stops in paint data
+ */
+export interface IndexedCollection<T> {
+  [key: number]: T;
+  length: number;
+}
 
-  /**
-   * Emote set has been updated
-   */
-  | 'emote_set.update'
+export interface BadgeData extends EventObject {
+  host: SevenTvHost;
+  tooltip: string;
+}
 
-  /**
-   * Emote set has been deleted
-   */
-  | 'emote_set.delete'
+export interface PaintData {
+  id: string;
+  name: string;
+  color: number | null;
+  gradients: {
+    length: number;
+  };
+  shadows: IndexedCollection<PaintShadow>;
+  text: string | null;
+  function: 'LINEAR_GRADIENT' | 'RADIAL_GRADIENT' | 'URL';
+  repeat: boolean;
+  angle: number;
+  shape: 'circle' | 'ellipse';
+  image_url: string;
+  stops: IndexedCollection<PaintStop>;
+}
 
-  /**
-   * Subscribe to all emote set events
-   */
-  | 'emote_set.*';
+interface PaintCosmeticObject {
+  id: string;
+  kind: 'PAINT';
+  data: PaintData;
+}
 
-type SevenTvEmoteEvents =
-  /**
-   * Emote has been created
-   */
-  | 'emote.create'
+interface BadgeCosmeticObject {
+  id: string;
+  kind: 'BADGE';
+  data: BadgeData;
+}
 
-  /**
-   * Emote has been updated (i.e. renamed)
-   */
-  | 'emote.update'
+export interface PaintCosmetic {
+  id: string;
+  kind: number;
+  object: PaintCosmeticObject;
+}
 
-  /**
-   * Emote has been deleted from the set
-   */
-  | 'emote.delete'
+export interface BadgeCosmetic {
+  id: string;
+  kind: number;
+  object: BadgeCosmeticObject;
+}
 
-  /**
-   * Subscribe to all emote events
-   */
-  | 'emote.*';
+export type CosmeticCreate = BadgeCosmetic | PaintCosmetic;
 
-type SevenTvCosmeticEvents =
-  /**
-   * Cosmetic has been created
-   */
-  | 'cosmetic.create'
+type EmoteChange = SevenTvEmote & { origin_id: string | null };
 
-  /**
-   * Cosmetic has been updated
-   */
-  | 'cosmetic.update'
-  /**
-   * Cosmetic has been deleted
-   */
-  | 'cosmetic.delete'
+interface EmoteSetCreate extends EventObject {
+  capacity: number;
+  flags: number;
+  immutable: boolean;
+  privileged: boolean;
+  tags: string[];
+  owner: StvUser;
+}
 
-  /**
-   * Subscribe to all cosmetic events
-   */
-  | 'cosmetic.*';
+export interface EntitlementUserStyle {
+  color?: number;
+  paint_id?: string;
+  badge_id?: string;
+}
 
-type SevenTvUserEvents =
-  /**
-   * User has been created
-   */
-  | 'user.create'
+export interface EntitlementUserConnection {
+  id: string;
+  platform: 'TWITCH';
+  username: string;
+  display_name: string;
+  linked_at: number;
+  emote_capacity: number;
+  emote_set_id: string;
+}
 
-  /**
-   * User has been updated
-   */
-  | 'user.update'
+export interface EntitlementUser {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+  style: EntitlementUserStyle;
+  role_ids: IndexedCollection<string>;
+  connections: IndexedCollection<EntitlementUserConnection>;
+}
 
-  /**
-   * User has been deleted
-   */
-  | 'user.delete'
+export interface EntitlementObject {
+  id: string;
+  kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
+  ref_id: string;
+  user: EntitlementUser;
+}
 
-  /**
-   * Subscribe to all user events
-   */
-  | 'user.*';
+export interface EntitlementCreate {
+  id: string;
+  kind: number;
+  object: EntitlementObject;
+}
 
-type SevenTvUserEntitlementEvents =
-  /**
-   * Entitlement has been created
-   */
-  | 'entitlement.create'
-  /**
-   * Entitlement has been updated
-   */
-  | 'entitlement.update'
+export interface SevenTvEventMap {
+  // Cosmetic events
+  'cosmetic.create': CosmeticCreate;
+  'cosmetic.update': ChangeMap<CosmeticCreate>;
+  'cosmetic.delete': { id: string };
+  'cosmetic.*': CosmeticCreate | ChangeMap<CosmeticCreate> | { id: string };
 
-  /**
-   * Entitlement has been deleted
-   */
-  | 'entitlement.delete'
+  // Emote set events
+  'emote_set.create': EmoteSetCreate;
+  'emote_set.update': ChangeMap<EmoteChange>;
+  'emote_set.delete': { id: string };
+  'emote_set.*': EmoteSetCreate | ChangeMap<EmoteChange> | { id: string };
 
-  /**
-   * Subscribe to all entitlement events
-   */
-  | 'entitlement.*';
+  // Emote events
+  'emote.create': SevenTvEmote;
+  'emote.update': ChangeMap<SevenTvEmote>;
+  'emote.delete': { id: string };
+  'emote.*': SevenTvEmote | ChangeMap<SevenTvEmote> | { id: string };
 
-type SevenTvEventType =
-  | SevenTvEmoteSetEvents
-  | SevenTvEmoteEvents
-  | SevenTvCosmeticEvents
-  | SevenTvUserEvents
-  | SevenTvUserEntitlementEvents;
+  // User events
+  'user.create': StvUser;
+  'user.update': ChangeMap<EventObject | null, true>;
+  'user.delete': { id: string };
+  'user.*': StvUser | ChangeMap<EventObject | null, true> | { id: string };
 
-export interface SevenTvEventData {
-  type: SevenTvEventType;
-  body: SevenTvWsBody;
+  // Entitlement events
+  'entitlement.create': EntitlementCreate;
+  'entitlement.update': ChangeMap<EntitlementCreate>;
+  'entitlement.delete': { id: string };
+  'entitlement.*':
+    | EntitlementCreate
+    | ChangeMap<EntitlementCreate>
+    | { id: string };
+}
+
+/**
+ * All possible SevenTV event types
+ */
+export type SevenTvEventType = keyof SevenTvEventMap;
+
+/**
+ * Event data payload with type-safe body based on event type
+ */
+export interface SevenTvEventData<
+  T extends SevenTvEventType = SevenTvEventType,
+> {
+  type: T;
+  body: SevenTvEventMap[T];
 }
 
 /**
@@ -280,7 +394,7 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       op: 35;
       d: {
         type: TEventType;
-        condition: TEventType extends 'entitlement.create'
+        condition: TEventType extends 'entitlement.create' | 'cosmetic.create'
           ? {
               /**
                * valid fields in the condition depend on the subscription type
@@ -357,6 +471,10 @@ export default class SevenTvWsService {
         removed: SanitisiedEmoteSet[];
         channelId: string;
       }) => void)
+    | null = null;
+
+  private static cosmeticCreateCallback:
+    | ((data: CosmeticCreateCallbackData) => void)
     | null = null;
 
   // eslint-disable-next-line no-empty-function
@@ -440,23 +558,42 @@ export default class SevenTvWsService {
 
   private static onMessage(event: MessageEvent) {
     try {
-      const message = JSON.parse(
-        event.data as string,
-      ) as SevenTvWsMessage<SevenTvEventData>;
+      const message = JSON.parse(event.data as string) as SevenTvWsMessage<
+        SevenTvEventData<SevenTvEventType>
+      >;
+
+      logger.stvWs.debug('[onMessage] Received message with op:', message.op);
 
       switch (message.op) {
         case 0: {
+          // Add defensive checks to ensure message.d exists and has the expected structure
+          if (!message.d) {
+            logger.stvWs.error('message.d is undefined or null');
+            break;
+          }
+
+          if (typeof message.d !== 'object' || !('type' in message.d)) {
+            logger.stvWs.error('message.d does not have expected structure');
+            break;
+          }
           switch (message.d.type) {
             case 'emote_set.update': {
-              // logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
-              SevenTvWsService.handleEmoteSetUpdate(message.d);
+              SevenTvWsService.handleEmoteSetUpdate(
+                message.d as SevenTvEventData<'emote_set.update'>,
+              );
+              break;
+            }
+
+            case 'cosmetic.create': {
+              logger.stvWs.debug('cosmetic.create event received');
+              SevenTvWsService.handleCosmeticCreate(
+                message.d as SevenTvEventData<'cosmetic.create'>,
+              );
               break;
             }
 
             default: {
-              // logger.stvWs.info(
-              //   `💚 Received WS unhandled data event: ${message.d.type}`,
-              // );
+              // Unhandled event types
               break;
             }
           }
@@ -505,15 +642,16 @@ export default class SevenTvWsService {
     }
   }
 
-  private static handleEmoteSetUpdate(data: SevenTvEventData): void {
+  private static handleEmoteSetUpdate(
+    data: SevenTvEventData<'emote_set.update'>,
+  ): void {
     try {
-      // logger.stvWs.info('💚 Handling emote set update event', data);
-
       // Filter out historical events by checking if this is within the first few seconds of connection
       // This helps filter out the initial historical events that come when first subscribing
       const timeSinceConnection =
         Date.now() - SevenTvWsService.connectionTimestamp;
-      const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds buffer
+
+      const HISTORICAL_EVENT_BUFFER = 5000; // 5 seconds buffer
 
       if (timeSinceConnection < HISTORICAL_EVENT_BUFFER) {
         logger.stvWs.info(
@@ -525,11 +663,13 @@ export default class SevenTvWsService {
       const addedEmotes: SanitisiedEmoteSet[] = [];
       const removedEmotes: SanitisiedEmoteSet[] = [];
 
+      const { body } = data;
+
       /**
        * New emotes have been added to the set
        */
-      if (data.body.pushed) {
-        data.body.pushed.forEach(emote => {
+      if (body.pushed) {
+        body.pushed.forEach(emote => {
           const emote4x =
             emote.value.data.host.files.find(file => file.name === '4x.avif') ||
             emote.value.data.host.files.find(file => file.name === '3x.avif') ||
@@ -550,15 +690,15 @@ export default class SevenTvWsService {
             site: '7TV Channel Emote',
             height: emote4x?.height,
             width: emote4x?.width,
-            actor: data.body.actor,
+            actor: body.actor,
           });
         });
       }
 
-      if (data.body.pulled) {
-        console.log('actor is ->', data.body.actor?.display_name);
+      if (body.pulled) {
+        logger.stvWs.debug('Emote removed by:', body.actor?.display_name);
 
-        Object.values(data.body.pulled).forEach(emote => {
+        Object.values(body.pulled).forEach(emote => {
           if (emote && emote.old_value) {
             removedEmotes.push({
               name: emote.old_value.data.name,
@@ -569,7 +709,7 @@ export default class SevenTvWsService {
               creator: emote.old_value.data.owner?.display_name,
               emote_link: `https://7tv.app/emotes/${emote.old_value.id}`,
               site: '7TV Channel Emote',
-              actor: data.body.actor,
+              actor: body.actor,
             });
           }
         });
@@ -594,6 +734,23 @@ export default class SevenTvWsService {
       }
     } catch (error) {
       logger.stvWs.error('Error handling emote set update:', error);
+    }
+  }
+
+  private static handleCosmeticCreate(
+    data: SevenTvEventData<'cosmetic.create'>,
+  ): void {
+    try {
+      const { body } = data;
+
+      if (SevenTvWsService.cosmeticCreateCallback) {
+        SevenTvWsService.cosmeticCreateCallback({
+          cosmetic: body,
+          kind: body.object.kind,
+        });
+      }
+    } catch (e) {
+      logger.stvWs.error('Error handling cosmetic create:', e);
     }
   }
 
@@ -862,6 +1019,15 @@ export default class SevenTvWsService {
   }
 
   /**
+   * Set the cosmetic create callback
+   */
+  public static setCosmeticCreateCallback(
+    callback: ((data: CosmeticCreateCallbackData) => void) | null,
+  ): void {
+    SevenTvWsService.cosmeticCreateCallback = callback;
+  }
+
+  /**
    * Remove event listener for a given channel
    */
   public static disconnect(): void {
@@ -877,6 +1043,7 @@ export default class SevenTvWsService {
       SevenTvWsService.hasInitialSubscriptions = false;
       SevenTvWsService.activeSubscriptions.clear();
       SevenTvWsService.emoteUpdateCallback = null;
+      SevenTvWsService.cosmeticCreateCallback = null;
 
       logger.stvWs.info('🟢 SevenTV WebSocket disconnected');
     }

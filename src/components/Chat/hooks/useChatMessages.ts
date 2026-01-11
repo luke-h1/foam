@@ -1,5 +1,5 @@
 import { addMessages, ChatMessageType } from '@app/store/chatStore';
-import { RefObject, useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 
 const BATCH_SIZE = 3;
 const BATCH_TIMEOUT_MS = 10;
@@ -8,19 +8,7 @@ const MAX_MESSAGES = 500;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyMessage = ChatMessageType<any, any>;
 
-interface UseChatMessagesOptions {
-  isAtBottomRef: RefObject<boolean>;
-  isScrollingToBottom: boolean;
-  onUnreadIncrement: (count: number) => void;
-  onAutoScroll: () => void;
-}
-
-export const useChatMessages = ({
-  isAtBottomRef,
-  isScrollingToBottom,
-  onUnreadIncrement,
-  onAutoScroll,
-}: UseChatMessagesOptions) => {
+export const useChatMessages = () => {
   const messagesRef = useRef<AnyMessage[]>([]);
   const messageBatchRef = useRef<AnyMessage[]>([]);
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,15 +39,7 @@ export const useChatMessages = ({
     messagesRef.current = [...messagesRef.current, ...deduplicatedBatch].slice(
       -MAX_MESSAGES,
     );
-
-    if (!isAtBottomRef.current && !isScrollingToBottom) {
-      onUnreadIncrement(batch.length);
-    }
-
-    if (isAtBottomRef.current && !isScrollingToBottom) {
-      setTimeout(onAutoScroll, 0);
-    }
-  }, [isScrollingToBottom, isAtBottomRef, onUnreadIncrement, onAutoScroll]);
+  }, []);
 
   const handleNewMessage = useCallback(
     (newMessage: AnyMessage) => {

@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType } from '@app/store/chatStore';
+import { ChatMessageType, UserPaint } from '@app/store/chatStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import {
   UserNoticeVariantMap,
@@ -12,7 +12,7 @@ import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
 import { truncate } from '@app/utils/string/truncate';
-import React, { useCallback, memo } from 'react';
+import React, { useCallback, memo, useMemo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../../../Button';
@@ -23,6 +23,7 @@ import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
 import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
 import { ViewerMileStoneNotice } from '../usernotices/ViewerMilestoneNotice';
+import { PaintedUsername } from './PaintedUsername';
 import { EmoteRenderer } from './renderers';
 
 type OnReply<TNoticeType extends NoticeVariants> = Omit<
@@ -63,12 +64,16 @@ function ChatMessageComponent<
   onBadgePress,
   onMessageLongPress,
   getMentionColor,
+  parseTextForEmotes,
+  userPaints,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
   onEmotePress?: (data: EmotePressData) => void;
   onBadgePress?: (data: BadgePressData) => void;
   onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
   getMentionColor?: (username: string) => string;
+  parseTextForEmotes?: (text: string) => ParsedPart[];
+  userPaints?: Record<string, UserPaint>;
 }) {
   const isSubscriptionNotice = message.some(
     part =>
@@ -137,7 +142,7 @@ function ChatMessageComponent<
         case 'mention': {
           const mentionedUsername = part.content.replace(/^@/, '').trim();
 
-          // Use the cached/memoized color lookup from Chat component
+          // TODO: - update to process 7tv paint if set
           const mentionColor = getMentionColor
             ? getMentionColor(mentionedUsername)
             : generateRandomTwitchColor(mentionedUsername);
@@ -170,15 +175,24 @@ function ChatMessageComponent<
         case 'resub':
         case 'anongiftpaidupgrade':
         case 'anongift': {
+          const subMessage = part.subscriptionEvent?.message;
+          const parsedSubMessage =
+            subMessage && parseTextForEmotes
+              ? parseTextForEmotes(subMessage)
+              : undefined;
+
           if (notice_tags) {
             return (
               <SubscriptionNotice
                 part={part}
                 notice_tags={notice_tags as UserNoticeTags}
+                parsedMessage={parsedSubMessage}
               />
             );
           }
-          return <SubscriptionNotice part={part} />;
+          return (
+            <SubscriptionNotice part={part} parsedMessage={parsedSubMessage} />
+          );
         }
 
         case 'viewermilestone': {
@@ -279,6 +293,13 @@ function ChatMessageComponent<
 
   const isReply = Boolean(parentDisplayName);
 
+  // Get the user's paint if available
+  const userPaint = useMemo(() => {
+    const userId = userstate['user-id'];
+    if (!userId || !userPaints) return null;
+    return userPaints[userId] ?? null;
+  }, [userstate, userPaints]);
+
   const isSystemNotice = message.some(
     part =>
       part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
@@ -286,16 +307,21 @@ function ChatMessageComponent<
 
   const isFirstMessage = userstate['first-msg'] === '1';
 
-  // Don't allow replies to system messages, subscription notices, or system sender
+  // Don't allow replies to system messages, subscription notices, milestones, or system sender
   const isSystemSender =
     sender === 'System' ||
     sender === 'system' ||
     userstate.username === 'System' ||
     userstate.username === 'system';
 
+  const isMilestoneNotice = message.some(
+    part => part.type === 'viewermilestone',
+  );
+
   const canReply =
     !isSystemNotice &&
     !isSubscriptionNotice &&
+    !isMilestoneNotice &&
     !isSystemSender &&
     Boolean(userstate.username);
 
@@ -333,12 +359,6 @@ function ChatMessageComponent<
         </View>
       )}
 
-      {isFirstMessage && (
-        <View style={styles.firstMessageIndicator}>
-          <Text style={styles.firstMessageText}>first message</Text>
-        </View>
-      )}
-
       {isSubscriptionNotice && (
         <View style={styles.subscriptionNoticeContainer}>
           {message.map(renderMessagePart)}
@@ -354,29 +374,43 @@ function ChatMessageComponent<
               </Text>
             )}
             {renderBadges()}
-            {userstate.username && (
-              <Text
-                style={[
-                  styles.username,
-                  styles.usernameDefaultColor,
-                  // eslint-disable next-line react-native/no-inline-styles
-                  userstate.color && { color: lightenColor(userstate.color) },
-                ]}
-              >
-                {userstate.username}:
-              </Text>
-            )}
+            {userstate.username &&
+              (userPaint ? (
+                <PaintedUsername
+                  username={userstate.username}
+                  paint={userPaint}
+                  fallbackColor={
+                    userstate.color ? lightenColor(userstate.color) : undefined
+                  }
+                />
+              ) : (
+                <Text
+                  style={[
+                    styles.username,
+                    styles.usernameDefaultColor,
+                    // eslint-disable next-line react-native/no-inline-styles
+                    userstate.color && { color: lightenColor(userstate.color) },
+                  ]}
+                >
+                  {userstate.username}:
+                </Text>
+              ))}
             {message.map(renderMessagePart)}
           </View>
-          {canReply && (
-            <Button
-              onPress={handleReply}
-              style={styles.replyButton}
-              testID="reply-button"
-            >
-              <Icon icon="corner-up-left" size={14} color="#FFFFFF" />
-            </Button>
-          )}
+          <View style={styles.rightActions}>
+            {isFirstMessage && (
+              <Text style={styles.firstMessageText}>first message</Text>
+            )}
+            {canReply && (
+              <Button
+                onPress={handleReply}
+                style={styles.replyButton}
+                testID="reply-button"
+              >
+                <Icon icon="corner-up-left" size={14} color="#FFFFFF" />
+              </Button>
+            )}
+          </View>
         </View>
       )}
     </Button>
@@ -398,6 +432,8 @@ export const ChatMessage = MemoizedChatMessage as <
     onBadgePress?: (data: BadgePressData) => void;
     onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
     getMentionColor?: (username: string) => string;
+    parseTextForEmotes?: (text: string) => ParsedPart[];
+    userPaints?: Record<string, UserPaint>;
   },
 ) => React.JSX.Element;
 const styles = StyleSheet.create(theme => ({
@@ -405,12 +441,14 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.xs,
   },
   firstMessageContainer: {
-    backgroundColor: 'rgba(0, 210, 106, 0.15)',
-    padding: theme.spacing.sm,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 210, 106, 0.3)',
-    marginBottom: theme.spacing.xs,
+    backgroundColor: 'rgba(145, 71, 255, 0.08)',
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderLeftWidth: 3,
+    borderRightWidth: 3,
+    borderLeftColor: theme.colors.violet.accent,
+    borderRightColor: theme.colors.violet.accent,
+    marginVertical: theme.spacing.xs,
   },
   messageLine: {
     flexDirection: 'row',
@@ -553,13 +591,17 @@ const styles = StyleSheet.create(theme => ({
   messageText: {
     lineHeight: theme.spacing['2xl'],
   },
-  firstMessageIndicator: {
-    marginBottom: theme.spacing.xs,
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginLeft: theme.spacing.xs,
   },
   firstMessageText: {
-    color: '#00D26A',
+    color: 'rgba(145, 71, 255, 0.5)',
     fontSize: theme.font.fontSize.xs,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: '500',
+    textTransform: 'lowercase',
+    fontStyle: 'italic',
   },
 }));
