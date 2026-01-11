@@ -81,5 +81,4 @@ jobs:
       - name: 🚀 Create preview
         uses: expo/expo-github-action/preview@v8
         with:
-          command: eas update --auto --branch pr-${{ github.event.pull_request.number }} --non-interactive --local
-
+          command: eas update --auto --branch pr-${{ github.event.pull_request.number }} --non-interactive
