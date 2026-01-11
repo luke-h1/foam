@@ -4,7 +4,6 @@ import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { useTwitchWs } from '@app/hooks/useTwitchWs';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
-import { PaintData } from '@app/services/ws/seventv-ws-service';
 import {
   ChatMessageType,
   useMessages,
@@ -29,6 +28,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { PaintData } from '@app/utils/color/seventv-ws-service';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';

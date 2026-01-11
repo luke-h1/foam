@@ -5,7 +5,7 @@ import {
   SevenTvEventData,
   SevenTvEventType,
   SevenTvWsMessage,
-} from '@app/services/ws/seventv-ws-service';
+} from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useMemo } from 'react';

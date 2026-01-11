@@ -7,73 +7,13 @@ import {
   SevenTvEmote,
   SanitisiedEmoteSet,
   SevenTvHost,
-} from '../seventv-service';
+} from '../../services/seventv-service';
+import { IndexedCollection } from '../../services/ws/util/indexedCollection';
 
 interface EventObject {
   id: string;
   name: string;
 }
-
-/**
- * {
-  "id": "01KDREVNA4XVTD3G04PWWDQMGF",
-  "kind": 10,
-  "object": {
-    "id": "01KDREVNA4XVTD3G04PWWDQMGF",
-    "kind": "PAINT",
-    "data": {
-      "id": "01KDREVNA4XVTD3G04PWWDQMGF",
-      "name": "Northern Light",
-      "color": null,
-      "gradients": {
-        "length": 0
-      },
-      "shadows": {
-        "0": {
-          "x_offset": 0,
-          "y_offset": 0,
-          "radius": 0.1,
-          "color": 2096885247
-        },
-        "length": 1
-      },
-      "text": null,
-      "function": "LINEAR_GRADIENT",
-      "repeat": false,
-      "angle": 45,
-      "shape": "circle",
-      "image_url": "",
-      "stops": {
-        "0": {
-          "at": 0,
-          "color": -1675056641
-        },
-        "1": {
-          "at": 0.2,
-          "color": -279117825
-        },
-        "2": {
-          "at": 0.4,
-          "color": 1560255231
-        },
-        "3": {
-          "at": 0.6,
-          "color": 1308618239
-        },
-        "4": {
-          "at": 0.8,
-          "color": 576286207
-        },
-        "5": {
-          "at": 1,
-          "color": 576286207
-        },
-        "length": 6
-      }
-    }
-  }
-}
- */
 
 interface ChangeValue<TType, TValue, TNested = false> {
   key: string;
@@ -161,84 +101,6 @@ export interface PaintStop {
 }
 
 /**
- * A collection of items with numeric indices and a length property.
- *
- * This structure is used by 7TV WebSocket messages to represent arrays
- * in a JSON-object format. It's commonly used for shadows and gradient stops.
- *
- * @typeParam T - The type of items stored in the collection.
- *
- * @example
- * ```typescript
- * // Example from 7TV WebSocket message:
- * const stops: IndexedCollection<PaintStop> = {
- *   "0": { at: 0, color: -1675056641 },
- *   "1": { at: 0.5, color: 1560255231 },
- *   "2": { at: 1, color: 576286207 },
- *   "length": 3
- * };
- * ```
- */
-export interface IndexedCollection<T> {
-  [key: number]: T;
-  length: number;
-}
-
-/**
- * Type guard to check if a value is an IndexedCollection.
- *
- * @typeParam T - The expected type of items in the collection.
- * @param value - The value to check.
- * @returns `true` if the value is an IndexedCollection, `false` otherwise.
- *
- * @example
- * ```typescript
- * if (isIndexedCollection<PaintStop>(data.stops)) {
- *   const stopsArray = indexedCollectionToArray(data.stops);
- * }
- * ```
- */
-export function isIndexedCollection<T>(
-  value: unknown,
-): value is IndexedCollection<T> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'length' in value &&
-    typeof (value as IndexedCollection<T>).length === 'number'
-  );
-}
-
-/**
- * Converts an IndexedCollection to a standard TypeScript array.
- *
- * This utility handles the conversion from 7TV's object-based array format
- * to a native array, filtering out any undefined indices.
- *
- * @typeParam T - The type of items in the collection.
- * @param collection - The IndexedCollection to convert.
- * @returns A typed array containing all defined items from the collection.
- *
- * @example
- * ```typescript
- * const stops: IndexedCollection<PaintStop> = { "0": stop1, "1": stop2, "length": 2 };
- * const stopsArray: PaintStop[] = indexedCollectionToArray(stops);
- * // Result: [stop1, stop2]
- * ```
- */
-export function indexedCollectionToArray<T>(
-  collection: IndexedCollection<T>,
-): T[] {
-  const result: T[] = [];
-  for (let i = 0; i < collection.length; i += 1) {
-    if (collection[i] !== undefined) {
-      result.push(collection[i] as T);
-    }
-  }
-  return result;
-}
-
-/**
  * Converts a 7TV packed RGBA color integer to its individual channel components.
  *
  * Uses unsigned right shift (`>>>`) to correctly handle signed 32-bit integers,
@@ -254,42 +116,6 @@ export function indexedCollectionToArray<T>(
  * // Result: { r: 156, g: 89, b: 182, a: 255 } (purple, fully opaque)
  * ```
  */
-export function sevenTvColorToRgba(color: SevenTvColor): {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
-} {
-  // eslint-disable-next-line no-bitwise
-  const r = (color >>> 24) & 0xff;
-  // eslint-disable-next-line no-bitwise
-  const g = (color >>> 16) & 0xff;
-  // eslint-disable-next-line no-bitwise
-  const b = (color >>> 8) & 0xff;
-  // eslint-disable-next-line no-bitwise
-  const a = color & 0xff;
-
-  return { r, g, b, a };
-}
-
-/**
- * Converts a 7TV packed RGBA color integer to a CSS-compatible rgba() string.
- *
- * The alpha channel is normalized from 0-255 to 0-1 for CSS compatibility.
- *
- * @param color - The packed RGBA color as a 32-bit signed integer.
- * @returns A CSS rgba() color string.
- *
- * @example
- * ```typescript
- * const cssColor = sevenTvColorToCss(-1675056641);
- * // Result: "rgba(156, 89, 182, 1.00)"
- * ```
- */
-export function sevenTvColorToCss(color: SevenTvColor): string {
-  const { r, g, b, a } = sevenTvColorToRgba(color);
-  return `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(2)})`;
-}
 
 /**
  * Defines the type of gradient or fill function used by a 7TV paint cosmetic.

@@ -10,7 +10,6 @@ import {
   twitchBadgeService,
 } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
-import { PaintData } from '@app/services/ws/seventv-ws-service';
 import { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
 import { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
 import { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
@@ -24,6 +23,7 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { PaintData } from '@app/utils/color/seventv-ws-service';
 import {
   cacheImageFromUrl,
   clearSessionCache,

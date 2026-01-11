@@ -1,10 +1,7 @@
-import {
-  PaintData,
-  PaintStop,
-  sevenTvColorToCss,
-  indexedCollectionToArray,
-} from '@app/services/ws/seventv-ws-service';
+import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import { chatStore$ } from '@app/store/chatStore';
+import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
+import { PaintData, PaintStop } from '@app/utils/color/seventv-ws-service';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useMemo } from 'react';

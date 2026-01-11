@@ -1,4 +1,4 @@
-import type { PaintData } from '@app/services/ws/seventv-ws-service';
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { render } from '@testing-library/react-native';
 import { PaintedUsername } from '../CosmeticUsername';
 
