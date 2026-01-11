@@ -1,0 +1,30 @@
+query PaintQuery($id: Id!) {
+  paints {
+    paint(id: $id) {
+      id
+      name
+      description
+      tags
+      data {
+        layers {
+          id
+          opacity
+        }
+        shadows {
+          color {
+            hex
+            r
+            g
+            b
+            a
+          }
+          offsetX
+          offsetY
+          blur
+        }
+      }
+      createdById
+      updatedAt
+    }
+  }
+}

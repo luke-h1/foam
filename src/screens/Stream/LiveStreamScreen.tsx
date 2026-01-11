@@ -179,7 +179,6 @@ const styles = StyleSheet.create(() => ({
   },
   contentContainer: {
     flex: 1,
-    backgroundColor: '#000',
   },
   row: {
     flexDirection: 'row',
@@ -197,7 +196,6 @@ const styles = StyleSheet.create(() => ({
     marginTop: 20,
   },
   chatContainer: {
-    backgroundColor: '#000',
     overflow: 'hidden',
   },
   chatContent: {

@@ -10,6 +10,7 @@ import {
   twitchBadgeService,
 } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { PaintData } from '@app/services/ws/seventv-ws-service';
 import { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
 import { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
 import { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
@@ -43,37 +44,54 @@ configureObservablePersistence({
   pluginLocal: ObservablePersistMMKV,
 });
 
-interface CosmeticPaint {
-  id: string;
-  name: string;
-  style: string;
-  shape: string;
-  backgroundImage: string;
-  shadows: string | null;
-  KIND: 'animated' | 'non-animated';
-  url: string;
+/**
+ * User cosmetic data from 7TV WebSocket
+ * Stores paints, badges, and personal emotes for a user
+ */
+export interface UserCosmetics {
+  /**
+   * Active paint ID
+   */
+  paint_id: string | null;
+  /**
+   * Active Badge ID
+   */
+  badge_id: string | null;
+
+  /**
+   * 7TV cosmetics
+   */
+  paints: PaintData[];
+
+  /**
+   * 7TV badges
+   */
+  badges: SanitisedBadgeSet[];
+  /**
+   * 7TV personal emotes
+   */
+  personal_emotes?: SanitisedBadgeSet[];
+  user_info: {
+    lastUpdate: number;
+    user_id: string;
+    ttv_user_id: string | null;
+    avatar_url: string | null;
+    personal_set_id: string[];
+    color?: string;
+  };
+}
+
+/**
+ * Paint data associated with a specific user (for userPaints store)
+ */
+export interface UserPaint extends PaintData {
+  ttv_user_id: string;
 }
 
 export interface ChatUser {
   name: string;
   color: string;
-  cosmetics?: {
-    [key: string]: unknown;
-    personal_emotes?: SanitisedBadgeSet;
-    paints: CosmeticPaint[];
-    badges: SanitisedBadgeSet[];
-    user_info: {
-      lastUpdate: number;
-      user_id: string;
-      ttv_user_id: string | null;
-      paint_id: string | null;
-      badge_id: string | null;
-      avatar_url: string | null;
-      personal_emotes: SanitisedBadgeSet[];
-      personal_set_id: string[];
-      color?: string;
-    };
-  };
+  cosmetics?: UserCosmetics;
   avatar: string | null;
   userId: string;
 }
@@ -166,7 +184,6 @@ let activeLoadController: AbortController | null = null;
  * Automatically aborts any previous in-flight request.
  */
 export const createLoadController = (): AbortController => {
-  // Abort any existing request first
   if (activeLoadController) {
     activeLoadController.abort();
     logger.main.info('🚫 Aborted previous load request');
@@ -175,9 +192,6 @@ export const createLoadController = (): AbortController => {
   return activeLoadController;
 };
 
-/**
- * Aborts the current load request if one exists.
- */
 export const abortCurrentLoad = (): void => {
   if (activeLoadController) {
     activeLoadController.abort();
@@ -186,9 +200,6 @@ export const abortCurrentLoad = (): void => {
   }
 };
 
-/**
- * Checks if a load operation has been aborted.
- */
 export const isLoadAborted = (): boolean => {
   return activeLoadController?.signal.aborted ?? false;
 };
@@ -248,6 +259,17 @@ export const chatStore$ = observable({
   bits: [] as Bit[],
   ttvUsers: [] as ChatUser[],
   messages: [] as ChatMessageType<never>[],
+
+  /**
+   * 7TV paints cache keyed by paint ID
+   */
+  paints: {} as Record<string, PaintData>,
+
+  /**
+   * Mapping of Twitch user ID to paint ID
+   * Stored separately so we can link users to paints before paint data arrives
+   */
+  userPaintIds: {} as Record<string, string>,
 });
 
 persistObservable(chatStore$.persisted, {
@@ -303,6 +325,57 @@ export const setBits = (bits: Bit[]) => {
   chatStore$.bits.set(bits);
 };
 
+/**
+ * Add a paint to the paints cache
+ */
+export const addPaint = (paint: PaintData) => {
+  if (paint.id) {
+    const currentPaints = chatStore$.paints.peek();
+    chatStore$.paints.set({ ...currentPaints, [paint.id]: paint });
+  }
+};
+
+/**
+ * Get a paint by its ID from the cache
+ */
+export const getPaint = (paintId: string): PaintData | undefined => {
+  return chatStore$.paints[paintId]?.peek();
+};
+
+/**
+ * Associate a Twitch user with a paint ID
+ * The actual paint data will be looked up at render time from the paints cache
+ * @param ttvUserId - The Twitch user ID
+ * @param paintId - The paint ID to associate
+ */
+export const setUserPaint = (ttvUserId: string, paintId: string) => {
+  const currentUserPaintIds = chatStore$.userPaintIds.peek();
+  chatStore$.userPaintIds.set({ ...currentUserPaintIds, [ttvUserId]: paintId });
+  logger.chat.info(`Linked paint ${paintId} to user ${ttvUserId}`);
+};
+
+/**
+ * Get a user's paint by their Twitch user ID
+ * Looks up the paint ID mapping, then retrieves the paint data
+ */
+export const getUserPaint = (ttvUserId: string): UserPaint | undefined => {
+  const paintId = chatStore$.userPaintIds[ttvUserId]?.peek();
+  if (!paintId) return undefined;
+  const paint = chatStore$.paints[paintId]?.peek();
+  if (!paint) return undefined;
+  return { ...paint, ttv_user_id: ttvUserId };
+};
+
+/**
+ * Clear all paints (useful when leaving a channel)
+ */
+export const clearPaints = () => {
+  batch(() => {
+    chatStore$.paints.set({});
+    chatStore$.userPaintIds.set({});
+  });
+};
+
 export const clearChannelResources = () => {
   batch(() => {
     chatStore$.currentChannelId.set(null);
@@ -322,7 +395,6 @@ export const loadChannelResources = async (
   options: LoadChannelResourcesOptions | string,
   forceRefresh = false,
 ): Promise<boolean> => {
-  // Support both old signature and new options object
   const opts: LoadChannelResourcesOptions =
     typeof options === 'string'
       ? { channelId: options, forceRefresh }
@@ -572,7 +644,6 @@ export const loadChannelResources = async (
       `Loaded ${allEmotes.length} emotes and ${allBadges.length} badges`,
     );
 
-    // Cache emote images in the background (non-blocking but abortable)
     cacheEmoteImages(allEmotes, signal).catch(error => {
       if (!signal?.aborted) {
         logger.chat.warn('Background emote image caching failed:', error);
@@ -937,7 +1008,6 @@ export const useBits = () => useSelector(chatStore$.bits);
 export const useEmojis = () => useSelector(chatStore$.emojis);
 
 export const useCurrentEmoteData = () => {
-  // Subscribe to observables and preferences to ensure we get updates for any change
   const channelId = useSelector(chatStore$.currentChannelId);
   const caches = useSelector(chatStore$.persisted.channelCaches);
   const preferences = usePreferences();
@@ -1048,4 +1118,34 @@ export const useChannelEmoteData = (channelId: string | null) => {
       ? (cache.chatterinoBadges ?? [])
       : [],
   };
+};
+
+/**
+ * Hook to get all paints cache (keyed by paint ID)
+ */
+export const usePaints = () => useSelector(chatStore$.paints);
+
+/**
+ * Hook to get user paint ID mappings (keyed by Twitch user ID)
+ */
+export const useUserPaintIds = () => useSelector(chatStore$.userPaintIds);
+
+/**
+ * Hook to get resolved user paints (keyed by Twitch user ID)
+ * Merges userPaintIds with paints to get the full paint data for each user
+ */
+export const useUserPaints = (): Record<string, UserPaint> => {
+  const paints = useSelector(chatStore$.paints);
+  const userPaintIds = useSelector(chatStore$.userPaintIds);
+
+  return Object.entries(userPaintIds).reduce<Record<string, UserPaint>>(
+    (resolved, [userId, paintId]) => {
+      const paint = paints[paintId];
+      if (paint) {
+        resolved[userId] = { ...paint, ttv_user_id: userId };
+      }
+      return resolved;
+    },
+    {},
+  );
 };

@@ -1,0 +1,9 @@
+fragment ImageFragment on Image {
+  url
+  mime
+  size
+  scale
+  width
+  height
+  frameCount
+}

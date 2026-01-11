@@ -14,14 +14,11 @@ export interface FlashListProps<TItem = unknown>
 
 // eslint-disable-next-line react/display-name
 export const FlashList = forwardRef(
-  <TItem,>(
-    props: ShopifyFlashListProps<TItem>,
-    ref: Ref<FlashListRef<TItem>>,
-  ) => {
+  <TItem,>(props: FlashListProps<TItem>, ref: Ref<FlashListRef<TItem>>) => {
     return <ShopifyFlashList ref={ref} {...props} />;
   },
 ) as <TItem = unknown>(
-  props: ShopifyFlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> },
+  props: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> },
 ) => ReactNode;
 
 export const AnimatedFlashList = Animated.createAnimatedComponent(

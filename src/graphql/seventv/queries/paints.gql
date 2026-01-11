@@ -1,0 +1,30 @@
+query PaintsQuery {
+  paints {
+    paints {
+      id
+      name
+      description
+      tags
+      data {
+        layers {
+          id
+          opacity
+        }
+        shadows {
+          color {
+            hex
+            r
+            g
+            b
+            a
+          }
+          offsetX
+          offsetY
+          blur
+        }
+      }
+      createdById
+      updatedAt
+    }
+  }
+}

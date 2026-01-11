@@ -1,21 +1,47 @@
+import { Icon } from '@app/components/Icon';
+import { Image } from '@app/components/Image';
 import { Text } from '@app/components/Text';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import React, { useCallback } from 'react';
+import { ReactNode } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 interface SubscriptionNoticeProps {
   part: ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'>;
   notice_tags?: UserNoticeTags;
+  parsedMessage?: ParsedPart[];
 }
 
 export function SubscriptionNotice({
   part,
   notice_tags: _,
+  parsedMessage,
 }: SubscriptionNoticeProps) {
   const { subscriptionEvent } = part;
   const { msgId, displayName, message } = subscriptionEvent;
+
+  const renderMessagePart = (messagePart: ParsedPart, index: number) => {
+    switch (messagePart.type) {
+      case 'text':
+        return (
+          <Text key={index} style={styles.messageText}>
+            {messagePart.content}
+          </Text>
+        );
+      case 'emote':
+        return (
+          <Image
+            key={index}
+            source={messagePart.url}
+            style={styles.emote}
+            transition={20}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   const cumulativeMonths =
     'months' in subscriptionEvent ? subscriptionEvent.months : undefined;
@@ -48,13 +74,11 @@ export function SubscriptionNotice({
       ? subscriptionEvent.promoGiftTotal
       : undefined;
 
-  const getPlanDisplay = () => {
-    if ('planName' in subscriptionEvent && subscriptionEvent.planName) {
-      return subscriptionEvent.planName;
-    }
+  const getTierDisplay = () => {
     if ('plan' in subscriptionEvent && subscriptionEvent.plan) {
       switch (subscriptionEvent.plan) {
         case '1000':
+        case 'Prime':
           return 'Prime';
         case '2000':
           return 'Tier 1';
@@ -63,138 +87,158 @@ export function SubscriptionNotice({
         case '3001':
           return 'Tier 3';
         default:
-          return '';
+          return 'Tier 1';
       }
     }
-    return '';
+    if ('planName' in subscriptionEvent && subscriptionEvent.planName) {
+      return subscriptionEvent.planName;
+    }
+    return 'Tier 1';
   };
 
-  const planDisplay = getPlanDisplay();
-  const isPrime =
-    planDisplay === 'Prime' ||
-    ('plan' in subscriptionEvent && subscriptionEvent.plan === '1000');
-  const isResub = msgId === 'resub';
+  const tierDisplay = getTierDisplay();
+  const isPrime = tierDisplay === 'Prime';
 
-  const buildSubMessage = useCallback(() => {
-    const parts: React.ReactNode[] = [];
+  const buildDescription = () => {
+    const parts: ReactNode[] = [];
 
-    parts.push(
-      <Text key="name" color="violet.accent">
-        {displayName}
-      </Text>,
-    );
-
-    let actionText = '';
     switch (msgId) {
       case 'sub': {
-        if (isPrime) {
-          actionText = 'subscribed with Prime';
-        } else {
-          actionText = 'subscribed';
-        }
+        parts.push(
+          <Text key="action" style={styles.descriptionText}>
+            Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
+          </Text>,
+        );
         break;
       }
       case 'resub': {
         const hasMonths =
           cumulativeMonths !== undefined && cumulativeMonths > 0;
-        const monthsText = hasMonths
-          ? ` for ${cumulativeMonths} month${cumulativeMonths > 1 ? 's' : ''}`
-          : '';
-        const primeText = isPrime ? ' with Prime' : '';
-        actionText = `resubscribed${monthsText}${primeText}`;
+
+        parts.push(
+          <Text key="action" style={styles.descriptionText}>
+            Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
+          </Text>,
+        );
+
+        if (hasMonths) {
+          parts.push(
+            <Text key="months" style={styles.descriptionText}>
+              {' '}
+              They&apos;ve subscribed for{' '}
+            </Text>,
+          );
+          parts.push(
+            <Text key="monthsCount" style={styles.monthsHighlight}>
+              {cumulativeMonths} month{cumulativeMonths > 1 ? 's' : ''}
+            </Text>,
+          );
+
+          if (
+            streakMonths !== undefined &&
+            streakMonths > 0 &&
+            shouldShareStreak
+          ) {
+            parts.push(
+              <Text key="streak" style={styles.descriptionText}>
+                , {streakMonths} month{streakMonths > 1 ? 's' : ''} in a row
+              </Text>,
+            );
+          }
+
+          parts.push(
+            <Text key="period" style={styles.descriptionText}>
+              .
+            </Text>,
+          );
+        }
         break;
       }
-
       case 'subgift': {
         if (recipientDisplayName) {
-          actionText = `gifted a subscription to ${recipientDisplayName}`;
+          parts.push(
+            <Text key="action" style={styles.descriptionText}>
+              Gifted a {tierDisplay} subscription to{' '}
+            </Text>,
+          );
+          parts.push(
+            <Text key="recipient" style={styles.recipientName}>
+              {recipientDisplayName}
+            </Text>,
+          );
         } else {
-          actionText = 'gifted a subscription';
+          parts.push(
+            <Text key="action" style={styles.descriptionText}>
+              Gifted a {tierDisplay} subscription
+            </Text>,
+          );
         }
-        if (giftMonths !== undefined && giftMonths > 0) {
-          actionText += ` (${giftMonths} month${giftMonths > 1 ? 's' : ''})`;
+        if (giftMonths !== undefined && giftMonths > 1) {
+          parts.push(
+            <Text key="giftMonths" style={styles.descriptionText}>
+              {' '}
+              ({giftMonths} months)
+            </Text>,
+          );
         }
-        if (isPrime) {
-          actionText += ' with Prime';
-        }
+        parts.push(
+          <Text key="period" style={styles.descriptionText}>
+            .
+          </Text>,
+        );
         break;
       }
       case 'anongiftpaidupgrade': {
-        actionText = 'gifted a subscription';
+        parts.push(
+          <Text key="action" style={styles.descriptionText}>
+            Continuing their gift subscription
+          </Text>,
+        );
         if (promoName) {
-          actionText += ` (${promoName}`;
-          if (promoGiftTotal) {
-            actionText += `, ${promoGiftTotal} total)`;
-          } else {
-            actionText += ')';
-          }
+          parts.push(
+            <Text key="promo" style={styles.descriptionText}>
+              {' '}
+              ({promoName}
+              {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
+            </Text>,
+          );
         }
+        parts.push(
+          <Text key="period" style={styles.descriptionText}>
+            .
+          </Text>,
+        );
         break;
       }
       default:
-        actionText = 'subscription event';
-    }
-
-    parts.push(<Text key="action"> {actionText}</Text>);
-
-    // Streak information (for sub/resub)
-    if (
-      (msgId === 'sub' || msgId === 'resub') &&
-      streakMonths !== undefined &&
-      streakMonths > 0 &&
-      shouldShareStreak
-    ) {
-      parts.push(
-        <Text key="streak" color="gray.accentHover">
-          , {streakMonths} month{streakMonths > 1 ? 's' : ''} in a row
-        </Text>,
-      );
-    }
-
-    if (planDisplay && !isPrime) {
-      parts.push(
-        <Text key="plan" color="gray.accentHover">
-          {' '}
-          ({planDisplay})
-        </Text>,
-      );
+        parts.push(
+          <Text key="action" style={styles.descriptionText}>
+            Subscription event.
+          </Text>,
+        );
     }
 
     return parts;
-  }, [
-    cumulativeMonths,
-    displayName,
-    giftMonths,
-    isPrime,
-    msgId,
-    planDisplay,
-    promoGiftTotal,
-    promoName,
-    recipientDisplayName,
-    shouldShareStreak,
-    streakMonths,
-  ]);
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.notice}>
-        {isResub ? (
-          <View style={styles.resubBadge}>
-            <Text style={styles.resubBadgeText}>RESUB</Text>
-          </View>
-        ) : (
-          <View style={styles.newSubBadge}>
-            <Text style={styles.newSubBadgeText}>NEW</Text>
-          </View>
-        )}
-        <Text style={styles.subscriptionText}>{buildSubMessage()}</Text>
+      <View style={styles.headerLine}>
+        <Icon icon="star" size={14} color="#FFD700" style={styles.starIcon} />
+        <Text style={styles.username}>{displayName}</Text>
+        <View style={styles.descriptionContainer}>{buildDescription()}</View>
       </View>
 
-      {message && (
+      {/* User message if present - render with emotes if parsed */}
+      {(parsedMessage && parsedMessage.length > 0) || message ? (
         <View style={styles.messageContainer}>
-          <Text style={styles.messageText}>{message.trim()}</Text>
+          {parsedMessage && parsedMessage.length > 0
+            ? parsedMessage.map(renderMessagePart)
+            : message && (
+                <Text style={styles.messageText}>{message.trim()}</Text>
+              )}
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -202,55 +246,57 @@ export function SubscriptionNotice({
 const styles = StyleSheet.create(theme => ({
   container: {
     width: '100%',
-    padding: theme.spacing.sm,
-    backgroundColor: theme.colors.gray.uiActive,
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
-    borderLeftColor: theme.colors.violet.accent,
-    borderRightColor: theme.colors.violet.accent,
-    borderCurve: 'continuous',
-    marginVertical: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs,
   },
-  notice: {
+  headerLine: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
   },
-  resubBadge: {
-    backgroundColor: theme.colors.violet.accent,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: 4,
+  starIcon: {
+    marginRight: theme.spacing.sm,
+    alignItems: 'center',
+  },
+  username: {
+    color: theme.colors.violet.accent,
+    fontWeight: '600',
     marginRight: theme.spacing.xs,
   },
-  resubBadgeText: {
-    fontSize: theme.font.fontSize.xs,
+  descriptionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    flex: 1,
+  },
+  descriptionText: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.sm,
+  },
+  monthsHighlight: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.sm,
+    fontWeight: '700',
+  },
+  recipientName: {
+    color: theme.colors.violet.accent,
     fontWeight: '600',
-    color: theme.colors.violet.contrast,
-  },
-  newSubBadge: {
-    backgroundColor: theme.colors.green.accent,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginRight: theme.spacing.xs,
-  },
-  newSubBadgeText: {
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '600',
-    color: theme.colors.green.contrast,
-  },
-  subscriptionText: {
     fontSize: theme.font.fontSize.sm,
   },
   messageContainer: {
     marginTop: theme.spacing.xs,
-    paddingTop: theme.spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.gray.border,
+    paddingLeft: theme.spacing.lg,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
   },
   messageText: {
     fontSize: theme.font.fontSize.sm,
     color: theme.colors.gray.text,
     fontStyle: 'italic',
+  },
+  emote: {
+    width: 24,
+    height: 24,
+    marginHorizontal: 2,
   },
 }));

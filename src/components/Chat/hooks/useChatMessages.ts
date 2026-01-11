@@ -1,5 +1,5 @@
 import { addMessages, ChatMessageType } from '@app/store/chatStore';
-import { RefObject, useCallback, useRef } from 'react';
+import { MutableRefObject, useCallback, useRef } from 'react';
 
 const BATCH_SIZE = 3;
 const BATCH_TIMEOUT_MS = 10;
@@ -9,18 +9,20 @@ const MAX_MESSAGES = 500;
 type AnyMessage = ChatMessageType<any, any>;
 
 interface UseChatMessagesOptions {
-  isAtBottomRef: RefObject<boolean>;
+  isAtBottomRef: MutableRefObject<boolean>;
   isScrollingToBottom: boolean;
   onUnreadIncrement: (count: number) => void;
   onAutoScroll: () => void;
 }
 
-export const useChatMessages = ({
-  isAtBottomRef,
-  isScrollingToBottom,
-  onUnreadIncrement,
-  onAutoScroll,
-}: UseChatMessagesOptions) => {
+export const useChatMessages = (options: UseChatMessagesOptions) => {
+  const {
+    isAtBottomRef,
+    isScrollingToBottom,
+    onUnreadIncrement,
+    onAutoScroll,
+  } = options;
+
   const messagesRef = useRef<AnyMessage[]>([]);
   const messageBatchRef = useRef<AnyMessage[]>([]);
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -52,14 +54,18 @@ export const useChatMessages = ({
       -MAX_MESSAGES,
     );
 
-    if (!isAtBottomRef.current && !isScrollingToBottom) {
-      onUnreadIncrement(batch.length);
+    // Handle unread count when not at bottom
+    if (!isAtBottomRef.current) {
+      onUnreadIncrement(deduplicatedBatch.length);
     }
 
+    // Trigger auto-scroll when at bottom and not already scrolling
     if (isAtBottomRef.current && !isScrollingToBottom) {
-      setTimeout(onAutoScroll, 0);
+      setTimeout(() => {
+        onAutoScroll();
+      }, 0);
     }
-  }, [isScrollingToBottom, isAtBottomRef, onUnreadIncrement, onAutoScroll]);
+  }, [isAtBottomRef, isScrollingToBottom, onUnreadIncrement, onAutoScroll]);
 
   const handleNewMessage = useCallback(
     (newMessage: AnyMessage) => {

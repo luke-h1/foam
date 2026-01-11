@@ -64,7 +64,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 10,
         }),
@@ -80,7 +80,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 10,
         }),
@@ -99,7 +99,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 100,
         }),
@@ -123,7 +123,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 100,
         }),
@@ -147,7 +147,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 100,
         }),
@@ -179,7 +179,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 10,
         }),
@@ -202,7 +202,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 10,
         }),
@@ -221,7 +221,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef, mocks } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -241,7 +241,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -266,7 +266,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -290,7 +290,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef, mocks } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 0,
         }),
@@ -310,7 +310,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef, mocks } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -334,7 +334,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef, mocks } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -367,7 +367,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef, mocks } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -395,7 +395,7 @@ describe('useChatScroll', () => {
 
       const { result, rerender } = renderHook(
         ({ messagesLength }) =>
-          useChatScroll({
+          useChatScroll<unknown>({
             flashListRef,
             messagesLength,
           }),
@@ -427,7 +427,7 @@ describe('useChatScroll', () => {
 
       const { result, rerender } = renderHook(
         ({ messagesLength }) =>
-          useChatScroll({
+          useChatScroll<unknown>({
             flashListRef,
             messagesLength,
           }),
@@ -458,7 +458,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -489,7 +489,7 @@ describe('useChatScroll', () => {
       } as RefObject<FlashListRef<unknown> | null>;
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 50,
         }),
@@ -508,7 +508,7 @@ describe('useChatScroll', () => {
       const { ref: flashListRef } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
-        useChatScroll({
+        useChatScroll<unknown>({
           flashListRef,
           messagesLength: 100,
         }),

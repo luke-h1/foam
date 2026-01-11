@@ -1,0 +1,16 @@
+query BadgeQuery($id: Id!) {
+  badges {
+    badge(id: $id) {
+      id
+      name
+      description
+      tags
+      images {
+        ...ImageFragment
+      }
+      createdById
+      updatedAt
+      searchUpdatedAt
+    }
+  }
+}

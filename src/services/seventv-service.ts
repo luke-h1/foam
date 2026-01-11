@@ -11,7 +11,7 @@ interface SevenTvFile {
   format: string;
 }
 
-interface SevenTvHost {
+export interface SevenTvHost {
   url: string;
   files: SevenTvFile[];
 }
@@ -170,6 +170,9 @@ export interface SanitisiedEmoteSet {
   site: string;
   height?: number;
   width?: number;
+  frame_count?: number;
+  static_name?: string;
+  format?: string;
 
   // temporarily - review this
   bits?: number;
@@ -209,7 +212,7 @@ export const sevenTvService = {
     const sanitisedSet = result.emotes.map(emote => {
       const { owner } = emote.data;
 
-      const emote4x =
+      const emoteUrl =
         emote.data.host.files.find(file => file.name === '4x.avif') ||
         emote.data.host.files.find(file => file.name === '3x.avif') ||
         emote.data.host.files.find(file => file.name === '2x.avif') ||
@@ -218,15 +221,18 @@ export const sevenTvService = {
       return {
         name: emote.name,
         id: emote.id,
-        url: `https://cdn.7tv.app/emote/${emote.id}/${emote4x?.name ?? '1x.avif'}`,
+        url: `https://cdn.7tv.app/emote/${emote.id}/${emoteUrl?.name ?? '2x.avif'}`,
         flags: emote.data.flags,
         original_name: emote.data.name,
         creator: (owner?.display_name || owner?.username) ?? 'UNKNOWN',
         emote_link: `https://7tv.app/emotes/${emote.id}`,
         site:
           emoteSetId === 'global' ? '7TV Global Emote' : '7TV Channel Emote',
-        height: emote4x?.height,
-        width: emote4x?.width,
+        height: emoteUrl?.height,
+        width: emoteUrl?.width,
+        frame_count: emoteUrl?.frame_count,
+        static_name: emoteUrl?.static_name,
+        format: emoteUrl?.format,
       };
     });
 
@@ -234,5 +240,16 @@ export const sevenTvService = {
   },
   getEmote: async (emoteId: string) => {
     return sevenTvApi.get<StvEmote>(`/emotes/${emoteId}`);
+  },
+  sendPresence: async (channelId: string, userId: string) => {
+    return sevenTvApi.post(`/users/${userId}/presences`, {
+      kind: 1,
+      passive: false,
+      session_id: null,
+      data: {
+        platform: 'TWITCH',
+        id: channelId,
+      },
+    });
   },
 } as const;

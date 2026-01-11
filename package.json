@@ -32,6 +32,7 @@
     "alphabetize": "node scripts/alphabetizePackageJson.js",
     "clean": "rm -rf ios android .expo node_modules",
     "commit": "cz",
+    "gql:codegen": "graphql-codegen",
     "deploy": "./scripts/deploy.sh",
     "gen-env": "gen-env-types .env -o src/types/env.d.ts -e .",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
@@ -168,6 +169,7 @@
     "reanimated-color-picker": "^4.1.0",
     "sonner-native": "^0.21.0",
     "twemoji": "^14.0.2",
+    "urql": "^5.0.1",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
@@ -188,6 +190,10 @@
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.32.0",
     "@expo/fingerprint": "~0.15.1",
+    "@graphql-codegen/cli": "^6.1.0",
+    "@graphql-codegen/typescript": "^5.0.7",
+    "@graphql-codegen/typescript-operations": "^5.0.7",
+    "@graphql-codegen/typescript-urql": "^4.0.1",
     "@react-native-community/cli": "20.0.1",
     "@rozenite/expo-atlas-plugin": "^1.0.0-alpha.16",
     "@rozenite/metro": "^1.0.0-alpha.16",
