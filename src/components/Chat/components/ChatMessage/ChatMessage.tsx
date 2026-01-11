@@ -65,7 +65,10 @@ function ChatMessageComponent<
   getMentionColor,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
-  onEmotePress?: (data: EmotePressData) => void;
+  onEmotePress?: (
+    data: EmotePressData,
+    position: { x: number; y: number; width: number; height: number },
+  ) => void;
   onBadgePress?: (data: BadgePressData) => void;
   onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
   getMentionColor?: (username: string) => string;
@@ -90,9 +93,12 @@ function ChatMessageComponent<
   }
 
   const handleEmotePress = useCallback(
-    (part: ParsedPart) => {
+    (
+      part: ParsedPart,
+      position: { x: number; y: number; width: number; height: number },
+    ) => {
       if (part.type === 'emote') {
-        onEmotePress?.(part);
+        onEmotePress?.(part, position);
       }
     },
     [onEmotePress],
@@ -129,7 +135,15 @@ function ChatMessageComponent<
             <EmoteRenderer
               key={index}
               part={part}
-              handleEmotePress={handleEmotePress}
+              handleEmotePress={emotePart => {
+                // Measure the emote to get position, but we don't need it for bottom sheet
+                handleEmotePress(emotePart, {
+                  x: 0,
+                  y: 0,
+                  width: 0,
+                  height: 0,
+                });
+              }}
             />
           );
         }
@@ -394,7 +408,10 @@ export const ChatMessage = MemoizedChatMessage as <
 >(
   props: ChatMessageType<TNoticeType, TVariant> & {
     onReply: (args: OnReply<TNoticeType>) => void;
-    onEmotePress?: (data: EmotePressData) => void;
+    onEmotePress?: (
+      data: EmotePressData,
+      position: { x: number; y: number; width: number; height: number },
+    ) => void;
     onBadgePress?: (data: BadgePressData) => void;
     onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
     getMentionColor?: (username: string) => string;
