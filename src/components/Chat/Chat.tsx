@@ -166,7 +166,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     handleNewMessage,
     clearLocalMessages,
     cleanup: cleanupMessages,
-  } = useChatMessages();
+  } = useChatMessages({
+    isAtBottomRef,
+    isScrollingToBottom,
+    onUnreadIncrement: useCallback(
+      (count: number) => setUnreadCount(prev => prev + count),
+      [setUnreadCount],
+    ),
+    onAutoScroll: scrollToBottom,
+  });
 
   // Process emotes for a message
   const processMessageEmotes = useCallback(

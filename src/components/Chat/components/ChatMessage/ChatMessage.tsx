@@ -23,7 +23,7 @@ import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
 import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
 import { ViewerMileStoneNotice } from '../usernotices/ViewerMilestoneNotice';
-import { PaintedUsername } from './PaintedUsername';
+import { PaintedUsername } from './CosmeticUsername';
 import { EmoteRenderer } from './renderers';
 
 type OnReply<TNoticeType extends NoticeVariants> = Omit<

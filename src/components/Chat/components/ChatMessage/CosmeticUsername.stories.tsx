@@ -1,7 +1,7 @@
 import type { PaintData } from '@app/services/ws/seventv-ws-service';
 import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
-import { PaintedUsername } from './PaintedUsername';
+import { PaintedUsername } from './CosmeticUsername';
 
 function rgbaToSevenTvColor(
   r: number,

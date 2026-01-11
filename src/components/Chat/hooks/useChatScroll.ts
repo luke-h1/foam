@@ -5,7 +5,7 @@ import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 /**
  * Threshold in pixels from the bottom to consider user "at bottom"
  */
-const BOTTOM_THRESHOLD = 100;
+const BOTTOM_THRESHOLD = 50;
 
 interface UseChatScrollOptions<T> {
   flashListRef: RefObject<FlashListRef<T> | null>;
@@ -21,8 +21,16 @@ export const useChatScroll = <T>({
   const [isScrollingToBottom, setIsScrollingToBottom] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const prevMessagesLengthRef = useRef(messagesLength);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contentSizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const messagesLengthRef = useRef(messagesLength);
 
-  // Track new messages for unread count
+  useEffect(() => {
+    messagesLengthRef.current = messagesLength;
+  }, [messagesLength]);
+
   useEffect(() => {
     const newMessageCount = messagesLength - prevMessagesLengthRef.current;
     prevMessagesLengthRef.current = messagesLength;
@@ -60,26 +68,66 @@ export const useChatScroll = <T>({
   );
 
   const scrollToBottom = useCallback(() => {
+    const currentLength = messagesLengthRef.current;
+    if (currentLength === 0) {
+      return;
+    }
+
     setIsScrollingToBottom(true);
 
-    // Scroll to the end of the list to see newest messages
-    void flashListRef.current?.scrollToEnd({
+    void flashListRef.current?.scrollToIndex({
+      index: currentLength - 1,
       animated: true,
     });
 
-    setTimeout(() => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
       isAtBottomRef.current = true;
       setIsAtBottom(true);
       setUnreadCount(0);
       setIsScrollingToBottom(false);
-    }, 300);
+    }, 150);
   }, [flashListRef]);
+
+  const handleContentSizeChange = useCallback(() => {
+    // Don't auto-scroll if user has scrolled away or if we're already scrolling
+    if (!isAtBottomRef.current || isScrollingToBottom) {
+      return;
+    }
+
+    // Clear any existing timeout
+    if (contentSizeTimeoutRef.current) {
+      clearTimeout(contentSizeTimeoutRef.current);
+    }
+
+    contentSizeTimeoutRef.current = setTimeout(() => {
+      const currentLength = messagesLengthRef.current;
+      if (currentLength === 0) {
+        return;
+      }
+
+      void flashListRef.current?.scrollToIndex({
+        index: currentLength - 1,
+        animated: false,
+      });
+    }, 10);
+  }, [flashListRef, isScrollingToBottom]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);
   }, []);
 
-  const cleanup = useCallback(() => {}, []);
+  const cleanup = useCallback(() => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    if (contentSizeTimeoutRef.current) {
+      clearTimeout(contentSizeTimeoutRef.current);
+    }
+  }, []);
 
   return {
     isAtBottom,
@@ -88,6 +136,7 @@ export const useChatScroll = <T>({
     unreadCount,
     setUnreadCount,
     handleScroll,
+    handleContentSizeChange,
     scrollToBottom,
     incrementUnread,
     cleanup,
