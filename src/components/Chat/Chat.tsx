@@ -94,14 +94,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const channelEmoteData = useChannelEmoteData(channelId);
   const userPaints = useUserPaints();
 
-  // Refs for lifecycle management
   const hasPartedRef = useRef(false);
   const isMountedRef = useRef(true);
   const currentEmoteSetIdRef = useRef<string | null>(null);
   const emoteReprocessAttemptedRef = useRef<string | null>(null);
   const initializedChannelRef = useRef<string | null>(null);
 
-  // UI refs
   const flashListRef = useRef<FlashListRef<AnyChatMessageType>>(null);
   const emoteSheetRef = useRef<TrueSheet>(null);
   const settingsSheetRef = useRef<TrueSheet>(null);
@@ -117,7 +115,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
   const [, setIsInputFocused] = useState(false);
 
-  // Shared sheet state (single instances instead of per-message)
   const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
     null,
   );
@@ -954,6 +951,7 @@ Chat.displayName = 'Chat';
 const styles = StyleSheet.create(theme => ({
   wrapper: {
     flex: 1,
+    backgroundColor: theme.colors.gray.bg,
   },
   keyboardAvoidingView: {
     flex: 1,

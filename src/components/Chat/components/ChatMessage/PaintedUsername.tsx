@@ -1,19 +1,25 @@
 import {
   PaintData,
-  IndexedCollection,
   PaintStop,
+  sevenTvColorToCss,
+  indexedCollectionToArray,
 } from '@app/services/ws/seventv-ws-service';
 import { chatStore$ } from '@app/store/chatStore';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useMemo } from 'react';
 import { View } from 'react-native';
+import Svg, {
+  Defs,
+  RadialGradient as SvgRadialGradient,
+  Stop,
+  Rect,
+} from 'react-native-svg';
 import { StyleSheet } from 'react-native-unistyles';
 import { Text } from '../../../Text';
 
 interface PaintedUsernameProps {
   username: string;
-
   /**
    * Paint cosmetics - if not provided it gets looked up from store by the userId
    */
@@ -27,39 +33,17 @@ interface PaintedUsernameProps {
 }
 
 /**
- * Convert a 7TV integer color to a CSS rgba string
- * 7TV colors are stored as signed 32-bit integers in RGBA format
- */
-function intToRgba(color: number): string {
-  const unsigned = Math.abs(color);
-
-  const r = Math.floor(unsigned / 0x1000000) % 0x100;
-  const g = Math.floor(unsigned / 0x10000) % 0x100;
-  const b = Math.floor(unsigned / 0x100) % 0x100;
-  const a = (unsigned % 0x100) / 255;
-
-  return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
-}
-
-function indexedCollectionToArray<T>(collection: IndexedCollection<T>): T[] {
-  const result: T[] = [];
-  for (let i = 0; i < collection.length; i += 1) {
-    if (collection[i] !== undefined) {
-      result.push(collection[i] as T);
-    }
-  }
-  return result;
-}
-
-/**
  * Calculate gradient start and end points based on angle
- * 0 degrees = left to right, 90 degrees = bottom to top
+ * CSS gradient angles: 0deg = bottom to top, 90deg = left to right
+ * We convert to expo-linear-gradient's coordinate system
  */
 function angleToPoints(angle: number): {
   start: { x: number; y: number };
   end: { x: number; y: number };
 } {
-  // Convert angle to radians and adjust for CSS gradient direction
+  // Convert CSS angle to radians
+  // CSS: 0deg = bottom to top, clockwise positive
+  // We need to convert to coordinate points where (0,0) is top-left
   const rad = ((angle - 90) * Math.PI) / 180;
 
   const x1 = 0.5 + 0.5 * Math.cos(rad + Math.PI);
@@ -70,6 +54,59 @@ function angleToPoints(angle: number): {
   return {
     start: { x: x1, y: y1 },
     end: { x: x2, y: y2 },
+  };
+}
+
+interface GradientConfig {
+  colors: string[];
+  locations: number[];
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+}
+
+/**
+ * Build gradient configuration from paint data
+ */
+function buildGradientConfig(
+  paint: PaintData,
+  fallbackColor: string,
+): GradientConfig {
+  // Handle URL paints or empty stops - use solid color
+  if (paint.function === 'URL' || !paint.stops || paint.stops.length === 0) {
+    const solidColor =
+      paint.color !== null ? sevenTvColorToCss(paint.color) : fallbackColor;
+    return {
+      colors: [solidColor, solidColor],
+      locations: [0, 1],
+      start: { x: 0, y: 0 },
+      end: { x: 1, y: 0 },
+    };
+  }
+
+  const stops = indexedCollectionToArray<PaintStop>(paint.stops);
+  const sortedStops = [...stops].sort((a, b) => a.at - b.at);
+
+  const gradientColors = sortedStops.map(stop => sevenTvColorToCss(stop.color));
+  const gradientLocations = sortedStops.map(stop => stop.at);
+
+  // Need at least 2 stops for a gradient
+  if (gradientColors.length < 2) {
+    const color = gradientColors[0] || fallbackColor;
+    return {
+      colors: [color, color],
+      locations: [0, 1],
+      start: { x: 0, y: 0 },
+      end: { x: 1, y: 0 },
+    };
+  }
+
+  const points = angleToPoints(paint.angle || 0);
+
+  return {
+    colors: gradientColors,
+    locations: gradientLocations,
+    start: points.start,
+    end: points.end,
   };
 }
 
@@ -89,7 +126,7 @@ function PaintedUsernameComponent({
     return chatStore$.paints[paintId]?.peek() ?? null;
   }, [paintProp, userId]);
 
-  const { colors, locations, start, end } = useMemo(() => {
+  const gradientConfig = useMemo((): GradientConfig => {
     if (!paint) {
       return {
         colors: [fallbackColor, fallbackColor],
@@ -98,42 +135,8 @@ function PaintedUsernameComponent({
         end: { x: 1, y: 0 },
       };
     }
-    if (paint.function === 'URL' || !paint.stops || paint.stops.length === 0) {
-      const solidColor =
-        paint.color !== null ? intToRgba(paint.color) : fallbackColor;
-      return {
-        colors: [solidColor, solidColor],
-        locations: [0, 1],
-        start: { x: 0, y: 0 },
-        end: { x: 1, y: 0 },
-      };
-    }
 
-    const stops = indexedCollectionToArray<PaintStop>(paint.stops);
-
-    const sortedStops = [...stops].sort((a, b) => a.at - b.at);
-
-    const gradientColors = sortedStops.map(stop => intToRgba(stop.color));
-    const gradientLocations = sortedStops.map(stop => stop.at);
-
-    if (gradientColors.length < 2) {
-      const color = gradientColors[0] || fallbackColor;
-      return {
-        colors: [color, color],
-        locations: [0, 1],
-        start: { x: 0, y: 0 },
-        end: { x: 1, y: 0 },
-      };
-    }
-
-    const points = angleToPoints(paint.angle || 0);
-
-    return {
-      colors: gradientColors,
-      locations: gradientLocations,
-      start: points.start,
-      end: points.end,
-    };
+    return buildGradientConfig(paint, fallbackColor);
   }, [paint, fallbackColor]);
 
   const shadowStyle = useMemo(() => {
@@ -145,17 +148,75 @@ function PaintedUsernameComponent({
     if (shadows.length === 0) return {};
 
     const shadow = shadows[0];
-    const shadowColor = intToRgba(shadow?.color as number);
+    if (!shadow) return {};
+
+    const shadowColor = sevenTvColorToCss(shadow.color);
 
     return {
       textShadowColor: shadowColor,
       textShadowOffset: {
-        width: shadow?.x_offset || 0,
-        height: shadow?.y_offset || 0,
+        width: shadow.x_offset || 0,
+        height: shadow.y_offset || 0,
       },
-      textShadowRadius: shadow?.radius || 0,
+      textShadowRadius: shadow.radius || 0,
     };
   }, [paint]);
+
+  const isRadial = paint?.function === 'RADIAL_GRADIENT';
+
+  const renderGradient = () => {
+    if (isRadial) {
+      return (
+        <View style={styles.gradient}>
+          <View style={styles.svgContainer}>
+            <Svg width="100%" height="100%" style={styles.svgGradient}>
+              <Defs>
+                <SvgRadialGradient
+                  id="radialPaint"
+                  cx="50%"
+                  cy="50%"
+                  rx="50%"
+                  ry="50%"
+                  fx="50%"
+                  fy="50%"
+                >
+                  {gradientConfig.colors.map((color, index) => (
+                    <Stop
+                      key={`${color}-${gradientConfig.locations[index]}`}
+                      offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
+                      stopColor={color}
+                    />
+                  ))}
+                </SvgRadialGradient>
+              </Defs>
+              <Rect
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                fill="url(#radialPaint)"
+              />
+            </Svg>
+          </View>
+          {/* Invisible text to size the gradient correctly */}
+          <Text style={[styles.hiddenText, shadowStyle]}>{username}:</Text>
+        </View>
+      );
+    }
+
+    return (
+      <LinearGradient
+        colors={gradientConfig.colors as [string, string, ...string[]]}
+        locations={gradientConfig.locations as [number, number, ...number[]]}
+        start={gradientConfig.start}
+        end={gradientConfig.end}
+        style={styles.gradient}
+      >
+        {/* Invisible text to size the gradient correctly */}
+        <Text style={[styles.hiddenText, shadowStyle]}>{username}:</Text>
+      </LinearGradient>
+    );
+  };
 
   return (
     <MaskedView
@@ -165,16 +226,7 @@ function PaintedUsernameComponent({
         </View>
       }
     >
-      <LinearGradient
-        colors={colors as [string, string, ...string[]]}
-        locations={locations as [number, number, ...number[]]}
-        start={start}
-        end={end}
-        style={styles.gradient}
-      >
-        {/* Invisible text to size the gradient correctly */}
-        <Text style={[styles.hiddenText, shadowStyle]}>{username}:</Text>
-      </LinearGradient>
+      {renderGradient()}
     </MaskedView>
   );
 }
@@ -195,6 +247,16 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: 'bold',
     fontSize: theme.font.fontSize.sm,
     opacity: 0,
+  },
+  svgContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  svgGradient: {
+    position: 'absolute',
   },
 }));
 

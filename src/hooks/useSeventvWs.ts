@@ -108,9 +108,9 @@ export function useSeventvWs(
     if (!currentScreen) return false;
     const isOnChatScreen = SEVENTV_CHAT_SCREENS.includes(currentScreen);
     const hasRequiredIds =
-      twitchChannelIdRef.current && sevenTvEmoteSetIdRef.current;
+      options?.twitchChannelId && options?.sevenTvEmoteSetId;
     return isOnChatScreen && hasRequiredIds;
-  }, [currentScreen]);
+  }, [currentScreen, options?.twitchChannelId, options?.sevenTvEmoteSetId]);
 
   const handleEmoteSetUpdate = useCallback(
     (data: SevenTvEventData<'emote_set.update'>) => {

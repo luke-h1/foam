@@ -293,7 +293,6 @@ function ChatMessageComponent<
 
   const isReply = Boolean(parentDisplayName);
 
-  // Get the user's paint if available
   const userPaint = useMemo(() => {
     const userId = userstate['user-id'];
     if (!userId || !userPaints) return null;
@@ -307,7 +306,6 @@ function ChatMessageComponent<
 
   const isFirstMessage = userstate['first-msg'] === '1';
 
-  // Don't allow replies to system messages, subscription notices, milestones, or system sender
   const isSystemSender =
     sender === 'System' ||
     sender === 'system' ||

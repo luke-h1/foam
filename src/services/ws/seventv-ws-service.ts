@@ -92,46 +92,333 @@ export interface ChangeMap<TValue, TNested = false> {
   contextual?: boolean;
 }
 
+/**
+ * Represents a color value from 7TV stored as a signed 32-bit integer in RGBA format.
+ *
+ * The color is packed into 32 bits with the following layout:
+ * - Bits 24-31: Red channel (0-255)
+ * - Bits 16-23: Green channel (0-255)
+ * - Bits 8-15: Blue channel (0-255)
+ * - Bits 0-7: Alpha channel (0-255)
+ *
+ * @example
+ * // Fully opaque red: 0xFF0000FF
+ * // Fully opaque green: 0x00FF00FF
+ * // Semi-transparent blue: 0x0000FF80
+ */
+export type SevenTvColor = number;
+
+/**
+ * Represents a drop shadow effect applied to a 7TV paint cosmetic.
+ *
+ * Shadows are rendered behind the text to create depth and visual effects.
+ * Multiple shadows can be combined for complex glow or outline effects.
+ */
 export interface PaintShadow {
-  color: number;
+  /**
+   * The shadow color as a 7TV packed RGBA integer.
+   * @see {@link SevenTvColor} for the color format specification.
+   */
+  color: SevenTvColor;
+
+  /**
+   * The blur radius of the shadow in pixels.
+   * Higher values create a softer, more diffuse shadow effect.
+   */
   radius: number;
+
+  /**
+   * The horizontal offset of the shadow from the text in pixels.
+   * Positive values move the shadow to the right.
+   */
   x_offset: number;
+
+  /**
+   * The vertical offset of the shadow from the text in pixels.
+   * Positive values move the shadow downward.
+   */
   y_offset: number;
 }
 
+/**
+ * Represents a single color stop in a gradient paint.
+ *
+ * Gradient stops define the colors and their positions along the gradient axis.
+ * Multiple stops are combined to create smooth color transitions.
+ */
 export interface PaintStop {
-  color: number;
+  /**
+   * The color at this stop as a 7TV packed RGBA integer.
+   * @see {@link SevenTvColor} for the color format specification.
+   */
+  color: SevenTvColor;
+
+  /**
+   * The position of this stop along the gradient axis.
+   * Value ranges from 0 (start) to 1 (end).
+   */
   at: number;
 }
 
 /**
- * A collection of items with numeric indices and a length property
- * Used for shadows and stops in paint data
+ * A collection of items with numeric indices and a length property.
+ *
+ * This structure is used by 7TV WebSocket messages to represent arrays
+ * in a JSON-object format. It's commonly used for shadows and gradient stops.
+ *
+ * @typeParam T - The type of items stored in the collection.
+ *
+ * @example
+ * ```typescript
+ * // Example from 7TV WebSocket message:
+ * const stops: IndexedCollection<PaintStop> = {
+ *   "0": { at: 0, color: -1675056641 },
+ *   "1": { at: 0.5, color: 1560255231 },
+ *   "2": { at: 1, color: 576286207 },
+ *   "length": 3
+ * };
+ * ```
  */
 export interface IndexedCollection<T> {
   [key: number]: T;
   length: number;
 }
 
+/**
+ * Type guard to check if a value is an IndexedCollection.
+ *
+ * @typeParam T - The expected type of items in the collection.
+ * @param value - The value to check.
+ * @returns `true` if the value is an IndexedCollection, `false` otherwise.
+ *
+ * @example
+ * ```typescript
+ * if (isIndexedCollection<PaintStop>(data.stops)) {
+ *   const stopsArray = indexedCollectionToArray(data.stops);
+ * }
+ * ```
+ */
+export function isIndexedCollection<T>(
+  value: unknown,
+): value is IndexedCollection<T> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'length' in value &&
+    typeof (value as IndexedCollection<T>).length === 'number'
+  );
+}
+
+/**
+ * Converts an IndexedCollection to a standard TypeScript array.
+ *
+ * This utility handles the conversion from 7TV's object-based array format
+ * to a native array, filtering out any undefined indices.
+ *
+ * @typeParam T - The type of items in the collection.
+ * @param collection - The IndexedCollection to convert.
+ * @returns A typed array containing all defined items from the collection.
+ *
+ * @example
+ * ```typescript
+ * const stops: IndexedCollection<PaintStop> = { "0": stop1, "1": stop2, "length": 2 };
+ * const stopsArray: PaintStop[] = indexedCollectionToArray(stops);
+ * // Result: [stop1, stop2]
+ * ```
+ */
+export function indexedCollectionToArray<T>(
+  collection: IndexedCollection<T>,
+): T[] {
+  const result: T[] = [];
+  for (let i = 0; i < collection.length; i += 1) {
+    if (collection[i] !== undefined) {
+      result.push(collection[i] as T);
+    }
+  }
+  return result;
+}
+
+/**
+ * Converts a 7TV packed RGBA color integer to its individual channel components.
+ *
+ * Uses unsigned right shift (`>>>`) to correctly handle signed 32-bit integers,
+ * which is necessary because JavaScript stores numbers as 64-bit floats but
+ * bitwise operations convert to 32-bit signed integers.
+ *
+ * @param color - The packed RGBA color as a 32-bit signed integer.
+ * @returns An object containing the red, green, blue, and alpha channel values (0-255).
+ *
+ * @example
+ * ```typescript
+ * const { r, g, b, a } = sevenTvColorToRgba(-1675056641);
+ * // Result: { r: 156, g: 89, b: 182, a: 255 } (purple, fully opaque)
+ * ```
+ */
+export function sevenTvColorToRgba(color: SevenTvColor): {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+} {
+  // eslint-disable-next-line no-bitwise
+  const r = (color >>> 24) & 0xff;
+  // eslint-disable-next-line no-bitwise
+  const g = (color >>> 16) & 0xff;
+  // eslint-disable-next-line no-bitwise
+  const b = (color >>> 8) & 0xff;
+  // eslint-disable-next-line no-bitwise
+  const a = color & 0xff;
+
+  return { r, g, b, a };
+}
+
+/**
+ * Converts a 7TV packed RGBA color integer to a CSS-compatible rgba() string.
+ *
+ * The alpha channel is normalized from 0-255 to 0-1 for CSS compatibility.
+ *
+ * @param color - The packed RGBA color as a 32-bit signed integer.
+ * @returns A CSS rgba() color string.
+ *
+ * @example
+ * ```typescript
+ * const cssColor = sevenTvColorToCss(-1675056641);
+ * // Result: "rgba(156, 89, 182, 1.00)"
+ * ```
+ */
+export function sevenTvColorToCss(color: SevenTvColor): string {
+  const { r, g, b, a } = sevenTvColorToRgba(color);
+  return `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(2)})`;
+}
+
+/**
+ * Defines the type of gradient or fill function used by a 7TV paint cosmetic.
+ *
+ * - `LINEAR_GRADIENT`: A gradient that transitions colors along a straight line at a specified angle.
+ * - `RADIAL_GRADIENT`: A gradient that radiates colors outward from a center point.
+ * - `URL`: An image-based paint loaded from a URL.
+ */
+export type PaintFunction = 'LINEAR_GRADIENT' | 'RADIAL_GRADIENT' | 'URL';
+
+/**
+ * Defines the shape of a radial gradient paint.
+ *
+ * - `circle`: A perfectly round gradient that extends equally in all directions.
+ * - `ellipse`: An oval gradient that can stretch differently along the horizontal and vertical axes.
+ */
+export type PaintShape = 'circle' | 'ellipse';
+
+/**
+ * Represents a 7TV badge cosmetic with its visual and metadata.
+ */
 export interface BadgeData extends EventObject {
+  /** The CDN host information for badge image URLs. */
   host: SevenTvHost;
+
+  /** The tooltip text displayed when hovering over the badge. */
   tooltip: string;
 }
 
+/**
+ * Represents a 7TV paint cosmetic that can be applied to usernames.
+ *
+ * Paints are visual effects that modify how a user's name appears in chat.
+ * They can include gradients (linear or radial), solid colors, images,
+ * and shadow effects for enhanced visual impact.
+ *
+ * @example
+ * ```typescript
+ * // A linear gradient paint (Northern Light)
+ * const paint: PaintData = {
+ *   id: "01KDREVNA4XVTD3G04PWWDQMGF",
+ *   name: "Northern Light",
+ *   function: "LINEAR_GRADIENT",
+ *   angle: 45,
+ *   stops: { "0": { at: 0, color: -1675056641 }, "length": 1 },
+ *   shadows: { "0": { x_offset: 0, y_offset: 0, radius: 0.1, color: 2096885247 }, "length": 1 },
+ *   // ...other fields
+ * };
+ * ```
+ */
 export interface PaintData {
+  /**
+   * The unique identifier for this paint.
+   * Used to reference the paint in entitlements and cache lookups.
+   */
   id: string;
+
+  /**
+   * The display name of the paint shown to users.
+   * @example "Northern Light", "Galaxy", "Fire"
+   */
   name: string;
-  color: number | null;
+
+  /**
+   * A solid fallback color used when the paint function is not gradient-based,
+   * or when gradient stops are not available.
+   * @see {@link SevenTvColor} for the color format specification.
+   */
+  color: SevenTvColor | null;
+
+  /**
+   * Legacy gradient layers container.
+   * Currently unused in favor of the `stops` property, kept for API compatibility.
+   */
   gradients: {
     length: number;
   };
+
+  /**
+   * Drop shadow effects applied behind the painted text.
+   * Multiple shadows can be combined for glow, outline, or depth effects.
+   */
   shadows: IndexedCollection<PaintShadow>;
+
+  /**
+   * Optional text content associated with the paint.
+   * Rarely used in practice.
+   */
   text: string | null;
-  function: 'LINEAR_GRADIENT' | 'RADIAL_GRADIENT' | 'URL';
+
+  /**
+   * The type of gradient or fill function used to render this paint.
+   * Determines how the `stops`, `angle`, and `shape` properties are interpreted.
+   */
+  function: PaintFunction;
+
+  /**
+   * Whether the gradient pattern should repeat beyond its natural bounds.
+   * When `true`, the gradient tiles to fill the available space.
+   */
   repeat: boolean;
+
+  /**
+   * The angle of rotation for linear gradients, in degrees.
+   * - `0`: Left to right
+   * - `90`: Bottom to top
+   * - `180`: Right to left
+   * - `270`: Top to bottom
+   *
+   * Only applicable when `function` is `LINEAR_GRADIENT`.
+   */
   angle: number;
-  shape: 'circle' | 'ellipse';
+
+  /**
+   * The shape of radial gradients.
+   * Only applicable when `function` is `RADIAL_GRADIENT`.
+   */
+  shape: PaintShape;
+
+  /**
+   * The URL of an image to use as the paint texture.
+   * Only applicable when `function` is `URL`.
+   */
   image_url: string;
+
+  /**
+   * The color stops that define the gradient transition.
+   * Each stop specifies a color and its position (0-1) along the gradient axis.
+   */
   stops: IndexedCollection<PaintStop>;
 }
 
