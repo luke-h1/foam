@@ -11,6 +11,7 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
+import { logger } from '@app/utils/logger';
 import { truncate } from '@app/utils/string/truncate';
 import React, { useCallback, memo, useMemo } from 'react';
 import { View } from 'react-native';
@@ -23,7 +24,7 @@ import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
 import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
 import { ViewerMileStoneNotice } from '../usernotices/ViewerMilestoneNotice';
-import { PaintedUsername } from './CosmeticUsername';
+import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { EmoteRenderer } from './renderers';
 
 type OnReply<TNoticeType extends NoticeVariants> = Omit<
@@ -82,17 +83,6 @@ function ChatMessageComponent<
       part.type === 'anongiftpaidupgrade' ||
       part.type === 'anongift',
   );
-
-  if (isSubscriptionNotice) {
-    console.log('🔔 ChatMessage received subscription:', {
-      message_id,
-      hasNoticeTags: !!notice_tags,
-      noticeTagsType: notice_tags ? typeof notice_tags : 'undefined',
-      messageTypes: message.map(m => m.type),
-      isSubscriptionNotice,
-      noticeTagsKeys: notice_tags ? Object.keys(notice_tags) : [],
-    });
-  }
 
   const handleEmotePress = useCallback(
     (part: ParsedPart) => {
@@ -293,11 +283,21 @@ function ChatMessageComponent<
 
   const isReply = Boolean(parentDisplayName);
 
+  const userId = userstate['user-id'];
+  const paintId = userId && userPaints ? userPaints[userId]?.id : null;
   const userPaint = useMemo(() => {
-    const userId = userstate['user-id'];
-    if (!userId || !userPaints) return null;
-    return userPaints[userId] ?? null;
-  }, [userstate, userPaints]);
+    if (!userId || !userPaints) {
+      return null;
+    }
+    const paint = userPaints[userId] ?? null;
+    if (paint) {
+      logger.stvWs.debug(
+        `ChatMessage: Found paint for user ${userId}: ${paint.name}`,
+      );
+    }
+    return paint;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, paintId]);
 
   const isSystemNotice = message.some(
     part =>
@@ -372,27 +372,16 @@ function ChatMessageComponent<
               </Text>
             )}
             {renderBadges()}
-            {userstate.username &&
-              (userPaint ? (
-                <PaintedUsername
-                  username={userstate.username}
-                  paint={userPaint}
-                  fallbackColor={
-                    userstate.color ? lightenColor(userstate.color) : undefined
-                  }
-                />
-              ) : (
-                <Text
-                  style={[
-                    styles.username,
-                    styles.usernameDefaultColor,
-                    // eslint-disable next-line react-native/no-inline-styles
-                    userstate.color && { color: lightenColor(userstate.color) },
-                  ]}
-                >
-                  {userstate.username}:
-                </Text>
-              ))}
+            {userstate.username && (
+              <PaintedUsername
+                username={userstate.username}
+                paint={userPaint ?? undefined}
+                userId={userstate['user-id']}
+                fallbackColor={
+                  userstate.color ? lightenColor(userstate.color) : undefined
+                }
+              />
+            )}
             {message.map(renderMessagePart)}
           </View>
           <View style={styles.rightActions}>

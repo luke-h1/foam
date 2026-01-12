@@ -1,6 +1,13 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
-import { CosmeticCreateCallbackData } from '@app/hooks/useSeventvWs';
+import {
+  CosmeticCreateCallbackData,
+  CosmeticUpdateCallbackData,
+  CosmeticDeleteCallbackData,
+  EntitlementCreateCallbackData,
+  EntitlementUpdateCallbackData,
+  EntitlementDeleteCallbackData,
+} from '@app/hooks/useSeventvWs';
 import { logger } from '@app/utils/logger';
 import {
   StvUser,
@@ -590,6 +597,26 @@ export default class SevenTvWsService {
     | ((data: CosmeticCreateCallbackData) => void)
     | null = null;
 
+  private static cosmeticUpdateCallback:
+    | ((data: CosmeticUpdateCallbackData) => void)
+    | null = null;
+
+  private static cosmeticDeleteCallback:
+    | ((data: CosmeticDeleteCallbackData) => void)
+    | null = null;
+
+  private static entitlementCreateCallback:
+    | ((data: EntitlementCreateCallbackData) => void)
+    | null = null;
+
+  private static entitlementUpdateCallback:
+    | ((data: EntitlementUpdateCallbackData) => void)
+    | null = null;
+
+  private static entitlementDeleteCallback:
+    | ((data: EntitlementDeleteCallbackData) => void)
+    | null = null;
+
   // eslint-disable-next-line no-empty-function
   private constructor() {}
 
@@ -705,6 +732,46 @@ export default class SevenTvWsService {
               break;
             }
 
+            case 'cosmetic.update': {
+              logger.stvWs.debug('cosmetic.update event received');
+              SevenTvWsService.handleCosmeticUpdate(
+                message.d as SevenTvEventData<'cosmetic.update'>,
+              );
+              break;
+            }
+
+            case 'cosmetic.delete': {
+              logger.stvWs.debug('cosmetic.delete event received');
+              SevenTvWsService.handleCosmeticDelete(
+                message.d as SevenTvEventData<'cosmetic.delete'>,
+              );
+              break;
+            }
+
+            case 'entitlement.create': {
+              logger.stvWs.debug('entitlement.create event received');
+              SevenTvWsService.handleEntitlementCreate(
+                message.d as SevenTvEventData<'entitlement.create'>,
+              );
+              break;
+            }
+
+            case 'entitlement.update': {
+              logger.stvWs.debug('entitlement.update event received');
+              SevenTvWsService.handleEntitlementUpdate(
+                message.d as SevenTvEventData<'entitlement.update'>,
+              );
+              break;
+            }
+
+            case 'entitlement.delete': {
+              logger.stvWs.debug('entitlement.delete event received');
+              SevenTvWsService.handleEntitlementDelete(
+                message.d as SevenTvEventData<'entitlement.delete'>,
+              );
+              break;
+            }
+
             default: {
               // Unhandled event types
               break;
@@ -764,7 +831,7 @@ export default class SevenTvWsService {
       const timeSinceConnection =
         Date.now() - SevenTvWsService.connectionTimestamp;
 
-      const HISTORICAL_EVENT_BUFFER = 5000; // 5 seconds buffer
+      const HISTORICAL_EVENT_BUFFER = 5000; // 2 seconds buffer
 
       if (timeSinceConnection < HISTORICAL_EVENT_BUFFER) {
         logger.stvWs.info(
@@ -867,6 +934,255 @@ export default class SevenTvWsService {
     }
   }
 
+  private static handleCosmeticUpdate(
+    data: SevenTvEventData<'cosmetic.update'>,
+  ): void {
+    try {
+      const { body } = data;
+      let kind: 'PAINT' | 'BADGE' | null = null;
+
+      // Check updated values to determine kind
+      if (body.updated) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const update of body.updated) {
+          if (update.value && typeof update.value === 'object') {
+            if ('object' in update.value && update.value.object) {
+              kind = update.value.object.kind === 'BADGE' ? 'BADGE' : 'PAINT';
+              break;
+            }
+          }
+        }
+      }
+
+      // Check pushed values
+      if (!kind && body.pushed) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const push of body.pushed) {
+          if (push.value && typeof push.value === 'object') {
+            if ('object' in push.value && push.value.object) {
+              kind = push.value.object.kind === 'BADGE' ? 'BADGE' : 'PAINT';
+              break;
+            }
+          }
+        }
+      }
+
+      if (SevenTvWsService.cosmeticUpdateCallback) {
+        SevenTvWsService.cosmeticUpdateCallback({
+          changes: body,
+          kind,
+        });
+      }
+    } catch (e) {
+      logger.stvWs.error('Error handling cosmetic update:', e);
+    }
+  }
+
+  private static handleCosmeticDelete(
+    data: SevenTvEventData<'cosmetic.delete'>,
+  ): void {
+    try {
+      const { body } = data;
+
+      if (SevenTvWsService.cosmeticDeleteCallback) {
+        SevenTvWsService.cosmeticDeleteCallback({
+          cosmeticId: body.id,
+        });
+      }
+    } catch (e) {
+      logger.stvWs.error('Error handling cosmetic delete:', e);
+    }
+  }
+
+  private static handleEntitlementCreate(
+    data: SevenTvEventData<'entitlement.create'>,
+  ): void {
+    try {
+      const { body: entitlement } = data;
+      const { kind } = entitlement.object;
+
+      let ttvUserId: string | null = null;
+      if (entitlement.object.user.connections) {
+        const twitchConnection = Object.values(
+          entitlement.object.user.connections,
+        ).find(
+          conn =>
+            conn &&
+            typeof conn === 'object' &&
+            'platform' in conn &&
+            conn.platform === 'TWITCH',
+        );
+
+        if (
+          twitchConnection &&
+          typeof twitchConnection === 'object' &&
+          'id' in twitchConnection &&
+          typeof twitchConnection.id === 'string'
+        ) {
+          ttvUserId = twitchConnection.id;
+        }
+      }
+
+      // Extract paint_id and badge_id from style
+      // Also use ref_id as the authoritative ID when kind matches
+      let paintId: string | null = null;
+      let badgeId: string | null = null;
+
+      if (entitlement.object.user.style) {
+        if (entitlement.object.user.style.paint_id) {
+          paintId = entitlement.object.user.style.paint_id;
+        }
+        if (entitlement.object.user.style.badge_id) {
+          badgeId = entitlement.object.user.style.badge_id;
+        }
+      }
+
+      // Use ref_id as the authoritative cosmetic ID when kind matches
+      // This ensures we use the correct ID even if style doesn't have it yet
+      if (kind === 'PAINT' && entitlement.object.ref_id) {
+        paintId = entitlement.object.ref_id;
+      }
+      if (kind === 'BADGE' && entitlement.object.ref_id) {
+        badgeId = entitlement.object.ref_id;
+      }
+
+      if (SevenTvWsService.entitlementCreateCallback) {
+        SevenTvWsService.entitlementCreateCallback({
+          entitlement,
+          kind,
+          ttvUserId,
+          paintId,
+          badgeId,
+        });
+      }
+    } catch (e) {
+      logger.stvWs.error('Error handling entitlement create:', e);
+    }
+  }
+
+  private static handleEntitlementUpdate(
+    data: SevenTvEventData<'entitlement.update'>,
+  ): void {
+    try {
+      const { body } = data;
+      let ttvUserId: string | null = null;
+      let paintId: string | null = null;
+      let badgeId: string | null = null;
+
+      if (body.updated) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const update of body.updated) {
+          if (update.value && typeof update.value === 'object') {
+            if ('object' in update.value && update.value.object) {
+              const entitlement = update.value.object;
+
+              // Extract Twitch user ID from connections
+              if (entitlement.user?.connections) {
+                const twitchConnection = Object.values(
+                  entitlement.user.connections,
+                ).find(
+                  conn =>
+                    conn &&
+                    typeof conn === 'object' &&
+                    'platform' in conn &&
+                    conn.platform === 'TWITCH',
+                );
+
+                if (
+                  twitchConnection &&
+                  typeof twitchConnection === 'object' &&
+                  'id' in twitchConnection &&
+                  typeof twitchConnection.id === 'string'
+                ) {
+                  ttvUserId = twitchConnection.id;
+                }
+              }
+
+              if (entitlement.user?.style) {
+                if (entitlement.user.style.paint_id) {
+                  paintId = entitlement.user.style.paint_id;
+                }
+                if (entitlement.user.style.badge_id) {
+                  badgeId = entitlement.user.style.badge_id;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (!ttvUserId && body.pushed) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const push of body.pushed) {
+          if (push.value && typeof push.value === 'object') {
+            if ('object' in push.value && push.value.object) {
+              const entitlement = push.value.object;
+
+              if (entitlement.user?.connections) {
+                const twitchConnection = Object.values(
+                  entitlement.user.connections,
+                ).find(
+                  conn =>
+                    conn &&
+                    typeof conn === 'object' &&
+                    'platform' in conn &&
+                    conn.platform === 'TWITCH',
+                );
+
+                if (
+                  twitchConnection &&
+                  typeof twitchConnection === 'object' &&
+                  'id' in twitchConnection &&
+                  typeof twitchConnection.id === 'string'
+                ) {
+                  ttvUserId = twitchConnection.id;
+                }
+              }
+
+              if (entitlement.user?.style) {
+                if (entitlement.user.style.paint_id) {
+                  paintId = entitlement.user.style.paint_id;
+                }
+                if (entitlement.user.style.badge_id) {
+                  badgeId = entitlement.user.style.badge_id;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (SevenTvWsService.entitlementUpdateCallback) {
+        SevenTvWsService.entitlementUpdateCallback({
+          changes: body,
+          ttvUserId,
+          paintId,
+          badgeId,
+        });
+      }
+    } catch (e) {
+      logger.stvWs.error('Error handling entitlement update:', e);
+    }
+  }
+
+  private static handleEntitlementDelete(
+    data: SevenTvEventData<'entitlement.delete'>,
+  ): void {
+    try {
+      const { body } = data;
+      const entitlementId = body.id;
+
+      if (SevenTvWsService.entitlementDeleteCallback) {
+        SevenTvWsService.entitlementDeleteCallback({
+          entitlementId,
+          ttvUserId: null,
+        });
+      }
+    } catch (e) {
+      logger.stvWs.error('Error handling entitlement delete:', e);
+    }
+  }
+
   private static attemptReconnect() {
     if (SevenTvWsService.isReconnecting) {
       return;
@@ -922,8 +1238,9 @@ export default class SevenTvWsService {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    // Subscribe to entitlement.create events if twitchChannelId is available
+    // Subscribe to all entitlement events if twitchChannelId is available
     if (SevenTvWsService.twitchChannelId) {
+      // Subscribe to entitlement.create
       const subscribeEntitlementCreateMessage: SevenTvWsMessage<
         never,
         'entitlement.create'
@@ -944,7 +1261,45 @@ export default class SevenTvWsService {
         JSON.stringify(subscribeEntitlementCreateMessage),
       );
 
-      // logger.stvWs.info('💚 Subscribed to entitlement.create events');
+      const subscribeEntitlementUpdateMessage: SevenTvWsMessage<
+        never,
+        'entitlement.update'
+      > = {
+        op: 35,
+        t: Date.now(),
+        d: {
+          type: 'entitlement.update',
+          condition: {
+            object_id: SevenTvWsService.twitchChannelId,
+          },
+        },
+      };
+
+      SevenTvWsService.instance.send(
+        JSON.stringify(subscribeEntitlementUpdateMessage),
+      );
+
+      const subscribeEntitlementDeleteMessage: SevenTvWsMessage<
+        never,
+        'entitlement.delete'
+      > = {
+        op: 35,
+        t: Date.now(),
+        d: {
+          type: 'entitlement.delete',
+          condition: {
+            object_id: SevenTvWsService.twitchChannelId,
+          },
+        },
+      };
+
+      SevenTvWsService.instance.send(
+        JSON.stringify(subscribeEntitlementDeleteMessage),
+      );
+
+      logger.stvWs.info(
+        '💚 Subscribed to all entitlement events (create, update, delete)',
+      );
     }
 
     // Reset wait timer for next set of IDs
@@ -976,6 +1331,72 @@ export default class SevenTvWsService {
 
       SevenTvWsService.instance.send(JSON.stringify(subscribeEmoteSetMessage));
       // logger.stvWs.info('💚 Subscribed to emote_set.update events');
+    }
+
+    // Subscribe to all cosmetic events if twitchChannelId is available
+    if (SevenTvWsService.twitchChannelId) {
+      // Subscribe to cosmetic.create
+      const subscribeCosmeticCreateMessage: SevenTvWsMessage<
+        never,
+        'cosmetic.create'
+      > = {
+        op: 35,
+        t: Date.now(),
+        d: {
+          type: 'cosmetic.create',
+          condition: {
+            platform: 'TWITCH',
+            ctx: 'channel',
+            id: SevenTvWsService.twitchChannelId,
+          },
+        },
+      };
+
+      SevenTvWsService.instance.send(
+        JSON.stringify(subscribeCosmeticCreateMessage),
+      );
+
+      // Subscribe to cosmetic.update
+      const subscribeCosmeticUpdateMessage: SevenTvWsMessage<
+        never,
+        'cosmetic.update'
+      > = {
+        op: 35,
+        t: Date.now(),
+        d: {
+          type: 'cosmetic.update',
+          condition: {
+            object_id: SevenTvWsService.twitchChannelId,
+          },
+        },
+      };
+
+      SevenTvWsService.instance.send(
+        JSON.stringify(subscribeCosmeticUpdateMessage),
+      );
+
+      // Subscribe to cosmetic.delete
+      const subscribeCosmeticDeleteMessage: SevenTvWsMessage<
+        never,
+        'cosmetic.delete'
+      > = {
+        op: 35,
+        t: Date.now(),
+        d: {
+          type: 'cosmetic.delete',
+          condition: {
+            object_id: SevenTvWsService.twitchChannelId,
+          },
+        },
+      };
+
+      SevenTvWsService.instance.send(
+        JSON.stringify(subscribeCosmeticDeleteMessage),
+      );
+
+      logger.stvWs.info(
+        '💚 Subscribed to all cosmetic events (create, update, delete)',
+      );
     }
   }
 
@@ -1141,6 +1562,51 @@ export default class SevenTvWsService {
   }
 
   /**
+   * Set the cosmetic update callback
+   */
+  public static setCosmeticUpdateCallback(
+    callback: ((data: CosmeticUpdateCallbackData) => void) | null,
+  ): void {
+    SevenTvWsService.cosmeticUpdateCallback = callback;
+  }
+
+  /**
+   * Set the cosmetic delete callback
+   */
+  public static setCosmeticDeleteCallback(
+    callback: ((data: CosmeticDeleteCallbackData) => void) | null,
+  ): void {
+    SevenTvWsService.cosmeticDeleteCallback = callback;
+  }
+
+  /**
+   * Set the entitlement create callback
+   */
+  public static setEntitlementCreateCallback(
+    callback: ((data: EntitlementCreateCallbackData) => void) | null,
+  ): void {
+    SevenTvWsService.entitlementCreateCallback = callback;
+  }
+
+  /**
+   * Set the entitlement update callback
+   */
+  public static setEntitlementUpdateCallback(
+    callback: ((data: EntitlementUpdateCallbackData) => void) | null,
+  ): void {
+    SevenTvWsService.entitlementUpdateCallback = callback;
+  }
+
+  /**
+   * Set the entitlement delete callback
+   */
+  public static setEntitlementDeleteCallback(
+    callback: ((data: EntitlementDeleteCallbackData) => void) | null,
+  ): void {
+    SevenTvWsService.entitlementDeleteCallback = callback;
+  }
+
+  /**
    * Remove event listener for a given channel
    */
   public static disconnect(): void {
@@ -1157,6 +1623,11 @@ export default class SevenTvWsService {
       SevenTvWsService.activeSubscriptions.clear();
       SevenTvWsService.emoteUpdateCallback = null;
       SevenTvWsService.cosmeticCreateCallback = null;
+      SevenTvWsService.cosmeticUpdateCallback = null;
+      SevenTvWsService.cosmeticDeleteCallback = null;
+      SevenTvWsService.entitlementCreateCallback = null;
+      SevenTvWsService.entitlementUpdateCallback = null;
+      SevenTvWsService.entitlementDeleteCallback = null;
 
       logger.stvWs.info('🟢 SevenTV WebSocket disconnected');
     }

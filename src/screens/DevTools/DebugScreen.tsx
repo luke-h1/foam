@@ -77,7 +77,6 @@ export function DebugScreen() {
     if (!channelName.trim()) {
       return;
     }
-    // Navigate to root-level Chat (outside tabs) so tab bar is hidden
     navigation
       .getParent()
       ?.getParent()

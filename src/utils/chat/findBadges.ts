@@ -1,5 +1,5 @@
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatUser } from '@app/store/chatStore';
+import { ChatUser, getUserBadge } from '@app/store/chatStore';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
 interface FindBadgesParams {
@@ -22,17 +22,6 @@ export function findBadges({
   chatUsers,
   chatterinoBadges,
 }: FindBadgesParams): SanitisedBadgeSet[] {
-  // // Write userstate to file
-  // const userstateLogPath = path.join(process.cwd(), 'userstate-log.json');
-  // const existingData: ChatUserstate[] = fs.existsSync(userstateLogPath)
-  //   ? (JSON.parse(
-  //       fs.readFileSync(userstateLogPath, 'utf-8'),
-  //     ) as ChatUserstate[])
-  //   : [];
-
-  // existingData.push(userstate);
-  // fs.writeFileSync(userstateLogPath, JSON.stringify(existingData, null, 2));
-
   const badges: SanitisedBadgeSet[] = [];
 
   /**
@@ -134,80 +123,73 @@ export function findBadges({
           });
         }
       }
+    }
+  }
 
-      /**
-       * Chatterino badges
-       */
+  const globalFfzBadges = ffzGlobalBadges.filter(
+    b => b.owner_username === userstate.username,
+  );
 
-      /**
-       * FFZ global badges
-       */
-      const globalFfzBadges = ffzGlobalBadges.filter(
-        b => b.owner_username === userstate.username,
-      );
-
-      globalFfzBadges.forEach(b => {
-        // Check if badge already exists to prevent duplicates
-        const existingBadge = badges.find(
-          existing => existing.id === b.id && existing.set === b.id,
-        );
-        if (!existingBadge) {
-          badges.push({
-            title: b.title,
-            id: b.id,
-            set: b.id,
-            type: 'FFZ Global Badge',
-            url: b.url,
-            color: b.color,
-            owner_username: b.owner_username,
-          });
-        }
+  globalFfzBadges.forEach(b => {
+    const existingBadge = badges.find(
+      existing => existing.id === b.id && existing.set === b.id,
+    );
+    if (!existingBadge) {
+      badges.push({
+        title: b.title,
+        id: b.id,
+        set: b.id,
+        type: 'FFZ Global Badge',
+        url: b.url,
+        color: b.color,
+        owner_username: b.owner_username,
       });
+    }
+  });
 
-      /**
-       * FFZ channel badges
-       */
+  const stvUser = chatUsers.find(u => u.name === `@${userstate.username}`);
 
-      /**
-       * 7TV badges
-       */
-      const stvUser = chatUsers.find(u => u.name === `@${userstate.username}`);
+  if (stvUser && stvUser.cosmetics?.badge_id) {
+    const stvBadge = stvUser.cosmetics.badges.find(
+      b => b.id === stvUser.cosmetics?.badge_id,
+    );
 
-      if (stvUser && stvUser.cosmetics?.badge_id) {
-        const stvBadge = stvUser.cosmetics.badges.find(
-          b => b.id === stvUser.cosmetics?.badge_id,
-        );
-
-        if (stvBadge) {
-          // Check if badge already exists to prevent duplicates
-          const existingBadge = badges.find(
-            existing =>
-              existing.id === stvBadge.id && existing.set === stvBadge.set,
-          );
-          if (!existingBadge) {
-            badges.push(stvBadge);
-          }
-        }
-      }
-
-      /**
-       * Chatterino badges
-       */
-      const chatterinoBadge = chatterinoBadges.find(
-        b => b.id === userstate['user-id'],
+    if (stvBadge) {
+      const existingBadge = badges.find(
+        existing =>
+          existing.id === stvBadge.id && existing.set === stvBadge.set,
       );
-
-      if (chatterinoBadge) {
-        // Check if badge already exists to prevent duplicates
-        const existingBadge = badges.find(
-          existing =>
-            existing.id === chatterinoBadge.id &&
-            existing.set === chatterinoBadge.set,
-        );
-        if (!existingBadge) {
-          badges.push(chatterinoBadge);
-        }
+      if (!existingBadge) {
+        badges.push(stvBadge);
       }
+    }
+  }
+
+  if (userstate['user-id']) {
+    const storeBadge = getUserBadge(userstate['user-id']);
+    if (storeBadge) {
+      const existingBadge = badges.find(
+        existing =>
+          existing.id === storeBadge.id && existing.set === storeBadge.set,
+      );
+      if (!existingBadge) {
+        badges.push(storeBadge);
+      }
+    }
+  }
+
+  const chatterinoBadge = chatterinoBadges.find(
+    b => b.id === userstate['user-id'],
+  );
+
+  if (chatterinoBadge) {
+    const existingBadge = badges.find(
+      existing =>
+        existing.id === chatterinoBadge.id &&
+        existing.set === chatterinoBadge.set,
+    );
+    if (!existingBadge) {
+      badges.push(chatterinoBadge);
     }
   }
 

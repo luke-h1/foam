@@ -2,6 +2,7 @@ import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import {
   CosmeticCreate,
   EntitlementCreate,
+  ChangeMap,
   SevenTvEventData,
   SevenTvEventType,
   SevenTvWsMessage,
@@ -14,7 +15,6 @@ import { useWebsocket } from './ws/useWebsocket';
 
 export const SEVENTV_CHAT_SCREENS = ['Chat', 'LiveStream'];
 
-// Re-export types for consumers of this hook
 export type {
   SevenTvEventData,
   SevenTvEventType,
@@ -36,18 +36,41 @@ export interface CosmeticCreateCallbackData {
 export interface EntitlementCreateCallbackData {
   entitlement: EntitlementCreate;
   kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
+  ttvUserId: string | null;
+  paintId: string | null;
+  badgeId: string | null;
+}
+
+export interface CosmeticUpdateCallbackData {
+  changes: ChangeMap<CosmeticCreate>;
+  kind: 'PAINT' | 'BADGE' | null;
+}
+
+export interface CosmeticDeleteCallbackData {
+  cosmeticId: string;
+}
+
+export interface EntitlementUpdateCallbackData {
+  changes: ChangeMap<EntitlementCreate>;
+  ttvUserId: string | null;
+  paintId: string | null;
+  badgeId: string | null;
+}
+
+export interface EntitlementDeleteCallbackData {
+  entitlementId: string;
   /** The Twitch user ID (from user.connections) */
   ttvUserId: string | null;
-  /** The user's active paint ID (from user.style.paint_id) */
-  paintId: string | null;
-  /** The user's active badge ID (from user.style.badge_id) */
-  badgeId: string | null;
 }
 
 interface UseSeventvWsOptions {
   onEmoteUpdate?: (data: EmoteUpdateCallbackData) => void;
   onCosmeticCreate?: (data: CosmeticCreateCallbackData) => void;
+  onCosmeticUpdate?: (data: CosmeticUpdateCallbackData) => void;
+  onCosmeticDelete?: (data: CosmeticDeleteCallbackData) => void;
   onEntitlementCreate?: (data: EntitlementCreateCallbackData) => void;
+  onEntitlementUpdate?: (data: EntitlementUpdateCallbackData) => void;
+  onEntitlementDelete?: (data: EntitlementDeleteCallbackData) => void;
   onEvent?: (
     eventType: SevenTvEventType,
     data: SevenTvEventData<SevenTvEventType>,
@@ -81,7 +104,11 @@ export function useSeventvWs(
   const lastScreenRef = useRef<string | null>(null);
   const emoteCallbackRef = useRef(options?.onEmoteUpdate);
   const cosmeticCallbackRef = useRef(options?.onCosmeticCreate);
+  const cosmeticUpdateCallbackRef = useRef(options?.onCosmeticUpdate);
+  const cosmeticDeleteCallbackRef = useRef(options?.onCosmeticDelete);
   const entitlementCallbackRef = useRef(options?.onEntitlementCreate);
+  const entitlementUpdateCallbackRef = useRef(options?.onEntitlementUpdate);
+  const entitlementDeleteCallbackRef = useRef(options?.onEntitlementDelete);
   const eventCallbackRef = useRef(options?.onEvent);
   const connectionTimestampRef = useRef<number | null>(null);
 
@@ -94,7 +121,11 @@ export function useSeventvWs(
 
   emoteCallbackRef.current = options?.onEmoteUpdate;
   cosmeticCallbackRef.current = options?.onCosmeticCreate;
+  cosmeticUpdateCallbackRef.current = options?.onCosmeticUpdate;
+  cosmeticDeleteCallbackRef.current = options?.onCosmeticDelete;
   entitlementCallbackRef.current = options?.onEntitlementCreate;
+  entitlementUpdateCallbackRef.current = options?.onEntitlementUpdate;
+  entitlementDeleteCallbackRef.current = options?.onEntitlementDelete;
   eventCallbackRef.current = options?.onEvent;
   twitchChannelIdRef.current = options?.twitchChannelId;
   sevenTvEmoteSetIdRef.current = options?.sevenTvEmoteSetId;
@@ -264,6 +295,129 @@ export function useSeventvWs(
     [],
   );
 
+  const handleCosmeticUpdate = useCallback(
+    (data: SevenTvEventData<'cosmetic.update'>) => {
+      try {
+        const changes = data.body;
+        let kind: 'PAINT' | 'BADGE' | null = null;
+
+        if (changes.updated) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const update of changes.updated) {
+            if (update.value && typeof update.value === 'object') {
+              if ('object' in update.value && update.value.object) {
+                kind = update.value.object.kind === 'BADGE' ? 'BADGE' : 'PAINT';
+                break;
+              }
+            }
+          }
+        }
+
+        if (!kind && changes.pushed) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const push of changes.pushed) {
+            if (push.value && typeof push.value === 'object') {
+              if ('object' in push.value && push.value.object) {
+                kind = push.value.object.kind === 'BADGE' ? 'BADGE' : 'PAINT';
+                break;
+              }
+            }
+          }
+        }
+
+        if (cosmeticUpdateCallbackRef.current) {
+          cosmeticUpdateCallbackRef.current({
+            changes,
+            kind,
+          });
+        }
+      } catch (e) {
+        logger.chat.error('Error handling cosmetic.update:', e);
+      }
+    },
+    [],
+  );
+
+  const handleCosmeticDelete = useCallback(
+    (data: SevenTvEventData<'cosmetic.delete'>) => {
+      try {
+        const cosmeticId = data.body.id;
+        if (cosmeticDeleteCallbackRef.current) {
+          cosmeticDeleteCallbackRef.current({
+            cosmeticId,
+          });
+        }
+      } catch (e) {
+        logger.chat.error('Error handling cosmetic.delete:', e);
+      }
+    },
+    [],
+  );
+
+  const handleEntitlementUpdate = useCallback(
+    (data: SevenTvEventData<'entitlement.update'>) => {
+      try {
+        const changes = data.body;
+        let ttvUserId: string | null = null;
+        let paintId: string | null = null;
+        let badgeId: string | null = null;
+
+        if (changes.updated) {
+          // eslint-disable-next-line no-restricted-syntax
+          for (const update of changes.updated) {
+            if (update.value && typeof update.value === 'object') {
+              if ('object' in update.value && update.value.object) {
+                const { user } = update.value.object;
+                if (user) {
+                  if (user.connections) {
+                    for (let i = 0; i < user.connections.length; i += 1) {
+                      const conn = user.connections[i];
+                      if (conn?.platform === 'TWITCH') {
+                        ttvUserId = conn.id;
+                        break;
+                      }
+                    }
+                  }
+                  paintId = user.style?.paint_id ?? null;
+                  badgeId = user.style?.badge_id ?? null;
+                }
+              }
+            }
+          }
+        }
+
+        if (entitlementUpdateCallbackRef.current) {
+          entitlementUpdateCallbackRef.current({
+            changes,
+            ttvUserId,
+            paintId,
+            badgeId,
+          });
+        }
+      } catch (e) {
+        logger.chat.error('Error handling entitlement.update:', e);
+      }
+    },
+    [],
+  );
+
+  const handleEntitlementDelete = useCallback(
+    (data: SevenTvEventData<'entitlement.delete'>) => {
+      try {
+        const entitlementId = data.body.id;
+        if (entitlementDeleteCallbackRef.current) {
+          entitlementDeleteCallbackRef.current({
+            entitlementId,
+            ttvUserId: null, // Will be resolved in the store
+          });
+        }
+      } catch (e) {
+        logger.chat.error('Error handling entitlement.delete:', e);
+      }
+    },
+    [],
+  );
+
   const sendSubscription = useCallback(
     (emoteSetId: string, sendJsonMessage: (msg: unknown) => void) => {
       logger.stvWs.info(
@@ -345,7 +499,7 @@ export function useSeventvWs(
           },
         };
 
-        const subscribeCosmeticMessage: SevenTvWsMessage<
+        const subscribeCosmeticCreateMessage: SevenTvWsMessage<
           never,
           'cosmetic.create'
         > = {
@@ -362,9 +516,12 @@ export function useSeventvWs(
         };
 
         sendJsonMessage(subscribeEntitlementMessage);
-        sendJsonMessage(subscribeCosmeticMessage);
+        sendJsonMessage(subscribeCosmeticCreateMessage);
         logger.stvWs.info(
           '💚 Subscribed to entitlement.create and cosmetic.create events',
+        );
+        logger.stvWs.info(
+          '💚 Note: update/delete events will be handled through general event stream',
         );
       }
 
@@ -449,6 +606,38 @@ export function useSeventvWs(
                 break;
               }
 
+              case 'cosmetic.update': {
+                logger.stvWs.info(`💚 Received WS 'cosmetic.update' event`);
+                handleCosmeticUpdate(
+                  message.d as SevenTvEventData<'cosmetic.update'>,
+                );
+                break;
+              }
+
+              case 'cosmetic.delete': {
+                logger.stvWs.info(`💚 Received WS 'cosmetic.delete' event`);
+                handleCosmeticDelete(
+                  message.d as SevenTvEventData<'cosmetic.delete'>,
+                );
+                break;
+              }
+
+              case 'entitlement.update': {
+                logger.stvWs.info(`💚 Received WS 'entitlement.update' event`);
+                handleEntitlementUpdate(
+                  message.d as SevenTvEventData<'entitlement.update'>,
+                );
+                break;
+              }
+
+              case 'entitlement.delete': {
+                logger.stvWs.info(`💚 Received WS 'entitlement.delete' event`);
+                handleEntitlementDelete(
+                  message.d as SevenTvEventData<'entitlement.delete'>,
+                );
+                break;
+              }
+
               default: {
                 logger.stvWs.debug(
                   `[DEFAULT CASE] Unhandled event type: ${message.d.type}`,
@@ -502,7 +691,15 @@ export function useSeventvWs(
         );
       }
     },
-    [handleEmoteSetUpdate, handleCosmeticCreate, handleEntitlementCreate],
+    [
+      handleEmoteSetUpdate,
+      handleCosmeticCreate,
+      handleCosmeticUpdate,
+      handleCosmeticDelete,
+      handleEntitlementCreate,
+      handleEntitlementUpdate,
+      handleEntitlementDelete,
+    ],
   );
 
   const { getWebSocket, sendJsonMessage } = useWebsocket(

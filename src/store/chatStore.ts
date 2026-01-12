@@ -2,6 +2,8 @@ import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
 import {
+  GqlBadge,
+  GqlPaint,
   SanitisiedEmoteSet,
   sevenTvService,
 } from '@app/services/seventv-service';
@@ -10,6 +12,7 @@ import {
   twitchBadgeService,
 } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
 import { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
 import { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
@@ -23,7 +26,12 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { PaintData } from '@app/utils/color/seventv-ws-service';
+import {
+  PaintData,
+  PaintFunction,
+  PaintShape,
+  PaintShadow,
+} from '@app/utils/color/seventv-ws-service';
 import {
   cacheImageFromUrl,
   clearSessionCache,
@@ -155,8 +163,16 @@ export interface ChannelCacheType {
   lastUpdated: number;
   twitchChannelEmotes: SanitisiedEmoteSet[];
   twitchGlobalEmotes: SanitisiedEmoteSet[];
+
   sevenTvChannelEmotes: SanitisiedEmoteSet[];
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];
+
+  /**
+   * Keyed by userId
+   */
+  sevenTvPersonalEmotes: Record<string, SanitisiedEmoteSet[]>;
+  sevenTvPersonalBadges: Record<string, SanitisedBadgeSet[]>;
+
   ffzChannelEmotes: SanitisiedEmoteSet[];
   ffzGlobalEmotes: SanitisiedEmoteSet[];
   bttvGlobalEmotes: SanitisiedEmoteSet[];
@@ -205,23 +221,25 @@ export const isLoadAborted = (): boolean => {
 };
 
 const emptyEmoteData = {
-  twitchChannelEmotes: [] as SanitisiedEmoteSet[],
-  twitchGlobalEmotes: [] as SanitisiedEmoteSet[],
-  sevenTvChannelEmotes: [] as SanitisiedEmoteSet[],
-  sevenTvGlobalEmotes: [] as SanitisiedEmoteSet[],
-  ffzChannelEmotes: [] as SanitisiedEmoteSet[],
-  ffzGlobalEmotes: [] as SanitisiedEmoteSet[],
-  bttvGlobalEmotes: [] as SanitisiedEmoteSet[],
-  bttvChannelEmotes: [] as SanitisiedEmoteSet[],
-  twitchChannelBadges: [] as SanitisedBadgeSet[],
-  twitchGlobalBadges: [] as SanitisedBadgeSet[],
-  ffzChannelBadges: [] as SanitisedBadgeSet[],
-  ffzGlobalBadges: [] as SanitisedBadgeSet[],
-  badges: [] as SanitisedBadgeSet[],
-  emotes: [] as SanitisiedEmoteSet[],
+  twitchChannelEmotes: [],
+  twitchGlobalEmotes: [],
+  sevenTvChannelEmotes: [],
+  sevenTvGlobalEmotes: [],
+  sevenTvPersonalBadges: {},
+  sevenTvPersonalEmotes: {},
+  ffzChannelEmotes: [],
+  ffzGlobalEmotes: [],
+  bttvGlobalEmotes: [],
+  bttvChannelEmotes: [],
+  twitchChannelBadges: [],
+  twitchGlobalBadges: [],
+  ffzChannelBadges: [],
+  ffzGlobalBadges: [],
+  badges: [],
+  emotes: [],
   lastUpdated: 0,
   sevenTvEmoteSetId: undefined,
-  chatterinoBadges: [] as SanitisedBadgeSet[],
+  chatterinoBadges: [],
 } satisfies ChannelCacheType;
 
 const limitChannelCaches = (
@@ -229,6 +247,7 @@ const limitChannelCaches = (
   currentChannelId: string | null,
 ): Record<string, ChannelCacheType> => {
   const entries = Object.entries(channelCaches);
+
   if (entries.length <= MAX_CACHED_CHANNELS) {
     return channelCaches;
   }
@@ -270,6 +289,17 @@ export const chatStore$ = observable({
    * Stored separately so we can link users to paints before paint data arrives
    */
   userPaintIds: {} as Record<string, string>,
+
+  /**
+   * 7TV badges cache keyed by badge ID
+   */
+  badges: {} as Record<string, SanitisedBadgeSet>,
+
+  /**
+   * Mapping of Twitch user ID to badge ID
+   * Stored separately so we can link users to their badges
+   */
+  userBadgeIds: {} as Record<string, string>,
 });
 
 persistObservable(chatStore$.persisted, {
@@ -343,14 +373,158 @@ export const getPaint = (paintId: string): PaintData | undefined => {
 };
 
 /**
+ * Convert GQL paint response to PaintData format
+ */
+const convertGqlPaintToPaintData = (paint: GqlPaint): PaintData => {
+  const stopsIndexed: IndexedCollection<{ at: number; color: number }> = {
+    length: paint.stops?.length || 0,
+  };
+  paint.stops?.forEach((stop, index) => {
+    stopsIndexed[index] = { at: stop.at, color: stop.color };
+  });
+
+  const shadowsIndexed: IndexedCollection<PaintShadow> = {
+    length: paint.shadows?.length || 0,
+  };
+  paint.shadows?.forEach((shadow, index) => {
+    shadowsIndexed[index] = {
+      color: shadow.color,
+      radius: shadow.radius,
+      x_offset: shadow.x_offset,
+      y_offset: shadow.y_offset,
+    };
+  });
+
+  return {
+    id: paint.id,
+    name: paint.name,
+    color: paint.color,
+    function: (paint.function || 'LINEAR_GRADIENT') as PaintFunction,
+    repeat: paint.repeat || false,
+    angle: paint.angle || 0,
+    shape: (paint.shape || 'circle') as PaintShape,
+    image_url: paint.image_url || '',
+    stops: stopsIndexed,
+    shadows: shadowsIndexed,
+    gradients: { length: 0 },
+    text: null,
+  };
+};
+
+/**
+ * Convert GQL badge response to SanitisedBadgeSet format
+ */
+const convertGqlBadgeToSanitised = (badge: GqlBadge): SanitisedBadgeSet => {
+  return {
+    id: badge.id,
+    url: `https://cdn.7tv.app/badge/${badge.id}/4x.webp`,
+    type: '7TV Badge',
+    title: badge.tooltip || badge.name,
+    set: badge.id,
+    provider: '7tv',
+  };
+};
+
+/**
+ * Fetch user cosmetics via GQL and cache them
+ * @param sevenTvUserId - The 7TV user ID
+ * @returns The Twitch user ID if found, null otherwise
+ */
+export const fetchAndCacheUserCosmetics = async (
+  sevenTvUserId: string,
+): Promise<string | null> => {
+  try {
+    logger.stvWs.info(`Fetching GQL cosmetics for 7TV user: ${sevenTvUserId}`);
+    const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
+
+    if (!cosmetics) {
+      logger.stvWs.warn(`No cosmetics found for 7TV user: ${sevenTvUserId}`);
+      return null;
+    }
+
+    logger.stvWs.info(
+      `GQL response for ${sevenTvUserId}: ttvUserId=${cosmetics.ttvUserId}, paintId=${cosmetics.paintId}, badgeId=${cosmetics.badgeId}, hasPaint=${!!cosmetics.paint}, hasBadge=${!!cosmetics.badge}`,
+    );
+
+    if (cosmetics.paint) {
+      const paintData = convertGqlPaintToPaintData(cosmetics.paint);
+      logger.stvWs.info(
+        `Caching paint: id=${paintData.id}, name=${cosmetics.paint.name}, function=${paintData.function}`,
+      );
+      addPaint(paintData);
+    } else {
+      logger.stvWs.debug(`No paint data in GQL response for ${sevenTvUserId}`);
+    }
+
+    if (cosmetics.badge) {
+      const badgeData = convertGqlBadgeToSanitised(cosmetics.badge);
+      addBadge(badgeData);
+      logger.stvWs.info(`Cached badge: ${cosmetics.badge.name}`);
+    }
+
+    // Link user to their cosmetics
+    if (cosmetics.ttvUserId) {
+      if (cosmetics.paintId) {
+        const currentUserPaintIds = chatStore$.userPaintIds.peek();
+        chatStore$.userPaintIds.set({
+          ...currentUserPaintIds,
+          [cosmetics.ttvUserId]: cosmetics.paintId,
+        });
+        logger.stvWs.info(
+          `Linked paint ${cosmetics.paintId} to Twitch user ${cosmetics.ttvUserId}`,
+        );
+
+        // Verify the link was set
+        const verifyPaintId =
+          chatStore$.userPaintIds[cosmetics.ttvUserId]?.peek();
+        const verifyPaint = chatStore$.paints[cosmetics.paintId]?.peek();
+        logger.stvWs.info(
+          `Verification: userPaintIds[${cosmetics.ttvUserId}]=${verifyPaintId}, paints[${cosmetics.paintId}]=${verifyPaint ? verifyPaint.name : 'NOT FOUND'}`,
+        );
+      } else {
+        logger.stvWs.debug(
+          `No paintId in cosmetics response for ${cosmetics.ttvUserId}`,
+        );
+      }
+
+      if (cosmetics.badgeId) {
+        const currentUserBadgeIds = chatStore$.userBadgeIds.peek();
+        chatStore$.userBadgeIds.set({
+          ...currentUserBadgeIds,
+          [cosmetics.ttvUserId]: cosmetics.badgeId,
+        });
+        logger.stvWs.info(
+          `Linked badge ${cosmetics.badgeId} to user ${cosmetics.ttvUserId}`,
+        );
+      }
+    } else {
+      logger.stvWs.warn(
+        `No ttvUserId in cosmetics response for 7TV user ${sevenTvUserId}`,
+      );
+    }
+
+    return cosmetics.ttvUserId;
+  } catch (error) {
+    logger.stvWs.error(
+      `Error fetching cosmetics for user ${sevenTvUserId}:`,
+      error,
+    );
+    return null;
+  }
+};
+
+/**
  * Associate a Twitch user with a paint ID
- * The actual paint data will be looked up at render time from the paints cache
+ * The actual paint data should already be in the cache from cosmetic.create or GQL fetch
  * @param ttvUserId - The Twitch user ID
  * @param paintId - The paint ID to associate
  */
-export const setUserPaint = (ttvUserId: string, paintId: string) => {
+export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const currentUserPaintIds = chatStore$.userPaintIds.peek();
-  chatStore$.userPaintIds.set({ ...currentUserPaintIds, [ttvUserId]: paintId });
+  chatStore$.userPaintIds.set({
+    ...currentUserPaintIds,
+    [ttvUserId]: paintId,
+  });
   logger.chat.info(`Linked paint ${paintId} to user ${ttvUserId}`);
 };
 
@@ -367,13 +541,174 @@ export const getUserPaint = (ttvUserId: string): UserPaint | undefined => {
 };
 
 /**
- * Clear all paints (useful when leaving a channel)
+ * Add a badge to the badges cache
+ */
+export const addBadge = (badge: SanitisedBadgeSet) => {
+  if (badge.id) {
+    const currentBadges = chatStore$.badges.peek();
+    chatStore$.badges.set({ ...currentBadges, [badge.id]: badge });
+  }
+};
+
+/**
+ * Get a badge by its ID from the cache
+ */
+export const getBadge = (badgeId: string): SanitisedBadgeSet | undefined => {
+  return chatStore$.badges[badgeId]?.peek();
+};
+
+/**
+ * Associate a Twitch user with a badge ID
+ * The actual badge data should already be in the cache from cosmetic.create or GQL fetch
+ * @param ttvUserId - The Twitch user ID
+ * @param badgeId - The badge ID to associate
+ */
+export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
+  const currentUserBadgeIds = chatStore$.userBadgeIds.peek();
+  chatStore$.userBadgeIds.set({
+    ...currentUserBadgeIds,
+    [ttvUserId]: badgeId,
+  });
+  logger.chat.info(`Linked badge ${badgeId} to user ${ttvUserId}`);
+};
+
+/**
+ * Get a user's badge by their Twitch user ID
+ * Looks up the badge ID mapping, then retrieves the badge data
+ */
+export const getUserBadge = (
+  ttvUserId: string,
+): SanitisedBadgeSet | undefined => {
+  const badgeId = chatStore$.userBadgeIds[ttvUserId]?.peek();
+  if (!badgeId) return undefined;
+  return chatStore$.badges[badgeId]?.peek();
+};
+
+/**
+ * Update a badge in the cache
+ * Used when cosmetic.update event is received
+ */
+export const updateBadge = (badge: SanitisedBadgeSet) => {
+  if (badge.id) {
+    const currentBadges = chatStore$.badges.peek();
+    chatStore$.badges.set({ ...currentBadges, [badge.id]: badge });
+    logger.chat.info(`Updated badge in cache: ${badge.id}`);
+  }
+};
+
+/**
+ * Remove a badge from the cache
+ * Used when cosmetic.delete event is received
+ */
+export const removeBadge = (badgeId: string) => {
+  const currentBadges = chatStore$.badges.peek();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { [badgeId]: _removed, ...remainingBadges } = currentBadges;
+  chatStore$.badges.set(remainingBadges);
+  logger.chat.info(`Removed badge from cache: ${badgeId}`);
+
+  // Also remove any user associations with this badge
+  const currentUserBadgeIds = chatStore$.userBadgeIds.peek();
+  const updatedUserBadgeIds = Object.fromEntries(
+    Object.entries(currentUserBadgeIds).filter(
+      ([, userBadgeId]) => userBadgeId !== badgeId,
+    ),
+  );
+  chatStore$.userBadgeIds.set(updatedUserBadgeIds);
+};
+
+/**
+ * Remove a user's badge association
+ * Used when entitlement.delete event is received
+ */
+export const removeUserBadge = (ttvUserId: string) => {
+  const currentUserBadgeIds = chatStore$.userBadgeIds.peek();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { [ttvUserId]: _removed, ...remainingUserBadgeIds } =
+    currentUserBadgeIds;
+  chatStore$.userBadgeIds.set(remainingUserBadgeIds);
+  logger.chat.info(`Removed badge association for user: ${ttvUserId}`);
+};
+
+/**
+ * Update a paint in the cache
+ * Used when cosmetic.update event is received
+ */
+export const updatePaint = (paint: PaintData) => {
+  if (paint.id) {
+    const currentPaints = chatStore$.paints.peek();
+    chatStore$.paints.set({ ...currentPaints, [paint.id]: paint });
+    logger.chat.info(`Updated paint in cache: ${paint.id}`);
+  }
+};
+
+/**
+ * Remove a paint from the cache
+ * Used when cosmetic.delete event is received
+ */
+export const removePaint = (paintId: string) => {
+  const currentPaints = chatStore$.paints.peek();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { [paintId]: _removed, ...remainingPaints } = currentPaints;
+  chatStore$.paints.set(remainingPaints);
+  logger.chat.info(`Removed paint from cache: ${paintId}`);
+
+  // Also remove any user associations with this paint
+  const currentUserPaintIds = chatStore$.userPaintIds.peek();
+  const updatedUserPaintIds = Object.fromEntries(
+    Object.entries(currentUserPaintIds).filter(
+      ([, userPaintId]) => userPaintId !== paintId,
+    ),
+  );
+  chatStore$.userPaintIds.set(updatedUserPaintIds);
+};
+
+/**
+ * Remove a user's paint association
+ * Used when entitlement.delete event is received
+ */
+export const removeUserPaint = (ttvUserId: string) => {
+  const currentUserPaintIds = chatStore$.userPaintIds.peek();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { [ttvUserId]: _removed, ...remainingUserPaintIds } =
+    currentUserPaintIds;
+  chatStore$.userPaintIds.set(remainingUserPaintIds);
+  logger.chat.info(`Removed paint association for user: ${ttvUserId}`);
+};
+
+/**
+ * Clear all paints and their user mappings
  */
 export const clearPaints = () => {
   batch(() => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});
   });
+  logger.chat.info('Cleared all paints from cache');
+};
+
+/**
+ * Clear all 7TV badges and their user mappings
+ */
+export const clearSevenTvBadges = () => {
+  batch(() => {
+    chatStore$.badges.set({});
+    chatStore$.userBadgeIds.set({});
+  });
+  logger.chat.info('Cleared all 7TV badges from cache');
+};
+
+/**
+ * Clear all paints and badges (useful when leaving a channel)
+ */
+export const clearPaintsAndBadges = () => {
+  batch(() => {
+    chatStore$.paints.set({});
+    chatStore$.userPaintIds.set({});
+    chatStore$.badges.set({});
+    chatStore$.userBadgeIds.set({});
+  });
+  logger.chat.info('Cleared all paints and badges from cache');
 };
 
 export const clearChannelResources = () => {
@@ -385,10 +720,49 @@ export const clearChannelResources = () => {
   });
 };
 
+/**
+ * Notify 7TV about user presence in a channel
+ * This allows 7TV to track that the user is viewing the channel
+ * @param twitchUserId - The current user's Twitch user ID
+ * @param twitchChannelId - The Twitch channel ID the user is viewing
+ */
+export const notify7TVPresence = async (
+  twitchUserId: string | undefined,
+  twitchChannelId: string,
+): Promise<void> => {
+  if (!twitchUserId || !twitchChannelId) {
+    logger.stvWs.debug(
+      'Skipping 7TV presence notification: missing user or channel ID',
+    );
+    return;
+  }
+
+  try {
+    const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
+    if (!sevenTvUserId) {
+      logger.stvWs.warn(
+        `Could not get 7TV user ID for Twitch user: ${twitchUserId}`,
+      );
+      return;
+    }
+
+    await sevenTvService.sendPresence(twitchChannelId, sevenTvUserId);
+    logger.stvWs.info(
+      `Notified 7TV about presence in channel ${twitchChannelId} for user ${twitchUserId}`,
+    );
+  } catch (error) {
+    logger.stvWs.error(
+      `Failed to notify 7TV about presence: ${String(error)}`,
+      error,
+    );
+  }
+};
+
 export interface LoadChannelResourcesOptions {
   channelId: string;
   forceRefresh?: boolean;
   signal?: AbortSignal;
+  twitchUserId?: string;
 }
 
 export const loadChannelResources = async (
@@ -400,7 +774,12 @@ export const loadChannelResources = async (
       ? { channelId: options, forceRefresh }
       : options;
 
-  const { channelId, forceRefresh: shouldForceRefresh = false, signal } = opts;
+  const {
+    channelId,
+    forceRefresh: shouldForceRefresh = false,
+    signal,
+    twitchUserId,
+  } = opts;
 
   const startTime = performance.now();
   logger.main.info('🏗️ chatStore loadChannelResources called:', {
@@ -495,6 +874,11 @@ export const loadChannelResources = async (
             chatStore$.currentChannelId.set(channelId);
             chatStore$.loadingState.set('COMPLETED');
           });
+
+          // Notify 7TV about user presence
+          if (twitchUserId) {
+            void notify7TVPresence(twitchUserId, channelId);
+          }
 
           const totalDuration = performance.now() - startTime;
           logger.performance.debug(
@@ -623,6 +1007,8 @@ export const loadChannelResources = async (
       ffzGlobalBadges: deduplicateById(getValue(ffzGlobalBadges)),
       ffzChannelBadges: deduplicateById(getValue(ffzChannelBadges)),
       chatterinoBadges: deduplicateById(getValue(chatterinoBadges)),
+      sevenTvPersonalBadges: {},
+      sevenTvPersonalEmotes: {},
       sevenTvEmoteSetId: sevenTvSetId !== 'global' ? sevenTvSetId : undefined,
     };
 
@@ -635,6 +1021,11 @@ export const loadChannelResources = async (
       chatStore$.persisted.channelCaches.set(updatedCaches);
       chatStore$.loadingState.set('COMPLETED');
     });
+
+    // Notify 7TV about user presence
+    if (twitchUserId) {
+      void notify7TVPresence(twitchUserId, channelId);
+    }
 
     const totalDuration = performance.now() - startTime;
     logger.performance.debug(
@@ -873,11 +1264,12 @@ export const clearEmoteImageCache = (): void => {
 export const refreshChannelResources = async (
   channelId: string,
   forceRefresh = false,
+  twitchUserId?: string,
 ): Promise<boolean> => {
   if (forceRefresh) {
     clearCache(channelId);
   }
-  return loadChannelResources(channelId, forceRefresh);
+  return loadChannelResources({ channelId, forceRefresh, twitchUserId });
 };
 
 export const getCurrentEmoteData = (channelId?: string) => {
