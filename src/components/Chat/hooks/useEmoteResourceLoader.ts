@@ -1,3 +1,4 @@
+import { useAuthContext } from '@app/context/AuthContext';
 import {
   loadChannelResources,
   getSevenTvEmoteSetId,
@@ -21,6 +22,7 @@ export const useEmoteResourceLoader = ({
   isChatConnected,
   isMountedRef,
 }: UseEmoteResourceLoaderOptions) => {
+  const { user } = useAuthContext();
   const loadingAbortRef = useRef<AbortController | null>(null);
   const emoteLoadingStartedRef = useRef(false);
 
@@ -46,7 +48,10 @@ export const useEmoteResourceLoader = ({
 
       if (chatConnected) {
         emoteLoadingStartedRef.current = true;
-        void loadChannelResources(channelId).then(success => {
+        void loadChannelResources({
+          channelId,
+          twitchUserId: user?.id,
+        }).then(success => {
           if (isMountedRef.current && !abortController.signal.aborted) {
             if (!success) {
               emoteLoadingStartedRef.current = false;
@@ -71,12 +76,16 @@ export const useEmoteResourceLoader = ({
       abortController.abort();
       emoteLoadingStartedRef.current = false;
     };
-  }, [channelId, accessToken, isChatConnected, isMountedRef]);
+  }, [channelId, accessToken, isMountedRef, isChatConnected, user?.id]);
 
   const handleRefetch = useCallback(() => {
     emoteLoadingStartedRef.current = false;
-    void loadChannelResources(channelId, true);
-  }, [channelId]);
+    void loadChannelResources({
+      channelId,
+      forceRefresh: true,
+      twitchUserId: user?.id,
+    });
+  }, [channelId, user?.id]);
 
   const cleanup = useCallback(() => {
     if (loadingAbortRef.current) {

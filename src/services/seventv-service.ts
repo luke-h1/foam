@@ -183,6 +183,122 @@ export interface SanitisiedEmoteSet {
   actor?: StvUser;
 }
 
+/**
+ * 7TV Bridge Event API Types
+ * Used for batch fetching user cosmetics
+ */
+export interface BridgeEventIdentifier {
+  platform: 'TWITCH';
+  id: string;
+}
+
+export interface BridgeEventRequest {
+  identifiers: BridgeEventIdentifier[];
+}
+
+export interface BridgeEventUserStyle {
+  paint_id?: string;
+  badge_id?: string;
+}
+
+export interface BridgeEventUserConnection {
+  platform: 'TWITCH' | 'YOUTUBE' | 'KICK';
+  id: string;
+  username: string;
+}
+
+export interface BridgeEventUser {
+  username: string;
+  avatar_url?: string;
+  style?: BridgeEventUserStyle;
+  connections: BridgeEventUserConnection[];
+}
+
+export interface BridgeEventBody {
+  object: {
+    data: {
+      user: BridgeEventUser;
+    };
+  };
+}
+
+export interface BridgeEventResponse {
+  body: BridgeEventBody;
+}
+
+/**
+ * 7TV GQL User Style Types
+ * Used for fetching individual user's paint/badge data
+ */
+export interface GqlPaintStop {
+  at: number;
+  color: number;
+}
+
+export interface GqlPaintShadow {
+  x_offset: number;
+  y_offset: number;
+  radius: number;
+  color: number;
+}
+
+export interface GqlPaint {
+  id: string;
+  kind: string;
+  name: string;
+  function: string;
+  color: number | null;
+  angle: number;
+  shape?: string;
+  image_url?: string;
+  repeat: boolean;
+  stops: GqlPaintStop[];
+  shadows: GqlPaintShadow[];
+}
+
+export interface GqlBadge {
+  id: string;
+  kind: string;
+  name: string;
+  tooltip: string;
+  tag?: string;
+}
+
+export interface GqlUserStyle {
+  color?: number;
+  paint?: GqlPaint;
+  badge?: GqlBadge;
+}
+
+export interface GqlUserConnection {
+  id: string;
+  platform: string;
+}
+
+export interface GqlUser {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url?: string;
+  style?: GqlUserStyle;
+  connections: GqlUserConnection[];
+}
+
+export interface GqlUserResponse {
+  data?: {
+    user?: GqlUser;
+  };
+}
+
+export interface UserCosmeticsInfo {
+  userId: string; // 7TV user ID
+  ttvUserId: string | null; // Twitch user ID
+  paintId: string | null;
+  badgeId: string | null;
+  paint: GqlPaint | null;
+  badge: GqlBadge | null;
+}
+
 export const sevenTvService = {
   get7tvUserId: async (twitchUserId: string): Promise<string> => {
     const result = await sevenTvApi.get<{ user: { id: string } }>(
@@ -244,12 +360,164 @@ export const sevenTvService = {
   sendPresence: async (channelId: string, userId: string) => {
     return sevenTvApi.post(`/users/${userId}/presences`, {
       kind: 1,
-      passive: false,
-      session_id: null,
+      passive: true,
+      session_id: '',
       data: {
         platform: 'TWITCH',
-        id: channelId,
+        id: String(channelId),
       },
     });
+  },
+
+  /**
+   * Batch fetch cosmetics for multiple users via bridge/event-api
+   * Returns basic cosmetic info (paint_id, badge_id) for each user
+   * @param twitchUserIds - Array of Twitch user IDs
+   */
+  getUsersCosmetics: async (
+    twitchUserIds: string[],
+  ): Promise<
+    {
+      twitchUserId: string;
+      username?: string;
+      avatarUrl?: string;
+      paintId?: string;
+      badgeId?: string;
+    }[]
+  > => {
+    if (twitchUserIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const response = await fetch('https://7tv.io/v3/bridge/event-api', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifiers: twitchUserIds.map(id => ({
+            platform: 'TWITCH',
+            id,
+          })),
+        } satisfies BridgeEventRequest),
+      });
+
+      if (!response.ok) {
+        logger.stv.error('Bridge API request failed:', response.status);
+        return [];
+      }
+
+      const data = (await response.json()) as BridgeEventResponse[];
+
+      if (!Array.isArray(data) || data.length === 0) {
+        return [];
+      }
+
+      return data.map(item => {
+        const {
+          body: {
+            object: {
+              data: { user },
+            },
+          },
+        } = item;
+        const twitchConnection = user.connections.find(
+          conn => conn.platform === 'TWITCH',
+        );
+
+        return {
+          twitchUserId: twitchConnection?.id ?? '',
+          username: twitchConnection?.username,
+          avatarUrl: user.avatar_url,
+          paintId: user.style?.paint_id,
+          badgeId: user.style?.badge_id,
+        };
+      });
+    } catch (error) {
+      logger.stv.error('Failed to fetch users cosmetics:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Fetch a user's full cosmetics (paint + badge data) via GQL
+   * Use this when you need the actual paint/badge styling data
+   * @param sevenTvUserId - The 7TV user ID (not Twitch ID)
+   */
+  getUserCosmeticsGql: async (
+    sevenTvUserId: string,
+  ): Promise<UserCosmeticsInfo | null> => {
+    try {
+      const response = await fetch('https://7tv.io/v3/gql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `query GetUserForUserPage($id: ObjectID!) {
+            user(id: $id) {
+              id
+              username
+              display_name
+              avatar_url
+              style {
+                color
+                paint {
+                  id
+                  kind
+                  name
+                  function
+                  color
+                  angle
+                  shape
+                  image_url
+                  repeat
+                  stops { at color }
+                  shadows { x_offset y_offset radius color }
+                }
+                badge {
+                  id
+                  kind
+                  name
+                  tooltip
+                  tag
+                }
+              }
+              connections { id platform }
+            }
+          }`,
+          variables: { id: sevenTvUserId },
+        }),
+      });
+
+      if (!response.ok) {
+        logger.stv.error('GQL request failed:', response.status);
+        return null;
+      }
+
+      const result = (await response.json()) as GqlUserResponse;
+      const user = result.data?.user;
+
+      if (!user) {
+        return null;
+      }
+
+      const twitchConnection = user.connections.find(
+        conn => conn.platform === 'TWITCH',
+      );
+
+      return {
+        userId: user.id,
+        ttvUserId: twitchConnection?.id ?? null,
+        paintId: user.style?.paint?.id ?? null,
+        badgeId: user.style?.badge?.id ?? null,
+        paint: user.style?.paint ?? null,
+        badge: user.style?.badge ?? null,
+      };
+    } catch (error) {
+      logger.stv.error('Failed to fetch user cosmetics via GQL:', error);
+      return null;
+    }
   },
 } as const;

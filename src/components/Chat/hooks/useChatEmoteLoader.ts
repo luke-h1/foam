@@ -1,3 +1,4 @@
+import { useAuthContext } from '@app/context/AuthContext';
 import {
   loadChannelResources,
   createLoadController,
@@ -38,6 +39,7 @@ export const useChatEmoteLoader = ({
   channelId,
   enabled = true,
 }: UseChatEmoteLoaderOptions): UseChatEmoteLoaderResult => {
+  const { user } = useAuthContext();
   const [status, setStatus] = useState<EmoteLoadingStatus>('idle');
   const isMountedRef = useRef(true);
   const currentChannelRef = useRef<string | null>(null);
@@ -82,6 +84,7 @@ export const useChatEmoteLoader = ({
           channelId,
           forceRefresh,
           signal: controller.signal,
+          twitchUserId: user?.id,
         });
 
         // Don't update state if aborted or unmounted
@@ -122,7 +125,7 @@ export const useChatEmoteLoader = ({
         }
       }
     },
-    [channelId],
+    [channelId, user?.id],
   );
 
   const refetch = useCallback(async () => {

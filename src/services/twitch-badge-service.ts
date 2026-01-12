@@ -27,6 +27,7 @@ export interface SanitisedBadgeSet {
     | 'Twitch Global Badge'
     | 'FFZ Badge'
     | 'FFZ Channel Badge'
+    | '7TV Badge'
   >;
   title: string;
 
@@ -36,6 +37,10 @@ export interface SanitisedBadgeSet {
    * The set ID
    */
   set: string;
+  /**
+   * The provider of the badge (7TV, BTTV, FFZ)
+   */
+  provider?: '7tv' | 'bttv' | 'ffz';
 }
 
 export const twitchBadgeService = {
@@ -65,6 +70,7 @@ export const twitchBadgeService = {
           });
         });
       }
+
       if (badgeSet.set_id === 'subscriber') {
         badgeSet.versions.forEach((badge: TwitchBadgeVersion) => {
           sanitisedBadges.push({

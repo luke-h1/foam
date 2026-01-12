@@ -1,6 +1,6 @@
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { render } from '@testing-library/react-native';
-import { PaintedUsername } from '../CosmeticUsername';
+import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
 
 jest.mock('@app/store/chatStore', () => ({
   chatStore$: {

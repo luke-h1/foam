@@ -3,6 +3,8 @@ import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { useTwitchWs } from '@app/hooks/useTwitchWs';
+import { sevenTvService } from '@app/services/seventv-service';
+import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
   ChatMessageType,
@@ -18,9 +20,20 @@ import {
   abortCurrentLoad,
   updateSevenTvEmotes,
   addPaint,
+  getPaint,
   setUserPaint,
+  updatePaint,
+  removePaint,
+  removeUserPaint,
+  addBadge,
+  getBadge,
+  setUserBadge,
+  updateBadge,
+  removeBadge,
+  removeUserBadge,
   clearPaints,
   useUserPaints,
+  fetchAndCacheUserCosmetics,
 } from '@app/store/chatStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -28,7 +41,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { PaintData } from '@app/utils/color/seventv-ws-service';
+import { PaintData, BadgeData } from '@app/utils/color/seventv-ws-service';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -124,10 +137,52 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [selectedMessage, setSelectedMessage] =
     useState<MessageActionData<'usernotice'> | null>(null);
 
-  // Memoized mention color cache to avoid O(n) lookups in each message
   const mentionColorCache = useRef<Map<string, string>>(new Map());
+  const fetchedCosmeticsUsers = useRef<Set<string>>(new Set());
 
   useTwitchWs();
+
+  const fetchUserCosmetics = useCallback(
+    async (twitchUserId: string) => {
+      if (fetchedCosmeticsUsers.current.has(twitchUserId)) {
+        return;
+      }
+
+      // Mark as fetching to prevent duplicate requests
+      fetchedCosmeticsUsers.current.add(twitchUserId);
+
+      const existingUserPaint = userPaints[twitchUserId];
+      if (existingUserPaint) {
+        logger.stvWs.debug(
+          `User ${twitchUserId} already has paint: ${existingUserPaint.name}`,
+        );
+        return;
+      }
+
+      try {
+        logger.stvWs.info(`Fetching cosmetics for user ${twitchUserId}...`);
+
+        const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
+
+        if (sevenTvUserId) {
+          logger.stvWs.info(
+            `Got 7TV user ID ${sevenTvUserId} for Twitch user ${twitchUserId}`,
+          );
+          await fetchAndCacheUserCosmetics(sevenTvUserId);
+          logger.stvWs.info(`Finished fetching cosmetics for ${twitchUserId}`);
+        } else {
+          logger.stvWs.debug(`No 7TV user ID found for ${twitchUserId}`);
+        }
+      } catch (error) {
+        // User might not have a 7TV account - that's fine
+        logger.stvWs.debug(
+          `Failed to fetch cosmetics for ${twitchUserId}:`,
+          error,
+        );
+      }
+    },
+    [userPaints],
+  );
 
   const {
     status: emoteLoadStatus,
@@ -161,7 +216,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     cleanup: cleanupScroll,
   } = useChatScroll({ flashListRef, messagesLength: messages.length });
 
-  // Message management
   const {
     handleNewMessage,
     clearLocalMessages,
@@ -176,7 +230,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     onAutoScroll: scrollToBottom,
   });
 
-  // Process emotes for a message
   const processMessageEmotes = useCallback(
     (
       text: string,
@@ -223,17 +276,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [channelId, emoteProcessor, handleNewMessage],
   );
 
-  // Reprocess all existing messages with current emote data (for refresh)
   const reprocessAllMessages = useCallback(() => {
     reprocessMessages(messages as AnyChatMessageType[], processMessageEmotes);
   }, [messages, processMessageEmotes]);
 
-  // Chat handlers
   const onMessage = useCallback(
     (_channel: string, tags: Record<string, string>, text: string) => {
       const userstate = createUserStateFromTags(tags);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];
+
+      const userId = tags['user-id'];
+      if (userId) {
+        void fetchUserCosmetics(userId);
+      }
 
       let parentColor: string | undefined;
       if (replyParentDisplayName?.trim()) {
@@ -255,7 +311,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       handleNewMessage(messageWithParentColor);
       processMessageEmotes(text, userstate, messageWithParentColor);
     },
-    [channelName, handleNewMessage, messages, processMessageEmotes],
+    [
+      channelName,
+      fetchUserCosmetics,
+      handleNewMessage,
+      messages,
+      processMessageEmotes,
+    ],
   );
 
   const onUserNotice = useCallback(
@@ -314,6 +376,27 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     return () => clearInterval(interval);
   }, [isChatConnected]);
 
+  useEffect(() => {
+    const fetchCurrentUserCosmetics = async () => {
+      if (!user?.id) return;
+
+      try {
+        const sevenTvUserId = await sevenTvService.get7tvUserId(user.id);
+
+        if (sevenTvUserId) {
+          await fetchAndCacheUserCosmetics(sevenTvUserId);
+          logger.stvWs.info(
+            `Fetched cosmetics for current user: ${user.display_name}`,
+          );
+        }
+      } catch (error) {
+        logger.stvWs.warn('Failed to fetch current user cosmetics:', error);
+      }
+    };
+
+    void fetchCurrentUserCosmetics();
+  }, [user?.id, user?.display_name]);
+
   const { subscribeToChannel, unsubscribeFromChannel, isConnected } =
     useSeventvWs({
       onEmoteUpdate: ({ added, removed, channelId: cId }) => {
@@ -321,24 +404,259 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           `Channel ${cId}: +${added.length} -${removed.length} emotes`,
         );
         updateSevenTvEmotes(cId, added, removed);
+        // todo - display this in chat
+        // stv_emote_added stv_emote_removed
       },
       onEvent: eventType => {
         console.log(`SevenTV event: ${eventType}`);
       },
       onCosmeticCreate: data => {
-        if (data.kind === 'PAINT') {
-          const paintData = data.cosmetic.object.data as PaintData;
-          addPaint(paintData);
-          logger.stvWs.info(`Added paint to cache: ${paintData.name}`);
+        if (!data.cosmetic?.object) {
+          return;
         }
 
+        const { object } = data.cosmetic;
+
         if (data.kind === 'BADGE') {
-          // TODO: handle badges
+          const badgeData = object.data as BadgeData & { ref_id?: string };
+
+          // Handle special case where id is all zeros - use ref_id from data if available
+          const badgeId =
+            badgeData.id === '00000000000000000000000000' && badgeData.ref_id
+              ? badgeData.ref_id
+              : badgeData.id;
+
+          const existingBadge = getBadge(badgeId);
+          if (existingBadge) {
+            return;
+          }
+
+          // Use the last file (4x) or fallback to first file
+          const badgeFile =
+            badgeData.host.files[badgeData.host.files.length - 1] ||
+            badgeData.host.files[0];
+
+          const badgeUrl = badgeFile
+            ? `${badgeData.host.url}/${badgeFile.name}`
+            : badgeData.host.url;
+
+          const sanitisedBadge: SanitisedBadgeSet = {
+            id: badgeId,
+            url: badgeUrl,
+            type: '7TV Badge' as const,
+            title: badgeData.tooltip || badgeData.name,
+            set: badgeId,
+            provider: '7tv',
+          };
+
+          addBadge(sanitisedBadge);
+          logger.stvWs.info(
+            `Added badge to cache: ${badgeData.name} (id: ${badgeId})`,
+          );
+        } else if (data.kind === 'PAINT') {
+          const paintData = object.data as PaintData & { ref_id?: string };
+
+          // Handle special case where id is all zeros - use ref_id from data if available
+          const paintId: string =
+            paintData.id === '00000000000000000000000000' && paintData.ref_id
+              ? paintData.ref_id
+              : paintData.id;
+
+          const existingPaint = getPaint(paintId);
+          if (existingPaint) {
+            return;
+          }
+
+          // Create a new paint object with the correct ID
+          const paintWithId: PaintData = {
+            ...paintData,
+            id: paintId,
+          };
+
+          addPaint(paintWithId);
+          logger.stvWs.info(
+            `Added paint to cache: ${paintData.name} (id: ${paintId})`,
+          );
         }
       },
       onEntitlementCreate: data => {
-        if (data.ttvUserId && data.paintId) {
-          setUserPaint(data.ttvUserId, data.paintId);
+        const { entitlement } = data;
+        const cosmeticId = entitlement.object.ref_id;
+        const sevenTvUserId = entitlement.object.user.id;
+
+        const handleEntitlement = async () => {
+          if (entitlement.object.kind === 'PAINT') {
+            const paintId = cosmeticId || data.paintId;
+            if (paintId) {
+              const existingPaint = getPaint(paintId);
+              if (!existingPaint && sevenTvUserId) {
+                // Paint not in cache, fetch user's cosmetics via GQL
+                await fetchAndCacheUserCosmetics(sevenTvUserId);
+              } else if (data.ttvUserId) {
+                // Paint already cached, just link the user
+                setUserPaint(data.ttvUserId, paintId);
+              }
+            }
+          }
+
+          if (entitlement.object.kind === 'BADGE') {
+            const badgeId = cosmeticId || data.badgeId;
+            if (badgeId) {
+              const existingBadge = getBadge(badgeId);
+              if (!existingBadge && sevenTvUserId) {
+                // Badge not in cache, fetch user's cosmetics via GQL
+                await fetchAndCacheUserCosmetics(sevenTvUserId);
+              } else if (data.ttvUserId) {
+                // Badge already cached, just link the user
+                setUserBadge(data.ttvUserId, badgeId);
+              }
+            }
+          }
+        };
+
+        void handleEntitlement();
+      },
+      onCosmeticUpdate: data => {
+        if (data.kind === 'PAINT') {
+          // Handle paint updates - extract updated paint data from changes
+          const { changes } = data;
+          if (changes.updated) {
+            // eslint-disable-next-line no-restricted-syntax
+            for (const update of changes.updated) {
+              if (update.value && typeof update.value === 'object') {
+                if ('object' in update.value && update.value.object) {
+                  const paintData = update.value.object.data as PaintData;
+                  if (paintData.id) {
+                    updatePaint(paintData);
+                    logger.stvWs.info(
+                      `Updated paint in cache: ${paintData.name}`,
+                    );
+                  }
+                }
+              }
+            }
+          }
+          if (changes.pushed) {
+            // eslint-disable-next-line no-restricted-syntax
+            for (const push of changes.pushed) {
+              if (push.value && typeof push.value === 'object') {
+                if ('object' in push.value && push.value.object) {
+                  const paintData = push.value.object.data as PaintData;
+                  if (paintData.id) {
+                    addPaint(paintData);
+                    logger.stvWs.info(
+                      `Added paint from update: ${paintData.name}`,
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        if (data.kind === 'BADGE') {
+          const { changes } = data;
+          if (changes.updated) {
+            // eslint-disable-next-line no-restricted-syntax
+            for (const update of changes.updated) {
+              if (update.value && typeof update.value === 'object') {
+                if ('object' in update.value && update.value.object) {
+                  const badgeData = update.value.object.data as BadgeData;
+                  if (badgeData.id) {
+                    const badgeFile =
+                      badgeData.host.files.find(file => file.name === '4x') ||
+                      badgeData.host.files.find(file => file.name === '3x') ||
+                      badgeData.host.files.find(file => file.name === '2x') ||
+                      badgeData.host.files.find(file => file.name === '1x') ||
+                      badgeData.host.files[0];
+
+                    const badgeUrl = badgeFile
+                      ? `${badgeData.host.url}/${badgeFile.name}`
+                      : badgeData.host.url;
+
+                    const sanitisedBadge: SanitisedBadgeSet = {
+                      id: badgeData.id,
+                      url: badgeUrl,
+                      type: '7TV Badge' as const,
+                      title: badgeData.tooltip || badgeData.name,
+                      set: badgeData.id,
+                      provider: '7tv',
+                    };
+
+                    updateBadge(sanitisedBadge);
+                    logger.stvWs.info(
+                      `Updated badge in cache: ${badgeData.name}`,
+                    );
+                  }
+                }
+              }
+            }
+          }
+          if (changes.pushed) {
+            // eslint-disable-next-line no-restricted-syntax
+            for (const push of changes.pushed) {
+              if (push.value && typeof push.value === 'object') {
+                if ('object' in push.value && push.value.object) {
+                  const badgeData = push.value.object.data as BadgeData;
+                  if (badgeData.id) {
+                    const badgeFile =
+                      badgeData.host.files.find(file => file.name === '4x') ||
+                      badgeData.host.files.find(file => file.name === '3x') ||
+                      badgeData.host.files.find(file => file.name === '2x') ||
+                      badgeData.host.files.find(file => file.name === '1x') ||
+                      badgeData.host.files[0];
+
+                    const badgeUrl = badgeFile
+                      ? `${badgeData.host.url}/${badgeFile.name}`
+                      : badgeData.host.url;
+
+                    const sanitisedBadge: SanitisedBadgeSet = {
+                      id: badgeData.id,
+                      url: badgeUrl,
+                      type: '7TV Badge' as const,
+                      title: badgeData.tooltip || badgeData.name,
+                      set: badgeData.id,
+                      provider: '7tv',
+                    };
+
+                    addBadge(sanitisedBadge);
+                    logger.stvWs.info(
+                      `Added badge from update: ${badgeData.name}`,
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      onCosmeticDelete: data => {
+        removeBadge(data.cosmeticId);
+        removePaint(data.cosmeticId);
+        logger.stvWs.info(`Removed cosmetic from cache: ${data.cosmeticId}`);
+      },
+      onEntitlementUpdate: data => {
+        if (data.ttvUserId) {
+          if (data.paintId) {
+            setUserPaint(data.ttvUserId, data.paintId);
+          } else {
+            // If paintId is null, remove the paint association
+            removeUserPaint(data.ttvUserId);
+          }
+
+          if (data.badgeId) {
+            setUserBadge(data.ttvUserId, data.badgeId);
+          } else {
+            // If badgeId is null, remove the badge association
+            removeUserBadge(data.ttvUserId);
+          }
+        }
+      },
+      onEntitlementDelete: data => {
+        if (data.ttvUserId) {
+          removeUserPaint(data.ttvUserId);
+          removeUserBadge(data.ttvUserId);
+          logger.stvWs.info(`Removed entitlements for user: ${data.ttvUserId}`);
         }
       },
       twitchChannelId: channelId,
@@ -394,6 +712,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   }, [wsConnected, channelId, emoteLoadStatus, subscribeToChannel]);
 
   useEffect(() => {
+    const cosmeticsUsersSet = fetchedCosmeticsUsers.current;
+
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       abortCurrentLoad();
       cancelEmoteLoad();
@@ -424,6 +744,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       clearChannelResources();
       clearTtvUsers();
       clearPaints();
+      cosmeticsUsersSet.clear();
       clearMessages();
       clearLocalMessages();
       cleanupScroll();
@@ -440,7 +761,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     cancelEmoteLoad,
   ]);
 
-  // Reprocess messages when emotes load
   useEffect(() => {
     if (emoteLoadStatus !== 'success') return;
 
@@ -520,7 +840,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     };
   }, [channelId, clearLocalMessages, cleanupScroll, cleanupMessages]);
 
-  // Send message handler
   const handleSendMessage = useCallback(() => {
     if (!messageInput.trim() || !isChatConnected()) return;
 
@@ -542,6 +861,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         user?.login ||
         currentUserState['display-name'] ||
         '',
+      'user-id': user?.id || currentUserState['user-id'] || '',
       'badges-raw': badgeData['badges-raw'],
       badges: badgeData.badges,
       color:
@@ -716,7 +1036,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [messages],
   );
 
-  // Parse text for emotes synchronously
   const parseTextForEmotes = useCallback(
     (text: string): ParsedPart[] => {
       if (!text || !text.trim()) return [];
@@ -858,6 +1177,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             removeClippedSubviews={false}
             contentInsetAdjustmentBehavior="automatic"
             drawDistance={500}
+            extraData={userPaints}
             overrideItemLayout={(layout, msg) => {
               const messageLength = msg.message?.length || 0;
               layout.span = Math.max(

@@ -1,7 +1,8 @@
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import { chatStore$ } from '@app/store/chatStore';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
-import { PaintData, PaintStop } from '@app/utils/color/seventv-ws-service';
+import { PaintData } from '@app/utils/color/seventv-ws-service';
+import { useSelector } from '@legendapp/state/react';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useMemo } from 'react';
@@ -13,7 +14,11 @@ import Svg, {
   Rect,
 } from 'react-native-svg';
 import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../../../Text';
+import { Text } from '../../../../Text';
+import {
+  buildGradientConfig,
+  GradientConfig,
+} from './util/buildGradientConfig';
 
 interface PaintedUsernameProps {
   username: string;
@@ -29,99 +34,23 @@ interface PaintedUsernameProps {
   fallbackColor?: string;
 }
 
-/**
- * Calculate gradient start and end points based on angle
- * CSS gradient angles: 0deg = bottom to top, 90deg = left to right
- * We convert to expo-linear-gradient's coordinate system
- */
-function angleToPoints(angle: number): {
-  start: { x: number; y: number };
-  end: { x: number; y: number };
-} {
-  // Convert CSS angle to radians
-  // CSS: 0deg = bottom to top, clockwise positive
-  // We need to convert to coordinate points where (0,0) is top-left
-  const rad = ((angle - 90) * Math.PI) / 180;
-
-  const x1 = 0.5 + 0.5 * Math.cos(rad + Math.PI);
-  const y1 = 0.5 + 0.5 * Math.sin(rad + Math.PI);
-  const x2 = 0.5 + 0.5 * Math.cos(rad);
-  const y2 = 0.5 + 0.5 * Math.sin(rad);
-
-  return {
-    start: { x: x1, y: y1 },
-    end: { x: x2, y: y2 },
-  };
-}
-
-interface GradientConfig {
-  colors: string[];
-  locations: number[];
-  start: { x: number; y: number };
-  end: { x: number; y: number };
-}
-
-/**
- * Build gradient configuration from paint data
- */
-function buildGradientConfig(
-  paint: PaintData,
-  fallbackColor: string,
-): GradientConfig {
-  // Handle URL paints or empty stops - use solid color
-  if (paint.function === 'URL' || !paint.stops || paint.stops.length === 0) {
-    const solidColor =
-      paint.color !== null ? sevenTvColorToCss(paint.color) : fallbackColor;
-    return {
-      colors: [solidColor, solidColor],
-      locations: [0, 1],
-      start: { x: 0, y: 0 },
-      end: { x: 1, y: 0 },
-    };
-  }
-
-  const stops = indexedCollectionToArray<PaintStop>(paint.stops);
-  const sortedStops = [...stops].sort((a, b) => a.at - b.at);
-
-  const gradientColors = sortedStops.map(stop => sevenTvColorToCss(stop.color));
-  const gradientLocations = sortedStops.map(stop => stop.at);
-
-  // Need at least 2 stops for a gradient
-  if (gradientColors.length < 2) {
-    const color = gradientColors[0] || fallbackColor;
-    return {
-      colors: [color, color],
-      locations: [0, 1],
-      start: { x: 0, y: 0 },
-      end: { x: 1, y: 0 },
-    };
-  }
-
-  const points = angleToPoints(paint.angle || 0);
-
-  return {
-    colors: gradientColors,
-    locations: gradientLocations,
-    start: points.start,
-    end: points.end,
-  };
-}
-
 function PaintedUsernameComponent({
   username,
   paint: paintProp,
   userId,
   fallbackColor = '#FFFFFF',
 }: PaintedUsernameProps) {
+  const paintId = useSelector(() =>
+    userId ? chatStore$.userPaintIds[userId]?.get() : null,
+  );
+  const storePaint = useSelector(() =>
+    paintId ? chatStore$.paints[paintId]?.get() : null,
+  );
+
   const paint = useMemo(() => {
     if (paintProp) return paintProp;
-    if (!userId) return null;
-
-    const paintId = chatStore$.userPaintIds[userId]?.peek();
-    if (!paintId) return null;
-
-    return chatStore$.paints[paintId]?.peek() ?? null;
-  }, [paintProp, userId]);
+    return storePaint ?? null;
+  }, [paintProp, storePaint]);
 
   const gradientConfig = useMemo((): GradientConfig => {
     if (!paint) {

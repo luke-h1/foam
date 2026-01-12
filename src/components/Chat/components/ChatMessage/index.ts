@@ -1,2 +1,2 @@
 export * from './ChatMessage';
-export * from './CosmeticUsername';
+export * from './CosmeticUsername/CosmeticUsername';

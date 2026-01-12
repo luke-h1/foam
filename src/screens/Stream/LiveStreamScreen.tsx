@@ -1,6 +1,5 @@
 import { Chat } from '@app/components/Chat';
 import { Spinner } from '@app/components/Spinner';
-import { Text } from '@app/components/Text';
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
@@ -129,14 +128,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     return <Spinner />;
   }
 
-  if (!stream) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.videoUser}>User Offline</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.contentContainer, isLandscape && styles.row]}>
       {/* <GestureDetector gesture={doubleTapGesture}>
@@ -157,7 +148,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
       {(isChatVisible || chatOpacity.value > 0) && (
         <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-          {shouldRenderChat && stream.user_login && stream.user_id && (
+          {shouldRenderChat && stream?.user_login && stream.user_id && (
             <View style={styles.chatContent}>
               <Chat
                 channelId={stream.user_id}
