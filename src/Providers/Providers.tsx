@@ -99,11 +99,10 @@ export function Providers({ children }: PropsWithChildren) {
                     <PressablesConfig
                       globalHandlers={{
                         onPress: () => {
-                          Haptics.selectionAsync();
+                          void Haptics.selectionAsync();
                         },
                       }}
                     >
-                      {' '}
                       {children}
                     </PressablesConfig>
                   </QueryProviderWithAuth>

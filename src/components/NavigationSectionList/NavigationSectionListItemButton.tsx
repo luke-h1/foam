@@ -1,5 +1,5 @@
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { View } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import { Image } from '../Image';
