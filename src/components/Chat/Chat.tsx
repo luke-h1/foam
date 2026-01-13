@@ -139,12 +139,39 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const mentionColorCache = useRef<Map<string, string>>(new Map());
   const fetchedCosmeticsUsers = useRef<Set<string>>(new Set());
+  const chatStartTimeRef = useRef<number | null>(null);
 
   useTwitchWs();
+
+  useEffect(() => {
+    chatStartTimeRef.current = Date.now();
+  }, [channelId]);
+
+  const canFetchCosmetics = useCallback((): boolean => {
+    const chatStartTime = chatStartTimeRef.current;
+    if (!chatStartTime) {
+      return true;
+    }
+
+    const elapsedSeconds = (Date.now() - chatStartTime) / 1000;
+    return elapsedSeconds <= 10;
+  }, []);
 
   const fetchUserCosmetics = useCallback(
     async (twitchUserId: string) => {
       if (fetchedCosmeticsUsers.current.has(twitchUserId)) {
+        return;
+      }
+
+      // Only fetch cosmetics for the first 10 seconds of chat to prevent API overload
+      if (!canFetchCosmetics()) {
+        const chatStartTime = chatStartTimeRef.current;
+        const elapsedSeconds = chatStartTime
+          ? (Date.now() - chatStartTime) / 1000
+          : 0;
+        logger.stvWs.debug(
+          `Skipping cosmetic fetch for ${twitchUserId} - chat has been active for ${elapsedSeconds.toFixed(1)}s (limit: 10s)`,
+        );
         return;
       }
 
@@ -181,7 +208,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         );
       }
     },
-    [userPaints],
+    [userPaints, canFetchCosmetics],
   );
 
   const {
@@ -490,8 +517,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             if (paintId) {
               const existingPaint = getPaint(paintId);
               if (!existingPaint && sevenTvUserId) {
-                // Paint not in cache, fetch user's cosmetics via GQL
-                await fetchAndCacheUserCosmetics(sevenTvUserId);
+                // Paint not in cache, fetch user's cosmetics via GQL (only if within 10s limit)
+                if (canFetchCosmetics()) {
+                  await fetchAndCacheUserCosmetics(sevenTvUserId);
+                } else {
+                  logger.stvWs.debug(
+                    `Skipping cosmetic fetch for entitlement - 10s limit exceeded`,
+                  );
+                }
               } else if (data.ttvUserId) {
                 // Paint already cached, just link the user
                 setUserPaint(data.ttvUserId, paintId);
@@ -504,8 +537,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             if (badgeId) {
               const existingBadge = getBadge(badgeId);
               if (!existingBadge && sevenTvUserId) {
-                // Badge not in cache, fetch user's cosmetics via GQL
-                await fetchAndCacheUserCosmetics(sevenTvUserId);
+                // Badge not in cache, fetch user's cosmetics via GQL (only if within 10s limit)
+                if (canFetchCosmetics()) {
+                  await fetchAndCacheUserCosmetics(sevenTvUserId);
+                } else {
+                  logger.stvWs.debug(
+                    `Skipping cosmetic fetch for entitlement - 10s limit exceeded`,
+                  );
+                }
               } else if (data.ttvUserId) {
                 // Badge already cached, just link the user
                 setUserBadge(data.ttvUserId, badgeId);

@@ -16,6 +16,8 @@ import { useReactNavigationDevTools } from '@rozenite/react-navigation-plugin';
 import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
+import { PressablesConfig } from 'pressto';
 import { PropsWithChildren } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -93,7 +95,17 @@ export function Providers({ children }: PropsWithChildren) {
             <KeyboardProvider>
               <GestureHandlerRootView style={styles.gestureContainer}>
                 <BottomSheetModalProvider>
-                  <QueryProviderWithAuth>{children}</QueryProviderWithAuth>
+                  <QueryProviderWithAuth>
+                    <PressablesConfig
+                      globalHandlers={{
+                        onPress: () => {
+                          void Haptics.selectionAsync();
+                        },
+                      }}
+                    >
+                      {children}
+                    </PressablesConfig>
+                  </QueryProviderWithAuth>
                 </BottomSheetModalProvider>
               </GestureHandlerRootView>
             </KeyboardProvider>
