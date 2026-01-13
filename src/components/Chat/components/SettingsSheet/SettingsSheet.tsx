@@ -78,26 +78,14 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
           </View>
 
           <View style={styles.menuContainer}>
-            <Button
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-              onPress={handleRefetchEmotes}
-            >
+            <Button style={styles.menuItem} onPress={handleRefetchEmotes}>
               <Icon icon="refresh-cw" color={theme.colors.gray.borderHover} />
               <Text style={styles.menuItemText} weight="semibold">
                 Refetch Emotes & Badges
               </Text>
             </Button>
 
-            <Button
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-              onPress={handleReconnect}
-            >
+            <Button style={styles.menuItem} onPress={handleReconnect}>
               <Icon icon="wifi" color={theme.colors.gray.borderHover} />
               <Text style={styles.menuItemText} weight="semibold">
                 Reconnect
@@ -118,13 +106,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               </View>
             </View>
 
-            <Button
-              style={({ pressed }) => [
-                styles.menuItem,
-                pressed && styles.menuItemPressed,
-              ]}
-              onPress={handleRefreshVideo}
-            >
+            <Button style={styles.menuItem} onPress={handleRefreshVideo}>
               <Icon icon="video" color={theme.colors.gray.borderHover} />
               <Text style={styles.menuItemText} weight="semibold">
                 Refresh Video

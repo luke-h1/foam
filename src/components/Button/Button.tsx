@@ -1,35 +1,30 @@
-/* eslint-disable no-restricted-imports */
 import { createHitslop } from '@app/utils/string/createHitSlop';
-import { forwardRef } from 'react';
-import { Pressable, PressableProps, View } from 'react-native';
+import { PressableScale, type CustomPressableProps } from 'pressto';
 
-export type ButtonProps = PressableProps & {
+export type ButtonProps = CustomPressableProps & {
   label?: string;
+  disabled?: boolean;
 };
 
-export const Button = forwardRef<View, ButtonProps>(
-  (
-    {
-      children,
-      onPress,
-      style,
-      hitSlop = createHitslop(10),
-      label,
-      ...touchableProps
-    },
-    ref,
-  ) => (
-    <Pressable
-      ref={ref}
+export function Button({
+  children,
+  onPress,
+  style,
+  hitSlop = createHitslop(10),
+  label,
+  disabled,
+  ...touchableProps
+}: ButtonProps) {
+  return (
+    <PressableScale
       accessibilityLabel={label}
       {...touchableProps}
       hitSlop={hitSlop}
       style={style}
+      enabled={!disabled}
       onPress={onPress}
     >
       {children}
-    </Pressable>
-  ),
-);
-
-Button.displayName = 'Button';
+    </PressableScale>
+  );
+}

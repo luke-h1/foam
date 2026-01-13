@@ -1,7 +1,5 @@
-import { forwardRef, Ref } from 'react';
-
-import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { View } from 'react-native';
 import { Button, ButtonProps } from '../Button';
 import { Icon } from '../Icon';
 import { Image } from '../Image';
@@ -10,41 +8,37 @@ import { SectionListItem } from './NavigationSectionList';
 
 type NavigationSectionListItemButtonProps = ButtonProps & SectionListItem;
 
-export const NavigationSectionListItemButton = forwardRef(
-  (
-    {
-      title,
-      iconName: icon,
-      picture,
-      description,
-      onPress,
-      ...props
-    }: NavigationSectionListItemButtonProps,
-    ref: Ref<View>,
-  ) => {
-    const { theme } = useUnistyles();
+export function NavigationSectionListItemButton({
+  title,
+  iconName: icon,
+  picture,
+  description,
+  onPress,
+  ...props
+}: NavigationSectionListItemButtonProps) {
+  const { theme } = useUnistyles();
 
-    return (
-      <Button {...props} ref={ref} onPress={e => onPress?.(e)}>
-        <View style={styles.container}>
-          <View style={styles.contentWrapper}>
-            {icon && <Icon icon={icon} size={20} />}
-            {picture && <Image source={picture} style={styles.image} />}
-            <View style={styles.textWrapper}>
-              <Text>{title}</Text>
-              <Text>{description}</Text>
-            </View>
+  return (
+    <Button {...props} onPress={onPress}>
+      <View style={styles.container}>
+        <View style={styles.contentWrapper}>
+          {icon && <Icon icon={icon} size={20} />}
+          {picture && <Image source={picture} style={styles.image} />}
+          <View style={styles.textWrapper}>
+            <Text>{title}</Text>
+            <Text>{description}</Text>
           </View>
-          <Icon
-            icon="arrow-right"
-            size={20}
-            color={theme.colors.black.accentHoverAlpha}
-          />
         </View>
-      </Button>
-    );
-  },
-);
+        <Icon
+          icon="arrow-right"
+          size={20}
+          color={theme.colors.black.accentHoverAlpha}
+        />
+      </View>
+    </Button>
+  );
+}
+
 NavigationSectionListItemButton.displayName = 'NavigationSectionListItemButton';
 
 const styles = StyleSheet.create(theme => ({
