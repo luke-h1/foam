@@ -163,7 +163,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   // Optimized message handler - minimal processing for performance
   const handleMessage = useCallback((event: WebViewMessageEvent) => {
     try {
-      const { type, data } = JSON.parse(event.nativeEvent.data) as PlayerMessage;
+      const { type, data } = JSON.parse(
+        event.nativeEvent.data,
+      ) as PlayerMessage;
       switch (type) {
         case 'ready':
           setPlayerState(prev => ({ ...prev, isReady: true }));
