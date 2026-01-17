@@ -22,6 +22,7 @@ export function OTAUpdateModal({
 }: OTAUpdateModalProps) {
   const insets = useSafeAreaInsets();
   const isDownloading = updateState.status === 'downloading';
+  const isPending = updateState.status === 'pending';
 
   return (
     <RNModal
@@ -68,7 +69,7 @@ export function OTAUpdateModal({
           <Button
             onPress={onApply}
             style={styles.applyButton}
-            disabled={isDownloading}
+            disabled={isDownloading || !isPending}
           >
             <Text color="accent" contrast type="md" weight="semibold">
               {isDownloading ? 'Downloading...' : 'Relaunch Now'}

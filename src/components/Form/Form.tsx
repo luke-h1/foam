@@ -735,18 +735,35 @@ export function Section({
 }
 
 function isStringishNode(node: React.ReactNode): boolean {
-  let containsStringChildren = typeof node === 'string';
+  if (typeof node === 'string') {
+    return true;
+  }
+
+  if (node == null) {
+    return false;
+  }
+
+  let containsStringChildren = false;
 
   React.Children.forEach(node, child => {
-    if (typeof child === 'string') {
+    if (containsStringChildren) {
+      return; // Early return if we already found a string
+    }
+
+    if (typeof child === 'string' || typeof child === 'number') {
       containsStringChildren = true;
     } else if (
       React.isValidElement(child) &&
       'props' in child &&
       typeof child.props === 'object' &&
-      child.props !== null
+      child.props !== null &&
+      'children' in child.props
     ) {
-      containsStringChildren = isStringishNode(child);
+      // Recurse on children prop, not the entire child element
+      // This prevents infinite recursion
+      containsStringChildren = isStringishNode(
+        child.props.children as React.ReactNode,
+      );
     }
   });
   return containsStringChildren;

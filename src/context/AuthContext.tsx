@@ -40,10 +40,59 @@ export const storageKeys = {
   user: 'V1_foam-user', // logged in token
 } as const;
 
+/**
+ * Buffer time in seconds before token expiration to consider it expired
+ * This allows proactive refresh before actual expiration
+ */
+const TOKEN_EXPIRATION_BUFFER = 60; // 1 minute buffer
+
+/**
+ * Check if a token is expired or will expire soon
+ * Uses expires_in from the Twitch API response to calculate expiration
+ * @param token - The token to check
+ * @returns true if token is expired or will expire within the buffer time
+ */
+const isTokenExpired = (token: TwitchToken): boolean => {
+  const { expiresAt } = token;
+
+  if (!expiresAt) {
+    // If no expiration timestamp, we can't determine expiration - assume valid but log warning
+    logger.auth.warn(
+      'Token missing expiresAt timestamp, cannot verify expiration',
+    );
+    return false;
+  }
+
+  const now = Date.now();
+  const bufferTime = TOKEN_EXPIRATION_BUFFER * 1000; // Convert to milliseconds
+
+  return now >= expiresAt - bufferTime;
+};
+
+/**
+ * Calculate expiration timestamp from expiresIn and add it to a token
+ */
+const addExpirationTimestamp = (
+  token: Omit<TwitchToken, 'expiresAt'>,
+): TwitchToken => {
+  const now = Date.now();
+  return {
+    ...token,
+    expiresAt: now + token.expiresIn * 1000, // expiresIn is in seconds, convert to milliseconds
+  };
+};
+
+const isTwitchToken = (
+  token: TokenResponse | TwitchToken,
+): token is TwitchToken => {
+  return 'expiresAt' in token;
+};
+
 export interface TwitchToken {
   accessToken: string;
   expiresIn: number;
   tokenType: string;
+  expiresAt?: number; // Unix timestamp in milliseconds when token expires
 }
 
 interface AuthState {
@@ -106,27 +155,22 @@ export const AuthContextProvider = ({
         };
       }
 
+      const token = addExpirationTimestamp({
+        accessToken: result.access_token,
+        expiresIn: result.expires_in,
+        tokenType: result.token_type,
+      });
+
       setState({
         ready: true,
         authState: {
           isAnonAuth: true,
           isLoggedIn: false,
-          token: {
-            accessToken: result.access_token,
-            expiresIn: result.expires_in,
-            tokenType: result.token_type,
-          },
+          token,
         },
       });
 
-      await SecureStore.setItemAsync(
-        storageKeys.anon,
-        JSON.stringify({
-          accessToken: result.access_token,
-          expiresIn: result.expires_in,
-          tokenType: result.token_type,
-        }),
-      );
+      await SecureStore.setItemAsync(storageKeys.anon, JSON.stringify(token));
       twitchApi.setAuthToken(result.access_token);
 
       prefetchInitialData();
@@ -137,51 +181,87 @@ export const AuthContextProvider = ({
     }
   };
 
-  const doAuth = async (token: TokenResponse) => {
+  const doAuth = async (token: TokenResponse | TwitchToken) => {
+    // Convert TokenResponse to TwitchToken format if needed
+    let twitchToken: TwitchToken;
+
+    if (isTwitchToken(token)) {
+      twitchToken = token;
+    } else {
+      // TokenResponse has expiresIn as number | undefined, but we know it should be a number
+      // from expo-auth-session when authentication succeeds
+      if (token.expiresIn === undefined) {
+        logger.auth.warn('Token missing expiresIn, cannot proceed with auth');
+        await doAnonAuth();
+        return;
+      }
+      twitchToken = addExpirationTimestamp({
+        accessToken: token.accessToken,
+        expiresIn: token.expiresIn,
+        tokenType: token.tokenType,
+      });
+    }
+
+    // Check if token is expired before making API calls
+    if (isTokenExpired(twitchToken)) {
+      logger.auth.info(
+        'Stored user token is expired, clearing and falling back to anon auth',
+      );
+      await SecureStore.deleteItemAsync(storageKeys.anon);
+      await SecureStore.deleteItemAsync(storageKeys.user);
+      await doAnonAuth();
+      return;
+    }
+
     try {
-      const isValidToken = await twitchService.validateToken(token.accessToken);
+      const isValidToken = await twitchService.validateToken(
+        twitchToken.accessToken,
+      );
 
       if (!isValidToken) {
         // token isn't valid, do anon auth
+        logger.auth.warn('User token validation failed, clearing tokens');
         await SecureStore.deleteItemAsync(storageKeys.anon);
         await SecureStore.deleteItemAsync(storageKeys.user);
         await doAnonAuth();
-
         return;
       }
     } catch (error) {
       logger.auth.warn('validateToken failed. Clearing tokens', error);
       await SecureStore.deleteItemAsync(storageKeys.anon);
       await SecureStore.deleteItemAsync(storageKeys.user);
+      await doAnonAuth();
+      return;
     }
 
-    const u = await twitchService.getUserInfo(token.accessToken);
-    setUser(u);
-    twitchApi.setAuthToken(token.accessToken);
+    try {
+      const u = await twitchService.getUserInfo(twitchToken.accessToken);
+      setUser(u);
+      twitchApi.setAuthToken(twitchToken.accessToken);
 
-    // Prefetch initial data immediately after auth
-    prefetchInitialData(u.id);
+      // Prefetch initial data immediately after auth
+      prefetchInitialData(u.id);
 
-    await SecureStore.setItemAsync(
-      storageKeys.user,
-      JSON.stringify({
-        accessToken: token.accessToken,
-        expiresIn: token.expiresIn,
-        tokenType: token.tokenType,
-      }),
-    );
-    setState({
-      ready: true,
-      authState: {
-        isAnonAuth: false,
-        isLoggedIn: true,
-        token: {
-          accessToken: token.accessToken,
-          expiresIn: token.expiresIn as number,
-          tokenType: token.tokenType,
+      await SecureStore.setItemAsync(
+        storageKeys.user,
+        JSON.stringify(twitchToken),
+      );
+      setState({
+        ready: true,
+        authState: {
+          isAnonAuth: false,
+          isLoggedIn: true,
+          token: twitchToken,
         },
-      },
-    });
+      });
+    } catch (error) {
+      logger.auth.error(
+        'Failed to get user info, falling back to anon auth',
+        error,
+      );
+      await SecureStore.deleteItemAsync(storageKeys.user);
+      await doAnonAuth();
+    }
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
@@ -197,9 +277,11 @@ export const AuthContextProvider = ({
       return null;
     }
 
-    // console.log('tokenType ->', response.authentication.tokenType);
-    // console.log('expiresIn ->', response.authentication.expiresIn);
-    // console.log('accecssToken ->', response.authentication.accessToken);
+    const token = addExpirationTimestamp({
+      accessToken: response.authentication.accessToken,
+      expiresIn: response.authentication.expiresIn as number,
+      tokenType: response.authentication.tokenType,
+    });
 
     // we have succeeded
     setState({
@@ -207,31 +289,30 @@ export const AuthContextProvider = ({
       authState: {
         isAnonAuth: false,
         isLoggedIn: true,
-        token: {
-          accessToken: response.authentication.accessToken,
-          expiresIn: response.authentication.expiresIn as number,
-          tokenType: response.authentication.tokenType,
-        },
+        token,
       },
     });
-    const u = await twitchService.getUserInfo(
-      response.authentication.accessToken,
-    );
-    setUser(u);
 
-    // Prefetch initial data immediately after login
-    prefetchInitialData(u.id);
+    try {
+      const u = await twitchService.getUserInfo(token.accessToken);
+      setUser(u);
 
-    // evict cached anon details
-    await SecureStore.deleteItemAsync(storageKeys.anon);
+      // Prefetch initial data immediately after login
+      prefetchInitialData(u.id);
 
-    const stringifedAuth = JSON.stringify(response.authentication);
+      // evict cached anon details
+      await SecureStore.deleteItemAsync(storageKeys.anon);
 
-    // set tokens in secure-store
-    await SecureStore.setItemAsync(storageKeys.user, stringifedAuth);
+      // set tokens in secure-store with timestamp
+      await SecureStore.setItemAsync(storageKeys.user, JSON.stringify(token));
 
-    // set header in axios
-    twitchApi.setAuthToken(response.authentication.accessToken);
+      // set header in axios
+      twitchApi.setAuthToken(token.accessToken);
+    } catch (error) {
+      logger.auth.error('Failed to get user info after login', error);
+      await doAnonAuth();
+    }
+
     return null;
   };
 
@@ -239,34 +320,64 @@ export const AuthContextProvider = ({
     if (!token?.accessToken) {
       // request a default token and set it in state
       await fetchAnonToken();
-    } else {
-      // we have an anonymous token, check its validity
+      return;
+    }
+
+    // Check if token is expired based on timestamp (faster than API call)
+    if (isTokenExpired(token)) {
+      logger.auth.info('Anonymous token is expired, fetching new token');
+      twitchApi.removeAuthToken();
+      await fetchAnonToken();
+      return;
+    }
+
+    // Validate token with API to ensure it's still valid
+    try {
       const isValidToken = await twitchService.validateToken(token.accessToken);
 
-      console.log('isValidToken ->', isValidToken);
-
-      // if it's expired, get a new token and set it in state
       if (!isValidToken) {
+        logger.auth.warn(
+          'Anonymous token validation failed, fetching new token',
+        );
         twitchApi.removeAuthToken();
         await fetchAnonToken();
-      } else {
-        setState({
-          ready: true,
-          authState: {
-            isAnonAuth: true,
-            isLoggedIn: false,
-            token: {
-              accessToken: token.accessToken,
-              expiresIn: token.expiresIn,
-              tokenType: token.tokenType,
-            },
-          },
-        });
-        twitchApi.setAuthToken(token.accessToken);
-
-        // Prefetch top streams for anonymous users with cached token
-        prefetchInitialData();
+        return;
       }
+
+      // Token is valid and not expired
+      // Ensure token has expiration timestamp (for backward compatibility with old stored tokens)
+      const tokenWithExpiration = token.expiresAt
+        ? token
+        : addExpirationTimestamp({
+            accessToken: token.accessToken,
+            expiresIn: token.expiresIn,
+            tokenType: token.tokenType,
+          });
+
+      // Update stored token with expiration timestamp if it was missing
+      if (!token.expiresAt) {
+        await SecureStore.setItemAsync(
+          storageKeys.anon,
+          JSON.stringify(tokenWithExpiration),
+        );
+      }
+
+      setState({
+        ready: true,
+        authState: {
+          isAnonAuth: true,
+          isLoggedIn: false,
+          token: tokenWithExpiration,
+        },
+      });
+      twitchApi.setAuthToken(token.accessToken);
+
+      // Prefetch top streams for anonymous users with cached token
+      prefetchInitialData();
+    } catch (error) {
+      logger.auth.error('Token validation error, fetching new token', error);
+      twitchApi.removeAuthToken();
+      await fetchAnonToken();
     }
   };
 
@@ -277,11 +388,26 @@ export const AuthContextProvider = ({
     ]);
 
     if (storedAuthToken) {
-      const parsedAuthToken = JSON.parse(storedAuthToken) as TokenResponse;
-      await doAuth(parsedAuthToken);
+      try {
+        // Try to parse as TwitchToken first (new format with issuedAt)
+        const parsedAuthToken = JSON.parse(storedAuthToken) as
+          | TwitchToken
+          | TokenResponse;
+        await doAuth(parsedAuthToken);
+      } catch (error) {
+        logger.auth.error('Failed to parse stored user token', error);
+        await SecureStore.deleteItemAsync(storageKeys.user);
+        await doAnonAuth();
+      }
     } else if (storedAnonToken) {
-      const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
-      await doAnonAuth(parsedAnonToken);
+      try {
+        const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
+        await doAnonAuth(parsedAnonToken);
+      } catch (error) {
+        logger.auth.error('Failed to parse stored anon token', error);
+        await SecureStore.deleteItemAsync(storageKeys.anon);
+        await doAnonAuth();
+      }
     } else {
       await doAnonAuth();
     }

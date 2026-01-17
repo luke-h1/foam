@@ -8,8 +8,8 @@ import {
   setExtraParamAsync,
   useUpdates,
 } from 'expo-updates';
-import React, { useEffect, useRef } from 'react';
-import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 
 const MINIMUM_MINIMIZE_TIME = 5 * 60e3; // 5 minutes
 
@@ -20,10 +20,7 @@ async function setExtraParams() {
     // This just ensures it gets passed as a string
     `${nativeBuildVersion}`,
   );
-  await setExtraParamAsync(
-    'channel',
-    Updates.channel || 'unknown',
-  );
+  await setExtraParamAsync('channel', Updates.channel || 'unknown');
 }
 
 interface UseOTAUpdatesOptions {
@@ -34,19 +31,46 @@ interface UseOTAUpdatesOptions {
   isReady: boolean;
 }
 
+export type OTAUpdateState = {
+  status: 'idle' | 'checking' | 'downloading' | 'available' | 'pending';
+};
+
 export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
   const shouldReceiveUpdates = isEnabled && !__DEV__;
   const isProduction = process.env.APP_VARIANT === 'production';
-  const appState = React.useRef<AppStateStatus>('active');
-  const lastMinimize = React.useRef(0);
-  const ranInitialCheck = React.useRef(false);
-  const [lastChecked, setLastChecked] = React.useState<Date | null>(null);
-  const { isUpdatePending } = useUpdates();
+  const appState = useRef<AppStateStatus>('active');
+  const lastMinimize = useRef(0);
+  const ranInitialCheck = useRef(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const updates = useUpdates();
 
   // eslint-disable-next-line no-undef
   const timeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  const checkForUpdates = React.useCallback(async () => {
+  // Determine update state from expo-updates
+  const updateState: OTAUpdateState = useMemo(() => {
+    if (updates.isUpdatePending) {
+      return { status: 'pending' };
+    }
+    if (updates.isDownloading) {
+      return { status: 'downloading' };
+    }
+    if (updates.isChecking) {
+      return { status: 'checking' };
+    }
+    if (updates.isUpdateAvailable) {
+      return { status: 'available' };
+    }
+    return { status: 'idle' };
+  }, [
+    updates.isUpdatePending,
+    updates.isDownloading,
+    updates.isChecking,
+    updates.isUpdateAvailable,
+  ]);
+
+  const checkForUpdates = useCallback(async () => {
     try {
       await setExtraParams();
 
@@ -57,25 +81,7 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
       if (res.isAvailable) {
         console.debug('Attempting to fetch update...');
         await fetchUpdateAsync();
-
-        Alert.alert(
-          'Update Available',
-          'A new version of the app is available. Relaunch now?',
-          [
-            {
-              text: 'No',
-              style: 'cancel',
-            },
-            {
-              text: 'Relaunch',
-              style: 'default',
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onPress: async () => {
-                await reloadAsync();
-              },
-            },
-          ],
-        );
+        // Modal will be shown by the useEffect that watches isUpdatePending
       } else {
         console.debug('No update available.');
       }
@@ -84,8 +90,17 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
     }
   }, []);
 
+  const handleApply = useCallback(async () => {
+    setModalVisible(false);
+    await reloadAsync();
+  }, []);
+
+  const handleDismiss = useCallback(() => {
+    setModalVisible(false);
+  }, []);
+
   // Initial check - only runs after app is ready
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isReady || !shouldReceiveUpdates || ranInitialCheck.current) {
       return;
     }
@@ -108,6 +123,17 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
     };
   }, [isReady, shouldReceiveUpdates, checkForUpdates, isProduction]);
 
+  // Show modal when update becomes pending
+  useEffect(() => {
+    if (
+      updates.isUpdatePending &&
+      !updates.isDownloading &&
+      !updates.isChecking
+    ) {
+      setModalVisible(true);
+    }
+  }, [updates.isUpdatePending, updates.isDownloading, updates.isChecking]);
+
   // After the app has been minimized for 5 minutes, we want to either A. install an update if one has become available
   // or B check for an update again.
   useEffect(() => {
@@ -128,7 +154,7 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
             lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
 
           if (shouldUpdate) {
-            if (isUpdatePending) {
+            if (updates.isUpdatePending) {
               await reloadAsync();
             } else {
               void checkForUpdates();
@@ -146,7 +172,13 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
       clearTimeout(timeout.current);
       subscription.remove();
     };
-  }, [isUpdatePending, checkForUpdates, isReady, isProduction]);
+  }, [updates.isUpdatePending, checkForUpdates, isReady, isProduction]);
 
-  return { lastChecked };
+  return {
+    lastChecked,
+    updateState,
+    modalVisible,
+    onApply: handleApply,
+    onDismiss: handleDismiss,
+  };
 }

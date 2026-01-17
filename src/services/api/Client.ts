@@ -41,6 +41,10 @@ export interface ResponseInterceptor {
   onError?: (error: unknown) => unknown;
 }
 
+export type ResponseInterceptorFactory = (
+  client: Client,
+) => ResponseInterceptor;
+
 const defaultParamsSerializer: CustomParamsSerializer = params =>
   qs.stringify(params, { arrayFormat: 'comma' });
 
@@ -48,7 +52,7 @@ export interface ClientOptions {
   baseURL?: string;
   headers?: AxiosRequestConfig['headers'];
   requestInterceptors?: RequestInterceptor[];
-  responseInterceptors?: ResponseInterceptor[];
+  responseInterceptors?: (ResponseInterceptor | ResponseInterceptorFactory)[];
   paramsSerializer?: CustomParamsSerializer;
 }
 
@@ -76,8 +80,14 @@ export default class Client {
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     requestInterceptors?.forEach(this.addRequestInterceptor.bind(this));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    responseInterceptors?.forEach(this.addResponseInterceptor.bind(this));
+    responseInterceptors?.forEach(interceptor => {
+      // Handle both ResponseInterceptor and factory functions
+      if (Client.isResponseInterceptorFactory(interceptor)) {
+        this.addResponseInterceptor(interceptor(this));
+      } else {
+        this.addResponseInterceptor(interceptor);
+      }
+    });
   }
 
   public async request<TValue>(
@@ -289,5 +299,16 @@ export default class Client {
 
   public getAuthToken() {
     return this.axios.defaults.headers.Authorization;
+  }
+
+  private static isResponseInterceptorFactory(
+    interceptor: ResponseInterceptor | ResponseInterceptorFactory,
+  ): interceptor is ResponseInterceptorFactory {
+    // A factory function is a function that doesn't have ResponseInterceptor properties
+    return (
+      typeof interceptor === 'function' &&
+      !('onResponse' in interceptor) &&
+      !('onError' in interceptor)
+    );
   }
 }

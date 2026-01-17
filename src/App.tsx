@@ -5,6 +5,7 @@ import { createNavigationContainerRef } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';
 import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
+import * as SplashScreen from 'expo-splash-screen';
 import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
 import { enableFreeze } from 'react-native-screens';
@@ -24,6 +25,8 @@ import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
 
 enableFreeze(true);
+
+void SplashScreen.hideAsync();
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 
