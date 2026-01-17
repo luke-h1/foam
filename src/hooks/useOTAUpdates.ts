@@ -1,4 +1,5 @@
 import { nativeBuildVersion } from 'expo-application';
+import * as Updates from 'expo-updates';
 import {
   checkForUpdateAsync,
   fetchUpdateAsync,
@@ -21,8 +22,7 @@ async function setExtraParams() {
   );
   await setExtraParamAsync(
     'channel',
-    // todo - fix this
-    process.env.APP_VARIANT === 'production' ? 'production' : 'production',
+    Updates.channel || 'unknown',
   );
 }
 
@@ -36,6 +36,7 @@ interface UseOTAUpdatesOptions {
 
 export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
   const shouldReceiveUpdates = isEnabled && !__DEV__;
+  const isProduction = process.env.APP_VARIANT === 'production';
   const appState = React.useRef<AppStateStatus>('active');
   const lastMinimize = React.useRef(0);
   const ranInitialCheck = React.useRef(false);
@@ -89,18 +90,23 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
       return;
     }
 
-    // Delay the initial check to ensure the app is fully rendered
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    timeout.current = setTimeout(() => {
+    // In production, run immediately; otherwise delay to ensure the app is fully rendered
+    if (isProduction) {
       ranInitialCheck.current = true;
       void checkForUpdates();
-    }, 10e3);
+    } else {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      timeout.current = setTimeout(() => {
+        ranInitialCheck.current = true;
+        void checkForUpdates();
+      }, 10e3);
+    }
 
     return () => {
       clearTimeout(timeout.current);
     };
-  }, [isReady, shouldReceiveUpdates, checkForUpdates]);
+  }, [isReady, shouldReceiveUpdates, checkForUpdates, isProduction]);
 
   // After the app has been minimized for 5 minutes, we want to either A. install an update if one has become available
   // or B check for an update again.
@@ -115,9 +121,13 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
           appState.current.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          // If it's been 5 minutes since the last "minimize", we should feel comfortable updating the client since
-          // chances are that there isn't anything important going on in the current session.
-          if (lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME) {
+          // In production, run updates immediately when app comes to foreground
+          // Otherwise, wait 5 minutes since the last "minimize" to feel comfortable updating
+          const shouldUpdate =
+            isProduction ||
+            lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
+
+          if (shouldUpdate) {
             if (isUpdatePending) {
               await reloadAsync();
             } else {
@@ -136,7 +146,7 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
       clearTimeout(timeout.current);
       subscription.remove();
     };
-  }, [isUpdatePending, checkForUpdates, isReady]);
+  }, [isUpdatePending, checkForUpdates, isReady, isProduction]);
 
   return { lastChecked };
 }
