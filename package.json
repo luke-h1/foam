@@ -169,6 +169,7 @@
     "react-server-dom-webpack": "~19.0.0",
     "reanimated-color-picker": "^4.1.0",
     "sonner-native": "^0.21.0",
+    "swr": "^2.3.8",
     "twemoji": "^14.0.2",
     "urql": "^5.0.1",
     "zustand": "^5.0.6"
