@@ -5,6 +5,7 @@ import { BaseConfig } from '@app/navigators/config';
 import { navigationRef } from '@app/navigators/navigationUtilities';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api';
+import { createAuthErrorInterceptor } from '@app/services/api/interceptors';
 import { storage } from '@app/services/storage-service';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';
@@ -18,7 +19,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { PressablesConfig } from 'pressto';
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
@@ -31,7 +32,28 @@ import { Toaster } from 'sonner-native';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider';
 
 function QueryProviderWithAuth({ children }: PropsWithChildren) {
-  const { user } = useAuthContext();
+  const { user, populateAuthState } = useAuthContext();
+  const interceptorAdded = useRef(false);
+
+  // Set up 401 error interceptor to handle auth refresh after OTA updates
+  useEffect(() => {
+    if (!interceptorAdded.current) {
+      const authErrorInterceptor = createAuthErrorInterceptor(async () => {
+        // When a 401 occurs, try to refresh auth state
+        // This is especially important after OTA updates when the app reloads
+        // and auth state might not be fully restored before API calls are made
+        await populateAuthState();
+      });
+
+      twitchApi.addResponseInterceptor(authErrorInterceptor);
+      interceptorAdded.current = true;
+
+      return () => {
+        twitchApi.removeResponseInterceptor(authErrorInterceptor);
+        interceptorAdded.current = false;
+      };
+    }
+  }, [populateAuthState]);
 
   return (
     <QueryProvider currentUserId={user?.id}>

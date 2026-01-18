@@ -22,6 +22,10 @@ export function CategoryCard({ category }: Props) {
     navigation.navigate('Category', { id: category.id });
   }, [navigation, category.id]);
 
+  if (!category?.id) {
+    return null;
+  }
+
   return (
     <Button onPress={handlePress} style={styles.container}>
       <View style={styles.wrapper}>

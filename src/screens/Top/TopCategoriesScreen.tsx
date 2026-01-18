@@ -94,7 +94,8 @@ export function TopCategoriesScreen() {
     setRefreshing(false);
   };
 
-  const allCategories = categories?.pages.flatMap(page => page.data) ?? [];
+  const allCategories =
+    categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [];
 
   if (allCategories.length === 0) {
     return (
@@ -113,7 +114,7 @@ export function TopCategoriesScreen() {
       ref={flashListRef}
       contentInsetAdjustmentBehavior="automatic"
       renderItem={renderItem}
-      keyExtractor={(_item, index) => index.toString()}
+      keyExtractor={item => item.id}
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.4}
