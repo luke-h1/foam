@@ -21,9 +21,10 @@ import { StyleSheet } from 'react-native-unistyles';
 export const CategoryScreen: FC<
   StackScreenProps<AppStackParamList, 'Category'>
 > = ({ route: { params } }) => {
-  const { id } = params;
   const flashListRef = useRef(null);
   const navigation = useAppNavigation();
+
+  const id = params?.id;
 
   const {
     data: category,

@@ -72,7 +72,7 @@ export function RemoteConfigScreen() {
             <IconSymbol name="arrow.clockwise" size={16} color="#fff" />
           )}
           <Text type="sm" weight="semibold" style={styles.buttonText}>
-            {isRefetching ? 'Fetching...' : 'Fetch from Remote'}
+            {isRefetching ? 'Fetching...' : 'Fetch from server'}
           </Text>
         </Button>
       </View>

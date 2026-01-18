@@ -72,13 +72,13 @@ export function OTAUpdateModal({
             disabled={isDownloading || !isPending}
           >
             <Text color="accent" contrast type="md" weight="semibold">
-              {isDownloading ? 'Downloading...' : 'Relaunch Now'}
+              {isDownloading ? 'Downloading...' : 'Relaunch'}
             </Text>
           </Button>
 
           <Button onPress={onDismiss} style={styles.dismissButton}>
             <Text color="gray.textLow" type="sm" weight="medium">
-              Later
+              Defer
             </Text>
           </Button>
         </View>

@@ -35,7 +35,7 @@ export function SettingsDevtoolsScreen() {
           {
             arrow: true,
             label: 'Debug',
-            description: 'Turn on debugging tools (hello from removed OTA)',
+            description: 'Turn on debugging tools',
             onPress: () => navigate('Debug'),
             icon: {
               type: 'symbol',

@@ -1,0 +1,307 @@
+# Continuous Deployment Workflow
+#
+# Automatically deploys OTA updates or triggers native builds.
+# Uses @expo/fingerprint to DETECT if native changes occurred,
+# but still uses appVersion for runtime versioning.
+#
+# Logic:
+# - Compare fingerprint to last successful deploy
+# - If unchanged: OTA update (fast, no app store submission)
+# - If changed: Native build required (warns or auto-builds)
+#
+# References:
+# - https://github.com/expo/expo-github-action/tree/main/fingerprint
+# - https://docs.expo.dev/eas-update/runtime-versions/
+
+name: Continuous Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      deploy_type:
+        description: 'Deployment type'
+        required: true
+        type: choice
+        default: 'auto'
+        options:
+          - auto        # Detect using fingerprint
+          - ota         # Force OTA update
+          - build       # Force native build
+      platform:
+        description: 'Platform to deploy'
+        required: false
+        type: choice
+        default: 'all'
+        options:
+          - all
+          - ios
+          - android
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  # Run tests before any deployment
+  test:
+    name: 🧪 Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🧪 Run tests
+        run: bun run test:ci
+
+      - name: 📝 TypeScript check
+        run: bun run ts:check
+
+  # Detect if native changes occurred using fingerprint
+  detect-changes:
+    name: 🔍 Detect Changes
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      fingerprint-changed: ${{ steps.compare.outputs.changed }}
+      ios-fingerprint: ${{ steps.fingerprint.outputs.ios }}
+      android-fingerprint: ${{ steps.fingerprint.outputs.android }}
+      deploy-type: ${{ steps.decide.outputs.deploy-type }}
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need history for comparison
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Calculate current fingerprints
+        id: fingerprint
+        run: |
+          IOS_FP=$(npx expo-updates fingerprint:generate --platform ios 2>/dev/null | jq -r '.hash' || echo "unknown")
+          ANDROID_FP=$(npx expo-updates fingerprint:generate --platform android 2>/dev/null | jq -r '.hash' || echo "unknown")
+
+          echo "ios=$IOS_FP" >> $GITHUB_OUTPUT
+          echo "android=$ANDROID_FP" >> $GITHUB_OUTPUT
+          echo "📱 iOS Fingerprint: $IOS_FP"
+          echo "🤖 Android Fingerprint: $ANDROID_FP"
+
+      - name: 📂 Load previous fingerprints
+        id: previous
+        uses: actions/cache/restore@v4
+        with:
+          path: .fingerprint-cache
+          key: fingerprint-${{ github.ref_name }}
+          restore-keys: |
+            fingerprint-main
+            fingerprint-
+
+      - name: 🔄 Compare fingerprints
+        id: compare
+        run: |
+          CHANGED="false"
+
+          if [ -f .fingerprint-cache/ios ]; then
+            PREV_IOS=$(cat .fingerprint-cache/ios)
+            if [ "$PREV_IOS" != "${{ steps.fingerprint.outputs.ios }}" ]; then
+              echo "⚠️ iOS fingerprint changed: $PREV_IOS → ${{ steps.fingerprint.outputs.ios }}"
+              CHANGED="true"
+            else
+              echo "✅ iOS fingerprint unchanged"
+            fi
+          else
+            echo "ℹ️ No previous iOS fingerprint found (first run)"
+            CHANGED="true"
+          fi
+
+          if [ -f .fingerprint-cache/android ]; then
+            PREV_ANDROID=$(cat .fingerprint-cache/android)
+            if [ "$PREV_ANDROID" != "${{ steps.fingerprint.outputs.android }}" ]; then
+              echo "⚠️ Android fingerprint changed: $PREV_ANDROID → ${{ steps.fingerprint.outputs.android }}"
+              CHANGED="true"
+            else
+              echo "✅ Android fingerprint unchanged"
+            fi
+          else
+            echo "ℹ️ No previous Android fingerprint found (first run)"
+            CHANGED="true"
+          fi
+
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: 🤔 Decide deployment type
+        id: decide
+        run: |
+          MANUAL_TYPE="${{ inputs.deploy_type }}"
+
+          if [ "$MANUAL_TYPE" == "ota" ]; then
+            echo "deploy-type=ota" >> $GITHUB_OUTPUT
+            echo "📦 Manual: OTA update requested"
+          elif [ "$MANUAL_TYPE" == "build" ]; then
+            echo "deploy-type=build" >> $GITHUB_OUTPUT
+            echo "🔨 Manual: Native build requested"
+          elif [ "${{ steps.compare.outputs.changed }}" == "true" ]; then
+            echo "deploy-type=build" >> $GITHUB_OUTPUT
+            echo "🔨 Auto: Native changes detected - build required"
+          else
+            echo "deploy-type=ota" >> $GITHUB_OUTPUT
+            echo "📦 Auto: No native changes - OTA update"
+          fi
+
+      - name: 📊 Summary
+        run: |
+          echo "## Change Detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Fingerprint | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS | \`${{ steps.fingerprint.outputs.ios }}\` | ${{ steps.compare.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | \`${{ steps.fingerprint.outputs.android }}\` | ${{ steps.compare.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Decision:** ${{ steps.decide.outputs.deploy-type == 'build' && '🔨 Native Build' || '📦 OTA Update' }}" >> $GITHUB_STEP_SUMMARY
+
+  # Native build (when fingerprint changed or manually requested)
+  build:
+    name: 🔨 Native Build
+    needs: detect-changes
+    if: needs.detect-changes.outputs.deploy-type == 'build'
+    runs-on: ubuntu-latest
+    concurrency: eas-build-${{ inputs.platform || 'all' }}
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 🔨 Build & Submit
+        run: |
+          PLATFORM="${{ inputs.platform || 'all' }}"
+
+          if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "ios" ]; then
+            echo "Building iOS..."
+            eas build --platform ios --profile production --auto-submit --non-interactive --no-wait
+          fi
+
+          if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "android" ]; then
+            echo "Building Android..."
+            eas build --platform android --profile production --auto-submit --non-interactive --no-wait
+          fi
+        env:
+          APP_VARIANT: production
+
+      - name: 💾 Save fingerprints for next run
+        run: |
+          mkdir -p .fingerprint-cache
+          echo "${{ needs.detect-changes.outputs.ios-fingerprint }}" > .fingerprint-cache/ios
+          echo "${{ needs.detect-changes.outputs.android-fingerprint }}" > .fingerprint-cache/android
+
+      - name: 📂 Cache fingerprints
+        uses: actions/cache/save@v4
+        with:
+          path: .fingerprint-cache
+          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}
+
+      - name: 📊 Summary
+        run: |
+          echo "## Native Build Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Profile:** production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auto-submit:** Yes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Fingerprints saved for future comparison." >> $GITHUB_STEP_SUMMARY
+
+  # OTA Update (when no native changes)
+  ota:
+    name: 📦 OTA Update
+    needs: detect-changes
+    if: needs.detect-changes.outputs.deploy-type == 'ota'
+    runs-on: ubuntu-latest
+    concurrency: eas-update-production
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 📦 Publish OTA Update
+        run: |
+          PLATFORM="${{ inputs.platform || 'all' }}"
+
+          if [ "$PLATFORM" == "all" ]; then
+            PLATFORM_FLAG="--platform all"
+          else
+            PLATFORM_FLAG="--platform $PLATFORM"
+          fi
+
+          eas update \
+            --branch production \
+            --message "Deploy: ${{ github.event.head_commit.message || github.sha }}" \
+            $PLATFORM_FLAG \
+            --non-interactive
+        env:
+          APP_VARIANT: production
+
+      - name: 💾 Save fingerprints for next run
+        run: |
+          mkdir -p .fingerprint-cache
+          echo "${{ needs.detect-changes.outputs.ios-fingerprint }}" > .fingerprint-cache/ios
+          echo "${{ needs.detect-changes.outputs.android-fingerprint }}" > .fingerprint-cache/android
+
+      - name: 📂 Cache fingerprints
+        uses: actions/cache/save@v4
+        with:
+          path: .fingerprint-cache
+          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}
+
+      - name: 📊 Summary
+        run: |
+          echo "## OTA Update Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Update deployed instantly to all users!" >> $GITHUB_STEP_SUMMARY

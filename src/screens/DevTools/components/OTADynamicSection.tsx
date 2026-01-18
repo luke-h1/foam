@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 import * as Form from '@app/components/Form/Form';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
+import { sentryService } from '@app/services/sentry-service';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
 import { ActivityIndicator, View } from 'react-native';
@@ -17,8 +18,11 @@ export function OTADynamicSection() {
     if (updates.isChecking) {
       return 'Checking for updates...';
     }
-    if (updates.isUpdateAvailable) {
+    if (updates.isUpdatePending) {
       return 'Reload app';
+    }
+    if (updates.isUpdateAvailable) {
+      return 'Download & reload';
     }
     return 'Check again';
   })();
@@ -41,12 +45,16 @@ export function OTADynamicSection() {
 
   const isLoading = updates.isChecking || updates.isDownloading;
   const textColor =
-    updates.availableUpdate || !isLoading ? AC.systemBlue : AC.label;
+    updates.isUpdatePending || updates.isUpdateAvailable || !isLoading
+      ? AC.systemBlue
+      : AC.label;
 
   return (
     <Form.Section
       title={
-        !updates.availableUpdate ? 'Synchronized ✓' : 'Needs synchronization'
+        !updates.isUpdatePending && !updates.isUpdateAvailable
+          ? 'Synchronized ✓'
+          : 'Needs synchronization'
       }
       titleHint={isLoading ? <ActivityIndicator animating /> : lastCheckTime}
     >
@@ -58,11 +66,55 @@ export function OTADynamicSection() {
             alert('OTA updates are not available in the Expo Go app.');
             return;
           }
-          if (updates.availableUpdate) {
-            void Updates.reloadAsync();
-          } else {
-            void Updates.checkForUpdateAsync();
-          }
+          void (async () => {
+            if (updates.isUpdatePending) {
+              // Update is ready, reload immediately
+              sentryService.captureMessage('OTA reload triggered from dev tools', {
+                level: 'info',
+                tags: {
+                  category: 'ota',
+                  action: 'dev_tools_reload',
+                  source: 'pending',
+                },
+              });
+              await Updates.reloadAsync();
+            } else if (updates.isUpdateAvailable) {
+              // Update is available but not fetched, fetch it first
+              sentryService.captureMessage(
+                'OTA check and fetch triggered from dev tools',
+                {
+                  level: 'info',
+                  tags: {
+                    category: 'ota',
+                    action: 'dev_tools_fetch',
+                    source: 'available',
+                  },
+                },
+              );
+              const result = await Updates.checkForUpdateAsync();
+              if (result.isAvailable) {
+                await Updates.fetchUpdateAsync();
+                // After fetch, it should become pending, reload
+                await Updates.reloadAsync();
+              }
+            } else {
+              // Check for updates
+              sentryService.captureMessage('OTA check triggered from dev tools', {
+                level: 'info',
+                tags: {
+                  category: 'ota',
+                  action: 'dev_tools_check',
+                  source: 'idle',
+                },
+              });
+              const result = await Updates.checkForUpdateAsync();
+              if (result.isAvailable) {
+                await Updates.fetchUpdateAsync();
+                // After fetch, reload
+                await Updates.reloadAsync();
+              }
+            }
+          })();
         }}
         hint={
           isLoading ? (
