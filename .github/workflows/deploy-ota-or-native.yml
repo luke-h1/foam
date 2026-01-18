@@ -160,7 +160,7 @@ jobs:
     name: 🔨 Native Build
     needs: detect-changes
     if: needs.detect-changes.outputs.deploy-type == 'build'
-    runs-on: ubuntu-latest
+    runs-on: foam
     concurrency: eas-build-${{ inputs.platform || 'all' }}
     steps:
       - name: 🏗 Checkout
@@ -187,12 +187,12 @@ jobs:
 
           if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "ios" ]; then
             echo "Building iOS..."
-            eas build --platform ios --profile production --auto-submit --non-interactive --no-wait
+            eas build --platform ios --profile production --auto-submit --non-interactive --no-wait --local
           fi
 
           if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "android" ]; then
             echo "Building Android..."
-            eas build --platform android --profile production --auto-submit --non-interactive --no-wait
+            eas build --platform android --profile production --auto-submit --non-interactive --no-wait --local
           fi
         env:
           APP_VARIANT: production
