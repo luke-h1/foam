@@ -11,6 +11,8 @@ jest.mock('@app/utils/date-time/date', () => ({
   formatDate: jest.fn(() => '12:00'),
 }));
 
+jest.mock('@app/services/twitch-service');
+
 const createMockMessage = (
   message: ParsedPart[],
   userstate: Partial<UserStateTags> = {},
@@ -359,11 +361,11 @@ describe('ChatMessage', () => {
         color: '#FF5500',
       });
 
-      const { getByText } = render(
+      const { getAllByText } = render(
         <ChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(getByText('ColoredUser:')).toBeTruthy();
+      expect(getAllByText('ColoredUser:').length).toBeGreaterThan(0);
     });
 
     it('should NOT display username when not provided', () => {

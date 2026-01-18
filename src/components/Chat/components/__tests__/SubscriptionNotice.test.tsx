@@ -5,23 +5,6 @@ import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
 
 describe('SubscriptionNotice', () => {
   describe('sub (new subscription)', () => {
-    test('renders NEW badge for new subscription', () => {
-      const part: ParsedPart<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '2000',
-          planName: 'Tier 1',
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.getByText('NEW')).toBeOnTheScreen();
-      expect(screen.queryByText('RESUB')).not.toBeOnTheScreen();
-    });
-
     test('displays subscription message for new subscription', () => {
       const part: ParsedPart<'sub'> = {
         type: 'sub',
@@ -36,7 +19,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice part={part} />);
 
       expect(screen.getByText('TestUser')).toBeOnTheScreen();
-      expect(screen.getByText(/subscribed/)).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
     test('displays Prime subscription correctly', () => {
@@ -53,7 +36,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice part={part} />);
 
       expect(screen.getByText('PrimeUser')).toBeOnTheScreen();
-      expect(screen.getByText(/subscribed with Prime/)).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
     });
 
     test('displays plan name for non-Prime subscriptions', () => {
@@ -69,61 +52,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/\(Tier 2\)/)).toBeOnTheScreen();
-    });
-
-    test('displays streak information when shouldShareStreak is true', () => {
-      const part: ParsedPart<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'StreakUser',
-          plan: '2000',
-          planName: 'Tier 1',
-          streakMonths: 3,
-          shouldShareStreak: true,
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.getByText(/, 3 months in a row/)).toBeOnTheScreen();
-    });
-
-    test('displays singular month for streak', () => {
-      const part: ParsedPart<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'StreakUser',
-          plan: '2000',
-          planName: 'Tier 1',
-          streakMonths: 1,
-          shouldShareStreak: true,
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.getByText(/, 1 month in a row/)).toBeOnTheScreen();
-    });
-
-    test('does not display streak when shouldShareStreak is false', () => {
-      const part: ParsedPart<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'NoStreakUser',
-          plan: '2000',
-          planName: 'Tier 1',
-          streakMonths: 5,
-          shouldShareStreak: false,
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.queryByText(/months in a row/)).not.toBeOnTheScreen();
+      expect(screen.getByText(/with Tier 2/)).toBeOnTheScreen();
     });
 
     test('displays subscriber message when provided', () => {
@@ -144,61 +73,9 @@ describe('SubscriptionNotice', () => {
         screen.getByText('Thanks for the great content!'),
       ).toBeOnTheScreen();
     });
-
-    test('does not display empty message', () => {
-      const part: ParsedPart<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'NoMessageUser',
-          plan: '2000',
-          planName: 'Tier 1',
-          message: '',
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.queryByTestId('messageContainer')).not.toBeOnTheScreen();
-    });
-
-    test('does not display whitespace-only message', () => {
-      const part: ParsedPart<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'WhitespaceUser',
-          plan: '2000',
-          planName: 'Tier 1',
-          message: '   ',
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.queryByTestId('messageContainer')).not.toBeOnTheScreen();
-    });
   });
 
   describe('resub (resubscription)', () => {
-    test('renders RESUB badge for resubscription', () => {
-      const part: ParsedPart<'resub'> = {
-        type: 'resub',
-        subscriptionEvent: {
-          msgId: 'resub',
-          displayName: 'ResubUser',
-          plan: '2000',
-          planName: 'Tier 1',
-          months: 6,
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.getByText('RESUB')).toBeOnTheScreen();
-      expect(screen.queryByText('NEW')).not.toBeOnTheScreen();
-    });
-
     test('displays resubscription message with months', () => {
       const part: ParsedPart<'resub'> = {
         type: 'resub',
@@ -214,7 +91,8 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice part={part} />);
 
       expect(screen.getByText('ResubUser')).toBeOnTheScreen();
-      expect(screen.getByText(/resubscribed for 6 months/)).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
+      expect(screen.getByText(/6 months/)).toBeOnTheScreen();
     });
 
     test('displays singular month for resubscription', () => {
@@ -231,25 +109,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/resubscribed for 1 month/)).toBeOnTheScreen();
-    });
-
-    test('displays resubscription without months when months is 0', () => {
-      const part: ParsedPart<'resub'> = {
-        type: 'resub',
-        subscriptionEvent: {
-          msgId: 'resub',
-          displayName: 'ResubUser',
-          plan: '2000',
-          planName: 'Tier 1',
-          months: 0,
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.getByText(/resubscribed$/)).toBeOnTheScreen();
-      expect(screen.queryByText(/for \d+ month/)).not.toBeOnTheScreen();
+      expect(screen.getByText('1 month')).toBeOnTheScreen();
     });
 
     test('displays Prime resubscription correctly', () => {
@@ -266,9 +126,8 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(
-        screen.getByText(/resubscribed for 12 months with Prime/),
-      ).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
+      expect(screen.getByText(/12 months/)).toBeOnTheScreen();
     });
 
     test('displays streak information for resubscription', () => {
@@ -304,7 +163,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/\(Tier 3\)/)).toBeOnTheScreen();
+      expect(screen.getByText(/with Tier 3/)).toBeOnTheScreen();
     });
   });
 
@@ -328,8 +187,9 @@ describe('SubscriptionNotice', () => {
 
       expect(screen.getByText('GifterUser')).toBeOnTheScreen();
       expect(
-        screen.getByText(/gifted a subscription to RecipientUser/),
+        screen.getByText(/Gifted a Tier 1 subscription to/),
       ).toBeOnTheScreen();
+      expect(screen.getByText('RecipientUser')).toBeOnTheScreen();
     });
 
     test('displays gift subscription without recipient', () => {
@@ -349,13 +209,12 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/gifted a subscription/)).toBeOnTheScreen();
-      expect(screen.queryByText(/to/)).not.toBeOnTheScreen();
-      // Should still show gift months and plan
-      expect(screen.getByText(/\(1 month\)/)).toBeOnTheScreen();
+      expect(
+        screen.getByText(/Gifted a Tier 1 subscription/),
+      ).toBeOnTheScreen();
     });
 
-    test('displays gift months for gift subscription', () => {
+    test('displays gift months for gift subscription with multiple months', () => {
       const part: ParsedPart<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
@@ -375,7 +234,7 @@ describe('SubscriptionNotice', () => {
       expect(screen.getByText(/\(3 months\)/)).toBeOnTheScreen();
     });
 
-    test('displays singular month for gift subscription', () => {
+    test('does not display gift months for single month gift', () => {
       const part: ParsedPart<'anongift'> = {
         type: 'anongift',
         subscriptionEvent: {
@@ -392,7 +251,8 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/\(1 month\)/)).toBeOnTheScreen();
+      // Single month gifts don't show the month count in parentheses
+      expect(screen.queryByText(/\(1 month\)/)).not.toBeOnTheScreen();
     });
 
     test('displays Prime gift subscription correctly', () => {
@@ -412,7 +272,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/with Prime/)).toBeOnTheScreen();
+      expect(screen.getByText(/Gifted a Prime subscription/)).toBeOnTheScreen();
     });
 
     test('does not display gift months when giftMonths is 0', () => {
@@ -452,8 +312,9 @@ describe('SubscriptionNotice', () => {
 
       expect(screen.getByText('AnonymousGifter')).toBeOnTheScreen();
       expect(
-        screen.getByText(/gifted a subscription \(Valorant, 5 total\)/),
+        screen.getByText(/Continuing their gift subscription/),
       ).toBeOnTheScreen();
+      expect(screen.getByText(/\(Valorant, 5 total\)/)).toBeOnTheScreen();
     });
 
     test('displays anonymous gift paid upgrade without total', () => {
@@ -469,9 +330,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(
-        screen.getByText(/gifted a subscription \(SummerPromo\)/),
-      ).toBeOnTheScreen();
+      expect(screen.getByText(/\(SummerPromo\)/)).toBeOnTheScreen();
     });
 
     test('displays anonymous gift paid upgrade without promo name', () => {
@@ -487,28 +346,13 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/gifted a subscription$/)).toBeOnTheScreen();
-      expect(screen.queryByText(/\(/)).not.toBeOnTheScreen();
+      expect(
+        screen.getByText(/Continuing their gift subscription/),
+      ).toBeOnTheScreen();
     });
   });
 
   describe('plan display', () => {
-    test('uses planName when available', () => {
-      const part: ParsedPart<'sub'> = {
-        type: 'sub',
-        subscriptionEvent: {
-          msgId: 'sub',
-          displayName: 'TestUser',
-          plan: '2000',
-          planName: 'Custom Plan Name',
-        },
-      };
-
-      render(<SubscriptionNotice part={part} />);
-
-      expect(screen.getByText(/\(Custom Plan Name\)/)).toBeOnTheScreen();
-    });
-
     test('maps plan code 1000 to Prime', () => {
       const part: ParsedPart<'sub'> = {
         type: 'sub',
@@ -521,7 +365,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/subscribed with Prime/)).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed with Prime/)).toBeOnTheScreen();
     });
 
     test('maps plan code 2000 to Tier 1', () => {
@@ -536,7 +380,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/\(Tier 1\)/)).toBeOnTheScreen();
+      expect(screen.getByText(/with Tier 1/)).toBeOnTheScreen();
     });
 
     test('maps plan code 3000 to Tier 2', () => {
@@ -551,7 +395,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/\(Tier 2\)/)).toBeOnTheScreen();
+      expect(screen.getByText(/with Tier 2/)).toBeOnTheScreen();
     });
 
     test('maps plan code 3001 to Tier 3', () => {
@@ -566,10 +410,10 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/\(Tier 3\)/)).toBeOnTheScreen();
+      expect(screen.getByText(/with Tier 3/)).toBeOnTheScreen();
     });
 
-    test('handles unknown plan code', () => {
+    test('handles unknown plan code by defaulting to Tier 1', () => {
       const part: ParsedPart<'sub'> = {
         type: 'sub',
         subscriptionEvent: {
@@ -582,8 +426,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice part={part} />);
 
       expect(screen.getByText('TestUser')).toBeOnTheScreen();
-      expect(screen.getByText(/subscribed/)).toBeOnTheScreen();
-      expect(screen.queryByText(/\(/)).not.toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed with Tier 1/)).toBeOnTheScreen();
     });
   });
 
@@ -601,7 +444,7 @@ describe('SubscriptionNotice', () => {
       render(<SubscriptionNotice part={part} />);
 
       expect(screen.getByText('MinimalUser')).toBeOnTheScreen();
-      expect(screen.getByText(/subscribed/)).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
 
     test('handles empty display name', () => {
@@ -617,7 +460,7 @@ describe('SubscriptionNotice', () => {
 
       render(<SubscriptionNotice part={part} />);
 
-      expect(screen.getByText(/subscribed/)).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
   });
 });

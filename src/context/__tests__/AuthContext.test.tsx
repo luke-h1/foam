@@ -17,7 +17,6 @@ import {
   AuthContextProvider,
   type AuthContextProviderProps,
   type AuthContextState,
-  type TwitchToken,
   useAuthContext,
 } from '../AuthContext';
 
@@ -42,6 +41,15 @@ const twitchApi = jest.mocked(_twitchApi);
 describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (twitchService.getTopStreams as jest.Mock).mockResolvedValue({
+      data: [],
+      pagination: { cursor: null },
+    });
+    (twitchService.getTopCategories as jest.Mock).mockResolvedValue({
+      data: [],
+      pagination: { cursor: null },
+    });
+    (twitchService.getFollowedStreams as jest.Mock).mockResolvedValue([]);
   });
 
   const initialProps: AuthContextState = {
@@ -79,7 +87,14 @@ describe('AuthContext', () => {
       expect(result.current.authState).toEqual({
         isAnonAuth: true,
         isLoggedIn: false,
-        token: { accessToken: 'anon', expiresIn: 3600, tokenType: 'bearer' },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        token: expect.objectContaining({
+          accessToken: 'anon',
+          expiresIn: 3600,
+          tokenType: 'bearer',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          expiresAt: expect.any(Number),
+        }),
       });
 
       expect(result.current.ready).toBe(true);
@@ -138,36 +153,33 @@ describe('AuthContext', () => {
       expect(result.current.authState).toEqual({
         isAnonAuth: false,
         isLoggedIn: true,
-        token: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        token: expect.objectContaining({
           accessToken: 'user-token',
           expiresIn: 3600,
           tokenType: 'bearer',
-        },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          expiresAt: expect.any(Number),
+        }),
       });
 
       // 1 for inital anon auth when app boots and the 2nd is for when the user logs in
       expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(2);
 
-      const anonToken: TwitchToken = {
-        accessToken: 'anon',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-      };
-
+      // Check that anon token was saved with expiresAt
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
         'V1_foam-anon',
-        JSON.stringify(anonToken),
+        expect.stringMatching(
+          /"accessToken":"anon","expiresIn":3600,"tokenType":"bearer","expiresAt":\d+/,
+        ),
       );
 
-      const userToken: TwitchToken = {
-        accessToken: 'user-token',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-      };
-
+      // Check that user token was saved with expiresAt
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
         'V1_foam-user',
-        JSON.stringify(userToken),
+        expect.stringMatching(
+          /"accessToken":"user-token","expiresIn":3600,"tokenType":"bearer","expiresAt":\d+/,
+        ),
       );
     });
   });

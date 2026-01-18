@@ -5,6 +5,7 @@ import {
   createLoadController,
   abortCurrentLoad,
 } from '@app/store/chatStore';
+import { DefaultWrapper } from '@app/test/render';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useChatEmoteLoader } from '../useChatEmoteLoader';
 
@@ -42,22 +43,26 @@ describe('useChatEmoteLoader', () => {
 
   describe('Initial State', () => {
     test('should start with idle status', () => {
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: false,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: false,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       expect(result.current.status).toBe('idle');
     });
 
     test('should return cancel and refetch functions', () => {
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: false,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: false,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       expect(typeof result.current.cancel).toBe('function');
@@ -67,11 +72,13 @@ describe('useChatEmoteLoader', () => {
 
   describe('Loading Behavior', () => {
     test('should load emotes when enabled and channelId provided', async () => {
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel-123',
-          enabled: true,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel-123',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await waitFor(() => {
@@ -87,11 +94,13 @@ describe('useChatEmoteLoader', () => {
     });
 
     test('should not load when disabled', async () => {
-      renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: false,
-        }),
+      renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: false,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await act(() => {
@@ -104,11 +113,13 @@ describe('useChatEmoteLoader', () => {
     });
 
     test('should not load when channelId is empty', async () => {
-      renderHook(() =>
-        useChatEmoteLoader({
-          channelId: '',
-          enabled: true,
-        }),
+      renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: '',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await act(() => {
@@ -127,11 +138,13 @@ describe('useChatEmoteLoader', () => {
         });
       });
 
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       // Wait for loading to complete
@@ -146,11 +159,13 @@ describe('useChatEmoteLoader', () => {
     test('should set status to error when load fails', async () => {
       mockLoadChannelResources.mockResolvedValue(false);
 
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await waitFor(() => {
@@ -161,11 +176,13 @@ describe('useChatEmoteLoader', () => {
     test('should set status to error when load throws', async () => {
       mockLoadChannelResources.mockRejectedValue(new Error('Network error'));
 
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await waitFor(() => {
@@ -176,11 +193,13 @@ describe('useChatEmoteLoader', () => {
 
   describe('Cancellation', () => {
     test('should cancel load when cancel is called', async () => {
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       // Wait for initial load to complete
@@ -199,11 +218,13 @@ describe('useChatEmoteLoader', () => {
     });
 
     test('should cancel on unmount', async () => {
-      const { unmount } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { unmount } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await waitFor(() => {
@@ -222,11 +243,13 @@ describe('useChatEmoteLoader', () => {
         return Promise.resolve(true);
       });
 
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await waitFor(() => {
@@ -237,11 +260,13 @@ describe('useChatEmoteLoader', () => {
 
   describe('Refetch', () => {
     test('should reload with forceRefresh when refetch is called', async () => {
-      const { result } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { result } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       await waitFor(() => {
@@ -272,6 +297,7 @@ describe('useChatEmoteLoader', () => {
             enabled: true,
           }),
         {
+          wrapper: DefaultWrapper,
           initialProps: { channelId: 'channel-1' },
         },
       );
@@ -308,6 +334,7 @@ describe('useChatEmoteLoader', () => {
             enabled: true,
           }),
         {
+          wrapper: DefaultWrapper,
           initialProps: { channelId: 'channel-1' },
         },
       );
@@ -332,6 +359,7 @@ describe('useChatEmoteLoader', () => {
             enabled: true,
           }),
         {
+          wrapper: DefaultWrapper,
           initialProps: { channelId: 'channel-1' },
         },
       );
@@ -354,11 +382,13 @@ describe('useChatEmoteLoader', () => {
 
       mockLoadChannelResources.mockReturnValue(loadPromise);
 
-      const { unmount } = renderHook(() =>
-        useChatEmoteLoader({
-          channelId: 'test-channel',
-          enabled: true,
-        }),
+      const { unmount } = renderHook(
+        () =>
+          useChatEmoteLoader({
+            channelId: 'test-channel',
+            enabled: true,
+          }),
+        { wrapper: DefaultWrapper },
       );
 
       // Unmount while load is pending - should not throw

@@ -1,3 +1,4 @@
+import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   render as baseRender,
@@ -6,7 +7,7 @@ import {
 } from '@testing-library/react-native';
 import { ReactElement, ReactNode } from 'react';
 
-const DefaultWrapper = ({ children }: { children: ReactNode }) => {
+export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -16,7 +17,28 @@ const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   });
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthContextTestProvider
+        ready
+        authState={{
+          isLoggedIn: false,
+          isAnonAuth: true,
+          token: {
+            accessToken: 'test-token',
+            expiresIn: 3600,
+            tokenType: 'bearer',
+            expiresAt: Date.now() + 3600000,
+          },
+        }}
+        user={undefined}
+        loginWithTwitch={jest.fn()}
+        logout={jest.fn()}
+        populateAuthState={jest.fn()}
+        fetchAnonToken={jest.fn()}
+      >
+        {children}
+      </AuthContextTestProvider>
+    </QueryClientProvider>
   );
 };
 

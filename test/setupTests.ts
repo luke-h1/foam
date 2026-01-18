@@ -129,3 +129,5 @@ jest.mock('expo-updates');
 
 // expo/fetch needs manual mock due to path structure
 jest.mock('expo/fetch');
+
+jest.mock('pressto');
