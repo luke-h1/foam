@@ -1,40 +1,22 @@
-# Continuous Deployment Workflow
-#
-# Automatically deploys OTA updates or triggers native builds.
-# Uses @expo/fingerprint to DETECT if native changes occurred,
-# but still uses appVersion for runtime versioning.
-#
-# Logic:
-# - Compare fingerprint to last successful deploy
-# - If unchanged: OTA update (fast, no app store submission)
-# - If changed: Native build required (warns or auto-builds)
-#
-# References:
-# - https://github.com/expo/expo-github-action/tree/main/fingerprint
-# - https://docs.expo.dev/eas-update/runtime-versions/
-
-name: Continuous Deploy
+name: Deploy native or OTA
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       deploy_type:
-        description: 'Deployment type'
+        description: "Deployment type"
         required: true
         type: choice
-        default: 'auto'
+        default: "auto"
         options:
-          - auto        # Detect using fingerprint
-          - ota         # Force OTA update
-          - build       # Force native build
+          - auto # Detect using fingerprint
+          - ota # Force OTA update
+          - build # Force native build
       platform:
-        description: 'Platform to deploy'
+        description: "Platform to deploy"
         required: false
         type: choice
-        default: 'all'
+        default: "all"
         options:
           - all
           - ios
@@ -44,7 +26,6 @@ env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
 jobs:
-  # Run tests before any deployment
   test:
     name: 🧪 Test
     runs-on: ubuntu-latest
@@ -55,7 +36,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: '.bun-version'
+          bun-version-file: ".bun-version"
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
@@ -66,7 +47,6 @@ jobs:
       - name: 📝 TypeScript check
         run: bun run ts:check
 
-  # Detect if native changes occurred using fingerprint
   detect-changes:
     name: 🔍 Detect Changes
     needs: test
@@ -82,12 +62,12 @@ jobs:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Need history for comparison
+          fetch-depth: 0 # Need history for comparison
 
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: '.bun-version'
+          bun-version-file: ".bun-version"
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
@@ -176,7 +156,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Decision:** ${{ steps.decide.outputs.deploy-type == 'build' && '🔨 Native Build' || '📦 OTA Update' }}" >> $GITHUB_STEP_SUMMARY
 
-  # Native build (when fingerprint changed or manually requested)
   build:
     name: 🔨 Native Build
     needs: detect-changes
@@ -190,7 +169,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: '.bun-version'
+          bun-version-file: ".bun-version"
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
@@ -240,7 +219,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Fingerprints saved for future comparison." >> $GITHUB_STEP_SUMMARY
 
-  # OTA Update (when no native changes)
   ota:
     name: 📦 OTA Update
     needs: detect-changes
@@ -254,7 +232,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version-file: '.bun-version'
+          bun-version-file: ".bun-version"
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile

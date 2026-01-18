@@ -348,13 +348,16 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
 
       if (isProduction) {
         // In production, auto-reload immediately for instant OTA
-        sentryService.captureMessage('OTA update auto-reloading in production', {
-          level: 'info',
-          tags: {
-            category: 'ota',
-            action: 'auto_reload',
+        sentryService.captureMessage(
+          'OTA update auto-reloading in production',
+          {
+            level: 'info',
+            tags: {
+              category: 'ota',
+              action: 'auto_reload',
+            },
           },
-        });
+        );
 
         // Track metric for dashboard (using message with specific tag)
         sentryService.captureMessage('ota.update.applied', {
@@ -391,7 +394,13 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
         setModalVisible(true);
       }
     }
-  }, [updates.isUpdatePending, updates.isDownloading, updates.isChecking, updates.availableUpdate, isProduction]);
+  }, [
+    updates.isUpdatePending,
+    updates.isDownloading,
+    updates.isChecking,
+    updates.availableUpdate,
+    isProduction,
+  ]);
 
   // After the app has been minimized for 5 minutes, we want to either A. install an update if one has become available
   // or B check for an update again.

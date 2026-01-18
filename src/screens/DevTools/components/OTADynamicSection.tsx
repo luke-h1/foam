@@ -69,14 +69,17 @@ export function OTADynamicSection() {
           void (async () => {
             if (updates.isUpdatePending) {
               // Update is ready, reload immediately
-              sentryService.captureMessage('OTA reload triggered from dev tools', {
-                level: 'info',
-                tags: {
-                  category: 'ota',
-                  action: 'dev_tools_reload',
-                  source: 'pending',
+              sentryService.captureMessage(
+                'OTA reload triggered from dev tools',
+                {
+                  level: 'info',
+                  tags: {
+                    category: 'ota',
+                    action: 'dev_tools_reload',
+                    source: 'pending',
+                  },
                 },
-              });
+              );
               await Updates.reloadAsync();
             } else if (updates.isUpdateAvailable) {
               // Update is available but not fetched, fetch it first
@@ -99,14 +102,17 @@ export function OTADynamicSection() {
               }
             } else {
               // Check for updates
-              sentryService.captureMessage('OTA check triggered from dev tools', {
-                level: 'info',
-                tags: {
-                  category: 'ota',
-                  action: 'dev_tools_check',
-                  source: 'idle',
+              sentryService.captureMessage(
+                'OTA check triggered from dev tools',
+                {
+                  level: 'info',
+                  tags: {
+                    category: 'ota',
+                    action: 'dev_tools_check',
+                    source: 'idle',
+                  },
                 },
-              });
+              );
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
                 await Updates.fetchUpdateAsync();
