@@ -174,20 +174,41 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: 🔐 Load secrets from 1Password
-        uses: 1password/load-secrets-action@v2
-        id: op-secrets
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+      - name: Load secrets
+        id: load_secrets
+        uses: 1password/load-secrets-action@v3
         with:
           export-env: true
-          vault: foam-staging
-          items: |
-            ci-cd/TWITCH_CLIENT_ID
-            ci-cd/TWITCH_CLIENT_SECRET
-            ci-cd/AUTH_PROXY_API_BASE_URL
-            ci-cd/AUTH_PROXY_API_KEY
-            ci-cd/GOOGLE_SERVICES_IOS_PROD_BS4
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
+          TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
+          AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
+          AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
+          SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+          GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
+          GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
+          SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
+          OP_ENV_FILE: ".env"
+
+      - name: 📄 Decode and write Google service files
+        run: |
+          if [ -z "$GOOGLE_SERVICES_ANDROID_PROD_BS4" ]; then
+            echo "Error: GOOGLE_SERVICES_ANDROID_PROD_BS4 is not set"
+            exit 1
+          fi
+          if [ -z "$GOOGLE_SERVICES_IOS_PROD_BS4" ]; then
+            echo "Error: GOOGLE_SERVICES_IOS_PROD_BS4 is not set"
+            exit 1
+          fi
+
+          echo "Decoding Android Google Services JSON..."
+          echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > google-services-prod.json
+
+          echo "Decoding iOS Google Services plist..."
+          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
+
+          echo "✅ Google service files written successfully"
 
       - name: 📝 Generate GoogleService-Info.plist
         run: |

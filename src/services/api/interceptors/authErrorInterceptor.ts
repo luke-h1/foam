@@ -21,15 +21,15 @@ export const createAuthErrorInterceptor = (
       // Only handle 401s for Twitch API calls
       const url = error.config?.url || '';
       const baseURL = error.config?.baseURL || '';
-      
-      if (
-        baseURL.includes('api.twitch.tv') ||
-        url.includes('api.twitch.tv')
-      ) {
-        logger.auth.warn('401 Unauthorized from Twitch API, refreshing auth state', {
-          url,
-          baseURL,
-        });
+
+      if (baseURL.includes('api.twitch.tv') || url.includes('api.twitch.tv')) {
+        logger.auth.warn(
+          '401 Unauthorized from Twitch API, refreshing auth state',
+          {
+            url,
+            baseURL,
+          },
+        );
 
         sentryService.addBreadcrumb({
           category: 'auth',
@@ -46,22 +46,25 @@ export const createAuthErrorInterceptor = (
           // Trigger auth refresh/re-auth
           // This will restore tokens from SecureStore or fetch new anon token
           await onAuthError();
-          
+
           logger.auth.info('Auth state refreshed after 401');
-          
+
           sentryService.addBreadcrumb({
             category: 'auth',
             message: 'Auth state refreshed successfully after 401',
             level: 'info',
           });
-          
+
           // Note: We don't retry the request here because:
           // 1. The auth refresh might take time
           // 2. React Query will handle retries automatically
           // 3. The user might need to re-authenticate
         } catch (refreshError) {
-          logger.auth.error('Failed to refresh auth state after 401', refreshError);
-          
+          logger.auth.error(
+            'Failed to refresh auth state after 401',
+            refreshError,
+          );
+
           sentryService.captureException(refreshError, {
             tags: {
               category: 'auth',
@@ -72,13 +75,13 @@ export const createAuthErrorInterceptor = (
               baseURL,
             },
           });
-          
+
           // If refresh fails, let the error propagate
           // The auth context will handle clearing tokens
         }
       }
     }
-    
+
     // Re-throw the error so it can be handled by other error handlers
     throw error;
   },
