@@ -187,7 +187,7 @@ jobs:
 
           if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "ios" ]; then
             echo "Building iOS..."
-            eas build --platform ios --profile production --auto-submit --non-interactive --no-wait --local
+            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./app-production.abd && bun run eas submit -p ios --path ./app-production.abd            
           fi
 
           if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "android" ]; then
