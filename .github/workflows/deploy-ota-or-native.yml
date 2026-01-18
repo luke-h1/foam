@@ -307,12 +307,7 @@ jobs:
           else
             PLATFORM_FLAG="--platform $PLATFORM"
           fi
-
-          eas update \
-            --branch production \
-            --message "Deploy: ${{ github.event.head_commit.message || github.sha }}" \
-            $PLATFORM_FLAG \
-            --non-interactive
+          eas update --channel production --environment production --message "Deploy: ${{ github.event.head_commit.message || github.sha }}" $PLATFORM_FLAG --non-interactive --clear-cache
         env:
           APP_VARIANT: production
 
