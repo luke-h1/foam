@@ -53,6 +53,7 @@ function QueryProviderWithAuth({ children }: PropsWithChildren) {
         interceptorAdded.current = false;
       };
     }
+    return undefined;
   }, [populateAuthState]);
 
   return (
