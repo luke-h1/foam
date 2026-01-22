@@ -26,8 +26,7 @@ export function ChannelSwitcherSection() {
   const [urlOverrideInput, setUrlOverrideInput] = useState('');
   const [channelOverrideInput, setChannelOverrideInput] = useState('');
   const currentChannel = Updates.channel || 'unknown';
-  const currentUpdateURL =
-    Constants.expoConfig?.updates?.url || 'unknown';
+  const currentUpdateURL = Constants.expoConfig?.updates?.url || 'unknown';
 
   useEffect(() => {
     setIsLoadingChannels(true);
@@ -52,7 +51,10 @@ export function ChannelSwitcherSection() {
 
   const handleSwitchChannel = (channelName: string) => {
     if (channelName === currentChannel) {
-      Alert.alert('Already on channel', `You are already on the "${channelName}" channel.`);
+      Alert.alert(
+        'Already on channel',
+        `You are already on the "${channelName}" channel.`,
+      );
       return;
     }
 
@@ -103,7 +105,8 @@ export function ChannelSwitcherSection() {
                   ],
                 );
               } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
+                const message =
+                  error instanceof Error ? error.message : String(error);
                 Alert.alert('Error', `Failed to switch channel: ${message}`);
               } finally {
                 setIsSwitching(false);
@@ -134,7 +137,8 @@ export function ChannelSwitcherSection() {
             `Successfully switched to "${channelName}" channel.`,
           );
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
+          const message =
+            error instanceof Error ? error.message : String(error);
           Alert.alert('Error', `Failed to switch channel: ${message}`);
         } finally {
           setIsSwitching(false);
@@ -210,13 +214,20 @@ export function ChannelSwitcherSection() {
 
   const getChannelHint = (channel: string) => {
     if (channel === currentChannel) {
-      return <IconSymbol name="checkmark.circle.fill" color={theme.colors.blue.accent} />;
+      return (
+        <IconSymbol
+          name="checkmark.circle.fill"
+          color={theme.colors.blue.accent}
+        />
+      );
     }
 
     if (isSwitching) {
       return <ActivityIndicator animating size="small" />;
     }
-    return <IconSymbol name="arrow.right.circle" color={theme.colors.gray.textLow} />;
+    return (
+      <IconSymbol name="arrow.right.circle" color={theme.colors.gray.textLow} />
+    );
   };
 
   const getChannelColor = (channel: string) => {
@@ -249,7 +260,7 @@ export function ChannelSwitcherSection() {
             Loading channels...
           </Form.Text>
         ) : (
-          channels.map((channel) => (
+          channels.map(channel => (
             <Form.Text
               key={channel}
               style={{ color: getChannelColor(channel) }}
@@ -282,14 +293,19 @@ export function ChannelSwitcherSection() {
               <Form.HStack style={styles.customInputButtons}>
                 <Form.Text
                   style={{
-                    color: isSwitching ? theme.colors.gray.textLow : theme.colors.blue.accent,
+                    color: isSwitching
+                      ? theme.colors.gray.textLow
+                      : theme.colors.blue.accent,
                   }}
                   onPress={handleCustomChannel}
                   hint={
                     isSwitching ? (
                       <ActivityIndicator animating size="small" />
                     ) : (
-                      <IconSymbol name="checkmark.circle" color={theme.colors.blue.accent} />
+                      <IconSymbol
+                        name="checkmark.circle"
+                        color={theme.colors.blue.accent}
+                      />
                     )
                   }
                 >
@@ -297,13 +313,20 @@ export function ChannelSwitcherSection() {
                 </Form.Text>
                 <Form.Text
                   style={{
-                    color: isSwitching ? theme.colors.gray.textLow : theme.colors.gray.text,
+                    color: isSwitching
+                      ? theme.colors.gray.textLow
+                      : theme.colors.gray.text,
                   }}
                   onPress={() => {
                     setShowCustomInput(false);
                     setCustomChannelInput('');
                   }}
-                  hint={<IconSymbol name="xmark.circle" color={theme.colors.gray.textLow} />}
+                  hint={
+                    <IconSymbol
+                      name="xmark.circle"
+                      color={theme.colors.gray.textLow}
+                    />
+                  }
                 >
                   Cancel
                 </Form.Text>
@@ -313,7 +336,9 @@ export function ChannelSwitcherSection() {
         ) : (
           <Form.Text
             style={{
-              color: isSwitching ? theme.colors.gray.textLow : theme.colors.gray.text,
+              color: isSwitching
+                ? theme.colors.gray.textLow
+                : theme.colors.gray.text,
             }}
             onPress={() => {
               if (!isSwitching) {
@@ -324,7 +349,10 @@ export function ChannelSwitcherSection() {
               isSwitching ? (
                 <ActivityIndicator animating size="small" />
               ) : (
-                <IconSymbol name="plus.circle" color={theme.colors.gray.textLow} />
+                <IconSymbol
+                  name="plus.circle"
+                  color={theme.colors.gray.textLow}
+                />
               )
             }
           >
@@ -373,14 +401,19 @@ export function ChannelSwitcherSection() {
             <Form.HStack style={styles.urlOverrideButtons}>
               <Form.Text
                 style={{
-                  color: isSwitching ? theme.colors.gray.textLow : theme.colors.red.accent,
+                  color: isSwitching
+                    ? theme.colors.gray.textLow
+                    : theme.colors.red.accent,
                 }}
                 onPress={handleURLOverride}
                 hint={
                   isSwitching ? (
                     <ActivityIndicator animating size="small" />
                   ) : (
-                    <IconSymbol name="checkmark.circle" color={theme.colors.red.accent} />
+                    <IconSymbol
+                      name="checkmark.circle"
+                      color={theme.colors.red.accent}
+                    />
                   )
                 }
               >
@@ -388,14 +421,21 @@ export function ChannelSwitcherSection() {
               </Form.Text>
               <Form.Text
                 style={{
-                  color: isSwitching ? theme.colors.gray.textLow : theme.colors.gray.text,
+                  color: isSwitching
+                    ? theme.colors.gray.textLow
+                    : theme.colors.gray.text,
                 }}
                 onPress={() => {
                   setShowURLOverride(false);
                   setUrlOverrideInput('');
                   setChannelOverrideInput('');
                 }}
-                hint={<IconSymbol name="xmark.circle" color={theme.colors.gray.textLow} />}
+                hint={
+                  <IconSymbol
+                    name="xmark.circle"
+                    color={theme.colors.gray.textLow}
+                  />
+                }
               >
                 Cancel
               </Form.Text>
@@ -404,7 +444,9 @@ export function ChannelSwitcherSection() {
         ) : (
           <Form.Text
             style={{
-              color: isSwitching ? theme.colors.gray.textLow : theme.colors.red.accent,
+              color: isSwitching
+                ? theme.colors.gray.textLow
+                : theme.colors.red.accent,
             }}
             onPress={() => {
               if (!isSwitching) {
@@ -415,7 +457,10 @@ export function ChannelSwitcherSection() {
               isSwitching ? (
                 <ActivityIndicator animating size="small" />
               ) : (
-                <IconSymbol name="exclamationmark.triangle" color={theme.colors.red.accent} />
+                <IconSymbol
+                  name="exclamationmark.triangle"
+                  color={theme.colors.red.accent}
+                />
               )
             }
           >

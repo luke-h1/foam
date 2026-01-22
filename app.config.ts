@@ -119,6 +119,7 @@ const config: ExpoConfig = {
     // Updates are checked manually after the app has fully loaded
     checkAutomatically: 'NEVER',
     fallbackToCacheTimeout: 30000,
+    disableAntiBrickingMeasures: process.env.APP_VARIANT !== 'production',
   },
   runtimeVersion: {
     policy: 'appVersion',
