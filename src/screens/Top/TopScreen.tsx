@@ -13,7 +13,7 @@ export function TopScreen() {
   const [index, setIndex] = useState<number>(0);
 
   const [routes] = useState([
-    { key: 'streams', title: 'Streams' },
+    { key: 'streams', title: 'Streams !!!' },
     { key: 'categories', title: 'Categories' },
   ]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
