@@ -34,9 +34,49 @@ jobs:
           if echo "$COMMENT" | grep -qiE '!surf-channel'; then
             echo "✅ Comment matches pattern '!surf-channel', proceeding..."
             
-            # Extract platform option (ios, android, or default to all)
-            PLATFORM=$(echo "$COMMENT" | sed -nE 's/.*!surf-channel\s+(ios|android).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
+            # Common channels list (matching fetchUpdateChannels.ts)
+            COMMON_CHANNELS=("production" "preview" "staging" "development")
             
+            # Extract first and second words after !surf-channel
+            # Pattern: !surf-channel [channel] [platform] or !surf-channel [platform]
+            FIRST_WORD=$(echo "$COMMENT" | sed -nE 's/.*!surf-channel\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
+            SECOND_WORD=$(echo "$COMMENT" | sed -nE 's/.*!surf-channel\s+[a-zA-Z0-9_-]+\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
+            
+            CHANNEL_NAME=""
+            PLATFORM=""
+            
+            # Check if first word is a platform keyword
+            if [[ "$FIRST_WORD" == "ios" || "$FIRST_WORD" == "android" ]]; then
+              # No channel specified, only platform
+              PLATFORM="$FIRST_WORD"
+            else
+              # First word is (hopefully) a channel name
+              if [ -n "$FIRST_WORD" ]; then
+                # Validate it's a known channel
+                IS_VALID_CHANNEL=false
+                for valid_channel in "${COMMON_CHANNELS[@]}"; do
+                  if [ "$FIRST_WORD" == "$valid_channel" ]; then
+                    IS_VALID_CHANNEL=true
+                    CHANNEL_NAME="$FIRST_WORD"
+                    break
+                  fi
+                done
+                
+                if [ "$IS_VALID_CHANNEL" == "false" ]; then
+                  echo "❌ Invalid channel name '$FIRST_WORD'."
+                  echo "Valid channels: ${COMMON_CHANNELS[*]}"
+                  exit 1
+                fi
+                echo "✅ Channel specified: $CHANNEL_NAME"
+                
+                # Check if second word is a platform
+                if [[ "$SECOND_WORD" == "ios" || "$SECOND_WORD" == "android" ]]; then
+                  PLATFORM="$SECOND_WORD"
+                fi
+              fi
+            fi
+            
+            # Set default platform if not specified
             if [ -z "$PLATFORM" ]; then
               PLATFORM="all"
               echo "ℹ️ No platform specified, defaulting to 'all'"
@@ -49,6 +89,13 @@ jobs:
               echo "✅ Platform specified: $PLATFORM"
             fi
             
+            # Output channel (empty means all channels)
+            if [ -n "$CHANNEL_NAME" ]; then
+              echo "channel=$CHANNEL_NAME" >> $GITHUB_OUTPUT
+              echo "publish-all=false" >> $GITHUB_OUTPUT
+            else
+              echo "publish-all=true" >> $GITHUB_OUTPUT
+            fi
             echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
           else
             echo "ℹ️ Comment does not match pattern '!surf-channel', skipping"
@@ -75,21 +122,32 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
-      - name: 📦 Publish update to common channels
+      - name: 📦 Publish update to channel(s)
         id: publish-updates
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
           COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
           COMMIT_MSG="${{ github.event.pull_request.head.commit.message }}"
           PLATFORM="${{ steps.parse-comment.outputs.platform }}"
+          SPECIFIC_CHANNEL="${{ steps.parse-comment.outputs.channel }}"
+          PUBLISH_ALL="${{ steps.parse-comment.outputs.publish-all }}"
 
           # Common channels list (matching fetchUpdateChannels.ts)
-          CHANNELS=("production" "preview" "staging" "development")
+          COMMON_CHANNELS=("production" "preview" "staging" "development")
+
+          # Determine which channels to publish to
+          if [ "$PUBLISH_ALL" == "true" ]; then
+            CHANNELS=("${COMMON_CHANNELS[@]}")
+            echo "📋 Publishing to all common channels: ${CHANNELS[*]}"
+          else
+            CHANNELS=("$SPECIFIC_CHANNEL")
+            echo "📋 Publishing to specific channel: $SPECIFIC_CHANNEL"
+          fi
 
           SUCCESSFUL_CHANNELS=()
           FAILED_CHANNELS=()
 
-          echo "📱 Publishing to platform: $PLATFORM"
+          echo "📱 Platform: $PLATFORM"
           echo ""
 
           for CHANNEL in "${CHANNELS[@]}"; do
