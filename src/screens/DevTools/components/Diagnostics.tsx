@@ -5,6 +5,7 @@ import * as AC from '@bacons/apple-colors';
 import { Linking } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { AppStoreSection } from './AppStoreSection';
+import { ChannelSwitcherSection } from './ChannelSwitcherSection';
 import { ExpoSection } from './ExpoSection';
 import { OTADynamicSection } from './OTADynamicSection';
 import { OTASection } from './OTASection';
@@ -27,6 +28,7 @@ export function Diagnostics() {
       </Form.Section>
 
       <OTADynamicSection />
+      <ChannelSwitcherSection />
       <OTASection />
     </BodyScrollView>
   );

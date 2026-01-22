@@ -58,6 +58,7 @@
     "storybook:preview": "APP_VARIANT=development expo start --web",
     "fingerprint:android": "npx expo-updates fingerprint:generate --platform android | jq -r '.hash' | xargs -n 1 echo 'fingerprint:'",
     "fingerprint:ios": "npx expo-updates fingerprint:generate --platform ios | jq -r '.hash' | xargs -n 1 echo 'fingerprint:'",
+    "channels:cleanup": "./scripts/cleanup-channels.sh",
     "build:debug:android": "cd android && ./gradlew assembleDebug -DtestBuildType=debug -Dorg.gradle.jvmargs=-Xmx4g",
     "build:debug:ios": "cd ios && pod install && cd .. && xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/Foam.xcworkspace -UseNewBuildSystem=YES -scheme Foam -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build -quiet",
     "maestro:test": "maestro test --debug-output maestro-debug-output .maestro"
