@@ -30,17 +30,17 @@ jobs:
           COMMENT="${{ github.event.comment.body }}"
           echo "Comment: $COMMENT"
 
-          # Check if comment matches !surf-channel pattern
-          if echo "$COMMENT" | grep -qiE '!surf-channel'; then
-            echo "✅ Comment matches pattern '!surf-channel', proceeding..."
+          # Check if comment matches !channel-surf pattern
+          if echo "$COMMENT" | grep -qiE '!channel-surf'; then
+            echo "✅ Comment matches pattern '!channel-surf', proceeding..."
             
             # Common channels list (matching fetchUpdateChannels.ts)
             COMMON_CHANNELS=("production" "preview" "staging" "development")
             
-            # Extract first and second words after !surf-channel
-            # Pattern: !surf-channel [channel] [platform] or !surf-channel [platform]
-            FIRST_WORD=$(echo "$COMMENT" | sed -nE 's/.*!surf-channel\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
-            SECOND_WORD=$(echo "$COMMENT" | sed -nE 's/.*!surf-channel\s+[a-zA-Z0-9_-]+\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
+            # Extract first and second words after !channel-surf
+            # Pattern: !channel-surf [channel] [platform] or !channel-surf [platform]
+            FIRST_WORD=$(echo "$COMMENT" | sed -nE 's/.*!channel-surf\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
+            SECOND_WORD=$(echo "$COMMENT" | sed -nE 's/.*!channel-surf\s+[a-zA-Z0-9_-]+\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
             
             CHANNEL_NAME=""
             PLATFORM=""
@@ -98,7 +98,7 @@ jobs:
             fi
             echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
           else
-            echo "ℹ️ Comment does not match pattern '!surf-channel', skipping"
+            echo "ℹ️ Comment does not match pattern '!channel-surf', skipping"
             exit 0
           fi
 
