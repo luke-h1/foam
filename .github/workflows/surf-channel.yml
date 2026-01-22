@@ -1,0 +1,232 @@
+name: OTA Channel surf - Publish to channel
+
+on:
+  issue_comment:
+    types: [created]
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  surf-channel:
+    name: 🏄 OTA channel surf
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request != null
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: 🔎 Check for EXPO_TOKEN
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "❌ EXPO_TOKEN secret is required"
+            exit 1
+          fi
+
+      - name: 📝 Parse comment
+        id: parse-comment
+        run: |
+          COMMENT="${{ github.event.comment.body }}"
+          echo "Comment: $COMMENT"
+
+          # Check if comment matches !surf-channel pattern
+          if echo "$COMMENT" | grep -qiE '!surf-channel'; then
+            echo "✅ Comment matches pattern '!surf-channel', proceeding..."
+            
+            # Common channels list (matching fetchUpdateChannels.ts)
+            COMMON_CHANNELS=("production" "preview" "staging" "development")
+            
+            # Extract first and second words after !surf-channel
+            # Pattern: !surf-channel [channel] [platform] or !surf-channel [platform]
+            FIRST_WORD=$(echo "$COMMENT" | sed -nE 's/.*!surf-channel\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
+            SECOND_WORD=$(echo "$COMMENT" | sed -nE 's/.*!surf-channel\s+[a-zA-Z0-9_-]+\s+([a-zA-Z0-9_-]+).*/\1/p' | head -1 | tr '[:upper:]' '[:lower:]')
+            
+            CHANNEL_NAME=""
+            PLATFORM=""
+            
+            # Check if first word is a platform keyword
+            if [[ "$FIRST_WORD" == "ios" || "$FIRST_WORD" == "android" ]]; then
+              # No channel specified, only platform
+              PLATFORM="$FIRST_WORD"
+            else
+              # First word is (hopefully) a channel name
+              if [ -n "$FIRST_WORD" ]; then
+                # Validate it's a known channel
+                IS_VALID_CHANNEL=false
+                for valid_channel in "${COMMON_CHANNELS[@]}"; do
+                  if [ "$FIRST_WORD" == "$valid_channel" ]; then
+                    IS_VALID_CHANNEL=true
+                    CHANNEL_NAME="$FIRST_WORD"
+                    break
+                  fi
+                done
+                
+                if [ "$IS_VALID_CHANNEL" == "false" ]; then
+                  echo "❌ Invalid channel name '$FIRST_WORD'."
+                  echo "Valid channels: ${COMMON_CHANNELS[*]}"
+                  exit 1
+                fi
+                echo "✅ Channel specified: $CHANNEL_NAME"
+                
+                # Check if second word is a platform
+                if [[ "$SECOND_WORD" == "ios" || "$SECOND_WORD" == "android" ]]; then
+                  PLATFORM="$SECOND_WORD"
+                fi
+              fi
+            fi
+            
+            # Set default platform if not specified
+            if [ -z "$PLATFORM" ]; then
+              PLATFORM="all"
+              echo "ℹ️ No platform specified, defaulting to 'all'"
+            else
+              # Validate platform
+              if [[ "$PLATFORM" != "ios" && "$PLATFORM" != "android" ]]; then
+                echo "❌ Invalid platform '$PLATFORM'. Use 'ios' or 'android'."
+                exit 1
+              fi
+              echo "✅ Platform specified: $PLATFORM"
+            fi
+            
+            # Output channel (empty means all channels)
+            if [ -n "$CHANNEL_NAME" ]; then
+              echo "channel=$CHANNEL_NAME" >> $GITHUB_OUTPUT
+              echo "publish-all=false" >> $GITHUB_OUTPUT
+            else
+              echo "publish-all=true" >> $GITHUB_OUTPUT
+            fi
+            echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ Comment does not match pattern '!surf-channel', skipping"
+            exit 0
+          fi
+
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 📦 Publish update to channel(s)
+        id: publish-updates
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+          COMMIT_MSG="${{ github.event.pull_request.head.commit.message }}"
+          PLATFORM="${{ steps.parse-comment.outputs.platform }}"
+          SPECIFIC_CHANNEL="${{ steps.parse-comment.outputs.channel }}"
+          PUBLISH_ALL="${{ steps.parse-comment.outputs.publish-all }}"
+
+          # Common channels list (matching fetchUpdateChannels.ts)
+          COMMON_CHANNELS=("production" "preview" "staging" "development")
+
+          # Determine which channels to publish to
+          if [ "$PUBLISH_ALL" == "true" ]; then
+            CHANNELS=("${COMMON_CHANNELS[@]}")
+            echo "📋 Publishing to all common channels: ${CHANNELS[*]}"
+          else
+            CHANNELS=("$SPECIFIC_CHANNEL")
+            echo "📋 Publishing to specific channel: $SPECIFIC_CHANNEL"
+          fi
+
+          SUCCESSFUL_CHANNELS=()
+          FAILED_CHANNELS=()
+
+          echo "📱 Platform: $PLATFORM"
+          echo ""
+
+          for CHANNEL in "${CHANNELS[@]}"; do
+            echo ""
+            echo "🚀 Publishing update to channel '$CHANNEL' (platform: $PLATFORM)..."
+            
+            if eas update \
+              --channel "$CHANNEL" \
+              --message "PR #$PR_NUMBER: $COMMIT_MSG" \
+              --platform "$PLATFORM" \
+              --non-interactive \
+              --clear-cache; then
+              echo "✅ Update published to channel '$CHANNEL'"
+              SUCCESSFUL_CHANNELS+=("$CHANNEL")
+            else
+              echo "❌ Failed to publish to channel '$CHANNEL'"
+              FAILED_CHANNELS+=("$CHANNEL")
+            fi
+          done
+
+          echo "successful-channels=${SUCCESSFUL_CHANNELS[*]}" >> $GITHUB_OUTPUT
+          echo "failed-channels=${FAILED_CHANNELS[*]}" >> $GITHUB_OUTPUT
+          echo "total-successful=${#SUCCESSFUL_CHANNELS[@]}" >> $GITHUB_OUTPUT
+          echo "total-failed=${#FAILED_CHANNELS[@]}" >> $GITHUB_OUTPUT
+
+      - name: 💬 Post comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const successfulChannels = '${{ steps.publish-updates.outputs.successful-channels }}'.split(' ').filter(c => c);
+            const failedChannels = '${{ steps.publish-updates.outputs.failed-channels }}'.split(' ').filter(c => c);
+            const totalSuccessful = parseInt('${{ steps.publish-updates.outputs.total-successful }}') || 0;
+            const totalFailed = parseInt('${{ steps.publish-updates.outputs.total-failed }}') || 0;
+            const platform = '${{ steps.parse-comment.outputs.platform }}';
+            const prNumber = context.issue.number;
+
+            let message = '## 🏄 Channel Surfing Complete\n\n';
+            message += `📱 **Platform:** \`${platform}\`\n\n`;
+
+            if (totalSuccessful > 0) {
+              message += `✅ **Successfully published to ${totalSuccessful} channel(s):**\n`;
+              message += successfulChannels.map(c => `- \`${c}\``).join('\n') + '\n\n';
+              message += 'You can now switch to any of these channels in the app\'s DevTools to test this PR.\n\n';
+            }
+
+            if (totalFailed > 0) {
+              message += `⚠️ **Failed to publish to ${totalFailed} channel(s):**\n`;
+              message += failedChannels.map(c => `- \`${c}\``).join('\n') + '\n\n';
+            }
+
+            if (totalSuccessful === 0 && totalFailed === 0) {
+              message += '⚠️ No channels were processed.';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message,
+            });
+
+      - name: 📊 Summary
+        run: |
+          echo "## 🏄 Channel Surfing Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.event.pull_request.head.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** \`${{ steps.parse-comment.outputs.platform }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Channels Published:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Successful:** ${{ steps.publish-updates.outputs.total-successful }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.publish-updates.outputs.successful-channels }}" ]; then
+            echo "- ${{ steps.publish-updates.outputs.successful-channels }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.publish-updates.outputs.total-failed }}" != "0" ]; then
+            echo "❌ **Failed:** ${{ steps.publish-updates.outputs.total-failed }}" >> $GITHUB_STEP_SUMMARY
+            if [ -n "${{ steps.publish-updates.outputs.failed-channels }}" ]; then
+              echo "- ${{ steps.publish-updates.outputs.failed-channels }}" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
