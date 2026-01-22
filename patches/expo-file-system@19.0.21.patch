@@ -1,5 +1,5 @@
 diff --git a/src/legacyWarnings.ts b/src/legacyWarnings.ts
-index 0c2be1d956920e13d43707fa2066e22ddb98d5b3..08622d7035cea88af5a4237e4c22634fdd549474 100644
+index 0c2be1d956920e13d43707fa2066e22ddb98d5b3..04b60269a7730ea484179719eb3f1bf5329d30d5 100644
 --- a/src/legacyWarnings.ts
 +++ b/src/legacyWarnings.ts
 @@ -24,6 +24,8 @@ function errorOnLegacyMethodUse(methodName: string): Error {
@@ -125,13 +125,12 @@ index 0c2be1d956920e13d43707fa2066e22ddb98d5b3..08622d7035cea88af5a4237e4c22634f
    options: FileSystemUploadOptions = {}
  ): Promise<FileSystemUploadResult> {
    throw errorOnLegacyMethodUse('uploadAsync');
-@@ -141,10 +179,21 @@ export async function uploadAsync(
+@@ -141,10 +179,20 @@ export async function uploadAsync(
   * @deprecated Import this method from `expo-file-system/legacy`. This method will throw in runtime.
   */
  export function createDownloadResumable(
 +  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 +  // @ts-ignore
-+
    uri: string,
 +  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 +  // @ts-ignore
@@ -147,7 +146,7 @@ index 0c2be1d956920e13d43707fa2066e22ddb98d5b3..08622d7035cea88af5a4237e4c22634f
    resumeData?: string
  ): any {
    throw errorOnLegacyMethodUse('createDownloadResumable');
-@@ -154,9 +203,17 @@ export function createDownloadResumable(
+@@ -154,9 +202,17 @@ export function createDownloadResumable(
   * @deprecated Import this method from `expo-file-system/legacy`. This method will throw in runtime.
   */
  export function createUploadTask(
