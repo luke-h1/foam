@@ -22,6 +22,7 @@ import { TabNavigator, TabParamList } from './TabNavigator';
 import type { TopStackParamList } from './TopStackNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
 import { BaseConfig } from './config';
+import { linking } from './linking';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
 
 const LazyChatScreen = lazy(() =>
@@ -195,7 +196,9 @@ const AppStack = () => {
   );
 };
 
-type NavigationProps = Partial<ComponentProps<typeof NavigationContainer>>;
+type NavigationProps = Partial<
+  ComponentProps<typeof NavigationContainer<AppStackParamList>>
+>;
 
 export const AppNavigator = (props: NavigationProps) => {
   const colorScheme = useColorScheme();
@@ -214,8 +217,12 @@ export const AppNavigator = (props: NavigationProps) => {
   }, [colorScheme]);
 
   return (
-    // @ts-expect-error - navigationRef types are compatible at runtime
-    <NavigationContainer ref={navigationRef} theme={navTheme} {...props}>
+    <NavigationContainer<AppStackParamList>
+      ref={navigationRef}
+      theme={navTheme}
+      linking={linking}
+      {...props}
+    >
       <View style={styles.container}>
         <AppStack />
       </View>
