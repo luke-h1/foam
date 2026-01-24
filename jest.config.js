@@ -30,7 +30,6 @@ const jestConfig = {
     '<rootDir>/src/**/*.(test|spec).(ts|tsx|js|jsx)',
     '<rootDir>/test/**/*.(test|spec).(ts|tsx|js|jsx)',
   ],
-  // Limit coverage collection to source files only (exclude tests, mocks, config files)
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -42,6 +41,7 @@ const jestConfig = {
     '!src/test/**',
   ],
   cache: true,
+  cacheDirectory: '<rootDir>/.jest-cache',
   // Use 25% of available CPUs
   maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.25)),
   clearMocks: true,
