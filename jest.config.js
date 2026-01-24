@@ -23,8 +23,32 @@ const jestConfig = {
       '<rootDir>/__mocks__/src/screens/StorybookScreen.tsx',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  verbose: true,
+  verbose: process.env.CI === 'true' || process.env.JEST_VERBOSE === 'true',
   testEnvironment: 'jsdom',
+  testMatch: [
+    '<rootDir>/src/**/__tests__/**/*.(test|spec).(ts|tsx|js|jsx)',
+    '<rootDir>/src/**/*.(test|spec).(ts|tsx|js|jsx)',
+    '<rootDir>/test/**/*.(test|spec).(ts|tsx|js|jsx)',
+  ],
+  // Limit coverage collection to source files only (exclude tests, mocks, config files)
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/__tests__/**',
+    '!src/**/__mocks__/**',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/*.spec.{ts,tsx}',
+    '!src/**/__snapshots__/**',
+    '!src/test/**',
+  ],
+  cache: true,
+  // Use 25% of available CPUs
+  maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.25)),
+  clearMocks: true,
+  resetMocks: false,
+  restoreMocks: false,
+  moduleDirectories: ['node_modules', '<rootDir>'],
+  collectCoverage: false,
   coverageThreshold: {
     global: {
       lines: 60, // TODO: increase this to 70%

@@ -71,6 +71,7 @@ xcuserdata
 
 # test
 coverage
+.jest-cache
 
 # Bun
 bun.lockb
