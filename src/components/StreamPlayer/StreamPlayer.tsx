@@ -247,6 +247,7 @@ type PlayerMessage =
       };
       type: 'healthCheck';
     }
+  | { payload: { hasContentGate: boolean }; type: 'contentGateDetected' }
   | { type: 'ended' }
   | { type: 'offline' }
   | { type: 'online' }
@@ -391,122 +392,30 @@ const INJECTED_JAVASCRIPT = `
     });
   };
 
-  // Accept content warning - handles mature content gates
-  function acceptContentWarning() {
-    console.log('[Foam] Checking for content warning gates...');
+  // Detect content gate and notify React Native (for gesture detector)
+  // Also updates CSS styles to scale content gate properly
+  function detectContentGate() {
+    var hasContentGate = !!(
+      document.querySelector('[data-a-target="player-overlay-content-gate"]') ||
+      document.querySelector('[data-a-target*="content-classification-gate"]') ||
+      document.querySelector('.content-classification-gate') ||
+      document.querySelector('[class*="content-gate"]') ||
+      document.querySelector('[class*="ContentGate"]')
+    );
 
-    // Comprehensive list of content gate selectors
-    var selectors = [
-      // Modern content classification gates
-      'button[data-a-target*="content-classification-gate"]',
-      '[data-a-target="content-classification-gate-overlay-start-watching-button"]',
-      'button[data-a-target="player-overlay-content-gate-confirm-button"]',
-      // Mature content gates
-      'button[data-a-target="player-overlay-mature-accept"]',
-      'button[data-a-target*="mature-accept"]',
-      // Generic overlay buttons
-      '[data-a-target*="overlay-start-watching"]',
-      '[data-a-target*="overlay-confirm"]',
-      // Text-based selectors (fallback)
-      'button:has-text("Start Watching")',
-      'button:has-text("Continue")',
-      'button:has-text("Accept")',
-      // Class-based selectors
-      '.content-classification-gate button',
-      '.player-overlay button[type="button"]',
-    ];
+    // Update CSS styles based on content gate presence
+    hideDefaultOverlay();
 
-    var attempts = 0;
-    var maxAttempts = 20;
-    var checkInterval = setInterval(function() {
-      attempts++;
-      if (attempts > maxAttempts) {
-        clearInterval(checkInterval);
-        return;
+    if (hasContentGate) {
+      console.log('[Foam] Content gate detected');
+      postMessage('contentGateDetected', { hasContentGate: true });
+    } else {
+      // Check if video is playing - if so, no content gate
+      var video = document.querySelector('video');
+      if (video && video.readyState >= 2) {
+        postMessage('contentGateDetected', { hasContentGate: false });
       }
-
-      selectors.forEach(function(selector) {
-        try {
-          var btn = document.querySelector(selector);
-          if (!btn) {
-            var buttons = document.querySelectorAll(selector);
-            btn = buttons.length > 0 ? buttons[0] : null;
-          }
-
-          if (btn) {
-            var rect = btn.getBoundingClientRect();
-            var style = window.getComputedStyle(btn);
-
-            if (rect.width > 0 && rect.height > 0 &&
-                style.display !== 'none' &&
-                style.visibility !== 'hidden' &&
-                style.pointerEvents !== 'none') {
-              console.log('[Foam] Found and clicking content gate button:', selector);
-
-              try {
-                btn.click();
-              } catch (e) {
-                var clickEvent = new MouseEvent('click', {
-                  bubbles: true,
-                  cancelable: true,
-                  view: window
-                });
-                btn.dispatchEvent(clickEvent);
-              }
-
-              try {
-                btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-                btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-              } catch (e) {
-                // Ignore event dispatch errors
-              }
-            }
-          }
-        } catch (e) {
-          // Ignore selector errors
-        }
-      });
-
-      try {
-        var allButtons = document.querySelectorAll('button');
-        allButtons.forEach(function(btn) {
-          var text = (btn.textContent || btn.innerText || '').toLowerCase();
-          if (text.includes('start watching') ||
-              text.includes('continue') ||
-              text.includes('accept') ||
-              text.includes('watch')) {
-            var rect = btn.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-              console.log('[Foam] Found text-based content gate button, clicking');
-              try {
-                btn.click();
-              } catch (e) {
-                // Ignore click errors
-              }
-            }
-          }
-        });
-      } catch (e) {
-        // Ignore button search errors
-      }
-    }, 500);
-
-    // Use async query selector for initial detection
-    selectors.forEach(function(selector) {
-      _asyncQuerySelector(selector, 10000).then(function(btn) {
-        if (btn) {
-          console.log('[Foam] Found content gate button (async):', selector);
-          try {
-            btn.click();
-            btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-            btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-            btn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-          } catch (e) {
-            console.warn('[Foam] Failed to click button:', e);
-          }
-        }
-      });
-    });
+    }
   }
 
   // Check for error states and offline messages
@@ -541,16 +450,60 @@ const INJECTED_JAVASCRIPT = `
       var hasPlayerContainer = document.querySelector('[data-a-target="player-container"]');
       if (hasPlayerContainer) {
         console.warn('[Foam] Player container exists but no video element - possible blank screen');
-        acceptContentWarning();
       }
     }
   }
 
   // Hide Twitch's default overlay controls using CSS injection
+  // Dynamically updates styles based on content gate presence
   function hideDefaultOverlay() {
-    if (!document.getElementById('foam-overlay-styles')) {
-      var style = document.createElement('style');
+    var style = document.getElementById('foam-overlay-styles');
+    if (!style) {
+      style = document.createElement('style');
       style.id = 'foam-overlay-styles';
+      document.head.appendChild(style);
+    }
+
+    // Check if content gate is present
+    var hasContentGate = !!(
+      document.querySelector('[data-a-target="player-overlay-content-gate"]') ||
+      document.querySelector('[data-a-target*="content-classification-gate"]') ||
+      document.querySelector('.content-classification-gate')
+    );
+
+    if (hasContentGate) {
+      // Content gate present - scale down content to fit and allow scrolling
+      style.textContent =
+        '.top-bar,' +
+        '.player-controls,' +
+        '#channel-player-disclosures,' +
+        '[data-a-target="player-overlay-preview-background"],' +
+        '[data-a-target="player-overlay-video-stats"]' +
+        '{ display: none !important; visibility: hidden !important; pointer-events: none !important; }' +
+        // Allow scrolling when content gate is shown
+        'body, html { ' +
+        ' margin: 0 !important; ' +
+        ' padding: 0 !important; ' +
+        ' overflow: auto !important; ' +
+        ' -webkit-overflow-scrolling: touch !important; ' +
+        '}' +
+        // Scale content gate to fit in viewport
+        '[data-a-target="player-overlay-content-gate"] { ' +
+        ' transform: scale(0.85) !important; ' +
+        ' transform-origin: center center !important; ' +
+        '}' +
+        '[data-a-target="player-container"], [data-a-target="player-container"] > div { ' +
+        ' display: flex !important; ' +
+        ' align-items: center !important; ' +
+        ' justify-content: center !important; ' +
+        ' width: 100% !important; ' +
+        ' height: 100% !important; ' +
+        ' margin: 0 !important; ' +
+        ' padding: 0 !important; ' +
+        ' overflow: visible !important; ' +
+        '}';
+    } else {
+      // No content gate - normal video styles
       style.textContent =
         '.top-bar,' +
         '.player-controls,' +
@@ -572,14 +525,11 @@ const INJECTED_JAVASCRIPT = `
         '  display: block !important; ' +
         '  visibility: visible !important; ' +
         '  opacity: 1 !important; ' +
-        '  max-width: 100% !important; ' +
-        '  max-height: 100% !important; ' +
-        '  width: auto !important; ' +
-        '  height: auto !important; ' +
+        '  width: 100% !important; ' +
+        '  height: 100% !important; ' +
         '  object-fit: contain !important; ' +
         '  margin: 0 auto !important; ' +
         '}';
-      document.head.appendChild(style);
     }
 
     var observer = new MutationObserver(function(mutations, obs) {
@@ -829,12 +779,12 @@ const INJECTED_JAVASCRIPT = `
   console.log('[Foam] Starting initialization...');
   console.log('[Foam] Current URL:', window.location.href);
 
-  acceptContentWarning();
   hideDefaultOverlay();
   initVideo();
+  detectContentGate(); // Initial check
 
   setInterval(function() {
-    acceptContentWarning();
+    detectContentGate(); // Check periodically
   }, 2000);
 
   // Check for errors after a delay to allow page to load
@@ -1121,6 +1071,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null,
     );
+    const [hasContentGate, setHasContentGate] = useState(false);
 
     // Track last known video time for stuck detection
     const lastVideoTimeRef = useRef<number>(-1);
@@ -1449,6 +1400,12 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               );
               onError?.(message.payload.message);
               break;
+            case 'contentGateDetected': {
+              const hasGate = message.payload?.hasContentGate ?? false;
+              console.log('[StreamPlayer] Content gate detected:', hasGate);
+              setHasContentGate(hasGate);
+              break;
+            }
             case 'healthCheck': {
               // Handle health check responses for stuck detection
               const { currentTime, readyState, paused } = message.payload as {
@@ -1580,11 +1537,14 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
     const tapGesture = useMemo(
       () =>
-        Gesture.Tap().onEnd(() => {
-          'worklet';
+        Gesture.Tap()
+          .maxDuration(250)
+          .onEnd(() => {
+            'worklet';
 
-          scheduleOnRN(toggleControlsInternal);
-        }),
+            scheduleOnRN(toggleControlsInternal);
+          })
+          .shouldCancelWhenOutside(false),
       [toggleControlsInternal],
     );
 
@@ -1799,11 +1759,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           }}
         />
 
-        <GestureDetector gesture={tapGesture}>
-          <View style={styles.tapArea} />
-        </GestureDetector>
+        {!hasContentGate && (
+          <GestureDetector gesture={tapGesture}>
+            <View style={styles.tapArea} />
+          </GestureDetector>
+        )}
 
-        {showOverlayControls && (
+        {showOverlayControls && !hasContentGate && (
           <ControlsOverlay
             isVisible={controlsVisible}
             paused={playerState.isPaused}

@@ -1,14 +1,14 @@
 import { Chat } from '@app/components/Chat';
 import { Spinner } from '@app/components/Spinner';
 import {
-  StreamInfo,
   StreamPlayer,
-  StreamPlayerRef,
+  type StreamPlayerRef,
 } from '@app/components/StreamPlayer/StreamPlayer';
+
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -19,14 +19,13 @@ import { StyleSheet } from 'react-native-unistyles';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
-  navigation,
 }) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
-  const streamPlayerRef = useRef<StreamPlayerRef>(null);
 
   const [isChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
+  const streamPlayerRef = useRef<StreamPlayerRef>(null);
 
   useEffect(() => {
     setShouldRenderChat(false);
@@ -36,43 +35,11 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     };
   }, [params.id]);
 
-  const [streamQueryResult, userQueryResult, userImageQueryResult] = useQueries(
-    {
-      queries: [
-        twitchQueries.getStream(params.id),
-        twitchQueries.getUser(params.id),
-        twitchQueries.getUserImage(params.id),
-      ],
-    },
-  );
+  const [streamQueryResult] = useQueries({
+    queries: [twitchQueries.getStream(params.id)],
+  });
 
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
-  const { data: user } = userQueryResult;
-  const { data: userImage } = userImageQueryResult;
-
-  const streamInfo: StreamInfo = useMemo(
-    () => ({
-      gameName: stream?.game_name,
-      profileImageUrl: userImage || user?.profile_image_url,
-      startedAt: stream?.started_at,
-      title: stream?.title,
-      userName: stream?.user_name || user?.display_name,
-      userLogin: stream?.user_login || user?.login,
-      viewerCount: stream?.viewer_count,
-    }),
-    [stream, user, userImage],
-  );
-
-  const handleBackPress = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
-
-  const handleRefresh = useCallback(() => {
-    streamPlayerRef.current?.pause();
-    setTimeout(() => {
-      streamPlayerRef.current?.play();
-    }, 100);
-  }, []);
 
   useEffect(() => {
     if (
@@ -179,14 +146,10 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         {stream?.user_login && (
           <StreamPlayer
             ref={streamPlayerRef}
-            autoplay
             channel={stream.user_login}
             height="100%"
-            showOverlayControls
-            streamInfo={streamInfo}
             width="100%"
-            onBackPress={handleBackPress}
-            onRefresh={handleRefresh}
+            autoplay
           />
         )}
       </Animated.View>
