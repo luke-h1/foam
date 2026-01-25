@@ -1,9 +1,14 @@
 import { Chat } from '@app/components/Chat';
 import { Spinner } from '@app/components/Spinner';
+import {
+  StreamInfo,
+  StreamPlayer,
+  StreamPlayerRef,
+} from '@app/components/StreamPlayer/StreamPlayer';
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -14,9 +19,11 @@ import { StyleSheet } from 'react-native-unistyles';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
+  navigation,
 }) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
+  const streamPlayerRef = useRef<StreamPlayerRef>(null);
 
   const [isChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
@@ -29,18 +36,51 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     };
   }, [params.id]);
 
-  const [streamQueryResult] = useQueries({
-    queries: [
-      twitchQueries.getStream(params.id),
-      twitchQueries.getUser(params.id),
-      twitchQueries.getUserImage(params.id),
-    ],
-  });
+  const [streamQueryResult, userQueryResult, userImageQueryResult] = useQueries(
+    {
+      queries: [
+        twitchQueries.getStream(params.id),
+        twitchQueries.getUser(params.id),
+        twitchQueries.getUserImage(params.id),
+      ],
+    },
+  );
 
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
+  const { data: user } = userQueryResult;
+  const { data: userImage } = userImageQueryResult;
+
+  const streamInfo: StreamInfo = useMemo(
+    () => ({
+      gameName: stream?.game_name,
+      profileImageUrl: userImage || user?.profile_image_url,
+      startedAt: stream?.started_at,
+      title: stream?.title,
+      userName: stream?.user_name || user?.display_name,
+      userLogin: stream?.user_login || user?.login,
+      viewerCount: stream?.viewer_count,
+    }),
+    [stream, user, userImage],
+  );
+
+  const handleBackPress = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleRefresh = useCallback(() => {
+    streamPlayerRef.current?.pause();
+    setTimeout(() => {
+      streamPlayerRef.current?.play();
+    }, 100);
+  }, []);
 
   useEffect(() => {
-    if (stream?.user_login && stream?.user_id && !shouldRenderChat) {
+    if (
+      stream?.user_login &&
+      stream?.user_id &&
+      !shouldRenderChat &&
+      !__DEV__
+    ) {
       // Use setTimeout to defer Chat rendering to next tick, allowing screen to render first to stop blocking navigation
       const timer = setTimeout(() => {
         setShouldRenderChat(true);
@@ -84,6 +124,13 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const chatOpacity = useSharedValue(1);
   const chatTranslateX = useSharedValue(0);
 
+  const animatedChatStyle = useAnimatedStyle(() => ({
+    width: chatWidth.value,
+    height: chatHeight.value,
+    opacity: chatOpacity.value,
+    transform: [{ translateX: chatTranslateX.value }],
+  }));
+
   useEffect(() => {
     const videoDims = getVideoDimensions();
     const chatDims = getChatDimensions();
@@ -117,11 +164,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     getChatDimensions,
   ]);
 
-  const animatedChatStyle = useAnimatedStyle(() => ({
-    width: chatWidth.value,
-    height: chatHeight.value,
-    opacity: chatOpacity.value,
-    transform: [{ translateX: chatTranslateX.value }],
+  const animatedVideoStyle = useAnimatedStyle(() => ({
+    width: videoWidth.value,
+    height: videoHeight.value,
   }));
 
   if (isStreamPending) {
@@ -130,23 +175,23 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   return (
     <View style={[styles.contentContainer, isLandscape && styles.row]}>
-      {/* <GestureDetector gesture={doubleTapGesture}>
-        <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-          <WebView
-            source={{
-              uri: `https://player.twitch.tv/?channel=${stream.user_login}&autoplay=true&parent=foam-app.com`,
-            }}
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            style={getWebViewStyle(isLandscape)}
-            allowsInlineMediaPlaybook
-            javaScriptEnabled
-            mediaPlaybackRequiresUserAction={false}
+      <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
+        {stream?.user_login && (
+          <StreamPlayer
+            ref={streamPlayerRef}
+            autoplay
+            channel={stream.user_login}
+            height="100%"
+            showOverlayControls
+            streamInfo={streamInfo}
+            width="100%"
+            onBackPress={handleBackPress}
+            onRefresh={handleRefresh}
           />
-        </Animated.View>
-      </GestureDetector> */}
+        )}
+      </Animated.View>
 
-      {(isChatVisible || chatOpacity.value > 0) && (
+      {!__DEV__ && (
         <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
           {shouldRenderChat && stream?.user_login && stream.user_id && (
             <View style={styles.chatContent}>
