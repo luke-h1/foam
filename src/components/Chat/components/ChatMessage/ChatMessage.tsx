@@ -8,11 +8,9 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
 import { logger } from '@app/utils/logger';
-import { truncate } from '@app/utils/string/truncate';
 import React, { useCallback, memo, useMemo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -335,12 +333,7 @@ function ChatMessageComponent<
     >
       {isReply && (
         <View style={styles.replyIndicatorWrapper} testID="reply-indicator">
-          <Icon
-            icon="corner-down-right"
-            size={10}
-            color="rgba(255,255,255,0.5)"
-          />
-          <Text style={styles.replyLabel}>replying to</Text>
+          <Text style={styles.replyLabel}>↳</Text>
           <Text
             style={[
               styles.replyUsername,
@@ -349,11 +342,6 @@ function ChatMessageComponent<
           >
             @{parentDisplayName}
           </Text>
-          {replyBody && (
-            <Text style={styles.replyBodyText} numberOfLines={1}>
-              {truncate(unescapeIrcTag(replyBody).trim(), 20)}
-            </Text>
-          )}
         </View>
       )}
 
@@ -553,24 +541,17 @@ const styles = StyleSheet.create(theme => ({
   replyIndicatorWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-    gap: 4,
-    flexWrap: 'wrap',
+    marginBottom: 2,
+    gap: 3,
   },
   replyLabel: {
-    color: 'rgba(255, 255, 255, 0.5)',
-    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.4)',
+    fontSize: 10,
   },
   replyUsername: {
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 11,
-  },
-  replyBodyText: {
-    color: 'rgba(255, 255, 255, 0.4)',
-    fontSize: 11,
-    fontStyle: 'italic',
-    flexShrink: 1,
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
   },
   subscriptionNoticeContainer: {
     width: '100%',

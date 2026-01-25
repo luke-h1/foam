@@ -110,7 +110,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const hasPartedRef = useRef(false);
   const isMountedRef = useRef(true);
   const currentEmoteSetIdRef = useRef<string | null>(null);
-  const emoteReprocessAttemptedRef = useRef<string | null>(null);
+  const processedMessageIdsRef = useRef<Set<string>>(new Set());
   const initializedChannelRef = useRef<string | null>(null);
 
   const flashListRef = useRef<FlashListRef<AnyChatMessageType>>(null);
@@ -154,7 +154,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
 
     const elapsedSeconds = (Date.now() - chatStartTime) / 1000;
-    return elapsedSeconds <= 10;
+    return elapsedSeconds <= 5;
   }, []);
 
   const fetchUserCosmetics = useCallback(
@@ -163,14 +163,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         return;
       }
 
-      // Only fetch cosmetics for the first 10 seconds of chat to prevent API overload
+      // Only fetch cosmetics for the first 5 seconds of chat to prevent API overload
       if (!canFetchCosmetics()) {
         const chatStartTime = chatStartTimeRef.current;
         const elapsedSeconds = chatStartTime
           ? (Date.now() - chatStartTime) / 1000
           : 0;
         logger.stvWs.debug(
-          `Skipping cosmetic fetch for ${twitchUserId} - chat has been active for ${elapsedSeconds.toFixed(1)}s (limit: 10s)`,
+          `Skipping cosmetic fetch for ${twitchUserId} - chat has been active for ${elapsedSeconds.toFixed(1)}s (limit: 5s)`,
         );
         return;
       }
@@ -201,7 +201,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           logger.stvWs.debug(`No 7TV user ID found for ${twitchUserId}`);
         }
       } catch (error) {
-        // User might not have a 7TV account - that's fine
         logger.stvWs.debug(
           `Failed to fetch cosmetics for ${twitchUserId}:`,
           error,
@@ -447,7 +446,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         if (data.kind === 'BADGE') {
           const badgeData = object.data as BadgeData & { ref_id?: string };
 
-          // Handle special case where id is all zeros - use ref_id from data if available
           const badgeId =
             badgeData.id === '00000000000000000000000000' && badgeData.ref_id
               ? badgeData.ref_id
@@ -813,25 +811,28 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       channelEmoteData.ffzGlobalEmotes.length > 0 ||
       channelEmoteData.ffzChannelEmotes.length > 0;
 
-    if (
-      !hasEmotes ||
-      emoteReprocessAttemptedRef.current === channelId ||
-      messages.length === 0
-    ) {
-      if (hasEmotes && messages.length > 0) {
-        emoteReprocessAttemptedRef.current = channelId;
-      }
+    if (!hasEmotes || messages.length === 0) {
       return;
     }
 
+    // Find text-only messages that haven't been processed yet
     const textOnlyMessages = (messages as AnyChatMessageType[]).filter(msg => {
-      if (msg.sender === 'System' || 'notice_tags' in msg) return false;
+      // Skip already processed messages
+      if (processedMessageIdsRef.current.has(msg.message_id)) {
+        return false;
+      }
+      // Skip system messages and notices
+      if (msg.sender === 'System' || 'notice_tags' in msg) {
+        return false;
+      }
+      // Only include messages that are text-only (no emotes yet)
       return msg.message.every((part: ParsedPart) => part.type === 'text');
     });
 
     if (textOnlyMessages.length > 0) {
-      emoteReprocessAttemptedRef.current = channelId;
       textOnlyMessages.forEach(msg => {
+        processedMessageIdsRef.current.add(msg.message_id);
+
         const textContent = msg.message
           .filter((p: ParsedPart) => p.type === 'text')
           .map((p: ParsedPart) => (p as { content: string }).content)
@@ -841,8 +842,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           processMessageEmotes(textContent, msg.userstate, msg);
         }
       });
-    } else {
-      emoteReprocessAttemptedRef.current = channelId;
     }
   }, [
     channelId,
@@ -856,7 +855,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     isMountedRef.current = true;
     hasPartedRef.current = false;
     currentEmoteSetIdRef.current = null;
-    emoteReprocessAttemptedRef.current = null;
+    processedMessageIdsRef.current.clear();
 
     cleanupScroll();
     cleanupMessages();

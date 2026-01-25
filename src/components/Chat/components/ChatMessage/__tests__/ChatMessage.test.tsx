@@ -243,7 +243,7 @@ describe('ChatMessage', () => {
       );
 
       expect(getByTestId('reply-indicator')).toBeTruthy();
-      expect(getByText('replying to')).toBeTruthy();
+      expect(getByText('↳')).toBeTruthy();
       expect(getByText('@OriginalUser')).toBeTruthy();
     });
 
@@ -257,10 +257,10 @@ describe('ChatMessage', () => {
       );
 
       expect(queryByTestId('reply-indicator')).toBeNull();
-      expect(queryByText('replying to')).toBeNull();
+      expect(queryByText('↳')).toBeNull();
     });
 
-    it('should display reply body in reply indicator', () => {
+    it('should render minimalist reply indicator without body preview', () => {
       const replyBody = 'This is the original message content';
       const message = createMockMessage(
         [{ type: 'text', content: 'This is a reply' }],
@@ -271,15 +271,15 @@ describe('ChatMessage', () => {
         },
       );
 
-      const { getByText } = render(
+      const { getByText, queryByText } = render(
         <ChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      // The reply indicator should show "replying to @username"
-      expect(getByText('replying to')).toBeTruthy();
+      // The reply indicator should show "↳ @username" (minimalist)
+      expect(getByText('↳')).toBeTruthy();
       expect(getByText('@OriginalUser')).toBeTruthy();
-      // The reply body should be truncated (20 chars) but still visible
-      expect(getByText(/This is the original/)).toBeTruthy();
+      // The reply body should NOT be shown in the minimalist indicator
+      expect(queryByText(/This is the original/)).toBeNull();
     });
   });
 
