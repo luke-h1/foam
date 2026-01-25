@@ -1672,30 +1672,14 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       rawHeight,
     ]);
 
-    return (
-      <View
-        collapsable={false}
-        style={[styles.container, { height: playerHeight, width: playerWidth }]}
-        onLayout={e => {
-          const { width: w, height: h } = e.nativeEvent.layout;
-
-          console.log('[StreamPlayer] Container layout:', {
-            width: w,
-            height: h,
-          });
-          if (w < 400 || h < 300) {
-            console.warn(
-              '[StreamPlayer] WARNING: Below Twitch minimum size (400x300)',
-            );
-          }
-        }}
-      >
-        <WebView
+    const webViewContent = (
+      <WebView
           collapsable={false}
           allowsInlineMediaPlayback
           allowsBackForwardNavigationGestures={false}
           mediaPlaybackRequiresUserAction={false}
           allowsFullscreenVideo
+          scrollEnabled={hasContentGate}
           injectedJavaScriptBeforeContentLoaded={`
             window.onerror = function(msg, url, line, col, error) {
               console.log('[Foam-Early] Error:', msg, 'at', url, line);
@@ -1710,8 +1694,12 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           sharedCookiesEnabled
           thirdPartyCookiesEnabled
           source={{ uri: playerUrl }}
-          // eslint-disable-next-line react-native/no-inline-styles
-          style={[styles.webView, { minWidth: 400, minHeight: 300 }]}
+          style={[
+            styles.webView,
+            // eslint-disable-next-line react-native/no-inline-styles
+            { minWidth: 400, minHeight: 300 },
+            hasContentGate && styles.webViewScrollable,
+          ]}
           userAgent={
             Platform.OS === 'ios'
               ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
@@ -1758,6 +1746,31 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             webViewRef.current?.reload();
           }}
         />
+    );
+
+    return (
+      <View
+        collapsable={false}
+        style={[
+          styles.container,
+          { height: playerHeight, width: playerWidth },
+          hasContentGate && styles.containerScrollable,
+        ]}
+        onLayout={e => {
+          const { width: w, height: h } = e.nativeEvent.layout;
+
+          console.log('[StreamPlayer] Container layout:', {
+            width: w,
+            height: h,
+          });
+          if (w < 400 || h < 300) {
+            console.warn(
+              '[StreamPlayer] WARNING: Below Twitch minimum size (400x300)',
+            );
+          }
+        }}
+      >
+        {webViewContent}
 
         {!hasContentGate && (
           <GestureDetector gesture={tapGesture}>
@@ -1817,6 +1830,12 @@ const styles = StyleSheet.create((theme, rt) => ({
     overflow: 'hidden',
     paddingTop: rt.insets.top,
     position: 'relative',
+  },
+  containerScrollable: {
+    overflow: 'visible',
+  },
+  webViewScrollable: {
+    minHeight: '100%',
   },
   controlButton: {
     alignItems: 'center',

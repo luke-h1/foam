@@ -7,10 +7,13 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { sentryService } from '@app/services/sentry-service';
 import { useAuthRequest } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
 import { Platform, SafeAreaView, View, Dimensions } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const USER_SCOPES = [
   'user:read:follows',
@@ -66,6 +69,7 @@ export function LoginScreen() {
 
       // Enable PKCE (Proof Key for Code Exchange) to prevent another app from intercepting the redirect request.
       usePKCE: true,
+
       extraParams: {
         force_verify: 'true',
       },
@@ -127,7 +131,11 @@ export function LoginScreen() {
 
           <View style={styles.actionSection}>
             <Button
-              onPress={() => promptAsync()}
+              onPress={() =>
+                promptAsync({
+                  preferEphemeralSession: false,
+                })
+              }
               onPressIn={() => {
                 navigation.preload('Tabs', { screen: 'Following' });
               }}
