@@ -12,7 +12,6 @@ import {
   useState,
 } from 'react';
 import {
-  ActivityIndicator,
   AppState,
   type AppStateStatus,
   type DimensionValue,
@@ -143,11 +142,6 @@ export interface StreamInfo {
 
 export interface StreamPlayerProps {
   /**
-   * Twitch OAuth access token for authentication
-   * When provided, sets cookies to authenticate with Twitch
-   */
-  accessToken?: string;
-  /**
    * Enable autoplay
    * @default true
    */
@@ -156,19 +150,12 @@ export interface StreamPlayerProps {
    * Twitch channel name
    */
   channel?: string;
-  /**
-   * Collection ID to play
-   */
-  collection?: string;
+
   /**
    * Height of the player
    */
   height?: DimensionValue;
-  /**
-   * Hide the default Twitch controls
-   * @default false
-   */
-  hideControls?: boolean;
+
   /**
    * Initial muted state
    * @default false
@@ -224,11 +211,6 @@ export interface StreamPlayerProps {
    * Stream information for the overlay
    */
   streamInfo?: StreamInfo;
-  /**
-   * Start time for VODs
-   * @example "1h2m3s"
-   */
-  time?: string;
   /**
    * VOD ID to play
    */
@@ -1095,27 +1077,12 @@ function ControlsOverlay({
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function LoadingOverlay() {
-  return (
-    <View style={styles.loadingOverlay}>
-      <ActivityIndicator color="#9147FF" size="large" />
-    </View>
-  );
-}
-
 export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
   function StreamPlayer(
     {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      accessToken,
       autoplay = true,
       channel,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      collection,
       height,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      hideControls = false,
       muted: initialMuted = false,
       onBackPress,
       onEnded,
@@ -1129,8 +1096,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       parent = 'foam-app.com',
       showOverlayControls = true,
       streamInfo,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      time,
       video,
       width,
     },
@@ -1631,30 +1596,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       }
       showControls();
     }, [pause, play, playerState.isPaused, showControls]);
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleMuteToggle = useCallback(() => {
-      if (playerState.muted) {
-        unmute();
-      } else {
-        mute();
-      }
-      showControls();
-    }, [mute, playerState.muted, showControls, unmute]);
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleVolumeChange = useCallback(
-      (volume: number) => {
-        setVolume(volume);
-        if (volume > 0 && playerState.muted) {
-          unmute();
-        } else if (volume === 0 && !playerState.muted) {
-          mute();
-        }
-        showControls();
-      },
-      [mute, playerState.muted, setVolume, showControls, unmute],
-    );
 
     const handlePipPress = useCallback(() => {
       console.log('PiP pressed');

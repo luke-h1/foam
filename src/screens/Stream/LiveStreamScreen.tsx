@@ -5,7 +5,6 @@ import {
   StreamPlayer,
   StreamPlayerRef,
 } from '@app/components/StreamPlayer/StreamPlayer';
-import { useAuthContext } from '@app/context/AuthContext';
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
@@ -25,7 +24,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
-  const { authState } = useAuthContext();
 
   const [isChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
@@ -181,7 +179,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         {stream?.user_login && (
           <StreamPlayer
             ref={streamPlayerRef}
-            accessToken={authState?.token?.accessToken}
             autoplay
             channel={stream.user_login}
             height="100%"

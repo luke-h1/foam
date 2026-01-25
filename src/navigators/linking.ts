@@ -14,14 +14,11 @@ import { AppStackParamList } from './AppNavigator';
  * - foam://preferences/chat
  * - foam://login
  * - foam://storybook
- * 
+ *
  * https://reactnavigation.org/docs/deep-linking#integrating-with-other-tools
  */
 export const linking: LinkingOptions<AppStackParamList> = {
-  prefixes: [
-    Linking.createURL('/'),
-    'foam://',
-  ],
+  prefixes: [Linking.createURL('/'), 'foam://'],
   config: {
     screens: {
       Tabs: {
