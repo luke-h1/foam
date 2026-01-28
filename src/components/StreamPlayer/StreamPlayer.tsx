@@ -1674,13 +1674,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
     const webViewContent = (
       <WebView
-          collapsable={false}
-          allowsInlineMediaPlayback
-          allowsBackForwardNavigationGestures={false}
-          mediaPlaybackRequiresUserAction={false}
-          allowsFullscreenVideo
-          scrollEnabled={hasContentGate}
-          injectedJavaScriptBeforeContentLoaded={`
+        collapsable={false}
+        allowsInlineMediaPlayback
+        allowsBackForwardNavigationGestures={false}
+        mediaPlaybackRequiresUserAction={false}
+        allowsFullscreenVideo
+        scrollEnabled={hasContentGate}
+        injectedJavaScriptBeforeContentLoaded={`
             window.onerror = function(msg, url, line, col, error) {
               console.log('[Foam-Early] Error:', msg, 'at', url, line);
               return false;
@@ -1688,64 +1688,64 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             console.log('[Foam-Early] Page loading:', window.location.href);
             true;
           `}
-          injectedJavaScript={INJECTED_JAVASCRIPT}
-          javaScriptEnabled
-          originWhitelist={['*']}
-          sharedCookiesEnabled
-          thirdPartyCookiesEnabled
-          source={{ uri: playerUrl }}
-          style={[
-            styles.webView,
-            // eslint-disable-next-line react-native/no-inline-styles
-            { minWidth: 400, minHeight: 300 },
-            hasContentGate && styles.webViewScrollable,
-          ]}
-          userAgent={
-            Platform.OS === 'ios'
-              ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
-              : 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+        injectedJavaScript={INJECTED_JAVASCRIPT}
+        javaScriptEnabled
+        originWhitelist={['*']}
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
+        source={{ uri: playerUrl }}
+        style={[
+          styles.webView,
+          // eslint-disable-next-line react-native/no-inline-styles
+          { minWidth: 400, minHeight: 300 },
+          hasContentGate && styles.webViewScrollable,
+        ]}
+        userAgent={
+          Platform.OS === 'ios'
+            ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+            : 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+        }
+        onContentProcessDidTerminate={(e: {
+          nativeEvent: { didCrash?: boolean };
+        }) => {
+          console.error(
+            '[StreamPlayer] WebView process terminated!',
+            e.nativeEvent,
+          );
+          webViewRef.current?.reload();
+        }}
+        onError={handleWebViewError}
+        onHttpError={handleWebViewHttpError}
+        onLoad={() => console.log('[StreamPlayer] WebView onLoad fired')}
+        onLoadEnd={() => console.log('[StreamPlayer] WebView load ended')}
+        onLoadProgress={(e: { nativeEvent: { progress: number } }) => {
+          if (e.nativeEvent.progress === 1) {
+            console.log('[StreamPlayer] WebView load progress: 100%');
           }
-          onContentProcessDidTerminate={(e: {
-            nativeEvent: { didCrash?: boolean };
-          }) => {
-            console.error(
-              '[StreamPlayer] WebView process terminated!',
-              e.nativeEvent,
-            );
-            webViewRef.current?.reload();
-          }}
-          onError={handleWebViewError}
-          onHttpError={handleWebViewHttpError}
-          onLoad={() => console.log('[StreamPlayer] WebView onLoad fired')}
-          onLoadEnd={() => console.log('[StreamPlayer] WebView load ended')}
-          onLoadProgress={(e: { nativeEvent: { progress: number } }) => {
-            if (e.nativeEvent.progress === 1) {
-              console.log('[StreamPlayer] WebView load progress: 100%');
-            }
-          }}
-          onLoadStart={() => console.log('[StreamPlayer] WebView load started')}
-          onMessage={handleMessage}
-          onNavigationStateChange={(navState: {
-            url: string;
-            title: string;
-            loading: boolean;
-            canGoBack: boolean;
-          }) => {
-            console.log('[StreamPlayer] Navigation state:', {
-              url: navState.url,
-              title: navState.title,
-              loading: navState.loading,
-              canGoBack: navState.canGoBack,
-            });
-          }}
-          onRenderProcessGone={(e: { nativeEvent: { didCrash?: boolean } }) => {
-            console.error(
-              '[StreamPlayer] WebView render process gone!',
-              e.nativeEvent,
-            );
-            webViewRef.current?.reload();
-          }}
-        />
+        }}
+        onLoadStart={() => console.log('[StreamPlayer] WebView load started')}
+        onMessage={handleMessage}
+        onNavigationStateChange={(navState: {
+          url: string;
+          title: string;
+          loading: boolean;
+          canGoBack: boolean;
+        }) => {
+          console.log('[StreamPlayer] Navigation state:', {
+            url: navState.url,
+            title: navState.title,
+            loading: navState.loading,
+            canGoBack: navState.canGoBack,
+          });
+        }}
+        onRenderProcessGone={(e: { nativeEvent: { didCrash?: boolean } }) => {
+          console.error(
+            '[StreamPlayer] WebView render process gone!',
+            e.nativeEvent,
+          );
+          webViewRef.current?.reload();
+        }}
+      />
     );
 
     return (

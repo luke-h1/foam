@@ -15,7 +15,7 @@ import React, { useCallback, memo, useMemo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../../../Button';
-import { Icon } from '../../../Icon';
+import { IconSymbol } from '../../../IconSymbol/IconSymbol';
 import { Image } from '../../../Image';
 import { Text } from '../../../Text';
 import { MediaLinkCard } from '../MediaLinkCard';
@@ -382,7 +382,12 @@ function ChatMessageComponent<
                 style={styles.replyButton}
                 testID="reply-button"
               >
-                <Icon icon="corner-up-left" size={14} color="#FFFFFF" />
+                <IconSymbol
+                  name="arrowshape.turn.up.left"
+                  size={16}
+                  color="rgba(255, 255, 255, 0.5)"
+                  weight="medium"
+                />
               </Button>
             )}
           </View>
@@ -458,12 +463,9 @@ const styles = StyleSheet.create(theme => ({
     width: '100%',
   },
   replyButton: {
-    padding: theme.spacing.sm,
+    padding: theme.spacing.xs,
     marginLeft: theme.spacing.xs,
-    borderRadius: 6,
-    backgroundColor: 'rgba(145, 71, 255, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(145, 71, 255, 0.25)',
+    opacity: 0.4,
   },
   messagePrefix: {
     flexDirection: 'row',

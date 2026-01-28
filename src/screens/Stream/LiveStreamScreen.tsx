@@ -42,12 +42,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
 
   useEffect(() => {
-    if (
-      stream?.user_login &&
-      stream?.user_id &&
-      !shouldRenderChat &&
-      !__DEV__
-    ) {
+    if (stream?.user_login && stream?.user_id && !shouldRenderChat) {
       // Use setTimeout to defer Chat rendering to next tick, allowing screen to render first to stop blocking navigation
       const timer = setTimeout(() => {
         setShouldRenderChat(true);
@@ -154,18 +149,13 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         )}
       </Animated.View>
 
-      {!__DEV__ && (
-        <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-          {shouldRenderChat && stream?.user_login && stream.user_id && (
-            <View style={styles.chatContent}>
-              <Chat
-                channelId={stream.user_id}
-                channelName={stream.user_login}
-              />
-            </View>
-          )}
-        </Animated.View>
-      )}
+      <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
+        {shouldRenderChat && stream?.user_login && stream.user_id && (
+          <View style={styles.chatContent}>
+            <Chat channelId={stream.user_id} channelName={stream.user_login} />
+          </View>
+        )}
+      </Animated.View>
     </View>
   );
 };
