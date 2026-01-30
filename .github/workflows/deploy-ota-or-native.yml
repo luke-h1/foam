@@ -168,20 +168,22 @@ jobs:
             echo "📦 Auto: No native changes - OTA update"
           fi
 
-      - name: 🏷️ Generate release tag
+      - name: 🏷️ Generate release tag (preliminary)
         id: tag
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           DEPLOY_TYPE="${{ steps.decide.outputs.deploy-type }}"
 
           if [ "$DEPLOY_TYPE" == "ota" ]; then
-            TAG="ota-${VERSION}-${{ github.run_number }}"
+            # Preliminary tag for OTA - final tag will use update group ID in release job
+            TAG="ota-pending"
+            echo "🏷️ OTA release - final tag will be determined after update (ota-{updateId})"
           else
             TAG="${VERSION}"
+            echo "🏷️ Native release tag: $TAG"
           fi
 
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "🏷️ Release tag: $TAG"
 
       - name: 📊 Summary
         run: |
@@ -398,11 +400,36 @@ jobs:
     needs: [prepare, detect-changes, build, ota]
     if: always() && needs.detect-changes.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: 🏷️ Determine release tag
+        id: release_tag
+        run: |
+          DEPLOY_TYPE="${{ needs.detect-changes.outputs.deploy-type }}"
+          VERSION="${{ needs.prepare.outputs.version }}"
+          UPDATE_GROUP_ID="${{ needs.ota.outputs.update_group_id }}"
+
+          if [ "$DEPLOY_TYPE" == "ota" ] && [ -n "$UPDATE_GROUP_ID" ]; then
+            # Use ota-{updateId} format for OTA releases
+            TAG="ota-${UPDATE_GROUP_ID}"
+            echo "🏷️ OTA Release tag: $TAG (using update group ID)"
+          elif [ "$DEPLOY_TYPE" == "ota" ]; then
+            # Fallback if no update group ID (shouldn't happen)
+            TAG="ota-${VERSION}-${{ github.run_number }}"
+            echo "🏷️ OTA Release tag: $TAG (fallback)"
+          else
+            # Native builds use version-based tag
+            TAG="${VERSION}"
+            echo "🏷️ Native Release tag: $TAG"
+          fi
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: 📝 Create Release
         uses: ./.github/actions/create-release
@@ -411,7 +438,7 @@ jobs:
           dry: ${{ inputs.dry_run }}
           variant: production
           version: ${{ needs.prepare.outputs.version }}
-          tag: ${{ needs.detect-changes.outputs.tag }}
+          tag: ${{ steps.release_tag.outputs.tag }}
           deployment_type: ${{ needs.detect-changes.outputs.deploy-type == 'ota' && 'ota' || 'native' }}
           ios_fingerprint: ${{ needs.detect-changes.outputs.ios-fingerprint || '' }}
           android_fingerprint: ${{ needs.detect-changes.outputs.android-fingerprint || '' }}
@@ -423,7 +450,7 @@ jobs:
         run: |
           echo "## Release Created" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** \`${{ needs.detect-changes.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ steps.release_tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** \`${{ needs.prepare.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Type:** ${{ needs.detect-changes.outputs.deploy-type == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
