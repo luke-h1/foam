@@ -118,6 +118,7 @@ runs:
       if: steps.check_tag.outputs.tag_exists == 'false'
       shell: bash
       run: |
+        set +e  # Disable exit on error for this script - we handle errors manually
         FOUND_PREVIOUS_TAG=""
 
         # Use provided previous_tag if available
@@ -133,20 +134,30 @@ runs:
 
             if [ "${{ inputs.variant }}" = "preview" ]; then
               # Find latest OTA tag for preview
-              OTA_TAG=$(git tag -l "ota-*" | grep -v "^${CURRENT_TAG}$" | while read tag; do
-                echo "$(git log -1 --format=%ct "$tag" 2>/dev/null || echo 0) $tag"
-              done | sort -rn | sed -n '1p' | awk '{print $2}')
+              OTA_TAGS=$(git tag -l "ota-*" 2>/dev/null | grep -v "^${CURRENT_TAG}$" || true)
+              if [ -n "$OTA_TAGS" ]; then
+                OTA_TAG=$(echo "$OTA_TAGS" | while read tag; do
+                  echo "$(git log -1 --format=%ct "$tag" 2>/dev/null || echo 0) $tag"
+                done | sort -rn | head -1 | awk '{print $2}')
+              else
+                OTA_TAG=""
+              fi
 
               # Find latest native tag for preview
-              NATIVE_TAG=$(git tag -l | grep -E "preview$" | grep -vE "^ota-" | sort -V --reverse | sed -n 1p)
+              NATIVE_TAG=$(git tag -l 2>/dev/null | grep -E "preview$" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
             else
               # Find latest OTA tag for production
-              OTA_TAG=$(git tag -l "ota-*" | grep -v "^${CURRENT_TAG}$" | while read tag; do
-                echo "$(git log -1 --format=%ct "$tag" 2>/dev/null || echo 0) $tag"
-              done | sort -rn | sed -n '1p' | awk '{print $2}')
+              OTA_TAGS=$(git tag -l "ota-*" 2>/dev/null | grep -v "^${CURRENT_TAG}$" || true)
+              if [ -n "$OTA_TAGS" ]; then
+                OTA_TAG=$(echo "$OTA_TAGS" | while read tag; do
+                  echo "$(git log -1 --format=%ct "$tag" 2>/dev/null || echo 0) $tag"
+                done | sort -rn | head -1 | awk '{print $2}')
+              else
+                OTA_TAG=""
+              fi
 
               # Find latest native tag for production (exclude preview tags)
-              NATIVE_TAG=$(git tag -l | grep -v "preview" | grep -vE "^ota-" | sort -V --reverse | sed -n 1p)
+              NATIVE_TAG=$(git tag -l 2>/dev/null | grep -v "preview" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
             fi
 
             # Compare commit dates: use whichever is newer
@@ -173,14 +184,18 @@ runs:
           else
             # For native builds, use the original logic
             if [ "${{ inputs.variant }}" = "preview" ]; then
-              FOUND_PREVIOUS_TAG=$(git tag -l | grep -E "preview$" | grep -vE "^ota-" | sort -V --reverse | sed -n 1p)
+              FOUND_PREVIOUS_TAG=$(git tag -l 2>/dev/null | grep -E "preview$" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
             else
-              FOUND_PREVIOUS_TAG=$(git tag -l | grep -v "preview" | grep -vE "^ota-" | sort -V --reverse | sed -n 1p)
+              FOUND_PREVIOUS_TAG=$(git tag -l 2>/dev/null | grep -v "preview" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
             fi
           fi
         fi
 
-        [[ -z $(echo "$FOUND_PREVIOUS_TAG") ]] && echo "No tag found..." || echo "Tag found: ${FOUND_PREVIOUS_TAG}"
+        if [ -z "$FOUND_PREVIOUS_TAG" ]; then
+          echo "No tag found..."
+        else
+          echo "Tag found: ${FOUND_PREVIOUS_TAG}"
+        fi
 
         echo "previous_tag=$FOUND_PREVIOUS_TAG" >> $GITHUB_OUTPUT
 
