@@ -1,0 +1,205 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_type:
+        description: 'Deployment type'
+        required: true
+        type: choice
+        options:
+          - native
+          - ota
+      variant:
+        description: 'App variant'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+      platform:
+        description: 'Platform (native builds only)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+      message:
+        description: 'Update message (OTA only)'
+        required: false
+        default: ''
+        type: string
+      dry_run:
+        description: 'Dry run mode'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: deploy-${{ github.ref }}-${{ inputs.deployment_type }}
+  cancel-in-progress: false
+
+env:
+  APP_VARIANT: ${{ inputs.variant }}
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      tag: ${{ steps.get_version.outputs.tag }}
+      channel: ${{ steps.get_channel.outputs.channel }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from app.config.ts
+        id: get_version
+        run: |
+          VERSION=$(grep "const VERSION = " app.config.ts | sed "s/const VERSION = '//g" | sed "s/';//g" | tr -d ' ')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          if [ "${{ inputs.deployment_type }}" = "ota" ]; then
+            TAG="ota-${VERSION}-${{ github.run_number }}"
+          elif [ "${{ inputs.variant }}" = "preview" ]; then
+            TAG="${VERSION}-preview"
+          else
+            TAG="${VERSION}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION, Tag: $TAG"
+
+      - name: Determine channel
+        id: get_channel
+        run: |
+          if [ "${{ inputs.variant }}" = "preview" ]; then
+            echo "channel=preview" >> $GITHUB_OUTPUT
+          else
+            echo "channel=production" >> $GITHUB_OUTPUT
+          fi
+
+  build-native:
+    name: Build Native (${{ inputs.platform }})
+    needs: prepare
+    if: inputs.deployment_type == 'native' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS
+        if: inputs.platform == 'all' || inputs.platform == 'ios'
+        run: eas build --platform ios --profile ${{ inputs.variant }} --auto-submit --non-interactive --no-wait
+
+      - name: Build Android
+        if: inputs.platform == 'all' || inputs.platform == 'android'
+        run: eas build --platform android --profile ${{ inputs.variant }} --auto-submit --non-interactive --no-wait
+
+  publish-ota:
+    name: Publish OTA Update
+    needs: prepare
+    if: inputs.deployment_type == 'ota' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    outputs:
+      ios_fingerprint: ${{ steps.fingerprint.outputs.ios_fingerprint }}
+      android_fingerprint: ${{ steps.fingerprint.outputs.android_fingerprint }}
+      ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
+      android_update_id: ${{ steps.publish.outputs.android_update_id }}
+      update_group_id: ${{ steps.publish.outputs.update_group_id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Get fingerprints
+        id: fingerprint
+        run: |
+          IOS_FP=$(npx expo-updates fingerprint:generate --platform ios 2>/dev/null | jq -r '.hash' || echo "")
+          ANDROID_FP=$(npx expo-updates fingerprint:generate --platform android 2>/dev/null | jq -r '.hash' || echo "")
+          echo "ios_fingerprint=$IOS_FP" >> $GITHUB_OUTPUT
+          echo "android_fingerprint=$ANDROID_FP" >> $GITHUB_OUTPUT
+
+      - name: Publish OTA update
+        id: publish
+        run: |
+          MESSAGE="${{ inputs.message }}"
+          if [ -z "$MESSAGE" ]; then
+            MESSAGE="OTA Update ${{ needs.prepare.outputs.tag }}"
+          fi
+
+          # Capture the JSON output from eas update
+          UPDATE_OUTPUT=$(eas update --channel ${{ needs.prepare.outputs.channel }} --message "$MESSAGE" --non-interactive --json 2>/dev/null || echo "[]")
+
+          # Parse update IDs from the JSON output
+          # EAS update returns an array of updates, one per platform
+          IOS_UPDATE_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[] | select(.platform == "ios") | .id' 2>/dev/null || echo "")
+          ANDROID_UPDATE_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[] | select(.platform == "android") | .id' 2>/dev/null || echo "")
+          UPDATE_GROUP_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[0].group' 2>/dev/null || echo "")
+
+          echo "ios_update_id=$IOS_UPDATE_ID" >> $GITHUB_OUTPUT
+          echo "android_update_id=$ANDROID_UPDATE_ID" >> $GITHUB_OUTPUT
+          echo "update_group_id=$UPDATE_GROUP_ID" >> $GITHUB_OUTPUT
+
+          echo "Published OTA Update:"
+          echo "  iOS Update ID: $IOS_UPDATE_ID"
+          echo "  Android Update ID: $ANDROID_UPDATE_ID"
+          echo "  Update Group ID: $UPDATE_GROUP_ID"
+
+  release:
+    name: Create Release
+    needs: [prepare, build-native, publish-ota]
+    if: always() && needs.prepare.result == 'success' && (needs.build-native.result == 'success' || needs.build-native.result == 'skipped') && (needs.publish-ota.result == 'success' || needs.publish-ota.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Release
+        uses: ./.github/actions/create-release
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          dry: ${{ inputs.dry_run }}
+          variant: ${{ inputs.variant }}
+          version: ${{ needs.prepare.outputs.version }}
+          tag: ${{ needs.prepare.outputs.tag }}
+          deployment_type: ${{ inputs.deployment_type }}
+          ios_fingerprint: ${{ needs.publish-ota.outputs.ios_fingerprint || '' }}
+          android_fingerprint: ${{ needs.publish-ota.outputs.android_fingerprint || '' }}
+          ios_update_id: ${{ needs.publish-ota.outputs.ios_update_id || '' }}
+          android_update_id: ${{ needs.publish-ota.outputs.android_update_id || '' }}
+          update_group_id: ${{ needs.publish-ota.outputs.update_group_id || '' }}
