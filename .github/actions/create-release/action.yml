@@ -226,7 +226,10 @@ runs:
       run: |
         # Store current ref to return to later
         CURRENT_REF=$(git rev-parse HEAD)
-        DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | awk '{print $NF}')
+        
+        # Get default branch - fallback to 'main' if detection fails
+        DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+        echo "Default branch: $DEFAULT_BRANCH"
         
         # Generate the full changelog
         ~/.cargo/bin/git-cliff --config cliff.toml -o CHANGELOG.md
@@ -259,10 +262,10 @@ runs:
           # Push the branch (force to handle re-runs)
           git push origin "$BRANCH_NAME" --force
           
-          # Check if PR already exists
-          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          # Check if PR already exists - handle null/empty properly
+          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number // empty' 2>/dev/null || echo "")
           
-          if [ -n "$EXISTING_PR" ]; then
+          if [ -n "$EXISTING_PR" ] && [ "$EXISTING_PR" != "null" ]; then
             echo "PR #$EXISTING_PR already exists for branch $BRANCH_NAME, skipping PR creation"
           else
             gh pr create \
