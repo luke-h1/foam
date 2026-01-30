@@ -88,8 +88,8 @@ protect_breaking_commits = false
 # Filter out commits by pattern
 filter_commits = false
 
-# Tag pattern for releases
-tag_pattern = "v[0-9].*"
+# Tag pattern for releases (supports: v0.0.1, 0.0.1, ota-*)
+tag_pattern = "(v)?[0-9]+\\.[0-9]+.*|ota-.*"
 
 # Sort order for commits within each group
 sort_commits = "oldest"
