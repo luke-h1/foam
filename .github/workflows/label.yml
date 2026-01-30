@@ -1,0 +1,20 @@
+name: Label
+on:
+  pull_request: 
+jobs:
+  label:
+    name: Label
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      checks: write    
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/labeler@v4
+        with:
+          sync-labels: true

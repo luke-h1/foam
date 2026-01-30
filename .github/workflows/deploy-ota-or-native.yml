@@ -1,0 +1,430 @@
+name: Deploy native or OTA
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_type:
+        description: "Deployment type"
+        required: true
+        type: choice
+        default: "auto"
+        options:
+          - auto # Detect using fingerprint
+          - ota # Force OTA update
+          - build # Force native build
+      platform:
+        description: "Platform to deploy"
+        required: false
+        type: choice
+        default: "all"
+        options:
+          - all
+          - ios
+          - android
+      dry_run:
+        description: "Dry run mode (skip release creation)"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  prepare:
+    name: 📋 Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      tag: ${{ steps.get_version.outputs.tag }}
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📌 Get version from app.config.ts
+        id: get_version
+        run: |
+          VERSION=$(grep "const VERSION = " app.config.ts | sed "s/const VERSION = '//g" | sed "s/';//g" | tr -d ' ')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📌 App Version: $VERSION"
+
+  test:
+    name: 🧪 Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🧪 Run tests
+        run: bun run test:ci
+
+      - name: 📝 TypeScript check
+        run: bun run ts:check
+
+  detect-changes:
+    name: 🔍 Detect Changes
+    needs: [prepare, test]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      fingerprint-changed: ${{ steps.compare.outputs.changed }}
+      ios-fingerprint: ${{ steps.fingerprint.outputs.ios }}
+      android-fingerprint: ${{ steps.fingerprint.outputs.android }}
+      deploy-type: ${{ steps.decide.outputs.deploy-type }}
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need history for comparison
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Calculate current fingerprints
+        id: fingerprint
+        run: |
+          IOS_FP=$(npx expo-updates fingerprint:generate --platform ios 2>/dev/null | jq -r '.hash' || echo "unknown")
+          ANDROID_FP=$(npx expo-updates fingerprint:generate --platform android 2>/dev/null | jq -r '.hash' || echo "unknown")
+
+          echo "ios=$IOS_FP" >> $GITHUB_OUTPUT
+          echo "android=$ANDROID_FP" >> $GITHUB_OUTPUT
+          echo "📱 iOS Fingerprint: $IOS_FP"
+          echo "🤖 Android Fingerprint: $ANDROID_FP"
+
+      - name: 📂 Load previous fingerprints
+        id: previous
+        uses: actions/cache/restore@v4
+        with:
+          path: .fingerprint-cache
+          key: fingerprint-${{ github.ref_name }}
+          restore-keys: |
+            fingerprint-main
+            fingerprint-
+
+      - name: 🔄 Compare fingerprints
+        id: compare
+        run: |
+          CHANGED="false"
+
+          if [ -f .fingerprint-cache/ios ]; then
+            PREV_IOS=$(cat .fingerprint-cache/ios)
+            if [ "$PREV_IOS" != "${{ steps.fingerprint.outputs.ios }}" ]; then
+              echo "⚠️ iOS fingerprint changed: $PREV_IOS → ${{ steps.fingerprint.outputs.ios }}"
+              CHANGED="true"
+            else
+              echo "✅ iOS fingerprint unchanged"
+            fi
+          else
+            echo "ℹ️ No previous iOS fingerprint found (first run)"
+            CHANGED="true"
+          fi
+
+          if [ -f .fingerprint-cache/android ]; then
+            PREV_ANDROID=$(cat .fingerprint-cache/android)
+            if [ "$PREV_ANDROID" != "${{ steps.fingerprint.outputs.android }}" ]; then
+              echo "⚠️ Android fingerprint changed: $PREV_ANDROID → ${{ steps.fingerprint.outputs.android }}"
+              CHANGED="true"
+            else
+              echo "✅ Android fingerprint unchanged"
+            fi
+          else
+            echo "ℹ️ No previous Android fingerprint found (first run)"
+            CHANGED="true"
+          fi
+
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+
+      - name: 🤔 Decide deployment type
+        id: decide
+        run: |
+          MANUAL_TYPE="${{ inputs.deploy_type }}"
+
+          if [ "$MANUAL_TYPE" == "ota" ]; then
+            echo "deploy-type=ota" >> $GITHUB_OUTPUT
+            echo "📦 Manual: OTA update requested"
+          elif [ "$MANUAL_TYPE" == "build" ]; then
+            echo "deploy-type=build" >> $GITHUB_OUTPUT
+            echo "🔨 Manual: Native build requested"
+          elif [ "${{ steps.compare.outputs.changed }}" == "true" ]; then
+            echo "deploy-type=build" >> $GITHUB_OUTPUT
+            echo "🔨 Auto: Native changes detected - build required"
+          else
+            echo "deploy-type=ota" >> $GITHUB_OUTPUT
+            echo "📦 Auto: No native changes - OTA update"
+          fi
+
+      - name: 🏷️ Generate release tag
+        id: tag
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          DEPLOY_TYPE="${{ steps.decide.outputs.deploy-type }}"
+
+          if [ "$DEPLOY_TYPE" == "ota" ]; then
+            TAG="ota-${VERSION}-${{ github.run_number }}"
+          else
+            TAG="${VERSION}"
+          fi
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "🏷️ Release tag: $TAG"
+
+      - name: 📊 Summary
+        run: |
+          echo "## Change Detection" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Fingerprint | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS | \`${{ steps.fingerprint.outputs.ios }}\` | ${{ steps.compare.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | \`${{ steps.fingerprint.outputs.android }}\` | ${{ steps.compare.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Decision:** ${{ steps.decide.outputs.deploy-type == 'build' && '🔨 Native Build' || '📦 OTA Update' }}" >> $GITHUB_STEP_SUMMARY
+
+  build:
+    name: 🔨 Native Build
+    needs: [prepare, detect-changes]
+    if: needs.detect-changes.outputs.deploy-type == 'build'
+    runs-on: foam
+    concurrency: eas-build-${{ inputs.platform || 'all' }}
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Load secrets
+        id: load_secrets
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
+          TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
+          AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
+          AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
+          SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+          GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
+          GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
+          SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
+          OP_ENV_FILE: ".env"
+
+      - name: 📄 Decode and write Google service files
+        run: |
+          if [ -z "$GOOGLE_SERVICES_ANDROID_PROD_BS4" ]; then
+            echo "Error: GOOGLE_SERVICES_ANDROID_PROD_BS4 is not set"
+            exit 1
+          fi
+          if [ -z "$GOOGLE_SERVICES_IOS_PROD_BS4" ]; then
+            echo "Error: GOOGLE_SERVICES_IOS_PROD_BS4 is not set"
+            exit 1
+          fi
+
+          echo "Decoding Android Google Services JSON..."
+          echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > google-services-prod.json
+
+          echo "Decoding iOS Google Services plist..."
+          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
+
+          echo "✅ Google service files written successfully"
+
+      - name: 📝 Generate GoogleService-Info.plist
+        run: |
+          # Decode base64 and write directly to file
+          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
+
+          # Verify the file was created
+          if [ -f "GoogleService-Info-prod.plist" ]; then
+            echo "✅ GoogleService-Info-prod.plist created successfully"
+            head -5 GoogleService-Info-prod.plist || true
+          else
+            echo "❌ Failed to create GoogleService-Info-prod.plist"
+            exit 1
+          fi
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 🔨 Build & Submit
+        run: |
+          PLATFORM="${{ inputs.platform || 'all' }}"
+
+          if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "ios" ]; then
+            echo "Building iOS..."
+            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./app-production.abd && bun run eas submit -p ios --path ./app-production.abd            
+          fi
+
+          if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "android" ]; then
+            echo "Building Android..."
+            eas build --platform android --profile production --auto-submit --non-interactive --no-wait --local
+          fi
+        env:
+          APP_VARIANT: production
+          TWITCH_CLIENT_ID: ${{ env.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ env.TWITCH_CLIENT_SECRET }}
+          AUTH_PROXY_API_BASE_URL: ${{ env.AUTH_PROXY_API_BASE_URL }}
+          AUTH_PROXY_API_KEY: ${{ env.AUTH_PROXY_API_KEY }}
+
+      - name: 💾 Save fingerprints for next run
+        run: |
+          mkdir -p .fingerprint-cache
+          echo "${{ needs.detect-changes.outputs.ios-fingerprint }}" > .fingerprint-cache/ios
+          echo "${{ needs.detect-changes.outputs.android-fingerprint }}" > .fingerprint-cache/android
+
+      - name: 📂 Cache fingerprints
+        uses: actions/cache/save@v4
+        with:
+          path: .fingerprint-cache
+          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}
+
+      - name: 📊 Summary
+        run: |
+          echo "## Native Build Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Profile:** production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auto-submit:** Yes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Fingerprints saved for future comparison." >> $GITHUB_STEP_SUMMARY
+
+  ota:
+    name: 📦 OTA Update
+    needs: [prepare, detect-changes]
+    if: needs.detect-changes.outputs.deploy-type == 'ota'
+    runs-on: ubuntu-latest
+    concurrency: eas-update-production
+    outputs:
+      ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
+      android_update_id: ${{ steps.publish.outputs.android_update_id }}
+      update_group_id: ${{ steps.publish.outputs.update_group_id }}
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 📦 Publish OTA Update
+        id: publish
+        run: |
+          PLATFORM="${{ inputs.platform || 'all' }}"
+
+          if [ "$PLATFORM" == "all" ]; then
+            PLATFORM_FLAG="--platform all"
+          else
+            PLATFORM_FLAG="--platform $PLATFORM"
+          fi
+
+          # Capture the JSON output from eas update
+          UPDATE_OUTPUT=$(eas update --channel production --environment production --message "Deploy: ${{ github.event.head_commit.message || github.sha }}" $PLATFORM_FLAG --non-interactive --clear-cache --json 2>/dev/null || echo "[]")
+
+          # Parse update IDs from the JSON output
+          IOS_UPDATE_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[] | select(.platform == "ios") | .id' 2>/dev/null || echo "")
+          ANDROID_UPDATE_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[] | select(.platform == "android") | .id' 2>/dev/null || echo "")
+          UPDATE_GROUP_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[0].group' 2>/dev/null || echo "")
+
+          echo "ios_update_id=$IOS_UPDATE_ID" >> $GITHUB_OUTPUT
+          echo "android_update_id=$ANDROID_UPDATE_ID" >> $GITHUB_OUTPUT
+          echo "update_group_id=$UPDATE_GROUP_ID" >> $GITHUB_OUTPUT
+
+          echo "📦 Published OTA Update:"
+          echo "  iOS Update ID: $IOS_UPDATE_ID"
+          echo "  Android Update ID: $ANDROID_UPDATE_ID"
+          echo "  Update Group ID: $UPDATE_GROUP_ID"
+        env:
+          APP_VARIANT: production
+
+      - name: 💾 Save fingerprints for next run
+        run: |
+          mkdir -p .fingerprint-cache
+          echo "${{ needs.detect-changes.outputs.ios-fingerprint }}" > .fingerprint-cache/ios
+          echo "${{ needs.detect-changes.outputs.android-fingerprint }}" > .fingerprint-cache/android
+
+      - name: 📂 Cache fingerprints
+        uses: actions/cache/save@v4
+        with:
+          path: .fingerprint-cache
+          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}
+
+      - name: 📊 Summary
+        run: |
+          echo "## OTA Update Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Update Group ID:** \`${{ steps.publish.outputs.update_group_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Update deployed instantly to all users!" >> $GITHUB_STEP_SUMMARY
+
+  release:
+    name: 📝 Create Release
+    needs: [prepare, detect-changes, build, ota]
+    if: always() && needs.detect-changes.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📝 Create Release
+        uses: ./.github/actions/create-release
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          dry: ${{ inputs.dry_run }}
+          variant: production
+          version: ${{ needs.prepare.outputs.version }}
+          tag: ${{ needs.detect-changes.outputs.tag }}
+          deployment_type: ${{ needs.detect-changes.outputs.deploy-type == 'ota' && 'ota' || 'native' }}
+          ios_fingerprint: ${{ needs.detect-changes.outputs.ios-fingerprint || '' }}
+          android_fingerprint: ${{ needs.detect-changes.outputs.android-fingerprint || '' }}
+          ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
+          android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
+          update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
+
+      - name: 📊 Summary
+        run: |
+          echo "## Release Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${{ needs.detect-changes.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** \`${{ needs.prepare.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type:** ${{ needs.detect-changes.outputs.deploy-type == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ GitHub release and CHANGELOG.md updated!" >> $GITHUB_STEP_SUMMARY
