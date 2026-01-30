@@ -212,16 +212,40 @@ runs:
       shell: bash
       run: |
         PREVIOUS="${{ steps.get_previous_tag.outputs.previous_tag }}"
+        TAG="${{ inputs.tag }}"
 
         if [ -z "$PREVIOUS" ]; then
           RELEASE_NOTES="Initial release"
         else
-          RELEASE_NOTES=$(~/.cargo/bin/git-cliff --config cliff.toml "$PREVIOUS"..HEAD --strip header 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
+          # Generate release notes for only unreleased commits since the previous tag
+          # --tag sets the version name, --unreleased only includes commits not in any tag
+          # --strip all removes headers/footers, leaving just the grouped commits
+          RAW_NOTES=$(~/.cargo/bin/git-cliff --config cliff.toml "$PREVIOUS"..HEAD --tag "$TAG" --unreleased --strip all 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
 
-          # Fallback to simple git log if git-cliff fails or returns empty
-          if [ -z "$RELEASE_NOTES" ] || echo "$RELEASE_NOTES" | grep -q "panicked"; then
-            echo "git-cliff failed or returned empty, falling back to git log"
-            RELEASE_NOTES=$(git log --pretty=format:"- %s (%an)" "$PREVIOUS"..HEAD)
+          # Check if we got meaningful content (more than just the header)
+          # Strip the header line and check if there's content
+          CONTENT_ONLY=$(echo "$RAW_NOTES" | tail -n +2 | sed '/^[[:space:]]*$/d')
+          
+          if [ -z "$CONTENT_ONLY" ]; then
+            # No unreleased changes found
+            COMMIT_COUNT=$(git rev-list --count "$PREVIOUS"..HEAD 2>/dev/null || echo "0")
+            if [ "$COMMIT_COUNT" = "0" ]; then
+              RELEASE_NOTES="No changes since previous release."
+            else
+              # There are commits but they're all already tagged - use git log as fallback
+              echo "No unreleased commits found, using git log for recent commits"
+              GIT_LOG=$(git log --pretty=format:"- %s" "$PREVIOUS"..HEAD | head -20)
+              RELEASE_NOTES="### Changes"$'\n\n'"${GIT_LOG}"
+            fi
+          else
+            RELEASE_NOTES="$RAW_NOTES"
+          fi
+
+          # Check for git-cliff errors
+          if echo "$RELEASE_NOTES" | grep -q "panicked"; then
+            echo "git-cliff panicked, falling back to git log"
+            GIT_LOG=$(git log --pretty=format:"- %s" "$PREVIOUS"..HEAD | head -20)
+            RELEASE_NOTES="### Changes"$'\n\n'"${GIT_LOG}"
           fi
         fi
 
