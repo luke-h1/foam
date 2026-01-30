@@ -216,6 +216,8 @@ runs:
       id: update_changelog
       if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_exists == 'false' }}
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
       run: |
         # Generate the full changelog
         ~/.cargo/bin/git-cliff --config cliff.toml -o CHANGELOG.md
@@ -225,18 +227,33 @@ runs:
           echo "CHANGELOG.md has not changed"
           echo "changed=false" >> $GITHUB_OUTPUT
         else
-          echo "CHANGELOG.md has changed, committing..."
+          echo "CHANGELOG.md has changed, creating PR..."
           echo "changed=true" >> $GITHUB_OUTPUT
 
           # Configure git for commit
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Commit and push the changelog
+          # Create a branch for the changelog update
+          BRANCH_NAME="chore/changelog-${{ inputs.tag }}"
+          git checkout -b "$BRANCH_NAME"
+
+          # Commit the changelog
           git add CHANGELOG.md
           git commit -m "chore(changelog): update CHANGELOG.md for ${{ inputs.tag }}"
-          git push origin HEAD
-          echo "CHANGELOG.md committed and pushed"
+
+          # Push the branch and create PR
+          git push origin "$BRANCH_NAME"
+          gh pr create \
+            --title "chore(changelog): update CHANGELOG.md for ${{ inputs.tag }}" \
+            --body "Automated changelog update for release ${{ inputs.tag }}" \
+            --base main \
+            --head "$BRANCH_NAME"
+
+          echo "CHANGELOG.md PR created"
+
+          # Switch back to main for subsequent steps
+          git checkout main
         fi
 
     - name: Get variant-specific app info
