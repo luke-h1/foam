@@ -1,0 +1,48 @@
+name: $TSFixMe progress
+on:
+    pull_request:
+        types: [opened, synchronize]
+        branches:
+            - main
+
+concurrency:
+    group: tsfixme-progress-{{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    tsfixme-progress:
+        runs-on: "ubuntu-latest"
+        steps:
+            - name: Fetch hub
+              run: |
+                  (
+                    cd /tmp
+                    curl -s -L https://github.com/github/hub/releases/download/v2.12.3/hub-linux-amd64-2.12.3.tgz > hub-linux-amd64-2.12.3.tgz
+                    tar xzf hub-linux-amd64-2.12.3.tgz hub-linux-amd64-2.12.3/bin/hub
+                    mv hub-linux-amd64-2.12.3/bin/hub hub
+                  )
+            - name: Install ripgrep
+              run: |
+                  (
+                    cd /tmp 
+                    curl -LO https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb
+                    sudo dpkg -i ripgrep_13.0.0_amd64.deb
+                  )
+            - uses: actions/checkout@v3
+              with:
+                  ref: ${{ github.event.pull_request.base.sha }}
+
+            - name: Count base instances of $TSFixMe
+              run: |
+                  rg "\\\$TSFixMe" --stats . | rg '.*matches$' | head -1 | awk '{ print $1 }' > /tmp/base_count_tsfixme_instances
+                  rg "ts-expect-error ts-migrate" --stats . | rg '.*matches$' | head -1 | awk '{ print $1 }' > /tmp/base_count_tserror_instances
+                  rg "\\\$TSFixMe" --stats . | rg '.*matches$' | tail -1 | awk '{ print $1 }' > /tmp/base_count_tsfixme_files
+            - uses: actions/checkout@v3
+
+            - name: Execute progress script
+              env:
+                  GITHUB_TOKEN: ${{ secrets.FOAM_GITHUB_TOKEN }}
+                  GITHUB_USER: github
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
+              run: |
+                  ./.github/scripts/tsfixme_progress.sh

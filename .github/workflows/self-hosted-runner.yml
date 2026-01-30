@@ -1,0 +1,32 @@
+name: Check self hosted runner
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+jobs:
+  self-hosted-runner:
+    name: ESLint
+    runs-on: foam
+    if: github.repository == 'luke-h1/foam' && (github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'self-hosted-test'))
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🤓 Run ESLint
+        run: bun run lint

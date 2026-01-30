@@ -1,0 +1,75 @@
+name: EAS production / preview deployment
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'Production or preview deployment (build & submit)'
+        required: true
+        type: choice
+        default: 'production'
+        options:
+          - production
+          - preview
+      platform:
+        description: 'The platform to deploy to'
+        required: true
+        type: choice
+        default: 'all'
+        options:
+          - all
+          - ios
+          - android
+jobs:
+  app_deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency: eas-deploy-fingerprint-main
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: 🔎 Check for EXPO_TOKEN
+        run: |
+            if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+              echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/tutorial/eas/using-github/"
+              exit 1
+            fi
+
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: '.bun-version'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        if: ${{ !inputs.dry }}
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+          patch-watchers: false
+      
+      - name: 🚀 Build & deploy
+        run: |
+          if [ "${{ inputs.platform }}" == "all" ]; then
+            bun run build:${{ inputs.variant }}:ios
+            bun run build:${{ inputs.variant }}:android
+
+          elif [ "${{ inputs.platform }}" == "ios" ]; then
+            bun run build:${{ inputs.variant }}:ios
+
+          elif [ "${{ inputs.platform }}" == "android" ]; then
+            bun run build:${{ inputs.variant }}:android
+          fi
+          

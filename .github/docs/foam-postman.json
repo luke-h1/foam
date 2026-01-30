@@ -1,0 +1,261 @@
+{
+	"info": {
+		"_postman_id": "3365d7bf-d684-4bc3-be0f-72af866118e3",
+		"name": "foam",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30671007"
+	},
+	"item": [
+		{
+			"name": "bttv",
+			"item": [
+				{
+					"name": "cached global emotes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.betterttv.net/3/cached/emotes/global",
+							"protocol": "https",
+							"host": [
+								"api",
+								"betterttv",
+								"net"
+							],
+							"path": [
+								"3",
+								"cached",
+								"emotes",
+								"global"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cached singe global emote",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.betterttv.net/3/cached/users/twitch/71092938",
+							"protocol": "https",
+							"host": [
+								"api",
+								"betterttv",
+								"net"
+							],
+							"path": [
+								"3",
+								"cached",
+								"users",
+								"twitch",
+								"71092938"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get cached badges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.betterttv.net/3/cached/badges",
+							"protocol": "https",
+							"host": [
+								"api",
+								"betterttv",
+								"net"
+							],
+							"path": [
+								"3",
+								"cached",
+								"badges"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "twitch",
+			"item": [
+				{
+					"name": "global emotes",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer xr9p8up1dpp6pbp7vdwecjqy98wkkv",
+								"type": "text"
+							},
+							{
+								"key": "Client-ID",
+								"value": "8k08f7vuubgft5fflydy4hsyfeyi1l",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://api.twitch.tv/helix/chat/emotes/global",
+							"protocol": "https",
+							"host": [
+								"api",
+								"twitch",
+								"tv"
+							],
+							"path": [
+								"helix",
+								"chat",
+								"emotes",
+								"global"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sevenTV",
+			"item": [
+				{
+					"name": "global emotes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.7tv.app/v2/emotes/global",
+							"protocol": "https",
+							"host": [
+								"api",
+								"7tv",
+								"app"
+							],
+							"path": [
+								"v2",
+								"emotes",
+								"global"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get channel emote",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.7tv.app/v2/users/71092938/emotes",
+							"protocol": "https",
+							"host": [
+								"api",
+								"7tv",
+								"app"
+							],
+							"path": [
+								"v2",
+								"users",
+								"71092938",
+								"emotes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all user badges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.7tv.app/v2/badges?user_identifier=twitch_id",
+							"protocol": "https",
+							"host": [
+								"api",
+								"7tv",
+								"app"
+							],
+							"path": [
+								"v2",
+								"badges"
+							],
+							"query": [
+								{
+									"key": "user_identifier",
+									"value": "twitch_id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ffz",
+			"item": [
+				{
+					"name": "global emotes",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "room info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.frankerfacez.com/v1/room/id/71092938",
+							"protocol": "https",
+							"host": [
+								"api",
+								"frankerfacez",
+								"com"
+							],
+							"path": [
+								"v1",
+								"room",
+								"id",
+								"71092938"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get badges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.frankerfacez.com/v1/badges/ids",
+							"protocol": "https",
+							"host": [
+								"api",
+								"frankerfacez",
+								"com"
+							],
+							"path": [
+								"v1",
+								"badges",
+								"ids"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
