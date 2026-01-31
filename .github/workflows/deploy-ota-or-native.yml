@@ -481,6 +481,7 @@ jobs:
           android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
           update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
           runtime_version: ${{ needs.prepare.outputs.runtime_version || '' }}
+          commit_changelog: 'true'
 
       - name: 📊 Summary
         run: |

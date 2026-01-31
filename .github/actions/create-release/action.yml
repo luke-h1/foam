@@ -269,7 +269,9 @@ runs:
       shell: bash
       run: |
         # Generate the full changelog
-        ~/.cargo/bin/git-cliff --config cliff.toml -o CHANGELOG.md
+        # Pass --tag to tell git-cliff that HEAD should be treated as this tag
+        # This prevents commits from appearing as "unreleased" when they're being released
+        ~/.cargo/bin/git-cliff --config cliff.toml --tag "${{ inputs.tag }}" -o CHANGELOG.md
 
         # Check if changelog has changed
         if git diff --quiet CHANGELOG.md 2>/dev/null; then

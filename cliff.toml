@@ -45,6 +45,10 @@ filter_unconventional = false
 # Process each line of a commit as an individual commit
 split_commits = false
 
+# Use topological order for tags (based on git commit graph, not alphabetical)
+# This is critical for OTA tags with UUIDs that don't sort chronologically
+topo_order = true
+
 # Commit preprocessors
 commit_preprocessors = [
   # Replace issue numbers
@@ -59,6 +63,7 @@ commit_parsers = [
   # Skip patterns first (order matters!)
   { message = "^chore\\(release\\)", skip = true },
   { message = "^chore: [Rr]elease", skip = true },
+  { message = "^chore\\(changelog\\)", skip = true },
   { message = "^[0-9]+\\.[0-9]+\\.[0-9]+", skip = true },
   { message = "^[Rr]elease", skip = true },
   { message = "^Merge", skip = true },
