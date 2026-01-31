@@ -4,6 +4,23 @@
 
 ### Bug Fixes
 
+- **infrastructure:** Ota runtime version
+
+### Miscellaneous Tasks
+
+- **changelog:** Update CHANGELOG.md for ota-1054ebce-6b29-4342-ad1f-030bfca5d82b ([#475](https://github.com/lhowsam/foam/issues/475))
+- **infrastructure:** Don't pr a changelog
+
+## ota-b578613f-7fd1-4d05-a6fc-10a2c2fff773
+
+### Bug Fixes
+
+- **infrastructure:** Improve release notes generation
+
+## ota-1054ebce-6b29-4342-ad1f-030bfca5d82b
+
+### Bug Fixes
+
 - **app:** Fix emotes not loading on init
 - **app:** Content classification
 - **app:** Scrollable content classification
