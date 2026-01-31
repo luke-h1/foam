@@ -270,554 +270,162 @@ function generatePlayerURL(options: {
 }
 
 /**
- * Injected JS for player controls
+ * Simplified injected JS for player controls
  */
 const INJECTED_JAVASCRIPT = `
 (function() {
-  // singleton
   if (window._injected) return;
   window._injected = true;
 
-  console.log('[Foam] Injected JS starting...');
-
   function postMessage(type, payload) {
     try {
-      console.log('[Foam] Posting message:', type, payload ? JSON.stringify(payload) : '');
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, payload: payload }));
-    } catch (e) {
-      console.error('[Foam] Failed to post message:', e);
-    }
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type, payload }));
+    } catch (e) {}
   }
 
-  // Debug: Log all video events
-  function debugVideoElement(video) {
-    if (!video || video._debugAttached) return;
-    video._debugAttached = true;
-
-    var events = [
-      'loadstart', 'progress', 'suspend', 'abort', 'error', 'emptied',
-      'stalled', 'loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough',
-      'playing', 'waiting', 'seeking', 'seeked', 'ended', 'durationchange',
-      'timeupdate', 'play', 'pause', 'ratechange', 'resize', 'volumechange'
-    ];
-
-    events.forEach(function(eventName) {
-      video.addEventListener(eventName, function(e) {
-        console.log('[Foam] Video event:', eventName,
-          'paused:', video.paused,
-          'readyState:', video.readyState,
-          'networkState:', video.networkState,
-          'currentTime:', video.currentTime ? video.currentTime.toFixed(2) : 0
-        );
-      });
-    });
-  }
-
-  // Promise queue with length limit and generation tracking
-  // Generation tracking prevents counter from going negative when queue resets
-  window._PROMISE_QUEUE = Promise.resolve();
-  window._promiseQueueLength = 0;
-  window._promiseQueueGen = 0;
-
-  window._queuePromise = function(method) {
-    window._promiseQueueLength++;
-
-    // Reset queue if it gets too long (prevents memory accumulation)
-    if (window._promiseQueueLength > 30) {
-      window._PROMISE_QUEUE = Promise.resolve();
-      window._promiseQueueLength = 1;
-      window._promiseQueueGen++;
-    }
-
-    var myGen = window._promiseQueueGen;
-
-    window._PROMISE_QUEUE = window._PROMISE_QUEUE.then(function() {
-      return new Promise(function(resolve) {
-        Promise.resolve().then(function() {
-          return method();
-        }).then(function() {
-          // Only decrement if still same generation (not reset)
-          if (myGen === window._promiseQueueGen) {
-            window._promiseQueueLength--;
-          }
-          resolve();
-        }).catch(function(e) {
-          console.warn('Queue promise error:', e);
-          if (myGen === window._promiseQueueGen) {
-            window._promiseQueueLength--;
-          }
-          resolve();
-        });
-      });
-    });
-
-    return window._PROMISE_QUEUE;
-  };
-
-  // Periodic cleanup timer - reset promise queue every 10 minutes
-  // Prevents memory accumulation during extended viewing sessions
-  // This is a soft reset that clears queue state without full page reload
-  window._cleanupInterval = setInterval(function() {
-    window._PROMISE_QUEUE = Promise.resolve();
-    window._promiseQueueLength = 0;
-    window._promiseQueueGen++;
-  }, 600000); // 10 minutes
-
-  // Async query selector that waits for element to appear
-  window._asyncQuerySelector = function(selector, timeout) {
-    timeout = timeout || 30000;
+  // Wait for video element
+  function waitForVideo(timeout) {
     return new Promise(function(resolve) {
-      var element = document.querySelector(selector);
-      if (element) {
-        return resolve(element);
-      }
+      var video = document.querySelector('video');
+      if (video) return resolve(video);
 
       var timeoutId;
       var observer = new MutationObserver(function() {
-        element = document.querySelector(selector);
-        if (element) {
+        video = document.querySelector('video');
+        if (video) {
           observer.disconnect();
           clearTimeout(timeoutId);
-          resolve(element);
+          resolve(video);
         }
       });
-      // Must use subtree to detect nested elements in the player
       observer.observe(document.body, { childList: true, subtree: true });
-
-      // Always set timeout with default of 30 seconds
       timeoutId = setTimeout(function() {
         observer.disconnect();
-        resolve(undefined);
-      }, timeout);
+        resolve(null);
+      }, timeout || 15000);
     });
-  };
+  }
 
-  // Detect content gate and notify React Native (for gesture detector)
-  // Also updates CSS styles to scale content gate properly
+  // Detect content gate
   function detectContentGate() {
-    var hasContentGate = !!(
+    var hasGate = !!(
       document.querySelector('[data-a-target="player-overlay-content-gate"]') ||
-      document.querySelector('[data-a-target*="content-classification-gate"]') ||
-      document.querySelector('.content-classification-gate') ||
-      document.querySelector('[class*="content-gate"]') ||
-      document.querySelector('[class*="ContentGate"]')
+      document.querySelector('.content-classification-gate')
     );
-
-    // Update CSS styles based on content gate presence
-    hideDefaultOverlay();
-
-    if (hasContentGate) {
-      console.log('[Foam] Content gate detected');
-      postMessage('contentGateDetected', { hasContentGate: true });
-    } else {
-      // Check if video is playing - if so, no content gate
-      var video = document.querySelector('video');
-      if (video && video.readyState >= 2) {
-        postMessage('contentGateDetected', { hasContentGate: false });
-      }
-    }
+    postMessage('contentGateDetected', { hasContentGate: hasGate });
+    applyStyles(hasGate);
   }
 
-  // Check for error states and offline messages
-  function checkForErrors() {
-    // Check for various error/offline indicators
-    var errorSelectors = [
-      '[data-a-target="player-overlay-content-gate"]',
-      '.channel-status-info--offline',
-      '.offline-recommendations',
-      '[data-test-selector="video-player__video-error"]',
-      '.video-player__error',
-      '.player-error'
-    ];
-
-    errorSelectors.forEach(function(selector) {
-      var el = document.querySelector(selector);
-      if (el) {
-        console.log('[Foam] Found error/offline element:', selector, el.textContent?.substring(0, 100));
-        postMessage('error', { message: 'Stream error: ' + selector });
-      }
-    });
-
-    // Check if there's any text indicating offline
-    var bodyText = document.body?.innerText || '';
-    if (bodyText.includes('is offline') || bodyText.includes('Channel is not live')) {
-      console.log('[Foam] Stream appears to be offline');
-      postMessage('offline');
-    }
-    
-    var video = document.querySelector('video');
-    if (!video && document.readyState === 'complete') {
-      var hasPlayerContainer = document.querySelector('[data-a-target="player-container"]');
-      if (hasPlayerContainer) {
-        console.warn('[Foam] Player container exists but no video element - possible blank screen');
-      }
-    }
-  }
-
-  // Hide Twitch's default overlay controls using CSS injection
-  // Dynamically updates styles based on content gate presence
-  function hideDefaultOverlay() {
-    var style = document.getElementById('foam-overlay-styles');
+  // Apply styles to hide Twitch UI and style video
+  function applyStyles(hasContentGate) {
+    var style = document.getElementById('foam-styles');
     if (!style) {
       style = document.createElement('style');
-      style.id = 'foam-overlay-styles';
+      style.id = 'foam-styles';
       document.head.appendChild(style);
     }
 
-    // Check if content gate is present
-    var hasContentGate = !!(
-      document.querySelector('[data-a-target="player-overlay-content-gate"]') ||
-      document.querySelector('[data-a-target*="content-classification-gate"]') ||
-      document.querySelector('.content-classification-gate')
-    );
+    var hideControls = '.top-bar, .player-controls, #channel-player-disclosures, ' +
+      '[data-a-target="player-overlay-preview-background"], ' +
+      '[data-a-target="player-overlay-video-stats"] ' +
+      '{ display: none !important; }';
 
     if (hasContentGate) {
-      // Content gate present - scale down content to fit and allow scrolling
-      style.textContent =
-        '.top-bar,' +
-        '.player-controls,' +
-        '#channel-player-disclosures,' +
-        '[data-a-target="player-overlay-preview-background"],' +
-        '[data-a-target="player-overlay-video-stats"]' +
-        '{ display: none !important; visibility: hidden !important; pointer-events: none !important; }' +
-        // Allow scrolling when content gate is shown
-        'body, html { ' +
-        ' margin: 0 !important; ' +
-        ' padding: 0 !important; ' +
-        ' overflow: auto !important; ' +
-        ' -webkit-overflow-scrolling: touch !important; ' +
-        '}' +
-        // Scale content gate to fit in viewport
-        '[data-a-target="player-overlay-content-gate"] { ' +
-        ' transform: scale(0.85) !important; ' +
-        ' transform-origin: center center !important; ' +
-        '}' +
-        '[data-a-target="player-container"], [data-a-target="player-container"] > div { ' +
-        ' display: flex !important; ' +
-        ' align-items: center !important; ' +
-        ' justify-content: center !important; ' +
-        ' width: 100% !important; ' +
-        ' height: 100% !important; ' +
-        ' margin: 0 !important; ' +
-        ' padding: 0 !important; ' +
-        ' overflow: visible !important; ' +
-        '}';
+      style.textContent = hideControls +
+        'body, html { margin: 0; padding: 0; overflow: auto; -webkit-overflow-scrolling: touch; }' +
+        '[data-a-target="player-overlay-content-gate"] { transform: scale(0.85); transform-origin: center; }';
     } else {
-      // No content gate - normal video styles
-      style.textContent =
-        '.top-bar,' +
-        '.player-controls,' +
-        '#channel-player-disclosures,' +
-        '[data-a-target="player-overlay-preview-background"],' +
-        '[data-a-target="player-overlay-video-stats"]' +
-        '{ display: none !important; visibility: hidden !important; pointer-events: none !important; }' +
-        'body, html { margin: 0 !important; padding: 0 !important; overflow: hidden !important; }' +
-        '[data-a-target="player-container"], [data-a-target="player-container"] > div { ' +
-        '  display: flex !important; ' +
-        '  align-items: center !important; ' +
-        '  justify-content: center !important; ' +
-        '  width: 100% !important; ' +
-        '  height: 100% !important; ' +
-        '  margin: 0 !important; ' +
-        '  padding: 0 !important; ' +
-        '}' +
-        'video { ' +
-        '  display: block !important; ' +
-        '  visibility: visible !important; ' +
-        '  opacity: 1 !important; ' +
-        '  width: 100% !important; ' +
-        '  height: 100% !important; ' +
-        '  object-fit: contain !important; ' +
-        '  margin: 0 auto !important; ' +
-        '}';
+      style.textContent = hideControls +
+        'body, html { margin: 0; padding: 0; overflow: hidden; }' +
+        'video { display: block; width: 100%; height: 100%; object-fit: contain; }';
     }
-
-    var observer = new MutationObserver(function(mutations, obs) {
-      if (document.querySelector('video')) {
-        obs.disconnect();
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    setTimeout(function() { observer.disconnect(); }, 30000);
   }
 
-  // Configure video element for playback
-  function configureVideoElement(videoElement) {
-    if (!videoElement || videoElement._configured) return;
-    videoElement._configured = true;
+  // Setup video event listeners
+  function setupVideo(video) {
+    if (video._setup) return;
+    video._setup = true;
 
-    // Disable text tracks (captions) immediately
-    if (videoElement.textTracks) {
-      for (var i = 0; i < videoElement.textTracks.length; i++) {
-        videoElement.textTracks[i].mode = 'hidden';
+    // Disable captions
+    if (video.textTracks) {
+      for (var i = 0; i < video.textTracks.length; i++) {
+        video.textTracks[i].mode = 'hidden';
       }
     }
-  }
 
-  // Initialize video player
-  function initVideo() {
-    console.log('[Foam] initVideo called, waiting for video element...');
-
-    _queuePromise(function() {
-      return _asyncQuerySelector('video').then(function(videoElement) {
-        if (!videoElement) {
-          console.warn('[Foam] Video element not found within timeout');
-          postMessage('error', { message: 'Video element not found' });
-          return;
-        }
-
-        // Check computed styles for visibility
-        var computedStyle = window.getComputedStyle(videoElement);
-        var visibilityData = {
-          display: computedStyle.display,
-          visibility: computedStyle.visibility,
-          opacity: computedStyle.opacity,
-          width: computedStyle.width,
-          height: computedStyle.height,
-          position: computedStyle.position,
-          zIndex: computedStyle.zIndex
-        };
-
-        console.log('[Foam] Video element found!', {
-          paused: videoElement.paused,
-          muted: videoElement.muted,
-          readyState: videoElement.readyState,
-          networkState: videoElement.networkState,
-          src: videoElement.src ? 'present' : 'missing',
-          autoplay: videoElement.autoplay,
-          dimensions: {
-            videoWidth: videoElement.videoWidth,
-            videoHeight: videoElement.videoHeight,
-            clientWidth: videoElement.clientWidth,
-            clientHeight: videoElement.clientHeight,
-            offsetWidth: videoElement.offsetWidth,
-            offsetHeight: videoElement.offsetHeight
-          },
-          styles: visibilityData
-        });
-
-        debugVideoElement(videoElement);
-
-        configureVideoElement(videoElement);
-
-        if (!videoElement._listenersAdded) {
-          videoElement._listenersAdded = true;
-
-          videoElement.addEventListener('pause', function() {
-            postMessage('pause');
-            // Hide captions on pause
-            if (videoElement.textTracks && videoElement.textTracks.length > 0) {
-              videoElement.textTracks[0].mode = 'hidden';
-            }
-          });
-
-          videoElement.addEventListener('playing', function() {
-            postMessage('play');
-            // Ensure video is unmuted and at full volume
-            videoElement.muted = false;
-            videoElement.volume = 1.0;
-            // Hide captions
-            if (videoElement.textTracks && videoElement.textTracks.length > 0) {
-              videoElement.textTracks[0].mode = 'hidden';
-            }
-          });
-
-          videoElement.addEventListener('ended', function() {
-            postMessage('ended');
-          });
-
-          var lastBufferingState = null;
-          videoElement.addEventListener('waiting', function() {
-            if (lastBufferingState !== true) {
-              lastBufferingState = true;
-              postMessage('stateUpdate', { isBuffering: true });
-            }
-          });
-
-          videoElement.addEventListener('canplay', function() {
-            if (lastBufferingState !== false) {
-              lastBufferingState = false;
-              postMessage('stateUpdate', { isBuffering: false });
-            }
-          });
-
-          videoElement.addEventListener('loadedmetadata', function() {
-            // Metadata loaded
-          });
-
-          var lastTimeCheck = -1;
-          var timeCheckCount = 0;
-          videoElement.addEventListener('timeupdate', function() {
-            var currentTime = videoElement.currentTime;
-            // Only log every 2 seconds to avoid spam
-            if (Date.now() % 2000 < 100) {
-              if (lastTimeCheck >= 0 && Math.abs(currentTime - lastTimeCheck) < 0.1 && !videoElement.paused) {
-                timeCheckCount++;
-                if (timeCheckCount >= 3) {
-                  // Video appears stuck - recovery handled by checkPlaybackStuck
-                }
-              } else {
-                timeCheckCount = 0;
-              }
-              lastTimeCheck = currentTime;
-            }
-          });
-        }
-
-        if (!videoElement.paused) {
-          postMessage('play');
-          videoElement.muted = false;
-          videoElement.volume = 1.0;
-          if (videoElement.textTracks && videoElement.textTracks.length > 0) {
-            videoElement.textTracks[0].mode = 'hidden';
-          }
-        } else {
-          // Try to start playback if autoplay is enabled
-          if (videoElement.autoplay || videoElement.readyState >= 3) {
-            videoElement.play().then(function() {
-              // Playback started
-            }).catch(function(e) {
-              console.warn('[Foam] Playback failed:', e);
-            });
-          }
-        }
-
-        postMessage('ready');
-      });
+    video.addEventListener('pause', function() { postMessage('pause'); });
+    video.addEventListener('playing', function() {
+      postMessage('play');
+      video.muted = false;
+      video.volume = 1.0;
     });
-  }
+    video.addEventListener('ended', function() { postMessage('ended'); });
+    video.addEventListener('waiting', function() { postMessage('stateUpdate', { isBuffering: true }); });
+    video.addEventListener('canplay', function() { postMessage('stateUpdate', { isBuffering: false }); });
 
-  function getPlayerState() {
-    var video = document.querySelector('video');
-    if (!video) return null;
-    return {
-      isPaused: video.paused,
-      muted: video.muted,
-      volume: video.volume,
-      currentTime: video.currentTime || 0,
-      duration: video.duration || 0,
-      isBuffering: video.readyState < 3,
-      isReady: true
-    };
-  }
+    postMessage('ready');
 
-  var lastState = null;
-
-  function sendStateUpdate() {
-    var state = getPlayerState();
-    if (!state) return;
-
-    // Only send update if state actually changed (excluding currentTime which changes constantly)
-    if (lastState &&
-        lastState.isPaused === state.isPaused &&
-        lastState.muted === state.muted &&
-        lastState.volume === state.volume &&
-        lastState.isBuffering === state.isBuffering) {
-      return;
+    // Auto-start if not playing
+    if (video.paused && video.readyState >= 2) {
+      video.play().catch(function() {});
     }
-
-    lastState = state;
-    postMessage('stateUpdate', state);
   }
 
-  // Reduced polling interval - 5 seconds instead of 2
-  // State changes are primarily tracked via event listeners now
-  setInterval(sendStateUpdate, 5000);
+  // Check for offline/error states
+  function checkErrors() {
+    var bodyText = document.body?.innerText || '';
+    if (bodyText.includes('is offline') || bodyText.includes('Channel is not live')) {
+      postMessage('offline');
+    }
+  }
 
-  // Playback recovery: detect stuck video and attempt to resume
-  // This handles cases where first frame loads but video freezes
+  // Stuck playback recovery
   var lastTime = -1;
   var stuckCount = 0;
-
-  function checkPlaybackStuck() {
+  function checkStuck() {
     var video = document.querySelector('video');
-    if (!video) return;
-
-    // Only check if video should be playing
-    if (video.paused || video.ended) {
+    if (!video || video.paused || video.ended) {
       lastTime = -1;
       stuckCount = 0;
       return;
     }
 
-    var currentTime = video.currentTime;
-
-    // If time hasn't changed and we're supposed to be playing, we might be stuck
-    if (lastTime >= 0 && Math.abs(currentTime - lastTime) < 0.1) {
+    if (lastTime >= 0 && Math.abs(video.currentTime - lastTime) < 0.1) {
       stuckCount++;
-      console.log('[Foam] Possible stuck playback detected, count:', stuckCount,
-        'time:', currentTime, 'readyState:', video.readyState);
-
       if (stuckCount >= 3) {
-        console.log('[Foam] Attempting playback recovery...');
-
-        // Try multiple recovery strategies
-        if (video.readyState >= 2) {
-          // Strategy 1: Pause and play
-          video.pause();
-          setTimeout(function() {
-            video.play().then(function() {
-              console.log('[Foam] Recovery: play() succeeded');
-            }).catch(function(e) {
-              console.log('[Foam] Recovery: play() failed:', e.message);
-            });
-          }, 100);
-        }
-
+        video.pause();
+        setTimeout(function() { video.play().catch(function() {}); }, 100);
         stuckCount = 0;
       }
     } else {
       stuckCount = 0;
     }
-
-    lastTime = currentTime;
+    lastTime = video.currentTime;
   }
 
-  // Check every 2 seconds for stuck playback
-  setInterval(checkPlaybackStuck, 2000);
+  // Initialize
+  applyStyles(false);
+  detectContentGate();
 
-  console.log('[Foam] Starting initialization...');
-  console.log('[Foam] Current URL:', window.location.href);
+  waitForVideo(15000).then(function(video) {
+    if (video) {
+      setupVideo(video);
+    } else {
+      postMessage('error', { message: 'Video element not found' });
+    }
+  });
 
-  hideDefaultOverlay();
-  initVideo();
-  detectContentGate(); // Initial check
+  // Periodic checks
+  setInterval(detectContentGate, 2000);
+  setInterval(checkStuck, 2000);
+  setTimeout(checkErrors, 5000);
+  setInterval(checkErrors, 30000);
 
-  setInterval(function() {
-    detectContentGate(); // Check periodically
-  }, 2000);
-
-  // Check for errors after a delay to allow page to load
-  setTimeout(function() {
-    checkForErrors();
-  }, 5000);
-
-  // Periodic error check for streams that go offline
-  setInterval(function() {
-    checkForErrors();
-  }, 30000);
-
-  // Periodic video rendering check - detect blank/audio-only issues
-  setInterval(function() {
-    var video = document.querySelector('video');
-    if (!video) return;
-
-    var container = video.closest('[data-a-target="player-container"]') || video.parentElement;
-    var containerRect = container ? container.getBoundingClientRect() : null;
-    var videoRect = video.getBoundingClientRect();
-    var computedStyle = window.getComputedStyle(video);
-
-  }, 5000);
-
-  // Expose control functions
+  // Expose controls
   window.playerControls = {
     play: function() {
       var v = document.querySelector('video');
-      if (v) {
-        v.play().catch(function() {});
-        v.muted = false;
-        v.volume = 1.0;
-      }
+      if (v) { v.play().catch(function() {}); v.muted = false; v.volume = 1.0; }
     },
     pause: function() {
       var v = document.querySelector('video');
@@ -829,17 +437,11 @@ const INJECTED_JAVASCRIPT = `
     },
     unmute: function() {
       var v = document.querySelector('video');
-      if (v) {
-        v.muted = false;
-        v.volume = 1.0;
-      }
+      if (v) { v.muted = false; v.volume = 1.0; }
     },
     setVolume: function(vol) {
       var v = document.querySelector('video');
-      if (v) {
-        v.volume = vol;
-        if (vol > 0) v.muted = false;
-      }
+      if (v) { v.volume = vol; if (vol > 0) v.muted = false; }
     },
     seek: function(time) {
       var v = document.querySelector('video');
@@ -1080,38 +682,18 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
     useEffect(() => {
       const handleAppStateChange = (nextAppState: AppStateStatus) => {
-        console.log(
-          '[StreamPlayer] App state changed:',
-          appStateRef.current,
-          '->',
-          nextAppState,
-        );
-
         if (
           appStateRef.current.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          console.log('[StreamPlayer] App resumed - checking video health');
-
-          // Give the WebView a moment to resume, then check if video is playing
+          // Resume playback when app returns to foreground
           setTimeout(() => {
             if (webViewRef.current && playerState.isReady) {
-              // Inject a health check that will try to resume if stuck
               webViewRef.current.injectJavaScript(`
                 (function() {
                   var video = document.querySelector('video');
-                  if (video) {
-                    console.log('[Foam] App resumed - video state:', {
-                      paused: video.paused,
-                      readyState: video.readyState,
-                      currentTime: video.currentTime
-                    });
-                    // If video should be playing but appears stuck, try to resume
-                    if (!video.paused && video.readyState >= 2) {
-                      video.play().catch(function(e) {
-                        console.log('[Foam] Resume play failed:', e.message);
-                      });
-                    }
+                  if (video && !video.paused && video.readyState >= 2) {
+                    video.play().catch(function() {});
                   }
                 })();
                 true;
@@ -1133,38 +715,12 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       };
     }, [playerState.isReady]);
 
-    // Video health monitoring - detect and recover from stuck playback
+    // Health monitoring is handled by injected JS - reset refs when state changes
     useEffect(() => {
       if (!playerState.isReady || playerState.isPaused) {
         lastVideoTimeRef.current = -1;
         stuckCountRef.current = 0;
-        return;
       }
-
-      const healthCheckInterval = setInterval(() => {
-        if (!webViewRef.current) return;
-
-        // Query current video time
-        webViewRef.current.injectJavaScript(`
-          (function() {
-            var video = document.querySelector('video');
-            if (video && !video.paused) {
-              window.ReactNativeWebView.postMessage(JSON.stringify({
-                type: 'healthCheck',
-                payload: {
-                  currentTime: video.currentTime,
-                  readyState: video.readyState,
-                  networkState: video.networkState,
-                  paused: video.paused
-                }
-              }));
-            }
-          })();
-          true;
-        `);
-      }, 3000);
-
-      return () => clearInterval(healthCheckInterval);
     }, [playerState.isReady, playerState.isPaused]);
 
     const currentTimeResolverRef = useRef<((value: number) => void) | null>(
@@ -1265,23 +821,16 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     }, [injectJS, playerState.duration]);
 
     /**
-     * Force refresh the player - hard reload via about:blank
-     * This is the most reliable way to recover from frozen/stuck playback
+     * Force refresh the player
      */
     const forceRefresh = useCallback(() => {
-      console.log('[StreamPlayer] Force refresh triggered');
       setPlayerState(prev => ({
         ...prev,
         isReady: false,
         isBuffering: true,
       }));
 
-      // Hard refresh: load blank page first, then reload
-      webViewRef.current?.injectJavaScript(`
-        window._injected = false;
-        window._cleanupInterval && clearInterval(window._cleanupInterval);
-      `);
-
+      webViewRef.current?.injectJavaScript('window._injected = false;');
       setTimeout(() => {
         webViewRef.current?.reload();
       }, 100);
@@ -1333,12 +882,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       (event: WebViewMessageEvent) => {
         try {
           const message = JSON.parse(event.nativeEvent.data) as PlayerMessage;
-          console.log('[StreamPlayer] Message received:', message.type);
 
           switch (message.type) {
             case 'ready':
-              console.log('[StreamPlayer] Player ready');
-
               setPlayerState(prev => ({
                 ...prev,
                 isReady: true,
@@ -1364,9 +910,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               onOffline?.();
               break;
             case 'stateUpdate':
-              /**
-               * Only update the player if values change to avoid re-renders
-               */
               setPlayerState(prev => {
                 const { payload } = message;
                 if (
@@ -1394,92 +937,16 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               }
               break;
             case 'error':
-              console.error(
-                '[StreamPlayer] Error from WebView:',
-                message.payload.message,
-              );
               onError?.(message.payload.message);
               break;
-            case 'contentGateDetected': {
-              const hasGate = message.payload?.hasContentGate ?? false;
-              console.log('[StreamPlayer] Content gate detected:', hasGate);
-              setHasContentGate(hasGate);
+            case 'contentGateDetected':
+              setHasContentGate(message.payload?.hasContentGate ?? false);
               break;
-            }
-            case 'healthCheck': {
-              // Handle health check responses for stuck detection
-              const { currentTime, readyState, paused } = message.payload as {
-                currentTime: number;
-                networkState: number;
-                paused: boolean;
-                readyState: number;
-              };
-
-              if (paused) {
-                // Video is paused, reset stuck detection
-                lastVideoTimeRef.current = -1;
-                stuckCountRef.current = 0;
-                break;
-              }
-
-              // Check if video time is not advancing
-              if (
-                lastVideoTimeRef.current >= 0 &&
-                Math.abs(currentTime - lastVideoTimeRef.current) < 0.1
-              ) {
-                stuckCountRef.current += 1;
-                console.log(
-                  '[StreamPlayer] Video may be stuck, count:',
-                  stuckCountRef.current,
-                  'time:',
-                  currentTime,
-                  'readyState:',
-                  readyState,
-                );
-
-                // After 3 consecutive stuck detections (9 seconds), attempt recovery
-                if (stuckCountRef.current >= 3) {
-                  console.log(
-                    '[StreamPlayer] Video stuck detected - attempting recovery',
-                  );
-
-                  // Try to resume playback first
-                  webViewRef.current?.injectJavaScript(`
-                    (function() {
-                      var video = document.querySelector('video');
-                      if (video) {
-                        console.log('[Foam] Attempting stuck recovery...');
-                        video.currentTime = video.currentTime + 0.1;
-                        video.play().catch(function(e) {
-                          console.log('[Foam] Recovery play failed:', e.message);
-                        });
-                      }
-                    })();
-                    true;
-                  `);
-
-                  stuckCountRef.current = 0;
-                }
-              } else {
-                stuckCountRef.current = 0;
-              }
-
-              lastVideoTimeRef.current = currentTime;
-              break;
-            }
             default:
-              console.log(
-                '[StreamPlayer] Unknown message type:',
-                (message as { type: string }).type,
-              );
               break;
           }
-        } catch (e) {
-          console.error(
-            '[StreamPlayer] Failed to parse message:',
-            e,
-            event.nativeEvent.data,
-          );
+        } catch {
+          // Ignore parse errors
         }
       },
       [onEnded, onError, onOffline, onOnline, onPause, onPlay, onReady],
@@ -1524,10 +991,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     }, []);
 
     const toggleControlsInternal = useCallback(() => {
-      console.log(
-        '[StreamPlayer] Tap detected, controlsVisible:',
-        controlsVisibleRef.current,
-      );
       if (controlsVisibleRef.current) {
         dismissControls();
       } else {
@@ -1564,29 +1027,19 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const handleWebViewError = useCallback(
       (event: { nativeEvent: WebViewError }) => {
         const { nativeEvent } = event;
-        const error = new Error(
-          `StreamPlayer WebView error: ${nativeEvent.description}`,
+
+        sentryService.captureException(
+          new Error(`StreamPlayer WebView error: ${nativeEvent.description}`),
+          {
+            tags: { component: 'StreamPlayer', errorType: 'webview_error' },
+            extra: {
+              code: nativeEvent.code,
+              description: nativeEvent.description,
+              url: nativeEvent.url,
+              channel,
+            },
+          },
         );
-
-        console.error('[StreamPlayer] WebView error:', {
-          code: nativeEvent.code,
-          description: nativeEvent.description,
-          url: nativeEvent.url,
-          channel,
-        });
-
-        sentryService.captureException(error, {
-          tags: {
-            component: 'StreamPlayer',
-            errorType: 'webview_error',
-          },
-          extra: {
-            code: nativeEvent.code,
-            description: nativeEvent.description,
-            url: nativeEvent.url,
-            channel,
-          },
-        });
 
         onError?.(nativeEvent.description);
       },
@@ -1596,29 +1049,21 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const handleWebViewHttpError = useCallback(
       (event: { nativeEvent: WebViewHttpError }) => {
         const { nativeEvent } = event;
-        const error = new Error(
-          `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
+
+        sentryService.captureException(
+          new Error(
+            `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
+          ),
+          {
+            tags: { component: 'StreamPlayer', errorType: 'http_error' },
+            extra: {
+              statusCode: nativeEvent.statusCode,
+              description: nativeEvent.description,
+              url: nativeEvent.url,
+              channel,
+            },
+          },
         );
-
-        console.error('[StreamPlayer] HTTP error:', {
-          statusCode: nativeEvent.statusCode,
-          description: nativeEvent.description,
-          url: nativeEvent.url,
-          channel,
-        });
-
-        sentryService.captureException(error, {
-          tags: {
-            component: 'StreamPlayer',
-            errorType: 'http_error',
-          },
-          extra: {
-            statusCode: nativeEvent.statusCode,
-            description: nativeEvent.description,
-            url: nativeEvent.url,
-            channel,
-          },
-        });
 
         onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
       },
@@ -1642,52 +1087,16 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         ? Math.max(rawHeight, TWITCH_MIN_HEIGHT)
         : rawHeight;
 
-    useEffect(() => {
-      console.log('[StreamPlayer] Player URL:', playerUrl);
-      console.log('[StreamPlayer] Channel:', channel);
-      console.log('[StreamPlayer] Screen width:', screenWidth);
-      console.log('[StreamPlayer] Player dimensions:', {
-        width: playerWidth,
-        height: playerHeight,
-        rawWidth,
-        rawHeight,
-      });
-      if (typeof playerWidth === 'number' && typeof playerHeight === 'number') {
-        if (
-          playerWidth < TWITCH_MIN_WIDTH ||
-          playerHeight < TWITCH_MIN_HEIGHT
-        ) {
-          console.warn(
-            '[StreamPlayer] WARNING: Below Twitch minimum size (400x300)!',
-          );
-        }
-      }
-    }, [
-      channel,
-      playerUrl,
-      screenWidth,
-      playerWidth,
-      playerHeight,
-      rawWidth,
-      rawHeight,
-    ]);
 
     const webViewContent = (
       <WebView
+        ref={webViewRef}
         collapsable={false}
         allowsInlineMediaPlayback
         allowsBackForwardNavigationGestures={false}
         mediaPlaybackRequiresUserAction={false}
         allowsFullscreenVideo
         scrollEnabled={hasContentGate}
-        injectedJavaScriptBeforeContentLoaded={`
-            window.onerror = function(msg, url, line, col, error) {
-              console.log('[Foam-Early] Error:', msg, 'at', url, line);
-              return false;
-            };
-            console.log('[Foam-Early] Page loading:', window.location.href);
-            true;
-          `}
         injectedJavaScript={INJECTED_JAVASCRIPT}
         javaScriptEnabled
         originWhitelist={['*']}
@@ -1705,46 +1114,11 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
             : 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
         }
-        onContentProcessDidTerminate={(e: {
-          nativeEvent: { didCrash?: boolean };
-        }) => {
-          console.error(
-            '[StreamPlayer] WebView process terminated!',
-            e.nativeEvent,
-          );
-          webViewRef.current?.reload();
-        }}
+        onContentProcessDidTerminate={() => webViewRef.current?.reload()}
         onError={handleWebViewError}
         onHttpError={handleWebViewHttpError}
-        onLoad={() => console.log('[StreamPlayer] WebView onLoad fired')}
-        onLoadEnd={() => console.log('[StreamPlayer] WebView load ended')}
-        onLoadProgress={(e: { nativeEvent: { progress: number } }) => {
-          if (e.nativeEvent.progress === 1) {
-            console.log('[StreamPlayer] WebView load progress: 100%');
-          }
-        }}
-        onLoadStart={() => console.log('[StreamPlayer] WebView load started')}
         onMessage={handleMessage}
-        onNavigationStateChange={(navState: {
-          url: string;
-          title: string;
-          loading: boolean;
-          canGoBack: boolean;
-        }) => {
-          console.log('[StreamPlayer] Navigation state:', {
-            url: navState.url,
-            title: navState.title,
-            loading: navState.loading,
-            canGoBack: navState.canGoBack,
-          });
-        }}
-        onRenderProcessGone={(e: { nativeEvent: { didCrash?: boolean } }) => {
-          console.error(
-            '[StreamPlayer] WebView render process gone!',
-            e.nativeEvent,
-          );
-          webViewRef.current?.reload();
-        }}
+        onRenderProcessGone={() => webViewRef.current?.reload()}
       />
     );
 
@@ -1756,19 +1130,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           { height: playerHeight, width: playerWidth },
           hasContentGate && styles.containerScrollable,
         ]}
-        onLayout={e => {
-          const { width: w, height: h } = e.nativeEvent.layout;
-
-          console.log('[StreamPlayer] Container layout:', {
-            width: w,
-            height: h,
-          });
-          if (w < 400 || h < 300) {
-            console.warn(
-              '[StreamPlayer] WARNING: Below Twitch minimum size (400x300)',
-            );
-          }
-        }}
       >
         {webViewContent}
 

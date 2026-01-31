@@ -1,4 +1,8 @@
 import { Chat } from '@app/components/Chat';
+import {
+  NativeStreamPlayer,
+  type NativeStreamPlayerRef,
+} from '@app/components/NativeStreamPlayer';
 import { Spinner } from '@app/components/Spinner';
 import {
   StreamPlayer,
@@ -7,6 +11,7 @@ import {
 
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
+import { storageService } from '@app/services/storage-service';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -22,10 +27,12 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 }) => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isLandscape = screenWidth > screenHeight;
+  const isHlsEnabled = storageService.getString<boolean>('foam_hls_player');
 
   const [isChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
+  const nativePlayerRef = useRef<NativeStreamPlayerRef>(null);
 
   useEffect(() => {
     setShouldRenderChat(false);
@@ -138,15 +145,31 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   return (
     <View style={[styles.contentContainer, isLandscape && styles.row]}>
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-        {stream?.user_login && (
-          <StreamPlayer
-            ref={streamPlayerRef}
-            channel={stream.user_login}
-            height="100%"
-            width="100%"
-            autoplay
-          />
-        )}
+        {stream?.user_login &&
+          (isHlsEnabled ? (
+            <NativeStreamPlayer
+              ref={nativePlayerRef}
+              channel={stream.user_login}
+              height="100%"
+              width="100%"
+              autoplay
+              streamInfo={{
+                userName: stream.user_name,
+                userLogin: stream.user_login,
+                viewerCount: stream.viewer_count,
+                startedAt: stream.started_at,
+                gameName: stream.game_name,
+              }}
+            />
+          ) : (
+            <StreamPlayer
+              ref={streamPlayerRef}
+              channel={stream.user_login}
+              height="100%"
+              width="100%"
+              autoplay
+            />
+          ))}
       </Animated.View>
 
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
