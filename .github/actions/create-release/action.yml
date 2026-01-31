@@ -55,6 +55,10 @@ inputs:
     description: 'OTA update group ID (for OTA releases)'
     required: false
     default: ''
+  runtime_version:
+    description: 'Target runtime version for OTA updates (x.x.x format)'
+    required: false
+    default: ''
 
 outputs:
   tag:
@@ -94,6 +98,9 @@ runs:
           echo "update_group_id=${{ inputs.update_group_id }}"
           echo "ios_update_id=${{ inputs.ios_update_id }}"
           echo "android_update_id=${{ inputs.android_update_id }}"
+          if [ -n "${{ inputs.runtime_version }}" ]; then
+            echo "runtime_version=${{ inputs.runtime_version }}"
+          fi
         fi
 
     - name: Check tag exists for early exit
@@ -338,6 +345,12 @@ runs:
         **Update Group ID:** \`${{ inputs.update_group_id }}\`"
           fi
 
+          # Add target runtime version if specified
+          if [ -n "${{ inputs.runtime_version }}" ]; then
+            BODY="${BODY}
+        **Target Runtime Version:** \`${{ inputs.runtime_version }}\`"
+          fi
+
           # Add platform-specific update IDs
           if [ -n "${{ inputs.ios_update_id }}" ]; then
             BODY="${BODY}
@@ -409,6 +422,9 @@ runs:
           echo "Android Update ID: ${{ inputs.android_update_id }}"
           echo "iOS Fingerprint: ${{ inputs.ios_fingerprint }}"
           echo "Android Fingerprint: ${{ inputs.android_fingerprint }}"
+          if [ -n "${{ inputs.runtime_version }}" ]; then
+            echo "Target Runtime Version: ${{ inputs.runtime_version }}"
+          fi
         fi
         echo ""
         echo "=== CHANGELOG.md ==="

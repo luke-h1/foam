@@ -21,6 +21,10 @@ on:
           - all
           - ios
           - android
+      runtimeVersion:
+        description: "Runtime version (x.x.x format) to target for OTA updates"
+        required: false
+        type: string
       dry_run:
         description: "Dry run mode (skip release creation)"
         required: false
@@ -37,9 +41,24 @@ jobs:
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       tag: ${{ steps.get_version.outputs.tag }}
+      runtime_version: ${{ steps.validate_runtime.outputs.runtime_version }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
+
+      - name: 🧐 Validate runtime version
+        id: validate_runtime
+        if: ${{ inputs.runtimeVersion }}
+        env:
+          RUNTIME_VERSION: ${{ inputs.runtimeVersion }}
+        run: |
+          if [[ ! "$RUNTIME_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid runtime version format: $RUNTIME_VERSION"
+            echo "   Expected format: x.x.x (e.g., 1.0.0)"
+            exit 1
+          fi
+          echo "✅ Runtime version is valid: $RUNTIME_VERSION"
+          echo "runtime_version=$RUNTIME_VERSION" >> $GITHUB_OUTPUT
 
       - name: 📌 Get version from app.config.ts
         id: get_version
@@ -346,6 +365,7 @@ jobs:
         id: publish
         run: |
           PLATFORM="${{ inputs.platform || 'all' }}"
+          RUNTIME_VERSION="${{ needs.prepare.outputs.runtime_version }}"
 
           if [ "$PLATFORM" == "all" ]; then
             PLATFORM_FLAG="--platform all"
@@ -353,8 +373,15 @@ jobs:
             PLATFORM_FLAG="--platform $PLATFORM"
           fi
 
+          # Build runtime version flag if specified
+          RUNTIME_FLAG=""
+          if [ -n "$RUNTIME_VERSION" ]; then
+            RUNTIME_FLAG="--runtime-version $RUNTIME_VERSION"
+            echo "🎯 Targeting runtime version: $RUNTIME_VERSION"
+          fi
+
           # Capture the JSON output from eas update
-          UPDATE_OUTPUT=$(eas update --channel production --environment production --message "Deploy: ${{ github.event.head_commit.message || github.sha }}" $PLATFORM_FLAG --non-interactive --clear-cache --json 2>/dev/null || echo "[]")
+          UPDATE_OUTPUT=$(eas update --channel production --environment production --message "Deploy: ${{ github.event.head_commit.message || github.sha }}" $PLATFORM_FLAG $RUNTIME_FLAG --non-interactive --clear-cache --json 2>/dev/null || echo "[]")
 
           # Parse update IDs from the JSON output
           IOS_UPDATE_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[] | select(.platform == "ios") | .id' 2>/dev/null || echo "")
@@ -369,6 +396,9 @@ jobs:
           echo "  iOS Update ID: $IOS_UPDATE_ID"
           echo "  Android Update ID: $ANDROID_UPDATE_ID"
           echo "  Update Group ID: $UPDATE_GROUP_ID"
+          if [ -n "$RUNTIME_VERSION" ]; then
+            echo "  Runtime Version: $RUNTIME_VERSION"
+          fi
         env:
           APP_VARIANT: production
 
@@ -390,6 +420,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** production" >> $GITHUB_STEP_SUMMARY
           echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ needs.prepare.outputs.runtime_version }}" ]; then
+            echo "- **Runtime Version:** \`${{ needs.prepare.outputs.runtime_version }}\`" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Update Group ID:** \`${{ steps.publish.outputs.update_group_id }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -447,6 +480,7 @@ jobs:
           ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
           android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
           update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
+          runtime_version: ${{ needs.prepare.outputs.runtime_version || '' }}
 
       - name: 📊 Summary
         run: |
