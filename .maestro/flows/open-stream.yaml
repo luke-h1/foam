@@ -1,0 +1,55 @@
+appId: foam-tv-e2e
+name: "Open Stream"
+tags:
+  - streams
+  - player
+---
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    when:
+      visible: "Development Build"
+    file: ../utils/handle-dev-client.yml
+
+- extendedWaitUntil:
+    visible: "Top|Following"
+    timeout: 20000
+
+- tapOn:
+    text: "Top"
+
+- extendedWaitUntil:
+    visible: "Streams|Categories"
+    timeout: 10000
+
+- tapOn:
+    text: "Streams"
+    optional: true
+
+- extendedWaitUntil:
+    visible: ".*viewers.*"
+    timeout: 10000
+    optional: true
+
+- tapOn:
+    index: 0
+    optional: true
+
+- tapOn:
+    text: ".*xQc.*"
+    optional: true
+
+- extendedWaitUntil:
+    visible: "Live|Chat|Follow|Loading"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: "stream-view"
+
+- back
+
+- extendedWaitUntil:
+    visible: "Top|Streams"
+    timeout: 10000

@@ -12,9 +12,10 @@ interface AppVariantConfig {
   iosBundleIdentifier: string;
   iosGoogleServicesFile: string;
   androidGoogleServicesFile: string;
+  mockServerUrl?: string;
 }
 
-export type Variant = 'development' | 'preview' | 'test' | 'production';
+export type Variant = 'development' | 'preview' | 'test' | 'e2e' | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
 const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
@@ -47,6 +48,17 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     splashBackgroundColor: '#000000',
     iosGoogleServicesFile: './GoogleService-Info-test.plist',
     androidGoogleServicesFile: './google-services-test.json',
+  },
+  e2e: {
+    name: 'Foam (E2E)',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv-e2e',
+    androidPackageName: 'com.lhowsam.foam.e2e',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
+    iosGoogleServicesFile: './GoogleService-Info-dev.plist',
+    androidGoogleServicesFile: './google-services-dev.json',
+    mockServerUrl: 'http://localhost:3001',
   },
   production: {
     name: 'Foam',
@@ -128,6 +140,7 @@ const config: ExpoConfig = {
     TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET: process.env.TWITCH_CLIENT_SECRET,
     AUTH_PROXY_API_KEY: process.env.AUTH_PROXY_API_KEY,
+    MOCK_SERVER_URL: appConfig.mockServerUrl,
     updates: {
       assetPatternsToBeBundled: ['**/*'],
     },
@@ -224,6 +237,10 @@ const config: ExpoConfig = {
   experiments: {
     tsconfigPaths: true,
   },
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  buildCacheProvider: 'eas',
   web: {},
   ios: {
     appleTeamId: 'XJA7HDCMMY',

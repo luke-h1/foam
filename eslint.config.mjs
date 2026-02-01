@@ -140,6 +140,10 @@ export default [
               pattern: '@app/**',
               group: 'internal',
             },
+            {
+              pattern: '@e2e/**',
+              group: 'internal',
+            },
           ],
 
           alphabetize: {

@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import axios, { AxiosHeaders } from 'axios';
-import { twitchApi } from './api';
+import { twitchApi, mockServerUrl, isE2EMode } from './api';
 
 export interface PaginatedList<T> {
   data: T[];
@@ -267,14 +267,18 @@ export const twitchService = {
    * @returns a token for an anonymous user
    */
   getDefaultToken: async (): Promise<DefaultTokenResponse> => {
-    const { data } = await axios.get<{ data: DefaultTokenResponse }>(
-      `${process.env.AUTH_PROXY_API_BASE_URL}/token`,
-      {
-        headers: {
-          'x-api-key': process.env.AUTH_PROXY_API_KEY,
-        },
-      },
-    );
+    // Use mock server for E2E tests
+    const tokenUrl = isE2EMode
+      ? `${mockServerUrl}/token`
+      : `${process.env.AUTH_PROXY_API_BASE_URL}/token`;
+
+    const { data } = await axios.get<{ data: DefaultTokenResponse }>(tokenUrl, {
+      headers: isE2EMode
+        ? {}
+        : {
+            'x-api-key': process.env.AUTH_PROXY_API_KEY,
+          },
+    });
 
     if (!data.data.access_token) {
       console.error('no token received from auth lambda');

@@ -10,6 +10,8 @@ declare global {
       EXPO_PUBLIC_ENABLE_WDYR: boolean;
       EXPO_PUBLIC_WITH_STORYBOOK: boolean;
       EXPO_PUBLIC_WITH_ROZENITE: boolean;
+
+      MOCK_SERVER_PORT: number;
     }
   }
 }

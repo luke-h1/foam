@@ -1,9 +1,22 @@
+import Constants from 'expo-constants';
 import Client from './Client';
 import { createLoggerInterceptor } from './interceptors';
 
+// Get mock server URL from Expo config (only set for E2E variant)
+export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as
+  | string
+  | undefined;
+
+export const isE2EMode = !!mockServerUrl;
+
+// Use mock server for E2E tests, otherwise use real Twitch API
+const twitchApiBaseUrl = mockServerUrl
+  ? `${mockServerUrl}/helix`
+  : 'https://api.twitch.tv/helix';
+
 // Twitch Helix API
 export const twitchApi = new Client({
-  baseURL: 'https://api.twitch.tv/helix',
+  baseURL: twitchApiBaseUrl,
   headers: {
     'Client-ID': process.env.TWITCH_CLIENT_ID,
   },

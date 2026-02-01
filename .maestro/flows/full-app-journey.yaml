@@ -1,0 +1,102 @@
+appId: foam-tv-e2e
+name: "Full App Journey"
+tags:
+  - e2e
+  - journey
+  - critical
+---
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    when:
+      visible: "Development Build"
+    file: ../utils/handle-dev-client.yml
+
+- extendedWaitUntil:
+    visible: "Top|Following"
+    timeout: 20000
+
+- takeScreenshot: "journey-01-app-launched"
+
+- tapOn:
+    text: "Top"
+
+- extendedWaitUntil:
+    visible: "Streams|Categories"
+    timeout: 10000
+
+- tapOn:
+    text: "Streams"
+    optional: true
+
+- scroll
+
+- takeScreenshot: "journey-02-top-streams"
+
+- tapOn:
+    text: "Categories"
+    optional: true
+
+- extendedWaitUntil:
+    visible: ".*Just Chatting.*"
+    timeout: 10000
+    optional: true
+
+- scroll
+
+- takeScreenshot: "journey-03-categories"
+
+- tapOn:
+    text: "Search"
+
+- extendedWaitUntil:
+    visible: ".*[Ss]earch.*"
+    timeout: 10000
+
+- tapOn:
+    id: "search-input"
+    optional: true
+
+- inputText: "fortnite"
+
+- extendedWaitUntil:
+    visible: ".*Fortnite.*"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: "journey-04-search-results"
+
+- eraseText
+
+- tapOn:
+    text: "Settings"
+
+- extendedWaitUntil:
+    visible: "Settings|Appearance|About"
+    timeout: 10000
+
+- takeScreenshot: "journey-05-settings"
+
+- tapOn:
+    text: "About"
+    optional: true
+
+- extendedWaitUntil:
+    visible: "Version|Foam"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: "journey-06-about"
+
+- back
+
+- tapOn:
+    text: "Top"
+
+- extendedWaitUntil:
+    visible: "Streams|Categories"
+    timeout: 10000
+
+- takeScreenshot: "journey-07-complete"

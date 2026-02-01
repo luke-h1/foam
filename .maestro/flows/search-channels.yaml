@@ -1,0 +1,53 @@
+appId: foam-tv-e2e
+name: "Search Channels"
+tags:
+  - search
+  - channels
+---
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    when:
+      visible: "Development Build"
+    file: ../utils/handle-dev-client.yml
+
+- extendedWaitUntil:
+    visible: "Top|Following"
+    timeout: 20000
+
+- tapOn:
+    text: "Search"
+
+- extendedWaitUntil:
+    visible: ".*[Ss]earch.*"
+    timeout: 10000
+
+- tapOn:
+    id: "search-input"
+    optional: true
+
+- tapOn:
+    text: ".*search.*"
+    optional: true
+
+- inputText: "xqc"
+
+- extendedWaitUntil:
+    visible: ".*xQc.*"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: "search-results"
+
+- eraseText
+
+- inputText: "fortnite"
+
+- extendedWaitUntil:
+    visible: ".*Fortnite.*"
+    timeout: 10000
+    optional: true
+
+- takeScreenshot: "search-category-results"

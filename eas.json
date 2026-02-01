@@ -14,6 +14,36 @@
       },
       "channel": "test"
     },
+    "e2e": {
+      "extends": "base",
+      "withoutCredentials": true,
+      "env": {
+        "APP_VARIANT": "e2e",
+        "MOCK_SERVER_URL": "http://localhost:3001"
+      },
+      "ios": {
+        "simulator": true,
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "buildType": "apk",
+        "resourceClass": "medium"
+      },
+      "channel": "e2e"
+    },
+    "e2e-dev": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "e2e",
+        "MOCK_SERVER_URL": "http://localhost:3001"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "channel": "e2e"
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",

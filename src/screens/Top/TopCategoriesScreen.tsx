@@ -68,23 +68,26 @@ export function TopCategoriesScreen() {
 
   if (isLoading || refreshing) {
     return (
-      <FlashList
-        contentInsetAdjustmentBehavior="automatic"
-        style={styles.wrapper}
-        data={Array.from({ length: SKELETON_COUNT })}
-        keyExtractor={(_, idx) => `skeleton-${idx}`}
-        numColumns={SKELETON_COLUMNS}
-        renderItem={loadingRenderItem}
-      />
+      <View style={styles.wrapper}>
+        <FlashList
+          contentInsetAdjustmentBehavior="automatic"
+          data={Array.from({ length: SKELETON_COUNT })}
+          keyExtractor={(_, idx) => `skeleton-${idx}`}
+          numColumns={SKELETON_COLUMNS}
+          renderItem={loadingRenderItem}
+        />
+      </View>
     );
   }
 
   if (!isLoading && !refreshing && isError) {
     return (
-      <EmptyState
-        heading="Failed to fetch categories"
-        content="Failed to fetch top categories"
-      />
+      <View style={styles.wrapper}>
+        <EmptyState
+          heading="Failed to fetch categories"
+          content="Failed to fetch top categories"
+        />
+      </View>
     );
   }
 
@@ -99,36 +102,39 @@ export function TopCategoriesScreen() {
 
   if (allCategories.length === 0) {
     return (
-      <EmptyState
-        content="No categories found"
-        buttonOnPress={() => onRefresh()}
-      />
+      <View style={styles.wrapper}>
+        <EmptyState
+          content="No categories found"
+          buttonOnPress={() => onRefresh()}
+        />
+      </View>
     );
   }
 
   return (
-    <FlashList<Category>
-      data={allCategories}
-      style={styles.wrapper}
-      numColumns={3}
-      ref={flashListRef}
-      contentInsetAdjustmentBehavior="automatic"
-      renderItem={renderItem}
-      keyExtractor={item => item.id}
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.4}
-      onRefresh={onRefresh}
-      refreshing={refreshing}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="white"
-          colors={['white']}
-        />
-      }
-    />
+    <View style={styles.wrapper}>
+      <FlashList<Category>
+        data={allCategories}
+        numColumns={3}
+        ref={flashListRef}
+        contentInsetAdjustmentBehavior="automatic"
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.4}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="white"
+            colors={['white']}
+          />
+        }
+      />
+    </View>
   );
 }
 

@@ -1,0 +1,20 @@
+{
+  "name": "foam-mock-server",
+  "version": "1.0.0",
+  "description": "Mock server for Foam E2E testing",
+  "main": "server.ts",
+  "scripts": {
+    "start": "tsx server.ts",
+    "dev": "tsx watch server.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "tsx": "^4.20.3",
+    "typescript": "~5.9.2"
+  }
+}

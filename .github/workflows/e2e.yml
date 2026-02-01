@@ -1,0 +1,130 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  e2e-ios:
+    name: 🧪 E2E Tests (iOS)
+    runs-on: macos-latest
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 📱 Build E2E app
+        run: |
+          # EAS handles caching automatically via buildCacheProvider: 'eas'
+          # This downloads cached builds when fingerprint matches
+          eas build --profile e2e --platform ios --local --non-interactive --output=Foam.app
+        env:
+          APP_VARIANT: e2e
+
+      - name: 🎭 Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: 📱 Boot Simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone" | head -1 | grep -oE '[0-9A-F-]{36}')
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: 📲 Install app on simulator
+        run: |
+          xcrun simctl install booted Foam.app
+
+      - name: 🚀 Start mock server
+        run: |
+          bun run e2e:mock-server &
+          sleep 3
+
+      - name: 🧪 Run Maestro tests
+        run: |
+          bun run maestro:test
+
+      - name: 📤 Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-results-ios
+          path: maestro-debug-output/
+          retention-days: 7
+
+  e2e-android:
+    name: 🧪 E2E Tests (Android)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 📱 Build E2E app
+        run: |
+          eas build --profile e2e --platform android --local --non-interactive --output=app-e2e.apk
+        env:
+          APP_VARIANT: e2e
+
+      - name: 🎭 Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: 🤖 Setup Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            adb install app-e2e.apk
+            bun run e2e:mock-server &
+            sleep 3
+            bun run maestro:test
+
+      - name: 📤 Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-results-android
+          path: maestro-debug-output/
+          retention-days: 7

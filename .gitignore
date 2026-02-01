@@ -69,9 +69,17 @@ xcuserdata
 .history/
 .turbo
 
+# Cursor
+.cursor/
+
 # test
 coverage
 .jest-cache
+
+# Maestro E2E test output
+maestro-debug-output/
+*.maestro-screenshot.png
+build-*.tar.gz
 
 # Bun
 bun.lockb
@@ -96,3 +104,5 @@ FOAM_ANDROID_TESTFLIGHT_KEY.json
 .env
 
 profile-*.json
+
+
