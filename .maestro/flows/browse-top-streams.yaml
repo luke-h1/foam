@@ -29,7 +29,7 @@ tags:
     optional: true
 
 - extendedWaitUntil:
-    visible: ".*xQc.*"
+    visible: ".*Blueberry42.*"
     timeout: 10000
     optional: true
 

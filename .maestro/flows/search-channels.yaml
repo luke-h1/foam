@@ -32,10 +32,10 @@ tags:
     text: ".*search.*"
     optional: true
 
-- inputText: "xqc"
+- inputText: "blueberry"
 
 - extendedWaitUntil:
-    visible: ".*xQc.*"
+    visible: ".*Blueberry42.*"
     timeout: 10000
     optional: true
 

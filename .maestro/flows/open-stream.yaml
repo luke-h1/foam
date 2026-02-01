@@ -38,7 +38,7 @@ tags:
     optional: true
 
 - tapOn:
-    text: ".*xQc.*"
+    text: ".*Blueberry42.*"
     optional: true
 
 - extendedWaitUntil:
