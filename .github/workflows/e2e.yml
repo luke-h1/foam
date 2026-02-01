@@ -33,9 +33,17 @@ jobs:
 
       - name: 📱 Build E2E app
         run: |
-          eas build --profile e2e --platform ios --local --non-interactive --output=Foam.app
+          eas build --profile e2e --platform ios --local --non-interactive --output=build.tar.gz
         env:
           APP_VARIANT: e2e
+
+      - name: 📦 Extract app
+        run: |
+          tar -xzf build.tar.gz
+          # Find the .app directory
+          APP_PATH=$(find . -name "*.app" -type d | head -1)
+          echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
+          echo "Found app at: $APP_PATH"
 
       - name: 🎭 Install Maestro
         run: |
@@ -49,7 +57,7 @@ jobs:
 
       - name: 📲 Install app on simulator
         run: |
-          xcrun simctl install booted Foam.app
+          xcrun simctl install booted "$APP_PATH"
 
       - name: 🚀 Start mock server
         run: |
