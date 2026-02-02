@@ -56,8 +56,8 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     androidPackageName: 'com.lhowsam.foam.e2e',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
-    iosGoogleServicesFile: './GoogleService-Info-dev.plist',
-    androidGoogleServicesFile: './google-services-dev.json',
+    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
+    androidGoogleServicesFile: './google-services-prod.json',
     mockServerUrl: 'http://localhost:3001',
   },
   production: {

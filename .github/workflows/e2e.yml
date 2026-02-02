@@ -11,7 +11,7 @@ env:
 jobs:
   e2e-ios:
     name: 🧪 E2E Tests (iOS)
-    runs-on: macos-latest
+    runs-on: foam
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
@@ -23,6 +23,20 @@ jobs:
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: 🔐 Load secrets
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
+
+      - name: 📄 Decode Google Services file
+        run: |
+          echo "Decoding iOS Google Services plist..."
+          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
+          echo "✅ GoogleService-Info-prod.plist created"
 
       - name: Λ Setup EAS
         uses: expo/expo-github-action@v8
@@ -40,7 +54,6 @@ jobs:
       - name: 📦 Extract app
         run: |
           tar -xzf build.tar.gz
-          # Find the .app directory
           APP_PATH=$(find . -name "*.app" -type d | head -1)
           echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
           echo "Found app at: $APP_PATH"
