@@ -16,7 +16,7 @@ env:
 jobs:
   fingerprint:
     name: 🔍 Check Fingerprint
-    runs-on: ubuntu-latest
+    runs-on: foam
     outputs:
       hash: ${{ steps.fingerprint.outputs.hash }}
       cache-hit: ${{ steps.cache.outputs.cache-hit }}
@@ -52,7 +52,7 @@ jobs:
     name: 🔨 Build E2E App
     needs: fingerprint
     if: needs.fingerprint.outputs.cache-hit != 'true' || inputs.force_rebuild
-    runs-on: macos-latest
+    runs-on: foam
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
     name: 🧪 Run E2E Tests
     needs: [fingerprint, build]
     if: always() && needs.fingerprint.result == 'success'
-    runs-on: macos-latest
+    runs-on: foam
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
