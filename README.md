@@ -346,16 +346,72 @@ All variants can be installed on the same device at the same time, because they 
 
 ## E2E testing
 
-We use `maestro` for automated `e2e` testing. The test flows are defined in the <a href='/src/test/maestro/'>`src/test/maestro`</a> directory, and will eventually cover core user journeys once the app is complete. To run them locally use the `maestro` CLI command `maestro test [path to test flow]`.
+We use [Maestro](https://maestro.mobile.dev/) for E2E testing. Tests run against a mock server for deterministic results.
 
-### Running E2E tests locally
+### Quick start (dev client - recommended for local dev)
 
-1. Install [`maestro`](https://maestro.mobile.dev/)
-2. Before running the E2E tests you need to install the development version of the app
-   1. Read [Running `development` version of the app locally](#running-development-version-of-the-app-locally) to achieve this
-   2. E2E tests are assumed to be run on Android Emulator or iOS Simulator
-3. `bun run e2e-test:android` - runs the tests on Android
-4. `bun run e2e-test:ios` - runs the tests on iOS
+Uses a development build with Metro for hot reload during test development:
+
+```bash
+# Install Maestro (one-time)
+curl -Ls "https://get.maestro.mobile.dev" | bash
+
+# Build the E2E dev client (one-time, or when native code changes)
+bun run e2e:dev:ios
+
+# Run tests (three terminals)
+bun run e2e:mock-server:dev                           # Terminal 1: Mock server
+APP_VARIANT=e2e npx expo start --dev-client --localhost  # Terminal 2: Metro
+bun run maestro:test                                  # Terminal 3: Tests
+```
+
+### Standalone build (for CI)
+
+Creates a self-contained app with bundled JS - no Metro needed:
+
+```bash
+# Build standalone E2E app
+bun run e2e:build:ios
+
+# Run tests (two terminals)
+bun run e2e:mock-server:dev  # Terminal 1
+bun run maestro:test         # Terminal 2
+```
+
+### Commands
+
+| Command                       | Description                          |
+| ----------------------------- | ------------------------------------ |
+| `bun run e2e:dev:ios`         | Build dev client (local development) |
+| `bun run e2e:build:ios`       | Build standalone app (CI)            |
+| `bun run e2e:build:android`   | Build standalone app (Android)       |
+| `bun run maestro:test`        | Run all tests                        |
+| `bun run maestro:test:smoke`  | Run smoke tests only                 |
+| `bun run maestro:studio`      | Interactive test editor              |
+| `bun run e2e:mock-server:dev` | Start mock server (auto-reload)      |
+
+### OTA updates for E2E
+
+The standalone E2E app supports OTA updates via the `e2e` channel, eliminating the need to rebuild for JS-only changes:
+
+```bash
+# Push JS update to E2E builds (no native rebuild needed)
+eas update --channel e2e --message "Fix E2E test"
+```
+
+Only rebuild (`bun run e2e:build:ios`) when native code changes. Use fingerprinting to detect this automatically in CI.
+
+### Build caching (EAS)
+
+Local builds use EAS build caching to speed up `npx expo run:ios/android`. Builds are cached by fingerprint and reused when native code hasn't changed.
+
+**How it works:**
+
+- On `npx expo run:ios`, Expo checks EAS for a cached build matching the project fingerprint
+- If found, downloads and uses it (skips compilation)
+- If not found, compiles normally and uploads to EAS for future runs
+
+No setup required - just ensure you're logged in with `eas login`.
 
 ## Local EAS build
 

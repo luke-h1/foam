@@ -1,0 +1,14 @@
+# Maestro Configuration for Foam E2E Tests
+# https://maestro.mobile.dev/reference/configuration
+# https://cloud.mobile.dev/reference/workspace-configuration
+
+flows:
+  - flows/*
+
+excludeTags:
+  - util
+
+executionOrder:
+  continueOnFailure: false
+  flowsOrder:
+    - app-launch

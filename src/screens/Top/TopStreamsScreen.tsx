@@ -12,7 +12,7 @@ import {
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
-import { RefreshControl } from 'react-native';
+import { RefreshControl, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function TopStreamsScreen() {
@@ -60,19 +60,21 @@ export function TopStreamsScreen() {
 
   if (refreshing || isLoading) {
     return (
-      <>
+      <View style={styles.container}>
         {Array.from({ length: 5 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <LiveStreamCardSkeleton key={index} />
         ))}
-      </>
+      </View>
     );
   }
 
   if (!streams || !streams.pages) {
     return (
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+      <View style={styles.container}>
+        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+        <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+      </View>
     );
   }
 
@@ -81,33 +83,36 @@ export function TopStreamsScreen() {
 
   if (allStreams.length === 0) {
     return (
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+      <View style={styles.container}>
+        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+        <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+      </View>
     );
   }
 
   return (
-    <FlashList
-      ref={flashListRef}
-      contentInsetAdjustmentBehavior="automatic"
-      style={styles.container}
-      data={allStreams}
-      renderItem={renderItem}
-      keyExtractor={item => `${item.game_id}-${item.title}`}
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onEndReached={debouncedHandleLoadMore}
-      refreshing={refreshing}
-      onEndReachedThreshold={0.3}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          onRefresh={onRefresh}
-          tintColor="white"
-          colors={['white']}
-        />
-      }
-    />
+    <View style={styles.container}>
+      <FlashList
+        ref={flashListRef}
+        contentInsetAdjustmentBehavior="automatic"
+        data={allStreams}
+        renderItem={renderItem}
+        keyExtractor={item => `${item.game_id}-${item.title}`}
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        onEndReached={debouncedHandleLoadMore}
+        refreshing={refreshing}
+        onEndReachedThreshold={0.3}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onRefresh={onRefresh}
+            tintColor="white"
+            colors={['white']}
+          />
+        }
+      />
+    </View>
   );
 }
 

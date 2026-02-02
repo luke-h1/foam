@@ -1,0 +1,24 @@
+appId: foam-tv-e2e
+tags:
+  - util
+---
+- runFlow:
+    when:
+      visible: Development Build
+    commands:
+      - tapOn:
+          text: http://.*:8081
+
+- runFlow:
+    when:
+      visible: Continue
+    commands:
+      - tapOn:
+          text: "Continue"
+
+- runFlow:
+    when:
+      visible: "Go home"
+    commands:
+      - tapOn:
+          point: 90%, 45%

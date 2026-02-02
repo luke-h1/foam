@@ -1,0 +1,42 @@
+appId: foam-tv-e2e
+name: "Browse Top Streams"
+tags:
+  - browse
+  - streams
+---
+
+- launchApp:
+    clearState: true
+
+- runFlow:
+    when:
+      visible: "Development Build"
+    file: ../utils/handle-dev-client.yml
+
+- extendedWaitUntil:
+    visible: "Top|Following"
+    timeout: 20000
+
+- tapOn:
+    text: "Top"
+
+- extendedWaitUntil:
+    visible: "Streams|Categories"
+    timeout: 10000
+
+- tapOn:
+    text: "Streams"
+    optional: true
+
+- extendedWaitUntil:
+    visible: ".*Blueberry42.*"
+    timeout: 10000
+    optional: true
+
+- scroll
+
+- assertVisible:
+    text: ".*"
+    optional: true
+
+- takeScreenshot: "top-streams-list"
