@@ -4,14 +4,55 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: "Force rebuild (ignore cache)"
+        type: boolean
+        default: false
 
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
 jobs:
-  e2e-ios:
-    name: 🧪 E2E Tests (iOS)
-    runs-on: foam
+  fingerprint:
+    name: 🔍 Check Fingerprint
+    runs-on: ubuntu-latest
+    outputs:
+      hash: ${{ steps.fingerprint.outputs.hash }}
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Calculate fingerprint
+        id: fingerprint
+        run: |
+          HASH=$(npx expo-updates fingerprint:generate --platform ios 2>/dev/null | jq -r '.hash' || echo "unknown-$(date +%s)")
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+          echo "📱 iOS Fingerprint: $HASH"
+
+      - name: 📂 Check build cache
+        id: cache
+        if: ${{ !inputs.force_rebuild }}
+        uses: actions/cache/restore@v4
+        with:
+          path: e2e-build.tar.gz
+          key: e2e-ios-${{ steps.fingerprint.outputs.hash }}
+          lookup-only: true
+
+  build:
+    name: 🔨 Build E2E App
+    needs: fingerprint
+    if: needs.fingerprint.outputs.cache-hit != 'true' || inputs.force_rebuild
+    runs-on: macos-latest
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
@@ -34,9 +75,7 @@ jobs:
 
       - name: 📄 Decode Google Services file
         run: |
-          echo "Decoding iOS Google Services plist..."
           echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
-          echo "✅ GoogleService-Info-prod.plist created"
 
       - name: Λ Setup EAS
         uses: expo/expo-github-action@v8
@@ -47,26 +86,84 @@ jobs:
 
       - name: 📱 Build E2E app
         run: |
-          eas build --profile e2e --platform ios --local --non-interactive --output=build.tar.gz
+          eas build --profile e2e --platform ios --local --non-interactive --output=e2e-build.tar.gz
         env:
           APP_VARIANT: e2e
 
+      - name: 💾 Save build to cache
+        uses: actions/cache/save@v4
+        with:
+          path: e2e-build.tar.gz
+          key: e2e-ios-${{ needs.fingerprint.outputs.hash }}
+
+      - name: 📤 Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-build
+          path: e2e-build.tar.gz
+          retention-days: 30
+
+  test:
+    name: 🧪 Run E2E Tests
+    needs: [fingerprint, build]
+    if: always() && needs.fingerprint.result == 'success'
+    runs-on: macos-latest
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 📂 Restore build from cache
+        if: needs.build.result == 'skipped'
+        uses: actions/cache/restore@v4
+        with:
+          path: e2e-build.tar.gz
+          key: e2e-ios-${{ needs.fingerprint.outputs.hash }}
+
+      - name: 📥 Download build artifact
+        if: needs.build.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-build
+
       - name: 📦 Extract app
         run: |
-          tar -xzf build.tar.gz
+          tar -xzf e2e-build.tar.gz
           APP_PATH=$(find . -name "*.app" -type d | head -1)
           echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
           echo "Found app at: $APP_PATH"
 
+      - name: Λ Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 📦 Push OTA update (JS changes only)
+        if: needs.build.result == 'skipped'
+        run: |
+          echo "🚀 Pushing OTA update for JS changes..."
+          eas update --channel e2e --message "E2E: ${{ github.event.pull_request.title || github.sha }}" --non-interactive || true
+        env:
+          APP_VARIANT: e2e
+
       - name: 🎭 Install Maestro
         run: |
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+          brew install maestro
 
       - name: 📱 Boot Simulator
         run: |
           DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone" | head -1 | grep -oE '[0-9A-F-]{36}')
           xcrun simctl boot "$DEVICE_ID" || true
+          sleep 5
 
       - name: 📲 Install app on simulator
         run: |
