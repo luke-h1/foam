@@ -1087,7 +1087,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         ? Math.max(rawHeight, TWITCH_MIN_HEIGHT)
         : rawHeight;
 
-
     const webViewContent = (
       <WebView
         ref={webViewRef}
