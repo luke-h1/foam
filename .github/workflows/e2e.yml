@@ -157,7 +157,8 @@ jobs:
 
       - name: 🎭 Install Maestro
         run: |
-          brew install maestro
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       - name: 📱 Boot Simulator
         run: |
