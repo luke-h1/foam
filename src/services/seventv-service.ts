@@ -1,5 +1,51 @@
+import { UserPersonalEmotesQueryDocument } from '@app/graphql/generated/gql';
 import { logger } from '@app/utils/logger';
+import { print } from 'graphql';
 import { sevenTvApi } from './api';
+
+interface PersonalEmotesQueryResponse {
+  data: {
+    users: {
+      userByConnection?: {
+        id: string;
+        personalEmoteSet?: {
+          id: string;
+          name: string;
+          emotes: {
+            items: Array<{
+              id: string;
+              alias: string;
+              emote: {
+                id: string;
+                defaultName: string;
+                flags: {
+                  animated: boolean;
+                  approvedPersonal: boolean;
+                  defaultZeroWidth: boolean;
+                };
+                images: Array<{
+                  url: string;
+                  mime: string;
+                  size: number;
+                  scale: number;
+                  width: number;
+                  height: number;
+                  frameCount: number;
+                }>;
+                owner?: {
+                  id: string;
+                  mainConnection?: {
+                    platformDisplayName: string;
+                  } | null;
+                } | null;
+              };
+            }>;
+          };
+        } | null;
+      } | null;
+    };
+  };
+}
 
 interface SevenTvFile {
   name: string;
@@ -436,6 +482,86 @@ export const sevenTvService = {
       });
     } catch (error) {
       logger.stv.error('Failed to fetch users cosmetics:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Fetch a user's personal emote set via GQL (v4 API)
+   * Personal emotes are unique emotes that a user can use in any channel
+   * @param twitchUserId - The Twitch user ID
+   * @returns Array of sanitized emotes or empty array if no personal emotes
+   */
+  getPersonalEmoteSet: async (
+    twitchUserId: string,
+  ): Promise<SanitisiedEmoteSet[]> => {
+    try {
+      const response = await fetch('https://7tv.io/v4/gql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          query: print(UserPersonalEmotesQueryDocument),
+          variables: { platformId: twitchUserId },
+        }),
+      });
+
+      if (!response.ok) {
+        logger.stv.warn(
+          `Failed to fetch personal emotes for user ${twitchUserId}: ${response.status}`,
+        );
+        return [];
+      }
+
+      const result = (await response.json()) as PersonalEmotesQueryResponse;
+      const personalEmoteSet =
+        result.data?.users?.userByConnection?.personalEmoteSet;
+
+      if (!personalEmoteSet || !personalEmoteSet.emotes?.items?.length) {
+        return [];
+      }
+
+      // Sanitize the emotes to match our standard format
+      const sanitizedEmotes: SanitisiedEmoteSet[] =
+        personalEmoteSet.emotes.items.map(item => {
+          const { emote } = item;
+          const emoteName = item.alias || emote.defaultName;
+
+          // Find the best quality image (prefer higher scale)
+          // v4 API returns individual image objects with scale property
+          const sortedImages = [...emote.images].sort(
+            (a, b) => b.scale - a.scale,
+          );
+          const bestImage = sortedImages[0];
+
+          return {
+            name: emoteName,
+            id: emote.id,
+            url: bestImage?.url ?? '',
+            flags: emote.flags.animated ? 1 : 0,
+            original_name: emote.defaultName,
+            creator:
+              emote.owner?.mainConnection?.platformDisplayName || 'Unknown',
+            emote_link: `https://7tv.app/emotes/${emote.id}`,
+            site: '7TV Personal Emote',
+            height: bestImage?.height,
+            width: bestImage?.width,
+            frame_count: bestImage?.frameCount,
+            format: bestImage?.mime?.replace('image/', ''),
+          };
+        });
+
+      logger.stv.info(
+        `Fetched ${sanitizedEmotes.length} personal emotes for user ${twitchUserId}`,
+      );
+      return sanitizedEmotes;
+    } catch (error) {
+      logger.stv.error(
+        `Failed to fetch personal emotes for user ${twitchUserId}:`,
+        error,
+      );
       return [];
     }
   },

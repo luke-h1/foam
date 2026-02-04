@@ -74,7 +74,9 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   },
 } as const;
 
-const variant = (process.env.APP_VARIANT as Variant) || 'production';
+const variant = (process.env.APP_VARIANT as Variant) || 'development';
+
+console.log(`[app.config.ts] Using APP_VARIANT: ${variant}`);
 
 const VERSION = '0.0.38';
 
@@ -237,10 +239,6 @@ const config: ExpoConfig = {
   experiments: {
     tsconfigPaths: true,
   },
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  buildCacheProvider: 'eas',
   web: {},
   ios: {
     appleTeamId: 'XJA7HDCMMY',

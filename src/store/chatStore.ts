@@ -711,6 +711,90 @@ export const clearPaintsAndBadges = () => {
   logger.chat.info('Cleared all paints and badges from cache');
 };
 
+const personalEmoteFetchPromises = new Map<
+  string,
+  Promise<SanitisiedEmoteSet[]>
+>();
+
+const checkedUsersForPersonalEmotes = new Set<string>();
+
+export const fetchUserPersonalEmotes = async (
+  twitchUserId: string,
+  channelId: string,
+): Promise<SanitisiedEmoteSet[]> => {
+  if (checkedUsersForPersonalEmotes.has(twitchUserId)) {
+    const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
+    return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
+  }
+
+  const existingPromise = personalEmoteFetchPromises.get(twitchUserId);
+  if (existingPromise) {
+    return existingPromise;
+  }
+
+  const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
+  if (cache?.sevenTvPersonalEmotes?.[twitchUserId]?.length) {
+    checkedUsersForPersonalEmotes.add(twitchUserId);
+    return cache.sevenTvPersonalEmotes[twitchUserId];
+  }
+
+  const fetchPromise = (async (): Promise<SanitisiedEmoteSet[]> => {
+    try {
+      const personalEmotes =
+        await sevenTvService.getPersonalEmoteSet(twitchUserId);
+
+      checkedUsersForPersonalEmotes.add(twitchUserId);
+
+      if (personalEmotes.length > 0) {
+        const channelCache = chatStore$.persisted.channelCaches[channelId];
+        if (channelCache) {
+          const currentPersonalEmotes =
+            channelCache.sevenTvPersonalEmotes?.peek() || {};
+          channelCache.sevenTvPersonalEmotes.set({
+            ...currentPersonalEmotes,
+            [twitchUserId]: personalEmotes,
+          });
+          logger.stv.info(
+            `Cached ${personalEmotes.length} personal emotes for user ${twitchUserId}`,
+          );
+        }
+      }
+
+      return personalEmotes;
+    } catch (error) {
+      logger.stv.error(
+        `Failed to fetch personal emotes for user ${twitchUserId}:`,
+        error,
+      );
+      checkedUsersForPersonalEmotes.add(twitchUserId);
+      return [];
+    } finally {
+      personalEmoteFetchPromises.delete(twitchUserId);
+    }
+  })();
+
+  personalEmoteFetchPromises.set(twitchUserId, fetchPromise);
+  return fetchPromise;
+};
+
+export const getUserPersonalEmotes = (
+  twitchUserId: string,
+  channelId: string,
+): SanitisiedEmoteSet[] => {
+  const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
+  return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
+};
+
+export const hasCheckedPersonalEmotes = (twitchUserId: string): boolean => {
+  return checkedUsersForPersonalEmotes.has(twitchUserId);
+};
+
+export const clearPersonalEmotesCache = () => {
+  checkedUsersForPersonalEmotes.clear();
+  personalEmoteFetchPromises.clear();
+  logger.chat.info('Cleared personal emotes cache');
+};
+
 export const clearChannelResources = () => {
   batch(() => {
     chatStore$.currentChannelId.set(null);

@@ -9,6 +9,7 @@ interface EmoteProcessorParams {
   userstate: UserStateTags | null;
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];
   sevenTvChannelEmotes: SanitisiedEmoteSet[];
+  sevenTvPersonalEmotes?: SanitisiedEmoteSet[];
   twitchGlobalEmotes: SanitisiedEmoteSet[];
   twitchChannelEmotes: SanitisiedEmoteSet[];
   ffzChannelEmotes: SanitisiedEmoteSet[];
@@ -25,6 +26,7 @@ const createCacheKey = (
   inputString: string,
   sevenTvGlobalEmotes: SanitisiedEmoteSet[],
   sevenTvChannelEmotes: SanitisiedEmoteSet[],
+  sevenTvPersonalEmotes: SanitisiedEmoteSet[],
   twitchGlobalEmotes: SanitisiedEmoteSet[],
   twitchChannelEmotes: SanitisiedEmoteSet[],
   ffzChannelEmotes: SanitisiedEmoteSet[],
@@ -37,6 +39,7 @@ const createCacheKey = (
   const emoteHash = [
     sevenTvGlobalEmotes.length,
     sevenTvChannelEmotes.length,
+    sevenTvPersonalEmotes.length,
     twitchGlobalEmotes.length,
     twitchChannelEmotes.length,
     ffzChannelEmotes.length,
@@ -50,6 +53,8 @@ const createCacheKey = (
     sevenTvChannelEmotes[sevenTvChannelEmotes.length - 1]?.id || '',
     sevenTvGlobalEmotes[0]?.id || '',
     sevenTvGlobalEmotes[sevenTvGlobalEmotes.length - 1]?.id || '',
+    sevenTvPersonalEmotes[0]?.id || '',
+    sevenTvPersonalEmotes[sevenTvPersonalEmotes.length - 1]?.id || '',
   ].join('|');
 
   return `${emoteHash}:${firstLastIds}:${inputString}`;
@@ -64,6 +69,7 @@ export const processEmotesWorklet = (
     inputString,
     sevenTvGlobalEmotes,
     sevenTvChannelEmotes,
+    sevenTvPersonalEmotes = [],
     twitchGlobalEmotes,
     twitchChannelEmotes,
     ffzChannelEmotes,
@@ -80,6 +86,7 @@ export const processEmotesWorklet = (
     inputString,
     sevenTvGlobalEmotes,
     sevenTvChannelEmotes,
+    sevenTvPersonalEmotes,
     twitchGlobalEmotes,
     twitchChannelEmotes,
     ffzChannelEmotes,
@@ -93,6 +100,9 @@ export const processEmotesWorklet = (
     return cached;
   }
   const emoteMap = new Map<string, SanitisiedEmoteSet>();
+
+  // Personal emotes have highest priority (only the sender can use them)
+  const personalEmotes = [...sevenTvPersonalEmotes];
 
   const channelEmotes = [
     ...sevenTvChannelEmotes,
@@ -108,10 +118,19 @@ export const processEmotesWorklet = (
     ...bttvGlobalEmotes,
   ];
 
-  channelEmotes.forEach(emote => {
+  // Add personal emotes first (highest priority)
+  personalEmotes.forEach(emote => {
     emoteMap.set(emote.name, emote);
   });
 
+  // Add channel emotes, only if not already set by personal emotes
+  channelEmotes.forEach(emote => {
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, emote);
+    }
+  });
+
+  // Add global emotes, only if not already set by personal or channel emotes
   globalEmotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);

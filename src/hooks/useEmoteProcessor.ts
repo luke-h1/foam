@@ -8,6 +8,7 @@ import { runOnJS, useSharedValue } from 'react-native-reanimated';
 interface UseEmoteProcessorParams {
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];
   sevenTvChannelEmotes: SanitisiedEmoteSet[];
+  sevenTvPersonalEmotes?: SanitisiedEmoteSet[];
   twitchGlobalEmotes: SanitisiedEmoteSet[];
   twitchChannelEmotes: SanitisiedEmoteSet[];
   ffzChannelEmotes: SanitisiedEmoteSet[];
@@ -25,6 +26,7 @@ export const useEmoteProcessor = (params: UseEmoteProcessorParams) => {
       inputString: string,
       userstate: UserStateTags | null,
       onComplete: (result: ParsedPart[]) => void,
+      sevenTvPersonalEmotes?: SanitisiedEmoteSet[],
     ) => {
       if (isProcessing.value) {
         // If already processing, queue the request
@@ -37,6 +39,8 @@ export const useEmoteProcessor = (params: UseEmoteProcessorParams) => {
         inputString,
         userstate,
         ...params,
+        // Include personal emotes for this message (if provided)
+        sevenTvPersonalEmotes: sevenTvPersonalEmotes || [],
       };
 
       const result = processEmotesWorklet(processParams);

@@ -34,6 +34,9 @@ import {
   clearPaints,
   useUserPaints,
   fetchAndCacheUserCosmetics,
+  fetchUserPersonalEmotes,
+  getUserPersonalEmotes,
+  clearPersonalEmotesCache,
 } from '@app/store/chatStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -261,6 +264,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       text: string,
       userstate: ReturnType<typeof createUserStateFromTags>,
       baseMessage: AnyChatMessageType,
+      userId?: string,
     ) => {
       const emoteData = getCurrentEmoteData(channelId);
       if (!emoteData) return;
@@ -272,6 +276,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         emoteData.ffzGlobalEmotes.length > 0;
 
       if (!hasEmotes) return;
+
+      // Get personal emotes for the message sender (if we have them cached)
+      const personalEmotes = userId
+        ? getUserPersonalEmotes(userId, channelId)
+        : [];
 
       emoteProcessor.processEmotes(
         text.trimEnd(),
@@ -297,6 +306,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             logger.chat.error('Error processing emotes:', error);
           }
         },
+        personalEmotes,
       );
     },
     [channelId, emoteProcessor, handleNewMessage],
@@ -315,6 +325,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       const userId = tags['user-id'];
       if (userId) {
         void fetchUserCosmetics(userId);
+        // Fetch personal emotes for this user (in background, non-blocking)
+        void fetchUserPersonalEmotes(userId, channelId);
       }
 
       let parentColor: string | undefined;
@@ -335,9 +347,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       const messageWithParentColor = { ...baseMessage, parentColor };
 
       handleNewMessage(messageWithParentColor);
-      processMessageEmotes(text, userstate, messageWithParentColor);
+      processMessageEmotes(text, userstate, messageWithParentColor, userId);
     },
     [
+      channelId,
       channelName,
       fetchUserCosmetics,
       handleNewMessage,
@@ -781,6 +794,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       clearChannelResources();
       clearTtvUsers();
       clearPaints();
+      clearPersonalEmotesCache();
       cosmeticsUsersSet.clear();
       clearMessages();
       clearLocalMessages();

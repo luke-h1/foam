@@ -1,0 +1,35 @@
+query UserPersonalEmotesQuery($platformId: String!) {
+  users {
+    userByConnection(platform: TWITCH, platformId: $platformId) {
+      id
+      personalEmoteSet {
+        id
+        name
+        emotes(page: 1, perPage: 100) {
+          items {
+            id
+            alias
+            emote {
+              id
+              defaultName
+              flags {
+                animated
+                approvedPersonal
+                defaultZeroWidth
+              }
+              images {
+                ...ImageFragment
+              }
+              owner {
+                id
+                mainConnection {
+                  platformDisplayName
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

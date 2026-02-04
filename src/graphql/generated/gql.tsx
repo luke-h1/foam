@@ -2029,6 +2029,63 @@ export type PaintsQueryQuery = {
   };
 };
 
+export type UserPersonalEmotesQueryQueryVariables = Exact<{
+  platformId: Scalars['String']['input'];
+}>;
+
+export type UserPersonalEmotesQueryQuery = {
+  __typename?: 'Query';
+  users: {
+    __typename?: 'UserQuery';
+    userByConnection?: {
+      __typename?: 'User';
+      id: any;
+      personalEmoteSet?: {
+        __typename?: 'EmoteSet';
+        id: any;
+        name: string;
+        emotes: {
+          __typename?: 'EmoteSetEmoteSearchResult';
+          items: Array<{
+            __typename?: 'EmoteSetEmote';
+            id: any;
+            alias: string;
+            emote: {
+              __typename?: 'Emote';
+              id: any;
+              defaultName: string;
+              flags: {
+                __typename?: 'EmoteFlags';
+                animated: boolean;
+                approvedPersonal: boolean;
+                defaultZeroWidth: boolean;
+              };
+              images: Array<{
+                __typename?: 'Image';
+                url: string;
+                mime: string;
+                size: number;
+                scale: number;
+                width: number;
+                height: number;
+                frameCount: number;
+              }>;
+              owner?: {
+                __typename?: 'User';
+                id: any;
+                mainConnection?: {
+                  __typename?: 'UserConnection';
+                  platformDisplayName: string;
+                } | null;
+              } | null;
+            };
+          }>;
+        };
+      } | null;
+    } | null;
+  };
+};
+
 export const ImageFragmentFragmentDoc = gql`
   fragment ImageFragment on Image {
     url
@@ -2177,4 +2234,54 @@ export function usePaintsQueryQuery(
     query: PaintsQueryDocument,
     ...options,
   });
+}
+export const UserPersonalEmotesQueryDocument = gql`
+  query UserPersonalEmotesQuery($platformId: String!) {
+    users {
+      userByConnection(platform: TWITCH, platformId: $platformId) {
+        id
+        personalEmoteSet {
+          id
+          name
+          emotes(page: 1, perPage: 100) {
+            items {
+              id
+              alias
+              emote {
+                id
+                defaultName
+                flags {
+                  animated
+                  approvedPersonal
+                  defaultZeroWidth
+                }
+                images {
+                  ...ImageFragment
+                }
+                owner {
+                  id
+                  mainConnection {
+                    platformDisplayName
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  ${ImageFragmentFragmentDoc}
+`;
+
+export function useUserPersonalEmotesQueryQuery(
+  options: Omit<
+    Urql.UseQueryArgs<UserPersonalEmotesQueryQueryVariables>,
+    'query'
+  >,
+) {
+  return Urql.useQuery<
+    UserPersonalEmotesQueryQuery,
+    UserPersonalEmotesQueryQueryVariables
+  >({ query: UserPersonalEmotesQueryDocument, ...options });
 }

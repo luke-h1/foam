@@ -342,6 +342,7 @@ export function replaceTextWithEmotes({
   inputString,
   sevenTvChannelEmotes,
   sevenTvGlobalEmotes,
+  sevenTvPersonalEmotes = [],
   twitchGlobalEmotes,
   bttvChannelEmotes,
   bttvGlobalEmotes,
@@ -354,6 +355,7 @@ export function replaceTextWithEmotes({
   userstate: UserStateTags | null;
   sevenTvGlobalEmotes: SanitisiedEmoteSet[];
   sevenTvChannelEmotes: SanitisiedEmoteSet[];
+  sevenTvPersonalEmotes?: SanitisiedEmoteSet[];
   twitchGlobalEmotes: SanitisiedEmoteSet[];
   twitchChannelEmotes: SanitisiedEmoteSet[];
   ffzChannelEmotes: SanitisiedEmoteSet[];
@@ -365,10 +367,10 @@ export function replaceTextWithEmotes({
     return [{ type: 'text', content: inputString }];
   }
 
-  // Add debugging to see what emotes we have
   const totalEmotes =
     sevenTvGlobalEmotes.length +
     sevenTvChannelEmotes.length +
+    sevenTvPersonalEmotes.length +
     twitchGlobalEmotes.length +
     twitchChannelEmotes.length +
     ffzGlobalEmotes.length +
@@ -377,14 +379,17 @@ export function replaceTextWithEmotes({
     bttvChannelEmotes.length;
 
   console.log(
-    `🎭 Processing "${inputString}" with ${totalEmotes} total emotes available`,
+    `🎭 Processing "${inputString}" with ${totalEmotes} total emotes available (${sevenTvPersonalEmotes.length} personal)`,
   );
 
   const emoteMap = new Map<string, SanitisiedEmoteSet>();
 
   /**
-   * Channel emotes always take priority over global emotes
+   * Personal emotes have the highest priority (only the sender can use them)
+   * Then channel emotes take priority over global emotes
    */
+  const personalEmotes = [...sevenTvPersonalEmotes] as const;
+
   const channelEmotes = [
     ...sevenTvChannelEmotes,
     ...twitchChannelEmotes,
@@ -399,7 +404,8 @@ export function replaceTextWithEmotes({
     ...bttvGlobalEmotes,
   ] as const;
 
-  channelEmotes.forEach(emote => {
+  // Add personal emotes first (highest priority)
+  personalEmotes.forEach(emote => {
     emoteMap.set(emote.name, {
       creator: emote.creator,
       emote_link: emote.emote_link,
@@ -413,7 +419,24 @@ export function replaceTextWithEmotes({
     });
   });
 
-  // add global emotes, only if not already set by channel emotes
+  // Add channel emotes, only if not already set by personal emotes
+  channelEmotes.forEach(emote => {
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, {
+        creator: emote.creator,
+        emote_link: emote.emote_link,
+        original_name: emote.original_name,
+        site: emote.site,
+        url: emote.url,
+        height: emote.height,
+        width: emote.width,
+        id: emote.id,
+        name: emote.name,
+      });
+    }
+  });
+
+  // add global emotes, only if not already set by personal or channel emotes
   globalEmotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
