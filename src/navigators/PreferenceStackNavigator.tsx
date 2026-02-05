@@ -1,49 +1,9 @@
-import { ScreenSuspense } from '@app/components/ScreenSuspense';
+import { BlockedUsersScreen } from '@app/screens/Preferences/BlockedUsersScreen';
+import { ChatPreferenceScreen } from '@app/screens/Preferences/ChatPreferenceScreen';
+import { ThemePreferenceScreen } from '@app/screens/Preferences/ThemePreferenceScreen';
+import { VideoPreferenceScreen } from '@app/screens/Preferences/VideoPreferenceScreen';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import { lazy } from 'react';
-
-const LazyBlockedUsersScreen = lazy(() =>
-  import('@app/screens/Preferences/BlockedUsersScreen').then(m => ({
-    default: m.BlockedUsersScreen,
-  })),
-);
-const LazyChatPreferenceScreen = lazy(() =>
-  import('@app/screens/Preferences/ChatPreferenceScreen').then(m => ({
-    default: m.ChatPreferenceScreen,
-  })),
-);
-const LazyThemePreferenceScreen = lazy(() =>
-  import('@app/screens/Preferences/ThemePreferenceScreen').then(m => ({
-    default: m.ThemePreferenceScreen,
-  })),
-);
-const LazyVideoPreferenceScreen = lazy(() =>
-  import('@app/screens/Preferences/VideoPreferenceScreen').then(m => ({
-    default: m.VideoPreferenceScreen,
-  })),
-);
-
-const BlockedUsersScreen = () => (
-  <ScreenSuspense>
-    <LazyBlockedUsersScreen />
-  </ScreenSuspense>
-);
-const ChatPreferenceScreen = () => (
-  <ScreenSuspense>
-    <LazyChatPreferenceScreen />
-  </ScreenSuspense>
-);
-const ThemePreferenceScreen = () => (
-  <ScreenSuspense>
-    <LazyThemePreferenceScreen />
-  </ScreenSuspense>
-);
-const VideoPreferenceScreen = () => (
-  <ScreenSuspense>
-    <LazyVideoPreferenceScreen />
-  </ScreenSuspense>
-);
 
 export type PreferenceStackParamList = {
   Chat: undefined;

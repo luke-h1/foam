@@ -1,7 +1,14 @@
-import { UserPersonalEmotesQueryDocument } from '@app/graphql/generated/gql';
+import {
+  EmoteSetKind,
+  UserByConnectionDocument,
+  UserByConnectionQuery,
+  UserByConnectionQueryVariables,
+  UserPersonalEmotesQueryDocument,
+} from '@app/graphql/generated/gql';
 import { logger } from '@app/utils/logger';
 import { print } from 'graphql';
 import { sevenTvApi } from './api';
+import { sevenTvV4Client } from './gql/client';
 
 interface PersonalEmotesQueryResponse {
   data: {
@@ -353,17 +360,39 @@ export const sevenTvService = {
     return result.user.id;
   },
 
+  // TODO: call v4 api with result of this
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {
-    const result = await sevenTvApi.get<StvChannelEmotesResponse>(
-      `/users/twitch/${twitchUserId}`,
-    );
+    const result = await sevenTvV4Client.query<
+      UserByConnectionQuery,
+      UserByConnectionQueryVariables
+    >({
+      query: UserByConnectionDocument,
+      variables: { platformId: twitchUserId },
+    });
 
-    if (!result.emote_set.id) {
-      logger.stv.error('no set id returned from stv api');
+    if (result.error) {
+      logger.stv.error(
+        `Failed to fetch emote set ID for user ${twitchUserId}:`,
+        result.error.message,
+      );
+      return '';
     }
 
-    return result.emote_set.id;
+    const activeSet =
+      result.data?.users.userByConnection?.emoteSets.filter(
+        set => set.kind === EmoteSetKind.Normal,
+      ) ?? [];
+
+    console.log('ACTIVE_SET', JSON.stringify(activeSet));
+
+    if (!activeSet.length) {
+      logger.stv.error('no NORMAL emote set returned from stv v4 api');
+      return '';
+    }
+
+    return (activeSet[0]?.id as string) ?? '';
   },
+
   getSanitisedEmoteSet: async (
     emoteSetId: string,
   ): Promise<SanitisiedEmoteSet[]> => {
@@ -502,7 +531,6 @@ export const sevenTvService = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           query: print(UserPersonalEmotesQueryDocument),
           variables: { platformId: twitchUserId },
         }),

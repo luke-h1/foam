@@ -241,7 +241,7 @@ export const NativeStreamPlayer = forwardRef<
     autoplay = true,
     channel,
     height,
-    muted: initialMuted = false,
+    muted: initialMuted = __DEV__,
     onBackPress,
     onEnded,
     onError,

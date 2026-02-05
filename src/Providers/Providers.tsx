@@ -1,3 +1,4 @@
+import { ApolloProvider } from '@apollo/client/react';
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
@@ -6,6 +7,7 @@ import { navigationRef } from '@app/navigators/navigationUtilities';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api';
 import { createAuthErrorInterceptor } from '@app/services/api/interceptors';
+import { sevenTvV4Client } from '@app/services/gql/client';
 import { storage } from '@app/services/storage-service';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';
@@ -109,32 +111,34 @@ export function Providers({ children }: PropsWithChildren) {
 
   return (
     <AuthContextProvider>
-      <ScreenDimensionsProvider>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <ErrorBoundary
-            catchErrors={BaseConfig.catchErrors}
-            onReset={() => setRecoveredFromError(true)}
-          >
-            <KeyboardProvider>
-              <GestureHandlerRootView style={styles.gestureContainer}>
-                <BottomSheetModalProvider>
-                  <QueryProviderWithAuth>
-                    <PressablesConfig
-                      globalHandlers={{
-                        onPress: () => {
-                          void Haptics.selectionAsync();
-                        },
-                      }}
-                    >
-                      {children}
-                    </PressablesConfig>
-                  </QueryProviderWithAuth>
-                </BottomSheetModalProvider>
-              </GestureHandlerRootView>
-            </KeyboardProvider>
-          </ErrorBoundary>
-        </SafeAreaProvider>
-      </ScreenDimensionsProvider>
+      <ApolloProvider client={sevenTvV4Client}>
+        <ScreenDimensionsProvider>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <ErrorBoundary
+              catchErrors={BaseConfig.catchErrors}
+              onReset={() => setRecoveredFromError(true)}
+            >
+              <KeyboardProvider>
+                <GestureHandlerRootView style={styles.gestureContainer}>
+                  <BottomSheetModalProvider>
+                    <QueryProviderWithAuth>
+                      <PressablesConfig
+                        globalHandlers={{
+                          onPress: () => {
+                            void Haptics.selectionAsync();
+                          },
+                        }}
+                      >
+                        {children}
+                      </PressablesConfig>
+                    </QueryProviderWithAuth>
+                  </BottomSheetModalProvider>
+                </GestureHandlerRootView>
+              </KeyboardProvider>
+            </ErrorBoundary>
+          </SafeAreaProvider>
+        </ScreenDimensionsProvider>
+      </ApolloProvider>
     </AuthContextProvider>
   );
 }

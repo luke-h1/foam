@@ -1,8 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 /* eslint-disable */
-import gql from 'graphql-tag';
-import * as Urql from 'urql';
+import { DocumentNode } from 'graphql';
+import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -23,7 +21,6 @@ export type Incremental<T> =
   | {
       [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
     };
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string };
@@ -1955,6 +1952,47 @@ export type BadgesQueryQuery = {
   };
 };
 
+export type EmoteQueryQueryVariables = Exact<{
+  id: Scalars['Id']['input'];
+}>;
+
+export type EmoteQueryQuery = {
+  __typename?: 'Query';
+  emotes: {
+    __typename?: 'EmoteQuery';
+    emote?: {
+      __typename?: 'Emote';
+      id: any;
+      defaultName: string;
+      tags: Array<string>;
+      flags: {
+        __typename?: 'EmoteFlags';
+        animated: boolean;
+        defaultZeroWidth: boolean;
+        publicListed: boolean;
+      };
+      images: Array<{
+        __typename?: 'Image';
+        url: string;
+        mime: string;
+        size: number;
+        scale: number;
+        width: number;
+        height: number;
+        frameCount: number;
+      }>;
+      owner?: {
+        __typename?: 'User';
+        id: any;
+        mainConnection?: {
+          __typename?: 'UserConnection';
+          platformDisplayName: string;
+        } | null;
+      } | null;
+    } | null;
+  };
+};
+
 export type PaintQueryQueryVariables = Exact<{
   id: Scalars['Id']['input'];
 }>;
@@ -2029,6 +2067,27 @@ export type PaintsQueryQuery = {
   };
 };
 
+export type UserByConnectionQueryVariables = Exact<{
+  platformId: Scalars['String']['input'];
+}>;
+
+export type UserByConnectionQuery = {
+  __typename?: 'Query';
+  users: {
+    __typename?: 'UserQuery';
+    userByConnection?: {
+      __typename?: 'User';
+      id: any;
+      emoteSets: Array<{
+        __typename?: 'EmoteSet';
+        id: any;
+        name: string;
+        kind: EmoteSetKind;
+      }>;
+    } | null;
+  };
+};
+
 export type UserPersonalEmotesQueryQueryVariables = Exact<{
   platformId: Scalars['String']['input'];
 }>;
@@ -2086,202 +2145,1004 @@ export type UserPersonalEmotesQueryQuery = {
   };
 };
 
-export const ImageFragmentFragmentDoc = gql`
-  fragment ImageFragment on Image {
-    url
-    mime
-    size
-    scale
-    width
-    height
-    frameCount
-  }
-`;
-export const BadgeQueryDocument = gql`
-  query BadgeQuery($id: Id!) {
-    badges {
-      badge(id: $id) {
-        id
-        name
-        description
-        tags
-        images {
-          ...ImageFragment
-        }
-        createdById
-        updatedAt
-        searchUpdatedAt
-      }
-    }
-  }
-  ${ImageFragmentFragmentDoc}
-`;
-
-export function useBadgeQueryQuery(
-  options: Omit<Urql.UseQueryArgs<BadgeQueryQueryVariables>, 'query'>,
-) {
-  return Urql.useQuery<BadgeQueryQuery, BadgeQueryQueryVariables>({
-    query: BadgeQueryDocument,
-    ...options,
-  });
-}
-export const BadgesQueryDocument = gql`
-  query BadgesQuery {
-    badges {
-      badges {
-        id
-        name
-        description
-        tags
-        images {
-          ...ImageFragment
-        }
-        createdById
-        updatedAt
-        searchUpdatedAt
-      }
-    }
-  }
-  ${ImageFragmentFragmentDoc}
-`;
-
-export function useBadgesQueryQuery(
-  options?: Omit<Urql.UseQueryArgs<BadgesQueryQueryVariables>, 'query'>,
-) {
-  return Urql.useQuery<BadgesQueryQuery, BadgesQueryQueryVariables>({
-    query: BadgesQueryDocument,
-    ...options,
-  });
-}
-export const PaintQueryDocument = gql`
-  query PaintQuery($id: Id!) {
-    paints {
-      paint(id: $id) {
-        id
-        name
-        description
-        tags
-        data {
-          layers {
-            id
-            opacity
-          }
-          shadows {
-            color {
-              hex
-              r
-              g
-              b
-              a
-            }
-            offsetX
-            offsetY
-            blur
-          }
-        }
-        createdById
-        updatedAt
-      }
-    }
-  }
-`;
-
-export function usePaintQueryQuery(
-  options: Omit<Urql.UseQueryArgs<PaintQueryQueryVariables>, 'query'>,
-) {
-  return Urql.useQuery<PaintQueryQuery, PaintQueryQueryVariables>({
-    query: PaintQueryDocument,
-    ...options,
-  });
-}
-export const PaintsQueryDocument = gql`
-  query PaintsQuery {
-    paints {
-      paints {
-        id
-        name
-        description
-        tags
-        data {
-          layers {
-            id
-            opacity
-          }
-          shadows {
-            color {
-              hex
-              r
-              g
-              b
-              a
-            }
-            offsetX
-            offsetY
-            blur
-          }
-        }
-        createdById
-        updatedAt
-      }
-    }
-  }
-`;
-
-export function usePaintsQueryQuery(
-  options?: Omit<Urql.UseQueryArgs<PaintsQueryQueryVariables>, 'query'>,
-) {
-  return Urql.useQuery<PaintsQueryQuery, PaintsQueryQueryVariables>({
-    query: PaintsQueryDocument,
-    ...options,
-  });
-}
-export const UserPersonalEmotesQueryDocument = gql`
-  query UserPersonalEmotesQuery($platformId: String!) {
-    users {
-      userByConnection(platform: TWITCH, platformId: $platformId) {
-        id
-        personalEmoteSet {
-          id
-          name
-          emotes(page: 1, perPage: 100) {
-            items {
-              id
-              alias
-              emote {
-                id
-                defaultName
-                flags {
-                  animated
-                  approvedPersonal
-                  defaultZeroWidth
-                }
-                images {
-                  ...ImageFragment
-                }
-                owner {
-                  id
-                  mainConnection {
-                    platformDisplayName
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  ${ImageFragmentFragmentDoc}
-`;
-
-export function useUserPersonalEmotesQueryQuery(
-  options: Omit<
-    Urql.UseQueryArgs<UserPersonalEmotesQueryQueryVariables>,
-    'query'
-  >,
-) {
-  return Urql.useQuery<
-    UserPersonalEmotesQueryQuery,
-    UserPersonalEmotesQueryQueryVariables
-  >({ query: UserPersonalEmotesQueryDocument, ...options });
-}
+export const ImageFragmentFragmentDoc = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ImageFragment' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Image' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export const BadgeQueryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'BadgeQuery' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'badges' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'badge' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'id' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'images' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'FragmentSpread',
+                              name: { kind: 'Name', value: 'ImageFragment' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdById' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'searchUpdatedAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ImageFragment' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Image' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export type BadgeQueryQueryResult = Apollo.QueryResult<
+  BadgeQueryQuery,
+  BadgeQueryQueryVariables
+>;
+export const BadgesQueryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'BadgesQuery' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'badges' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'badges' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'images' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'FragmentSpread',
+                              name: { kind: 'Name', value: 'ImageFragment' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdById' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'searchUpdatedAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ImageFragment' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Image' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export type BadgesQueryQueryResult = Apollo.QueryResult<
+  BadgesQueryQuery,
+  BadgesQueryQueryVariables
+>;
+export const EmoteQueryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'EmoteQuery' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'emotes' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'emote' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'id' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'defaultName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'flags' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'animated' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'defaultZeroWidth' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'publicListed' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'images' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'FragmentSpread',
+                              name: { kind: 'Name', value: 'ImageFragment' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'owner' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'mainConnection' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'platformDisplayName',
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ImageFragment' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Image' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export type EmoteQueryQueryResult = Apollo.QueryResult<
+  EmoteQueryQuery,
+  EmoteQueryQueryVariables
+>;
+export const PaintQueryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PaintQuery' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'paints' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'paint' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'id' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'data' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'layers' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'opacity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'shadows' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'color' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'hex' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'r' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'g' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'b' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'a' },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'offsetX' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'offsetY' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'blur' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdById' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export type PaintQueryQueryResult = Apollo.QueryResult<
+  PaintQueryQuery,
+  PaintQueryQueryVariables
+>;
+export const PaintsQueryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'PaintsQuery' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'paints' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'paints' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'data' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'layers' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'opacity' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'shadows' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'color' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'hex' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'r' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'g' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'b' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'a' },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'offsetX' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'offsetY' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'blur' },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdById' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'updatedAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export type PaintsQueryQueryResult = Apollo.QueryResult<
+  PaintsQueryQuery,
+  PaintsQueryQueryVariables
+>;
+export const UserByConnectionDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'UserByConnection' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'platformId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'users' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'userByConnection' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'platform' },
+                      value: { kind: 'EnumValue', value: 'TWITCH' },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'platformId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'platformId' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emoteSets' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'kind' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export type UserByConnectionQueryResult = Apollo.QueryResult<
+  UserByConnectionQuery,
+  UserByConnectionQueryVariables
+>;
+export const UserPersonalEmotesQueryDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'UserPersonalEmotesQuery' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'platformId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'users' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'userByConnection' },
+                  arguments: [
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'platform' },
+                      value: { kind: 'EnumValue', value: 'TWITCH' },
+                    },
+                    {
+                      kind: 'Argument',
+                      name: { kind: 'Name', value: 'platformId' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'platformId' },
+                      },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'personalEmoteSet' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'emotes' },
+                              arguments: [
+                                {
+                                  kind: 'Argument',
+                                  name: { kind: 'Name', value: 'page' },
+                                  value: { kind: 'IntValue', value: '1' },
+                                },
+                                {
+                                  kind: 'Argument',
+                                  name: { kind: 'Name', value: 'perPage' },
+                                  value: { kind: 'IntValue', value: '100' },
+                                },
+                              ],
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'items' },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'alias',
+                                          },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'emote',
+                                          },
+                                          selectionSet: {
+                                            kind: 'SelectionSet',
+                                            selections: [
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'id',
+                                                },
+                                              },
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'defaultName',
+                                                },
+                                              },
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'flags',
+                                                },
+                                                selectionSet: {
+                                                  kind: 'SelectionSet',
+                                                  selections: [
+                                                    {
+                                                      kind: 'Field',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value: 'animated',
+                                                      },
+                                                    },
+                                                    {
+                                                      kind: 'Field',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value:
+                                                          'approvedPersonal',
+                                                      },
+                                                    },
+                                                    {
+                                                      kind: 'Field',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value:
+                                                          'defaultZeroWidth',
+                                                      },
+                                                    },
+                                                  ],
+                                                },
+                                              },
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'images',
+                                                },
+                                                selectionSet: {
+                                                  kind: 'SelectionSet',
+                                                  selections: [
+                                                    {
+                                                      kind: 'FragmentSpread',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value: 'ImageFragment',
+                                                      },
+                                                    },
+                                                  ],
+                                                },
+                                              },
+                                              {
+                                                kind: 'Field',
+                                                name: {
+                                                  kind: 'Name',
+                                                  value: 'owner',
+                                                },
+                                                selectionSet: {
+                                                  kind: 'SelectionSet',
+                                                  selections: [
+                                                    {
+                                                      kind: 'Field',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value: 'id',
+                                                      },
+                                                    },
+                                                    {
+                                                      kind: 'Field',
+                                                      name: {
+                                                        kind: 'Name',
+                                                        value: 'mainConnection',
+                                                      },
+                                                      selectionSet: {
+                                                        kind: 'SelectionSet',
+                                                        selections: [
+                                                          {
+                                                            kind: 'Field',
+                                                            name: {
+                                                              kind: 'Name',
+                                                              value:
+                                                                'platformDisplayName',
+                                                            },
+                                                          },
+                                                        ],
+                                                      },
+                                                    },
+                                                  ],
+                                                },
+                                              },
+                                            ],
+                                          },
+                                        },
+                                      ],
+                                    },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: 'FragmentDefinition',
+      name: { kind: 'Name', value: 'ImageFragment' },
+      typeCondition: {
+        kind: 'NamedType',
+        name: { kind: 'Name', value: 'Image' },
+      },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
+          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode;
+export type UserPersonalEmotesQueryQueryResult = Apollo.QueryResult<
+  UserPersonalEmotesQueryQuery,
+  UserPersonalEmotesQueryQueryVariables
+>;

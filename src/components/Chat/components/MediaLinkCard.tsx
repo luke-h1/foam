@@ -59,8 +59,6 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
     }
   };
 
-  console.log('type ->', type);
-
   if (
     (type === 'stvEmote' && sevenTvEmote.isPending) ||
     (type === 'twitchClip' && twitchClip.isPending)

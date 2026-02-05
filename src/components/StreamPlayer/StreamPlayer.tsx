@@ -635,7 +635,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       autoplay = true,
       channel,
       height,
-      muted: initialMuted = false,
+      muted: initialMuted = __DEV__,
       onBackPress,
       onEnded,
       onError,

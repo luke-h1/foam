@@ -927,8 +927,9 @@ export const loadChannelResources = async (
             }
 
             try {
-              const sevenTvSetId =
-                await sevenTvService.getEmoteSetId(channelId);
+              const sevenTvSetId = await sevenTvService.getEmoteSetId(
+                channelId,
+              );
 
               if (signal?.aborted) {
                 logger.main.info('🚫 Load aborted after 7TV set ID fetch');

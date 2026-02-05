@@ -1,0 +1,23 @@
+query EmoteQuery($id: Id!) {
+  emotes {
+    emote(id: $id) {
+      id
+      defaultName
+      tags
+      flags {
+        animated
+        defaultZeroWidth
+        publicListed
+      }
+      images {
+        ...ImageFragment
+      }
+      owner {
+        id
+        mainConnection {
+          platformDisplayName
+        }
+      }
+    }
+  }
+}
