@@ -13,7 +13,8 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import { ComponentProps, useMemo } from 'react';
+import NewRelic from 'newrelic-react-native-agent';
+import { ComponentProps, useCallback, useMemo } from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { DevToolsParamList } from './DevToolsStackNavigator';
@@ -156,12 +157,23 @@ export const AppNavigator = (props: NavigationProps) => {
     };
   }, [colorScheme]);
 
+  const { onStateChange: externalOnStateChange, ...restProps } = props;
+
+  const handleStateChange = useCallback(
+    (state: Parameters<NonNullable<NavigationProps['onStateChange']>>[0]) => {
+      NewRelic.onStateChange(state);
+      externalOnStateChange?.(state);
+    },
+    [externalOnStateChange],
+  );
+
   return (
     <NavigationContainer<AppStackParamList>
       ref={navigationRef}
       theme={navTheme}
       linking={linking}
-      {...props}
+      onStateChange={handleStateChange}
+      {...restProps}
     >
       <View style={styles.container}>
         <AppStack />

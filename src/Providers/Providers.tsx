@@ -20,6 +20,7 @@ import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import NewRelic from 'newrelic-react-native-agent';
 import { PressablesConfig } from 'pressto';
 import { PropsWithChildren, useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -36,6 +37,13 @@ import { ScreenDimensionsProvider } from './ScreenDimensionsProvider';
 function QueryProviderWithAuth({ children }: PropsWithChildren) {
   const { user, populateAuthState } = useAuthContext();
   const interceptorAdded = useRef(false);
+
+  // Set New Relic user ID for session attribution
+  useEffect(() => {
+    if (user?.id) {
+      NewRelic.setUserId(user.id);
+    }
+  }, [user?.id]);
 
   // Set up 401 error interceptor to handle auth refresh after OTA updates
   useEffect(() => {

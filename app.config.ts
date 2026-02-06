@@ -151,6 +151,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    'newrelic-react-native-agent',
     'react-native-compressor',
     [
       '@sentry/react-native/expo',
@@ -221,6 +222,7 @@ const config: ExpoConfig = {
           useFrameworks: 'static',
           // buildReactNativeFromSource: true,
           forceStaticLinking: ['RNFBApp'],
+          deploymentTarget: '16.0',
         },
       },
     ],
