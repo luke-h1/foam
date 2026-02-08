@@ -1,5 +1,5 @@
-import { SafeAreaViewFixed } from '@app/components/SafeAreaViewFixed';
-import { Text } from '@app/components/Text';
+import { SafeAreaViewFixed } from '@app/components/SafeAreaViewFixed/SafeAreaViewFixed';
+import { Text } from '@app/components/Text/Text';
 import { useEffect } from 'react';
 import { useWindowDimensions, View, ViewStyle } from 'react-native';
 import Animated, {
@@ -11,7 +11,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-import { FlashList } from '../../FlashList';
+import { FlashList } from '../../FlashList/FlashList';
 
 const Shimmer = ({ style }: { style: ViewStyle }) => {
   const translateX = useSharedValue(-100);

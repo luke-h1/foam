@@ -5,7 +5,7 @@ import {
 import render from '@app/test/render';
 import { NavigationContainer } from '@react-navigation/native';
 import { screen } from '@testing-library/react-native';
-import { LiveStreamCard } from '../LiveStreamCard';
+import { LiveStreamCard } from '../LiveStreamCard/LiveStreamCard';
 
 const mockStream: TwitchStream = {
   id: '1',

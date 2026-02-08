@@ -9,14 +9,25 @@ const config: CodegenConfig = {
       plugins: [
         {
           add: {
-            content:
-              '// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n// @ts-nocheck\n/* eslint-disable */',
+            content: '/* eslint-disable */\n// @ts-nocheck',
           },
         },
         'typescript',
         'typescript-operations',
-        'typescript-urql',
+        'typescript-react-apollo',
       ],
+      config: {
+        withHooks: false,
+        documentMode: 'documentNode',
+        scalars: {
+          Id: 'string',
+          CustomerId: 'string',
+          DateTime: 'string',
+          InvoiceId: 'string',
+          JSONObject: 'Record<string, unknown>',
+          StripeProductId: 'string',
+        },
+      },
     },
   },
   hooks: {

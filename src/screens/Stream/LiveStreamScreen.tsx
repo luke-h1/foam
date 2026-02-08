@@ -1,9 +1,9 @@
-import { Chat } from '@app/components/Chat';
+import { Chat } from '@app/components/Chat/Chat';
 import {
   NativeStreamPlayer,
   type NativeStreamPlayerRef,
-} from '@app/components/NativeStreamPlayer';
-import { Spinner } from '@app/components/Spinner';
+} from '@app/components/NativeStreamPlayer/NativeStreamPlayer';
+import { Spinner } from '@app/components/Spinner/Spinner';
 import {
   StreamPlayer,
   type StreamPlayerRef,

@@ -24,7 +24,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { BodyScrollView } from '../BodyScrollView';
+import { BodyScrollView } from '../BodyScrollView/BodyScrollView';
 import { IconSymbol, IconSymbolName } from '../IconSymbol/IconSymbol';
 
 type ListStyle = 'grouped' | 'auto';

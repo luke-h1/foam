@@ -1,6 +1,6 @@
 import { View, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Image } from '../Image';
+import { Image } from '../Image/Image';
 
 interface Props {
   thumbnail?: string;

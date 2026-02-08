@@ -11,9 +11,9 @@ import { Modal as RNModal, Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { Variant } from '../../../app.config';
-import { Button } from '../Button';
+import { Button } from '../Button/Button';
 import { IconSymbol } from '../IconSymbol/IconSymbol';
-import { Text } from '../Text';
+import { Text } from '../Text/Text';
 
 function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
   const platform = Platform.OS === 'ios' ? 'ios' : 'android';

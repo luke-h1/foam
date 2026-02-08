@@ -1,8 +1,8 @@
-import { Button } from '@app/components/Button';
-import { FlashList, ListRenderItem } from '@app/components/FlashList';
-import { Image } from '@app/components/Image';
-import { ScreenHeader } from '@app/components/ScreenHeader';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { FlashList, ListRenderItem } from '@app/components/FlashList/FlashList';
+import { Image } from '@app/components/Image/Image';
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { Text } from '@app/components/Text/Text';
 import {
   chatStore$,
   clearEmoteImageCache,

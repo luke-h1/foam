@@ -1,4 +1,4 @@
-import { BodyScrollView } from '@app/components/BodyScrollView';
+import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import * as Form from '@app/components/Form/Form';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
 import * as AC from '@bacons/apple-colors';

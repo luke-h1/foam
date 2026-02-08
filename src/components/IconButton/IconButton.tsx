@@ -1,10 +1,10 @@
-import { Spacing } from '@app/styles';
+import { Spacing } from '@app/styles/spacing';
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { Insets, StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { Button } from '../Button';
+import { Button } from '../Button/Button';
 import { Icon } from '../Icon/Icon';
-import { Spinner } from '../Spinner';
+import { Spinner } from '../Spinner/Spinner';
 
 type IconType =
   | {

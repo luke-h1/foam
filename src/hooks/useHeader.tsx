@@ -1,4 +1,4 @@
-import { Text } from '@app/components/Text';
+import { Text } from '@app/components/Text/Text';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useEffect } from 'react';
 import { View } from 'react-native';

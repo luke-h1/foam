@@ -1,0 +1,31 @@
+query emoteSetCustom($id: Id!) {
+  emoteSets {
+    emoteSet(id: $id) {
+      id
+      name
+      capacity
+      ownerId
+      kind
+      updatedAt
+      emotes {
+        totalCount
+        items {
+          id
+          alias
+          addedById
+          emote {
+            id
+            tags
+            aspectRatio
+            images {
+              ...ImageFragment
+            }
+          }
+          flags {
+            zeroWidth
+          }
+        }
+      }
+    }
+  }
+}

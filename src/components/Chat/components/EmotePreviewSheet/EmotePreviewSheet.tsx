@@ -1,7 +1,7 @@
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/Text/Text';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -113,6 +113,7 @@ export const EmotePreviewSheet = forwardRef<BottomSheetModal, Props>(
             <View style={styles.emoteContainer}>
               <Image
                 source={selectedEmote.url ?? ''}
+                contentFit="contain"
                 transition={100}
                 style={[styles.emoteImage, emoteSize]}
               />

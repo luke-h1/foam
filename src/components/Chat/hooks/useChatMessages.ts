@@ -3,27 +3,18 @@ import { MutableRefObject, useCallback, useRef } from 'react';
 
 const BATCH_SIZE = 3;
 const BATCH_TIMEOUT_MS = 10;
-const MAX_MESSAGES = 500;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyMessage = ChatMessageType<any, any>;
 
 interface UseChatMessagesOptions {
   isAtBottomRef: MutableRefObject<boolean>;
-  isScrollingToBottom: boolean;
   onUnreadIncrement: (count: number) => void;
-  onAutoScroll: () => void;
 }
 
 export const useChatMessages = (options: UseChatMessagesOptions) => {
-  const {
-    isAtBottomRef,
-    isScrollingToBottom,
-    onUnreadIncrement,
-    onAutoScroll,
-  } = options;
+  const { isAtBottomRef, onUnreadIncrement } = options;
 
-  const messagesRef = useRef<AnyMessage[]>([]);
   const messageBatchRef = useRef<AnyMessage[]>([]);
   const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -50,22 +41,11 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     addMessages(deduplicatedBatch as ChatMessageType<never>[]);
 
-    messagesRef.current = [...messagesRef.current, ...deduplicatedBatch].slice(
-      -MAX_MESSAGES,
-    );
-
     // Handle unread count when not at bottom
     if (!isAtBottomRef.current) {
       onUnreadIncrement(deduplicatedBatch.length);
     }
-
-    // Trigger auto-scroll when at bottom and not already scrolling
-    if (isAtBottomRef.current && !isScrollingToBottom) {
-      setTimeout(() => {
-        onAutoScroll();
-      }, 0);
-    }
-  }, [isAtBottomRef, isScrollingToBottom, onUnreadIncrement, onAutoScroll]);
+  }, [isAtBottomRef, onUnreadIncrement]);
 
   const handleNewMessage = useCallback(
     (newMessage: AnyMessage) => {
@@ -87,7 +67,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   );
 
   const clearLocalMessages = useCallback(() => {
-    messagesRef.current = [];
     messageBatchRef.current = [];
   }, []);
 
@@ -99,7 +78,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   }, []);
 
   return {
-    messagesRef,
     handleNewMessage,
     clearLocalMessages,
     cleanup,

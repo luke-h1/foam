@@ -1,7 +1,8 @@
-import { EmptyState } from '@app/components/EmptyState';
-import { FlashList } from '@app/components/FlashList';
-import { LiveStreamCard } from '@app/components/LiveStreamCard';
+import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import { FlashList } from '@app/components/FlashList/FlashList';
+import { LiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
@@ -12,7 +13,7 @@ import {
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function TopStreamsScreen() {
@@ -102,15 +103,7 @@ export function TopStreamsScreen() {
         onEndReached={debouncedHandleLoadMore}
         refreshing={refreshing}
         onEndReachedThreshold={0.3}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onRefresh={onRefresh}
-            tintColor="white"
-            colors={['white']}
-          />
-        }
+        refreshControl={<RefreshControl onRefresh={onRefresh} />}
       />
     </View>
   );

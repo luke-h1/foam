@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType, UserPaint } from '@app/store/chatStore';
+import { ChatMessageType } from '@app/store/chatStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import {
   UserNoticeVariantMap,
@@ -10,20 +10,19 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
-import { logger } from '@app/utils/logger';
-import React, { useCallback, memo, useMemo } from 'react';
+import React, { useCallback, memo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Button } from '../../../Button';
+import { Button } from '../../../Button/Button';
 import { IconSymbol } from '../../../IconSymbol/IconSymbol';
-import { Image } from '../../../Image';
-import { Text } from '../../../Text';
+import { Image } from '../../../Image/Image';
+import { Text } from '../../../Text/Text';
 import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
 import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
 import { ViewerMileStoneNotice } from '../usernotices/ViewerMilestoneNotice';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
-import { EmoteRenderer } from './renderers';
+import { EmoteRenderer } from './renderers/EmoteRenderer';
 
 type OnReply<TNoticeType extends NoticeVariants> = Omit<
   ChatMessageType<TNoticeType>,
@@ -64,7 +63,6 @@ function ChatMessageComponent<
   onMessageLongPress,
   getMentionColor,
   parseTextForEmotes,
-  userPaints,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
   onEmotePress?: (data: EmotePressData) => void;
@@ -72,7 +70,6 @@ function ChatMessageComponent<
   onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
   getMentionColor?: (username: string) => string;
   parseTextForEmotes?: (text: string) => ParsedPart[];
-  userPaints?: Record<string, UserPaint>;
 }) {
   const isSubscriptionNotice = message.some(
     part =>
@@ -281,22 +278,6 @@ function ChatMessageComponent<
 
   const isReply = Boolean(parentDisplayName);
 
-  const userId = userstate['user-id'];
-  const paintId = userId && userPaints ? userPaints[userId]?.id : null;
-  const userPaint = useMemo(() => {
-    if (!userId || !userPaints) {
-      return null;
-    }
-    const paint = userPaints[userId] ?? null;
-    if (paint) {
-      logger.stvWs.debug(
-        `ChatMessage: Found paint for user ${userId}: ${paint.name}`,
-      );
-    }
-    return paint;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, paintId]);
-
   const isSystemNotice = message.some(
     part =>
       part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
@@ -342,6 +323,15 @@ function ChatMessageComponent<
           >
             @{parentDisplayName}
           </Text>
+          {replyBody ? (
+            <Text
+              style={styles.replyBodyPreview}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {replyBody}
+            </Text>
+          ) : null}
         </View>
       )}
 
@@ -363,7 +353,6 @@ function ChatMessageComponent<
             {userstate.username && (
               <PaintedUsername
                 username={userstate.username}
-                paint={userPaint ?? undefined}
                 userId={userstate['user-id']}
                 fallbackColor={
                   userstate.color ? lightenColor(userstate.color) : undefined
@@ -413,7 +402,6 @@ export const ChatMessage = MemoizedChatMessage as <
     onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
     getMentionColor?: (username: string) => string;
     parseTextForEmotes?: (text: string) => ParsedPart[];
-    userPaints?: Record<string, UserPaint>;
   },
 ) => React.JSX.Element;
 const styles = StyleSheet.create(theme => ({
@@ -509,11 +497,6 @@ const styles = StyleSheet.create(theme => ({
   mentionDefaultColor: {
     color: '#FFFFFF',
   },
-  emote: {
-    width: 25,
-    height: 25,
-    marginHorizontal: 2,
-  },
   safeArea: {
     flex: 1,
   },
@@ -554,6 +537,11 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 10,
+  },
+  replyBodyPreview: {
+    color: 'rgba(255, 255, 255, 0.35)',
+    fontSize: 10,
+    flexShrink: 1,
   },
   subscriptionNoticeContainer: {
     width: '100%',

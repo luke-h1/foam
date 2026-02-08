@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import Client from './Client';
-import { createLoggerInterceptor } from './interceptors';
+import { createLoggerInterceptor } from './interceptors/loggerInterceptor';
 
 // Get mock server URL from Expo config (only set for E2E variant)
 export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as

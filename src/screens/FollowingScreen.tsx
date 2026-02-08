@@ -1,13 +1,17 @@
-import { EmptyState } from '@app/components/EmptyState';
-import { AnimatedFlashList, ListRenderItem } from '@app/components/FlashList';
-import { LiveStreamCard } from '@app/components/LiveStreamCard';
+import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import {
+  AnimatedFlashList,
+  ListRenderItem,
+} from '@app/components/FlashList/FlashList';
+import { LiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { RefreshControl } from '@app/components/RefreshControl';
+import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
 import { useAuthContext } from '@app/context/AuthContext';
+import { useRefresh } from '@app/hooks/useRefresh';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState, useCallback, type JSX } from 'react';
+import { useMemo, useCallback, type JSX } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -21,22 +25,20 @@ export interface Section {
 
 export default function FollowingScreen() {
   const { user } = useAuthContext();
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const queryClient = useQueryClient();
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await queryClient.refetchQueries({
-      queryKey: followingStreamsQuery.queryKey,
-    });
-    setRefreshing(false);
-  };
 
   const followingStreamsQuery = useMemo(
     () => twitchQueries.getFollowedStreams(user?.id as string),
 
     [user],
   );
+
+  const { scrollHandler, scrollY, isRefreshing, refreshControl } = useRefresh({
+    onRefresh: () =>
+      queryClient.refetchQueries({
+        queryKey: followingStreamsQuery.queryKey,
+      }),
+  });
 
   const {
     data: streams,
@@ -53,7 +55,7 @@ export default function FollowingScreen() {
     return <LiveStreamCard stream={item} />;
   }, []);
 
-  if (refreshing || isLoading) {
+  if (isRefreshing || isLoading) {
     return (
       <>
         {Array.from({ length: 5 }).map((_, index) => (
@@ -87,12 +89,14 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
+      <RefreshIndicator scrollY={scrollY} isRefreshing={isRefreshing} />
       <AnimatedFlashList<TwitchStream>
         data={streamsArray}
         keyExtractor={item => item.id}
         contentInsetAdjustmentBehavior="automatic"
         renderItem={renderItem}
-        refreshControl={<RefreshControl onRefresh={onRefresh} />}
+        onScroll={scrollHandler}
+        refreshControl={refreshControl}
       />
     </View>
   );
@@ -102,5 +106,6 @@ const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    overflow: 'hidden',
   },
 }));

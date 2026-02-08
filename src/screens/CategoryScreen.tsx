@@ -1,8 +1,8 @@
-import { EmptyState } from '@app/components/EmptyState';
-import { LiveStreamCard } from '@app/components/LiveStreamCard';
-import { ScreenHeader } from '@app/components/ScreenHeader';
-import { Spinner } from '@app/components/Spinner';
-import { Text } from '@app/components/Text';
+import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import { LiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { Spinner } from '@app/components/Spinner/Spinner';
+import { Text } from '@app/components/Text/Text';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { AppStackParamList } from '@app/navigators/AppNavigator';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';

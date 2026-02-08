@@ -1,5 +1,5 @@
+import type { TwitchSanitisedEmote } from '@app/types/emote';
 import { twitchApi } from './api';
-import { SanitisiedEmoteSet } from './seventv-service';
 import { PaginatedList, twitchService } from './twitch-service';
 
 export interface TwitchEmote {
@@ -29,7 +29,7 @@ interface TwitchGlobalEmote {
 export const twitchEmoteService = {
   getChannelEmotes: async (
     channelId: string,
-  ): Promise<SanitisiedEmoteSet[]> => {
+  ): Promise<TwitchSanitisedEmote[]> => {
     const result = await twitchApi.get<
       PaginatedList<TwitchEmote & { template: string }>
     >('/chat/emotes', {
@@ -40,7 +40,7 @@ export const twitchEmoteService = {
 
     const broadcaster = await twitchService.getUser(undefined, channelId);
 
-    const sanitisedSet = result.data.map<SanitisiedEmoteSet>(emote => ({
+    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote => ({
       name: emote.name,
       id: emote.id,
       url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
@@ -53,12 +53,12 @@ export const twitchEmoteService = {
     return sanitisedSet;
   },
 
-  getGlobalEmotes: async (): Promise<SanitisiedEmoteSet[]> => {
+  getGlobalEmotes: async (): Promise<TwitchSanitisedEmote[]> => {
     const result = await twitchApi.get<{ data: TwitchGlobalEmote[] }>(
       '/chat/emotes/global',
     );
 
-    const sanitisedSet = result.data.map<SanitisiedEmoteSet>(emote => ({
+    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote => ({
       name: emote.name,
       id: emote.id,
       url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,

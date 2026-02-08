@@ -1,5 +1,5 @@
 import { FlashListRef } from '@shopify/flash-list';
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useRef, useState } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
 /**
@@ -7,55 +7,44 @@ import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
  */
 const BOTTOM_THRESHOLD = 50;
 
+/**
+ * Grace period (ms) after being at bottom where we still auto-scroll.
+ * Covers transient scroll events from message trimming.
+ */
+const BOTTOM_GRACE_MS = 300;
+
 interface UseChatScrollOptions<T> {
   flashListRef: RefObject<FlashListRef<T> | null>;
-  messagesLength: number;
 }
 
-export const useChatScroll = <T>({
-  flashListRef,
-  messagesLength,
-}: UseChatScrollOptions<T>) => {
+export const useChatScroll = <T>({ flashListRef }: UseChatScrollOptions<T>) => {
   const isAtBottomRef = useRef(true);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isScrollingToBottom, setIsScrollingToBottom] = useState(false);
+  const isScrollingToBottomRef = useRef(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const prevMessagesLengthRef = useRef(messagesLength);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const contentSizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const messagesLengthRef = useRef(messagesLength);
-
-  useEffect(() => {
-    messagesLengthRef.current = messagesLength;
-  }, [messagesLength]);
-
-  useEffect(() => {
-    const newMessageCount = messagesLength - prevMessagesLengthRef.current;
-    prevMessagesLengthRef.current = messagesLength;
-
-    // Only increment unread if user has scrolled away from bottom
-    if (newMessageCount > 0 && !isAtBottomRef.current) {
-      setUnreadCount(prev => prev + newMessageCount);
-    }
-  }, [messagesLength]);
+  const lastAtBottomTimeRef = useRef(Date.now());
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
 
-      // At bottom when scrolled near the end of content
       const distanceFromBottom =
         contentSize.height - (contentOffset.y + layoutMeasurement.height);
       const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD;
 
       isAtBottomRef.current = atBottom;
 
-      if (!isScrollingToBottom || atBottom) {
+      if (atBottom) {
+        lastAtBottomTimeRef.current = Date.now();
+      }
+
+      if (!isScrollingToBottomRef.current || atBottom) {
         setIsAtBottom(atBottom);
 
-        if (isScrollingToBottom && atBottom) {
+        if (isScrollingToBottomRef.current && atBottom) {
+          isScrollingToBottomRef.current = false;
           setIsScrollingToBottom(false);
         }
       }
@@ -64,21 +53,14 @@ export const useChatScroll = <T>({
         setUnreadCount(0);
       }
     },
-    [isScrollingToBottom],
+    [],
   );
 
   const scrollToBottom = useCallback(() => {
-    const currentLength = messagesLengthRef.current;
-    if (currentLength === 0) {
-      return;
-    }
-
+    isScrollingToBottomRef.current = true;
     setIsScrollingToBottom(true);
 
-    void flashListRef.current?.scrollToIndex({
-      index: currentLength - 1,
-      animated: true,
-    });
+    flashListRef.current?.scrollToEnd({ animated: true });
 
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
@@ -88,33 +70,27 @@ export const useChatScroll = <T>({
       isAtBottomRef.current = true;
       setIsAtBottom(true);
       setUnreadCount(0);
+      isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
-    }, 150);
+    }, 300);
   }, [flashListRef]);
 
   const handleContentSizeChange = useCallback(() => {
-    // Don't auto-scroll if user has scrolled away or if we're already scrolling
-    if (!isAtBottomRef.current || isScrollingToBottom) {
+    if (isScrollingToBottomRef.current) {
       return;
     }
 
-    // Clear any existing timeout
-    if (contentSizeTimeoutRef.current) {
-      clearTimeout(contentSizeTimeoutRef.current);
+    const wasRecentlyAtBottom =
+      Date.now() - lastAtBottomTimeRef.current < BOTTOM_GRACE_MS;
+
+    if (!isAtBottomRef.current && !wasRecentlyAtBottom) {
+      return;
     }
 
-    contentSizeTimeoutRef.current = setTimeout(() => {
-      const currentLength = messagesLengthRef.current;
-      if (currentLength === 0) {
-        return;
-      }
-
-      void flashListRef.current?.scrollToIndex({
-        index: currentLength - 1,
-        animated: false,
-      });
-    }, 10);
-  }, [flashListRef, isScrollingToBottom]);
+    isAtBottomRef.current = true;
+    lastAtBottomTimeRef.current = Date.now();
+    flashListRef.current?.scrollToEnd({ animated: false });
+  }, [flashListRef]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);
@@ -123,9 +99,6 @@ export const useChatScroll = <T>({
   const cleanup = useCallback(() => {
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
-    }
-    if (contentSizeTimeoutRef.current) {
-      clearTimeout(contentSizeTimeoutRef.current);
     }
   }, []);
 

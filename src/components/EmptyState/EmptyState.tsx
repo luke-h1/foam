@@ -9,9 +9,9 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Button, ButtonProps } from '../Button';
-import { SafeAreaViewFixed } from '../SafeAreaViewFixed';
-import { Text } from '../Text';
+import { Button, ButtonProps } from '../Button/Button';
+import { SafeAreaViewFixed } from '../SafeAreaViewFixed/SafeAreaViewFixed';
+import { Text } from '../Text/Text';
 
 interface EmptyStatePresetItem {
   imageSource: ImageProps['source'];

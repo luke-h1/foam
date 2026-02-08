@@ -59,9 +59,9 @@ export type WebSocketHookReturn<T = WebSocketEventMap['message']> = {
   getWebSocket: () => WebSocket;
 };
 
-// code from typescript/lib/lib.dom.d.ts
-// It is useful when using react-native with typescript.
-// Or you can add dom libarary as `lib: ["esnext" ,"dom"]` in tsconfig.json
+type WebSocketCloseEvent = CloseEvent;
+type WebSocketErrorEvent = Event;
+type WebSocketMessageEvent = MessageEvent;
 
 export type WebSocketEventMap = {
   close: WebSocketCloseEvent;

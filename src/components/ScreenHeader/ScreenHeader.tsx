@@ -1,4 +1,4 @@
-import { ThemeColor } from '@app/styles';
+import { ThemeColor } from '@app/styles/colors';
 import { ColorScale } from '@app/styles/util/createPallete';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,9 +6,9 @@ import { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
-import { IconButton } from '../IconButton';
-import { Image } from '../Image';
-import { Text, TextType, TextWeight } from '../Text';
+import { IconButton } from '../IconButton/IconButton';
+import { Image } from '../Image/Image';
+import { Text, TextType, TextWeight } from '../Text/Text';
 
 type NestedColorPath = `${ThemeColor}.${ColorScale | 'contrast'}`;
 

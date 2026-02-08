@@ -1,6 +1,6 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { SanitisedEmote } from '@app/types/emote';
 
-export const bttvSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
+export const bttvSanitisedGlobalEmoteSet: SanitisedEmote[] = [
   {
     name: ':tf:',
     id: '54fa8f1401e468494b85b537',

@@ -7,11 +7,11 @@ import * as Clipboard from 'expo-clipboard';
 import { View, SectionListRenderItem } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
-import { BrandIcon } from '../../BrandIcon';
-import { Button } from '../../Button';
-import { Icon } from '../../Icon';
-import { Image } from '../../Image';
-import { Text } from '../../Text';
+import { BrandIcon } from '../../BrandIcon/BrandIcon';
+import { Button } from '../../Button/Button';
+import { Icon } from '../../Icon/Icon';
+import { Image } from '../../Image/Image';
+import { Text } from '../../Text/Text';
 
 interface EmoteAction {
   title: string;

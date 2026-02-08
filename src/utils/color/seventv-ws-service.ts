@@ -1,5 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
+import { EmoteSetKind } from '@app/graphql/generated/gql';
 import {
   CosmeticCreateCallbackData,
   CosmeticUpdateCallbackData,
@@ -8,11 +9,11 @@ import {
   EntitlementUpdateCallbackData,
   EntitlementDeleteCallbackData,
 } from '@app/hooks/useSeventvWs';
+import type { SanitisedEmote, SevenTvSite } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 import {
   StvUser,
   SevenTvEmote,
-  SanitisiedEmoteSet,
   SevenTvHost,
 } from '../../services/seventv-service';
 import { IndexedCollection } from '../../services/ws/util/indexedCollection';
@@ -64,7 +65,6 @@ export type SevenTvColor = number;
 export interface PaintShadow {
   /**
    * The shadow color as a 7TV packed RGBA integer.
-   * @see {@link SevenTvColor} for the color format specification.
    */
   color: SevenTvColor;
 
@@ -332,31 +332,31 @@ export interface EntitlementCreate {
 }
 
 export interface SevenTvEventMap {
-  // Cosmetic events
+  // Cosmetics
   'cosmetic.create': CosmeticCreate;
   'cosmetic.update': ChangeMap<CosmeticCreate>;
   'cosmetic.delete': { id: string };
   'cosmetic.*': CosmeticCreate | ChangeMap<CosmeticCreate> | { id: string };
 
-  // Emote set events
+  // emote sets
   'emote_set.create': EmoteSetCreate;
   'emote_set.update': ChangeMap<EmoteChange>;
   'emote_set.delete': { id: string };
   'emote_set.*': EmoteSetCreate | ChangeMap<EmoteChange> | { id: string };
 
-  // Emote events
+  // emotes
   'emote.create': SevenTvEmote;
   'emote.update': ChangeMap<SevenTvEmote>;
   'emote.delete': { id: string };
   'emote.*': SevenTvEmote | ChangeMap<SevenTvEmote> | { id: string };
 
-  // User events
+  // users
   'user.create': StvUser;
   'user.update': ChangeMap<EventObject | null, true>;
   'user.delete': { id: string };
   'user.*': StvUser | ChangeMap<EventObject | null, true> | { id: string };
 
-  // Entitlement events
+  // entitlements
   'entitlement.create': EntitlementCreate;
   'entitlement.update': ChangeMap<EntitlementCreate>;
   'entitlement.delete': { id: string };
@@ -587,8 +587,8 @@ export default class SevenTvWsService {
    */
   private static emoteUpdateCallback:
     | ((data: {
-        added: SanitisiedEmoteSet[];
-        removed: SanitisiedEmoteSet[];
+        added: SanitisedEmote[];
+        removed: SanitisedEmote[];
         channelId: string;
       }) => void)
     | null = null;
@@ -826,22 +826,20 @@ export default class SevenTvWsService {
     data: SevenTvEventData<'emote_set.update'>,
   ): void {
     try {
-      // Filter out historical events by checking if this is within the first few seconds of connection
-      // This helps filter out the initial historical events that come when first subscribing
       const timeSinceConnection =
         Date.now() - SevenTvWsService.connectionTimestamp;
 
-      const HISTORICAL_EVENT_BUFFER = 5000; // 2 seconds buffer
+      const BUFFER_PERIOD = 5000;
 
-      if (timeSinceConnection < HISTORICAL_EVENT_BUFFER) {
+      if (timeSinceConnection < BUFFER_PERIOD) {
         logger.stvWs.info(
-          '💚 Ignoring potential historical emote set update event (within buffer period)',
+          '💚 Ignoring potential emote set update event (within buffer period)',
         );
         return;
       }
 
-      const addedEmotes: SanitisiedEmoteSet[] = [];
-      const removedEmotes: SanitisiedEmoteSet[] = [];
+      const addedEmotes: SanitisedEmote[] = [];
+      const removedEmotes: SanitisedEmote[] = [];
 
       const { body } = data;
 
@@ -851,25 +849,50 @@ export default class SevenTvWsService {
       if (body.pushed) {
         body.pushed.forEach(emote => {
           const emote4x =
-            emote.value.data.host.files.find(file => file.name === '4x.avif') ||
-            emote.value.data.host.files.find(file => file.name === '3x.avif') ||
-            emote.value.data.host.files.find(file => file.name === '2x.avif') ||
-            emote.value.data.host.files.find(file => file.name === '1x.avif');
+            emote.value.data.host.files.find(
+              (file: { name: string }) => file.name === '4x.avif',
+            ) ||
+            emote.value.data.host.files.find(
+              (file: { name: string }) => file.name === '3x.avif',
+            ) ||
+            emote.value.data.host.files.find(
+              (file: { name: string }) => file.name === '2x.avif',
+            ) ||
+            emote.value.data.host.files.find(
+              (file: { name: string }) => file.name === '1x.avif',
+            );
 
           addedEmotes.push({
-            name: emote.value.name,
+            name: emote.value.data.name,
             id: emote.value.id,
             url: `https://cdn.7tv.app/emote/${emote.value.id}/${emote4x?.name ?? '1x.avif'}`,
-            flags: emote.value.data.flags,
             original_name: emote.value.data.name,
             creator:
               (emote.value.data.owner?.display_name ||
                 emote.value.data.owner?.username) ??
               'UNKNOWN',
             emote_link: `https://7tv.app/emotes/${emote.value.id}`,
-            site: '7TV Channel Emote',
-            height: emote4x?.height,
-            width: emote4x?.width,
+            site: '7TV Channel' as SevenTvSite,
+            frame_count: emote4x?.frame_count ?? 1,
+            format: emote4x?.format ?? 'avif',
+            flags: emote.value.data.flags,
+            aspect_ratio:
+              emote4x && emote4x.height > 0
+                ? emote4x.width / emote4x.height
+                : 1,
+            // eslint-disable-next-line no-bitwise
+            zero_width: Boolean(emote.value.data.flags & 256),
+            width: emote4x?.width ?? 0,
+            height: emote4x?.height ?? 0,
+            set_metadata: {
+              setId: '',
+              setName: '',
+              capacity: null,
+              ownerId: null,
+              kind: 'NORMAL' as EmoteSetKind,
+              updatedAt: new Date().toISOString(),
+              totalCount: 0, // todo see if we can get this
+            },
             actor: body.actor,
           });
         });
@@ -880,15 +903,48 @@ export default class SevenTvWsService {
 
         Object.values(body.pulled).forEach(emote => {
           if (emote && emote.old_value) {
+            const oldEmote4x =
+              emote.old_value.data.host.files.find(
+                (file: { name: string }) => file.name === '4x.avif',
+              ) ||
+              emote.old_value.data.host.files.find(
+                (file: { name: string }) => file.name === '3x.avif',
+              ) ||
+              emote.old_value.data.host.files.find(
+                (file: { name: string }) => file.name === '2x.avif',
+              ) ||
+              emote.old_value.data.host.files.find(
+                (file: { name: string }) => file.name === '1x.avif',
+              );
+
             removedEmotes.push({
               name: emote.old_value.data.name,
               id: emote.old_value.id,
               url: `https://cdn.7tv.app/emote/${emote.old_value.id}/1x.avif`,
               flags: 0,
               original_name: emote.old_value.data.name,
-              creator: emote.old_value.data.owner?.display_name,
+              creator: emote.old_value.data.owner?.display_name ?? null,
               emote_link: `https://7tv.app/emotes/${emote.old_value.id}`,
-              site: '7TV Channel Emote',
+              site: '7TV Channel' as SevenTvSite,
+              frame_count: oldEmote4x?.frame_count ?? 1,
+              format: oldEmote4x?.format ?? 'avif',
+              aspect_ratio:
+                oldEmote4x && oldEmote4x.height > 0 && oldEmote4x.width > 0
+                  ? oldEmote4x.width / oldEmote4x.height
+                  : 1,
+              // eslint-disable-next-line no-bitwise
+              zero_width: Boolean(emote.old_value.data.flags & 256),
+              width: oldEmote4x?.width ?? 0,
+              height: oldEmote4x?.height ?? 0,
+              set_metadata: {
+                setId: '',
+                setName: '',
+                capacity: null,
+                ownerId: null,
+                kind: 'NORMAL' as EmoteSetKind,
+                updatedAt: new Date().toISOString(),
+                totalCount: 0,
+              },
               actor: body.actor,
             });
           }
@@ -900,17 +956,11 @@ export default class SevenTvWsService {
           `💚 Processing emote set update: +${addedEmotes.length} -${removedEmotes.length} emotes`,
         );
 
-        /**
-         * Fire callback so we can update the emote set
-         * in our context
-         */
-        if (SevenTvWsService.emoteUpdateCallback) {
-          SevenTvWsService.emoteUpdateCallback({
-            added: addedEmotes,
-            removed: removedEmotes,
-            channelId: SevenTvWsService.twitchChannelId || '',
-          });
-        }
+        SevenTvWsService.emoteUpdateCallback?.({
+          added: addedEmotes,
+          removed: removedEmotes,
+          channelId: SevenTvWsService.twitchChannelId || '',
+        });
       }
     } catch (error) {
       logger.stvWs.error('Error handling emote set update:', error);
@@ -923,12 +973,10 @@ export default class SevenTvWsService {
     try {
       const { body } = data;
 
-      if (SevenTvWsService.cosmeticCreateCallback) {
-        SevenTvWsService.cosmeticCreateCallback({
-          cosmetic: body,
-          kind: body.object.kind,
-        });
-      }
+      SevenTvWsService.cosmeticCreateCallback?.({
+        cosmetic: body,
+        kind: body.object.kind,
+      });
     } catch (e) {
       logger.stvWs.error('Error handling cosmetic create:', e);
     }
@@ -954,7 +1002,6 @@ export default class SevenTvWsService {
         }
       }
 
-      // Check pushed values
       if (!kind && body.pushed) {
         // eslint-disable-next-line no-restricted-syntax
         for (const push of body.pushed) {
@@ -967,12 +1014,10 @@ export default class SevenTvWsService {
         }
       }
 
-      if (SevenTvWsService.cosmeticUpdateCallback) {
-        SevenTvWsService.cosmeticUpdateCallback({
-          changes: body,
-          kind,
-        });
-      }
+      SevenTvWsService.cosmeticUpdateCallback?.({
+        changes: body,
+        kind,
+      });
     } catch (e) {
       logger.stvWs.error('Error handling cosmetic update:', e);
     }
@@ -984,11 +1029,9 @@ export default class SevenTvWsService {
     try {
       const { body } = data;
 
-      if (SevenTvWsService.cosmeticDeleteCallback) {
-        SevenTvWsService.cosmeticDeleteCallback({
-          cosmeticId: body.id,
-        });
-      }
+      SevenTvWsService.cosmeticDeleteCallback?.({
+        cosmeticId: body.id,
+      });
     } catch (e) {
       logger.stvWs.error('Error handling cosmetic delete:', e);
     }
@@ -1042,19 +1085,18 @@ export default class SevenTvWsService {
       if (kind === 'PAINT' && entitlement.object.ref_id) {
         paintId = entitlement.object.ref_id;
       }
+
       if (kind === 'BADGE' && entitlement.object.ref_id) {
         badgeId = entitlement.object.ref_id;
       }
 
-      if (SevenTvWsService.entitlementCreateCallback) {
-        SevenTvWsService.entitlementCreateCallback({
-          entitlement,
-          kind,
-          ttvUserId,
-          paintId,
-          badgeId,
-        });
-      }
+      SevenTvWsService.entitlementCreateCallback?.({
+        entitlement,
+        kind,
+        ttvUserId,
+        paintId,
+        badgeId,
+      });
     } catch (e) {
       logger.stvWs.error('Error handling entitlement create:', e);
     }
@@ -1152,14 +1194,12 @@ export default class SevenTvWsService {
         }
       }
 
-      if (SevenTvWsService.entitlementUpdateCallback) {
-        SevenTvWsService.entitlementUpdateCallback({
-          changes: body,
-          ttvUserId,
-          paintId,
-          badgeId,
-        });
-      }
+      SevenTvWsService.entitlementUpdateCallback?.({
+        changes: body,
+        ttvUserId,
+        paintId,
+        badgeId,
+      });
     } catch (e) {
       logger.stvWs.error('Error handling entitlement update:', e);
     }
@@ -1172,12 +1212,10 @@ export default class SevenTvWsService {
       const { body } = data;
       const entitlementId = body.id;
 
-      if (SevenTvWsService.entitlementDeleteCallback) {
-        SevenTvWsService.entitlementDeleteCallback({
-          entitlementId,
-          ttvUserId: null,
-        });
-      }
+      SevenTvWsService.entitlementDeleteCallback?.({
+        entitlementId,
+        ttvUserId: null,
+      });
     } catch (e) {
       logger.stvWs.error('Error handling entitlement delete:', e);
     }
@@ -1238,7 +1276,6 @@ export default class SevenTvWsService {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    // Subscribe to all entitlement events if twitchChannelId is available
     if (SevenTvWsService.twitchChannelId) {
       // Subscribe to entitlement.create
       const subscribeEntitlementCreateMessage: SevenTvWsMessage<
@@ -1333,9 +1370,7 @@ export default class SevenTvWsService {
       // logger.stvWs.info('💚 Subscribed to emote_set.update events');
     }
 
-    // Subscribe to all cosmetic events if twitchChannelId is available
     if (SevenTvWsService.twitchChannelId) {
-      // Subscribe to cosmetic.create
       const subscribeCosmeticCreateMessage: SevenTvWsMessage<
         never,
         'cosmetic.create'
@@ -1356,7 +1391,6 @@ export default class SevenTvWsService {
         JSON.stringify(subscribeCosmeticCreateMessage),
       );
 
-      // Subscribe to cosmetic.update
       const subscribeCosmeticUpdateMessage: SevenTvWsMessage<
         never,
         'cosmetic.update'
@@ -1375,7 +1409,6 @@ export default class SevenTvWsService {
         JSON.stringify(subscribeCosmeticUpdateMessage),
       );
 
-      // Subscribe to cosmetic.delete
       const subscribeCosmeticDeleteMessage: SevenTvWsMessage<
         never,
         'cosmetic.delete'
@@ -1400,12 +1433,7 @@ export default class SevenTvWsService {
     }
   }
 
-  /**
-   * Send subscription payload for a specific emote set
-   */
   private static sendSubscription(emoteSetId: string): void {
-    // logger.stvWs.info(`💚 Attempting to subscribe to emote set: ${emoteSetId}`);
-
     if (!SevenTvWsService.isConnected()) {
       logger.stvWs.warn(
         '💚 Cannot subscribe - SevenTV WebSocket not connected',
@@ -1463,9 +1491,6 @@ export default class SevenTvWsService {
     }
   }
 
-  /**
-   * Unsubscribe from a specific emote set
-   */
   private static unsubscribeFromEmoteSet(emoteSetId: string): void {
     const unsubscribeMessage: SevenTvWsMessage<never, 'emote_set.update'> = {
       op: 36,
@@ -1487,9 +1512,6 @@ export default class SevenTvWsService {
     }
   }
 
-  /**
-   * Subscribe to a channel's emote set
-   */
   public static subscribeToChannel(emoteSetId: string): void {
     // Check if already subscribed to this emote set
     if (SevenTvWsService.activeSubscriptions.has(emoteSetId)) {
@@ -1520,9 +1542,6 @@ export default class SevenTvWsService {
     logger.stvWs.info(`💚 Set current emote set: ${emoteSetId}`);
   }
 
-  /**
-   * Unsubscribe from current channel's emote set
-   */
   public static unsubscribeFromChannel(): void {
     if (SevenTvWsService.currentEmoteSetId && SevenTvWsService.isConnected()) {
       SevenTvWsService.unsubscribeFromEmoteSet(
@@ -1537,14 +1556,11 @@ export default class SevenTvWsService {
     logger.stvWs.info('💚 Cleared current emote set');
   }
 
-  /**
-   * Set the emote update callback
-   */
   public static setEmoteUpdateCallback(
     callback:
       | ((data: {
-          added: SanitisiedEmoteSet[];
-          removed: SanitisiedEmoteSet[];
+          added: SanitisedEmote[];
+          removed: SanitisedEmote[];
           channelId: string;
         }) => void)
       | null,
@@ -1552,63 +1568,42 @@ export default class SevenTvWsService {
     SevenTvWsService.emoteUpdateCallback = callback;
   }
 
-  /**
-   * Set the cosmetic create callback
-   */
   public static setCosmeticCreateCallback(
     callback: ((data: CosmeticCreateCallbackData) => void) | null,
   ): void {
     SevenTvWsService.cosmeticCreateCallback = callback;
   }
 
-  /**
-   * Set the cosmetic update callback
-   */
   public static setCosmeticUpdateCallback(
     callback: ((data: CosmeticUpdateCallbackData) => void) | null,
   ): void {
     SevenTvWsService.cosmeticUpdateCallback = callback;
   }
 
-  /**
-   * Set the cosmetic delete callback
-   */
   public static setCosmeticDeleteCallback(
     callback: ((data: CosmeticDeleteCallbackData) => void) | null,
   ): void {
     SevenTvWsService.cosmeticDeleteCallback = callback;
   }
 
-  /**
-   * Set the entitlement create callback
-   */
   public static setEntitlementCreateCallback(
     callback: ((data: EntitlementCreateCallbackData) => void) | null,
   ): void {
     SevenTvWsService.entitlementCreateCallback = callback;
   }
 
-  /**
-   * Set the entitlement update callback
-   */
   public static setEntitlementUpdateCallback(
     callback: ((data: EntitlementUpdateCallbackData) => void) | null,
   ): void {
     SevenTvWsService.entitlementUpdateCallback = callback;
   }
 
-  /**
-   * Set the entitlement delete callback
-   */
   public static setEntitlementDeleteCallback(
     callback: ((data: EntitlementDeleteCallbackData) => void) | null,
   ): void {
     SevenTvWsService.entitlementDeleteCallback = callback;
   }
 
-  /**
-   * Remove event listener for a given channel
-   */
   public static disconnect(): void {
     if (SevenTvWsService.instance) {
       SevenTvWsService.instance.close(1000, 'Manual Disconnect');
@@ -1666,17 +1661,11 @@ export default class SevenTvWsService {
     }
   }
 
-  /**
-   * Set the Twitch channel ID for entitlement subscriptions
-   */
   public static setTwitchChannelId(channelId: string): void {
     SevenTvWsService.twitchChannelId = channelId;
     logger.stvWs.info(`💚 Set Twitch channel ID: ${channelId}`);
   }
 
-  /**
-   * Set the SevenTV emote set ID for emote set subscriptions
-   */
   public static setSevenTVemoteSetId(emoteSetId: string): void {
     SevenTvWsService.sevenTVemoteSetId = emoteSetId;
     logger.stvWs.info(`💚 Set SevenTV emote set ID: ${emoteSetId}`);

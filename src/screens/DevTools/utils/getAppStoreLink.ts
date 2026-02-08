@@ -1,4 +1,5 @@
 import { storageService } from '@app/services/storage-service';
+import { fetch } from 'expo/fetch';
 
 export async function getAppStoreLink(bundleId: string) {
   // Check cache first

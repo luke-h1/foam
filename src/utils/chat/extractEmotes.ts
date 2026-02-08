@@ -1,9 +1,9 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { TwitchSanitisedEmote } from '@app/types/emote';
 
 export const extractEmotes = (
   emotes: Record<string, string[]> | undefined,
   message: string,
-): SanitisiedEmoteSet[] => {
+): TwitchSanitisedEmote[] => {
   if (!emotes) return [];
   const graphemes = [...message];
   return Object.entries(emotes).flatMap(([emoteId, positions]) =>

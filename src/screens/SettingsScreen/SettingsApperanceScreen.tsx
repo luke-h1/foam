@@ -1,6 +1,6 @@
-import { Menu, MenuItem } from '@app/components/Menu';
-import { ScreenHeader } from '@app/components/ScreenHeader';
-import { Slider } from '@app/components/Slider';
+import { Menu, MenuItem } from '@app/components/Menu/Menu';
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { Slider } from '@app/components/Slider/Slider';
 import { Preferences, usePreferences } from '@app/store/preferenceStore';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';

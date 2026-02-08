@@ -1,8 +1,8 @@
 import { NAMESPACE } from '@app/services/storage-service';
-import { Theme } from '@app/styles';
+import { Theme } from '@app/styles/themes';
 import { StateCreator, create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { zustandStorage } from './util';
+import { zustandStorage } from './util/zustardStorage';
 
 const PREFERENCE_STORAGE_KEY = `${NAMESPACE}_PREFERENCES`;
 

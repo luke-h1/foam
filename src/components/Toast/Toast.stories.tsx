@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
 import RNToast from 'react-native-toast-message';
-import { Button } from '../Button';
-import { Text } from '../Text';
+import { Button } from '../Button/Button';
+import { Text } from '../Text/Text';
 import { Toast } from './Toast';
 
 const meta = {

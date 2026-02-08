@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable camelcase */
+import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { ChatMessageType } from '@app/store/chatStore';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
@@ -99,9 +100,25 @@ describe('ChatMessage', () => {
               name: 'TestEmote',
               url: 'https://example.com/emote.png',
               original_name: 'TestEmote',
-              site: '7tv',
+              site: '7TV Channel',
               creator: null,
               emote_link: '',
+              frame_count: 1,
+              format: 'avif',
+              flags: 0,
+              aspect_ratio: 1,
+              zero_width: false,
+              width: 128,
+              height: 128,
+              set_metadata: {
+                setId: '',
+                setName: '',
+                capacity: null,
+                ownerId: null,
+                kind: 'NORMAL' as EmoteSetKind,
+                updatedAt: '',
+                totalCount: 0,
+              },
             },
           },
         },
@@ -125,9 +142,25 @@ describe('ChatMessage', () => {
               name: 'TestEmote',
               url: 'https://example.com/emote.png',
               original_name: 'TestEmote',
-              site: '7tv',
+              site: '7TV Channel',
               creator: null,
               emote_link: '',
+              frame_count: 1,
+              format: 'avif',
+              flags: 0,
+              aspect_ratio: 1,
+              zero_width: false,
+              width: 128,
+              height: 128,
+              set_metadata: {
+                setId: '',
+                setName: '',
+                capacity: null,
+                ownerId: null,
+                kind: 'NORMAL' as EmoteSetKind,
+                updatedAt: '',
+                totalCount: 0,
+              },
             },
           },
         },
@@ -260,7 +293,7 @@ describe('ChatMessage', () => {
       expect(queryByText('↳')).toBeNull();
     });
 
-    it('should render minimalist reply indicator without body preview', () => {
+    it('should render reply indicator with truncated body preview', () => {
       const replyBody = 'This is the original message content';
       const message = createMockMessage(
         [{ type: 'text', content: 'This is a reply' }],
@@ -271,15 +304,13 @@ describe('ChatMessage', () => {
         },
       );
 
-      const { getByText, queryByText } = render(
+      const { getByText } = render(
         <ChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      // The reply indicator should show "↳ @username" (minimalist)
       expect(getByText('↳')).toBeTruthy();
       expect(getByText('@OriginalUser')).toBeTruthy();
-      // The reply body should NOT be shown in the minimalist indicator
-      expect(queryByText(/This is the original/)).toBeNull();
+      expect(getByText(replyBody)).toBeTruthy();
     });
   });
 
@@ -309,7 +340,7 @@ describe('ChatMessage', () => {
         name: 'Kappa',
         id: '25',
         url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
-        site: 'twitch',
+        site: 'Twitch Channel',
       };
 
       const message = createMockMessage([emoteData]);

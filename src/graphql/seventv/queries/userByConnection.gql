@@ -1,0 +1,12 @@
+query UserByConnection($platformId: String!) {
+  users {
+    userByConnection(platform: TWITCH, platformId: $platformId) {
+      id
+      emoteSets {
+        id
+        name
+        kind
+      }
+    }
+  }
+}

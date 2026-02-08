@@ -1,6 +1,6 @@
 import render from '@app/test/render';
 import { screen } from '@testing-library/react-native';
-import { LiveStreamImage } from '../LiveStreamImage';
+import { LiveStreamImage } from '../LiveStreamImage/LiveStreamImage';
 
 describe('LiveStreamImage', () => {
   const thumbnail = 'https://example.com/thumbnail.jpg';
