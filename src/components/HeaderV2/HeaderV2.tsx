@@ -4,8 +4,8 @@ import { UnistylesValues } from 'node_modules/react-native-unistyles/lib/typescr
 import { ReactNode } from 'react';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { IconButton } from '../IconButton';
-import { Text } from '../Text';
+import { IconButton } from '../IconButton/IconButton';
+import { Text } from '../Text/Text';
 
 export interface HeaderV2Props {
   back?: boolean;

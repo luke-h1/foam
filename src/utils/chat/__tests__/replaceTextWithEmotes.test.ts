@@ -1,15 +1,13 @@
-import {
-  sevenTvSanitisedChannelEmoteSetFixture,
-  seventvSanitiisedGlobalEmoteSetFixture,
-  twitchTvSanitisedEmoteSetChannelFixture,
-  twitchTvSanitisedEmoteSetGlobalFixture,
-  bttvSanitisedChannelEmoteSet,
-  bttvSanitisedGlobalEmoteSet,
-  ffzSanitisedChannelEmoteSet,
-  ffzSanitisedGlobalEmoteSet,
-} from '@app/services/__fixtures__';
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import { bttvSanitisedChannelEmoteSet } from '@app/services/__fixtures__/emotes/bttv/bttvSanitisedChannelEmoteSet.fixture';
+import { bttvSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/bttv/bttvSanitisedGlobalEmoteSet.fixture';
+import { ffzSanitisedChannelEmoteSet } from '@app/services/__fixtures__/emotes/ffz/ffzSanitisedChannelEmoteSet.fixture';
+import { ffzSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/ffz/ffzSanitisedGlobalEmoteSet.fixture';
+import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedChannelEmoteSet.fixture';
+import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
+import { twitchTvSanitisedEmoteSetChannelFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetChannel.fixture';
+import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart, replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
 /**
@@ -17,14 +15,14 @@ import { ParsedPart, replaceTextWithEmotes } from '../replaceTextWithEmotes';
  */
 describe.skip('replaceTextWithEmotesV2', () => {
   const defaultEmoteSets: {
-    ffzChannelEmotes: SanitisiedEmoteSet[];
-    ffzGlobalEmotes: SanitisiedEmoteSet[];
-    sevenTvChannelEmotes: SanitisiedEmoteSet[];
-    sevenTvGlobalEmotes: SanitisiedEmoteSet[];
-    twitchChannelEmotes: SanitisiedEmoteSet[];
-    twitchGlobalEmotes: SanitisiedEmoteSet[];
-    bttvChannelEmotes: SanitisiedEmoteSet[];
-    bttvGlobalEmotes: SanitisiedEmoteSet[];
+    ffzChannelEmotes: SanitisedEmote[];
+    ffzGlobalEmotes: SanitisedEmote[];
+    sevenTvChannelEmotes: SanitisedEmote[];
+    sevenTvGlobalEmotes: SanitisedEmote[];
+    twitchChannelEmotes: SanitisedEmote[];
+    twitchGlobalEmotes: SanitisedEmote[];
+    bttvChannelEmotes: SanitisedEmote[];
+    bttvGlobalEmotes: SanitisedEmote[];
   } = {
     ffzChannelEmotes: ffzSanitisedChannelEmoteSet,
     ffzGlobalEmotes: ffzSanitisedGlobalEmoteSet,
@@ -87,6 +85,40 @@ describe.skip('replaceTextWithEmotesV2', () => {
 
   test.skip('should handle mentions with emotes', () => {});
 
+  test('should match emotes case-sensitively', () => {
+    const result = replaceTextWithEmotes({
+      inputString: 'kappa KAPPA Kappa',
+      ...defaultEmoteSets,
+      userstate: defaultUserState as UserStateTags,
+    });
+
+    expect(result).toEqual<ParsedPart[]>([
+      {
+        content: 'kappa',
+        type: 'text',
+      },
+      {
+        content: ' ',
+        type: 'text',
+      },
+      {
+        content: 'KAPPA',
+        type: 'text',
+      },
+      {
+        content: ' ',
+        type: 'text',
+      },
+      {
+        content: 'Kappa',
+        height: undefined,
+        type: 'emote',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
+        width: undefined,
+      },
+    ]);
+  });
+
   test('should handle emojis', () => {
     const result = replaceTextWithEmotes({
       inputString: 'Hello 😊 World',
@@ -97,6 +129,20 @@ describe.skip('replaceTextWithEmotesV2', () => {
     expect(result).toEqual<ParsedPart[]>([
       { type: 'text', content: 'Hello' },
       { type: 'text', content: '😊' },
+      { type: 'text', content: 'World' },
+    ]);
+  });
+
+  test('should filter out replacement character (encoding issues)', () => {
+    // U+FFFD is the unicode replacement character (�) for invalid/malformed text
+    const result = replaceTextWithEmotes({
+      inputString: 'Hello \uFFFD World',
+      ...defaultEmoteSets,
+      userstate: defaultUserState as UserStateTags,
+    });
+
+    expect(result).toEqual<ParsedPart[]>([
+      { type: 'text', content: 'Hello' },
       { type: 'text', content: 'World' },
     ]);
   });

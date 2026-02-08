@@ -7,8 +7,8 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 import { StyleSheet } from 'react-native-unistyles';
-import { Button } from '../Button';
-import { Icon } from '../Icon';
+import { Button } from '../Button/Button';
+import { Icon } from '../Icon/Icon';
 
 const SWITCH_WIDTH = 40;
 const SWITCH_THUMB_SIZE = 20;

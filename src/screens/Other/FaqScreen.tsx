@@ -1,4 +1,4 @@
-import { Text } from '@app/components/Text';
+import { Text } from '@app/components/Text/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 

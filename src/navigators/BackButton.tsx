@@ -1,4 +1,4 @@
-import { Icon } from '@app/components/Icon';
+import { Icon } from '@app/components/Icon/Icon';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 
 // Component which implements a back button for the navigation bar

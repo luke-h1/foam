@@ -1,8 +1,8 @@
-import { Icon } from '@app/components/Icon';
-import { Image } from '@app/components/Image';
-import { Modal } from '@app/components/Modal';
-import { PressableArea } from '@app/components/PressableArea';
-import { Text } from '@app/components/Text';
+import { Icon } from '@app/components/Icon/Icon';
+import { Image } from '@app/components/Image/Image';
+import { Modal } from '@app/components/Modal/Modal';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { resetRoot } from '@app/navigators/navigationUtilities';

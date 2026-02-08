@@ -3,9 +3,9 @@ import { ListRenderItem } from '@shopify/flash-list';
 import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { Button } from '../Button';
-import { FlashList } from '../FlashList';
-import { Text } from '../Text';
+import { Button } from '../Button/Button';
+import { FlashList } from '../FlashList/FlashList';
+import { Text } from '../Text/Text';
 
 interface Props {
   results: string[];

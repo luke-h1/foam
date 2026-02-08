@@ -1,6 +1,6 @@
-import { Menu } from '@app/components/Menu';
-import { PressableArea } from '@app/components/PressableArea';
-import { Text } from '@app/components/Text';
+import { Menu } from '@app/components/Menu/Menu';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { Text } from '@app/components/Text/Text';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
@@ -8,7 +8,7 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { BuildStatus } from './components';
+import { BuildStatus } from './components/BuildStatus';
 
 export function SettingsIndexScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();

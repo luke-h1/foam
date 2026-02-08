@@ -1,4 +1,4 @@
-import { ScreenHeader } from '@app/components/ScreenHeader';
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { ProfileCard } from './components/profile/ProfileCard';

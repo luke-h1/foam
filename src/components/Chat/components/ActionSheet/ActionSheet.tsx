@@ -1,6 +1,6 @@
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { Text } from '@app/components/Text/Text';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';

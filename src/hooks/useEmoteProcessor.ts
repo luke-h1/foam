@@ -1,58 +1,44 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { SanitisedEmote } from '@app/types/emote';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useCallback } from 'react';
-import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
 interface UseEmoteProcessorParams {
-  sevenTvGlobalEmotes: SanitisiedEmoteSet[];
-  sevenTvChannelEmotes: SanitisiedEmoteSet[];
-  twitchGlobalEmotes: SanitisiedEmoteSet[];
-  twitchChannelEmotes: SanitisiedEmoteSet[];
-  ffzChannelEmotes: SanitisiedEmoteSet[];
-  ffzGlobalEmotes: SanitisiedEmoteSet[];
-  bttvChannelEmotes: SanitisiedEmoteSet[];
-  bttvGlobalEmotes: SanitisiedEmoteSet[];
+  sevenTvGlobalEmotes: SanitisedEmote[];
+  sevenTvChannelEmotes: SanitisedEmote[];
+  sevenTvPersonalEmotes?: SanitisedEmote[];
+  twitchGlobalEmotes: SanitisedEmote[];
+  twitchChannelEmotes: SanitisedEmote[];
+  ffzChannelEmotes: SanitisedEmote[];
+  ffzGlobalEmotes: SanitisedEmote[];
+  bttvChannelEmotes: SanitisedEmote[];
+  bttvGlobalEmotes: SanitisedEmote[];
 }
 
 export const useEmoteProcessor = (params: UseEmoteProcessorParams) => {
-  const processingQueue = useSharedValue<ParsedPart[]>([]);
-  const isProcessing = useSharedValue(false);
-
   const processEmotes = useCallback(
     (
       inputString: string,
       userstate: UserStateTags | null,
       onComplete: (result: ParsedPart[]) => void,
+      sevenTvPersonalEmotes?: SanitisedEmote[],
     ) => {
-      if (isProcessing.value) {
-        // If already processing, queue the request
-        return;
-      }
-
-      isProcessing.value = true;
-
       const processParams = {
         inputString,
         userstate,
         ...params,
+        sevenTvPersonalEmotes: sevenTvPersonalEmotes || [],
       };
 
       const result = processEmotesWorklet(processParams);
 
-      processingQueue.value = result;
-
-      runOnJS(onComplete)(result);
-
-      isProcessing.value = false;
+      onComplete(result);
     },
-    [params, processingQueue, isProcessing],
+    [params],
   );
 
   return {
     processEmotes,
-    processingQueue,
-    isProcessing,
   };
 };

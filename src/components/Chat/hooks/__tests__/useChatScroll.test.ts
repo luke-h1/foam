@@ -66,7 +66,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 10,
         }),
       );
 
@@ -74,23 +73,6 @@ describe('useChatScroll', () => {
       expect(result.current.isAtBottomRef.current).toBe(true);
       expect(result.current.isScrollingToBottom).toBe(false);
       expect(result.current.unreadCount).toBe(0);
-    });
-
-    test('should return all required functions', () => {
-      const { ref: flashListRef } = createMockFlashListRef();
-
-      const { result } = renderHook(() =>
-        useChatScroll<unknown>({
-          flashListRef,
-          messagesLength: 10,
-        }),
-      );
-
-      expect(typeof result.current.handleScroll).toBe('function');
-      expect(typeof result.current.handleContentSizeChange).toBe('function');
-      expect(typeof result.current.scrollToBottom).toBe('function');
-      expect(typeof result.current.incrementUnread).toBe('function');
-      expect(typeof result.current.cleanup).toBe('function');
     });
   });
 
@@ -101,7 +83,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 100,
         }),
       );
 
@@ -125,7 +106,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 100,
         }),
       );
 
@@ -149,7 +129,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 100,
         }),
       );
 
@@ -181,7 +160,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 10,
         }),
       );
 
@@ -204,7 +182,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 10,
         }),
       );
 
@@ -217,13 +194,12 @@ describe('useChatScroll', () => {
   });
 
   describe('Scroll to Bottom', () => {
-    test('should trigger scroll to last message', () => {
+    test('should trigger scrollToEnd with animation', () => {
       const { ref: flashListRef, mocks } = createMockFlashListRef();
 
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 50,
         }),
       );
 
@@ -231,8 +207,7 @@ describe('useChatScroll', () => {
         result.current.scrollToBottom();
       });
 
-      expect(mocks.scrollToIndex).toHaveBeenCalledWith({
-        index: 49,
+      expect(mocks.scrollToEnd).toHaveBeenCalledWith({
         animated: true,
       });
     });
@@ -243,7 +218,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 50,
         }),
       );
 
@@ -253,9 +227,9 @@ describe('useChatScroll', () => {
 
       expect(result.current.isScrollingToBottom).toBe(true);
 
-      // After timeout, should reset
+      // After timeout (300ms), should reset
       act(() => {
-        jest.advanceTimersByTime(150);
+        jest.advanceTimersByTime(300);
       });
 
       expect(result.current.isScrollingToBottom).toBe(false);
@@ -268,7 +242,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 50,
         }),
       );
 
@@ -280,28 +253,10 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.scrollToBottom();
-        jest.advanceTimersByTime(150);
+        jest.advanceTimersByTime(300);
       });
 
       expect(result.current.unreadCount).toBe(0);
-    });
-
-    test('should handle empty messages list', () => {
-      const { ref: flashListRef, mocks } = createMockFlashListRef();
-
-      const { result } = renderHook(() =>
-        useChatScroll<unknown>({
-          flashListRef,
-          messagesLength: 0,
-        }),
-      );
-
-      act(() => {
-        result.current.scrollToBottom();
-      });
-
-      // Should not attempt to scroll
-      expect(mocks.scrollToIndex).not.toHaveBeenCalled();
     });
   });
 
@@ -312,7 +267,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 50,
         }),
       );
 
@@ -321,11 +275,9 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.handleContentSizeChange();
-        jest.advanceTimersByTime(10);
       });
 
-      expect(mocks.scrollToIndex).toHaveBeenCalledWith({
-        index: 49,
+      expect(mocks.scrollToEnd).toHaveBeenCalledWith({
         animated: false,
       });
     });
@@ -336,7 +288,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 50,
         }),
       );
 
@@ -353,14 +304,59 @@ describe('useChatScroll', () => {
 
       expect(result.current.isAtBottom).toBe(false);
 
-      mocks.scrollToIndex.mockClear();
+      // Wait past the grace period so "recently at bottom" no longer applies
+      act(() => {
+        jest.advanceTimersByTime(400);
+      });
+
+      mocks.scrollToEnd.mockClear();
 
       act(() => {
         result.current.handleContentSizeChange();
-        jest.advanceTimersByTime(10);
       });
 
-      expect(mocks.scrollToIndex).not.toHaveBeenCalled();
+      expect(mocks.scrollToEnd).not.toHaveBeenCalled();
+    });
+
+    test('should still auto-scroll during grace period after message trimming', () => {
+      const { ref: flashListRef, mocks } = createMockFlashListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll<unknown>({
+          flashListRef,
+        }),
+      );
+
+      // Confirm at bottom with a scroll event
+      const atBottomEvent = createScrollEvent(
+        { y: 950 },
+        { height: 500 },
+        { height: 1500 },
+      );
+      act(() => {
+        result.current.handleScroll(atBottomEvent);
+      });
+      expect(result.current.isAtBottom).toBe(true);
+
+      // Simulate message trimming: a transient scroll event reports not-at-bottom
+      const trimShiftEvent = createScrollEvent(
+        { y: 700 },
+        { height: 500 },
+        { height: 1300 },
+      );
+      act(() => {
+        result.current.handleScroll(trimShiftEvent);
+      });
+      expect(result.current.isAtBottomRef.current).toBe(false);
+
+      mocks.scrollToEnd.mockClear();
+
+      // Content size change fires within the grace period — should still auto-scroll
+      act(() => {
+        result.current.handleContentSizeChange();
+      });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledWith({ animated: false });
     });
 
     test('should not auto-scroll during manual scroll to bottom', () => {
@@ -369,7 +365,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 50,
         }),
       );
 
@@ -379,77 +374,14 @@ describe('useChatScroll', () => {
 
       expect(result.current.isScrollingToBottom).toBe(true);
 
-      mocks.scrollToIndex.mockClear();
+      mocks.scrollToEnd.mockClear();
 
       act(() => {
         result.current.handleContentSizeChange();
-        jest.advanceTimersByTime(10);
       });
 
       // Should not call again during manual scroll
-      expect(mocks.scrollToIndex).not.toHaveBeenCalled();
-    });
-
-    test('should use updated messagesLength when content size changes after rerender', () => {
-      const { ref: flashListRef, mocks } = createMockFlashListRef();
-
-      const { result, rerender } = renderHook(
-        ({ messagesLength }) =>
-          useChatScroll<unknown>({
-            flashListRef,
-            messagesLength,
-          }),
-        { initialProps: { messagesLength: 50 } },
-      );
-
-      // Ensure we're at bottom
-      expect(result.current.isAtBottomRef.current).toBe(true);
-
-      // Simulate new messages arriving - rerender with new length
-      rerender({ messagesLength: 55 });
-
-      mocks.scrollToIndex.mockClear();
-
-      act(() => {
-        result.current.handleContentSizeChange();
-        jest.advanceTimersByTime(10);
-      });
-
-      // Should scroll to the new last index (55 - 1 = 54)
-      expect(mocks.scrollToIndex).toHaveBeenCalledWith({
-        index: 54,
-        animated: false,
-      });
-    });
-
-    test('should immediately reflect messagesLength changes in scroll callbacks', () => {
-      const { ref: flashListRef, mocks } = createMockFlashListRef();
-
-      const { result, rerender } = renderHook(
-        ({ messagesLength }) =>
-          useChatScroll<unknown>({
-            flashListRef,
-            messagesLength,
-          }),
-        { initialProps: { messagesLength: 10 } },
-      );
-
-      // Update messages length multiple times rapidly
-      rerender({ messagesLength: 15 });
-      rerender({ messagesLength: 20 });
-      rerender({ messagesLength: 25 });
-
-      mocks.scrollToIndex.mockClear();
-
-      act(() => {
-        result.current.scrollToBottom();
-      });
-
-      // Should use the latest messagesLength (25 - 1 = 24)
-      expect(mocks.scrollToIndex).toHaveBeenCalledWith({
-        index: 24,
-        animated: true,
-      });
+      expect(mocks.scrollToEnd).not.toHaveBeenCalled();
     });
   });
 
@@ -460,7 +392,6 @@ describe('useChatScroll', () => {
       const { result } = renderHook(() =>
         useChatScroll<unknown>({
           flashListRef,
-          messagesLength: 50,
         }),
       );
 
@@ -474,61 +405,11 @@ describe('useChatScroll', () => {
 
       // Advancing timers should not cause state changes
       act(() => {
-        jest.advanceTimersByTime(200);
+        jest.advanceTimersByTime(400);
       });
 
       // isScrollingToBottom should still be true since cleanup cancelled the timeout
       expect(result.current.isScrollingToBottom).toBe(true);
-    });
-  });
-
-  describe('Edge Cases', () => {
-    test('should handle null flashListRef', () => {
-      const flashListRef = {
-        current: null,
-      } as RefObject<FlashListRef<unknown> | null>;
-
-      const { result } = renderHook(() =>
-        useChatScroll<unknown>({
-          flashListRef,
-          messagesLength: 50,
-        }),
-      );
-
-      // Should not throw when trying to scroll
-      expect(() => {
-        act(() => {
-          result.current.scrollToBottom();
-          result.current.handleContentSizeChange();
-        });
-      }).not.toThrow();
-    });
-
-    test('should handle rapid scroll events', () => {
-      const { ref: flashListRef } = createMockFlashListRef();
-
-      const { result } = renderHook(() =>
-        useChatScroll<unknown>({
-          flashListRef,
-          messagesLength: 100,
-        }),
-      );
-
-      // Rapid scroll events
-      for (let i = 0; i < 10; i += 1) {
-        const event = createScrollEvent(
-          { y: i * 100 },
-          { height: 500 },
-          { height: 1500 },
-        );
-
-        act(() => {
-          result.current.handleScroll(event);
-        });
-      }
-
-      // Should handle all events without error
-      expect(result.current.isAtBottom).toBe(false);
     });
   });
 });

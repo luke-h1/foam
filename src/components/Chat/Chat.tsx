@@ -1,6 +1,5 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { useEmoteProcessor } from '@app/hooks/useEmoteProcessor';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { useTwitchWs } from '@app/hooks/useTwitchWs';
 import { sevenTvService } from '@app/services/seventv-service';
@@ -18,6 +17,7 @@ import {
   getSevenTvEmoteSetId,
   clearCache,
   abortCurrentLoad,
+  updateMessage,
   updateSevenTvEmotes,
   addPaint,
   getPaint,
@@ -32,10 +32,15 @@ import {
   removeBadge,
   removeUserBadge,
   clearPaints,
-  useUserPaints,
+  chatStore$,
+  getMessageColor,
   fetchAndCacheUserCosmetics,
+  fetchUserPersonalEmotes,
+  getUserPersonalEmotes,
+  clearPersonalEmotesCache,
 } from '@app/store/chatStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseBadges } from '@app/utils/chat/parseBadges';
@@ -48,7 +53,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import { FlashListRef, ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
-import { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { View, Platform, TextInput } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -56,9 +61,9 @@ import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 import { FlashList } from '../FlashList/FlashList';
 
-import { Text } from '../Text';
-import { ActionSheet } from './components/ActionSheet';
-import { BadgePreviewSheet } from './components/BadgePreviewSheet';
+import { Text } from '../Text/Text';
+import { ActionSheet } from './components/ActionSheet/ActionSheet';
+import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
 import {
@@ -67,7 +72,7 @@ import {
   BadgePressData,
   MessageActionData,
 } from './components/ChatMessage/ChatMessage';
-import { EmotePreviewSheet } from './components/EmotePreviewSheet';
+import { EmotePreviewSheet } from './components/EmotePreviewSheet/EmotePreviewSheet';
 import {
   EmoteSheet,
   EmotePickerItem,
@@ -92,7 +97,6 @@ import {
   createUserNoticeMessage,
   createSystemMessage,
 } from './util/messageHandlers';
-import { reprocessMessages } from './util/reprocessMessages';
 
 interface ChatProps {
   channelId: string;
@@ -105,8 +109,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const insets = useSafeAreaInsets();
   const messages = useMessages();
   const channelEmoteData = useChannelEmoteData(channelId);
-  const userPaints = useUserPaints();
-
   const hasPartedRef = useRef(false);
   const isMountedRef = useRef(true);
   const currentEmoteSetIdRef = useRef<string | null>(null);
@@ -178,10 +180,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       // Mark as fetching to prevent duplicate requests
       fetchedCosmeticsUsers.current.add(twitchUserId);
 
-      const existingUserPaint = userPaints[twitchUserId];
-      if (existingUserPaint) {
+      const existingPaintId = chatStore$.userPaintIds[twitchUserId]?.peek();
+      if (existingPaintId) {
         logger.stvWs.debug(
-          `User ${twitchUserId} already has paint: ${existingUserPaint.name}`,
+          `User ${twitchUserId} already has paint: ${existingPaintId}`,
         );
         return;
       }
@@ -207,7 +209,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         );
       }
     },
-    [userPaints, canFetchCosmetics],
+    [canFetchCosmetics],
   );
 
   const {
@@ -220,17 +222,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     enabled: true,
   });
 
-  const emoteProcessor = useEmoteProcessor({
-    sevenTvGlobalEmotes: channelEmoteData.sevenTvGlobalEmotes,
-    sevenTvChannelEmotes: channelEmoteData.sevenTvChannelEmotes,
-    twitchGlobalEmotes: channelEmoteData.twitchGlobalEmotes,
-    twitchChannelEmotes: channelEmoteData.twitchChannelEmotes,
-    ffzChannelEmotes: channelEmoteData.ffzChannelEmotes,
-    ffzGlobalEmotes: channelEmoteData.ffzGlobalEmotes,
-    bttvChannelEmotes: channelEmoteData.bttvChannelEmotes,
-    bttvGlobalEmotes: channelEmoteData.bttvGlobalEmotes,
-  });
-
   const {
     isAtBottom,
     isAtBottomRef,
@@ -238,9 +229,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     unreadCount,
     setUnreadCount,
     handleScroll,
+    handleContentSizeChange,
     scrollToBottom,
     cleanup: cleanupScroll,
-  } = useChatScroll({ flashListRef, messagesLength: messages.length });
+  } = useChatScroll({ flashListRef });
 
   const {
     handleNewMessage,
@@ -248,12 +240,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     cleanup: cleanupMessages,
   } = useChatMessages({
     isAtBottomRef,
-    isScrollingToBottom,
     onUnreadIncrement: useCallback(
       (count: number) => setUnreadCount(prev => prev + count),
       [setUnreadCount],
     ),
-    onAutoScroll: scrollToBottom,
   });
 
   const processMessageEmotes = useCallback(
@@ -261,9 +251,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       text: string,
       userstate: ReturnType<typeof createUserStateFromTags>,
       baseMessage: AnyChatMessageType,
+      userId?: string,
     ) => {
       const emoteData = getCurrentEmoteData(channelId);
-      if (!emoteData) return;
+      if (!emoteData) {
+        handleNewMessage(baseMessage);
+        return;
+      }
 
       const hasEmotes =
         emoteData.twitchGlobalEmotes.length > 0 ||
@@ -271,40 +265,95 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         emoteData.bttvGlobalEmotes.length > 0 ||
         emoteData.ffzGlobalEmotes.length > 0;
 
-      if (!hasEmotes) return;
+      if (!hasEmotes) {
+        handleNewMessage(baseMessage);
+        return;
+      }
 
-      emoteProcessor.processEmotes(
-        text.trimEnd(),
-        userstate,
-        replacedMessage => {
-          try {
-            const replacedBadges = findBadges({
-              userstate,
-              chatterinoBadges: emoteData.chatterinoBadges,
-              chatUsers: [],
-              ffzChannelBadges: emoteData.ffzChannelBadges,
-              ffzGlobalBadges: emoteData.ffzGlobalBadges,
-              twitchChannelBadges: emoteData.twitchChannelBadges,
-              twitchGlobalBadges: emoteData.twitchGlobalBadges,
-            });
+      const personalEmotes = userId
+        ? getUserPersonalEmotes(userId, channelId)
+        : [];
 
-            handleNewMessage({
-              ...baseMessage,
-              message: replacedMessage,
-              badges: replacedBadges,
-            });
-          } catch (error) {
-            logger.chat.error('Error processing emotes:', error);
-          }
-        },
-      );
+      try {
+        const replacedMessage = processEmotesWorklet({
+          inputString: text.trimEnd(),
+          userstate,
+          sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+          sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+          sevenTvPersonalEmotes: personalEmotes,
+          twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+          twitchChannelEmotes: emoteData.twitchChannelEmotes,
+          ffzChannelEmotes: emoteData.ffzChannelEmotes,
+          ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+          bttvChannelEmotes: emoteData.bttvChannelEmotes,
+          bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
+        });
+
+        const replacedBadges = findBadges({
+          userstate,
+          chatterinoBadges: emoteData.chatterinoBadges,
+          chatUsers: [],
+          ffzChannelBadges: emoteData.ffzChannelBadges,
+          ffzGlobalBadges: emoteData.ffzGlobalBadges,
+          twitchChannelBadges: emoteData.twitchChannelBadges,
+          twitchGlobalBadges: emoteData.twitchGlobalBadges,
+        });
+
+        handleNewMessage({
+          ...baseMessage,
+          message: replacedMessage,
+          badges: replacedBadges,
+        });
+      } catch (error) {
+        logger.chat.error('Error processing emotes:', error);
+        handleNewMessage(baseMessage);
+      }
     },
-    [channelId, emoteProcessor, handleNewMessage],
+    [channelId, handleNewMessage],
   );
 
   const reprocessAllMessages = useCallback(() => {
-    reprocessMessages(messages as AnyChatMessageType[], processMessageEmotes);
-  }, [messages, processMessageEmotes]);
+    const emoteData = getCurrentEmoteData(channelId);
+    if (!emoteData) return;
+
+    const messagesToReprocess = (messages as AnyChatMessageType[]).filter(
+      msg =>
+        msg.sender !== 'System' && !('notice_tags' in msg && msg.notice_tags),
+    );
+
+    messagesToReprocess.forEach(msg => {
+      const textContent = replaceEmotesWithText(msg.message);
+      if (!textContent.trim()) return;
+
+      const replacedMessage = processEmotesWorklet({
+        inputString: textContent.trimEnd(),
+        userstate: msg.userstate,
+        sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+        sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+        twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+        twitchChannelEmotes: emoteData.twitchChannelEmotes,
+        ffzChannelEmotes: emoteData.ffzChannelEmotes,
+        ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+        bttvChannelEmotes: emoteData.bttvChannelEmotes,
+        bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
+      });
+
+      const replacedBadges = findBadges({
+        userstate: msg.userstate,
+        chatterinoBadges: emoteData.chatterinoBadges,
+        chatUsers: [],
+        ffzChannelBadges: emoteData.ffzChannelBadges,
+        ffzGlobalBadges: emoteData.ffzGlobalBadges,
+        twitchChannelBadges: emoteData.twitchChannelBadges,
+        twitchGlobalBadges: emoteData.twitchGlobalBadges,
+      });
+
+      updateMessage(msg.message_id, msg.message_nonce, {
+        message: replacedMessage,
+        badges: replacedBadges,
+      });
+    });
+  }, [channelId, messages]);
 
   const onMessage = useCallback(
     (_channel: string, tags: Record<string, string>, text: string) => {
@@ -315,16 +364,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       const userId = tags['user-id'];
       if (userId) {
         void fetchUserCosmetics(userId);
+        void fetchUserPersonalEmotes(userId, channelId);
       }
 
       let parentColor: string | undefined;
       if (replyParentDisplayName?.trim()) {
         if (replyParentMessageId) {
-          const replyParent = messages.find(
-            m => m?.message_id === replyParentMessageId,
-          );
           parentColor =
-            replyParent?.userstate.color ||
+            getMessageColor(replyParentMessageId) ||
             generateRandomTwitchColor(replyParentDisplayName);
         } else {
           parentColor = generateRandomTwitchColor(replyParentDisplayName);
@@ -334,16 +381,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       const baseMessage = createBaseMessage({ tags, channelName, text });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
-      handleNewMessage(messageWithParentColor);
-      processMessageEmotes(text, userstate, messageWithParentColor);
+      processMessageEmotes(text, userstate, messageWithParentColor, userId);
     },
-    [
-      channelName,
-      fetchUserCosmetics,
-      handleNewMessage,
-      messages,
-      processMessageEmotes,
-    ],
+    [channelId, channelName, fetchUserCosmetics, processMessageEmotes],
   );
 
   const onUserNotice = useCallback(
@@ -434,7 +474,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         // stv_emote_added stv_emote_removed
       },
       onEvent: eventType => {
-        console.log(`SevenTV event: ${eventType}`);
+        logger.stvWs.debug(`SevenTV event: ${eventType}`);
       },
       onCosmeticCreate: data => {
         if (!data.cosmetic?.object) {
@@ -781,6 +821,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       clearChannelResources();
       clearTtvUsers();
       clearPaints();
+      clearPersonalEmotesCache();
       cosmeticsUsersSet.clear();
       clearMessages();
       clearLocalMessages();
@@ -801,15 +842,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   useEffect(() => {
     if (emoteLoadStatus !== 'success') return;
 
+    const emoteData = getCurrentEmoteData(channelId);
+    if (!emoteData) return;
+
     const hasEmotes =
-      channelEmoteData.sevenTvGlobalEmotes.length > 0 ||
-      channelEmoteData.sevenTvChannelEmotes.length > 0 ||
-      channelEmoteData.twitchGlobalEmotes.length > 0 ||
-      channelEmoteData.twitchChannelEmotes.length > 0 ||
-      channelEmoteData.bttvGlobalEmotes.length > 0 ||
-      channelEmoteData.bttvChannelEmotes.length > 0 ||
-      channelEmoteData.ffzGlobalEmotes.length > 0 ||
-      channelEmoteData.ffzChannelEmotes.length > 0;
+      emoteData.sevenTvGlobalEmotes.length > 0 ||
+      emoteData.sevenTvChannelEmotes.length > 0 ||
+      emoteData.twitchGlobalEmotes.length > 0 ||
+      emoteData.twitchChannelEmotes.length > 0 ||
+      emoteData.bttvGlobalEmotes.length > 0 ||
+      emoteData.bttvChannelEmotes.length > 0 ||
+      emoteData.ffzGlobalEmotes.length > 0 ||
+      emoteData.ffzChannelEmotes.length > 0;
 
     if (!hasEmotes || messages.length === 0) {
       return;
@@ -839,17 +883,37 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           .join('');
 
         if (textContent.trim()) {
-          processMessageEmotes(textContent, msg.userstate, msg);
+          const replacedMessage = processEmotesWorklet({
+            inputString: textContent.trimEnd(),
+            userstate: msg.userstate,
+            sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+            sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+            twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+            twitchChannelEmotes: emoteData.twitchChannelEmotes,
+            ffzChannelEmotes: emoteData.ffzChannelEmotes,
+            ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+            bttvChannelEmotes: emoteData.bttvChannelEmotes,
+            bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
+          });
+
+          const replacedBadges = findBadges({
+            userstate: msg.userstate,
+            chatterinoBadges: emoteData.chatterinoBadges,
+            chatUsers: [],
+            ffzChannelBadges: emoteData.ffzChannelBadges,
+            ffzGlobalBadges: emoteData.ffzGlobalBadges,
+            twitchChannelBadges: emoteData.twitchChannelBadges,
+            twitchGlobalBadges: emoteData.twitchGlobalBadges,
+          });
+
+          updateMessage(msg.message_id, msg.message_nonce, {
+            message: replacedMessage,
+            badges: replacedBadges,
+          });
         }
       });
     }
-  }, [
-    channelId,
-    channelEmoteData,
-    messages,
-    emoteLoadStatus,
-    processMessageEmotes,
-  ]);
+  }, [channelId, channelEmoteData, messages, emoteLoadStatus]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -941,7 +1005,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       parentColor: replyTo?.color,
     };
 
-    handleNewMessage(optimisticMessage);
     processMessageEmotes(messageText, optimisticUserstate, optimisticMessage);
 
     if (replyTo) {
@@ -970,7 +1033,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     sendMessage,
     isChatConnected,
     user,
-    handleNewMessage,
     getUserState,
     processMessageEmotes,
   ]);
@@ -1014,12 +1076,16 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const handleEmoteLongPress = useCallback((emote: EmotePressData) => {
     setSelectedEmote(emote);
-    emotePreviewSheetRef.current?.present();
+    requestAnimationFrame(() => {
+      emotePreviewSheetRef.current?.present();
+    });
   }, []);
 
   const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
     setSelectedBadge(badge);
-    badgePreviewSheetRef.current?.present();
+    requestAnimationFrame(() => {
+      badgePreviewSheetRef.current?.present();
+    });
   }, []);
 
   const handleMessageLongPress = useCallback(
@@ -1045,34 +1111,32 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     actionSheetRef.current?.dismiss();
   }, [selectedMessage]);
 
-  const getMentionColor = useCallback(
-    (username: string): string => {
-      const lowerUsername = username.toLowerCase();
+  const getMentionColor = useCallback((username: string): string => {
+    const lowerUsername = username.toLowerCase();
 
-      const cached = mentionColorCache.current.get(lowerUsername);
-      if (cached) return cached;
+    const cached = mentionColorCache.current.get(lowerUsername);
+    if (cached) return cached;
 
-      const mentionedUserMessage = messages.find(msg => {
-        const msgUsername = msg?.userstate.username?.toLowerCase();
-        const msgLogin = msg?.userstate.login?.toLowerCase();
-        const msgSender = msg?.sender?.toLowerCase();
-        return (
-          msgUsername === lowerUsername ||
-          msgLogin === lowerUsername ||
-          msgSender === lowerUsername
-        );
-      });
+    const currentMessages = chatStore$.messages.peek();
+    const mentionedUserMessage = currentMessages.find(msg => {
+      const msgUsername = msg?.userstate.username?.toLowerCase();
+      const msgLogin = msg?.userstate.login?.toLowerCase();
+      const msgSender = msg?.sender?.toLowerCase();
+      return (
+        msgUsername === lowerUsername ||
+        msgLogin === lowerUsername ||
+        msgSender === lowerUsername
+      );
+    });
 
-      const color =
-        mentionedUserMessage?.userstate.color ||
-        generateRandomTwitchColor(username);
+    const color =
+      mentionedUserMessage?.userstate.color ||
+      generateRandomTwitchColor(username);
 
-      mentionColorCache.current.set(lowerUsername, color);
+    mentionColorCache.current.set(lowerUsername, color);
 
-      return color;
-    },
-    [messages],
-  );
+    return color;
+  }, []);
 
   const parseTextForEmotes = useCallback(
     (text: string): ParsedPart[] => {
@@ -1089,13 +1153,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       if (!hasEmotes) return [{ type: 'text', content: text }];
 
-      let result: ParsedPart[] = [{ type: 'text', content: text }];
-      emoteProcessor.processEmotes(text.trimEnd(), null, parsedParts => {
-        result = parsedParts;
+      return processEmotesWorklet({
+        inputString: text.trimEnd(),
+        userstate: null,
+        sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+        sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+        twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+        twitchChannelEmotes: emoteData.twitchChannelEmotes,
+        ffzChannelEmotes: emoteData.ffzChannelEmotes,
+        ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+        bttvChannelEmotes: emoteData.bttvChannelEmotes,
+        bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
       });
-      return result;
     },
-    [channelId, emoteProcessor],
+    [channelId],
   );
 
   const handleTestMessage = useCallback(
@@ -1133,15 +1204,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [channelId]);
 
-  const deduplicatedMessages = useMemo(() => {
-    const messageMap = new Map<string, AnyChatMessageType>();
-    messages.forEach(message => {
-      const key = `${message?.message_id}_${message?.message_nonce}`;
-      messageMap.set(key, message as AnyChatMessageType);
-    });
-    return Array.from(messageMap.values());
-  }, [messages]);
-
   const renderItem: ListRenderItem<AnyChatMessageType> = useCallback(
     ({ item: msg }) => (
       <ChatMessage
@@ -1163,7 +1225,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onMessageLongPress={handleMessageLongPress}
         getMentionColor={getMentionColor}
         parseTextForEmotes={parseTextForEmotes}
-        userPaints={userPaints}
         // @ts-expect-error - notice_tags having issues being narrowed down
         notice_tags={
           'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
@@ -1177,7 +1238,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       handleMessageLongPress,
       getMentionColor,
       parseTextForEmotes,
-      userPaints,
     ],
   );
 
@@ -1198,7 +1258,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <View style={styles.chatContainer}>
-          {!connected && deduplicatedMessages.length === 0 && (
+          {!connected && messages.length === 0 && (
             <View style={styles.connectingContainer}>
               <Text style={styles.connectingText}>
                 Connecting to {channelName}&apos;s chat...
@@ -1207,15 +1267,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           )}
 
           <FlashList
-            data={deduplicatedMessages}
+            data={messages as AnyChatMessageType[]}
             ref={flashListRef}
             keyExtractor={keyExtractor}
             onScroll={handleScroll}
+            onContentSizeChange={handleContentSizeChange}
             renderItem={renderItem}
             removeClippedSubviews={false}
             contentInsetAdjustmentBehavior="automatic"
             drawDistance={500}
-            extraData={userPaints}
             overrideItemLayout={(layout, msg) => {
               const messageLength = msg.message?.length || 0;
               layout.span = Math.max(

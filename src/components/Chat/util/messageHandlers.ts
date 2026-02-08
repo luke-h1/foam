@@ -10,6 +10,7 @@ import {
   createViewerMilestonePart,
 } from '@app/utils/chat/formatSubscriptionNotice';
 import { parseBadges } from '@app/utils/chat/parseBadges';
+import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import omit from 'lodash/omit';
 
@@ -67,7 +68,7 @@ export const createBaseMessage = ({
     sender: userstate.username || '',
     parentDisplayName: tags['reply-parent-display-name'] || '',
     replyDisplayName: tags['reply-parent-user-login'] || '',
-    replyBody: tags['reply-parent-msg-body'] || '',
+    replyBody: unescapeIrcTag(tags['reply-parent-msg-body'] || ''),
     parentColor: undefined,
   };
 };
@@ -123,7 +124,11 @@ export const createUserNoticeMessage = ({
         ? tags['reply-parent-display-name']
         : '',
     replyDisplayName: tags['reply-parent-user-login'] || '',
-    replyBody: tags['reply-parent-msg-body'] || '',
+    replyBody: unescapeIrcTag(
+      typeof tags['reply-parent-msg-body'] === 'string'
+        ? tags['reply-parent-msg-body']
+        : '',
+    ),
     ...omit(userstate, 'message'),
   };
 

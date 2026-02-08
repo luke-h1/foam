@@ -1,5 +1,5 @@
-import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/Text/Text';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { formatDate } from '@app/utils/date-time/date';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';

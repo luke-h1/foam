@@ -1,5 +1,5 @@
+import type { BttvSanitisedEmote } from '@app/types/emote';
 import { bttvCachedApi } from './api';
-import { SanitisiedEmoteSet } from './seventv-service';
 
 export interface BttvEmote {
   id: string;
@@ -34,10 +34,10 @@ interface BttvChannelEmoteSet {
 const bttvZeroWidthEmotes = ['cvHazmat', 'cvMask'];
 
 export const bttvEmoteService = {
-  getSanitisedGlobalEmotes: async (): Promise<SanitisiedEmoteSet[]> => {
+  getSanitisedGlobalEmotes: async (): Promise<BttvSanitisedEmote[]> => {
     const result = await bttvCachedApi.get<BttvEmote[]>('/emotes/global');
 
-    const sanitisedSet = result.map<SanitisiedEmoteSet>(emote => ({
+    const sanitisedSet = result.map<BttvSanitisedEmote>(emote => ({
       name: emote.code,
       id: emote.id,
       url: `https://cdn.betterttv.net/emote/${emote.id}/3x`,
@@ -53,12 +53,12 @@ export const bttvEmoteService = {
 
   getSanitisedChannelEmotes: async (
     twitchChannelId: string,
-  ): Promise<SanitisiedEmoteSet[]> => {
+  ): Promise<BttvSanitisedEmote[]> => {
     const result = await bttvCachedApi.get<BttvChannelEmoteSet>(
       `/users/twitch/${twitchChannelId}`,
     );
 
-    const sharedEmotes = result.sharedEmotes.map<SanitisiedEmoteSet>(emote => ({
+    const sharedEmotes = result.sharedEmotes.map<BttvSanitisedEmote>(emote => ({
       name: emote.code,
       id: emote.id,
       url: `https://cdn.betterttv.net/emote/${emote.id}/3x`,
@@ -68,7 +68,7 @@ export const bttvEmoteService = {
       site: 'BTTV',
     }));
 
-    const channelEmotes = result.channelEmotes.map<SanitisiedEmoteSet>(
+    const channelEmotes = result.channelEmotes.map<BttvSanitisedEmote>(
       emote => ({
         name: emote.code,
         id: emote.id,

@@ -1,5 +1,5 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { useCurrentEmoteData, useEmojis } from '@app/store/chatStore';
+import type { SanitisedEmote } from '@app/types/emote';
 import { useMemo } from 'react';
 
 interface UseEmoteSuggestionsProps {
@@ -41,7 +41,7 @@ export function useEmoteSuggestions({
       ...emojis,
     ];
 
-    const emoteMap = new Map<string, SanitisiedEmoteSet>();
+    const emoteMap = new Map<string, SanitisedEmote>();
 
     globalEmotes.forEach(emote => {
       if (emote && emote.name) {
@@ -98,7 +98,7 @@ export function useEmoteSuggestions({
       return [];
     }
 
-    const results: SanitisiedEmoteSet[] = [];
+    const results: SanitisedEmote[] = [];
     const maxResults = maxSuggestions;
 
     // eslint-disable-next-line no-restricted-syntax

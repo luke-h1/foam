@@ -1,4 +1,5 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import { EmoteSetKind } from '@app/graphql/generated/gql';
+import type { SanitisedEmote } from '@app/types/emote';
 import {
   CosmeticCreate,
   EntitlementCreate,
@@ -23,8 +24,8 @@ export type {
 };
 
 interface EmoteUpdateCallbackData {
-  added: SanitisiedEmoteSet[];
-  removed: SanitisiedEmoteSet[];
+  added: SanitisedEmote[];
+  removed: SanitisedEmote[];
   channelId: string;
 }
 
@@ -159,13 +160,13 @@ export function useSeventvWs(
           }
         }
 
-        const addedEmotes: SanitisiedEmoteSet[] = [];
-        const removedEmotes: SanitisiedEmoteSet[] = [];
+        const addedEmotes: SanitisedEmote[] = [];
+        const removedEmotes: SanitisedEmote[] = [];
         const { body } = data;
 
         if (body.pushed) {
           body.pushed.forEach(emote => {
-            const emoteUrl =
+            const emote4x =
               emote.value.data.host.files.find(
                 file => file.name === '4x.avif',
               ) ||
@@ -180,17 +181,34 @@ export function useSeventvWs(
             addedEmotes.push({
               name: emote.value.name,
               id: emote.value.id,
-              url: `https://cdn.7tv.app/emote/${emote.value.id}/${emoteUrl?.name ?? '1x.avif'}`,
-              flags: emote.value.data.flags,
+              url: `https://cdn.7tv.app/emote/${emote.value.id}/${emote4x?.name ?? '1x.avif'}`,
               original_name: emote.value.data.name,
               creator:
                 (emote.value.data.owner?.display_name ||
                   emote.value.data.owner?.username) ??
                 'UNKNOWN',
               emote_link: `https://7tv.app/emotes/${emote.value.id}`,
-              site: '7TV Channel Emote',
-              height: emoteUrl?.height,
-              width: emoteUrl?.width,
+              site: '7TV Channel' as const,
+              frame_count: emote4x?.frame_count ?? 1,
+              format: emote4x?.format ?? 'avif',
+              flags: emote.value.data.flags,
+              aspect_ratio:
+                emote4x && emote4x.height > 0
+                  ? emote4x.width / emote4x.height
+                  : 1,
+              // eslint-disable-next-line no-bitwise
+              zero_width: Boolean(emote.value.data.flags & 256),
+              width: emote4x?.width ?? 0,
+              height: emote4x?.height ?? 0,
+              set_metadata: {
+                setId: '',
+                setName: '',
+                capacity: null,
+                ownerId: null,
+                kind: EmoteSetKind.Normal,
+                updatedAt: new Date().toISOString(),
+                totalCount: 0,
+              },
               actor: body.actor,
             });
           });
@@ -199,15 +217,47 @@ export function useSeventvWs(
         if (body.pulled) {
           body.pulled.forEach(emote => {
             if (emote && emote.old_value) {
+              const oldEmote4x =
+                emote.old_value.data.host.files.find(
+                  file => file.name === '4x.avif',
+                ) ||
+                emote.old_value.data.host.files.find(
+                  file => file.name === '3x.avif',
+                ) ||
+                emote.old_value.data.host.files.find(
+                  file => file.name === '2x.avif',
+                ) ||
+                emote.old_value.data.host.files.find(
+                  file => file.name === '1x.avif',
+                );
+
               removedEmotes.push({
                 name: emote.old_value.data.name,
                 id: emote.old_value.id,
                 url: `https://cdn.7tv.app/emote/${emote.old_value.id}/1x.avif`,
                 flags: 0,
                 original_name: emote.old_value.data.name,
-                creator: emote.old_value.data.owner?.display_name,
+                creator: emote.old_value.data.owner?.display_name ?? null,
                 emote_link: `https://7tv.app/emotes/${emote.old_value.id}`,
-                site: '7TV Channel Emote',
+                site: '7TV Channel' as const,
+                frame_count: oldEmote4x?.frame_count ?? 1,
+                format: oldEmote4x?.format ?? 'avif',
+                aspect_ratio: oldEmote4x
+                  ? oldEmote4x.width / oldEmote4x.height
+                  : 1,
+                // eslint-disable-next-line no-bitwise
+                zero_width: Boolean(emote.old_value.data.flags & 256),
+                width: oldEmote4x?.width ?? 0,
+                height: oldEmote4x?.height ?? 0,
+                set_metadata: {
+                  setId: '',
+                  setName: '',
+                  capacity: null,
+                  ownerId: null,
+                  kind: EmoteSetKind.Normal,
+                  updatedAt: new Date().toISOString(),
+                  totalCount: 0,
+                },
                 actor: body.actor,
               });
             }

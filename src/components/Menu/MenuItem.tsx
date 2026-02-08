@@ -6,11 +6,11 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { BrandIcon } from '../BrandIcon';
-import { Icon } from '../Icon';
-import { Image } from '../Image';
-import { Switch } from '../Switch';
-import { Text } from '../Text';
+import { BrandIcon } from '../BrandIcon/BrandIcon';
+import { Icon } from '../Icon/Icon';
+import { Image } from '../Image/Image';
+import { Switch } from '../Switch/Switch';
+import { Text } from '../Text/Text';
 import { SheetItem } from '../sheets/SheetItem';
 import { SheetModal } from '../sheets/SheetModal';
 import { type Icon as IconType, type MenuItem } from './Menu';

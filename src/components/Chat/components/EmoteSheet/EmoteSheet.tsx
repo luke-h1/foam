@@ -1,9 +1,9 @@
-import { BrandIcon, BrandIconName } from '@app/components/BrandIcon';
-import { Button } from '@app/components/Button';
-import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import { BrandIcon, BrandIconName } from '@app/components/BrandIcon/BrandIcon';
+import { Button } from '@app/components/Button/Button';
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/Text/Text';
 import { useCurrentEmoteData, getCachedEmoteUri } from '@app/store/chatStore';
+import type { SanitisedEmote } from '@app/types/emote';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
@@ -25,7 +25,7 @@ const EMOTE_SIZE = 44;
 const CATEGORY_HEIGHT = 48;
 const ROW_HEIGHT = EMOTE_SIZE + 4; // emote size + padding
 
-export type EmotePickerItem = string | SanitisiedEmoteSet;
+export type EmotePickerItem = string | SanitisedEmote;
 
 type EmoteSectionIcon = BrandIconName | `emoji:${string}`;
 
@@ -414,9 +414,7 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         const firstSection = sections[0];
         if (firstSection && firstSection.data.length > 0) {
           const emotesToPreload = firstSection.data
-            .filter(
-              (item): item is SanitisiedEmoteSet => typeof item === 'object',
-            )
+            .filter((item): item is SanitisedEmote => typeof item === 'object')
             .slice(0, GRID_COLUMNS * 3); // Preload first 3 rows
 
           emotesToPreload.forEach(emote => {

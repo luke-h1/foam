@@ -7,8 +7,8 @@ import { SharedValue, useAnimatedReaction } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { scheduleOnUI } from 'react-native-worklets';
-import { Button } from '../Button';
-import { Text } from '../Text';
+import { Button } from '../Button/Button';
+import { Text } from '../Text/Text';
 
 export interface BottomSheetModalPickerProps<TOption extends string> {
   value: TOption;

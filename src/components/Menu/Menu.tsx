@@ -2,10 +2,10 @@ import { SFSymbol } from 'expo-symbols';
 import { ReactElement } from 'react';
 import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { BrandIconName } from '../BrandIcon';
-import { FlashList, FlashListProps } from '../FlashList';
-import { RefreshControl } from '../RefreshControl';
-import { Text } from '../Text';
+import { BrandIconName } from '../BrandIcon/BrandIcon';
+import { FlashList, FlashListProps } from '../FlashList/FlashList';
+import { RefreshControl } from '../RefreshControl/RefreshControl';
+import { Text } from '../Text/Text';
 import { MenuItem } from './MenuItem';
 
 export type Item = MenuItem | string | null | (() => ReactElement);

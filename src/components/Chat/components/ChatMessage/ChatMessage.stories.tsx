@@ -133,7 +133,7 @@ export const WithEmotes: Story = {
         name: 'Kappa',
         id: '25',
         url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
-        site: 'twitch',
+        site: 'Twitch Channel',
       },
       {
         type: 'text',
@@ -146,7 +146,7 @@ export const WithEmotes: Story = {
         name: 'PogChamp',
         id: '305954156',
         url: 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/1.0',
-        site: 'twitch',
+        site: 'Twitch Channel',
       },
       {
         type: 'text',
@@ -555,7 +555,7 @@ export const ComplexMessage: Story = {
           name: 'PogChamp',
           id: '305954156',
           url: 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/1.0',
-          site: 'twitch',
+          site: 'Twitch Channel',
         },
         {
           type: 'text',

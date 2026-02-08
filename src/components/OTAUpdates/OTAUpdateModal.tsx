@@ -1,6 +1,6 @@
-import { Button } from '@app/components/Button';
+import { Button } from '@app/components/Button/Button';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
-import { Text } from '@app/components/Text';
+import { Text } from '@app/components/Text/Text';
 import { OTAUpdateState } from '@app/hooks/useOTAUpdates';
 import { nativeApplicationVersion, nativeBuildVersion } from 'expo-application';
 import { Modal as RNModal, View } from 'react-native';

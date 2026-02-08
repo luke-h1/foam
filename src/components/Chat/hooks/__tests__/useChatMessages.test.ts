@@ -47,9 +47,7 @@ describe('useChatMessages', () => {
 
   const defaultOptions = {
     isAtBottomRef: { current: true },
-    isScrollingToBottom: false,
     onUnreadIncrement: jest.fn(),
-    onAutoScroll: jest.fn(),
   };
 
   beforeEach(() => {
@@ -68,7 +66,6 @@ describe('useChatMessages', () => {
       expect(typeof result.current.handleNewMessage).toBe('function');
       expect(typeof result.current.clearLocalMessages).toBe('function');
       expect(typeof result.current.cleanup).toBe('function');
-      expect(result.current.messagesRef.current).toEqual([]);
     });
   });
 
@@ -151,76 +148,6 @@ describe('useChatMessages', () => {
     });
   });
 
-  describe('Auto-scroll Behavior', () => {
-    test('should trigger auto-scroll when at bottom', () => {
-      const onAutoScroll = jest.fn();
-      const { result } = renderHook(() =>
-        useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
-          onAutoScroll,
-        }),
-      );
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(15);
-      });
-
-      // Auto-scroll should be called with setTimeout(..., 0)
-      act(() => {
-        jest.advanceTimersByTime(1);
-      });
-
-      expect(onAutoScroll).toHaveBeenCalled();
-    });
-
-    test('should not auto-scroll when not at bottom', () => {
-      const onAutoScroll = jest.fn();
-      const { result } = renderHook(() =>
-        useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: false },
-          onAutoScroll,
-        }),
-      );
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(15);
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(1);
-      });
-
-      expect(onAutoScroll).not.toHaveBeenCalled();
-    });
-
-    test('should not auto-scroll when scrolling to bottom', () => {
-      const onAutoScroll = jest.fn();
-      const { result } = renderHook(() =>
-        useChatMessages({
-          ...defaultOptions,
-          isAtBottomRef: { current: true },
-          isScrollingToBottom: true,
-          onAutoScroll,
-        }),
-      );
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(15);
-      });
-
-      act(() => {
-        jest.advanceTimersByTime(1);
-      });
-
-      expect(onAutoScroll).not.toHaveBeenCalled();
-    });
-  });
-
   describe('Unread Count', () => {
     test('should increment unread when not at bottom', () => {
       const onUnreadIncrement = jest.fn();
@@ -257,57 +184,6 @@ describe('useChatMessages', () => {
       });
 
       expect(onUnreadIncrement).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Local Message Management', () => {
-    test('should track messages in messagesRef', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        result.current.handleNewMessage(createMockMessage('2'));
-        jest.advanceTimersByTime(15);
-      });
-
-      expect(result.current.messagesRef.current).toHaveLength(2);
-    });
-
-    test('should clear local messages', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
-
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(15);
-      });
-
-      expect(result.current.messagesRef.current).toHaveLength(1);
-
-      act(() => {
-        result.current.clearLocalMessages();
-      });
-
-      expect(result.current.messagesRef.current).toHaveLength(0);
-    });
-
-    test('should limit messages to MAX_MESSAGES (500)', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
-
-      // Add 550 messages
-      act(() => {
-        for (let i = 0; i < 550; i += 1) {
-          result.current.handleNewMessage(createMockMessage(`${i}`));
-          if ((i + 1) % 3 === 0) {
-            // Process batch every 3 messages
-            jest.advanceTimersByTime(0);
-          }
-        }
-        jest.advanceTimersByTime(15);
-      });
-
-      expect(result.current.messagesRef.current.length).toBeLessThanOrEqual(
-        500,
-      );
     });
   });
 
@@ -368,9 +244,6 @@ describe('useChatMessages', () => {
       });
 
       expect(mockAddMessages).toHaveBeenCalledTimes(2);
-
-      // Messages should accumulate in messagesRef
-      expect(result.current.messagesRef.current).toHaveLength(2);
     });
   });
 });

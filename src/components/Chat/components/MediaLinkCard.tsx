@@ -1,9 +1,9 @@
-import { BrandIcon } from '@app/components/BrandIcon';
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { Image } from '@app/components/Image';
-import { Skeleton } from '@app/components/Skeleton';
-import { Text } from '@app/components/Text';
+import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { Image } from '@app/components/Image/Image';
+import { Skeleton } from '@app/components/Skeleton/Skeleton';
+import { Text } from '@app/components/Text/Text';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
 import {
@@ -36,7 +36,6 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
       {
         queryKey: ['twitchClip', url],
         queryFn: () => {
-          console.log('url ->', url);
           const twitchClipMatch = url.match(TWITCH_CLIP_REGEX);
           const twitchChannelClipMatch = url.match(TWITCH_CHANNEL_CLIP_REGEX);
           const clipId =
@@ -58,8 +57,6 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
         return null;
     }
   };
-
-  console.log('type ->', type);
 
   if (
     (type === 'stvEmote' && sevenTvEmote.isPending) ||
@@ -91,8 +88,8 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
 
   const createdBy =
     type === 'stvEmote'
-      ? sevenTvEmote.data?.owner.display_name ||
-        sevenTvEmote.data?.owner.username
+      ? sevenTvEmote.data?.owner?.display_name ||
+        sevenTvEmote.data?.owner?.username
       : twitchClip.data?.creator_name;
 
   return (

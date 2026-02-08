@@ -1,7 +1,7 @@
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { Text } from '@app/components/Text';
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { Text } from '@app/components/Text/Text';
+import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import {
   createHitslop,
@@ -27,7 +27,7 @@ export interface ReplyToData {
 interface ChatInputSectionProps {
   messageInput: string;
   onChangeText: (text: string) => void;
-  onEmoteSelect: (emote: SanitisiedEmoteSet) => void;
+  onEmoteSelect: (emote: SanitisedEmote) => void;
   onFocus: () => void;
   onBlur: () => void;
   onSubmit: () => void;
@@ -60,7 +60,7 @@ export const ChatInputSection = memo(
     const containerRef = useRef<View>(null);
 
     const handleEmoteSelect = useCallback(
-      (emote: SanitisiedEmoteSet) => {
+      (emote: SanitisedEmote) => {
         onEmoteSelect(emote);
       },
       [onEmoteSelect],

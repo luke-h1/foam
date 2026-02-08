@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { Text } from '../Text';
+import { Text } from '../Text/Text';
 
 type TextBoxProps = Pick<
   TextInputProps,

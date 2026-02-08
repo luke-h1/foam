@@ -1,4 +1,4 @@
-import { Text } from '@app/components/Text';
+import { Text } from '@app/components/Text/Text';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { useMemo } from 'react';

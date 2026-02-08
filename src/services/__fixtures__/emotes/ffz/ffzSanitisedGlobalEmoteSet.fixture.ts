@@ -1,6 +1,6 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { SanitisedEmote } from '@app/types/emote';
 
-export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
+export const ffzSanitisedGlobalEmoteSet: SanitisedEmote[] = [
   {
     name: 'ZrehplaR',
     id: '9',
@@ -9,6 +9,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'YooHoo',
@@ -18,6 +21,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'ManChicken',
@@ -27,6 +33,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'BeanieHipster',
@@ -36,6 +45,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'CatBag',
@@ -45,6 +57,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'ZreknarF',
@@ -54,6 +69,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'LilZ',
@@ -63,6 +81,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'ZliL',
@@ -72,6 +93,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'LaterSooner',
@@ -81,6 +105,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'BORT',
@@ -90,6 +117,9 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
   {
     name: 'BibleThump',
@@ -99,5 +129,8 @@ export const ffzSanitisedGlobalEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'UNKNOWN',
     site: 'Global FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
 ];

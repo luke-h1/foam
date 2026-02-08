@@ -1,7 +1,9 @@
-import { ScreenSuspense } from '@app/components/ScreenSuspense';
 import { useAuthContext } from '@app/context/AuthContext';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
 import { CategoryScreen } from '@app/screens/CategoryScreen';
+import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
+import { LoginScreen } from '@app/screens/LoginScreen';
+import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
 import {
   DarkTheme,
   DefaultTheme,
@@ -11,83 +13,22 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import { ComponentProps, lazy, useMemo } from 'react';
+import NewRelic from 'newrelic-react-native-agent';
+import { ComponentProps, useCallback, useMemo } from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { DevToolsParamList } from './DevToolsStackNavigator';
 import { OtherStackParamList } from './OtherStackNavigator';
 import type { PreferenceStackParamList } from './PreferenceStackNavigator';
+import { PreferenceStackNavigator } from './PreferenceStackNavigator';
 import type { StreamStackParamList } from './StreamStackNavigator';
+import { StreamStackNavigator } from './StreamStackNavigator';
 import { TabNavigator, TabParamList } from './TabNavigator';
 import type { TopStackParamList } from './TopStackNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
 import { BaseConfig } from './config';
 import { linking } from './linking';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
-
-const LazyChatScreen = lazy(() =>
-  import('@app/screens/ChatScreen/ChatScreen').then(m => ({
-    default: m.ChatScreen,
-  })),
-);
-const LazyLoginScreen = lazy(() =>
-  import('@app/screens/LoginScreen').then(m => ({ default: m.LoginScreen })),
-);
-const LazyStorybookScreen = lazy(() =>
-  import('@app/screens/StorybookScreen/StorybookScreen').then(m => ({
-    default: m.StorybookScreen,
-  })),
-);
-const LazyStreamStackNavigator = lazy(() =>
-  import('./StreamStackNavigator').then(m => ({
-    default: m.StreamStackNavigator,
-  })),
-);
-const LazyPreferenceStackNavigator = lazy(() =>
-  import('./PreferenceStackNavigator').then(m => ({
-    default: m.PreferenceStackNavigator,
-  })),
-);
-
-function ChatScreen(props: AppStackScreenProps<'Chat'>) {
-  return (
-    <ScreenSuspense>
-      <LazyChatScreen {...props} />
-    </ScreenSuspense>
-  );
-}
-
-function LoginScreen() {
-  return (
-    <ScreenSuspense>
-      <LazyLoginScreen />
-    </ScreenSuspense>
-  );
-}
-
-function StorybookScreen() {
-  return (
-    <ScreenSuspense>
-      <LazyStorybookScreen />
-    </ScreenSuspense>
-  );
-}
-
-function StreamStackNavigator() {
-  return (
-    <ScreenSuspense>
-      <LazyStreamStackNavigator />
-    </ScreenSuspense>
-  );
-}
-
-function PreferenceStackNavigator() {
-  return (
-    <ScreenSuspense>
-      <LazyPreferenceStackNavigator />
-    </ScreenSuspense>
-  );
-}
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator as
@@ -216,12 +157,23 @@ export const AppNavigator = (props: NavigationProps) => {
     };
   }, [colorScheme]);
 
+  const { onStateChange: externalOnStateChange, ...restProps } = props;
+
+  const handleStateChange = useCallback(
+    (state: Parameters<NonNullable<NavigationProps['onStateChange']>>[0]) => {
+      NewRelic.onStateChange(state);
+      externalOnStateChange?.(state);
+    },
+    [externalOnStateChange],
+  );
+
   return (
     <NavigationContainer<AppStackParamList>
       ref={navigationRef}
       theme={navTheme}
       linking={linking}
-      {...props}
+      onStateChange={handleStateChange}
+      {...restProps}
     >
       <View style={styles.container}>
         <AppStack />

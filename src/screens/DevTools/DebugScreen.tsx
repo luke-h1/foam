@@ -1,8 +1,8 @@
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { Switch } from '@app/components/Switch';
-import { Text } from '@app/components/Text';
-import { TextField } from '@app/components/TextField';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { Switch } from '@app/components/Switch/Switch';
+import { Text } from '@app/components/Text/Text';
+import { TextField } from '@app/components/TextField/TextField';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { AppStackParamList } from '@app/navigators/AppNavigator';

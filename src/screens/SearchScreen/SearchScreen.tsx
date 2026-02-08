@@ -1,9 +1,9 @@
-import { Button } from '@app/components/Button';
-import { FlashList } from '@app/components/FlashList';
-import { Icon } from '@app/components/Icon';
-import { PressableArea } from '@app/components/PressableArea';
-import { SearchHistoryV2 } from '@app/components/SearchHistory';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { FlashList } from '@app/components/FlashList/FlashList';
+import { Icon } from '@app/components/Icon/Icon';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { SearchHistoryV2 } from '@app/components/SearchHistory/SearchHistoryV2';
+import { Text } from '@app/components/Text/Text';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useDebouncedEffect } from '@app/hooks/useDebouncedEffect';
@@ -20,7 +20,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { StreamerCard } from './components';
+import { StreamerCard } from './components/StreamerCard';
 
 interface SearchHistoryItem {
   query: string;

@@ -1,4 +1,4 @@
-import { twitchSanitisedChannelBadges } from '@app/services/__fixtures__';
+import { twitchSanitisedChannelBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedChannelBadges.fixture';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { findBadges } from '../findBadges';

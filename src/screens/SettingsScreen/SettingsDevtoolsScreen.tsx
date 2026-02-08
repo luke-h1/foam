@@ -1,5 +1,5 @@
-import { Menu } from '@app/components/Menu';
-import { ScreenHeader } from '@app/components/ScreenHeader';
+import { Menu } from '@app/components/Menu/Menu';
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
 import { View } from 'react-native';

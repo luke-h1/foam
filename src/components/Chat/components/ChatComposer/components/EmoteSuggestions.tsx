@@ -1,15 +1,15 @@
-import { Button } from '@app/components/Button';
-import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import { Button } from '@app/components/Button/Button';
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/Text/Text';
+import type { SanitisedEmote } from '@app/types/emote';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 interface EmoteSuggestionsProps {
-  emotes: SanitisiedEmoteSet[];
-  handleEmotePress: (set: SanitisiedEmoteSet) => void;
+  emotes: SanitisedEmote[];
+  handleEmotePress: (set: SanitisedEmote) => void;
   showSuggestions: boolean;
   setShowSuggestions: (val: boolean) => void;
   inputLayout: {
@@ -48,7 +48,7 @@ export function EmoteSuggestions({
     maxHeight: suggestionsHeight,
   };
 
-  const renderEmoteItem: ListRenderItem<SanitisiedEmoteSet> = useCallback(
+  const renderEmoteItem: ListRenderItem<SanitisedEmote> = useCallback(
     ({ item }) => (
       <View style={styles.animatedItem}>
         <Button
@@ -57,15 +57,7 @@ export function EmoteSuggestions({
         >
           <View style={styles.emoteContainer}>
             <View>
-              <Image
-                source={item.url}
-                style={[
-                  styles.emoteImage,
-                  item.width && item.height
-                    ? { aspectRatio: item.width / item.height }
-                    : undefined,
-                ]}
-              />
+              <Image source={item.url} style={styles.emoteImage} />
             </View>
             <View style={styles.emoteTextContainer}>
               <Text

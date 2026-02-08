@@ -1,6 +1,6 @@
-import { Icon } from '@app/components/Icon';
-import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Icon } from '@app/components/Icon/Icon';
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/Text/Text';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { ReactNode } from 'react';

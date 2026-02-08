@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Diagnostics } from './components';
+import { Diagnostics } from './components/Diagnostics';
 
 export function DiagnosticsScreen() {
   return (

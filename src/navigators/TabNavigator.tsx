@@ -1,55 +1,16 @@
-import { HapticTab } from '@app/components/HapticTab';
-import { IconSymbolName } from '@app/components/IconSymbol/IconSymbol';
-import { ScreenSuspense } from '@app/components/ScreenSuspense';
+import { TabBar } from '@app/components/TabBar/TabBar';
 import { useAuthContext } from '@app/context/AuthContext';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import FollowingScreen from '@app/screens/FollowingScreen';
+import { SearchScreen } from '@app/screens/SearchScreen/SearchScreen';
 import {
-  createNativeBottomTabNavigator,
-  NativeBottomTabNavigationOptions,
-} from '@react-navigation/bottom-tabs/unstable';
+  BottomTabScreenProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
 import { CompositeScreenProps } from '@react-navigation/native';
-import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import { ComponentType, FC, lazy, useCallback, useMemo } from 'react';
-import { Platform } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
+import { ComponentType, FC, useCallback, useMemo } from 'react';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
+import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
-
-const LazyFollowingScreen = lazy(() => import('@app/screens/FollowingScreen'));
-const LazySearchScreen = lazy(() =>
-  import('@app/screens/SearchScreen/SearchScreen').then(m => ({
-    default: m.SearchScreen,
-  })),
-);
-const LazySettingsStackNavigator = lazy(() =>
-  import('./SettingsStackNavigator').then(m => ({
-    default: m.SettingsStackNavigator,
-  })),
-);
-
-function FollowingScreen() {
-  return (
-    <ScreenSuspense>
-      <LazyFollowingScreen />
-    </ScreenSuspense>
-  );
-}
-
-function SearchScreen() {
-  return (
-    <ScreenSuspense>
-      <LazySearchScreen />
-    </ScreenSuspense>
-  );
-}
-
-function SettingsStackNavigator() {
-  return (
-    <ScreenSuspense>
-      <LazySettingsStackNavigator />
-    </ScreenSuspense>
-  );
-}
 
 export type TabParamList = {
   Following: undefined;
@@ -64,7 +25,7 @@ export type TabScreenProps<TParam extends keyof TabParamList> =
     AppStackScreenProps<keyof AppStackParamList>
   >;
 
-const Tab = createNativeBottomTabNavigator<TabParamList>();
+const Tab = createBottomTabNavigator<TabParamList>();
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
@@ -75,53 +36,34 @@ type ScreenComponentType =
 interface Screen {
   name: keyof TabParamList;
   component: ScreenComponentType;
-  sfSymbol: IconSymbolName;
-  sfSymbolFocused: IconSymbolName;
-  drawableResource: string;
   requiresAuth?: boolean;
-  /** iOS only: use system tab bar item */
-  tabBarSystemItem?: 'search';
 }
 
 const screens: Screen[] = [
   {
     name: 'Following',
     component: FollowingScreen,
-    sfSymbol: 'person.2',
-    sfSymbolFocused: 'person.2.fill',
-    drawableResource: '',
     requiresAuth: true,
   },
   {
     name: 'Top',
     component: TopStackNavigator,
-    sfSymbol: 'chart.bar',
-    sfSymbolFocused: 'chart.bar.fill',
-    drawableResource: '',
     requiresAuth: false,
   },
   {
     name: 'Search',
     component: SearchScreen,
-    sfSymbol: 'magnifyingglass',
-    sfSymbolFocused: 'magnifyingglass',
-    drawableResource: '',
     requiresAuth: false,
-    tabBarSystemItem: 'search',
   },
   {
     name: 'Settings',
     component: SettingsStackNavigator,
-    sfSymbol: 'gearshape',
-    sfSymbolFocused: 'gearshape.fill',
-    drawableResource: '',
     requiresAuth: false,
   },
 ];
 
 export function TabNavigator() {
   const { user, authState } = useAuthContext();
-  const { theme } = useUnistyles();
 
   const availableScreens = useMemo(
     () => screens.filter(screen => !screen.requiresAuth || user),
@@ -136,58 +78,23 @@ export function TabNavigator() {
     ) {
       return 'Following';
     }
-    // Otherwise, default to Top
     return 'Top';
   }, [authState?.isLoggedIn, user, availableScreens]);
 
-  const getScreenOptions = useCallback(
-    (screen: Screen): NativeBottomTabNavigationOptions => {
-      const baseOptions: NativeBottomTabNavigationOptions = {
-        lazy: true,
-        headerShown: false,
-        tabBarIcon: ({ focused }) =>
-          Platform.select({
-            ios: {
-              type: 'sfSymbol' as const,
-              name: focused ? screen.sfSymbolFocused : screen.sfSymbol,
-            },
-            default: {
-              type: 'drawableResource' as const,
-              name: screen.drawableResource,
-            },
-          }),
-      };
-
-      // iOS 26+: Use system search tab for native Liquid Glass tab bar styling
-      // iOS 18 and earlier: Use SF Symbol for search icon
-      // See: https://reactnavigation.org/docs/native-bottom-tab-navigator/
-      if (
-        screen.tabBarSystemItem === 'search' &&
-        Platform.OS === 'ios' &&
-        isLiquidGlassAvailable()
-      ) {
-        return {
-          ...baseOptions,
-          tabBarSystemItem: 'search',
-          // Use undefined to let system handle icon for search tab
-          tabBarIcon: undefined,
-        };
-      }
-
-      return baseOptions;
-    },
+  const renderTabBar = useCallback(
+    (props: import('@react-navigation/bottom-tabs').BottomTabBarProps) => (
+      <TabBar {...props} />
+    ),
     [],
   );
 
   return (
     <Tab.Navigator
       initialRouteName={initialRouteName}
+      tabBar={renderTabBar}
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.grass.accentAlpha,
-        tabBarInactiveTintColor: theme.colors.gray.accent,
-        // @ts-expect-error: hapticFeedbackEnabled is not in types but supported by library
-        hapticFeedbackEnabled: true,
-        tabBarButton: HapticTab,
+        lazy: true,
+        headerShown: false,
       }}
     >
       {availableScreens.map(screen => (
@@ -195,9 +102,6 @@ export function TabNavigator() {
           key={screen.name}
           name={screen.name}
           component={screen.component as ComponentType}
-          options={() => ({
-            ...getScreenOptions(screen),
-          })}
         />
       ))}
     </Tab.Navigator>

@@ -1,6 +1,6 @@
-import { Button } from '@app/components/Button';
-import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import {
@@ -85,6 +85,8 @@ export const EmoteRenderer = memo(
           source={{
             uri: imageUrl,
           }}
+          containerStyle={styles.emoteContainer(width, height)}
+          contentFit="contain"
           cachePolicy="memory-disk"
           decodeFormat="argb"
           useAppleWebpCodec
@@ -102,6 +104,11 @@ export const EmoteRenderer = memo(
 EmoteRenderer.displayName = 'EmoteRenderer';
 
 const styles = StyleSheet.create({
+  emoteContainer: (width: number, height: number) => ({
+    width,
+    height,
+    overflow: 'hidden' as const,
+  }),
   name: (width: number, height: number) => ({
     width,
     height,

@@ -1,6 +1,6 @@
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { Text } from '@app/components/Text/Text';
 import { sentryService } from '@app/services/sentry-service';
 import {
   forwardRef,
@@ -353,11 +353,20 @@ const INJECTED_JAVASCRIPT = `
       }
     }
 
+    var hasStartedPlaying = false;
+
     video.addEventListener('pause', function() { postMessage('pause'); });
     video.addEventListener('playing', function() {
       postMessage('play');
-      video.muted = false;
-      video.volume = 1.0;
+      if (!hasStartedPlaying) {
+        hasStartedPlaying = true;
+        setTimeout(function() {
+          if (!video.paused) {
+            video.muted = false;
+            video.volume = 1.0;
+          }
+        }, 500);
+      }
     });
     video.addEventListener('ended', function() { postMessage('ended'); });
     video.addEventListener('waiting', function() { postMessage('stateUpdate', { isBuffering: true }); });
@@ -365,9 +374,11 @@ const INJECTED_JAVASCRIPT = `
 
     postMessage('ready');
 
-    // Auto-start if not playing
-    if (video.paused && video.readyState >= 2) {
-      video.play().catch(function() {});
+    if (video.paused) {
+      video.play().catch(function() {
+        video.muted = true;
+        video.play().catch(function() {});
+      });
     }
   }
 
@@ -635,7 +646,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       autoplay = true,
       channel,
       height,
-      muted: initialMuted = false,
+      muted: initialMuted = __DEV__,
       onBackPress,
       onEnded,
       onError,
@@ -692,8 +703,11 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               webViewRef.current.injectJavaScript(`
                 (function() {
                   var video = document.querySelector('video');
-                  if (video && !video.paused && video.readyState >= 2) {
-                    video.play().catch(function() {});
+                  if (video && video.paused && video.readyState >= 2) {
+                    video.play().catch(function() {
+                      video.muted = true;
+                      video.play().catch(function() {});
+                    });
                   }
                 })();
                 true;
