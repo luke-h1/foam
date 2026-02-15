@@ -7,7 +7,6 @@ header = """
 # Changelog\n
 """
 
-# Template for the changelog body
 body = """
 {% if version %}\
     ## {{ version | trim_start_matches(pat="v") }}
@@ -15,12 +14,12 @@ body = """
     ## [unreleased]
 {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
-    ### {{ group | upper_first }}
+    ### {{ group | striptags | trim | upper_first }}
     {% for commit in commits %}
         - {% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
             {{ commit.message | upper_first }}\
     {% endfor %}
-{% endfor %}\n
+{% endfor %}\
 """
 
 # Template for the changelog footer
@@ -30,7 +29,7 @@ footer = """
 # Remove the leading and trailing whitespace from the templates
 trim = true
 
-# Postprocessors
+# Postprocessors (issue links)
 postprocessors = [
   { pattern = '<REPO>', replace = "https://github.com/lhowsam/foam" },
 ]
@@ -45,9 +44,14 @@ filter_unconventional = false
 # Process each line of a commit as an individual commit
 split_commits = false
 
-# Use topological order for tags (based on git commit graph, not alphabetical)
-# This is critical for OTA tags with UUIDs that don't sort chronologically
+# Use topological order for tags (based on git commit graph, not alphabetical).
+# Critical for OTA tags with UUIDs that don't sort chronologically.
 topo_order = true
+
+# Match both semver tags (native builds) and OTA tags (ota-<uuid> or ota-0.0.38-27)
+tag_pattern = "^(v?[0-9]+\\.[0-9]+\\.[0-9]+.*|ota-.+)$"
+
+date_order = false
 
 # Commit preprocessors
 commit_preprocessors = [
@@ -67,24 +71,24 @@ commit_parsers = [
   { message = "^[0-9]+\\.[0-9]+\\.[0-9]+", skip = true },
   { message = "^[Rr]elease", skip = true },
   { message = "^Merge", skip = true },
-  # Conventional commit types
-  { message = "^feat", group = "Features" },
-  { message = "^fix", group = "Bug Fixes" },
-  { message = "^perf", group = "Performance" },
-  { message = "^refactor", group = "Refactor" },
-  { message = "^style", group = "Styling" },
-  { message = "^test", group = "Testing" },
-  { message = "^doc", group = "Documentation" },
-  { message = "^docs", group = "Documentation" },
-  { message = "^chore\\(deps\\)", group = "Dependencies" },
-  { message = "^chore\\(deps-dev\\)", group = "Dependencies" },
-  { message = "^chore", group = "Miscellaneous Tasks" },
-  { message = "^ci", group = "CI/CD" },
-  { message = "^build", group = "Build" },
-  { message = "^revert", group = "Reverted" },
-  { body = ".*security", group = "Security" },
+  # Conventional commit types (with emojis)
+  { message = "^feat", group = "✨ Features" },
+  { message = "^fix", group = "🐛 Bug Fixes" },
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^refactor", group = "♻️ Refactor" },
+  { message = "^style", group = "💄 Styling" },
+  { message = "^test", group = "🧪 Testing" },
+  { message = "^doc", group = "📚 Documentation" },
+  { message = "^docs", group = "📚 Documentation" },
+  { message = "^chore\\(deps\\)", group = "📦 Dependencies" },
+  { message = "^chore\\(deps-dev\\)", group = "📦 Dependencies" },
+  { message = "^chore", group = "🔧 Miscellaneous Tasks" },
+  { message = "^ci", group = "👷 CI/CD" },
+  { message = "^build", group = "🏗️ Build" },
+  { message = "^revert", group = "⏪ Reverted" },
+  { body = ".*security", group = "🔒 Security" },
   # Catch-all for non-conventional commits
-  { message = ".*", group = "Other Changes" },
+  { message = ".*", group = "📝 Other Changes" },
 ]
 
 # Protect breaking changes from being skipped
@@ -92,9 +96,6 @@ protect_breaking_commits = false
 
 # Filter out commits by pattern
 filter_commits = false
-
-# Tag pattern for releases (supports: v0.0.1, 0.0.1, ota-*)
-tag_pattern = "(v)?[0-9]+\\.[0-9]+.*|ota-.*"
 
 # Sort order for commits within each group
 sort_commits = "oldest"

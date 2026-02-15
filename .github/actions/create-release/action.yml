@@ -254,6 +254,9 @@ runs:
             GIT_LOG=$(git log --pretty=format:"- %s" "$PREVIOUS"..HEAD | head -20)
             RELEASE_NOTES="### Changes"$'\n\n'"${GIT_LOG}"
           fi
+
+          # git-cliff with a range outputs one section per tag in that range; keep only this release's section (first ## block)
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | awk 'BEGIN{first=1} /^## / { if (!first) exit; first=0 } { print }')
         fi
 
         # Use heredoc syntax for multiline/special character output
@@ -383,13 +386,15 @@ runs:
           fi
         fi
 
-        # Append only this release's changelog (git-cliff PREVIOUS..HEAD).
+        # Append only this release's changelog. git-cliff with a range outputs one section per tag
+        # in that range, so take only the first "## " block (this tag's section).
         if [ -f .release-notes-body.md ]; then
+          RELEASE_SECTION=$(awk 'BEGIN{first=1} /^## / { if (!first) exit; first=0 } { print }' .release-notes-body.md)
           BODY="${BODY}
 
         ---
 
-        $(cat .release-notes-body.md)"
+        ${RELEASE_SECTION}"
         fi
 
         # Use heredoc for multiline output
