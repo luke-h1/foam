@@ -1,5 +1,10 @@
 # Changelog
 
+## ota-a0aa7b2d-23b7-4b57-b1eb-f6f96acb3718
+
+### 🔧 Miscellaneous Tasks
+
+- **infrastructure:** Refresh agents
 ## ota-aae23856-f62e-4417-aa6b-efcef6d920b6
 
 ### 🐛 Bug Fixes
