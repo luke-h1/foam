@@ -1,6 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { Slider } from '@app/components/Slider/Slider';
 import { Text } from '@app/components/Text/Text';
 import { sentryService } from '@app/services/sentry-service';
 import {
@@ -383,14 +384,18 @@ function buildTwitchEmbedHtml(options: {
 
 interface ControlsOverlayProps {
   isVisible: boolean;
+  muted: boolean;
   onBackPress?: () => void;
+  onMutePress: () => void;
   onPipPress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onToggleControls: () => void;
+  onVolumeChange: (value: number) => void;
   paused: boolean;
   showPip?: boolean;
   streamInfo?: StreamInfo;
+  volume: number;
 }
 
 function formatDuration(startedAt?: string): string {
@@ -416,14 +421,18 @@ function formatViewerCount(count?: number): string {
 
 function ControlsOverlay({
   isVisible,
+  muted,
   onBackPress,
+  onMutePress,
   onPipPress,
   onPlayPausePress,
   onRefresh,
   onToggleControls,
+  onVolumeChange,
   paused,
   showPip = Platform.OS === 'ios',
   streamInfo,
+  volume,
 }: ControlsOverlayProps) {
   const opacity = useSharedValue(0);
   const [duration, setDuration] = useState(() =>
@@ -501,6 +510,31 @@ function ControlsOverlay({
         >
           <Icon color="#FFFFFF" icon={paused ? 'play' : 'pause'} size={40} />
         </Button>
+      </View>
+
+      <View style={styles.volumeRow} pointerEvents="box-none">
+        <View style={styles.volumeControls} pointerEvents="auto">
+          <Button
+            label={muted ? 'Unmute' : 'Mute'}
+            style={styles.volumeButton}
+            onPress={onMutePress}
+          >
+            <Icon
+              color="#FFFFFF"
+              icon={muted ? 'volume-variant-off' : 'volume-high'}
+              iconFamily="MaterialCommunityIcons"
+              size={22}
+            />
+          </Button>
+          <Slider
+            max={1}
+            min={0}
+            onChange={onVolumeChange}
+            step={0.05}
+            style={styles.volumeSlider}
+            value={muted ? 0 : volume}
+          />
+        </View>
       </View>
 
       <View style={styles.bottomControls}>
@@ -1098,13 +1132,28 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         {showOverlayControls && !hasContentGate && playerState.isReady && (
           <ControlsOverlay
             isVisible={controlsVisible}
-            paused={playerState.isPaused}
-            streamInfo={streamInfo}
+            muted={playerState.muted}
             onBackPress={onBackPress}
+            onMutePress={() => {
+              const next = !playerState.muted;
+              setMuted(next);
+              setPlayerState(prev => ({ ...prev, muted: next }));
+            }}
             onPipPress={handlePipPress}
             onPlayPausePress={handlePlayPause}
             onRefresh={onRefresh}
             onToggleControls={toggleControlsInternal}
+            onVolumeChange={v => {
+              setVolume(v);
+              setPlayerState(prev => ({
+                ...prev,
+                volume: v,
+                muted: v === 0,
+              }));
+            }}
+            paused={playerState.isPaused}
+            streamInfo={streamInfo}
+            volume={playerState.volume}
           />
         )}
 
@@ -1160,6 +1209,28 @@ const styles = StyleSheet.create((theme, rt) => ({
     paddingHorizontal: theme.spacing.sm,
     position: 'absolute',
     right: 0,
+  },
+  volumeButton: {
+    alignItems: 'center',
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  volumeControls: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  volumeRow: {
+    bottom: rt.insets.bottom + 48,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  volumeSlider: {
+    flex: 1,
+    minWidth: 80,
   },
   centerControls: {
     alignItems: 'center',

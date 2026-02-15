@@ -19,6 +19,7 @@
 
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
+import { Slider } from '@app/components/Slider/Slider';
 import { Text } from '@app/components/Text/Text';
 import { twitchHlsService } from '@app/services/twitch-hls-service';
 import {
@@ -109,22 +110,30 @@ function formatViewerCount(count?: number): string {
 
 interface ControlsOverlayProps {
   isVisible: boolean;
+  muted: boolean;
   onBackPress?: () => void;
+  onMutePress: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onToggleControls: () => void;
+  onVolumeChange: (value: number) => void;
   paused: boolean;
   streamInfo?: StreamInfo;
+  volume: number;
 }
 
 function ControlsOverlay({
   isVisible,
+  muted,
   onBackPress,
+  onMutePress,
   onPlayPausePress,
   onRefresh,
   onToggleControls,
+  onVolumeChange,
   paused,
   streamInfo,
+  volume,
 }: ControlsOverlayProps) {
   const opacity = useSharedValue(0);
   const [duration, setDuration] = useState(() =>
@@ -204,6 +213,31 @@ function ControlsOverlay({
         </Button>
       </View>
 
+      <View style={styles.volumeRow} pointerEvents="box-none">
+        <View style={styles.volumeControls} pointerEvents="auto">
+          <Button
+            label={muted ? 'Unmute' : 'Mute'}
+            style={styles.volumeButton}
+            onPress={onMutePress}
+          >
+            <Icon
+              color="#FFFFFF"
+              icon={muted ? 'volume-variant-off' : 'volume-high'}
+              iconFamily="MaterialCommunityIcons"
+              size={22}
+            />
+          </Button>
+          <Slider
+            max={1}
+            min={0}
+            onChange={onVolumeChange}
+            step={0.05}
+            style={styles.volumeSlider}
+            value={muted ? 0 : volume}
+          />
+        </View>
+      </View>
+
       <View style={styles.bottomControls}>
         <View style={styles.liveIndicatorContainer}>
           <View style={styles.liveIndicator}>
@@ -266,6 +300,7 @@ export const NativeStreamPlayer = forwardRef<
   const [error, setError] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(!autoplay);
   const [isMuted, setIsMuted] = useState(initialMuted);
+  const [volume, setVolume] = useState(1);
   const [currentChannel, setCurrentChannel] = useState(channel);
 
   const [controlsVisible, setControlsVisible] = useState(false);
@@ -515,7 +550,7 @@ export const NativeStreamPlayer = forwardRef<
         resizeMode="contain"
         paused={isPaused}
         muted={isMuted}
-        volume={1.0}
+        volume={isMuted ? 0 : volume}
         rate={1.0}
         repeat={false}
         playInBackground={false}
@@ -549,12 +584,19 @@ export const NativeStreamPlayer = forwardRef<
       {showOverlayControls && (
         <ControlsOverlay
           isVisible={controlsVisible}
-          paused={isPaused}
-          streamInfo={streamInfo}
+          muted={isMuted}
           onBackPress={onBackPress}
+          onMutePress={() => setIsMuted(prev => !prev)}
           onPlayPausePress={handlePlayPause}
           onRefresh={onRefresh ?? forceRefresh}
           onToggleControls={toggleControls}
+          onVolumeChange={v => {
+            setVolume(v);
+            if (v > 0) setIsMuted(false);
+          }}
+          paused={isPaused}
+          streamInfo={streamInfo}
+          volume={volume}
         />
       )}
     </View>
@@ -702,6 +744,28 @@ const styles = StyleSheet.create((theme, rt) => ({
     paddingHorizontal: theme.spacing.sm,
     position: 'absolute',
     right: 0,
+  },
+  volumeButton: {
+    alignItems: 'center',
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  volumeControls: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  volumeRow: {
+    bottom: rt.insets.bottom + 48,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+  volumeSlider: {
+    flex: 1,
+    minWidth: 80,
   },
   liveIndicatorContainer: {
     alignItems: 'center',
