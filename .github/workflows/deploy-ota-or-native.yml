@@ -313,28 +313,6 @@ jobs:
           AUTH_PROXY_API_BASE_URL: ${{ env.AUTH_PROXY_API_BASE_URL }}
           AUTH_PROXY_API_KEY: ${{ env.AUTH_PROXY_API_KEY }}
 
-      - name: 📤 Upload to Sentry Size Analysis
-        if: inputs.platform == 'all' || inputs.platform == 'ios'
-        run: |
-          if [ -f ./build-artifacts/app.ipa ]; then
-            echo "Uploading iOS build to Sentry Size Analysis..."
-            npx @sentry/cli build upload ./build-artifacts/app.ipa \
-              --org "$SENTRY_ORG" \
-              --project "$SENTRY_PROJECT" \
-              --build-configuration Release \
-              --head-sha "$GITHUB_SHA" \
-              --head-ref "${GITHUB_REF#refs/heads/}" \
-              --vcs-provider github \
-              --head-repo-name "$GITHUB_REPOSITORY"
-            echo "✅ Sentry Size Analysis upload complete"
-          else
-            echo "⚠️ No iOS IPA found at ./build-artifacts/app.ipa, skipping Size Analysis upload"
-          fi
-        env:
-          SENTRY_ORG: luke-howsam
-          SENTRY_PROJECT: foam
-          SENTRY_AUTH_TOKEN: ${{ env.SENTRY_AUTH_TOKEN }}
-
       - name: 💾 Save fingerprints for next run
         run: |
           mkdir -p .fingerprint-cache
@@ -354,7 +332,6 @@ jobs:
           echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Profile:** production" >> $GITHUB_STEP_SUMMARY
           echo "- **Auto-submit:** Yes" >> $GITHUB_STEP_SUMMARY
-          echo "- **Sentry Size Analysis:** iOS IPA uploaded when platform is all or ios" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Fingerprints saved for future comparison." >> $GITHUB_STEP_SUMMARY
 
@@ -462,6 +439,15 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    outputs:
+      version: ${{ needs.prepare.outputs.version }}
+      tag: ${{ steps.release_tag.outputs.tag }}
+      deployment_type: ${{ needs.detect-changes.outputs.deploy-type }}
+      release_notes: ${{ steps.create_release.outputs.release_notes }}
+      ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
+      android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
+      update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
+      release_url: https://github.com/${{ github.repository }}/releases/tag/${{ steps.release_tag.outputs.tag }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
@@ -493,6 +479,7 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: 📝 Create Release
+        id: create_release
         uses: ./.github/actions/create-release
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -518,3 +505,32 @@ jobs:
           echo "- **Type:** ${{ needs.detect-changes.outputs.deploy-type == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ GitHub release and CHANGELOG.md updated!" >> $GITHUB_STEP_SUMMARY
+
+  slack-notify:
+    name: 📢 Slack Notification
+    needs: [release]
+    if: always() && needs.release.result == 'success' && !inputs.dry_run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Load secrets
+        id: secrets
+        uses: 1password/load-secrets-action@v3
+        with:
+          export-env: false
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
+
+      - name: Send Slack notification
+        uses: ./.github/actions/slack-deploy-notification
+        with:
+          webhook_url: ${{ steps.secrets.outputs.SLACK_WEBHOOK_URL }}
+          version: ${{ needs.release.outputs.version }}
+          deployment_type: ${{ needs.release.outputs.deployment_type }}
+          tag: ${{ needs.release.outputs.tag }}
+          ios_update_id: ${{ needs.release.outputs.ios_update_id }}
+          android_update_id: ${{ needs.release.outputs.android_update_id }}
+          update_group_id: ${{ needs.release.outputs.update_group_id }}
+          release_notes: ${{ needs.release.outputs.release_notes }}
+          release_url: ${{ needs.release.outputs.release_url }}
+          repository: ${{ github.repository }}

@@ -1,0 +1,112 @@
+name: 'Slack Deploy Notification'
+description: 'Send deployment summary to Slack'
+
+inputs:
+  webhook_url:
+    description: 'Slack incoming webhook URL'
+    required: true
+  version:
+    description: 'App (native) version'
+    required: true
+  deployment_type:
+    description: 'Deployment type (ota or native)'
+    required: true
+  tag:
+    description: 'Release tag'
+    required: true
+  ios_update_id:
+    description: 'iOS OTA update ID (OTA only)'
+    required: false
+    default: ''
+  android_update_id:
+    description: 'Android OTA update ID (OTA only)'
+    required: false
+    default: ''
+  update_group_id:
+    description: 'OTA update group ID (OTA only)'
+    required: false
+    default: ''
+  release_notes:
+    description: 'Changelog / release notes text'
+    required: false
+    default: ''
+  release_url:
+    description: 'URL to the GitHub release'
+    required: false
+    default: ''
+  repository:
+    description: 'GitHub repository (owner/repo)'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build and send Slack message
+      shell: bash
+      env:
+        WEBHOOK_URL: ${{ inputs.webhook_url }}
+        VERSION: ${{ inputs.version }}
+        DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
+        TAG: ${{ inputs.tag }}
+        IOS_UPDATE_ID: ${{ inputs.ios_update_id }}
+        ANDROID_UPDATE_ID: ${{ inputs.android_update_id }}
+        UPDATE_GROUP_ID: ${{ inputs.update_group_id }}
+        RELEASE_NOTES: ${{ inputs.release_notes }}
+        RELEASE_URL: ${{ inputs.release_url }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -e
+
+        if [ -z "$WEBHOOK_URL" ] || [ "$WEBHOOK_URL" = "" ]; then
+          echo "Slack webhook URL not set, skipping notification"
+          exit 0
+        fi
+
+        if [ "$DEPLOYMENT_TYPE" = "ota" ]; then
+          HEADER_EMOJI="📦"
+          HEADER_TEXT="Foam — OTA Update"
+          VERSION_BLOCK="*Native app version:* \`${VERSION}\`
+        *OTA:* Group \`${UPDATE_GROUP_ID}\` | iOS \`${IOS_UPDATE_ID}\` | Android \`${ANDROID_UPDATE_ID}\`"
+        else
+          HEADER_EMOJI="🔨"
+          HEADER_TEXT="Foam — Native Build"
+          VERSION_BLOCK="*Native version:* \`${VERSION}\` (tag: \`${TAG}\`)"
+        fi
+
+        # Changelog: truncate for Slack block (~2400 chars), wrap in code block
+        TRUNCATED_NOTES="$RELEASE_NOTES"
+        if [ ${#TRUNCATED_NOTES} -gt 2400 ]; then
+          TRUNCATED_NOTES="${TRUNCATED_NOTES:0:2397}..."
+        fi
+        TRUNCATED_NOTES_JSON=$(printf '%s' "$TRUNCATED_NOTES" | jq -Rs .)
+        RELEASE_URL_JSON=$(printf '%s' "$RELEASE_URL" | jq -Rs .)
+        CHANGELOG_MRKDWN_JSON=$(jq -n \
+          --argjson notes "$TRUNCATED_NOTES_JSON" \
+          --argjson url "$RELEASE_URL_JSON" \
+          '("*Changelog*\n" + (if $url != "" then "<" + $url + "|View full changelog on GitHub>\n\n" else "" end) + "```\n" + $notes + "\n```")')
+
+        FOOTER="Expo: <https://expo.dev|expo.dev>"
+        [ -n "$REPOSITORY" ] && FOOTER="${FOOTER} | Repo: <https://github.com/${REPOSITORY}|${REPOSITORY}>"
+        FOOTER_JSON=$(printf '%s' "$FOOTER" | jq -Rs .)
+        VERSION_BLOCK_JSON=$(printf '%s' "$VERSION_BLOCK" | jq -Rs .)
+        HEADER_JSON=$(printf '%s' "${HEADER_EMOJI} ${HEADER_TEXT}" | jq -Rs .)
+
+        PAYLOAD=$(jq -n \
+          --argjson header "$HEADER_JSON" \
+          --argjson version_block "$VERSION_BLOCK_JSON" \
+          --argjson changelog_mrkdwn "$CHANGELOG_MRKDWN_JSON" \
+          --argjson footer "$FOOTER_JSON" \
+          '{
+            blocks: [
+              { type: "header", text: { type: "plain_text", text: $header, emoji: true } },
+              { type: "section", text: { type: "mrkdwn", text: $version_block } },
+              { type: "section", text: { type: "mrkdwn", text: $changelog_mrkdwn } },
+              { type: "context", elements: [{ type: "mrkdwn", text: $footer }] }
+            ]
+          }')
+
+        curl -sSf -X POST "$WEBHOOK_URL" \
+          -H 'Content-Type: application/json' \
+          -d "$PAYLOAD" || { echo "Slack notification failed"; exit 1; }
+        echo "Slack notification sent."
