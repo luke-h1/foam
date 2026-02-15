@@ -290,13 +290,16 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
+      - name: 📁 Prepare build artifacts dir
+        run: mkdir -p build-artifacts
+
       - name: 🔨 Build & Submit
         run: |
           PLATFORM="${{ inputs.platform || 'all' }}"
 
           if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "ios" ]; then
             echo "Building iOS..."
-            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./app-production.abd && bun run eas submit -p ios --path ./app-production.abd            
+            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./build-artifacts/app.ipa && bun run eas submit -p ios --path ./build-artifacts/app.ipa
           fi
 
           if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "android" ]; then
@@ -309,6 +312,28 @@ jobs:
           TWITCH_CLIENT_SECRET: ${{ env.TWITCH_CLIENT_SECRET }}
           AUTH_PROXY_API_BASE_URL: ${{ env.AUTH_PROXY_API_BASE_URL }}
           AUTH_PROXY_API_KEY: ${{ env.AUTH_PROXY_API_KEY }}
+
+      - name: 📤 Upload to Sentry Size Analysis
+        if: inputs.platform == 'all' || inputs.platform == 'ios'
+        run: |
+          if [ -f ./build-artifacts/app.ipa ]; then
+            echo "Uploading iOS build to Sentry Size Analysis..."
+            npx @sentry/cli build upload ./build-artifacts/app.ipa \
+              --org "$SENTRY_ORG" \
+              --project "$SENTRY_PROJECT" \
+              --build-configuration Release \
+              --head-sha "$GITHUB_SHA" \
+              --head-ref "${GITHUB_REF#refs/heads/}" \
+              --vcs-provider github \
+              --head-repo-name "$GITHUB_REPOSITORY"
+            echo "✅ Sentry Size Analysis upload complete"
+          else
+            echo "⚠️ No iOS IPA found at ./build-artifacts/app.ipa, skipping Size Analysis upload"
+          fi
+        env:
+          SENTRY_ORG: luke-howsam
+          SENTRY_PROJECT: foam
+          SENTRY_AUTH_TOKEN: ${{ env.SENTRY_AUTH_TOKEN }}
 
       - name: 💾 Save fingerprints for next run
         run: |
@@ -329,6 +354,7 @@ jobs:
           echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Profile:** production" >> $GITHUB_STEP_SUMMARY
           echo "- **Auto-submit:** Yes" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sentry Size Analysis:** iOS IPA uploaded when platform is all or ios" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Fingerprints saved for future comparison." >> $GITHUB_STEP_SUMMARY
 
