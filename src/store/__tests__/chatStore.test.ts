@@ -480,14 +480,13 @@ describe('chatStore', () => {
       expect(chatStore$.messages.peek()).toHaveLength(0);
     });
 
-    test('should limit messages to MAX_MESSAGES (500)', () => {
-      const messages = Array.from({ length: 600 }, (_, i) =>
+    test('should limit messages to MAX_CHAT_MESSAGES (1000)', () => {
+      const messages = Array.from({ length: 1100 }, (_, i) =>
         createTestMessage(`${i}`),
       );
       addMessages(messages);
 
-      // After trimming, should be around 500 or less
-      expect(chatStore$.messages.peek().length).toBeLessThanOrEqual(500);
+      expect(chatStore$.messages.peek().length).toBeLessThanOrEqual(1000);
     });
   });
 

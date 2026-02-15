@@ -57,6 +57,7 @@ export const Image = function Image({
           style={style as StyleProp<ViewStyle>}
           resizeMode={resizeMode}
           recyclingKey={url}
+          testID={props.testID}
         />
       </View>
     );
