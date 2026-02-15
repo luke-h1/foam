@@ -1,5 +1,5 @@
-import { Button } from '@app/components/Button';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Text } from '@app/components/Text/Text';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 

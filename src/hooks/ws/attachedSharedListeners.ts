@@ -44,14 +44,20 @@ export const attachSharedListeners = (instance: WebSocket, url: string) => {
         const reconnectAttempts =
           subscriber.optionsRef.current.reconnectAttempts ??
           DEFAULT_RECONNECT_LIMIT;
+        const baseInterval =
+          subscriber.optionsRef.current.reconnectInterval ??
+          DEFAULT_RECONNECT_INTERVAL_MS;
         if (subscriber.reconnectCount.current < reconnectAttempts) {
           // eslint-disable-next-line no-plusplus
           if (subscriber.reconnectCount.current++ === 0) {
             subscriber.reconnect.current();
           } else {
+            const attempt = subscriber.reconnectCount.current;
+            const backoffMultiplier = Math.min(1.5 ** attempt, 8);
+            const delay = Math.round(baseInterval * backoffMultiplier);
             setTimeout(() => {
               subscriber.reconnect.current();
-            }, subscriber.optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
+            }, delay);
           }
         } else {
           if (

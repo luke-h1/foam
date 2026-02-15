@@ -1,12 +1,12 @@
 /* eslint-disable camelcase */
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { ChatMessageType } from '@app/store/chatStore';
+import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 interface GenerateStvEmoteNoticeArgs {
   type: 'added' | 'removed';
-  emote: SanitisiedEmoteSet;
+  emote: SanitisedEmote;
   channelName: string;
 }
 
@@ -44,6 +44,7 @@ export function generateStvEmoteNotice({
       replyBody: '',
       replyDisplayName: '',
       sender: '',
+      isSpecialNotice: true,
     };
   }
 
@@ -75,6 +76,7 @@ export function generateStvEmoteNotice({
       replyBody: '',
       replyDisplayName: '',
       sender: '',
+      isSpecialNotice: true,
     };
   }
   return new Error("type wasn't `removed` or `added`") as never;

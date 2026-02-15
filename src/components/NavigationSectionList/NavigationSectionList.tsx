@@ -1,8 +1,8 @@
 import { ReactNode } from 'react';
 import { ScrollView, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { ButtonProps } from '../Button';
-import { Text } from '../Text';
+import { ButtonProps } from '../Button/Button';
+import { Text } from '../Text/Text';
 import { NavigationSectionListItemButton } from './NavigationSectionListItemButton';
 
 export interface SectionListItem {

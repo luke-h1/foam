@@ -14,7 +14,7 @@ import Svg, {
   Rect,
 } from 'react-native-svg';
 import { StyleSheet } from 'react-native-unistyles';
-import { Text } from '../../../../Text';
+import { Text } from '../../../../Text/Text';
 import {
   buildGradientConfig,
   GradientConfig,

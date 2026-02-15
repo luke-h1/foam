@@ -2,7 +2,8 @@
 import * as Form from '@app/components/Form/Form';
 import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
-import { getHermesVersion, getReleaseTypeAsync } from '../utils';
+import { getHermesVersion } from '../utils/getHermesVersion';
+import { getReleaseTypeAsync } from '../utils/getReleaseTypeAsync';
 
 export function ExpoSection() {
   const [envName, setEnvName] = useState<string | null>(null);

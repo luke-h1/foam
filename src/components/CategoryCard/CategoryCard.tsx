@@ -3,9 +3,9 @@ import { Category } from '@app/services/twitch-service';
 import { useCallback } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Button } from '../Button';
-import { Image } from '../Image';
-import { Text } from '../Text';
+import { Button } from '../Button/Button';
+import { Image } from '../Image/Image';
+import { Text } from '../Text/Text';
 
 interface Props {
   category: Category;

@@ -1,5 +1,5 @@
-import { Menu, MenuItem } from '@app/components/Menu';
-import { ScreenHeader } from '@app/components/ScreenHeader';
+import { Menu, MenuItem } from '@app/components/Menu/Menu';
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { usePreferences } from '@app/store/preferenceStore';
 import { useMemo } from 'react';
 import { View } from 'react-native';

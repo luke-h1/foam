@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { getCurrentEmoteData } from '@app/store/chatStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { SanitisedEmote } from '@app/types/emote';
 import {
   createUserStateFromTags,
   createBaseMessage,
@@ -24,14 +24,14 @@ const mockGetCurrentEmoteData = getCurrentEmoteData as jest.MockedFunction<
 >;
 
 interface MockEmoteData {
-  twitchGlobalEmotes: SanitisiedEmoteSet[];
-  sevenTvGlobalEmotes: SanitisiedEmoteSet[];
-  bttvGlobalEmotes: SanitisiedEmoteSet[];
-  ffzGlobalEmotes: SanitisiedEmoteSet[];
-  twitchChannelEmotes: SanitisiedEmoteSet[];
-  sevenTvChannelEmotes: SanitisiedEmoteSet[];
-  bttvChannelEmotes: SanitisiedEmoteSet[];
-  ffzChannelEmotes: SanitisiedEmoteSet[];
+  twitchGlobalEmotes: SanitisedEmote[];
+  sevenTvGlobalEmotes: SanitisedEmote[];
+  bttvGlobalEmotes: SanitisedEmote[];
+  ffzGlobalEmotes: SanitisedEmote[];
+  twitchChannelEmotes: SanitisedEmote[];
+  sevenTvChannelEmotes: SanitisedEmote[];
+  bttvChannelEmotes: SanitisedEmote[];
+  ffzChannelEmotes: SanitisedEmote[];
 }
 
 const createMockEmoteData = (
@@ -439,9 +439,7 @@ describe('messageHandlers', () => {
     test('should return true when twitch global emotes exist', () => {
       mockGetCurrentEmoteData.mockReturnValue(
         createMockEmoteData({
-          twitchGlobalEmotes: [
-            { id: '1', name: 'Kappa' } as SanitisiedEmoteSet,
-          ],
+          twitchGlobalEmotes: [{ id: '1', name: 'Kappa' } as SanitisedEmote],
         }) as any,
       );
 
@@ -452,7 +450,7 @@ describe('messageHandlers', () => {
       mockGetCurrentEmoteData.mockReturnValue(
         createMockEmoteData({
           sevenTvGlobalEmotes: [
-            { id: '1', name: 'OMEGALUL' } as SanitisiedEmoteSet,
+            { id: '1', name: 'OMEGALUL' } as SanitisedEmote,
           ],
         }) as any,
       );
@@ -463,7 +461,7 @@ describe('messageHandlers', () => {
     test('should return true when BTTV global emotes exist', () => {
       mockGetCurrentEmoteData.mockReturnValue(
         createMockEmoteData({
-          bttvGlobalEmotes: [{ id: '1', name: 'LULW' } as SanitisiedEmoteSet],
+          bttvGlobalEmotes: [{ id: '1', name: 'LULW' } as SanitisedEmote],
         }) as any,
       );
 
@@ -473,7 +471,7 @@ describe('messageHandlers', () => {
     test('should return true when FFZ global emotes exist', () => {
       mockGetCurrentEmoteData.mockReturnValue(
         createMockEmoteData({
-          ffzGlobalEmotes: [{ id: '1', name: 'KEKW' } as SanitisiedEmoteSet],
+          ffzGlobalEmotes: [{ id: '1', name: 'KEKW' } as SanitisedEmote],
         }) as any,
       );
 
@@ -496,17 +494,15 @@ describe('messageHandlers', () => {
       mockGetCurrentEmoteData.mockReturnValue(
         createMockEmoteData({
           twitchChannelEmotes: [
-            { id: '1', name: 'ChannelEmote' } as SanitisiedEmoteSet,
+            { id: '1', name: 'ChannelEmote' } as SanitisedEmote,
           ],
           sevenTvChannelEmotes: [
-            { id: '2', name: 'ChannelSTV' } as SanitisiedEmoteSet,
+            { id: '2', name: 'ChannelSTV' } as SanitisedEmote,
           ],
           bttvChannelEmotes: [
-            { id: '3', name: 'ChannelBTTV' } as SanitisiedEmoteSet,
+            { id: '3', name: 'ChannelBTTV' } as SanitisedEmote,
           ],
-          ffzChannelEmotes: [
-            { id: '4', name: 'ChannelFFZ' } as SanitisiedEmoteSet,
-          ],
+          ffzChannelEmotes: [{ id: '4', name: 'ChannelFFZ' } as SanitisedEmote],
         }) as any,
       );
 

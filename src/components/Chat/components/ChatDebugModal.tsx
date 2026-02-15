@@ -1,5 +1,5 @@
-import { Button } from '@app/components/Button';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Text } from '@app/components/Text/Text';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { forwardRef, memo, useCallback } from 'react';
 import { View } from 'react-native';

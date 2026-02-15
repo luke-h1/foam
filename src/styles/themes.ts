@@ -1,7 +1,7 @@
 import { font } from './font';
 import { radii } from './radii';
 import { spacing } from './spacing';
-import { createPallete } from './util';
+import { createPallete } from './util/createPallete';
 
 export type Theme = 'foam-light' | 'foam-dark';
 

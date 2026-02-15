@@ -372,7 +372,7 @@ export function useTwitchWs(): WebSocket {
 
         return shouldConnect;
       },
-      reconnectAttempts: 20,
+      reconnectAttempts: 30,
       reconnectInterval: 2000,
     },
     shouldConnect,

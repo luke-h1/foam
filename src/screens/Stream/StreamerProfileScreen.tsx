@@ -1,4 +1,4 @@
-import { Text } from '@app/components/Text';
+import { Text } from '@app/components/Text/Text';
 import { View } from 'react-native';
 
 export function StreamerProfileScreen() {

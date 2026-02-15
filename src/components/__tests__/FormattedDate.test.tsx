@@ -1,6 +1,6 @@
 import render from '@app/test/render';
 import { screen } from '@testing-library/react-native';
-import { FormattedDate } from '../FormattedDate';
+import { FormattedDate } from '../FormattedDate/FormattedDate';
 
 describe('FormattedDate', () => {
   describe('using default format', () => {

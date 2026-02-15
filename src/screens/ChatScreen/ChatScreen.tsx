@@ -1,4 +1,4 @@
-import { Chat } from '@app/components/Chat';
+import { Chat } from '@app/components/Chat/Chat';
 import { AppStackScreenProps } from '@app/navigators/AppNavigator';
 import { FC } from 'react';
 import { View } from 'react-native';

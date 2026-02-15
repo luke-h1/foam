@@ -1,13 +1,13 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-base-to-string */
-import { BodyScrollView } from '@app/components/BodyScrollView';
-import { Button } from '@app/components/Button';
+import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
+import { Button } from '@app/components/Button/Button';
 import {
   IconSymbol,
   IconSymbolName,
 } from '@app/components/IconSymbol/IconSymbol';
-import { Text } from '@app/components/Text';
+import { Text } from '@app/components/Text/Text';
 import {
   defaultRemoteConfig,
   RemoteConfigKey,

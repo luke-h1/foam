@@ -1,6 +1,6 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { SanitisedEmote } from '@app/types/emote';
 
-export const ffzSanitisedChannelEmoteSet: SanitisiedEmoteSet[] = [
+export const ffzSanitisedChannelEmoteSet: SanitisedEmote[] = [
   {
     name: 'OMEGALUL',
     id: '128054',
@@ -9,5 +9,8 @@ export const ffzSanitisedChannelEmoteSet: SanitisiedEmoteSet[] = [
     creator: 'dourgent',
     site: 'FFZ',
     original_name: 'UNKNOWN',
+    width: 28,
+    height: 28,
+    aspect_ratio: 1,
   },
 ];

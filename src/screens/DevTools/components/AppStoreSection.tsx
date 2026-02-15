@@ -3,7 +3,7 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as AC from '@bacons/apple-colors';
 import * as Application from 'expo-application';
 import { useState } from 'react';
-import { getStoreUrlAsync } from '../utils';
+import { getStoreUrlAsync } from '../utils/getStoreUrlAsync';
 
 export function AppStoreSection() {
   const [canOpenStore, setCanOpenStore] = useState<boolean>(true);

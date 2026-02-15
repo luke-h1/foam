@@ -1,10 +1,10 @@
 import { AuthContextTestProvider } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import {
-  userInfoFixture,
   userBlockListFixture,
   manyUserBlockListFixture,
-} from '@app/services/__fixtures__/twitch';
+} from '@app/services/__fixtures__/twitch/userBlockList.fixture';
+import { userInfoFixture } from '@app/services/__fixtures__/twitch/userInfo.fixture';
 import { UserBlockList } from '@app/services/twitch-service';
 import type { Meta, StoryObj } from '@storybook/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

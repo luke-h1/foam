@@ -11,7 +11,7 @@ import { LogBox } from 'react-native';
 import { enableFreeze } from 'react-native-screens';
 import { Providers } from './Providers/Providers';
 import { ForceUpdateModal } from './components/ForceUpdateModal/ForceUpdateModal';
-import { OTAUpdates } from './components/OTAUpdates';
+import { OTAUpdates } from './components/OTAUpdates/OTAUpdates';
 import { useChangeScreenOrientation } from './hooks/useChangeScreenOrientation';
 import { useClearExpiredStorageItems } from './hooks/useClearExpiredStorageItems';
 import { useOnAppStateChange } from './hooks/useOnAppStateChange';

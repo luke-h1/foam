@@ -3,7 +3,7 @@ import { forwardRef } from 'react';
 import { ScrollViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useBottomTabOverflow } from '../TabBarBackground';
+import { useBottomTabOverflow } from '../TabBarBackground/TabBarBackground';
 
 export const BodyScrollView = forwardRef<Animated.ScrollView, ScrollViewProps>(
   (props, ref) => {

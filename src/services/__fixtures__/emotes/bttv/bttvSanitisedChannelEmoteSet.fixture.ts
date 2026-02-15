@@ -1,6 +1,6 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { BttvSanitisedEmote } from '@app/types/emote';
 
-export const bttvSanitisedChannelEmoteSet: SanitisiedEmoteSet[] = [
+export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
   {
     name: 'zoilGiggles',
     id: '5e8b709b518d2b5ce0b0f069',

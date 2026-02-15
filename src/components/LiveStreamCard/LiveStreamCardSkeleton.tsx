@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { Skeleton } from '../Skeleton';
+import { Skeleton } from '../Skeleton/Skeleton';
 
 export function LiveStreamCardSkeleton() {
   return (

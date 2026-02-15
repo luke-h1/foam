@@ -1,7 +1,7 @@
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { Image } from '@app/components/Image';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/Text/Text';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
@@ -10,7 +10,7 @@ import { forwardRef, useCallback, useMemo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
-import { styles } from '../EmotePreviewSheet';
+import { styles } from '../EmotePreviewSheet/EmotePreviewSheet';
 
 interface Props {
   selectedBadge: SanitisedBadgeSet;

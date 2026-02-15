@@ -1,4 +1,4 @@
-import { ThemeColor } from '@app/styles';
+import { ThemeColor } from '@app/styles/colors';
 import { getMargin, MarginProps } from '@app/styles/spacing';
 import { ColorScale } from '@app/styles/util/createPallete';
 import { forwardRef, LegacyRef, ReactNode } from 'react';

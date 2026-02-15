@@ -1,13 +1,11 @@
-import {
-  sevenTvSanitisedChannelEmoteSetFixture,
-  seventvSanitiisedGlobalEmoteSetFixture,
-  twitchTvSanitisedEmoteSetChannelFixture,
-  twitchTvSanitisedEmoteSetGlobalFixture,
-  bttvSanitisedChannelEmoteSet,
-  bttvSanitisedGlobalEmoteSet,
-  ffzSanitisedChannelEmoteSet,
-  ffzSanitisedGlobalEmoteSet,
-} from '@app/services/__fixtures__';
+import { bttvSanitisedChannelEmoteSet } from '@app/services/__fixtures__/emotes/bttv/bttvSanitisedChannelEmoteSet.fixture';
+import { bttvSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/bttv/bttvSanitisedGlobalEmoteSet.fixture';
+import { ffzSanitisedChannelEmoteSet } from '@app/services/__fixtures__/emotes/ffz/ffzSanitisedChannelEmoteSet.fixture';
+import { ffzSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/ffz/ffzSanitisedGlobalEmoteSet.fixture';
+import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedChannelEmoteSet.fixture';
+import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
+import { twitchTvSanitisedEmoteSetChannelFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetChannel.fixture';
+import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
 import { replaceEmotesWithText } from '../replaceEmotesWithText';
 
 describe('replaceEmotesWithText', () => {

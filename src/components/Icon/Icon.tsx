@@ -5,7 +5,7 @@ import { ComponentType } from 'react';
 import { ImageStyle, StyleProp, View, ViewStyle } from 'react-native';
 import { useUnistyles } from 'react-native-unistyles';
 import Feather from 'react-native-vector-icons/Feather';
-import { Button, ButtonProps } from '../Button';
+import { Button, ButtonProps } from '../Button/Button';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const iconType = {

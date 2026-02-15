@@ -1,12 +1,12 @@
-import { Button } from '@app/components/Button';
-import { Text } from '@app/components/Text';
+import { Button } from '@app/components/Button/Button';
+import { Text } from '@app/components/Text/Text';
 import { ReactNativeLegal } from 'react-native-legal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function LicensesScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Button
         onPress={() => ReactNativeLegal.launchLicenseListScreen('OSS licenses')}
       >

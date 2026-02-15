@@ -12,9 +12,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { scheduleOnRN } from 'react-native-worklets';
-import { Icon } from '../Icon';
-import { PressableArea } from '../PressableArea';
-import { Text } from '../Text';
+import { Icon } from '../Icon/Icon';
+import { PressableArea } from '../PressableArea/PressableArea';
+import { Text } from '../Text/Text';
 
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;

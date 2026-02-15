@@ -1,6 +1,6 @@
-import { Button } from '@app/components/Button';
-import { Icon } from '@app/components/Icon';
-import { TextBox } from '@app/components/TextBox';
+import { Button } from '@app/components/Button/Button';
+import { Icon } from '@app/components/Icon/Icon';
+import { TextBox } from '@app/components/TextBox/TextBox';
 import {
   type StyleProp,
   type TextInputProps,

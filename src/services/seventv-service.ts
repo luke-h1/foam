@@ -1,5 +1,51 @@
+import {
+  EmoteSetKind,
+  type Image,
+  Platform,
+  UserCosmeticsDocument,
+  UserCosmeticsQuery,
+  UserCosmeticsQueryVariables,
+  UserPersonalEmotesQueryDocument,
+  UserPersonalEmotesQueryQuery,
+  UserPersonalEmotesQueryQueryVariables,
+} from '@app/graphql/generated/gql';
+import type {
+  SevenTvEmoteSetMetadata,
+  SevenTvSanitisedEmote,
+} from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 import { sevenTvApi } from './api';
+import { sevenTvV4Client } from './gql/client';
+
+/**
+ * Pick the best format from a set of images at the same scale.
+ * Prefers AVIF > WebP > first available.
+ */
+function pickBestFormat(imgs: Image[]): Image | undefined {
+  return (
+    imgs.find(img => img.mime === 'image/avif') ??
+    imgs.find(img => img.mime === 'image/webp') ??
+    imgs[0]
+  );
+}
+
+export function pickBestImage(images: readonly Image[]): Image | undefined {
+  const scales = [4, 3, 2, 1];
+
+  const result = scales.reduce<Image | undefined>((found, targetScale) => {
+    if (found) return found;
+
+    const atScale = images.filter(img => img.scale === targetScale);
+    if (atScale.length === 0) return undefined;
+
+    const animated = atScale.filter(img => img.frameCount > 1);
+    return animated.length > 0
+      ? pickBestFormat(animated)
+      : pickBestFormat(atScale);
+  }, undefined);
+
+  return result;
+}
 
 interface SevenTvFile {
   name: string;
@@ -14,17 +60,6 @@ interface SevenTvFile {
 export interface SevenTvHost {
   url: string;
   files: SevenTvFile[];
-}
-
-export interface SevenTvVersion {
-  id: string;
-  name: string;
-  description?: string;
-  lifecycle: number;
-  state: string[];
-  listed: boolean;
-  animated: boolean;
-  host: SevenTvHost;
 }
 
 export interface StvConnection {
@@ -47,31 +82,6 @@ export interface StvUser {
   connection: StvConnection[];
 }
 
-export interface StvEmote {
-  id: string;
-  name: string;
-  flags: number;
-  tags: string[];
-  lifecycle: number;
-  state: string[];
-  listed: boolean;
-  animated: boolean;
-  host: SevenTvHost;
-  versions: SevenTvVersion[];
-  createdAt: number;
-  owner: StvUser;
-}
-
-interface Connection {
-  id: string;
-  platform: 'TWITCH';
-  username: string;
-  display_name: string;
-  linked_at: number;
-  emote_capacity: number;
-  emote_set_id: string;
-}
-
 export interface SevenTvEmote {
   id: string;
   name: string;
@@ -87,7 +97,6 @@ export interface SevenTvEmote {
     listed: boolean;
     animated: boolean;
     tags?: string[];
-
     owner: {
       id: string;
       username: string;
@@ -99,25 +108,17 @@ export interface SevenTvEmote {
         color?: number;
       };
       role_ids: string[];
-      connection: Connection[];
+      connection: StvConnection[];
       roles?: string[];
     };
     host: {
       url: string;
-      files: {
-        name: string;
-        static_name: string;
-        width: number;
-        height: number;
-        frame_count: number;
-        size: number;
-        format: string;
-      }[];
+      files: SevenTvFile[];
     };
   };
 }
 
-export interface StvEmoteSet {
+interface StvEmoteSet {
   id: string;
   name: string;
   flags: number;
@@ -140,9 +141,7 @@ export interface StvEmoteSet {
   };
 }
 
-export type StvGlobalEmotesResponse = StvEmoteSet;
-
-export type StvChannelEmotesResponse = {
+interface StvChannelEmotesResponse {
   id: string;
   platform: string;
   username: string;
@@ -157,146 +156,59 @@ export type StvChannelEmotesResponse = {
     created_at: number;
     avatar_url: string;
   };
-};
+}
 
-export interface SanitisiedEmoteSet {
+export interface StvEmote {
+  id: string;
   name: string;
-  id: string;
-  url: string;
-  flags?: number;
-  original_name: string;
-  creator: string | null;
-  emote_link: string;
-  site: string;
-  height?: number;
-  width?: number;
-  frame_count?: number;
-  static_name?: string;
-  format?: string;
-
-  // temporarily - review this
-  bits?: number;
-
-  /**
-   * The person who added/removed this emote
-   */
-  actor?: StvUser;
+  flags: number;
+  tags: string[];
+  lifecycle: number;
+  state: string[];
+  listed: boolean;
+  animated: boolean;
+  host: SevenTvHost;
+  versions: {
+    id: string;
+    name: string;
+    description?: string;
+    lifecycle: number;
+    state: string[];
+    listed: boolean;
+    animated: boolean;
+    host: SevenTvHost;
+  }[];
+  createdAt: number;
+  owner: StvUser;
 }
 
-/**
- * 7TV Bridge Event API Types
- * Used for batch fetching user cosmetics
- */
-export interface BridgeEventIdentifier {
-  platform: 'TWITCH';
-  id: string;
-}
+type V4User = NonNullable<UserCosmeticsQuery['users']['user']>;
 
-export interface BridgeEventRequest {
-  identifiers: BridgeEventIdentifier[];
-}
+export type V4Paint = NonNullable<V4User['style']['activePaint']>;
 
-export interface BridgeEventUserStyle {
-  paint_id?: string;
-  badge_id?: string;
-}
-
-export interface BridgeEventUserConnection {
-  platform: 'TWITCH' | 'YOUTUBE' | 'KICK';
-  id: string;
-  username: string;
-}
-
-export interface BridgeEventUser {
-  username: string;
-  avatar_url?: string;
-  style?: BridgeEventUserStyle;
-  connections: BridgeEventUserConnection[];
-}
-
-export interface BridgeEventBody {
-  object: {
-    data: {
-      user: BridgeEventUser;
-    };
-  };
-}
-
-export interface BridgeEventResponse {
-  body: BridgeEventBody;
-}
-
-/**
- * 7TV GQL User Style Types
- * Used for fetching individual user's paint/badge data
- */
-export interface GqlPaintStop {
-  at: number;
-  color: number;
-}
-
-export interface GqlPaintShadow {
-  x_offset: number;
-  y_offset: number;
-  radius: number;
-  color: number;
-}
-
-export interface GqlPaint {
-  id: string;
-  kind: string;
-  name: string;
-  function: string;
-  color: number | null;
-  angle: number;
-  shape?: string;
-  image_url?: string;
-  repeat: boolean;
-  stops: GqlPaintStop[];
-  shadows: GqlPaintShadow[];
-}
-
-export interface GqlBadge {
-  id: string;
-  kind: string;
-  name: string;
-  tooltip: string;
-  tag?: string;
-}
-
-export interface GqlUserStyle {
-  color?: number;
-  paint?: GqlPaint;
-  badge?: GqlBadge;
-}
-
-export interface GqlUserConnection {
-  id: string;
-  platform: string;
-}
-
-export interface GqlUser {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar_url?: string;
-  style?: GqlUserStyle;
-  connections: GqlUserConnection[];
-}
-
-export interface GqlUserResponse {
-  data?: {
-    user?: GqlUser;
-  };
-}
+export type V4Badge = NonNullable<V4User['style']['activeBadge']>;
 
 export interface UserCosmeticsInfo {
-  userId: string; // 7TV user ID
-  ttvUserId: string | null; // Twitch user ID
+  userId: string;
+  ttvUserId: string | null;
   paintId: string | null;
   badgeId: string | null;
-  paint: GqlPaint | null;
-  badge: GqlBadge | null;
+  paint: V4Paint | null;
+  badge: V4Badge | null;
+}
+
+/**
+ * Pick the best file from a v3 REST host.files array.
+ * Prefers 4x AVIF > 3x AVIF > 2x AVIF > 1x AVIF, then any available.
+ */
+function pickBestV3File(files: SevenTvFile[]): SevenTvFile | undefined {
+  return (
+    files.find(file => file.name === '4x.avif') ||
+    files.find(file => file.name === '3x.avif') ||
+    files.find(file => file.name === '2x.avif') ||
+    files.find(file => file.name === '1x.avif') ||
+    files[0]
+  );
 }
 
 export const sevenTvService = {
@@ -318,45 +230,58 @@ export const sevenTvService = {
 
     return result.emote_set.id;
   },
+
   getSanitisedEmoteSet: async (
     emoteSetId: string,
-  ): Promise<SanitisiedEmoteSet[]> => {
+  ): Promise<SevenTvSanitisedEmote[]> => {
     const result = await sevenTvApi.get<StvEmoteSet>(
       `/emote-sets/${emoteSetId}`,
     );
 
-    const sanitisedSet = result.emotes.map(emote => {
-      const { owner } = emote.data;
+    const site = emoteSetId === 'global' ? '7TV Global' : '7TV Channel';
 
-      const emoteUrl =
-        emote.data.host.files.find(file => file.name === '4x.avif') ||
-        emote.data.host.files.find(file => file.name === '3x.avif') ||
-        emote.data.host.files.find(file => file.name === '2x.avif') ||
-        emote.data.host.files.find(file => file.name === '1x.avif');
+    const setMetadata: SevenTvEmoteSetMetadata = {
+      setId: result.id,
+      setName: result.name,
+      capacity: result.capacity,
+      ownerId: result.owner?.id ?? null,
+      kind: EmoteSetKind.Normal,
+      updatedAt: '',
+      totalCount: result.emote_count,
+    };
+
+    return result.emotes.map(emote => {
+      const { owner } = emote.data;
+      const bestFile = pickBestV3File(emote.data.host.files);
 
       return {
         name: emote.name,
         id: emote.id,
-        url: `https://cdn.7tv.app/emote/${emote.id}/${emoteUrl?.name ?? '2x.avif'}`,
+        url: `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '2x.avif'}`,
         flags: emote.data.flags,
         original_name: emote.data.name,
-        creator: (owner?.display_name || owner?.username) ?? 'UNKNOWN',
+        creator: (owner?.display_name || owner?.username) ?? null,
         emote_link: `https://7tv.app/emotes/${emote.id}`,
-        site:
-          emoteSetId === 'global' ? '7TV Global Emote' : '7TV Channel Emote',
-        height: emoteUrl?.height,
-        width: emoteUrl?.width,
-        frame_count: emoteUrl?.frame_count,
-        static_name: emoteUrl?.static_name,
-        format: emoteUrl?.format,
+        site,
+        frame_count: bestFile?.frame_count ?? 1,
+        format: bestFile?.format ?? 'avif',
+        aspect_ratio:
+          bestFile && bestFile.height > 0
+            ? bestFile.width / bestFile.height
+            : 1,
+        // eslint-disable-next-line no-bitwise
+        zero_width: Boolean(emote.data.flags & 256),
+        width: bestFile?.width ?? 0,
+        height: bestFile?.height ?? 0,
+        set_metadata: setMetadata,
       };
     });
-
-    return sanitisedSet;
   },
+
   getEmote: async (emoteId: string) => {
     return sevenTvApi.get<StvEmote>(`/emotes/${emoteId}`);
   },
+
   sendPresence: async (channelId: string, userId: string) => {
     return sevenTvApi.post(`/users/${userId}/presences`, {
       kind: 1,
@@ -370,78 +295,78 @@ export const sevenTvService = {
   },
 
   /**
-   * Batch fetch cosmetics for multiple users via bridge/event-api
-   * Returns basic cosmetic info (paint_id, badge_id) for each user
-   * @param twitchUserIds - Array of Twitch user IDs
+   * Fetch a user's personal emote set via v4 GQL
+   * Personal emotes are unique emotes that a user can use in any channel
+   * @param twitchUserId - The Twitch user ID
+   * @returns Array of sanitized emotes or empty array if no personal emotes
    */
-  getUsersCosmetics: async (
-    twitchUserIds: string[],
-  ): Promise<
-    {
-      twitchUserId: string;
-      username?: string;
-      avatarUrl?: string;
-      paintId?: string;
-      badgeId?: string;
-    }[]
-  > => {
-    if (twitchUserIds.length === 0) {
+  getPersonalEmoteSet: async (
+    twitchUserId: string,
+  ): Promise<SevenTvSanitisedEmote[]> => {
+    const { data, error } = await sevenTvV4Client.query<
+      UserPersonalEmotesQueryQuery,
+      UserPersonalEmotesQueryQueryVariables
+    >({
+      query: UserPersonalEmotesQueryDocument,
+      variables: { platformId: twitchUserId },
+    });
+
+    if (error) {
+      logger.stv.warn(
+        `Failed to fetch personal emotes for user ${twitchUserId}:`,
+        error.message,
+      );
       return [];
     }
 
-    try {
-      const response = await fetch('https://7tv.io/v3/bridge/event-api', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identifiers: twitchUserIds.map(id => ({
-            platform: 'TWITCH',
-            id,
-          })),
-        } satisfies BridgeEventRequest),
-      });
+    const personalEmoteSet = data?.users?.userByConnection?.personalEmoteSet;
 
-      if (!response.ok) {
-        logger.stv.error('Bridge API request failed:', response.status);
-        return [];
-      }
-
-      const data = (await response.json()) as BridgeEventResponse[];
-
-      if (!Array.isArray(data) || data.length === 0) {
-        return [];
-      }
-
-      return data.map(item => {
-        const {
-          body: {
-            object: {
-              data: { user },
-            },
-          },
-        } = item;
-        const twitchConnection = user.connections.find(
-          conn => conn.platform === 'TWITCH',
-        );
-
-        return {
-          twitchUserId: twitchConnection?.id ?? '',
-          username: twitchConnection?.username,
-          avatarUrl: user.avatar_url,
-          paintId: user.style?.paint_id,
-          badgeId: user.style?.badge_id,
-        };
-      });
-    } catch (error) {
-      logger.stv.error('Failed to fetch users cosmetics:', error);
+    if (!personalEmoteSet || !personalEmoteSet.emotes?.items?.length) {
       return [];
     }
+
+    const setMetadata: SevenTvEmoteSetMetadata = {
+      setId: personalEmoteSet.id,
+      setName: personalEmoteSet.name,
+      capacity: null,
+      ownerId: null,
+      kind: EmoteSetKind.Personal,
+      updatedAt: '',
+      totalCount: personalEmoteSet.emotes.items.length,
+    };
+
+    return personalEmoteSet.emotes.items.map(item => {
+      const { emote } = item;
+      const emoteName = item.alias || emote.defaultName;
+
+      const bestImage = pickBestImage(emote.images);
+
+      const imgScale = bestImage?.scale ?? 1;
+      const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
+      const imgHeight = bestImage ? Math.round(bestImage.height / imgScale) : 0;
+
+      return {
+        name: emoteName,
+        id: emote.id,
+        url: bestImage?.url ?? '',
+        flags: emote.flags.animated ? 1 : 0,
+        original_name: emote.defaultName,
+        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+        emote_link: `https://7tv.app/emotes/${emote.id}`,
+        site: '7TV Personal',
+        frame_count: bestImage?.frameCount ?? 1,
+        format: bestImage?.mime?.replace('image/', '') ?? 'webp',
+        aspect_ratio: imgHeight > 0 ? imgWidth / imgHeight : 1,
+        zero_width: emote.flags.defaultZeroWidth,
+        width: imgWidth,
+        height: imgHeight,
+        set_metadata: setMetadata,
+      };
+    });
   },
 
   /**
-   * Fetch a user's full cosmetics (paint + badge data) via GQL
+   * Fetch a user's full cosmetics (paint + badge data) via v4 GQL
    * Use this when you need the actual paint/badge styling data
    * @param sevenTvUserId - The 7TV user ID (not Twitch ID)
    */
@@ -449,71 +374,38 @@ export const sevenTvService = {
     sevenTvUserId: string,
   ): Promise<UserCosmeticsInfo | null> => {
     try {
-      const response = await fetch('https://7tv.io/v3/gql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: `query GetUserForUserPage($id: ObjectID!) {
-            user(id: $id) {
-              id
-              username
-              display_name
-              avatar_url
-              style {
-                color
-                paint {
-                  id
-                  kind
-                  name
-                  function
-                  color
-                  angle
-                  shape
-                  image_url
-                  repeat
-                  stops { at color }
-                  shadows { x_offset y_offset radius color }
-                }
-                badge {
-                  id
-                  kind
-                  name
-                  tooltip
-                  tag
-                }
-              }
-              connections { id platform }
-            }
-          }`,
-          variables: { id: sevenTvUserId },
-        }),
+      const { data, error } = await sevenTvV4Client.query<
+        UserCosmeticsQuery,
+        UserCosmeticsQueryVariables
+      >({
+        query: UserCosmeticsDocument,
+        variables: { id: sevenTvUserId },
       });
 
-      if (!response.ok) {
-        logger.stv.error('GQL request failed:', response.status);
+      if (error) {
+        logger.stv.error('v4 GQL request failed:', error.message);
         return null;
       }
 
-      const result = (await response.json()) as GqlUserResponse;
-      const user = result.data?.user;
+      const user = data?.users?.user;
 
       if (!user) {
         return null;
       }
 
       const twitchConnection = user.connections.find(
-        conn => conn.platform === 'TWITCH',
+        conn => conn.platform === Platform.Twitch,
       );
+
+      const { style } = user;
 
       return {
         userId: user.id,
-        ttvUserId: twitchConnection?.id ?? null,
-        paintId: user.style?.paint?.id ?? null,
-        badgeId: user.style?.badge?.id ?? null,
-        paint: user.style?.paint ?? null,
-        badge: user.style?.badge ?? null,
+        ttvUserId: twitchConnection?.platformId ?? null,
+        paintId: style.activePaintId ?? null,
+        badgeId: style.activeBadgeId ?? null,
+        paint: style.activePaint ?? null,
+        badge: style.activeBadge ?? null,
       };
     } catch (error) {
       logger.stv.error('Failed to fetch user cosmetics via GQL:', error);

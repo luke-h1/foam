@@ -1,28 +1,37 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { SanitisedEmote } from '@app/types/emote';
 import {
   findEmotesInText,
   FindEmotesInTextReturn,
 } from '../replaceTextWithEmotes';
 
 describe('FindEmotesInText', () => {
-  const createMockEmote = (name: string): SanitisiedEmoteSet => ({
+  const createMockEmote = (name: string): SanitisedEmote => ({
     id: '1',
     name,
     emote_link: `https://example.com/${name}.png`,
     url: `https://example.com/${name}.png`,
-    width: 28,
-    height: 28,
     creator: 'UNKNOWN',
     original_name: name,
-    site: 'Twitch',
+    site: 'Twitch Channel',
+  });
+
+  const createNonTwitchMockEmote = (name: string): SanitisedEmote => ({
+    id: '1',
+    name,
+    emote_link: `https://example.com/${name}.png`,
+    url: `https://example.com/${name}.png`,
+    creator: 'UNKNOWN',
+    original_name: name,
+    site: 'FFZ',
   });
 
   const createEmoteMap = (
     emoteNames: string[],
-  ): Map<string, SanitisiedEmoteSet> => {
-    const map = new Map<string, SanitisiedEmoteSet>();
+    factory: (name: string) => SanitisedEmote = createMockEmote,
+  ): Map<string, SanitisedEmote> => {
+    const map = new Map<string, SanitisedEmote>();
     emoteNames.forEach(name => {
-      map.set(name, createMockEmote(name));
+      map.set(name, factory(name));
     });
     return map;
   };
@@ -86,7 +95,7 @@ describe('FindEmotesInText', () => {
   });
 
   test('should not match emotes that are part of other words', () => {
-    const emoteMap = createEmoteMap(['Kappa']);
+    const emoteMap = createEmoteMap(['Kappa'], createNonTwitchMockEmote);
     const result = findEmotesInText(
       'PreKappa KappaPost NotKappaHere',
       emoteMap,
@@ -128,18 +137,18 @@ describe('FindEmotesInText', () => {
   });
 
   test('should respect word boundaries', () => {
-    const emoteMap = createEmoteMap(['Pog']);
+    const emoteMap = createEmoteMap(['Pog'], createNonTwitchMockEmote);
     const result = findEmotesInText('Pog PogChamp Pog NotPog PogNot', emoteMap);
 
     // Should only match the standalone 'Pog'
     expect(result).toEqual([
       {
-        emote: createMockEmote('Pog'),
+        emote: createNonTwitchMockEmote('Pog'),
         start: 0,
         end: 3,
       },
       {
-        emote: createMockEmote('Pog'),
+        emote: createNonTwitchMockEmote('Pog'),
         start: 13,
         end: 16,
       },

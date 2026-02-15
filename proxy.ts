@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable no-console */
+
 import axios from 'axios';
 import dotenv from 'dotenv';
 import express, { Request, Response } from 'express';
@@ -21,7 +21,6 @@ const main = async () => {
   });
 
   app.get('/api/proxy', async (req: Request, res: Response) => {
-    // const redirectUri = `${APP_SCHEME_NAME}://?${new URL(req.url, `foam://`).searchParams}`;
     const redirectUri = `foam://?${new URL(req.url, 'http://a').searchParams}`;
 
     console.info(`redirecting to app with redirect_uri -> ${redirectUri}`);
@@ -52,6 +51,82 @@ const main = async () => {
       return res.status(200).json(data);
     },
   );
+
+  app.get('/api/stream', (req: Request, res: Response) => {
+    const channel = (req.query.channel as string) || 'forsen';
+    const video = req.query.video as string | undefined;
+    const host = req.get('host') || 'localhost';
+    const parent = host.split(':')[0] ?? 'localhost';
+    const safeChannel = encodeURIComponent(channel);
+    const iframeSrc = video
+      ? `https://player.twitch.tv/?video=${encodeURIComponent(video)}&parent=${encodeURIComponent(parent)}&muted=false`
+      : `https://player.twitch.tv/?channel=${safeChannel}&parent=${encodeURIComponent(parent)}&muted=false&low_latency=true`;
+
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>${channel} - Twitch Stream</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0e0e10;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .player-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .tap-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.75);
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            animation: fadeInOut 6s ease-in-out;
+        }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            15% { opacity: 1; }
+            85% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-wrap">
+        <iframe
+            id="twitch-embed"
+            src="${iframeSrc}"
+            allowfullscreen="true"
+            allow="autoplay; encrypted-media; fullscreen"
+            scrolling="no">
+        </iframe>
+        <div class="tap-hint">Tap the video to log in if prompted</div>
+    </div>
+</body>
+</html>
+    `);
+  });
 
   // @ts-expect-error - express type definitions are incorrect
   app.get('/api/pending', async (req: Request, res: Response) => {

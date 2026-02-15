@@ -1,6 +1,6 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { SanitisedEmote } from '@app/types/emote';
 
-export const twitchTvSanitisedEmoteSetChannelFixture: SanitisiedEmoteSet[] = [
+export const twitchTvSanitisedEmoteSetChannelFixture: SanitisedEmote[] = [
   {
     name: 'sennykToilet',
     id: 'emotesv2_ad49b53de0ed493cbdf04c75640800e3',

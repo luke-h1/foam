@@ -3,10 +3,10 @@ import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
 import { type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { BrandIcon, type BrandIconName } from '../BrandIcon';
-import { Button } from '../Button';
-import { Icon } from '../Icon';
-import { Text } from '../Text';
+import { BrandIcon, type BrandIconName } from '../BrandIcon/BrandIcon';
+import { Button } from '../Button/Button';
+import { Icon } from '../Icon/Icon';
+import { Text } from '../Text/Text';
 
 type Icon =
   | {

@@ -1,4 +1,4 @@
-import { Menu } from '@app/components/Menu';
+import { Menu } from '@app/components/Menu/Menu';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 

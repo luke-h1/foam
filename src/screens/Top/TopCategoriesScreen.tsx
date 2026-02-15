@@ -1,12 +1,13 @@
-import { CategoryCard } from '@app/components/CategoryCard';
-import { EmptyState } from '@app/components/EmptyState';
-import { FlashList } from '@app/components/FlashList';
+import { CategoryCard } from '@app/components/CategoryCard/CategoryCard';
+import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import { FlashList } from '@app/components/FlashList/FlashList';
+import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { Category, twitchService } from '@app/services/twitch-service';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 const SKELETON_COUNT = 9;
@@ -91,9 +92,9 @@ export function TopCategoriesScreen() {
     );
   }
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    void refetch();
+    await refetch();
     setRefreshing(false);
   };
 
@@ -105,7 +106,7 @@ export function TopCategoriesScreen() {
       <View style={styles.wrapper}>
         <EmptyState
           content="No categories found"
-          buttonOnPress={() => onRefresh()}
+          buttonOnPress={() => void onRefresh()}
         />
       </View>
     );
@@ -123,16 +124,7 @@ export function TopCategoriesScreen() {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
-        onRefresh={onRefresh}
-        refreshing={refreshing}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="white"
-            colors={['white']}
-          />
-        }
+        refreshControl={<RefreshControl onRefresh={onRefresh} />}
       />
     </View>
   );

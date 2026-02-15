@@ -1,6 +1,6 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
+import type { SanitisedEmote } from '@app/types/emote';
 
-export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisiedEmoteSet[] = [
+export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
   {
     name: 'ZLANsup',
     id: 'emotesv2_bd02ce011d11477cba6b2753e19fbd55',

@@ -74,7 +74,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   },
 } as const;
 
-const variant = (process.env.APP_VARIANT as Variant) || 'production';
+const variant = (process.env.APP_VARIANT as Variant) || 'development';
 
 const VERSION = '0.0.38';
 
@@ -149,6 +149,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
+    'newrelic-react-native-agent',
     'react-native-compressor',
     [
       '@sentry/react-native/expo',
@@ -219,6 +220,7 @@ const config: ExpoConfig = {
           useFrameworks: 'static',
           // buildReactNativeFromSource: true,
           forceStaticLinking: ['RNFBApp'],
+          deploymentTarget: '16.0',
         },
       },
     ],
@@ -237,10 +239,6 @@ const config: ExpoConfig = {
   experiments: {
     tsconfigPaths: true,
   },
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  buildCacheProvider: 'eas',
   web: {},
   ios: {
     appleTeamId: 'XJA7HDCMMY',
@@ -265,6 +263,18 @@ const config: ExpoConfig = {
       ? appConfig.androidGoogleServicesFile
       : undefined,
     edgeToEdgeEnabled: true,
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [
+          { scheme: 'https', host: 'www.twitch.tv' },
+          { scheme: 'https', host: 'twitch.tv' },
+          { scheme: 'https', host: 'm.twitch.tv' },
+        ],
+      },
+    ],
   },
 };
 

@@ -2,7 +2,10 @@ import { typedObjectKeys } from '@app/utils/typescript/typedObjectKeys';
 import { memo } from 'react';
 import { DimensionValue, ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { BttvIcon, FfzIcon, StvIcon, TwitchIcon } from './svg';
+import { BttvIcon } from './svg/BttvIcon';
+import { FfzIcon } from './svg/FfzIcon';
+import { StvIcon } from './svg/StvIcon';
+import { TwitchIcon } from './svg/TwitchIcon';
 
 export type BrandIconName = keyof typeof BrandIcons;
 

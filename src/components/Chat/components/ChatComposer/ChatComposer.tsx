@@ -1,5 +1,5 @@
-import { SanitisiedEmoteSet } from '@app/services/seventv-service';
 import { ChatUser } from '@app/store/chatStore';
+import type { SanitisedEmote } from '@app/types/emote';
 import { useCallback, useEffect, useState, forwardRef, useMemo } from 'react';
 import {
   TextInput,
@@ -19,7 +19,7 @@ import { useWordInfo } from './hooks/useWordInfo';
 export type SuggestionType = 'emote' | 'user';
 
 interface ChatComposerProps extends TextInputProps {
-  onEmoteSelect?: (emote: SanitisiedEmoteSet) => void;
+  onEmoteSelect?: (emote: SanitisedEmote) => void;
   maxSuggestions?: number;
   prioritizeChannelEmotes?: boolean;
   placeholder?: string;
@@ -126,7 +126,7 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
     }, []);
 
     const handleEmotePress = useCallback(
-      (emote: SanitisiedEmoteSet) => {
+      (emote: SanitisedEmote) => {
         const beforeWord = value.substring(0, wordInfo.start);
         const afterWord = value.substring(wordInfo.end);
         const newText = `${beforeWord}${emote.name}${afterWord}`;

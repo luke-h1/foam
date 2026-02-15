@@ -1,5 +1,5 @@
-import { IconButton } from '@app/components/IconButton';
-import { Text } from '@app/components/Text';
+import { IconButton } from '@app/components/IconButton/IconButton';
+import { Text } from '@app/components/Text/Text';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { SFSymbol } from 'expo-symbols';
 import { View } from 'react-native';

@@ -1,0 +1,86 @@
+query UserCosmetics($id: Id!) {
+  users {
+    user(id: $id) {
+      id
+      connections {
+        platform
+        platformId
+        platformDisplayName
+      }
+      style {
+        activePaintId
+        activeBadgeId
+        activePaint {
+          id
+          name
+          data {
+            layers {
+              id
+              opacity
+              ty {
+                ... on PaintLayerTypeLinearGradient {
+                  angle
+                  repeating
+                  stops {
+                    at
+                    color {
+                      r
+                      g
+                      b
+                      a
+                    }
+                  }
+                }
+                ... on PaintLayerTypeRadialGradient {
+                  repeating
+                  shape
+                  stops {
+                    at
+                    color {
+                      r
+                      g
+                      b
+                      a
+                    }
+                  }
+                }
+                ... on PaintLayerTypeSingleColor {
+                  color {
+                    r
+                    g
+                    b
+                    a
+                  }
+                }
+                ... on PaintLayerTypeImage {
+                  images {
+                    ...ImageFragment
+                  }
+                }
+              }
+            }
+            shadows {
+              offsetX
+              offsetY
+              blur
+              color {
+                r
+                g
+                b
+                a
+              }
+            }
+          }
+        }
+        activeBadge {
+          id
+          name
+          description
+          images {
+            ...ImageFragment
+          }
+        }
+      }
+    }
+  }
+}

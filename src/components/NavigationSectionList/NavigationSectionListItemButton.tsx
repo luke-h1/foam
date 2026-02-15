@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { Button, ButtonProps } from '../Button';
-import { Icon } from '../Icon';
-import { Image } from '../Image';
-import { Text } from '../Text';
+import { Button, ButtonProps } from '../Button/Button';
+import { Icon } from '../Icon/Icon';
+import { Image } from '../Image/Image';
+import { Text } from '../Text/Text';
 import { SectionListItem } from './NavigationSectionList';
 
 type NavigationSectionListItemButtonProps = ButtonProps & SectionListItem;

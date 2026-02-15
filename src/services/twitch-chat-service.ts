@@ -2,12 +2,15 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { logger } from '@app/utils/logger';
 import { useNavigationState } from '@react-navigation/native';
-import { useEffect, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { CHAT_SCREENS } from '../constants/chat';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 import { getActiveRouteName } from '../navigators/navigationUtilities';
 
 const TWITCH_CHAT_URL = 'wss://irc-ws.chat.twitch.tv:443';
+
+/** Delay before opening chat WS so stream WebView can connect first and avoid resource contention */
+const CHAT_CONNECT_DELAY_MS = 800;
 
 interface IrcMessage {
   tags?: Map<string, string>;
@@ -104,6 +107,44 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     if (!currentScreen) return false;
     return CHAT_SCREENS.includes(currentScreen as 'Chat' | 'LiveStream');
   }, [currentScreen]);
+
+  // Stagger chat connection so stream WebView can establish first (reduces "max reconnect" failures)
+  const [delayedShouldConnect, setDelayedShouldConnect] = useState(false);
+  const previousTokenRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!shouldConnect) {
+      setDelayedShouldConnect(false);
+      return;
+    }
+    const t = setTimeout(
+      () => setDelayedShouldConnect(true),
+      CHAT_CONNECT_DELAY_MS,
+    );
+    return () => clearTimeout(t);
+  }, [shouldConnect]);
+
+  // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore.
+  useEffect(() => {
+    const currentToken = authState?.token?.accessToken;
+    if (currentToken == null || !shouldConnect) {
+      previousTokenRef.current = currentToken;
+      return;
+    }
+    const previousToken = previousTokenRef.current;
+    previousTokenRef.current = currentToken;
+    if (previousToken !== undefined && previousToken !== currentToken) {
+      logger.chat.info(
+        '[useTwitchChat] Token updated, reconnecting IRC with new token',
+      );
+      setDelayedShouldConnect(false);
+      const t = setTimeout(() => setDelayedShouldConnect(true), 150);
+      return () => clearTimeout(t);
+    }
+  }, [authState?.token?.accessToken, shouldConnect]);
 
   /**
    * Parse IRC message tags (format: @key=value;key2=value2)
@@ -645,27 +686,24 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const shouldReconnect = useCallback(
     (event: CloseEvent) => {
-      // Don't reconnect on normal closure
-      if (event.code === 1000) {
-        return false;
-      }
-      return shouldConnect;
+      if (event.code === 1000) return false;
+      return delayedShouldConnect;
     },
-    [shouldConnect],
+    [delayedShouldConnect],
   );
 
   const { getWebSocket } = useWebsocket(
-    shouldConnect ? TWITCH_CHAT_URL : null,
+    delayedShouldConnect ? TWITCH_CHAT_URL : null,
     {
       onOpen: handleWebSocketOpen,
       onMessage: handleMessage,
       onClose: handleWebSocketClose,
       onError: handleWebSocketError,
       shouldReconnect,
-      reconnectAttempts: 20,
+      reconnectAttempts: 30,
       reconnectInterval: 2000,
     },
-    shouldConnect,
+    delayedShouldConnect,
   );
 
   useEffect(() => {

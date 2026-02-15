@@ -16,8 +16,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { Button } from '../Button';
-import { Text } from '../Text';
+import { Button } from '../Button/Button';
+import { Text } from '../Text/Text';
 
 export interface TextFieldAccessoryProps {
   style: StyleProp<unknown>;

@@ -1,3 +1,4 @@
+import { ApolloProvider } from '@apollo/client/react';
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
@@ -5,7 +6,8 @@ import { BaseConfig } from '@app/navigators/config';
 import { navigationRef } from '@app/navigators/navigationUtilities';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api';
-import { createAuthErrorInterceptor } from '@app/services/api/interceptors';
+import { createAuthErrorInterceptor } from '@app/services/api/interceptors/authErrorInterceptor';
+import { sevenTvV4Client } from '@app/services/gql/client';
 import { storage } from '@app/services/storage-service';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';
@@ -18,6 +20,7 @@ import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import NewRelic from 'newrelic-react-native-agent';
 import { PressablesConfig } from 'pressto';
 import { PropsWithChildren, useEffect, useRef } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -29,11 +32,17 @@ import {
 } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { Toaster } from 'sonner-native';
-import { ScreenDimensionsProvider } from './ScreenDimensionsProvider';
+import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 
 function QueryProviderWithAuth({ children }: PropsWithChildren) {
   const { user, populateAuthState } = useAuthContext();
   const interceptorAdded = useRef(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      NewRelic.setUserId(user.id);
+    }
+  }, [user?.id]);
 
   // Set up 401 error interceptor to handle auth refresh after OTA updates
   useEffect(() => {
@@ -109,32 +118,34 @@ export function Providers({ children }: PropsWithChildren) {
 
   return (
     <AuthContextProvider>
-      <ScreenDimensionsProvider>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <ErrorBoundary
-            catchErrors={BaseConfig.catchErrors}
-            onReset={() => setRecoveredFromError(true)}
-          >
-            <KeyboardProvider>
-              <GestureHandlerRootView style={styles.gestureContainer}>
-                <BottomSheetModalProvider>
-                  <QueryProviderWithAuth>
-                    <PressablesConfig
-                      globalHandlers={{
-                        onPress: () => {
-                          void Haptics.selectionAsync();
-                        },
-                      }}
-                    >
-                      {children}
-                    </PressablesConfig>
-                  </QueryProviderWithAuth>
-                </BottomSheetModalProvider>
-              </GestureHandlerRootView>
-            </KeyboardProvider>
-          </ErrorBoundary>
-        </SafeAreaProvider>
-      </ScreenDimensionsProvider>
+      <ApolloProvider client={sevenTvV4Client}>
+        <ScreenDimensionsProvider>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <ErrorBoundary
+              catchErrors={BaseConfig.catchErrors}
+              onReset={() => setRecoveredFromError(true)}
+            >
+              <KeyboardProvider>
+                <GestureHandlerRootView style={styles.gestureContainer}>
+                  <BottomSheetModalProvider>
+                    <QueryProviderWithAuth>
+                      <PressablesConfig
+                        globalHandlers={{
+                          onPress: () => {
+                            void Haptics.selectionAsync();
+                          },
+                        }}
+                      >
+                        {children}
+                      </PressablesConfig>
+                    </QueryProviderWithAuth>
+                  </BottomSheetModalProvider>
+                </GestureHandlerRootView>
+              </KeyboardProvider>
+            </ErrorBoundary>
+          </SafeAreaProvider>
+        </ScreenDimensionsProvider>
+      </ApolloProvider>
     </AuthContextProvider>
   );
 }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import type { FfzSanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 import { ffzApi } from './api';
-import { SanitisiedEmoteSet } from './seventv-service';
 import { SanitisedBadgeSet } from './twitch-badge-service';
 
 export interface FfzEmoticon {
@@ -90,7 +90,7 @@ export interface FfzBadgeUsers {
 }
 
 export const ffzService = {
-  getSanitisedGlobalEmotes: async (): Promise<SanitisiedEmoteSet[]> => {
+  getSanitisedGlobalEmotes: async (): Promise<FfzSanitisedEmote[]> => {
     try {
       const result = await ffzApi.get<FfzGlobalEmotesResponse>('/set/global');
 
@@ -99,7 +99,7 @@ export const ffzService = {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         result.default_sets[0]
-      ].emoticons.map<SanitisiedEmoteSet>((emote: FfzEmoticon) => {
+      ].emoticons.map<FfzSanitisedEmote>((emote: FfzEmoticon) => {
         return {
           name: emote.name,
           id: emote.id.toString(),
@@ -112,10 +112,13 @@ export const ffzService = {
           creator: 'UNKNOWN',
           site: 'Global FFZ',
           original_name: 'UNKNOWN',
-        } satisfies SanitisiedEmoteSet;
+          width: emote.width,
+          height: emote.height,
+          aspect_ratio: emote.height > 0 ? emote.width / emote.height : 1,
+        } satisfies FfzSanitisedEmote;
       });
 
-      return sanitisedSet as SanitisiedEmoteSet[];
+      return sanitisedSet as FfzSanitisedEmote[];
     } catch (error) {
       logger.ffz.error('Error fetching global FFZ emotes:', error);
       return [];
@@ -198,7 +201,7 @@ export const ffzService = {
 
   getSanitisedChannelEmotes: async (
     channelId: string,
-  ): Promise<SanitisiedEmoteSet[]> => {
+  ): Promise<FfzSanitisedEmote[]> => {
     try {
       const result = await ffzApi.get<
         FfzChannelEmotesResponse | FFzErrorResponse
@@ -212,7 +215,7 @@ export const ffzService = {
         const emoteSet = result.sets[result.room.set];
         const sanitistedSet =
           emoteSet?.emoticons &&
-          emoteSet?.emoticons.map<SanitisiedEmoteSet>(emote => {
+          emoteSet?.emoticons.map<FfzSanitisedEmote>(emote => {
             const { owner } = emote;
 
             return {
@@ -225,7 +228,10 @@ export const ffzService = {
               creator: owner.name ?? 'unknown',
               site: 'FFZ',
               original_name: 'UNKNOWN',
-            } satisfies SanitisiedEmoteSet;
+              width: emote.width,
+              height: emote.height,
+              aspect_ratio: emote.height > 0 ? emote.width / emote.height : 1,
+            } satisfies FfzSanitisedEmote;
           });
         return sanitistedSet ?? [];
       }
