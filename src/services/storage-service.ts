@@ -12,10 +12,7 @@ export type StorageItem<T = unknown> = {
 };
 
 export type AllowedKey = OpenStringUnion<
-  | 'ReactQueryDebug'
-  | 'foam_hls_player'
-  | 'previous_searches'
-  | `appStoreLink_${string}`
+  'ReactQueryDebug' | 'previous_searches' | `appStoreLink_${string}`
 >;
 
 export const NAMESPACE = 'FOAM_V1';

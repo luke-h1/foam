@@ -1,8 +1,4 @@
 import { Chat } from '@app/components/Chat/Chat';
-import {
-  NativeStreamPlayer,
-  type NativeStreamPlayerRef,
-} from '@app/components/NativeStreamPlayer/NativeStreamPlayer';
 import { Spinner } from '@app/components/Spinner/Spinner';
 import {
   StreamPlayer,
@@ -11,7 +7,6 @@ import {
 
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
-import { storageService } from '@app/services/storage-service';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -37,14 +32,12 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const screenWidth = safeFrame.width;
   const screenHeight = safeFrame.height;
   const isLandscape = windowWidth > windowHeight;
-  const isHlsEnabled = storageService.getString<boolean>('foam_hls_player');
   const prevOrientationRef = useRef(isLandscape);
 
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
   const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
-  const nativePlayerRef = useRef<NativeStreamPlayerRef>(null);
   const lastChatToggleTimeRef = useRef<number>(0);
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 
@@ -196,43 +189,25 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
       edges={['top', 'left', 'right', 'bottom']}
     >
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-        {stream?.user_login &&
-          (isHlsEnabled ? (
-            <NativeStreamPlayer
-              ref={nativePlayerRef}
-              channel={stream.user_login}
-              height="100%"
-              width="100%"
-              autoplay
-              muted={false}
-              onVideoAreaPress={isLandscape ? toggleChat : undefined}
-              streamInfo={{
-                userName: stream.user_name,
-                userLogin: stream.user_login,
-                viewerCount: stream.viewer_count,
-                startedAt: stream.started_at,
-                gameName: stream.game_name,
-              }}
-            />
-          ) : (
-            <StreamPlayer
-              ref={streamPlayerRef}
-              channel={stream.user_login ?? params.id}
-              height="100%"
-              width="100%"
-              autoplay
-              muted={false}
-              onContentGateChange={setHasContentGate}
-              onVideoAreaPress={isLandscape ? toggleChat : undefined}
-              streamInfo={{
-                userName: stream.user_name,
-                userLogin: stream.user_login,
-                viewerCount: stream.viewer_count,
-                startedAt: stream.started_at,
-                gameName: stream.game_name,
-              }}
-            />
-          ))}
+        {stream?.user_login && (
+          <StreamPlayer
+            ref={streamPlayerRef}
+            channel={stream.user_login ?? params.id}
+            height="100%"
+            width="100%"
+            autoplay
+            muted={false}
+            onContentGateChange={setHasContentGate}
+            onVideoAreaPress={isLandscape ? toggleChat : undefined}
+            streamInfo={{
+              userName: stream.user_name,
+              userLogin: stream.user_login,
+              viewerCount: stream.viewer_count,
+              startedAt: stream.started_at,
+              gameName: stream.game_name,
+            }}
+          />
+        )}
       </Animated.View>
 
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>

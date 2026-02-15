@@ -5,11 +5,14 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 interface SliderProps {
   disabled?: boolean;
+  maximumTrackTintColor?: string;
   max?: number;
+  minimumTrackTintColor?: string;
   min?: number;
   onChange: (value: number) => void;
   step?: number;
   style?: StyleProp<ViewStyle>;
+  thumbTintColor?: string;
   value: number;
 }
 
@@ -17,15 +20,21 @@ export function Slider({
   onChange,
   value,
   disabled,
+  maximumTrackTintColor,
   max,
+  minimumTrackTintColor,
   min,
   step,
   style,
+  thumbTintColor,
 }: SliderProps) {
   const { theme } = useUnistyles();
+  const maxTrack = maximumTrackTintColor ?? theme.colors.gray.ui;
+  const minTrack = minimumTrackTintColor ?? theme.colors.accent.accent;
+  const thumb = thumbTintColor ?? theme.colors.accent.accent;
   return (
     <View style={style}>
-      {!disabled && step && min && max && (
+      {!disabled && step && min != null && max != null && (
         <View style={styles.wrapper}>
           {range(min, max + step, step).map(item => (
             <View key={item} style={styles.marker(item <= value)} />
@@ -34,13 +43,14 @@ export function Slider({
       )}
       <Component
         disabled={disabled}
-        maximumTrackTintColor={theme.colors.gray.ui}
+        maximumTrackTintColor={maxTrack}
         maximumValue={max}
-        minimumTrackTintColor={theme.colors.accent.accent}
+        minimumTrackTintColor={minTrack}
         minimumValue={min}
         onValueChange={onChange}
         step={step}
         tapToSeek
+        thumbTintColor={thumb}
         value={value}
       />
     </View>
