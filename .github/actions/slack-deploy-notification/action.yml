@@ -78,9 +78,14 @@ runs:
           exit 0
         fi
 
-        # Prefer full changelog from file (avoids job output truncation)
+        # Prefer changelog from file (avoids job output truncation)
         if [ -n "$RELEASE_NOTES_FILE" ] && [ -f "$RELEASE_NOTES_FILE" ]; then
           RELEASE_NOTES=$(cat "$RELEASE_NOTES_FILE")
+        fi
+
+        # Keep only this release: take content up to the next "## " version header (exclude older versions / full changelog)
+        if [ -n "$RELEASE_NOTES" ]; then
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | awk 'BEGIN{first=1} /^## / { if (!first) exit; first=0 } { print }')
         fi
 
         if [ "$DEPLOYMENT_TYPE" = "ota" ]; then
@@ -100,18 +105,18 @@ runs:
           VERSION_BLOCK="*Native version:* \`${VERSION}\` (tag: \`${TAG}\`)"
         fi
 
-        # Changelog: truncate for Slack block (~2800 chars), show as markdown in code block (collapsed style)
-        TRUNCATED_NOTES="$RELEASE_NOTES"
-        if [ ${#TRUNCATED_NOTES} -gt 2800 ]; then
-          TRUNCATED_NOTES="${TRUNCATED_NOTES:0:2797}…"
-          TRUNCATED_NOTES="${TRUNCATED_NOTES}"$'\n\n''(View full changelog on GitHub)'
+        # Changelog: short preview in mrkdwn (no code block), link to GitHub for full — "collapsible" style
+        PREVIEW_LEN=1200
+        CHANGELOG_PREVIEW="$RELEASE_NOTES"
+        if [ ${#CHANGELOG_PREVIEW} -gt "$PREVIEW_LEN" ]; then
+          CHANGELOG_PREVIEW="${CHANGELOG_PREVIEW:0:$((PREVIEW_LEN))}…"
         fi
-        TRUNCATED_NOTES_JSON=$(printf '%s' "$TRUNCATED_NOTES" | jq -Rs .)
+        CHANGELOG_PREVIEW_JSON=$(printf '%s' "$CHANGELOG_PREVIEW" | jq -Rs .)
         RELEASE_URL_JSON=$(printf '%s' "$RELEASE_URL" | jq -Rs .)
         CHANGELOG_MRKDWN_JSON=$(jq -n \
-          --argjson notes "$TRUNCATED_NOTES_JSON" \
+          --argjson preview "$CHANGELOG_PREVIEW_JSON" \
           --argjson url "$RELEASE_URL_JSON" \
-          '("*Changelog*" + (if $url != "" then " · <" + $url + "|View full on GitHub>\n\n" else "\n\n" end) + "```\n" + $notes + "\n```")')
+          '("*Changelog*" + (if $url != "" then " · <" + $url + "|View full on GitHub>\n\n" else "\n\n" end) + $preview + (if $url != "" then "\n\n<" + $url + "|View full changelog on GitHub>" else "" end))')
 
         FOOTER="Expo: <https://expo.dev|expo.dev>"
         [ -n "$REPOSITORY" ] && FOOTER="${FOOTER} | Repo: <https://github.com/${REPOSITORY}|${REPOSITORY}>"
@@ -119,19 +124,37 @@ runs:
         VERSION_BLOCK_JSON=$(printf '%s' "$VERSION_BLOCK" | jq -Rs .)
         HEADER_JSON=$(printf '%s' "${HEADER_EMOJI} ${HEADER_TEXT}" | jq -Rs .)
 
-        PAYLOAD=$(jq -n \
-          --argjson header "$HEADER_JSON" \
-          --argjson version_block "$VERSION_BLOCK_JSON" \
-          --argjson changelog_mrkdwn "$CHANGELOG_MRKDWN_JSON" \
-          --argjson footer "$FOOTER_JSON" \
-          '{
-            blocks: [
-              { type: "header", text: { type: "plain_text", text: $header, emoji: true } },
-              { type: "section", text: { type: "mrkdwn", text: $version_block } },
-              { type: "section", text: { type: "mrkdwn", text: $changelog_mrkdwn } },
-              { type: "context", elements: [{ type: "mrkdwn", text: $footer }] }
-            ]
-          }')
+        # Changelog section: optional "View on GitHub" button (collapsible-style link)
+        if [ -n "$RELEASE_URL" ]; then
+          PAYLOAD=$(jq -n \
+            --argjson header "$HEADER_JSON" \
+            --argjson version_block "$VERSION_BLOCK_JSON" \
+            --argjson changelog_mrkdwn "$CHANGELOG_MRKDWN_JSON" \
+            --argjson footer "$FOOTER_JSON" \
+            --arg url "$RELEASE_URL" \
+            '{
+              blocks: [
+                { type: "header", text: { type: "plain_text", text: $header, emoji: true } },
+                { type: "section", text: { type: "mrkdwn", text: $version_block } },
+                { type: "section", text: { type: "mrkdwn", text: $changelog_mrkdwn }, accessory: { type: "button", text: { type: "plain_text", text: "View on GitHub", emoji: true }, url: $url } },
+                { type: "context", elements: [{ type: "mrkdwn", text: $footer }] }
+              ]
+            }')
+        else
+          PAYLOAD=$(jq -n \
+            --argjson header "$HEADER_JSON" \
+            --argjson version_block "$VERSION_BLOCK_JSON" \
+            --argjson changelog_mrkdwn "$CHANGELOG_MRKDWN_JSON" \
+            --argjson footer "$FOOTER_JSON" \
+            '{
+              blocks: [
+                { type: "header", text: { type: "plain_text", text: $header, emoji: true } },
+                { type: "section", text: { type: "mrkdwn", text: $version_block } },
+                { type: "section", text: { type: "mrkdwn", text: $changelog_mrkdwn } },
+                { type: "context", elements: [{ type: "mrkdwn", text: $footer }] }
+              ]
+            }')
+        fi
 
         curl -sSf -X POST "$WEBHOOK_URL" \
           -H 'Content-Type: application/json' \

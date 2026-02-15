@@ -41,6 +41,10 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const lastChatToggleTimeRef = useRef<number>(0);
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 
+  const handleContentGateChange = useCallback((hasGate: boolean) => {
+    setHasContentGate(prev => (prev === hasGate ? prev : hasGate));
+  }, []);
+
   const toggleChat = useCallback(() => {
     const now = Date.now();
     if (now - lastChatToggleTimeRef.current < CHAT_TOGGLE_DEBOUNCE_MS) {
@@ -164,14 +168,14 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     hasContentGate,
     screenWidth,
     screenHeight,
+    getVideoDimensions,
+    getChatDimensions,
     videoWidth,
     videoHeight,
     chatWidth,
     chatHeight,
     chatOpacity,
     chatTranslateX,
-    getVideoDimensions,
-    getChatDimensions,
   ]);
 
   const animatedVideoStyle = useAnimatedStyle(() => ({
@@ -197,7 +201,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             width="100%"
             autoplay
             muted={false}
-            onContentGateChange={setHasContentGate}
+            onContentGateChange={handleContentGateChange}
             onVideoAreaPress={isLandscape ? toggleChat : undefined}
             streamInfo={{
               userName: stream.user_name,
