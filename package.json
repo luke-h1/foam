@@ -42,7 +42,7 @@
     "prebuild:android": "npx expo prebuild -p android",
     "prebuild:ios": "npx expo prebuild -p ios",
     "preinstall": "[ -n \"$CI\" ] || (only-allow bun && node ./scripts/commit-hooks)",
-    "postinstall": "lefthook install",
+    "prepare": "husky",
     "ts:check": "tsc --noEmit",
     "start:proxy": "ts-node-dev -P tsconfig.proxy.json --respawn --transpile-only proxy.ts",
     "test": "jest",
@@ -272,7 +272,8 @@
     "globals": "^16.3.0",
     "jest": "~29.7.0",
     "jest-expo": "~54.0.16",
-    "lefthook": "^1.12.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "only-allow": "^1.2.1",
     "prettier": "^3.6.2",
     "react-native-performance": "^6.0.0",
@@ -298,6 +299,12 @@
     "overrides": {
       "uuid": "3.4.0"
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": "bun eslint --fix",
+    "*.{js,jsx,ts,tsx,css,scss,html,json}": "bun prettier --write",
+    "assets/icons/**/*.svg": "bash -c 'bun svgo -f ./assets/icons'",
+    "*.{png,jpg,jpeg,gif}": "bun expo optimize"
   },
   "config": {
     "commitizen": {
