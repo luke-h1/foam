@@ -1,5 +1,18 @@
 # Changelog
 
+## ota-c3493b6f-a9f2-4896-9a64-fb2d956e8245
+
+### Bug Fixes
+
+- **app:** Webview improvements ([#487](https://github.com/lhowsam/foam/issues/487))
+- **app:** Fix player muted
+
+### Miscellaneous Tasks
+
+- **app:** Refresh agent skills
+- **infrastructure:** Slack noti fix
+- **infrastructure:** Fix deploy-ota-or-native
+
 ## 0.0.39
 
 ### Bug Fixes
