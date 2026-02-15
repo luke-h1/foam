@@ -44,7 +44,7 @@ async function validateFile(validator, filePath) {
 
 function formatErrors(errors) {
   return errors
-    .map(error => {
+    .map((error) => {
       const path = error.instancePath || '(root)';
       const allowed = error.params?.allowedValues?.join(', ');
       return `  ${path}: ${error.message}${allowed ? ` (allowed: ${allowed})` : ''}`;
@@ -54,7 +54,7 @@ function formatErrors(errors) {
 
 if (import.meta.main) {
   const args = process.argv.slice(2);
-  const files = args.filter(a => !a.startsWith('-'));
+  const files = args.filter((a) => !a.startsWith('-'));
 
   if (files.length === 0 || args.includes('--help') || args.includes('-h')) {
     console.log(`Usage: validate <workflow.yml> [workflow2.yml ...]
