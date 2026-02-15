@@ -124,6 +124,8 @@ jobs:
           echo "android=$ANDROID_FP" >> $GITHUB_OUTPUT
           echo "📱 iOS Fingerprint: $IOS_FP"
           echo "🤖 Android Fingerprint: $ANDROID_FP"
+        env:
+          APP_VARIANT: production
 
       - name: 📂 Load previous fingerprints
         id: previous
