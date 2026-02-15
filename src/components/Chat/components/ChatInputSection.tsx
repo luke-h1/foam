@@ -190,6 +190,7 @@ const styles = StyleSheet.create(theme => ({
   },
   inputContainer: {
     flex: 1,
+    minWidth: 80,
   },
   actionButton: {
     width: 36,

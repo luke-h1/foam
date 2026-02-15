@@ -20,20 +20,42 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import {
+  SafeAreaView,
+  useSafeAreaFrame,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   route: { params },
 }) => {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const isLandscape = screenWidth > screenHeight;
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const safeFrame = useSafeAreaFrame();
+  const insets = useSafeAreaInsets();
+  // Use safe area dimensions so video + chat fit inside insets (avoids chat clipping)
+  const screenWidth = safeFrame.width;
+  const screenHeight = safeFrame.height;
+  const isLandscape = windowWidth > windowHeight;
   const isHlsEnabled = storageService.getString<boolean>('foam_hls_player');
+  const prevOrientationRef = useRef(isLandscape);
 
-  const [isChatVisible] = useState<boolean>(true);
+  const [isChatVisible, setChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
   const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   const nativePlayerRef = useRef<NativeStreamPlayerRef>(null);
+  const lastChatToggleTimeRef = useRef<number>(0);
+  const CHAT_TOGGLE_DEBOUNCE_MS = 450;
+
+  const toggleChat = useCallback(() => {
+    const now = Date.now();
+    if (now - lastChatToggleTimeRef.current < CHAT_TOGGLE_DEBOUNCE_MS) {
+      return;
+    }
+    lastChatToggleTimeRef.current = now;
+    setChatVisible(v => !v);
+  }, []);
 
   useEffect(() => {
     setShouldRenderChat(false);
@@ -63,8 +85,10 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const getVideoDimensions = useCallback(() => {
     if (isLandscape) {
+      // Video 65% / chat 35% when chat visible (chat a bit bigger so input isn’t squished)
+      const videoFraction = isChatVisible ? 0.65 : 1;
       return {
-        width: isChatVisible ? screenWidth * 0.6 : screenWidth,
+        width: screenWidth * videoFraction,
         height: screenHeight,
       };
     }
@@ -82,8 +106,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const getChatDimensions = useCallback(() => {
     if (isLandscape) {
+      // Chat 35% when visible (video 65%)
       return {
-        width: screenWidth * 0.65,
+        width: screenWidth * 0.35,
         height: screenHeight,
       };
     }
@@ -113,19 +138,31 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   useEffect(() => {
     const videoDims = getVideoDimensions();
     const chatDims = getChatDimensions();
+    const orientationChanged = prevOrientationRef.current !== isLandscape;
+    prevOrientationRef.current = isLandscape;
+    // No animation on orientation change to avoid lag; animate only for chat toggle
+    const layoutDuration = orientationChanged ? 0 : 300;
 
-    videoWidth.value = withTiming(videoDims.width, { duration: 300 });
-    videoHeight.value = withTiming(videoDims.height, { duration: 300 });
-    chatWidth.value = withTiming(chatDims.width, { duration: 300 });
-    chatHeight.value = withTiming(chatDims.height, { duration: 300 });
+    videoWidth.value = withTiming(videoDims.width, {
+      duration: layoutDuration,
+    });
+    videoHeight.value = withTiming(videoDims.height, {
+      duration: layoutDuration,
+    });
+    chatWidth.value = withTiming(chatDims.width, { duration: layoutDuration });
+    chatHeight.value = withTiming(chatDims.height, {
+      duration: layoutDuration,
+    });
 
     if (isChatVisible) {
-      chatOpacity.value = withTiming(1, { duration: 300 });
-      chatTranslateX.value = withTiming(0, { duration: 300 });
+      chatOpacity.value = withTiming(1, { duration: layoutDuration });
+      chatTranslateX.value = withTiming(0, { duration: layoutDuration });
     } else {
-      chatOpacity.value = withTiming(0, { duration: 300 });
+      chatOpacity.value = withTiming(0, { duration: layoutDuration });
       if (isLandscape) {
-        chatTranslateX.value = withTiming(chatDims.width, { duration: 300 });
+        chatTranslateX.value = withTiming(chatDims.width, {
+          duration: layoutDuration,
+        });
       }
     }
   }, [
@@ -154,7 +191,10 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   }
 
   return (
-    <View style={[styles.contentContainer, isLandscape && styles.row]}>
+    <SafeAreaView
+      style={[styles.contentContainer, isLandscape && styles.row]}
+      edges={['top', 'left', 'right', 'bottom']}
+    >
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
         {stream?.user_login &&
           (isHlsEnabled ? (
@@ -164,6 +204,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
               height="100%"
               width="100%"
               autoplay
+              onVideoAreaPress={isLandscape ? toggleChat : undefined}
               streamInfo={{
                 userName: stream.user_name,
                 userLogin: stream.user_login,
@@ -180,6 +221,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
               width="100%"
               autoplay
               onContentGateChange={setHasContentGate}
+              onVideoAreaPress={isLandscape ? toggleChat : undefined}
               streamInfo={{
                 userName: stream.user_name,
                 userLogin: stream.user_login,
@@ -193,12 +235,20 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
         {shouldRenderChat && stream?.user_login && stream.user_id && (
-          <View style={styles.chatContent}>
+          <View
+            style={[
+              styles.chatContent,
+              {
+                paddingRight: insets.right,
+                paddingBottom: insets.bottom,
+              },
+            ]}
+          >
             <Chat channelId={stream.user_id} channelName={stream.user_login} />
           </View>
         )}
       </Animated.View>
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -77,6 +77,10 @@ export interface NativeStreamPlayerProps {
   onPlay?: () => void;
   onReady?: () => void;
   onRefresh?: () => void;
+  /**
+   * Optional callback when the user taps the video area (e.g. to toggle chat in landscape).
+   */
+  onVideoAreaPress?: () => void;
   showOverlayControls?: boolean;
   streamInfo?: StreamInfo;
   width?: DimensionValue;
@@ -249,6 +253,7 @@ export const NativeStreamPlayer = forwardRef<
     onPlay,
     onReady,
     onRefresh,
+    onVideoAreaPress,
     showOverlayControls = true,
     streamInfo,
     width,
@@ -394,6 +399,11 @@ export const NativeStreamPlayer = forwardRef<
     }
   }, [dismissControls, showControls]);
 
+  const handleVideoTap = useCallback(() => {
+    onVideoAreaPress?.();
+    toggleControls();
+  }, [onVideoAreaPress, toggleControls]);
+
   const handlePlayPause = useCallback(() => {
     setIsPaused(prev => !prev);
     showControls();
@@ -406,10 +416,10 @@ export const NativeStreamPlayer = forwardRef<
         .onEnd(() => {
           'worklet';
 
-          runOnJS(toggleControls)();
+          runOnJS(handleVideoTap)();
         })
         .shouldCancelWhenOutside(false),
-    [toggleControls],
+    [handleVideoTap],
   );
 
   useEffect(() => {

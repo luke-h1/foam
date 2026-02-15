@@ -201,6 +201,10 @@ export interface StreamPlayerProps {
    */
   onRefresh?: () => void;
   /**
+   * Optional callback when the user taps the video area (e.g. to toggle chat in landscape).
+   */
+  onVideoAreaPress?: () => void;
+  /**
    * Parent domain for Twitch embed. Must be an HTTPS domain you added in the
    * Twitch Developer Console (e.g. foam-app.com). We send Referer/Origin so Twitch validates.
    * @default 'foam-app.com'
@@ -565,6 +569,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       onPlay,
       onReady,
       onRefresh,
+      onVideoAreaPress,
       parent = 'www.twitch.tv',
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       streamProxyBaseUrl: _streamProxyBaseUrl,
@@ -934,12 +939,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     }, []);
 
     const toggleControlsInternal = useCallback(() => {
+      onVideoAreaPress?.();
       if (controlsVisibleRef.current) {
         dismissControls();
       } else {
         showControls();
       }
-    }, [dismissControls, showControls]);
+    }, [dismissControls, showControls, onVideoAreaPress]);
 
     const handlePlayPause = useCallback(() => {
       if (playerState.isPaused) {
