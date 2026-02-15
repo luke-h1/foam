@@ -1,5 +1,18 @@
 # Changelog
 
+## ota-09afb2ac-dbdf-4b7d-996c-6beeaef68082
+
+### Bug Fixes
+
+- **app:** Volume muted on webview
+- **infrastructure:** Fix fingerprint failing in CD
+
+### Miscellaneous Tasks
+
+- **app:** Remove old native player
+- **app:** Improve gh release format
+- **infrastructure:** Improve slack msg
+
 ## ota-c3493b6f-a9f2-4896-9a64-fb2d956e8245
 
 ### Bug Fixes
