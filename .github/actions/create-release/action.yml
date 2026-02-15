@@ -263,6 +263,8 @@ runs:
           echo "EOF"
         } >> $GITHUB_OUTPUT
 
+        echo "$RELEASE_NOTES" > .release-notes-body.md
+
     - name: Update CHANGELOG.md
       id: update_changelog
       if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_exists == 'false' }}
@@ -379,11 +381,14 @@ runs:
           fi
         fi
 
-        BODY="${BODY}
+        # Append only this release's notes (from generate_release_notes), not full CHANGELOG
+        if [ -f .release-notes-body.md ]; then
+          BODY="${BODY}
 
         ---
 
-        ${{ steps.generate_release_notes.outputs.release_notes }}"
+        $(cat .release-notes-body.md)"
+        fi
 
         # Use heredoc for multiline output
         {

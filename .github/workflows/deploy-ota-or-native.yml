@@ -444,6 +444,7 @@ jobs:
       tag: ${{ steps.release_tag.outputs.tag }}
       deployment_type: ${{ needs.detect-changes.outputs.deploy-type }}
       release_notes: ${{ steps.create_release.outputs.release_notes }}
+      has_release_notes_file: ${{ steps.check_release_notes.outputs.has_file }}
       ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
       android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
       update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
@@ -496,6 +497,22 @@ jobs:
           runtime_version: ${{ needs.prepare.outputs.runtime_version || '' }}
           commit_changelog: 'true'
 
+      - name: Check for release notes file
+        id: check_release_notes
+        run: |
+          if [ -f .release-notes-body.md ]; then
+            echo "has_file=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_file=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload release notes for Slack
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: .release-notes-body.md
+          if-no-files-found: ignore
+
       - name: 📊 Summary
         run: |
           echo "## Release Created" >> $GITHUB_STEP_SUMMARY
@@ -514,6 +531,12 @@ jobs:
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
+
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+        if: needs.release.outputs.has_release_notes_file == 'true'
 
       - name: Load secrets
         id: secrets
@@ -535,5 +558,6 @@ jobs:
           android_update_id: ${{ needs.release.outputs.android_update_id }}
           update_group_id: ${{ needs.release.outputs.update_group_id }}
           release_notes: ${{ needs.release.outputs.release_notes }}
+          release_notes_file: ${{ needs.release.outputs.has_release_notes_file == 'true' && '.release-notes-body.md' || '' }}
           release_url: ${{ needs.release.outputs.release_url }}
           repository: ${{ github.repository }}

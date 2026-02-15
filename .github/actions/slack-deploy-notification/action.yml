@@ -27,7 +27,11 @@ inputs:
     required: false
     default: ''
   release_notes:
-    description: 'Changelog / release notes text'
+    description: 'Changelog / release notes text (fallback when release_notes_file not used)'
+    required: false
+    default: ''
+  release_notes_file:
+    description: 'Path to file containing full changelog markdown (overrides release_notes when present)'
     required: false
     default: ''
   release_url:
@@ -53,6 +57,7 @@ runs:
         ANDROID_UPDATE_ID: ${{ inputs.android_update_id }}
         UPDATE_GROUP_ID: ${{ inputs.update_group_id }}
         RELEASE_NOTES: ${{ inputs.release_notes }}
+        RELEASE_NOTES_FILE: ${{ inputs.release_notes_file }}
         RELEASE_URL: ${{ inputs.release_url }}
         REPOSITORY: ${{ inputs.repository }}
       run: |
@@ -61,6 +66,11 @@ runs:
         if [ -z "$WEBHOOK_URL" ] || [ "$WEBHOOK_URL" = "" ]; then
           echo "Slack webhook URL not set, skipping notification"
           exit 0
+        fi
+
+        # Prefer full changelog from file (avoids job output truncation)
+        if [ -n "$RELEASE_NOTES_FILE" ] && [ -f "$RELEASE_NOTES_FILE" ]; then
+          RELEASE_NOTES=$(cat "$RELEASE_NOTES_FILE")
         fi
 
         if [ "$DEPLOYMENT_TYPE" = "ota" ]; then
@@ -74,17 +84,18 @@ runs:
           VERSION_BLOCK="*Native version:* \`${VERSION}\` (tag: \`${TAG}\`)"
         fi
 
-        # Changelog: truncate for Slack block (~2400 chars), wrap in code block
+        # Changelog: truncate for Slack block (~2800 chars), show as markdown in code block (collapsed style)
         TRUNCATED_NOTES="$RELEASE_NOTES"
-        if [ ${#TRUNCATED_NOTES} -gt 2400 ]; then
-          TRUNCATED_NOTES="${TRUNCATED_NOTES:0:2397}..."
+        if [ ${#TRUNCATED_NOTES} -gt 2800 ]; then
+          TRUNCATED_NOTES="${TRUNCATED_NOTES:0:2797}…"
+          TRUNCATED_NOTES="${TRUNCATED_NOTES}"$'\n\n''(View full changelog on GitHub)'
         fi
         TRUNCATED_NOTES_JSON=$(printf '%s' "$TRUNCATED_NOTES" | jq -Rs .)
         RELEASE_URL_JSON=$(printf '%s' "$RELEASE_URL" | jq -Rs .)
         CHANGELOG_MRKDWN_JSON=$(jq -n \
           --argjson notes "$TRUNCATED_NOTES_JSON" \
           --argjson url "$RELEASE_URL_JSON" \
-          '("*Changelog*\n" + (if $url != "" then "<" + $url + "|View full changelog on GitHub>\n\n" else "" end) + "```\n" + $notes + "\n```")')
+          '("*Changelog*" + (if $url != "" then " · <" + $url + "|View full on GitHub>\n\n" else "\n\n" end) + "```\n" + $notes + "\n```")')
 
         FOOTER="Expo: <https://expo.dev|expo.dev>"
         [ -n "$REPOSITORY" ] && FOOTER="${FOOTER} | Repo: <https://github.com/${REPOSITORY}|${REPOSITORY}>"
