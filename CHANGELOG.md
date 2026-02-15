@@ -1,6 +1,29 @@
 # Changelog
 
-## [unreleased]
+## 0.0.39
+
+### Bug Fixes
+
+- **infrastructure:** Ota runtime version
+- **app:** Chat perf + videos
+- **app:** Fix unit tests
+
+### Miscellaneous Tasks
+
+- **app:** Add hls switch for debugging
+- **test:** E2e tests ([#480](https://github.com/lhowsam/foam/issues/480))
+- **infrastructure:** Add sentry size analysis
+- **app:** Change policy to fingerprint
+- **app:** Migrate to husky
+- **app:** Update deps
+- **app:** Increase test speed
+- **infrastructure:** Slack notifications
+
+### Refactor
+
+- **chat:** Move to v4 stv ([#485](https://github.com/lhowsam/foam/issues/485))
+
+## ota-0.0.38-27
 
 ### Bug Fixes
 
@@ -8,7 +31,6 @@
 
 ### Miscellaneous Tasks
 
-- **changelog:** Update CHANGELOG.md for ota-1054ebce-6b29-4342-ad1f-030bfca5d82b ([#475](https://github.com/lhowsam/foam/issues/475))
 - **infrastructure:** Don't pr a changelog
 
 ## ota-b578613f-7fd1-4d05-a6fc-10a2c2fff773
