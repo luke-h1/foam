@@ -26,6 +26,14 @@ inputs:
     description: 'OTA update group ID (OTA only)'
     required: false
     default: ''
+  previous_ios_update_id:
+    description: 'Previous iOS OTA update ID (fallback when this run has no iOS id)'
+    required: false
+    default: ''
+  previous_android_update_id:
+    description: 'Previous Android OTA update ID (fallback when this run has no Android id)'
+    required: false
+    default: ''
   release_notes:
     description: 'Changelog / release notes text (fallback when release_notes_file not used)'
     required: false
@@ -56,6 +64,8 @@ runs:
         IOS_UPDATE_ID: ${{ inputs.ios_update_id }}
         ANDROID_UPDATE_ID: ${{ inputs.android_update_id }}
         UPDATE_GROUP_ID: ${{ inputs.update_group_id }}
+        PREVIOUS_IOS_UPDATE_ID: ${{ inputs.previous_ios_update_id }}
+        PREVIOUS_ANDROID_UPDATE_ID: ${{ inputs.previous_android_update_id }}
         RELEASE_NOTES: ${{ inputs.release_notes }}
         RELEASE_NOTES_FILE: ${{ inputs.release_notes_file }}
         RELEASE_URL: ${{ inputs.release_url }}
@@ -76,8 +86,14 @@ runs:
         if [ "$DEPLOYMENT_TYPE" = "ota" ]; then
           HEADER_EMOJI="📦"
           HEADER_TEXT="Foam — OTA Update"
+          IOS_DISPLAY="${IOS_UPDATE_ID:-$PREVIOUS_IOS_UPDATE_ID}"
+          ANDROID_DISPLAY="${ANDROID_UPDATE_ID:-$PREVIOUS_ANDROID_UPDATE_ID}"
+          [ -z "$IOS_DISPLAY" ] && IOS_DISPLAY="—"
+          [ -z "$ANDROID_DISPLAY" ] && ANDROID_DISPLAY="—"
           VERSION_BLOCK="*Native app version:* \`${VERSION}\`
-        *OTA:* Group \`${UPDATE_GROUP_ID}\` | iOS \`${IOS_UPDATE_ID}\` | Android \`${ANDROID_UPDATE_ID}\`"
+        *OTA Group:* \`${UPDATE_GROUP_ID}\`
+        *iOS Update ID:* \`${IOS_DISPLAY}\`
+        *Android Update ID:* \`${ANDROID_DISPLAY}\`"
         else
           HEADER_EMOJI="🔨"
           HEADER_TEXT="Foam — Native Build"

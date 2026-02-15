@@ -533,6 +533,26 @@ jobs:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
 
+      - name: Restore previous OTA update IDs
+        uses: actions/cache/restore@v4
+        with:
+          path: .ota-cache
+          key: ota-update-ids-production
+
+      - name: Get previous OTA IDs for Slack
+        id: previous_ota
+        run: |
+          PREV_IOS=""
+          PREV_ANDROID=""
+          [ -f .ota-cache/ios ] && PREV_IOS=$(cat .ota-cache/ios)
+          [ -f .ota-cache/android ] && PREV_ANDROID=$(cat .ota-cache/android)
+          echo "ios<<EOF" >> $GITHUB_OUTPUT
+          echo "$PREV_IOS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "android<<EOF" >> $GITHUB_OUTPUT
+          echo "$PREV_ANDROID" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Download release notes
         if: needs.release.outputs.has_release_notes_file == 'true'
         continue-on-error: true
@@ -559,7 +579,23 @@ jobs:
           ios_update_id: ${{ needs.release.outputs.ios_update_id }}
           android_update_id: ${{ needs.release.outputs.android_update_id }}
           update_group_id: ${{ needs.release.outputs.update_group_id }}
+          previous_ios_update_id: ${{ steps.previous_ota.outputs.ios }}
+          previous_android_update_id: ${{ steps.previous_ota.outputs.android }}
           release_notes: ${{ needs.release.outputs.release_notes }}
           release_notes_file: ${{ needs.release.outputs.has_release_notes_file == 'true' && '.release-notes-body.md' || '' }}
           release_url: ${{ needs.release.outputs.release_url }}
           repository: ${{ github.repository }}
+
+      - name: Cache OTA update IDs for next run
+        if: needs.release.outputs.deployment_type == 'ota'
+        run: |
+          mkdir -p .ota-cache
+          echo "${{ needs.release.outputs.ios_update_id }}" > .ota-cache/ios
+          echo "${{ needs.release.outputs.android_update_id }}" > .ota-cache/android
+
+      - name: Save OTA cache
+        if: needs.release.outputs.deployment_type == 'ota'
+        uses: actions/cache/save@v4
+        with:
+          path: .ota-cache
+          key: ota-update-ids-production
