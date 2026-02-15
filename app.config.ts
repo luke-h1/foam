@@ -76,7 +76,7 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 
 const variant = (process.env.APP_VARIANT as Variant) || 'development';
 
-const VERSION = '0.0.38';
+const VERSION = '0.0.39';
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 
