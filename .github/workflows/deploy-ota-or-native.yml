@@ -304,7 +304,8 @@ jobs:
 
           if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "android" ]; then
             echo "Building Android..."
-            eas build --platform android --profile production --auto-submit --non-interactive --no-wait --local
+            # Local builds don't support --auto-submit; build then submit separately (like iOS)
+            eas build --platform android --profile production --local --non-interactive --output=./build-artifacts/app.aab && bun run eas submit -p android --path ./build-artifacts/app.aab
           fi
         env:
           APP_VARIANT: production
