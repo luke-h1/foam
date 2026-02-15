@@ -45,8 +45,8 @@ const jestConfig = {
   ],
   cache: true,
   cacheDirectory: '<rootDir>/.jest-cache',
-  // Use 25% of available CPUs
-  maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.25)),
+  // Use 50% of available CPUs
+  maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.50)),
   clearMocks: true,
   resetMocks: false,
   restoreMocks: false,
