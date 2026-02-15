@@ -1,18 +1,11 @@
-/* eslint-disable react/no-unused-prop-types */
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Text } from '@app/components/Text/Text';
-import { FlashListRef } from '@shopify/flash-list';
-import { RefObject } from 'react';
 import { View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-interface ResumeScrollProps {
-  flashListRef: RefObject<FlashListRef<unknown> | null>;
-  isAtBottomRef: RefObject<boolean>;
+export interface ResumeScrollProps {
   unreadCount: number;
-  setIsAtBottom: (val: boolean) => void;
-  setUnreadCount: (val: number) => void;
   onScrollToBottom: () => void;
 }
 

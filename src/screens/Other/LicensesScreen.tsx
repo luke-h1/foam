@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 export function LicensesScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Button
         onPress={() => ReactNativeLegal.launchLicenseListScreen('OSS licenses')}
       >

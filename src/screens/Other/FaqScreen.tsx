@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 export function FaqScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Text>FAQ</Text>
     </SafeAreaView>
   );

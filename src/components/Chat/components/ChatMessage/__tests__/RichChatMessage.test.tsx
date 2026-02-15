@@ -5,7 +5,7 @@ import { ChatMessageType } from '@app/store/chatStore';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { render, fireEvent } from '@testing-library/react-native';
-import { ChatMessage } from '../ChatMessage';
+import { RichChatMessage } from '../RichChatMessage';
 
 // Only mock date for deterministic timestamps in tests
 jest.mock('@app/utils/date-time/date', () => ({
@@ -43,7 +43,7 @@ const createMockMessage = (
   };
 };
 
-describe('ChatMessage', () => {
+describe('RichChatMessage', () => {
   const mockOnReply = jest.fn();
   const mockOnEmotePress = jest.fn();
   const mockOnMessageLongPress = jest.fn();
@@ -59,7 +59,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { getByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(getByTestId('reply-button')).toBeTruthy();
@@ -71,7 +71,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { getByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       fireEvent.press(getByTestId('reply-button'));
@@ -125,7 +125,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { queryByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-button')).toBeNull();
@@ -167,7 +167,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { queryByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-button')).toBeNull();
@@ -189,7 +189,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { queryByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-button')).toBeNull();
@@ -211,7 +211,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { queryByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-button')).toBeNull();
@@ -224,7 +224,7 @@ describe('ChatMessage', () => {
       );
 
       const { queryByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-button')).toBeNull();
@@ -238,7 +238,7 @@ describe('ChatMessage', () => {
       );
 
       const { queryByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-button')).toBeNull();
@@ -252,7 +252,7 @@ describe('ChatMessage', () => {
       );
 
       const { queryByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-button')).toBeNull();
@@ -272,7 +272,7 @@ describe('ChatMessage', () => {
       );
 
       const { getByTestId, getByText } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(getByTestId('reply-indicator')).toBeTruthy();
@@ -286,7 +286,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { queryByTestId, queryByText } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByTestId('reply-indicator')).toBeNull();
@@ -305,7 +305,7 @@ describe('ChatMessage', () => {
       );
 
       const { getByText } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(getByText('↳')).toBeTruthy();
@@ -321,7 +321,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { getByText } = render(
-        <ChatMessage
+        <RichChatMessage
           {...message}
           onReply={mockOnReply}
           onMessageLongPress={mockOnMessageLongPress}
@@ -346,7 +346,7 @@ describe('ChatMessage', () => {
       const message = createMockMessage([emoteData]);
 
       const { getByTestId } = render(
-        <ChatMessage
+        <RichChatMessage
           {...message}
           onReply={mockOnReply}
           onEmotePress={mockOnEmotePress}
@@ -366,7 +366,7 @@ describe('ChatMessage', () => {
       );
 
       const { getByText } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(getByText('first message')).toBeTruthy();
@@ -378,7 +378,7 @@ describe('ChatMessage', () => {
       ]);
 
       const { queryByText } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByText('first message')).toBeNull();
@@ -393,7 +393,7 @@ describe('ChatMessage', () => {
       });
 
       const { getAllByText } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(getAllByText('ColoredUser:').length).toBeGreaterThan(0);
@@ -406,7 +406,7 @@ describe('ChatMessage', () => {
       );
 
       const { queryByText } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       expect(queryByText('testuser:')).toBeNull();
@@ -427,7 +427,7 @@ describe('ChatMessage', () => {
       );
 
       const { getByTestId } = render(
-        <ChatMessage {...message} onReply={mockOnReply} />,
+        <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
       fireEvent.press(getByTestId('reply-button'));

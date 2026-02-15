@@ -1,5 +1,6 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/Text/Text';
 import { sentryService } from '@app/services/sentry-service';
 import {
@@ -17,12 +18,10 @@ import {
   type DimensionValue,
   Platform,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -166,6 +165,10 @@ export interface StreamPlayerProps {
    */
   onBackPress?: () => void;
   /**
+   * Callback when content gate (e.g. login required) is detected or dismissed
+   */
+  onContentGateChange?: (hasGate: boolean) => void;
+  /**
    * Callback when the stream ends
    */
   onEnded?: () => void;
@@ -198,10 +201,16 @@ export interface StreamPlayerProps {
    */
   onRefresh?: () => void;
   /**
-   * Parent domain for embed
+   * Parent domain for Twitch embed. Must be an HTTPS domain you added in the
+   * Twitch Developer Console (e.g. foam-app.com). We send Referer/Origin so Twitch validates.
    * @default 'foam-app.com'
    */
   parent?: string;
+  /**
+   * Base URL for stream proxy (e.g. http://localhost:4000).
+   * When set, WebView loads Twitch embed via proxy instead of direct player URL.
+   */
+  streamProxyBaseUrl?: string;
   /**
    * Show custom overlay controls
    * @default true
@@ -248,220 +257,125 @@ type PlayerMessage =
       type: 'healthCheck';
     }
   | { payload: { hasContentGate: boolean }; type: 'contentGateDetected' }
+  | {
+      payload: {
+        hasGate: boolean;
+        gateText: string;
+        hasAuthToken: boolean;
+        hasAuthHyphen: boolean;
+        cookieCount: number;
+        href: string;
+      };
+      type: 'debugLog';
+    }
   | { type: 'ended' }
   | { type: 'offline' }
   | { type: 'online' }
   | { type: 'pause' }
   | { type: 'play' }
-  | { type: 'ready' };
+  | { type: 'ready' }
+  | { type: 'trace'; payload: { step: string; detail?: string } }
+  | { type: 'error'; payload: { message: string } };
 
-function generatePlayerURL(options: {
-  channel?: string;
-  parent: string;
+function buildTwitchEmbedHtml(options: {
+  channel: string;
   video?: string;
+  parent: string;
+  autoplay: boolean;
+  muted: boolean;
+  width: number | string;
+  height: number | string;
 }): string {
-  const { channel, parent, video } = options;
+  const { channel, video, parent, autoplay, muted, width, height } = options;
+  const safeChannel = channel.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const safeParent = parent.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const widthPx = typeof width === 'number' ? `${width}px` : width;
+  const heightPx = typeof height === 'number' ? `${height}px` : height;
 
-  if (video) {
-    return `https://player.twitch.tv/?video=${video}&parent=${parent}&muted=false`;
-  }
-
-  return `https://player.twitch.tv/?channel=${channel}&parent=${parent}&muted=false`;
-}
-
-/**
- * Simplified injected JS for player controls
- */
-const INJECTED_JAVASCRIPT = `
-(function() {
-  if (window._injected) return;
-  window._injected = true;
-
-  function postMessage(type, payload) {
-    try {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type, payload }));
-    } catch (e) {}
-  }
-
-  // Wait for video element
-  function waitForVideo(timeout) {
-    return new Promise(function(resolve) {
-      var video = document.querySelector('video');
-      if (video) return resolve(video);
-
-      var timeoutId;
-      var observer = new MutationObserver(function() {
-        video = document.querySelector('video');
-        if (video) {
-          observer.disconnect();
-          clearTimeout(timeoutId);
-          resolve(video);
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #twitch-player { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="twitch-player" style="width:${widthPx};height:${heightPx};"></div>
+  <script>
+    function post(type, payload) {
+      try {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, payload: payload || {} }));
+      } catch (e) {}
+    }
+    post('trace', { step: 'html_parsed', detail: 'inline script running' });
+    function initPlayer() {
+      post('trace', { step: 'embed_script_loaded', detail: 'Twitch embed v1.js loaded' });
+      try {
+        if (typeof Twitch === 'undefined') {
+          post('error', { message: 'Twitch is undefined after script load' });
+          return;
         }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-      timeoutId = setTimeout(function() {
-        observer.disconnect();
-        resolve(null);
-      }, timeout || 15000);
-    });
-  }
-
-  // Detect content gate
-  function detectContentGate() {
-    var hasGate = !!(
-      document.querySelector('[data-a-target="player-overlay-content-gate"]') ||
-      document.querySelector('.content-classification-gate')
-    );
-    postMessage('contentGateDetected', { hasContentGate: hasGate });
-    applyStyles(hasGate);
-  }
-
-  // Apply styles to hide Twitch UI and style video
-  function applyStyles(hasContentGate) {
-    var style = document.getElementById('foam-styles');
-    if (!style) {
-      style = document.createElement('style');
-      style.id = 'foam-styles';
-      document.head.appendChild(style);
-    }
-
-    var hideControls = '.top-bar, .player-controls, #channel-player-disclosures, ' +
-      '[data-a-target="player-overlay-preview-background"], ' +
-      '[data-a-target="player-overlay-video-stats"] ' +
-      '{ display: none !important; }';
-
-    if (hasContentGate) {
-      style.textContent = hideControls +
-        'body, html { margin: 0; padding: 0; overflow: auto; -webkit-overflow-scrolling: touch; }' +
-        '[data-a-target="player-overlay-content-gate"] { transform: scale(0.85); transform-origin: center; }';
-    } else {
-      style.textContent = hideControls +
-        'body, html { margin: 0; padding: 0; overflow: hidden; }' +
-        'video { display: block; width: 100%; height: 100%; object-fit: contain; }';
-    }
-  }
-
-  // Setup video event listeners
-  function setupVideo(video) {
-    if (video._setup) return;
-    video._setup = true;
-
-    // Disable captions
-    if (video.textTracks) {
-      for (var i = 0; i < video.textTracks.length; i++) {
-        video.textTracks[i].mode = 'hidden';
+        post('trace', { step: 'creating_player', detail: 'channel=${safeChannel}' });
+        var embedOpts = {
+          width: '100%',
+          height: '100%',
+          parent: ['${safeParent}'],
+          autoplay: ${autoplay},
+          muted: ${muted}
+        };
+        ${video ? `embedOpts.video = '${video.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}';` : `embedOpts.channel = '${safeChannel}';`}
+        var player = new Twitch.Player('twitch-player', embedOpts);
+        post('trace', { step: 'player_created', detail: 'Twitch.Player instance created' });
+        window._twitchPlayer = player;
+        player.addEventListener(Twitch.Player.READY, function() { post('ready'); });
+        player.addEventListener(Twitch.Player.PLAY, function() { post('play'); });
+        player.addEventListener(Twitch.Player.PAUSE, function() { post('pause'); });
+        player.addEventListener(Twitch.Player.PLAYING, function() {
+          post('stateUpdate', { isBuffering: false, isPaused: false, isReady: true });
+        });
+        player.addEventListener(Twitch.Player.ENDED, function() { post('ended'); });
+        player.addEventListener(Twitch.Player.OFFLINE, function() { post('offline'); });
+        player.addEventListener(Twitch.Player.ONLINE, function() { post('online'); });
+        window.playerControls = {
+          play: function() { player.play(); },
+          pause: function() { player.pause(); },
+          setMuted: function(m) { player.setMuted(m); },
+          unmute: function() { player.setMuted(false); player.setVolume(1); },
+          setVolume: function(v) { player.setVolume(v); if (v > 0) player.setMuted(false); },
+          getCurrentTime: function() { post('currentTime', { time: player.getCurrentTime() }); },
+          getDuration: function() { post('duration', { duration: player.getDuration() }); },
+          seek: function(t) { player.seek(t); },
+          setChannel: function(c) { player.setChannel(c); },
+          setVideo: function(v, t) { player.setVideo(v, t || 0); },
+          setQuality: function(q) { player.setQuality(q); },
+          seekToLive: function() {}
+        };
+        post('trace', { step: 'player_ready', detail: 'listeners and controls attached' });
+      } catch (e) {
+        post('error', { message: 'initPlayer: ' + (e.message || String(e)) });
       }
     }
-
-    var hasStartedPlaying = false;
-
-    video.addEventListener('pause', function() { postMessage('pause'); });
-    video.addEventListener('playing', function() {
-      postMessage('play');
-      if (!hasStartedPlaying) {
-        hasStartedPlaying = true;
-        setTimeout(function() {
-          if (!video.paused) {
-            video.muted = false;
-            video.volume = 1.0;
-          }
-        }, 500);
+    var embedScript = document.createElement('script');
+    embedScript.src = 'https://embed.twitch.tv/embed/v1.js';
+    embedScript.onload = function() { initPlayer(); };
+    embedScript.onerror = function() {
+      post('error', { message: 'Failed to load embed.twitch.tv/embed/v1.js' });
+    };
+    post('trace', { step: 'loading_embed_script', detail: 'fetching v1.js' });
+    document.head.appendChild(embedScript);
+    setTimeout(function() {
+      if (!window._twitchPlayer && !window.__traceInitTimeout) {
+        window.__traceInitTimeout = true;
+        post('trace', { step: 'timeout_10s', detail: 'Twitch player not ready after 10s' });
       }
-    });
-    video.addEventListener('ended', function() { postMessage('ended'); });
-    video.addEventListener('waiting', function() { postMessage('stateUpdate', { isBuffering: true }); });
-    video.addEventListener('canplay', function() { postMessage('stateUpdate', { isBuffering: false }); });
-
-    postMessage('ready');
-
-    if (video.paused) {
-      video.play().catch(function() {
-        video.muted = true;
-        video.play().catch(function() {});
-      });
-    }
-  }
-
-  // Check for offline/error states
-  function checkErrors() {
-    var bodyText = document.body?.innerText || '';
-    if (bodyText.includes('is offline') || bodyText.includes('Channel is not live')) {
-      postMessage('offline');
-    }
-  }
-
-  // Stuck playback recovery
-  var lastTime = -1;
-  var stuckCount = 0;
-  function checkStuck() {
-    var video = document.querySelector('video');
-    if (!video || video.paused || video.ended) {
-      lastTime = -1;
-      stuckCount = 0;
-      return;
-    }
-
-    if (lastTime >= 0 && Math.abs(video.currentTime - lastTime) < 0.1) {
-      stuckCount++;
-      if (stuckCount >= 3) {
-        video.pause();
-        setTimeout(function() { video.play().catch(function() {}); }, 100);
-        stuckCount = 0;
-      }
-    } else {
-      stuckCount = 0;
-    }
-    lastTime = video.currentTime;
-  }
-
-  // Initialize
-  applyStyles(false);
-  detectContentGate();
-
-  waitForVideo(15000).then(function(video) {
-    if (video) {
-      setupVideo(video);
-    } else {
-      postMessage('error', { message: 'Video element not found' });
-    }
-  });
-
-  // Periodic checks
-  setInterval(detectContentGate, 2000);
-  setInterval(checkStuck, 2000);
-  setTimeout(checkErrors, 5000);
-  setInterval(checkErrors, 30000);
-
-  // Expose controls
-  window.playerControls = {
-    play: function() {
-      var v = document.querySelector('video');
-      if (v) { v.play().catch(function() {}); v.muted = false; v.volume = 1.0; }
-    },
-    pause: function() {
-      var v = document.querySelector('video');
-      if (v) v.pause();
-    },
-    mute: function() {
-      var v = document.querySelector('video');
-      if (v) v.muted = true;
-    },
-    unmute: function() {
-      var v = document.querySelector('video');
-      if (v) { v.muted = false; v.volume = 1.0; }
-    },
-    setVolume: function(vol) {
-      var v = document.querySelector('video');
-      if (v) { v.volume = vol; if (vol > 0) v.muted = false; }
-    },
-    seek: function(time) {
-      var v = document.querySelector('video');
-      if (v) v.currentTime = time;
-    }
-  };
-})();
-true;
-`;
+    }, 10000);
+  </script>
+</body>
+</html>`;
+}
 
 interface ControlsOverlayProps {
   isVisible: boolean;
@@ -475,9 +389,6 @@ interface ControlsOverlayProps {
   streamInfo?: StreamInfo;
 }
 
-/**
- * Format seconds to duration string (e.g., "6:40:05")
- */
 function formatDuration(startedAt?: string): string {
   if (!startedAt) return '0:00';
   const start = new Date(startedAt).getTime();
@@ -494,9 +405,6 @@ function formatDuration(startedAt?: string): string {
   return `${minutes}:${secs.toString().padStart(2, '0')}`;
 }
 
-/**
- * Format viewer count (e.g., "52,564")
- */
 function formatViewerCount(count?: number): string {
   if (!count) return '0';
   return count.toLocaleString();
@@ -545,7 +453,7 @@ function ControlsOverlay({
       Gesture.Tap().onEnd(() => {
         'worklet';
 
-        runOnJS(onToggleControls)();
+        scheduleOnRN(onToggleControls);
       }),
     [onToggleControls],
   );
@@ -646,8 +554,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       autoplay = true,
       channel,
       height,
-      muted: initialMuted = __DEV__,
+      muted: initialMuted = false,
       onBackPress,
+      onContentGateChange,
       onEnded,
       onError,
       onOffline,
@@ -656,7 +565,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       onPlay,
       onReady,
       onRefresh,
-      parent = 'foam-app.com',
+      parent = 'www.twitch.tv',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      streamProxyBaseUrl: _streamProxyBaseUrl,
       showOverlayControls = true,
       streamInfo,
       video,
@@ -664,7 +575,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     },
     ref,
   ) {
-    const { width: screenWidth } = useWindowDimensions();
     const webViewRef = useRef<WebView>(null);
 
     const [playerState, setPlayerState] = useState<PlayerState>({
@@ -685,8 +595,21 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       null,
     );
     const [hasContentGate, setHasContentGate] = useState(false);
+    const [showLoginPrompt, setShowLoginPrompt] = useState(true);
 
-    // Track last known video time for stuck detection
+    useEffect(() => {
+      if (hasContentGate) setShowLoginPrompt(true);
+    }, [hasContentGate]);
+
+    useEffect(() => {
+      onContentGateChange?.(hasContentGate);
+    }, [hasContentGate, onContentGateChange]);
+    const [lastHttpError, setLastHttpError] = useState<{
+      url: string;
+      statusCode: number;
+    } | null>(null);
+
+    // For stuck-detection health check (injected JS)
     const lastVideoTimeRef = useRef<number>(-1);
     const stuckCountRef = useRef<number>(0);
     const appStateRef = useRef<AppStateStatus>(AppState.currentState);
@@ -700,18 +623,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           // Resume playback when app returns to foreground
           setTimeout(() => {
             if (webViewRef.current && playerState.isReady) {
-              webViewRef.current.injectJavaScript(`
-                (function() {
-                  var video = document.querySelector('video');
-                  if (video && video.paused && video.readyState >= 2) {
-                    video.play().catch(function() {
-                      video.muted = true;
-                      video.play().catch(function() {});
-                    });
-                  }
-                })();
-                true;
-              `);
+              webViewRef.current.injectJavaScript(
+                'try { if (window.playerControls) window.playerControls.play(); } catch(e) {}; true;',
+              );
             }
           }, 500);
         }
@@ -729,7 +643,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       };
     }, [playerState.isReady]);
 
-    // Health monitoring is handled by injected JS - reset refs when state changes
+    // Reset stuck-detection refs when not ready or paused
     useEffect(() => {
       if (!playerState.isReady || playerState.isPaused) {
         lastVideoTimeRef.current = -1;
@@ -743,7 +657,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const durationResolverRef = useRef<((value: number) => void) | null>(null);
 
     const injectJS = useCallback((script: string) => {
-      webViewRef.current?.injectJavaScript(`${script}; true;`);
+      webViewRef.current?.injectJavaScript(
+        `try { ${script} } catch(e) {}; true;`,
+      );
     }, []);
 
     const play = useCallback(() => {
@@ -834,9 +750,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       });
     }, [injectJS, playerState.duration]);
 
-    /**
-     * Force refresh the player
-     */
     const forceRefresh = useCallback(() => {
       setPlayerState(prev => ({
         ...prev,
@@ -844,7 +757,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         isBuffering: true,
       }));
 
-      webViewRef.current?.injectJavaScript('window._injected = false;');
       setTimeout(() => {
         webViewRef.current?.reload();
       }, 100);
@@ -950,8 +862,19 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
                 durationResolverRef.current = null;
               }
               break;
+            case 'trace':
+              console.warn(
+                '[StreamPlayer:embed]',
+                message.payload?.step ?? '?',
+                message.payload?.detail ?? '',
+              );
+              break;
             case 'error':
-              onError?.(message.payload.message);
+              console.warn(
+                '[StreamPlayer:embed ERROR]',
+                message.payload?.message ?? message.payload,
+              );
+              onError?.(message.payload?.message ?? 'Unknown embed error');
               break;
             case 'contentGateDetected':
               setHasContentGate(message.payload?.hasContentGate ?? false);
@@ -960,20 +883,26 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               break;
           }
         } catch {
-          // Ignore parse errors
+          // ignore parse errors
         }
       },
       [onEnded, onError, onOffline, onOnline, onPause, onPlay, onReady],
     );
 
-    const playerUrl = useMemo(
-      () =>
-        generatePlayerURL({
-          channel,
-          parent,
+    const webViewSource = useMemo(
+      () => ({
+        html: buildTwitchEmbedHtml({
+          channel: channel || 'twitch',
           video,
+          parent,
+          autoplay: true,
+          muted: true,
+          width: '100%',
+          height: '100%',
         }),
-      [channel, parent, video],
+        baseUrl: `https://${parent}/`,
+      }),
+      [channel, video, parent],
     );
 
     const showControls = useCallback(() => {
@@ -1012,19 +941,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       }
     }, [dismissControls, showControls]);
 
-    const tapGesture = useMemo(
-      () =>
-        Gesture.Tap()
-          .maxDuration(250)
-          .onEnd(() => {
-            'worklet';
-
-            scheduleOnRN(toggleControlsInternal);
-          })
-          .shouldCancelWhenOutside(false),
-      [toggleControlsInternal],
-    );
-
     const handlePlayPause = useCallback(() => {
       if (playerState.isPaused) {
         play();
@@ -1035,12 +951,17 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     }, [pause, play, playerState.isPaused, showControls]);
 
     const handlePipPress = useCallback(() => {
-      console.log('PiP pressed');
+      // PiP implementation pending
     }, []);
 
     const handleWebViewError = useCallback(
       (event: { nativeEvent: WebViewError }) => {
         const { nativeEvent } = event;
+        console.warn('[StreamPlayer:WebView ERROR]', {
+          code: nativeEvent.code,
+          description: nativeEvent.description,
+          url: nativeEvent.url,
+        });
 
         sentryService.captureException(
           new Error(`StreamPlayer WebView error: ${nativeEvent.description}`),
@@ -1063,6 +984,16 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const handleWebViewHttpError = useCallback(
       (event: { nativeEvent: WebViewHttpError }) => {
         const { nativeEvent } = event;
+        console.warn('[StreamPlayer:HTTP ERROR]', {
+          statusCode: nativeEvent.statusCode,
+          url: nativeEvent.url,
+          description: nativeEvent.description,
+        });
+
+        setLastHttpError({
+          url: nativeEvent.url,
+          statusCode: nativeEvent.statusCode,
+        });
 
         sentryService.captureException(
           new Error(
@@ -1084,75 +1015,81 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       [channel, onError],
     );
 
-    const TWITCH_MIN_WIDTH = 400;
-    const TWITCH_MIN_HEIGHT = 300;
-
-    const rawWidth = width ?? screenWidth;
-    const rawHeight =
-      height ??
-      (typeof width === 'number' ? width * (9 / 16) : screenWidth * (9 / 16));
-
-    const playerWidth: DimensionValue =
-      typeof rawWidth === 'number'
-        ? Math.max(rawWidth, TWITCH_MIN_WIDTH)
-        : rawWidth;
-    const playerHeight: DimensionValue =
-      typeof rawHeight === 'number'
-        ? Math.max(rawHeight, TWITCH_MIN_HEIGHT)
-        : rawHeight;
-
-    const webViewContent = (
-      <WebView
-        ref={webViewRef}
-        collapsable={false}
-        allowsInlineMediaPlayback
-        allowsBackForwardNavigationGestures={false}
-        mediaPlaybackRequiresUserAction={false}
-        allowsFullscreenVideo
-        scrollEnabled={hasContentGate}
-        injectedJavaScript={INJECTED_JAVASCRIPT}
-        javaScriptEnabled
-        originWhitelist={['*']}
-        sharedCookiesEnabled
-        thirdPartyCookiesEnabled
-        source={{ uri: playerUrl }}
-        style={[
-          styles.webView,
-          // eslint-disable-next-line react-native/no-inline-styles
-          { minWidth: 400, minHeight: 300 },
-          hasContentGate && styles.webViewScrollable,
-        ]}
-        userAgent={
-          Platform.OS === 'ios'
-            ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
-            : 'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
-        }
-        onContentProcessDidTerminate={() => webViewRef.current?.reload()}
-        onError={handleWebViewError}
-        onHttpError={handleWebViewHttpError}
-        onMessage={handleMessage}
-        onRenderProcessGone={() => webViewRef.current?.reload()}
-      />
-    );
+    const playerWidth: DimensionValue = width ?? '100%';
+    const playerHeight: DimensionValue = height ?? '100%';
 
     return (
       <View
         collapsable={false}
         style={[
           styles.container,
-          { height: playerHeight, width: playerWidth },
+          { width: playerWidth, height: playerHeight },
           hasContentGate && styles.containerScrollable,
         ]}
       >
-        {webViewContent}
+        <WebView
+          ref={webViewRef}
+          allowsFullscreenVideo={false}
+          allowsInlineMediaPlayback
+          javaScriptEnabled
+          mediaPlaybackRequiresUserAction={false}
+          originWhitelist={['*']}
+          source={webViewSource}
+          style={[styles.webView, hasContentGate && styles.webViewScrollable]}
+          onContentProcessDidTerminate={() => webViewRef.current?.reload()}
+          onError={handleWebViewError}
+          onHttpError={handleWebViewHttpError}
+          onLoadStart={() => {
+            console.warn('[StreamPlayer:WebView] onLoadStart', {
+              channel,
+              hasVideo: !!video,
+            });
+          }}
+          onMessage={handleMessage}
+          onRenderProcessGone={() => webViewRef.current?.reload()}
+        />
 
-        {!hasContentGate && (
-          <GestureDetector gesture={tapGesture}>
-            <View style={styles.tapArea} />
-          </GestureDetector>
+        {showOverlayControls && !hasContentGate && playerState.isReady && (
+          <PressableArea
+            onPress={toggleControlsInternal}
+            style={styles.touchBlockOverlay}
+            pointerEvents="auto"
+            accessibilityLabel="Show player controls"
+            accessibilityRole="button"
+          />
         )}
 
-        {showOverlayControls && !hasContentGate && (
+        {__DEV__ && lastHttpError && (
+          <View style={styles.debugErrorOverlay}>
+            <Text color="red" weight="semibold">
+              HTTP {lastHttpError.statusCode}
+            </Text>
+            <Text color="gray.contrast" type="xs" numberOfLines={3}>
+              {lastHttpError.url}
+            </Text>
+            <Button
+              onPress={() => setLastHttpError(null)}
+              style={styles.debugDismissButton}
+            >
+              <Text color="gray.contrast" type="xs">
+                Dismiss
+              </Text>
+            </Button>
+          </View>
+        )}
+
+        {showOverlayControls && !hasContentGate && playerState.isReady && (
+          <PressableArea
+            onPress={toggleControlsInternal}
+            style={styles.controlsTriggerButton}
+            accessibilityLabel="Show player controls"
+            accessibilityRole="button"
+          >
+            <Icon color="#FFFFFF" icon="more-horizontal" size={24} />
+          </PressableArea>
+        )}
+
+        {showOverlayControls && !hasContentGate && playerState.isReady && (
           <ControlsOverlay
             isVisible={controlsVisible}
             paused={playerState.isPaused}
@@ -1163,6 +1100,34 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             onRefresh={onRefresh}
             onToggleControls={toggleControlsInternal}
           />
+        )}
+
+        {hasContentGate && (
+          // eslint-disable-next-line react/jsx-no-useless-fragment
+          <>
+            {showLoginPrompt && (
+              <View style={styles.loginPromptOverlay} pointerEvents="box-none">
+                <View style={styles.loginPromptBanner}>
+                  <Text
+                    color="gray.contrast"
+                    type="sm"
+                    style={styles.loginPromptText}
+                  >
+                    Some streams require a Twitch account. Tap the video to log
+                    in if Twitch prompts you.
+                  </Text>
+                  <PressableArea
+                    onPress={() => setShowLoginPrompt(false)}
+                    style={styles.loginPromptDismiss}
+                  >
+                    <Text color="accent" weight="semibold" type="sm">
+                      Got it
+                    </Text>
+                  </PressableArea>
+                </View>
+              </View>
+            )}
+          </>
         )}
       </View>
     );
@@ -1200,13 +1165,66 @@ const styles = StyleSheet.create((theme, rt) => ({
     top: 0,
   },
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: '#000',
     overflow: 'hidden',
-    paddingTop: rt.insets.top,
     position: 'relative',
+  },
+  touchBlockOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   containerScrollable: {
     overflow: 'visible',
+  },
+  loginPromptOverlay: {
+    left: 0,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: rt.insets.top + theme.spacing.sm,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  controlsTriggerButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderRadius: theme.radii.full,
+    height: 40,
+    justifyContent: 'center',
+    padding: theme.spacing.sm,
+    position: 'absolute',
+    right: theme.spacing.sm,
+    top: rt.insets.top + theme.spacing.sm,
+    width: 40,
+  },
+  debugErrorOverlay: {
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    bottom: rt.insets.bottom + 24,
+    left: theme.spacing.sm,
+    maxWidth: '95%',
+    padding: theme.spacing.sm,
+    position: 'absolute',
+    right: theme.spacing.sm,
+  },
+  debugDismissButton: {
+    marginTop: theme.spacing.xs,
+  },
+  loginPromptBanner: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderRadius: theme.radii.md,
+    maxWidth: 340,
+    padding: theme.spacing.md,
+  },
+  loginPromptDismiss: {
+    marginTop: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  loginPromptText: {
+    textAlign: 'center',
   },
   webViewScrollable: {
     minHeight: '100%',
@@ -1384,7 +1402,12 @@ const styles = StyleSheet.create((theme, rt) => ({
     fontWeight: '500',
   },
   webView: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: '#000',
     flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  webViewPlaceholder: {
+    backgroundColor: '#111',
   },
 }));

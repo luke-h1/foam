@@ -11,11 +11,11 @@ import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import type { Meta, StoryObj } from '@storybook/react';
 import { View, ScrollView } from 'react-native';
-import { ChatMessage } from './ChatMessage';
+import { RichChatMessage } from './RichChatMessage';
 
 const meta = {
-  title: 'components/Chat/ChatMessage',
-  component: ChatMessage,
+  title: 'components/Chat/RichChatMessage',
+  component: RichChatMessage,
   decorators: [
     Story => (
       <ScrollView
@@ -34,7 +34,7 @@ const meta = {
   argTypes: {
     onReply: { action: 'onReply' },
   },
-} satisfies Meta<typeof ChatMessage>;
+} satisfies Meta<typeof RichChatMessage>;
 
 export default meta;
 
@@ -201,7 +201,7 @@ export const WithMentions: Story = {
     ];
     return (
       // @ts-expect-error - allMessages is a valid prop but not in Storybook's type definition
-      <ChatMessage {...args} allMessages={allMessages} />
+      <RichChatMessage {...args} allMessages={allMessages} />
     );
   },
 };
@@ -576,28 +576,28 @@ export const DifferentColors: Story = {
   },
   render: () => (
     <View style={{ gap: 16 }}>
-      <ChatMessage
+      <RichChatMessage
         {...createBaseMessage([{ type: 'text', content: 'Red user message' }], {
           username: 'RedUser',
           color: '#FF0000',
         })}
         onReply={() => {}}
       />
-      <ChatMessage
+      <RichChatMessage
         {...createBaseMessage(
           [{ type: 'text', content: 'Blue user message' }],
           { username: 'BlueUser', color: '#0000FF' },
         )}
         onReply={() => {}}
       />
-      <ChatMessage
+      <RichChatMessage
         {...createBaseMessage(
           [{ type: 'text', content: 'Green user message' }],
           { username: 'GreenUser', color: '#00FF00' },
         )}
         onReply={() => {}}
       />
-      <ChatMessage
+      <RichChatMessage
         {...createBaseMessage(
           [{ type: 'text', content: 'Purple user message' }],
           { username: 'PurpleUser', color: '#9B59B6' },

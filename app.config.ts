@@ -263,6 +263,18 @@ const config: ExpoConfig = {
       ? appConfig.androidGoogleServicesFile
       : undefined,
     edgeToEdgeEnabled: true,
+    intentFilters: [
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [
+          { scheme: 'https', host: 'www.twitch.tv' },
+          { scheme: 'https', host: 'twitch.tv' },
+          { scheme: 'https', host: 'm.twitch.tv' },
+        ],
+      },
+    ],
   },
 };
 

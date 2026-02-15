@@ -15,7 +15,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { FC, useCallback, useMemo, useRef } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export const CategoryScreen: FC<
@@ -128,6 +128,8 @@ export const CategoryScreen: FC<
         contentInsetAdjustmentBehavior="automatic"
         keyExtractor={item => item.id}
         renderItem={renderItem}
+        drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+        contentContainerStyle={styles.listContent}
         ListHeaderComponent={renderHeader}
         onEndReachedThreshold={0.3}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -141,6 +143,9 @@ const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
     backgroundColor: theme.colors.gray.bg,
+  },
+  listContent: {
+    paddingBottom: theme.spacing.lg,
   },
   sectionHeader: {
     paddingHorizontal: theme.spacing.md,

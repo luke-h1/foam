@@ -4,7 +4,12 @@ import {
   createLoadController,
   abortCurrentLoad,
   getSevenTvEmoteSetId,
+  getCurrentEmoteData,
 } from '@app/store/chatStore';
+import {
+  preloadChannelEmotes,
+  preloadGlobalEmotes,
+} from '@app/utils/image/preloadEmotes';
 import { logger } from '@app/utils/logger';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -104,6 +109,18 @@ export const useChatEmoteLoader = ({
           setStatus('success');
           currentChannelRef.current = channelId;
           logger.chat.info('✅ Emote load completed', { channelId });
+
+          // Preload emotes in background for instant display in chat
+          const emoteData = getCurrentEmoteData(channelId);
+          if (emoteData) {
+            // Preload in background - don't await
+            void Promise.all([
+              preloadGlobalEmotes(emoteData),
+              preloadChannelEmotes(emoteData),
+            ]).then(() => {
+              logger.chat.debug('🖼️ Emote preload completed');
+            });
+          }
         } else {
           setStatus('error');
           logger.chat.warn('❌ Emote load failed', { channelId });

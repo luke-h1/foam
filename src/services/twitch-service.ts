@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import axios, { AxiosHeaders } from 'axios';
-import { twitchApi, mockServerUrl, isE2EMode } from './api';
+import { twitchApi, mockServerUrl, isE2EMode, twitchClientId } from './api';
 
 export interface PaginatedList<T> {
   data: T[];
@@ -246,7 +246,7 @@ export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data } = await axios.post(
-      `https://id.twitch.tv/oauth2/token?client_id=${process.env.TWITCH_CLIENT_ID}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
+      `https://id.twitch.tv/oauth2/token?client_id=${twitchClientId}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -321,7 +321,7 @@ export const twitchService = {
       '/streams',
       {
         headers: {
-          'Client-Id': process.env.TWITCH_CLIENT_ID,
+          'Client-Id': twitchClientId,
         },
         params: {
           ...(cursor && { after: cursor }),
@@ -364,7 +364,7 @@ export const twitchService = {
         ...params,
       },
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID,
+        'Client-Id': twitchClientId,
       },
     });
 
@@ -419,7 +419,7 @@ export const twitchService = {
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
       headers: {
-        'Client-Id': process.env.TWITCH_CLIENT_ID,
+        'Client-Id': twitchClientId,
         Authorization: `Bearer ${token}`,
       },
     });

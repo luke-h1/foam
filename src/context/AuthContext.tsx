@@ -32,7 +32,6 @@ const prefetchInitialData = (userId?: string) => {
     queryKey: twitchQueries.getTopStreams().queryKey,
     queryFn: () => twitchQueries.getTopStreams().queryFn({}),
   });
-  void queryClient.prefetchQuery(twitchQueries.getTopCategories());
 };
 
 export const storageKeys = {
@@ -297,17 +296,13 @@ export const AuthContextProvider = ({
       const u = await twitchService.getUserInfo(token.accessToken);
       setUser(u);
 
-      // Prefetch initial data immediately after login
+      twitchApi.setAuthToken(token.accessToken);
+
       prefetchInitialData(u.id);
 
-      // evict cached anon details
       await SecureStore.deleteItemAsync(storageKeys.anon);
 
-      // set tokens in secure-store with timestamp
       await SecureStore.setItemAsync(storageKeys.user, JSON.stringify(token));
-
-      // set header in axios
-      twitchApi.setAuthToken(token.accessToken);
     } catch (error) {
       logger.auth.error('Failed to get user info after login', error);
       await doAnonAuth();

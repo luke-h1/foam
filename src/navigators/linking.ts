@@ -68,6 +68,7 @@ export const linking: LinkingOptions<AppStackParamList> = {
       },
       Category: 'category/:id',
       Login: 'login',
+      AuthCallback: 'auth',
       Storybook: 'storybook',
       Preferences: {
         screens: {

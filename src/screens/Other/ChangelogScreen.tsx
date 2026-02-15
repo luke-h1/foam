@@ -40,7 +40,7 @@ All notable changes to this project will be documented in this file.
 
 export function ChangelogScreen() {
   return (
-    <SafeAreaView>
+    <SafeAreaView edges={['top']}>
       <Text>{mockChangelog}</Text>
     </SafeAreaView>
   );

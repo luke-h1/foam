@@ -183,6 +183,7 @@ export const createUserNoticeMessage = ({
           'system-msg': tags['system-msg'] ?? '',
           ...emptyFields,
         } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
+        isSpecialNotice: true,
       } as ChatMessageType<'usernotice', 'viewermilestone'>;
     }
 
@@ -193,6 +194,7 @@ export const createUserNoticeMessage = ({
         message: [createSubscriptionPart(tags, text)],
         userstate,
         notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice', 'resub'>;
     }
@@ -205,6 +207,7 @@ export const createUserNoticeMessage = ({
         badges: [],
         message: [createSubscriptionPart(tags, text)],
         userstate,
+        isSpecialNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice', 'sub'>;
     }
@@ -216,6 +219,7 @@ export const createUserNoticeMessage = ({
         message: [createSubscriptionPart(tags, text)],
         userstate,
         notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice', 'subgift'>;
     }
@@ -227,6 +231,7 @@ export const createUserNoticeMessage = ({
         message: [createSubscriptionPart(tags, text)],
         userstate,
         notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice', 'anongiftpaidupgrade'>;
     }
@@ -238,6 +243,7 @@ export const createUserNoticeMessage = ({
         message: [],
         userstate,
         notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice', 'raid'>;
     }
@@ -248,6 +254,7 @@ export const createUserNoticeMessage = ({
         userstate,
         badges: [],
         message: [],
+        isSpecialNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice'>;
     }
@@ -292,5 +299,6 @@ export const createSystemMessage = (
     replyDisplayName: '',
     replyBody: '',
     parentColor: undefined,
+    isSpecialNotice: true,
   };
 };

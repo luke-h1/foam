@@ -1,32 +1,43 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TabView, SceneMap } from 'react-native-tab-view';
+import { TabView, type SceneRendererProps } from 'react-native-tab-view';
 import { StyleSheet } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
 import { TopStreamsScreen } from './TopStreamsScreen';
+
+type Route = { key: string; title: string };
 
 export function TopScreen() {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState<number>(0);
 
-  const [routes] = useState([
+  const [routes] = useState<Route[]>([
     { key: 'streams', title: 'Streams' },
     { key: 'categories', title: 'Categories' },
   ]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, setCurrentTitle] = useState<string>('Streams');
 
-  const renderScene = SceneMap({
-    streams: TopStreamsScreen,
-    categories: TopCategoriesScreen,
-  });
+  const renderScene = useCallback(
+    // eslint-disable-next-line react/no-unused-prop-types
+    ({ route }: SceneRendererProps & { route: Route }) => {
+      switch (route.key) {
+        case 'streams':
+          return <TopStreamsScreen />;
+        case 'categories':
+          return <TopCategoriesScreen />;
+        default:
+          return null;
+      }
+    },
+    [],
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <TabView
+        lazy
         style={styles.tabViewWrapper}
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -34,22 +45,17 @@ export function TopScreen() {
         initialLayout={{ width: layout.width }}
         renderTabBar={props => (
           <View style={styles.tabContainer}>
-            {props.navigationState.routes.map(
-              (route: { key: string; title: string }, i) => {
-                return (
-                  <Button
-                    key={route.key}
-                    onPress={() => {
-                      props.jumpTo(route.key);
-                      setCurrentTitle(route.title);
-                    }}
-                    style={[styles.tab, styles.line(index, i)]}
-                  >
-                    <Text>{route.title}</Text>
-                  </Button>
-                );
-              },
-            )}
+            {props.navigationState.routes.map((route, i) => {
+              return (
+                <Button
+                  key={route.key}
+                  onPress={() => props.jumpTo(route.key)}
+                  style={[styles.tab, styles.line(index, i)]}
+                >
+                  <Text>{route.title}</Text>
+                </Button>
+              );
+            })}
           </View>
         )}
       />

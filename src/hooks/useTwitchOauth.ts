@@ -1,24 +1,27 @@
-import { useAuthContext } from '@app/context/AuthContext';
-import { logger } from '@app/utils/logger';
 import {
   AuthRequestConfig,
   DiscoveryDocument,
   useAuthRequest,
 } from 'expo-auth-session';
-import { InteractionManager, Platform } from 'react-native';
-import { useAppNavigation } from './useAppNavigation';
-import { useAsyncEffect } from './useAsyncEffect';
+import Constants from 'expo-constants';
+import { useCallback, useEffect } from 'react';
+import { Platform } from 'react-native';
 
 /**
- * Experimental oauth hook
- * crashes the app with UIViewControllerHierarchyInconsistency at the moment
+ * Twitch OAuth (implicit flow).
+ * - Native: redirect_uri is foam://auth. On device, system browser redirects back to app (Linking).
+ *   On simulator, we open auth in an in-app WebView and intercept foam://auth to mimic the same flow.
+ * - Web: redirect to auth proxy (AUTH_PROXY_API_BASE_URL/pending).
  */
+const FOAM_AUTH_REDIRECT_URI = 'foam://auth';
 
 const USER_SCOPES = [
   'user:read:follows',
   'user:read:blocked_users',
   'user:read:emotes',
   'user:manage:blocked_users',
+  'user:manage:chat_color',
+  'user:read:subscriptions',
 ] as const;
 
 const CHANNEL_SCOPES = [
@@ -29,30 +32,43 @@ const CHANNEL_SCOPES = [
 
 const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
 const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
+const MODERATOR_SCOPES = [
+  'moderator:read:chatters',
+  'moderator:read:followers',
+] as const;
 
-const proxyUrl = new URL(
-  Platform.select({
-    native: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-    default: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    web: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    ios: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-  }),
-).toString();
+const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
+const proxyBase = process.env.AUTH_PROXY_API_BASE_URL;
+const proxyUrl =
+  proxyBase != null
+    ? new URL(
+        Platform.OS === 'web' ? `${proxyBase}/pending` : `${proxyBase}/proxy`,
+      ).toString()
+    : '';
+
+function getRedirectUri(): string {
+  if (!isNative) return proxyUrl || FOAM_AUTH_REDIRECT_URI;
+  return FOAM_AUTH_REDIRECT_URI;
+}
+
+export const isSimulator = isNative && !Constants.isDevice;
 
 const twitchConfig: AuthRequestConfig = {
-  clientId: process.env.TWITCH_CLIENT_ID,
-  clientSecret: process.env.TWITCH_CLIENT_SECRET,
+  clientId:
+    (Constants.expoConfig?.extra?.TWITCH_CLIENT_ID as string | undefined) ??
+    process.env.TWITCH_CLIENT_ID,
+  clientSecret:
+    (Constants.expoConfig?.extra?.TWITCH_CLIENT_SECRET as string | undefined) ??
+    process.env.TWITCH_CLIENT_SECRET,
   scopes: [
     ...USER_SCOPES,
     ...CHAT_SCOPES,
     ...WHISPER_SCOPES,
     ...CHANNEL_SCOPES,
+    ...MODERATOR_SCOPES,
   ],
   responseType: 'token',
-  redirectUri: proxyUrl,
-  /**
-   * Enable PKCE (Proof Key for Code Exchange) to prevent another app from intercepting the redirect request.
-   */
+  redirectUri: getRedirectUri(),
   usePKCE: true,
   extraParams: {
     force_verify: 'true',
@@ -66,42 +82,48 @@ const twitchDiscovery: DiscoveryDocument = {
 };
 
 export function useTwitchOauth() {
-  const { navigate } = useAppNavigation();
-  const { loginWithTwitch } = useAuthContext();
-  const [twitchRequest, twitchResponse, promptTwitchAsync] = useAuthRequest(
+  const [request, , promptTwitchAsync] = useAuthRequest(
     twitchConfig,
     twitchDiscovery,
   );
 
-  const signInWithTwitch = async () => {
+  useEffect(() => {
+    console.warn('[Auth:OAuth] useTwitchOauth mount', {
+      isSimulator,
+      hasRequest: !!request,
+      platform: Platform.OS,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      isDevice: Constants.isDevice,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSimulator, request]);
+
+  const getAuthUrlAsync = useCallback(async () => {
+    console.warn('[Auth:OAuth] getAuthUrlAsync called', {
+      hasRequest: !!request,
+    });
+    if (!request) {
+      console.warn(
+        '[Auth:OAuth] getAuthUrlAsync: request is null, returning null',
+      );
+      return null;
+    }
     try {
-      if (!twitchRequest) {
-        logger.auth.error('no twitch request');
-        return;
-      }
-      await loginWithTwitch(twitchResponse);
-
-      if (twitchResponse?.type === 'success') {
-        // Wait for any pending interactions to complete before navigating
-        InteractionManager.runAfterInteractions(() => {
-          navigate('Tabs', {
-            screen: 'Following',
-          });
-        });
-      }
-    } catch (error) {
-      logger.auth.error('Failed to sign in with twitch', error);
+      const url = await request.makeAuthUrlAsync(twitchDiscovery);
+      console.warn('[Auth:OAuth] getAuthUrlAsync result', {
+        hasUrl: !!url,
+        urlSafe: url?.slice(0, 100),
+      });
+      return url;
+    } catch (e) {
+      console.warn('[Auth:OAuth] getAuthUrlAsync throw', e);
+      return null;
     }
-  };
-
-  useAsyncEffect(async () => {
-    if (twitchResponse && twitchResponse?.type === 'success') {
-      await signInWithTwitch();
-    }
-  }, [twitchResponse]);
+  }, [request]);
 
   return {
     promptTwitchAsync,
-    twitchResponse,
+    getAuthUrlAsync,
+    isSimulator,
   };
 }

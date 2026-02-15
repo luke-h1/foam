@@ -13,7 +13,7 @@ import {
 import { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export function TopStreamsScreen() {
@@ -99,6 +99,8 @@ export function TopStreamsScreen() {
         data={allStreams}
         renderItem={renderItem}
         keyExtractor={item => `${item.game_id}-${item.title}`}
+        drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+        contentContainerStyle={styles.listContent}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         refreshing={refreshing}
@@ -109,8 +111,11 @@ export function TopStreamsScreen() {
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
+  },
+  listContent: {
+    paddingBottom: theme.spacing.lg,
   },
 }));

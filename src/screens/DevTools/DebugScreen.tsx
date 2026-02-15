@@ -24,16 +24,12 @@ export function DebugScreen() {
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   const [reactQueryEnabled, setReactQueryEnabled] = useState(false);
-  const [hlsPlayerEnabled, setHlsPlayerEnabled] = useState(false);
   const [username, setUsername] = useState('');
   const [channelName, setChannelName] = useState('');
   const [channelId, setChannelId] = useState('');
 
   useEffect(() => {
     setReactQueryEnabled(debugOptions.ReactQueryDebug?.enabled ?? false);
-    setHlsPlayerEnabled(
-      storageService.getString<boolean>('foam_hls_player') ?? false,
-    );
   }, [debugOptions]);
 
   useEffect(() => {
@@ -58,11 +54,6 @@ export function DebugScreen() {
   const handleToggleRQ = (val: boolean) => {
     setReactQueryEnabled(val);
     storageService.set('ReactQueryDebug', val);
-  };
-
-  const handleToggleHls = (val: boolean) => {
-    setHlsPlayerEnabled(val);
-    storageService.set('foam_hls_player', val);
   };
 
   const handleConvertUsername = async () => {
@@ -130,16 +121,6 @@ export function DebugScreen() {
               </Text>
             </View>
             <Switch value={reactQueryEnabled} onValueChange={handleToggleRQ} />
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.rowText}>
-              <Text weight="semibold">Native HLS Player (Experimental)</Text>
-              <Text type="xs" color="gray.textLow">
-                Uses unofficial API - dev/debug only, not for production
-              </Text>
-            </View>
-            <Switch value={hlsPlayerEnabled} onValueChange={handleToggleHls} />
           </View>
 
           <View style={styles.divider} />

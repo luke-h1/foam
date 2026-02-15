@@ -1,115 +1,121 @@
-import { FlashListRef } from '@shopify/flash-list';
+import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { RefObject, useCallback, useRef, useState } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
-/**
- * Threshold in pixels from the bottom to consider user "at bottom"
- */
-const BOTTOM_THRESHOLD = 50;
+import type { AnyChatMessageType } from '../util/messageHandlers';
 
-/**
- * Grace period (ms) after being at bottom where we still auto-scroll.
- * Covers transient scroll events from message trimming.
- */
-const BOTTOM_GRACE_MS = 300;
+const BOTTOM_THRESHOLD = 200;
+const NOT_AT_BOTTOM_THRESHOLD = 250;
+const SCROLL_THROTTLE_MS = 150;
 
-interface UseChatScrollOptions<T> {
-  flashListRef: RefObject<FlashListRef<T> | null>;
+interface UseChatScrollOptions {
+  listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
+  getMessagesLength: () => number;
 }
 
-export const useChatScroll = <T>({ flashListRef }: UseChatScrollOptions<T>) => {
+export const useChatScroll = ({
+  listRef,
+  getMessagesLength,
+}: UseChatScrollOptions) => {
   const isAtBottomRef = useRef(true);
+  const isScrollingToBottomRef = useRef(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isScrollingToBottom, setIsScrollingToBottom] = useState(false);
-  const isScrollingToBottomRef = useRef(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastAtBottomTimeRef = useRef(Date.now());
+  const scrollThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastAtBottomRef = useRef<boolean | null>(null);
+  const lastContentHeightRef = useRef(0);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
+      const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+      const { y } = contentOffset;
+      const contentHeight = contentSize?.height ?? 0;
+      const viewHeight = layoutMeasurement?.height ?? 0;
+      const distanceFromEnd = contentHeight - viewHeight - y;
+      const contentGrew = contentHeight > lastContentHeightRef.current;
+      lastContentHeightRef.current = contentHeight;
 
-      const distanceFromBottom =
-        contentSize.height - (contentOffset.y + layoutMeasurement.height);
-      const atBottom = distanceFromBottom <= BOTTOM_THRESHOLD;
+      const atBottom =
+        contentHeight <= viewHeight || distanceFromEnd <= BOTTOM_THRESHOLD;
+      const notAtBottom =
+        contentHeight > viewHeight && distanceFromEnd > NOT_AT_BOTTOM_THRESHOLD;
 
-      isAtBottomRef.current = atBottom;
-
-      if (atBottom) {
-        lastAtBottomTimeRef.current = Date.now();
-      }
-
-      if (!isScrollingToBottomRef.current || atBottom) {
-        setIsAtBottom(atBottom);
-
-        if (isScrollingToBottomRef.current && atBottom) {
-          isScrollingToBottomRef.current = false;
-          setIsScrollingToBottom(false);
+      if (contentGrew && lastAtBottomRef.current === true && !notAtBottom) {
+        isAtBottomRef.current = true;
+        lastAtBottomRef.current = true;
+        if (scrollThrottleRef.current) {
+          clearTimeout(scrollThrottleRef.current);
+          scrollThrottleRef.current = null;
         }
+        setIsAtBottom(true);
+        return;
       }
 
-      if (atBottom) {
-        setUnreadCount(0);
-      }
+      const resolved =
+        // eslint-disable-next-line no-nested-ternary
+        lastAtBottomRef.current === true
+          ? atBottom
+          : notAtBottom
+            ? false
+            : atBottom;
+
+      isAtBottomRef.current = resolved;
+
+      if (lastAtBottomRef.current === resolved) return;
+
+      lastAtBottomRef.current = resolved;
+
+      if (scrollThrottleRef.current) return;
+
+      scrollThrottleRef.current = setTimeout(() => {
+        scrollThrottleRef.current = null;
+        const { current } = isAtBottomRef;
+        setIsAtBottom(current);
+        if (current) setUnreadCount(0);
+      }, SCROLL_THROTTLE_MS);
     },
     [],
   );
 
   const scrollToBottom = useCallback(() => {
+    if (getMessagesLength() === 0) return;
+
     isScrollingToBottomRef.current = true;
     setIsScrollingToBottom(true);
 
-    flashListRef.current?.scrollToEnd({ animated: true });
+    listRef.current?.scrollToEnd?.({ animated: true });
 
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     scrollTimeoutRef.current = setTimeout(() => {
       isAtBottomRef.current = true;
+      lastAtBottomRef.current = true;
       setIsAtBottom(true);
       setUnreadCount(0);
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
-    }, 300);
-  }, [flashListRef]);
-
-  const handleContentSizeChange = useCallback(() => {
-    if (isScrollingToBottomRef.current) {
-      return;
-    }
-
-    const wasRecentlyAtBottom =
-      Date.now() - lastAtBottomTimeRef.current < BOTTOM_GRACE_MS;
-
-    if (!isAtBottomRef.current && !wasRecentlyAtBottom) {
-      return;
-    }
-
-    isAtBottomRef.current = true;
-    lastAtBottomTimeRef.current = Date.now();
-    flashListRef.current?.scrollToEnd({ animated: false });
-  }, [flashListRef]);
+    }, 350);
+  }, [listRef, getMessagesLength]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);
   }, []);
 
   const cleanup = useCallback(() => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    if (scrollThrottleRef.current) clearTimeout(scrollThrottleRef.current);
+    scrollThrottleRef.current = null;
   }, []);
 
   return {
     isAtBottom,
     isAtBottomRef,
     isScrollingToBottom,
+    isScrollingToBottomRef,
     unreadCount,
     setUnreadCount,
     handleScroll,
-    handleContentSizeChange,
     scrollToBottom,
     incrementUnread,
     cleanup,

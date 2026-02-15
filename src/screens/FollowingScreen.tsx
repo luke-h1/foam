@@ -12,7 +12,8 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, type JSX } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { toast } from 'sonner-native';
@@ -26,6 +27,7 @@ export interface Section {
 export default function FollowingScreen() {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
 
   const followingStreamsQuery = useMemo(
     () => twitchQueries.getFollowedStreams(user?.id as string),
@@ -57,12 +59,12 @@ export default function FollowingScreen() {
 
   if (isRefreshing || isLoading) {
     return (
-      <>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         {Array.from({ length: 5 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <LiveStreamCardSkeleton key={index} />
         ))}
-      </>
+      </View>
     );
   }
   if ((!isLoading && !streams) || isError) {
@@ -94,6 +96,8 @@ export default function FollowingScreen() {
         data={streamsArray}
         keyExtractor={item => item.id}
         contentInsetAdjustmentBehavior="automatic"
+        drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+        contentContainerStyle={[styles.listContent, { paddingTop: insets.top }]}
         renderItem={renderItem}
         onScroll={scrollHandler}
         refreshControl={refreshControl}
@@ -107,5 +111,8 @@ const styles = StyleSheet.create(theme => ({
     flex: 1,
     backgroundColor: theme.colors.gray.bg,
     overflow: 'hidden',
+  },
+  listContent: {
+    paddingBottom: theme.spacing.lg,
   },
 }));

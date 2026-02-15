@@ -1,85 +1,149 @@
 import { addMessages, ChatMessageType } from '@app/store/chatStore';
+import { lightenColor } from '@app/utils/color/lightenColor';
 import { MutableRefObject, useCallback, useRef } from 'react';
 
-const BATCH_SIZE = 3;
-const BATCH_TIMEOUT_MS = 10;
+const BUFFER_FLUSH_INTERVAL_MS = 50;
+
+const colorCache = new Map<string, string>();
+const MAX_COLOR_CACHE_SIZE = 200;
+
+function getCachedLightenedColor(
+  color: string | undefined,
+): string | undefined {
+  if (!color) {
+    return undefined;
+  }
+
+  const cached = colorCache.get(color);
+  if (cached) {
+    return cached;
+  }
+
+  const lightened = lightenColor(color);
+  colorCache.set(color, lightened);
+
+  if (colorCache.size > MAX_COLOR_CACHE_SIZE) {
+    const firstKey = colorCache.keys().next().value as string | undefined;
+    if (firstKey) {
+      colorCache.delete(firstKey);
+    }
+  }
+
+  return lightened;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyMessage = ChatMessageType<any, any>;
+type AnyMessage = ChatMessageType<any, any> & {
+  cachedSenderColor?: string;
+};
 
 interface UseChatMessagesOptions {
   isAtBottomRef: MutableRefObject<boolean>;
+  isScrollingToBottomRef?: MutableRefObject<boolean>;
   onUnreadIncrement: (count: number) => void;
 }
 
 export const useChatMessages = (options: UseChatMessagesOptions) => {
-  const { isAtBottomRef, onUnreadIncrement } = options;
+  const { isAtBottomRef, isScrollingToBottomRef, onUnreadIncrement } = options;
 
-  const messageBatchRef = useRef<AnyMessage[]>([]);
-  const batchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messageBufferRef = useRef<AnyMessage[]>([]);
+  const seenKeysRef = useRef<Set<string>>(new Set());
+  const flushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isFlushingRef = useRef(false);
 
-  const processMessageBatch = useCallback(() => {
-    if (messageBatchRef.current.length === 0) return;
+  const flushBuffer = useCallback(() => {
+    if (messageBufferRef.current.length === 0) return;
+    if (isFlushingRef.current) return;
 
-    const batch = [...messageBatchRef.current];
-    messageBatchRef.current = [];
+    isFlushingRef.current = true;
 
-    // Deduplicate within batch by message_id + message_nonce
-    const deduplicatedBatch = batch.reduce((acc, message) => {
-      const key = `${message.message_id}_${message.message_nonce}`;
-      const existingIndex = acc.findIndex(
-        m => `${m.message_id}_${m.message_nonce}` === key,
-      );
+    const messagesToFlush = messageBufferRef.current;
+    messageBufferRef.current = [];
 
-      if (existingIndex >= 0) {
-        acc[existingIndex] = message;
-      } else {
-        acc.push(message);
-      }
-      return acc;
-    }, [] as AnyMessage[]);
-
-    addMessages(deduplicatedBatch as ChatMessageType<never>[]);
-
-    // Handle unread count when not at bottom
-    if (!isAtBottomRef.current) {
-      onUnreadIncrement(deduplicatedBatch.length);
+    if (messagesToFlush.length > 0) {
+      addMessages(messagesToFlush as ChatMessageType<never>[]);
     }
-  }, [isAtBottomRef, onUnreadIncrement]);
+
+    isFlushingRef.current = false;
+  }, []);
+
+  const startFlushTimer = useCallback(() => {
+    if (flushTimerRef.current) return;
+
+    flushTimerRef.current = setInterval(() => {
+      flushBuffer();
+    }, BUFFER_FLUSH_INTERVAL_MS);
+  }, [flushBuffer]);
 
   const handleNewMessage = useCallback(
     (newMessage: AnyMessage) => {
-      messageBatchRef.current.push(newMessage);
+      const key = `${newMessage.message_id}_${newMessage.message_nonce}`;
 
-      if (batchTimeoutRef.current) {
-        clearTimeout(batchTimeoutRef.current);
+      const messageWithCachedColor = {
+        ...newMessage,
+        cachedSenderColor: getCachedLightenedColor(newMessage.userstate?.color),
+      };
+
+      const existingIndex = messageBufferRef.current.findIndex(
+        msg => `${msg.message_id}_${msg.message_nonce}` === key,
+      );
+
+      if (existingIndex >= 0) {
+        const existingMsg = messageBufferRef.current[existingIndex];
+        messageBufferRef.current[existingIndex] = {
+          ...messageWithCachedColor,
+          cachedSenderColor:
+            existingMsg?.cachedSenderColor ??
+            messageWithCachedColor.cachedSenderColor,
+        };
+        return;
       }
 
-      if (messageBatchRef.current.length >= BATCH_SIZE) {
-        processMessageBatch();
-      } else {
-        batchTimeoutRef.current = setTimeout(() => {
-          processMessageBatch();
-        }, BATCH_TIMEOUT_MS);
+      seenKeysRef.current.add(key);
+
+      messageBufferRef.current.push(messageWithCachedColor);
+
+      const scrollingToBottom = isScrollingToBottomRef?.current ?? false;
+      if (!isAtBottomRef.current && !scrollingToBottom) {
+        onUnreadIncrement(1);
       }
+
+      startFlushTimer();
     },
-    [processMessageBatch],
+    [isAtBottomRef, isScrollingToBottomRef, onUnreadIncrement, startFlushTimer],
   );
 
+  const forceFlush = useCallback(() => {
+    if (messageBufferRef.current.length === 0) {
+      return;
+    }
+
+    const bufferedMessages = messageBufferRef.current;
+    messageBufferRef.current = [];
+
+    if (bufferedMessages.length > 0) {
+      addMessages(bufferedMessages as ChatMessageType<never>[]);
+    }
+  }, []);
+
   const clearLocalMessages = useCallback(() => {
-    messageBatchRef.current = [];
+    messageBufferRef.current = [];
+    seenKeysRef.current.clear();
   }, []);
 
   const cleanup = useCallback(() => {
-    if (batchTimeoutRef.current) {
-      clearTimeout(batchTimeoutRef.current);
-      batchTimeoutRef.current = null;
+    if (flushTimerRef.current) {
+      clearInterval(flushTimerRef.current);
+      flushTimerRef.current = null;
     }
+    messageBufferRef.current = [];
   }, []);
 
   return {
     handleNewMessage,
     clearLocalMessages,
     cleanup,
+    forceFlush,
+    getBufferSize: () => messageBufferRef.current.length,
   };
 };

@@ -43,7 +43,7 @@ export function LiveStreamCard({ stream }: Props) {
   }, [navigation, stream.game_id]);
 
   return (
-    <Button onPress={handleStreamPress}>
+    <Button onPress={handleStreamPress} style={styles.cardWrapper}>
       <View style={styles.container}>
         <View style={styles.imageContainer}>
           <Image
@@ -51,12 +51,9 @@ export function LiveStreamCard({ stream }: Props) {
               .replace('{width}', '1920')
               .replace('{height}', '1080')}
             style={styles.image}
+            containerStyle={styles.imageWrapper}
             transition={150}
           />
-          <View style={styles.overlay}>
-            <View style={styles.redDot} />
-            <Text type="xxs">{elapsedStreamTime(stream.started_at)}</Text>
-          </View>
         </View>
         <View style={styles.details}>
           <View style={styles.headerRow}>
@@ -70,6 +67,14 @@ export function LiveStreamCard({ stream }: Props) {
                 {stream.user_name}
               </Text>
             </PressableArea>
+          </View>
+          <View style={styles.metadataRow}>
+            <View style={styles.liveBadge}>
+              <View style={styles.redDot} />
+              <Text type="xxs" style={styles.liveText}>
+                {elapsedStreamTime(stream.started_at)}
+              </Text>
+            </View>
             <View style={styles.viewersBadge}>
               <View style={styles.viewersDot} />
               <Text type="xxs" style={styles.viewersText}>
@@ -96,6 +101,15 @@ export function LiveStreamCard({ stream }: Props) {
 }
 
 const styles = StyleSheet.create(theme => ({
+  cardWrapper: {
+    width: '100%',
+  },
+  imageWrapper: {
+    width: 150,
+    height: 100,
+    overflow: 'hidden',
+    borderRadius: 8,
+  },
   image: {
     width: 150,
     height: 100,
@@ -103,50 +117,57 @@ const styles = StyleSheet.create(theme => ({
   },
   container: {
     flexDirection: 'row',
+    flexWrap: 'nowrap',
     paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
-    columnGap: theme.spacing.md,
-    flex: 1,
+    paddingHorizontal: theme.spacing.md,
+    alignItems: 'flex-start',
   },
   imageContainer: {
-    position: 'relative',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderCurve: 'continuous',
+    width: 150,
+    height: 100,
+    flexShrink: 0,
+    marginRight: theme.spacing.md,
+    overflow: 'hidden',
+    borderRadius: 8,
   },
   redDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#ff4444',
-    marginRight: 5,
   },
   details: {
     flex: 1,
+    flexShrink: 1,
     justifyContent: 'flex-start',
     gap: theme.spacing.xs,
+    minWidth: 0,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  metadataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  liveText: {
+    color: theme.colors.gray.textLow,
   },
   usernameButton: {
     flex: 1,
+    minWidth: 0,
   },
   username: {
     fontWeight: '600',
+    color: theme.colors.gray.text,
   },
   viewersBadge: {
     flexDirection: 'row',
@@ -175,7 +196,7 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: '400',
   },
   title: {
-    opacity: 0.85,
+    color: theme.colors.gray.textLow,
     marginTop: theme.spacing.xs,
     lineHeight: 18,
   },

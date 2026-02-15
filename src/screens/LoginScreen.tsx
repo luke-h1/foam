@@ -9,7 +9,7 @@ import { sentryService } from '@app/services/sentry-service';
 import { useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
-import { Platform, SafeAreaView, View, Dimensions } from 'react-native';
+import { Dimensions, Platform, SafeAreaView, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
@@ -44,7 +44,6 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export function LoginScreen() {
   const navigation = useAppNavigation();
-
   const { loginWithTwitch } = useAuthContext();
 
   const discovery = {
@@ -63,13 +62,9 @@ export function LoginScreen() {
         ...WHISPER_SCOPES,
         ...CHANNEL_SCOPES,
       ],
-      // Use implicit flow to avoid code exchange.
       responseType: 'token',
       redirectUri: proxyUrl,
-
-      // Enable PKCE (Proof Key for Code Exchange) to prevent another app from intercepting the redirect request.
       usePKCE: true,
-
       extraParams: {
         force_verify: 'true',
       },
@@ -101,7 +96,6 @@ export function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Decorative background elements */}
       <View style={styles.decorativeElements}>
         <View style={styles.decorativeCircle} />
         <View style={styles.decorativeCircle2} />
@@ -252,12 +246,6 @@ const styles = StyleSheet.create(theme => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  twitchIcon: {
-    width: 20,
-    height: 20,
-    marginRight: theme.spacing.md,
-    tintColor: 'white',
   },
   featuresSection: {
     alignItems: 'center',

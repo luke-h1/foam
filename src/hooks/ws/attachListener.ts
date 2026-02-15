@@ -57,16 +57,23 @@ export function attachListeners(
     ) {
       const reconnectAttempts =
         optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+      const baseInterval =
+        optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
+        const attempt = reconnectCount.current;
+        const backoffMultiplier = Math.min(1.5 ** attempt, 8);
+        const delay = Math.round(baseInterval * backoffMultiplier);
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();
-        }, optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS);
+        }, delay);
+      } else {
+        optionsRef.current.onReconnectStop?.(reconnectAttempts);
+        console.error(
+          `Maximum reconnect attempts reached: ${reconnectAttempts}`,
+        );
       }
-
-      optionsRef.current.onReconnectStop?.(reconnectAttempts);
-      console.error(`Maximum reconnect attempts reached: ${reconnectAttempts}`);
     }
   };
 
@@ -74,22 +81,25 @@ export function attachListeners(
     optionsRef.current.onError?.(event);
 
     if (optionsRef.current.retryOnError) {
-      if (
-        reconnectCount.current <
-        (optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT)
-      ) {
+      const reconnectAttempts =
+        optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
+      const baseInterval =
+        optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
+
+      if (reconnectCount.current < reconnectAttempts) {
+        const attempt = reconnectCount.current;
+        const backoffMultiplier = Math.min(1.5 ** attempt, 8);
+        const delay = Math.round(baseInterval * backoffMultiplier);
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();
-        }, optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_LIMIT);
+        }, delay);
+      } else {
+        optionsRef.current.onReconnectStop?.(reconnectAttempts);
+        console.error(
+          `Maximum reconnect attempts reached: ${reconnectAttempts}`,
+        );
       }
-
-      optionsRef.current.onReconnectStop?.(
-        optionsRef.current.reconnectAttempts as number,
-      );
-      console.error(
-        `Maximum reconnect attempts reached: ${optionsRef.current.reconnectAttempts}`,
-      );
     }
   };
 

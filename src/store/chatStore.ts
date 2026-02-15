@@ -2,6 +2,7 @@ import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
+import { sentryService, startSpanAsync } from '@app/services/sentry-service';
 import {
   V4Badge,
   V4Paint,
@@ -128,6 +129,8 @@ export interface ChatMessageType<
   sender: string;
   style?: ViewStyle;
   parentDisplayName?: string;
+  isSpecialNotice?: boolean;
+  cachedSenderColor?: string;
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;
@@ -186,7 +189,6 @@ export interface ChannelCacheType {
   sevenTvEmoteSetId?: string;
 }
 
-const MAX_MESSAGES = 500;
 const MAX_CACHED_CHANNELS = 10;
 const MAX_COSMETIC_ENTRIES = 500;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
@@ -197,7 +199,6 @@ const messageColorIndex = new Map<string, string>();
 
 const getMessageKey = (messageId: string, messageNonce: string): string =>
   `${messageId}_${messageNonce}`;
-
 const emoteImageCachePromises = new Map<string, Promise<string>>();
 
 let activeLoadController: AbortController | null = null;
@@ -313,31 +314,24 @@ persistObservable(chatStore$.persisted, {
   local: 'chat-store-v2',
 });
 
+const MAX_CHAT_MESSAGES = 1000;
+
+function trimToMaxMessages(
+  messages: ChatMessageType<never>[],
+): ChatMessageType<never>[] {
+  if (messages.length <= MAX_CHAT_MESSAGES) return messages;
+  return messages.slice(-MAX_CHAT_MESSAGES);
+}
+
 export const addMessage = <TNoticeType extends NoticeVariants>(
   message: ChatMessageType<TNoticeType>,
 ) => {
-  const key = getMessageKey(message.message_id, message.message_nonce);
-  if (messageKeySet.has(key)) {
-    return;
-  }
-  messageKeySet.add(key);
-
-  if (message.userstate?.color && message.message_id) {
-    messageColorIndex.set(message.message_id, message.userstate.color);
-  }
-
-  const currentLength = chatStore$.messages.peek().length;
-  chatStore$.messages.push(message as ChatMessageType<never>);
-
-  if (currentLength >= MAX_MESSAGES) {
-    const removeCount = Math.floor(MAX_MESSAGES * 0.2);
-    const removed = chatStore$.messages.peek().slice(0, removeCount);
-    removed.forEach(msg => {
-      messageKeySet.delete(getMessageKey(msg.message_id, msg.message_nonce));
-      messageColorIndex.delete(msg.message_id);
-    });
-    chatStore$.messages.set(msgs => msgs.slice(removeCount));
-  }
+  const current = chatStore$.messages.peek();
+  const next = trimToMaxMessages([
+    ...current,
+    message as ChatMessageType<never>,
+  ]);
+  chatStore$.messages.set(next);
 };
 
 export const addMessages = (messages: ChatMessageType<never>[]) => {
@@ -362,19 +356,8 @@ export const addMessages = (messages: ChatMessageType<never>[]) => {
 
   batch(() => {
     const current = chatStore$.messages.peek();
-    const updated = [...current, ...newMessages];
-
-    if (updated.length > MAX_MESSAGES) {
-      const removeCount = Math.floor(MAX_MESSAGES * 0.2);
-      const removed = updated.slice(0, removeCount);
-      removed.forEach(msg => {
-        messageKeySet.delete(getMessageKey(msg.message_id, msg.message_nonce));
-        messageColorIndex.delete(msg.message_id);
-      });
-      chatStore$.messages.set(updated.slice(removeCount));
-    } else {
-      chatStore$.messages.set(updated);
-    }
+    const updated = trimToMaxMessages([...current, ...newMessages]);
+    chatStore$.messages.set(updated);
   });
 };
 
@@ -410,11 +393,10 @@ export const getMessageColor = (messageId: string): string | undefined => {
 
 export const addTtvUser = (user: ChatUser) => {
   const existingUsers = chatStore$.ttvUsers.peek();
-  const newUsers = [...existingUsers, user].filter(
-    (existingUser, index, self) =>
-      index === self.findIndex(t => t.userId === existingUser.userId),
-  );
-  chatStore$.ttvUsers.set(newUsers);
+  const exists = existingUsers.some(u => u.userId === user.userId);
+  if (!exists) {
+    chatStore$.ttvUsers.push(user);
+  }
 };
 
 export const clearTtvUsers = () => {
@@ -430,8 +412,8 @@ export const setBits = (bits: Bit[]) => {
  */
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
-    const currentPaints = chatStore$.paints.peek();
-    chatStore$.paints.set({ ...currentPaints, [paint.id]: paint });
+    const cell = chatStore$.paints[paint.id];
+    if (cell) cell.set(paint);
   }
 };
 
@@ -561,73 +543,32 @@ export const fetchAndCacheUserCosmetics = async (
   sevenTvUserId: string,
 ): Promise<string | null> => {
   try {
-    logger.stvWs.info(`Fetching GQL cosmetics for 7TV user: ${sevenTvUserId}`);
     const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
 
     if (!cosmetics) {
-      logger.stvWs.warn(`No cosmetics found for 7TV user: ${sevenTvUserId}`);
       return null;
     }
 
-    logger.stvWs.info(
-      `GQL response for ${sevenTvUserId}: ttvUserId=${cosmetics.ttvUserId}, paintId=${cosmetics.paintId}, badgeId=${cosmetics.badgeId}, hasPaint=${!!cosmetics.paint}, hasBadge=${!!cosmetics.badge}`,
-    );
-
     if (cosmetics.paint) {
       const paintData = convertV4PaintToPaintData(cosmetics.paint);
-      logger.stvWs.info(
-        `Caching paint: id=${paintData.id}, name=${cosmetics.paint.name}, function=${paintData.function}`,
-      );
       addPaint(paintData);
-    } else {
-      logger.stvWs.debug(`No paint data in GQL response for ${sevenTvUserId}`);
     }
 
     if (cosmetics.badge) {
       const badgeData = convertV4BadgeToSanitised(cosmetics.badge);
       addBadge(badgeData);
-      logger.stvWs.info(`Cached badge: ${cosmetics.badge.name}`);
     }
 
-    // Link user to their cosmetics
     if (cosmetics.ttvUserId) {
       if (cosmetics.paintId) {
-        const currentUserPaintIds = chatStore$.userPaintIds.peek();
-        chatStore$.userPaintIds.set({
-          ...currentUserPaintIds,
-          [cosmetics.ttvUserId]: cosmetics.paintId,
-        });
-        logger.stvWs.info(
-          `Linked paint ${cosmetics.paintId} to Twitch user ${cosmetics.ttvUserId}`,
-        );
-
-        // Verify the link was set
-        const verifyPaintId =
-          chatStore$.userPaintIds[cosmetics.ttvUserId]?.peek();
-        const verifyPaint = chatStore$.paints[cosmetics.paintId]?.peek();
-        logger.stvWs.info(
-          `Verification: userPaintIds[${cosmetics.ttvUserId}]=${verifyPaintId}, paints[${cosmetics.paintId}]=${verifyPaint ? verifyPaint.name : 'NOT FOUND'}`,
-        );
-      } else {
-        logger.stvWs.debug(
-          `No paintId in cosmetics response for ${cosmetics.ttvUserId}`,
-        );
+        const cell = chatStore$.userPaintIds[cosmetics.ttvUserId];
+        if (cell) cell.set(cosmetics.paintId);
       }
 
       if (cosmetics.badgeId) {
-        const currentUserBadgeIds = chatStore$.userBadgeIds.peek();
-        chatStore$.userBadgeIds.set({
-          ...currentUserBadgeIds,
-          [cosmetics.ttvUserId]: cosmetics.badgeId,
-        });
-        logger.stvWs.info(
-          `Linked badge ${cosmetics.badgeId} to user ${cosmetics.ttvUserId}`,
-        );
+        const badgeCell = chatStore$.userBadgeIds[cosmetics.ttvUserId];
+        if (badgeCell) badgeCell.set(cosmetics.badgeId);
       }
-    } else {
-      logger.stvWs.warn(
-        `No ttvUserId in cosmetics response for 7TV user ${sevenTvUserId}`,
-      );
     }
 
     return cosmetics.ttvUserId;
@@ -642,7 +583,6 @@ export const fetchAndCacheUserCosmetics = async (
 
 /**
  * Associate a Twitch user with a paint ID
- * The actual paint data should already be in the cache from cosmetic.create or GQL fetch
  * @param ttvUserId - The Twitch user ID
  * @param paintId - The paint ID to associate
  */
@@ -661,12 +601,10 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
       [ttvUserId]: paintId,
     });
   }
-  logger.chat.info(`Linked paint ${paintId} to user ${ttvUserId}`);
 };
 
 /**
  * Get a user's paint by their Twitch user ID
- * Looks up the paint ID mapping, then retrieves the paint data
  */
 export const getUserPaint = (ttvUserId: string): UserPaint | undefined => {
   const paintId = chatStore$.userPaintIds[ttvUserId]?.peek();
@@ -681,8 +619,8 @@ export const getUserPaint = (ttvUserId: string): UserPaint | undefined => {
  */
 export const addBadge = (badge: SanitisedBadgeSet) => {
   if (badge.id) {
-    const currentBadges = chatStore$.badges.peek();
-    chatStore$.badges.set({ ...currentBadges, [badge.id]: badge });
+    const cell = chatStore$.badges[badge.id];
+    if (cell) cell.set(badge);
   }
 };
 
@@ -714,7 +652,6 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
       [ttvUserId]: badgeId,
     });
   }
-  logger.chat.info(`Linked badge ${badgeId} to user ${ttvUserId}`);
 };
 
 /**
@@ -735,9 +672,10 @@ export const getUserBadge = (
  */
 export const updateBadge = (badge: SanitisedBadgeSet) => {
   if (badge.id) {
-    const currentBadges = chatStore$.badges.peek();
-    chatStore$.badges.set({ ...currentBadges, [badge.id]: badge });
-    logger.chat.info(`Updated badge in cache: ${badge.id}`);
+    const cell = chatStore$.badges[badge.id];
+    if (cell) {
+      cell.set(badge);
+    }
   }
 };
 
@@ -750,9 +688,7 @@ export const removeBadge = (badgeId: string) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { [badgeId]: _removed, ...remainingBadges } = currentBadges;
   chatStore$.badges.set(remainingBadges);
-  logger.chat.info(`Removed badge from cache: ${badgeId}`);
 
-  // Also remove any user associations with this badge
   const currentUserBadgeIds = chatStore$.userBadgeIds.peek();
   const updatedUserBadgeIds = Object.fromEntries(
     Object.entries(currentUserBadgeIds).filter(
@@ -772,7 +708,6 @@ export const removeUserBadge = (ttvUserId: string) => {
   const { [ttvUserId]: _removed, ...remainingUserBadgeIds } =
     currentUserBadgeIds;
   chatStore$.userBadgeIds.set(remainingUserBadgeIds);
-  logger.chat.info(`Removed badge association for user: ${ttvUserId}`);
 };
 
 /**
@@ -781,9 +716,10 @@ export const removeUserBadge = (ttvUserId: string) => {
  */
 export const updatePaint = (paint: PaintData) => {
   if (paint.id) {
-    const currentPaints = chatStore$.paints.peek();
-    chatStore$.paints.set({ ...currentPaints, [paint.id]: paint });
-    logger.chat.info(`Updated paint in cache: ${paint.id}`);
+    const cell = chatStore$.paints[paint.id];
+    if (cell) {
+      cell.set(paint);
+    }
   }
 };
 
@@ -796,9 +732,7 @@ export const removePaint = (paintId: string) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { [paintId]: _removed, ...remainingPaints } = currentPaints;
   chatStore$.paints.set(remainingPaints);
-  logger.chat.info(`Removed paint from cache: ${paintId}`);
 
-  // Also remove any user associations with this paint
   const currentUserPaintIds = chatStore$.userPaintIds.peek();
   const updatedUserPaintIds = Object.fromEntries(
     Object.entries(currentUserPaintIds).filter(
@@ -818,7 +752,6 @@ export const removeUserPaint = (ttvUserId: string) => {
   const { [ttvUserId]: _removed, ...remainingUserPaintIds } =
     currentUserPaintIds;
   chatStore$.userPaintIds.set(remainingUserPaintIds);
-  logger.chat.info(`Removed paint association for user: ${ttvUserId}`);
 };
 
 /**
@@ -829,7 +762,6 @@ export const clearPaints = () => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});
   });
-  logger.chat.info('Cleared all paints from cache');
 };
 
 /**
@@ -840,7 +772,6 @@ export const clearSevenTvBadges = () => {
     chatStore$.badges.set({});
     chatStore$.userBadgeIds.set({});
   });
-  logger.chat.info('Cleared all 7TV badges from cache');
 };
 
 /**
@@ -853,7 +784,6 @@ export const clearPaintsAndBadges = () => {
     chatStore$.badges.set({});
     chatStore$.userBadgeIds.set({});
   });
-  logger.chat.info('Cleared all paints and badges from cache');
 };
 
 const personalEmoteFetchPromises = new Map<string, Promise<SanitisedEmote[]>>();
@@ -934,7 +864,6 @@ export const hasCheckedPersonalEmotes = (twitchUserId: string): boolean => {
 export const clearPersonalEmotesCache = () => {
   checkedUsersForPersonalEmotes.clear();
   personalEmoteFetchPromises.clear();
-  logger.chat.info('Cleared personal emotes cache');
 };
 
 export const clearChannelResources = () => {
@@ -1008,34 +937,39 @@ export const loadChannelResources = async (
     twitchUserId,
   } = opts;
 
-  const startTime = performance.now();
-  logger.main.info('🏗️ chatStore loadChannelResources called:', {
-    channelId,
-    forceRefresh: shouldForceRefresh,
-    hasSignal: !!signal,
-  });
+  return startSpanAsync(
+    'load-channel-resources',
+    'chat.load',
+    async () => {
+      return loadChannelResourcesInternal(
+        channelId,
+        shouldForceRefresh,
+        signal,
+        twitchUserId,
+      );
+    },
+    { channelId, forceRefresh: shouldForceRefresh },
+  );
+};
 
+const loadChannelResourcesInternal = async (
+  channelId: string,
+  shouldForceRefresh: boolean,
+  signal?: AbortSignal,
+  twitchUserId?: string,
+): Promise<boolean> => {
   if (signal?.aborted) {
-    logger.main.info('🚫 Load aborted before starting');
     return false;
   }
 
   chatStore$.loadingState.set('LOADING');
 
   try {
-    let reason = '';
-
     if (!shouldForceRefresh) {
       const caches = chatStore$.persisted.channelCaches.peek();
       const existingCache = caches?.[channelId];
-      logger.main.info('🗄️ Existing cache check:', {
-        channelId,
-        hasCache: !!existingCache,
-      });
 
-      if (!existingCache) {
-        reason = 'No persisted state found';
-      } else {
+      if (existingCache) {
         const cacheAge = Date.now() - existingCache.lastUpdated;
 
         const hasEmptyEmotes =
@@ -1050,33 +984,21 @@ export const loadChannelResources = async (
 
         const missingEmoteSetId = !existingCache.sevenTvEmoteSetId;
 
-        logger.main.info('📊 Cache validation:', {
-          cacheAge: Math.round(cacheAge / (60 * 1000)),
-          hasEmptyEmotes,
-          missingEmoteSetId,
-        });
-
-        if (hasEmptyEmotes) {
-          reason = 'Cached data has empty emote lists';
-        } else if (cacheAge >= CACHE_DURATION) {
-          reason = `Cache expired (age: ${Math.round(cacheAge / (60 * 1000))} minutes)`;
-        } else {
-          logger.main.info('✅ Using cached data');
+        if (!hasEmptyEmotes && cacheAge < CACHE_DURATION) {
+          sentryService.addBreadcrumb({
+            category: 'chat',
+            message: 'Using cached channel resources',
+            data: { channelId, cacheAge },
+          });
 
           if (missingEmoteSetId) {
-            if (signal?.aborted) {
-              logger.main.info('🚫 Load aborted before 7TV set ID fetch');
-              return false;
-            }
+            if (signal?.aborted) return false;
 
             try {
               const sevenTvSetId =
                 await sevenTvService.getEmoteSetId(channelId);
 
-              if (signal?.aborted) {
-                logger.main.info('🚫 Load aborted after 7TV set ID fetch');
-                return false;
-              }
+              if (signal?.aborted) return false;
 
               const channelCache =
                 chatStore$.persisted.channelCaches[channelId];
@@ -1086,10 +1008,7 @@ export const loadChannelResources = async (
                 });
               }
             } catch (error) {
-              if (signal?.aborted) {
-                logger.main.info('🚫 Load aborted (7TV set ID fetch failed)');
-                return false;
-              }
+              if (signal?.aborted) return false;
               logger.chat.warn(
                 'Failed to get 7TV emote set ID for cached data:',
                 error,
@@ -1102,27 +1021,18 @@ export const loadChannelResources = async (
             chatStore$.loadingState.set('COMPLETED');
           });
 
-          // Notify 7TV about user presence
           if (twitchUserId) {
             void notify7TVPresence(twitchUserId, channelId);
           }
 
-          const totalDuration = performance.now() - startTime;
-          logger.performance.debug(
-            `⏳ Load channel resources (from cache) ${channelId} -- time: ${totalDuration.toFixed(2)} ms`,
-          );
           return true;
         }
       }
-    } else {
-      reason = 'Force refresh requested';
     }
 
-    logger.main.info('🌐 Fetching from APIs, reason:', reason);
     chatStore$.currentChannelId.set(channelId);
 
     if (signal?.aborted) {
-      logger.main.info('🚫 Load aborted before API fetch');
       chatStore$.loadingState.set('IDLE');
       return false;
     }
@@ -1135,12 +1045,10 @@ export const loadChannelResources = async (
     }
 
     if (signal?.aborted) {
-      logger.main.info('🚫 Load aborted after 7TV set ID fetch');
       chatStore$.loadingState.set('IDLE');
       return false;
     }
 
-    const parallelFetchStart = performance.now();
     const [
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
@@ -1155,32 +1063,32 @@ export const loadChannelResources = async (
       ffzGlobalBadges,
       ffzChannelBadges,
       chatterinoBadges,
-    ] = await Promise.allSettled([
-      sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
-      sevenTvService.getSanitisedEmoteSet('global'),
-      twitchEmoteService.getChannelEmotes(channelId),
-      twitchEmoteService.getGlobalEmotes(),
-      bttvEmoteService.getSanitisedGlobalEmotes(),
-      bttvEmoteService.getSanitisedChannelEmotes(channelId),
-      ffzService.getSanitisedChannelEmotes(channelId),
-      ffzService.getSanitisedGlobalEmotes(),
-      twitchBadgeService.listSanitisedChannelBadges(channelId),
-      twitchBadgeService.listSanitisedGlobalBadges(),
-      ffzService.getSanitisedGlobalBadges(),
-      ffzService.getSanitisedChannelBadges(channelId),
-      chatterinoService.listSanitisedBadges(),
-    ]);
+    ] = await startSpanAsync(
+      'fetch-emotes-and-badges',
+      'http.client',
+      () =>
+        Promise.allSettled([
+          sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
+          sevenTvService.getSanitisedEmoteSet('global'),
+          twitchEmoteService.getChannelEmotes(channelId),
+          twitchEmoteService.getGlobalEmotes(),
+          bttvEmoteService.getSanitisedGlobalEmotes(),
+          bttvEmoteService.getSanitisedChannelEmotes(channelId),
+          ffzService.getSanitisedChannelEmotes(channelId),
+          ffzService.getSanitisedGlobalEmotes(),
+          twitchBadgeService.listSanitisedChannelBadges(channelId),
+          twitchBadgeService.listSanitisedGlobalBadges(),
+          ffzService.getSanitisedGlobalBadges(),
+          ffzService.getSanitisedChannelBadges(channelId),
+          chatterinoService.listSanitisedBadges(),
+        ]),
+      { channelId, services: 13 },
+    );
 
     if (signal?.aborted) {
-      logger.main.info('🚫 Load aborted after API fetch - discarding results');
       chatStore$.loadingState.set('IDLE');
       return false;
     }
-
-    const parallelFetchDuration = performance.now() - parallelFetchStart;
-    logger.performance.debug(
-      `⏳ Parallel API fetch (13 services) -- time: ${parallelFetchDuration.toFixed(2)} ms`,
-    );
 
     const getValue = <T>(result: PromiseSettledResult<T[]>): T[] =>
       result.status === 'fulfilled' ? result.value : [];
@@ -1212,7 +1120,6 @@ export const loadChannelResources = async (
     const allBadges = deduplicateById(allBadgesRaw);
 
     if (signal?.aborted) {
-      logger.main.info('🚫 Load aborted before committing to store');
       chatStore$.loadingState.set('IDLE');
       return false;
     }
@@ -1249,29 +1156,21 @@ export const loadChannelResources = async (
       chatStore$.loadingState.set('COMPLETED');
     });
 
-    // Notify 7TV about user presence
     if (twitchUserId) {
       void notify7TVPresence(twitchUserId, channelId);
     }
 
-    const totalDuration = performance.now() - startTime;
-    logger.performance.debug(
-      `⏳ Load channel resources (fresh data) ${channelId} -- time: ${totalDuration.toFixed(2)} ms`,
-    );
-    logger.chat.info(
-      `Loaded ${allEmotes.length} emotes and ${allBadges.length} badges`,
-    );
-
-    cacheEmoteImages(allEmotes, signal).catch(error => {
-      if (!signal?.aborted) {
-        logger.chat.warn('Background emote image caching failed:', error);
-      }
+    sentryService.addBreadcrumb({
+      category: 'chat',
+      message: 'Loaded channel resources',
+      data: { channelId, emotes: allEmotes.length, badges: allBadges.length },
     });
+
+    cacheEmoteImages(allEmotes, signal).catch(() => {});
 
     return true;
   } catch (error) {
     if (signal?.aborted) {
-      logger.main.info('🚫 Load aborted (caught error)');
       chatStore$.loadingState.set('IDLE');
       return false;
     }
@@ -1353,7 +1252,6 @@ export const clearAllCache = () => {
     chatStore$.messages.set([]);
   });
   clearEmoteImageCache();
-  logger.chat.info('All chat cache cleared successfully');
 };
 
 /**
@@ -1417,75 +1315,37 @@ export const getCachedEmoteUri = (emoteUrl: string): string => {
   return cachedUri ?? emoteUrl;
 };
 
-/**
- * Cache multiple emote images with abort support
- * This is called after loading channel resources to pre-cache all emote images
- * Respects the AbortSignal to stop caching when navigating away
- */
 export const cacheEmoteImages = async (
   emotes: SanitisedEmote[],
   signal?: AbortSignal,
 ): Promise<void> => {
-  if (emotes.length === 0) return;
+  if (emotes.length === 0 || signal?.aborted) return;
 
-  // Check abort before starting
-  if (signal?.aborted) {
-    logger.chat.info('🚫 Emote image caching aborted before starting');
-    return;
-  }
-
-  const startTime = performance.now();
   const urls = emotes.map(e => e.url).filter(Boolean);
 
-  // Filter out already cached URLs
   const urlsToCache = urls.filter(url => {
     if (url.startsWith('data:') || url.startsWith('file://')) {
       return false;
     }
-    if (getCachedImageUri(url)) {
-      return false;
-    }
-    return true;
+    return !getCachedImageUri(url);
   });
 
-  if (urlsToCache.length === 0) {
-    logger.chat.debug('All emote images already cached');
-    return;
-  }
+  if (urlsToCache.length === 0) return;
 
-  logger.chat.info(
-    `Starting background cache of ${urlsToCache.length} emote images...`,
-  );
-
-  // Cache in batches to allow abort checks between batches
   const BATCH_SIZE = 20;
-  let cachedCount = 0;
 
   for (let i = 0; i < urlsToCache.length; i += BATCH_SIZE) {
-    // Check abort before each batch
-    if (signal?.aborted) {
-      logger.chat.info(
-        `🚫 Emote image caching aborted after ${cachedCount}/${urlsToCache.length} images`,
-      );
-      return;
-    }
+    if (signal?.aborted) return;
 
     const urlBatch = urlsToCache.slice(i, i + BATCH_SIZE);
-    // eslint-disable-next-line no-await-in-loop -- Intentional: sequential batches with abort checks
+    // eslint-disable-next-line no-await-in-loop
     await Promise.allSettled(urlBatch.map(url => cacheEmoteImage(url)));
-    cachedCount += urlBatch.length;
   }
-
-  const duration = performance.now() - startTime;
-  logger.performance.debug(
-    `⏳ Cached ${urlsToCache.length} emote images -- time: ${duration.toFixed(2)} ms`,
-  );
 };
 
 export const clearEmoteImageCache = (): void => {
   emoteImageCachePromises.clear();
   clearSessionCache();
-  logger.chat.info('Emote image cache cleared');
 };
 
 export const refreshChannelResources = async (

@@ -1,3 +1,4 @@
+import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
@@ -7,7 +8,7 @@ import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
   ChatMessageType,
-  useMessages,
+  chatStore$,
   useChannelEmoteData,
   clearChannelResources,
   clearTtvUsers,
@@ -32,8 +33,8 @@ import {
   removeBadge,
   removeUserBadge,
   clearPaints,
-  chatStore$,
   getMessageColor,
+  useUserPaints,
   fetchAndCacheUserCosmetics,
   fetchUserPersonalEmotes,
   getUserPersonalEmotes,
@@ -46,12 +47,13 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { lightenColor } from '@app/utils/color/lightenColor';
 import { PaintData, BadgeData } from '@app/utils/color/seventv-ws-service';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { Memo } from '@legendapp/state/react';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
-import { FlashListRef, ListRenderItem } from '@shopify/flash-list';
 import * as Clipboard from 'expo-clipboard';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { View, Platform, TextInput } from 'react-native';
@@ -59,19 +61,19 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
-import { FlashList } from '../FlashList/FlashList';
 
 import { Text } from '../Text/Text';
 import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
+import { ChatMessage } from './components/ChatMessage/ChatMessage';
 import {
-  ChatMessage,
+  RichChatMessage,
   EmotePressData,
   BadgePressData,
   MessageActionData,
-} from './components/ChatMessage/ChatMessage';
+} from './components/ChatMessage/RichChatMessage';
 import { EmotePreviewSheet } from './components/EmotePreviewSheet/EmotePreviewSheet';
 import {
   EmoteSheet,
@@ -97,6 +99,7 @@ import {
   createUserNoticeMessage,
   createSystemMessage,
 } from './util/messageHandlers';
+import { reprocessMessages } from './util/reprocessMessages';
 
 interface ChatProps {
   channelId: string;
@@ -107,15 +110,17 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { user } = useAuthContext();
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
-  const messages = useMessages();
+  const messages$ = chatStore$.messages;
   const channelEmoteData = useChannelEmoteData(channelId);
+  const userPaints = useUserPaints();
+
   const hasPartedRef = useRef(false);
   const isMountedRef = useRef(true);
   const currentEmoteSetIdRef = useRef<string | null>(null);
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
   const initializedChannelRef = useRef<string | null>(null);
 
-  const flashListRef = useRef<FlashListRef<AnyChatMessageType>>(null);
+  const listRef = useRef<FlashListRef<AnyChatMessageType> | null>(null);
   const emoteSheetRef = useRef<TrueSheet>(null);
   const settingsSheetRef = useRef<TrueSheet>(null);
   const debugModalRef = useRef<BottomSheetModal>(null);
@@ -140,6 +145,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     useState<MessageActionData<'usernotice'> | null>(null);
 
   const mentionColorCache = useRef<Map<string, string>>(new Map());
+  const lightenedColorCache = useRef<Map<string, string>>(new Map());
   const fetchedCosmeticsUsers = useRef<Set<string>>(new Set());
   const chatStartTimeRef = useRef<number | null>(null);
 
@@ -229,15 +235,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     unreadCount,
     setUnreadCount,
     handleScroll,
-    handleContentSizeChange,
     scrollToBottom,
     cleanup: cleanupScroll,
-  } = useChatScroll({ flashListRef });
+  } = useChatScroll({
+    listRef,
+    getMessagesLength: () => messages$.peek().length,
+  });
 
   const {
     handleNewMessage,
     clearLocalMessages,
     cleanup: cleanupMessages,
+    forceFlush,
   } = useChatMessages({
     isAtBottomRef,
     onUnreadIncrement: useCallback(
@@ -313,47 +322,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   );
 
   const reprocessAllMessages = useCallback(() => {
-    const emoteData = getCurrentEmoteData(channelId);
-    if (!emoteData) return;
-
-    const messagesToReprocess = (messages as AnyChatMessageType[]).filter(
-      msg =>
-        msg.sender !== 'System' && !('notice_tags' in msg && msg.notice_tags),
+    reprocessMessages(
+      messages$.peek() as AnyChatMessageType[],
+      processMessageEmotes,
     );
-
-    messagesToReprocess.forEach(msg => {
-      const textContent = replaceEmotesWithText(msg.message);
-      if (!textContent.trim()) return;
-
-      const replacedMessage = processEmotesWorklet({
-        inputString: textContent.trimEnd(),
-        userstate: msg.userstate,
-        sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
-        sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
-        twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
-        twitchChannelEmotes: emoteData.twitchChannelEmotes,
-        ffzChannelEmotes: emoteData.ffzChannelEmotes,
-        ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
-        bttvChannelEmotes: emoteData.bttvChannelEmotes,
-        bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
-      });
-
-      const replacedBadges = findBadges({
-        userstate: msg.userstate,
-        chatterinoBadges: emoteData.chatterinoBadges,
-        chatUsers: [],
-        ffzChannelBadges: emoteData.ffzChannelBadges,
-        ffzGlobalBadges: emoteData.ffzGlobalBadges,
-        twitchChannelBadges: emoteData.twitchChannelBadges,
-        twitchGlobalBadges: emoteData.twitchGlobalBadges,
-      });
-
-      updateMessage(msg.message_id, msg.message_nonce, {
-        message: replacedMessage,
-        badges: replacedBadges,
-      });
-    });
-  }, [channelId, messages]);
+  }, [messages$, processMessageEmotes]);
 
   const onMessage = useCallback(
     (_channel: string, tags: Record<string, string>, text: string) => {
@@ -398,12 +371,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     clearMessages();
     clearLocalMessages();
     setTimeout(() => {
-      void flashListRef.current?.scrollToIndex({
-        index: messages.length - 1,
-        animated: false,
-      });
+      void listRef.current?.scrollToEnd({ animated: false });
     }, 0);
-  }, [messages.length, clearLocalMessages]);
+  }, [clearLocalMessages]);
 
   const onJoin = useCallback(() => {
     logger.chat.info('Joined channel:', channelName);
@@ -470,8 +440,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           `Channel ${cId}: +${added.length} -${removed.length} emotes`,
         );
         updateSevenTvEmotes(cId, added, removed);
-        // todo - display this in chat
-        // stv_emote_added stv_emote_removed
       },
       onEvent: eventType => {
         logger.stvWs.debug(`SevenTV event: ${eventType}`);
@@ -855,23 +823,27 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       emoteData.ffzGlobalEmotes.length > 0 ||
       emoteData.ffzChannelEmotes.length > 0;
 
-    if (!hasEmotes || messages.length === 0) {
+    // Access messages via peek() to avoid re-renders
+    const currentMessages = messages$.peek();
+    if (!hasEmotes || currentMessages.length === 0) {
       return;
     }
 
     // Find text-only messages that haven't been processed yet
-    const textOnlyMessages = (messages as AnyChatMessageType[]).filter(msg => {
-      // Skip already processed messages
-      if (processedMessageIdsRef.current.has(msg.message_id)) {
-        return false;
-      }
-      // Skip system messages and notices
-      if (msg.sender === 'System' || 'notice_tags' in msg) {
-        return false;
-      }
-      // Only include messages that are text-only (no emotes yet)
-      return msg.message.every((part: ParsedPart) => part.type === 'text');
-    });
+    const textOnlyMessages = (currentMessages as AnyChatMessageType[]).filter(
+      msg => {
+        // Skip already processed messages
+        if (processedMessageIdsRef.current.has(msg.message_id)) {
+          return false;
+        }
+        // Skip system messages and notices
+        if (msg.sender === 'System' || 'notice_tags' in msg) {
+          return false;
+        }
+        // Only include messages that are text-only (no emotes yet)
+        return msg.message.every((part: ParsedPart) => part.type === 'text');
+      },
+    );
 
     if (textOnlyMessages.length > 0) {
       textOnlyMessages.forEach(msg => {
@@ -913,7 +885,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         }
       });
     }
-  }, [channelId, channelEmoteData, messages, emoteLoadStatus]);
+  }, [
+    channelId,
+    channelEmoteData,
+    messages$,
+    emoteLoadStatus,
+    processMessageEmotes,
+  ]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -1040,9 +1018,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const handleReply = useCallback(
     (message: ChatMessageType<'usernotice'>) => {
       const messageText = replaceEmotesWithText(message.message);
-      const parentMessage = messages.find(
-        m => m?.message_id === message.message_id,
-      );
+      const parentMessage = messages$
+        .peek()
+        .find(m => m?.message_id === message.message_id);
 
       setReplyTo({
         messageId: message.message_id,
@@ -1055,7 +1033,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         color: message.userstate.color,
       });
     },
-    [messages],
+    [messages$],
   );
 
   const handleEmoteSelect = useCallback((item: EmotePickerItem) => {
@@ -1076,14 +1054,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const handleEmoteLongPress = useCallback((emote: EmotePressData) => {
     setSelectedEmote(emote);
-    requestAnimationFrame(() => {
+    globalThis.requestAnimationFrame(() => {
       emotePreviewSheetRef.current?.present();
     });
   }, []);
 
   const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
     setSelectedBadge(badge);
-    requestAnimationFrame(() => {
+    globalThis.requestAnimationFrame(() => {
       badgePreviewSheetRef.current?.present();
     });
   }, []);
@@ -1111,32 +1089,36 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     actionSheetRef.current?.dismiss();
   }, [selectedMessage]);
 
-  const getMentionColor = useCallback((username: string): string => {
-    const lowerUsername = username.toLowerCase();
+  // Stable getMentionColor - uses observable peek() to avoid renderItem recreation
+  const getMentionColor = useCallback(
+    (username: string): string => {
+      const lowerUsername = username.toLowerCase();
 
-    const cached = mentionColorCache.current.get(lowerUsername);
-    if (cached) return cached;
+      const cached = mentionColorCache.current.get(lowerUsername);
+      if (cached) return cached;
 
-    const currentMessages = chatStore$.messages.peek();
-    const mentionedUserMessage = currentMessages.find(msg => {
-      const msgUsername = msg?.userstate.username?.toLowerCase();
-      const msgLogin = msg?.userstate.login?.toLowerCase();
-      const msgSender = msg?.sender?.toLowerCase();
-      return (
-        msgUsername === lowerUsername ||
-        msgLogin === lowerUsername ||
-        msgSender === lowerUsername
-      );
-    });
+      const currentMessages = messages$.peek();
+      const mentionedUserMessage = currentMessages.find(msg => {
+        const msgUsername = msg?.userstate.username?.toLowerCase();
+        const msgLogin = msg?.userstate.login?.toLowerCase();
+        const msgSender = msg?.sender?.toLowerCase();
+        return (
+          msgUsername === lowerUsername ||
+          msgLogin === lowerUsername ||
+          msgSender === lowerUsername
+        );
+      });
 
-    const color =
-      mentionedUserMessage?.userstate.color ||
-      generateRandomTwitchColor(username);
+      const color =
+        mentionedUserMessage?.userstate.color ||
+        generateRandomTwitchColor(username);
 
-    mentionColorCache.current.set(lowerUsername, color);
+      mentionColorCache.current.set(lowerUsername, color);
 
-    return color;
-  }, []);
+      return color;
+    },
+    [messages$], // messages$ is stable observable reference
+  );
 
   const parseTextForEmotes = useCallback(
     (text: string): ParsedPart[] => {
@@ -1204,41 +1186,104 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [channelId]);
 
-  const renderItem: ListRenderItem<AnyChatMessageType> = useCallback(
-    ({ item: msg }) => (
-      <ChatMessage
-        channel={msg.channel}
-        message={msg.message}
-        userstate={msg.userstate}
-        badges={msg.badges}
-        message_id={msg.message_id}
-        message_nonce={msg.message_nonce}
-        sender={msg.sender}
-        style={styles.messageContainer}
-        parentDisplayName={msg.parentDisplayName}
-        parentColor={msg.parentColor}
-        onReply={handleReply}
-        replyDisplayName={msg.replyDisplayName}
-        replyBody={msg.replyBody}
-        onEmotePress={handleEmoteLongPress}
-        onBadgePress={handleBadgeLongPress}
-        onMessageLongPress={handleMessageLongPress}
-        getMentionColor={getMentionColor}
-        parseTextForEmotes={parseTextForEmotes}
-        // @ts-expect-error - notice_tags having issues being narrowed down
-        notice_tags={
-          'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
-        }
-      />
-    ),
-    [
-      handleReply,
-      handleEmoteLongPress,
-      handleBadgeLongPress,
-      handleMessageLongPress,
-      getMentionColor,
-      parseTextForEmotes,
-    ],
+  const castMessages = useCallback(
+    (msgs: ChatMessageType<never>[]): AnyChatMessageType[] =>
+      msgs as AnyChatMessageType[],
+    [],
+  );
+
+  const userPaintsRef = useRef(userPaints);
+  userPaintsRef.current = userPaints;
+
+  const getLightenedColor = useCallback(
+    (color: string | undefined): string | undefined => {
+      if (!color) return undefined;
+      const cached = lightenedColorCache.current.get(color);
+      if (cached) return cached;
+      const lightened = lightenColor(color);
+      lightenedColorCache.current.set(color, lightened);
+      // Limit cache size to prevent memory leak
+      if (lightenedColorCache.current.size > 500) {
+        const firstKey = lightenedColorCache.current.keys().next().value as
+          | string
+          | undefined;
+        if (firstKey) lightenedColorCache.current.delete(firstKey);
+      }
+      return lightened;
+    },
+    [],
+  );
+
+  const getLightenedColorRef = useRef(getLightenedColor);
+  getLightenedColorRef.current = getLightenedColor;
+  const handleReplyRef = useRef(handleReply);
+  handleReplyRef.current = handleReply;
+  const handleEmoteLongPressRef = useRef(handleEmoteLongPress);
+  handleEmoteLongPressRef.current = handleEmoteLongPress;
+  const handleBadgeLongPressRef = useRef(handleBadgeLongPress);
+  handleBadgeLongPressRef.current = handleBadgeLongPress;
+  const handleMessageLongPressRef = useRef(handleMessageLongPress);
+  handleMessageLongPressRef.current = handleMessageLongPress;
+  const getMentionColorRef = useRef(getMentionColor);
+  getMentionColorRef.current = getMentionColor;
+  const parseTextForEmotesRef = useRef(parseTextForEmotes);
+  parseTextForEmotesRef.current = parseTextForEmotes;
+
+  const renderItem = useCallback(
+    // eslint-disable-next-line react/no-unused-prop-types
+    ({ item: msg }: { item: AnyChatMessageType }) => {
+      const { isSpecialNotice } = msg as { isSpecialNotice?: boolean };
+
+      if (isSpecialNotice) {
+        return (
+          <RichChatMessage
+            id={msg.id}
+            channel={msg.channel}
+            message={msg.message}
+            userstate={msg.userstate}
+            badges={msg.badges}
+            message_id={msg.message_id}
+            message_nonce={msg.message_nonce}
+            sender={msg.sender}
+            style={styles.messageContainer}
+            parentDisplayName={msg.parentDisplayName}
+            parentColor={msg.parentColor}
+            onReply={handleReplyRef.current}
+            replyDisplayName={msg.replyDisplayName}
+            replyBody={msg.replyBody}
+            onEmotePress={handleEmoteLongPressRef.current}
+            onBadgePress={handleBadgeLongPressRef.current}
+            onMessageLongPress={handleMessageLongPressRef.current}
+            getMentionColor={getMentionColorRef.current}
+            parseTextForEmotes={parseTextForEmotesRef.current}
+            userPaints={userPaintsRef.current}
+            // @ts-expect-error - notice_tags union type not narrowing correctly
+            notice_tags={
+              'notice_tags' in msg && msg.notice_tags
+                ? msg.notice_tags
+                : undefined
+            }
+          />
+        );
+      }
+
+      const senderColor =
+        msg.cachedSenderColor ??
+        getLightenedColorRef.current(msg.userstate.color);
+
+      return (
+        <ChatMessage
+          messageId={msg.message_id}
+          sender={msg.sender}
+          senderColor={senderColor}
+          message={msg.message}
+          badges={msg.badges}
+          isReply={Boolean(msg.parentDisplayName)}
+          parentDisplayName={msg.parentDisplayName}
+        />
+      );
+    },
+    [], // Empty deps - callbacks accessed via refs
   );
 
   const keyExtractor = useCallback(
@@ -1246,19 +1291,19 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [],
   );
 
-  return (
-    <View style={styles.wrapper}>
-      <View style={{ paddingTop: insets.top }}>
-        <Text style={styles.header}>CHAT</Text>
-      </View>
+  const getItemType = useCallback((item: AnyChatMessageType) => {
+    return item.isSpecialNotice ? 'notice' : 'regular';
+  }, []);
 
+  return (
+    <View style={[styles.wrapper, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView
         behavior="padding"
         style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <View style={styles.chatContainer}>
-          {!connected && messages.length === 0 && (
+          {!connected && messages$.peek().length === 0 && (
             <View style={styles.connectingContainer}>
               <Text style={styles.connectingText}>
                 Connecting to {channelName}&apos;s chat...
@@ -1266,33 +1311,35 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             </View>
           )}
 
-          <FlashList
-            data={messages as AnyChatMessageType[]}
-            ref={flashListRef}
-            keyExtractor={keyExtractor}
-            onScroll={handleScroll}
-            onContentSizeChange={handleContentSizeChange}
-            renderItem={renderItem}
-            removeClippedSubviews={false}
-            contentInsetAdjustmentBehavior="automatic"
-            drawDistance={500}
-            overrideItemLayout={(layout, msg) => {
-              const messageLength = msg.message?.length || 0;
-              layout.span = Math.max(
-                60,
-                Math.min(120, 60 + messageLength * 0.5),
+          <Memo>
+            {() => {
+              const msgs = castMessages(messages$.get());
+              return (
+                <FlashList
+                  data={msgs}
+                  ref={listRef}
+                  keyExtractor={keyExtractor}
+                  getItemType={getItemType}
+                  onScroll={handleScroll}
+                  renderItem={renderItem}
+                  contentContainerStyle={styles.listContent}
+                  maintainVisibleContentPosition={{
+                    autoscrollToTopThreshold: 10,
+                    autoscrollToBottomThreshold: 10,
+                    startRenderingFromBottom: true,
+                  }}
+                />
               );
             }}
-          />
+          </Memo>
 
           {!isAtBottom && !isScrollingToBottom && (
             <ResumeScroll
-              isAtBottomRef={isAtBottomRef}
-              flashListRef={flashListRef}
-              setIsAtBottom={() => {}}
-              setUnreadCount={setUnreadCount}
               unreadCount={unreadCount}
-              onScrollToBottom={scrollToBottom}
+              onScrollToBottom={() => {
+                forceFlush();
+                scrollToBottom();
+              }}
             />
           )}
         </View>
@@ -1382,14 +1429,15 @@ const styles = StyleSheet.create(theme => ({
   keyboardAvoidingView: {
     flex: 1,
   },
-  header: {
-    padding: theme.spacing.md,
-  },
   chatContainer: {
     flex: 1,
     width: '100%',
     overflow: 'hidden',
     maxWidth: '100%',
+  },
+  listContent: {
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
   },
   connectingContainer: {
     paddingVertical: theme.spacing.xs,

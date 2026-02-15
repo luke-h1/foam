@@ -93,7 +93,6 @@ export function TabNavigator() {
       initialRouteName={initialRouteName}
       tabBar={renderTabBar}
       screenOptions={{
-        lazy: true,
         headerShown: false,
       }}
     >

@@ -44,6 +44,7 @@ export function generateStvEmoteNotice({
       replyBody: '',
       replyDisplayName: '',
       sender: '',
+      isSpecialNotice: true,
     };
   }
 
@@ -75,6 +76,7 @@ export function generateStvEmoteNotice({
       replyBody: '',
       replyDisplayName: '',
       sender: '',
+      isSpecialNotice: true,
     };
   }
   return new Error("type wasn't `removed` or `added`") as never;

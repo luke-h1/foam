@@ -66,11 +66,19 @@ describe('useChatMessages', () => {
       expect(typeof result.current.handleNewMessage).toBe('function');
       expect(typeof result.current.clearLocalMessages).toBe('function');
       expect(typeof result.current.cleanup).toBe('function');
+      expect(typeof result.current.forceFlush).toBe('function');
+      expect(typeof result.current.getBufferSize).toBe('function');
+    });
+
+    test('should start with empty buffer', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      expect(result.current.getBufferSize()).toBe(0);
     });
   });
 
-  describe('Message Batching', () => {
-    test('should batch messages and process after timeout', () => {
+  describe('Message Buffering', () => {
+    test('should buffer messages and flush periodically', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       const message = createMockMessage('1');
@@ -79,29 +87,88 @@ describe('useChatMessages', () => {
         result.current.handleNewMessage(message);
       });
 
-      // Message should not be added immediately
       expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(result.current.getBufferSize()).toBe(1);
 
-      // After batch timeout (10ms)
       act(() => {
-        jest.advanceTimersByTime(15);
+        jest.advanceTimersByTime(100);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledWith([message]);
+      expect(mockAddMessages).toHaveBeenCalledWith([
+        expect.objectContaining({
+          message_id: '1',
+          message_nonce: 'nonce-1',
+        }),
+      ]);
+      expect(result.current.getBufferSize()).toBe(0);
     });
 
-    test('should process immediately when batch size reached', () => {
+    test('should flush when not at bottom so messages always appear', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        result.current.handleNewMessage(createMockMessage('2'));
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(mockAddMessages).toHaveBeenCalled();
+      expect(result.current.getBufferSize()).toBe(0);
+    });
+
+    test('should deduplicate messages in buffer', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
-      // Send 3 messages (BATCH_SIZE)
+      const message1 = createMockMessage('1', 'shared-nonce');
+      const message2 = createMockMessage('1', 'shared-nonce');
+
+      act(() => {
+        result.current.handleNewMessage(message1);
+        result.current.handleNewMessage(message2);
+      });
+
+      expect(result.current.getBufferSize()).toBe(1);
+    });
+
+    test('should keep messages with different nonces', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1', 'nonce-a'));
+        result.current.handleNewMessage(createMockMessage('1', 'nonce-b'));
+      });
+
+      expect(result.current.getBufferSize()).toBe(2);
+    });
+  });
+
+  describe('Force Flush (Resume Scroll)', () => {
+    test('should flush all buffered messages on forceFlush', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+        }),
+      );
+
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
         result.current.handleNewMessage(createMockMessage('2'));
         result.current.handleNewMessage(createMockMessage('3'));
       });
 
-      // Should process immediately without waiting for timeout
-      expect(mockAddMessages).toHaveBeenCalledTimes(1);
+      expect(result.current.getBufferSize()).toBe(3);
+      expect(mockAddMessages).not.toHaveBeenCalled();
+
+      act(() => {
+        result.current.forceFlush();
+      });
+
       expect(mockAddMessages).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ message_id: '1' }),
@@ -109,47 +176,12 @@ describe('useChatMessages', () => {
           expect.objectContaining({ message_id: '3' }),
         ]),
       );
-    });
-
-    test('should deduplicate messages within batch', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
-
-      // Same message_id and message_nonce should be deduplicated
-      const message1 = createMockMessage('1', 'shared-nonce');
-      const message2 = createMockMessage('1', 'shared-nonce');
-
-      act(() => {
-        result.current.handleNewMessage(message1);
-        result.current.handleNewMessage(message2);
-        jest.advanceTimersByTime(15);
-      });
-
-      expect(mockAddMessages).toHaveBeenCalledWith([message2]); // Last one wins
-    });
-
-    test('should keep messages with different nonces', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
-
-      const message1 = createMockMessage('1', 'nonce-a');
-      const message2 = createMockMessage('1', 'nonce-b');
-
-      act(() => {
-        result.current.handleNewMessage(message1);
-        result.current.handleNewMessage(message2);
-        jest.advanceTimersByTime(15);
-      });
-
-      expect(mockAddMessages).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ message_nonce: 'nonce-a' }),
-          expect.objectContaining({ message_nonce: 'nonce-b' }),
-        ]),
-      );
+      expect(result.current.getBufferSize()).toBe(0);
     });
   });
 
   describe('Unread Count', () => {
-    test('should increment unread when not at bottom', () => {
+    test('should increment unread for each message when not at bottom', () => {
       const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
@@ -162,10 +194,10 @@ describe('useChatMessages', () => {
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
         result.current.handleNewMessage(createMockMessage('2'));
-        jest.advanceTimersByTime(15);
       });
 
-      expect(onUnreadIncrement).toHaveBeenCalledWith(2);
+      expect(onUnreadIncrement).toHaveBeenCalledTimes(2);
+      expect(onUnreadIncrement).toHaveBeenCalledWith(1);
     });
 
     test('should not increment unread when at bottom', () => {
@@ -180,7 +212,6 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(15);
       });
 
       expect(onUnreadIncrement).not.toHaveBeenCalled();
@@ -188,62 +219,69 @@ describe('useChatMessages', () => {
   });
 
   describe('Cleanup', () => {
-    test('should clear pending batch timeout', () => {
+    test('should clear flush timer on cleanup', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
       });
 
-      // Cleanup before timeout fires
       act(() => {
         result.current.cleanup();
       });
 
-      // Advancing time should not process the batch
       act(() => {
-        jest.advanceTimersByTime(50);
+        jest.advanceTimersByTime(500);
       });
 
       expect(mockAddMessages).not.toHaveBeenCalled();
     });
 
-    test('should also clear message batch on clearLocalMessages', () => {
+    test('should clear buffer on clearLocalMessages', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
+        result.current.handleNewMessage(createMockMessage('2'));
+      });
+
+      expect(result.current.getBufferSize()).toBe(2);
+
+      act(() => {
         result.current.clearLocalMessages();
       });
 
-      // Message batch should be cleared too
-      act(() => {
-        jest.advanceTimersByTime(50);
-      });
-
-      expect(mockAddMessages).not.toHaveBeenCalled();
+      expect(result.current.getBufferSize()).toBe(0);
     });
   });
 
-  describe('Multiple Batches', () => {
-    test('should handle multiple sequential batches', () => {
+  describe('High volume', () => {
+    test('should flush entire buffer so all messages appear', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 
-      // First batch
       act(() => {
-        result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(15);
+        for (let i = 0; i < 250; i += 1) {
+          result.current.handleNewMessage(createMockMessage(`${i}`));
+        }
       });
 
+      expect(result.current.getBufferSize()).toBe(250);
+
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(mockAddMessages).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ message_id: '0' }),
+          expect.objectContaining({ message_id: '249' }),
+        ]),
+      );
       expect(mockAddMessages).toHaveBeenCalledTimes(1);
-
-      // Second batch
-      act(() => {
-        result.current.handleNewMessage(createMockMessage('2'));
-        jest.advanceTimersByTime(15);
-      });
-
-      expect(mockAddMessages).toHaveBeenCalledTimes(2);
+      const firstCall = (mockAddMessages as jest.Mock).mock
+        .calls[0] as unknown[];
+      expect(firstCall[0]).toHaveLength(250);
+      expect(result.current.getBufferSize()).toBe(0);
     });
   });
 });

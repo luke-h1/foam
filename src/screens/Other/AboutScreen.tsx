@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function AboutScreen() {
   return (
-    <SafeAreaView>
+    <SafeAreaView edges={['top']}>
       <Text>About</Text>
     </SafeAreaView>
   );

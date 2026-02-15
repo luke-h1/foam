@@ -21,21 +21,15 @@ export async function compressEmoteUrl(url: string): Promise<string> {
     return url;
   }
 
-  // Check in-memory cache first (fastest)
+  // Check in-memory cache first (fastest) - no logging in hot path
   const cached = compressionCache$.peek()[url];
   if (cached) {
-    logger.chat.debug(
-      `📦 Using cached emote from memory: ${url.substring(0, 50)}... → ${cached.substring(0, 50)}...`,
-    );
     return cached;
   }
 
   // Check if file already exists on disk (before downloading)
   const existingFileUri = getCachedImageUri(url);
   if (existingFileUri) {
-    logger.chat.debug(
-      `📦 Found cached emote on disk: ${url.substring(0, 50)}... → ${existingFileUri.substring(0, 50)}...`,
-    );
     // Update in-memory cache for future lookups
     const currentCache = compressionCache$.peek();
     compressionCache$.set({ ...currentCache, [url]: existingFileUri });
@@ -87,19 +81,12 @@ export async function compressEmoteUrl(url: string): Promise<string> {
  * Use this for immediate rendering, then call compressEmoteUrl for async caching
  */
 export function getCompressedEmoteUrl(url: string): string {
+  // Hot path - no logging to avoid flooding console during high-volume chat
   if (!url || url.startsWith('data:') || url.startsWith('file://')) {
-    if (url?.startsWith('data:') || url?.startsWith('file://')) {
-      logger.chat.debug(
-        `📦 URL already cached (${url.startsWith('data:') ? 'data URI' : 'file URI'}): ${url.substring(0, 50)}...`,
-      );
-    }
     return url;
   }
   const cached = compressionCache$.peek()[url];
   if (cached) {
-    logger.chat.debug(
-      `📦 Found cached file URI: ${url.substring(0, 50)}... → ${cached.substring(0, 50)}...`,
-    );
     return cached;
   }
   return url;

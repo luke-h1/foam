@@ -31,11 +31,13 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const [isChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
+  const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   const nativePlayerRef = useRef<NativeStreamPlayerRef>(null);
 
   useEffect(() => {
     setShouldRenderChat(false);
+    setHasContentGate(false);
     return () => {
       console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
       setShouldRenderChat(false);
@@ -66,11 +68,17 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         height: screenHeight,
       };
     }
+    if (hasContentGate) {
+      return {
+        width: screenWidth,
+        height: screenHeight * 0.75,
+      };
+    }
     return {
       width: screenWidth,
       height: screenWidth * (9 / 16),
     };
-  }, [isLandscape, isChatVisible, screenWidth, screenHeight]);
+  }, [isLandscape, isChatVisible, hasContentGate, screenWidth, screenHeight]);
 
   const getChatDimensions = useCallback(() => {
     if (isLandscape) {
@@ -79,12 +87,14 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
         height: screenHeight,
       };
     }
-    const videoHeight = screenWidth * (9 / 16);
+    const videoHeight = hasContentGate
+      ? screenHeight * 0.75
+      : screenWidth * (9 / 16);
     return {
       width: screenWidth,
       height: screenHeight - videoHeight,
     };
-  }, [isLandscape, screenWidth, screenHeight]);
+  }, [isLandscape, hasContentGate, screenWidth, screenHeight]);
 
   const videoWidth = useSharedValue(getVideoDimensions().width);
   const videoHeight = useSharedValue(getVideoDimensions().height);
@@ -121,6 +131,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   }, [
     isLandscape,
     isChatVisible,
+    hasContentGate,
     screenWidth,
     screenHeight,
     videoWidth,
@@ -164,10 +175,18 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
           ) : (
             <StreamPlayer
               ref={streamPlayerRef}
-              channel={stream.user_login}
+              channel={stream.user_login ?? params.id}
               height="100%"
               width="100%"
               autoplay
+              onContentGateChange={setHasContentGate}
+              streamInfo={{
+                userName: stream.user_name,
+                userLogin: stream.user_login,
+                viewerCount: stream.viewer_count,
+                startedAt: stream.started_at,
+                gameName: stream.game_name,
+              }}
             />
           ))}
       </Animated.View>

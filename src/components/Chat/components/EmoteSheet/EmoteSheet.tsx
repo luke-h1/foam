@@ -5,7 +5,12 @@ import { Text } from '@app/components/Text/Text';
 import { useCurrentEmoteData, getCachedEmoteUri } from '@app/store/chatStore';
 import type { SanitisedEmote } from '@app/types/emote';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
-import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import {
+  type DidDismissEvent,
+  type DidPresentEvent,
+  TrueSheet,
+  type TrueSheetProps,
+} from '@lodev09/react-native-true-sheet';
 import { FlashList, FlashListRef } from '@shopify/flash-list';
 import {
   forwardRef,
@@ -16,15 +21,22 @@ import {
   useState,
   useEffect,
 } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet, UnistylesRuntime } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-const GRID_COLUMNS = 8;
-const EMOTE_SIZE = 44;
-const CATEGORY_HEIGHT = 48;
-const ROW_HEIGHT = EMOTE_SIZE + 4; // emote size + padding
-
+const MIN_CELL_SIZE = 40;
+const MAX_CELL_SIZE = 52;
+const GRID_HORIZONTAL_PADDING = 16;
+const CATEGORY_BAR_HEIGHT = 44;
+const GRABBER_TOP = 8;
+const GRABBER_BOTTOM = 4;
+const LIST_TOP_PADDING = 4;
 export type EmotePickerItem = string | SanitisedEmote;
 
 type EmoteSectionIcon = BrandIconName | `emoji:${string}`;
@@ -119,9 +131,10 @@ const EMOJI_SECTIONS: EmoteSection[] = [
 interface EmoteCellProps {
   item: EmotePickerItem;
   onPress: (item: EmotePickerItem) => void;
+  cellSize: number;
 }
 
-const EmoteCell = memo(({ item, onPress }: EmoteCellProps) => {
+const EmoteCell = memo(({ item, onPress, cellSize }: EmoteCellProps) => {
   const handlePress = useCallback(() => {
     onPress(item);
   }, [item, onPress]);
@@ -133,12 +146,18 @@ const EmoteCell = memo(({ item, onPress }: EmoteCellProps) => {
     return null;
   }, [item]);
 
+  const size = cellSize;
+  const innerSize = Math.round(size * 0.72);
+
   if (typeof item === 'object') {
     return (
-      <Button style={styles.emoteCell} onPress={handlePress}>
+      <Button
+        style={[styles.emoteCell, { width: size, height: size }]}
+        onPress={handlePress}
+      >
         <Image
           source={imageSource || item.url}
-          style={styles.emoteImage}
+          style={[styles.emoteImage, { width: innerSize, height: innerSize }]}
           contentFit="contain"
           cachePolicy="memory-disk"
           recyclingKey={item.id}
@@ -148,8 +167,13 @@ const EmoteCell = memo(({ item, onPress }: EmoteCellProps) => {
   }
 
   return (
-    <Button style={styles.emoteCell} onPress={handlePress}>
-      <Text style={styles.emojiText}>{item}</Text>
+    <Button
+      style={[styles.emoteCell, { width: size, height: size }]}
+      onPress={handlePress}
+    >
+      <Text style={[styles.emojiText, { fontSize: innerSize * 0.85 }]}>
+        {item}
+      </Text>
     </Button>
   );
 });
@@ -161,7 +185,11 @@ interface EmoteRowProps {
   onPress: (item: EmotePickerItem) => void;
 }
 
-const EmoteRow = memo(({ items, onPress }: EmoteRowProps) => {
+interface EmoteRowPropsWithSize extends EmoteRowProps {
+  cellSize: number;
+}
+
+const EmoteRow = memo(({ items, onPress, cellSize }: EmoteRowPropsWithSize) => {
   return (
     <View style={styles.emoteRow}>
       {items.map((item, index) => (
@@ -169,6 +197,7 @@ const EmoteRow = memo(({ items, onPress }: EmoteRowProps) => {
           key={typeof item === 'object' ? item.id : `emoji-${index}-${item}`}
           item={item}
           onPress={onPress}
+          cellSize={cellSize}
         />
       ))}
     </View>
@@ -177,21 +206,7 @@ const EmoteRow = memo(({ items, onPress }: EmoteRowProps) => {
 
 EmoteRow.displayName = 'EmoteRow';
 
-interface SectionHeaderProps {
-  title: string;
-}
-
-const SectionHeader = memo(({ title }: SectionHeaderProps) => (
-  <View style={styles.sectionHeader}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-  </View>
-));
-
-SectionHeader.displayName = 'SectionHeader';
-
-type ListItem =
-  | { type: 'header'; title: string; key: string }
-  | { type: 'row'; items: EmotePickerItem[]; key: string };
+type ListItem = { type: 'row'; items: EmotePickerItem[]; key: string };
 
 interface CategoryButtonProps {
   section: EmoteSection;
@@ -226,12 +241,36 @@ const CategoryButton = memo(
 CategoryButton.displayName = 'CategoryButton';
 
 export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
-  ({ onEmoteSelect, ...sheetProps }, ref) => {
+  ({ onEmoteSelect, onDidPresent, onDidDismiss, ...sheetProps }, ref) => {
+    const { theme } = useUnistyles();
     const { bottom: bottomInset } = useSafeAreaInsets();
-    const { height: screenHeight } = useWindowDimensions();
+    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
     const flashListRef = useRef<FlashListRef<ListItem>>(null);
 
-    const listHeight = screenHeight * 0.55 - CATEGORY_HEIGHT - 40;
+    const [contentReady, setContentReady] = useState(false);
+
+    const listHeight =
+      screenHeight * 0.55 -
+      CATEGORY_BAR_HEIGHT -
+      GRABBER_TOP -
+      GRABBER_BOTTOM -
+      LIST_TOP_PADDING -
+      24;
+
+    const columns = Math.max(
+      5,
+      Math.min(
+        10,
+        Math.floor((screenWidth - GRID_HORIZONTAL_PADDING * 2) / MIN_CELL_SIZE),
+      ),
+    );
+    const cellSize = Math.min(
+      MAX_CELL_SIZE,
+      Math.max(
+        MIN_CELL_SIZE,
+        (screenWidth - GRID_HORIZONTAL_PADDING * 2) / columns,
+      ),
+    );
 
     const {
       bttvChannelEmotes,
@@ -247,7 +286,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
     const sections = useMemo<EmoteSection[]>(() => {
       const result: EmoteSection[] = [];
 
-      // 7TV Channel
       if (sevenTvChannelEmotes.length > 0) {
         result.push({
           title: '7TV Channel',
@@ -256,7 +294,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // 7TV Global
       if (sevenTvGlobalEmotes.length > 0) {
         result.push({
           title: '7TV Global',
@@ -265,7 +302,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // Twitch Channel
       if (twitchChannelEmotes.length > 0) {
         result.push({
           title: 'Twitch Channel',
@@ -274,7 +310,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // Twitch Global
       if (twitchGlobalEmotes.length > 0) {
         result.push({
           title: 'Twitch Global',
@@ -283,7 +318,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // FFZ Channel
       if (ffzChannelEmotes.length > 0) {
         result.push({
           title: 'FFZ Channel',
@@ -292,7 +326,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // FFZ Global
       if (ffzGlobalEmotes.length > 0) {
         result.push({
           title: 'FFZ Global',
@@ -301,7 +334,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // BTTV Channel
       if (bttvChannelEmotes.length > 0) {
         result.push({
           title: 'BTTV Channel',
@@ -310,7 +342,6 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       }
 
-      // BTTV Global
       if (bttvGlobalEmotes.length > 0) {
         result.push({
           title: 'BTTV Global',
@@ -333,23 +364,16 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
       bttvGlobalEmotes,
     ]);
 
-    // Flatten sections into list items (headers + rows)
-    const flatData = useMemo<ListItem[]>(() => {
+    const { flatData, sectionStartIndices } = useMemo(() => {
       const items: ListItem[] = [];
+      const starts: number[] = [];
 
       sections.forEach((section, sectionIndex) => {
-        items.push({
-          type: 'header',
-          title: section.title,
-          key: `header-${sectionIndex}`,
-        });
-
-        // Chunk data into rows
+        starts.push(items.length);
         const rows: EmotePickerItem[][] = [];
-        for (let i = 0; i < section.data.length; i += GRID_COLUMNS) {
-          rows.push(section.data.slice(i, i + GRID_COLUMNS));
+        for (let i = 0; i < section.data.length; i += columns) {
+          rows.push(section.data.slice(i, i + columns));
         }
-
         rows.forEach((row, rowIndex) => {
           items.push({
             type: 'row',
@@ -359,18 +383,8 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         });
       });
 
-      return items;
-    }, [sections]);
-
-    const sectionIndices = useMemo(() => {
-      const indices: number[] = [];
-      flatData.forEach((item, index) => {
-        if (item.type === 'header') {
-          indices.push(index);
-        }
-      });
-      return indices;
-    }, [flatData]);
+      return { flatData: items, sectionStartIndices: starts };
+    }, [sections, columns]);
 
     const handleEmotePress = useCallback(
       (item: EmotePickerItem) => {
@@ -383,7 +397,7 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
 
     const scrollToSection = useCallback(
       (sectionIndex: number) => {
-        const flatIndex = sectionIndices[sectionIndex];
+        const flatIndex = sectionStartIndices[sectionIndex];
         if (flatIndex !== undefined && flashListRef.current) {
           setActiveSection(sectionIndex);
           void flashListRef.current.scrollToIndex({
@@ -392,17 +406,52 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
           });
         }
       },
-      [sectionIndices],
+      [sectionStartIndices],
+    );
+
+    const onViewableItemsChanged = useCallback(
+      (info: { viewableItems: { index: number | null }[] }) => {
+        const indices = info.viewableItems
+          .map(v => v.index)
+          .filter((i): i is number => i != null);
+        if (indices.length === 0) return;
+        const topIndex = Math.min(...indices);
+        let section = 0;
+        for (
+          let i = sectionStartIndices?.length
+            ? sectionStartIndices.length - 1
+            : -1;
+          i >= 0;
+          i -= 1
+        ) {
+          const start = sectionStartIndices?.[i];
+          if (typeof start === 'number' && start <= topIndex) {
+            section = i;
+            break;
+          }
+        }
+        setActiveSection(section);
+      },
+      [sectionStartIndices],
+    );
+
+    const viewabilityConfig = useMemo(
+      () => ({
+        itemVisiblePercentThreshold: 10,
+        minimumViewTime: 50,
+      }),
+      [],
     );
 
     const renderItem = useCallback(
-      ({ item }: { item: ListItem }) => {
-        if (item.type === 'header') {
-          return <SectionHeader title={item.title} />;
-        }
-        return <EmoteRow items={item.items} onPress={handleEmotePress} />;
-      },
-      [handleEmotePress],
+      ({ item }: { item: ListItem }) => (
+        <EmoteRow
+          items={item.items}
+          onPress={handleEmotePress}
+          cellSize={cellSize}
+        />
+      ),
+      [handleEmotePress, cellSize],
     );
 
     const getItemType = useCallback((item: ListItem) => item.type, []);
@@ -415,18 +464,32 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         if (firstSection && firstSection.data.length > 0) {
           const emotesToPreload = firstSection.data
             .filter((item): item is SanitisedEmote => typeof item === 'object')
-            .slice(0, GRID_COLUMNS * 3); // Preload first 3 rows
+            .slice(0, columns * 3);
 
           emotesToPreload.forEach(emote => {
             getCachedEmoteUri(emote.url);
           });
         }
       }
-    }, [sections]);
+    }, [sections, columns]);
 
-    if (sections.length === 0) {
-      return null;
-    }
+    const handleDidPresent = useCallback(
+      (e: DidPresentEvent) => {
+        setContentReady(true);
+        onDidPresent?.(e);
+      },
+      [onDidPresent],
+    );
+
+    const handleDidDismiss = useCallback(
+      (e: DidDismissEvent) => {
+        setContentReady(false);
+        onDidDismiss?.(e);
+      },
+      [onDidDismiss],
+    );
+
+    const showPlaceholder = !contentReady || sections.length === 0;
 
     return (
       <TrueSheet
@@ -435,49 +498,60 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         cornerRadius={24}
         grabber={false}
         blurTint="dark"
-        backgroundColor={
-          UnistylesRuntime.themeName === 'dark' ? '#1a1a1a' : '#ffffff'
-        }
+        backgroundColor={theme.colors.gray.bg}
         {...sheetProps}
+        onDidPresent={handleDidPresent}
+        onDidDismiss={handleDidDismiss}
       >
-        <View style={[styles.container, { paddingBottom: bottomInset + 8 }]}>
-          {/* Grabber */}
+        <View
+          style={[
+            styles.container,
+            { paddingBottom: bottomInset + theme.spacing.lg },
+          ]}
+        >
           <View style={styles.grabberContainer}>
             <View style={styles.grabber} />
           </View>
 
-          {/* Category Bar */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoryBar}
-            contentContainerStyle={styles.categoryBarContent}
-          >
-            {sections.map((section, index) => (
-              <CategoryButton
-                key={`category-${section.title}`}
-                section={section}
-                isActive={index === activeSection}
-                onPress={() => scrollToSection(index)}
-              />
-            ))}
-          </ScrollView>
+          {showPlaceholder ? (
+            <View style={[styles.placeholderContent, { height: listHeight }]}>
+              <ActivityIndicator size="large" color={theme.colors.gray.text} />
+            </View>
+          ) : (
+            <>
+              <View style={styles.categoryBar}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.categoryBarContent}
+                >
+                  {sections.map((section, index) => (
+                    <CategoryButton
+                      key={`category-${section.title}`}
+                      section={section}
+                      isActive={index === activeSection}
+                      onPress={() => scrollToSection(index)}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
 
-          {/* Emote Grid */}
-          <View style={[styles.listContainer, { height: listHeight }]}>
-            <FlashList<ListItem>
-              ref={flashListRef}
-              data={flatData}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              getItemType={getItemType}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
-              // @ts-expect-error - estimatedItemSize exists on FlashList but types are wrong
-              estimatedItemSize={ROW_HEIGHT}
-              drawDistance={150}
-            />
-          </View>
+              <View style={[styles.listContainer, { height: listHeight }]}>
+                <FlashList<ListItem>
+                  ref={flashListRef}
+                  data={flatData}
+                  renderItem={renderItem}
+                  keyExtractor={keyExtractor}
+                  getItemType={getItemType}
+                  onViewableItemsChanged={onViewableItemsChanged}
+                  viewabilityConfig={viewabilityConfig}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.listContent}
+                  drawDistance={200}
+                />
+              </View>
+            </>
+          )}
         </View>
       </TrueSheet>
     );
@@ -492,7 +566,8 @@ const styles = StyleSheet.create(theme => ({
   },
   grabberContainer: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingTop: GRABBER_TOP,
+    paddingBottom: GRABBER_BOTTOM,
   },
   grabber: {
     width: 36,
@@ -501,19 +576,21 @@ const styles = StyleSheet.create(theme => ({
     backgroundColor: theme.colors.gray.accent,
   },
   categoryBar: {
-    maxHeight: CATEGORY_HEIGHT,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray.accentHover,
+    height: CATEGORY_BAR_HEIGHT,
+    justifyContent: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.colors.gray.border,
   },
   categoryBarContent: {
-    paddingHorizontal: 12,
-    gap: 4,
+    paddingHorizontal: theme.spacing.md,
+    gap: theme.spacing.xs,
+    flexDirection: 'row',
     alignItems: 'center',
   },
   categoryButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    minHeight: 44,
+    borderRadius: theme.radii.lg,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
@@ -522,43 +599,31 @@ const styles = StyleSheet.create(theme => ({
     backgroundColor: theme.colors.accent.accent,
   },
   categoryEmoji: {
-    fontSize: 20,
+    fontSize: theme.font.fontSize.lg,
+  },
+  placeholderContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listContainer: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-  },
-  sectionHeader: {
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    opacity: 0.6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: LIST_TOP_PADDING,
+    paddingBottom: theme.spacing.lg,
   },
   emoteRow: {
     flexDirection: 'row',
-    paddingVertical: 2,
+    paddingVertical: theme.spacing.xs,
   },
   emoteCell: {
-    width: EMOTE_SIZE,
-    height: EMOTE_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: theme.radii.md,
   },
-  emoteImage: {
-    width: 32,
-    height: 32,
-  },
+  emoteImage: {},
   emojiText: {
-    fontSize: 26,
-    lineHeight: 32,
+    lineHeight: undefined,
   },
 }));
