@@ -204,6 +204,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
               height="100%"
               width="100%"
               autoplay
+              muted={false}
               onVideoAreaPress={isLandscape ? toggleChat : undefined}
               streamInfo={{
                 userName: stream.user_name,
@@ -220,6 +221,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
               height="100%"
               width="100%"
               autoplay
+              muted={false}
               onContentGateChange={setHasContentGate}
               onVideoAreaPress={isLandscape ? toggleChat : undefined}
               streamInfo={{

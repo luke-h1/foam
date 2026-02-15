@@ -901,13 +901,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           video,
           parent,
           autoplay: true,
-          muted: true,
+          muted: initialMuted,
           width: '100%',
           height: '100%',
         }),
         baseUrl: `https://${parent}/`,
       }),
-      [channel, video, parent],
+      [channel, video, parent, initialMuted],
     );
 
     const showControls = useCallback(() => {
