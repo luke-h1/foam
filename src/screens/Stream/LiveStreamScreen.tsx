@@ -9,7 +9,12 @@ import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
 import { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import {
+  AppState,
+  type AppStateStatus,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -36,10 +41,31 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
   const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
+  const [webViewLoaded, setWebViewLoaded] = useState(false);
   const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
+  const [chatReloadKey, setChatReloadKey] = useState(0);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastChatToggleTimeRef = useRef<number>(0);
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
+
+  // On return to foreground: reload WebView and remount Chat so they stay in sync
+  useEffect(() => {
+    const sub = AppState.addEventListener(
+      'change',
+      (nextState: AppStateStatus) => {
+        if (
+          appStateRef.current.match(/inactive|background/) &&
+          nextState === 'active'
+        ) {
+          streamPlayerRef.current?.forceRefresh();
+          setChatReloadKey(k => k + 1);
+        }
+        appStateRef.current = nextState;
+      },
+    );
+    return () => sub.remove();
+  }, []);
 
   const handleContentGateChange = useCallback((hasGate: boolean) => {
     setHasContentGate(prev => (prev === hasGate ? prev : hasGate));
@@ -56,6 +82,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   useEffect(() => {
     setShouldRenderChat(false);
+    setWebViewLoaded(false);
     setHasContentGate(false);
     return () => {
       console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
@@ -63,22 +90,25 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     };
   }, [params.id]);
 
+  const handleWebViewLoaded = useCallback(() => setWebViewLoaded(true), []);
+
   const [streamQueryResult] = useQueries({
     queries: [twitchQueries.getStream(params.id)],
   });
 
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
 
+  // Connect chat only after the embed WebView has loaded so player and chat are in sync
   useEffect(() => {
-    if (stream?.user_login && stream?.user_id && !shouldRenderChat) {
-      // Use setTimeout to defer Chat rendering to next tick, allowing screen to render first to stop blocking navigation
-      const timer = setTimeout(() => {
-        setShouldRenderChat(true);
-      }, 0);
-      return () => clearTimeout(timer);
+    if (
+      stream?.user_login &&
+      stream?.user_id &&
+      webViewLoaded &&
+      !shouldRenderChat
+    ) {
+      setShouldRenderChat(true);
     }
-    return undefined;
-  }, [stream?.user_login, stream?.user_id, shouldRenderChat]);
+  }, [stream?.user_login, stream?.user_id, webViewLoaded, shouldRenderChat]);
 
   const getVideoDimensions = useCallback(() => {
     if (isLandscape) {
@@ -203,6 +233,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             muted={false}
             onContentGateChange={handleContentGateChange}
             onVideoAreaPress={isLandscape ? toggleChat : undefined}
+            onWebViewLoaded={handleWebViewLoaded}
             streamInfo={{
               userName: stream.user_name,
               userLogin: stream.user_login,
@@ -225,7 +256,11 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
               },
             ]}
           >
-            <Chat channelId={stream.user_id} channelName={stream.user_login} />
+            <Chat
+              key={chatReloadKey}
+              channelId={stream.user_id}
+              channelName={stream.user_login}
+            />
           </View>
         )}
       </Animated.View>

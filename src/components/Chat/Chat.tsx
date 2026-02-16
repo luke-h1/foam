@@ -1323,11 +1323,16 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
                   onScroll={handleScroll}
                   renderItem={renderItem}
                   contentContainerStyle={styles.listContent}
-                  maintainVisibleContentPosition={{
-                    autoscrollToTopThreshold: 10,
-                    autoscrollToBottomThreshold: 10,
-                    startRenderingFromBottom: true,
-                  }}
+                  scrollEventThrottle={16}
+                  maintainVisibleContentPosition={
+                    isAtBottom
+                      ? {
+                          autoscrollToTopThreshold: 10,
+                          autoscrollToBottomThreshold: 10,
+                          startRenderingFromBottom: true,
+                        }
+                      : undefined
+                  }
                 />
               );
             }}
