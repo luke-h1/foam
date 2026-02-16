@@ -205,7 +205,7 @@ export interface StreamPlayerProps {
    */
   onVideoAreaPress?: () => void;
   /**
-   * Callback when the embed WebView has finished loading. Use to sync chat connection (e.g. connect chat only after player is ready).
+   * Callback when the embed WebView has finished loading. Use to sync IRC connections (only after player is ready).
    */
   onWebViewLoaded?: () => void;
   /**
