@@ -49,7 +49,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const lastChatToggleTimeRef = useRef<number>(0);
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 
-  // On return to foreground: reload WebView and remount Chat so they stay in sync
   useEffect(() => {
     const sub = AppState.addEventListener(
       'change',
@@ -98,7 +97,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
 
-  // Connect chat only after the embed WebView has loaded so player and chat are in sync
   useEffect(() => {
     if (
       stream?.user_login &&
