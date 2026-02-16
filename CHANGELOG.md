@@ -1,5 +1,10 @@
 # Changelog
 
+## ota-0831b9f9-5fce-43bb-8b70-fe9c4633601b
+
+### ✨ Features
+
+- **app:** Ensure chat + video is in sync ([#488](https://github.com/lhowsam/foam/issues/488))
 ## ota-a0aa7b2d-23b7-4b57-b1eb-f6f96acb3718
 
 ### 🔧 Miscellaneous Tasks
