@@ -133,7 +133,7 @@ const config: ExpoConfig = {
     fallbackToCacheTimeout: 30000,
   },
   runtimeVersion: {
-    policy: 'fingerprint',
+    policy: 'appVersion',
   },
   extra: {
     AUTH_PROXY_API_BASE_URL: process.env.AUTH_PROXY_API_BASE_URL,

@@ -205,6 +205,10 @@ export interface StreamPlayerProps {
    */
   onVideoAreaPress?: () => void;
   /**
+   * Callback when the embed WebView has finished loading. Use to sync IRC connections (only after player is ready).
+   */
+  onWebViewLoaded?: () => void;
+  /**
    * Parent domain for Twitch embed. Must be an HTTPS domain you added in the
    * Twitch Developer Console (e.g. foam-app.com). We send Referer/Origin so Twitch validates.
    * @default 'foam-app.com'
@@ -570,6 +574,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       onReady,
       onRefresh,
       onVideoAreaPress,
+      onWebViewLoaded,
       parent = 'www.twitch.tv',
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       streamProxyBaseUrl: _streamProxyBaseUrl,
@@ -1045,6 +1050,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           onContentProcessDidTerminate={() => webViewRef.current?.reload()}
           onError={handleWebViewError}
           onHttpError={handleWebViewHttpError}
+          onLoadEnd={() => onWebViewLoaded?.()}
           onLoadStart={() => {
             console.warn('[StreamPlayer:WebView] onLoadStart', {
               channel,
