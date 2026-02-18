@@ -171,7 +171,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         return;
       }
 
-      // Only fetch cosmetics for the first 5 seconds of chat to prevent API overload
       if (!canFetchCosmetics()) {
         const chatStartTime = chatStartTimeRef.current;
         const elapsedSeconds = chatStartTime

@@ -26,7 +26,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import type {
   WebViewError,
@@ -387,12 +387,20 @@ function buildTwitchEmbedHtml(options: {
 
 interface ControlsOverlayProps {
   isVisible: boolean;
+  /**
+   * Timestamp when webview loaded
+   */
+  overlayStartTime: number;
   onBackPress?: () => void;
   onPipPress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onToggleControls: () => void;
   paused: boolean;
+  /**
+   * Timestamp when player fired 'ready', or null if not ready yet.
+   */
+  readyTimestamp: number | null;
   showPip?: boolean;
   streamInfo?: StreamInfo;
 }
@@ -420,19 +428,36 @@ function formatViewerCount(count?: number): string {
 
 function ControlsOverlay({
   isVisible,
+  overlayStartTime,
   onBackPress,
   onPipPress,
   onPlayPausePress,
   onRefresh,
   onToggleControls,
   paused,
+  readyTimestamp,
   showPip = Platform.OS === 'ios',
   streamInfo,
 }: ControlsOverlayProps) {
+  const { theme } = useUnistyles();
   const opacity = useSharedValue(0);
   const [duration, setDuration] = useState(() =>
     formatDuration(streamInfo?.startedAt),
   );
+  const [latencySeconds, setLatencySeconds] = useState<number>(0);
+
+  useEffect(() => {
+    const update = () => {
+      const elapsedMs =
+        readyTimestamp != null
+          ? readyTimestamp - overlayStartTime
+          : Date.now() - overlayStartTime;
+      setLatencySeconds(elapsedMs / 1000);
+    };
+    update();
+    const interval = setInterval(update, 500);
+    return () => clearInterval(interval);
+  }, [overlayStartTime, readyTimestamp]);
 
   useEffect(() => {
     if (!streamInfo?.startedAt) return;
@@ -475,6 +500,18 @@ function ControlsOverlay({
       <View pointerEvents="none" style={styles.gradientTop} />
       <View pointerEvents="none" style={styles.gradientBottom} />
 
+      <View pointerEvents="none" style={styles.latencyBadge}>
+        <Icon
+          color={theme.colors.gray.contrast}
+          icon="clock"
+          size={12}
+          style={styles.latencyBadgeIcon}
+        />
+        <Text style={styles.latencyBadgeText}>
+          {latencySeconds.toFixed(1)}s
+        </Text>
+      </View>
+
       <View style={styles.header}>
         {onBackPress && (
           <View style={styles.headerButtonContainer}>
@@ -483,7 +520,11 @@ function ControlsOverlay({
               style={styles.headerButton}
               onPress={onBackPress}
             >
-              <Icon color="#FFFFFF" icon="chevron-left" size={24} />
+              <Icon
+                color={theme.colors.gray.contrast}
+                icon="chevron-left"
+                size={24}
+              />
             </Button>
           </View>
         )}
@@ -503,7 +544,11 @@ function ControlsOverlay({
           style={styles.playPauseButton}
           onPress={onPlayPausePress}
         >
-          <Icon color="#FFFFFF" icon={paused ? 'play' : 'pause'} size={40} />
+          <Icon
+            color={theme.colors.gray.contrast}
+            icon={paused ? 'play' : 'pause'}
+            size={40}
+          />
         </Button>
       </View>
 
@@ -530,7 +575,11 @@ function ControlsOverlay({
               style={styles.controlButton}
               onPress={onRefresh}
             >
-              <Icon color="#FFFFFF" icon="refresh-cw" size={18} />
+              <Icon
+                color={theme.colors.gray.contrast}
+                icon="refresh-cw"
+                size={18}
+              />
             </Button>
           </View>
         )}
@@ -543,7 +592,7 @@ function ControlsOverlay({
               onPress={onPipPress}
             >
               <Icon
-                color="#FFFFFF"
+                color={theme.colors.gray.contrast}
                 icon="picture-in-picture-bottom-right"
                 iconFamily="MaterialCommunityIcons"
                 size={20}
@@ -585,6 +634,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     },
     ref,
   ) {
+    const { theme } = useUnistyles();
     const webViewRef = useRef<WebView>(null);
 
     const [playerState, setPlayerState] = useState<PlayerState>({
@@ -604,7 +654,14 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null,
     );
+    const [overlayStartTime, setOverlayStartTime] = useState(() => Date.now());
+    const [readyTimestamp, setReadyTimestamp] = useState<number | null>(null);
     const [hasContentGate, setHasContentGate] = useState(false);
+
+    useEffect(() => {
+      setOverlayStartTime(Date.now());
+      setReadyTimestamp(null);
+    }, [channel, video]);
     const [showLoginPrompt, setShowLoginPrompt] = useState(true);
 
     useEffect(() => {
@@ -821,6 +878,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
           switch (message.type) {
             case 'ready':
+              setReadyTimestamp(Date.now());
               setPlayerState(prev => ({
                 ...prev,
                 isReady: true,
@@ -1110,19 +1168,25 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             accessibilityLabel="Show player controls"
             accessibilityRole="button"
           >
-            <Icon color="#FFFFFF" icon="more-horizontal" size={24} />
+            <Icon
+              color={theme.colors.gray.contrast}
+              icon="more-horizontal"
+              size={24}
+            />
           </PressableArea>
         )}
 
         {showOverlayControls && !hasContentGate && playerState.isReady && (
           <ControlsOverlay
             isVisible={controlsVisible}
+            overlayStartTime={overlayStartTime}
             onBackPress={onBackPress}
             onPipPress={handlePipPress}
             onPlayPausePress={handlePlayPause}
             onRefresh={onRefresh}
             onToggleControls={toggleControlsInternal}
             paused={playerState.isPaused}
+            readyTimestamp={readyTimestamp}
             streamInfo={streamInfo}
           />
         )}
@@ -1175,8 +1239,8 @@ const styles = StyleSheet.create((theme, rt) => ({
     flexDirection: 'row',
     gap: theme.spacing.sm,
     left: 0,
-    paddingBottom: rt.insets.bottom + 4,
-    paddingHorizontal: theme.spacing.sm,
+    paddingBottom: rt.insets.bottom + 12,
+    paddingHorizontal: theme.spacing.md,
     position: 'absolute',
     right: 0,
   },
@@ -1256,16 +1320,17 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
   controlButton: {
     alignItems: 'center',
-    height: 36,
+    height: 40,
     justifyContent: 'center',
-    width: 36,
+    width: 40,
   },
   controlButtonContainer: {
     alignItems: 'center',
-    borderRadius: theme.radii.sm,
-    height: 20,
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderRadius: theme.radii.md,
+    height: 40,
     justifyContent: 'center',
-    width: 36,
+    width: 40,
   },
   controlsOverlay: {
     bottom: 0,
@@ -1293,25 +1358,49 @@ const styles = StyleSheet.create((theme, rt) => ({
   gradientBottom: {
     backgroundColor: theme.colors.black.borderHoverAlpha,
     bottom: 0,
-    height: 80,
+    height: 120,
     left: 0,
     position: 'absolute',
     right: 0,
   },
   gradientTop: {
     backgroundColor: theme.colors.black.borderHoverAlpha,
-    height: 80,
+    height: 120,
     left: 0,
     position: 'absolute',
     right: 0,
     top: 0,
   },
+  latencyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    position: 'absolute',
+    top: rt.insets.top + theme.spacing.sm,
+    right: theme.spacing.sm + 48,
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderRadius: theme.radii.full,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    zIndex: 2,
+    borderWidth: 1,
+    borderColor: theme.colors.black.borderHoverAlpha,
+  },
+  latencyBadgeIcon: {
+    opacity: 0.9,
+  },
+  latencyBadgeText: {
+    color: theme.colors.gray.contrast,
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
   header: {
     alignItems: 'center',
     flexDirection: 'row',
     left: 0,
-    paddingHorizontal: theme.spacing.xs,
-    paddingTop: rt.insets.top + 2,
+    paddingHorizontal: theme.spacing.sm,
+    paddingTop: rt.insets.top + 8,
     position: 'absolute',
     right: 0,
     top: 0,
@@ -1319,17 +1408,17 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
   headerButton: {
     alignItems: 'center',
-    height: 36,
+    height: 40,
     justifyContent: 'center',
-    width: 36,
+    width: 40,
   },
   headerButtonContainer: {
     alignItems: 'center',
     backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.sm,
-    height: 36,
+    borderRadius: theme.radii.md,
+    height: 40,
     justifyContent: 'center',
-    width: 36,
+    width: 40,
   },
   headerInfo: {
     flex: 1,
@@ -1349,10 +1438,10 @@ const styles = StyleSheet.create((theme, rt) => ({
   liveIndicatorContainer: {
     alignItems: 'center',
     backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.radii.md,
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   loadingOverlay: {
     alignItems: 'center',
@@ -1365,6 +1454,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     top: 0,
   },
   overlayBackground: {
+    backgroundColor: theme.colors.black.bgAlpha,
     bottom: 0,
     left: 0,
     position: 'absolute',
@@ -1374,10 +1464,10 @@ const styles = StyleSheet.create((theme, rt) => ({
   playPauseButton: {
     alignItems: 'center',
     backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: 40,
-    height: 80,
+    borderRadius: 44,
+    height: 88,
     justifyContent: 'center',
-    width: 80,
+    width: 88,
   },
   spacer: {
     flex: 1,
@@ -1402,11 +1492,11 @@ const styles = StyleSheet.create((theme, rt) => ({
   },
   streamerNameContainer: {
     backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.radii.md,
     flex: 1,
-    marginHorizontal: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
+    marginHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   viewerCount: {
     alignItems: 'center',
@@ -1416,10 +1506,10 @@ const styles = StyleSheet.create((theme, rt) => ({
   viewerCountContainer: {
     alignItems: 'center',
     backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.radii.md,
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   viewerCountText: {
     color: theme.colors.gray.contrast,

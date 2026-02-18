@@ -235,8 +235,8 @@ export const AuthContextProvider = ({
 
     try {
       const u = await twitchService.getUserInfo(twitchToken.accessToken);
-      setUser(u);
       twitchApi.setAuthToken(twitchToken.accessToken);
+      setUser(u);
 
       // Prefetch initial data immediately after auth
       prefetchInitialData(u.id);
@@ -294,9 +294,9 @@ export const AuthContextProvider = ({
 
     try {
       const u = await twitchService.getUserInfo(token.accessToken);
-      setUser(u);
-
+      // Set token before setUser so any enabled queries (e.g. followed streams) use the correct token
       twitchApi.setAuthToken(token.accessToken);
+      setUser(u);
 
       prefetchInitialData(u.id);
 

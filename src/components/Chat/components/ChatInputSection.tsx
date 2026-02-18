@@ -68,6 +68,11 @@ export const ChatInputSection = memo(
 
     const canSend = messageInput.trim() && isConnected;
 
+    const inputPlaceholder =
+      replyTo !== null
+        ? `Reply to ${replyTo.username}...`
+        : 'Send a message...';
+
     return (
       <View
         ref={containerRef}
@@ -125,16 +130,12 @@ export const ChatInputSection = memo(
               onEmoteSelect={handleEmoteSelect}
               onFocus={onFocus}
               onBlur={onBlur}
-              placeholder={
-                replyTo
-                  ? `Reply to ${replyTo.username}...`
-                  : 'Send a message...'
-              }
+              placeholder={inputPlaceholder}
               editable
               autoComplete="off"
               autoCapitalize="none"
               autoCorrect={false}
-              placeholderTextColor="#666"
+              placeholderTextColor="#8E8E93"
               onSubmitEditing={onSubmit}
               returnKeyType="send"
               prioritizeChannelEmotes
