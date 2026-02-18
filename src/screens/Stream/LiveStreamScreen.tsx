@@ -97,7 +97,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
 
-  // Render chat once stream + WebView are ready (or after max wait so chat syncs within ~5s)
   const MAX_WAIT_FOR_WEBVIEW_MS = 4000;
   useEffect(() => {
     if (!stream?.user_login || !stream?.user_id) return;
@@ -229,6 +228,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
           <StreamPlayer
             ref={streamPlayerRef}
             channel={stream.user_login ?? params.id}
+            deferOverlayUntilUserUnmute
             height="100%"
             width="100%"
             autoplay
