@@ -11,7 +11,7 @@ import { useRefresh } from '@app/hooks/useRefresh';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useCallback, type JSX } from 'react';
+import { useMemo, useCallback, useRef, useEffect, type JSX } from 'react';
 import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
@@ -46,12 +46,25 @@ export default function FollowingScreen() {
     data: streams,
     isLoading,
     isError,
+    isFetched,
   } = useQuery({
     ...followingStreamsQuery,
     enabled: !!user?.id,
+    retry: 2,
+    retryDelay: (attemptIndex: number) =>
+      Math.min(1000 * 2 ** attemptIndex, 3000),
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const streamsArray = Array.isArray(streams) ? streams : [];
+  const hasShownErrorToast = useRef(false);
+
+  useEffect(() => {
+    if (!isError) {
+      hasShownErrorToast.current = false;
+    }
+  }, [isError]);
 
   const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
     return <LiveStreamCard stream={item} />;
@@ -67,9 +80,19 @@ export default function FollowingScreen() {
       </View>
     );
   }
-  if ((!isLoading && !streams) || isError) {
-    // Only show error toast if user is logged in (query was enabled)
-    if (user?.id) {
+
+  if (!user?.id) {
+    return (
+      <EmptyState
+        content="Log in to see streams from channels you follow"
+        heading="Your followed streams"
+      />
+    );
+  }
+
+  if (isFetched && isError) {
+    if (!hasShownErrorToast.current) {
+      hasShownErrorToast.current = true;
       toast.error('Failed to fetch followed streams');
     }
     return (
@@ -77,6 +100,18 @@ export default function FollowingScreen() {
         content="Failed to fetch followed streams"
         heading="No followed streams"
       />
+    );
+  }
+
+  // Query enabled but not yet fetched (shouldn't happen after isLoading check, but guard for no data)
+  if (!streams) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <LiveStreamCardSkeleton key={index} />
+        ))}
+      </View>
     );
   }
 

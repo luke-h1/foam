@@ -97,15 +97,19 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
 
   const { data: stream, isPending: isStreamPending } = streamQueryResult;
 
+  // Render chat once stream + WebView are ready (or after max wait so chat syncs within ~5s)
+  const MAX_WAIT_FOR_WEBVIEW_MS = 4000;
   useEffect(() => {
-    if (
-      stream?.user_login &&
-      stream?.user_id &&
-      webViewLoaded &&
-      !shouldRenderChat
-    ) {
-      setShouldRenderChat(true);
+    if (!stream?.user_login || !stream?.user_id) return;
+    if (webViewLoaded) {
+      if (!shouldRenderChat) setShouldRenderChat(true);
+      return;
     }
+    const timeout = setTimeout(() => {
+      setWebViewLoaded(true);
+      setShouldRenderChat(true);
+    }, MAX_WAIT_FOR_WEBVIEW_MS);
+    return () => clearTimeout(timeout);
   }, [stream?.user_login, stream?.user_id, webViewLoaded, shouldRenderChat]);
 
   const getVideoDimensions = useCallback(() => {
