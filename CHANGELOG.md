@@ -1,5 +1,15 @@
 # Changelog
 
+## ota-1ffa7bd3-e434-4400-9364-90da567dcf68
+
+### 🐛 Bug Fixes
+
+- **app:** Fix stream muted ([#492](https://github.com/lhowsam/foam/issues/492))
+- **app:** Fix stream muted ([#493](https://github.com/lhowsam/foam/issues/493))
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Update agent skills
 ## ota-0831b9f9-5fce-43bb-8b70-fe9c4633601b
 
 ### ✨ Features
