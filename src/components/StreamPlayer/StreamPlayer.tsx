@@ -155,6 +155,7 @@ export interface StreamPlayerProps {
    */
   height?: DimensionValue;
 
+  deferOverlayUntilUserUnmute?: boolean;
   /**
    * Initial muted state
    * @default false
@@ -283,7 +284,8 @@ type PlayerMessage =
   | { type: 'play' }
   | { type: 'ready' }
   | { type: 'trace'; payload: { step: string; detail?: string } }
-  | { type: 'error'; payload: { message: string } };
+  | { type: 'error'; payload: { message: string } }
+  | { type: 'muteState'; payload: { muted: boolean; volume: number } };
 
 function buildTwitchEmbedHtml(options: {
   channel: string;
@@ -338,7 +340,49 @@ function buildTwitchEmbedHtml(options: {
         var player = new Twitch.Player('twitch-player', embedOpts);
         post('trace', { step: 'player_created', detail: 'Twitch.Player instance created' });
         window._twitchPlayer = player;
-        player.addEventListener(Twitch.Player.READY, function() { post('ready'); });
+        player.addEventListener(Twitch.Player.READY, function() {
+          post('ready');
+          if (player.getMuted()) {
+            var deadline = Date.now() + 800;
+            var tick = setInterval(function() {
+              var el = null;
+              try {
+                var nodes = document.querySelectorAll('button, a, [role=button], [class*="unmute"], [class*="Unmute"]');
+                for (var i = 0; i < nodes.length; i++) {
+                  var t = (nodes[i].textContent || '').toLowerCase();
+                  if (t.indexOf('click to unmute') !== -1) { el = nodes[i]; break; }
+                }
+              } catch (e) {}
+              if (el) {
+                clearInterval(tick);
+                el.click();
+                player.setMuted(false);
+                player.setVolume(1);
+              } else if (Date.now() > deadline) {
+                clearInterval(tick);
+                player.setMuted(false);
+                player.setVolume(1);
+              }
+            }, 200);
+          }
+          var startWatchingDeadline = Date.now() + 10000;
+          var startWatchingTick = setInterval(function() {
+            var btn = null;
+            try {
+              var nodes = document.querySelectorAll('button, a, [role=button]');
+              for (var i = 0; i < nodes.length; i++) {
+                var t = (nodes[i].textContent || '').toLowerCase();
+                if (t.indexOf('Start Watching') !== -1) { btn = nodes[i]; break; }
+              }
+            } catch (e) {}
+            if (btn) {
+              clearInterval(startWatchingTick);
+              btn.click();
+            } else if (Date.now() > startWatchingDeadline) {
+              clearInterval(startWatchingTick);
+            }
+          }, 300);
+        });
         player.addEventListener(Twitch.Player.PLAY, function() { post('play'); });
         player.addEventListener(Twitch.Player.PAUSE, function() { post('pause'); });
         player.addEventListener(Twitch.Player.PLAYING, function() {
@@ -361,6 +405,19 @@ function buildTwitchEmbedHtml(options: {
           setQuality: function(q) { player.setQuality(q); },
           seekToLive: function() {}
         };
+        var lastMuted = player.getMuted();
+        var lastVol = player.getVolume();
+        setInterval(function() {
+          try {
+            var m = player.getMuted();
+            var v = player.getVolume();
+            if (m !== lastMuted || v !== lastVol) {
+              lastMuted = m;
+              lastVol = v;
+              post('muteState', { muted: m, volume: v });
+            }
+          } catch (e) {}
+        }, 400);
         post('trace', { step: 'player_ready', detail: 'listeners and controls attached' });
       } catch (e) {
         post('error', { message: 'initPlayer: ' + (e.message || String(e)) });
@@ -610,6 +667,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     {
       autoplay = true,
       channel,
+      deferOverlayUntilUserUnmute = false,
       height,
       muted: initialMuted = false,
       onBackPress,
@@ -657,10 +715,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const [overlayStartTime, setOverlayStartTime] = useState(() => Date.now());
     const [readyTimestamp, setReadyTimestamp] = useState<number | null>(null);
     const [hasContentGate, setHasContentGate] = useState(false);
+    const [overlayUnlocked, setOverlayUnlocked] = useState(false);
+    const [webViewKey, setWebViewKey] = useState(0);
 
     useEffect(() => {
       setOverlayStartTime(Date.now());
       setReadyTimestamp(null);
+      setOverlayUnlocked(false);
     }, [channel, video]);
     const [showLoginPrompt, setShowLoginPrompt] = useState(true);
 
@@ -687,14 +748,8 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           appStateRef.current.match(/inactive|background/) &&
           nextAppState === 'active'
         ) {
-          // Resume playback when app returns to foreground
-          setTimeout(() => {
-            if (webViewRef.current && playerState.isReady) {
-              webViewRef.current.injectJavaScript(
-                'try { if (window.playerControls) window.playerControls.play(); } catch(e) {}; true;',
-              );
-            }
-          }, 500);
+          // Remount WebView so it loads our embed HTML again (reload() would reload twitch.tv if it navigated there)
+          setWebViewKey(k => k + 1);
         }
 
         appStateRef.current = nextAppState;
@@ -708,7 +763,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       return () => {
         subscription.remove();
       };
-    }, [playerState.isReady]);
+    }, []);
 
     // Reset stuck-detection refs when not ready or paused
     useEffect(() => {
@@ -877,7 +932,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           const message = JSON.parse(event.nativeEvent.data) as PlayerMessage;
 
           switch (message.type) {
-            case 'ready':
+            case 'ready': {
               setReadyTimestamp(Date.now());
               setPlayerState(prev => ({
                 ...prev,
@@ -887,8 +942,18 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               onReady?.();
               if (autoplay) {
                 play();
+                // Retry playing the stream so flaky streams still play
+                const retryPlay = () => {
+                  play();
+                };
+                setTimeout(retryPlay, 400);
+                setTimeout(retryPlay, 1200);
+              }
+              if (!initialMuted && !deferOverlayUntilUserUnmute) {
+                unmute();
               }
               break;
+            }
             case 'play':
               setPlayerState(prev => ({ ...prev, isPaused: false }));
               onPlay?.();
@@ -950,6 +1015,18 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             case 'contentGateDetected':
               setHasContentGate(message.payload?.hasContentGate ?? false);
               break;
+            case 'muteState': {
+              const { muted: m, volume: v } = message.payload;
+              setPlayerState(prev =>
+                prev.muted === m && prev.volume === v
+                  ? prev
+                  : { ...prev, muted: m, volume: v },
+              );
+              if (deferOverlayUntilUserUnmute && m === false) {
+                setOverlayUnlocked(true);
+              }
+              break;
+            }
             default:
               break;
           }
@@ -959,6 +1036,8 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       },
       [
         autoplay,
+        deferOverlayUntilUserUnmute,
+        initialMuted,
         onEnded,
         onError,
         onOffline,
@@ -967,6 +1046,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         onPlay,
         onReady,
         play,
+        unmute,
       ],
     );
 
@@ -977,13 +1057,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           video,
           parent,
           autoplay: true,
-          muted: initialMuted,
+          muted: deferOverlayUntilUserUnmute ? true : initialMuted,
           width: '100%',
           height: '100%',
         }),
         baseUrl: `https://${parent}/`,
       }),
-      [channel, video, parent, initialMuted],
+      [channel, video, parent, initialMuted, deferOverlayUntilUserUnmute],
     );
 
     const showControls = useCallback(() => {
@@ -1110,6 +1190,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         ]}
       >
         <WebView
+          key={webViewKey}
           ref={webViewRef}
           allowsFullscreenVideo={false}
           allowsInlineMediaPlayback
@@ -1132,15 +1213,18 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           onRenderProcessGone={() => webViewRef.current?.reload()}
         />
 
-        {showOverlayControls && !hasContentGate && playerState.isReady && (
-          <PressableArea
-            onPress={toggleControlsInternal}
-            style={styles.touchBlockOverlay}
-            pointerEvents="auto"
-            accessibilityLabel="Show player controls"
-            accessibilityRole="button"
-          />
-        )}
+        {showOverlayControls &&
+          !hasContentGate &&
+          playerState.isReady &&
+          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
+            <PressableArea
+              onPress={toggleControlsInternal}
+              style={styles.touchBlockOverlay}
+              pointerEvents="auto"
+              accessibilityLabel="Show player controls"
+              accessibilityRole="button"
+            />
+          )}
 
         {__DEV__ && lastHttpError && (
           <View style={styles.debugErrorOverlay}>
@@ -1161,35 +1245,41 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           </View>
         )}
 
-        {showOverlayControls && !hasContentGate && playerState.isReady && (
-          <PressableArea
-            onPress={toggleControlsInternal}
-            style={styles.controlsTriggerButton}
-            accessibilityLabel="Show player controls"
-            accessibilityRole="button"
-          >
-            <Icon
-              color={theme.colors.gray.contrast}
-              icon="more-horizontal"
-              size={24}
-            />
-          </PressableArea>
-        )}
+        {showOverlayControls &&
+          !hasContentGate &&
+          playerState.isReady &&
+          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
+            <PressableArea
+              onPress={toggleControlsInternal}
+              style={styles.controlsTriggerButton}
+              accessibilityLabel="Show player controls"
+              accessibilityRole="button"
+            >
+              <Icon
+                color={theme.colors.gray.contrast}
+                icon="more-horizontal"
+                size={24}
+              />
+            </PressableArea>
+          )}
 
-        {showOverlayControls && !hasContentGate && playerState.isReady && (
-          <ControlsOverlay
-            isVisible={controlsVisible}
-            overlayStartTime={overlayStartTime}
-            onBackPress={onBackPress}
-            onPipPress={handlePipPress}
-            onPlayPausePress={handlePlayPause}
-            onRefresh={onRefresh}
-            onToggleControls={toggleControlsInternal}
-            paused={playerState.isPaused}
-            readyTimestamp={readyTimestamp}
-            streamInfo={streamInfo}
-          />
-        )}
+        {showOverlayControls &&
+          !hasContentGate &&
+          playerState.isReady &&
+          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
+            <ControlsOverlay
+              isVisible={controlsVisible}
+              overlayStartTime={overlayStartTime}
+              onBackPress={onBackPress}
+              onPipPress={handlePipPress}
+              onPlayPausePress={handlePlayPause}
+              onRefresh={onRefresh}
+              onToggleControls={toggleControlsInternal}
+              paused={playerState.isPaused}
+              readyTimestamp={readyTimestamp}
+              streamInfo={streamInfo}
+            />
+          )}
 
         {hasContentGate && (
           // eslint-disable-next-line react/jsx-no-useless-fragment

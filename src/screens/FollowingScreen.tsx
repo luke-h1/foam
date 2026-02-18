@@ -103,7 +103,6 @@ export default function FollowingScreen() {
     );
   }
 
-  // Query enabled but not yet fetched (shouldn't happen after isLoading check, but guard for no data)
   if (!streams) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
