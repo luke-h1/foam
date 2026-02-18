@@ -30,6 +30,7 @@ SKILLS=(
     "bunx skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-native-skills"
     "bunx skills add https://github.com/callstackincubator/agent-skills --skill react-native-best-practices"
     "bunx skills add https://github.com/dammyjay93/interface-design --skill interface-design"
+    "bunx skills add  callstackincubator/agent-device"
 )
 
 for cmd in "${SKILLS[@]}"; do

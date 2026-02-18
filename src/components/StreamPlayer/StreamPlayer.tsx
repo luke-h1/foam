@@ -827,6 +827,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
                 isBuffering: false,
               }));
               onReady?.();
+              if (autoplay) {
+                play();
+              }
               break;
             case 'play':
               setPlayerState(prev => ({ ...prev, isPaused: false }));
@@ -896,7 +899,17 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           // ignore parse errors
         }
       },
-      [onEnded, onError, onOffline, onOnline, onPause, onPlay, onReady],
+      [
+        autoplay,
+        onEnded,
+        onError,
+        onOffline,
+        onOnline,
+        onPause,
+        onPlay,
+        onReady,
+        play,
+      ],
     );
 
     const webViewSource = useMemo(
