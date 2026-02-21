@@ -204,7 +204,7 @@ function ChatMessageComponent<
         key={`${badge.set}-${badge.id}-${badge.type}-${badge.url}-${index}`}
         onPress={() => handleBadgePress(badge)}
       >
-        <Image source={badge.url} style={styles.badge} transition={20} />
+        <Image source={badge.url} style={styles.badge} transition={0} />
       </Button>
     ));
   }, [badges, handleBadgePress]);

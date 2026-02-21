@@ -52,7 +52,7 @@ import { PaintData, BadgeData } from '@app/utils/color/seventv-ws-service';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Memo } from '@legendapp/state/react';
+import { useSelector } from '@legendapp/state/react';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -111,6 +111,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
   const messages$ = chatStore$.messages;
+  const messages = useSelector(messages$);
   const channelEmoteData = useChannelEmoteData(channelId);
   const userPaints = useUserPaints();
 
@@ -1310,32 +1311,29 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             </View>
           )}
 
-          <Memo>
-            {() => {
-              const msgs = castMessages(messages$.get());
-              return (
-                <FlashList
-                  data={msgs}
-                  ref={listRef}
-                  keyExtractor={keyExtractor}
-                  getItemType={getItemType}
-                  onScroll={handleScroll}
-                  renderItem={renderItem}
-                  contentContainerStyle={styles.listContent}
-                  scrollEventThrottle={16}
-                  maintainVisibleContentPosition={
-                    isAtBottom
-                      ? {
-                          autoscrollToTopThreshold: 10,
-                          autoscrollToBottomThreshold: 10,
-                          startRenderingFromBottom: true,
-                        }
-                      : undefined
+          <FlashList
+            data={castMessages(
+              (Array.isArray(messages) ? messages : []).filter(
+                (m): m is ChatMessageType<never> => m != null,
+              ),
+            )}
+            ref={listRef}
+            keyExtractor={keyExtractor}
+            getItemType={getItemType}
+            onScroll={handleScroll}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            scrollEventThrottle={16}
+            maintainVisibleContentPosition={
+              isAtBottom
+                ? {
+                    autoscrollToTopThreshold: 10,
+                    autoscrollToBottomThreshold: 10,
+                    startRenderingFromBottom: true,
                   }
-                />
-              );
-            }}
-          </Memo>
+                : undefined
+            }
+          />
 
           {!isAtBottom && !isScrollingToBottom && (
             <ResumeScroll

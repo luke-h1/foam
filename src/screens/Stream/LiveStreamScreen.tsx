@@ -44,7 +44,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   const [webViewLoaded, setWebViewLoaded] = useState(false);
   const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
-  const [chatReloadKey, setChatReloadKey] = useState(0);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastChatToggleTimeRef = useRef<number>(0);
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
@@ -58,7 +57,6 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
           nextState === 'active'
         ) {
           streamPlayerRef.current?.forceRefresh();
-          setChatReloadKey(k => k + 1);
         }
         appStateRef.current = nextState;
       },
@@ -259,7 +257,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             ]}
           >
             <Chat
-              key={chatReloadKey}
+              key={stream.user_id}
               channelId={stream.user_id}
               channelName={stream.user_login}
             />

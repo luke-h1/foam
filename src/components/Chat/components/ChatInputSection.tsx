@@ -10,7 +10,6 @@ import {
 import { truncate } from '@app/utils/string/truncate';
 import { memo, RefObject, useCallback, useRef } from 'react';
 import { View, TextInput } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 import { ChatComposer } from './ChatComposer/ChatComposer';
@@ -79,11 +78,7 @@ export const ChatInputSection = memo(
         style={[styles.wrapper, { paddingBottom: insets.bottom }]}
       >
         {replyTo && (
-          <Animated.View
-            entering={FadeIn.duration(150)}
-            exiting={FadeOut.duration(100)}
-            style={styles.replyPreview}
-          >
+          <View style={styles.replyPreview}>
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
               <Text style={styles.replyLabel}>
@@ -110,7 +105,7 @@ export const ChatInputSection = memo(
             >
               <Icon icon="x" size={18} />
             </Button>
-          </Animated.View>
+          </View>
         )}
 
         <View style={styles.inputRow}>

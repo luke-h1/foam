@@ -35,7 +35,7 @@ export function SubscriptionNotice({
             key={index}
             source={messagePart.url}
             style={styles.emote}
-            transition={20}
+            transition={0}
           />
         );
       default:

@@ -85,7 +85,7 @@ export const useChatScroll = ({
     isScrollingToBottomRef.current = true;
     setIsScrollingToBottom(true);
 
-    listRef.current?.scrollToEnd?.({ animated: true });
+    listRef.current?.scrollToEnd?.({ animated: false });
 
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     scrollTimeoutRef.current = setTimeout(() => {
@@ -95,7 +95,7 @@ export const useChatScroll = ({
       setUnreadCount(0);
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
-    }, 350);
+    }, 0);
   }, [listRef, getMessagesLength]);
 
   const incrementUnread = useCallback((count: number) => {

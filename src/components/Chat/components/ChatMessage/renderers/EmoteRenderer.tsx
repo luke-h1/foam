@@ -90,7 +90,7 @@ export const EmoteRenderer = memo(
           cachePolicy="memory-disk"
           decodeFormat="argb"
           useAppleWebpCodec
-          transition={50}
+          transition={0}
           style={{
             width,
             height,

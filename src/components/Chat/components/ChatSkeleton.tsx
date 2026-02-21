@@ -1,65 +1,7 @@
 import { SafeAreaViewFixed } from '@app/components/SafeAreaViewFixed/SafeAreaViewFixed';
-import { useEffect } from 'react';
-import { useWindowDimensions, View, ViewStyle } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  withSequence,
-  runOnJS,
-} from 'react-native-reanimated';
+import { useWindowDimensions, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { FlashList } from '../../FlashList/FlashList';
-
-const Shimmer = ({ style }: { style: ViewStyle }) => {
-  const translateX = useSharedValue(-100);
-
-  useEffect(() => {
-    const startAnimation = () => {
-      translateX.value = withRepeat(
-        withSequence(
-          withTiming(100, { duration: 2000 }),
-          withTiming(-100, { duration: 2000 }),
-        ),
-        -1,
-        false,
-      );
-    };
-
-    runOnJS(startAnimation)();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Make sure the style calculation runs on the UI thread
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: `${translateX.value}%` }],
-    };
-  });
-
-  return (
-    <View style={[style, shimmerStyles.container]}>
-      <Animated.View style={(shimmerStyles.shimmer, animatedStyle)} />
-    </View>
-  );
-};
-
-const shimmerStyles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-  },
-  shimmer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    transform: [{ skewX: '-15deg' }],
-  },
-});
 
 export function ChatSkeleton() {
   const { width, height } = useWindowDimensions();
@@ -76,10 +18,10 @@ export function ChatSkeleton() {
           data={new Array(20)}
           renderItem={({ index }) => (
             <View key={index} style={styles.skeletonMessageContainer}>
-              <Shimmer style={styles.skeletonAvatar} />
+              <View style={styles.skeletonAvatar} />
               <View style={styles.skeletonContent}>
-                <Shimmer style={styles.skeletonUsername} />
-                <Shimmer style={styles.skeletonMessage} />
+                <View style={styles.skeletonUsername} />
+                <View style={styles.skeletonMessage} />
               </View>
             </View>
           )}

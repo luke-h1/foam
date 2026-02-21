@@ -42,7 +42,7 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
         <Image
           source={content.url}
           style={styles.emoteImage}
-          transition={20}
+          transition={0}
           contentFit="contain"
         />
         <View style={styles.textContainer}>
