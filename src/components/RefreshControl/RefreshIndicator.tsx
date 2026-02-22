@@ -21,11 +21,13 @@ const ICON_NAME: IconSymbolName = 'arrow.down';
 interface RefreshIndicatorProps {
   scrollY: SharedValue<number>;
   isRefreshing: boolean;
+  contentInsetTop?: number;
 }
 
 export function RefreshIndicator({
   scrollY,
   isRefreshing,
+  contentInsetTop = 0,
 }: RefreshIndicatorProps) {
   const { theme } = useUnistyles();
   const refreshProgress = useSharedValue(0);
@@ -35,7 +37,8 @@ export function RefreshIndicator({
   }, [isRefreshing, refreshProgress]);
 
   const containerStyle = useAnimatedStyle(() => {
-    const pullAmount = Math.abs(Math.min(scrollY.value, 0));
+    const rawPull = Math.abs(Math.min(scrollY.value, 0));
+    const pullAmount = Math.max(0, rawPull - contentInsetTop);
     const rp = refreshProgress.value;
 
     const pullTranslateY = interpolate(
@@ -61,7 +64,8 @@ export function RefreshIndicator({
   });
 
   const arrowStyle = useAnimatedStyle(() => {
-    const pullAmount = Math.abs(Math.min(scrollY.value, 0));
+    const rawPull = Math.abs(Math.min(scrollY.value, 0));
+    const pullAmount = Math.max(0, rawPull - contentInsetTop);
     const rotation = interpolate(
       pullAmount,
       [0, REFRESH_THRESHOLD],

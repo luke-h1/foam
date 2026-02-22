@@ -8,10 +8,11 @@ import {
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   type AppStateStatus,
+  InteractionManager,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -21,15 +22,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {
-  SafeAreaView,
   useSafeAreaFrame,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native-unistyles';
 
-export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
+export const LiveStreamScreen = memo(function LiveStreamScreen({
   route: { params },
-}) => {
+}: StreamStackScreenProps<'LiveStream'>) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const safeFrame = useSafeAreaFrame();
   const insets = useSafeAreaInsets();
@@ -52,10 +52,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     const sub = AppState.addEventListener(
       'change',
       (nextState: AppStateStatus) => {
-        if (
-          appStateRef.current.match(/inactive|background/) &&
-          nextState === 'active'
-        ) {
+        if (appStateRef.current === 'background' && nextState === 'active') {
           streamPlayerRef.current?.forceRefresh();
         }
         appStateRef.current = nextState;
@@ -82,7 +79,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     setWebViewLoaded(false);
     setHasContentGate(false);
     return () => {
-      console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
+      if (__DEV__) {
+        console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
+      }
       setShouldRenderChat(false);
     };
   }, [params.id]);
@@ -99,7 +98,12 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
   useEffect(() => {
     if (!stream?.user_login || !stream?.user_id) return;
     if (webViewLoaded) {
-      if (!shouldRenderChat) setShouldRenderChat(true);
+      if (!shouldRenderChat) {
+        const task = InteractionManager.runAfterInteractions(() => {
+          setShouldRenderChat(true);
+        });
+        return () => task.cancel();
+      }
       return;
     }
     const timeout = setTimeout(() => {
@@ -212,15 +216,46 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
     height: videoHeight.value,
   }));
 
+  const contentContainerStyle = useMemo(
+    () => [
+      styles.contentContainer,
+      isLandscape && styles.row,
+      {
+        paddingTop: insets.top,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+        paddingBottom: insets.bottom,
+      },
+    ],
+    [isLandscape, insets.top, insets.left, insets.right, insets.bottom],
+  );
+
+  const streamInfo = useMemo(
+    () =>
+      stream?.user_login
+        ? {
+            userName: stream.user_name,
+            userLogin: stream.user_login,
+            viewerCount: stream.viewer_count,
+            startedAt: stream.started_at,
+            gameName: stream.game_name,
+          }
+        : undefined,
+    [
+      stream?.user_login,
+      stream?.user_name,
+      stream?.viewer_count,
+      stream?.started_at,
+      stream?.game_name,
+    ],
+  );
+
   if (isStreamPending) {
     return <Spinner />;
   }
 
   return (
-    <SafeAreaView
-      style={[styles.contentContainer, isLandscape && styles.row]}
-      edges={['top', 'left', 'right', 'bottom']}
-    >
+    <View style={contentContainerStyle}>
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
         {stream?.user_login && (
           <StreamPlayer
@@ -234,13 +269,7 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
             onContentGateChange={handleContentGateChange}
             onVideoAreaPress={isLandscape ? toggleChat : undefined}
             onWebViewLoaded={handleWebViewLoaded}
-            streamInfo={{
-              userName: stream.user_name,
-              userLogin: stream.user_login,
-              viewerCount: stream.viewer_count,
-              startedAt: stream.started_at,
-              gameName: stream.game_name,
-            }}
+            streamInfo={streamInfo}
           />
         )}
       </Animated.View>
@@ -264,9 +293,9 @@ export const LiveStreamScreen: FC<StreamStackScreenProps<'LiveStream'>> = ({
           </View>
         )}
       </Animated.View>
-    </SafeAreaView>
+    </View>
   );
-};
+});
 
 const styles = StyleSheet.create(() => ({
   container: {

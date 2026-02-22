@@ -744,11 +744,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
     useEffect(() => {
       const handleAppStateChange = (nextAppState: AppStateStatus) => {
-        if (
-          appStateRef.current.match(/inactive|background/) &&
-          nextAppState === 'active'
-        ) {
-          // Remount WebView so it loads our embed HTML again (reload() would reload twitch.tv if it navigated there)
+        if (appStateRef.current === 'background' && nextAppState === 'active') {
           setWebViewKey(k => k + 1);
         }
 

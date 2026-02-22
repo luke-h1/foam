@@ -125,7 +125,11 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
-      <RefreshIndicator scrollY={scrollY} isRefreshing={isRefreshing} />
+      <RefreshIndicator
+        scrollY={scrollY}
+        isRefreshing={isRefreshing}
+        contentInsetTop={insets.top}
+      />
       <AnimatedFlashList<TwitchStream>
         data={streamsArray}
         keyExtractor={item => item.id}

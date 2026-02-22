@@ -255,6 +255,7 @@ const config: ExpoConfig = {
     infoPlist: {
       NSSupportsLiveActivities: true,
       NSPhotoLibraryUsageDescription: 'Used for saving emotes/badges',
+      UIBackgroundModes: ['audio'],
     },
   },
   android: {
