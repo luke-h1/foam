@@ -228,6 +228,19 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     ),
   });
 
+  const prevMessageCountRef = useRef(0);
+  useEffect(() => {
+    const count = Array.isArray(messages) ? messages.length : 0;
+    if (
+      count > prevMessageCountRef.current &&
+      isAtBottomRef.current &&
+      listRef.current
+    ) {
+      listRef.current.scrollToEnd({ animated: false });
+    }
+    prevMessageCountRef.current = count;
+  }, [messages, isAtBottomRef, listRef]);
+
   const processMessageEmotes = useCallback(
     (
       text: string,
@@ -883,15 +896,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             scrollEventThrottle={16}
-            maintainVisibleContentPosition={
-              isAtBottom
-                ? {
-                    autoscrollToTopThreshold: 10,
-                    autoscrollToBottomThreshold: 10,
-                    startRenderingFromBottom: true,
-                  }
-                : undefined
-            }
           />
 
           {!isAtBottom && !isScrollingToBottom && (

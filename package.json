@@ -193,7 +193,6 @@
     "rxjs": "^7.8.2",
     "sonner-native": "^0.21.0",
     "twemoji": "^14.0.2",
-    "zeego": "^3.0.6",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

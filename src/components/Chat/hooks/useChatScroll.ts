@@ -5,7 +5,7 @@ import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
 const BOTTOM_THRESHOLD = 200;
-const NOT_AT_BOTTOM_THRESHOLD = 250;
+const NOT_AT_BOTTOM_THRESHOLD = 80;
 const SCROLL_THROTTLE_MS = 150;
 
 interface UseChatScrollOptions {
@@ -66,6 +66,15 @@ export const useChatScroll = ({
       if (lastAtBottomRef.current === resolved) return;
 
       lastAtBottomRef.current = resolved;
+
+      if (resolved === false) {
+        if (scrollThrottleRef.current) {
+          clearTimeout(scrollThrottleRef.current);
+          scrollThrottleRef.current = null;
+        }
+        setIsAtBottom(false);
+        return;
+      }
 
       if (scrollThrottleRef.current) return;
 

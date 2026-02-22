@@ -10,7 +10,7 @@ import {
 import { memo, useEffect, useState, useMemo } from 'react';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { EmoteContextMenu } from './EmoteContextMenu';
+import { EmoteActionSheet } from './EmoteActionSheet';
 
 type PartVariant = ParsedPart<'emote'>;
 
@@ -71,16 +71,16 @@ export const EmoteRenderer = memo(
     // Add error handling for missing URLs
     if (!part.url) {
       return (
-        <EmoteContextMenu part={part} onPress={handleEmotePress}>
+        <EmoteActionSheet part={part} onPress={handleEmotePress}>
           <Button>
             <Text style={styles.name(width, height)}>{part.name || '?'}</Text>
           </Button>
-        </EmoteContextMenu>
+        </EmoteActionSheet>
       );
     }
 
     return (
-      <EmoteContextMenu part={part} onPress={handleEmotePress}>
+      <EmoteActionSheet part={part} onPress={handleEmotePress}>
         <Button>
           <Image
             source={{
@@ -98,7 +98,7 @@ export const EmoteRenderer = memo(
             }}
           />
         </Button>
-      </EmoteContextMenu>
+      </EmoteActionSheet>
     );
   },
 );

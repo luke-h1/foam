@@ -221,7 +221,7 @@ jobs:
     name: 🔨 Native Build
     needs: [prepare, detect-changes]
     if: needs.detect-changes.outputs.deploy-type == 'build'
-    runs-on: foam
+    runs-on: macos-latest
     concurrency: eas-build-${{ inputs.platform || 'all' }}
     steps:
       - name: 🏗 Checkout
