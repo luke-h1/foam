@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import Animated, {
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -33,10 +34,15 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const safeFrame = useSafeAreaFrame();
   const insets = useSafeAreaInsets();
-  // Use safe area dimensions so video + chat fit inside insets (avoids chat clipping)
-  const screenWidth = safeFrame.width;
-  const screenHeight = safeFrame.height;
   const isLandscape = windowWidth > windowHeight;
+  const screenWidth = Math.max(
+    1,
+    safeFrame.width > 0 ? safeFrame.width : windowWidth,
+  );
+  const screenHeight = Math.max(
+    1,
+    safeFrame.height > 0 ? safeFrame.height : windowHeight,
+  );
   const prevOrientationRef = useRef(isLandscape);
 
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
@@ -118,36 +124,38 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       // Video 65% / chat 35% when chat visible (chat a bit bigger so input isn’t squished)
       const videoFraction = isChatVisible ? 0.65 : 1;
       return {
-        width: screenWidth * videoFraction,
-        height: screenHeight,
+        width: Math.max(1, screenWidth * videoFraction),
+        height: Math.max(1, screenHeight),
       };
     }
     if (hasContentGate) {
       return {
-        width: screenWidth,
-        height: screenHeight * 0.75,
+        width: Math.max(1, screenWidth),
+        height: Math.max(1, screenHeight * 0.75),
       };
     }
     return {
-      width: screenWidth,
-      height: screenWidth * (9 / 16),
+      width: Math.max(1, screenWidth),
+      height: Math.max(1, screenWidth * (9 / 16)),
     };
   }, [isLandscape, isChatVisible, hasContentGate, screenWidth, screenHeight]);
 
   const getChatDimensions = useCallback(() => {
+    let width: number;
+    let height: number;
     if (isLandscape) {
-      // Chat 35% when visible (video 65%)
-      return {
-        width: screenWidth * 0.35,
-        height: screenHeight,
-      };
+      width = screenWidth * 0.35;
+      height = screenHeight;
+    } else {
+      const videoHeight = hasContentGate
+        ? screenHeight * 0.75
+        : screenWidth * (9 / 16);
+      width = screenWidth;
+      height = screenHeight - videoHeight;
     }
-    const videoHeight = hasContentGate
-      ? screenHeight * 0.75
-      : screenWidth * (9 / 16);
     return {
-      width: screenWidth,
-      height: screenHeight - videoHeight,
+      width: Math.max(1, width),
+      height: Math.max(1, height),
     };
   }, [isLandscape, hasContentGate, screenWidth, screenHeight]);
 
@@ -165,34 +173,35 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     transform: [{ translateX: chatTranslateX.value }],
   }));
 
+  const layoutAnimationConfig = useMemo(
+    () => ({
+      duration: 320,
+      easing: Easing.inOut(Easing.ease),
+    }),
+    [],
+  );
+
   useEffect(() => {
+    prevOrientationRef.current = isLandscape;
+
     const videoDims = getVideoDimensions();
     const chatDims = getChatDimensions();
-    const orientationChanged = prevOrientationRef.current !== isLandscape;
-    prevOrientationRef.current = isLandscape;
-    // No animation on orientation change to avoid lag; animate only for chat toggle
-    const layoutDuration = orientationChanged ? 0 : 300;
 
-    videoWidth.value = withTiming(videoDims.width, {
-      duration: layoutDuration,
-    });
-    videoHeight.value = withTiming(videoDims.height, {
-      duration: layoutDuration,
-    });
-    chatWidth.value = withTiming(chatDims.width, { duration: layoutDuration });
-    chatHeight.value = withTiming(chatDims.height, {
-      duration: layoutDuration,
-    });
+    videoWidth.value = withTiming(videoDims.width, layoutAnimationConfig);
+    videoHeight.value = withTiming(videoDims.height, layoutAnimationConfig);
+    chatWidth.value = withTiming(chatDims.width, layoutAnimationConfig);
+    chatHeight.value = withTiming(chatDims.height, layoutAnimationConfig);
 
     if (isChatVisible) {
-      chatOpacity.value = withTiming(1, { duration: layoutDuration });
-      chatTranslateX.value = withTiming(0, { duration: layoutDuration });
+      chatOpacity.value = withTiming(1, layoutAnimationConfig);
+      chatTranslateX.value = withTiming(0, layoutAnimationConfig);
     } else {
-      chatOpacity.value = withTiming(0, { duration: layoutDuration });
+      chatOpacity.value = withTiming(0, layoutAnimationConfig);
       if (isLandscape) {
-        chatTranslateX.value = withTiming(chatDims.width, {
-          duration: layoutDuration,
-        });
+        chatTranslateX.value = withTiming(
+          chatDims.width,
+          layoutAnimationConfig,
+        );
       }
     }
   }, [
@@ -203,6 +212,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     screenHeight,
     getVideoDimensions,
     getChatDimensions,
+    layoutAnimationConfig,
     videoWidth,
     videoHeight,
     chatWidth,
