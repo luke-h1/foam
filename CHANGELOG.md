@@ -1,5 +1,21 @@
 # Changelog
 
+## ota-8b3783c1-ee13-4bf3-8d2d-b68cf79a0655
+
+### ♻️ Refactor
+
+- **app:** Simplify chat LOC
+
+### 🐛 Bug Fixes
+
+- **app:** Chat flickering
+- **app:** Fix unit tests
+- **app:** Unit test fixes
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Fix build
+- **app:** Fix build
 ## ota-1ffa7bd3-e434-4400-9364-90da567dcf68
 
 ### 🐛 Bug Fixes
