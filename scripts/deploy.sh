@@ -1,7 +1,5 @@
 #!/bin/bash
-
-
-# android
+set -e
 
 bun run eas build --platform android --profile production --local --non-interactive --output=./app-prod.apk && bun run eas submit -p android --path ./app-prod.apk
 

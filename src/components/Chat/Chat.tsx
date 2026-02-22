@@ -47,12 +47,13 @@ import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
-import { ChatMessage } from './components/ChatMessage/ChatMessage';
 import {
   RichChatMessage,
   BadgePressData,
   MessageActionData,
+  EmotePressData,
 } from './components/ChatMessage/RichChatMessage';
+import { EmotePreviewSheet } from './components/EmotePreviewSheet/EmotePreviewSheet';
 import {
   EmoteSheet,
   EmotePickerItem,
@@ -106,6 +107,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const chatInputRef = useRef<TextInput>(null);
 
   const badgePreviewSheetRef = useRef<BottomSheetModal>(null);
+  const emotePreviewSheetRef = useRef<BottomSheetModal>(null);
   const actionSheetRef = useRef<BottomSheetModal>(null);
 
   const [messageInput, setMessageInput] = useState('');
@@ -117,6 +119,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   );
   const [selectedMessage, setSelectedMessage] =
     useState<MessageActionData<'usernotice'> | null>(null);
+  const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
+    null,
+  );
 
   const mentionColorCache = useRef<Map<string, string>>(new Map());
   const lightenedColorCache = useRef<Map<string, string>>(new Map());
@@ -649,6 +654,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [],
   );
 
+  const handleEmotePress = useCallback((emote: EmotePressData) => {
+    setSelectedEmote(emote);
+    globalThis.requestAnimationFrame(() => {
+      emotePreviewSheetRef.current?.present();
+    });
+  }, []);
+
   const handleActionSheetReply = useCallback(() => {
     if (!selectedMessage) return;
     handleReply(selectedMessage.messageData as ChatMessageType<'usernotice'>);
@@ -797,6 +809,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   handleBadgeLongPressRef.current = handleBadgeLongPress;
   const handleMessageLongPressRef = useRef(handleMessageLongPress);
   handleMessageLongPressRef.current = handleMessageLongPress;
+  const handleEmotePressRef = useRef(handleEmotePress);
+  handleEmotePressRef.current = handleEmotePress;
   const getMentionColorRef = useRef(getMentionColor);
   getMentionColorRef.current = getMentionColor;
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
@@ -826,6 +840,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             replyBody={msg.replyBody}
             onBadgePress={handleBadgeLongPressRef.current}
             onMessageLongPress={handleMessageLongPressRef.current}
+            onEmotePress={handleEmotePressRef.current}
             getMentionColor={getMentionColorRef.current}
             parseTextForEmotes={parseTextForEmotesRef.current}
             userPaints={userPaintsRef.current}
@@ -839,19 +854,34 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         );
       }
 
-      const senderColor =
-        msg.cachedSenderColor ??
-        getLightenedColorRef.current(msg.userstate.color);
-
       return (
-        <ChatMessage
-          messageId={msg.message_id}
-          sender={msg.sender}
-          senderColor={senderColor}
+        <RichChatMessage
+          id={msg.id}
+          channel={msg.channel}
           message={msg.message}
+          userstate={msg.userstate}
           badges={msg.badges}
-          isReply={Boolean(msg.parentDisplayName)}
+          message_id={msg.message_id}
+          message_nonce={msg.message_nonce}
+          sender={msg.sender}
+          style={styles.messageContainer}
           parentDisplayName={msg.parentDisplayName}
+          parentColor={msg.parentColor}
+          onReply={handleReplyRef.current}
+          replyDisplayName={msg.replyDisplayName}
+          replyBody={msg.replyBody}
+          onBadgePress={handleBadgeLongPressRef.current}
+          onMessageLongPress={handleMessageLongPressRef.current}
+          onEmotePress={handleEmotePressRef.current}
+          getMentionColor={getMentionColorRef.current}
+          parseTextForEmotes={parseTextForEmotesRef.current}
+          userPaints={userPaintsRef.current}
+          // @ts-expect-error - notice_tags union type not narrowing correctly
+          notice_tags={
+            'notice_tags' in msg && msg.notice_tags
+              ? msg.notice_tags
+              : undefined
+          }
         />
       );
     },
@@ -960,6 +990,13 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           <BadgePreviewSheet
             ref={badgePreviewSheetRef}
             selectedBadge={selectedBadge}
+          />
+        )}
+
+        {selectedEmote && (
+          <EmotePreviewSheet
+            ref={emotePreviewSheetRef}
+            selectedEmote={selectedEmote}
           />
         )}
 
