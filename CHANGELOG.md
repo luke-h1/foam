@@ -1,5 +1,10 @@
 # Changelog
 
+## ota-9dc97786-4ff2-40e0-83b9-19be83418ed1
+
+### 🐛 Bug Fixes
+
+- **app:** Fix crash on rotate
 ## ota-8b3783c1-ee13-4bf3-8d2d-b68cf79a0655
 
 ### ♻️ Refactor
