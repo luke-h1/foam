@@ -53,13 +53,15 @@ export const useChatScroll = ({
         return;
       }
 
+      // When we were previously at bottom (or unknown/null), use the 200px threshold.
+      // When we were explicitly not at bottom, use hysteresis: require within 80px to be at bottom again.
       const resolved =
         // eslint-disable-next-line no-nested-ternary
-        lastAtBottomRef.current === true
-          ? atBottom
-          : notAtBottom
+        lastAtBottomRef.current === false
+          ? notAtBottom
             ? false
-            : atBottom;
+            : atBottom
+          : atBottom;
 
       isAtBottomRef.current = resolved;
 
