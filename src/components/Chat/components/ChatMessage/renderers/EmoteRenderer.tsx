@@ -7,8 +7,10 @@ import {
   getCompressedEmoteUrl,
   compressEmoteUrl,
 } from '@app/utils/image/emoteCompression';
-import { memo, useEffect, useState, useCallback, useMemo } from 'react';
+import { memo, useEffect, useState, useMemo } from 'react';
 import { StyleSheet } from 'react-native-unistyles';
+
+import { EmoteContextMenu } from './EmoteContextMenu';
 
 type PartVariant = ParsedPart<'emote'>;
 
@@ -66,37 +68,37 @@ export const EmoteRenderer = memo(
     // Use compressed URL if available, otherwise use original URL
     const imageUrl = compressedUrl || part.url || '';
 
-    const onLongPress = useCallback(() => {
-      handleEmotePress(part);
-    }, [handleEmotePress, part]);
-
     // Add error handling for missing URLs
     if (!part.url) {
       return (
-        <Button onLongPress={onLongPress}>
-          <Text style={styles.name(width, height)}>{part.name || '?'}</Text>
-        </Button>
+        <EmoteContextMenu part={part} onPress={handleEmotePress}>
+          <Button>
+            <Text style={styles.name(width, height)}>{part.name || '?'}</Text>
+          </Button>
+        </EmoteContextMenu>
       );
     }
 
     return (
-      <Button onLongPress={onLongPress}>
-        <Image
-          source={{
-            uri: imageUrl,
-          }}
-          containerStyle={styles.emoteContainer(width, height)}
-          contentFit="contain"
-          cachePolicy="memory-disk"
-          decodeFormat="argb"
-          useAppleWebpCodec
-          transition={0}
-          style={{
-            width,
-            height,
-          }}
-        />
-      </Button>
+      <EmoteContextMenu part={part} onPress={handleEmotePress}>
+        <Button>
+          <Image
+            source={{
+              uri: imageUrl,
+            }}
+            containerStyle={styles.emoteContainer(width, height)}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+            decodeFormat="argb"
+            useAppleWebpCodec
+            transition={0}
+            style={{
+              width,
+              height,
+            }}
+          />
+        </Button>
+      </EmoteContextMenu>
     );
   },
 );

@@ -7,12 +7,21 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { render, fireEvent } from '@testing-library/react-native';
 import { RichChatMessage } from '../RichChatMessage';
 
-// Only mock date for deterministic timestamps in tests
 jest.mock('@app/utils/date-time/date', () => ({
   formatDate: jest.fn(() => '12:00'),
 }));
 
 jest.mock('@app/services/twitch-service');
+
+jest.mock('../renderers/EmoteRenderer', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory must not reference outer scope
+  const { View } = require('react-native');
+  return {
+    EmoteRenderer: ({ part }: { part: { name?: string } }) => (
+      <View testID="emote-renderer">{part?.name ?? 'emote'}</View>
+    ),
+  };
+});
 
 const createMockMessage = (
   message: ParsedPart[],
@@ -45,8 +54,8 @@ const createMockMessage = (
 
 describe('RichChatMessage', () => {
   const mockOnReply = jest.fn();
-  const mockOnEmotePress = jest.fn();
   const mockOnMessageLongPress = jest.fn();
+  const mockOnEmotePress = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();

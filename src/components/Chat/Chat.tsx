@@ -50,11 +50,9 @@ import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
 import { ChatMessage } from './components/ChatMessage/ChatMessage';
 import {
   RichChatMessage,
-  EmotePressData,
   BadgePressData,
   MessageActionData,
 } from './components/ChatMessage/RichChatMessage';
-import { EmotePreviewSheet } from './components/EmotePreviewSheet/EmotePreviewSheet';
 import {
   EmoteSheet,
   EmotePickerItem,
@@ -107,7 +105,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const debugModalRef = useRef<BottomSheetModal>(null);
   const chatInputRef = useRef<TextInput>(null);
 
-  const emotePreviewSheetRef = useRef<BottomSheetModal>(null);
   const badgePreviewSheetRef = useRef<BottomSheetModal>(null);
   const actionSheetRef = useRef<BottomSheetModal>(null);
 
@@ -115,9 +112,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
   const [, setIsInputFocused] = useState(false);
 
-  const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
-    null,
-  );
   const [selectedBadge, setSelectedBadge] = useState<BadgePressData | null>(
     null,
   );
@@ -627,13 +621,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     void settingsSheetRef.current?.present();
   }, []);
 
-  const handleEmoteLongPress = useCallback((emote: EmotePressData) => {
-    setSelectedEmote(emote);
-    globalThis.requestAnimationFrame(() => {
-      emotePreviewSheetRef.current?.present();
-    });
-  }, []);
-
   const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
     setSelectedBadge(badge);
     globalThis.requestAnimationFrame(() => {
@@ -793,8 +780,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   getLightenedColorRef.current = getLightenedColor;
   const handleReplyRef = useRef(handleReply);
   handleReplyRef.current = handleReply;
-  const handleEmoteLongPressRef = useRef(handleEmoteLongPress);
-  handleEmoteLongPressRef.current = handleEmoteLongPress;
   const handleBadgeLongPressRef = useRef(handleBadgeLongPress);
   handleBadgeLongPressRef.current = handleBadgeLongPress;
   const handleMessageLongPressRef = useRef(handleMessageLongPress);
@@ -826,7 +811,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onReply={handleReplyRef.current}
             replyDisplayName={msg.replyDisplayName}
             replyBody={msg.replyBody}
-            onEmotePress={handleEmoteLongPressRef.current}
             onBadgePress={handleBadgeLongPressRef.current}
             onMessageLongPress={handleMessageLongPressRef.current}
             getMentionColor={getMentionColorRef.current}
@@ -967,13 +951,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           onClearChatCache={handleClearChatCache}
           onClearImageCache={() => void handleClearImageCache()}
         />
-
-        {selectedEmote && (
-          <EmotePreviewSheet
-            ref={emotePreviewSheetRef}
-            selectedEmote={selectedEmote}
-          />
-        )}
 
         {selectedBadge && (
           <BadgePreviewSheet

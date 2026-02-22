@@ -283,7 +283,7 @@ describe('useChatScroll', () => {
       });
 
       expect(mocks.scrollToEnd).toHaveBeenCalledWith({
-        animated: true,
+        animated: false,
       });
     });
 

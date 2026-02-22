@@ -58,36 +58,34 @@ function ChatMessageComponent<
   parentColor,
   notice_tags,
   onReply,
-  onEmotePress,
   onBadgePress,
   onMessageLongPress,
+  onEmotePress,
   getMentionColor,
   parseTextForEmotes,
   userPaints,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply: (args: OnReply<TNoticeType>) => void;
-  onEmotePress?: (data: EmotePressData) => void;
   onBadgePress?: (data: BadgePressData) => void;
   onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
+  onEmotePress?: (data: EmotePressData) => void;
   getMentionColor?: (username: string) => string;
   parseTextForEmotes?: (text: string) => ParsedPart[];
   userPaints?: Record<string, UserPaint>;
 }) {
+  const handleEmotePress = useCallback(
+    (part: EmotePressData) => {
+      onEmotePress?.(part);
+    },
+    [onEmotePress],
+  );
+
   const isSubscriptionNotice = message.some(
     part =>
       part.type === 'sub' ||
       part.type === 'resub' ||
       part.type === 'anongiftpaidupgrade' ||
       part.type === 'anongift',
-  );
-
-  const handleEmotePress = useCallback(
-    (part: ParsedPart) => {
-      if (part.type === 'emote') {
-        onEmotePress?.(part);
-      }
-    },
-    [onEmotePress],
   );
 
   const handleBadgePress = useCallback(
@@ -188,13 +186,7 @@ function ChatMessageComponent<
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      userstate.username,
-      userstate.color,
-      handleEmotePress,
-      message_id,
-      notice_tags,
-    ],
+    [userstate.username, userstate.color, message_id, notice_tags],
   );
 
   const renderBadges = useCallback(() => {
@@ -408,9 +400,9 @@ export const RichChatMessage = MemoizedRichChatMessage as <
 >(
   props: ChatMessageType<TNoticeType, TVariant> & {
     onReply: (args: OnReply<TNoticeType>) => void;
-    onEmotePress?: (data: EmotePressData) => void;
     onBadgePress?: (data: BadgePressData) => void;
     onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
+    onEmotePress?: (data: EmotePressData) => void;
     getMentionColor?: (username: string) => string;
     parseTextForEmotes?: (text: string) => ParsedPart[];
     userPaints?: Record<string, UserPaint>;
