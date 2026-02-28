@@ -1,11 +1,10 @@
 import {
   abortCurrentLoad,
   clearChannelResources,
-  clearMessages,
-  clearPaints,
   clearPersonalEmotesCache,
-  clearTtvUsers,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/channelLoad';
+import { clearPaints } from '@app/store/chatStore/cosmetics';
+import { clearMessages, clearTtvUsers } from '@app/store/chatStore/messages';
 import { MutableRefObject, useEffect, useRef } from 'react';
 
 type PartChannel = (channelName: string) => void;

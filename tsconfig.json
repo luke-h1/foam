@@ -26,6 +26,6 @@
       "@e2e/*": ["./e2e/*"]
     }
   },
-  "include": ["assets", "**/*.ts", "**/*.tsx", "app.config.ts"],
+  "include": ["assets", "**/*.ts", "**/*.tsx", "**/*.js", "app.config.ts"],
   "exclude": ["node_modules", "node_modules/expo-file-system/**/*"]
 }

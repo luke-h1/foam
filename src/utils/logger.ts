@@ -1,8 +1,56 @@
+import { sentryService } from '@app/services/sentry-service';
 import {
   logger as rnlogger,
   defLvlType,
   consoleTransport,
 } from 'react-native-logs';
+import type { transportFunctionType } from 'react-native-logs';
+
+type TransportProps = Parameters<
+  transportFunctionType<Record<string, unknown>>
+>[0];
+
+const createSentryTransport =
+  (): transportFunctionType<Record<string, unknown>> =>
+  (props: TransportProps) => {
+    if (!props?.level) {
+      return;
+    }
+
+    const { msg, rawMsg, level, extension } = props;
+    const category = extension ?? 'app';
+    const rawArgs = Array.isArray(rawMsg) ? rawMsg : [rawMsg];
+    const errorFromArgs = rawArgs.find(
+      (arg): arg is Error => arg instanceof Error,
+    );
+
+    if (level.text === 'error') {
+      sentryService.addBreadcrumb({
+        category,
+        message: msg,
+        level: 'error',
+      });
+      if (errorFromArgs) {
+        sentryService.captureException(errorFromArgs, {
+          tags: { category },
+          extra: { logMessage: msg },
+        });
+      } else {
+        sentryService.captureMessage(msg, {
+          level: 'error',
+          tags: { category },
+        });
+      }
+    } else if (level.text === 'warn') {
+      sentryService.addBreadcrumb({
+        category,
+        message: msg,
+        level: 'warning',
+      });
+    }
+  };
+
+const sentryTransport = createSentryTransport();
 
 const loggingConfig = {
   main: {
@@ -95,7 +143,7 @@ const loggingConfig = {
 >;
 
 const baseLogger = rnlogger.createLogger({
-  transport: consoleTransport,
+  transport: [consoleTransport, sentryTransport],
   transportOptions: {
     colors: {
       debug: 'cyanBright',

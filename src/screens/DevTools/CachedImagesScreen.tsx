@@ -4,12 +4,12 @@ import { Image } from '@app/components/Image/Image';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/Text/Text';
 import {
-  chatStore$,
-  clearEmoteImageCache,
   clearPaints,
   clearSevenTvBadges,
-  usePaints,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/cosmetics';
+import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
+import { usePaints } from '@app/store/chatStore/hooks';
+import { chatStore$ } from '@app/store/chatStore/state';
 import {
   CachedImageInfo,
   getCacheDirectoryPath,

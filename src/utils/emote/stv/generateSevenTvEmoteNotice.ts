@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ChatMessageType } from '@app/store/chatStore';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { generateNonce } from '@app/utils/string/generateNonce';

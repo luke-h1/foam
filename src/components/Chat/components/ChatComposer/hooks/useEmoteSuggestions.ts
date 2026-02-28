@@ -1,4 +1,4 @@
-import { useCurrentEmoteData, useEmojis } from '@app/store/chatStore';
+import { useCurrentEmoteData, useEmojis } from '@app/store/chatStore/hooks';
 import type { SanitisedEmote } from '@app/types/emote';
 import { useMemo } from 'react';
 

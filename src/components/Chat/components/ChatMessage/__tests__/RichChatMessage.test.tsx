@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable camelcase */
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import { ChatMessageType } from '@app/store/chatStore';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { render, fireEvent } from '@testing-library/react-native';

@@ -1,4 +1,5 @@
-import { addMessages, ChatMessageType } from '@app/store/chatStore';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
+import { addMessages } from '@app/store/chatStore/messages';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { MutableRefObject, useCallback, useRef } from 'react';
 

@@ -19,7 +19,7 @@ import {
   setUserPaint,
   updateBadge,
   updatePaint,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/cosmetics';
 import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
 import { useCallback } from 'react';

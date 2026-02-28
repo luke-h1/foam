@@ -1,6 +1,6 @@
 import { Text } from '@app/components/Text/Text';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType } from '@app/store/chatStore';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { memo, ReactNode, useMemo } from 'react';

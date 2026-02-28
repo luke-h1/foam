@@ -1,4 +1,5 @@
-import { getCurrentEmoteData, updateMessage } from '@app/store/chatStore';
+import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
+import { updateMessage } from '@app/store/chatStore/messages';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';

@@ -4,16 +4,15 @@ import {
   loadChannelResources,
   createLoadController,
   abortCurrentLoad,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/channelLoad';
 import { DefaultWrapper } from '@app/test/render';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useChatEmoteLoader } from '../useChatEmoteLoader';
 
-// Mock the chatStore functions
-jest.mock('@app/store/chatStore', () => {
-  const originalModule = jest.requireActual('@app/store/chatStore');
+jest.mock('@app/store/chatStore/channelLoad', () => {
+  const actual = jest.requireActual('@app/store/chatStore/channelLoad');
   return {
-    ...originalModule,
+    ...actual,
     loadChannelResources: jest.fn(),
     createLoadController: jest.fn(),
     abortCurrentLoad: jest.fn(),

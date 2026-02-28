@@ -5,7 +5,7 @@ import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures
 import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType } from '@app/store/chatStore';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { SubscriptionTags } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';

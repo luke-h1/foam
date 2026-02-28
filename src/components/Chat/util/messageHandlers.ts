@@ -1,4 +1,5 @@
-import { ChatMessageType, getCurrentEmoteData } from '@app/store/chatStore';
+import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
 import {
   UserNoticeTags,
   UserNoticeTagsByVariant,

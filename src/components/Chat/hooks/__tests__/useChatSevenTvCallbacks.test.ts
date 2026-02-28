@@ -9,11 +9,11 @@ import {
   removeUserPaint,
   setUserBadge,
   setUserPaint,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/cosmetics';
 import { renderHook, act } from '@testing-library/react-native';
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 
-jest.mock('@app/store/chatStore', () => ({
+jest.mock('@app/store/chatStore/cosmetics', () => ({
   addBadge: jest.fn(),
   addPaint: jest.fn(),
   getBadge: jest.fn(),
