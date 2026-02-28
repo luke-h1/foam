@@ -1,5 +1,5 @@
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
-import { chatStore$ } from '@app/store/chatStore';
+import { chatStore$ } from '@app/store/chatStore/state';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { PaintData } from '@app/utils/color/seventv-ws-service';
 import { useSelector } from '@legendapp/state/react';

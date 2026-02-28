@@ -1,6 +1,9 @@
 /* eslint-disable camelcase */
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { ChatMessageType, UserPaint } from '@app/store/chatStore';
+import type {
+  ChatMessageType,
+  UserPaint,
+} from '@app/store/chatStore/constants';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import {
   UserNoticeVariantMap,

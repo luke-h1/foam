@@ -13,7 +13,7 @@ export function useAppState({
   nextAppState,
 }: UseAppStateReturn) {
   const appState = useRef<AppStateStatus>(AppState.currentState);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [_, setAppStateVisible] = useState<AppStateStatus>(appState.current);
 
   // eslint-disable-next-line no-underscore-dangle

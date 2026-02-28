@@ -5,7 +5,7 @@ import {
   abortCurrentLoad,
   getSevenTvEmoteSetId,
   getCurrentEmoteData,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/channelLoad';
 import {
   preloadChannelEmotes,
   preloadGlobalEmotes,

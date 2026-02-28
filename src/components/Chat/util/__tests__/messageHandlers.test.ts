@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { getCurrentEmoteData } from '@app/store/chatStore';
+import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { SanitisedEmote } from '@app/types/emote';
 import {
@@ -11,7 +11,7 @@ import {
   hasEmoteData,
 } from '../messageHandlers';
 
-jest.mock('@app/store/chatStore', () => ({
+jest.mock('@app/store/chatStore/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
 }));
 

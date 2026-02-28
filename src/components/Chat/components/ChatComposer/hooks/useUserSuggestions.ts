@@ -1,4 +1,5 @@
-import { ChatUser, useTtvUsers } from '@app/store/chatStore';
+import type { ChatUser } from '@app/store/chatStore/constants';
+import { useTtvUsers } from '@app/store/chatStore/hooks';
 import { useMemo } from 'react';
 
 interface UseUserSuggestionsProps {

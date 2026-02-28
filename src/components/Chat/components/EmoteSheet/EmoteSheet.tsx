@@ -2,7 +2,8 @@ import { BrandIcon, BrandIconName } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
-import { useCurrentEmoteData, getCachedEmoteUri } from '@app/store/chatStore';
+import { getCachedEmoteUri } from '@app/store/chatStore/emoteImages';
+import { useCurrentEmoteData } from '@app/store/chatStore/hooks';
 import type { SanitisedEmote } from '@app/types/emote';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import {

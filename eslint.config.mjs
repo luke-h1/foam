@@ -159,6 +159,7 @@ export default [
         'error',
         {
           argsIgnorePattern: '^_$',
+          varsIgnorePattern: '^_$',
         },
       ],
 
@@ -280,6 +281,17 @@ export default [
     files: ['**/*.stories.tsx'],
     rules: {
       'react-native/no-inline-styles': 'off',
+    },
+  },
+  {
+    files: ['src/plugins/**/*.js'],
+    rules: {
+      'import/no-extraneous-dependencies': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
     },
   },
 ];

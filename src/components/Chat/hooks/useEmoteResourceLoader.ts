@@ -2,7 +2,7 @@ import { useAuthContext } from '@app/context/AuthContext';
 import {
   loadChannelResources,
   getSevenTvEmoteSetId,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/channelLoad';
 import { logger } from '@app/utils/logger';
 import { RefObject, useCallback, useEffect, useRef } from 'react';
 

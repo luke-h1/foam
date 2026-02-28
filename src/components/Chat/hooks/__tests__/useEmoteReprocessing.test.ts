@@ -1,10 +1,13 @@
-import { getCurrentEmoteData, updateMessage } from '@app/store/chatStore';
+import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
+import { updateMessage } from '@app/store/chatStore/messages';
 import { renderHook } from '@testing-library/react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
 
-jest.mock('@app/store/chatStore', () => ({
+jest.mock('@app/store/chatStore/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
+}));
+jest.mock('@app/store/chatStore/messages', () => ({
   updateMessage: jest.fn(),
 }));
 

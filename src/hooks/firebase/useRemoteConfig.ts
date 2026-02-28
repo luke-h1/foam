@@ -1,5 +1,4 @@
 import '@react-native-firebase/installations';
-import { sentryService } from '@app/services/sentry-service';
 import { logger } from '@app/utils/logger';
 import { getApp } from '@react-native-firebase/app';
 import {
@@ -94,12 +93,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
 }
 
 remoteConfig.setDefaults(defaultRemoteConfig).catch(e => {
-  sentryService.addBreadcrumb({
-    message: 'Failed to set default remote config values',
-    category: 'firebase.remote-config.default-set',
-    level: 'error',
-  });
-  sentryService.captureException(e);
+  logger.remoteConfig.error('Failed to set default remote config values', e);
 });
 
 export type UseRemoteConfigResult = {
@@ -149,11 +143,6 @@ export function useRemoteConfig(): UseRemoteConfigResult {
       return activated;
     } catch (error) {
       logger.remoteConfig.error('fetchAndActivate failed', error);
-      sentryService.addBreadcrumb({
-        message: 'Failed to update remote config values',
-        category: 'firebase.remote-config.update-values',
-      });
-      sentryService.captureException(error);
       return false;
     } finally {
       setIsRefetching(false);

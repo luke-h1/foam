@@ -6,22 +6,42 @@ import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { batch } from '@legendapp/state';
 import {
-  chatStore$,
   createLoadController,
   abortCurrentLoad,
   isLoadAborted,
   loadChannelResources,
-  cacheEmoteImages,
-  clearMessages,
-  addMessage,
-  addMessages,
   clearChannelResources,
   getSevenTvEmoteSetId,
-  ChatMessageType,
-} from '../chatStore';
+} from '../chatStore/channelLoad';
+import type { ChatMessageType } from '../chatStore/constants';
+import { cacheEmoteImages } from '../chatStore/emoteImages';
+import { addMessage, addMessages, clearMessages } from '../chatStore/messages';
+import { chatStore$ } from '../chatStore/state';
 
-// Mock all services
+/**
+ * Reset chatStore$ to initial state in one batch (Legend State best practice:
+ * use batch() for multiple .set() calls to avoid intermediate updates).
+ * Use peek() in assertions to read without creating tracking context.
+ */
+function resetChatStoreForTests(): void {
+  batch(() => {
+    chatStore$.persisted.channelCaches.set({});
+    chatStore$.persisted.lastGlobalUpdate.set(0);
+    chatStore$.loadingState.set('IDLE');
+    chatStore$.currentChannelId.set(null);
+    chatStore$.messages.set([]);
+    chatStore$.emojis.set([]);
+    chatStore$.bits.set([]);
+    chatStore$.ttvUsers.set([]);
+    chatStore$.paints.set({});
+    chatStore$.userPaintIds.set({});
+    chatStore$.badges.set({});
+    chatStore$.userBadgeIds.set({});
+  });
+}
+
 jest.mock('@app/services/seventv-service');
 jest.mock('@app/services/twitch-emote-service');
 jest.mock('@app/services/bttv-emote-service');
@@ -29,7 +49,6 @@ jest.mock('@app/services/ffz-service');
 jest.mock('@app/services/twitch-badge-service');
 jest.mock('@app/services/chatterino-service');
 
-// Type for the mocked image cache module
 interface ImageCacheMock {
   cacheImageFromUrl: jest.Mock<Promise<string>, [string]>;
   getCachedImageUri: jest.Mock<string | null, [string]>;
@@ -57,14 +76,19 @@ const mockChatterinoService = chatterinoService as jest.Mocked<
   typeof chatterinoService
 >;
 
+/**
+ * Legend State testing: use .peek() in assertions to read observable values
+ * without creating a tracking context; use batch() when resetting or setting
+ * multiple branches so updates are applied in one pass.
+ */
 describe('chatStore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    resetChatStoreForTests();
     clearMessages();
     clearChannelResources();
     abortCurrentLoad();
 
-    // Default mock implementations
     mockSevenTvService.getEmoteSetId.mockResolvedValue('test-emote-set-id');
     mockSevenTvService.getSanitisedEmoteSet.mockResolvedValue(
       sevenTvSanitisedChannelEmoteSetFixture.slice(0, 5),
@@ -480,13 +504,13 @@ describe('chatStore', () => {
       expect(chatStore$.messages.peek()).toHaveLength(0);
     });
 
-    test('should limit messages to MAX_CHAT_MESSAGES (1000)', () => {
-      const messages = Array.from({ length: 1100 }, (_, i) =>
+    test('should limit messages to MAX_CHAT_MESSAGES', () => {
+      const messages = Array.from({ length: 100_001 }, (_, i) =>
         createTestMessage(`${i}`),
       );
       addMessages(messages);
 
-      expect(chatStore$.messages.peek().length).toBeLessThanOrEqual(1000);
+      expect(chatStore$.messages.peek().length).toBeLessThanOrEqual(100_000);
     });
   });
 

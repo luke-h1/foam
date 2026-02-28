@@ -2,7 +2,7 @@ import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { render } from '@testing-library/react-native';
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
 
-jest.mock('@app/store/chatStore', () => ({
+jest.mock('@app/store/chatStore/state', () => ({
   chatStore$: {
     userPaintIds: {},
     paints: {},

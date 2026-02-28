@@ -6,21 +6,22 @@ import { useTwitchWs } from '@app/hooks/useTwitchWs';
 import { sevenTvService } from '@app/services/seventv-service';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import {
-  ChatMessageType,
-  chatStore$,
-  useChannelEmoteData,
-  addMessage,
-  clearMessages,
   getCurrentEmoteData,
   getSevenTvEmoteSetId,
   clearCache,
   updateSevenTvEmotes,
-  getMessageColor,
-  useUserPaints,
-  fetchAndCacheUserCosmetics,
   fetchUserPersonalEmotes,
   getUserPersonalEmotes,
-} from '@app/store/chatStore';
+} from '@app/store/chatStore/channelLoad';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
+import { fetchAndCacheUserCosmetics } from '@app/store/chatStore/cosmetics';
+import { useChannelEmoteData, useUserPaints } from '@app/store/chatStore/hooks';
+import {
+  addMessage,
+  clearMessages,
+  getMessageColor,
+} from '@app/store/chatStore/messages';
+import { chatStore$ } from '@app/store/chatStore/state';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -47,11 +48,11 @@ import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
+import type { EmotePressData } from './components/ChatMessage/RichChatMessage';
 import {
   RichChatMessage,
   BadgePressData,
   MessageActionData,
-  EmotePressData,
 } from './components/ChatMessage/RichChatMessage';
 import { EmotePreviewSheet } from './components/EmotePreviewSheet/EmotePreviewSheet';
 import {

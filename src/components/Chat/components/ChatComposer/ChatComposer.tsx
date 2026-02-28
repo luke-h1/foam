@@ -1,4 +1,4 @@
-import { ChatUser } from '@app/store/chatStore';
+import type { ChatUser } from '@app/store/chatStore/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { useCallback, useEffect, useState, forwardRef, useMemo } from 'react';
 import {

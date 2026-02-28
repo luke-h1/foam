@@ -1,8 +1,9 @@
-import { addMessages, ChatMessageType } from '@app/store/chatStore';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
+import { addMessages } from '@app/store/chatStore/messages';
 import { renderHook, act } from '@testing-library/react-native';
 import { useChatMessages } from '../useChatMessages';
 
-jest.mock('@app/store/chatStore', () => ({
+jest.mock('@app/store/chatStore/messages', () => ({
   addMessages: jest.fn(),
 }));
 

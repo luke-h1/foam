@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-useless-escape */
-import { ChatMessageType } from '@app/store/chatStore';
+import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
 function createBaseSubNotice(
