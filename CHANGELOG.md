@@ -1,5 +1,27 @@
 # Changelog
 
+## ota-c42ee437-f55f-4a6e-93b8-7fb765721c2d
+
+### ♻️ Refactor
+
+- **app:** Tidy up chat store ([#508](https://github.com/lhowsam/foam/issues/508))
+
+### ✨ Features
+
+- **app:** Improve stream overlay
+
+### 🐛 Bug Fixes
+
+- **app:** Fix android build
+- **infrastructure:** Fix clearing ota ids
+- **app:** Improve unmuting of webview ([#510](https://github.com/lhowsam/foam/issues/510))
+- **infrastructure:** Limit concurrency of deploy-ota-or-native workflow
+- **app:** Improve stream delay
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Upgrade deps ([#509](https://github.com/lhowsam/foam/issues/509))
+- **app:** Remove interactionManager
 ## ota-9dc97786-4ff2-40e0-83b9-19be83418ed1
 
 ### 🐛 Bug Fixes
