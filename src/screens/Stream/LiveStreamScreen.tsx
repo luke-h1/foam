@@ -12,7 +12,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   type AppStateStatus,
-  InteractionManager,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -105,10 +104,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     if (!stream?.user_login || !stream?.user_id) return;
     if (webViewLoaded) {
       if (!shouldRenderChat) {
-        const task = InteractionManager.runAfterInteractions(() => {
+        const handle = requestIdleCallback(() => {
           setShouldRenderChat(true);
         });
-        return () => task.cancel();
+        return () => cancelIdleCallback(handle);
       }
       return;
     }

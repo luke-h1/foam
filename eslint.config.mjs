@@ -44,6 +44,8 @@ export default [
         ...globals.jest,
         ...globals.node,
         __DEV__: true,
+        requestIdleCallback: 'readonly',
+        cancelIdleCallback: 'readonly',
       },
       parserOptions: {
         project: './tsconfig.json',
