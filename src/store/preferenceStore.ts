@@ -1,8 +1,8 @@
 import { NAMESPACE } from '@app/services/storage-service';
 import { Theme } from '@app/styles/themes';
-import { StateCreator, create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { zustandStorage } from './util/zustardStorage';
+import { observable } from '@legendapp/state';
+import { persistObservable } from '@legendapp/state/persist';
+import { useSelector } from '@legendapp/state/react';
 
 const PREFERENCE_STORAGE_KEY = `${NAMESPACE}_PREFERENCES`;
 
@@ -12,9 +12,6 @@ export interface Preferences {
   systemScaling: boolean;
   hapticFeedback: boolean;
   chatTimestamps: boolean;
-  /**
-   * Emote providers
-   */
   show7TvEmotes: boolean;
   showBttvEmotes: boolean;
   showFFzEmotes: boolean;
@@ -26,16 +23,7 @@ export interface Preferences {
   showBttvBadges: boolean;
 }
 
-interface PreferenceState extends Preferences {
-  update: (payload: Partial<Preferences>) => void;
-}
-
-const preferenceStoreCreator: StateCreator<
-  PreferenceState,
-  [],
-  [['zustand/persist', unknown]],
-  PreferenceState
-> = set => ({
+const initialPreferences: Preferences = {
   theme: 'foam-dark',
   fontScaling: 1,
   systemScaling: false,
@@ -50,14 +38,26 @@ const preferenceStoreCreator: StateCreator<
   show7tvBadges: true,
   showFFzBadges: true,
   showBttvBadges: true,
-  update: payload => {
-    set(payload);
-  },
+};
+
+export const preferences$ = observable(initialPreferences);
+
+persistObservable(preferences$, {
+  local: PREFERENCE_STORAGE_KEY,
 });
 
-export const usePreferences = create<PreferenceState>()(
-  persist(preferenceStoreCreator, {
-    name: PREFERENCE_STORAGE_KEY,
-    storage: createJSONStorage(() => zustandStorage),
-  }),
-);
+export function getPreferences(): Preferences {
+  return preferences$.peek();
+}
+
+export function usePreferences(): Preferences & {
+  update: (payload: Partial<Preferences>) => void;
+} {
+  const preferences = useSelector(preferences$);
+  return {
+    ...preferences,
+    update: (payload: Partial<Preferences>) => {
+      preferences$.assign(payload);
+    },
+  };
+}

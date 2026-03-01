@@ -10,7 +10,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 import { batch } from '@legendapp/state';
 
-import { usePreferences } from '../preferenceStore';
+import { getPreferences } from '../preferenceStore';
 import type { ChannelCacheType } from './constants';
 import {
   BADGE_CACHE_DURATION,
@@ -599,7 +599,7 @@ export const getCurrentEmoteData = (channelId?: string) => {
     return emptyEmoteData;
   }
 
-  const preferences = usePreferences.getState();
+  const preferences = getPreferences();
 
   return {
     twitchChannelEmotes: preferences.showTwitchEmotes

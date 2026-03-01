@@ -149,7 +149,6 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
-    'newrelic-react-native-agent',
     'react-native-compressor',
     [
       '@sentry/react-native/expo',
@@ -220,18 +219,11 @@ const config: ExpoConfig = {
           useFrameworks: 'static',
           // buildReactNativeFromSource: true,
           forceStaticLinking: ['RNFBApp'],
-          deploymentTarget: '16.0',
+          deploymentTarget: '26.0',
         },
       },
     ],
     '@react-native-firebase/app',
-    [
-      'expo-video',
-      {
-        supportsBackgroundPlayback: true,
-        supportsPictureInPicture: true,
-      },
-    ],
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
     // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
