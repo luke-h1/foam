@@ -1,6 +1,6 @@
 import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import EventEmitter from 'eventemitter3';
-import { MMKV } from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 
 export type StorageSetterOptions = {
   expiry?: Date;
@@ -26,7 +26,7 @@ const namespaceKey = (key: AllowedKey, namespacePrefix?: string) => {
 
 const storageEvents = new EventEmitter();
 
-export const storage = new MMKV({
+export const storage = createMMKV({
   id: 'storageService',
 });
 
@@ -48,7 +48,7 @@ export const storageService = {
     const { value, expiry } = JSON.parse(item) as StorageItem<T>;
 
     if (expiry && new Date() >= new Date(expiry)) {
-      storageService.delete(key);
+      storageService.remove(key);
       return null;
     }
 
@@ -78,18 +78,18 @@ export const storageService = {
     storageEvents.emit('storageChange', key);
   },
   delete(key: AllowedKey, namespacePrefix?: NamespacePrefixes): void {
-    storage.delete(namespaceKey(key, namespacePrefix));
+    storage.remove(namespaceKey(key, namespacePrefix));
     storageEvents.emit('storageChange', key);
   },
   remove(key: AllowedKey, namespacePrefix?: NamespacePrefixes): void {
     const namespacedKey = namespaceKey(key, namespacePrefix);
-    storage.delete(namespacedKey);
+    storage.remove(namespacedKey);
     storageEvents.emit('storageChange', key);
   },
 
   clear(): void {
     const keys = storage.getAllKeys().filter(key => key.startsWith(NAMESPACE));
-    keys.forEach(key => storage.delete(key));
+    keys.forEach(key => storage.remove(key));
     storageEvents.emit('storageChange', 'all');
   },
 
@@ -107,7 +107,7 @@ export const storageService = {
       if (item) {
         const { expiry } = JSON.parse(item) as StorageItem;
         if (expiry && new Date() >= new Date(expiry)) {
-          storage.delete(key);
+          storage.remove(key);
         }
       }
     });
@@ -116,7 +116,7 @@ export const storageService = {
     const keys = storage
       .getAllKeys()
       .filter(key => key.startsWith(`${NAMESPACE}_image_cache`));
-    keys.forEach(key => storage.delete(key));
+    keys.forEach(key => storage.remove(key));
     storageEvents.emit('storageChange', 'image_cache');
   },
 } as const;

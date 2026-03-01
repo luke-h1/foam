@@ -3,7 +3,6 @@ const jestConfig = {
   setupFilesAfterEnv: ['./test/setupTests.ts'],
   setupFiles: [
     './node_modules/react-native-gesture-handler/jestSetup.js',
-    './node_modules/newrelic-react-native-agent/jestSetup.js',
   ],
   transform: {
     '^.+\\.(t|j)sx?$': 'babel-jest',

@@ -5,7 +5,6 @@ import { CategoryScreen } from '@app/screens/CategoryScreen';
 import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { LoginScreen } from '@app/screens/LoginScreen';
 import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
-import { logger } from '@app/utils/logger';
 import {
   DarkTheme,
   DefaultTheme,
@@ -15,7 +14,6 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
-import NewRelic from 'newrelic-react-native-agent';
 import { ComponentProps, useCallback, useEffect, useMemo } from 'react';
 import { Linking, Platform, useColorScheme, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -33,10 +31,6 @@ import { BaseConfig } from './config';
 import { linking } from './linking';
 import { navigationRef, useBackButtonHandler } from './navigationUtilities';
 import { parseTwitchUrl } from './twitchLinking';
-
-const authLog = (msg: string, data?: object) => {
-  logger.auth.info(`[Auth:Linking] ${msg}`, data ?? {});
-};
 
 /**
  * This type allows TypeScript to know what routes are defined in this navigator as
@@ -182,7 +176,6 @@ export const AppNavigator = (props: NavigationProps) => {
 
   const handleStateChange = useCallback(
     (state: Parameters<NonNullable<NavigationProps['onStateChange']>>[0]) => {
-      NewRelic.onStateChange(state);
       externalOnStateChange?.(state);
     },
     [externalOnStateChange],
@@ -190,21 +183,10 @@ export const AppNavigator = (props: NavigationProps) => {
 
   useEffect(() => {
     function handleIncomingUrl(url: string | null) {
-      authLog('handleIncomingUrl', {
-        urlSafe: url?.slice(0, 120),
-        isAuthCallback: url ? isAuthCallbackUrl(url) : false,
-      });
       if (!url) return;
 
       if (isAuthCallbackUrl(url)) {
-        authLog(
-          'handleIncomingUrl: auth callback, calling completeAuthWithCallbackUrl',
-        );
         void completeAuthWithCallbackUrl(url, loginWithTwitch).then(handled => {
-          authLog('completeAuthWithCallbackUrl then', {
-            handled,
-            navReady: navigationRef.isReady(),
-          });
           if (handled && navigationRef.isReady()) {
             navigationRef.reset({
               index: 0,
@@ -225,6 +207,7 @@ export const AppNavigator = (props: NavigationProps) => {
           : link.type === 'video'
             ? link.channelLogin
             : null;
+
       if (channelLogin) {
         navigationRef.navigate('Streams', {
           screen: 'LiveStream',
@@ -233,17 +216,11 @@ export const AppNavigator = (props: NavigationProps) => {
       }
     }
 
-    authLog('Linking listener subscribed');
     const subscription = Linking.addEventListener('url', ({ url }) => {
-      authLog('Linking event url', { urlSafe: url?.slice(0, 100) });
       handleIncomingUrl(url);
     });
 
     void Linking.getInitialURL().then(initialUrl => {
-      authLog('getInitialURL', {
-        hasUrl: !!initialUrl,
-        urlSafe: initialUrl?.slice(0, 100),
-      });
       if (initialUrl) {
         setTimeout(() => handleIncomingUrl(initialUrl), 100);
       }
