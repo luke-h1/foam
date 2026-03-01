@@ -714,6 +714,8 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       null,
     );
     const [overlayStartTime, setOverlayStartTime] = useState(() => Date.now());
+    const overlayStartTimeRef = useRef(overlayStartTime);
+    overlayStartTimeRef.current = overlayStartTime;
     const [readyTimestamp, setReadyTimestamp] = useState<number | null>(null);
     const [hasContentGate, setHasContentGate] = useState(false);
     const [overlayUnlocked, setOverlayUnlocked] = useState(false);
@@ -930,7 +932,21 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
           switch (message.type) {
             case 'ready': {
-              setReadyTimestamp(Date.now());
+              const readyAt = Date.now();
+              setReadyTimestamp(readyAt);
+              const streamReadyElapsedMs =
+                readyAt - overlayStartTimeRef.current;
+              sentryService.captureMessage('stream.ready', {
+                level: 'info',
+                tags: { component: 'StreamPlayer' },
+                extra: {
+                  channel: channel ?? undefined,
+                  stream_ready_elapsed_ms: streamReadyElapsedMs,
+                  stream_ready_elapsed_seconds: Math.round(
+                    streamReadyElapsedMs / 1000,
+                  ),
+                },
+              });
               setPlayerState(prev => ({
                 ...prev,
                 isReady: true,
@@ -1038,6 +1054,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         }
       },
       [
+        channel,
         autoplay,
         deferOverlayUntilUserUnmute,
         initialMuted,

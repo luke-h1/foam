@@ -1,5 +1,4 @@
 import { Chat } from '@app/components/Chat/Chat';
-import { Spinner } from '@app/components/Spinner/Spinner';
 import {
   StreamPlayer,
   type StreamPlayerRef,
@@ -45,8 +44,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const prevOrientationRef = useRef(isLandscape);
 
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
-  const [shouldRenderChat, setShouldRenderChat] = useState<boolean>(false);
-  const [webViewLoaded, setWebViewLoaded] = useState(false);
   const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
@@ -80,43 +77,19 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   }, []);
 
   useEffect(() => {
-    setShouldRenderChat(false);
-    setWebViewLoaded(false);
     setHasContentGate(false);
     return () => {
       if (__DEV__) {
         console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
       }
-      setShouldRenderChat(false);
     };
   }, [params.id]);
-
-  const handleWebViewLoaded = useCallback(() => setWebViewLoaded(true), []);
 
   const [streamQueryResult] = useQueries({
     queries: [twitchQueries.getStream(params.id)],
   });
 
-  const { data: stream, isPending: isStreamPending } = streamQueryResult;
-
-  const MAX_WAIT_FOR_WEBVIEW_MS = 4000;
-  useEffect(() => {
-    if (!stream?.user_login || !stream?.user_id) return;
-    if (webViewLoaded) {
-      if (!shouldRenderChat) {
-        const handle = requestIdleCallback(() => {
-          setShouldRenderChat(true);
-        });
-        return () => cancelIdleCallback(handle);
-      }
-      return;
-    }
-    const timeout = setTimeout(() => {
-      setWebViewLoaded(true);
-      setShouldRenderChat(true);
-    }, MAX_WAIT_FOR_WEBVIEW_MS);
-    return () => clearTimeout(timeout);
-  }, [stream?.user_login, stream?.user_id, webViewLoaded, shouldRenderChat]);
+  const { data: stream } = streamQueryResult;
 
   const getVideoDimensions = useCallback(() => {
     if (isLandscape) {
@@ -259,17 +232,15 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     ],
   );
 
-  if (isStreamPending) {
-    return <Spinner />;
-  }
+  const channel = stream?.user_login ?? params.id;
 
   return (
     <View style={contentContainerStyle}>
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-        {stream?.user_login && (
+        {channel ? (
           <StreamPlayer
             ref={streamPlayerRef}
-            channel={stream.user_login ?? params.id}
+            channel={channel}
             deferOverlayUntilUserUnmute
             height="100%"
             width="100%"
@@ -277,14 +248,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             muted={false}
             onContentGateChange={handleContentGateChange}
             onVideoAreaPress={isLandscape ? toggleChat : undefined}
-            onWebViewLoaded={handleWebViewLoaded}
             streamInfo={streamInfo}
           />
-        )}
+        ) : null}
       </Animated.View>
 
       <Animated.View style={[styles.chatContainer, animatedChatStyle]}>
-        {shouldRenderChat && stream?.user_login && stream.user_id && (
+        {stream?.user_login && stream?.user_id ? (
           <View
             style={[
               styles.chatContent,
@@ -300,7 +270,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
               channelName={stream.user_login}
             />
           </View>
-        )}
+        ) : null}
       </Animated.View>
     </View>
   );
