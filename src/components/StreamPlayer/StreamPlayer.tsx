@@ -343,8 +343,8 @@ function buildTwitchEmbedHtml(options: {
         player.addEventListener(Twitch.Player.READY, function() {
           post('ready');
           if (player.getMuted()) {
-            var deadline = Date.now() + 800;
-            var tick = setInterval(function() {
+            var unmuteDeadline = Date.now() + 5000;
+            var unmuteTick = setInterval(function() {
               var el = null;
               try {
                 var nodes = document.querySelectorAll('button, a, [role=button], [class*="unmute"], [class*="Unmute"]');
@@ -354,16 +354,16 @@ function buildTwitchEmbedHtml(options: {
                 }
               } catch (e) {}
               if (el) {
-                clearInterval(tick);
+                clearInterval(unmuteTick);
                 el.click();
                 player.setMuted(false);
                 player.setVolume(1);
-              } else if (Date.now() > deadline) {
-                clearInterval(tick);
+              } else if (Date.now() > unmuteDeadline) {
+                clearInterval(unmuteTick);
                 player.setMuted(false);
                 player.setVolume(1);
               }
-            }, 200);
+            }, 100);
           }
           var startWatchingDeadline = Date.now() + 10000;
           var startWatchingTick = setInterval(function() {
@@ -946,7 +946,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
                 setTimeout(retryPlay, 1200);
               }
               if (!initialMuted && !deferOverlayUntilUserUnmute) {
-                unmute();
+                const unmuteDeadline = Date.now() + 5000;
+                const unmuteInterval = setInterval(() => {
+                  unmute();
+                  if (Date.now() > unmuteDeadline) {
+                    clearInterval(unmuteInterval);
+                  }
+                }, 100);
               }
               break;
             }
