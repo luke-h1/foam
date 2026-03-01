@@ -1122,18 +1122,43 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       }
     }, [dismissControls, showControls]);
 
+    const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+      null,
+    );
+
+    const cancelPendingSingleTap = useCallback(() => {
+      if (singleTapTimeoutRef.current) {
+        clearTimeout(singleTapTimeoutRef.current);
+        singleTapTimeoutRef.current = null;
+      }
+    }, []);
+
+    useEffect(() => {
+      return () => cancelPendingSingleTap();
+    }, [cancelPendingSingleTap]);
+
     const handleVideoAreaDoubleTap = useCallback(() => {
+      cancelPendingSingleTap();
       if (Platform.OS !== 'web') {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
       onVideoAreaPress?.();
-    }, [onVideoAreaPress]);
+    }, [onVideoAreaPress, cancelPendingSingleTap]);
+
+    const SINGLE_TAP_DELAY_MS = 400;
+
+    const handleSingleTapDelayed = useCallback(() => {
+      singleTapTimeoutRef.current = setTimeout(() => {
+        singleTapTimeoutRef.current = null;
+        toggleControlsInternal();
+      }, SINGLE_TAP_DELAY_MS);
+    }, [toggleControlsInternal]);
 
     const overlayTapGesture = useMemo(() => {
       const singleTap = Gesture.Tap()
         .numberOfTaps(1)
         .onEnd(() => {
-          scheduleOnRN(toggleControlsInternal);
+          scheduleOnRN(handleSingleTapDelayed);
         });
       if (!onVideoAreaPress) {
         return singleTap;
@@ -1144,7 +1169,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           scheduleOnRN(handleVideoAreaDoubleTap);
         });
       return Gesture.Exclusive(doubleTap, singleTap);
-    }, [onVideoAreaPress, toggleControlsInternal, handleVideoAreaDoubleTap]);
+    }, [onVideoAreaPress, handleVideoAreaDoubleTap, handleSingleTapDelayed]);
 
     const handlePlayPause = useCallback(() => {
       if (playerState.isPaused) {

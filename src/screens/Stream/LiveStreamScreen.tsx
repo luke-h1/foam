@@ -163,29 +163,73 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     [],
   );
 
+  const layoutDebounceMs = 120;
+  const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevIsLandscapeRef = useRef(isLandscape);
+  const [layoutIsLandscape, setLayoutIsLandscape] = useState(isLandscape);
+
   useEffect(() => {
+    const isOrientationChange = prevIsLandscapeRef.current !== isLandscape;
     prevOrientationRef.current = isLandscape;
 
-    const videoDims = getVideoDimensions();
-    const chatDims = getChatDimensions();
+    const applyLayout = () => {
+      layoutTimeoutRef.current = null;
+      prevIsLandscapeRef.current = isLandscape;
+      setLayoutIsLandscape(isLandscape);
 
-    videoWidth.value = withTiming(videoDims.width, layoutAnimationConfig);
-    videoHeight.value = withTiming(videoDims.height, layoutAnimationConfig);
-    chatWidth.value = withTiming(chatDims.width, layoutAnimationConfig);
-    chatHeight.value = withTiming(chatDims.height, layoutAnimationConfig);
+      const videoDims = getVideoDimensions();
+      const chatDims = getChatDimensions();
 
-    if (isChatVisible) {
-      chatOpacity.value = withTiming(1, layoutAnimationConfig);
-      chatTranslateX.value = withTiming(0, layoutAnimationConfig);
-    } else {
-      chatOpacity.value = withTiming(0, layoutAnimationConfig);
-      if (isLandscape) {
-        chatTranslateX.value = withTiming(
-          chatDims.width,
+      const chatHidden = !isChatVisible && isLandscape;
+      const effectiveChatWidth = chatHidden ? 0 : chatDims.width;
+      const effectiveChatHeight = chatHidden ? 0 : chatDims.height;
+
+      if (isOrientationChange) {
+        videoWidth.value = videoDims.width;
+        videoHeight.value = videoDims.height;
+        chatWidth.value = effectiveChatWidth;
+        chatHeight.value = effectiveChatHeight;
+        if (isChatVisible) {
+          chatOpacity.value = 1;
+          chatTranslateX.value = 0;
+        } else {
+          chatOpacity.value = 0;
+          chatTranslateX.value = isLandscape ? chatDims.width : 0;
+        }
+      } else {
+        videoWidth.value = withTiming(videoDims.width, layoutAnimationConfig);
+        videoHeight.value = withTiming(videoDims.height, layoutAnimationConfig);
+        chatWidth.value = withTiming(effectiveChatWidth, layoutAnimationConfig);
+        chatHeight.value = withTiming(
+          effectiveChatHeight,
           layoutAnimationConfig,
         );
+        if (isChatVisible) {
+          chatOpacity.value = withTiming(1, layoutAnimationConfig);
+          chatTranslateX.value = withTiming(0, layoutAnimationConfig);
+        } else {
+          chatOpacity.value = withTiming(0, layoutAnimationConfig);
+          if (isLandscape) {
+            chatTranslateX.value = withTiming(
+              chatDims.width,
+              layoutAnimationConfig,
+            );
+          }
+        }
       }
+    };
+
+    if (layoutTimeoutRef.current) {
+      clearTimeout(layoutTimeoutRef.current);
     }
+    layoutTimeoutRef.current = setTimeout(applyLayout, layoutDebounceMs);
+
+    return () => {
+      if (layoutTimeoutRef.current) {
+        clearTimeout(layoutTimeoutRef.current);
+        layoutTimeoutRef.current = null;
+      }
+    };
   }, [
     isLandscape,
     isChatVisible,
@@ -211,7 +255,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const contentContainerStyle = useMemo(
     () => [
       styles.contentContainer,
-      isLandscape && styles.row,
+      layoutIsLandscape && styles.row,
       {
         paddingTop: insets.top,
         paddingLeft: insets.left,
@@ -219,7 +263,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         paddingBottom: insets.bottom,
       },
     ],
-    [isLandscape, insets.top, insets.left, insets.right, insets.bottom],
+    [layoutIsLandscape, insets.top, insets.left, insets.right, insets.bottom],
   );
 
   const streamInfo = useMemo(
