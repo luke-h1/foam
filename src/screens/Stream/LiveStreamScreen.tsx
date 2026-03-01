@@ -7,6 +7,7 @@ import {
 import { StreamStackScreenProps } from '@app/navigators/StreamStackNavigator';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
@@ -49,6 +50,15 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastChatToggleTimeRef = useRef<number>(0);
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
+
+  useEffect(() => {
+    void ScreenOrientation.unlockAsync();
+    return () => {
+      void ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.PORTRAIT_UP,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     const sub = AppState.addEventListener(
