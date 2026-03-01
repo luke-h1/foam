@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { Alert, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -79,7 +78,7 @@ function SwipeableHistoryItem({
         mass: 4,
       });
     } else {
-      runOnJS(onSelect)();
+      scheduleOnRN(onSelect);
     }
   });
 

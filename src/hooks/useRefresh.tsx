@@ -2,21 +2,25 @@ import * as Haptics from 'expo-haptics';
 import { ReactElement, useCallback, useState } from 'react';
 import { Platform, RefreshControl, RefreshControlProps } from 'react-native';
 import {
-  runOnJS,
   SharedValue,
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export const REFRESH_THRESHOLD = 80;
 
 function fireThresholdHaptic() {
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === 'web') {
+    return;
+  }
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 }
 
 function fireCompleteHaptic() {
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === 'web') {
+    return;
+  }
   void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 }
 
@@ -60,7 +64,7 @@ export function useRefresh({ onRefresh }: UseRefreshOptions): UseRefreshResult {
         !isRefreshingShared.value
       ) {
         hasTriggeredHaptic.value = true;
-        runOnJS(fireThresholdHaptic)();
+        scheduleOnRN(fireThresholdHaptic);
       }
 
       if (event.contentOffset.y > -REFRESH_THRESHOLD * 0.5) {
@@ -76,6 +80,7 @@ export function useRefresh({ onRefresh }: UseRefreshOptions): UseRefreshResult {
       tintColor="transparent"
       colors={['transparent']}
       progressBackgroundColor="transparent"
+      progressViewOffset={-10000}
     />
   );
 

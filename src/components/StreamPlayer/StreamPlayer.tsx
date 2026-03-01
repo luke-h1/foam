@@ -3,6 +3,8 @@ import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/Text/Text';
 import { sentryService } from '@app/services/sentry-service';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   forwardRef,
   useCallback,
@@ -551,11 +553,8 @@ function ControlsOverlay({
   return (
     <Animated.View style={[styles.controlsOverlay, animatedStyle]}>
       <GestureDetector gesture={overlayTapGesture}>
-        <View style={styles.overlayBackground} />
+        <View style={styles.overlayTapTarget} />
       </GestureDetector>
-
-      <View pointerEvents="none" style={styles.gradientTop} />
-      <View pointerEvents="none" style={styles.gradientBottom} />
 
       <View pointerEvents="none" style={styles.latencyBadge}>
         <Icon
@@ -586,12 +585,6 @@ function ControlsOverlay({
           </View>
         )}
 
-        <View style={styles.streamerNameContainer}>
-          <Text numberOfLines={1} style={styles.streamerName}>
-            {streamInfo?.userName || streamInfo?.userLogin || ''}
-          </Text>
-        </View>
-
         <View style={styles.spacer} />
       </View>
 
@@ -609,19 +602,27 @@ function ControlsOverlay({
         </Button>
       </View>
 
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.85)']}
+        style={styles.bottomGradient}
+        pointerEvents="none"
+      />
+
       <View style={styles.bottomControls}>
-        <View style={styles.liveIndicatorContainer}>
+        <View style={styles.streamMetadataRow}>
           <View style={styles.liveIndicator}>
             <View style={styles.liveDot} />
             <Text style={styles.durationText}>{duration}</Text>
           </View>
-        </View>
-
-        <View style={styles.viewerCountContainer}>
-          <Icon icon="user" size={20} style={styles.userIcon} />
-          <Text style={styles.viewerCountText}>
-            {formatViewerCount(streamInfo?.viewerCount)}
+          <Text numberOfLines={1} style={styles.streamerNameBottom}>
+            {streamInfo?.userName || streamInfo?.userLogin || ''}
           </Text>
+          <View style={styles.viewerCountRow}>
+            <Icon icon="user" size={14} style={styles.userIcon} />
+            <Text style={styles.viewerCountText}>
+              {formatViewerCount(streamInfo?.viewerCount)}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.spacer} />
@@ -1097,13 +1098,36 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     }, []);
 
     const toggleControlsInternal = useCallback(() => {
-      onVideoAreaPress?.();
       if (controlsVisibleRef.current) {
         dismissControls();
       } else {
         showControls();
       }
-    }, [dismissControls, showControls, onVideoAreaPress]);
+    }, [dismissControls, showControls]);
+
+    const handleVideoAreaDoubleTap = useCallback(() => {
+      if (Platform.OS !== 'web') {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      onVideoAreaPress?.();
+    }, [onVideoAreaPress]);
+
+    const overlayTapGesture = useMemo(() => {
+      const singleTap = Gesture.Tap()
+        .numberOfTaps(1)
+        .onEnd(() => {
+          scheduleOnRN(toggleControlsInternal);
+        });
+      if (!onVideoAreaPress) {
+        return singleTap;
+      }
+      const doubleTap = Gesture.Tap()
+        .numberOfTaps(2)
+        .onEnd(() => {
+          scheduleOnRN(handleVideoAreaDoubleTap);
+        });
+      return Gesture.Exclusive(doubleTap, singleTap);
+    }, [onVideoAreaPress, toggleControlsInternal, handleVideoAreaDoubleTap]);
 
     const handlePlayPause = useCallback(() => {
       if (playerState.isPaused) {
@@ -1219,13 +1243,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           !hasContentGate &&
           playerState.isReady &&
           (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
-            <PressableArea
-              onPress={toggleControlsInternal}
-              style={styles.touchBlockOverlay}
-              pointerEvents="auto"
-              accessibilityLabel="Show player controls"
-              accessibilityRole="button"
-            />
+            <GestureDetector gesture={overlayTapGesture}>
+              <View
+                style={styles.touchBlockOverlay}
+                accessibilityLabel="Show player controls"
+                accessibilityRole="button"
+              />
+            </GestureDetector>
           )}
 
         {__DEV__ && lastHttpError && (
@@ -1333,8 +1357,10 @@ const styles = StyleSheet.create((theme, rt) => ({
     left: 0,
     paddingBottom: rt.insets.bottom + 12,
     paddingHorizontal: theme.spacing.md,
+    paddingTop: 32,
     position: 'absolute',
     right: 0,
+    zIndex: 1,
   },
   centerControls: {
     alignItems: 'center',
@@ -1447,21 +1473,30 @@ const styles = StyleSheet.create((theme, rt) => ({
     flexDirection: 'row',
     marginTop: theme.spacing.xs,
   },
-  gradientBottom: {
-    backgroundColor: theme.colors.black.borderHoverAlpha,
+  bottomGradient: {
     bottom: 0,
     height: 120,
     left: 0,
     position: 'absolute',
     right: 0,
   },
-  gradientTop: {
-    backgroundColor: theme.colors.black.borderHoverAlpha,
-    height: 120,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
+  streamMetadataRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    flex: 1,
+  },
+  streamerNameBottom: {
+    color: theme.colors.gray.contrast,
+    flex: 1,
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '600',
+    opacity: 0.95,
+  },
+  viewerCountRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
   },
   latencyBadge: {
     flexDirection: 'row',
@@ -1527,14 +1562,6 @@ const styles = StyleSheet.create((theme, rt) => ({
     alignItems: 'center',
     flexDirection: 'row',
   },
-  liveIndicatorContainer: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.md,
-    flexDirection: 'row',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-  },
   loadingOverlay: {
     alignItems: 'center',
     backgroundColor: theme.colors.gray.bg,
@@ -1545,8 +1572,7 @@ const styles = StyleSheet.create((theme, rt) => ({
     right: 0,
     top: 0,
   },
-  overlayBackground: {
-    backgroundColor: theme.colors.black.bgAlpha,
+  overlayTapTarget: {
     bottom: 0,
     left: 0,
     position: 'absolute',
@@ -1582,26 +1608,10 @@ const styles = StyleSheet.create((theme, rt) => ({
     fontSize: theme.font.fontSize.xs,
     fontWeight: '600',
   },
-  streamerNameContainer: {
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.md,
-    flex: 1,
-    marginHorizontal: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-  },
   viewerCount: {
     alignItems: 'center',
     flexDirection: 'row',
     marginLeft: theme.spacing.md,
-  },
-  viewerCountContainer: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.md,
-    flexDirection: 'row',
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
   },
   viewerCountText: {
     color: theme.colors.gray.contrast,
