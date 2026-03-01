@@ -224,13 +224,6 @@ const config: ExpoConfig = {
       },
     ],
     '@react-native-firebase/app',
-    [
-      'expo-video',
-      {
-        supportsBackgroundPlayback: true,
-        supportsPictureInPicture: true,
-      },
-    ],
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
     // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
