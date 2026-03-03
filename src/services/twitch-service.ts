@@ -246,7 +246,12 @@ export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data } = await axios.post(
-      `https://id.twitch.tv/oauth2/token?client_id=${twitchClientId}&client_secret=${process.env.TWITCH_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${refreshToken}`,
+      `${process.env.AUTH_PROXY_API_BASE_URL}/refresh-token?token=${refreshToken}`,
+      {
+        headers: {
+          'x-api-key': process.env.AUTH_PROXY_API_KEY,
+        },
+      },
     );
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
