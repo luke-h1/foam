@@ -26,7 +26,7 @@ import { deleteTokens } from './utils/authentication/deleteTokens';
 
 enableFreeze(true);
 
-void SplashScreen.hideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 export const NAVIGATION_PERSISTENCE_KEY = 'NAVIGATION_STATE';
 

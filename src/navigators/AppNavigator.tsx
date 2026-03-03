@@ -14,6 +14,7 @@ import {
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
+import * as SplashScreen from 'expo-splash-screen';
 import { ComponentProps, useCallback, useEffect, useMemo } from 'react';
 import { Linking, Platform, useColorScheme, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -91,9 +92,20 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 // Documentation: https://reactnavigation.org/docs/stack-navigator/
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
+SplashScreen.setOptions({
+  duration: 1000,
+  fade: true,
+});
+
 const AppStack = () => {
   usePopulateAuth();
   const { ready } = useAuthContext();
+
+  useEffect(() => {
+    if (ready) {
+      void SplashScreen.hideAsync();
+    }
+  }, [ready]);
 
   /**
    * Todo: add loading state + fallback here if auth down
