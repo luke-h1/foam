@@ -209,7 +209,7 @@ jobs:
     name: 🔨 Native Build
     needs: [prepare, detect-changes]
     if: needs.detect-changes.outputs.deploy-type == 'build'
-    runs-on: macos-latest
+    runs-on: macos-26
     concurrency: eas-build-${{ inputs.platform || 'all' }}
     steps:
       - name: 🏗 Checkout
