@@ -287,16 +287,23 @@ jobs:
         run: |
           PLATFORM="${{ inputs.platform || 'all' }}"
 
-          if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "ios" ]; then
+          if [ "$PLATFORM" == "ios" ]; then
             echo "Building iOS..."
             EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./build-artifacts/app.ipa && bun run eas submit -p ios --path ./build-artifacts/app.ipa
           fi
 
-          if [ "$PLATFORM" == "all" ] || [ "$PLATFORM" == "android" ]; then
+          if [ "$PLATFORM" == "android" ]; then
             echo "Building Android..."
-            # Local builds don't support --auto-submit; build then submit separately (like iOS)
-            eas build --platform android --profile production --local --non-interactive --output=./build-artifacts/app.aab && bun run eas submit -p android --path ./build-artifacts/app.aab
+            bun run eas build --platform android --profile production --local --non-interactive --output=./build-artifacts/app.aab && bun run eas submit -p android --path ./build-artifacts/app.aab
           fi
+
+          if [ "$PLATFORM" == "all" ]; then
+            echo "Building iOS..."
+            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./build-artifacts/app.ipa && bun run eas submit -p ios --path ./build-artifacts/app.ipa
+            echo "Building Android..."
+            bun run eas build --platform android --profile production --local --non-interactive --output=./build-artifacts/app.aab && bun run eas submit -p android --path ./build-artifacts/app.aab
+          fi
+  
         env:
           APP_VARIANT: production
           TWITCH_CLIENT_ID: ${{ env.TWITCH_CLIENT_ID }}
