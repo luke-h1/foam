@@ -30,7 +30,7 @@ export const Image = function Image({
   transition = 500,
   source,
   cachePolicy,
-  useNitro = true,
+  useNitro = false,
   style,
   ...props
 }: ImageProps) {

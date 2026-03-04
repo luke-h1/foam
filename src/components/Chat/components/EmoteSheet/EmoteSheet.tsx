@@ -157,6 +157,7 @@ const EmoteCell = memo(({ item, onPress, cellSize }: EmoteCellProps) => {
         onPress={handlePress}
       >
         <Image
+          useNitro
           source={imageSource || item.url}
           style={[styles.emoteImage, { width: innerSize, height: innerSize }]}
           contentFit="contain"
