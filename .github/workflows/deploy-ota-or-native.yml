@@ -210,7 +210,7 @@ jobs:
     needs: [prepare, detect-changes]
     if: needs.detect-changes.outputs.deploy-type == 'build'
     runs-on: macos-26
-    concurrency: eas-build-${{ inputs.platform || 'all' }}
+    concurrency: eas-build-${{ inputs.platform || 'ios' }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
@@ -285,7 +285,7 @@ jobs:
 
       - name: 🔨 Build & Submit
         run: |
-          PLATFORM="${{ inputs.platform || 'all' }}"
+          PLATFORM="${{ inputs.platform || 'ios' }}"
 
           if [ "$PLATFORM" == "ios" ]; then
             echo "Building iOS..."
@@ -327,7 +327,7 @@ jobs:
         run: |
           echo "## Native Build Triggered" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** ${{ inputs.platform || 'ios' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Profile:** production" >> $GITHUB_STEP_SUMMARY
           echo "- **Auto-submit:** Yes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -365,7 +365,7 @@ jobs:
       - name: 📦 Publish OTA Update
         id: publish
         run: |
-          PLATFORM="${{ inputs.platform || 'all' }}"
+          PLATFORM="${{ inputs.platform || 'ios' }}"
 
           if [ "$PLATFORM" == "all" ]; then
             PLATFORM_FLAG="--platform all"
@@ -409,7 +409,7 @@ jobs:
           echo "## OTA Update Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** production" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platform:** ${{ inputs.platform || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** ${{ inputs.platform || 'ios' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Update Group ID:** \`${{ steps.publish.outputs.update_group_id }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
