@@ -75,6 +75,9 @@ xcuserdata
 coverage
 .jest-cache
 
+# ESLint
+.eslintcache
+
 maestro-debug-output/
 *.maestro-screenshot.png
 build-*.tar.gz

@@ -49,7 +49,7 @@ export default [
         cancelIdleCallback: 'readonly',
       },
       parserOptions: {
-        project: './tsconfig.json',
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
         ecmaFeatures: {
           jsx: true,
@@ -82,7 +82,7 @@ export default [
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: './tsconfig.json',
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -91,7 +91,7 @@ export default [
     settings: {
       'import/resolver': {
         typescript: {
-          project: ['tsconfig.json'],
+          project: path.join(__dirname, 'tsconfig.json'),
         },
       },
       react: {
@@ -145,6 +145,10 @@ export default [
             },
             {
               pattern: '@e2e/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@modules/**',
               group: 'internal',
             },
           ],

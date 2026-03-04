@@ -23,7 +23,8 @@
     "baseUrl": ".",
     "paths": {
       "@app/*": ["./src/*"],
-      "@e2e/*": ["./e2e/*"]
+      "@e2e/*": ["./e2e/*"],
+      "@modules/*": ["./modules/*"]
     }
   },
   "include": ["assets", "**/*.ts", "**/*.tsx", "**/*.js", "app.config.ts"],
