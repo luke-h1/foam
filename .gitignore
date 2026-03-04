@@ -107,3 +107,5 @@ FOAM_ANDROID_TESTFLIGHT_KEY.json
 profile-*.json
 
 
+# expo modules
+modules/core-haptics/build

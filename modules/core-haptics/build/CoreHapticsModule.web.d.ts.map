@@ -1,1 +1,0 @@
-{"version":3,"file":"CoreHapticsModule.web.d.ts","sourceRoot":"","sources":["../src/CoreHapticsModule.web.ts"],"names":[],"mappings":"AAAA,OAAO,EAAqB,YAAY,EAAE,MAAM,MAAM,CAAC;AAEvD,OAAO,EAAE,uBAAuB,EAAE,MAAM,qBAAqB,CAAC;AAE9D,cAAM,iBAAkB,SAAQ,YAAY,CAAC,uBAAuB,CAAC;IACnE,EAAE,SAAW;IACP,aAAa,CAAC,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;IAGjD,KAAK;CAGN;;AAED,wBAAyE"}
