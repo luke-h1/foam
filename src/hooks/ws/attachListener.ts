@@ -22,8 +22,8 @@ export function attachListeners(
 ): () => void {
   const { setLastMessage, setReadyState } = setters;
 
-  let interval: NodeJS.Timeout;
-  let reconnectTimeout: NodeJS.Timeout;
+  let interval: ReturnType<typeof setInterval>;
+  let reconnectTimeout: ReturnType<typeof setTimeout>;
 
   if (optionsRef.current.fromSocketIO) {
     interval = setupSocketPing(instance);

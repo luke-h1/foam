@@ -21,7 +21,10 @@ const compat = new FlatCompat({
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ['commitlint.config.js'],
+    ignores: [
+      'commitlint.config.js',
+      'modules/**/node_modules',
+    ],
   },
   {
     files: ['src/**/*.{js,mjs,cjs,ts,jsx,tsx}'],
@@ -49,7 +52,7 @@ export default [
         cancelIdleCallback: 'readonly',
       },
       parserOptions: {
-        projectService: true,
+        project: './tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
         ecmaFeatures: {
           jsx: true,
@@ -82,7 +85,7 @@ export default [
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        projectService: true,
+        project: './tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -91,7 +94,7 @@ export default [
     settings: {
       'import/resolver': {
         typescript: {
-          project: path.join(__dirname, 'tsconfig.json'),
+          project: ['tsconfig.json'],
         },
       },
       react: {
@@ -144,11 +147,11 @@ export default [
               group: 'internal',
             },
             {
-              pattern: '@e2e/**',
+              pattern: '@modules/**',
               group: 'internal',
             },
             {
-              pattern: '@modules/**',
+              pattern: '@e2e/**',
               group: 'internal',
             },
           ],
