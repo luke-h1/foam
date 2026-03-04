@@ -1,9 +1,9 @@
 {
   "platforms": ["apple"],
   "apple": {
-    "modules": ["CoreHapticsModule"]
+    "modules": ["NativeCoreHapticsModule"]
   },
   "android": {
-    "modules": ["expo.modules.corehaptics.CoreHapticsModule"]
+    "modules": ["expo.modules.corehaptics.NativeCoreHapticsModule"]
   }
 }

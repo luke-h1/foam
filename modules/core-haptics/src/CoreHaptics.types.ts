@@ -52,7 +52,7 @@ export interface HapticPatternData {
   parameterCurves?: HapticParameterCurve[];
 }
 
-export interface CoreHapticsModule {
+export interface NativeCoreHapticsModule {
   /**
    * Play a transient haptic impacy
    * @param sharpness - The sharpness of the haptic (0.0 to 1.0)
