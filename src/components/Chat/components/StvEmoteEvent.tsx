@@ -40,6 +40,7 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
       </View>
       <View style={styles.content}>
         <Image
+          useNitro
           source={content.url}
           style={styles.emoteImage}
           transition={0}

@@ -40,6 +40,7 @@ export const BadgePreviewSheet = forwardRef<BottomSheetModal, Props>(
         <BottomSheetView style={styles.wrapper}>
           <View style={styles.meta}>
             <Image
+              useNitro
               source={selectedBadge.url ?? ''}
               transition={50}
               style={badgetyles.badge}

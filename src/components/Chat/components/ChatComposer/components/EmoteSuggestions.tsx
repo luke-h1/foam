@@ -57,7 +57,7 @@ export function EmoteSuggestions({
         >
           <View style={styles.emoteContainer}>
             <View>
-              <Image source={item.url} style={styles.emoteImage} />
+              <Image source={item.url} style={styles.emoteImage} useNitro />
             </View>
             <View style={styles.emoteTextContainer}>
               <Text

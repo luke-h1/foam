@@ -66,6 +66,7 @@ export function EmoteBadgePreview({
           <View style={styles.previewContainer}>
             <View style={styles.imageContainer}>
               <Image
+                useNitro
                 source={selectedEmote.url ?? ''}
                 transition={50}
                 style={styles.emoteImage(width - 50, height - 50)}

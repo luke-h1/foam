@@ -83,6 +83,7 @@ export const EmoteRenderer = memo(
       <EmoteActionSheet part={part} onPress={handleEmotePress}>
         <Button>
           <Image
+            useNitro
             source={{
               uri: imageUrl,
             }}

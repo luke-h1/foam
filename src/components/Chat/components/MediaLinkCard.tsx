@@ -97,6 +97,7 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
       <View style={styles.card}>
         {thumbnail && (
           <Image
+            useNitro
             source={thumbnail}
             style={styles.thumbnail}
             contentFit="contain"
