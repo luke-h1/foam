@@ -8,6 +8,10 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as SplashScreen from 'expo-splash-screen';
 import { useLayoutEffect } from 'react';
 import { LogBox } from 'react-native';
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+} from 'react-native-reanimated';
 import { enableFreeze } from 'react-native-screens';
 import { Providers } from './Providers/Providers';
 import { ForceUpdateModal } from './components/ForceUpdateModal/ForceUpdateModal';
@@ -23,6 +27,15 @@ import { twitchApi } from './services/api';
 import { navigationIntegration } from './services/sentry-service';
 import * as storage from './utils/async-storage/async-storage';
 import { deleteTokens } from './utils/authentication/deleteTokens';
+
+/**
+ * pressto PressableScale triggers strict mode warnings,
+ * it uses patterns that are technically correct but trigger warnings.
+ */
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 
 enableFreeze(true);
 

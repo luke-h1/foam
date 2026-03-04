@@ -19,6 +19,7 @@ module.exports = api => {
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
         alias: {
           '@app': './src',
+          '@modules': './modules',
         },
       },
     ],

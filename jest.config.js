@@ -13,6 +13,7 @@ const jestConfig = {
   ],
   moduleNameMapper: {
     '^@app/(.*)$': '<rootDir>/src/$1',
+    '^@modules/(.*)$': '<rootDir>/modules/$1',
     '\\.otf$': '<rootDir>/__mocks__/fileMock.js',
     '^@bacons/apple-colors$': '<rootDir>/__mocks__/@bacons/apple-colors.ts',
     '^react-native-legal$': '<rootDir>/__mocks__/react-native-legal.ts',

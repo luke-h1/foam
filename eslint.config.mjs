@@ -21,7 +21,10 @@ const compat = new FlatCompat({
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ['commitlint.config.js'],
+    ignores: [
+      'commitlint.config.js',
+      'modules/**/node_modules',
+    ],
   },
   {
     files: ['src/**/*.{js,mjs,cjs,ts,jsx,tsx}'],
@@ -141,6 +144,10 @@ export default [
           pathGroups: [
             {
               pattern: '@app/**',
+              group: 'internal',
+            },
+            {
+              pattern: '@modules/**',
               group: 'internal',
             },
             {
