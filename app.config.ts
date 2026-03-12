@@ -229,6 +229,7 @@ const config: ExpoConfig = {
       },
     ],
     '@react-native-firebase/app',
+    './src/plugins/withAndroidReleaseLintFix.js',
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
     // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
