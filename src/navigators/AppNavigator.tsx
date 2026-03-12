@@ -7,7 +7,6 @@ import { LoginScreen } from '@app/screens/LoginScreen';
 import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
 import {
   DarkTheme,
-  DefaultTheme,
   NavigationContainer,
   NavigatorScreenParams,
 } from '@react-navigation/native';
@@ -16,7 +15,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { ComponentProps, useCallback, useEffect, useMemo } from 'react';
-import { Linking, Platform, useColorScheme, View } from 'react-native';
+import { Linking, Platform, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { DevToolsParamList } from './DevToolsStackNavigator';
 import { OtherStackParamList } from './OtherStackNavigator';
@@ -93,26 +92,17 @@ export type AppStackScreenProps<T extends keyof AppStackParamList> =
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 SplashScreen.setOptions({
-  duration: 1000,
+  duration: 500,
   fade: true,
 });
 
 const AppStack = () => {
   usePopulateAuth();
-  const { ready } = useAuthContext();
+  useAuthContext();
 
   useEffect(() => {
-    if (ready) {
-      void SplashScreen.hideAsync();
-    }
-  }, [ready]);
-
-  /**
-   * Todo: add loading state + fallback here if auth down
-   */
-  if (!ready) {
-    return null;
-  }
+    void SplashScreen.hideAsync();
+  }, []);
 
   return (
     <Stack.Navigator
@@ -168,21 +158,19 @@ type NavigationProps = Partial<
 >;
 
 export const AppNavigator = (props: NavigationProps) => {
-  const colorScheme = useColorScheme();
   const { loginWithTwitch } = useAuthContext();
 
   useBackButtonHandler(routeName => exitRoutes.includes(routeName));
 
-  const navTheme = useMemo(() => {
-    const theme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
-
-    return {
-      ...theme,
+  const navTheme = useMemo(
+    () => ({
+      ...DarkTheme,
       colors: {
-        ...theme.colors,
+        ...DarkTheme.colors,
       },
-    };
-  }, [colorScheme]);
+    }),
+    [],
+  );
 
   const { onStateChange: externalOnStateChange, ...restProps } = props;
 

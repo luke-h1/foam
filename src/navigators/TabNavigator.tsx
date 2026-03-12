@@ -1,8 +1,14 @@
-import { IconSymbolName } from '@app/components/IconSymbol/IconSymbolFallback';
+import {
+  IconSymbol,
+  type IconSymbolName,
+} from '@app/components/IconSymbol/IconSymbol';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import { SearchScreen } from '@app/screens/SearchScreen/SearchScreen';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import {
+  BottomTabScreenProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
 import {
   createNativeBottomTabNavigator,
   NativeBottomTabNavigationOptions,
@@ -30,6 +36,63 @@ export type TabScreenProps<TParam extends keyof TabParamList> =
   >;
 
 const Tab = createNativeBottomTabNavigator<TabParamList>();
+const TabAndroid = createBottomTabNavigator<TabParamList>();
+
+type TabBarIconProps = {
+  focused: boolean;
+  color: string | undefined;
+  size: number;
+  symbol: IconSymbolName;
+  symbolFocused: IconSymbolName;
+  colorFallback: string;
+};
+
+function TabBarIcon({
+  focused,
+  color,
+  size,
+  symbol,
+  symbolFocused,
+  colorFallback,
+}: TabBarIconProps) {
+  return (
+    <IconSymbol
+      name={focused ? symbolFocused : symbol}
+      color={color ?? colorFallback}
+      size={size}
+    />
+  );
+}
+
+type TabBarIconRenderProps = {
+  focused: boolean;
+  color: string | undefined;
+  size: number;
+};
+
+function makeTabBarIcon(symbol: IconSymbolName, symbolFocused: IconSymbolName) {
+  return function TabBarIconForScreen(props: TabBarIconRenderProps) {
+    const { theme } = useUnistyles();
+    return (
+      <TabBarIcon
+        {...props}
+        symbol={symbol}
+        symbolFocused={symbolFocused}
+        colorFallback={theme.colors.gray.accent}
+      />
+    );
+  };
+}
+
+const TAB_BAR_ICONS: Record<
+  keyof TabParamList,
+  ReturnType<typeof makeTabBarIcon>
+> = {
+  Following: makeTabBarIcon('person.2', 'person.2.fill'),
+  Top: makeTabBarIcon('chart.bar', 'chart.bar.fill'),
+  Search: makeTabBarIcon('magnifyingglass', 'magnifyingglass'),
+  Settings: makeTabBarIcon('gearshape', 'gearshape.fill'),
+};
 
 type ScreenComponentType =
   | FC<TabScreenProps<'Following'>>
@@ -146,12 +209,43 @@ export function TabNavigator() {
     [],
   );
 
+  if (Platform.OS === 'android') {
+    return (
+      <TabAndroid.Navigator
+        initialRouteName={initialRouteName}
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: theme.colors.grass.accentAlpha,
+          tabBarInactiveTintColor: theme.colors.gray.accent,
+          tabBarStyle: {
+            backgroundColor: theme.colors.gray.bg,
+            borderTopColor: theme.colors.gray.border,
+          },
+        }}
+      >
+        {availableScreens.map(screen => (
+          <TabAndroid.Screen
+            key={screen.name}
+            name={screen.name}
+            component={screen.component as ComponentType}
+            options={{
+              tabBarIcon: TAB_BAR_ICONS[screen.name],
+            }}
+          />
+        ))}
+      </TabAndroid.Navigator>
+    );
+  }
+
   return (
     <Tab.Navigator
       initialRouteName={initialRouteName}
       screenOptions={{
         tabBarActiveTintColor: theme.colors.grass.accentAlpha,
         tabBarInactiveTintColor: theme.colors.gray.accent,
+        tabBarStyle: {
+          backgroundColor: theme.colors.gray.bg,
+        },
         // @ts-expect-error: hapticFeedbackEnabled is not in types but supported by library
         hapticFeedbackEnabled: true,
       }}

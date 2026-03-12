@@ -4,10 +4,10 @@ import { FlashList } from '@app/components/FlashList/FlashList';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { Category, twitchService } from '@app/services/twitch-service';
-import { ListRenderItem } from '@shopify/flash-list';
+import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 const SKELETON_COUNT = 9;
@@ -68,11 +68,12 @@ export function TopCategoriesScreen() {
   }, []);
 
   if (isLoading || refreshing) {
+    const skeletonData = Array.from({ length: SKELETON_COUNT });
     return (
       <View style={styles.wrapper}>
         <FlashList
           contentInsetAdjustmentBehavior="automatic"
-          data={Array.from({ length: SKELETON_COUNT })}
+          data={skeletonData}
           keyExtractor={(_, idx) => `skeleton-${idx}`}
           numColumns={SKELETON_COLUMNS}
           renderItem={loadingRenderItem}
@@ -112,6 +113,11 @@ export function TopCategoriesScreen() {
     );
   }
 
+  const refreshControl =
+    Platform.OS === 'android' ? undefined : (
+      <RefreshControl onRefresh={onRefresh} />
+    );
+
   return (
     <View style={styles.wrapper}>
       <FlashList<Category>
@@ -124,13 +130,13 @@ export function TopCategoriesScreen() {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
-        refreshControl={<RefreshControl onRefresh={onRefresh} />}
+        refreshControl={refreshControl}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(theme => ({
   cardContainer: {
     flex: 1,
     margin: 5,
@@ -152,5 +158,6 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
+    backgroundColor: theme.colors.gray.bg,
   },
-});
+}));

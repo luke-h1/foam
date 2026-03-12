@@ -16,9 +16,11 @@ export function parseTwitchUrl(url: string | null): TwitchLink {
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+
     if (!TWITCH_HOSTS.some(h => host === h || host.endsWith(`.${h}`))) {
       return null;
     }
+
     const path = parsed.pathname.replace(/^\/+/, '').split('/').filter(Boolean);
     if (path.length >= 1) {
       const first = path[0];

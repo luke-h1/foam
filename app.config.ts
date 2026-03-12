@@ -221,6 +221,11 @@ const config: ExpoConfig = {
           forceStaticLinking: ['RNFBApp'],
           deploymentTarget: '26.0',
         },
+        android: {
+          enableProguardInReleaseBuilds: true,
+          enableShrinkResourcesInReleaseBuilds: true,
+          useLegacyPackaging: true,
+        },
       },
     ],
     '@react-native-firebase/app',

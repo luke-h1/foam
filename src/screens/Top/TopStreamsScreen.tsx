@@ -10,7 +10,7 @@ import {
   getNextPageParam,
   getPreviousPageParam,
 } from '@app/utils/pagination/pagination';
-import { ListRenderItem } from '@shopify/flash-list';
+import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
 import { Platform, View } from 'react-native';
@@ -91,6 +91,11 @@ export function TopStreamsScreen() {
     );
   }
 
+  const refreshControl =
+    Platform.OS === 'android' ? undefined : (
+      <RefreshControl onRefresh={onRefresh} />
+    );
+
   return (
     <View style={styles.container}>
       <FlashList
@@ -98,14 +103,14 @@ export function TopStreamsScreen() {
         contentInsetAdjustmentBehavior="automatic"
         data={allStreams}
         renderItem={renderItem}
-        keyExtractor={item => `${item.game_id}-${item.title}`}
-        drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+        keyExtractor={item => item.id}
+        drawDistance={500}
         contentContainerStyle={styles.listContent}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         refreshing={refreshing}
         onEndReachedThreshold={0.3}
-        refreshControl={<RefreshControl onRefresh={onRefresh} />}
+        refreshControl={refreshControl}
       />
     </View>
   );
@@ -114,6 +119,7 @@ export function TopStreamsScreen() {
 const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.gray.bg,
   },
   listContent: {
     paddingBottom: theme.spacing.lg,

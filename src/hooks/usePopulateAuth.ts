@@ -23,6 +23,7 @@ export function usePopulateAuth() {
           screen: 'Following',
         });
       }, 0);
+
       return () => clearTimeout(timer);
     }
 
