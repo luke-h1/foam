@@ -664,7 +664,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const handleActionSheetReply = useCallback(() => {
     if (!selectedMessage) return;
-    handleReply(selectedMessage.messageData as ChatMessageType<'usernotice'>);
+    handleReply(selectedMessage.messageData);
     actionSheetRef.current?.dismiss();
   }, [selectedMessage, handleReply]);
 
@@ -804,8 +804,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const getLightenedColorRef = useRef(getLightenedColor);
   getLightenedColorRef.current = getLightenedColor;
-  const handleReplyRef = useRef(handleReply);
-  handleReplyRef.current = handleReply;
   const handleBadgeLongPressRef = useRef(handleBadgeLongPress);
   handleBadgeLongPressRef.current = handleBadgeLongPress;
   const handleMessageLongPressRef = useRef(handleMessageLongPress);
@@ -836,7 +834,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             style={styles.messageContainer}
             parentDisplayName={msg.parentDisplayName}
             parentColor={msg.parentColor}
-            onReply={handleReplyRef.current}
             replyDisplayName={msg.replyDisplayName}
             replyBody={msg.replyBody}
             onBadgePress={handleBadgeLongPressRef.current}
@@ -868,7 +865,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           style={styles.messageContainer}
           parentDisplayName={msg.parentDisplayName}
           parentColor={msg.parentColor}
-          onReply={handleReplyRef.current}
           replyDisplayName={msg.replyDisplayName}
           replyBody={msg.replyBody}
           onBadgePress={handleBadgeLongPressRef.current}

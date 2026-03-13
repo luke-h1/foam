@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { RefObject } from 'react';
 import {
   DEFAULT_RECONNECT_INTERVAL_MS,

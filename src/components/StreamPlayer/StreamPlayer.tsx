@@ -35,6 +35,7 @@ import type {
   WebViewHttpError,
 } from 'react-native-webview/lib/WebViewTypes';
 import { scheduleOnRN } from 'react-native-worklets';
+import { streamWebViewWarmupPool } from './WebViewWarmupPool';
 
 export interface StreamPlayerRef {
   /**
@@ -308,6 +309,9 @@ function buildTwitchEmbedHtml(options: {
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="dns-prefetch" href="//embed.twitch.tv">
+  <link rel="preconnect" href="https://embed.twitch.tv" crossorigin>
+  <link rel="preconnect" href="https://static.twitchcdn.net" crossorigin>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
@@ -695,6 +699,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
   ) {
     const { theme } = useUnistyles();
     const webViewRef = useRef<WebView>(null);
+    const needsInitRef = useRef(true);
 
     const [playerState, setPlayerState] = useState<PlayerState>({
       channel,
@@ -725,6 +730,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       setOverlayStartTime(Date.now());
       setReadyTimestamp(null);
       setOverlayUnlocked(false);
+      needsInitRef.current = true;
     }, [channel, video]);
     const [showLoginPrompt, setShowLoginPrompt] = useState(true);
 
@@ -763,6 +769,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         subscription.remove();
       };
     }, []);
+
+    useEffect(() => {
+      streamWebViewWarmupPool.startWarmup(parent);
+    }, [parent]);
 
     // Reset stuck-detection refs when not ready or paused
     useEffect(() => {
@@ -877,6 +887,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         isReady: false,
         isBuffering: true,
       }));
+      needsInitRef.current = true;
 
       setTimeout(() => {
         webViewRef.current?.reload();
@@ -1262,15 +1273,36 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           ref={webViewRef}
           allowsFullscreenVideo={false}
           allowsInlineMediaPlayback
+          cacheEnabled
+          domStorageEnabled
           javaScriptEnabled
           mediaPlaybackRequiresUserAction={false}
+          scrollEnabled={false}
+          setBuiltInZoomControls={false}
+          setDisplayZoomControls={false}
+          setSupportMultipleWindows={false}
+          sharedCookiesEnabled
+          thirdPartyCookiesEnabled
           originWhitelist={['*']}
           source={webViewSource}
           style={[styles.webView, hasContentGate && styles.webViewScrollable]}
-          onContentProcessDidTerminate={() => webViewRef.current?.reload()}
+          onContentProcessDidTerminate={() => {
+            needsInitRef.current = true;
+            webViewRef.current?.reload();
+          }}
           onError={handleWebViewError}
           onHttpError={handleWebViewHttpError}
-          onLoadEnd={() => onWebViewLoaded?.()}
+          onLoadEnd={() => {
+            onWebViewLoaded?.();
+            if (needsInitRef.current) {
+              needsInitRef.current = false;
+              if (autoplay) {
+                setTimeout(() => {
+                  play();
+                }, 80);
+              }
+            }
+          }}
           onLoadStart={() => {
             console.warn('[StreamPlayer:WebView] onLoadStart', {
               channel,
@@ -1278,7 +1310,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             });
           }}
           onMessage={handleMessage}
-          onRenderProcessGone={() => webViewRef.current?.reload()}
+          onRenderProcessGone={() => {
+            needsInitRef.current = true;
+            webViewRef.current?.reload();
+          }}
         />
 
         {showOverlayControls &&
@@ -1380,6 +1415,40 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     );
   },
 );
+
+export function StreamPlayerPrewarm({
+  parent = 'www.twitch.tv',
+}: {
+  parent?: string;
+}) {
+  const warmupProps = streamWebViewWarmupPool.getWarmupRenderProps(parent);
+
+  if (!warmupProps) {
+    return null;
+  }
+
+  return (
+    <View style={styles.prewarmHidden}>
+      <WebView
+        key={warmupProps.key}
+        source={warmupProps.source}
+        onMessage={warmupProps.onMessage}
+        onLoadEnd={warmupProps.onLoadEnd}
+        javaScriptEnabled
+        domStorageEnabled
+        cacheEnabled
+        allowsInlineMediaPlayback
+        mediaPlaybackRequiresUserAction={false}
+        originWhitelist={['*']}
+        scrollEnabled={false}
+        setSupportMultipleWindows={false}
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
+        style={styles.prewarmWebView}
+      />
+    </View>
+  );
+}
 
 const styles = StyleSheet.create((theme, rt) => ({
   avatar: {
@@ -1665,6 +1734,18 @@ const styles = StyleSheet.create((theme, rt) => ({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  prewarmHidden: {
+    position: 'absolute',
+    width: 0,
+    height: 0,
+    opacity: 0,
+    zIndex: -1,
+    overflow: 'hidden',
+  },
+  prewarmWebView: {
+    width: 1,
+    height: 1,
   },
   webViewPlaceholder: {
     backgroundColor: '#111',

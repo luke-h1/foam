@@ -1,10 +1,18 @@
 import { NAMESPACE } from '@app/services/storage-service';
 import { Theme } from '@app/styles/themes';
 import { observable } from '@legendapp/state';
-import { persistObservable } from '@legendapp/state/persist';
+import {
+  configureObservablePersistence,
+  persistObservable,
+} from '@legendapp/state/persist';
+import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv';
 import { useSelector } from '@legendapp/state/react';
 
 const PREFERENCE_STORAGE_KEY = `${NAMESPACE}_PREFERENCES`;
+
+configureObservablePersistence({
+  pluginLocal: ObservablePersistMMKV,
+});
 
 export interface Preferences {
   theme: Theme;

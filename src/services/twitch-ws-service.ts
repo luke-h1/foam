@@ -66,7 +66,6 @@ class TwitchWsService {
    */
   private static keepaliveTimeout: number = 10;
 
-  // eslint-disable-next-line no-undef
   private static keepaliveTimer: ReturnType<typeof setTimeout> | null = null;
 
   private static eventCallbacks: Map<string, EventCallback[]> = new Map();

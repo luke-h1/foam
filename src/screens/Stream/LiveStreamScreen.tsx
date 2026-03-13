@@ -1,6 +1,7 @@
 import { Chat } from '@app/components/Chat/Chat';
 import {
   StreamPlayer,
+  StreamPlayerPrewarm,
   type StreamPlayerRef,
 } from '@app/components/StreamPlayer/StreamPlayer';
 
@@ -290,6 +291,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   return (
     <View style={contentContainerStyle}>
+      {channel ? <StreamPlayerPrewarm parent="www.twitch.tv" /> : null}
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
         {channel ? (
           <StreamPlayer

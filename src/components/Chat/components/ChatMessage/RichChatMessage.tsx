@@ -17,7 +17,6 @@ import React, { useCallback, memo, useMemo } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../../../Button/Button';
-import { IconSymbol } from '../../../IconSymbol/IconSymbol';
 import { Image } from '../../../Image/Image';
 import { Text } from '../../../Text/Text';
 import { MediaLinkCard } from '../MediaLinkCard';
@@ -27,17 +26,12 @@ import { ViewerMileStoneNotice } from '../usernotices/ViewerMilestoneNotice';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { EmoteRenderer } from './renderers/EmoteRenderer';
 
-type OnReply<TNoticeType extends NoticeVariants> = Omit<
-  ChatMessageType<TNoticeType>,
-  'style'
->;
-
 export type EmotePressData = ParsedPart<'emote'>;
 export type BadgePressData = SanitisedBadgeSet;
 export type MessageActionData<TNoticeType extends NoticeVariants> = {
   message: ParsedPart[];
   username?: string;
-  messageData: OnReply<TNoticeType>;
+  messageData: ChatMessageType<TNoticeType>;
 };
 
 function ChatMessageComponent<
@@ -68,7 +62,7 @@ function ChatMessageComponent<
   parseTextForEmotes,
   userPaints,
 }: ChatMessageType<TNoticeType, TVariant> & {
-  onReply: (args: OnReply<TNoticeType>) => void;
+  onReply?: (args: ChatMessageType<TNoticeType>) => void;
   onBadgePress?: (data: BadgePressData) => void;
   onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
   onEmotePress?: (data: EmotePressData) => void;
@@ -210,24 +204,28 @@ function ChatMessageComponent<
   }, [badges, handleBadgePress]);
 
   const handleLongPress = useCallback(() => {
+    const messageData = {
+      id,
+      userstate,
+      message,
+      badges,
+      channel,
+      message_id,
+      message_nonce,
+      sender,
+      parentDisplayName,
+      replyBody,
+      replyDisplayName,
+    } as ChatMessageType<TNoticeType>;
+
+    onReply?.(messageData);
     onMessageLongPress?.({
       message,
       username: userstate.username,
-      messageData: {
-        id,
-        userstate,
-        message,
-        badges,
-        channel,
-        message_id,
-        message_nonce,
-        sender,
-        parentDisplayName,
-        replyBody,
-        replyDisplayName,
-      } as OnReply<TNoticeType>,
+      messageData,
     });
   }, [
+    onReply,
     onMessageLongPress,
     message,
     userstate,
@@ -240,39 +238,6 @@ function ChatMessageComponent<
     parentDisplayName,
     replyBody,
     replyDisplayName,
-  ]);
-
-  const handleReply = useCallback(() => {
-    onReply({
-      id,
-      userstate,
-      message,
-      badges,
-      channel,
-      message_id,
-      message_nonce,
-      sender,
-      parentDisplayName,
-      replyBody,
-      replyDisplayName,
-      parentColor,
-      notice_tags,
-    } as OnReply<TNoticeType>);
-  }, [
-    onReply,
-    id,
-    userstate,
-    message,
-    badges,
-    channel,
-    message_id,
-    message_nonce,
-    sender,
-    parentDisplayName,
-    replyBody,
-    replyDisplayName,
-    parentColor,
-    notice_tags,
   ]);
 
   const isReply = Boolean(parentDisplayName);
@@ -295,23 +260,6 @@ function ChatMessageComponent<
   );
 
   const isFirstMessage = userstate['first-msg'] === '1';
-
-  const isSystemSender =
-    sender === 'System' ||
-    sender === 'system' ||
-    userstate.username === 'System' ||
-    userstate.username === 'system';
-
-  const isMilestoneNotice = message.some(
-    part => part.type === 'viewermilestone',
-  );
-
-  const canReply =
-    !isSystemNotice &&
-    !isSubscriptionNotice &&
-    !isMilestoneNotice &&
-    !isSystemSender &&
-    Boolean(userstate.username);
 
   return (
     <Button
@@ -376,20 +324,6 @@ function ChatMessageComponent<
             {isFirstMessage && (
               <Text style={styles.firstMessageText}>first message</Text>
             )}
-            {canReply && (
-              <Button
-                onPress={handleReply}
-                style={styles.replyButton}
-                testID="reply-button"
-              >
-                <IconSymbol
-                  name="arrowshape.turn.up.left"
-                  size={16}
-                  color="rgba(255, 255, 255, 0.5)"
-                  weight="medium"
-                />
-              </Button>
-            )}
           </View>
         </View>
       )}
@@ -407,7 +341,7 @@ export const RichChatMessage = MemoizedRichChatMessage as <
     : never = never,
 >(
   props: ChatMessageType<TNoticeType, TVariant> & {
-    onReply: (args: OnReply<TNoticeType>) => void;
+    onReply?: (args: ChatMessageType<TNoticeType>) => void;
     onBadgePress?: (data: BadgePressData) => void;
     onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
     onEmotePress?: (data: EmotePressData) => void;

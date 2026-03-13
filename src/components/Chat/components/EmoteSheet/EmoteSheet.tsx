@@ -565,6 +565,7 @@ EmoteSheet.displayName = 'EmoteSheet';
 const styles = StyleSheet.create(theme => ({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.gray.bg,
   },
   grabberContainer: {
     alignItems: 'center',
@@ -606,6 +607,7 @@ const styles = StyleSheet.create(theme => ({
   placeholderContent: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.gray.bg,
   },
   listContainer: {
     flex: 1,
