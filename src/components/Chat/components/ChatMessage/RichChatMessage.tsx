@@ -261,6 +261,44 @@ function ChatMessageComponent<
 
   const isFirstMessage = userstate['first-msg'] === '1';
 
+  const shouldShowReplyButton =
+    onReply &&
+    !isSubscriptionNotice &&
+    !isSystemNotice &&
+    userstate.username &&
+    sender?.toLowerCase() !== 'system';
+
+  const handleReplyPress = useCallback(() => {
+    const messageData = {
+      id,
+      userstate,
+      message,
+      badges,
+      channel,
+      message_id,
+      message_nonce,
+      sender,
+      parentDisplayName,
+      replyBody,
+      replyDisplayName,
+    } as ChatMessageType<TNoticeType>;
+
+    onReply?.(messageData);
+  }, [
+    onReply,
+    id,
+    userstate,
+    message,
+    badges,
+    channel,
+    message_id,
+    message_nonce,
+    sender,
+    parentDisplayName,
+    replyBody,
+    replyDisplayName,
+  ]);
+
   return (
     <Button
       onLongPress={handleLongPress}
@@ -323,6 +361,15 @@ function ChatMessageComponent<
           <View style={styles.rightActions}>
             {isFirstMessage && (
               <Text style={styles.firstMessageText}>first message</Text>
+            )}
+            {shouldShowReplyButton && (
+              <Button
+                testID="reply-button"
+                onPress={handleReplyPress}
+                style={styles.replyButton}
+              >
+                <Text style={styles.replyButtonText}>↩</Text>
+              </Button>
             )}
           </View>
         </View>
@@ -402,6 +449,10 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing.xs,
     marginLeft: theme.spacing.xs,
     opacity: 0.4,
+  },
+  replyButtonText: {
+    fontSize: theme.font.fontSize.xs,
+    color: theme.colors.gray.accentAlpha,
   },
   messagePrefix: {
     flexDirection: 'row',
