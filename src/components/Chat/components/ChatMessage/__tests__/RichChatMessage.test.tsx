@@ -61,29 +61,17 @@ describe('RichChatMessage', () => {
     jest.clearAllMocks();
   });
 
-  describe('Reply Button', () => {
-    it('should render reply button for regular messages', () => {
+  describe('Long Press Reply', () => {
+    it('should call onReply when message is long pressed (regular messages)', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Hello world!' },
       ]);
 
-      const { getByTestId } = render(
+      const { getByText } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(getByTestId('reply-button')).toBeTruthy();
-    });
-
-    it('should call onReply when reply button is pressed', () => {
-      const message = createMockMessage([
-        { type: 'text', content: 'Hello world!' },
-      ]);
-
-      const { getByTestId } = render(
-        <RichChatMessage {...message} onReply={mockOnReply} />,
-      );
-
-      fireEvent.press(getByTestId('reply-button'));
+      fireEvent(getByText('Hello world!'), 'longPress');
 
       expect(mockOnReply).toHaveBeenCalledTimes(1);
       expect(mockOnReply).toHaveBeenCalledWith(
@@ -98,7 +86,7 @@ describe('RichChatMessage', () => {
       );
     });
 
-    it('should NOT render reply button for system messages (STV emote added)', () => {
+    it('should NOT call onReply when system messages (STV emote added) are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'stv_emote_added',
@@ -133,14 +121,16 @@ describe('RichChatMessage', () => {
         },
       ]);
 
-      const { queryByTestId } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(queryByTestId('reply-button')).toBeNull();
+      fireEvent(getByTestId('chat-message'), 'longPress');
+
+      expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT render reply button for system messages (STV emote removed)', () => {
+    it('should NOT call onReply when system messages (STV emote removed) are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'stv_emote_removed',
@@ -175,14 +165,16 @@ describe('RichChatMessage', () => {
         },
       ]);
 
-      const { queryByTestId } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(queryByTestId('reply-button')).toBeNull();
+      fireEvent(getByTestId('chat-message'), 'longPress');
+
+      expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT render reply button for subscription notices', () => {
+    it('should NOT call onReply when subscription notices are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'sub',
@@ -197,14 +189,16 @@ describe('RichChatMessage', () => {
         },
       ]);
 
-      const { queryByTestId } = render(
+      const { getByText } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(queryByTestId('reply-button')).toBeNull();
+      fireEvent(getByText('Thanks for subscribing!'), 'longPress');
+
+      expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT render reply button for resub notices', () => {
+    it('should NOT call onReply when resub notices are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'resub',
@@ -219,107 +213,60 @@ describe('RichChatMessage', () => {
         },
       ]);
 
-      const { queryByTestId } = render(
+      const { getByText } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(queryByTestId('reply-button')).toBeNull();
+      fireEvent(getByText('Keep up the great content!'), 'longPress');
+
+      expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT render reply button for messages without username', () => {
+    it('should NOT call onReply when messages without username are long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Anonymous message' }],
         { username: undefined },
-      );
-
-      const { queryByTestId } = render(
-        <RichChatMessage {...message} onReply={mockOnReply} />,
-      );
-
-      expect(queryByTestId('reply-button')).toBeNull();
-    });
-
-    it('should NOT render reply button for System sender messages', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'Connected to channel' }],
-        { username: 'System' },
-        { sender: 'System' },
-      );
-
-      const { queryByTestId } = render(
-        <RichChatMessage {...message} onReply={mockOnReply} />,
-      );
-
-      expect(queryByTestId('reply-button')).toBeNull();
-    });
-
-    it('should NOT render reply button for system (lowercase) sender messages', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'Connection established' }],
-        { username: 'system' },
-        { sender: 'system' },
-      );
-
-      const { queryByTestId } = render(
-        <RichChatMessage {...message} onReply={mockOnReply} />,
-      );
-
-      expect(queryByTestId('reply-button')).toBeNull();
-    });
-  });
-
-  describe('Reply Indicator', () => {
-    it('should render reply indicator when message is a reply', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'This is a reply' }],
-        {},
-        {
-          parentDisplayName: 'OriginalUser',
-          replyBody: 'The original message',
-          parentColor: '#3498DB',
-        },
-      );
-
-      const { getByTestId, getByText } = render(
-        <RichChatMessage {...message} onReply={mockOnReply} />,
-      );
-
-      expect(getByTestId('reply-indicator')).toBeTruthy();
-      expect(getByText('↳')).toBeTruthy();
-      expect(getByText('@OriginalUser')).toBeTruthy();
-    });
-
-    it('should NOT render reply indicator when message is not a reply', () => {
-      const message = createMockMessage([
-        { type: 'text', content: 'Regular message' },
-      ]);
-
-      const { queryByTestId, queryByText } = render(
-        <RichChatMessage {...message} onReply={mockOnReply} />,
-      );
-
-      expect(queryByTestId('reply-indicator')).toBeNull();
-      expect(queryByText('↳')).toBeNull();
-    });
-
-    it('should render reply indicator with truncated body preview', () => {
-      const replyBody = 'This is the original message content';
-      const message = createMockMessage(
-        [{ type: 'text', content: 'This is a reply' }],
-        {},
-        {
-          parentDisplayName: 'OriginalUser',
-          replyBody,
-        },
       );
 
       const { getByText } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(getByText('↳')).toBeTruthy();
-      expect(getByText('@OriginalUser')).toBeTruthy();
-      expect(getByText(replyBody)).toBeTruthy();
+      fireEvent(getByText('Anonymous message'), 'longPress');
+
+      expect(mockOnReply).not.toHaveBeenCalled();
+    });
+
+    it('should NOT call onReply when System sender messages are long pressed', () => {
+      const message = createMockMessage(
+        [{ type: 'text', content: 'Connected to channel' }],
+        { username: 'System' },
+        { sender: 'System' },
+      );
+
+      const { getByText } = render(
+        <RichChatMessage {...message} onReply={mockOnReply} />,
+      );
+
+      fireEvent(getByText('Connected to channel'), 'longPress');
+
+      expect(mockOnReply).not.toHaveBeenCalled();
+    });
+
+    it('should NOT call onReply when system (lowercase) sender messages are long pressed', () => {
+      const message = createMockMessage(
+        [{ type: 'text', content: 'Connection established' }],
+        { username: 'system' },
+        { sender: 'system' },
+      );
+
+      const { getByText } = render(
+        <RichChatMessage {...message} onReply={mockOnReply} />,
+      );
+
+      fireEvent(getByText('Connection established'), 'longPress');
+
+      expect(mockOnReply).not.toHaveBeenCalled();
     });
   });
 
@@ -339,6 +286,8 @@ describe('RichChatMessage', () => {
 
       const textElement = getByText('Hello world!');
       fireEvent(textElement, 'longPress');
+
+      expect(mockOnMessageLongPress).toHaveBeenCalledTimes(1);
     });
 
     it('should render emotes in messages', () => {
@@ -362,8 +311,7 @@ describe('RichChatMessage', () => {
         />,
       );
 
-      // Verify the message renders (emote is inside)
-      expect(getByTestId('reply-button')).toBeTruthy();
+      expect(getByTestId('emote-renderer')).toBeTruthy();
     });
   });
 
@@ -424,7 +372,7 @@ describe('RichChatMessage', () => {
   });
 
   describe('Reply Data', () => {
-    it('should pass correct data to onReply callback', () => {
+    it('should pass correct data to onReply callback when long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Test message' }],
         { username: 'TestUser', color: '#00FF00' },
@@ -435,11 +383,11 @@ describe('RichChatMessage', () => {
         },
       );
 
-      const { getByTestId } = render(
+      const { getByText } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent.press(getByTestId('reply-button'));
+      fireEvent(getByText('Test message'), 'longPress');
 
       expect(mockOnReply).toHaveBeenCalledWith(
         expect.objectContaining({
