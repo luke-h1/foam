@@ -52,7 +52,7 @@ function ChatMessageComponent<
   parentDisplayName,
   replyBody,
   replyDisplayName,
-  parentColor,
+  parentColor: _,
   notice_tags,
   onReply,
   onBadgePress,
@@ -203,6 +203,24 @@ function ChatMessageComponent<
     ));
   }, [badges, handleBadgePress]);
 
+  const isSystemNotice = message.some(
+    part =>
+      part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
+  );
+
+  const canReply =
+    onReply &&
+    !message.some(
+      part =>
+        part.type === 'sub' ||
+        part.type === 'resub' ||
+        part.type === 'anongiftpaidupgrade' ||
+        part.type === 'anongift',
+    ) &&
+    !isSystemNotice &&
+    userstate.username &&
+    sender?.toLowerCase() !== 'system';
+
   const handleLongPress = useCallback(() => {
     const messageData = {
       id,
@@ -218,7 +236,9 @@ function ChatMessageComponent<
       replyDisplayName,
     } as ChatMessageType<TNoticeType>;
 
-    onReply?.(messageData);
+    if (canReply) {
+      onReply?.(messageData);
+    }
     onMessageLongPress?.({
       message,
       username: userstate.username,
@@ -226,6 +246,7 @@ function ChatMessageComponent<
     });
   }, [
     onReply,
+    canReply,
     onMessageLongPress,
     message,
     userstate,
@@ -254,53 +275,11 @@ function ChatMessageComponent<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, paintId]);
 
-  const isSystemNotice = message.some(
-    part =>
-      part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
-  );
-
   const isFirstMessage = userstate['first-msg'] === '1';
-
-  const shouldShowReplyButton =
-    onReply &&
-    !isSubscriptionNotice &&
-    !isSystemNotice &&
-    userstate.username &&
-    sender?.toLowerCase() !== 'system';
-
-  const handleReplyPress = useCallback(() => {
-    const messageData = {
-      id,
-      userstate,
-      message,
-      badges,
-      channel,
-      message_id,
-      message_nonce,
-      sender,
-      parentDisplayName,
-      replyBody,
-      replyDisplayName,
-    } as ChatMessageType<TNoticeType>;
-
-    onReply?.(messageData);
-  }, [
-    onReply,
-    id,
-    userstate,
-    message,
-    badges,
-    channel,
-    message_id,
-    message_nonce,
-    sender,
-    parentDisplayName,
-    replyBody,
-    replyDisplayName,
-  ]);
 
   return (
     <Button
+      testID="chat-message"
       onLongPress={handleLongPress}
       style={[
         styles.chatContainer,
@@ -309,29 +288,6 @@ function ChatMessageComponent<
         isFirstMessage && styles.firstMessageContainer,
       ]}
     >
-      {isReply && (
-        <View style={styles.replyIndicatorWrapper} testID="reply-indicator">
-          <Text style={styles.replyLabel}>↳</Text>
-          <Text
-            style={[
-              styles.replyUsername,
-              parentColor && { color: lightenColor(parentColor) },
-            ]}
-          >
-            @{parentDisplayName}
-          </Text>
-          {replyBody ? (
-            <Text
-              style={styles.replyBodyPreview}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {replyBody}
-            </Text>
-          ) : null}
-        </View>
-      )}
-
       {isSubscriptionNotice && (
         <View style={styles.subscriptionNoticeContainer}>
           {message.map(renderMessagePart)}
@@ -361,15 +317,6 @@ function ChatMessageComponent<
           <View style={styles.rightActions}>
             {isFirstMessage && (
               <Text style={styles.firstMessageText}>first message</Text>
-            )}
-            {shouldShowReplyButton && (
-              <Button
-                testID="reply-button"
-                onPress={handleReplyPress}
-                style={styles.replyButton}
-              >
-                <Text style={styles.replyButtonText}>↩</Text>
-              </Button>
             )}
           </View>
         </View>
@@ -444,15 +391,6 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     width: '100%',
-  },
-  replyButton: {
-    padding: theme.spacing.xs,
-    marginLeft: theme.spacing.xs,
-    opacity: 0.4,
-  },
-  replyButtonText: {
-    fontSize: theme.font.fontSize.xs,
-    color: theme.colors.gray.accentAlpha,
   },
   messagePrefix: {
     flexDirection: 'row',
