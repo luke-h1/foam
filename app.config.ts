@@ -217,14 +217,15 @@ const config: ExpoConfig = {
       {
         ios: {
           useFrameworks: 'static',
-          // buildReactNativeFromSource: true,
           forceStaticLinking: ['RNFBApp'],
           deploymentTarget: '26.0',
+          reactNativeReleaseLevel: 'experimental',
         },
         android: {
           enableProguardInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
           useLegacyPackaging: true,
+          reactNativeReleaseLevel: 'experimental',
         },
       },
     ],
