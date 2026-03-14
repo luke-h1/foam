@@ -1,35 +1,45 @@
-import { PropsWithChildren, Ref, forwardRef } from 'react';
+import { PropsWithChildren, Ref, forwardRef, useState } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable, PressableProps, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+import { EaseView } from 'react-native-ease';
+import { StyleSheet } from 'react-native-unistyles';
 
 export const PressableArea = forwardRef(
   (props: PropsWithChildren<PressableProps>, ref: Ref<View>) => {
-    const opacity = useSharedValue(1);
+    const [pressed, setPressed] = useState(false);
 
-    const animatedStyle = useAnimatedStyle(() => ({
-      opacity: opacity.value,
-    }));
+    const { onPressIn, onPressOut, style, children, ...rest } = props;
 
     return (
-      <AnimatedPressable
-        {...props}
+      <Pressable
+        {...rest}
         ref={ref}
-        style={[props.style, animatedStyle]}
-        onPressIn={() => {
-          opacity.value = withTiming(0.75, { duration: 150 });
+        style={style}
+        onPressIn={e => {
+          setPressed(true);
+          onPressIn?.(e);
         }}
-        onPressOut={() => {
-          opacity.value = withTiming(1, { duration: 150 });
+        onPressOut={e => {
+          setPressed(false);
+          onPressOut?.(e);
         }}
-      />
+      >
+        <EaseView
+          animate={{ opacity: pressed ? 0.75 : 1 }}
+          transition={{ type: 'timing', duration: 150 }}
+          style={styles.pressable}
+        >
+          {children}
+        </EaseView>
+      </Pressable>
     );
   },
 );
+
+const styles = StyleSheet.create({
+  pressable: {
+    flex: 1,
+  },
+});
+
 PressableArea.displayName = 'PressableArea';

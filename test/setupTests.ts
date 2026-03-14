@@ -131,3 +131,12 @@ jest.mock('expo-updates');
 jest.mock('expo/fetch');
 
 jest.mock('pressto');
+
+jest.mock('react-native-ease', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    EaseView: ({ children, style, ...rest }: { children?: React.ReactNode; style?: unknown }) =>
+      React.createElement(View, { ...rest, style }, children),
+  };
+});

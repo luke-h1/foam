@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useState } from 'react';
 import {
   AccessibilityState,
   GestureResponderEvent,
@@ -8,13 +8,7 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+import { EaseView } from 'react-native-ease';
 
 interface TabBarButtonProps {
   icon: FC<{ color: string }>;
@@ -33,11 +27,7 @@ export function TabBarButton({
 }: TabBarButtonProps) {
   const focused = accessibilityState?.selected;
   const color = focused ? activeTintColor : inactiveTintColor;
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const [pressed, setPressed] = useState(false);
 
   const handlePress = (e: GestureResponderEvent) => {
     if (Platform.OS !== 'web') {
@@ -49,18 +39,24 @@ export function TabBarButton({
   };
 
   return (
-    <AnimatedPressable
+    <Pressable
       onPress={handlePress}
-      onPressIn={() => {
-        scale.value = withSpring(0.92);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1);
-      }}
-      style={[styles.pressable, animatedStyle]}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={styles.pressable}
     >
-      {icon({ color }) as ReactNode}
-    </AnimatedPressable>
+      <EaseView
+        animate={{ scale: pressed ? 0.92 : 1 }}
+        transition={{
+          type: 'spring',
+          damping: 25,
+          stiffness: 300,
+        }}
+        style={styles.pressable}
+      >
+        {icon({ color }) as ReactNode}
+      </EaseView>
+    </Pressable>
   );
 }
 
