@@ -1,4 +1,4 @@
-import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
+import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
@@ -45,6 +45,7 @@ import { toast } from 'sonner-native';
 
 import { Text } from '../Text/Text';
 import { ActionSheet } from './components/ActionSheet/ActionSheet';
+import { ChatMessageList } from './components/ChatMessageList/ChatMessageList';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
@@ -95,7 +96,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
   const messages$ = chatStore$.messages;
-  const messages = useSelector(messages$);
+  const messageCount = useSelector(() => messages$.peek().length);
   const channelEmoteData = useChannelEmoteData(channelId);
   const userPaints = useUserPaints();
 
@@ -236,16 +237,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const prevMessageCountRef = useRef(0);
   useEffect(() => {
-    const count = Array.isArray(messages) ? messages.length : 0;
     if (
-      count > prevMessageCountRef.current &&
+      messageCount > prevMessageCountRef.current &&
       isAtBottomRef.current &&
       listRef.current
     ) {
       listRef.current.scrollToEnd({ animated: false });
     }
-    prevMessageCountRef.current = count;
-  }, [messages, isAtBottomRef, listRef]);
+    prevMessageCountRef.current = messageCount;
+  }, [messageCount, isAtBottomRef, listRef]);
 
   const processMessageEmotes = useCallback(
     (
@@ -774,12 +774,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [channelId]);
 
-  const castMessages = useCallback(
-    (msgs: ChatMessageType<never>[]): AnyChatMessageType[] =>
-      msgs as AnyChatMessageType[],
-    [],
-  );
-
   const userPaintsRef = useRef(userPaints);
   userPaintsRef.current = userPaints;
 
@@ -885,15 +879,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [], // Empty deps - callbacks accessed via refs
   );
 
-  const keyExtractor = useCallback(
-    (item: AnyChatMessageType) => `${item.message_id}_${item.message_nonce}`,
-    [],
-  );
-
-  const getItemType = useCallback((item: AnyChatMessageType) => {
-    return item.isSpecialNotice ? 'notice' : 'regular';
-  }, []);
-
   return (
     <View style={[styles.wrapper, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView
@@ -902,7 +887,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <View style={styles.chatContainer}>
-          {!connected && messages$.peek().length === 0 && (
+          {!connected && messageCount === 0 && (
             <View style={styles.connectingContainer}>
               <Text style={styles.connectingText}>
                 Connecting to {channelName}&apos;s chat...
@@ -910,18 +895,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             </View>
           )}
 
-          <FlashList
-            data={castMessages(
-              (Array.isArray(messages) ? messages : []).filter(
-                (m): m is ChatMessageType<never> => m != null,
-              ),
-            )}
-            ref={listRef}
-            keyExtractor={keyExtractor}
-            getItemType={getItemType}
+          <ChatMessageList
+            listRef={listRef}
             onScroll={handleScroll}
             renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
             scrollEventThrottle={16}
           />
 
@@ -1026,10 +1003,6 @@ const styles = StyleSheet.create(theme => ({
     width: '100%',
     overflow: 'hidden',
     maxWidth: '100%',
-  },
-  listContent: {
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.md,
   },
   connectingContainer: {
     paddingVertical: theme.spacing.xs,
