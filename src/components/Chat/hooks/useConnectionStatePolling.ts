@@ -11,7 +11,10 @@ export function useConnectionStatePolling(
   const [state, setState] = useState(getState);
 
   useEffect(() => {
-    const check = () => setState(getState());
+    const check = () => {
+      const next = getState();
+      setState(prev => (prev === next ? prev : next));
+    };
     check();
     const id = setInterval(check, intervalMs);
     return () => clearInterval(id);
