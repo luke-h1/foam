@@ -1,4 +1,5 @@
 import { useSelector } from '@legendapp/state/react';
+import { useMemo } from 'react';
 
 import { usePreferences } from '../preferenceStore';
 import type { UserPaint } from './constants';
@@ -118,14 +119,18 @@ export const useUserPaintIds = () => useSelector(chatStore$.userPaintIds);
 export const useUserPaints = (): Record<string, UserPaint> => {
   const paints = useSelector(chatStore$.paints);
   const userPaintIds = useSelector(chatStore$.userPaintIds);
-  return Object.entries(userPaintIds).reduce<Record<string, UserPaint>>(
-    (resolved, [userId, paintId]) => {
-      const paint = paints[paintId];
-      if (paint) {
-        resolved[userId] = { ...paint, ttv_user_id: userId };
-      }
-      return resolved;
-    },
-    {},
+  return useMemo(
+    () =>
+      Object.entries(userPaintIds).reduce<Record<string, UserPaint>>(
+        (resolved, [userId, paintId]) => {
+          const paint = paints[paintId];
+          if (paint) {
+            resolved[userId] = { ...paint, ttv_user_id: userId };
+          }
+          return resolved;
+        },
+        {},
+      ),
+    [paints, userPaintIds],
   );
 };

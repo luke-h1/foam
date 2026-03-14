@@ -1,4 +1,4 @@
-import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
+import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
@@ -48,6 +48,7 @@ import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
+import { ChatList } from './components/ChatList';
 import type { EmotePressData } from './components/ChatMessage/RichChatMessage';
 import {
   RichChatMessage,
@@ -95,7 +96,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
   const messages$ = chatStore$.messages;
-  const messages = useSelector(messages$);
+  // Fine-grained selector — only causes a re-render when the "has messages" boolean flips,
+  // not on every individual message arrival. The FlashList data subscription lives in ChatList.
+  const hasMessages = useSelector(() => chatStore$.messages.get().length > 0);
   const channelEmoteData = useChannelEmoteData(channelId);
   const userPaints = useUserPaints();
 
@@ -233,19 +236,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       [setUnreadCount],
     ),
   });
-
-  const prevMessageCountRef = useRef(0);
-  useEffect(() => {
-    const count = Array.isArray(messages) ? messages.length : 0;
-    if (
-      count > prevMessageCountRef.current &&
-      isAtBottomRef.current &&
-      listRef.current
-    ) {
-      listRef.current.scrollToEnd({ animated: false });
-    }
-    prevMessageCountRef.current = count;
-  }, [messages, isAtBottomRef, listRef]);
 
   const processMessageEmotes = useCallback(
     (
@@ -774,12 +764,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     }
   }, [channelId]);
 
-  const castMessages = useCallback(
-    (msgs: ChatMessageType<never>[]): AnyChatMessageType[] =>
-      msgs as AnyChatMessageType[],
-    [],
-  );
-
   const userPaintsRef = useRef(userPaints);
   userPaintsRef.current = userPaints;
 
@@ -817,72 +801,34 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const renderItem = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
-    ({ item: msg }: { item: AnyChatMessageType }) => {
-      const { isSpecialNotice } = msg as { isSpecialNotice?: boolean };
-
-      if (isSpecialNotice) {
-        return (
-          <RichChatMessage
-            id={msg.id}
-            channel={msg.channel}
-            message={msg.message}
-            userstate={msg.userstate}
-            badges={msg.badges}
-            message_id={msg.message_id}
-            message_nonce={msg.message_nonce}
-            sender={msg.sender}
-            style={styles.messageContainer}
-            parentDisplayName={msg.parentDisplayName}
-            parentColor={msg.parentColor}
-            replyDisplayName={msg.replyDisplayName}
-            replyBody={msg.replyBody}
-            onBadgePress={handleBadgeLongPressRef.current}
-            onMessageLongPress={handleMessageLongPressRef.current}
-            onEmotePress={handleEmotePressRef.current}
-            getMentionColor={getMentionColorRef.current}
-            parseTextForEmotes={parseTextForEmotesRef.current}
-            userPaints={userPaintsRef.current}
-            // @ts-expect-error - notice_tags union type not narrowing correctly
-            notice_tags={
-              'notice_tags' in msg && msg.notice_tags
-                ? msg.notice_tags
-                : undefined
-            }
-          />
-        );
-      }
-
-      return (
-        <RichChatMessage
-          id={msg.id}
-          channel={msg.channel}
-          message={msg.message}
-          userstate={msg.userstate}
-          badges={msg.badges}
-          message_id={msg.message_id}
-          message_nonce={msg.message_nonce}
-          sender={msg.sender}
-          style={styles.messageContainer}
-          parentDisplayName={msg.parentDisplayName}
-          parentColor={msg.parentColor}
-          replyDisplayName={msg.replyDisplayName}
-          replyBody={msg.replyBody}
-          onBadgePress={handleBadgeLongPressRef.current}
-          onMessageLongPress={handleMessageLongPressRef.current}
-          onEmotePress={handleEmotePressRef.current}
-          getMentionColor={getMentionColorRef.current}
-          parseTextForEmotes={parseTextForEmotesRef.current}
-          userPaints={userPaintsRef.current}
-          // @ts-expect-error - notice_tags union type not narrowing correctly
-          notice_tags={
-            'notice_tags' in msg && msg.notice_tags
-              ? msg.notice_tags
-              : undefined
-          }
-        />
-      );
-    },
-    [], // Empty deps - callbacks accessed via refs
+    ({ item: msg }: { item: AnyChatMessageType }) => (
+      <RichChatMessage
+        id={msg.id}
+        channel={msg.channel}
+        message={msg.message}
+        userstate={msg.userstate}
+        badges={msg.badges}
+        message_id={msg.message_id}
+        message_nonce={msg.message_nonce}
+        sender={msg.sender}
+        style={styles.messageContainer}
+        parentDisplayName={msg.parentDisplayName}
+        parentColor={msg.parentColor}
+        replyDisplayName={msg.replyDisplayName}
+        replyBody={msg.replyBody}
+        onBadgePress={handleBadgeLongPressRef.current}
+        onMessageLongPress={handleMessageLongPressRef.current}
+        onEmotePress={handleEmotePressRef.current}
+        getMentionColor={getMentionColorRef.current}
+        parseTextForEmotes={parseTextForEmotesRef.current}
+        userPaints={userPaintsRef.current}
+        // @ts-expect-error - notice_tags union type not narrowing correctly
+        notice_tags={
+          'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
+        }
+      />
+    ),
+    [], // Empty deps — all callbacks accessed via stable refs
   );
 
   const keyExtractor = useCallback(
@@ -902,7 +848,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <View style={styles.chatContainer}>
-          {!connected && messages$.peek().length === 0 && (
+          {!connected && !hasMessages && (
             <View style={styles.connectingContainer}>
               <Text style={styles.connectingText}>
                 Connecting to {channelName}&apos;s chat...
@@ -910,19 +856,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             </View>
           )}
 
-          <FlashList
-            data={castMessages(
-              (Array.isArray(messages) ? messages : []).filter(
-                (m): m is ChatMessageType<never> => m != null,
-              ),
-            )}
-            ref={listRef}
+          <ChatList
+            listRef={listRef}
+            isAtBottomRef={isAtBottomRef}
+            handleScroll={handleScroll}
+            renderItem={renderItem}
             keyExtractor={keyExtractor}
             getItemType={getItemType}
-            onScroll={handleScroll}
-            renderItem={renderItem}
             contentContainerStyle={styles.listContent}
-            scrollEventThrottle={16}
           />
 
           {!isAtBottom && !isScrollingToBottom && (
