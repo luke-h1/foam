@@ -4,32 +4,17 @@ import { batch } from '@legendapp/state';
 import type { Bit, ChatMessageType, ChatUser } from './constants';
 import { chatStore$ } from './state';
 
-const MAX_CHAT_MESSAGES = 100_000;
 const messageKeySet = new Set<string>();
 const messageColorIndex = new Map<string, string>();
 
 const getMessageKey = (messageId: string, messageNonce: string): string =>
   `${messageId}_${messageNonce}`;
 
-function trimToMaxMessages(
-  messages: ChatMessageType<never>[],
-): ChatMessageType<never>[] {
-  if (messages.length <= MAX_CHAT_MESSAGES) {
-    return messages;
-  }
-  return messages.slice(-MAX_CHAT_MESSAGES);
-}
-
 export const addMessage = <TNoticeType extends NoticeVariants>(
   message: ChatMessageType<TNoticeType>,
 ) => {
   const current = chatStore$.messages.peek();
-  const next = trimToMaxMessages([
-    ...current,
-    message as ChatMessageType<never>,
-  ]);
-
-  chatStore$.messages.set(next);
+  chatStore$.messages.set([...current, message as ChatMessageType<never>]);
 };
 
 export const addMessages = (messages: ChatMessageType<never>[]) => {
@@ -53,7 +38,7 @@ export const addMessages = (messages: ChatMessageType<never>[]) => {
   });
   batch(() => {
     const current = chatStore$.messages.peek();
-    chatStore$.messages.set(trimToMaxMessages([...current, ...newMessages]));
+    chatStore$.messages.set([...current, ...newMessages]);
   });
 };
 
