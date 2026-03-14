@@ -51,10 +51,40 @@ agent-device snapshot -i -s "Camera"
 agent-device snapshot -i -s @e3
 ```
 
+## Diff snapshots (structural)
+
+Use `diff snapshot` when you need compact state-change visibility between nearby UI states:
+
+```bash
+agent-device snapshot -i           # First snapshot initializes baseline
+agent-device press @e5
+agent-device diff snapshot -i           # Shows +/− structural lines vs prior snapshot
+```
+
+Efficient pattern:
+- Initialize once at a stable point.
+- Mutate UI (`press`, `fill`, `swipe`).
+- Run `diff snapshot` after interactions to confirm expected change shape with bounded output.
+- Re-run full/scoped `snapshot` only when you need fresh refs for next step selection.
+
 ## Troubleshooting
 
 - Ref not found: re-snapshot.
 - If XCTest returns 0 nodes, foreground app state may have changed. Re-open the app or retry after state is stable.
+
+## Stop Conditions
+
+- If refs are unstable after UI transitions, switch to selector-based targeting and stop investing in ref-only flows.
+
+## find click response
+
+`find "<query>" click --json` returns deterministic matched-target metadata:
+
+```json
+{ "ref": "@e3", "locator": "any", "query": "Increment", "x": 195, "y": 422 }
+```
+
+Fields come from the matched snapshot node, not the platform runner. Use these for observability and replay quality — they are stable across runs for the same UI state.
 
 ## Replay note
 
