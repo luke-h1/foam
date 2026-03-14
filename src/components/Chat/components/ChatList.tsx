@@ -1,15 +1,11 @@
-import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
+import {
+  FlashList,
+  FlashListRef,
+  ListRenderItem,
+} from '@app/components/FlashList/FlashList';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { useSelector } from '@legendapp/state/react';
-import {
-  JSXElementConstructor,
-  memo,
-  MutableRefObject,
-  ReactElement,
-  RefObject,
-  useEffect,
-  useRef,
-} from 'react';
+import { memo, MutableRefObject, RefObject, useEffect, useRef } from 'react';
 import {
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -23,11 +19,7 @@ interface ChatListProps {
   listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
   isAtBottomRef: MutableRefObject<boolean>;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  renderItem: ({
-    item,
-  }: {
-    item: AnyChatMessageType;
-  }) => ReactElement<unknown, string | JSXElementConstructor<unknown>> | null;
+  renderItem: ListRenderItem<AnyChatMessageType>;
   keyExtractor: (item: AnyChatMessageType) => string;
   getItemType: (item: AnyChatMessageType) => string;
   contentContainerStyle: StyleProp<ViewStyle>;
