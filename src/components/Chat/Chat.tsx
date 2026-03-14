@@ -96,8 +96,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
   const messages$ = chatStore$.messages;
-  // Fine-grained selector — only causes a re-render when the "has messages" boolean flips,
-  // not on every individual message arrival. The FlashList data subscription lives in ChatList.
   const hasMessages = useSelector(() => chatStore$.messages.get().length > 0);
   const channelEmoteData = useChannelEmoteData(channelId);
   const userPaints = useUserPaints();
@@ -828,7 +826,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         }
       />
     ),
-    [], // Empty deps — all callbacks accessed via stable refs
+    [],
   );
 
   const keyExtractor = useCallback(

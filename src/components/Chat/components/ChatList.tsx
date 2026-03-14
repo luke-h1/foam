@@ -33,11 +33,6 @@ interface ChatListProps {
   contentContainerStyle: StyleProp<ViewStyle>;
 }
 
-/**
- * Isolated FlashList wrapper that is the only subscriber to chatStore$.messages.
- * This prevents the parent Chat component from re-rendering on every message arrival,
- * which was the root cause of the blank-screen flash on each IRC message batch.
- */
 export const ChatList = memo(
   ({
     listRef,

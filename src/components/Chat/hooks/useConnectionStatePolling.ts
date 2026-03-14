@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 /**
  * Polls a getter every interval and exposes the result as state.
  * Use for connection state that doesn't trigger React updates (e.g. ref-based or external).
- * Uses the functional setState form to bail out of re-renders when the value is unchanged.
  */
 export function useConnectionStatePolling(
   getState: () => boolean,
