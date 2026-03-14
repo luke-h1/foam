@@ -2,6 +2,7 @@ import { PropsWithChildren, Ref, forwardRef, useState } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable, PressableProps, View } from 'react-native';
 import { EaseView } from 'react-native-ease';
+import { StyleSheet } from 'react-native-unistyles';
 
 export const PressableArea = forwardRef(
   (props: PropsWithChildren<PressableProps>, ref: Ref<View>) => {
@@ -26,7 +27,7 @@ export const PressableArea = forwardRef(
         <EaseView
           animate={{ opacity: pressed ? 0.75 : 1 }}
           transition={{ type: 'timing', duration: 150 }}
-          style={[{ flex: 1 }]}
+          style={styles.pressable}
         >
           {children}
         </EaseView>
@@ -34,4 +35,11 @@ export const PressableArea = forwardRef(
     );
   },
 );
+
+const styles = StyleSheet.create({
+  pressable: {
+    flex: 1,
+  },
+});
+
 PressableArea.displayName = 'PressableArea';
