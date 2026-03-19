@@ -186,6 +186,23 @@ function ChatMessageComponent<
     [userstate.username, userstate.color, message_id, notice_tags],
   );
 
+  const isSystemMessage = sender?.toLowerCase() === 'system';
+
+  const renderSystemMessagePart = useCallback(
+    (part: ParsedPart, index: number) => {
+      if (part.type === 'text') {
+        return (
+          <Text key={index} style={styles.systemMessageText}>
+            {part.content}
+          </Text>
+        );
+      }
+
+      return renderMessagePart(part, index);
+    },
+    [renderMessagePart],
+  );
+
   const renderBadges = useCallback(() => {
     return badges?.map((badge, index) => (
       <Button
@@ -284,6 +301,7 @@ function ChatMessageComponent<
       style={[
         styles.chatContainer,
         style,
+        isSystemMessage && styles.systemMessageContainer,
         isReply && styles.replyContainer,
         isFirstMessage && styles.firstMessageContainer,
       ]}
@@ -294,33 +312,38 @@ function ChatMessageComponent<
         </View>
       )}
 
-      {!isSubscriptionNotice && (
-        <View style={styles.messageRow}>
-          <View style={styles.messageLine}>
-            {!isSystemNotice && (
-              <Text style={styles.timestamp}>
-                {formatDate(new Date(), 'HH:mm')}:
-              </Text>
-            )}
-            {renderBadges()}
-            {userstate.username && (
-              <PaintedUsername
-                username={userstate.username}
-                userId={userstate['user-id']}
-                fallbackColor={
-                  userstate.color ? lightenColor(userstate.color) : undefined
-                }
-              />
-            )}
-            {message.map(renderMessagePart)}
+      {!isSubscriptionNotice &&
+        (isSystemMessage ? (
+          <View style={styles.systemMessageRow}>
+            {message.map(renderSystemMessagePart)}
           </View>
-          <View style={styles.rightActions}>
-            {isFirstMessage && (
-              <Text style={styles.firstMessageText}>first message</Text>
-            )}
+        ) : (
+          <View style={styles.messageRow}>
+            <View style={styles.messageLine}>
+              {!isSystemNotice && (
+                <Text style={styles.timestamp}>
+                  {formatDate(new Date(), 'HH:mm')}:
+                </Text>
+              )}
+              {renderBadges()}
+              {userstate.username && (
+                <PaintedUsername
+                  username={userstate.username}
+                  userId={userstate['user-id']}
+                  fallbackColor={
+                    userstate.color ? lightenColor(userstate.color) : undefined
+                  }
+                />
+              )}
+              {message.map(renderMessagePart)}
+            </View>
+            <View style={styles.rightActions}>
+              {isFirstMessage && (
+                <Text style={styles.firstMessageText}>first message</Text>
+              )}
+            </View>
           </View>
-        </View>
-      )}
+        ))}
     </Button>
   );
 }
@@ -349,6 +372,21 @@ const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.xs,
     minHeight: 44,
     maxHeight: 120,
+  },
+  systemMessageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  systemMessageRow: {
+    width: '100%',
+    paddingHorizontal: theme.spacing.sm,
+    alignItems: 'center',
+  },
+  systemMessageText: {
+    color: theme.colors.gray.textLow,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    lineHeight: theme.spacing['2xl'],
   },
   firstMessageContainer: {
     backgroundColor: 'rgba(145, 71, 255, 0.08)',

@@ -33,6 +33,7 @@ import { lightenColor } from '@app/utils/color/lightenColor';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { batch } from '@legendapp/state';
 import { useSelector } from '@legendapp/state/react';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import * as Clipboard from 'expo-clipboard';
@@ -97,10 +98,15 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const insets = useSafeAreaInsets();
   const messages$ = chatStore$.messages;
   const hasMessages = useSelector(() => chatStore$.messages.get().length > 0);
+  const isMessagesEmpty = useSelector(
+    () => chatStore$.messages.get().length === 0,
+  );
   const channelEmoteData = useChannelEmoteData(channelId);
   const userPaints = useUserPaints();
 
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
+  const hasEverHadMessagesRef = useRef(false);
+  const lastEmptyLogAtRef = useRef<number>(0);
 
   const listRef = useRef<FlashListRef<AnyChatMessageType> | null>(null);
   const emoteSheetRef = useRef<TrueSheet>(null);
@@ -347,13 +353,67 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [channelName, handleNewMessage],
   );
 
-  const onClearChat = useCallback(() => {
-    clearMessages();
-    clearLocalMessages();
-    setTimeout(() => {
-      void listRef.current?.scrollToEnd({ animated: false });
-    }, 0);
-  }, [clearLocalMessages]);
+  const onClearChat = useCallback(
+    (
+      _channel: string,
+      tags: Record<string, string>,
+      username?: string,
+      banDuration?: number,
+    ) => {
+      const beforeCount = messages$.peek().length;
+      logger.chat.warn('Twitch CLEARCHAT received', {
+        channelId,
+        channelName,
+        username,
+        banDuration,
+        targetUserId: tags['target-user-id'],
+        beforeCount,
+      });
+
+      clearLocalMessages();
+
+      const isFullChatClear = !username;
+      // eslint-disable-next-line no-nested-ternary
+      const systemMessageText = isFullChatClear
+        ? 'Chat was cleared by a moderator'
+        : banDuration != null
+          ? `${username} was banned for ${banDuration}.`
+          : `Chat history for ${username} was cleared by a mod.`;
+
+      const systemMessage = createSystemMessage(channelName, systemMessageText);
+
+      batch(() => {
+        clearMessages();
+        addMessage(systemMessage as ChatMessageType<never>);
+      });
+      setTimeout(() => {
+        void listRef.current?.scrollToEnd({ animated: false });
+      }, 0);
+    },
+    [clearLocalMessages, channelId, channelName, messages$],
+  );
+
+  // If chat becomes empty unexpectedly during active usage, record it.
+  useEffect(() => {
+    if (hasMessages) {
+      hasEverHadMessagesRef.current = true;
+    }
+  }, [hasMessages]);
+
+  useEffect(() => {
+    if (!hasEverHadMessagesRef.current) return;
+    if (!isMessagesEmpty) return;
+
+    const now = Date.now();
+    // Avoid log spam if we temporarily clear/re-populate.
+    if (now - lastEmptyLogAtRef.current < 2000) return;
+    lastEmptyLogAtRef.current = now;
+
+    logger.chat.warn('Chat messages became empty', {
+      channelId,
+      channelName,
+    });
+  }, [isMessagesEmpty, channelId, channelName, messages$]);
 
   const onJoin = useCallback(() => {
     logger.chat.info('Joined channel:', channelName);
