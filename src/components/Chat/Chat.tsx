@@ -658,6 +658,11 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         .peek()
         .find(m => m?.message_id === message.message_id);
 
+      const twitchUserId = message.userstate['user-id'];
+      if (twitchUserId) {
+        void fetchUserCosmetics(twitchUserId);
+      }
+
       setReplyTo({
         messageId: message.message_id,
         username: message.sender,
@@ -667,9 +672,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           parentMessage?.message as ParsedPart[],
         ),
         color: message.userstate.color,
+        userId: twitchUserId || undefined,
       });
     },
-    [messages$],
+    [fetchUserCosmetics, messages$],
   );
 
   const handleEmoteSelect = useCallback((item: EmotePickerItem) => {

@@ -1,4 +1,5 @@
 import { Button } from '@app/components/Button/Button';
+import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { Icon } from '@app/components/Icon/Icon';
 import { Text } from '@app/components/Text/Text';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -21,6 +22,10 @@ export interface ReplyToData {
   replyParentUserLogin: string;
   parentMessage: string;
   color?: string;
+  /**
+   * Twitch user-id for 7TV paint lookup in the reply preview
+   */
+  userId?: string;
 }
 
 interface ChatInputSectionProps {
@@ -81,17 +86,18 @@ export const ChatInputSection = memo(
           <View style={styles.replyPreview}>
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
-              <Text style={styles.replyLabel}>
-                Replying to{' '}
-                <Text
-                  style={[
-                    styles.replyUsername,
-                    replyTo.color && { color: lightenColor(replyTo.color) },
-                  ]}
-                >
-                  {replyTo.username}
-                </Text>
-              </Text>
+              <View style={styles.replyLabelRow}>
+                <Text style={styles.replyLabel}>Replying to </Text>
+                <PaintedUsername
+                  username={replyTo.username}
+                  userId={replyTo.userId}
+                  showColon={false}
+                  usernameTextStyle={styles.replyPaintedUsername}
+                  fallbackColor={
+                    replyTo.color ? lightenColor(replyTo.color) : undefined
+                  }
+                />
+              </View>
               {replyTo.message && (
                 <Text style={styles.replyMessagePreview} numberOfLines={1}>
                   {truncate(replyTo.message.trim() || replyTo.message, 60)}
@@ -227,13 +233,18 @@ const styles = StyleSheet.create(theme => ({
   replyContent: {
     flex: 1,
   },
+  replyLabelRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
   replyLabel: {
     fontSize: theme.font.fontSize.xs,
     opacity: 0.7,
   },
-  replyUsername: {
+  replyPaintedUsername: {
+    fontSize: theme.font.fontSize.xs,
     fontWeight: '600',
-    opacity: 1,
   },
   replyMessagePreview: {
     fontSize: theme.font.fontSize.sm,

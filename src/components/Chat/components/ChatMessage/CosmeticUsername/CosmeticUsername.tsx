@@ -6,7 +6,7 @@ import { useSelector } from '@legendapp/state/react';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useMemo } from 'react';
-import { View } from 'react-native';
+import { type StyleProp, TextStyle, View } from 'react-native';
 import Svg, {
   Defs,
   RadialGradient as SvgRadialGradient,
@@ -32,6 +32,11 @@ interface PaintedUsernameProps {
    */
   userId?: string;
   fallbackColor?: string;
+  /**
+   * When false, omits the trailing ":" (e.g. reply preview). Default true for chat lines.
+   * */
+  showColon?: boolean;
+  usernameTextStyle?: StyleProp<TextStyle>;
 }
 
 function PaintedUsernameComponent({
@@ -39,7 +44,10 @@ function PaintedUsernameComponent({
   paint: paintProp,
   userId,
   fallbackColor = '#FFFFFF',
+  showColon = true,
+  usernameTextStyle,
 }: PaintedUsernameProps) {
+  const displayUsername = showColon ? `${username}:` : username;
   const paintId = useSelector(() =>
     userId ? chatStore$.userPaintIds[userId]?.get() : null,
   );
@@ -125,7 +133,9 @@ function PaintedUsernameComponent({
             </Svg>
           </View>
           {/* Invisible text to size the gradient correctly */}
-          <Text style={[styles.hiddenText, shadowStyle]}>{username}:</Text>
+          <Text style={[styles.hiddenText, usernameTextStyle, shadowStyle]}>
+            {displayUsername}
+          </Text>
         </View>
       );
     }
@@ -138,8 +148,9 @@ function PaintedUsernameComponent({
         end={gradientConfig.end}
         style={styles.gradient}
       >
-        {/* Invisible text to size the gradient correctly */}
-        <Text style={[styles.hiddenText, shadowStyle]}>{username}:</Text>
+        <Text style={[styles.hiddenText, usernameTextStyle, shadowStyle]}>
+          {displayUsername}
+        </Text>
       </LinearGradient>
     );
   };
@@ -148,7 +159,9 @@ function PaintedUsernameComponent({
     <MaskedView
       maskElement={
         <View style={styles.maskContainer}>
-          <Text style={[styles.maskText, shadowStyle]}>{username}:</Text>
+          <Text style={[styles.maskText, usernameTextStyle, shadowStyle]}>
+            {displayUsername}
+          </Text>
         </View>
       }
     >
