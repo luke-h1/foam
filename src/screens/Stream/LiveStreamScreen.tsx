@@ -10,12 +10,7 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  AppState,
-  type AppStateStatus,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -48,7 +43,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
   const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastChatToggleTimeRef = useRef<number>(0);
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 
@@ -59,19 +53,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         ScreenOrientation.OrientationLock.PORTRAIT_UP,
       );
     };
-  }, []);
-
-  useEffect(() => {
-    const sub = AppState.addEventListener(
-      'change',
-      (nextState: AppStateStatus) => {
-        if (appStateRef.current === 'background' && nextState === 'active') {
-          streamPlayerRef.current?.forceRefresh();
-        }
-        appStateRef.current = nextState;
-      },
-    );
-    return () => sub.remove();
   }, []);
 
   const handleContentGateChange = useCallback((hasGate: boolean) => {

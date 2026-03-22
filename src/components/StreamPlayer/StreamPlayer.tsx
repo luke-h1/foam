@@ -751,10 +751,23 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const stuckCountRef = useRef<number>(0);
     const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
+    // Avoid WebView.reload(): with source={{ html, baseUrl: https://www.twitch.tv/ }} it loads twitch.tv, not the embed HTML (issue #524).
+    const remountEmbedWebView = useCallback(() => {
+      setPlayerState(prev => ({
+        ...prev,
+        isReady: false,
+        isBuffering: true,
+      }));
+      needsInitRef.current = true;
+      setWebViewKey(k => k + 1);
+    }, []);
+
+    const forceRefresh = remountEmbedWebView;
+
     useEffect(() => {
       const handleAppStateChange = (nextAppState: AppStateStatus) => {
         if (appStateRef.current === 'background' && nextAppState === 'active') {
-          setWebViewKey(k => k + 1);
+          remountEmbedWebView();
         }
 
         appStateRef.current = nextAppState;
@@ -768,7 +781,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       return () => {
         subscription.remove();
       };
-    }, []);
+    }, [remountEmbedWebView]);
 
     useEffect(() => {
       streamWebViewWarmupPool.startWarmup(parent);
@@ -880,19 +893,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         }, 1000);
       });
     }, [injectJS, playerState.duration]);
-
-    const forceRefresh = useCallback(() => {
-      setPlayerState(prev => ({
-        ...prev,
-        isReady: false,
-        isBuffering: true,
-      }));
-      needsInitRef.current = true;
-
-      setTimeout(() => {
-        webViewRef.current?.reload();
-      }, 100);
-    }, []);
 
     useImperativeHandle(
       ref,
@@ -1287,8 +1287,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           source={webViewSource}
           style={[styles.webView, hasContentGate && styles.webViewScrollable]}
           onContentProcessDidTerminate={() => {
-            needsInitRef.current = true;
-            webViewRef.current?.reload();
+            remountEmbedWebView();
           }}
           onError={handleWebViewError}
           onHttpError={handleWebViewHttpError}
@@ -1311,8 +1310,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           }}
           onMessage={handleMessage}
           onRenderProcessGone={() => {
-            needsInitRef.current = true;
-            webViewRef.current?.reload();
+            remountEmbedWebView();
           }}
         />
 
