@@ -20,6 +20,7 @@ import {
   updateBadge,
   updatePaint,
 } from '@app/store/chatStore/cosmetics';
+import type { SanitisedEmote } from '@app/types/emote';
 import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
 import { useCallback } from 'react';
@@ -49,8 +50,8 @@ export function useChatSevenTvCallbacks({
   fetchAndCacheUserCosmetics: (sevenTvUserId: string) => Promise<unknown>;
   updateSevenTvEmotes: (
     cId: string,
-    added: unknown[],
-    removed: unknown[],
+    added: SanitisedEmote[],
+    removed: SanitisedEmote[],
   ) => void;
 }) {
   const onEmoteUpdate = useCallback(
@@ -59,8 +60,8 @@ export function useChatSevenTvCallbacks({
       removed,
       channelId: cId,
     }: {
-      added: unknown[];
-      removed: unknown[];
+      added: SanitisedEmote[];
+      removed: SanitisedEmote[];
       channelId: string;
     }) => {
       logger.stvWs.info(

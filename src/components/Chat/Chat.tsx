@@ -32,7 +32,6 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { batch } from '@legendapp/state';
 import { useSelector } from '@legendapp/state/react';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
@@ -111,12 +110,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const listRef = useRef<FlashListRef<AnyChatMessageType> | null>(null);
   const emoteSheetRef = useRef<TrueSheet>(null);
   const settingsSheetRef = useRef<TrueSheet>(null);
-  const debugModalRef = useRef<BottomSheetModal>(null);
   const chatInputRef = useRef<TextInput>(null);
-
-  const badgePreviewSheetRef = useRef<BottomSheetModal>(null);
-  const emotePreviewSheetRef = useRef<BottomSheetModal>(null);
-  const actionSheetRef = useRef<BottomSheetModal>(null);
 
   const [messageInput, setMessageInput] = useState('');
   const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
@@ -130,6 +124,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
     null,
   );
+  const [isDebugModalVisible, setIsDebugModalVisible] = useState(false);
 
   const mentionColorCache = useRef<Map<string, string>>(new Map());
   const lightenedColorCache = useRef<Map<string, string>>(new Map());
@@ -169,7 +164,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         return;
       }
 
-      // Mark as fetching to prevent duplicate requests
       fetchedCosmeticsUsers.current.add(twitchUserId);
 
       const existingPaintId = chatStore$.userPaintIds[twitchUserId]?.peek();
@@ -393,7 +387,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     [clearLocalMessages, channelId, channelName, messages$],
   );
 
-  // If chat becomes empty unexpectedly during active usage, record it.
   useEffect(() => {
     if (hasMessages) {
       hasEverHadMessagesRef.current = true;
@@ -405,7 +398,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     if (!isMessagesEmpty) return;
 
     const now = Date.now();
-    // Avoid log spam if we temporarily clear/re-populate.
     if (now - lastEmptyLogAtRef.current < 2000) return;
     lastEmptyLogAtRef.current = now;
 
@@ -696,30 +688,23 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
     setSelectedBadge(badge);
-    globalThis.requestAnimationFrame(() => {
-      badgePreviewSheetRef.current?.present();
-    });
   }, []);
 
   const handleMessageLongPress = useCallback(
     (data: MessageActionData<'usernotice'>) => {
       setSelectedMessage(data);
-      actionSheetRef.current?.present();
     },
     [],
   );
 
   const handleEmotePress = useCallback((emote: EmotePressData) => {
     setSelectedEmote(emote);
-    globalThis.requestAnimationFrame(() => {
-      emotePreviewSheetRef.current?.present();
-    });
   }, []);
 
   const handleActionSheetReply = useCallback(() => {
     if (!selectedMessage) return;
     handleReply(selectedMessage.messageData);
-    actionSheetRef.current?.dismiss();
+    setSelectedMessage(null);
   }, [selectedMessage, handleReply]);
 
   const handleActionSheetCopy = useCallback(() => {
@@ -728,10 +713,9 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     void Clipboard.setStringAsync(messageText).then(() =>
       toast.success('Copied to clipboard'),
     );
-    actionSheetRef.current?.dismiss();
+    setSelectedMessage(null);
   }, [selectedMessage]);
 
-  // Stable getMentionColor - uses observable peek() to avoid renderItem recreation
   const getMentionColor = useCallback(
     (username: string): string => {
       const lowerUsername = username.toLowerCase();
@@ -759,7 +743,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
       return color;
     },
-    [messages$], // messages$ is stable observable reference
+    [messages$],
   );
 
   const parseTextForEmotes = useCallback(
@@ -838,7 +822,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       if (cached) return cached;
       const lightened = lightenColor(color);
       lightenedColorCache.current.set(color, lightened);
-      // Limit cache size to prevent memory leak
       if (lightenedColorCache.current.size > 500) {
         const firstKey = lightenedColorCache.current.keys().next().value as
           | string
@@ -886,6 +869,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         getMentionColor={getMentionColorRef.current}
         parseTextForEmotes={parseTextForEmotesRef.current}
         userPaints={userPaintsRef.current}
+        isChannelPointRedemption={msg.isChannelPointRedemption}
+        isTwitchSystemNotice={msg.isTwitchSystemNotice}
         // @ts-expect-error - notice_tags union type not narrowing correctly
         notice_tags={
           'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
@@ -954,7 +939,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           onSubmit={handleSendMessage}
           onOpenEmoteSheet={handleOpenEmoteSheet}
           onOpenSettingsSheet={handleOpenSettingsSheet}
-          onOpenDebugModal={() => debugModalRef.current?.present()}
+          onOpenDebugModal={() => setIsDebugModalVisible(true)}
           replyTo={replyTo}
           onClearReply={() => setReplyTo(null)}
           isConnected={connected}
@@ -969,7 +954,6 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
           ref={settingsSheetRef}
           onRefetchEmotes={() => {
             void refetchEmotes().then(() => {
-              // Reprocess existing messages with new emote/badge data
               reprocessAllMessages();
             });
           }}
@@ -982,7 +966,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         />
 
         <ChatDebugModal
-          ref={debugModalRef}
+          visible={isDebugModalVisible}
+          onClose={() => setIsDebugModalVisible(false)}
           onTestMessage={handleTestMessage}
           onClearChatCache={handleClearChatCache}
           onClearImageCache={() => void handleClearImageCache()}
@@ -990,21 +975,24 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         {selectedBadge && (
           <BadgePreviewSheet
-            ref={badgePreviewSheetRef}
+            visible={Boolean(selectedBadge)}
+            onClose={() => setSelectedBadge(null)}
             selectedBadge={selectedBadge}
           />
         )}
 
         {selectedEmote && (
           <EmotePreviewSheet
-            ref={emotePreviewSheetRef}
+            visible={Boolean(selectedEmote)}
+            onClose={() => setSelectedEmote(null)}
             selectedEmote={selectedEmote}
           />
         )}
 
         {selectedMessage && (
           <ActionSheet
-            ref={actionSheetRef}
+            visible={Boolean(selectedMessage)}
+            onClose={() => setSelectedMessage(null)}
             message={selectedMessage.message}
             username={selectedMessage.username}
             handleReply={handleActionSheetReply}

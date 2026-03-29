@@ -21,7 +21,6 @@ interface EmoteProcessorParams {
 const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
 
-// Helper to create cache key from emote sets and input string
 const createCacheKey = (
   inputString: string,
   sevenTvGlobalEmotes: SanitisedEmote[],
@@ -101,7 +100,6 @@ export const processEmotesWorklet = (
   }
   const emoteMap = new Map<string, SanitisedEmote>();
 
-  // Personal emotes have highest priority (only the sender can use them)
   const personalEmotes = [...sevenTvPersonalEmotes];
 
   const channelEmotes = [
@@ -118,19 +116,16 @@ export const processEmotesWorklet = (
     ...bttvGlobalEmotes,
   ];
 
-  // Add personal emotes first (highest priority)
   personalEmotes.forEach(emote => {
     emoteMap.set(emote.name, emote);
   });
 
-  // Add channel emotes, only if not already set by personal emotes
   channelEmotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
     }
   });
 
-  // Add global emotes, only if not already set by personal or channel emotes
   globalEmotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
@@ -150,7 +145,6 @@ export const processEmotesWorklet = (
       continue;
     }
 
-    // Skip whitespace
     if (/^\s+$/.test(word)) {
       result.push({ type: 'text', content: word });
       i += 1;
@@ -160,7 +154,6 @@ export const processEmotesWorklet = (
 
     let emote = emoteMap.get(word);
 
-    // Fallback: case-insensitive lookup if exact match fails
     if (!emote) {
       const lowerWord = word.toLowerCase();
       const entries = Array.from(emoteMap.entries());

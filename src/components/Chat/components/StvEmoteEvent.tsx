@@ -19,8 +19,12 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
   });
 
   const content = part.stvEvents?.data;
+  if (!content) {
+    return null;
+  }
 
   const status = removed ? 'Removed' : 'Added';
+  const actorName = content.actor?.display_name;
 
   return (
     <View style={styles.container}>
@@ -31,11 +35,7 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
             <Text color={removed ? 'red' : 'green'}>{status}</Text>
             <Text> Emote</Text>
           </Text>
-          {part.stvEvents.data.actor?.display_name && (
-            <Text style={styles.userText}>
-              {part.stvEvents.data.actor?.display_name}
-            </Text>
-          )}
+          {actorName ? <Text style={styles.userText}>{actorName}</Text> : null}
         </View>
       </View>
       <View style={styles.content}>
@@ -60,10 +60,6 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
 }
 
 const styles = StyleSheet.create(theme => ({
-  stvLogo: {
-    width: 30,
-    height: 30,
-  },
   noticeHeader: {
     backgroundColor: theme.colors.gray.uiActive,
     width: '100%',

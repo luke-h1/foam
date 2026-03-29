@@ -3,42 +3,23 @@ import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetView,
-} from '@gorhom/bottom-sheet';
 import { SymbolView } from 'expo-symbols';
-import { forwardRef, useCallback, useMemo, type ComponentProps } from 'react';
-import { Platform, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useMemo } from 'react';
+import { Modal, Platform, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 interface Props {
+  visible: boolean;
+  onClose: () => void;
   message: ParsedPart[];
   username?: string;
   handleReply: () => void;
   handleCopy: () => void;
 }
 
-export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
-  const { message, username, handleReply, handleCopy } = props;
-  const insets = useSafeAreaInsets();
-
-  const snapPoints = useMemo(() => ['40%'], []);
-
-  const renderBackdrop = useCallback(
-    (backdropProps: ComponentProps<typeof BottomSheetBackdrop>) => (
-      <BottomSheetBackdrop
-        {...backdropProps}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        opacity={0.5}
-        pressBehavior="close"
-      />
-    ),
-    [],
-  );
+export function ActionSheet(props: Props) {
+  const { visible, onClose, message, username, handleReply, handleCopy } =
+    props;
 
   const actions = useMemo(
     () => [
@@ -46,22 +27,28 @@ export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
         id: 'copy' as const,
         icon: 'copy',
         label: 'Copy Message',
-        onPress: handleCopy,
+        onPress: () => {
+          handleCopy();
+          onClose();
+        },
       },
       {
         id: 'reply' as const,
         icon: 'arrowshape.turn.up.left',
         label: 'Reply',
-        onPress: handleReply,
+        onPress: () => {
+          handleReply();
+          onClose();
+        },
       },
       {
         id: 'report' as const,
         icon: 'arrow.up.right.square',
         label: 'Report message',
-        onPress: () => {},
+        onPress: onClose,
       },
     ],
-    [handleCopy, handleReply],
+    [handleCopy, handleReply, onClose],
   );
 
   const getSFSymbolName = useCallback(
@@ -114,20 +101,13 @@ export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
   }, []);
 
   return (
-    <BottomSheetModal
-      ref={ref}
-      detached
-      enableDynamicSizing
-      maxDynamicContentSize={460}
-      backdropComponent={renderBackdrop}
-      bottomInset={Math.max(insets.bottom + 8, 16)}
-      style={styles.modalContainer}
-      backgroundStyle={styles.bottomSheet}
-      handleIndicatorStyle={styles.handle}
-      enablePanDownToClose
-      snapPoints={snapPoints}
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="formSheet"
+      onRequestClose={onClose}
     >
-      <BottomSheetView style={styles.wrapper}>
+      <View style={styles.wrapper}>
         <View style={styles.previewCard}>
           <View style={styles.messageLine}>
             {username ? (
@@ -161,29 +141,17 @@ export const ActionSheet = forwardRef<BottomSheetModal, Props>((props, ref) => {
             </Button>
           ))}
         </View>
-      </BottomSheetView>
-    </BottomSheetModal>
+      </View>
+    </Modal>
   );
-});
+}
 
 const styles = StyleSheet.create(theme => ({
-  modalContainer: {
-    marginHorizontal: theme.spacing.md,
-  },
-  bottomSheet: {
-    backgroundColor: '#171b23',
-    borderRadius: 28,
-  },
-  handle: {
-    backgroundColor: theme.colors.gray.accent,
-    width: 42,
-    height: 5.5,
-    borderRadius: theme.radii.full,
-    marginTop: 2,
-  },
   wrapper: {
+    flex: 1,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.md,
     backgroundColor: '#171b23',
     gap: theme.spacing.lg,
   },

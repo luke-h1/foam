@@ -20,30 +20,42 @@ import {
 import { cacheEmoteImages, clearEmoteImageCache } from './emoteImages';
 import { chatStore$, limitChannelCaches } from './state';
 
-let activeLoadController: AbortController | null = null;
+const channelLoadAbort = (() => {
+  let current: AbortController | null = null;
+  return {
+    startNext(): AbortController {
+      if (current) {
+        current.abort();
+        logger.main.info('🚫 Aborted previous load request');
+      }
+      current = new AbortController();
+      return current;
+    },
+    abortActive(): void {
+      if (!current) return;
+      current.abort();
+      current = null;
+      logger.main.info('🚫 Aborted current load request');
+    },
+  };
+})();
+
+export const createLoadController = (): AbortController =>
+  channelLoadAbort.startNext();
+
+export const abortCurrentLoad = (): void => channelLoadAbort.abortActive();
+
+const exitIfAborted = (
+  signal: AbortSignal | undefined,
+  resetLoading: boolean,
+): boolean => {
+  if (!signal?.aborted) return false;
+  if (resetLoading) chatStore$.loadingState.set('IDLE');
+  return true;
+};
 
 const personalEmoteFetchPromises = new Map<string, Promise<SanitisedEmote[]>>();
 const checkedUsersForPersonalEmotes = new Set<string>();
-
-export const createLoadController = (): AbortController => {
-  if (activeLoadController) {
-    activeLoadController.abort();
-    logger.main.info('🚫 Aborted previous load request');
-  }
-  activeLoadController = new AbortController();
-  return activeLoadController;
-};
-
-export const abortCurrentLoad = (): void => {
-  if (activeLoadController) {
-    activeLoadController.abort();
-    activeLoadController = null;
-    logger.main.info('🚫 Aborted current load request');
-  }
-};
-
-export const isLoadAborted = (): boolean =>
-  activeLoadController?.signal.aborted ?? false;
 
 export const fetchUserPersonalEmotes = async (
   twitchUserId: string,
@@ -202,25 +214,24 @@ const loadChannelResourcesInternal = async (
 
         if (!hasEmptyEmotes && cacheAge < CACHE_DURATION) {
           if (missingEmoteSetId) {
-            if (signal?.aborted) {
-              return false;
-            }
+            if (exitIfAborted(signal, true)) return false;
             try {
               const sevenTvSetId =
                 await sevenTvService.getEmoteSetId(channelId);
 
-              if (signal?.aborted) {
-                return false;
-              }
+              if (exitIfAborted(signal, true)) return false;
 
               const channelCache =
                 chatStore$.persisted.channelCaches[channelId];
 
               if (channelCache) {
-                channelCache.assign({ sevenTvEmoteSetId: sevenTvSetId });
+                channelCache.assign({
+                  sevenTvEmoteSetId:
+                    sevenTvSetId !== 'global' ? sevenTvSetId : undefined,
+                });
               }
             } catch (error) {
-              if (signal?.aborted) return false;
+              if (exitIfAborted(signal, true)) return false;
               logger.chat.warn(
                 'Failed to get 7TV emote set ID for cached data:',
                 error,
@@ -229,9 +240,7 @@ const loadChannelResourcesInternal = async (
           }
 
           if (badgesStale) {
-            if (signal?.aborted) {
-              return false;
-            }
+            if (exitIfAborted(signal, true)) return false;
 
             const [
               twitchChannelBadges,
@@ -247,9 +256,7 @@ const loadChannelResourcesInternal = async (
               chatterinoService.listSanitisedBadges(),
             ]);
 
-            if (signal?.aborted) {
-              return false;
-            }
+            if (exitIfAborted(signal, true)) return false;
 
             const getValue = <T>(r: PromiseSettledResult<T[]>): T[] =>
               r.status === 'fulfilled' ? r.value : [];
@@ -322,10 +329,7 @@ const loadChannelResourcesInternal = async (
 
     chatStore$.currentChannelId.set(channelId);
 
-    if (signal?.aborted) {
-      chatStore$.loadingState.set('IDLE');
-      return false;
-    }
+    if (exitIfAborted(signal, true)) return false;
 
     let sevenTvSetId = 'global';
 
@@ -335,10 +339,7 @@ const loadChannelResourcesInternal = async (
       logger.chat.warn('Failed to get 7TV emote set ID:', error);
     }
 
-    if (signal?.aborted) {
-      chatStore$.loadingState.set('IDLE');
-      return false;
-    }
+    if (exitIfAborted(signal, true)) return false;
 
     const [
       sevenTvChannelEmotes,
@@ -376,10 +377,7 @@ const loadChannelResourcesInternal = async (
       { channelId, services: 13 },
     );
 
-    if (signal?.aborted) {
-      chatStore$.loadingState.set('IDLE');
-      return false;
-    }
+    if (exitIfAborted(signal, true)) return false;
 
     const getValue = <T>(result: PromiseSettledResult<T[]>): T[] =>
       result.status === 'fulfilled' ? result.value : [];
@@ -409,10 +407,7 @@ const loadChannelResourcesInternal = async (
 
     const allBadges = deduplicateById(allBadgesRaw);
 
-    if (signal?.aborted) {
-      chatStore$.loadingState.set('IDLE');
-      return false;
-    }
+    if (exitIfAborted(signal, true)) return false;
 
     const channelData: ChannelCacheType = {
       emotes: allEmotes,
@@ -461,10 +456,7 @@ const loadChannelResourcesInternal = async (
     cacheEmoteImages(allEmotes, signal).catch(() => {});
     return true;
   } catch (error) {
-    if (signal?.aborted) {
-      chatStore$.loadingState.set('IDLE');
-      return false;
-    }
+    if (exitIfAborted(signal, true)) return false;
     logger.chat.error('Error loading channel resources:', error);
     chatStore$.loadingState.set('ERROR');
     return false;

@@ -12,7 +12,6 @@
         "@expo/metro-config": "~54.0.14",
         "@expo/metro-runtime": "~6.1.2",
         "@expo/webpack-config": "^19.0.0",
-        "@gorhom/bottom-sheet": "^5.1.8",
         "@legendapp/list": "^1.1.4",
         "@legendapp/state": "^2.1.15",
         "@lodev09/react-native-true-sheet": "^3.5.6",

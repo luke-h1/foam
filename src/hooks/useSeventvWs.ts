@@ -60,7 +60,6 @@ export interface EntitlementUpdateCallbackData {
 
 export interface EntitlementDeleteCallbackData {
   entitlementId: string;
-  /** The Twitch user ID (from user.connections) */
   ttvUserId: string | null;
 }
 
@@ -147,7 +146,6 @@ export function useSeventvWs(
   const handleEmoteSetUpdate = useCallback(
     (data: SevenTvEventData<'emote_set.update'>) => {
       try {
-        // Filter out historical events
         if (connectionTimestampRef.current) {
           const timeSinceConnection =
             Date.now() - connectionTimestampRef.current;
@@ -520,7 +518,6 @@ export function useSeventvWs(
     async (sendJsonMessage: (msg: unknown) => void) => {
       let waitStartTime = Date.now();
 
-      // Wait for twitchChannelId
       while (
         !twitchChannelIdRef.current &&
         Date.now() - waitStartTime < ID_WAIT_TIMEOUT
@@ -577,7 +574,6 @@ export function useSeventvWs(
 
       waitStartTime = Date.now();
 
-      // Wait for sevenTVemoteSetId
       while (
         !sevenTvEmoteSetIdRef.current &&
         Date.now() - waitStartTime < ID_WAIT_TIMEOUT
@@ -806,7 +802,6 @@ export function useSeventvWs(
         return;
       }
 
-      // Unsubscribe from previous channel if different
       if (
         currentEmoteSetIdRef.current &&
         currentEmoteSetIdRef.current !== emoteSetId &&
@@ -939,7 +934,6 @@ export function useSeventvWs(
       shouldConnect: isOnChatScreen && hasRequiredIds,
     });
 
-    // Track when we're on chat screen with required IDs
     if (isOnChatScreen && hasRequiredIds && !hasInitialized.current) {
       logger.stvWs.info(
         '[useSeventvWs] All requirements met, SevenTV WS will connect',

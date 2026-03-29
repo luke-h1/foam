@@ -42,14 +42,14 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
                 "fontSize": 16,
                 "fontWeight": "bold",
               },
+              undefined,
               {},
             ],
           ]
         }
         textBreakStrategy="simple"
       >
-        UrlPaintUser
-        :
+        UrlPaintUser:
       </Text>
     </View>
   </View>
@@ -105,14 +105,14 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
               "fontWeight": "bold",
               "opacity": 0,
             },
+            undefined,
             {},
           ],
         ]
       }
       textBreakStrategy="simple"
     >
-      UrlPaintUser
-      :
+      UrlPaintUser:
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -160,14 +160,14 @@ exports[`PaintedUsername Snapshots should match snapshot with fallback color onl
                 "fontSize": 16,
                 "fontWeight": "bold",
               },
+              undefined,
               {},
             ],
           ]
         }
         textBreakStrategy="simple"
       >
-        FallbackUser
-        :
+        FallbackUser:
       </Text>
     </View>
   </View>
@@ -223,14 +223,14 @@ exports[`PaintedUsername Snapshots should match snapshot with fallback color onl
               "fontWeight": "bold",
               "opacity": 0,
             },
+            undefined,
             {},
           ],
         ]
       }
       textBreakStrategy="simple"
     >
-      FallbackUser
-      :
+      FallbackUser:
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -278,6 +278,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
                 "fontSize": 16,
                 "fontWeight": "bold",
               },
+              undefined,
               {
                 "textShadowColor": "rgba(254, 118, 148, 1.00)",
                 "textShadowOffset": {
@@ -291,8 +292,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
         }
         textBreakStrategy="simple"
       >
-        RoseGoldUser
-        :
+        RoseGoldUser:
       </Text>
     </View>
   </View>
@@ -350,6 +350,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
               "fontWeight": "bold",
               "opacity": 0,
             },
+            undefined,
             {
               "textShadowColor": "rgba(254, 118, 148, 1.00)",
               "textShadowOffset": {
@@ -363,8 +364,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
       }
       textBreakStrategy="simple"
     >
-      RoseGoldUser
-      :
+      RoseGoldUser:
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -412,14 +412,14 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
                 "fontSize": 16,
                 "fontWeight": "bold",
               },
+              undefined,
               {},
             ],
           ]
         }
         textBreakStrategy="simple"
       >
-        VeryLongUsernameForTestingPurposes
-        :
+        VeryLongUsernameForTestingPurposes:
       </Text>
     </View>
   </View>
@@ -477,14 +477,14 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
               "fontWeight": "bold",
               "opacity": 0,
             },
+            undefined,
             {},
           ],
         ]
       }
       textBreakStrategy="simple"
     >
-      VeryLongUsernameForTestingPurposes
-      :
+      VeryLongUsernameForTestingPurposes:
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -532,6 +532,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
                 "fontSize": 16,
                 "fontWeight": "bold",
               },
+              undefined,
               {
                 "textShadowColor": "rgba(0, 0, 0, 1.00)",
                 "textShadowOffset": {
@@ -545,8 +546,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         }
         textBreakStrategy="simple"
       >
-        DivisionUser
-        :
+        DivisionUser:
       </Text>
     </View>
   </View>
@@ -604,6 +604,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
               "fontWeight": "bold",
               "opacity": 0,
             },
+            undefined,
             {
               "textShadowColor": "rgba(0, 0, 0, 1.00)",
               "textShadowOffset": {
@@ -617,8 +618,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
       }
       textBreakStrategy="simple"
     >
-      DivisionUser
-      :
+      DivisionUser:
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -666,6 +666,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
                 "fontSize": 16,
                 "fontWeight": "bold",
               },
+              undefined,
               {
                 "textShadowColor": "rgba(0, 96, 128, 1.00)",
                 "textShadowOffset": {
@@ -679,8 +680,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
         }
         textBreakStrategy="simple"
       >
-        FlowerchildUser
-        :
+        FlowerchildUser:
       </Text>
     </View>
   </View>
@@ -797,6 +797,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
               "fontWeight": "bold",
               "opacity": 0,
             },
+            undefined,
             {
               "textShadowColor": "rgba(0, 96, 128, 1.00)",
               "textShadowOffset": {
@@ -810,8 +811,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
       }
       textBreakStrategy="simple"
     >
-      FlowerchildUser
-      :
+      FlowerchildUser:
     </Text>
   </View>
 </RNCMaskedView>

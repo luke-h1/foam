@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+import { useChannelPointRewardTitle } from '@app/hooks/useChannelPointRewardTitle';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type {
   ChatMessageType,
@@ -9,11 +10,12 @@ import {
   UserNoticeVariantMap,
   UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
+import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPointsRewardTitle';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
-import React, { useCallback, memo, useMemo } from 'react';
+import React, { useCallback, memo, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../../../Button/Button';
@@ -33,6 +35,56 @@ export type MessageActionData<TNoticeType extends NoticeVariants> = {
   username?: string;
   messageData: ChatMessageType<TNoticeType>;
 };
+
+const SUBSCRIPTION_NOTICE_TYPES = new Set<ParsedPart['type']>([
+  'sub',
+  'resub',
+  'anongiftpaidupgrade',
+  'anongift',
+]);
+
+const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
+  'stv_emote_added',
+  'stv_emote_removed',
+]);
+
+function messageHasPart(
+  message: ParsedPart[],
+  types: Set<ParsedPart['type']>,
+): boolean {
+  return message.some(part => types.has(part.type));
+}
+
+/**
+ * Distinguishes how the message body should be laid out. Order of checks matters
+ * (e.g. Twitch system notices before subscription Usernotice parts).
+ */
+type ChatBodyVariant =
+  | 'twitch_system_notice'
+  | 'subscription'
+  | 'stv_emote_event'
+  | 'app_system_sender'
+  | 'user_chat';
+
+function getChatBodyVariant(
+  isTwitchSystemNotice: boolean | undefined,
+  message: ParsedPart[],
+  sender: string | undefined,
+): ChatBodyVariant {
+  if (isTwitchSystemNotice) {
+    return 'twitch_system_notice';
+  }
+  if (messageHasPart(message, SUBSCRIPTION_NOTICE_TYPES)) {
+    return 'subscription';
+  }
+  if (messageHasPart(message, STV_EMOTE_EVENT_TYPES)) {
+    return 'stv_emote_event';
+  }
+  if (sender?.toLowerCase() === 'system') {
+    return 'app_system_sender';
+  }
+  return 'user_chat';
+}
 
 function ChatMessageComponent<
   TNoticeType extends NoticeVariants,
@@ -61,6 +113,8 @@ function ChatMessageComponent<
   getMentionColor,
   parseTextForEmotes,
   userPaints,
+  isChannelPointRedemption,
+  isTwitchSystemNotice,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply?: (args: ChatMessageType<TNoticeType>) => void;
   onBadgePress?: (data: BadgePressData) => void;
@@ -70,19 +124,13 @@ function ChatMessageComponent<
   parseTextForEmotes?: (text: string) => ParsedPart[];
   userPaints?: Record<string, UserPaint>;
 }) {
+  void userPaints;
+
   const handleEmotePress = useCallback(
     (part: EmotePressData) => {
       onEmotePress?.(part);
     },
     [onEmotePress],
-  );
-
-  const isSubscriptionNotice = message.some(
-    part =>
-      part.type === 'sub' ||
-      part.type === 'resub' ||
-      part.type === 'anongiftpaidupgrade' ||
-      part.type === 'anongift',
   );
 
   const handleBadgePress = useCallback(
@@ -183,10 +231,16 @@ function ChatMessageComponent<
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [userstate.username, userstate.color, message_id, notice_tags],
+    [
+      handleEmotePress,
+      getMentionColor,
+      parseTextForEmotes,
+      notice_tags,
+      userstate.username,
+      userstate.color,
+      message_id,
+    ],
   );
-
-  const isSystemMessage = sender?.toLowerCase() === 'system';
 
   const renderSystemMessagePart = useCallback(
     (part: ParsedPart, index: number) => {
@@ -220,21 +274,36 @@ function ChatMessageComponent<
     ));
   }, [badges, handleBadgePress]);
 
-  const isSystemNotice = message.some(
-    part =>
-      part.type === 'stv_emote_added' || part.type === 'stv_emote_removed',
+  const bodyVariant = getChatBodyVariant(isTwitchSystemNotice, message, sender);
+
+  const isAppSystemSender = bodyVariant === 'app_system_sender';
+  const isUserChat = bodyVariant === 'user_chat';
+  const showChannelPointsRewardChrome =
+    isUserChat && isChannelPointRedemption && Boolean(userstate.username);
+
+  const rewardTitleIrc = showChannelPointsRewardChrome
+    ? channelPointsRewardTitleFromUserstate(userstate)
+    : undefined;
+  const roomId =
+    typeof userstate['room-id'] === 'string' ? userstate['room-id'] : undefined;
+  const rewardId =
+    typeof userstate['custom-reward-id'] === 'string'
+      ? userstate['custom-reward-id']
+      : undefined;
+  const rewardTitleApi = useChannelPointRewardTitle(
+    roomId,
+    rewardId,
+    Boolean(
+      showChannelPointsRewardChrome && !rewardTitleIrc && roomId && rewardId,
+    ),
   );
+  const rewardSummaryTitle =
+    rewardTitleIrc ?? rewardTitleApi ?? 'Channel Points reward';
 
   const canReply =
     onReply &&
-    !message.some(
-      part =>
-        part.type === 'sub' ||
-        part.type === 'resub' ||
-        part.type === 'anongiftpaidupgrade' ||
-        part.type === 'anongift',
-    ) &&
-    !isSystemNotice &&
+    !messageHasPart(message, SUBSCRIPTION_NOTICE_TYPES) &&
+    bodyVariant !== 'stv_emote_event' &&
     userstate.username &&
     sender?.toLowerCase() !== 'system';
 
@@ -279,20 +348,101 @@ function ChatMessageComponent<
   ]);
 
   const isReply = Boolean(parentDisplayName);
-
-  const userId = userstate['user-id'];
-  const paintId = userId && userPaints ? userPaints[userId]?.id : null;
-  // @ts-expect-error -- userPaint will be used for cosmetic paint rendering
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const userPaint = useMemo(() => {
-    if (!userId || !userPaints) {
-      return null;
-    }
-    return userPaints[userId] ?? null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, paintId]);
-
   const isFirstMessage = userstate['first-msg'] === '1';
+
+  const renderChatBody = (): ReactNode => {
+    switch (bodyVariant) {
+      case 'twitch_system_notice':
+        return null;
+
+      case 'subscription':
+        return (
+          <View style={styles.subscriptionNoticeContainer}>
+            {message.map(renderMessagePart)}
+          </View>
+        );
+
+      case 'stv_emote_event':
+        return (
+          <View
+            style={[styles.systemMessageRow, styles.stvSystemRowAlignStart]}
+          >
+            {message.map(renderMessagePart)}
+          </View>
+        );
+
+      case 'app_system_sender':
+        return (
+          <View style={styles.systemMessageRow}>
+            {message.map(renderSystemMessagePart)}
+          </View>
+        );
+
+      case 'user_chat': {
+        return (
+          <View style={styles.messageColumn}>
+            {showChannelPointsRewardChrome ? (
+              <View style={styles.rewardSummaryRow}>
+                <Text style={styles.rewardSummaryText}>
+                  <Text style={styles.rewardSummaryName}>
+                    {userstate.username}
+                  </Text>
+                  <Text style={styles.rewardSummaryMuted}> redeemed </Text>
+                  <Text style={styles.rewardSummaryRewardTitle}>
+                    {rewardSummaryTitle}
+                  </Text>
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.messageRow}>
+              <View style={styles.messageLine}>
+                <Text style={styles.timestamp}>
+                  {formatDate(new Date(), 'HH:mm')}:
+                </Text>
+                {renderBadges()}
+                {userstate.username && !isChannelPointRedemption ? (
+                  <PaintedUsername
+                    username={userstate.username}
+                    userId={userstate['user-id']}
+                    fallbackColor={
+                      userstate.color
+                        ? lightenColor(userstate.color)
+                        : undefined
+                    }
+                  />
+                ) : null}
+                {message.map(renderMessagePart)}
+              </View>
+              <View style={styles.rightActions}>
+                {isFirstMessage ? (
+                  <Text style={styles.firstMessageText}>first message</Text>
+                ) : null}
+              </View>
+            </View>
+          </View>
+        );
+      }
+
+      default: {
+        const unreachable: never = bodyVariant;
+        return unreachable;
+      }
+    }
+  };
+
+  if (bodyVariant === 'twitch_system_notice') {
+    return (
+      <Button
+        testID="chat-message"
+        onLongPress={handleLongPress}
+        style={[styles.chatContainer, style]}
+      >
+        <View style={styles.systemMessageRow}>
+          {message.map(renderSystemMessagePart)}
+        </View>
+      </Button>
+    );
+  }
 
   return (
     <Button
@@ -301,49 +451,13 @@ function ChatMessageComponent<
       style={[
         styles.chatContainer,
         style,
-        isSystemMessage && styles.systemMessageContainer,
+        isAppSystemSender && styles.systemMessageContainer,
         isReply && styles.replyContainer,
         isFirstMessage && styles.firstMessageContainer,
+        isChannelPointRedemption && isUserChat && styles.rewardMessageContainer,
       ]}
     >
-      {isSubscriptionNotice && (
-        <View style={styles.subscriptionNoticeContainer}>
-          {message.map(renderMessagePart)}
-        </View>
-      )}
-
-      {!isSubscriptionNotice &&
-        (isSystemMessage ? (
-          <View style={styles.systemMessageRow}>
-            {message.map(renderSystemMessagePart)}
-          </View>
-        ) : (
-          <View style={styles.messageRow}>
-            <View style={styles.messageLine}>
-              {!isSystemNotice && (
-                <Text style={styles.timestamp}>
-                  {formatDate(new Date(), 'HH:mm')}:
-                </Text>
-              )}
-              {renderBadges()}
-              {userstate.username && (
-                <PaintedUsername
-                  username={userstate.username}
-                  userId={userstate['user-id']}
-                  fallbackColor={
-                    userstate.color ? lightenColor(userstate.color) : undefined
-                  }
-                />
-              )}
-              {message.map(renderMessagePart)}
-            </View>
-            <View style={styles.rightActions}>
-              {isFirstMessage && (
-                <Text style={styles.firstMessageText}>first message</Text>
-              )}
-            </View>
-          </View>
-        ))}
+      {renderChatBody()}
     </Button>
   );
 }
@@ -379,8 +493,44 @@ const styles = StyleSheet.create(theme => ({
   },
   systemMessageRow: {
     width: '100%',
-    paddingHorizontal: theme.spacing.sm,
     alignItems: 'center',
+  },
+  stvSystemRowAlignStart: {
+    alignItems: 'flex-start',
+  },
+  messageColumn: {
+    width: '100%',
+    flexDirection: 'column',
+  },
+  rewardMessageContainer: {
+    backgroundColor: 'rgba(127, 127, 127, 0.06)',
+    borderLeftWidth: 3,
+    borderRightWidth: 3,
+    borderLeftColor: theme.colors.violet.accent,
+    borderRightColor: theme.colors.violet.accent,
+    paddingLeft: theme.spacing.sm,
+    paddingRight: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs,
+    marginVertical: theme.spacing.xs,
+  },
+  rewardSummaryRow: {
+    width: '100%',
+    marginBottom: theme.spacing.xs,
+  },
+  rewardSummaryText: {
+    flexWrap: 'wrap',
+  },
+  rewardSummaryName: {
+    color: theme.colors.gray.text,
+    fontWeight: '700',
+  },
+  rewardSummaryMuted: {
+    color: theme.colors.gray.textLow,
+    fontWeight: '400',
+  },
+  rewardSummaryRewardTitle: {
+    color: theme.colors.gray.text,
+    fontWeight: '700',
   },
   systemMessageText: {
     color: theme.colors.gray.textLow,

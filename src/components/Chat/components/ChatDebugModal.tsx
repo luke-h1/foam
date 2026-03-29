@@ -1,8 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { forwardRef, memo, useCallback } from 'react';
-import { View } from 'react-native';
+import { memo, useCallback } from 'react';
+import { Modal, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 type TestMessageType =
@@ -14,6 +13,8 @@ type TestMessageType =
   | 'Viewer Milestone';
 
 interface ChatDebugModalProps {
+  visible: boolean;
+  onClose: () => void;
   onTestMessage: (type: TestMessageType) => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
@@ -28,33 +29,29 @@ const DEBUG_OPTIONS: Array<{ label: string; type: TestMessageType }> = [
   { label: 'Viewer Milestone', type: 'Viewer Milestone' },
 ];
 
-const ChatDebugModalComponent = forwardRef<
-  BottomSheetModal,
-  ChatDebugModalProps
->(({ onTestMessage, onClearChatCache, onClearImageCache }, ref) => {
-  const handleDismiss = useCallback(() => {
-    if (ref && typeof ref !== 'function' && ref.current) {
-      ref.current.dismiss();
-    }
-  }, [ref]);
-
+const ChatDebugModalComponent = ({
+  visible,
+  onClose,
+  onTestMessage,
+  onClearChatCache,
+  onClearImageCache,
+}: ChatDebugModalProps) => {
   const handleTestMessage = useCallback(
     (type: TestMessageType) => {
       onTestMessage(type);
-      handleDismiss();
+      onClose();
     },
-    [onTestMessage, handleDismiss],
+    [onTestMessage, onClose],
   );
 
   return (
-    <BottomSheetModal
-      ref={ref}
-      backgroundStyle={styles.background}
-      handleIndicatorStyle={styles.handle}
-      enablePanDownToClose
-      snapPoints={['50%']}
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="formSheet"
+      onRequestClose={onClose}
     >
-      <BottomSheetView style={styles.content}>
+      <View style={styles.content}>
         <View style={styles.header}>
           <Text weight="bold" style={styles.title}>
             Debug Test Messages
@@ -78,10 +75,10 @@ const ChatDebugModalComponent = forwardRef<
         <Button onPress={onClearImageCache} style={styles.item}>
           <Text>Clear Image Cache</Text>
         </Button>
-      </BottomSheetView>
-    </BottomSheetModal>
+      </View>
+    </Modal>
   );
-});
+};
 
 ChatDebugModalComponent.displayName = 'ChatDebugModal';
 
@@ -92,12 +89,6 @@ export type { TestMessageType };
 const styles = StyleSheet.create(theme => ({
   background: {
     backgroundColor: theme.colors.gray.bg,
-  },
-  handle: {
-    backgroundColor: theme.colors.gray.accent,
-    width: 36,
-    height: 4,
-    borderRadius: theme.radii.full,
   },
   content: {
     flex: 1,

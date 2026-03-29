@@ -392,7 +392,10 @@ describe('messageHandlers', () => {
         text: '',
       });
 
-      expect(result.message).toEqual([]);
+      expect(result.message).toEqual([
+        { type: 'text', content: 'Some unknown notice' },
+      ]);
+      expect(result.isTwitchSystemNotice).toBe(true);
       expect(result.badges).toEqual([]);
     });
   });
