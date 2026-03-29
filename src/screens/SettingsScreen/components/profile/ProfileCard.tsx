@@ -6,9 +6,8 @@ import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { resetRoot } from '@app/navigators/navigationUtilities';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
@@ -26,7 +25,6 @@ export function ProfileCard() {
   const { navigate } = useAppNavigation();
   const { theme } = useUnistyles();
 
-  const sheetRef = useRef<BottomSheetModal>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
@@ -136,7 +134,12 @@ export function ProfileCard() {
         {/* Profile Header */}
         <PressableArea
           style={styles.profileHeader}
-          onPress={() => sheetRef.current?.present()}
+          onPress={() =>
+            navigate('Streams', {
+              screen: 'StreamerProfile',
+              params: { id: user.id },
+            })
+          }
         >
           <View style={styles.avatarContainer}>
             {user.profile_image_url ? (

@@ -2,6 +2,8 @@
 import axios, { AxiosHeaders } from 'axios';
 import { twitchApi, mockServerUrl, isE2EMode, twitchClientId } from './api';
 
+const channelPointRewardTitleCache = new Map<string, string>();
+
 export interface PaginatedList<T> {
   data: T[];
   pagination?: {
@@ -606,5 +608,38 @@ export const twitchService = {
         target_user_id: targetUserId,
       },
     });
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference#get-custom-reward
+   */
+  getCustomChannelRewardTitle: async (
+    broadcasterId: string,
+    rewardId: string,
+  ): Promise<string | undefined> => {
+    const cacheKey = `${broadcasterId}:${rewardId}`;
+    const cached = channelPointRewardTitleCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    try {
+      const { data } = await twitchApi.get<{
+        data: { id: string; title: string }[];
+      }>('/channel_points/custom_rewards', {
+        params: {
+          broadcaster_id: broadcasterId,
+          id: rewardId,
+        },
+      });
+      const title = data[0]?.title?.trim();
+      if (title) {
+        channelPointRewardTitleCache.set(cacheKey, title);
+        return title;
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
   },
 };

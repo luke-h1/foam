@@ -3,25 +3,23 @@ import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetView,
-} from '@gorhom/bottom-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView } from 'expo-symbols';
 import {
-  type ComponentProps,
   ReactNode,
   useCallback,
   useMemo,
-  useRef,
+  useState,
   cloneElement,
   isValidElement,
   ReactElement,
 } from 'react';
-import { Platform, View, type GestureResponderEvent } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Modal,
+  Platform,
+  View,
+  type GestureResponderEvent,
+} from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
@@ -38,18 +36,15 @@ export function EmoteActionSheet({
   onPress,
   children,
 }: EmoteActionSheetProps) {
-  const sheetRef = useRef<BottomSheetModal>(null);
-  const insets = useSafeAreaInsets();
-
-  const snapPoints = useMemo(() => ['42%'], []);
+  const [visible, setVisible] = useState(false);
 
   const openSheet = useCallback((e: GestureResponderEvent) => {
     e?.preventDefault?.();
-    sheetRef.current?.present();
+    setVisible(true);
   }, []);
 
   const closeSheet = useCallback(() => {
-    sheetRef.current?.dismiss();
+    setVisible(false);
   }, []);
 
   const copyName = useCallback(() => {
@@ -118,19 +113,6 @@ export function EmoteActionSheet({
     return 'Emote actions';
   }, [part.creator, part.site]);
 
-  const renderBackdrop = useCallback(
-    (backdropProps: ComponentProps<typeof BottomSheetBackdrop>) => (
-      <BottomSheetBackdrop
-        {...backdropProps}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        opacity={0.5}
-        pressBehavior="close"
-      />
-    ),
-    [],
-  );
-
   const getSFSymbolName = useCallback(
     (actionId: 'copy-name' | 'copy-url' | 'preview') => {
       switch (actionId) {
@@ -161,23 +143,13 @@ export function EmoteActionSheet({
   return (
     <>
       {triggerChild}
-      <BottomSheetModal
-        ref={sheetRef}
-        snapPoints={snapPoints}
-        enableDynamicSizing
-        maxDynamicContentSize={500}
-        enablePanDownToClose
-        detached
-        backdropComponent={renderBackdrop}
-        bottomInset={Math.max(insets.bottom + 8, 16)}
-        style={styles.modalContainer}
-        backgroundStyle={styles.background}
-        handleIndicatorStyle={styles.handle}
-        keyboardBehavior="interactive"
-        keyboardBlurBehavior="restore"
-        animateOnMount
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={closeSheet}
       >
-        <BottomSheetView style={styles.wrapper}>
+        <View style={styles.wrapper}>
           {(part.url || part.name || part.original_name) && (
             <View style={styles.previewCard}>
               <View style={styles.previewRow}>
@@ -228,30 +200,18 @@ export function EmoteActionSheet({
               </Button>
             ))}
           </View>
-        </BottomSheetView>
-      </BottomSheetModal>
+        </View>
+      </Modal>
     </>
   );
 }
 
 const styles = StyleSheet.create(theme => ({
-  modalContainer: {
-    marginHorizontal: theme.spacing.md,
-  },
-  background: {
-    backgroundColor: '#171b23',
-    borderRadius: 28,
-  },
-  handle: {
-    backgroundColor: theme.colors.gray.accent,
-    width: 42,
-    height: 5.5,
-    borderRadius: theme.radii.full,
-    marginTop: 2,
-  },
   wrapper: {
+    flex: 1,
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.md,
     gap: theme.spacing.lg,
     backgroundColor: '#171b23',
   },

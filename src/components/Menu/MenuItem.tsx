@@ -1,7 +1,6 @@
 /* eslint-disable no-nested-ternary */
-import { type BottomSheetModal } from '@gorhom/bottom-sheet';
 import { SymbolView } from 'expo-symbols';
-import { useMemo, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
@@ -41,7 +40,7 @@ function renderIcon(icon: IconType, defaultColor: string) {
 }
 
 export function MenuItem({ item, style }: MenuItemProps) {
-  const sheet = useRef<BottomSheetModal>(null);
+  const [sheetVisible, setSheetVisible] = useState(false);
 
   const Component = item.type === 'switch' ? View : Pressable;
 
@@ -68,7 +67,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
           }
 
           if (item.type === 'options') {
-            sheet.current?.present();
+            setSheetVisible(true);
           }
         }}
         style={[styles.component, style]}
@@ -112,7 +111,8 @@ export function MenuItem({ item, style }: MenuItemProps) {
       {item.type === 'options' ? (
         <SheetModal
           container={item.options.length > 6 ? 'scroll' : 'view'}
-          ref={sheet}
+          visible={sheetVisible}
+          onClose={() => setSheetVisible(false)}
           title={item.title ?? item.label}
         >
           {item.options.map((option, index) => {
@@ -150,8 +150,7 @@ export function MenuItem({ item, style }: MenuItemProps) {
                 left={option.left}
                 onPress={() => {
                   item.onSelect(option.value);
-
-                  sheet.current?.dismiss();
+                  setSheetVisible(false);
                 }}
                 right={!option.hideRight ? option.right : null}
                 selected={option.value === item.value}

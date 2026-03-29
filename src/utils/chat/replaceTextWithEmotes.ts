@@ -46,13 +46,7 @@ export type PartVariant =
    * Notice event
    */
   | 'notice'
-  /**
-   * stv emote added to set
-   */
   | 'stv_emote_added'
-  /**
-   * stv emote removed from set
-   */
   | 'stv_emote_removed'
   | TwitchNotices;
 

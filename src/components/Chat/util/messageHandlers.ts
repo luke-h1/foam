@@ -71,6 +71,7 @@ export const createBaseMessage = ({
     replyDisplayName: tags['reply-parent-user-login'] || '',
     replyBody: unescapeIrcTag(tags['reply-parent-msg-body'] || ''),
     parentColor: undefined,
+    isChannelPointRedemption: Boolean(tags['custom-reward-id']),
   };
 };
 
@@ -250,12 +251,32 @@ export const createUserNoticeMessage = ({
     }
 
     default: {
+      const rawSystem =
+        typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
+      const systemLine = unescapeIrcTag(rawSystem);
+      const userLine = text.trimEnd();
+      const combined = [systemLine, userLine]
+        .filter(Boolean)
+        .join(systemLine && userLine ? ' ' : '');
+
+      if (!combined) {
+        return {
+          ...baseMessage,
+          userstate,
+          badges: [],
+          message: [],
+          isSpecialNotice: true,
+          ...emptyFields,
+        } as ChatMessageType<'usernotice'>;
+      }
+
       return {
         ...baseMessage,
         userstate,
         badges: [],
-        message: [],
+        message: [{ type: 'text' as const, content: combined }],
         isSpecialNotice: true,
+        isTwitchSystemNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice'>;
     }

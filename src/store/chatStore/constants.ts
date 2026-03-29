@@ -73,6 +73,8 @@ export interface ChatMessageType<
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;
+  isChannelPointRedemption?: boolean;
+  isTwitchSystemNotice?: boolean;
   notice_tags?: TNoticeType extends 'userstate'
     ? UserStateTags
     : TNoticeType extends 'usernotice'

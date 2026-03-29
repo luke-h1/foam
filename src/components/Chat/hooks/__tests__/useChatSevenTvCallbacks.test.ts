@@ -10,6 +10,7 @@ import {
   setUserBadge,
   setUserPaint,
 } from '@app/store/chatStore/cosmetics';
+import type { SanitisedEmote } from '@app/types/emote';
 import { renderHook, act } from '@testing-library/react-native';
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 
@@ -78,8 +79,8 @@ describe('useChatSevenTvCallbacks', () => {
       act(() => {
         result.current.onEmoteUpdate({
           channelId: 'c1',
-          added: [{ id: 'e1' }],
-          removed: [{ id: 'e2' }],
+          added: [{ id: 'e1' } as SanitisedEmote],
+          removed: [{ id: 'e2' } as SanitisedEmote],
         });
       });
 

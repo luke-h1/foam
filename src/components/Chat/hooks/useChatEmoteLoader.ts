@@ -32,14 +32,6 @@ interface UseChatEmoteLoaderResult {
   cancel: () => void;
 }
 
-/**
- * Hook for loading chat emotes with AbortController-based cancellation.
- * Uses the chatStore's abort mechanism to cancel network requests immediately.
- *
- * - Cancels previous loads when starting a new one
- * - Cancels immediately on unmount (doesn't block navigation)
- * - Uses AbortController to cancel in-flight network requests
- */
 export const useChatEmoteLoader = ({
   channelId,
   enabled = true,
@@ -48,18 +40,9 @@ export const useChatEmoteLoader = ({
   const [status, setStatus] = useState<EmoteLoadingStatus>('idle');
   const isMountedRef = useRef(true);
   const currentChannelRef = useRef<string | null>(null);
-  const controllerRef = useRef<AbortController | null>(null);
 
   const cancel = useCallback(() => {
-    // Abort via the local reference for this hook instance
-    if (controllerRef.current) {
-      controllerRef.current.abort();
-      controllerRef.current = null;
-    }
-    // Also abort via the global store mechanism
-
     abortCurrentLoad();
-
     if (isMountedRef.current) {
       setStatus('cancelled');
     }
@@ -72,10 +55,7 @@ export const useChatEmoteLoader = ({
         return;
       }
 
-      // Cancel any previous load and create new controller
-
-      const controller: AbortController = createLoadController();
-      controllerRef.current = controller;
+      const { signal } = createLoadController();
 
       logger.chat.info('📦 Starting emote load', {
         channelId,
@@ -88,12 +68,11 @@ export const useChatEmoteLoader = ({
         const success = await loadChannelResources({
           channelId,
           forceRefresh,
-          signal: controller.signal,
+          signal,
           twitchUserId: user?.id,
         });
 
-        // Don't update state if aborted or unmounted
-        if (controller.signal.aborted) {
+        if (signal.aborted) {
           logger.chat.info('🚫 Emote load was aborted');
           if (isMountedRef.current) {
             setStatus('cancelled');
@@ -110,10 +89,8 @@ export const useChatEmoteLoader = ({
           currentChannelRef.current = channelId;
           logger.chat.info('✅ Emote load completed', { channelId });
 
-          // Preload emotes in background for instant display in chat
           const emoteData = getCurrentEmoteData(channelId);
           if (emoteData) {
-            // Preload in background - don't await
             void Promise.all([
               preloadGlobalEmotes(emoteData),
               preloadChannelEmotes(emoteData),
@@ -126,7 +103,7 @@ export const useChatEmoteLoader = ({
           logger.chat.warn('❌ Emote load failed', { channelId });
         }
       } catch (error) {
-        if (controller.signal.aborted) {
+        if (signal.aborted) {
           if (isMountedRef.current) {
             setStatus('cancelled');
           }
@@ -158,12 +135,10 @@ export const useChatEmoteLoader = ({
 
     return () => {
       isMountedRef.current = false;
-      // Cancel on unmount
       cancel();
     };
   }, [channelId, enabled, loadEmotes, cancel]);
 
-  // Reset on channel change
   useEffect(() => {
     if (channelId !== currentChannelRef.current) {
       setStatus('idle');

@@ -223,22 +223,28 @@ export function SubscriptionNotice({
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerLine}>
-        <Icon icon="star" size={14} color="#FFD700" style={styles.starIcon} />
-        <Text style={styles.username}>{displayName}</Text>
-        <View style={styles.descriptionContainer}>{buildDescription()}</View>
-      </View>
-
-      {/* User message if present - render with emotes if parsed */}
-      {(parsedMessage && parsedMessage.length > 0) || message ? (
-        <View style={styles.messageContainer}>
-          {parsedMessage && parsedMessage.length > 0
-            ? parsedMessage.map(renderMessagePart)
-            : message && (
-                <Text style={styles.messageText}>{message.trim()}</Text>
-              )}
+      <View style={styles.noticeRow}>
+        <View style={styles.starColumn}>
+          <Icon icon="star" size={14} color="#FFD700" style={styles.starIcon} />
         </View>
-      ) : null}
+        <View style={styles.bodyColumn}>
+          <View style={styles.headerLine}>
+            <Text style={styles.username}>{displayName}</Text>
+            <View style={styles.descriptionContainer}>
+              {buildDescription()}
+            </View>
+          </View>
+          {(parsedMessage && parsedMessage.length > 0) || message ? (
+            <View style={styles.messageContainer}>
+              {parsedMessage && parsedMessage.length > 0
+                ? parsedMessage.map(renderMessagePart)
+                : message && (
+                    <Text style={styles.messageText}>{message.trim()}</Text>
+                  )}
+            </View>
+          ) : null}
+        </View>
+      </View>
     </View>
   );
 }
@@ -248,13 +254,24 @@ const styles = StyleSheet.create(theme => ({
     width: '100%',
     paddingVertical: theme.spacing.xs,
   },
+  noticeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  starColumn: {
+    marginRight: theme.spacing.sm,
+  },
+  bodyColumn: {
+    flex: 1,
+    minWidth: 0,
+  },
   headerLine: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
   },
   starIcon: {
-    marginRight: theme.spacing.sm,
     alignItems: 'center',
   },
   username: {
@@ -284,7 +301,6 @@ const styles = StyleSheet.create(theme => ({
   },
   messageContainer: {
     marginTop: theme.spacing.xs,
-    paddingLeft: theme.spacing.lg,
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',

@@ -11,7 +11,6 @@ import { sevenTvV4Client } from '@app/services/gql/client';
 import { storage } from '@app/services/storage-service';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useMMKVDevTools } from '@rozenite/mmkv-plugin';
 import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
 import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
@@ -120,19 +119,17 @@ export function Providers({ children }: PropsWithChildren) {
             >
               <KeyboardProvider>
                 <GestureHandlerRootView style={styles.gestureContainer}>
-                  <BottomSheetModalProvider>
-                    <QueryProviderWithAuth>
-                      <PressablesConfig
-                        globalHandlers={{
-                          onPress: () => {
-                            void Haptics.selectionAsync();
-                          },
-                        }}
-                      >
-                        {children}
-                      </PressablesConfig>
-                    </QueryProviderWithAuth>
-                  </BottomSheetModalProvider>
+                  <QueryProviderWithAuth>
+                    <PressablesConfig
+                      globalHandlers={{
+                        onPress: () => {
+                          void Haptics.selectionAsync();
+                        },
+                      }}
+                    >
+                      {children}
+                    </PressablesConfig>
+                  </QueryProviderWithAuth>
                 </GestureHandlerRootView>
               </KeyboardProvider>
             </ErrorBoundary>

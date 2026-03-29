@@ -3,13 +3,10 @@
  * Based on Twitch IRC tag format - see https://dev.twitch.tv/docs/irc/tags/
  */
 export interface UserStateTags {
-  /** User's display name */
   'display-name'?: string;
   login?: string;
   username?: string;
-  /** User's ID */
   'user-id'?: string;
-  /** Message ID */
   id?: string;
   color?: string;
 
@@ -26,20 +23,18 @@ export interface UserStateTags {
     bits?: string;
     [key: string]: string | undefined;
   };
-  /** Raw badges string (format: "badge/version,badge/version") */
   'badges-raw'?: string;
-  /** User type (empty, admin, global_mod, staff) */
   'user-type'?: '' | 'admin' | 'global_mod' | 'staff';
-  /** Whether user is a moderator */
   mod?: string;
-  /** Whether user is a subscriber */
   subscriber?: string;
-  /** Whether user is a turbo user */
   turbo?: string;
-  /** Emote sets (comma-separated list of emote set IDs) */
   'emote-sets'?: string;
-  /** Whether this is the user's first message in the channel */
   'first-msg'?: string;
+
+  'room-id'?: string;
+  'custom-reward-id'?: string;
+  'msg-param-custom-reward-title'?: string;
+  'msg-param-reward-title'?: string;
 
   /**
    * Custom tags we're adding to the response to
