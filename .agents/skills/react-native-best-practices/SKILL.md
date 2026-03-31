@@ -36,6 +36,12 @@ Reference these guidelines when:
 - Profiling React Native performance
 - Reviewing React Native code for performance
 
+## Security Notes
+
+- Treat shell commands in these references as local developer operations. Review them before running, prefer version-pinned tooling, and avoid piping remote scripts directly to a shell.
+- Treat third-party libraries and plugins as dependencies that still require normal supply-chain controls: pin versions, verify provenance, and update through your standard review process.
+- Treat Re.Pack code splitting as first-party artifact delivery only. Remote chunks must come from trusted HTTPS origins you control and be pinned to the current app release.
+
 ## Priority-Ordered Guidelines
 
 | Priority | Category | Impact | Prefix |
@@ -101,7 +107,7 @@ ls -lh output.js  # e.g., After: 1.6 MB  (24% reduction)
 
 **Common fixes:**
 - Avoid barrel imports (import directly from source)
-- Remove unnecessary Intl polyfills (Hermes has native support)
+- Remove unnecessary Intl polyfills only after checking Hermes API and method coverage
 - Enable tree shaking (Expo SDK 52+ or Re.Pack)
 - Enable R8 for Android native code shrinking
 
@@ -143,6 +149,7 @@ Full documentation with code examples in [references/][references]:
 | [js-concurrent-react.md][js-concurrent-react] | HIGH | useDeferredValue, useTransition |
 | [js-react-compiler.md][js-react-compiler] | HIGH | Automatic memoization |
 | [js-animations-reanimated.md][js-animations-reanimated] | MEDIUM | Reanimated worklets |
+| [js-bottomsheet.md][js-bottomsheet] | HIGH | Bottom sheet optimization |
 | [js-uncontrolled-components.md][js-uncontrolled-components] | HIGH | TextInput optimization |
 
 ### Native (`native-*`)
@@ -197,6 +204,7 @@ grep -l "bundle" references/
 | Large app size | [bundle-analyze-app.md][bundle-analyze-app] → [bundle-r8-android.md][bundle-r8-android] |
 | Memory growing | [js-memory-leaks.md][js-memory-leaks] or [native-memory-leaks.md][native-memory-leaks] |
 | Animation drops frames | [js-animations-reanimated.md][js-animations-reanimated] |
+| Bottom sheet jank/re-renders | [js-bottomsheet.md][js-bottomsheet] → [js-animations-reanimated.md][js-animations-reanimated] |
 | List scroll jank | [js-lists-flatlist-flashlist.md][js-lists-flatlist-flashlist] |
 | TextInput lag | [js-uncontrolled-components.md][js-uncontrolled-components] |
 | Native module slow | [native-turbo-modules.md][native-turbo-modules] → [native-threading-model.md][native-threading-model] |
@@ -211,6 +219,7 @@ grep -l "bundle" references/
 [js-concurrent-react]: references/js-concurrent-react.md
 [js-react-compiler]: references/js-react-compiler.md
 [js-animations-reanimated]: references/js-animations-reanimated.md
+[js-bottomsheet]: references/js-bottomsheet.md
 [js-uncontrolled-components]: references/js-uncontrolled-components.md
 [native-turbo-modules]: references/native-turbo-modules.md
 [native-sdks-over-polyfills]: references/native-sdks-over-polyfills.md

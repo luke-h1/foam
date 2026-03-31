@@ -4,7 +4,7 @@
     "agent-device": {
       "source": "callstackincubator/agent-device",
       "sourceType": "github",
-      "computedHash": "18f7906a292772a0381c6d169b293ba00696df97c88be66ad47ecdf6b6468448"
+      "computedHash": "651e79454a6cc234ff9f31943aadc1e25e0cec41a6ae26a6429b93a7800d1e5d"
     },
     "building-native-ui": {
       "source": "expo/skills",
@@ -14,7 +14,7 @@
     "dogfood": {
       "source": "callstackincubator/agent-device",
       "sourceType": "github",
-      "computedHash": "948c88494387268b73c3df8ec276efa568f40b3cf4373f41d38f1025ea66497b"
+      "computedHash": "47e0ea18e07bbe14fc7547b3f79f9f4f1bd895e6d7cbb514055076d78c6ba9d0"
     },
     "expo-cicd-workflows": {
       "source": "expo/skills",
@@ -36,15 +36,25 @@
       "sourceType": "github",
       "computedHash": "d004c5e5e2e7132e1d64e9c2a339db7f7aaa69053a5c19cddc210dd35dd6fff5"
     },
+    "migrate-to-static-config": {
+      "source": "react-navigation/skills",
+      "sourceType": "github",
+      "computedHash": "052dbba0f84ad2376c07e60c9619d7088d8e728a0107ff00c5bf47e8c7ad2923"
+    },
     "native-data-fetching": {
       "source": "expo/skills",
       "sourceType": "github",
-      "computedHash": "6c14e4efb34a9c4759e8b959f82dec328f87dd89a022957c6737086984b9b106"
+      "computedHash": "3cd0ba91f359f9f84cd40f36f356287994a0e952520fac6e03ef7952d0397879"
     },
     "react-native-best-practices": {
       "source": "callstackincubator/agent-skills",
       "sourceType": "github",
-      "computedHash": "cc54bc37531c0221b2bfde241ef18c5f6e22423665955587f6dd63b0454355d8"
+      "computedHash": "6f5210e63faead5d3c0c8ff4f5ed5fda60ec7472ea2b212622c4e1ae6f12fefa"
+    },
+    "upgrade-react-navigation": {
+      "source": "react-navigation/skills",
+      "sourceType": "github",
+      "computedHash": "49e493a5e878c7ef4e77dd7b5ed98c477c6a815617351c337c9cd374414669f3"
     },
     "upgrading-expo": {
       "source": "expo/skills",

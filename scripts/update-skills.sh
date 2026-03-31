@@ -31,6 +31,7 @@ SKILLS=(
     "bunx skills add https://github.com/callstackincubator/agent-skills --skill react-native-best-practices"
     "bunx skills add https://github.com/dammyjay93/interface-design --skill interface-design"
     "bunx skills add  callstackincubator/agent-device"
+    "bunx skills add react-navigation/skills"
 )
 
 for cmd in "${SKILLS[@]}"; do
