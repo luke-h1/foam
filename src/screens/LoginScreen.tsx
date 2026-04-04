@@ -5,7 +5,7 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { sentryService } from '@app/services/sentry-service';
+import { countMetric } from '@app/services/sentry-service';
 import { useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
@@ -75,15 +75,15 @@ export function LoginScreen() {
   const handleAuth = async () => {
     await loginWithTwitch(response);
     if (response?.type === 'success') {
-      sentryService.captureMessage('LoginSuccess');
+      countMetric('auth.login.success', {
+        platform: Platform.OS,
+      });
       toast.success('Logged in');
 
       navigation.push('Tabs', {
         screen: 'Following',
       });
     }
-
-    sentryService.captureMessage(response?.type || 'unknownAuthEvent');
   };
 
   useEffect(() => {

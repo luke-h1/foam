@@ -11,6 +11,7 @@ Sentry.init({
   attachScreenshot: true,
   attachStacktrace: true,
   attachThreads: true,
+  enableTombstone: true,
   enableCaptureFailedRequests: true,
   spotlight: __DEV__,
   appHangTimeoutInterval: 1,
@@ -24,6 +25,18 @@ Sentry.init({
   environment: process.env.APP_VARIANT as string,
   integrations: [navigationIntegration, Sentry.mobileReplayIntegration()],
 });
+
+type MetricAttributes = Record<string, string | number | boolean>;
+
+export function countMetric(
+  name: string,
+  attributes?: MetricAttributes,
+  value = 1,
+): void {
+  Sentry.metrics.count(name, value, {
+    attributes,
+  });
+}
 
 export function startSpan<T>(
   name: string,
