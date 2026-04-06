@@ -305,6 +305,7 @@ function buildTwitchEmbedHtml(options: {
   const widthPx = typeof width === 'number' ? `${width}px` : width;
   const heightPx = typeof height === 'number' ? `${height}px` : height;
 
+  // Prevent Twitch's native overlay from rendering above Foam's controls.
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -316,6 +317,17 @@ function buildTwitchEmbedHtml(options: {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
     #twitch-player { width: 100%; height: 100%; }
+    .player-controls,
+    #channel-player-disclosures,
+    [data-a-target="player-overlay-preview-background"],
+    [data-a-target="player-overlay-video-stats"],
+    [data-a-target="player-overlay-play-button"],
+    [data-a-target="player-overlay-click-handler"],
+    .player-overlay-background {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
   </style>
 </head>
 <body>
