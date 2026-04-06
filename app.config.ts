@@ -157,6 +157,7 @@ const config: ExpoConfig = {
         note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
         project: 'foam',
         organization: 'luke-howsam',
+        useNativeInit: true,
       },
     ],
     [

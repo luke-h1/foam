@@ -2,7 +2,7 @@ import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/Text/Text';
-import { sentryService } from '@app/services/sentry-service';
+import { countMetric, sentryService } from '@app/services/sentry-service';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -957,18 +957,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             case 'ready': {
               const readyAt = Date.now();
               setReadyTimestamp(readyAt);
-              const streamReadyElapsedMs =
-                readyAt - overlayStartTimeRef.current;
-              sentryService.captureMessage('stream.ready', {
-                level: 'info',
-                tags: { component: 'StreamPlayer' },
-                extra: {
-                  channel: channel ?? undefined,
-                  stream_ready_elapsed_ms: streamReadyElapsedMs,
-                  stream_ready_elapsed_seconds: Math.round(
-                    streamReadyElapsedMs / 1000,
-                  ),
-                },
+              countMetric('stream.ready', {
+                autoplay,
+                component: 'StreamPlayer',
+                defer_overlay_until_user_unmute: deferOverlayUntilUserUnmute,
               });
               setPlayerState(prev => ({
                 ...prev,
@@ -1077,7 +1069,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         }
       },
       [
-        channel,
         autoplay,
         deferOverlayUntilUserUnmute,
         initialMuted,

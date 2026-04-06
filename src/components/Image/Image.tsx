@@ -1,8 +1,11 @@
 /* eslint-disable no-restricted-imports */
+import * as Sentry from '@sentry/react-native';
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
 import { View, ViewStyle, StyleProp } from 'react-native';
 import { NitroImage } from 'react-native-nitro-image';
 import { StyleSheet } from 'react-native-unistyles';
+
+Sentry.wrapExpoImage(ExpoImage);
 
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
   containerStyle?: ViewStyle;

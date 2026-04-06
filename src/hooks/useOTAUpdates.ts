@@ -1,4 +1,4 @@
-import { sentryService } from '@app/services/sentry-service';
+import { countMetric, sentryService } from '@app/services/sentry-service';
 import { nativeBuildVersion } from 'expo-application';
 import * as Updates from 'expo-updates';
 import {
@@ -108,16 +108,10 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
         },
       });
 
-      // Track metric for dashboard (using message with specific tag)
-      sentryService.captureMessage('ota.check.started', {
-        level: 'info',
-        tags: {
-          category: 'ota_metric',
-          metric_name: 'ota.check.started',
-          platform: Platform.OS,
-          channel: Updates.channel || 'unknown',
-          environment: isProduction ? 'production' : 'non-production',
-        },
+      countMetric('ota.check.started', {
+        channel: Updates.channel || 'unknown',
+        environment: isProduction ? 'production' : 'non-production',
+        platform: Platform.OS,
       });
 
       const res = await checkForUpdateAsync();
@@ -138,27 +132,19 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
 
       if (res.isAvailable) {
         console.debug('Attempting to fetch update...');
-        sentryService.captureMessage('OTA update available', {
+        sentryService.addBreadcrumb({
+          category: 'ota',
+          message: 'OTA update available',
           level: 'info',
-          tags: {
-            category: 'ota',
-            action: 'update_available',
-          },
-          extra: {
+          data: {
             manifestId: res.manifest?.id,
           },
         });
 
-        // Track metric for dashboard (using message with specific tag)
-        sentryService.captureMessage('ota.update.available', {
-          level: 'info',
-          tags: {
-            category: 'ota_metric',
-            metric_name: 'ota.update.available',
-            platform: Platform.OS,
-            channel: Updates.channel || 'unknown',
-            environment: isProduction ? 'production' : 'non-production',
-          },
+        countMetric('ota.update.available', {
+          channel: Updates.channel || 'unknown',
+          environment: isProduction ? 'production' : 'non-production',
+          platform: Platform.OS,
         });
 
         sentryService.addBreadcrumb({
@@ -169,24 +155,16 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
 
         await fetchUpdateAsync();
 
-        sentryService.captureMessage('OTA update fetched successfully', {
+        sentryService.addBreadcrumb({
+          category: 'ota',
+          message: 'OTA update fetched successfully',
           level: 'info',
-          tags: {
-            category: 'ota',
-            action: 'update_fetched',
-          },
         });
 
-        // Track metric for dashboard (using message with specific tag)
-        sentryService.captureMessage('ota.update.fetched', {
-          level: 'info',
-          tags: {
-            category: 'ota_metric',
-            metric_name: 'ota.update.fetched',
-            platform: Platform.OS,
-            channel: Updates.channel || 'unknown',
-            environment: isProduction ? 'production' : 'non-production',
-          },
+        countMetric('ota.update.fetched', {
+          channel: Updates.channel || 'unknown',
+          environment: isProduction ? 'production' : 'non-production',
+          platform: Platform.OS,
         });
 
         sentryService.addBreadcrumb({
@@ -225,31 +203,23 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
   const handleApply = useCallback(async () => {
     setModalVisible(false);
 
-    sentryService.captureMessage('OTA update applied by user', {
+    sentryService.addBreadcrumb({
+      category: 'ota',
+      message: 'OTA update applied by user',
       level: 'info',
-      tags: {
-        category: 'ota',
-        action: 'update_applied',
-      },
-      extra: {
-        channel: Updates.channel || 'unknown',
+      data: {
         buildVersion: nativeBuildVersion,
-        platform: Platform.OS,
+        channel: Updates.channel || 'unknown',
         isProduction,
+        platform: Platform.OS,
       },
     });
 
-    // Track metric for dashboard (using message with specific tag)
-    sentryService.captureMessage('ota.update.applied', {
-      level: 'info',
-      tags: {
-        category: 'ota_metric',
-        metric_name: 'ota.update.applied',
-        platform: Platform.OS,
-        channel: Updates.channel || 'unknown',
-        environment: isProduction ? 'production' : 'non-production',
-        method: 'manual',
-      },
+    countMetric('ota.update.applied', {
+      channel: Updates.channel || 'unknown',
+      environment: isProduction ? 'production' : 'non-production',
+      method: 'manual',
+      platform: Platform.OS,
     });
 
     sentryService.addBreadcrumb({
@@ -313,17 +283,11 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
       !updates.isDownloading &&
       !updates.isChecking
     ) {
-      sentryService.captureMessage('OTA update pending - ready to apply', {
+      sentryService.addBreadcrumb({
+        category: 'ota',
+        message: 'OTA update pending - ready to apply',
         level: 'info',
-        tags: {
-          category: 'ota',
-          action: 'update_pending',
-        },
-        extra: {
-          channel: Updates.channel || 'unknown',
-          buildVersion: nativeBuildVersion,
-          platform: Platform.OS,
-          isProduction,
+        data: {
           availableUpdate: updates.availableUpdate
             ? {
                 ...('id' in updates.availableUpdate
@@ -331,45 +295,32 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
                   : {}),
               }
             : null,
+          buildVersion: nativeBuildVersion,
+          channel: Updates.channel || 'unknown',
+          isProduction,
+          platform: Platform.OS,
         },
       });
 
-      // Track metric for dashboard (using message with specific tag)
-      sentryService.captureMessage('ota.update.pending', {
-        level: 'info',
-        tags: {
-          category: 'ota_metric',
-          metric_name: 'ota.update.pending',
-          platform: Platform.OS,
-          channel: Updates.channel || 'unknown',
-          environment: isProduction ? 'production' : 'non-production',
-        },
+      countMetric('ota.update.pending', {
+        channel: Updates.channel || 'unknown',
+        environment: isProduction ? 'production' : 'non-production',
+        platform: Platform.OS,
       });
 
       if (isProduction) {
         // In production, auto-reload immediately for instant OTA
-        sentryService.captureMessage(
-          'OTA update auto-reloading in production',
-          {
-            level: 'info',
-            tags: {
-              category: 'ota',
-              action: 'auto_reload',
-            },
-          },
-        );
-
-        // Track metric for dashboard (using message with specific tag)
-        sentryService.captureMessage('ota.update.applied', {
+        sentryService.addBreadcrumb({
+          category: 'ota',
+          message: 'OTA update auto-reloading in production',
           level: 'info',
-          tags: {
-            category: 'ota_metric',
-            metric_name: 'ota.update.applied',
-            platform: Platform.OS,
-            channel: Updates.channel || 'unknown',
-            environment: 'production',
-            method: 'auto',
-          },
+        });
+
+        countMetric('ota.update.applied', {
+          channel: Updates.channel || 'unknown',
+          environment: 'production',
+          method: 'auto',
+          platform: Platform.OS,
         });
 
         sentryService.addBreadcrumb({
