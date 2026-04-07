@@ -1,11 +1,11 @@
 import { ThemeColor } from '@app/styles/colors';
+import { theme } from '@app/styles/themes';
 import { ColorScale } from '@app/styles/util/createPallete';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ReactNode } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 import { IconButton } from '../IconButton/IconButton';
 import { Image } from '../Image/Image';
 import { Text, TextType, TextWeight } from '../Text/Text';
@@ -147,7 +147,12 @@ export function ScreenHeader({
         )}
 
         {(back || trailing) && (
-          <View style={styles.navRow(safeArea ? insets.top + 8 : 8)}>
+          <View
+            style={[
+              styles.navRow,
+              getNavRowOffsetStyle(safeArea ? insets.top + 8 : 8),
+            ]}
+          >
             {back && (
               <IconButton
                 icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
@@ -163,7 +168,12 @@ export function ScreenHeader({
         )}
 
         {/* Hero content */}
-        <View style={styles.heroContent(backgroundImage)}>
+        <View
+          style={[
+            styles.heroContent,
+            getHeroContentOffsetStyle(Boolean(backgroundImage)),
+          ]}
+        >
           <View style={styles.heroInner}>
             {featuredImage && (
               <Image source={featuredImage} style={styles.featuredImage} />
@@ -272,37 +282,92 @@ export function ScreenHeader({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  navSpacer: {
-    flex: 1,
-  },
-  textContent: {
-    flex: 1,
-    paddingBottom: theme.spacing.xs,
-    gap: theme.spacing.sm,
-  },
-  title: {
-    lineHeight: 34,
-  },
-  subtitle: {
-    lineHeight: 20,
-  },
-  standardContainer: {
-    paddingHorizontal: theme.spacing.md,
-    paddingBottom: theme.spacing.sm,
-  },
-  standardNavRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 44,
-  },
+const styles = StyleSheet.create({
   backButton: {
-    marginLeft: -theme.spacing.xs,
     justifyContent: 'center',
+    marginLeft: -theme.spacing.xs,
+  },
+  container: {
+    position: 'relative',
+  },
+  featuredImage: {
+    borderColor: theme.colors.violet.accent,
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: 2,
+    height: 134,
+    shadowColor: theme.colors.violet.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    width: 100,
+  },
+  heroBackground: {
+    left: 0,
+    overflow: 'hidden',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  heroBackgroundImage: {
+    height: '100%',
+    opacity: 0.4,
+    width: '100%',
+  },
+  heroContent: {
+    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
+  },
+  heroGradient: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  heroInner: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  heroTitle: {
+    lineHeight: 28,
   },
   inlineTitleSection: {
     flex: 1,
     marginLeft: theme.spacing.xs,
+  },
+
+  navRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    left: theme.spacing.sm,
+    position: 'absolute',
+    right: theme.spacing.sm,
+    zIndex: 10,
+  },
+  navSpacer: {
+    flex: 1,
+  },
+  standardContainer: {
+    paddingBottom: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  standardNavRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    minHeight: 44,
+  },
+  subtitle: {
+    lineHeight: 20,
+  },
+  textContent: {
+    flex: 1,
+    gap: theme.spacing.sm,
+    paddingBottom: theme.spacing.xs,
+  },
+  title: {
+    lineHeight: 34,
   },
   titleSection: {
     gap: theme.spacing.xs,
@@ -310,60 +375,14 @@ const styles = StyleSheet.create(theme => ({
   titleSectionWithNav: {
     marginTop: theme.spacing.xs,
   },
+});
 
-  container: {
-    position: 'relative',
-  },
-  heroBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    overflow: 'hidden',
-  },
-  heroBackgroundImage: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.4,
-  },
-  heroGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  navRow: (top: number) => ({
-    position: 'absolute',
-    top,
-    left: theme.spacing.sm,
-    right: theme.spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 10,
-  }),
-  heroContent: (backgroundImage?: string) => ({
-    paddingHorizontal: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
-    paddingTop: backgroundImage ? 100 : 80,
-  }),
-  heroInner: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: theme.spacing.md,
-  },
-  featuredImage: {
-    width: 100,
-    height: 134,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: theme.colors.violet.accent,
-    shadowColor: theme.colors.violet.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-  },
-  heroTitle: {
-    lineHeight: 28,
-  },
-}));
+function getNavRowOffsetStyle(top: number) {
+  return { top };
+}
+
+function getHeroContentOffsetStyle(hasBackgroundImage: boolean) {
+  return {
+    paddingTop: hasBackgroundImage ? 100 : 80,
+  };
+}

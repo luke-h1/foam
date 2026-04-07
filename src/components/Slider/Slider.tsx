@@ -1,7 +1,7 @@
+import { theme } from '@app/styles/themes';
 import Component from '@react-native-community/slider';
 import range from 'lodash/range';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { View, type StyleProp, type ViewStyle, StyleSheet } from 'react-native';
 
 interface SliderProps {
   disabled?: boolean;
@@ -28,7 +28,6 @@ export function Slider({
   style,
   thumbTintColor,
 }: SliderProps) {
-  const { theme } = useUnistyles();
   const maxTrack = maximumTrackTintColor ?? theme.colors.gray.ui;
   const minTrack = minimumTrackTintColor ?? theme.colors.accent.accent;
   const thumb = thumbTintColor ?? theme.colors.accent.accent;
@@ -37,7 +36,13 @@ export function Slider({
       {!disabled && step && min != null && max != null && (
         <View style={styles.wrapper}>
           {range(min, max + step, step).map(item => (
-            <View key={item} style={styles.marker(item <= value)} />
+            <View
+              key={item}
+              style={[
+                styles.marker,
+                item <= value ? styles.markerEnabled : styles.markerDisabled,
+              ]}
+            />
           ))}
         </View>
       )}
@@ -57,21 +62,18 @@ export function Slider({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  marker: (enabled: boolean) => ({
-    backgroundColor: enabled
-      ? theme.colors.accent.accent
-      : theme.colors.gray.ui,
+const styles = StyleSheet.create({
+  marker: {
     borderCurve: 'continuous',
     borderRadius: theme.radii.md,
     height: theme.spacing.md,
     width: theme.spacing.sm,
-  }),
-  markers: {
-    height: '100%',
-    left: 14,
-    position: 'absolute',
-    right: 14,
+  },
+  markerDisabled: {
+    backgroundColor: theme.colors.gray.ui,
+  },
+  markerEnabled: {
+    backgroundColor: theme.colors.accent.accent,
   },
   wrapper: {
     alignItems: 'center',
@@ -79,4 +81,4 @@ const styles = StyleSheet.create(theme => ({
     justifyContent: 'space-between',
     pointerEvents: 'none',
   },
-}));
+});

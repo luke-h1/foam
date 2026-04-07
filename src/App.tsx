@@ -1,5 +1,4 @@
 import './utils/performance/wdyr';
-import './styles/unistyles';
 
 import { createNavigationContainerRef } from '@react-navigation/native';
 import * as Sentry from '@sentry/react-native';

@@ -1,5 +1,5 @@
-import { View, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { View, ViewStyle, StyleSheet } from 'react-native';
 import { Image } from '../Image/Image';
 
 interface Props {
@@ -10,10 +10,6 @@ interface Props {
 }
 
 export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
-  styles.useVariants({
-    size,
-  });
-
   return (
     <View style={[styles.imageContainer, style]}>
       {thumbnail ? (
@@ -23,7 +19,7 @@ export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
           source={thumbnail
             .replace('{width}', '2560')
             .replace('{height}', '1080')}
-          style={styles.image}
+          style={[styles.image, size && getImageSizeStyle(size)]}
           transition={animated ? 300 : 0}
         />
       ) : null}
@@ -31,39 +27,27 @@ export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
+  image: {},
   imageContainer: {
-    marginRight: theme.spacing.md,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.sm,
+    marginRight: theme.spacing.md,
     overflow: 'hidden',
   },
-  profileImage: {
-    width: 50,
-    height: 70,
-  },
-  image: {
-    variants: {
-      size: {
-        sm: { width: 55, height: 55 },
-        md: { width: 60, height: 60 },
-        lg: { width: 130, height: 100 },
-        xl: { width: 200, height: 200 },
-      },
-    },
-  },
-  logo: {
-    variants: {
-      size: {
-        sm: { width: 20, height: 20 },
-        md: { width: 30, height: 30 },
-        lg: { width: 50, height: 50 },
-        xl: { width: 100, height: 100 },
-      },
-    },
-  },
-  fallback: {
-    backgroundColor: theme.colors.accent.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-}));
+});
+
+function getImageSizeStyle(size: NonNullable<Props['size']>) {
+  switch (size) {
+    case 'lg':
+      return { height: 100, width: 130 };
+    case 'md':
+      return { height: 60, width: 60 };
+    case 'sm':
+      return { height: 55, width: 55 };
+    case 'xl':
+      return { height: 200, width: 200 };
+    default:
+      return {};
+  }
+}

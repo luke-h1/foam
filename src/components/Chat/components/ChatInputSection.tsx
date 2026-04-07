@@ -2,6 +2,7 @@ import { Button } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { Icon } from '@app/components/Icon/Icon';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import {
@@ -10,9 +11,8 @@ import {
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 import { memo, RefObject, useCallback, useRef } from 'react';
-import { View, TextInput } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 
 export interface ReplyToData {
@@ -179,84 +179,84 @@ export const ChatInputSection = memo(
 
 ChatInputSection.displayName = 'ChatInputSection';
 
-const styles = StyleSheet.create(theme => ({
-  wrapper: {
-    backgroundColor: theme.colors.black.bgAlpha,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    gap: 6,
+const styles = StyleSheet.create({
+  actionButton: {
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: 18,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
   },
   inputContainer: {
     flex: 1,
     minWidth: 80,
   },
-  actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.violet.accent,
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.colors.gray.ui,
-  },
-  replyPreview: {
+  inputRow: {
+    alignItems: 'flex-end',
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.accent.ui,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray.border,
-  },
-  replyIndicator: {
-    width: 3,
-    height: '100%',
-    minHeight: 32,
-    backgroundColor: theme.colors.violet.accent,
-    borderRadius: 2,
-    marginRight: theme.spacing.sm,
   },
   replyContent: {
     flex: 1,
   },
-  replyLabelRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  replyDismissButton: {
     alignItems: 'center',
+    borderRadius: 16,
+    height: 32,
+    justifyContent: 'center',
+    marginLeft: 'auto',
+    width: 32,
+  },
+  replyIndicator: {
+    backgroundColor: theme.colors.violet.accent,
+    borderRadius: 2,
+    height: '100%',
+    marginRight: theme.spacing.sm,
+    minHeight: 32,
+    width: 3,
   },
   replyLabel: {
     fontSize: theme.font.fontSize.xs,
     opacity: 0.7,
   },
+  replyLabelRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  replyMessagePreview: {
+    fontSize: theme.font.fontSize.sm,
+    marginTop: 2,
+    opacity: 0.6,
+  },
   replyPaintedUsername: {
     fontSize: theme.font.fontSize.xs,
     fontWeight: '600',
   },
-  replyMessagePreview: {
-    fontSize: theme.font.fontSize.sm,
-    opacity: 0.6,
-    marginTop: 2,
-  },
-  replyDismissButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  replyPreview: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 'auto',
+    backgroundColor: theme.colors.accent.ui,
+    borderBottomColor: theme.colors.gray.border,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
   },
-}));
+  sendButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.violet.accent,
+    borderRadius: 18,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  sendButtonDisabled: {
+    backgroundColor: theme.colors.gray.ui,
+  },
+  wrapper: {
+    backgroundColor: theme.colors.black.bgAlpha,
+  },
+});

@@ -1,10 +1,8 @@
 import { Menu } from '@app/components/Menu/Menu';
-import { View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { View, StyleSheet } from 'react-native';
 
 export function SettingsCacheScreen() {
-  const { theme } = useUnistyles();
-
   return (
     <View style={styles.container}>
       <Menu
@@ -35,9 +33,9 @@ export function SettingsCacheScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
-}));
+});

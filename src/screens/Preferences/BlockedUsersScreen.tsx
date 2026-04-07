@@ -10,11 +10,11 @@ import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchService, UserBlockList } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 
 const SKELETON_COUNT = 5;
@@ -263,41 +263,42 @@ export function BlockedUsersScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
+  },
+  iconSkeleton: {
+    borderRadius: 10,
+    height: 20,
+    width: 20,
   },
   itemContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-    gap: theme.spacing.md,
-  },
-  userInfo: {
-    flex: 1,
-    gap: theme.spacing.xs,
-  },
-  unblockButton: {
-    padding: theme.spacing.xs,
-  },
-  unblockIconContainer: {
-    padding: theme.spacing.xs,
-    borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.red.uiAlpha,
-  },
-  nameSkeleton: {
-    height: 16,
-    width: 120,
   },
   loginSkeleton: {
     height: 14,
     width: 80,
   },
-  iconSkeleton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  nameSkeleton: {
+    height: 16,
+    width: 120,
   },
-}));
+  unblockButton: {
+    padding: theme.spacing.xs,
+  },
+  unblockIconContainer: {
+    backgroundColor: theme.colors.red.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.xs,
+  },
+  userInfo: {
+    flex: 1,
+    gap: theme.spacing.xs,
+  },
+});

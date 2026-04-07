@@ -2,12 +2,11 @@ import { Menu } from '@app/components/Menu/Menu';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
-import { View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { View, StyleSheet } from 'react-native';
 
 export function SettingsDevtoolsScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();
-  const { theme } = useUnistyles();
 
   return (
     <View style={styles.container}>
@@ -85,9 +84,9 @@ export function SettingsDevtoolsScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
-}));
+});

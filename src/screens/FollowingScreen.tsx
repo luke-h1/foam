@@ -10,11 +10,11 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useRefresh } from '@app/hooks/useRefresh';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useRef, useEffect, type JSX } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 
 import { toast } from 'sonner-native';
 
@@ -144,13 +144,13 @@ export default function FollowingScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
     overflow: 'hidden',
   },
   listContent: {
     paddingBottom: theme.spacing.lg,
   },
-}));
+});

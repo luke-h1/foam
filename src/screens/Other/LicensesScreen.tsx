@@ -1,8 +1,9 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
+import { StyleSheet } from 'react-native';
 import { ReactNativeLegal } from 'react-native-legal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 
 export function LicensesScreen() {
   return (
@@ -16,9 +17,9 @@ export function LicensesScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: theme.spacing.xl,
   },
-}));
+});

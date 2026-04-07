@@ -1,6 +1,5 @@
 import { Text } from '@app/components/Text/Text';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 /**
  * Shown when the app is opened via the Twitch OAuth redirect (e.g. foam://auth#access_token=...).
@@ -17,11 +16,11 @@ export function AuthCallbackScreen() {
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#000',
+    flex: 1,
+    justifyContent: 'center',
   },
-}));
+});

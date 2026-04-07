@@ -177,7 +177,6 @@
     "react-native-svg": "15.12.1",
     "react-native-tab-view": "^4.2.2",
     "react-native-toast-message": "^2.3.3",
-    "react-native-unistyles": "^3.0.10",
     "react-native-vector-icons": "^10.3.0",
     "react-native-video": "^6.19.0",
     "react-native-web": "^0.21.0",
@@ -310,16 +309,14 @@
     "protobufjs"
   ],
   "patchedDependencies": {
-    "expo-file-system@19.0.21": "patches/expo-file-system@19.0.21.patch",
-    "react-native-unistyles@3.0.10": "patches/react-native-unistyles@3.0.10.patch"
+    "expo-file-system@19.0.21": "patches/expo-file-system@19.0.21.patch"
   },
   "expo": {
     "install": {
       "exclude": [
         "react-native-screens",
         "react-native-pager-view",
-        "expo-file-system",
-        "react-native-unistyles"
+        "expo-file-system"
       ]
     }
   },

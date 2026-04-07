@@ -1,8 +1,6 @@
 import { registerRootComponent } from 'expo';
 import App from './src/App';
 
-import './src/styles/unistyles';
-
 const originalWarn = console.warn;
 console.warn = (...args: unknown[]) => {
   const message = args[0];

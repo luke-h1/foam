@@ -1,4 +1,5 @@
 /* eslint-disable no-restricted-imports */
+import { theme } from '@app/styles/themes';
 import {
   ComponentType,
   forwardRef,
@@ -14,8 +15,8 @@ import {
   TextStyle,
   View,
   ViewStyle,
+  StyleSheet,
 } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Button } from '../Button/Button';
 import { Text } from '../Text/Text';
 
@@ -60,8 +61,6 @@ export const TextField = forwardRef(function TextField(
     // eslint-disable-next-line no-shadow
     ...TextInputProps
   } = props;
-
-  const { theme } = useUnistyles();
 
   const input = useRef<TextInput>(null);
 
@@ -155,40 +154,40 @@ export const TextField = forwardRef(function TextField(
   );
 });
 
-const styles = StyleSheet.create(theme => ({
-  label: {
-    marginBottom: theme.spacing.sm,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 4,
-    borderCurve: 'continuous',
-    color: theme.colors.gray.text,
-    overflow: 'hidden',
-  },
-  input: {
-    flex: 1,
-    color: theme.colors.gray.text,
-    marginVertical: theme.spacing.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: theme.colors.gray.text,
-    padding: theme.spacing.lg,
-  },
+const styles = StyleSheet.create({
   helper: {
     marginTop: theme.spacing.xs,
   },
-  rightAccessory: {
-    marginEnd: theme.spacing.sm,
-    height: 30,
-    justifyContent: 'center',
+  input: {
+    borderColor: theme.colors.gray.text,
+    borderWidth: StyleSheet.hairlineWidth,
+    color: theme.colors.gray.text,
+    flex: 1,
+    marginVertical: theme.spacing.sm,
+    padding: theme.spacing.lg,
+  },
+  inputWrapper: {
     alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: 4,
+    borderWidth: 1,
+    color: theme.colors.gray.text,
+    flexDirection: 'row',
+    overflow: 'hidden',
+  },
+  label: {
+    marginBottom: theme.spacing.sm,
   },
   leftAccessory: {
-    marginStart: theme.spacing.xs,
+    alignItems: 'center',
     height: 30,
     justifyContent: 'center',
-    alignItems: 'center',
+    marginStart: theme.spacing.xs,
   },
-}));
+  rightAccessory: {
+    alignItems: 'center',
+    height: 30,
+    justifyContent: 'center',
+    marginEnd: theme.spacing.sm,
+  },
+});

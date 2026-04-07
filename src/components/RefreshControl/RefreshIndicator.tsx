@@ -3,8 +3,9 @@ import {
   IconSymbolName,
 } from '@app/components/IconSymbol/IconSymbol';
 import { REFRESH_THRESHOLD } from '@app/hooks/useRefresh';
+import { theme } from '@app/styles/themes';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -13,7 +14,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 const INDICATOR_SIZE = 36;
 const ICON_NAME: IconSymbolName = 'arrow.down';
@@ -29,7 +29,6 @@ export function RefreshIndicator({
   isRefreshing,
   contentInsetTop = 0,
 }: RefreshIndicatorProps) {
-  const { theme } = useUnistyles();
   const refreshProgress = useSharedValue(0);
 
   useEffect(() => {

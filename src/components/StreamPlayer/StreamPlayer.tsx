@@ -3,6 +3,7 @@ import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/Text/Text';
 import { countMetric, sentryService } from '@app/services/sentry-service';
+import { theme } from '@app/styles/themes';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -20,6 +21,7 @@ import {
   type DimensionValue,
   Platform,
   View,
+  StyleSheet,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -28,7 +30,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import type {
   WebViewError,
@@ -514,7 +516,7 @@ function ControlsOverlay({
   showPip = Platform.OS === 'ios',
   streamInfo,
 }: ControlsOverlayProps) {
-  const { theme } = useUnistyles();
+  const insets = useSafeAreaInsets();
   const opacity = useSharedValue(0);
   const [duration, setDuration] = useState(() =>
     formatDuration(streamInfo?.startedAt),
@@ -572,7 +574,10 @@ function ControlsOverlay({
         <View style={styles.overlayTapTarget} />
       </GestureDetector>
 
-      <View pointerEvents="none" style={styles.latencyBadge}>
+      <View
+        pointerEvents="none"
+        style={[styles.latencyBadge, { top: insets.top + theme.spacing.sm }]}
+      >
         <Icon
           color={theme.colors.gray.contrast}
           icon="clock"
@@ -584,7 +589,7 @@ function ControlsOverlay({
         </Text>
       </View>
 
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         {onBackPress && (
           <View style={styles.headerButtonContainer}>
             <Button
@@ -624,7 +629,9 @@ function ControlsOverlay({
         pointerEvents="none"
       />
 
-      <View style={styles.bottomControls}>
+      <View
+        style={[styles.bottomControls, { paddingBottom: insets.bottom + 12 }]}
+      >
         <View style={styles.streamMetadataRow}>
           <View style={styles.liveIndicator}>
             <View style={styles.liveDot} />
@@ -709,7 +716,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     },
     ref,
   ) {
-    const { theme } = useUnistyles();
+    const insets = useSafeAreaInsets();
     const webViewRef = useRef<WebView>(null);
     const needsInitRef = useRef(true);
 
@@ -1331,7 +1338,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           )}
 
         {__DEV__ && lastHttpError && (
-          <View style={styles.debugErrorOverlay}>
+          <View
+            style={[styles.debugErrorOverlay, { bottom: insets.bottom + 24 }]}
+          >
             <Text color="red" weight="semibold">
               HTTP {lastHttpError.statusCode}
             </Text>
@@ -1355,7 +1364,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
             <PressableArea
               onPress={toggleControlsInternal}
-              style={styles.controlsTriggerButton}
+              style={[
+                styles.controlsTriggerButton,
+                { top: insets.top + theme.spacing.sm },
+              ]}
               accessibilityLabel="Show player controls"
               accessibilityRole="button"
             >
@@ -1389,7 +1401,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           // eslint-disable-next-line react/jsx-no-useless-fragment
           <>
             {showLoginPrompt && (
-              <View style={styles.loginPromptOverlay} pointerEvents="box-none">
+              <View
+                style={[
+                  styles.loginPromptOverlay,
+                  { paddingTop: insets.top + theme.spacing.sm },
+                ]}
+                pointerEvents="box-none"
+              >
                 <View style={styles.loginPromptBanner}>
                   <Text
                     color="gray.contrast"
@@ -1451,28 +1469,25 @@ export function StreamPlayerPrewarm({
   );
 }
 
-const styles = StyleSheet.create((theme, rt) => ({
-  avatar: {
-    borderRadius: theme.radii.full,
-    height: theme.spacing['4xl'],
-    marginRight: theme.spacing.sm,
-    width: theme.spacing['4xl'],
-  },
-  userIcon: {
-    backgroundColor: theme.colors.accent.accentAlpha,
-  },
+const styles = StyleSheet.create({
   bottomControls: {
     alignItems: 'center',
     bottom: 0,
     flexDirection: 'row',
     gap: theme.spacing.sm,
     left: 0,
-    paddingBottom: rt.insets.bottom + 12,
     paddingHorizontal: theme.spacing.md,
     paddingTop: 32,
     position: 'absolute',
     right: 0,
     zIndex: 1,
+  },
+  bottomGradient: {
+    bottom: 0,
+    height: 120,
+    left: 0,
+    position: 'absolute',
+    right: 0,
   },
   centerControls: {
     alignItems: 'center',
@@ -1488,65 +1503,8 @@ const styles = StyleSheet.create((theme, rt) => ({
     overflow: 'hidden',
     position: 'relative',
   },
-  touchBlockOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   containerScrollable: {
     overflow: 'visible',
-  },
-  loginPromptOverlay: {
-    left: 0,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: rt.insets.top + theme.spacing.sm,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-  },
-  controlsTriggerButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.full,
-    height: 40,
-    justifyContent: 'center',
-    padding: theme.spacing.sm,
-    position: 'absolute',
-    right: theme.spacing.sm,
-    top: rt.insets.top + theme.spacing.sm,
-    width: 40,
-  },
-  debugErrorOverlay: {
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    bottom: rt.insets.bottom + 24,
-    left: theme.spacing.sm,
-    maxWidth: '95%',
-    padding: theme.spacing.sm,
-    position: 'absolute',
-    right: theme.spacing.sm,
-  },
-  debugDismissButton: {
-    marginTop: theme.spacing.xs,
-  },
-  loginPromptBanner: {
-    alignItems: 'center',
-    alignSelf: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.md,
-    maxWidth: 340,
-    padding: theme.spacing.md,
-  },
-  loginPromptDismiss: {
-    marginTop: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-  },
-  loginPromptText: {
-    textAlign: 'center',
-  },
-  webViewScrollable: {
-    minHeight: '100%',
   },
   controlButton: {
     alignItems: 'center',
@@ -1557,6 +1515,7 @@ const styles = StyleSheet.create((theme, rt) => ({
   controlButtonContainer: {
     alignItems: 'center',
     backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.md,
     height: 40,
     justifyContent: 'center',
@@ -1569,77 +1528,39 @@ const styles = StyleSheet.create((theme, rt) => ({
     right: 0,
     top: 0,
   },
+  controlsTriggerButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.full,
+    height: 40,
+    justifyContent: 'center',
+    padding: theme.spacing.sm,
+    position: 'absolute',
+    right: theme.spacing.sm,
+    width: 40,
+  },
+  debugDismissButton: {
+    marginTop: theme.spacing.xs,
+  },
+  debugErrorOverlay: {
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    left: theme.spacing.sm,
+    maxWidth: '95%',
+    padding: theme.spacing.sm,
+    position: 'absolute',
+    right: theme.spacing.sm,
+  },
   durationText: {
     color: theme.colors.gray.contrast,
     fontSize: theme.font.fontSize.xxs,
     fontWeight: '500',
-  },
-  gameName: {
-    color: theme.colors.gray.contrast,
-    fontSize: theme.font.fontSize.xxs,
-    marginLeft: theme.spacing.sm,
-    opacity: 0.9,
-  },
-  gameRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginTop: theme.spacing.xs,
-  },
-  bottomGradient: {
-    bottom: 0,
-    height: 120,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-  },
-  streamMetadataRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    flex: 1,
-  },
-  streamerNameBottom: {
-    color: theme.colors.gray.contrast,
-    flex: 1,
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '600',
-    opacity: 0.95,
-  },
-  viewerCountRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.xs,
-  },
-  latencyBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    position: 'absolute',
-    top: rt.insets.top + theme.spacing.sm,
-    right: theme.spacing.sm + 48,
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderRadius: theme.radii.full,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    zIndex: 2,
-    borderWidth: 1,
-    borderColor: theme.colors.black.borderHoverAlpha,
-  },
-  latencyBadgeIcon: {
-    opacity: 0.9,
-  },
-  latencyBadgeText: {
-    color: theme.colors.gray.contrast,
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '600',
-    letterSpacing: 0.2,
   },
   header: {
     alignItems: 'center',
     flexDirection: 'row',
     left: 0,
     paddingHorizontal: theme.spacing.sm,
-    paddingTop: rt.insets.top + 8,
     position: 'absolute',
     right: 0,
     top: 0,
@@ -1654,17 +1575,39 @@ const styles = StyleSheet.create((theme, rt) => ({
   headerButtonContainer: {
     alignItems: 'center',
     backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.md,
     height: 40,
     justifyContent: 'center',
     width: 40,
   },
-  headerInfo: {
-    flex: 1,
-    marginRight: theme.spacing.md,
+  latencyBadge: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderColor: theme.colors.black.borderHoverAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.full,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    position: 'absolute',
+    right: theme.spacing.sm + 48,
+    zIndex: 2,
+  },
+  latencyBadgeIcon: {
+    opacity: 0.9,
+  },
+  latencyBadgeText: {
+    color: theme.colors.gray.contrast,
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   liveDot: {
     backgroundColor: theme.colors.red.accent,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.full,
     height: 8,
     marginRight: theme.spacing.sm,
@@ -1674,15 +1617,28 @@ const styles = StyleSheet.create((theme, rt) => ({
     alignItems: 'center',
     flexDirection: 'row',
   },
-  loadingOverlay: {
+  loginPromptBanner: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.bg,
-    bottom: 0,
-    justifyContent: 'center',
+    alignSelf: 'center',
+    backgroundColor: theme.colors.black.uiActiveAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    maxWidth: 340,
+    padding: theme.spacing.md,
+  },
+  loginPromptDismiss: {
+    marginTop: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  loginPromptOverlay: {
     left: 0,
+    paddingHorizontal: theme.spacing.md,
     position: 'absolute',
     right: 0,
     top: 0,
+  },
+  loginPromptText: {
+    textAlign: 'center',
   },
   overlayTapTarget: {
     bottom: 0,
@@ -1699,31 +1655,48 @@ const styles = StyleSheet.create((theme, rt) => ({
     justifyContent: 'center',
     width: 88,
   },
+  prewarmHidden: {
+    height: 0,
+    opacity: 0,
+    overflow: 'hidden',
+    position: 'absolute',
+    width: 0,
+    zIndex: -1,
+  },
+  prewarmWebView: {
+    height: 1,
+    width: 1,
+  },
   spacer: {
     flex: 1,
   },
-  tapArea: {
+  streamMetadataRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flex: 1,
+    gap: theme.spacing.sm,
+  },
+  streamerNameBottom: {
+    color: theme.colors.gray.contrast,
+    flex: 1,
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '600',
+    opacity: 0.95,
+  },
+  touchBlockOverlay: {
     bottom: 0,
     left: 0,
     position: 'absolute',
     right: 0,
     top: 0,
   },
-  streamerLogin: {
-    color: theme.colors.gray.contrast,
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '400',
-    opacity: 0.7,
+  userIcon: {
+    backgroundColor: theme.colors.accent.accentAlpha,
   },
-  streamerName: {
-    color: theme.colors.gray.contrast,
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '600',
-  },
-  viewerCount: {
+  viewerCountRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    marginLeft: theme.spacing.md,
+    gap: theme.spacing.xs,
   },
   viewerCountText: {
     color: theme.colors.gray.contrast,
@@ -1733,22 +1706,10 @@ const styles = StyleSheet.create((theme, rt) => ({
   webView: {
     backgroundColor: '#000',
     flex: 1,
-    width: '100%',
     height: '100%',
+    width: '100%',
   },
-  prewarmHidden: {
-    position: 'absolute',
-    width: 0,
-    height: 0,
-    opacity: 0,
-    zIndex: -1,
-    overflow: 'hidden',
+  webViewScrollable: {
+    minHeight: '100%',
   },
-  prewarmWebView: {
-    width: 1,
-    height: 1,
-  },
-  webViewPlaceholder: {
-    backgroundColor: '#111',
-  },
-}));
+});

@@ -1,8 +1,7 @@
 import { PropsWithChildren, Ref, forwardRef, useState } from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { Pressable, PressableProps, View } from 'react-native';
+import { Pressable, PressableProps, View, StyleSheet } from 'react-native';
 import { EaseView } from 'react-native-ease';
-import { StyleSheet } from 'react-native-unistyles';
 
 export const PressableArea = forwardRef(
   (props: PropsWithChildren<PressableProps>, ref: Ref<View>) => {

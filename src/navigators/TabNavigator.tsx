@@ -5,6 +5,7 @@ import {
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import { SearchScreen } from '@app/screens/SearchScreen/SearchScreen';
+import { theme } from '@app/styles/themes';
 import {
   BottomTabScreenProps,
   createBottomTabNavigator,
@@ -17,7 +18,6 @@ import { CompositeScreenProps } from '@react-navigation/native';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { ComponentType, FC, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
 import { AppStackParamList, AppStackScreenProps } from './AppNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { TopStackNavigator } from './TopStackNavigator';
@@ -72,7 +72,6 @@ type TabBarIconRenderProps = {
 
 function makeTabBarIcon(symbol: IconSymbolName, symbolFocused: IconSymbolName) {
   return function TabBarIconForScreen(props: TabBarIconRenderProps) {
-    const { theme } = useUnistyles();
     return (
       <TabBarIcon
         {...props}
@@ -147,7 +146,6 @@ const screens: Screen[] = [
 ];
 
 export function TabNavigator() {
-  const { theme } = useUnistyles();
   const { user, authState } = useAuthContext();
 
   const availableScreens = useMemo(

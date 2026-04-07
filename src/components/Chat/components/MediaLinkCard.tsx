@@ -6,6 +6,7 @@ import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { Text } from '@app/components/Text/Text';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import {
   SEVENTV_EMOTE_LINK_REGEX,
   TWITCH_CHANNEL_CLIP_REGEX,
@@ -13,8 +14,7 @@ import {
   TwitchAnd7TVVariant,
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useQueries } from '@tanstack/react-query';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 type MediaLinkCardProps = {
   type: TwitchAnd7TVVariant;
@@ -116,56 +116,54 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  iconName: {
-    flex: 1,
-    flexShrink: 1,
+const styles = StyleSheet.create({
+  brandIconSkeleton: {
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    height: 20,
+    width: 20,
+  },
+  card: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.black.accentAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    flexDirection: 'row',
+    padding: theme.spacing.md,
+    width: '100%',
   },
   container: {
     marginVertical: theme.spacing.xs,
   },
-  card: {
-    backgroundColor: theme.colors.black.accentAlpha,
+  createdBySkeleton: {
+    borderCurve: 'continuous',
     borderRadius: theme.radii.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: theme.spacing.md,
-    width: '100%',
+    height: 13,
+    marginTop: 2,
+    width: '40%',
   },
-  thumbnail: {
-    width: 50,
-    height: 50,
-    marginRight: theme.spacing.md,
+  iconName: {
+    flex: 1,
+    flexShrink: 1,
   },
   info: {
     flex: 1,
   },
+  thumbnail: {
+    height: 50,
+    marginRight: theme.spacing.md,
+    width: 50,
+  },
   titleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  title: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: theme.colors.accent.accent,
-  },
-  brandIconSkeleton: {
-    width: 20,
-    height: 20,
-    borderRadius: theme.radii.sm,
-    borderCurve: 'continuous',
+    gap: theme.spacing.md,
   },
   titleSkeleton: {
-    width: '60%',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
     height: 16,
-    borderRadius: theme.radii.sm,
+    width: '60%',
   },
-  createdBySkeleton: {
-    width: '40%',
-    height: 13,
-    borderRadius: theme.radii.sm,
-    marginTop: 2,
-  },
-}));
+});

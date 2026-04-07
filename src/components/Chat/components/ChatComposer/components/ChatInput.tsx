@@ -1,7 +1,13 @@
 import Input, { InputProps } from '@app/components/Input/Input';
+import { theme } from '@app/styles/themes';
 import { forwardRef, useCallback } from 'react';
-import { TextInput, View, LayoutChangeEvent, FocusEvent } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import {
+  TextInput,
+  View,
+  LayoutChangeEvent,
+  FocusEvent,
+  StyleSheet,
+} from 'react-native';
 
 interface ChatInputProps extends Omit<InputProps, 'onChangeText'> {
   value?: string;
@@ -58,17 +64,18 @@ export const ChatInput = forwardRef<TextInput, ChatInputProps>(
 
 ChatInput.displayName = 'ChatInput';
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.gray.ui,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.lg,
   },
   input: {
     fontSize: 15,
-    paddingTop: 10,
+    maxHeight: 100,
+    minHeight: 40,
     paddingBottom: 10,
     paddingHorizontal: 14,
-    minHeight: 40,
-    maxHeight: 100,
+    paddingTop: 10,
   },
-}));
+});

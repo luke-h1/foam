@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { View, StyleSheet } from 'react-native';
 
 export function SentryDemoScreen() {
   return (
@@ -16,19 +16,19 @@ export function SentryDemoScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  container: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignContent: 'center',
-  },
-  buttonText: {
-    padding: theme.spacing.lg,
-    borderRadius: theme.spacing.lg,
-    borderCurve: 'continuous',
-    backgroundColor: theme.colors.accent.accent,
-  },
+const styles = StyleSheet.create({
   button: {
     marginVertical: theme.spacing.md,
   },
-}));
+  buttonText: {
+    backgroundColor: theme.colors.accent.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.spacing.lg,
+    padding: theme.spacing.lg,
+  },
+  container: {
+    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

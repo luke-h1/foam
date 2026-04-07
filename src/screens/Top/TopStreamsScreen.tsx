@@ -6,6 +6,7 @@ import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import {
   getNextPageParam,
   getPreviousPageParam,
@@ -13,8 +14,7 @@ import {
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState, useRef, useCallback } from 'react';
-import { Platform, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Platform, View, StyleSheet } from 'react-native';
 
 export function TopStreamsScreen() {
   const [cursor, setCursor] = useState<string>('');
@@ -116,12 +116,12 @@ export function TopStreamsScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
   listContent: {
     paddingBottom: theme.spacing.lg,
   },
-}));
+});

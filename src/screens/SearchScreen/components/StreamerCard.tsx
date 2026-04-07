@@ -1,8 +1,8 @@
 import { LiveStreamImage } from '@app/components/LiveStreamImage/LiveStreamImage';
 import { Text } from '@app/components/Text/Text';
 import { SearchChannelResponse } from '@app/services/twitch-service';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { View, StyleSheet } from 'react-native';
 
 interface Props {
   stream: SearchChannelResponse;
@@ -41,30 +41,31 @@ export function StreamerCard({ stream }: Props) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    flexDirection: 'row',
     flex: 1,
+    gap: theme.spacing.md,
   },
   info: {
     flex: 1,
     gap: 2,
   },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
   liveBadge: {
     backgroundColor: 'rgba(255, 68, 68, 0.15)',
+    borderCurve: 'continuous',
+    borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
   },
   liveText: {
     color: '#ff6b6b',
     fontWeight: '600',
   },
-}));
+  nameRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+});

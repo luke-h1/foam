@@ -13,9 +13,9 @@ import {
   RemoteConfigKey,
   useRemoteConfig,
 } from '@app/hooks/firebase/useRemoteConfig';
+import { theme } from '@app/styles/themes';
 import * as AC from '@bacons/apple-colors';
-import { ActivityIndicator, Platform, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
 
 function getSourceIcon(source: string): IconSymbolName {
   switch (source) {
@@ -116,7 +116,9 @@ export function RemoteConfigScreen() {
                       {key}
                     </Text>
                   </View>
-                  <View style={styles.sourceTag(entry.source)}>
+                  <View
+                    style={[styles.sourceTag, getSourceTagStyle(entry.source)]}
+                  >
                     <Text type="xs" weight="semibold" color="gray.bg">
                       {entry.source}
                     </Text>
@@ -192,106 +194,116 @@ export function RemoteConfigScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   appVariant: {
     marginBottom: theme.spacing.sm,
   },
+  buttonText: {
+    color: '#fff',
+  },
+  card: {
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    overflow: 'hidden',
+  },
+  configHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  configItem: {
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
+  },
+  configItemBorder: {
+    borderBottomColor: theme.colors.gray.borderAlpha,
+    borderBottomWidth: 1,
+  },
   contentContainer: {
+    gap: theme.spacing.xl,
     padding: theme.spacing.lg,
     paddingBottom: 100,
-    gap: theme.spacing.xl,
+  },
+  defaultValueBox: {
+    backgroundColor: theme.colors.gray.bgAltAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    opacity: 0.7,
+    padding: theme.spacing.sm,
+  },
+  defaultValueText: {
+    color: theme.colors.gray.textLow,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  fetchButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.blue.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  keyRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flex: 1,
+    gap: 8,
+  },
+  legendItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    padding: theme.spacing.md,
   },
   section: {
     gap: theme.spacing.sm,
   },
   sectionTitle: {
-    marginLeft: theme.spacing.xs,
     letterSpacing: 0.5,
+    marginLeft: theme.spacing.xs,
   },
-  card: {
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderRadius: theme.radii.lg,
-    overflow: 'hidden',
+  sourceTag: {
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  fetchButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: theme.colors.blue.accent,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: theme.radii.lg,
+  valueBox: {
+    backgroundColor: theme.colors.gray.bgAltAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    padding: theme.spacing.sm,
   },
-  buttonText: {
-    color: '#fff',
+  valueLabel: {
+    marginLeft: 2,
   },
-  configItem: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+  valueRow: {
+    gap: 4,
   },
-  configItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray.borderAlpha,
+  valueText: {
+    color: theme.colors.grass.accent,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
+    fontSize: 12,
+    lineHeight: 18,
   },
-  configHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  valuesContainer: {
+    gap: theme.spacing.xs,
   },
-  keyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  sourceTag: (source: string) => ({
+});
+
+function getSourceTagStyle(source: string) {
+  return {
     backgroundColor:
       source === 'remote'
         ? theme.colors.green.accent
         : source === 'default'
           ? theme.colors.orange.accent
           : theme.colors.gray.text,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: theme.radii.sm,
-  }),
-  valuesContainer: {
-    gap: theme.spacing.xs,
-  },
-  valueRow: {
-    gap: 4,
-  },
-  valueLabel: {
-    marginLeft: 2,
-  },
-  valueBox: {
-    backgroundColor: theme.colors.gray.bgAltAlpha,
-    borderRadius: theme.radii.sm,
-    padding: theme.spacing.sm,
-  },
-  valueText: {
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
-    fontSize: 12,
-    lineHeight: 18,
-    color: theme.colors.grass.accent,
-  },
-  defaultValueBox: {
-    backgroundColor: theme.colors.gray.bgAltAlpha,
-    borderRadius: theme.radii.sm,
-    padding: theme.spacing.sm,
-    opacity: 0.7,
-  },
-  defaultValueText: {
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
-    fontSize: 12,
-    lineHeight: 18,
-    color: theme.colors.gray.textLow,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: theme.spacing.md,
-  },
-}));
+  };
+}

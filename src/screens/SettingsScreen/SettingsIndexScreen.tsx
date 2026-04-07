@@ -4,15 +4,14 @@ import { Text } from '@app/components/Text/Text';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
+import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { BuildStatus } from './components/BuildStatus';
 
 export function SettingsIndexScreen() {
   const { navigate } = useAppNavigation<SettingsStackParamList>();
-  const { theme } = useUnistyles();
   const insets = useSafeAreaInsets();
   const { config } = useRemoteConfig();
   const { statusPageUrl, websiteUrl } = config;
@@ -111,25 +110,25 @@ export function SettingsIndexScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
-  },
-  quickLinks: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
+    flex: 1,
   },
   footer: {
-    position: 'absolute',
+    alignItems: 'center',
     bottom: 0,
     left: 0,
-    right: 0,
-    alignItems: 'center',
     paddingTop: theme.spacing.lg,
+    position: 'absolute',
+    right: 0,
     // backgroundColor: theme.colors.gray.bg,
   },
-}));
+  quickLinks: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    justifyContent: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+});

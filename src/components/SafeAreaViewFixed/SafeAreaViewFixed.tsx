@@ -1,8 +1,8 @@
 /* eslint-disable no-nested-ternary */
+import { theme } from '@app/styles/themes';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { StyleProp, View, ViewProps, ViewStyle } from 'react-native';
 import { Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useUnistyles } from 'react-native-unistyles';
 
 interface Props extends ViewProps {
   style?: StyleProp<ViewStyle>;
@@ -41,11 +41,7 @@ export function SafeAreaViewFixed({
 }: Props) {
   const insets = useSafeAreaInsets();
   const dynamicTabBarHeight = useTabBarHeight();
-  const {
-    theme: {
-      spacing: { tabBarHeight: themeTabBarHeight },
-    },
-  } = useUnistyles();
+  const { tabBarHeight: themeTabBarHeight } = theme.spacing;
   // Use dynamic height if available, fall back to theme value
   const tabBarHeight = dynamicTabBarHeight || themeTabBarHeight;
   const defaultEdges = edges === undefined;

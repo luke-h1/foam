@@ -8,7 +8,6 @@ import {
   compressEmoteUrl,
 } from '@app/utils/image/emoteCompression';
 import { memo, useEffect, useState, useMemo } from 'react';
-import { StyleSheet } from 'react-native-unistyles';
 
 import { EmoteActionSheet } from './EmoteActionSheet';
 
@@ -73,7 +72,7 @@ export const EmoteRenderer = memo(
       return (
         <EmoteActionSheet part={part} onPress={handleEmotePress}>
           <Button>
-            <Text style={styles.name(width, height)}>{part.name || '?'}</Text>
+            <Text style={getNameStyle(width, height)}>{part.name || '?'}</Text>
           </Button>
         </EmoteActionSheet>
       );
@@ -87,7 +86,7 @@ export const EmoteRenderer = memo(
             source={{
               uri: imageUrl,
             }}
-            containerStyle={styles.emoteContainer(width, height)}
+            containerStyle={getEmoteContainerStyle(width, height)}
             contentFit="contain"
             cachePolicy="memory-disk"
             decodeFormat="argb"
@@ -106,15 +105,18 @@ export const EmoteRenderer = memo(
 
 EmoteRenderer.displayName = 'EmoteRenderer';
 
-const styles = StyleSheet.create({
-  emoteContainer: (width: number, height: number) => ({
+function getEmoteContainerStyle(width: number, height: number) {
+  return {
     width,
     height,
     overflow: 'hidden' as const,
-  }),
-  name: (width: number, height: number) => ({
+  };
+}
+
+function getNameStyle(width: number, height: number) {
+  return {
     width,
     height,
-    textAlign: 'center',
-  }),
-});
+    textAlign: 'center' as const,
+  };
+}

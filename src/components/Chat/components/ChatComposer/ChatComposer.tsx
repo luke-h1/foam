@@ -6,8 +6,8 @@ import {
   TextInputProps,
   View,
   LayoutChangeEvent,
+  StyleSheet,
 } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
 import { ChatInput } from './components/ChatInput';
 import { EmoteSuggestions } from './components/EmoteSuggestions';
 import { UserSuggestions } from './components/UserSuggestions';
@@ -197,11 +197,11 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
 
 ChatComposer.displayName = 'ChatComposer';
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create({
   inputWrapper: {
     width: '100%',
   },
   mainContainer: {
     width: '100%',
   },
-}));
+});

@@ -1,12 +1,13 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { TextBox } from '@app/components/TextBox/TextBox';
+import { theme } from '@app/styles/themes';
 import {
   type StyleProp,
   type TextInputProps,
   type ViewStyle,
+  StyleSheet,
 } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
 
 interface SearchProps {
   onChange?: (value: string) => void;
@@ -59,7 +60,7 @@ export function SearchBox({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   clear: {
     height: theme.spacing.xl,
     width: theme.spacing.xl,
@@ -67,8 +68,8 @@ const styles = StyleSheet.create(theme => ({
   clearButton: {},
   content: {
     backgroundColor: 'transparent',
-    borderWidth: 0,
     borderCurve: 'continuous',
+    borderWidth: 0,
   },
   icon: {
     marginLeft: theme.spacing.md,
@@ -77,4 +78,4 @@ const styles = StyleSheet.create(theme => ({
     flexGrow: 1,
     height: theme.spacing['2xl'],
   },
-}));
+});

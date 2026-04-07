@@ -1,7 +1,6 @@
 import { typedObjectKeys } from '@app/utils/typescript/typedObjectKeys';
 import { memo } from 'react';
 import { DimensionValue, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
 import { BttvIcon } from './svg/BttvIcon';
 import { FfzIcon } from './svg/FfzIcon';
 import { StvIcon } from './svg/StvIcon';
@@ -58,7 +57,7 @@ export const BrandIcon = memo(
     return (
       <IconComponent
         color={color}
-        style={[styles.iconImage({ height, width }), style]}
+        style={[getIconImageStyle({ height, width }), style]}
         {...props}
       />
     );
@@ -66,15 +65,15 @@ export const BrandIcon = memo(
 );
 BrandIcon.displayName = 'BrandIcon';
 
-const styles = StyleSheet.create(() => ({
-  iconImage: ({
+function getIconImageStyle({
+  height,
+  width,
+}: {
+  height: DimensionValue;
+  width: DimensionValue;
+}) {
+  return {
     height,
     width,
-  }: {
-    height: DimensionValue;
-    width: DimensionValue;
-  }) => ({
-    height,
-    width,
-  }),
-}));
+  };
+}

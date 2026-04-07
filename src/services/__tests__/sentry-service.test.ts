@@ -1,22 +1,22 @@
-const countMock = jest.fn();
-const initMock = jest.fn();
-const reactNavigationIntegrationMock = jest.fn(() => ({
+const mockCount = jest.fn();
+const mockInit = jest.fn();
+const mockReactNavigationIntegration = jest.fn(() => ({
   registerNavigationContainer: jest.fn(),
 }));
-const mobileReplayIntegrationMock = jest.fn(() => ({
+const mockMobileReplayIntegration = jest.fn(() => ({
   name: 'MobileReplay',
 }));
-const wrapExpoImageMock = jest.fn();
+const mockWrapExpoImage = jest.fn();
 
 jest.mock('@sentry/react-native', () => ({
   __esModule: true,
   metrics: {
-    count: countMock,
+    count: mockCount,
   },
-  init: initMock,
-  reactNavigationIntegration: reactNavigationIntegrationMock,
-  mobileReplayIntegration: mobileReplayIntegrationMock,
-  wrapExpoImage: wrapExpoImageMock,
+  init: mockInit,
+  reactNavigationIntegration: mockReactNavigationIntegration,
+  mobileReplayIntegration: mockMobileReplayIntegration,
+  wrapExpoImage: mockWrapExpoImage,
 }));
 
 jest.mock('expo-image', () => ({
@@ -24,22 +24,24 @@ jest.mock('expo-image', () => ({
   Image: {},
 }));
 
+// eslint-disable-next-line no-underscore-dangle
+(globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ = false;
+
+const { countMetric } =
+  jest.requireActual<typeof import('../sentry-service')>('../sentry-service');
+
 describe('sentry-service', () => {
   beforeEach(() => {
-    // eslint-disable-next-line no-underscore-dangle
-    (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ = false;
-    countMock.mockClear();
+    mockCount.mockClear();
   });
 
-  it('captures counter metrics with attributes', async () => {
-    const { countMetric } = await import('../sentry-service');
-
+  it('captures counter metrics with attributes', () => {
     countMetric('ota.update.available', {
       platform: 'ios',
       environment: 'production',
     });
 
-    expect(countMock).toHaveBeenCalledWith('ota.update.available', 1, {
+    expect(mockCount).toHaveBeenCalledWith('ota.update.available', 1, {
       attributes: {
         platform: 'ios',
         environment: 'production',
@@ -47,12 +49,10 @@ describe('sentry-service', () => {
     });
   });
 
-  it('allows overriding the counter value', async () => {
-    const { countMetric } = await import('../sentry-service');
-
+  it('allows overriding the counter value', () => {
     countMetric('stream.ready', { component: 'StreamPlayer' }, 3);
 
-    expect(countMock).toHaveBeenCalledWith('stream.ready', 3, {
+    expect(mockCount).toHaveBeenCalledWith('stream.ready', 3, {
       attributes: {
         component: 'StreamPlayer',
       },

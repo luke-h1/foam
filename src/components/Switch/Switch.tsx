@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { StyleSheet } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -6,7 +7,6 @@ import Animated, {
   withSpring,
   ZoomIn,
 } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../Button/Button';
 import { Icon } from '../Icon/Icon';
 

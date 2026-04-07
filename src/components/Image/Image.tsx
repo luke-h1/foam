@@ -1,9 +1,8 @@
 /* eslint-disable no-restricted-imports */
 import * as Sentry from '@sentry/react-native';
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
-import { View, ViewStyle, StyleProp } from 'react-native';
+import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native';
 import { NitroImage } from 'react-native-nitro-image';
-import { StyleSheet } from 'react-native-unistyles';
 
 Sentry.wrapExpoImage(ExpoImage);
 
@@ -86,8 +85,8 @@ export const Image = function Image({
   );
 };
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create({
   container: {
     position: 'relative',
   },
-}));
+});

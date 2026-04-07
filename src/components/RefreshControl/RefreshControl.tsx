@@ -1,7 +1,7 @@
+import { theme } from '@app/styles/themes';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from 'react';
 import { Platform, RefreshControl as RNRefreshControl } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
 
 interface Props {
   offset?: number;
@@ -9,7 +9,6 @@ interface Props {
 }
 
 export function RefreshControl({ onRefresh, offset }: Props) {
-  const { theme } = useUnistyles();
   const [refreshing, setRefreshing] = useState(false);
 
   const tintColor = theme.colors.grass.accent;

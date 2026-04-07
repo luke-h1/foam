@@ -1,8 +1,7 @@
 import { Chat } from '@app/components/Chat/Chat';
 import { AppStackScreenProps } from '@app/navigators/AppNavigator';
 import { FC } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 export const ChatScreen: FC<AppStackScreenProps<'Chat'>> = ({
   route: { params },

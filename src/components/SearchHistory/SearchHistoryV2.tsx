@@ -1,5 +1,6 @@
+import { theme } from '@app/styles/themes';
 import { useCallback } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, View, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -9,7 +10,6 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Icon } from '../Icon/Icon';
 import { PressableArea } from '../PressableArea/PressableArea';
@@ -29,7 +29,6 @@ function SwipeableHistoryItem({
   onSelect,
   onDelete,
 }: SwipeableHistoryItemProps) {
-  const { theme } = useUnistyles();
   const translateX = useSharedValue(0);
   const itemHeight = useSharedValue(52);
   const opacity = useSharedValue(1);
@@ -210,58 +209,58 @@ export function SearchHistoryV2({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  wrapper: {
-    paddingTop: theme.spacing.lg,
+const styles = StyleSheet.create({
+  deleteAction: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.red.accent,
+    bottom: 0,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 80,
+  },
+  deleteActionButton: {
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'center',
+    width: '100%',
   },
   headerRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
   },
-  sectionTitle: {
-    letterSpacing: 0.5,
+  hint: {
+    marginTop: theme.spacing.md,
+    opacity: 0.6,
+    textAlign: 'center',
+  },
+  historyItem: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.bg,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
   },
   historyList: {
     gap: 1,
   },
   itemContainer: {
-    position: 'relative',
     overflow: 'hidden',
-  },
-  historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.bg,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    gap: theme.spacing.md,
+    position: 'relative',
   },
   query: {
-    flex: 1,
     color: theme.colors.gray.text,
+    flex: 1,
   },
-  deleteAction: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 80,
-    backgroundColor: theme.colors.red.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
+  sectionTitle: {
+    letterSpacing: 0.5,
   },
-  deleteActionButton: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+  wrapper: {
+    paddingTop: theme.spacing.lg,
   },
-  hint: {
-    textAlign: 'center',
-    marginTop: theme.spacing.md,
-    opacity: 0.6,
-  },
-}));
+});

@@ -8,16 +8,15 @@ import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { AppStackParamList } from '@app/navigators/AppNavigator';
 import { NAMESPACE, storageService } from '@app/services/storage-service';
 import { twitchService } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Clipboard from 'expo-clipboard';
 import { useState, useEffect } from 'react';
-import { Alert, Platform, ScrollView, View } from 'react-native';
+import { Alert, Platform, ScrollView, View, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export function DebugScreen() {
-  const { theme } = useUnistyles();
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
   const navigation =
@@ -215,93 +214,97 @@ export function DebugScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.bg,
+const styles = StyleSheet.create({
+  codeBlock: {
+    backgroundColor: theme.colors.gray.bgAltAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    padding: theme.spacing.md,
   },
-  flex: {
-    flex: 1,
+  codeText: {
+    color: theme.colors.grass.accent,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
   },
   content: {
     padding: theme.spacing.lg,
     paddingBottom: 100,
   },
-  title: {
-    marginBottom: theme.spacing.xl,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
-  },
-  rowText: {
-    flex: 1,
+  copyBtn: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   destructiveBtn: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
   },
   divider: {
-    height: 1,
     backgroundColor: theme.colors.gray.borderAlpha,
+    height: 1,
     marginVertical: theme.spacing.md,
   },
-  label: {
-    marginBottom: theme.spacing.sm,
+  flex: {
+    flex: 1,
+  },
+  goBtn: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  hint: {
+    marginTop: theme.spacing.sm,
+  },
+  inputFlex: {
+    flex: 1,
   },
   inputRow: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
   },
-  inputFlex: {
-    flex: 1,
-  },
-  goBtn: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderRadius: theme.radii.sm,
-  },
-  tokenBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.bgAltAlpha,
-    borderRadius: theme.radii.sm,
-    padding: theme.spacing.sm,
-    gap: theme.spacing.sm,
-  },
-  tokenText: {
-    flex: 1,
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
-    color: theme.colors.gray.text,
-  },
-  copyBtn: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-  },
   joinBtn: {
-    paddingHorizontal: theme.spacing.lg,
     backgroundColor: theme.colors.blue.accent,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.sm,
     justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
   },
   joinBtnText: {
     color: '#fff',
   },
-  hint: {
-    marginTop: theme.spacing.sm,
+  label: {
+    marginBottom: theme.spacing.sm,
   },
-  codeBlock: {
+  row: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.md,
+  },
+  rowText: {
+    flex: 1,
+  },
+  screenContainer: {
+    backgroundColor: theme.colors.gray.bg,
+    flex: 1,
+  },
+  title: {
+    marginBottom: theme.spacing.xl,
+  },
+  tokenBox: {
+    alignItems: 'center',
     backgroundColor: theme.colors.gray.bgAltAlpha,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.sm,
-    padding: theme.spacing.md,
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    padding: theme.spacing.sm,
   },
-  codeText: {
+  tokenText: {
+    color: theme.colors.gray.text,
+    flex: 1,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
-    color: theme.colors.grass.accent,
   },
-}));
+});

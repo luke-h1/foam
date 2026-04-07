@@ -5,6 +5,7 @@ import type {
   ChatMessageType,
   UserPaint,
 } from '@app/store/chatStore/constants';
+import { theme } from '@app/styles/themes';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import {
   UserNoticeVariantMap,
@@ -16,8 +17,7 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
 import React, { useCallback, memo, type ReactNode } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 import { Button } from '../../../Button/Button';
 import { Image } from '../../../Image/Image';
 import { Text } from '../../../Text/Text';
@@ -481,140 +481,33 @@ export const RichChatMessage = MemoizedRichChatMessage as <
     userPaints?: Record<string, UserPaint>;
   },
 ) => React.JSX.Element;
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
+  badge: {
+    height: 20,
+    marginRight: 2,
+    width: 20,
+  },
   chatContainer: {
-    paddingVertical: theme.spacing.xs,
-    minHeight: 44,
     maxHeight: 120,
-  },
-  systemMessageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  systemMessageRow: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  stvSystemRowAlignStart: {
-    alignItems: 'flex-start',
-  },
-  messageColumn: {
-    width: '100%',
-    flexDirection: 'column',
-  },
-  rewardMessageContainer: {
-    backgroundColor: 'rgba(127, 127, 127, 0.06)',
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
-    borderLeftColor: theme.colors.violet.accent,
-    borderRightColor: theme.colors.violet.accent,
-    paddingLeft: theme.spacing.sm,
-    paddingRight: theme.spacing.xs,
+    minHeight: 44,
     paddingVertical: theme.spacing.xs,
-    marginVertical: theme.spacing.xs,
-  },
-  rewardSummaryRow: {
-    width: '100%',
-    marginBottom: theme.spacing.xs,
-  },
-  rewardSummaryText: {
-    flexWrap: 'wrap',
-  },
-  rewardSummaryName: {
-    color: theme.colors.gray.text,
-    fontWeight: '700',
-  },
-  rewardSummaryMuted: {
-    color: theme.colors.gray.textLow,
-    fontWeight: '400',
-  },
-  rewardSummaryRewardTitle: {
-    color: theme.colors.gray.text,
-    fontWeight: '700',
-  },
-  systemMessageText: {
-    color: theme.colors.gray.textLow,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    lineHeight: theme.spacing['2xl'],
   },
   firstMessageContainer: {
     backgroundColor: 'rgba(145, 71, 255, 0.08)',
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
     borderLeftColor: theme.colors.violet.accent,
+    borderLeftWidth: 3,
     borderRightColor: theme.colors.violet.accent,
+    borderRightWidth: 3,
     marginVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
-  messageLine: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    flex: 1,
-  },
-  usernameButton: {
-    flexShrink: 0,
-  },
-  messageWrapper: {
-    width: '100%',
-    marginBottom: 5,
-  },
-  firstLine: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    width: '100%',
-  },
-  inlineMessageContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    flex: 1,
-    minWidth: 0,
-  },
-  messageRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  messagePrefix: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    flexShrink: 0,
-  },
-  messageContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    flex: 1,
-    minWidth: 0,
-    marginLeft: 0,
-  },
-  line: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    width: '100%',
-    marginBottom: 5,
-  },
-  badge: {
-    width: 20,
-    height: 20,
-    marginRight: 2,
-  },
-  username: {
-    marginRight: 5,
-    fontWeight: 'bold',
-  },
-  usernameDefaultColor: {
-    color: '#FFFFFF',
-  },
-  timestamp: {
-    color: theme.colors.gray.accentAlpha,
+  firstMessageText: {
+    color: 'rgba(145, 71, 255, 0.5)',
     fontSize: theme.font.fontSize.xs,
+    fontStyle: 'italic',
+    fontWeight: '500',
+    textTransform: 'lowercase',
   },
   mention: {
     marginHorizontal: 2,
@@ -622,69 +515,90 @@ const styles = StyleSheet.create(theme => ({
   mentionDefaultColor: {
     color: '#FFFFFF',
   },
-  safeArea: {
+  messageColumn: {
+    flexDirection: 'column',
+    width: '100%',
+  },
+  messageLine: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     flex: 1,
   },
-  bottomSheet: {
-    // backgroundColor: theme.colors.borderFaint,
-  },
-  messageActionsContainer: {
-    padding: 16,
-  },
-  messageActionButton: {
+  messageRow: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  messageActionText: {
-    marginLeft: 12,
-  },
-  replyContainer: {
-    borderLeftWidth: 2,
-    borderLeftColor: 'rgba(145, 71, 255, 0.5)',
-    paddingLeft: theme.spacing.sm,
-    marginLeft: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
-  },
-  replyIndicatorWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-    gap: 3,
-  },
-  replyLabel: {
-    color: 'rgba(255, 255, 255, 0.4)',
-    fontSize: 10,
-  },
-  replyUsername: {
-    fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 10,
-  },
-  replyBodyPreview: {
-    color: 'rgba(255, 255, 255, 0.35)',
-    fontSize: 10,
-    flexShrink: 1,
-  },
-  subscriptionNoticeContainer: {
+    justifyContent: 'space-between',
     width: '100%',
   },
   messageText: {
     lineHeight: theme.spacing['2xl'],
   },
+  replyContainer: {
+    borderLeftColor: 'rgba(145, 71, 255, 0.5)',
+    borderLeftWidth: 2,
+    marginBottom: theme.spacing.md,
+    marginLeft: theme.spacing.sm,
+    paddingLeft: theme.spacing.sm,
+  },
+  rewardMessageContainer: {
+    backgroundColor: 'rgba(127, 127, 127, 0.06)',
+    borderLeftColor: theme.colors.violet.accent,
+    borderLeftWidth: 3,
+    borderRightColor: theme.colors.violet.accent,
+    borderRightWidth: 3,
+    marginVertical: theme.spacing.xs,
+    paddingLeft: theme.spacing.sm,
+    paddingRight: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs,
+  },
+  rewardSummaryMuted: {
+    color: theme.colors.gray.textLow,
+    fontWeight: '400',
+  },
+  rewardSummaryName: {
+    color: theme.colors.gray.text,
+    fontWeight: '700',
+  },
+  rewardSummaryRewardTitle: {
+    color: theme.colors.gray.text,
+    fontWeight: '700',
+  },
+  rewardSummaryRow: {
+    marginBottom: theme.spacing.xs,
+    width: '100%',
+  },
+  rewardSummaryText: {
+    flexWrap: 'wrap',
+  },
   rightActions: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: theme.spacing.xs,
     marginLeft: theme.spacing.xs,
   },
-  firstMessageText: {
-    color: 'rgba(145, 71, 255, 0.5)',
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '500',
-    textTransform: 'lowercase',
-    fontStyle: 'italic',
+  stvSystemRowAlignStart: {
+    alignItems: 'flex-start',
   },
-}));
+  subscriptionNoticeContainer: {
+    width: '100%',
+  },
+  systemMessageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  systemMessageRow: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  systemMessageText: {
+    color: theme.colors.gray.textLow,
+    fontStyle: 'italic',
+    lineHeight: theme.spacing['2xl'],
+    textAlign: 'center',
+  },
+  timestamp: {
+    color: theme.colors.gray.accentAlpha,
+    fontSize: theme.font.fontSize.xs,
+  },
+});

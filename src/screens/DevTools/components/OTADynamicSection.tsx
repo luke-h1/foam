@@ -4,8 +4,7 @@ import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
 import { sentryService } from '@app/services/sentry-service';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
-import { ActivityIndicator, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { ENV_SUPPORTS_OTA } from '../utils/envSupportsOta';
 
 export function OTADynamicSection() {
@@ -145,9 +144,13 @@ export function OTADynamicSection() {
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create({
   errorContainer: {
     flexWrap: 'wrap',
+  },
+  errorMessage: {
+    color: AC.secondaryLabel,
+    flexShrink: 1,
   },
   errorText: {
     color: AC.systemRed,
@@ -155,8 +158,4 @@ const styles = StyleSheet.create(() => ({
   spacer: {
     flex: 1,
   },
-  errorMessage: {
-    flexShrink: 1,
-    color: AC.secondaryLabel,
-  },
-}));
+});

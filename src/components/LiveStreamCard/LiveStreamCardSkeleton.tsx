@@ -1,5 +1,5 @@
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { View, StyleSheet } from 'react-native';
 import { Skeleton } from '../Skeleton/Skeleton';
 
 export function LiveStreamCardSkeleton() {
@@ -23,51 +23,51 @@ export function LiveStreamCardSkeleton() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
+  avatarSkeleton: {
+    borderRadius: 10,
+    height: 20,
+    marginRight: theme.spacing.xs,
+    width: 20,
+  },
   container: {
-    flexDirection: 'row',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.sm,
-    marginBottom: theme.spacing.md,
     columnGap: theme.spacing.sm,
+    flexDirection: 'row',
     flex: 1,
-  },
-  imageContainer: {
-    position: 'relative',
-  },
-  imageSkeleton: {
-    width: 150,
-    height: 100,
-    borderRadius: theme.radii.md,
+    marginBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xl,
   },
   details: {
     flex: 1,
     justifyContent: 'flex-start',
     marginLeft: theme.spacing.md,
   },
-  titleSkeleton: {
-    height: 20,
-    width: '80%',
-    marginBottom: theme.spacing.sm,
+  imageContainer: {
+    position: 'relative',
+  },
+  imageSkeleton: {
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    height: 100,
+    width: 150,
+  },
+  info: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginVertical: theme.spacing.md,
   },
   metadata: {
     marginVertical: theme.spacing.sm,
   },
-  info: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: theme.spacing.md,
-  },
-  avatarSkeleton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: theme.spacing.xs,
-    borderCurve: 'continuous',
-  },
   textSkeleton: {
     height: 15,
-    width: '60%',
     marginBottom: theme.spacing.xs,
+    width: '60%',
   },
-}));
+  titleSkeleton: {
+    height: 20,
+    marginBottom: theme.spacing.sm,
+    width: '80%',
+  },
+});

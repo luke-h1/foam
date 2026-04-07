@@ -14,7 +14,6 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 import * as ReactNative from 'react-native';
 import 'cross-fetch/polyfill';
 import '@app/hooks/useAppNavigation';
-import '../src/styles/unistyles';
 import { configure as configureReassure } from 'reassure';
 import { TextEncoder, TextDecoder } from 'util';
 import mockFile from '../__mocks__/mockFile';
@@ -121,7 +120,6 @@ jest.mock('expo-secure-store', () => ({
 
 // Mocks are in __mocks__ directory - Jest will auto-discover them
 jest.mock('react-native-nitro-modules');
-jest.mock('react-native-unistyles');
 jest.mock('react-native-keyboard-controller');
 jest.mock('expo-task-manager');
 jest.mock('expo-background-task');

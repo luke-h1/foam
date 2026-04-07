@@ -1,8 +1,8 @@
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 export function BuildStatus() {
   return (
@@ -16,9 +16,9 @@ export function BuildStatus() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   buildContainer: {
     alignItems: 'center',
     paddingVertical: theme.spacing.xs,
   },
-}));
+});

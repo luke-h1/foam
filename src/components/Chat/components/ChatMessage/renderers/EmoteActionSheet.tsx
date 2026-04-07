@@ -2,6 +2,7 @@ import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView } from 'expo-symbols';
@@ -19,8 +20,8 @@ import {
   Platform,
   View,
   type GestureResponderEvent,
+  StyleSheet,
 } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
 type PartVariant = ParsedPart<'emote'>;
@@ -206,75 +207,78 @@ export function EmoteActionSheet({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  wrapper: {
-    flex: 1,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.md,
-    gap: theme.spacing.lg,
-    backgroundColor: '#171b23',
-  },
-  actionGroup: {
-    borderRadius: theme.radii.xl,
-    backgroundColor: 'transparent',
-    overflow: 'hidden',
-  },
+const styles = StyleSheet.create({
   actionButton: {
-    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
     gap: theme.spacing.sm,
     minHeight: Platform.select({ ios: 56, android: 56 }),
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: 'transparent',
   },
   actionButtonWithDivider: {
     borderTopWidth: 0,
+  },
+  actionGroup: {
+    backgroundColor: 'transparent',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.xl,
+    overflow: 'hidden',
+  },
+  actionIcon: {
+    opacity: 0.9,
   },
   actionText: {
     color: theme.colors.gray.text,
     fontSize: theme.font.fontSize.md,
     fontWeight: Platform.select({ ios: '400', android: '400' }),
   },
-  actionIcon: {
-    opacity: 0.9,
-  },
   previewCard: {
-    borderRadius: theme.radii.xl,
     backgroundColor: 'transparent',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.xl,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
   },
-  previewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  previewImageContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: theme.radii.lg,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
+  previewHint: {
+    color: theme.colors.gray.textLow,
+    fontSize: theme.font.fontSize.lg,
+    lineHeight: theme.font.fontSize.lg * 1.2,
+    marginTop: 4,
   },
   previewImage: {
-    width: 56,
     height: 56,
+    width: 56,
+  },
+  previewImageContainer: {
+    alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    height: 56,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    width: 56,
   },
   previewMeta: {
     flex: 1,
   },
   previewName: {
     color: theme.colors.gray.text,
-    fontWeight: Platform.select({ ios: '700', android: '600' }),
     fontSize: theme.font.fontSize['2xl'],
+    fontWeight: Platform.select({ ios: '700', android: '600' }),
     lineHeight: theme.font.fontSize['2xl'] * 1.1,
   },
-  previewHint: {
-    color: theme.colors.gray.textLow,
-    marginTop: 4,
-    fontSize: theme.font.fontSize.lg,
-    lineHeight: theme.font.fontSize.lg * 1.2,
+  previewRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
   },
-}));
+  wrapper: {
+    backgroundColor: '#171b23',
+    flex: 1,
+    gap: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+  },
+});

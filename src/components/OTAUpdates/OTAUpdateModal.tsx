@@ -2,10 +2,10 @@ import { Button } from '@app/components/Button/Button';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
 import { Text } from '@app/components/Text/Text';
 import { OTAUpdateState } from '@app/hooks/useOTAUpdates';
+import { theme } from '@app/styles/themes';
 import { nativeApplicationVersion, nativeBuildVersion } from 'expo-application';
-import { Modal as RNModal, View } from 'react-native';
+import { Modal as RNModal, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 
 interface OTAUpdateModalProps {
   visible: boolean;
@@ -36,7 +36,7 @@ export function OTAUpdateModal({
           <View style={styles.iconContainer}>
             <IconSymbol
               name="arrow.down.circle.fill"
-              color={styles.icon.color}
+              color={theme.colors.green.accent}
               size={40}
             />
           </View>
@@ -87,68 +87,68 @@ export function OTAUpdateModal({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    justifyContent: 'center' as const,
+const styles = StyleSheet.create({
+  applyButton: {
     alignItems: 'center' as const,
-    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.green.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    justifyContent: 'center' as const,
+    paddingVertical: theme.spacing.md,
+    width: '100%',
   },
   card: {
+    alignItems: 'center' as const,
     backgroundColor: theme.colors.gray.bgAlt,
+    borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    maxWidth: 340,
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.xl,
     width: '100%',
-    maxWidth: 340,
-    alignItems: 'center' as const,
-    borderWidth: 1,
-    borderColor: theme.colors.gray.border,
-  },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: theme.colors.green.uiAlpha,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    marginBottom: theme.spacing.lg,
-  },
-  icon: {
-    color: theme.colors.green.accent,
-  },
-  subtitle: {
-    marginBottom: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
-    lineHeight: 20,
-  },
-  versionInfo: {
-    width: '100%',
-    backgroundColor: theme.colors.gray.ui,
-    borderRadius: theme.radii.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  versionRow: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
-  },
-  applyButton: {
-    width: '100%',
-    backgroundColor: theme.colors.green.accent,
-    borderRadius: theme.radii.md,
-    paddingVertical: theme.spacing.md,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
   },
   dismissButton: {
-    width: '100%',
-    marginTop: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+    marginTop: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    width: '100%',
   },
-}));
+  iconContainer: {
+    alignItems: 'center' as const,
+    backgroundColor: theme.colors.green.uiAlpha,
+    borderRadius: 36,
+    height: 72,
+    justifyContent: 'center' as const,
+    marginBottom: theme.spacing.lg,
+    width: 72,
+  },
+  overlay: {
+    alignItems: 'center' as const,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    flex: 1,
+    justifyContent: 'center' as const,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  subtitle: {
+    lineHeight: 20,
+    marginBottom: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+  },
+  versionInfo: {
+    backgroundColor: theme.colors.gray.ui,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.lg,
+    padding: theme.spacing.md,
+    width: '100%',
+  },
+  versionRow: {
+    alignItems: 'center' as const,
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+  },
+});

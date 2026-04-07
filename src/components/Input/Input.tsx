@@ -1,6 +1,10 @@
+import { theme } from '@app/styles/themes';
 import { ForwardedRef, forwardRef } from 'react';
-import { TextInput as TextInputPrimitive, TextInputProps } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import {
+  TextInput as TextInputPrimitive,
+  TextInputProps,
+  StyleSheet,
+} from 'react-native';
 
 export interface InputProps extends TextInputProps {
   testID?: string;
@@ -47,11 +51,11 @@ const Input = (
   );
 };
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   input: {
-    fontFamily: theme.font.fontFamily,
     color: theme.colors.gray.text,
+    fontFamily: theme.font.fontFamily,
   },
-}));
+});
 
 export default forwardRef<TextInputPrimitive, InputProps>(Input);

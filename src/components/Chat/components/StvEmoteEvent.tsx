@@ -1,9 +1,9 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 interface StvEmoteEventProps {
   part: ParsedPart<'stv_emote_added' | 'stv_emote_removed'>;
@@ -12,11 +12,6 @@ interface StvEmoteEventProps {
 export function StvEmoteEvent({ part }: StvEmoteEventProps) {
   const added = part.type === 'stv_emote_added';
   const removed = part.type === 'stv_emote_removed';
-
-  styles.useVariants({
-    added,
-    removed,
-  });
 
   const content = part.stvEvents?.data;
   if (!content) {
@@ -27,7 +22,13 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
   const actorName = content.actor?.display_name;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        added && styles.addedContainer,
+        removed && styles.removedContainer,
+      ]}
+    >
       <View style={styles.notice}>
         <View style={styles.noticeHeader}>
           <BrandIcon name="stv" size="lg" />
@@ -59,67 +60,61 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  noticeHeader: {
-    backgroundColor: theme.colors.gray.uiActive,
-    width: '100%',
-    flexDirection: 'row',
-    paddingInline: theme.spacing.sm,
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xs,
+const styles = StyleSheet.create({
+  addedContainer: {
+    borderLeftColor: theme.colors.green.accent,
+    borderRightColor: theme.colors.green.accent,
   },
   container: {
-    width: '100%',
-    padding: theme.spacing.xs,
     backgroundColor: theme.colors.gray.uiActive,
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
-    borderLeftColor: theme.colors.accent.accent,
     borderCurve: 'continuous',
+    borderLeftColor: theme.colors.accent.accent,
+    borderLeftWidth: 3,
     borderRightColor: theme.colors.accent.accent,
-    variants: {
-      added: {
-        true: {
-          borderLeftColor: theme.colors.green.accent,
-          borderRightColor: theme.colors.green.accent,
-        },
-      },
-      removed: {
-        true: {
-          borderLeftColor: theme.colors.red.accent,
-          borderRightColor: theme.colors.red.accent,
-        },
-      },
-    },
-  },
-  notice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    borderRightWidth: 3,
+    padding: theme.spacing.xs,
+    width: '100%',
   },
   content: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginTop: theme.spacing.sm,
   },
   emoteImage: {
-    width: 140,
     height: 50,
     marginRight: theme.spacing.md,
-  },
-  textContainer: {
-    flex: 1,
+    width: 140,
   },
   emoteName: {
     fontSize: theme.font.fontSize.sm,
     marginTop: theme.spacing.xs,
   },
+  notice: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  noticeHeader: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.uiActive,
+    flexDirection: 'row',
+    paddingInline: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    width: '100%',
+  },
+  removedContainer: {
+    borderLeftColor: theme.colors.red.accent,
+    borderRightColor: theme.colors.red.accent,
+  },
   status: {
     marginLeft: theme.spacing.md,
   },
+  textContainer: {
+    flex: 1,
+  },
   userText: {
-    marginLeft: 'auto',
     color: theme.colors.gray.accentHover,
     fontSize: theme.font.fontSize.xs,
+    marginLeft: 'auto',
   },
-}));
+});

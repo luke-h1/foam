@@ -20,3 +20,7 @@ export const darkTheme = {
   radii,
   font,
 };
+
+export const theme = darkTheme;
+
+export type AppTheme = typeof theme;
