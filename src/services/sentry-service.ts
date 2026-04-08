@@ -11,7 +11,6 @@ Sentry.init({
   attachScreenshot: true,
   attachStacktrace: true,
   attachThreads: true,
-  enableTombstone: true,
   enableCaptureFailedRequests: true,
   spotlight: __DEV__,
   appHangTimeoutInterval: 1,

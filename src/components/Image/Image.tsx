@@ -4,7 +4,11 @@ import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
 import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native';
 import { NitroImage } from 'react-native-nitro-image';
 
-Sentry.wrapExpoImage(ExpoImage);
+const sentryWithExpoImage = Sentry as typeof Sentry & {
+  wrapExpoImage?: (image: typeof ExpoImage) => void;
+};
+
+sentryWithExpoImage.wrapExpoImage?.(ExpoImage);
 
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
   containerStyle?: ViewStyle;
