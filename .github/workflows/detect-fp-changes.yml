@@ -1,0 +1,171 @@
+name: Detect fingerprint changes
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  fingerprint:
+    name: Detect fingerprint changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: ⚙️ Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🌲 Create worktree for the base commit
+        run: |
+          set -euo pipefail
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          git worktree remove --force .__pr_base__ 2>/dev/null || true
+          git worktree add --detach .__pr_base__ "$BASE_SHA"
+
+      - name: ⚙️ Install dependencies for base commit
+        run: |
+          set -euo pipefail
+
+          pushd .__pr_base__ >/dev/null
+          bun install --frozen-lockfile
+          popd >/dev/null
+
+      - name: 🧬 Compute fingerprints
+        id: fp
+        run: |
+          set -euo pipefail
+
+          CHANGED_ANY="false"
+
+          for VARIANT in production preview; do
+            echo "=== Variant: $VARIANT ==="
+            export APP_VARIANT="$VARIANT"
+
+            echo "Computing HEAD fingerprints..."
+            HEAD_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
+            HEAD_ANDROID="$(bunx expo-updates fingerprint:generate --platform android | jq -r '.hash')"
+
+            echo "Computing BASE fingerprints..."
+            pushd .__pr_base__ >/dev/null
+            export APP_VARIANT="$VARIANT"
+            BASE_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
+            BASE_ANDROID="$(bunx expo-updates fingerprint:generate --platform android | jq -r '.hash')"
+            popd >/dev/null
+
+            CHANGED="false"
+            if [ "$HEAD_IOS" != "$BASE_IOS" ] || [ "$HEAD_ANDROID" != "$BASE_ANDROID" ]; then
+              CHANGED="true"
+              CHANGED_ANY="true"
+            fi
+
+            echo "head_ios_${VARIANT}=$HEAD_IOS" >> "$GITHUB_OUTPUT"
+            echo "head_android_${VARIANT}=$HEAD_ANDROID" >> "$GITHUB_OUTPUT"
+            echo "base_ios_${VARIANT}=$BASE_IOS" >> "$GITHUB_OUTPUT"
+            echo "base_android_${VARIANT}=$BASE_ANDROID" >> "$GITHUB_OUTPUT"
+            echo "changed_${VARIANT}=$CHANGED" >> "$GITHUB_OUTPUT"
+          done
+
+          echo "changed=$CHANGED_ANY" >> "$GITHUB_OUTPUT"
+
+      - name: 💬 Comment on PR when fingerprints changed
+        if: ${{ steps.fp.outputs.changed == 'true' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: fingerprint-diff
+          message: |
+            This pull request introduced fingerprint changes against the base commit.
+
+            Make sure the app version is bumped before cutting a native release.
+
+            <details>
+            <summary>production</summary>
+
+            | Platform | Base | Head |
+            |---|---|---|
+            | iOS | `${{ steps.fp.outputs.base_ios_production }}` | `${{ steps.fp.outputs.head_ios_production }}` |
+            | Android | `${{ steps.fp.outputs.base_android_production }}` | `${{ steps.fp.outputs.head_android_production }}` |
+
+            </details>
+
+            <details>
+            <summary>preview</summary>
+
+            | Platform | Base | Head |
+            |---|---|---|
+            | iOS | `${{ steps.fp.outputs.base_ios_preview }}` | `${{ steps.fp.outputs.head_ios_preview }}` |
+            | Android | `${{ steps.fp.outputs.base_android_preview }}` | `${{ steps.fp.outputs.head_android_preview }}` |
+
+            </details>
+
+            - production changed: **${{ steps.fp.outputs.changed_production }}**
+            - preview changed: **${{ steps.fp.outputs.changed_preview }}**
+
+      - name: 💬 Comment on PR when fingerprints are unchanged
+        if: ${{ steps.fp.outputs.changed != 'true' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: fingerprint-diff
+          message: |
+            No fingerprint differences were detected against the base commit.
+
+            <details>
+            <summary>production</summary>
+
+            | Platform | Base | Head |
+            |---|---|---|
+            | iOS | `${{ steps.fp.outputs.base_ios_production }}` | `${{ steps.fp.outputs.head_ios_production }}` |
+            | Android | `${{ steps.fp.outputs.base_android_production }}` | `${{ steps.fp.outputs.head_android_production }}` |
+
+            </details>
+
+            <details>
+            <summary>preview</summary>
+
+            | Platform | Base | Head |
+            |---|---|---|
+            | iOS | `${{ steps.fp.outputs.base_ios_preview }}` | `${{ steps.fp.outputs.head_ios_preview }}` |
+            | Android | `${{ steps.fp.outputs.base_android_preview }}` | `${{ steps.fp.outputs.head_android_preview }}` |
+
+            </details>
+
+            - production changed: **${{ steps.fp.outputs.changed_production }}**
+            - preview changed: **${{ steps.fp.outputs.changed_preview }}**
+
+      - name: 📊 Summary
+        run: |
+          echo "## Fingerprint comparison" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### production" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| iOS | \`${{ steps.fp.outputs.base_ios_production }}\` | \`${{ steps.fp.outputs.head_ios_production }}\` | ${{ steps.fp.outputs.base_ios_production != steps.fp.outputs.head_ios_production }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android | \`${{ steps.fp.outputs.base_android_production }}\` | \`${{ steps.fp.outputs.head_android_production }}\` | ${{ steps.fp.outputs.base_android_production != steps.fp.outputs.head_android_production }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| iOS | \`${{ steps.fp.outputs.base_ios_preview }}\` | \`${{ steps.fp.outputs.head_ios_preview }}\` | ${{ steps.fp.outputs.base_ios_preview != steps.fp.outputs.head_ios_preview }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android | \`${{ steps.fp.outputs.base_android_preview }}\` | \`${{ steps.fp.outputs.head_android_preview }}\` | ${{ steps.fp.outputs.base_android_preview != steps.fp.outputs.head_android_preview }} |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 🧹 Clean up worktree
+        if: always()
+        run: git worktree remove --force .__pr_base__ || true
