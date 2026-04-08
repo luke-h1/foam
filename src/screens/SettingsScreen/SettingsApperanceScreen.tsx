@@ -2,8 +2,8 @@ import { Menu, MenuItem } from '@app/components/Menu/Menu';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Slider } from '@app/components/Slider/Slider';
 import { Preferences, usePreferences } from '@app/store/preferenceStore';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { View, StyleSheet } from 'react-native';
 
 function FontScaleSlider() {
   const { fontScaling, systemScaling, update } = usePreferences();
@@ -30,7 +30,7 @@ function renderFontScaleSlider() {
 }
 
 export function SettingsAppearanceScreen() {
-  const { theme, hapticFeedback, update } = usePreferences();
+  const { theme: selectedTheme, hapticFeedback, update } = usePreferences();
 
   return (
     <View style={styles.container}>
@@ -46,7 +46,7 @@ export function SettingsAppearanceScreen() {
           'Theme',
           {
             icon: {
-              name: theme === 'foam-dark' ? 'moon' : 'sun.and.horizon',
+              name: selectedTheme === 'foam-dark' ? 'moon' : 'sun.and.horizon',
               type: 'symbol',
             },
             label: 'Theme',
@@ -59,7 +59,7 @@ export function SettingsAppearanceScreen() {
             ],
             title: 'Select Theme',
             type: 'options',
-            value: theme,
+            value: selectedTheme,
           } satisfies MenuItem,
           null,
           'Font Size',
@@ -85,12 +85,12 @@ export function SettingsAppearanceScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
   slider: {
     marginHorizontal: theme.spacing.lg,
   },
-}));
+});

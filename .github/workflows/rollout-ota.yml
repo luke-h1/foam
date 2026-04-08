@@ -1,0 +1,117 @@
+name: Rollout OTA
+
+on:
+  workflow_dispatch:
+    inputs:
+      ota_id:
+        description: "OTA update group ID to progress rollout for"
+        required: true
+        type: string
+      target_percentage:
+        description: "Target percentage to roll out to (1-100)"
+        required: true
+        type: string
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  rollout:
+    name: Rollout OTA
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: >
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: ⚙️ Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔨 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 🔎 Fetch current rollout state
+        id: current
+        run: |
+          set -euo pipefail
+
+          OTA_ID="${{ inputs.ota_id }}"
+          VIEW_OUTPUT="$(eas update:view "$OTA_ID" 2>&1 || true)"
+
+          echo "::group::eas update:view output ($OTA_ID)"
+          echo "$VIEW_OUTPUT"
+          echo "::endgroup::"
+
+          if [ -z "$VIEW_OUTPUT" ]; then
+            echo "::error::Failed to view update group. Make sure ota_id is an update group ID."
+            exit 1
+          fi
+
+          CURRENT_ROLLOUT="$(echo "$VIEW_OUTPUT" | awk -F'  +' '/^Rollout Percentage/{gsub(/%/,"",$NF); print $NF}' | tr -d '[:space:]')"
+
+          if [ -z "$CURRENT_ROLLOUT" ]; then
+            echo "::warning::No rollout percentage was found in eas update:view output. This update group likely is not a rollout update."
+            echo "is_rollout=false" >> "$GITHUB_OUTPUT"
+            echo "current_rollout=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "is_rollout=true" >> "$GITHUB_OUTPUT"
+          echo "current_rollout=$CURRENT_ROLLOUT" >> "$GITHUB_OUTPUT"
+          echo "Current rollout: $CURRENT_ROLLOUT%"
+
+      - name: ✏️ Progress rollout
+        if: ${{ steps.current.outputs.is_rollout == 'true' && steps.current.outputs.current_rollout != inputs.target_percentage }}
+        run: |
+          set -euo pipefail
+
+          OTA_ID="${{ inputs.ota_id }}"
+          TARGET="${{ inputs.target_percentage }}"
+          CURRENT="${{ steps.current.outputs.current_rollout }}"
+
+          if ! echo "$TARGET" | grep -Eq '^[0-9]+$'; then
+            echo "::error::target_percentage must be an integer between 1 and 100."
+            exit 1
+          fi
+
+          if [ "$TARGET" -lt 1 ] || [ "$TARGET" -gt 100 ]; then
+            echo "::error::target_percentage must be an integer between 1 and 100."
+            exit 1
+          fi
+
+          if [ "$TARGET" -lt "$CURRENT" ]; then
+            echo "::warning::Target rollout ($TARGET%) is lower than the current rollout ($CURRENT%). Proceeding anyway."
+          fi
+
+          echo "Setting rollout for $OTA_ID to $TARGET%..."
+          eas update:edit "$OTA_ID" --rollout-percentage "$TARGET" --non-interactive
+
+      - name: 📊 Summary
+        run: |
+          echo "## OTA rollout" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Update group:** \`${{ inputs.ota_id }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${{ steps.current.outputs.is_rollout }}" = "true" ]; then
+            echo "- **Previous rollout:** \`${{ steps.current.outputs.current_rollout }}%\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Requested rollout:** \`${{ inputs.target_percentage }}%\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- **Result:** No rollout percentage detected. Nothing changed." >> "$GITHUB_STEP_SUMMARY"
+          fi

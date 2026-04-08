@@ -1,10 +1,10 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { useCallback, useState } from 'react';
-import { Platform, useWindowDimensions, View } from 'react-native';
+import { Platform, useWindowDimensions, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TabView, type SceneRendererProps } from 'react-native-tab-view';
-import { StyleSheet } from 'react-native-unistyles';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
@@ -25,7 +25,10 @@ function TabBar({
   return (
     <View style={styles.tabContainer}>
       {ROUTES.map((route, i) => (
-        <View key={route.key} style={[styles.tab, styles.line(index === i)]}>
+        <View
+          key={route.key}
+          style={[styles.tab, index === i && styles.activeLine]}
+        >
           <Button onPress={() => onTabPress(i)}>
             <Text>{route.title}</Text>
           </Button>
@@ -90,10 +93,22 @@ export function TopScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
+  activeLine: {
+    borderBottomColor: theme.colors.plum.border,
+  },
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
+  },
+  sceneContainer: {
+    flex: 1,
+  },
+  tab: {
+    borderBottomWidth: 2.15,
+    marginHorizontal: 10,
+    marginTop: 2,
+    padding: 5,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -101,19 +116,7 @@ const styles = StyleSheet.create(theme => ({
     paddingHorizontal: 12,
     paddingVertical: 15,
   },
-  tab: {
-    marginTop: 2,
-    borderBottomWidth: 2.15,
-    padding: 5,
-    marginHorizontal: 10,
-  },
-  line: (active: boolean) => ({
-    borderBottomColor: active ? theme.colors.plum.border : 'transparent',
-  }),
-  sceneContainer: {
-    flex: 1,
-  },
   tabViewWrapper: {
     flex: 1,
   },
-}));
+});

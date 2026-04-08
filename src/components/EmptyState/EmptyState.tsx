@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 /* eslint-disable no-shadow */
+import { theme } from '@app/styles/themes';
 import {
   ImageProps,
   ImageStyle,
@@ -8,7 +9,6 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
 import { Button, ButtonProps } from '../Button/Button';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed/SafeAreaViewFixed';
 import { Text } from '../Text/Text';
@@ -128,12 +128,12 @@ export function EmptyState(props: EmptyStateProps) {
 
   return (
     <SafeAreaViewFixed
-      style={styles.container($contentStyleOverride as StyleProp<ViewStyle>)}
+      style={getContainerStyle($contentStyleOverride as StyleProp<ViewStyle>)}
     >
       {isHeadingPresent && (
         <Text
           {...HeadingTextProps}
-          style={styles.heading(
+          style={getHeadingStyle(
             $headingStyleOverride,
             isImagePresent,
             isHeadingPresent,
@@ -148,7 +148,7 @@ export function EmptyState(props: EmptyStateProps) {
       {isContentPresent && (
         <Text
           {...ContentTextProps}
-          style={styles.content(
+          style={getContentStyle(
             isImagePresent,
             isHeadingPresent,
             isButtonPresent,
@@ -169,20 +169,23 @@ export function EmptyState(props: EmptyStateProps) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  container: (containerStyleOverride: StyleProp<ViewStyle>) => ({
+function getContainerStyle(containerStyleOverride: StyleProp<ViewStyle>) {
+  return {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     ...(containerStyleOverride as object),
-  }),
-  heading: (
-    headingStyleOverride: StyleProp<TextStyle>,
-    isImagePresent: boolean,
-    isContentPresent: boolean,
-    isButtonPresent: boolean,
-    HeadingTextProps?: TextProps,
-  ) => ({
+  } as const;
+}
+
+function getHeadingStyle(
+  headingStyleOverride: StyleProp<TextStyle>,
+  isImagePresent: boolean,
+  isContentPresent: boolean,
+  isButtonPresent: boolean,
+  HeadingTextProps?: TextProps,
+) {
+  return {
     textAlign: 'center',
     paddingHorizontal: theme.spacing.lg,
     ...(isImagePresent && { marginTop: theme.spacing.sm }),
@@ -194,14 +197,17 @@ const styles = StyleSheet.create(theme => ({
       HeadingTextProps.style && {
         ...(HeadingTextProps.style as object),
       }),
-  }),
-  content: (
-    isImagePresent: boolean,
-    isHeadingPresent: boolean,
-    isButtonPresent: boolean,
-    contentStyleOverride: StyleProp<ViewStyle>,
-    ContentTextProps?: TextProps,
-  ) => ({
+  } as const;
+}
+
+function getContentStyle(
+  isImagePresent: boolean,
+  isHeadingPresent: boolean,
+  isButtonPresent: boolean,
+  contentStyleOverride: StyleProp<ViewStyle>,
+  ContentTextProps?: TextProps,
+) {
+  return {
     textAlign: 'center',
     marginBottom: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
@@ -215,5 +221,5 @@ const styles = StyleSheet.create(theme => ({
     ...(ContentTextProps?.style && {
       ...(ContentTextProps.style as object),
     }),
-  }),
-}));
+  } as const;
+}

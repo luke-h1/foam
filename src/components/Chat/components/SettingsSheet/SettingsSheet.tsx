@@ -1,11 +1,11 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { memo, useCallback, forwardRef } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export interface SettingsSheetProps
   extends Omit<TrueSheetProps, 'children' | 'sizes'> {
@@ -29,7 +29,6 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
     forwardedRef,
   ) => {
     const { bottom: bottomInset } = useSafeAreaInsets();
-    const { theme } = useUnistyles();
 
     const dismissSheet = useCallback(() => {
       if (
@@ -135,25 +134,25 @@ SettingsSheetComponent.displayName = 'SettingsSheet';
 
 export const SettingsSheet = memo(SettingsSheetComponent);
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  grabber: {
+    backgroundColor: theme.colors.gray.accent,
+    borderRadius: 2,
+    height: 4,
+    width: 36,
+  },
   grabberContainer: {
     alignItems: 'center',
-    paddingTop: theme.spacing.sm,
     paddingBottom: theme.spacing.xs,
-  },
-  grabber: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.gray.accent,
+    paddingTop: theme.spacing.sm,
   },
   header: {
+    marginBottom: theme.spacing.xs,
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
-    marginBottom: theme.spacing.xs,
   },
   headerTitle: {
     fontSize: theme.font.fontSize.lg,
@@ -163,30 +162,31 @@ const styles = StyleSheet.create(theme => ({
   },
   menuItem: {
     alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
     flexDirection: 'row',
     gap: theme.spacing.lg,
+    marginBottom: theme.spacing.xs,
+    marginHorizontal: theme.spacing.md,
     minHeight: theme.spacing['6xl'],
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
-    marginHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.xs,
-    borderRadius: theme.radii.md,
   },
   menuItemPressed: {
     opacity: 0.7,
   },
+  menuItemText: {
+    flex: 1,
+    fontSize: theme.font.fontSize.md,
+  },
   menuItemTextContainer: {
+    alignItems: 'center',
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  menuItemText: {
-    fontSize: theme.font.fontSize.md,
-    flex: 1,
   },
   menuItemValue: {
-    fontSize: theme.font.fontSize.md,
     color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.md,
   },
-}));
+});

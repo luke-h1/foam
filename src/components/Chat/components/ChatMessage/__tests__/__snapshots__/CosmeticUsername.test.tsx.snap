@@ -29,7 +29,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
               "lineHeight": 24,
             },
             {
-              "color": "#FFFFFF",
+              "color": "#fff",
               "fontFamily": undefined,
               "fontStyle": "normal",
               "fontVariant": undefined,
@@ -92,7 +92,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
             "lineHeight": 24,
           },
           {
-            "color": "#FFFFFF",
+            "color": "#fff",
             "fontFamily": undefined,
             "fontStyle": "normal",
             "fontVariant": undefined,
@@ -147,7 +147,7 @@ exports[`PaintedUsername Snapshots should match snapshot with fallback color onl
               "lineHeight": 24,
             },
             {
-              "color": "#FFFFFF",
+              "color": "#fff",
               "fontFamily": undefined,
               "fontStyle": "normal",
               "fontVariant": undefined,
@@ -210,7 +210,7 @@ exports[`PaintedUsername Snapshots should match snapshot with fallback color onl
             "lineHeight": 24,
           },
           {
-            "color": "#FFFFFF",
+            "color": "#fff",
             "fontFamily": undefined,
             "fontStyle": "normal",
             "fontVariant": undefined,
@@ -265,7 +265,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
               "lineHeight": 24,
             },
             {
-              "color": "#FFFFFF",
+              "color": "#fff",
               "fontFamily": undefined,
               "fontStyle": "normal",
               "fontVariant": undefined,
@@ -337,7 +337,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
             "lineHeight": 24,
           },
           {
-            "color": "#FFFFFF",
+            "color": "#fff",
             "fontFamily": undefined,
             "fontStyle": "normal",
             "fontVariant": undefined,
@@ -399,7 +399,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
               "lineHeight": 24,
             },
             {
-              "color": "#FFFFFF",
+              "color": "#fff",
               "fontFamily": undefined,
               "fontStyle": "normal",
               "fontVariant": undefined,
@@ -464,7 +464,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
             "lineHeight": 24,
           },
           {
-            "color": "#FFFFFF",
+            "color": "#fff",
             "fontFamily": undefined,
             "fontStyle": "normal",
             "fontVariant": undefined,
@@ -519,7 +519,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
               "lineHeight": 24,
             },
             {
-              "color": "#FFFFFF",
+              "color": "#fff",
               "fontFamily": undefined,
               "fontStyle": "normal",
               "fontVariant": undefined,
@@ -591,7 +591,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
             "lineHeight": 24,
           },
           {
-            "color": "#FFFFFF",
+            "color": "#fff",
             "fontFamily": undefined,
             "fontStyle": "normal",
             "fontVariant": undefined,
@@ -653,7 +653,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
               "lineHeight": 24,
             },
             {
-              "color": "#FFFFFF",
+              "color": "#fff",
               "fontFamily": undefined,
               "fontStyle": "normal",
               "fontVariant": undefined,
@@ -784,7 +784,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
             "lineHeight": 24,
           },
           {
-            "color": "#FFFFFF",
+            "color": "#fff",
             "fontFamily": undefined,
             "fontStyle": "normal",
             "fontVariant": undefined,

@@ -1,11 +1,11 @@
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { ReactNode } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 interface SubscriptionNoticeProps {
   part: ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'>;
@@ -249,27 +249,63 @@ export function SubscriptionNotice({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  container: {
-    width: '100%',
-    paddingVertical: theme.spacing.xs,
-  },
-  noticeRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    width: '100%',
-  },
-  starColumn: {
-    marginRight: theme.spacing.sm,
-  },
+const styles = StyleSheet.create({
   bodyColumn: {
     flex: 1,
     minWidth: 0,
   },
-  headerLine: {
+  container: {
+    paddingVertical: theme.spacing.xs,
+    width: '100%',
+  },
+  descriptionContainer: {
+    alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
+    flex: 1,
+  },
+  descriptionText: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.sm,
+  },
+  emote: {
+    height: 24,
+    marginHorizontal: 2,
+    width: 24,
+  },
+  headerLine: {
     alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  messageContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: theme.spacing.xs,
+  },
+  messageText: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.sm,
+    fontStyle: 'italic',
+  },
+  monthsHighlight: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.sm,
+    fontWeight: '700',
+  },
+  noticeRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    width: '100%',
+  },
+  recipientName: {
+    color: theme.colors.violet.accent,
+    fontSize: theme.font.fontSize.sm,
+    fontWeight: '600',
+  },
+  starColumn: {
+    marginRight: theme.spacing.sm,
   },
   starIcon: {
     alignItems: 'center',
@@ -279,40 +315,4 @@ const styles = StyleSheet.create(theme => ({
     fontWeight: '600',
     marginRight: theme.spacing.xs,
   },
-  descriptionContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    flex: 1,
-  },
-  descriptionText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.sm,
-  },
-  monthsHighlight: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.sm,
-    fontWeight: '700',
-  },
-  recipientName: {
-    color: theme.colors.violet.accent,
-    fontWeight: '600',
-    fontSize: theme.font.fontSize.sm,
-  },
-  messageContainer: {
-    marginTop: theme.spacing.xs,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-  },
-  messageText: {
-    fontSize: theme.font.fontSize.sm,
-    color: theme.colors.gray.text,
-    fontStyle: 'italic',
-  },
-  emote: {
-    width: 24,
-    height: 24,
-    marginHorizontal: 2,
-  },
-}));
+});

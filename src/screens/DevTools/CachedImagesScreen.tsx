@@ -10,6 +10,7 @@ import {
 import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
 import { usePaints } from '@app/store/chatStore/hooks';
 import { chatStore$ } from '@app/store/chatStore/state';
+import { theme } from '@app/styles/themes';
 import {
   CachedImageInfo,
   getCacheDirectoryPath,
@@ -17,8 +18,7 @@ import {
 } from '@app/utils/image/image-cache';
 import { useSelector } from '@legendapp/state/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { Alert, View, StyleSheet } from 'react-native';
 
 type TabType = 'images' | 'badges' | 'paints';
 
@@ -46,7 +46,6 @@ interface PaintInfo {
 }
 
 export function CachedImagesScreen() {
-  const { theme } = useUnistyles();
   const [activeTab, setActiveTab] = useState<TabType>('images');
   const [images, setImages] = useState<CachedImageInfo[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -243,7 +242,7 @@ export function CachedImagesScreen() {
         </View>
       </View>
     ),
-    [theme.colors.gray.ui],
+    [],
   );
 
   const getSubtitle = () => {
@@ -470,221 +469,231 @@ export function CachedImagesScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  screenContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.bg,
-  },
-  container: {
-    flex: 1,
-  },
-  headerContainer: {
-    backgroundColor: theme.colors.gray.bg,
-    paddingBottom: 8,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.gray.ui,
-    borderWidth: 1,
-    borderColor: theme.colors.gray.border,
-  },
-  tabButtonActive: {
-    borderColor: 'transparent',
-  },
-  tabButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: theme.colors.gray.text,
-    letterSpacing: 0.2,
-  },
-  tabButtonTextActive: {
-    color: '#fff',
-  },
-  pathContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: theme.colors.gray.ui,
-    marginHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: theme.colors.gray.border,
-  },
-  pathLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.colors.gray.textLow,
-    marginBottom: 6,
-    letterSpacing: 0.5,
-  },
-  pathValue: {
-    fontSize: 11,
-    color: theme.colors.gray.text,
-    fontFamily: 'monospace',
-    lineHeight: 16,
-  },
+const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 8,
+    paddingBottom: 4,
     paddingHorizontal: 16,
     paddingTop: 4,
-    paddingBottom: 4,
+  },
+  badgeMeta: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
   },
   button: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: theme.colors.gray.ui,
-    borderWidth: 1,
     borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   buttonText: {
     color: theme.colors.gray.text,
-    fontWeight: '500',
     fontSize: 13,
+    fontWeight: '500',
   },
   buttonTextDisabled: {
     color: theme.colors.gray.textLow,
     opacity: 0.5,
   },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+  colorBadge: {
+    borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: 6,
+    borderWidth: 1.5,
+    height: 20,
+    width: 20,
+  },
+  container: {
+    flex: 1,
+  },
+  emptyState: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: 40,
+    paddingHorizontal: 32,
+    paddingTop: 80,
+  },
+  emptySubtext: {
+    color: theme.colors.gray.textLow,
+    fontSize: 14,
+    lineHeight: 21,
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    color: theme.colors.gray.textLow,
+    fontSize: 19,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+    marginBottom: 10,
+  },
+  headerContainer: {
+    backgroundColor: theme.colors.gray.bg,
+    paddingBottom: 8,
   },
   item: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: 16,
     backgroundColor: theme.colors.gray.ui,
+    borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
     borderRadius: 14,
-    marginBottom: 12,
-    gap: 14,
     borderWidth: 1,
-    borderColor: theme.colors.gray.border,
+    flexDirection: 'row',
+    gap: 14,
+    marginBottom: 12,
+    padding: 16,
   },
-  thumbnailContainer: {
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.gray.bg,
-  },
-  thumbnail: {
-    width: 64,
-    height: 64,
-    borderRadius: 10,
-  },
-  paintPreview: {
-    width: 64,
-    height: 64,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: theme.colors.gray.border,
+  itemHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 2,
   },
   itemInfo: {
     flex: 1,
     flexShrink: 1,
     gap: 6,
   },
-  itemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 2,
+  itemMeta: {
+    color: theme.colors.gray.textLow,
+    fontSize: 12,
+    fontWeight: '500',
   },
   itemName: {
+    color: theme.colors.gray.text,
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: theme.colors.gray.text,
     letterSpacing: -0.2,
   },
-  sizeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: theme.colors.gray.bg,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors.gray.border,
-  },
-  sizeBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: theme.colors.gray.text,
-    fontFamily: 'monospace',
-  },
-  providerBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    backgroundColor: theme.colors.gray.bg,
-    borderRadius: 4,
-    marginLeft: 6,
-  },
-  providerBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: theme.colors.gray.textLow,
-    letterSpacing: 0.5,
-  },
-  colorBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: theme.colors.gray.border,
-  },
-  itemMeta: {
-    fontSize: 12,
-    color: theme.colors.gray.textLow,
-    fontWeight: '500',
-  },
   itemPath: {
-    fontSize: 10,
     color: theme.colors.gray.textLow,
     fontFamily: 'monospace',
+    fontSize: 10,
     marginTop: 2,
     opacity: 0.7,
   },
-  badgeMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 4,
+  listContent: {
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
-  emptyState: {
+  paintPreview: {
+    borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: 10,
+    borderWidth: 2,
+    height: 64,
+    width: 64,
+  },
+  pathContainer: {
+    backgroundColor: theme.colors.gray.ui,
+    borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
+    marginHorizontal: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  pathLabel: {
+    color: theme.colors.gray.textLow,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  pathValue: {
+    color: theme.colors.gray.text,
+    fontFamily: 'monospace',
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  providerBadge: {
+    backgroundColor: theme.colors.gray.bg,
+    borderCurve: 'continuous',
+    borderRadius: 4,
+    marginLeft: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  providerBadgeText: {
+    color: theme.colors.gray.textLow,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  screenContainer: {
+    backgroundColor: theme.colors.gray.bg,
+    flex: 1,
+  },
+  sizeBadge: {
+    backgroundColor: theme.colors.gray.bg,
+    borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: 6,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  sizeBadgeText: {
+    color: theme.colors.gray.text,
+    fontFamily: 'monospace',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  tabButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.ui,
+    borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: 10,
+    borderWidth: 1,
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  emptyText: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: theme.colors.gray.textLow,
-    marginBottom: 10,
-    letterSpacing: -0.3,
+  tabButtonActive: {
+    borderColor: 'transparent',
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: theme.colors.gray.textLow,
-    textAlign: 'center',
-    lineHeight: 21,
-    opacity: 0.8,
+  tabButtonText: {
+    color: theme.colors.gray.text,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
-}));
+  tabButtonTextActive: {
+    color: '#fff',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  thumbnail: {
+    borderCurve: 'continuous',
+    borderRadius: 10,
+    height: 64,
+    width: 64,
+  },
+  thumbnailContainer: {
+    backgroundColor: theme.colors.gray.bg,
+    borderCurve: 'continuous',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+});

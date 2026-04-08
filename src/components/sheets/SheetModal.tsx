@@ -1,7 +1,7 @@
+import { theme } from '@app/styles/themes';
 import { ReactNode } from 'react';
-import { Modal, ScrollView, View } from 'react-native';
+import { Modal, ScrollView, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 import { SheetHeader } from './SheetHeader';
 
 interface SheetModalProps {
@@ -55,12 +55,12 @@ export function SheetModal({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   content: {
-    flexGrow: 1,
     backgroundColor: theme.colors.black.bgAlpha,
+    flexGrow: 1,
   },
   header: {
     backgroundColor: 'transparent',
   },
-}));
+});

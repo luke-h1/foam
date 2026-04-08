@@ -1,8 +1,8 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
 import type { ChatUser } from '@app/store/chatStore/constants';
-import { ScrollView, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { ScrollView, View, StyleSheet } from 'react-native';
 
 interface UserSuggestionsProps {
   users: ChatUser[];
@@ -45,35 +45,36 @@ export function UserSuggestions({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  userSuggestionsWrapper: {
-    width: '100%',
-    marginBottom: theme.spacing.sm,
-  },
-  userSuggestionsContainer: {
-    backgroundColor: theme.colors.accent.accent,
-    borderRadius: theme.radii.md,
+const styles = StyleSheet.create({
+  userSuggestionItem: {
+    backgroundColor: theme.colors.accent.accentHover,
     borderCurve: 'continuous',
-    borderWidth: 1,
-    borderColor: theme.colors.accent.accent,
-    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radii.sm,
+    marginRight: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    paddingVertical: theme.spacing.xs,
   },
   userSuggestionScroll: {
     flexDirection: 'row',
   },
-  userSuggestionItem: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    marginRight: theme.spacing.xs,
-    borderRadius: theme.radii.sm,
-    backgroundColor: theme.colors.accent.accentHover,
-  },
   userSuggestionText: {
     fontWeight: '500',
   },
-}));
+  userSuggestionsContainer: {
+    backgroundColor: theme.colors.accent.accent,
+    borderColor: theme.colors.accent.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
+    elevation: 3,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  userSuggestionsWrapper: {
+    marginBottom: theme.spacing.sm,
+    width: '100%',
+  },
+});

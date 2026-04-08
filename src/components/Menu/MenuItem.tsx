@@ -1,10 +1,10 @@
 /* eslint-disable no-nested-ternary */
+import { theme } from '@app/styles/themes';
 import { SymbolView } from 'expo-symbols';
 import { useMemo, useState } from 'react';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle, StyleSheet } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { BrandIcon } from '../BrandIcon/BrandIcon';
 import { Icon } from '../Icon/Icon';
 import { Image } from '../Image/Image';
@@ -55,8 +55,6 @@ export function MenuItem({ item, style }: MenuItemProps) {
 
     return null;
   }, [item]);
-
-  const { theme } = useUnistyles();
 
   return (
     <>
@@ -164,28 +162,29 @@ export function MenuItem({ item, style }: MenuItemProps) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   component: {
     alignItems: 'center',
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
     flexDirection: 'row',
     gap: theme.spacing.lg,
+    marginBottom: theme.spacing.xs,
+    marginHorizontal: theme.spacing.md,
     minHeight: theme.spacing['6xl'],
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
-    marginHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderRadius: theme.radii.md,
-    marginBottom: theme.spacing.xs,
   },
   contentContainer: {
     flex: 1,
     paddingVertical: theme.spacing.xs,
   },
+  image: {
+    height: 20,
+    width: 20,
+  },
   separator: {
     marginVertical: theme.spacing.xs,
   },
-  image: {
-    width: 20,
-    height: 20,
-  },
-}));
+});

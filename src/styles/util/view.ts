@@ -1,6 +1,5 @@
 /* eslint-disable no-nested-ternary */
 import { FlexStyle } from 'react-native';
-import { UnistylesThemes } from 'react-native-unistyles';
 import {
   getMargin,
   getPadding,
@@ -8,6 +7,7 @@ import {
   PaddingProps,
   Spacing,
 } from '../spacing';
+import { AppTheme } from '../themes';
 
 export type ViewStyleProps = {
   align?: 'baseline' | 'center' | 'end' | 'start' | 'stretch';
@@ -27,7 +27,7 @@ export type ViewStyleProps = {
 } & MarginProps &
   PaddingProps;
 
-export function getViewStyles(theme: UnistylesThemes['dark']) {
+export function getViewStyles(theme: AppTheme) {
   return function styles({
     align,
     direction,
@@ -101,7 +101,7 @@ export function getViewStyles(theme: UnistylesThemes['dark']) {
   };
 }
 
-function getSpacing(theme: UnistylesThemes['dark'], key?: Spacing | number) {
+function getSpacing(theme: AppTheme, key?: Spacing | number) {
   if (!key) {
     return;
   }

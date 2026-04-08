@@ -2,11 +2,11 @@ import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useMemo } from 'react';
-import { Modal, Platform, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Modal, Platform, View, StyleSheet } from 'react-native';
 
 interface Props {
   visible: boolean;
@@ -146,54 +146,22 @@ export function ActionSheet(props: Props) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  wrapper: {
-    flex: 1,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.md,
-    backgroundColor: '#171b23',
-    gap: theme.spacing.lg,
-  },
-  previewCard: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
-    backgroundColor: 'transparent',
-  },
-  messageLine: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-  },
-  usernameText: {
-    color: theme.colors.gray.text,
-    fontWeight: '600',
-    fontSize: theme.font.fontSize.lg,
-  },
-  messageText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.lg,
-    lineHeight: theme.font.fontSize.lg * 1.25,
-  },
-  messageEmote: {
-    width: 24,
-    height: 24,
-    marginHorizontal: 2,
-  },
-  actionGroup: {
-    borderRadius: theme.radii.xl,
-    backgroundColor: 'transparent',
-    overflow: 'hidden',
-  },
+const styles = StyleSheet.create({
   actionButton: {
+    backgroundColor: 'transparent',
     minHeight: Platform.select({ ios: 56, android: 56 }),
     paddingHorizontal: theme.spacing.md,
-    backgroundColor: 'transparent',
   },
   actionContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: theme.spacing.sm,
+  },
+  actionGroup: {
+    backgroundColor: 'transparent',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.xl,
+    overflow: 'hidden',
   },
   actionIcon: {
     opacity: 0.9,
@@ -203,6 +171,39 @@ const styles = StyleSheet.create(theme => ({
     fontSize: theme.font.fontSize.md,
     fontWeight: Platform.select({ ios: '400', android: '400' }),
   },
-}));
+  messageEmote: {
+    height: 24,
+    marginHorizontal: 2,
+    width: 24,
+  },
+  messageLine: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  messageText: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.lg,
+    lineHeight: theme.font.fontSize.lg * 1.25,
+  },
+  previewCard: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+  },
+  usernameText: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.lg,
+    fontWeight: '600',
+  },
+  wrapper: {
+    backgroundColor: '#171b23',
+    flex: 1,
+    gap: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+  },
+});
 
 ActionSheet.displayName = 'ActionSheet';

@@ -1,5 +1,5 @@
-import { Modal as RNModal, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { theme } from '@app/styles/themes';
+import { Modal as RNModal, View, StyleSheet } from 'react-native';
 import { Button, ButtonProps } from '../Button/Button';
 import { Text } from '../Text/Text';
 
@@ -53,58 +53,60 @@ export function Modal({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+const styles = StyleSheet.create({
+  buttonText: {
+    textAlign: 'center',
+  },
+  cancelButton: {
     alignItems: 'center',
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderColor: theme.colors.gray.borderAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
     justifyContent: 'center',
+    marginTop: theme.spacing.sm,
+    minHeight: 44,
     paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
   },
   card: {
     backgroundColor: theme.colors.gray.bgAlt,
+    borderColor: theme.colors.gray.borderAlpha,
+    borderCurve: 'continuous',
     borderRadius: theme.radii.xl,
+    borderWidth: 1,
+    maxWidth: 340,
     paddingHorizontal: theme.spacing.xl,
     paddingVertical: theme.spacing.xl,
-    borderCurve: 'continuous',
     width: '100%',
-    maxWidth: 340,
-    borderWidth: 1,
-    borderColor: theme.colors.gray.borderAlpha,
   },
-  text: {
-    color: theme.colors.gray.text,
-    marginBottom: theme.spacing.sm,
+  confirmButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.red.uiAlpha,
+    borderColor: theme.colors.red.borderAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginTop: theme.spacing.md,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+  },
+  overlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
   },
   subtitle: {
     color: theme.colors.gray.textLow,
     marginBottom: theme.spacing.lg,
   },
-  confirmButton: {
-    marginTop: theme.spacing.md,
-    backgroundColor: theme.colors.red.uiAlpha,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors.red.borderAlpha,
-    minHeight: 44,
+  text: {
+    color: theme.colors.gray.text,
+    marginBottom: theme.spacing.sm,
   },
-  cancelButton: {
-    marginTop: theme.spacing.sm,
-    backgroundColor: theme.colors.gray.uiAlpha,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.radii.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors.gray.borderAlpha,
-    minHeight: 44,
-  },
-  buttonText: {
-    textAlign: 'center',
-  },
-}));
+});

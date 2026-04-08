@@ -1,19 +1,19 @@
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import { chatStore$ } from '@app/store/chatStore/state';
+import { theme } from '@app/styles/themes';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { PaintData } from '@app/utils/color/seventv-ws-service';
 import { useSelector } from '@legendapp/state/react';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useMemo } from 'react';
-import { type StyleProp, TextStyle, View } from 'react-native';
+import { type StyleProp, TextStyle, View, StyleSheet } from 'react-native';
 import Svg, {
   Defs,
   RadialGradient as SvgRadialGradient,
   Stop,
   Rect,
 } from 'react-native-svg';
-import { StyleSheet } from 'react-native-unistyles';
 import { Text } from '../../../../Text/Text';
 import {
   buildGradientConfig,
@@ -170,34 +170,34 @@ function PaintedUsernameComponent({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  maskContainer: {
-    backgroundColor: 'transparent',
-  },
-  maskText: {
-    fontWeight: 'bold',
-    fontSize: theme.font.fontSize.sm,
-    color: 'black',
-  },
+const styles = StyleSheet.create({
   gradient: {
     flexDirection: 'row',
   },
   hiddenText: {
-    fontWeight: 'bold',
     fontSize: theme.font.fontSize.sm,
+    fontWeight: 'bold',
     opacity: 0,
   },
+  maskContainer: {
+    backgroundColor: 'transparent',
+  },
+  maskText: {
+    color: 'black',
+    fontSize: theme.font.fontSize.sm,
+    fontWeight: 'bold',
+  },
   svgContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
     bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
   svgGradient: {
     position: 'absolute',
   },
-}));
+});
 
 export const PaintedUsername = memo(PaintedUsernameComponent);
 PaintedUsername.displayName = 'PaintedUsername';

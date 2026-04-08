@@ -1,14 +1,14 @@
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
   SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
 import { useAppNavigation } from './useAppNavigation';
 import { useTargetMeasurement } from './useTargetMeasurement';
 
@@ -71,16 +71,16 @@ export function useHeader({ offsetY, title }: Props) {
   return { triggerRef, onLayout };
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   headerLeft: {
     width: 48,
   },
   titleContainer: {
-    paddingVertical: theme.spacing.lg,
     overflow: 'hidden',
+    paddingVertical: theme.spacing.lg,
   },
   titleText: {
     fontSize: theme.font.fontSize.md,
     textAlign: 'center',
   },
-}));
+});

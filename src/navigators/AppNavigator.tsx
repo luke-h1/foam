@@ -5,6 +5,7 @@ import { CategoryScreen } from '@app/screens/CategoryScreen';
 import { ChatScreen } from '@app/screens/ChatScreen/ChatScreen';
 import { LoginScreen } from '@app/screens/LoginScreen';
 import { StorybookScreen } from '@app/screens/StorybookScreen/StorybookScreen';
+import { theme } from '@app/styles/themes';
 import {
   DarkTheme,
   NavigationContainer,
@@ -15,8 +16,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackScreenProps } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { ComponentProps, useCallback, useEffect, useMemo } from 'react';
-import { Linking, Platform, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Linking, Platform, View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DevToolsParamList } from './DevToolsStackNavigator';
 import { OtherStackParamList } from './OtherStackNavigator';
 import type { PreferenceStackParamList } from './PreferenceStackNavigator';
@@ -159,6 +160,7 @@ type NavigationProps = Partial<
 
 export const AppNavigator = (props: NavigationProps) => {
   const { loginWithTwitch } = useAuthContext();
+  const insets = useSafeAreaInsets();
 
   useBackButtonHandler(routeName => exitRoutes.includes(routeName));
 
@@ -237,20 +239,21 @@ export const AppNavigator = (props: NavigationProps) => {
       onStateChange={handleStateChange}
       {...restProps}
     >
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          Platform.OS === 'android' && { paddingTop: insets.top },
+        ]}
+      >
         <AppStack />
       </View>
     </NavigationContainer>
   );
 };
 
-const styles = StyleSheet.create((theme, rt) => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.blue.accent,
-    paddingTop: Platform.select({
-      ios: 0,
-      android: rt.insets.top,
-    }),
+    flex: 1,
   },
-}));
+});

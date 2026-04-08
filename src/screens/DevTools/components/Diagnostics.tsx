@@ -2,8 +2,7 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import * as Form from '@app/components/Form/Form';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
 import * as AC from '@bacons/apple-colors';
-import { Linking } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Linking, StyleSheet } from 'react-native';
 import { AppStoreSection } from './AppStoreSection';
 import { ExpoSection } from './ExpoSection';
 import { OTADynamicSection } from './OTADynamicSection';
@@ -32,8 +31,8 @@ export function Diagnostics() {
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create({
   contentContainer: {
     paddingBottom: 100,
   },
-}));
+});

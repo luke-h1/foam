@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type FontVariant, type TextStyle } from 'react-native';
-import { UnistylesThemes } from 'react-native-unistyles';
 import { ThemeColor } from './colors';
 import { FontSize } from './font';
 import { getMargin, MarginProps } from './spacing';
+import { AppTheme } from './themes';
 
 export type FontWeight = 'light' | 'regular' | 'medium' | 'bold';
 
@@ -19,7 +19,7 @@ export type TextStyleProps = {
   weight?: FontWeight;
 } & MarginProps;
 
-export function getTextStyles(theme: UnistylesThemes['dark']) {
+export function getTextStyles(theme: AppTheme) {
   return function styles(
     {
       align = 'left',

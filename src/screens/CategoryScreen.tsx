@@ -6,6 +6,7 @@ import { Text } from '@app/components/Text/Text';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { AppStackParamList } from '@app/navigators/AppNavigator';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import {
   getNextPageParam,
   getPreviousPageParam,
@@ -15,8 +16,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { FC, useCallback, useMemo, useRef } from 'react';
-import { Platform, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Platform, View, StyleSheet } from 'react-native';
 
 export const CategoryScreen: FC<
   StackScreenProps<AppStackParamList, 'Category'>
@@ -139,18 +139,18 @@ export const CategoryScreen: FC<
   );
 };
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
   listContent: {
     paddingBottom: theme.spacing.lg,
   },
   sectionHeader: {
+    borderBottomColor: theme.colors.gray.border,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.gray.border,
   },
-}));
+});

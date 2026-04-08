@@ -1,10 +1,10 @@
-import { View } from 'react-native';
+import { theme } from '@app/styles/themes';
+import { View, StyleSheet } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet } from 'react-native-unistyles';
 
 export function Spinner() {
   const animatedStyle = useAnimatedStyle(() => ({
@@ -22,24 +22,23 @@ export function Spinner() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
+  circle: {
+    borderColor: theme.colors.black.bgAlpha,
+    borderRadius: 20,
+    borderWidth: 5,
+    height: 40,
+    width: 40,
+  },
   container: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   spinner: {
-    width: 50,
+    alignItems: 'center',
     height: 50,
     justifyContent: 'center',
-    alignItems: 'center',
+    width: 50,
   },
-  circle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderCurve: 'continuous',
-    borderWidth: 5,
-    borderColor: theme.colors.black.bgAlpha,
-  },
-}));
+});

@@ -6,10 +6,10 @@ import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { resetRoot } from '@app/navigators/navigationUtilities';
+import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { ScrollView, View, StyleSheet } from 'react-native';
 
 interface ProfileMenuItem {
   title: string;
@@ -23,7 +23,6 @@ interface ProfileMenuItem {
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
   const { navigate } = useAppNavigation();
-  const { theme } = useUnistyles();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -255,137 +254,139 @@ export function ProfileCard() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  main: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing['3xl'],
-    gap: theme.spacing.xl,
-  },
-  // Login card styles
-  loginCard: {
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderRadius: theme.radii.xl,
-    padding: theme.spacing['2xl'],
-    alignItems: 'center',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: theme.colors.gray.borderAlpha,
-  },
-
-  loginIconContainer: {
-    marginBottom: theme.spacing.xl,
-  },
-  loginIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+const styles = StyleSheet.create({
+  avatar: {
+    borderRadius: 28,
     borderWidth: 2,
-  },
-  loginDescription: {
-    maxWidth: 280,
-    marginBottom: theme.spacing.xl,
-  },
-  loginButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.md,
-    backgroundColor: theme.colors.accent.accent,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing['2xl'],
-    borderRadius: theme.radii.lg,
-    width: '100%',
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderRadius: theme.radii.xl,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.gray.borderAlpha,
+    height: 56,
+    width: 56,
   },
   avatarContainer: {
     position: 'relative',
   },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
-  },
   avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.gray.ui,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
+    backgroundColor: theme.colors.gray.ui,
     borderColor: theme.colors.gray.border,
+    borderRadius: 28,
     borderStyle: 'dashed',
+    borderWidth: 2,
+    height: 56,
+    justifyContent: 'center',
+    width: 56,
   },
-  profileInfo: {
+  loginButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.accent.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing['2xl'],
+    paddingVertical: theme.spacing.lg,
+    width: '100%',
+  },
+  loginCard: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderColor: theme.colors.gray.borderAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    padding: theme.spacing['2xl'],
+  },
+  loginDescription: {
+    marginBottom: theme.spacing.xl,
+    maxWidth: 280,
+  },
+  loginIconCircle: {
+    alignItems: 'center',
+    borderRadius: 36,
+    borderWidth: 2,
+    height: 72,
+    justifyContent: 'center',
+    width: 72,
+  },
+  loginIconContainer: {
+    marginBottom: theme.spacing.xl,
+  },
+  logoutButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.red.uiAlpha,
+    borderColor: theme.colors.red.borderAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    justifyContent: 'center',
+    padding: theme.spacing.lg,
+  },
+  main: {
     flex: 1,
-    gap: theme.spacing.xs,
-  },
-  // Section styles
-  section: {
-    gap: theme.spacing.sm,
-  },
-  sectionTitle: {
-    marginLeft: theme.spacing.sm,
-    letterSpacing: 0.5,
   },
   menuCard: {
     backgroundColor: theme.colors.gray.uiAlpha,
-    borderRadius: theme.radii.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
     borderColor: theme.colors.gray.borderAlpha,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
-  },
-  menuItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray.borderAlpha,
-  },
-  menuIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: theme.radii.md,
-    backgroundColor: theme.colors.accent.uiAlpha,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuIconDanger: {
-    backgroundColor: theme.colors.red.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
   menuContent: {
     flex: 1,
     gap: theme.spacing.xs,
   },
-  // Logout styles
-  logoutButton: {
-    flexDirection: 'row',
+  menuIconContainer: {
     alignItems: 'center',
+    backgroundColor: theme.colors.accent.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    height: 36,
     justifyContent: 'center',
-    gap: theme.spacing.md,
-    backgroundColor: theme.colors.red.uiAlpha,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.red.borderAlpha,
+    width: 36,
   },
-}));
+  menuIconDanger: {
+    backgroundColor: theme.colors.red.uiAlpha,
+  },
+  menuItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.lg,
+    padding: theme.spacing.lg,
+  },
+  menuItemBorder: {
+    borderBottomColor: theme.colors.gray.borderAlpha,
+    borderBottomWidth: 1,
+  },
+  profileHeader: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderColor: theme.colors.gray.borderAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.xl,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: theme.spacing.lg,
+    padding: theme.spacing.lg,
+  },
+  profileInfo: {
+    flex: 1,
+    gap: theme.spacing.xs,
+  },
+  scrollContent: {
+    gap: theme.spacing.xl,
+    paddingBottom: theme.spacing['3xl'],
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
+  },
+  section: {
+    gap: theme.spacing.sm,
+  },
+  sectionTitle: {
+    letterSpacing: 0.5,
+    marginLeft: theme.spacing.sm,
+  },
+});

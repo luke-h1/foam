@@ -1,0 +1,173 @@
+name: Rollback OTA
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Channel to roll back"
+        required: true
+        type: choice
+        default: "production"
+        options:
+          - production
+          - preview
+      rollback_target:
+        description: "OTA update group ID, or 'embedded' to revert to the native build"
+        required: true
+        type: string
+      platform:
+        description: "Platform to roll back"
+        required: false
+        type: choice
+        default: "all"
+        options:
+          - all
+          - ios
+          - android
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  rollback:
+    name: Rollback OTA
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check for EXPO_TOKEN
+        run: >
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/eas-update/github-actions"
+            exit 1
+          fi
+
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: ".bun-version"
+
+      - name: ⚙️ Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔨 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: bun
+
+      - name: 🔎 Resolve runtime version
+        id: version
+        run: |
+          set -euo pipefail
+
+          CHANNEL="${{ inputs.channel }}"
+          PLATFORM="${{ inputs.platform }}"
+
+          export APP_VARIANT="$CHANNEL"
+
+          RUNTIME_VERSION_IOS=""
+          RUNTIME_VERSION_ANDROID=""
+
+          if [ "$PLATFORM" = "ios" ] || [ "$PLATFORM" = "all" ]; then
+            RUNTIME_VERSION_IOS="$(bunx expo-updates runtimeversion:resolve --platform ios 2>/dev/null | tr -d '[:space:]')"
+            if [ -z "$RUNTIME_VERSION_IOS" ]; then
+              echo "::error::Failed to resolve runtime version for ios"
+              exit 1
+            fi
+          fi
+
+          if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "all" ]; then
+            RUNTIME_VERSION_ANDROID="$(bunx expo-updates runtimeversion:resolve --platform android 2>/dev/null | tr -d '[:space:]')"
+            if [ -z "$RUNTIME_VERSION_ANDROID" ]; then
+              echo "::error::Failed to resolve runtime version for android"
+              exit 1
+            fi
+          fi
+
+          echo "runtime_version_ios=$RUNTIME_VERSION_IOS" >> "$GITHUB_OUTPUT"
+          echo "runtime_version_android=$RUNTIME_VERSION_ANDROID" >> "$GITHUB_OUTPUT"
+          echo "Runtime version (ios): $RUNTIME_VERSION_IOS"
+          echo "Runtime version (android): $RUNTIME_VERSION_ANDROID"
+
+      - name: ⏪ Roll back to embedded update
+        if: ${{ inputs.rollback_target == 'embedded' }}
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          PLATFORM: ${{ inputs.platform }}
+          RUNTIME_VERSION_IOS: ${{ steps.version.outputs.runtime_version_ios }}
+          RUNTIME_VERSION_ANDROID: ${{ steps.version.outputs.runtime_version_android }}
+        run: |
+          set -euo pipefail
+
+          if [ "$PLATFORM" = "ios" ]; then
+            eas update:roll-back-to-embedded \
+              --channel "$CHANNEL" \
+              --branch "$CHANNEL" \
+              --runtime-version "$RUNTIME_VERSION_IOS" \
+              --message "Rollback to embedded ($CHANNEL ios) - ${{ github.sha }}" \
+              --platform ios \
+              --non-interactive
+
+          elif [ "$PLATFORM" = "android" ]; then
+            eas update:roll-back-to-embedded \
+              --channel "$CHANNEL" \
+              --branch "$CHANNEL" \
+              --runtime-version "$RUNTIME_VERSION_ANDROID" \
+              --message "Rollback to embedded ($CHANNEL android) - ${{ github.sha }}" \
+              --platform android \
+              --non-interactive
+
+          else
+            eas update:roll-back-to-embedded \
+              --channel "$CHANNEL" \
+              --branch "$CHANNEL" \
+              --runtime-version "$RUNTIME_VERSION_IOS" \
+              --message "Rollback to embedded ($CHANNEL ios) - ${{ github.sha }}" \
+              --platform ios \
+              --non-interactive
+
+            eas update:roll-back-to-embedded \
+              --channel "$CHANNEL" \
+              --branch "$CHANNEL" \
+              --runtime-version "$RUNTIME_VERSION_ANDROID" \
+              --message "Rollback to embedded ($CHANNEL android) - ${{ github.sha }}" \
+              --platform android \
+              --non-interactive
+          fi
+
+      - name: ⏪ Roll back to previous OTA update group ${{ inputs.rollback_target }}
+        if: ${{ inputs.rollback_target != 'embedded' }}
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          PLATFORM: ${{ inputs.platform }}
+          GROUP_ID: ${{ inputs.rollback_target }}
+        run: |
+          set -euo pipefail
+
+          eas update:republish \
+            --group "$GROUP_ID" \
+            --destination-channel "$CHANNEL" \
+            --message "Rollback to update group $GROUP_ID ($CHANNEL) - ${{ github.sha }}" \
+            --platform "$PLATFORM" \
+            --non-interactive
+
+      - name: 📊 Summary
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          ROLLBACK_TARGET: ${{ inputs.rollback_target }}
+          PLATFORM: ${{ inputs.platform }}
+          RUNTIME_VERSION_IOS: ${{ steps.version.outputs.runtime_version_ios }}
+          RUNTIME_VERSION_ANDROID: ${{ steps.version.outputs.runtime_version_android }}
+        run: |
+          echo "## OTA rollback" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Channel:** \`$CHANNEL\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Target:** \`$ROLLBACK_TARGET\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Platform:** \`$PLATFORM\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Runtime version (ios):** \`$RUNTIME_VERSION_IOS\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Runtime version (android):** \`$RUNTIME_VERSION_ANDROID\`" >> "$GITHUB_STEP_SUMMARY"

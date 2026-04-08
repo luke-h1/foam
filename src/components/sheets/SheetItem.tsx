@@ -1,8 +1,13 @@
 /* eslint-disable no-nested-ternary */
+import { theme } from '@app/styles/themes';
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { type ReactNode } from 'react';
-import { type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import {
+  type StyleProp,
+  type TextStyle,
+  type ViewStyle,
+  StyleSheet,
+} from 'react-native';
 import { BrandIcon, type BrandIconName } from '../BrandIcon/BrandIcon';
 import { Button } from '../Button/Button';
 import { Icon } from '../Icon/Icon';
@@ -52,8 +57,6 @@ export function SheetItem({
   selected,
   style,
 }: SheetItemProps) {
-  const { theme } = useUnistyles();
-
   return (
     <Button
       disabled={!onPress}
@@ -94,7 +97,10 @@ export function SheetItem({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
+  label: {
+    flex: 1,
+  },
   pressable: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -103,10 +109,7 @@ const styles = StyleSheet.create(theme => ({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
   },
-  label: {
-    flex: 1,
-  },
   selected: {
     backgroundColor: '',
   },
-}));
+});

@@ -1,9 +1,9 @@
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { SFSymbol } from 'expo-symbols';
-import { View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 interface AboutLink {
   href: string;
@@ -28,7 +28,6 @@ const links = [
 ] satisfies AboutLink[];
 
 export function AboutCard() {
-  const { theme } = useUnistyles();
   return (
     <View style={styles.main}>
       <View style={styles.wrapper}>
@@ -63,17 +62,21 @@ export function AboutCard() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  main: {
-    alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  wrapper: {
-    alignItems: 'center',
-    gap: theme.spacing.lg,
-  },
+const styles = StyleSheet.create({
   info: {
     alignItems: 'center',
+  },
+  link: {
+    backgroundColor: theme.colors.gray.ui,
+    borderCurve: 'continuous',
+    borderRadius: theme.spacing.md,
+  },
+  linkContainer: {
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  linkLabel: {
+    textAlign: 'center',
   },
   linkWrapper: {
     alignItems: 'center',
@@ -82,16 +85,12 @@ const styles = StyleSheet.create(theme => ({
     gap: theme.spacing['4xl'],
     justifyContent: 'center',
   },
-  linkContainer: {
+  main: {
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    gap: theme.spacing.md,
   },
-  link: {
-    backgroundColor: theme.colors.gray.ui,
-    borderCurve: 'continuous',
-    borderRadius: theme.spacing.md,
+  wrapper: {
+    alignItems: 'center',
+    gap: theme.spacing.lg,
   },
-  linkLabel: {
-    textAlign: 'center',
-  },
-}));
+});

@@ -2,10 +2,10 @@ import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Text } from '@app/components/Text/Text';
 import { sentryService } from '@app/services/sentry-service';
+import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { type ErrorInfo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { ScrollView, View, StyleSheet } from 'react-native';
 
 export interface ErrorDetailsProps {
   error: Error | null;
@@ -129,57 +129,89 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.bg,
-  },
-  contentContainer: {
-    paddingHorizontal: theme.spacing['2xl'],
-    paddingTop: theme.spacing['4xl'],
-    paddingBottom: theme.spacing['3xl'],
-  },
-  topSection: {
-    alignItems: 'center',
-    marginBottom: theme.spacing['3xl'],
-  },
-  iconContainer: {
-    marginBottom: theme.spacing.xl,
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.gray.bgAlt,
-    borderRadius: theme.spacing['2xl'],
-    borderWidth: 2,
-    borderColor: theme.colors.red.accent,
-  },
-  heading: {
-    marginBottom: theme.spacing.md,
-  },
-  description: {
-    lineHeight: theme.font.fontSize.md * 1.5,
-    paddingHorizontal: theme.spacing.md,
-  },
+const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: theme.spacing.md,
     marginBottom: theme.spacing.lg,
   },
-  primaryButton: {
+  container: {
+    backgroundColor: theme.colors.gray.bg,
     flex: 1,
-    backgroundColor: theme.colors.blue.accent,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
+  },
+  contentContainer: {
+    paddingBottom: theme.spacing['3xl'],
+    paddingHorizontal: theme.spacing['2xl'],
+    paddingTop: theme.spacing['4xl'],
+  },
+  description: {
+    lineHeight: theme.font.fontSize.md * 1.5,
+    paddingHorizontal: theme.spacing.md,
+  },
+  errorBackTrace: {
+    fontFamily: 'monospace',
+    lineHeight: theme.font.fontSize.xs * 1.5,
+  },
+  errorCard: {
+    backgroundColor: theme.colors.gray.bgAlt,
+    borderColor: theme.colors.gray.accentAlpha,
+    borderCurve: 'continuous',
     borderRadius: theme.spacing.md,
+    borderWidth: 1,
+    marginBottom: theme.spacing.xl,
+    overflow: 'hidden',
+  },
+  errorContentContainer: {
+    padding: theme.spacing.lg,
+  },
+  errorMessage: {
+    lineHeight: theme.font.fontSize.sm * 1.4,
+    marginBottom: theme.spacing.md,
+  },
+  errorScrollView: {
+    maxHeight: 300,
+  },
+  heading: {
+    marginBottom: theme.spacing.md,
+  },
+  iconContainer: {
+    backgroundColor: theme.colors.gray.bgAlt,
+    borderColor: theme.colors.red.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.spacing['2xl'],
+    borderWidth: 2,
+    marginBottom: theme.spacing.xl,
+    padding: theme.spacing.lg,
+  },
+  primaryButton: {
     alignItems: 'center',
+    backgroundColor: theme.colors.blue.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.spacing.md,
+    flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+  },
+  resetButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.red.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.spacing.md,
+    justifyContent: 'center',
+    marginTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing['2xl'],
+    paddingVertical: theme.spacing.md,
   },
   secondaryButton: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.accent,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.spacing.md,
     alignItems: 'center',
+    backgroundColor: theme.colors.gray.accent,
+    borderCurve: 'continuous',
+    borderRadius: theme.spacing.md,
+    flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
   },
   toggleButton: {
     marginBottom: theme.spacing.lg,
@@ -188,35 +220,8 @@ const styles = StyleSheet.create(theme => ({
   toggleText: {
     textDecorationLine: 'underline',
   },
-  errorCard: {
-    backgroundColor: theme.colors.gray.bgAlt,
-    borderRadius: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.gray.accentAlpha,
-    overflow: 'hidden',
-  },
-  errorScrollView: {
-    maxHeight: 300,
-  },
-  errorContentContainer: {
-    padding: theme.spacing.lg,
-  },
-  errorMessage: {
-    marginBottom: theme.spacing.md,
-    lineHeight: theme.font.fontSize.sm * 1.4,
-  },
-  errorBackTrace: {
-    fontFamily: 'monospace',
-    lineHeight: theme.font.fontSize.xs * 1.5,
-  },
-  resetButton: {
-    backgroundColor: theme.colors.red.accent,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing['2xl'],
-    borderRadius: theme.spacing.md,
+  topSection: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing['3xl'],
   },
-}));
+});

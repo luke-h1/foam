@@ -13,13 +13,13 @@ import {
   SearchChannelResponse,
   twitchService,
 } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 // eslint-disable-next-line no-restricted-imports
 import { Image } from 'expo-image';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, TextInput, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { ScrollView, TextInput, View, StyleSheet } from 'react-native';
 import { StreamerCard } from './components/StreamerCard';
 
 interface SearchHistoryItem {
@@ -323,97 +323,95 @@ export function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.bg,
+const styles = StyleSheet.create({
+  cancelButton: {
+    paddingVertical: theme.spacing.xs,
   },
-  header: {
-    paddingBottom: theme.spacing.sm,
-  },
-  title: {
-    marginBottom: theme.spacing.md,
+  categoriesCarousel: {
+    gap: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+  categoriesSection: {
+    marginTop: theme.spacing.lg,
   },
-  searchBar: {
-    flex: 1,
-    flexDirection: 'row',
+  categoryCard: {
     alignItems: 'center',
+    width: 95,
+  },
+  categoryImage: {
+    height: '100%',
+    width: '100%',
+  },
+  categoryImageContainer: {
     backgroundColor: theme.colors.gray.ui,
-    borderRadius: 10,
-    paddingHorizontal: theme.spacing.sm,
-    height: 36,
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    height: 127,
+    overflow: 'hidden',
+    width: 95,
   },
-  searchIcon: {
-    opacity: 0.5,
-    marginRight: theme.spacing.xs,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: theme.colors.gray.text,
-    paddingVertical: 0,
+  categoryName: {
+    lineHeight: 14,
+    marginTop: theme.spacing.xs,
+    textAlign: 'center',
   },
   clearButton: {
     padding: theme.spacing.xs,
   },
   clearIcon: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    paddingVertical: theme.spacing.xs,
-  },
-  categoriesSection: {
-    marginTop: theme.spacing.lg,
-  },
-  categoriesCarousel: {
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    gap: theme.spacing.md,
-  },
-  categoryCard: {
-    width: 95,
-    alignItems: 'center',
-  },
-  categoryImageContainer: {
-    width: 95,
-    height: 127,
     borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: theme.colors.gray.ui,
+    height: 16,
+    justifyContent: 'center',
+    width: 16,
   },
-  categoryImage: {
-    width: '100%',
-    height: '100%',
+  container: {
+    backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
-  categoryName: {
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-  sectionHeader: {
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-  },
-  sectionTitle: {
-    letterSpacing: 0.5,
-    paddingHorizontal: theme.spacing.md,
+  header: {
+    paddingBottom: theme.spacing.sm,
   },
   resultItem: {
     flexDirection: 'row',
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
   },
-}));
+  searchBar: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.ui,
+    borderCurve: 'continuous',
+    borderRadius: 10,
+    flex: 1,
+    flexDirection: 'row',
+    height: 36,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  searchBarContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  searchIcon: {
+    marginRight: theme.spacing.xs,
+    opacity: 0.5,
+  },
+  searchInput: {
+    color: theme.colors.gray.text,
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
+  },
+  sectionHeader: {
+    marginBottom: theme.spacing.xs,
+    marginTop: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
+  },
+  sectionTitle: {
+    letterSpacing: 0.5,
+    paddingHorizontal: theme.spacing.md,
+  },
+});

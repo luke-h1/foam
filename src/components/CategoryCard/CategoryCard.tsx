@@ -1,8 +1,8 @@
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { Category } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import { useCallback } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { Text } from '../Text/Text';
@@ -42,19 +42,19 @@ export function CategoryCard({ category }: Props) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  title: {
-    marginTop: theme.spacing.sm,
-  },
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
+    flex: 1,
   },
   image: {
-    width: IMAGE_WIDTH,
     height: IMAGE_HEIGHT,
+    width: IMAGE_WIDTH,
+  },
+  title: {
+    marginTop: theme.spacing.sm,
   },
   wrapper: {
     marginBottom: 8,
   },
-}));
+});

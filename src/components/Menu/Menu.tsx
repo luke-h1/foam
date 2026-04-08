@@ -1,7 +1,13 @@
+import { theme } from '@app/styles/themes';
 import { SFSymbol } from 'expo-symbols';
 import { ReactElement } from 'react';
-import { StyleProp, TextStyle, View, ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import {
+  StyleProp,
+  TextStyle,
+  View,
+  ViewStyle,
+  StyleSheet,
+} from 'react-native';
 import { BrandIconName } from '../BrandIcon/BrandIcon';
 import { FlashList, FlashListProps } from '../FlashList/FlashList';
 import { RefreshControl } from '../RefreshControl/RefreshControl';
@@ -130,15 +136,15 @@ export function Menu({
   );
 }
 
-const menuStyles = StyleSheet.create(theme => ({
+const menuStyles = StyleSheet.create({
   menu: { height: theme.spacing.xs },
   sectionHeader: {
-    marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.sm,
+    marginTop: theme.spacing.xl,
     paddingHorizontal: theme.spacing.lg,
   },
   sectionTitle: {
     letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
-}));
+});

@@ -1,6 +1,6 @@
 import { Text } from '@app/components/Text/Text';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 
 export function FaqScreen() {
   return (

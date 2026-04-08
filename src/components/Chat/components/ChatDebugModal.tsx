@@ -1,8 +1,8 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { memo, useCallback } from 'react';
-import { Modal, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Modal, View, StyleSheet } from 'react-native';
 
 type TestMessageType =
   | 'Prime Sub'
@@ -86,25 +86,22 @@ export const ChatDebugModal = memo(ChatDebugModalComponent);
 
 export type { TestMessageType };
 
-const styles = StyleSheet.create(theme => ({
-  background: {
-    backgroundColor: theme.colors.gray.bg,
-  },
+const styles = StyleSheet.create({
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.md,
     paddingBottom: theme.spacing['2xl'],
+    paddingHorizontal: theme.spacing.md,
   },
   header: {
-    paddingVertical: theme.spacing.md,
     alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+  },
+  item: {
+    marginBottom: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
   },
   title: {
     fontSize: theme.font.fontSize.lg,
   },
-  item: {
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.xs,
-  },
-}));
+});

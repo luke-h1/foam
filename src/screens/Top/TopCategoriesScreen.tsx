@@ -4,11 +4,11 @@ import { FlashList } from '@app/components/FlashList/FlashList';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { Category, twitchService } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useCallback, useRef, useState } from 'react';
-import { Platform, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Platform, View, StyleSheet } from 'react-native';
 
 const SKELETON_COUNT = 9;
 const SKELETON_COLUMNS = 3;
@@ -136,7 +136,7 @@ export function TopCategoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
     margin: 5,
@@ -157,7 +157,7 @@ const styles = StyleSheet.create(theme => ({
     width: 80,
   },
   wrapper: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
-}));
+});

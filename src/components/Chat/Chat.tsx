@@ -22,6 +22,7 @@ import {
   getMessageColor,
 } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
+import { theme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -37,10 +38,9 @@ import { useSelector } from '@legendapp/state/react';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import * as Clipboard from 'expo-clipboard';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { View, Platform, TextInput } from 'react-native';
+import { View, Platform, TextInput, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 import { toast } from 'sonner-native';
 
 import { Text } from '../Text/Text';
@@ -1006,39 +1006,40 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
 Chat.displayName = 'Chat';
 
-const styles = StyleSheet.create(theme => ({
-  wrapper: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.bg,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
+const styles = StyleSheet.create({
   chatContainer: {
     flex: 1,
-    width: '100%',
-    overflow: 'hidden',
     maxWidth: '100%',
-  },
-  listContent: {
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.md,
+    overflow: 'hidden',
+    width: '100%',
   },
   connectingContainer: {
-    paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   connectingText: {
     color: theme.colors.gray.accent,
     fontSize: theme.font.fontSize.sm,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+  },
   messageContainer: {
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    width: '100%',
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.radii.sm,
     minHeight: 50,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    width: '100%',
   },
-}));
+  wrapper: {
+    backgroundColor: theme.colors.gray.bg,
+    flex: 1,
+  },
+});

@@ -1,6 +1,5 @@
 import { type ReactNode } from 'react';
-import { View, type StyleProp, type ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, type StyleProp, type ViewStyle, StyleSheet } from 'react-native';
 import { Text } from '../Text/Text';
 
 type Props = {

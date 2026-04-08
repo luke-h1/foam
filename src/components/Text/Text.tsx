@@ -1,5 +1,6 @@
 import { ThemeColor } from '@app/styles/colors';
 import { getMargin, MarginProps } from '@app/styles/spacing';
+import { theme, type AppTheme } from '@app/styles/themes';
 import { ColorScale } from '@app/styles/util/createPallete';
 import { forwardRef, LegacyRef, ReactNode } from 'react';
 
@@ -11,28 +12,32 @@ import {
   StyleSheet,
   TextStyle,
 } from 'react-native';
-import { useUnistyles } from 'react-native-unistyles';
 
 // Helper type for nested color paths
 type NestedColorPath = `${ThemeColor}.${ColorScale | 'contrast'}`;
+type ColorPathScale = ColorScale | 'contrast';
+type ThemeColorLookup = Partial<
+  Record<ThemeColor, Partial<Record<ColorPathScale, string>>>
+> & {
+  gray: Record<ColorPathScale, string>;
+};
 
 function getNestedColor(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  theme: any,
+  currentTheme: AppTheme,
   colorPath: ThemeColor | NestedColorPath,
 ): string {
+  const colors = currentTheme.colors as ThemeColorLookup;
+
   if (colorPath.includes('.')) {
     const [colorName, colorScale] = colorPath.split('.') as [
       ThemeColor,
       ColorScale | 'contrast',
     ];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
-    return theme.colors[colorName]?.[colorScale] || theme.colors.gray.text;
+    return colors[colorName]?.[colorScale] || colors.gray.text;
   }
 
   const color = colorPath as ThemeColor;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
-  return theme.colors[color]?.text || theme.colors.gray.text;
+  return colors[color]?.text || colors.gray.text;
 }
 
 export type TextType =
@@ -156,8 +161,6 @@ export const Text = forwardRef<RNText, TextProps>(
     }: TextProps,
     ref: LegacyRef<RNText>,
   ) => {
-    const { theme } = useUnistyles();
-
     // Resolve color
     let resolvedColor: string;
 
@@ -173,8 +176,8 @@ export const Text = forwardRef<RNText, TextProps>(
           ? 'text'
           : 'textLow';
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-      resolvedColor = (theme.colors as any)[baseColor][contrastLevel];
+      const colors = theme.colors as ThemeColorLookup;
+      resolvedColor = colors[baseColor]?.[contrastLevel] || colors.gray.text;
     }
 
     const sizeStyle = sizeStyles[type];

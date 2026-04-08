@@ -4,6 +4,7 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { getCachedEmoteUri } from '@app/store/chatStore/emoteImages';
 import { useCurrentEmoteData } from '@app/store/chatStore/hooks';
+import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import {
@@ -27,9 +28,9 @@ import {
   ScrollView,
   View,
   useWindowDimensions,
+  StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 const MIN_CELL_SIZE = 40;
 const MAX_CELL_SIZE = 52;
@@ -244,7 +245,6 @@ CategoryButton.displayName = 'CategoryButton';
 
 export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
   ({ onEmoteSelect, onDidPresent, onDidDismiss, ...sheetProps }, ref) => {
-    const { theme } = useUnistyles();
     const { bottom: bottomInset } = useSafeAreaInsets();
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
     const flashListRef = useRef<FlashListRef<ListItem>>(null);
@@ -562,41 +562,27 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
 
 EmoteSheet.displayName = 'EmoteSheet';
 
-const styles = StyleSheet.create(theme => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.bg,
-  },
-  grabberContainer: {
-    alignItems: 'center',
-    paddingTop: GRABBER_TOP,
-    paddingBottom: GRABBER_BOTTOM,
-  },
-  grabber: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.gray.accent,
-  },
+const styles = StyleSheet.create({
   categoryBar: {
+    borderBottomColor: theme.colors.gray.border,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     height: CATEGORY_BAR_HEIGHT,
     justifyContent: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: theme.colors.gray.border,
   },
   categoryBarContent: {
-    paddingHorizontal: theme.spacing.md,
-    gap: theme.spacing.xs,
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
   },
   categoryButton: {
-    width: 44,
-    minHeight: 44,
-    borderRadius: theme.radii.lg,
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: 'transparent',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    justifyContent: 'center',
+    minHeight: 44,
+    width: 44,
   },
   categoryButtonActive: {
     backgroundColor: theme.colors.accent.accent,
@@ -604,30 +590,46 @@ const styles = StyleSheet.create(theme => ({
   categoryEmoji: {
     fontSize: theme.font.fontSize.lg,
   },
-  placeholderContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  container: {
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
+  },
+  emojiText: {
+    lineHeight: undefined,
+  },
+  emoteCell: {
+    alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    justifyContent: 'center',
+  },
+  emoteImage: {},
+  emoteRow: {
+    flexDirection: 'row',
+    paddingVertical: theme.spacing.xs,
+  },
+  grabber: {
+    backgroundColor: theme.colors.gray.accent,
+    borderRadius: 2,
+    height: 4,
+    width: 36,
+  },
+  grabberContainer: {
+    alignItems: 'center',
+    paddingBottom: GRABBER_BOTTOM,
+    paddingTop: GRABBER_TOP,
   },
   listContainer: {
     flex: 1,
   },
   listContent: {
+    paddingBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.md,
     paddingTop: LIST_TOP_PADDING,
-    paddingBottom: theme.spacing.lg,
   },
-  emoteRow: {
-    flexDirection: 'row',
-    paddingVertical: theme.spacing.xs,
-  },
-  emoteCell: {
+  placeholderContent: {
     alignItems: 'center',
+    backgroundColor: theme.colors.gray.bg,
     justifyContent: 'center',
-    borderRadius: theme.radii.md,
   },
-  emoteImage: {},
-  emojiText: {
-    lineHeight: undefined,
-  },
-}));
+});

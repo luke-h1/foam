@@ -1,7 +1,7 @@
 import { Spacing } from '@app/styles/spacing';
+import { theme } from '@app/styles/themes';
 import { type SFSymbol, SymbolView } from 'expo-symbols';
-import { Insets, StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { Insets, StyleProp, ViewStyle, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
 import { Icon } from '../Icon/Icon';
 import { Spinner } from '../Spinner/Spinner';
@@ -42,8 +42,6 @@ export function IconButton({
   size = 'md',
   style,
 }: IconButtonProps) {
-  const { theme } = useUnistyles();
-
   const renderIcon = () => {
     if (loading) {
       return <Spinner />;
@@ -71,7 +69,7 @@ export function IconButton({
       disabled={loading}
       hitSlop={hitSlop}
       label={label}
-      style={[styles.button(size), style]}
+      style={[styles.button, getButtonSizeStyle(size), style]}
       onLongPress={onLongPress}
       onPress={onPress}
     >
@@ -80,10 +78,15 @@ export function IconButton({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  button: (size: Spacing) => ({
+const styles = StyleSheet.create({
+  button: {
     alignItems: 'center',
+  },
+});
+
+function getButtonSizeStyle(size: Spacing) {
+  return {
     height: theme.spacing[size],
     width: theme.spacing[size],
-  }),
-}));
+  };
+}

@@ -1,3 +1,4 @@
+import { theme } from '@app/styles/themes';
 import { ReactNode, Ref, useState } from 'react';
 import {
   StyleProp,
@@ -6,8 +7,8 @@ import {
   ViewStyle,
   TextInputProps,
   View,
+  StyleSheet,
 } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Text } from '../Text/Text';
 
 type TextBoxProps = Pick<
@@ -27,7 +28,6 @@ type TextBoxProps = Pick<
   | 'secureTextEntry'
   | 'value'
 > & {
-  code?: boolean;
   error?: string;
   hint?: string;
   label?: string;
@@ -43,7 +43,6 @@ export function TextBox({
   autoCapitalize,
   autoComplete,
   autoCorrect,
-  code,
   editable = true,
   error,
   hint,
@@ -67,8 +66,6 @@ export function TextBox({
 }: TextBoxProps) {
   const [focused, setFocused] = useState<boolean>(false);
 
-  const { theme } = useUnistyles();
-
   return (
     <View style={[styles.main, style]}>
       {label && (
@@ -77,7 +74,13 @@ export function TextBox({
         </Text>
       )}
 
-      <View style={[styles.wrapper(focused, Boolean(error)), styleContent]}>
+      <View
+        style={[
+          styles.wrapper,
+          getWrapperStateStyle(focused, Boolean(error)),
+          styleContent,
+        ]}
+      >
         {left}
         <TextInput
           // allowFontScaling={systemScaling}
@@ -105,7 +108,11 @@ export function TextBox({
           selectionColor={theme.colors.accent.accent}
           textAlignVertical="center"
           value={value}
-          style={[styles.input(Boolean(multiline), Boolean(code)), styleInput]}
+          style={[
+            styles.input,
+            getInputStateStyle(Boolean(multiline)),
+            styleInput,
+          ]}
         />
         {right}
       </View>
@@ -123,11 +130,30 @@ export function TextBox({
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  wrapper: (focused: boolean, error: boolean) => ({
+const styles = StyleSheet.create({
+  input: {
+    color: theme.colors.gray.text,
+    flex: 1,
+    fontSize: theme.font.fontSize.lg,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  main: {
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing['2xl'],
+  },
+  wrapper: {
     alignItems: 'center',
-    flexDirection: 'row',
     backgroundColor: theme.colors.gray.ui,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    flexGrow: 1,
+  },
+});
+
+function getWrapperStateStyle(focused: boolean, error: boolean) {
+  return {
     borderColor: (() => {
       if (focused) {
         if (error) {
@@ -140,22 +166,12 @@ const styles = StyleSheet.create(theme => ({
       }
       return theme.colors.gray.borderUi;
     })(),
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexGrow: 1,
-  }),
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  input: (multiline: boolean, _code: boolean) => ({
-    color: theme.colors.gray.text,
-    flex: 1,
-    fontSize: theme.font.fontSize.lg,
+  };
+}
+
+function getInputStateStyle(multiline: boolean) {
+  return {
     height: multiline ? undefined : theme.spacing['3xl'],
-    paddingHorizontal: theme.spacing.lg,
     paddingVertical: multiline ? theme.spacing.lg : undefined,
-  }),
-  main: {
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing['2xl'],
-  },
-}));
+  };
+}

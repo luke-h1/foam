@@ -21,6 +21,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { PressablesConfig } from 'pressto';
 import { PropsWithChildren, useEffect, useRef } from 'react';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
@@ -28,7 +29,6 @@ import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 import { Toaster } from 'sonner-native';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 
@@ -140,6 +140,6 @@ export function Providers({ children }: PropsWithChildren) {
   );
 }
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create({
   gestureContainer: { flex: 1 },
-}));
+});

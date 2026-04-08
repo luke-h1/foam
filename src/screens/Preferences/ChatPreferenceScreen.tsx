@@ -1,9 +1,9 @@
 import { Menu, MenuItem } from '@app/components/Menu/Menu';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { usePreferences } from '@app/store/preferenceStore';
+import { theme } from '@app/styles/themes';
 import { useMemo } from 'react';
-import { View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 export function ChatPreferenceScreen() {
   const {
@@ -18,7 +18,6 @@ export function ChatPreferenceScreen() {
     showTwitchBadges,
     update,
   } = usePreferences();
-  const { theme } = useUnistyles();
 
   const items = useMemo(() => {
     return [
@@ -165,7 +164,6 @@ export function ChatPreferenceScreen() {
     showFFzBadges,
     showTwitchEmotes,
     showTwitchBadges,
-    theme.colors,
     update,
   ]);
 
@@ -179,9 +177,9 @@ export function ChatPreferenceScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bg,
+    flex: 1,
   },
-}));
+});

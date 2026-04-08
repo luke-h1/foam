@@ -1,13 +1,14 @@
+/* eslint-disable react-native/no-unused-styles, react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useMemo } from 'react';
-import { Dimensions, Modal, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Dimensions, Modal, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 
 interface Props {
@@ -161,32 +162,34 @@ export function EmotePreviewSheet(props: Props) {
   );
 }
 
-export const styles = StyleSheet.create(theme => ({
+export const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.gray.bgAlt,
-    paddingHorizontal: theme.spacing['2xl'],
+    flex: 1,
     paddingBottom: theme.spacing['2xl'],
+    paddingHorizontal: theme.spacing['2xl'],
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     marginBottom: theme.spacing['3xl'],
     paddingTop: theme.spacing.lg,
   },
   emoteContainer: {
-    backgroundColor: theme.colors.gray.bg,
-    borderRadius: theme.radii.lg,
-    padding: theme.spacing.lg,
-    marginRight: theme.spacing.xl,
     alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
-    minHeight: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
-    borderWidth: 1,
+    backgroundColor: theme.colors.gray.bg,
     borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    justifyContent: 'center',
+    marginRight: theme.spacing.xl,
+    minHeight: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
+    minWidth: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
+    padding: theme.spacing.lg,
   },
   emoteImage: {
+    borderCurve: 'continuous',
     borderRadius: theme.radii.sm,
   },
   emoteInfo: {
@@ -195,17 +198,17 @@ export const styles = StyleSheet.create(theme => ({
     minHeight: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
   },
   emoteName: {
+    color: theme.colors.gray.text,
     fontSize: theme.font.fontSize.lg,
     fontWeight: 'bold',
-    color: theme.colors.gray.text,
     marginBottom: theme.spacing.sm,
   },
   metadataContainer: {
     gap: theme.spacing.xs,
   },
   emoteMetadata: {
-    fontSize: theme.font.fontSize.sm,
     color: theme.colors.gray.textLow,
+    fontSize: theme.font.fontSize.sm,
     lineHeight: theme.font.fontSize.sm * 1.3,
   },
   actionsContainer: {
@@ -213,29 +216,30 @@ export const styles = StyleSheet.create(theme => ({
   },
   actionButton: {
     backgroundColor: theme.colors.gray.bg,
-    borderRadius: theme.radii.lg,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xl,
-    borderWidth: 1,
     borderColor: theme.colors.gray.border,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.lg,
   },
   actionContent: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    flexDirection: 'row',
     gap: theme.spacing.md,
+    justifyContent: 'flex-start',
   },
   actionText: {
-    fontSize: theme.font.fontSize.md,
     color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.md,
     fontWeight: 'normal',
   },
   // Legacy styles for compatibility with BadgePreviewSheet
   meta: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     gap: theme.spacing.md,
+    justifyContent: 'flex-start',
   },
   actions: {
     marginTop: theme.spacing.xl,
@@ -247,14 +251,14 @@ export const styles = StyleSheet.create(theme => ({
     paddingVertical: theme.spacing.md,
   },
   imageContainer: {
-    marginBottom: theme.spacing.lg,
     alignItems: 'center',
+    marginBottom: theme.spacing.lg,
   },
   emoteDetail: {
     marginBottom: theme.spacing.xs / 2,
   },
   contentContainer: {
-    paddingHorizontal: theme.spacing.xl,
     overflow: 'visible',
+    paddingHorizontal: theme.spacing.xl,
   },
-}));
+});

@@ -1,10 +1,10 @@
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { TwitchStream } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useCallback } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
@@ -100,93 +100,9 @@ export function LiveStreamCard({ stream }: Props) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   cardWrapper: {
     width: '100%',
-  },
-  imageWrapper: {
-    width: 150,
-    height: 100,
-    overflow: 'hidden',
-    borderRadius: 8,
-  },
-  image: {
-    width: 150,
-    height: 100,
-    borderRadius: 8,
-  },
-  container: {
-    flexDirection: 'row',
-    flexWrap: 'nowrap',
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
-    alignItems: 'flex-start',
-  },
-  imageContainer: {
-    width: 150,
-    height: 100,
-    flexShrink: 0,
-    marginRight: theme.spacing.md,
-    overflow: 'hidden',
-    borderRadius: 8,
-  },
-  redDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ff4444',
-  },
-  details: {
-    flex: 1,
-    flexShrink: 1,
-    justifyContent: 'flex-start',
-    gap: theme.spacing.xs,
-    minWidth: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  metadataRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
-  },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  liveText: {
-    color: theme.colors.gray.textLow,
-  },
-  usernameButton: {
-    flex: 1,
-    minWidth: 0,
-  },
-  username: {
-    fontWeight: '600',
-    color: theme.colors.gray.text,
-  },
-  viewersBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 68, 68, 0.08)',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 4,
-  },
-  viewersDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: '#ff4444',
-  },
-  viewersText: {
-    color: '#e57373',
-    fontWeight: '500',
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -195,9 +111,97 @@ const styles = StyleSheet.create(theme => ({
     color: theme.colors.gray.textLow,
     fontWeight: '400',
   },
+  container: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.lg,
+  },
+  details: {
+    flex: 1,
+    flexShrink: 1,
+    gap: theme.spacing.xs,
+    justifyContent: 'flex-start',
+    minWidth: 0,
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  image: {
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    height: 100,
+    width: 150,
+  },
+  imageContainer: {
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    flexShrink: 0,
+    height: 100,
+    marginRight: theme.spacing.md,
+    overflow: 'hidden',
+    width: 150,
+  },
+  imageWrapper: {
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    height: 100,
+    overflow: 'hidden',
+    width: 150,
+  },
+  liveBadge: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 4,
+  },
+  liveText: {
+    color: theme.colors.gray.textLow,
+  },
+  metadataRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  redDot: {
+    backgroundColor: '#ff4444',
+    borderRadius: 4,
+    height: 8,
+    width: 8,
+  },
   title: {
     color: theme.colors.gray.textLow,
-    marginTop: theme.spacing.xs,
     lineHeight: 18,
+    marginTop: theme.spacing.xs,
   },
-}));
+  username: {
+    color: theme.colors.gray.text,
+    fontWeight: '600',
+  },
+  usernameButton: {
+    flex: 1,
+    minWidth: 0,
+  },
+  viewersBadge: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 68, 68, 0.08)',
+    borderCurve: 'continuous',
+    borderRadius: 10,
+    flexDirection: 'row',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  viewersDot: {
+    backgroundColor: '#ff4444',
+    borderRadius: 2.5,
+    height: 5,
+    width: 5,
+  },
+  viewersText: {
+    color: '#e57373',
+    fontWeight: '500',
+  },
+});

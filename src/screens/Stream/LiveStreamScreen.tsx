@@ -10,7 +10,7 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { useQueries } from '@tanstack/react-query';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View, StyleSheet } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -21,7 +21,6 @@ import {
   useSafeAreaFrame,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { StyleSheet } from 'react-native-unistyles';
 
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   route: { params },
@@ -313,11 +312,19 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   );
 });
 
-const styles = StyleSheet.create(() => ({
+const styles = StyleSheet.create({
+  chatContainer: {
+    overflow: 'hidden',
+  },
+  chatContent: {
+    flex: 1,
+    overflow: 'hidden',
+    width: '100%',
+  },
   container: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   contentContainer: {
     flex: 1,
@@ -327,22 +334,14 @@ const styles = StyleSheet.create(() => ({
   },
   videoContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#000',
+    justifyContent: 'center',
   },
   videoUser: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#fff',
     marginTop: 20,
+    textAlign: 'center',
   },
-  chatContainer: {
-    overflow: 'hidden',
-  },
-  chatContent: {
-    flex: 1,
-    width: '100%',
-    overflow: 'hidden',
-  },
-}));
+});

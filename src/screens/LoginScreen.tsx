@@ -6,11 +6,17 @@ import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { countMetric } from '@app/services/sentry-service';
+import { theme } from '@app/styles/themes';
 import { useAuthRequest } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
-import { Dimensions, Platform, SafeAreaView, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import {
+  Dimensions,
+  Platform,
+  SafeAreaView,
+  View,
+  StyleSheet,
+} from 'react-native';
 import { toast } from 'sonner-native';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -176,31 +182,17 @@ export function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.gray.ui,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
+const styles = StyleSheet.create({
+  actionSection: {
     alignItems: 'center',
-    paddingHorizontal: theme.spacing['2xl'],
-  },
-  innerContent: {
-    alignItems: 'center',
+    marginBottom: theme.spacing['4xl'],
     width: '100%',
-    maxWidth: 400,
-  },
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: theme.spacing['6xl'],
   },
   appIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 20,
     borderCurve: 'continuous',
+    borderRadius: 20,
+    elevation: 8,
+    height: 100,
     marginBottom: theme.spacing['2xl'],
     shadowColor: theme.colors.accent.ui,
     shadowOffset: {
@@ -209,84 +201,99 @@ const styles = StyleSheet.create(theme => ({
     },
     shadowOpacity: 0.25,
     shadowRadius: 12,
-    elevation: 8,
-  },
-  titleContainer: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-  },
-  subtitle: {
-    textAlign: 'center',
-    marginBottom: theme.spacing.lg,
-    lineHeight: 22,
-    maxWidth: screenWidth * 0.8,
-  },
-  actionSection: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: theme.spacing['4xl'],
-  },
-  loginButton: {
-    backgroundColor: '#9146ff',
-    paddingVertical: theme.spacing.xl,
-    paddingHorizontal: theme.spacing['3xl'],
-    borderRadius: theme.radii.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0px 4px 8px rgba(145, 70, 255, 0.3)',
-    minHeight: 56,
-    width: '100%',
-    maxWidth: 300,
-  },
-  loginButtonDisabled: {
-    backgroundColor: theme.colors.gray.accent,
-    shadowOpacity: 0,
+    width: 100,
   },
   buttonContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'center',
+  },
+  container: {
+    backgroundColor: theme.colors.gray.ui,
+    flex: 1,
+  },
+  content: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing['2xl'],
+  },
+  decorativeCircle: {
+    backgroundColor: theme.colors.accent.ui,
+    borderRadius: 60,
+    height: 120,
+    position: 'absolute',
+    width: 120,
+  },
+  decorativeCircle2: {
+    backgroundColor: theme.colors.violet.ui,
+    borderRadius: 40,
+    height: 80,
+    left: -20,
+    position: 'absolute',
+    top: 40,
+    width: 80,
+  },
+  decorativeElements: {
+    opacity: 0.1,
+    position: 'absolute',
+    right: theme.spacing['2xl'],
+    top: theme.spacing['4xl'],
+  },
+  featureDot: {
+    backgroundColor: theme.colors.accent.accent,
+    borderRadius: 2,
+    height: 4,
+    marginRight: theme.spacing.md,
+    width: 4,
+  },
+  featureItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  featuresList: {
+    alignItems: 'flex-start',
   },
   featuresSection: {
     alignItems: 'center',
     opacity: 0.8,
   },
-  featuresList: {
-    alignItems: 'flex-start',
-  },
-  featureItem: {
-    flexDirection: 'row',
+  innerContent: {
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    maxWidth: 400,
+    width: '100%',
   },
-  featureDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.accent.accent,
-    marginRight: theme.spacing.md,
+  loginButton: {
+    alignItems: 'center',
+    backgroundColor: '#9146ff',
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    boxShadow: '0px 4px 8px rgba(145, 70, 255, 0.3)',
+    justifyContent: 'center',
+    maxWidth: 300,
+    minHeight: 56,
+    paddingHorizontal: theme.spacing['3xl'],
+    paddingVertical: theme.spacing.xl,
+    width: '100%',
   },
-  decorativeElements: {
-    position: 'absolute',
-    top: theme.spacing['4xl'],
-    right: theme.spacing['2xl'],
-    opacity: 0.1,
+  loginButtonDisabled: {
+    backgroundColor: theme.colors.gray.accent,
+    shadowOpacity: 0,
   },
-  decorativeCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: theme.colors.accent.ui,
-    position: 'absolute',
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing['6xl'],
   },
-  decorativeCircle2: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: theme.colors.violet.ui,
-    position: 'absolute',
-    top: 40,
-    left: -20,
+  subtitle: {
+    lineHeight: 22,
+    marginBottom: theme.spacing.lg,
+    maxWidth: screenWidth * 0.8,
+    textAlign: 'center',
   },
-}));
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+});

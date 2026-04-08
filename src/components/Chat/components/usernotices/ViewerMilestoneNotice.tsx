@@ -1,9 +1,9 @@
 import { Text } from '@app/components/Text/Text';
+import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { useMemo } from 'react';
-import { View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { View, StyleSheet } from 'react-native';
 
 interface ViewerMilestoneNoticeProps {
   part: ParsedPart<'viewermilestone'>;
@@ -30,19 +30,19 @@ export function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
   );
 }
 
-const styles = StyleSheet.create(theme => ({
+const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    padding: theme.spacing.sm,
     backgroundColor: theme.colors.gray.uiActive,
-    borderLeftWidth: 3,
-    borderRightWidth: 3,
-    borderLeftColor: theme.colors.violet.accent,
-    borderRightColor: theme.colors.violet.accent,
     borderCurve: 'continuous',
+    borderLeftColor: theme.colors.violet.accent,
+    borderLeftWidth: 3,
+    borderRightColor: theme.colors.violet.accent,
+    borderRightWidth: 3,
     marginVertical: theme.spacing.xs,
+    padding: theme.spacing.sm,
+    width: '100%',
   },
   messageText: {
     lineHeight: theme.spacing['2xl'],
   },
-}));
+});

@@ -6,8 +6,7 @@ import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback } from 'react';
-import { Modal, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
+import { Modal, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 import { styles } from '../EmotePreviewSheet/EmotePreviewSheet';
 
