@@ -22,6 +22,7 @@ import {
   getMessageColor,
 } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
+import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
@@ -37,7 +38,7 @@ import { batch } from '@legendapp/state';
 import { useSelector } from '@legendapp/state/react';
 import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import * as Clipboard from 'expo-clipboard';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Platform, TextInput, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,7 +55,9 @@ import {
   RichChatMessage,
   BadgePressData,
   MessageActionData,
+  UsernamePressData,
 } from './components/ChatMessage/RichChatMessage';
+import { ChatViewControls } from './components/ChatViewControls';
 import { EmotePreviewSheet } from './components/EmotePreviewSheet/EmotePreviewSheet';
 import {
   EmoteSheet,
@@ -62,6 +65,7 @@ import {
 } from './components/EmoteSheet/EmoteSheet';
 import { ResumeScroll } from './components/ResumeScroll';
 import { SettingsSheet } from './components/SettingsSheet/SettingsSheet';
+import { UserActionSheet } from './components/UserActionSheet';
 import { useChatEmoteLoader } from './hooks/useChatEmoteLoader';
 import { useChatLifecycle } from './hooks/useChatLifecycle';
 import { useChatMessages } from './hooks/useChatMessages';
@@ -85,6 +89,10 @@ import {
   createSystemMessage,
 } from './util/messageHandlers';
 import { reprocessMessages } from './util/reprocessMessages';
+import {
+  getPausedPendingMessageCount,
+  getVisibleMessages,
+} from './util/visibleMessages';
 
 interface ChatProps {
   channelId: string;
@@ -93,9 +101,11 @@ interface ChatProps {
 
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { user } = useAuthContext();
+  const preferences = usePreferences();
   const navigation = useAppNavigation();
   const insets = useSafeAreaInsets();
   const messages$ = chatStore$.messages;
+  const rawMessages = useSelector(chatStore$.messages) as AnyChatMessageType[];
   const hasMessages = useSelector(() => chatStore$.messages.get().length > 0);
   const isMessagesEmpty = useSelector(
     () => chatStore$.messages.get().length === 0,
@@ -124,7 +134,20 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const [selectedEmote, setSelectedEmote] = useState<EmotePressData | null>(
     null,
   );
+  const [selectedUser, setSelectedUser] = useState<UsernamePressData | null>(
+    null,
+  );
   const [isDebugModalVisible, setIsDebugModalVisible] = useState(false);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [hiddenUsers, setHiddenUsers] = useState<string[]>([]);
+  const [hiddenPhrases, setHiddenPhrases] = useState<string[]>([]);
+  const [highlightedUsers, setHighlightedUsers] = useState<string[]>([]);
+  const [showOnlyMentions, setShowOnlyMentions] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [pauseAnchorMessageId, setPauseAnchorMessageId] = useState<
+    string | null
+  >(null);
 
   const mentionColorCache = useRef<Map<string, string>>(new Map());
   const lightenedColorCache = useRef<Map<string, string>>(new Map());
@@ -135,6 +158,18 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   useEffect(() => {
     chatStartTimeRef.current = Date.now();
+  }, [channelId]);
+
+  useEffect(() => {
+    setIsSearchVisible(false);
+    setSearchQuery('');
+    setHiddenUsers([]);
+    setHiddenPhrases([]);
+    setHighlightedUsers([]);
+    setShowOnlyMentions(false);
+    setIsPaused(false);
+    setPauseAnchorMessageId(null);
+    setSelectedUser(null);
   }, [channelId]);
 
   const canFetchCosmetics = useCallback((): boolean => {
@@ -221,6 +256,73 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     listRef,
     getMessagesLength: () => messages$.peek().length,
   });
+
+  const visibleMessages = useMemo(
+    () =>
+      getVisibleMessages(rawMessages ?? [], {
+        currentUsername: user?.login || user?.display_name,
+        currentUserId: user?.id,
+        hiddenUsers,
+        hiddenPhrases,
+        pauseAnchorMessageId,
+        searchQuery,
+        showOnlyMentions,
+      }),
+    [
+      rawMessages,
+      user?.login,
+      user?.display_name,
+      user?.id,
+      hiddenUsers,
+      hiddenPhrases,
+      pauseAnchorMessageId,
+      searchQuery,
+      showOnlyMentions,
+    ],
+  );
+
+  const pausedMessageCount = useMemo(() => {
+    if (!isPaused) {
+      return 0;
+    }
+
+    return getPausedPendingMessageCount(rawMessages ?? [], {
+      currentUsername: user?.login || user?.display_name,
+      currentUserId: user?.id,
+      hiddenUsers,
+      hiddenPhrases,
+      pauseAnchorMessageId,
+      searchQuery,
+      showOnlyMentions,
+    });
+  }, [
+    isPaused,
+    rawMessages,
+    user?.login,
+    user?.display_name,
+    user?.id,
+    hiddenUsers,
+    hiddenPhrases,
+    pauseAnchorMessageId,
+    searchQuery,
+    showOnlyMentions,
+  ]);
+
+  const hasActiveFilters = useMemo(() => {
+    return Boolean(
+      searchQuery.trim() ||
+        hiddenUsers.length ||
+        hiddenPhrases.length ||
+        highlightedUsers.length ||
+        showOnlyMentions,
+    );
+  }, [
+    searchQuery,
+    hiddenUsers.length,
+    hiddenPhrases.length,
+    highlightedUsers.length,
+    showOnlyMentions,
+  ]);
 
   const {
     handleNewMessage,
@@ -686,6 +788,75 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     void settingsSheetRef.current?.present();
   }, []);
 
+  const appendMentionToComposer = useCallback((username: string) => {
+    setMessageInput(prev => {
+      const trimmed = prev.trim();
+      if (!trimmed) {
+        return `@${username} `;
+      }
+
+      return `${prev}${prev.endsWith(' ') ? '' : ' '}@${username} `;
+    });
+    chatInputRef.current?.focus();
+  }, []);
+
+  const hideUserFromView = useCallback((username: string | undefined) => {
+    if (!username) {
+      return;
+    }
+
+    const normalised = username.trim().toLowerCase();
+    setHiddenUsers(prev =>
+      prev.includes(normalised) ? prev : [...prev, normalised].slice(-50),
+    );
+  }, []);
+
+  const toggleHighlightedUser = useCallback((username: string | undefined) => {
+    if (!username) {
+      return;
+    }
+
+    const normalised = username.trim().toLowerCase();
+    setHighlightedUsers(prev =>
+      prev.includes(normalised)
+        ? prev.filter(entry => entry !== normalised)
+        : [...prev, normalised].slice(-50),
+    );
+  }, []);
+
+  const hidePhraseFromView = useCallback((phrase: string | undefined) => {
+    if (!phrase?.trim()) {
+      return;
+    }
+
+    const normalised = phrase.trim().toLowerCase();
+    setHiddenPhrases(prev =>
+      prev.includes(normalised) ? prev : [...prev, normalised].slice(-50),
+    );
+  }, []);
+
+  const handleTogglePause = useCallback(() => {
+    if (isPaused) {
+      setIsPaused(false);
+      setPauseAnchorMessageId(null);
+      forceFlush();
+      scrollToBottom();
+      return;
+    }
+
+    const lastVisibleMessage = visibleMessages[visibleMessages.length - 1];
+    setPauseAnchorMessageId(lastVisibleMessage?.message_id ?? null);
+    setIsPaused(true);
+  }, [forceFlush, isPaused, scrollToBottom, visibleMessages]);
+
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('');
+    setHiddenUsers([]);
+    setHiddenPhrases([]);
+    setHighlightedUsers([]);
+    setShowOnlyMentions(false);
+  }, []);
+
   const handleBadgeLongPress = useCallback((badge: BadgePressData) => {
     setSelectedBadge(badge);
   }, []);
@@ -699,6 +870,10 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
   const handleEmotePress = useCallback((emote: EmotePressData) => {
     setSelectedEmote(emote);
+  }, []);
+
+  const handleUsernamePress = useCallback((usernameData: UsernamePressData) => {
+    setSelectedUser(usernameData);
   }, []);
 
   const handleActionSheetReply = useCallback(() => {
@@ -715,6 +890,55 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     );
     setSelectedMessage(null);
   }, [selectedMessage]);
+
+  const handleActionSheetHideUser = useCallback(() => {
+    hideUserFromView(selectedMessage?.username);
+    setSelectedMessage(null);
+  }, [hideUserFromView, selectedMessage]);
+
+  const handleActionSheetHighlightUser = useCallback(() => {
+    toggleHighlightedUser(selectedMessage?.username);
+    setSelectedMessage(null);
+  }, [selectedMessage, toggleHighlightedUser]);
+
+  const handleActionSheetHidePhrase = useCallback(() => {
+    if (!selectedMessage) {
+      return;
+    }
+
+    hidePhraseFromView(replaceEmotesWithText(selectedMessage.message));
+    setSelectedMessage(null);
+  }, [hidePhraseFromView, selectedMessage]);
+
+  const handleMentionSelectedUser = useCallback(() => {
+    if (!selectedUser?.username) {
+      return;
+    }
+
+    appendMentionToComposer(selectedUser.username);
+    setSelectedUser(null);
+  }, [appendMentionToComposer, selectedUser]);
+
+  const handleCopySelectedUsername = useCallback(() => {
+    if (!selectedUser?.username) {
+      return;
+    }
+
+    void Clipboard.setStringAsync(selectedUser.username).then(() =>
+      toast.success('Copied username'),
+    );
+    setSelectedUser(null);
+  }, [selectedUser]);
+
+  const handleHideSelectedUser = useCallback(() => {
+    hideUserFromView(selectedUser?.username);
+    setSelectedUser(null);
+  }, [hideUserFromView, selectedUser]);
+
+  const handleHighlightSelectedUser = useCallback(() => {
+    toggleHighlightedUser(selectedUser?.username);
+    setSelectedUser(null);
+  }, [selectedUser, toggleHighlightedUser]);
 
   const getMentionColor = useCallback(
     (username: string): string => {
@@ -866,18 +1090,37 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
         onBadgePress={handleBadgeLongPressRef.current}
         onMessageLongPress={handleMessageLongPressRef.current}
         onEmotePress={handleEmotePressRef.current}
+        onUsernamePress={handleUsernamePress}
         getMentionColor={getMentionColorRef.current}
         parseTextForEmotes={parseTextForEmotesRef.current}
         userPaints={userPaintsRef.current}
         isChannelPointRedemption={msg.isChannelPointRedemption}
         isTwitchSystemNotice={msg.isTwitchSystemNotice}
+        currentUsername={
+          preferences.highlightOwnMentions
+            ? (user?.login ?? user?.display_name)
+            : undefined
+        }
+        density={preferences.chatDensity}
+        showTimestamp={preferences.chatTimestamps}
+        highlightedUsers={highlightedUsers}
+        showInlineReplyContext={preferences.showInlineReplyContext}
         // @ts-expect-error - notice_tags union type not narrowing correctly
         notice_tags={
           'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
         }
       />
     ),
-    [],
+    [
+      handleUsernamePress,
+      user?.login,
+      user?.display_name,
+      preferences.chatDensity,
+      preferences.highlightOwnMentions,
+      preferences.chatTimestamps,
+      preferences.showInlineReplyContext,
+      highlightedUsers,
+    ],
   );
 
   const keyExtractor = useCallback(
@@ -905,7 +1148,34 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             </View>
           )}
 
+          <ChatViewControls
+            hasActiveFilters={hasActiveFilters}
+            isPaused={isPaused}
+            onChangeSearch={setSearchQuery}
+            onClearFilters={handleClearFilters}
+            onTogglePause={handleTogglePause}
+            onToggleSearch={() => setIsSearchVisible(prev => !prev)}
+            onToggleShowOnlyMentions={() => setShowOnlyMentions(prev => !prev)}
+            searchQuery={searchQuery}
+            showOnlyMentions={showOnlyMentions}
+            showSearch={isSearchVisible}
+          />
+
+          {visibleMessages.length === 0 && rawMessages.length > 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateTitle}>
+                No chat messages match the current view
+              </Text>
+              <Text style={styles.emptyStateBody}>
+                Clear filters or jump back to the latest messages.
+              </Text>
+            </View>
+          ) : null}
+
           <ChatList
+            data={visibleMessages.filter(
+              (message): message is AnyChatMessageType => message != null,
+            )}
             listRef={listRef}
             isAtBottomRef={isAtBottomRef}
             handleScroll={handleScroll}
@@ -915,15 +1185,21 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             contentContainerStyle={styles.listContent}
           />
 
-          {!isAtBottom && !isScrollingToBottom && (
-            <ResumeScroll
-              unreadCount={unreadCount}
-              onScrollToBottom={() => {
-                forceFlush();
-                scrollToBottom();
-              }}
-            />
-          )}
+          {preferences.showUnreadJumpPill &&
+            (!isAtBottom || isPaused) &&
+            !isScrollingToBottom && (
+              <ResumeScroll
+                unreadCount={isPaused ? pausedMessageCount : unreadCount}
+                onScrollToBottom={() => {
+                  if (isPaused) {
+                    setIsPaused(false);
+                    setPauseAnchorMessageId(null);
+                  }
+                  forceFlush();
+                  scrollToBottom();
+                }}
+              />
+            )}
         </View>
 
         <ChatInputSection
@@ -952,6 +1228,8 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         <SettingsSheet
           ref={settingsSheetRef}
+          chatDensity={preferences.chatDensity}
+          highlightOwnMentions={preferences.highlightOwnMentions}
           onRefetchEmotes={() => {
             void refetchEmotes().then(() => {
               reprocessAllMessages();
@@ -963,6 +1241,29 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
               joinChannel(channelName);
             }, 1000);
           }}
+          onToggleChatDensity={() =>
+            preferences.update({
+              chatDensity:
+                preferences.chatDensity === 'compact'
+                  ? 'comfortable'
+                  : 'compact',
+            })
+          }
+          onToggleHighlightOwnMentions={value =>
+            preferences.update({ highlightOwnMentions: value })
+          }
+          onToggleInlineReplyContext={value =>
+            preferences.update({ showInlineReplyContext: value })
+          }
+          onToggleShowTimestamps={value =>
+            preferences.update({ chatTimestamps: value })
+          }
+          onToggleShowUnreadJumpPill={value =>
+            preferences.update({ showUnreadJumpPill: value })
+          }
+          showInlineReplyContext={preferences.showInlineReplyContext}
+          showTimestamps={preferences.chatTimestamps}
+          showUnreadJumpPill={preferences.showUnreadJumpPill}
         />
 
         <ChatDebugModal
@@ -997,6 +1298,32 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             username={selectedMessage.username}
             handleReply={handleActionSheetReply}
             handleCopy={handleActionSheetCopy}
+            handleHidePhrase={handleActionSheetHidePhrase}
+            handleHideUser={handleActionSheetHideUser}
+            handleHighlightUser={handleActionSheetHighlightUser}
+            isUserHighlighted={Boolean(
+              selectedMessage.username &&
+                highlightedUsers.includes(
+                  selectedMessage.username.toLowerCase(),
+                ),
+            )}
+          />
+        )}
+
+        {selectedUser && (
+          <UserActionSheet
+            visible={Boolean(selectedUser)}
+            onClose={() => setSelectedUser(null)}
+            username={selectedUser.username}
+            login={selectedUser.login}
+            onMentionUser={handleMentionSelectedUser}
+            onCopyUsername={handleCopySelectedUsername}
+            onHideUser={handleHideSelectedUser}
+            onHighlightUser={handleHighlightSelectedUser}
+            isHidden={hiddenUsers.includes(selectedUser.username.toLowerCase())}
+            isHighlighted={highlightedUsers.includes(
+              selectedUser.username.toLowerCase(),
+            )}
           />
         )}
       </KeyboardAvoidingView>
@@ -1020,6 +1347,27 @@ const styles = StyleSheet.create({
   connectingText: {
     color: theme.colors.gray.accent,
     fontSize: theme.font.fontSize.sm,
+  },
+  emptyState: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.lg,
+    marginHorizontal: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+  },
+  emptyStateBody: {
+    color: theme.colors.gray.textLow,
+    fontSize: theme.font.fontSize.xs,
+    marginTop: theme.spacing.xs,
+    textAlign: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: theme.font.fontSize.sm,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   keyboardAvoidingView: {
     flex: 1,

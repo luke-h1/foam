@@ -21,7 +21,10 @@ export function ResumeScroll({
           size={16}
           color={theme.colors.amber.accentAlpha}
         />
-        {unreadCount > 0 && <Text>{unreadCount}</Text>}
+        <Text style={styles.resumeText}>Jump to latest</Text>
+        {unreadCount > 0 && (
+          <Text style={styles.resumeCount}> {unreadCount}</Text>
+        )}
       </Button>
     </View>
   );
@@ -50,5 +53,13 @@ const styles = StyleSheet.create({
     bottom: theme.spacing.lg,
     position: 'absolute',
     zIndex: 10,
+  },
+  resumeCount: {
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '700',
+  },
+  resumeText: {
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '600',
   },
 });

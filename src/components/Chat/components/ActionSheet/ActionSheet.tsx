@@ -15,16 +15,37 @@ interface Props {
   username?: string;
   handleReply: () => void;
   handleCopy: () => void;
+  handleHidePhrase?: () => void;
+  handleHideUser?: () => void;
+  handleHighlightUser?: () => void;
+  isUserHighlighted?: boolean;
 }
 
-export function ActionSheet(props: Props) {
-  const { visible, onClose, message, username, handleReply, handleCopy } =
-    props;
+type ActionItem = {
+  icon: string;
+  id: 'copy' | 'reply' | 'hide-user' | 'highlight-user' | 'hide-phrase';
+  label: string;
+  onPress: () => void;
+};
 
-  const actions = useMemo(
-    () => [
+export function ActionSheet(props: Props) {
+  const {
+    visible,
+    onClose,
+    message,
+    username,
+    handleReply,
+    handleCopy,
+    handleHidePhrase,
+    handleHideUser,
+    handleHighlightUser,
+    isUserHighlighted,
+  } = props;
+
+  const actions = useMemo<ActionItem[]>(() => {
+    const items: ActionItem[] = [
       {
-        id: 'copy' as const,
+        id: 'copy',
         icon: 'copy',
         label: 'Copy Message',
         onPress: () => {
@@ -33,8 +54,8 @@ export function ActionSheet(props: Props) {
         },
       },
       {
-        id: 'reply' as const,
-        icon: 'arrowshape.turn.up.left',
+        id: 'reply',
+        icon: 'corner-up-left',
         label: 'Reply',
         onPress: () => {
           handleReply();
@@ -42,24 +63,70 @@ export function ActionSheet(props: Props) {
         },
       },
       {
-        id: 'report' as const,
-        icon: 'arrow.up.right.square',
-        label: 'Report message',
-        onPress: onClose,
+        id: 'hide-phrase',
+        icon: 'slash',
+        label: 'Hide Phrase',
+        onPress: () => {
+          handleHidePhrase?.();
+          onClose();
+        },
       },
-    ],
-    [handleCopy, handleReply, onClose],
-  );
+    ];
+
+    if (username) {
+      items.splice(2, 0, {
+        id: 'hide-user',
+        icon: 'user-x',
+        label: 'Hide User',
+        onPress: () => {
+          handleHideUser?.();
+          onClose();
+        },
+      });
+
+      items.splice(3, 0, {
+        id: 'highlight-user',
+        icon: 'star',
+        label: isUserHighlighted ? 'Unhighlight User' : 'Highlight User',
+        onPress: () => {
+          handleHighlightUser?.();
+          onClose();
+        },
+      });
+    }
+
+    return items;
+  }, [
+    handleCopy,
+    handleReply,
+    username,
+    handleHideUser,
+    handleHighlightUser,
+    isUserHighlighted,
+    handleHidePhrase,
+    onClose,
+  ]);
 
   const getSFSymbolName = useCallback(
-    (actionId: 'copy' | 'reply' | 'report') => {
+    (
+      actionId:
+        | 'copy'
+        | 'reply'
+        | 'hide-user'
+        | 'highlight-user'
+        | 'hide-phrase',
+    ) => {
       switch (actionId) {
         case 'copy':
           return 'doc.on.doc' as const;
         case 'reply':
           return 'arrowshape.turn.up.left' as const;
-        case 'report':
-          return 'arrow.up.right.square' as const;
+        case 'hide-user':
+          return 'person.crop.circle.badge.xmark' as const;
+        case 'highlight-user':
+          return 'star' as const;
+        case 'hide-phrase':
+          return 'nosign' as const;
         default:
           return 'questionmark.circle' as const;
       }

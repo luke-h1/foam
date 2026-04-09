@@ -2,7 +2,6 @@ import { typedObjectKeys } from '@app/utils/typescript/typedObjectKeys';
 import { memo } from 'react';
 import { DimensionValue, ViewStyle } from 'react-native';
 import { BttvIcon } from './svg/BttvIcon';
-import { FfzIcon } from './svg/FfzIcon';
 import { StvIcon } from './svg/StvIcon';
 import { TwitchIcon } from './svg/TwitchIcon';
 
@@ -35,7 +34,6 @@ export const BrandIcons = {
   stv: StvIcon,
   twitch: TwitchIcon,
   bttv: BttvIcon,
-  ffz: FfzIcon,
 } as const;
 
 function resolveSize(size: IconSize) {
