@@ -1,9 +1,8 @@
 import { Text } from '@app/components/Text/Text';
-import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 interface ViewerMilestoneNoticeProps {
   part: ParsedPart<'viewermilestone'>;
@@ -16,33 +15,60 @@ export function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
     }
     return unescapeIrcTag(part.systemMsg);
   }, [part.systemMsg]);
+  const displayName = part.displayName?.trim() || '';
 
-  if (!unescapedSystemMsg) {
+  const messageBody = useMemo(() => {
+    if (part.category === 'watch-streak' && part.value) {
+      const streamCount = parseInt(part.value, 10);
+      const streamText = streamCount === 1 ? 'stream' : 'streams';
+      return `watched ${part.value} consecutive ${streamText} and sparked a watch streak!`;
+    }
+
+    if (!unescapedSystemMsg) {
+      return '';
+    }
+
+    if (
+      displayName &&
+      unescapedSystemMsg
+        .toLowerCase()
+        .startsWith(`${displayName.toLowerCase()} `)
+    ) {
+      return unescapedSystemMsg.slice(displayName.length).trimStart();
+    }
+
+    return unescapedSystemMsg;
+  }, [displayName, part.category, part.value, unescapedSystemMsg]);
+
+  if (!displayName && !messageBody) {
     return null;
   }
 
   return (
-    <View style={styles.container}>
-      <Text color="gray.text" style={styles.messageText}>
-        {unescapedSystemMsg}
-      </Text>
-    </View>
+    <Text color="gray.text" style={styles.messageText}>
+      {displayName ? (
+        <Text color="gray.text" style={styles.displayNameText}>
+          {displayName}
+        </Text>
+      ) : null}
+      {messageBody ? (
+        <Text color="gray.textLow" style={styles.eventBodyText}>
+          {displayName ? ` ${messageBody}` : messageBody}
+        </Text>
+      ) : null}
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.gray.uiActive,
-    borderCurve: 'continuous',
-    borderLeftColor: theme.colors.violet.accent,
-    borderLeftWidth: 3,
-    borderRightColor: theme.colors.violet.accent,
-    borderRightWidth: 3,
-    marginVertical: theme.spacing.xs,
-    padding: theme.spacing.sm,
-    width: '100%',
+  displayNameText: {
+    fontWeight: '700',
+  },
+  eventBodyText: {
+    fontWeight: '500',
   },
   messageText: {
-    lineHeight: theme.spacing['2xl'],
+    flexShrink: 1,
+    lineHeight: 22,
   },
 });

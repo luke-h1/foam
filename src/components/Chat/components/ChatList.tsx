@@ -3,8 +3,6 @@ import {
   FlashListRef,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import { chatStore$ } from '@app/store/chatStore/state';
-import { useSelector } from '@legendapp/state/react';
 import { memo, MutableRefObject, RefObject, useEffect, useRef } from 'react';
 import {
   NativeSyntheticEvent,
@@ -16,6 +14,7 @@ import {
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
 interface ChatListProps {
+  data: AnyChatMessageType[];
   listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
   isAtBottomRef: MutableRefObject<boolean>;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -27,6 +26,7 @@ interface ChatListProps {
 
 export const ChatList = memo(
   ({
+    data,
     listRef,
     isAtBottomRef,
     handleScroll,
@@ -35,11 +35,9 @@ export const ChatList = memo(
     getItemType,
     contentContainerStyle,
   }: ChatListProps) => {
-    const messages = useSelector(chatStore$.messages);
-
     const prevMessageCountRef = useRef(0);
     useEffect(() => {
-      const count = Array.isArray(messages) ? messages.length : 0;
+      const count = Array.isArray(data) ? data.length : 0;
       if (
         count > prevMessageCountRef.current &&
         isAtBottomRef.current &&
@@ -48,11 +46,7 @@ export const ChatList = memo(
         listRef.current.scrollToEnd({ animated: false });
       }
       prevMessageCountRef.current = count;
-    }, [messages, isAtBottomRef, listRef]);
-
-    const data = (
-      Array.isArray(messages) ? (messages as AnyChatMessageType[]) : []
-    ).filter((m): m is AnyChatMessageType => m != null);
+    }, [data, isAtBottomRef, listRef]);
 
     return (
       <FlashList

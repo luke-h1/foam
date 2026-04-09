@@ -16,7 +16,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { formatDate } from '@app/utils/date-time/date';
-import React, { useCallback, memo, type ReactNode } from 'react';
+import React, { useCallback, memo, useMemo, type ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '../../../Button/Button';
 import { Image } from '../../../Image/Image';
@@ -35,6 +35,12 @@ export type MessageActionData<TNoticeType extends NoticeVariants> = {
   username?: string;
   messageData: ChatMessageType<TNoticeType>;
 };
+export interface UsernamePressData {
+  color?: string;
+  login?: string;
+  userId?: string;
+  username: string;
+}
 
 const SUBSCRIPTION_NOTICE_TYPES = new Set<ParsedPart['type']>([
   'sub',
@@ -48,11 +54,32 @@ const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
   'stv_emote_removed',
 ]);
 
+const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
+
 function messageHasPart(
   message: ParsedPart[],
   types: Set<ParsedPart['type']>,
 ): boolean {
   return message.some(part => types.has(part.type));
+}
+
+function normaliseUsername(value: string | undefined): string {
+  return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
+}
+
+function messageMentionsUser(
+  message: ParsedPart[],
+  username: string | undefined,
+): boolean {
+  const target = normaliseUsername(username);
+  if (!target) {
+    return false;
+  }
+
+  return message.some(
+    part =>
+      part.type === 'mention' && normaliseUsername(part.content) === target,
+  );
 }
 
 /**
@@ -63,6 +90,7 @@ type ChatBodyVariant =
   | 'twitch_system_notice'
   | 'subscription'
   | 'stv_emote_event'
+  | 'viewer_milestone'
   | 'app_system_sender'
   | 'user_chat';
 
@@ -79,6 +107,9 @@ function getChatBodyVariant(
   }
   if (messageHasPart(message, STV_EMOTE_EVENT_TYPES)) {
     return 'stv_emote_event';
+  }
+  if (messageHasPart(message, VIEWER_MILESTONE_TYPES)) {
+    return 'viewer_milestone';
   }
   if (sender?.toLowerCase() === 'system') {
     return 'app_system_sender';
@@ -115,6 +146,12 @@ function ChatMessageComponent<
   userPaints,
   isChannelPointRedemption,
   isTwitchSystemNotice,
+  onUsernamePress,
+  currentUsername,
+  density = 'comfortable',
+  showTimestamp = true,
+  highlightedUsers = [],
+  showInlineReplyContext = true,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply?: (args: ChatMessageType<TNoticeType>) => void;
   onBadgePress?: (data: BadgePressData) => void;
@@ -123,8 +160,25 @@ function ChatMessageComponent<
   getMentionColor?: (username: string) => string;
   parseTextForEmotes?: (text: string) => ParsedPart[];
   userPaints?: Record<string, UserPaint>;
+  onUsernamePress?: (data: UsernamePressData) => void;
+  currentUsername?: string;
+  density?: 'comfortable' | 'compact';
+  showTimestamp?: boolean;
+  highlightedUsers?: string[];
+  showInlineReplyContext?: boolean;
 }) {
   void userPaints;
+  const compact = density === 'compact';
+  const mentionsCurrentUser = messageMentionsUser(message, currentUsername);
+  const highlightedUserSet = useMemo(
+    () => new Set(highlightedUsers.map(normaliseUsername).filter(Boolean)),
+    [highlightedUsers],
+  );
+  const messageSenderKey = normaliseUsername(
+    userstate.username || userstate.login || sender,
+  );
+  const isHighlightedSender =
+    messageSenderKey.length > 0 && highlightedUserSet.has(messageSenderKey);
 
   const handleEmotePress = useCallback(
     (part: EmotePressData) => {
@@ -140,12 +194,66 @@ function ChatMessageComponent<
     [onBadgePress],
   );
 
+  const handleUsernamePress = useCallback(() => {
+    if (!userstate.username) {
+      return;
+    }
+
+    onUsernamePress?.({
+      username: userstate.username,
+      login: userstate.login,
+      userId: userstate['user-id'],
+      color: userstate.color,
+    });
+  }, [onUsernamePress, userstate]);
+
+  const usernameElement = useMemo(() => {
+    if (!userstate.username || isChannelPointRedemption) {
+      return null;
+    }
+
+    const username = (
+      <PaintedUsername
+        username={userstate.username}
+        userId={userstate['user-id']}
+        fallbackColor={
+          userstate.color ? lightenColor(userstate.color) : undefined
+        }
+        usernameTextStyle={compact ? styles.usernameCompact : undefined}
+      />
+    );
+
+    if (!onUsernamePress) {
+      return username;
+    }
+
+    return (
+      <Button
+        onPress={handleUsernamePress}
+        style={styles.usernameButton}
+        testID="chat-username-button"
+      >
+        {username}
+      </Button>
+    );
+  }, [
+    compact,
+    handleUsernamePress,
+    isChannelPointRedemption,
+    onUsernamePress,
+    userstate,
+  ]);
+
   const renderMessagePart = useCallback(
     (part: ParsedPart, index: number) => {
       switch (part.type) {
         case 'text': {
           return (
-            <Text key={index} color="gray.text" style={styles.messageText}>
+            <Text
+              key={index}
+              color="gray.text"
+              style={[styles.messageText, compact && styles.messageTextCompact]}
+            >
               {part.content}
             </Text>
           );
@@ -174,6 +282,10 @@ function ChatMessageComponent<
           const mentionColor = getMentionColor
             ? getMentionColor(mentionedUsername)
             : generateRandomTwitchColor(mentionedUsername);
+          const isHighlightedMention =
+            highlightedUserSet.has(normaliseUsername(mentionedUsername)) ||
+            normaliseUsername(currentUsername) ===
+              normaliseUsername(mentionedUsername);
 
           return (
             <Text key={`message-${index}`}>
@@ -181,6 +293,8 @@ function ChatMessageComponent<
                 style={[
                   styles.mention,
                   styles.mentionDefaultColor,
+                  compact && styles.mentionCompact,
+                  isHighlightedMention && styles.mentionHighlighted,
                   mentionColor && { color: lightenColor(mentionColor) },
                 ]}
               >
@@ -223,7 +337,7 @@ function ChatMessageComponent<
         }
 
         case 'viewermilestone': {
-          return <ViewerMileStoneNotice part={part} />;
+          return <ViewerMileStoneNotice key={index} part={part} />;
         }
 
         default:
@@ -233,12 +347,15 @@ function ChatMessageComponent<
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       handleEmotePress,
+      compact,
       getMentionColor,
+      highlightedUserSet,
       parseTextForEmotes,
       notice_tags,
       userstate.username,
       userstate.color,
       message_id,
+      currentUsername,
     ],
   );
 
@@ -304,6 +421,7 @@ function ChatMessageComponent<
     onReply &&
     !messageHasPart(message, SUBSCRIPTION_NOTICE_TYPES) &&
     bodyVariant !== 'stv_emote_event' &&
+    bodyVariant !== 'viewer_milestone' &&
     userstate.username &&
     sender?.toLowerCase() !== 'system';
 
@@ -349,6 +467,10 @@ function ChatMessageComponent<
 
   const isReply = Boolean(parentDisplayName);
   const isFirstMessage = userstate['first-msg'] === '1';
+  const shouldRenderInlineReply =
+    showInlineReplyContext &&
+    isReply &&
+    Boolean(replyBody || parentDisplayName);
 
   const renderChatBody = (): ReactNode => {
     switch (bodyVariant) {
@@ -371,6 +493,20 @@ function ChatMessageComponent<
           </View>
         );
 
+      case 'viewer_milestone':
+        return (
+          <View style={styles.viewerMilestoneRow}>
+            {showTimestamp ? (
+              <Text
+                style={[styles.timestamp, compact && styles.timestampCompact]}
+              >
+                {formatDate(new Date(), 'HH:mm')}:
+              </Text>
+            ) : null}
+            {message.map(renderMessagePart)}
+          </View>
+        );
+
       case 'app_system_sender':
         return (
           <View style={styles.systemMessageRow}>
@@ -381,6 +517,29 @@ function ChatMessageComponent<
       case 'user_chat': {
         return (
           <View style={styles.messageColumn}>
+            {shouldRenderInlineReply ? (
+              <View style={styles.replyContextRow}>
+                <Text
+                  style={[
+                    styles.replyContextLabel,
+                    compact && styles.replyContextLabelCompact,
+                  ]}
+                >
+                  Replying to {parentDisplayName}
+                </Text>
+                {replyBody ? (
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.replyContextBody,
+                      compact && styles.replyContextBodyCompact,
+                    ]}
+                  >
+                    {replyBody}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
             {showChannelPointsRewardChrome ? (
               <View style={styles.rewardSummaryRow}>
                 <Text style={styles.rewardSummaryText}>
@@ -396,21 +555,18 @@ function ChatMessageComponent<
             ) : null}
             <View style={styles.messageRow}>
               <View style={styles.messageLine}>
-                <Text style={styles.timestamp}>
-                  {formatDate(new Date(), 'HH:mm')}:
-                </Text>
-                {renderBadges()}
-                {userstate.username && !isChannelPointRedemption ? (
-                  <PaintedUsername
-                    username={userstate.username}
-                    userId={userstate['user-id']}
-                    fallbackColor={
-                      userstate.color
-                        ? lightenColor(userstate.color)
-                        : undefined
-                    }
-                  />
+                {showTimestamp ? (
+                  <Text
+                    style={[
+                      styles.timestamp,
+                      compact && styles.timestampCompact,
+                    ]}
+                  >
+                    {formatDate(new Date(), 'HH:mm')}:
+                  </Text>
                 ) : null}
+                {renderBadges()}
+                {usernameElement}
                 {message.map(renderMessagePart)}
               </View>
               <View style={styles.rightActions}>
@@ -450,10 +606,14 @@ function ChatMessageComponent<
       onLongPress={handleLongPress}
       style={[
         styles.chatContainer,
+        compact && styles.chatContainerCompact,
         style,
         isAppSystemSender && styles.systemMessageContainer,
+        isUserChat && isHighlightedSender && styles.highlightedSenderContainer,
         isReply && styles.replyContainer,
+        mentionsCurrentUser && styles.ownMentionContainer,
         isFirstMessage && styles.firstMessageContainer,
+        bodyVariant === 'viewer_milestone' && styles.viewerMilestoneContainer,
         isChannelPointRedemption && isUserChat && styles.rewardMessageContainer,
       ]}
     >
@@ -479,6 +639,12 @@ export const RichChatMessage = MemoizedRichChatMessage as <
     getMentionColor?: (username: string) => string;
     parseTextForEmotes?: (text: string) => ParsedPart[];
     userPaints?: Record<string, UserPaint>;
+    onUsernamePress?: (data: UsernamePressData) => void;
+    currentUsername?: string;
+    density?: 'comfortable' | 'compact';
+    showTimestamp?: boolean;
+    highlightedUsers?: string[];
+    showInlineReplyContext?: boolean;
   },
 ) => React.JSX.Element;
 const styles = StyleSheet.create({
@@ -491,6 +657,10 @@ const styles = StyleSheet.create({
     maxHeight: 120,
     minHeight: 44,
     paddingVertical: theme.spacing.xs,
+  },
+  chatContainerCompact: {
+    minHeight: 32,
+    paddingVertical: 2,
   },
   firstMessageContainer: {
     backgroundColor: 'rgba(145, 71, 255, 0.08)',
@@ -509,11 +679,23 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textTransform: 'lowercase',
   },
+  highlightedSenderContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderLeftColor: 'rgba(255, 255, 255, 0.25)',
+    borderLeftWidth: 2,
+    paddingLeft: theme.spacing.sm,
+  },
   mention: {
     marginHorizontal: 2,
   },
+  mentionCompact: {
+    marginHorizontal: 1,
+  },
   mentionDefaultColor: {
     color: '#FFFFFF',
+  },
+  mentionHighlighted: {
+    fontWeight: '700',
   },
   messageColumn: {
     flexDirection: 'column',
@@ -534,12 +716,44 @@ const styles = StyleSheet.create({
   messageText: {
     lineHeight: theme.spacing['2xl'],
   },
+  messageTextCompact: {
+    fontSize: theme.font.fontSize.xs,
+    lineHeight: theme.spacing.xl,
+  },
+  ownMentionContainer: {
+    backgroundColor: 'rgba(145, 71, 255, 0.1)',
+    borderLeftColor: theme.colors.violet.accent,
+    borderLeftWidth: 3,
+    paddingLeft: theme.spacing.sm,
+  },
   replyContainer: {
     borderLeftColor: 'rgba(145, 71, 255, 0.5)',
     borderLeftWidth: 2,
     marginBottom: theme.spacing.md,
     marginLeft: theme.spacing.sm,
     paddingLeft: theme.spacing.sm,
+  },
+  replyContextBody: {
+    color: theme.colors.gray.textLow,
+    fontSize: theme.font.fontSize.xs,
+    maxWidth: '75%',
+  },
+  replyContextBodyCompact: {
+    fontSize: theme.font.fontSize.xxs,
+  },
+  replyContextLabel: {
+    color: theme.colors.gray.text,
+    fontSize: theme.font.fontSize.xs,
+    fontWeight: '600',
+  },
+  replyContextLabelCompact: {
+    fontSize: theme.font.fontSize.xxs,
+  },
+  replyContextRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.xs,
   },
   rewardMessageContainer: {
     backgroundColor: 'rgba(127, 127, 127, 0.06)',
@@ -600,5 +814,29 @@ const styles = StyleSheet.create({
   timestamp: {
     color: theme.colors.gray.accentAlpha,
     fontSize: theme.font.fontSize.xs,
+  },
+  timestampCompact: {
+    fontSize: theme.font.fontSize.xxs,
+    marginRight: 2,
+  },
+  usernameButton: {
+    alignSelf: 'center',
+  },
+  usernameCompact: {
+    fontSize: theme.font.fontSize.xs,
+  },
+  viewerMilestoneContainer: {
+    backgroundColor: 'rgba(145, 71, 255, 0.08)',
+    borderLeftColor: theme.colors.violet.accent,
+    borderLeftWidth: 3,
+    marginVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  viewerMilestoneRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: '100%',
   },
 });

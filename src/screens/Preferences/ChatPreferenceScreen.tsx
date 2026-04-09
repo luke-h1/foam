@@ -7,7 +7,11 @@ import { View, StyleSheet } from 'react-native';
 
 export function ChatPreferenceScreen() {
   const {
+    chatDensity,
     chatTimestamps,
+    highlightOwnMentions,
+    showInlineReplyContext,
+    showUnreadJumpPill,
     show7TvEmotes,
     show7tvBadges,
     showBttvEmotes,
@@ -23,6 +27,26 @@ export function ChatPreferenceScreen() {
     return [
       {
         icon: {
+          name: 'align-left',
+          type: 'icon',
+          color: theme.colors.gray.accent,
+        },
+        label: 'Chat Density',
+        description: 'Choose between comfortable and compact message rows',
+        onSelect: (value: string) => {
+          update({
+            chatDensity: value === 'compact' ? 'compact' : 'comfortable',
+          });
+        },
+        options: [
+          { label: 'Comfortable', value: 'comfortable' },
+          { label: 'Compact', value: 'compact' },
+        ],
+        type: 'options',
+        value: chatDensity,
+      },
+      {
+        icon: {
           name: 'clock',
           type: 'symbol',
           color: theme.colors.blue.accent,
@@ -34,6 +58,48 @@ export function ChatPreferenceScreen() {
         },
         type: 'switch',
         value: chatTimestamps,
+      },
+      {
+        icon: {
+          name: 'at-sign',
+          type: 'icon',
+          color: theme.colors.violet.accent,
+        },
+        label: 'Highlight Own Mentions',
+        description: 'Accent messages that mention your username',
+        onSelect: (value: boolean) => {
+          update({ highlightOwnMentions: value });
+        },
+        type: 'switch',
+        value: highlightOwnMentions,
+      },
+      {
+        icon: {
+          name: 'corner-up-left',
+          type: 'icon',
+          color: theme.colors.violet.accent,
+        },
+        label: 'Inline Reply Context',
+        description: 'Show reply context above chat messages',
+        onSelect: (value: boolean) => {
+          update({ showInlineReplyContext: value });
+        },
+        type: 'switch',
+        value: showInlineReplyContext,
+      },
+      {
+        icon: {
+          name: 'arrow-down-circle',
+          type: 'icon',
+          color: theme.colors.amber.accent,
+        },
+        label: 'Show Jump Pill',
+        description: 'Display the jump-to-latest unread indicator',
+        onSelect: (value: boolean) => {
+          update({ showUnreadJumpPill: value });
+        },
+        type: 'switch',
+        value: showUnreadJumpPill,
       },
       null,
       '7TV',
@@ -97,11 +163,6 @@ export function ChatPreferenceScreen() {
       },
       'FFZ',
       {
-        icon: {
-          type: 'brandIcon',
-          name: 'ffz',
-          color: theme.colors.green.accent,
-        },
         label: 'Emotes',
         description: 'Enable FFZ emotes in chat',
         onSelect: (value: boolean) => {
@@ -111,11 +172,6 @@ export function ChatPreferenceScreen() {
         value: showFFzEmotes,
       },
       {
-        icon: {
-          type: 'brandIcon',
-          name: 'ffz',
-          color: theme.colors.green.accent,
-        },
         label: 'Badges',
         description: 'Enable FFZ badges in chat',
         onSelect: (value: boolean) => {
@@ -155,7 +211,11 @@ export function ChatPreferenceScreen() {
       },
     ] satisfies (MenuItem | string | null)[];
   }, [
+    chatDensity,
     chatTimestamps,
+    highlightOwnMentions,
+    showInlineReplyContext,
+    showUnreadJumpPill,
     show7TvEmotes,
     show7tvBadges,
     showBttvEmotes,

@@ -19,7 +19,11 @@ export interface Preferences {
   fontScaling: number;
   systemScaling: boolean;
   hapticFeedback: boolean;
+  chatDensity: 'comfortable' | 'compact';
   chatTimestamps: boolean;
+  highlightOwnMentions: boolean;
+  showInlineReplyContext: boolean;
+  showUnreadJumpPill: boolean;
   show7TvEmotes: boolean;
   showBttvEmotes: boolean;
   showFFzEmotes: boolean;
@@ -36,7 +40,11 @@ const initialPreferences: Preferences = {
   fontScaling: 1,
   systemScaling: false,
   hapticFeedback: true,
+  chatDensity: 'comfortable',
   chatTimestamps: true,
+  highlightOwnMentions: true,
+  showInlineReplyContext: true,
+  showUnreadJumpPill: true,
   show7TvEmotes: true,
   showBttvEmotes: true,
   showFFzEmotes: true,
