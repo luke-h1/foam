@@ -1,7 +1,8 @@
 /* eslint-disable no-nested-ternary */
+import { Picker } from '@react-native-picker/picker';
 import { theme } from '@app/styles/themes';
 import { SymbolView } from 'expo-symbols';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { View, type StyleProp, type ViewStyle, StyleSheet } from 'react-native';
 // eslint-disable-next-line no-restricted-imports
 import { Pressable } from 'react-native';
@@ -10,9 +11,11 @@ import { Icon } from '../Icon/Icon';
 import { Image } from '../Image/Image';
 import { Switch } from '../Switch/Switch';
 import { Text } from '../Text/Text';
-import { SheetItem } from '../sheets/SheetItem';
-import { SheetModal } from '../sheets/SheetModal';
-import { type Icon as IconType, type MenuItem } from './Menu';
+import {
+  type Icon as IconType,
+  type MenuItem,
+  type MenuItemOption,
+} from './Menu';
 
 interface MenuItemProps {
   item: MenuItem;
@@ -39,15 +42,17 @@ function renderIcon(icon: IconType, defaultColor: string) {
   return <Icon icon={icon.name} color={icon.color ?? defaultColor} />;
 }
 
+function isMenuItemOption(
+  option: MenuItemOption | string | null,
+): option is MenuItemOption {
+  return typeof option === 'object' && option !== null;
+}
+
 export function MenuItem({ item, style }: MenuItemProps) {
-  const [sheetVisible, setSheetVisible] = useState(false);
-
-  const Component = item.type === 'switch' ? View : Pressable;
-
   const selected = useMemo(() => {
     if (item.type === 'options') {
       const $selected = item.options
-        .filter(option => typeof option === 'object')
+        .filter(isMenuItemOption)
         .find(option => option?.value === item.value);
 
       return $selected?.right ?? $selected?.label ?? $selected?.value;
@@ -56,125 +61,105 @@ export function MenuItem({ item, style }: MenuItemProps) {
     return null;
   }, [item]);
 
-  return (
-    <>
-      <Component
-        onPress={() => {
-          if (typeof item.onPress === 'function') {
-            void item.onPress();
-          }
+  const content = (
+    <View style={styles.component}>
+      {item.icon ? renderIcon(item.icon, theme.colors.gray.border) : null}
 
-          if (item.type === 'options') {
-            setSheetVisible(true);
-          }
-        }}
-        style={[styles.component, style]}
-      >
-        {item.icon ? renderIcon(item.icon, theme.colors.gray.border) : null}
+      {!item.icon && item.image && (
+        <Image source={item.image} style={styles.image} />
+      )}
 
-        {!item.icon && item.image && (
-          <Image source={item.image} style={styles.image} />
-        )}
+      <View style={styles.contentContainer}>
+        <Text weight="semibold">{item.label}</Text>
 
-        <View style={styles.contentContainer}>
-          <Text weight="semibold">{item.label}</Text>
-
-          {item.description ? (
-            <Text type="xs" color="gray.textLow">
-              {item.description}
-            </Text>
-          ) : null}
-        </View>
-
-        {item.hideSelected ? null : typeof selected === 'string' ? (
-          <Text color="gray" weight="bold">
-            {selected}
+        {item.description ? (
+          <Text type="xs" color="gray.textLow">
+            {item.description}
           </Text>
-        ) : (
-          selected
-        )}
-
-        {item.type === 'switch' ? (
-          <Switch
-            onValueChange={value => {
-              item.onSelect(value);
-            }}
-            value={item.value}
-          />
         ) : null}
+      </View>
 
-        {item.arrow ? <Icon color="gray" icon="arrow-right" /> : null}
-      </Component>
+      {item.hideSelected ? null : typeof selected === 'string' ? (
+        <Text color="gray" weight="bold">
+          {selected}
+        </Text>
+      ) : (
+        selected
+      )}
+
+      {item.type === 'switch' ? (
+        <Switch
+          onValueChange={value => {
+            item.onSelect(value);
+          }}
+          value={item.value}
+        />
+      ) : null}
+
+      {item.arrow ? <Icon color="gray" icon="arrow-right" /> : null}
+    </View>
+  );
+
+  return (
+    <View style={[styles.container, style]}>
+      {item.type === 'switch' || item.type === 'options' ? (
+        content
+      ) : (
+        <Pressable
+          onPress={() => {
+            if (typeof item.onPress === 'function') {
+              void item.onPress();
+            }
+          }}
+        >
+          {content}
+        </Pressable>
+      )}
 
       {item.type === 'options' ? (
-        <SheetModal
-          container={item.options.length > 6 ? 'scroll' : 'view'}
-          visible={sheetVisible}
-          onClose={() => setSheetVisible(false)}
-          title={item.title ?? item.label}
-        >
-          {item.options.map((option, index) => {
-            if (option === null) {
-              return (
-                <View
-                  style={styles.separator}
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={`separator-${index}`}
-                />
-              );
-            }
-
-            if (typeof option === 'string') {
-              return (
-                <Text
-                  highContrast={false}
-                  key={option}
-                  mb="sm"
-                  mt="sm"
-                  mx="sm"
-                  type="md"
-                  weight="semibold"
-                >
-                  {option}
-                </Text>
-              );
-            }
-            return (
-              <SheetItem
-                icon={'icon' in option ? option.icon : undefined}
+        <View style={[styles.section, styles.pickerSection]}>
+          <Picker
+            dropdownIconColor={theme.colors.gray.text}
+            itemStyle={styles.pickerItem}
+            selectedValue={item.value}
+            style={styles.picker}
+            testID="menu-item-picker"
+            onValueChange={value => {
+              item.onSelect(String(value));
+            }}
+          >
+            {item.options.filter(isMenuItemOption).map(option => (
+              <Picker.Item
                 key={option.value}
-                label={option.label ?? ''}
-                labelStyle={option.labelStyle}
-                left={option.left}
-                onPress={() => {
-                  item.onSelect(option.value);
-                  setSheetVisible(false);
-                }}
-                right={!option.hideRight ? option.right : null}
-                selected={option.value === item.value}
-                style={option.style}
+                label={option.label ?? option.value}
+                value={option.value}
               />
-            );
-          })}
-        </SheetModal>
+            ))}
+          </Picker>
+        </View>
       ) : null}
-    </>
+
+      {item.preview ? <View style={styles.section}>{item.preview}</View> : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   component: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
     flexDirection: 'row',
     gap: theme.spacing.lg,
-    marginBottom: theme.spacing.xs,
-    marginHorizontal: theme.spacing.md,
     minHeight: theme.spacing['6xl'],
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
+  },
+  container: {
+    backgroundColor: theme.colors.gray.uiAlpha,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.md,
+    marginBottom: theme.spacing.xs,
+    marginHorizontal: theme.spacing.md,
+    overflow: 'hidden',
   },
   contentContainer: {
     flex: 1,
@@ -184,7 +169,20 @@ const styles = StyleSheet.create({
     height: 20,
     width: 20,
   },
-  separator: {
-    marginVertical: theme.spacing.xs,
+  picker: {
+    color: theme.colors.gray.text,
+    marginHorizontal: -theme.spacing.md,
+  },
+  pickerItem: {
+    color: theme.colors.gray.text,
+  },
+  pickerSection: {
+    paddingTop: theme.spacing.xs,
+  },
+  section: {
+    borderTopColor: theme.colors.gray.borderAlpha,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
   },
 });

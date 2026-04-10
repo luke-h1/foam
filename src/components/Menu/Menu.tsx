@@ -55,6 +55,7 @@ export type MenuItem = {
   key?: string;
   labelStyle?: StyleProp<TextStyle>;
   onPress?: () => void | Promise<void>;
+  preview?: ReactElement;
   style?: StyleProp<ViewStyle>;
 } & (
   | {
