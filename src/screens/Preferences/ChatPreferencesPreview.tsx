@@ -3,12 +3,21 @@ import { Icon } from '@app/components/Icon/Icon';
 import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
-import { type ChatMessageType } from '@app/store/chatStore/constants';
+import {
+  type ChannelCacheType,
+  type ChatMessageType,
+} from '@app/store/chatStore/constants';
+import { chatStore$ } from '@app/store/chatStore/state';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
-import { type ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { type ReactNode } from 'react';
+import {
+  replaceTextWithEmotes,
+  type ParsedPart,
+} from '@app/utils/chat/replaceTextWithEmotes';
+import { useSelector } from '@legendapp/state/react';
+import { type ReactNode, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 
 const PREVIEW_CHANNEL = 'preview';
 const PREVIEW_VIEWER_LOGIN = 'foamviewer';
@@ -24,20 +33,9 @@ type PreviewState = {
   showUnreadJumpPill: boolean;
 };
 
-type PreviewEmoteSample = Pick<
-  SanitisedEmote,
-  'creator' | 'emote_link' | 'id' | 'name' | 'original_name' | 'site' | 'url'
-> &
-  Partial<
-    Pick<
-      SanitisedEmote,
-      'aspect_ratio' | 'height' | 'width' | 'zero_width'
-    >
-  >;
-
 type ProviderPreviewSample = {
   badges: SanitisedBadgeSet[];
-  emotes: PreviewEmoteSample[];
+  emotes: SanitisedEmote[];
 };
 
 export type ChatPreferencePreviewProps =
@@ -62,160 +60,6 @@ const PREVIEW_DEFAULTS: PreviewState = {
   showInlineReplyContext: true,
   showUnreadJumpPill: false,
 };
-
-const providerPreviewSamples = {
-  '7tv': {
-    badges: [
-      {
-        id: 'preview-7tv-badge',
-        provider: '7tv',
-        set: 'preview-7tv',
-        title: '7TV Supporter',
-        type: '7TV Badge',
-        url: 'https://cdn.7tv.app/emote/01F5PA9D3000034VRANA2SYVDP/4x.avif',
-      },
-    ],
-    emotes: [
-      {
-        name: 'yePls',
-        id: '01F5PA9D3000034VRANA2SYVDP',
-        url: 'https://cdn.7tv.app/emote/01F5PA9D3000034VRANA2SYVDP/4x.avif',
-        original_name: 'yePls',
-        creator: null,
-        emote_link: 'https://7tv.app/emotes/01F5PA9D3000034VRANA2SYVDP',
-        site: '7TV Channel',
-        width: 32,
-        height: 32,
-        aspect_ratio: 1,
-        zero_width: false,
-      },
-      {
-        name: 'FeelsStrongMan',
-        id: '01GB8D6Y00000BFSD141G0MBFP',
-        url: 'https://cdn.7tv.app/emote/01GB8D6Y00000BFSD141G0MBFP/4x.avif',
-        original_name: 'FeelsStrongMan',
-        creator: 'Laden',
-        emote_link: 'https://7tv.app/emotes/01GB8D6Y00000BFSD141G0MBFP',
-        site: '7TV Global',
-        width: 128,
-        height: 128,
-        aspect_ratio: 1,
-        zero_width: false,
-      },
-    ],
-  },
-  bttv: {
-    badges: [
-      {
-        id: 'preview-bttv-badge',
-        provider: 'bttv',
-        set: 'preview-bttv',
-        title: 'BTTV Supporter',
-        type: 'BTTV Badge',
-        url: 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
-      },
-    ],
-    emotes: [
-      {
-        name: 'catJAM',
-        id: '5f1c24b91ab9be446c4d78dc',
-        url: 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
-        original_name: 'UNKNOWN',
-        creator: null,
-        emote_link: 'https://betterttv.com/emotes/5f1c24b91ab9be446c4d78dc',
-        site: 'BTTV',
-      },
-      {
-        name: 'AYAYA',
-        id: '5ee22dfb924aa35e32a7a112',
-        url: 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
-        original_name: 'UNKNOWN',
-        creator: null,
-        emote_link: 'https://betterttv.com/emotes/5ee22dfb924aa35e32a7a112',
-        site: 'BTTV',
-      },
-    ],
-  },
-  ffz: {
-    badges: [
-      {
-        id: 'vip_badge',
-        url: 'https://cdn.frankerfacez.com/room-badge/vip/id/12943173/v/384f5396/4',
-        title: 'VIP',
-        color: '#ff0000',
-        owner_username: '12943173',
-        set: 'vip',
-        type: 'FFZ channel badge',
-      },
-    ],
-    emotes: [
-      {
-        name: 'OMEGALUL',
-        id: '128054',
-        url: 'https://cdn.frankerfacez.com/emote/128054/4',
-        original_name: 'UNKNOWN',
-        creator: 'dourgent',
-        emote_link: 'https://www.frankerfacez.com/emoticon/128054',
-        site: 'FFZ',
-        width: 28,
-        height: 28,
-        aspect_ratio: 1,
-      },
-      {
-        name: 'YooHoo',
-        id: '6',
-        url: 'https://cdn.frankerfacez.com/emote/6/4',
-        original_name: 'UNKNOWN',
-        creator: 'UNKNOWN',
-        emote_link: 'https://www.frankerfacez.com/emoticon/6',
-        site: 'Global FFZ',
-        width: 28,
-        height: 28,
-        aspect_ratio: 1,
-      },
-    ],
-  },
-  twitch: {
-    badges: [
-      {
-        id: 'subscriber_0',
-        url: 'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/3',
-        title: 'Subscriber',
-        type: 'Twitch Global Badge',
-        set: 'subscriber',
-      },
-      {
-        id: 'premium_1',
-        url: 'https://static-cdn.jtvnw.net/badges/v1/bbbe0db0-a598-423e-86d0-f9fb98ca1933/3',
-        title: 'Prime Gaming',
-        type: 'Twitch Global Badge',
-        set: 'premium',
-      },
-    ],
-    emotes: [
-      {
-        name: 'Kappa',
-        id: '25',
-        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
-        original_name: 'Kappa',
-        creator: null,
-        emote_link:
-          'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
-        site: 'Twitch Global',
-      },
-      {
-        name: 'PogChamp',
-        id: '305954156',
-        url: 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/3.0',
-        original_name: 'PogChamp',
-        creator: null,
-        emote_link:
-          'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/3.0',
-        site: 'Twitch Global',
-      },
-    ],
-  },
-} satisfies Record<PreviewProvider, ProviderPreviewSample>;
 
 const previewMessages = {
   plain: createPreviewMessage({
@@ -415,28 +259,36 @@ function ProviderAssetPreview({
   testID: string;
   variant: 'badges' | 'emotes';
 }) {
-  const sample = providerPreviewSamples[provider];
-  const message =
-    variant === 'emotes'
-      ? createPreviewMessage({
-          color: getProviderPreviewColor(provider),
-          displayName: 'username',
-          id: `preview-${provider}-emotes-${enabled ? 'on' : 'off'}`,
-          login: `${provider}-preview`,
-          message: enabled
-            ? buildProviderEmoteParts(sample.emotes)
-            : [textPart(buildProviderEmoteFallbackText(sample.emotes))],
-          userId: `preview-${provider}-emotes`,
-        })
-      : createPreviewMessage({
-          badges: enabled ? sample.badges : [],
-          color: getProviderPreviewColor(provider),
-          displayName: 'username',
-          id: `preview-${provider}-badges-${enabled ? 'on' : 'off'}`,
-          login: `${provider}-preview`,
-          text: ' hello world',
-          userId: `preview-${provider}-badges`,
-        });
+  const channelCaches = useSelector(chatStore$.persisted.channelCaches);
+  const cachedBadges = useSelector(chatStore$.badges);
+  const sample = useMemo(
+    () => getProviderPreviewSample(provider, channelCaches, cachedBadges),
+    [provider, channelCaches, cachedBadges],
+  );
+  const message = useMemo(
+    () =>
+      variant === 'emotes'
+        ? createPreviewMessage({
+            color: getProviderPreviewColor(provider),
+            displayName: 'username',
+            id: `preview-${provider}-emotes-${enabled ? 'on' : 'off'}`,
+            login: `${provider}-preview`,
+            message: enabled
+              ? buildProviderEmoteParts(provider, sample.emotes)
+              : [textPart(buildProviderEmoteFallbackText(sample.emotes))],
+            userId: `preview-${provider}-emotes`,
+          })
+        : createPreviewMessage({
+            badges: enabled ? sample.badges : [],
+            color: getProviderPreviewColor(provider),
+            displayName: 'username',
+            id: `preview-${provider}-badges-${enabled ? 'on' : 'off'}`,
+            login: `${provider}-preview`,
+            text: ' hello world',
+            userId: `preview-${provider}-badges`,
+          }),
+    [enabled, provider, sample.badges, sample.emotes, variant],
+  );
 
   return (
     <PreviewCard testID={testID}>
@@ -545,46 +397,177 @@ function mentionPart(content: string): ParsedPart<'mention'> {
   };
 }
 
-function emotePart(emote: PreviewEmoteSample): ParsedPart<'emote'> {
+function getProviderPreviewSample(
+  provider: PreviewProvider,
+  channelCaches: Record<string, ChannelCacheType>,
+  cachedBadges: Record<string, SanitisedBadgeSet>,
+): ProviderPreviewSample {
+  const fallback = chatPreferencePreviewFixtures[provider];
+
   return {
-    type: 'emote',
-    content: emote.name,
-    id: emote.id,
-    name: emote.name,
-    url: emote.url,
-    original_name: emote.original_name,
-    creator: emote.creator,
-    emote_link: emote.emote_link,
-    site: emote.site,
-    width: emote.width,
-    height: emote.height,
-    aspect_ratio: emote.aspect_ratio,
-    zero_width: emote.zero_width,
+    emotes: fillPreviewItems(
+      getLiveProviderEmotes(provider, channelCaches),
+      fallback.emotes,
+      2,
+      item => item.id,
+    ),
+    badges: fillPreviewItems(
+      getLiveProviderBadges(provider, channelCaches, cachedBadges),
+      fallback.badges,
+      provider === 'twitch' ? 2 : 1,
+      badge => `${badge.set}:${badge.id}`,
+    ),
   };
 }
 
-function buildProviderEmoteFallbackText(emotes: PreviewEmoteSample[]) {
+function fillPreviewItems<T>(
+  liveItems: T[],
+  fallbackItems: T[],
+  count: number,
+  getKey: (item: T) => string,
+): T[] {
+  const result: T[] = [];
+  const seen = new Set<string>();
+
+  [liveItems, fallbackItems].forEach(items => {
+    items.forEach(item => {
+      const key = getKey(item);
+      if (seen.has(key) || result.length >= count) {
+        return;
+      }
+      seen.add(key);
+      result.push(item);
+    });
+  });
+
+  return result;
+}
+
+function sortCachesByFreshness(channelCaches: Record<string, ChannelCacheType>) {
+  return Object.values(channelCaches).sort(
+    (left, right) => (right.lastUpdated || 0) - (left.lastUpdated || 0),
+  );
+}
+
+function getLiveProviderEmotes(
+  provider: PreviewProvider,
+  channelCaches: Record<string, ChannelCacheType>,
+): SanitisedEmote[] {
+  const caches = sortCachesByFreshness(channelCaches);
+  const emotes: SanitisedEmote[] = [];
+
+  caches.forEach(cache => {
+    switch (provider) {
+      case '7tv':
+        emotes.push(...cache.sevenTvChannelEmotes, ...cache.sevenTvGlobalEmotes);
+        break;
+      case 'bttv':
+        emotes.push(...cache.bttvChannelEmotes, ...cache.bttvGlobalEmotes);
+        break;
+      case 'ffz':
+        emotes.push(...cache.ffzChannelEmotes, ...cache.ffzGlobalEmotes);
+        break;
+      case 'twitch':
+        emotes.push(...cache.twitchChannelEmotes, ...cache.twitchGlobalEmotes);
+        break;
+      default: {
+        const unreachable: never = provider;
+        return unreachable;
+      }
+    }
+  });
+
+  return emotes;
+}
+
+function getLiveProviderBadges(
+  provider: PreviewProvider,
+  channelCaches: Record<string, ChannelCacheType>,
+  cachedBadges: Record<string, SanitisedBadgeSet>,
+): SanitisedBadgeSet[] {
+  if (provider === '7tv') {
+    return Object.values(cachedBadges).filter(
+      badge => badge.provider === '7tv' || badge.type === '7TV Badge',
+    );
+  }
+
+  if (provider === 'bttv') {
+    return Object.values(cachedBadges).filter(
+      badge => badge.provider === 'bttv' || badge.type === 'BTTV Badge',
+    );
+  }
+
+  const caches = sortCachesByFreshness(channelCaches);
+  const badges: SanitisedBadgeSet[] = [];
+
+  caches.forEach(cache => {
+    switch (provider) {
+      case 'ffz':
+        badges.push(...cache.ffzChannelBadges, ...cache.ffzGlobalBadges);
+        break;
+      case 'twitch':
+        badges.push(...cache.twitchChannelBadges, ...cache.twitchGlobalBadges);
+        break;
+      default:
+        break;
+    }
+  });
+
+  return badges;
+}
+
+function buildProviderEmoteFallbackText(emotes: SanitisedEmote[]) {
   return ` hello ${emotes.map(emote => emote.name).join(' ')} world`;
 }
 
-function buildProviderEmoteParts(emotes: PreviewEmoteSample[]): ParsedPart[] {
+function buildProviderEmoteParts(
+  provider: PreviewProvider,
+  emotes: SanitisedEmote[],
+): ParsedPart[] {
   if (emotes.length === 0) {
     return [textPart(' hello world')];
   }
 
-  const parts: ParsedPart[] = [textPart(' hello ')];
-
-  emotes.forEach((emote, index) => {
-    parts.push(emotePart(emote));
-
-    if (index < emotes.length - 1) {
-      parts.push(textPart(' '));
-    }
+  return replaceTextWithEmotes({
+    inputString: buildProviderEmoteFallbackText(emotes),
+    userstate: null,
+    sevenTvChannelEmotes:
+      provider === '7tv'
+        ? emotes.filter(emote => emote.site === '7TV Channel')
+        : [],
+    sevenTvGlobalEmotes:
+      provider === '7tv'
+        ? emotes.filter(emote => emote.site === '7TV Global')
+        : [],
+    sevenTvPersonalEmotes:
+      provider === '7tv'
+        ? emotes.filter(emote => emote.site === '7TV Personal')
+        : [],
+    twitchChannelEmotes:
+      provider === 'twitch'
+        ? emotes.filter(emote => emote.site === 'Twitch Channel')
+        : [],
+    twitchGlobalEmotes:
+      provider === 'twitch'
+        ? emotes.filter(emote => emote.site === 'Twitch Global')
+        : [],
+    ffzChannelEmotes:
+      provider === 'ffz'
+        ? emotes.filter(emote => emote.site === 'FFZ')
+        : [],
+    ffzGlobalEmotes:
+      provider === 'ffz'
+        ? emotes.filter(emote => emote.site === 'Global FFZ')
+        : [],
+    bttvChannelEmotes:
+      provider === 'bttv'
+        ? emotes.filter(emote => emote.site === 'BTTV')
+        : [],
+    bttvGlobalEmotes:
+      provider === 'bttv'
+        ? emotes.filter(emote => emote.site === 'Global BTTV')
+        : [],
   });
-
-  parts.push(textPart(' world'));
-
-  return parts;
 }
 
 function getProviderPreviewColor(provider: PreviewProvider) {
