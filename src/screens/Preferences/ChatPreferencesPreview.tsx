@@ -1,10 +1,11 @@
-import { BrandIcon, type BrandIconName } from '@app/components/BrandIcon/BrandIcon';
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { Icon } from '@app/components/Icon/Icon';
+import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
 import { type ChatMessageType } from '@app/store/chatStore/constants';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { type SanitisedEmote } from '@app/types/emote';
 import { type ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -23,16 +24,20 @@ type PreviewState = {
   showUnreadJumpPill: boolean;
 };
 
-type PreviewBadgeSample = {
-  accentColor: string;
-  iconName?: BrandIconName;
-  label: string;
-};
+type PreviewEmoteSample = Pick<
+  SanitisedEmote,
+  'creator' | 'emote_link' | 'id' | 'name' | 'original_name' | 'site' | 'url'
+> &
+  Partial<
+    Pick<
+      SanitisedEmote,
+      'aspect_ratio' | 'height' | 'width' | 'zero_width'
+    >
+  >;
 
 type ProviderPreviewSample = {
-  accentColor: string;
-  badgeSamples: PreviewBadgeSample[];
-  emoteSamples: string[];
+  badges: SanitisedBadgeSet[];
+  emotes: PreviewEmoteSample[];
 };
 
 export type ChatPreferencePreviewProps =
@@ -60,50 +65,155 @@ const PREVIEW_DEFAULTS: PreviewState = {
 
 const providerPreviewSamples = {
   '7tv': {
-    accentColor: theme.colors.plum.accent,
-    badgeSamples: [
+    badges: [
       {
-        accentColor: theme.colors.plum.accent,
-        iconName: 'stv',
-        label: '7TV',
+        id: 'preview-7tv-badge',
+        provider: '7tv',
+        set: 'preview-7tv',
+        title: '7TV Supporter',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/emote/01F5PA9D3000034VRANA2SYVDP/4x.avif',
       },
     ],
-    emoteSamples: ['yePls', 'monkaW'],
+    emotes: [
+      {
+        name: 'yePls',
+        id: '01F5PA9D3000034VRANA2SYVDP',
+        url: 'https://cdn.7tv.app/emote/01F5PA9D3000034VRANA2SYVDP/4x.avif',
+        original_name: 'yePls',
+        creator: null,
+        emote_link: 'https://7tv.app/emotes/01F5PA9D3000034VRANA2SYVDP',
+        site: '7TV Channel',
+        width: 32,
+        height: 32,
+        aspect_ratio: 1,
+        zero_width: false,
+      },
+      {
+        name: 'FeelsStrongMan',
+        id: '01GB8D6Y00000BFSD141G0MBFP',
+        url: 'https://cdn.7tv.app/emote/01GB8D6Y00000BFSD141G0MBFP/4x.avif',
+        original_name: 'FeelsStrongMan',
+        creator: 'Laden',
+        emote_link: 'https://7tv.app/emotes/01GB8D6Y00000BFSD141G0MBFP',
+        site: '7TV Global',
+        width: 128,
+        height: 128,
+        aspect_ratio: 1,
+        zero_width: false,
+      },
+    ],
   },
   bttv: {
-    accentColor: theme.colors.orange.accent,
-    badgeSamples: [
+    badges: [
       {
-        accentColor: theme.colors.orange.accent,
-        iconName: 'bttv',
-        label: 'BTTV',
+        id: 'preview-bttv-badge',
+        provider: 'bttv',
+        set: 'preview-bttv',
+        title: 'BTTV Supporter',
+        type: 'BTTV Badge',
+        url: 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
       },
     ],
-    emoteSamples: ['FeelsStrongMan', 'PepeHands'],
+    emotes: [
+      {
+        name: 'catJAM',
+        id: '5f1c24b91ab9be446c4d78dc',
+        url: 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
+        original_name: 'UNKNOWN',
+        creator: null,
+        emote_link: 'https://betterttv.com/emotes/5f1c24b91ab9be446c4d78dc',
+        site: 'BTTV',
+      },
+      {
+        name: 'AYAYA',
+        id: '5ee22dfb924aa35e32a7a112',
+        url: 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
+        original_name: 'UNKNOWN',
+        creator: null,
+        emote_link: 'https://betterttv.com/emotes/5ee22dfb924aa35e32a7a112',
+        site: 'BTTV',
+      },
+    ],
   },
   ffz: {
-    accentColor: theme.colors.blue.accent,
-    badgeSamples: [
+    badges: [
       {
-        accentColor: theme.colors.blue.accent,
-        label: 'FFZ',
+        id: 'vip_badge',
+        url: 'https://cdn.frankerfacez.com/room-badge/vip/id/12943173/v/384f5396/4',
+        title: 'VIP',
+        color: '#ff0000',
+        owner_username: '12943173',
+        set: 'vip',
+        type: 'FFZ channel badge',
       },
     ],
-    emoteSamples: ['PepoG', 'catJAM'],
+    emotes: [
+      {
+        name: 'OMEGALUL',
+        id: '128054',
+        url: 'https://cdn.frankerfacez.com/emote/128054/4',
+        original_name: 'UNKNOWN',
+        creator: 'dourgent',
+        emote_link: 'https://www.frankerfacez.com/emoticon/128054',
+        site: 'FFZ',
+        width: 28,
+        height: 28,
+        aspect_ratio: 1,
+      },
+      {
+        name: 'YooHoo',
+        id: '6',
+        url: 'https://cdn.frankerfacez.com/emote/6/4',
+        original_name: 'UNKNOWN',
+        creator: 'UNKNOWN',
+        emote_link: 'https://www.frankerfacez.com/emoticon/6',
+        site: 'Global FFZ',
+        width: 28,
+        height: 28,
+        aspect_ratio: 1,
+      },
+    ],
   },
   twitch: {
-    accentColor: theme.colors.violet.accent,
-    badgeSamples: [
+    badges: [
       {
-        accentColor: theme.colors.violet.accent,
-        label: 'SUB',
+        id: 'subscriber_0',
+        url: 'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/3',
+        title: 'Subscriber',
+        type: 'Twitch Global Badge',
+        set: 'subscriber',
       },
       {
-        accentColor: theme.colors.amber.accent,
-        label: 'VIP',
+        id: 'premium_1',
+        url: 'https://static-cdn.jtvnw.net/badges/v1/bbbe0db0-a598-423e-86d0-f9fb98ca1933/3',
+        title: 'Prime Gaming',
+        type: 'Twitch Global Badge',
+        set: 'premium',
       },
     ],
-    emoteSamples: ['Kappa', 'PogChamp'],
+    emotes: [
+      {
+        name: 'Kappa',
+        id: '25',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
+        original_name: 'Kappa',
+        creator: null,
+        emote_link:
+          'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
+        site: 'Twitch Global',
+      },
+      {
+        name: 'PogChamp',
+        id: '305954156',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/3.0',
+        original_name: 'PogChamp',
+        creator: null,
+        emote_link:
+          'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/3.0',
+        site: 'Twitch Global',
+      },
+    ],
   },
 } satisfies Record<PreviewProvider, ProviderPreviewSample>;
 
@@ -306,87 +416,42 @@ function ProviderAssetPreview({
   variant: 'badges' | 'emotes';
 }) {
   const sample = providerPreviewSamples[provider];
+  const message =
+    variant === 'emotes'
+      ? createPreviewMessage({
+          color: getProviderPreviewColor(provider),
+          displayName: 'username',
+          id: `preview-${provider}-emotes-${enabled ? 'on' : 'off'}`,
+          login: `${provider}-preview`,
+          message: enabled
+            ? buildProviderEmoteParts(sample.emotes)
+            : [textPart(buildProviderEmoteFallbackText(sample.emotes))],
+          userId: `preview-${provider}-emotes`,
+        })
+      : createPreviewMessage({
+          badges: enabled ? sample.badges : [],
+          color: getProviderPreviewColor(provider),
+          displayName: 'username',
+          id: `preview-${provider}-badges-${enabled ? 'on' : 'off'}`,
+          login: `${provider}-preview`,
+          text: ' hello world',
+          userId: `preview-${provider}-badges`,
+        });
 
   return (
     <PreviewCard testID={testID}>
-      <View style={styles.providerPreviewRow}>
-        {variant === 'badges' && enabled ? (
-          <View style={styles.assetStrip}>
-            {sample.badgeSamples.map(badge => (
-              <PreviewChip
-                key={`${provider}-${badge.label}`}
-                accentColor={badge.accentColor}
-                iconName={badge.iconName}
-                kind="badge"
-                label={badge.label}
-              />
-            ))}
-          </View>
-        ) : null}
-
-        <Text style={styles.providerUsername} weight="semibold">
-          username:
-        </Text>
-
-        {variant === 'emotes' ? (
-          enabled ? (
-            <>
-              <Text color="gray.textLow" style={styles.providerMessageText}>
-                hello
-              </Text>
-              <View style={styles.assetStrip}>
-                {sample.emoteSamples.map(emote => (
-                  <PreviewChip
-                    key={`${provider}-${emote}`}
-                    accentColor={sample.accentColor}
-                    kind="emote"
-                    label={emote}
-                  />
-                ))}
-              </View>
-              <Text color="gray.textLow" style={styles.providerMessageText}>
-                world
-              </Text>
-            </>
-          ) : (
-            <Text color="gray.textLow" style={styles.providerMessageText}>
-              {sample.emoteSamples.join(' ')} hello world
-            </Text>
-          )
-        ) : (
-          <Text color="gray.textLow" style={styles.providerMessageText}>
-            hello world
-          </Text>
-        )}
+      <View style={styles.providerPreviewSurface} pointerEvents="none">
+        <RichChatMessage
+          {...message}
+          density="comfortable"
+          getMentionColor={getMentionColor}
+          parseTextForEmotes={parseTextForEmotes}
+          showInlineReplyContext={false}
+          showTimestamp={false}
+          style={styles.messageRow}
+        />
       </View>
     </PreviewCard>
-  );
-}
-
-function PreviewChip({
-  accentColor,
-  iconName,
-  kind,
-  label,
-}: {
-  accentColor: string;
-  iconName?: BrandIconName;
-  kind: 'badge' | 'emote';
-  label: string;
-}) {
-  return (
-    <View
-      style={[
-        styles.previewChip,
-        kind === 'badge' ? styles.badgeChip : styles.emoteChip,
-        { borderColor: accentColor },
-      ]}
-    >
-      {iconName ? <BrandIcon color={accentColor} name={iconName} size="xs" /> : null}
-      <Text style={[styles.previewChipText, { color: accentColor }]} weight="semibold">
-        {label}
-      </Text>
-    </View>
   );
 }
 
@@ -405,6 +470,7 @@ function PreviewCard({
 }
 
 function createPreviewMessage({
+  badges = [],
   color,
   displayName,
   id,
@@ -416,6 +482,7 @@ function createPreviewMessage({
   text,
   userId,
 }: {
+  badges?: SanitisedBadgeSet[];
   color: string;
   displayName: string;
   id: string;
@@ -452,7 +519,7 @@ function createPreviewMessage({
     id,
     userstate,
     message: message ?? [textPart(text ?? '')],
-    badges: [],
+    badges,
     channel: PREVIEW_CHANNEL,
     message_id: id,
     message_nonce: `${id}-nonce`,
@@ -478,17 +545,66 @@ function mentionPart(content: string): ParsedPart<'mention'> {
   };
 }
 
+function emotePart(emote: PreviewEmoteSample): ParsedPart<'emote'> {
+  return {
+    type: 'emote',
+    content: emote.name,
+    id: emote.id,
+    name: emote.name,
+    url: emote.url,
+    original_name: emote.original_name,
+    creator: emote.creator,
+    emote_link: emote.emote_link,
+    site: emote.site,
+    width: emote.width,
+    height: emote.height,
+    aspect_ratio: emote.aspect_ratio,
+    zero_width: emote.zero_width,
+  };
+}
+
+function buildProviderEmoteFallbackText(emotes: PreviewEmoteSample[]) {
+  return ` hello ${emotes.map(emote => emote.name).join(' ')} world`;
+}
+
+function buildProviderEmoteParts(emotes: PreviewEmoteSample[]): ParsedPart[] {
+  if (emotes.length === 0) {
+    return [textPart(' hello world')];
+  }
+
+  const parts: ParsedPart[] = [textPart(' hello ')];
+
+  emotes.forEach((emote, index) => {
+    parts.push(emotePart(emote));
+
+    if (index < emotes.length - 1) {
+      parts.push(textPart(' '));
+    }
+  });
+
+  parts.push(textPart(' world'));
+
+  return parts;
+}
+
+function getProviderPreviewColor(provider: PreviewProvider) {
+  switch (provider) {
+    case '7tv':
+      return theme.colors.plum.accent;
+    case 'bttv':
+      return theme.colors.orange.accent;
+    case 'ffz':
+      return theme.colors.blue.accent;
+    case 'twitch':
+      return theme.colors.violet.accent;
+    default: {
+      const unreachable: never = provider;
+      return unreachable;
+    }
+  }
+}
+
 const styles = StyleSheet.create({
-  assetStrip: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.xs,
-  },
-  badgeChip: {
-    minHeight: 20,
-    paddingHorizontal: theme.spacing.xs,
-  },
   chatSurface: {
     backgroundColor: theme.colors.gray.bg,
     borderColor: theme.colors.gray.borderAlpha,
@@ -501,10 +617,6 @@ const styles = StyleSheet.create({
   },
   chatSurfaceWithJumpPill: {
     paddingBottom: 52,
-  },
-  emoteChip: {
-    minHeight: 24,
-    paddingHorizontal: theme.spacing.sm,
   },
   jumpPill: {
     alignItems: 'center',
@@ -544,38 +656,14 @@ const styles = StyleSheet.create({
   previewCard: {
     paddingTop: theme.spacing.xs,
   },
-  previewChip: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: theme.spacing.xs,
-    justifyContent: 'center',
-    paddingVertical: 2,
-  },
-  previewChipText: {
-    fontSize: theme.font.fontSize.xxs,
-  },
-  providerMessageText: {
-    fontSize: theme.font.fontSize.xs,
-  },
-  providerPreviewRow: {
-    alignItems: 'center',
+  providerPreviewSurface: {
     backgroundColor: theme.colors.gray.bg,
     borderColor: theme.colors.gray.borderAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.radii.md,
     borderWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
     minHeight: 44,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-  },
-  providerUsername: {
-    color: theme.colors.gray.text,
+    overflow: 'hidden',
+    paddingVertical: theme.spacing.xs,
   },
 });
