@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
-import { Picker } from '@react-native-picker/picker';
 import { theme } from '@app/styles/themes';
+import { Picker } from '@react-native-picker/picker';
 import { SymbolView } from 'expo-symbols';
 import { useMemo } from 'react';
 import { View, type StyleProp, type ViewStyle, StyleSheet } from 'react-native';

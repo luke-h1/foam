@@ -3,7 +3,7 @@ import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { ChatPreferencePreview } from '@app/screens/Preferences/ChatPreferencesPreview';
 import { Preferences, usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { useMemo } from 'react';
+import { type ReactElement, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 export function ChatPreferenceScreen() {
@@ -52,7 +52,7 @@ export function ChatPreferenceScreen() {
       icon?: MenuItem['icon'];
       key: K;
       label: string;
-      preview: React.JSX.Element;
+      preview: ReactElement;
     }) {
       return {
         description,

@@ -1,9 +1,9 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
+import { createBaseMessage } from '@app/components/Chat/util/messageHandlers';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
-import { createBaseMessage } from '@app/components/Chat/util/messageHandlers';
 import { ffzSanitiisedChannelBadges } from '@app/services/__fixtures__/badges/ffz/ffzSanitisedChannelBadges.fixture';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
 import { bttvSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/bttv/bttvSanitisedGlobalEmoteSet.fixture';
@@ -156,71 +156,94 @@ const parseTextForEmotes = (text: string) => [
 const getMentionColor = () => '#9147FF';
 
 export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
-  switch (props.variant) {
-    case 'density':
+  const { variant } = props;
+
+  switch (variant) {
+    case 'density': {
+      const { value } = props;
+
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.reply]}
-          settings={{ chatDensity: props.value }}
+          settings={{ chatDensity: value }}
           testID="chat-preference-preview-density"
         />
       );
+    }
 
-    case 'timestamps':
+    case 'timestamps': {
+      const { value } = props;
+
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain]}
-          settings={{ chatTimestamps: props.value }}
+          settings={{ chatTimestamps: value }}
           testID="chat-preference-preview-timestamps"
         />
       );
+    }
 
-    case 'mentions':
+    case 'mentions': {
+      const { value } = props;
+
       return (
         <ChatPreviewSurface
           messages={[previewMessages.mention]}
-          settings={{ highlightOwnMentions: props.value }}
+          settings={{ highlightOwnMentions: value }}
           testID="chat-preference-preview-mentions"
         />
       );
+    }
 
-    case 'inlineReply':
+    case 'inlineReply': {
+      const { value } = props;
+
       return (
         <ChatPreviewSurface
           messages={[previewMessages.reply]}
-          settings={{ showInlineReplyContext: props.value }}
+          settings={{ showInlineReplyContext: value }}
           testID="chat-preference-preview-inline-reply"
         />
       );
+    }
 
-    case 'jumpPill':
+    case 'jumpPill': {
+      const { value } = props;
+
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.mention]}
-          settings={{ showUnreadJumpPill: props.value }}
+          settings={{ showUnreadJumpPill: value }}
           testID="chat-preference-preview-jump-pill"
         />
       );
+    }
 
-    case 'providerEmotes':
+    case 'providerEmotes': {
+      const { provider, value } = props;
+
       return (
         <ProviderAssetPreview
-          enabled={props.value}
-          provider={props.provider}
-          testID={`chat-preference-preview-${props.provider}-emotes`}
+          enabled={value}
+          provider={provider}
+          testID={`chat-preference-preview-${provider}-emotes`}
           variant="emotes"
         />
       );
+    }
 
-    case 'providerBadges':
+    case 'providerBadges': {
+      const { provider, value } = props;
+
       return (
         <ProviderAssetPreview
-          enabled={props.value}
-          provider={props.provider}
-          testID={`chat-preference-preview-${props.provider}-badges`}
+          enabled={value}
+          provider={provider}
+          testID={`chat-preference-preview-${provider}-badges`}
           variant="badges"
         />
       );
+    }
 
     default: {
       const unreachable: never = props;
@@ -305,6 +328,34 @@ function ProviderAssetPreview({
   testID: string;
   variant: 'badges' | 'emotes';
 }) {
+  let previewContent: ReactNode;
+
+  if (variant === 'emotes') {
+    previewContent = enabled ? (
+      <View style={styles.assetStrip}>
+        {providerEmoteSamples[provider].map(sample => (
+          <Image
+            key={`${provider}-${sample.id}`}
+            source={{ uri: sample.url }}
+            style={styles.emoteSample}
+            transition={0}
+            useNitro
+          />
+        ))}
+      </View>
+    ) : (
+      <Text color="gray.textLow" style={styles.tokenText}>
+        {providerEmoteSamples[provider].map(sample => sample.name).join(' ')}
+      </Text>
+    );
+  } else {
+    previewContent = (
+      <Text color="gray.textLow" style={styles.tokenText}>
+        hello there
+      </Text>
+    );
+  }
+
   return (
     <PreviewCard testID={testID}>
       <View style={styles.providerPreviewRow}>
@@ -337,31 +388,7 @@ function ProviderAssetPreview({
         <Text style={styles.providerUsername} weight="semibold">
           username:
         </Text>
-        {variant === 'emotes' ? (
-          enabled ? (
-            <View style={styles.assetStrip}>
-              {providerEmoteSamples[provider].map(sample => (
-                <Image
-                  key={`${provider}-${sample.id}`}
-                  source={{ uri: sample.url }}
-                  style={styles.emoteSample}
-                  transition={0}
-                  useNitro
-                />
-              ))}
-            </View>
-          ) : (
-            <Text color="gray.textLow" style={styles.tokenText}>
-              {providerEmoteSamples[provider]
-                .map(sample => sample.name)
-                .join(' ')}
-            </Text>
-          )
-        ) : (
-          <Text color="gray.textLow" style={styles.tokenText}>
-            hello there
-          </Text>
-        )}
+        {previewContent}
       </View>
     </PreviewCard>
   );

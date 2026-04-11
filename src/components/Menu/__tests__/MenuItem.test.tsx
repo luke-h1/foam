@@ -1,33 +1,47 @@
+import { Text } from '@app/components/Text/Text';
 import render from '@app/test/render';
-import { Text } from 'react-native';
+import { type ReactNode } from 'react';
 import { MenuItem as MenuItemType } from '../Menu';
 import { MenuItem } from '../MenuItem';
 
 jest.mock('@react-native-picker/picker', () => {
-  const { View, Text: NativeText } = require('react-native');
+  const { Text: NativeText, View } =
+    jest.requireActual<typeof import('react-native')>('react-native');
 
-  const Picker = ({
+  function MockPicker({
     children,
     selectedValue,
     testID,
   }: {
-    children?: unknown;
+    children?: ReactNode;
     selectedValue?: string;
     testID?: string;
-  }) => (
-    <View
-      accessibilityValue={{ text: selectedValue }}
-      testID={testID ?? 'native-picker'}
-    >
-      {children}
-    </View>
-  );
+  }) {
+    return (
+      <View
+        accessibilityValue={{ text: selectedValue }}
+        testID={testID ?? 'native-picker'}
+      >
+        {children}
+      </View>
+    );
+  }
 
-  Picker.Item = ({ label, value }: { label: string; value: string }) => (
-    <NativeText>{`${label}:${value}`}</NativeText>
-  );
+  function MockPickerItem({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string;
+  }) {
+    return (
+      <NativeText>{`${label}:${value}`}</NativeText>
+    );
+  }
 
-  return { Picker };
+  return {
+    Picker: Object.assign(MockPicker, { Item: MockPickerItem }),
+  };
 });
 
 describe('MenuItem', () => {
