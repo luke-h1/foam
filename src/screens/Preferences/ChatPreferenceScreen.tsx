@@ -1,9 +1,63 @@
-import { Menu, MenuItem } from '@app/components/Menu/Menu';
+import { Menu, type Icon, type Item } from '@app/components/Menu/Menu';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { usePreferences } from '@app/store/preferenceStore';
+import { ChatPreferencePreview } from '@app/screens/Preferences/ChatPreferencesPreview';
+import { ChatPreferenceMenuItem } from '@app/screens/Preferences/components/ChatPreferenceMenuItem';
+import { Preferences, usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { useMemo } from 'react';
+import { type ReactElement, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
+
+type PreviewSwitchKey = keyof Pick<
+  Preferences,
+  | 'chatTimestamps'
+  | 'highlightOwnMentions'
+  | 'showInlineReplyContext'
+  | 'showUnreadJumpPill'
+  | 'show7TvEmotes'
+  | 'show7tvBadges'
+  | 'showBttvEmotes'
+  | 'showBttvBadges'
+  | 'showFFzEmotes'
+  | 'showFFzBadges'
+  | 'showTwitchEmotes'
+  | 'showTwitchBadges'
+>;
+
+function buildChatPreferenceSwitchItem<K extends PreviewSwitchKey>({
+  description,
+  icon,
+  key,
+  label,
+  preview,
+  switchValues,
+  update,
+}: {
+  description: string;
+  icon?: Icon;
+  key: K;
+  label: string;
+  preview: ReactElement;
+  switchValues: Pick<Preferences, PreviewSwitchKey>;
+  update: (patch: Partial<Preferences>) => void;
+}): Item {
+  function SwitchPreferenceItem() {
+    return (
+      <ChatPreferenceMenuItem
+        description={description}
+        icon={icon}
+        label={label}
+        preview={preview}
+        type="switch"
+        value={Boolean(switchValues[key])}
+        onSelect={value => {
+          update({ [key]: value } as Pick<Preferences, K>);
+        }}
+      />
+    );
+  }
+
+  return SwitchPreferenceItem;
+}
 
 export function ChatPreferenceScreen() {
   const {
@@ -24,192 +78,266 @@ export function ChatPreferenceScreen() {
   } = usePreferences();
 
   const items = useMemo(() => {
+    const switchValues = {
+      chatTimestamps,
+      highlightOwnMentions,
+      showInlineReplyContext,
+      showUnreadJumpPill,
+      show7TvEmotes,
+      show7tvBadges,
+      showBttvEmotes,
+      showBttvBadges,
+      showFFzEmotes,
+      showFFzBadges,
+      showTwitchEmotes,
+      showTwitchBadges,
+    } satisfies Pick<Preferences, PreviewSwitchKey>;
+
     return [
-      {
-        icon: {
-          name: 'align-left',
-          type: 'icon',
-          color: theme.colors.gray.accent,
-        },
-        label: 'Chat Density',
-        description: 'Choose between comfortable and compact message rows',
-        onSelect: (value: string) => {
-          update({
-            chatDensity: value === 'compact' ? 'compact' : 'comfortable',
-          });
-        },
-        options: [
-          { label: 'Comfortable', value: 'comfortable' },
-          { label: 'Compact', value: 'compact' },
-        ],
-        type: 'options',
-        value: chatDensity,
-      },
-      {
+      'Layout',
+      () => (
+        <ChatPreferenceMenuItem
+          description="Choose between comfortable and compact message rows"
+          icon={{
+            name: 'align-left',
+            type: 'icon',
+            color: theme.colors.gray.accent,
+          }}
+          label="Chat Density"
+          options={[
+            { label: 'Comfortable', value: 'comfortable' },
+            { label: 'Compact', value: 'compact' },
+          ]}
+          preview={
+            <ChatPreferencePreview variant="density" value={chatDensity} />
+          }
+          title="Select density"
+          type="options"
+          value={chatDensity}
+          onSelect={value => {
+            update({
+              chatDensity: value === 'compact' ? 'compact' : 'comfortable',
+            });
+          }}
+        />
+      ),
+      buildChatPreferenceSwitchItem({
+        description: 'Display timestamps next to messages',
         icon: {
           name: 'clock',
           type: 'symbol',
           color: theme.colors.blue.accent,
         },
+        key: 'chatTimestamps',
         label: 'Show Timestamps',
-        description: 'Display timestamps next to messages',
-        onSelect: (value: boolean) => {
-          update({ chatTimestamps: value });
-        },
-        type: 'switch',
-        value: chatTimestamps,
-      },
-      {
+        preview: (
+          <ChatPreferencePreview variant="timestamps" value={chatTimestamps} />
+        ),
+        switchValues,
+        update,
+      }),
+      buildChatPreferenceSwitchItem({
+        description: 'Accent messages that mention your username',
         icon: {
           name: 'at-sign',
           type: 'icon',
           color: theme.colors.violet.accent,
         },
+        key: 'highlightOwnMentions',
         label: 'Highlight Own Mentions',
-        description: 'Accent messages that mention your username',
-        onSelect: (value: boolean) => {
-          update({ highlightOwnMentions: value });
-        },
-        type: 'switch',
-        value: highlightOwnMentions,
-      },
-      {
+        preview: (
+          <ChatPreferencePreview
+            variant="mentions"
+            value={highlightOwnMentions}
+          />
+        ),
+        switchValues,
+        update,
+      }),
+      buildChatPreferenceSwitchItem({
+        description: 'Show reply context above chat messages',
         icon: {
           name: 'corner-up-left',
           type: 'icon',
           color: theme.colors.violet.accent,
         },
+        key: 'showInlineReplyContext',
         label: 'Inline Reply Context',
-        description: 'Show reply context above chat messages',
-        onSelect: (value: boolean) => {
-          update({ showInlineReplyContext: value });
-        },
-        type: 'switch',
-        value: showInlineReplyContext,
-      },
-      {
+        preview: (
+          <ChatPreferencePreview
+            variant="inlineReply"
+            value={showInlineReplyContext}
+          />
+        ),
+        switchValues,
+        update,
+      }),
+      buildChatPreferenceSwitchItem({
+        description: 'Display the jump-to-latest unread indicator',
         icon: {
           name: 'arrow-down-circle',
           type: 'icon',
           color: theme.colors.amber.accent,
         },
+        key: 'showUnreadJumpPill',
         label: 'Show Jump Pill',
-        description: 'Display the jump-to-latest unread indicator',
-        onSelect: (value: boolean) => {
-          update({ showUnreadJumpPill: value });
-        },
-        type: 'switch',
-        value: showUnreadJumpPill,
-      },
+        preview: (
+          <ChatPreferencePreview
+            variant="jumpPill"
+            value={showUnreadJumpPill}
+          />
+        ),
+        switchValues,
+        update,
+      }),
       null,
       '7TV',
-      {
-        icon: {
-          type: 'brandIcon',
-          name: 'stv',
-          color: theme.colors.plum.accent,
-        },
-        label: 'Emotes',
+      buildChatPreferenceSwitchItem({
         description: 'Enable 7TV emotes in chat',
-        onSelect: (value: boolean) => {
-          update({ show7TvEmotes: value });
-        },
-        type: 'switch',
-        value: show7TvEmotes,
-      },
-      {
         icon: {
           type: 'brandIcon',
           name: 'stv',
           color: theme.colors.plum.accent,
         },
-        label: 'Badges',
+        key: 'show7TvEmotes',
+        label: 'Emotes',
+        preview: (
+          <ChatPreferencePreview
+            provider="7tv"
+            value={show7TvEmotes}
+            variant="providerEmotes"
+          />
+        ),
+        switchValues,
+        update,
+      }),
+      buildChatPreferenceSwitchItem({
         description: 'Enable 7TV badges in chat',
-        onSelect: (value: boolean) => {
-          update({ show7tvBadges: value });
+        icon: {
+          type: 'brandIcon',
+          name: 'stv',
+          color: theme.colors.plum.accent,
         },
-        type: 'switch',
-        value: show7tvBadges,
-      },
-
+        key: 'show7tvBadges',
+        label: 'Badges',
+        preview: (
+          <ChatPreferencePreview
+            provider="7tv"
+            value={show7tvBadges}
+            variant="providerBadges"
+          />
+        ),
+        switchValues,
+        update,
+      }),
       'BTTV',
-      {
-        icon: {
-          type: 'brandIcon',
-          name: 'bttv',
-          color: theme.colors.orange.accent,
-        },
-        label: 'Emotes',
+      buildChatPreferenceSwitchItem({
         description: 'Enable BTTV emotes in chat',
-        onSelect: (value: boolean) => {
-          update({ showBttvEmotes: value });
-        },
-        type: 'switch',
-        value: showBttvEmotes,
-      },
-      {
         icon: {
           type: 'brandIcon',
           name: 'bttv',
           color: theme.colors.orange.accent,
         },
-        label: 'Badges',
+        key: 'showBttvEmotes',
+        label: 'Emotes',
+        preview: (
+          <ChatPreferencePreview
+            provider="bttv"
+            value={showBttvEmotes}
+            variant="providerEmotes"
+          />
+        ),
+        switchValues,
+        update,
+      }),
+      buildChatPreferenceSwitchItem({
         description: 'Enable BTTV badges in chat',
-        onSelect: (value: boolean) => {
-          update({ showBttvBadges: value });
+        icon: {
+          type: 'brandIcon',
+          name: 'bttv',
+          color: theme.colors.orange.accent,
         },
-        type: 'switch',
-        value: showBttvBadges,
-      },
+        key: 'showBttvBadges',
+        label: 'Badges',
+        preview: (
+          <ChatPreferencePreview
+            provider="bttv"
+            value={showBttvBadges}
+            variant="providerBadges"
+          />
+        ),
+        switchValues,
+        update,
+      }),
       'FFZ',
-      {
-        label: 'Emotes',
+      buildChatPreferenceSwitchItem({
         description: 'Enable FFZ emotes in chat',
-        onSelect: (value: boolean) => {
-          update({ showFFzEmotes: value });
-        },
-        type: 'switch',
-        value: showFFzEmotes,
-      },
-      {
-        label: 'Badges',
-        description: 'Enable FFZ badges in chat',
-        onSelect: (value: boolean) => {
-          update({ showFFzBadges: value });
-        },
-        type: 'switch',
-        value: showFFzBadges,
-      },
-      'Twitch',
-      {
-        icon: {
-          type: 'brandIcon',
-          name: 'twitch',
-          color: theme.colors.plum.accent,
-        },
+        key: 'showFFzEmotes',
         label: 'Emotes',
+        preview: (
+          <ChatPreferencePreview
+            provider="ffz"
+            value={showFFzEmotes}
+            variant="providerEmotes"
+          />
+        ),
+        switchValues,
+        update,
+      }),
+      buildChatPreferenceSwitchItem({
+        description: 'Enable FFZ badges in chat',
+        key: 'showFFzBadges',
+        label: 'Badges',
+        preview: (
+          <ChatPreferencePreview
+            provider="ffz"
+            value={showFFzBadges}
+            variant="providerBadges"
+          />
+        ),
+        switchValues,
+        update,
+      }),
+      'Twitch',
+      buildChatPreferenceSwitchItem({
         description: 'Enable Twitch emotes in chat',
-        onSelect: (value: boolean) => {
-          update({ showTwitchEmotes: value });
-        },
-        type: 'switch',
-        value: showTwitchEmotes,
-      },
-      {
         icon: {
           type: 'brandIcon',
           name: 'twitch',
           color: theme.colors.plum.accent,
         },
-        label: 'Badges',
+        key: 'showTwitchEmotes',
+        label: 'Emotes',
+        preview: (
+          <ChatPreferencePreview
+            provider="twitch"
+            value={showTwitchEmotes}
+            variant="providerEmotes"
+          />
+        ),
+        switchValues,
+        update,
+      }),
+      buildChatPreferenceSwitchItem({
         description: 'Enable Twitch badges in chat',
-        onSelect: (value: boolean) => {
-          update({ showTwitchBadges: value });
+        icon: {
+          type: 'brandIcon',
+          name: 'twitch',
+          color: theme.colors.plum.accent,
         },
-        type: 'switch',
-        value: showTwitchBadges,
-      },
-    ] satisfies (MenuItem | string | null)[];
+        key: 'showTwitchBadges',
+        label: 'Badges',
+        preview: (
+          <ChatPreferencePreview
+            provider="twitch"
+            value={showTwitchBadges}
+            variant="providerBadges"
+          />
+        ),
+        switchValues,
+        update,
+      }),
+    ] satisfies Item[];
   }, [
     chatDensity,
     chatTimestamps,
@@ -230,7 +358,13 @@ export function ChatPreferenceScreen() {
   return (
     <View style={styles.container}>
       <Menu
-        header={<ScreenHeader title="Chat" subtitle="" size="medium" />}
+        header={
+          <ScreenHeader
+            title="Chat"
+            subtitle="Preview each setting where it changes the chat UI"
+            size="medium"
+          />
+        }
         items={items}
       />
     </View>
