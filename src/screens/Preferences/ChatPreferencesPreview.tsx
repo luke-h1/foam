@@ -1,18 +1,11 @@
-import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
+import { BrandIcon, type BrandIconName } from '@app/components/BrandIcon/BrandIcon';
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
-import { createBaseMessage } from '@app/components/Chat/util/messageHandlers';
 import { Icon } from '@app/components/Icon/Icon';
-import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
-import { ffzSanitiisedChannelBadges } from '@app/services/__fixtures__/badges/ffz/ffzSanitisedChannelBadges.fixture';
-import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
-import { bttvSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/bttv/bttvSanitisedGlobalEmoteSet.fixture';
-import { ffzSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/ffz/ffzSanitisedGlobalEmoteSet.fixture';
-import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedChannelEmoteSet.fixture';
-import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
-import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { theme } from '@app/styles/themes';
-import { type SanitisedEmote } from '@app/types/emote';
+import { type ChatMessageType } from '@app/store/chatStore/constants';
+import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { type ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -20,7 +13,7 @@ const PREVIEW_CHANNEL = 'preview';
 const PREVIEW_VIEWER_LOGIN = 'foamviewer';
 
 type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
-type PreviewMessage = ReturnType<typeof createBaseMessage>;
+type PreviewMessage = ChatMessageType<'usernotice'>;
 
 type PreviewState = {
   chatDensity: 'comfortable' | 'compact';
@@ -28,6 +21,18 @@ type PreviewState = {
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
   showUnreadJumpPill: boolean;
+};
+
+type PreviewBadgeSample = {
+  accentColor: string;
+  iconName?: BrandIconName;
+  label: string;
+};
+
+type ProviderPreviewSample = {
+  accentColor: string;
+  badgeSamples: PreviewBadgeSample[];
+  emoteSamples: string[];
 };
 
 export type ChatPreferencePreviewProps =
@@ -45,18 +50,6 @@ export type ChatPreferencePreviewProps =
       variant: 'providerEmotes' | 'providerBadges';
     };
 
-type PreviewBadgeSample =
-  | {
-      badge: SanitisedBadgeSet;
-      type: 'badge';
-    }
-  | {
-      accentColor: string;
-      iconName: 'bttv' | 'stv';
-      label: string;
-      type: 'brand';
-    };
-
 const PREVIEW_DEFAULTS: PreviewState = {
   chatDensity: 'comfortable',
   chatTimestamps: true,
@@ -65,18 +58,54 @@ const PREVIEW_DEFAULTS: PreviewState = {
   showUnreadJumpPill: false,
 };
 
-const baseTagFields: Record<string, string> = {
-  badges: '',
-  'emote-sets': '',
-  mod: '0',
-  subscriber: '0',
-  turbo: '0',
-  'user-type': '',
-  'reply-parent-msg-id': '',
-  'reply-parent-msg-body': '',
-  'reply-parent-display-name': '',
-  'reply-parent-user-login': '',
-};
+const providerPreviewSamples = {
+  '7tv': {
+    accentColor: theme.colors.plum.accent,
+    badgeSamples: [
+      {
+        accentColor: theme.colors.plum.accent,
+        iconName: 'stv',
+        label: '7TV',
+      },
+    ],
+    emoteSamples: ['yePls', 'monkaW'],
+  },
+  bttv: {
+    accentColor: theme.colors.orange.accent,
+    badgeSamples: [
+      {
+        accentColor: theme.colors.orange.accent,
+        iconName: 'bttv',
+        label: 'BTTV',
+      },
+    ],
+    emoteSamples: ['FeelsStrongMan', 'PepeHands'],
+  },
+  ffz: {
+    accentColor: theme.colors.blue.accent,
+    badgeSamples: [
+      {
+        accentColor: theme.colors.blue.accent,
+        label: 'FFZ',
+      },
+    ],
+    emoteSamples: ['PepoG', 'catJAM'],
+  },
+  twitch: {
+    accentColor: theme.colors.violet.accent,
+    badgeSamples: [
+      {
+        accentColor: theme.colors.violet.accent,
+        label: 'SUB',
+      },
+      {
+        accentColor: theme.colors.amber.accent,
+        label: 'VIP',
+      },
+    ],
+    emoteSamples: ['Kappa', 'PogChamp'],
+  },
+} satisfies Record<PreviewProvider, ProviderPreviewSample>;
 
 const previewMessages = {
   plain: createPreviewMessage({
@@ -104,142 +133,89 @@ const previewMessages = {
     id: 'preview-mention',
     login: 'modbot',
     message: [
-      { type: 'text', content: 'Hey ' },
-      { type: 'mention', content: `@${PREVIEW_VIEWER_LOGIN}` },
-      { type: 'text', content: ' thanks for subscribing!' },
+      textPart('Hey '),
+      mentionPart(`@${PREVIEW_VIEWER_LOGIN}`),
+      textPart(' thanks for subscribing!'),
     ],
     userId: '103',
   }),
 } as const;
 
-const providerEmoteSamples: Record<PreviewProvider, SanitisedEmote[]> = {
-  '7tv': sevenTvSanitisedChannelEmoteSetFixture.slice(0, 2),
-  bttv: bttvSanitisedGlobalEmoteSet.slice(0, 2),
-  ffz: ffzSanitisedGlobalEmoteSet.slice(0, 2),
-  twitch: twitchTvSanitisedEmoteSetGlobalFixture.slice(0, 2),
-};
+const getMentionColor = () => theme.colors.violet.accent;
 
-const providerBadgeSamples: Record<PreviewProvider, PreviewBadgeSample[]> = {
-  '7tv': [
-    {
-      accentColor: theme.colors.plum.accent,
-      iconName: 'stv',
-      label: '7TV badge',
-      type: 'brand',
-    },
-  ],
-  bttv: [
-    {
-      accentColor: theme.colors.orange.accent,
-      iconName: 'bttv',
-      label: 'BTTV badge',
-      type: 'brand',
-    },
-  ],
-  ffz: ffzSanitiisedChannelBadges.slice(0, 1).map(badge => ({
-    badge,
-    type: 'badge' as const,
-  })),
-  twitch: twitchSanitisedGlobalBadges
-    .filter(badge => ['subscriber_0', 'premium_1'].includes(badge.id))
-    .slice(0, 2)
-    .map(badge => ({
-      badge,
-      type: 'badge' as const,
-    })),
-};
-
-const parseTextForEmotes = (text: string) => [
-  { type: 'text' as const, content: text },
-];
-
-const getMentionColor = () => '#9147FF';
+const parseTextForEmotes = (text: string): ParsedPart[] => [textPart(text)];
 
 export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
   const { variant } = props;
 
   switch (variant) {
     case 'density': {
-      const { value } = props;
-
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.reply]}
-          settings={{ chatDensity: value }}
+          settings={{ chatDensity: props.value }}
           testID="chat-preference-preview-density"
         />
       );
     }
 
     case 'timestamps': {
-      const { value } = props;
-
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain]}
-          settings={{ chatTimestamps: value }}
+          settings={{ chatTimestamps: props.value }}
           testID="chat-preference-preview-timestamps"
         />
       );
     }
 
     case 'mentions': {
-      const { value } = props;
-
       return (
         <ChatPreviewSurface
           messages={[previewMessages.mention]}
-          settings={{ highlightOwnMentions: value }}
+          settings={{ highlightOwnMentions: props.value }}
           testID="chat-preference-preview-mentions"
         />
       );
     }
 
     case 'inlineReply': {
-      const { value } = props;
-
       return (
         <ChatPreviewSurface
           messages={[previewMessages.reply]}
-          settings={{ showInlineReplyContext: value }}
+          settings={{ showInlineReplyContext: props.value }}
           testID="chat-preference-preview-inline-reply"
         />
       );
     }
 
     case 'jumpPill': {
-      const { value } = props;
-
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.mention]}
-          settings={{ showUnreadJumpPill: value }}
+          settings={{ showUnreadJumpPill: props.value }}
           testID="chat-preference-preview-jump-pill"
         />
       );
     }
 
     case 'providerEmotes': {
-      const { provider, value } = props;
-
       return (
         <ProviderAssetPreview
-          enabled={value}
-          provider={provider}
-          testID={`chat-preference-preview-${provider}-emotes`}
+          enabled={props.value}
+          provider={props.provider}
+          testID={`chat-preference-preview-${props.provider}-emotes`}
           variant="emotes"
         />
       );
     }
 
     case 'providerBadges': {
-      const { provider, value } = props;
-
       return (
         <ProviderAssetPreview
-          enabled={value}
-          provider={provider}
-          testID={`chat-preference-preview-${provider}-badges`}
+          enabled={props.value}
+          provider={props.provider}
+          testID={`chat-preference-preview-${props.provider}-badges`}
           variant="badges"
         />
       );
@@ -294,6 +270,7 @@ function ChatPreviewSurface({
             style={styles.messageRow}
           />
         ))}
+
         {previewState.showUnreadJumpPill ? (
           <View style={styles.jumpPillWrap}>
             <View style={styles.jumpPill}>
@@ -328,69 +305,88 @@ function ProviderAssetPreview({
   testID: string;
   variant: 'badges' | 'emotes';
 }) {
-  let previewContent: ReactNode;
-
-  if (variant === 'emotes') {
-    previewContent = enabled ? (
-      <View style={styles.assetStrip}>
-        {providerEmoteSamples[provider].map(sample => (
-          <Image
-            key={`${provider}-${sample.id}`}
-            source={{ uri: sample.url }}
-            style={styles.emoteSample}
-            transition={0}
-            useNitro
-          />
-        ))}
-      </View>
-    ) : (
-      <Text color="gray.textLow" style={styles.tokenText}>
-        {providerEmoteSamples[provider].map(sample => sample.name).join(' ')}
-      </Text>
-    );
-  } else {
-    previewContent = (
-      <Text color="gray.textLow" style={styles.tokenText}>
-        hello there
-      </Text>
-    );
-  }
+  const sample = providerPreviewSamples[provider];
 
   return (
     <PreviewCard testID={testID}>
       <View style={styles.providerPreviewRow}>
         {variant === 'badges' && enabled ? (
           <View style={styles.assetStrip}>
-            {providerBadgeSamples[provider].map(sample =>
-              sample.type === 'badge' ? (
-                <Image
-                  key={`${provider}-${sample.badge.id}`}
-                  source={sample.badge.url}
-                  style={styles.badgeSample}
-                  transition={0}
-                  useNitro
-                />
-              ) : (
-                <View
-                  key={`${provider}-${sample.label}`}
-                  style={styles.badgeFallback}
-                >
-                  <BrandIcon
-                    color={sample.accentColor}
-                    name={sample.iconName}
-                    size="sm"
-                  />
-                </View>
-              ),
-            )}
+            {sample.badgeSamples.map(badge => (
+              <PreviewChip
+                key={`${provider}-${badge.label}`}
+                accentColor={badge.accentColor}
+                iconName={badge.iconName}
+                kind="badge"
+                label={badge.label}
+              />
+            ))}
           </View>
         ) : null}
+
         <Text style={styles.providerUsername} weight="semibold">
           username:
         </Text>
-        {previewContent}
+
+        {variant === 'emotes' ? (
+          enabled ? (
+            <>
+              <Text color="gray.textLow" style={styles.providerMessageText}>
+                hello
+              </Text>
+              <View style={styles.assetStrip}>
+                {sample.emoteSamples.map(emote => (
+                  <PreviewChip
+                    key={`${provider}-${emote}`}
+                    accentColor={sample.accentColor}
+                    kind="emote"
+                    label={emote}
+                  />
+                ))}
+              </View>
+              <Text color="gray.textLow" style={styles.providerMessageText}>
+                world
+              </Text>
+            </>
+          ) : (
+            <Text color="gray.textLow" style={styles.providerMessageText}>
+              {sample.emoteSamples.join(' ')} hello world
+            </Text>
+          )
+        ) : (
+          <Text color="gray.textLow" style={styles.providerMessageText}>
+            hello world
+          </Text>
+        )}
       </View>
     </PreviewCard>
+  );
+}
+
+function PreviewChip({
+  accentColor,
+  iconName,
+  kind,
+  label,
+}: {
+  accentColor: string;
+  iconName?: BrandIconName;
+  kind: 'badge' | 'emote';
+  label: string;
+}) {
+  return (
+    <View
+      style={[
+        styles.previewChip,
+        kind === 'badge' ? styles.badgeChip : styles.emoteChip,
+        { borderColor: accentColor },
+      ]}
+    >
+      {iconName ? <BrandIcon color={accentColor} name={iconName} size="xs" /> : null}
+      <Text style={[styles.previewChipText, { color: accentColor }]} weight="semibold">
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -424,32 +420,61 @@ function createPreviewMessage({
   displayName: string;
   id: string;
   login: string;
-  message?: PreviewMessage['message'];
+  message?: ParsedPart[];
   replyBody?: string;
   replyDisplayName?: string;
   replyLogin?: string;
   text?: string;
   userId: string;
 }): PreviewMessage {
-  const baseMessage = createBaseMessage({
-    channelName: PREVIEW_CHANNEL,
-    tags: {
-      ...baseTagFields,
-      color,
-      'display-name': displayName,
-      id,
-      login,
-      'reply-parent-display-name': replyDisplayName ?? '',
-      'reply-parent-msg-body': replyBody ?? '',
-      'reply-parent-user-login': replyLogin ?? '',
-      'user-id': userId,
-    },
-    text: text ?? '',
-  });
+  const userstate: UserStateTags = {
+    'display-name': displayName,
+    login,
+    username: displayName,
+    'user-id': userId,
+    id,
+    color,
+    badges: {},
+    'badges-raw': '',
+    mod: '0',
+    subscriber: '0',
+    turbo: '0',
+    'emote-sets': '',
+    'user-type': '',
+    'first-msg': '0',
+    'reply-parent-msg-id': '',
+    'reply-parent-msg-body': replyBody ?? '',
+    'reply-parent-display-name': replyDisplayName ?? '',
+    'reply-parent-user-login': replyLogin ?? '',
+  };
 
   return {
-    ...baseMessage,
-    message: message ?? baseMessage.message,
+    id,
+    userstate,
+    message: message ?? [textPart(text ?? '')],
+    badges: [],
+    channel: PREVIEW_CHANNEL,
+    message_id: id,
+    message_nonce: `${id}-nonce`,
+    sender: login,
+    parentDisplayName: replyDisplayName ?? '',
+    replyDisplayName: replyLogin ?? '',
+    replyBody: replyBody ?? '',
+    parentColor: undefined,
+  };
+}
+
+function textPart(content: string): ParsedPart<'text'> {
+  return {
+    type: 'text',
+    content,
+  };
+}
+
+function mentionPart(content: string): ParsedPart<'mention'> {
+  return {
+    type: 'mention',
+    content,
   };
 }
 
@@ -457,20 +482,12 @@ const styles = StyleSheet.create({
   assetStrip: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.xs,
   },
-  badgeFallback: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
-    height: 20,
-    justifyContent: 'center',
-    width: 20,
-  },
-  badgeSample: {
-    height: 20,
-    width: 20,
+  badgeChip: {
+    minHeight: 20,
+    paddingHorizontal: theme.spacing.xs,
   },
   chatSurface: {
     backgroundColor: theme.colors.gray.bg,
@@ -485,9 +502,9 @@ const styles = StyleSheet.create({
   chatSurfaceWithJumpPill: {
     paddingBottom: 52,
   },
-  emoteSample: {
-    height: 28,
-    width: 28,
+  emoteChip: {
+    minHeight: 24,
+    paddingHorizontal: theme.spacing.sm,
   },
   jumpPill: {
     alignItems: 'center',
@@ -527,6 +544,23 @@ const styles = StyleSheet.create({
   previewCard: {
     paddingTop: theme.spacing.xs,
   },
+  previewChip: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.gray.ui,
+    borderCurve: 'continuous',
+    borderRadius: theme.radii.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+    justifyContent: 'center',
+    paddingVertical: 2,
+  },
+  previewChipText: {
+    fontSize: theme.font.fontSize.xxs,
+  },
+  providerMessageText: {
+    fontSize: theme.font.fontSize.xs,
+  },
   providerPreviewRow: {
     alignItems: 'center',
     backgroundColor: theme.colors.gray.bg,
@@ -543,8 +577,5 @@ const styles = StyleSheet.create({
   },
   providerUsername: {
     color: theme.colors.gray.text,
-  },
-  tokenText: {
-    fontSize: theme.font.fontSize.xs,
   },
 });
