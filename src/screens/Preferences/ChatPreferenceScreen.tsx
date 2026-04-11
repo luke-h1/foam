@@ -23,6 +23,42 @@ type PreviewSwitchKey = keyof Pick<
   | 'showTwitchBadges'
 >;
 
+function buildChatPreferenceSwitchItem<K extends PreviewSwitchKey>({
+  description,
+  icon,
+  key,
+  label,
+  preview,
+  switchValues,
+  update,
+}: {
+  description: string;
+  icon?: Icon;
+  key: K;
+  label: string;
+  preview: ReactElement;
+  switchValues: Pick<Preferences, PreviewSwitchKey>;
+  update: (patch: Partial<Preferences>) => void;
+}): Item {
+  function SwitchPreferenceItem() {
+    return (
+      <ChatPreferenceMenuItem
+        description={description}
+        icon={icon}
+        label={label}
+        preview={preview}
+        type="switch"
+        value={Boolean(switchValues[key])}
+        onSelect={value => {
+          update({ [key]: value } as Pick<Preferences, K>);
+        }}
+      />
+    );
+  }
+
+  return SwitchPreferenceItem;
+}
+
 export function ChatPreferenceScreen() {
   const {
     chatDensity,
@@ -57,34 +93,6 @@ export function ChatPreferenceScreen() {
       showTwitchBadges,
     } satisfies Pick<Preferences, PreviewSwitchKey>;
 
-    function buildSwitchItem<K extends PreviewSwitchKey>({
-      description,
-      icon,
-      key,
-      label,
-      preview,
-    }: {
-      description: string;
-      icon?: Icon;
-      key: K;
-      label: string;
-      preview: ReactElement;
-    }): Item {
-      return () => (
-        <ChatPreferenceMenuItem
-          description={description}
-          icon={icon}
-          label={label}
-          preview={preview}
-          type="switch"
-          value={Boolean(switchValues[key])}
-          onSelect={value => {
-            update({ [key]: value } as Pick<Preferences, K>);
-          }}
-        />
-      );
-    }
-
     return [
       'Layout',
       () => (
@@ -100,7 +108,9 @@ export function ChatPreferenceScreen() {
             { label: 'Comfortable', value: 'comfortable' },
             { label: 'Compact', value: 'compact' },
           ]}
-          preview={<ChatPreferencePreview variant="density" value={chatDensity} />}
+          preview={
+            <ChatPreferencePreview variant="density" value={chatDensity} />
+          }
           title="Select density"
           type="options"
           value={chatDensity}
@@ -111,7 +121,7 @@ export function ChatPreferenceScreen() {
           }}
         />
       ),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Display timestamps next to messages',
         icon: {
           name: 'clock',
@@ -123,8 +133,10 @@ export function ChatPreferenceScreen() {
         preview: (
           <ChatPreferencePreview variant="timestamps" value={chatTimestamps} />
         ),
+        switchValues,
+        update,
       }),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Accent messages that mention your username',
         icon: {
           name: 'at-sign',
@@ -139,8 +151,10 @@ export function ChatPreferenceScreen() {
             value={highlightOwnMentions}
           />
         ),
+        switchValues,
+        update,
       }),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Show reply context above chat messages',
         icon: {
           name: 'corner-up-left',
@@ -155,8 +169,10 @@ export function ChatPreferenceScreen() {
             value={showInlineReplyContext}
           />
         ),
+        switchValues,
+        update,
       }),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Display the jump-to-latest unread indicator',
         icon: {
           name: 'arrow-down-circle',
@@ -171,10 +187,12 @@ export function ChatPreferenceScreen() {
             value={showUnreadJumpPill}
           />
         ),
+        switchValues,
+        update,
       }),
       null,
       '7TV',
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable 7TV emotes in chat',
         icon: {
           type: 'brandIcon',
@@ -190,8 +208,10 @@ export function ChatPreferenceScreen() {
             variant="providerEmotes"
           />
         ),
+        switchValues,
+        update,
       }),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable 7TV badges in chat',
         icon: {
           type: 'brandIcon',
@@ -207,9 +227,11 @@ export function ChatPreferenceScreen() {
             variant="providerBadges"
           />
         ),
+        switchValues,
+        update,
       }),
       'BTTV',
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable BTTV emotes in chat',
         icon: {
           type: 'brandIcon',
@@ -225,8 +247,10 @@ export function ChatPreferenceScreen() {
             variant="providerEmotes"
           />
         ),
+        switchValues,
+        update,
       }),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable BTTV badges in chat',
         icon: {
           type: 'brandIcon',
@@ -242,9 +266,11 @@ export function ChatPreferenceScreen() {
             variant="providerBadges"
           />
         ),
+        switchValues,
+        update,
       }),
       'FFZ',
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable FFZ emotes in chat',
         key: 'showFFzEmotes',
         label: 'Emotes',
@@ -255,8 +281,10 @@ export function ChatPreferenceScreen() {
             variant="providerEmotes"
           />
         ),
+        switchValues,
+        update,
       }),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable FFZ badges in chat',
         key: 'showFFzBadges',
         label: 'Badges',
@@ -267,9 +295,11 @@ export function ChatPreferenceScreen() {
             variant="providerBadges"
           />
         ),
+        switchValues,
+        update,
       }),
       'Twitch',
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable Twitch emotes in chat',
         icon: {
           type: 'brandIcon',
@@ -285,8 +315,10 @@ export function ChatPreferenceScreen() {
             variant="providerEmotes"
           />
         ),
+        switchValues,
+        update,
       }),
-      buildSwitchItem({
+      buildChatPreferenceSwitchItem({
         description: 'Enable Twitch badges in chat',
         icon: {
           type: 'brandIcon',
@@ -302,6 +334,8 @@ export function ChatPreferenceScreen() {
             variant="providerBadges"
           />
         ),
+        switchValues,
+        update,
       }),
     ] satisfies Item[];
   }, [

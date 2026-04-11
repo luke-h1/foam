@@ -1,17 +1,18 @@
-/* eslint-disable no-nested-ternary */
-import { theme } from '@app/styles/themes';
-import { SymbolView } from 'expo-symbols';
-import { type ReactElement, useMemo, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-// eslint-disable-next-line no-restricted-imports
-import { Pressable } from 'react-native';
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Icon } from '@app/components/Icon/Icon';
+import {
+  type Icon as MenuIcon,
+  type MenuItemOption,
+} from '@app/components/Menu/Menu';
 import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/Text/Text';
-import { type Icon as MenuIcon, type MenuItemOption } from '@app/components/Menu/Menu';
 import { SheetItem } from '@app/components/sheets/SheetItem';
 import { SheetModal } from '@app/components/sheets/SheetModal';
+import { theme } from '@app/styles/themes';
+import { SymbolView } from 'expo-symbols';
+import { type ReactElement, type ReactNode, useMemo, useState } from 'react';
+// eslint-disable-next-line no-restricted-imports
+import { Pressable, StyleSheet, View } from 'react-native';
 
 type PreviewMenuItemProps = {
   description?: string;
@@ -60,30 +61,42 @@ function isMenuItemOption(
 }
 
 export function ChatPreferenceMenuItem(props: PreviewMenuItemProps) {
+  const { description, icon, label, preview, type } = props;
   const [sheetVisible, setSheetVisible] = useState(false);
 
   const selected = useMemo(() => {
-    if (props.type === 'options') {
-      const $selected = props.options
-        .filter(isMenuItemOption)
-        .find(option => option?.value === props.value);
+    if (type !== 'options') return null;
+    const { options, value } = props;
+    const $selected = options
+      .filter(isMenuItemOption)
+      .find(option => option?.value === value);
 
-      return $selected?.right ?? $selected?.label ?? $selected?.value;
-    }
+    return $selected?.right ?? $selected?.label ?? $selected?.value;
+  }, [props, type]);
 
-    return null;
-  }, [props]);
+  let switchControl: ReactNode = null;
+  if (type === 'switch') {
+    const { onSelect, value: switchValue } = props;
+    switchControl = (
+      <Switch
+        onValueChange={v => {
+          onSelect(v);
+        }}
+        value={switchValue}
+      />
+    );
+  }
 
   const row = (
     <View style={styles.row}>
-      {props.icon ? renderIcon(props.icon, theme.colors.gray.border) : null}
+      {icon ? renderIcon(icon, theme.colors.gray.border) : null}
 
       <View style={styles.contentContainer}>
-        <Text weight="semibold">{props.label}</Text>
+        <Text weight="semibold">{label}</Text>
 
-        {props.description ? (
+        {description ? (
           <Text type="xs" color="gray.textLow">
-            {props.description}
+            {description}
           </Text>
         ) : null}
       </View>
@@ -96,21 +109,72 @@ export function ChatPreferenceMenuItem(props: PreviewMenuItemProps) {
         selected
       )}
 
-      {props.type === 'switch' ? (
-        <Switch
-          onValueChange={value => {
-            props.onSelect(value);
-          }}
-          value={props.value}
-        />
-      ) : null}
+      {switchControl}
     </View>
   );
+
+  let optionsSheet: ReactNode = null;
+  if (type === 'options') {
+    const { onSelect, options, title, value } = props;
+    optionsSheet = (
+      <SheetModal
+        container={options.length > 6 ? 'scroll' : 'view'}
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        title={title ?? label}
+      >
+        {options.map((option, index) => {
+          if (option === null) {
+            return (
+              <View
+                style={styles.separator}
+                // eslint-disable-next-line react/no-array-index-key
+                key={`separator-${index}`}
+              />
+            );
+          }
+
+          if (typeof option === 'string') {
+            return (
+              <Text
+                highContrast={false}
+                key={option}
+                mb="sm"
+                mt="sm"
+                mx="sm"
+                type="md"
+                weight="semibold"
+              >
+                {option}
+              </Text>
+            );
+          }
+
+          return (
+            <SheetItem
+              icon={'icon' in option ? option.icon : undefined}
+              key={option.value}
+              label={option.label ?? ''}
+              labelStyle={option.labelStyle}
+              left={option.left}
+              onPress={() => {
+                onSelect(option.value);
+                setSheetVisible(false);
+              }}
+              right={!option.hideRight ? option.right : null}
+              selected={option.value === value}
+              style={option.style}
+            />
+          );
+        })}
+      </SheetModal>
+    );
+  }
 
   return (
     <>
       <View style={styles.container}>
-        {props.type === 'options' ? (
+        {type === 'options' ? (
           <Pressable
             onPress={() => {
               setSheetVisible(true);
@@ -122,62 +186,10 @@ export function ChatPreferenceMenuItem(props: PreviewMenuItemProps) {
           row
         )}
 
-        <View style={styles.previewSection}>{props.preview}</View>
+        <View style={styles.previewSection}>{preview}</View>
       </View>
 
-      {props.type === 'options' ? (
-        <SheetModal
-          container={props.options.length > 6 ? 'scroll' : 'view'}
-          visible={sheetVisible}
-          onClose={() => setSheetVisible(false)}
-          title={props.title ?? props.label}
-        >
-          {props.options.map((option, index) => {
-            if (option === null) {
-              return (
-                <View
-                  style={styles.separator}
-                  // eslint-disable-next-line react/no-array-index-key
-                  key={`separator-${index}`}
-                />
-              );
-            }
-
-            if (typeof option === 'string') {
-              return (
-                <Text
-                  highContrast={false}
-                  key={option}
-                  mb="sm"
-                  mt="sm"
-                  mx="sm"
-                  type="md"
-                  weight="semibold"
-                >
-                  {option}
-                </Text>
-              );
-            }
-
-            return (
-              <SheetItem
-                icon={'icon' in option ? option.icon : undefined}
-                key={option.value}
-                label={option.label ?? ''}
-                labelStyle={option.labelStyle}
-                left={option.left}
-                onPress={() => {
-                  props.onSelect(option.value);
-                  setSheetVisible(false);
-                }}
-                right={!option.hideRight ? option.right : null}
-                selected={option.value === props.value}
-                style={option.style}
-              />
-            );
-          })}
-        </SheetModal>
-      ) : null}
+      {optionsSheet}
     </>
   );
 }

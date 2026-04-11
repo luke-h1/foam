@@ -16,10 +16,7 @@ type ProviderPreviewFixtures = {
   emotes: SanitisedEmote[];
 };
 
-function requireValue<T>(
-  value: T | undefined,
-  message: string,
-): T {
+function requireValue<T>(value: T | undefined, message: string): T {
   if (!value) {
     throw new Error(message);
   }
@@ -54,7 +51,9 @@ export const chatPreferencePreviewFixtures: Record<
     badges: [sevenTvBadgeFallback],
     emotes: [
       requireValue(
-        sevenTvSanitisedChannelEmoteSetFixture.find(emote => emote.name === 'yePls'),
+        sevenTvSanitisedChannelEmoteSetFixture.find(
+          emote => emote.name === 'yePls',
+        ),
         'Missing 7TV channel preview emote fixture',
       ),
       requireValue(
@@ -109,7 +108,9 @@ export const chatPreferencePreviewFixtures: Record<
     ],
     emotes: [
       requireValue(
-        twitchTvSanitisedEmoteSetGlobalFixture.find(emote => emote.name === 'Kappa'),
+        twitchTvSanitisedEmoteSetGlobalFixture.find(
+          emote => emote.name === 'Kappa',
+        ),
         'Missing Twitch preview emote fixture: Kappa',
       ),
       requireValue(

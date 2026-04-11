@@ -1,13 +1,13 @@
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { Icon } from '@app/components/Icon/Icon';
-import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { Text } from '@app/components/Text/Text';
-import { theme } from '@app/styles/themes';
+import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import {
   type ChannelCacheType,
   type ChatMessageType,
 } from '@app/store/chatStore/constants';
 import { chatStore$ } from '@app/store/chatStore/state';
+import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
 import {
@@ -100,14 +100,14 @@ const getMentionColor = () => theme.colors.violet.accent;
 const parseTextForEmotes = (text: string): ParsedPart[] => [textPart(text)];
 
 export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
-  const { variant } = props;
+  const { variant, value } = props;
 
   switch (variant) {
     case 'density': {
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.reply]}
-          settings={{ chatDensity: props.value }}
+          settings={{ chatDensity: value }}
           testID="chat-preference-preview-density"
         />
       );
@@ -117,7 +117,7 @@ export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain]}
-          settings={{ chatTimestamps: props.value }}
+          settings={{ chatTimestamps: value }}
           testID="chat-preference-preview-timestamps"
         />
       );
@@ -127,7 +127,7 @@ export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
       return (
         <ChatPreviewSurface
           messages={[previewMessages.mention]}
-          settings={{ highlightOwnMentions: props.value }}
+          settings={{ highlightOwnMentions: value }}
           testID="chat-preference-preview-mentions"
         />
       );
@@ -137,7 +137,7 @@ export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
       return (
         <ChatPreviewSurface
           messages={[previewMessages.reply]}
-          settings={{ showInlineReplyContext: props.value }}
+          settings={{ showInlineReplyContext: value }}
           testID="chat-preference-preview-inline-reply"
         />
       );
@@ -147,36 +147,38 @@ export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
       return (
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.mention]}
-          settings={{ showUnreadJumpPill: props.value }}
+          settings={{ showUnreadJumpPill: value }}
           testID="chat-preference-preview-jump-pill"
         />
       );
     }
 
     case 'providerEmotes': {
+      const { provider } = props;
       return (
         <ProviderAssetPreview
-          enabled={props.value}
-          provider={props.provider}
-          testID={`chat-preference-preview-${props.provider}-emotes`}
+          enabled={value}
+          provider={provider}
+          testID={`chat-preference-preview-${provider}-emotes`}
           variant="emotes"
         />
       );
     }
 
     case 'providerBadges': {
+      const { provider } = props;
       return (
         <ProviderAssetPreview
-          enabled={props.value}
-          provider={props.provider}
-          testID={`chat-preference-preview-${props.provider}-badges`}
+          enabled={value}
+          provider={provider}
+          testID={`chat-preference-preview-${provider}-badges`}
           variant="badges"
         />
       );
     }
 
     default: {
-      const unreachable: never = props;
+      const unreachable: never = variant;
       return unreachable;
     }
   }
@@ -443,7 +445,9 @@ function fillPreviewItems<T>(
   return result;
 }
 
-function sortCachesByFreshness(channelCaches: Record<string, ChannelCacheType>) {
+function sortCachesByFreshness(
+  channelCaches: Record<string, ChannelCacheType>,
+) {
   return Object.values(channelCaches).sort(
     (left, right) => (right.lastUpdated || 0) - (left.lastUpdated || 0),
   );
@@ -459,7 +463,10 @@ function getLiveProviderEmotes(
   caches.forEach(cache => {
     switch (provider) {
       case '7tv':
-        emotes.push(...cache.sevenTvChannelEmotes, ...cache.sevenTvGlobalEmotes);
+        emotes.push(
+          ...cache.sevenTvChannelEmotes,
+          ...cache.sevenTvGlobalEmotes,
+        );
         break;
       case 'bttv':
         emotes.push(...cache.bttvChannelEmotes, ...cache.bttvGlobalEmotes);
@@ -552,17 +559,13 @@ function buildProviderEmoteParts(
         ? emotes.filter(emote => emote.site === 'Twitch Global')
         : [],
     ffzChannelEmotes:
-      provider === 'ffz'
-        ? emotes.filter(emote => emote.site === 'FFZ')
-        : [],
+      provider === 'ffz' ? emotes.filter(emote => emote.site === 'FFZ') : [],
     ffzGlobalEmotes:
       provider === 'ffz'
         ? emotes.filter(emote => emote.site === 'Global FFZ')
         : [],
     bttvChannelEmotes:
-      provider === 'bttv'
-        ? emotes.filter(emote => emote.site === 'BTTV')
-        : [],
+      provider === 'bttv' ? emotes.filter(emote => emote.site === 'BTTV') : [],
     bttvGlobalEmotes:
       provider === 'bttv'
         ? emotes.filter(emote => emote.site === 'Global BTTV')
