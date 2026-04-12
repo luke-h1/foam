@@ -6,7 +6,7 @@ A new way to experience Twitch.tv on mobile
 
 To improve my React native skills and learn various other tech
 
-The native Twitch app experience doesn't quite line up with the desktop experience and it lacks support for third-party extensions that many people use to express themselves in chat. This project aims to be a mobile alternative that supports these extensions and provides a cleaner and more intutive UI.
+The native Twitch app experience doesn't quite line up with the desktop experience and it lacks support for third-party extensions that many people use to express themselves in chat. This project aims to be a mobile alternative that supports these extensions and provides a cleaner and more intuitive UI.
 
 # Table of contents
 
@@ -14,57 +14,40 @@ The native Twitch app experience doesn't quite line up with the desktop experien
 - [Why](#why)
 - [Table of contents](#table-of-contents)
 - [Project structure](#project-structure)
-- [Store Links](#store-links)
+- [Store links](#store-links)
 - [Features](#features)
-- [Installation](#installation)
-  - [Recommended dev environment](#recommended-dev-environment)
-  - [Tips](#tips)
-  - [Running `development` version of the app locally](#running-development-version-of-the-app-locally)
-  - [Storybook](#storybook)
-  - [Running `preview` or `production` version of the app locally](#running-preview-or-production-version-of-the-app-locally)
+- [Getting started](#getting-started)
 - [Contributing](#contributing)
-  - [Commit strategy - conventional commits](#commit-strategy-conventional-commits)
-  - [Git flow \& Pull Requests](#git-flow--pull-requests)
-  - [Imports aliasing](#imports-aliasing)
-  - [dev-builds](#dev-builds)
-- [CI \& CD](#ci-cd)
-  - [Developer experience](#developer-experience)
-  - [Continuous Delivery](#continuous-delivery)
-  - [E2E testing](#e2e-testing)
-    - [Running E2E tests locally](#running-e2e-tests-locally)
-  - [Local EAS build](#local-eas-build)
-- [Continuous Delivery pipeline](#continuous-delivery-pipeline)
+- [CI/CD](#cicd)
 - [Release process](#release-process)
-  - [Trigger a new production build](#trigger-a-new-production-build)
-  - [Versioning strategy](#versioning-strategy)
 - [Testers management](#testers-management)
-  - [Android testers](#android-testers)
-  - [iOS testers](#ios-testers)
-- [Debugging](#debugging-1)
+- [Debugging](#debugging)
 - [Managing access to the project and associated services](#managing-access-to-the-project-and-associated-services)
 - [API dependencies](#api-dependencies)
 - [Markdown writing guide](#markdown-writing-guide)
-- [Bug Reports](#bug-reports)
+- [Bug reports](#bug-reports)
 
 # Project structure
 
-This is a [React Native app](https://reactnative.dev). This repository is responsible for powering the mobile app and its two variants:
+This is a [React Native app](https://reactnative.dev). This repository powers the mobile app and several [Expo app variants](https://docs.expo.dev/tutorial/eas/multiple-app-variants/) (see [`app.config.ts`](app.config.ts)):
 
-1. `production` - the `production` version of the app that is distributed via the stores (App store via TestFlight and Google Play(Via Google Beta Testers)). Eventually this variant will also submit to the actual stores for external users
-2. `development` - Used for local development and for installing development builds on your local phone when developing
+1. **`production`** — TestFlight / Play internal testing today, with a path toward full store releases.
+2. **`preview`** — Internal distribution builds for sharing work in progress.
+3. **`development`** — Local development and dev-client installs.
+4. **`e2e`** (and related Maestro profiles) — Deterministic UI tests with a mock server.
 
-Each variant is configured with different `bundleId` for `iOS` and `packageName` for `Android` in order to be able to have all versions of the app installed on the same device at the same time.
+Each variant uses different iOS bundle identifiers and Android application ids so multiple builds can be installed on one device.
 
 Core dependencies:
 
 | Library                                          | Category                       | Version | Description                                             |
 | ------------------------------------------------ | ------------------------------ | ------- | ------------------------------------------------------- |
-| [bun](https://bun.sh/)                           | Package manager & node runtime | 1.2.5   | Fastest package manager and node runtime                |
-| [React Native](https://reactnative.dev/)         | Mobile framework               | 0.81.4  | Cross-platform mobile framework                         |
+| [bun](https://bun.sh/)                           | Package manager & node runtime | 1.3.5 ([`.bun-version`](.bun-version)) | Fast package manager and Node-compatible runtime        |
+| [React Native](https://reactnative.dev/)         | Mobile framework               | 0.81.5  | Cross-platform mobile framework                         |
 | [React](https://react.dev/)                      | UI framework                   | 19.1.0  | Most popular UI framework worldwide                     |
 | [TypeScript](https://www.typescriptlang.org/)    | Language                       | 5.9.2   | Static typechecking                                     |
-| [Expo](https://expo.dev/)                        | SDK                            | 54.0.25 | React native framework / Expo modules                   |
-| [React Navigation](https://reactnavigation.org/) | Navigation                     | 7.1.26  | Routing and navigation library                          |
+| [Expo](https://expo.dev/)                        | SDK                            | ~54.0.33 | React Native framework / Expo modules                   |
+| [React Navigation](https://reactnavigation.org/) | Navigation                     | 7.x     | Routing and navigation library                          |
 | [Maestro](https://maestro.mobile.dev/)           | E2E testing                    | 1.40.1  | Declarative UI testing                                  |
 | [EAS](https://expo.dev/eas)                      | CI/CD                          | N/A     | Build the app binaries and submit the app to the stores |
 | [Storybook](https://storybook.js.org/)           | UI preview                     | 8.4.4   | UI development & preview tool for React Native          |
@@ -137,7 +120,7 @@ See [Expo React Native project](https://docs.expo.dev/get-started/set-up-your-en
 
 - `bun run prebuild`
 
-7. Run the app
+8. Run the app
 
 - `bun run ios`
 - `bun run android`
@@ -169,7 +152,7 @@ _Android_:
     - Add `export ANDROID_HOME=/Users/<your_username>/Library/Android/sdk` to your `.zshrc` or `.bashrc` (and restart your terminal).
   - Setup an emulator (Android Studio > Tools > Device Manager).
 
-## Tips
+## Tips
 
 - To run on your phone (ensure connected via a cable) add `-- --device` to your command (i.e. `bun run ios -- --device`).
 - If the Android simulator frequently hangs or is very slow, [bump its memory limit](https://stackoverflow.com/a/40068396)
@@ -201,9 +184,9 @@ To run the `production` variant of the app locally, you'll need to follow these 
 
 ### Prerequisites
 
-1. **Environment Setup**: Ensure you have all the development environment requirements from the [Installation](#installation) section
+1. **Environment Setup**: Ensure you have all the development environment requirements from the [Getting started](#getting-started) section
 2. **Production Credentials**: You'll need production-specific credentials and configuration files:
-   - Production Google Services files (`GoogleService-Info-production.plist` for iOS, `google-services-prod.json` for Android)
+   - Production Google Services files (`GoogleService-Info-prod.plist` for iOS, `google-services-prod.json` for Android)
    - Production environment variables in your `.env` file
    - Valid Apple Developer account and signing certificates for iOS
 
@@ -271,11 +254,22 @@ If you want to test the exact production build that would be submitted to the st
 - Uses production API endpoints and credentials
 - Optimized for performance and store submission
 
-# contributing
+## Running `preview` variant locally
+
+Use the same prerequisites as production (correct Google services files, env vars, signing), but point at the **preview** Firebase / config files from [`app.config.ts`](app.config.ts) (`GoogleService-Info-preview.plist`, `google-services-preview.json`). Then run with `APP_VARIANT=preview`, for example:
+
+```bash
+APP_VARIANT=preview expo run:ios
+APP_VARIANT=preview expo run:android
+```
+
+For store-parity binaries, use `eas build --profile preview` (cloud or `--local`) as in [Local EAS build](#local-eas-build).
+
+# Contributing
 
 ## Commit strategy - conventional commits
 
-This project follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. [Husky](https://github.com/typicode/husky) is used to execute scrips according to git hooks in order to test if a developer is following the various linting rules and conventional commits. Run `bun commit` to start an interactive commit. Please familiarize yourself with the [specification](https://www.conventionalcommits.org/en/v1.0.0/#specification).
+This project follows the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. [Husky](https://github.com/typicode/husky) is used to execute scripts according to git hooks in order to test if a developer is following the various linting rules and conventional commits. Run `bun commit` to start an interactive commit. Please familiarize yourself with the [specification](https://www.conventionalcommits.org/en/v1.0.0/#specification).
 
 Example:
 
@@ -296,7 +290,7 @@ fix(streams): fix crash on `LiveStreamScreen`
 
 4. Assign a reviewer to the PR
 5. After the PR is approved & the checks pass, merge it to `main`
-6. `eas-cd-production.yml` is responsible for deploying the app to TestFlight/TestTrack. We currently don't have submit CI set up yet.
+6. Merging to `main` runs [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml), which publishes a production [EAS Update](https://docs.expo.dev/eas-update/introduction/) when native fingerprints are unchanged, or builds and submits store binaries when native code changes (see [Deploy flows](#deploy-flows)). For ad-hoc **preview** or **production** cloud builds without going through that pipeline, use the manual workflow [`eas-deploy.yml`](.github/workflows/eas-deploy.yml) in GitHub Actions.
 
 ## Import aliases
 
@@ -316,7 +310,7 @@ Sometimes you may want to run the app on your device to check your changes, see 
 
 5. Navigate to signing & capabilities
 
-6. Select your team, ensure the bundle identifier is `foam-dev` (or something else to avoid naming conflicts) and select your device from the dropdown `Foam > YourPhoneName`
+6. Select your team, ensure the bundle identifier matches the dev variant (for example `foam-tv-dev` from [`app.config.ts`](app.config.ts), or another unique id) and select your device from the dropdown `Foam > YourPhoneName`
 
 7. Run a build by clicking the play button
 
@@ -328,21 +322,100 @@ If you get an error such as `no development servers found` then this means the l
 
 ## CI
 
-TODO
+Pull requests run checks in [`.github/workflows/`](.github/workflows/):
+
+| Workflow | Purpose |
+| -------- | ------- |
+| [`typescript.yml`](.github/workflows/typescript.yml) | `bun run ts:check` |
+| [`lint.yml`](.github/workflows/lint.yml) | ESLint (`bun run lint`) |
+| [`prettier.yml`](.github/workflows/prettier.yml) | Prettier (`bun run prettier:check`) |
+| [`cz.yml`](.github/workflows/cz.yml) | Commitlint on the latest commit |
+| [`jest.yml`](.github/workflows/jest.yml) | Jest (see workflow for the exact command) |
+| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml) | Compares Expo native fingerprints for `production` and `preview` against the PR base |
+| [`label.yml`](.github/workflows/label.yml) | Applies labels via [labeler](https://github.com/actions/labeler) |
+| [`tsfixme-progress.yml`](.github/workflows/tsfixme-progress.yml) | Tracks `$TSFixMe` progress on PRs to `main` |
+| [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Optional ESLint on the `foam` runner when the PR has the `self-hosted-test` label |
+
+Scheduled [CodeQL](.github/workflows/codeql.yml) runs weekly on the default branch.
+
+```mermaid
+flowchart LR
+  PR[Pull request] --> TS[typescript.yml]
+  PR --> Lint[lint.yml]
+  PR --> Prettier[prettier.yml]
+  PR --> CZ[cz.yml]
+  PR --> Jest[jest.yml]
+  PR --> FP[detect-fp-changes.yml]
+  PR --> Label[label.yml]
+  PR --> TSFix[tsfixme-progress.yml]
+  PR -->|label self-hosted-test| SH[self-hosted-runner.yml]
+```
 
 ## CD
 
-We use [EAS](https://docs.expo.dev/build-reference/eas/) to build and publish the app
+We use [EAS](https://docs.expo.dev/build-reference/eas/) to build, submit, and ship [EAS Update](https://docs.expo.dev/eas-update/introduction/) payloads.
 
-There is currently 3 variants of the app that can be installed on the same device
+There are three installable [variants](https://docs.expo.dev/tutorial/eas/multiple-app-variants/) today (each has distinct iOS bundle id and Android application id so they can sit side by side on one device):
 
-1. `production` - the app that is distributed via the stores (App Store (via TestFlight) and Google Play (via Google Beta Testers))
-   - there is a manual trigger configured for `production` build - use GitHub actions to trigger it.
-2. `preview` - the app that is used to easily preview the changes from the PRs and is distributed via [`Internal distribution`](https://docs.expo.dev/build/internal-distribution) mechanism (QR codes)
-   - on iOS it requires the [device to be registered beforehand](https://docs.expo.dev/build/internal-distribution/#automation-on-ci-optional)
-3. `development` - the development version of the app (including development client) that is not distributed in any way and has to be built locally
+1. **`production`** — TestFlight / Play internal testing today; store profiles live in [`eas.json`](eas.json) (`production` build profile, `production` update channel).
+2. **`preview`** — Internal distribution builds for trying changes from branches/PRs (`preview` profile and channel). iOS devices must be [registered for ad hoc](https://docs.expo.dev/build/internal-distribution/) builds.
+3. **`development`** — Local dev and dev-client installs only (`development` profile); not distributed from CI.
 
-All variants can be installed on the same device at the same time, because they have different `bundleIdentifier`s for `iOS` and different `packageName`s for `Android`. You can get more information about multiple app variants in [Expo docs](https://docs.expo.dev/tutorial/eas/multiple-app-variants/).
+Additional build profiles (for example `e2e`, `e2e-dev`) are used for Maestro and CI; see [`eas.json`](eas.json).
+
+## Deploy flows
+
+Production delivery is mostly automated on the default branch; preview/store-style builds can still be kicked off by hand.
+
+| Workflow | When | What it does |
+| -------- | ---- | ------------- |
+| [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml) | Push to `main`, or **Run workflow** with optional `deploy_type` / `platform` / `dry_run` | Runs tests, compares [native fingerprints](https://docs.expo.dev/eas-update/fingerprint/) to the last cached values, then either runs **`eas update`** on the `production` channel (JS-only) or **`eas build --local`** + **`eas submit`** for iOS/Android (native change). Creates a GitHub Release and can notify Slack. Needs `EXPO_TOKEN`, `GITHUB_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN` (1Password secrets for env files, Google services plist/json, Sentry, Slack, etc.). |
+| [`eas-deploy.yml`](.github/workflows/eas-deploy.yml) | **Run workflow** only | Cloud EAS build + auto-submit for **`production`** or **`preview`**, per chosen platform (`all` / `ios` / `android`). Uses `bun run build:<variant>:ios|android`. Requires `EXPO_TOKEN`. |
+| [`rollout-ota.yml`](.github/workflows/rollout-ota.yml) | **Run workflow** | Progresses staged rollout percentage for an existing update group (`eas update:edit --rollout-percentage`). |
+| [`rollback-ota.yml`](.github/workflows/rollback-ota.yml) | **Run workflow** | Rolls the `production` or `preview` channel back to **`embedded`** (native bundle) or **republishes** a previous update group. |
+| [`e2e.yml`](.github/workflows/e2e.yml) | **Run workflow** | Fingerprinted iOS `e2e` profile build (local EAS on the self-hosted `foam` runner when the cache misses), artifact or cache restore, optional `eas update` on the `e2e` channel when the build is skipped, then Maestro on `macos-latest` (see workflow for full steps). |
+| [`clear-cache.yml`](.github/workflows/clear-cache.yml) | **Run workflow** | Deletes GitHub Actions caches except OTA fingerprint / OTA id keys (see script in workflow). |
+
+There is also a draft [EAS Workflows](https://docs.expo.dev/eas/workflows/get-started/) file at [`.eas/deploy-prod.yml`](.eas/deploy-prod.yml) (mostly commented / experimental); **GitHub Actions above are the source of truth** for how this repo deploys today.
+
+### Default branch: native build vs OTA
+
+```mermaid
+flowchart TD
+  A[Push to main] --> P[prepare version from app.config.ts]
+  A --> T[bun run test:ci and ts:check]
+  P --> D[detect-changes fingerprints]
+  T --> D
+  D -->|fingerprint changed or force build| B[build local EAS production + submit stores]
+  D -->|fingerprint unchanged or force OTA| U[eas update production channel]
+  B --> R[release GitHub tag and changelog]
+  U --> R
+  R --> S[Slack notify]
+```
+
+### Manual EAS deploy (preview or production)
+
+```mermaid
+flowchart LR
+  H[GitHub Actions eas-deploy.yml] --> C[Choose variant production or preview]
+  C --> PL[Choose platform all ios android]
+  PL --> E[bun run build variant platform]
+  E --> EAS[EAS cloud build and auto-submit]
+```
+
+### OTA rollout and rollback
+
+```mermaid
+flowchart TD
+  subgraph rolloutWf["rollout-ota.yml"]
+    R1[Inputs update group id and target percent] --> R2[eas update:edit rollout percentage]
+  end
+  subgraph rollbackWf["rollback-ota.yml"]
+    B1{rollback target}
+    B1 -->|embedded| B2[eas update:roll-back-to-embedded per platform]
+    B1 -->|group id| B3[eas update:republish to channel]
+  end
+```
 
 ## E2E testing
 
@@ -415,27 +488,40 @@ No setup required - just ensure you're logged in with `eas login`.
 
 ## Local EAS build
 
-TODO
+Use this when you want binaries on your machine (parity with CI) or to avoid queue wait during iteration. Requires [EAS CLI](https://docs.expo.dev/build/setup/) and `eas login`.
 
-# Continuous delivery pipeline
+```bash
+# Cloud build (wait for Expo builders)
+eas build --profile production --platform ios
+eas build --profile preview --platform android
 
-TODO
+# Compile on this machine (artifacts under ./build-artifacts or default EAS output)
+eas build --profile production --platform ios --local
+eas build --profile production --platform android --local
+```
+
+Profiles and channels are defined in [`eas.json`](eas.json). See [EAS Build](https://docs.expo.dev/build/introduction/) for credentials, credentials.json, and `--local` requirements (Xcode / Android SDK).
 
 # Release process
 
-The `public` version of the app is distributed via the stores and is not available publicly yet:
+The public app is distributed via the stores and is not in wide release yet. Shipping happens through **EAS Build**, **EAS Submit**, and **EAS Update** as described in [Deploy flows](#deploy-flows).
 
-We use [EAS Build](https://expo.dev/eas#build) to build app binaries and [EAS Submit](https://expo.dev/eas#submit) to submit them to the stores.
-Production deployment is configured to be triggered manually.
-Manual trigger is available from GitHub, Expo Dashboard or directly from the console using the following commands:
+## Trigger a new production build
 
-- `bun run build:production:android` - builds the app for Android and auto-submits it to the Google Play Store
-- `bun run build:production:ios` - builds the app for iOS and auto-submits it to the App Store
+1. **Merge to `main`** — [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml) runs automatically. Use **Run workflow** on that file to force **OTA** or **build**, pick **platform**, or set **dry run** (skips release creation).
+2. **Manual cloud build + submit** — GitHub → **Actions** → **EAS production / preview deployment** ([`eas-deploy.yml`](.github/workflows/eas-deploy.yml)).
+3. **From your machine** (uses EAS cloud builders, non-blocking with `--no-wait` as in npm scripts):
 
-You can inspect the builds history on the [EAS Builds dashboard](https://expo.dev/accounts/lukehowsam123/projects/foam/builds).
-You can inspect the submissions history on the [EAS Submissions dashboard](https://expo.dev/accounts/lukehowsam123/projects/foam/submissions).
+- `bun run build:production:android` — Android production build and auto-submit to Google Play
+- `bun run build:production:ios` — iOS production build and auto-submit to App Store Connect
+- `bun run build:preview:ios` / `build:preview:android` / `build:preview` — preview / internal distribution builds
 
-You can view the build queue on the [EAS build queue dashboard](https://expo.dev/eas-build-status)
+You can inspect build history on the [EAS Builds dashboard](https://expo.dev/accounts/lukehowsam123/projects/foam/builds), submissions on [EAS Submissions](https://expo.dev/accounts/lukehowsam123/projects/foam/submissions), and the queue on [EAS build status](https://expo.dev/eas-build-status).
+
+## Versioning strategy
+
+- **Marketing / release tag version** — `VERSION` in [`app.config.ts`](app.config.ts) is read by `deploy-ota-or-native` for native release tags and changelog flow.
+- **Store build numbers** — [`eas.json`](eas.json) sets `"appVersionSource": "remote"` so compatible native version fields are managed on Expo’s side for production builds (see [EAS app version](https://docs.expo.dev/build-reference/app-versions/)).
 
 # Testers management
 
@@ -507,8 +593,6 @@ In order to join the TestFlight internal testing of the iOS app distributed via 
   - manage Android and iOS specific credentials needed for building and submitting the app to the stores
   - currently this account needs to be transferred to an org to enable sharing.
 
-2. Adhere to the [`Table of Contents`](#table-of-contents) structure
-
 # API dependencies
 
 1. The app currently depends on the following APIs and services to deliver its content
@@ -539,7 +623,8 @@ In order to join the TestFlight internal testing of the iOS app distributed via 
 
 # Markdown writing guide
 
-1. Take advantage of using GitHub flavored markdown
+1. When editing this README, keep the [table of contents](#table-of-contents) in sync with new top-level sections.
+2. Take advantage of using GitHub flavored markdown
 
    > [!NOTE]
    > This is a note
