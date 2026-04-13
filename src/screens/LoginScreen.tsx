@@ -7,7 +7,10 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { countMetric } from '@app/services/sentry-service';
 import { theme } from '@app/styles/themes';
-import { useAuthRequest } from 'expo-auth-session';
+import {
+  useAuthRequest,
+  type AuthRequestPromptOptions,
+} from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
 import {
@@ -47,6 +50,29 @@ const proxyUrl = new URL(
 ).toString();
 
 const { width: screenWidth } = Dimensions.get('window');
+
+function getTwitchAuthPromptOptions(
+  platform: typeof Platform.OS,
+): AuthRequestPromptOptions {
+  switch (platform) {
+    case 'ios':
+      return {
+        preferEphemeralSession: false,
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+        dismissButtonStyle: 'close',
+      };
+    case 'android':
+      return {
+        preferEphemeralSession: false,
+        createTask: false,
+        showInRecents: false,
+      };
+    default:
+      return {
+        preferEphemeralSession: false,
+      };
+  }
+}
 
 export function LoginScreen() {
   const navigation = useAppNavigation();
@@ -131,11 +157,7 @@ export function LoginScreen() {
 
           <View style={styles.actionSection}>
             <Button
-              onPress={() =>
-                promptAsync({
-                  preferEphemeralSession: false,
-                })
-              }
+              onPress={() => promptAsync(getTwitchAuthPromptOptions(Platform.OS))}
               onPressIn={() => {
                 navigation.preload('Tabs', { screen: 'Following' });
               }}
