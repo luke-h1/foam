@@ -21,6 +21,9 @@ export interface BaseUserNoticeTags
   'user-id'?: string;
   'user-type'?: string;
   vip?: '0' | '1';
+  'custom-reward-id'?: string;
+  'msg-param-custom-reward-title'?: string;
+  'msg-param-reward-title'?: string;
 }
 
 export interface ViewerMilestoneTags extends BaseUserNoticeTags {
@@ -119,6 +122,10 @@ export interface RaidTags extends BaseUserNoticeTags {
   'msg-param-displayName': string;
 }
 
+export interface RewardGiftTags extends BaseUserNoticeTags {
+  'msg-id': 'rewardgift';
+}
+
 /**
  * Type mapping from msg-id values to their corresponding tag types
  */
@@ -128,6 +135,7 @@ export type UserNoticeVariantMap = {
   resub: SubscriptionTags;
   subgift: SubGiftTags;
   anongiftpaidupgrade: AnonGiftPaidUpgradeTags;
+  rewardgift: RewardGiftTags;
   raid: RaidTags;
 };
 
@@ -142,4 +150,5 @@ export type UserNoticeTags =
   | SubscriptionTags
   | SubGiftTags
   | AnonGiftPaidUpgradeTags
+  | RewardGiftTags
   | RaidTags;

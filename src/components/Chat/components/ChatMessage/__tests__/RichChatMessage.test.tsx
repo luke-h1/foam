@@ -17,8 +17,18 @@ jest.mock('../renderers/EmoteRenderer', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory must not reference outer scope
   const { View } = require('react-native');
   return {
-    EmoteRenderer: ({ part }: { part: { name?: string } }) => (
-      <View testID="emote-renderer">{part?.name ?? 'emote'}</View>
+    EmoteRenderer: ({
+      part,
+      disableAnimations,
+    }: {
+      part: { name?: string };
+      disableAnimations?: boolean;
+    }) => (
+      <View
+        testID={disableAnimations ? 'emote-renderer-static' : 'emote-renderer'}
+      >
+        {part?.name ?? 'emote'}
+      </View>
     ),
   };
 });
@@ -288,6 +298,16 @@ describe('RichChatMessage', () => {
       fireEvent(textElement, 'longPress');
 
       expect(mockOnMessageLongPress).toHaveBeenCalledTimes(1);
+      expect(mockOnMessageLongPress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: 'testuser',
+          login: 'testuser',
+          userId: '123456',
+          messageData: expect.objectContaining({
+            message_id: 'msg-123',
+          }),
+        }),
+      );
     });
 
     it('should render emotes in messages', () => {

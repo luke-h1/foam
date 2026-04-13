@@ -33,6 +33,8 @@ export type BadgePressData = SanitisedBadgeSet;
 export type MessageActionData<TNoticeType extends NoticeVariants> = {
   message: ParsedPart[];
   username?: string;
+  login?: string;
+  userId?: string;
   messageData: ChatMessageType<TNoticeType>;
 };
 export interface UsernamePressData {
@@ -149,6 +151,7 @@ function ChatMessageComponent<
   onUsernamePress,
   currentUsername,
   density = 'comfortable',
+  disableEmoteAnimations = false,
   showTimestamp = true,
   highlightedUsers = [],
   showInlineReplyContext = true,
@@ -163,6 +166,7 @@ function ChatMessageComponent<
   onUsernamePress?: (data: UsernamePressData) => void;
   currentUsername?: string;
   density?: 'comfortable' | 'compact';
+  disableEmoteAnimations?: boolean;
   showTimestamp?: boolean;
   highlightedUsers?: string[];
   showInlineReplyContext?: boolean;
@@ -270,6 +274,7 @@ function ChatMessageComponent<
         case 'emote': {
           return (
             <EmoteRenderer
+              disableAnimations={disableEmoteAnimations}
               key={index}
               part={part}
               handleEmotePress={handleEmotePress}
@@ -305,11 +310,21 @@ function ChatMessageComponent<
         }
 
         case 'stv_emote_added': {
-          return <StvEmoteEvent part={part} />;
+          return (
+            <StvEmoteEvent
+              disableAnimations={disableEmoteAnimations}
+              part={part}
+            />
+          );
         }
 
         case 'stv_emote_removed': {
-          return <StvEmoteEvent part={part} />;
+          return (
+            <StvEmoteEvent
+              disableAnimations={disableEmoteAnimations}
+              part={part}
+            />
+          );
         }
 
         case 'sub':
@@ -348,6 +363,7 @@ function ChatMessageComponent<
     [
       handleEmotePress,
       compact,
+      disableEmoteAnimations,
       getMentionColor,
       highlightedUserSet,
       parseTextForEmotes,
@@ -446,6 +462,8 @@ function ChatMessageComponent<
     onMessageLongPress?.({
       message,
       username: userstate.username,
+      login: userstate.login,
+      userId: userstate['user-id'],
       messageData,
     });
   }, [
@@ -642,6 +660,7 @@ export const RichChatMessage = MemoizedRichChatMessage as <
     onUsernamePress?: (data: UsernamePressData) => void;
     currentUsername?: string;
     density?: 'comfortable' | 'compact';
+    disableEmoteAnimations?: boolean;
     showTimestamp?: boolean;
     highlightedUsers?: string[];
     showInlineReplyContext?: boolean;

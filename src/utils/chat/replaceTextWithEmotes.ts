@@ -135,7 +135,12 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                */
               Pick<
                 Partial<SanitisedEmote>,
-                'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
+                | 'creator'
+                | 'emote_link'
+                | 'original_name'
+                | 'site'
+                | 'static_url'
+                | 'url'
               > & {
                 id?: string;
                 name?: string;
@@ -432,6 +437,7 @@ export function replaceTextWithEmotes({
             emote_link: foundEmote.emote_link,
             original_name: foundEmote.original_name,
             site: foundEmote.site,
+            static_url: foundEmote.static_url,
             thumbnail: foundEmote.url,
             url: foundEmote.url,
             aspect_ratio: foundEmote.aspect_ratio,
@@ -467,6 +473,7 @@ export function replaceTextWithEmotes({
                 creator: emoteInMention.creator,
                 emote_link: emoteInMention.emote_link,
                 original_name: emoteInMention.original_name,
+                static_url: emoteInMention.static_url,
                 url: emoteInMention.url,
                 thumbnail: emoteInMention.url,
                 site: emoteInMention.site,

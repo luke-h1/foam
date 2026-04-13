@@ -29,6 +29,7 @@ export interface Preferences {
   showFFzEmotes: boolean;
   showChatterinoEmotes: boolean;
   showTwitchEmotes: boolean;
+  disableEmoteAnimations: boolean;
   showTwitchBadges: boolean;
   show7tvBadges: boolean;
   showFFzBadges: boolean;
@@ -50,6 +51,7 @@ const initialPreferences: Preferences = {
   showFFzEmotes: true,
   showChatterinoEmotes: true,
   showTwitchEmotes: true,
+  disableEmoteAnimations: false,
   showTwitchBadges: true,
   show7tvBadges: true,
   showFFzBadges: true,

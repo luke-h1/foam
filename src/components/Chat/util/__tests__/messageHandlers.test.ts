@@ -370,6 +370,39 @@ describe('messageHandlers', () => {
       expect(result.notice_tags?.['msg-id']).toBe('anongiftpaidupgrade');
     });
 
+    test('should create a channel point redemption notice without chat text', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'rewardgift',
+        'display-name': 'RewardUser',
+        login: 'rewarduser',
+        'system-msg': 'RewardUser redeemed Hydrate',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+        'room-id': '67890',
+        'custom-reward-id': 'reward-123',
+        'msg-param-reward-title': 'Hydrate',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('rewardgift');
+      expect(result.isChannelPointRedemption).toBe(true);
+      expect(result.isTwitchSystemNotice).not.toBe(true);
+      expect(result.message).toEqual([]);
+      expect(result.userstate['custom-reward-id']).toBe('reward-123');
+      expect(result.userstate['msg-param-reward-title']).toBe('Hydrate');
+    });
+
     test('should handle unknown msg-id with default case', () => {
       const tags = {
         'msg-id': 'unknown_type',

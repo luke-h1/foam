@@ -15,6 +15,7 @@ interface SanitisedEmoteBase {
   id: string;
   name: string;
   url: string;
+  static_url?: string;
   original_name: string;
   creator: string | null;
   emote_link: string;

@@ -18,12 +18,26 @@ interface Props {
   handleHidePhrase?: () => void;
   handleHideUser?: () => void;
   handleHighlightUser?: () => void;
+  handleDeleteMessage?: () => void;
+  handleTimeoutUser?: () => void;
+  handleBanUser?: () => void;
   isUserHighlighted?: boolean;
+  canModerateChat?: boolean;
+  canDeleteMessage?: boolean;
+  canModerateUser?: boolean;
 }
 
 type ActionItem = {
   icon: string;
-  id: 'copy' | 'reply' | 'hide-user' | 'highlight-user' | 'hide-phrase';
+  id:
+    | 'copy'
+    | 'reply'
+    | 'hide-user'
+    | 'highlight-user'
+    | 'hide-phrase'
+    | 'delete-message'
+    | 'timeout-user'
+    | 'ban-user';
   label: string;
   onPress: () => void;
 };
@@ -39,7 +53,13 @@ export function ActionSheet(props: Props) {
     handleHidePhrase,
     handleHideUser,
     handleHighlightUser,
+    handleDeleteMessage,
+    handleTimeoutUser,
+    handleBanUser,
     isUserHighlighted,
+    canModerateChat,
+    canDeleteMessage,
+    canModerateUser,
   } = props;
 
   const actions = useMemo<ActionItem[]>(() => {
@@ -95,10 +115,53 @@ export function ActionSheet(props: Props) {
       });
     }
 
+    if (canModerateChat) {
+      if (canDeleteMessage) {
+        items.push({
+          id: 'delete-message',
+          icon: 'trash-2',
+          label: 'Delete Message',
+          onPress: () => {
+            handleDeleteMessage?.();
+            onClose();
+          },
+        });
+      }
+
+      if (canModerateUser) {
+        items.push(
+          {
+            id: 'timeout-user',
+            icon: 'clock',
+            label: 'Timeout for 10m',
+            onPress: () => {
+              handleTimeoutUser?.();
+              onClose();
+            },
+          },
+          {
+            id: 'ban-user',
+            icon: 'slash',
+            label: 'Ban User',
+            onPress: () => {
+              handleBanUser?.();
+              onClose();
+            },
+          },
+        );
+      }
+    }
+
     return items;
   }, [
+    canDeleteMessage,
+    canModerateChat,
+    canModerateUser,
+    handleBanUser,
     handleCopy,
+    handleDeleteMessage,
     handleReply,
+    handleTimeoutUser,
     username,
     handleHideUser,
     handleHighlightUser,
@@ -114,7 +177,10 @@ export function ActionSheet(props: Props) {
         | 'reply'
         | 'hide-user'
         | 'highlight-user'
-        | 'hide-phrase',
+        | 'hide-phrase'
+        | 'delete-message'
+        | 'timeout-user'
+        | 'ban-user',
     ) => {
       switch (actionId) {
         case 'copy':
@@ -127,6 +193,12 @@ export function ActionSheet(props: Props) {
           return 'star' as const;
         case 'hide-phrase':
           return 'nosign' as const;
+        case 'delete-message':
+          return 'trash' as const;
+        case 'timeout-user':
+          return 'clock' as const;
+        case 'ban-user':
+          return 'slash.circle' as const;
         default:
           return 'questionmark.circle' as const;
       }

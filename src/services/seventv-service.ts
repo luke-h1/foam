@@ -211,6 +211,20 @@ function pickBestV3File(files: SevenTvFile[]): SevenTvFile | undefined {
   );
 }
 
+function pickBestStaticImage(images: readonly Image[]): Image | undefined {
+  const scales = [4, 3, 2, 1];
+
+  return scales.reduce<Image | undefined>((found, targetScale) => {
+    if (found) return found;
+
+    const atScale = images.filter(img => img.scale === targetScale);
+    if (atScale.length === 0) return undefined;
+
+    const staticImages = atScale.filter(img => img.frameCount <= 1);
+    return staticImages.length > 0 ? pickBestFormat(staticImages) : undefined;
+  }, undefined);
+}
+
 export const sevenTvService = {
   get7tvUserId: async (twitchUserId: string): Promise<string> => {
     const result = await sevenTvApi.get<{ user: { id: string } }>(
@@ -258,6 +272,9 @@ export const sevenTvService = {
         name: emote.name,
         id: emote.id,
         url: `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '2x.avif'}`,
+        static_url: bestFile?.static_name
+          ? `https://cdn.7tv.app/emote/${emote.id}/${bestFile.static_name}`
+          : undefined,
         flags: emote.data.flags,
         original_name: emote.data.name,
         creator: (owner?.display_name || owner?.username) ?? null,
@@ -340,6 +357,7 @@ export const sevenTvService = {
       const emoteName = item.alias || emote.defaultName;
 
       const bestImage = pickBestImage(emote.images);
+      const bestStaticImage = pickBestStaticImage(emote.images);
 
       const imgScale = bestImage?.scale ?? 1;
       const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
@@ -349,6 +367,7 @@ export const sevenTvService = {
         name: emoteName,
         id: emote.id,
         url: bestImage?.url ?? '',
+        static_url: bestStaticImage?.url,
         flags: emote.flags.animated ? 1 : 0,
         original_name: emote.defaultName,
         creator: emote.owner?.mainConnection?.platformDisplayName ?? null,

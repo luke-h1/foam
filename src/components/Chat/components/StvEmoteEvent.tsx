@@ -3,13 +3,18 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { View, StyleSheet } from 'react-native';
 
 interface StvEmoteEventProps {
+  disableAnimations?: boolean;
   part: ParsedPart<'stv_emote_added' | 'stv_emote_removed'>;
 }
 
-export function StvEmoteEvent({ part }: StvEmoteEventProps) {
+export function StvEmoteEvent({
+  part,
+  disableAnimations = false,
+}: StvEmoteEventProps) {
   const added = part.type === 'stv_emote_added';
   const removed = part.type === 'stv_emote_removed';
 
@@ -17,6 +22,11 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
   if (!content) {
     return null;
   }
+  const displayUrl = getDisplayEmoteUrl({
+    url: content.url,
+    static_url: content.static_url,
+    disableAnimations,
+  });
 
   const status = removed ? 'Removed' : 'Added';
   const actorName = content.actor?.display_name;
@@ -42,7 +52,7 @@ export function StvEmoteEvent({ part }: StvEmoteEventProps) {
       <View style={styles.content}>
         <Image
           useNitro
-          source={content.url}
+          source={displayUrl}
           style={styles.emoteImage}
           transition={0}
           contentFit="contain"

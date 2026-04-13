@@ -306,6 +306,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     ws.send(`${message}\r\n`);
   }, []);
 
+  const formatChannelName = useCallback((channelName: string): string => {
+    return channelName.startsWith('#') ? channelName : `#${channelName}`;
+  }, []);
+
   /**
    * Authenticate with Twitch IRC
    */
@@ -339,9 +343,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     (channelName: string) => {
       if (!channelName) return;
 
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
       if (joinedChannelsRef.current.has(channelFormatted)) {
         logger.chat.debug(`Already joined channel: ${channelFormatted}`);
@@ -352,7 +354,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       sendIrcCommand('JOIN', channelFormatted);
       joinedChannelsRef.current.add(channelFormatted);
     },
-    [sendIrcCommand],
+    [formatChannelName, sendIrcCommand],
   );
 
   /**
@@ -362,9 +364,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     (channelName: string) => {
       if (!channelName) return;
 
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
       if (!joinedChannelsRef.current.has(channelFormatted)) {
         return;
@@ -375,7 +375,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       joinedChannelsRef.current.delete(channelFormatted);
       onPart?.(channelFormatted);
     },
-    [sendIrcCommand, onPart],
+    [formatChannelName, sendIrcCommand, onPart],
   );
 
   const handleIrcMessage = useCallback(
@@ -800,9 +800,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         return;
       }
 
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
       pendingMessageRef.current = {
         channel: channelFormatted,
@@ -833,7 +831,31 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);
       ws.send(`${fullMessage}\r\n`);
     },
-    [],
+    [formatChannelName],
+  );
+
+  const sendChatCommand = useCallback(
+    (channelName: string, command: string) => {
+      const trimmedCommand = command.trim();
+      if (trimmedCommand.length === 0) {
+        logger.chat.warn('Cannot send empty chat command');
+        return;
+      }
+
+      const ws = getWebSocketRef.current?.();
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        logger.chat.warn('Cannot send chat command - WebSocket not open');
+        return;
+      }
+
+      const channelFormatted = formatChannelName(channelName);
+      const fullMessage = `PRIVMSG ${channelFormatted} :${trimmedCommand}`;
+      logger.chat.debug(
+        `Sending chat command: ${fullMessage.substring(0, 100)}...`,
+      );
+      ws.send(`${fullMessage}\r\n`);
+    },
+    [formatChannelName],
   );
 
   /**
@@ -841,15 +863,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    */
   const sendAction = useCallback(
     (channelName: string, action: string) => {
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
       // ACTION format: PRIVMSG #channel :\x01ACTION <message>\x01
       const actionMessage = `\x01ACTION ${action}\x01`;
       sendMessage(channelFormatted, actionMessage);
     },
-    [sendMessage],
+    [formatChannelName, sendMessage],
   );
 
   /**
@@ -871,6 +891,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       joinChannel,
       partChannel,
       sendMessage,
+      sendChatCommand,
       sendAction,
       getUserState,
     }),
@@ -880,6 +901,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       joinChannel,
       partChannel,
       sendMessage,
+      sendChatCommand,
       sendAction,
       getUserState,
     ],

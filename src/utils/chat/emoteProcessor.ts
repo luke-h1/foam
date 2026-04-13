@@ -179,6 +179,7 @@ export const processEmotesWorklet = (
         emote_link: emote.emote_link || '',
         original_name: emote.original_name || '',
         site: emote.site || '',
+        static_url: emote.static_url,
         thumbnail: emote.url,
         url: emote.url,
         width: emote.width,

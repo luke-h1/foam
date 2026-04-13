@@ -143,4 +143,31 @@ describe('RichChatMessage chat features', () => {
     ).toBeOnTheScreen();
     expect(queryByTestId('chat-username-button')).toBeNull();
   });
+
+  test('renders a standalone channel point redemption summary without chat text', () => {
+    const message = createMockMessage(
+      [],
+      {
+        'display-name': 'RewardUser',
+        username: 'RewardUser',
+        login: 'rewarduser',
+        'room-id': '67890',
+        'custom-reward-id': 'reward-123',
+        'msg-param-reward-title': 'Hydrate',
+      },
+      {
+        sender: 'rewarduser',
+        isChannelPointRedemption: true,
+      },
+    );
+
+    const { getByText, queryByTestId } = render(
+      <RichChatMessage {...message} />,
+    );
+
+    expect(getByText('RewardUser')).toBeOnTheScreen();
+    expect(getByText('redeemed')).toBeOnTheScreen();
+    expect(getByText('Hydrate')).toBeOnTheScreen();
+    expect(queryByTestId('chat-username-button')).toBeNull();
+  });
 });

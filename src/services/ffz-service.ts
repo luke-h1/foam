@@ -107,6 +107,9 @@ export const ffzService = {
           url: emote.animated
             ? `https://cdn.frankerfacez.com/emote/${emote.id}/animated/4`
             : `https://cdn.frankerfacez.com/emote/${emote.id}/4`,
+          static_url: emote.animated
+            ? `https://cdn.frankerfacez.com/emote/${emote.id}/4`
+            : undefined,
           emote_link: `https://www.frankerfacez.com/emoticon/${emote.id}`,
 
           creator: 'UNKNOWN',
@@ -224,6 +227,9 @@ export const ffzService = {
               url: emote.animated
                 ? `https://cdn.frankerfacez.com/emote/${emote.id}/animated/4`
                 : `https://cdn.frankerfacez.com/emote/${emote.id}/4`,
+              static_url: emote.animated
+                ? `https://cdn.frankerfacez.com/emote/${emote.id}/4`
+                : undefined,
               emote_link: `https://www.frankerfacez.com/emoticon/${emote.id}`,
               creator: owner.name ?? 'unknown',
               site: 'FFZ',

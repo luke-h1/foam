@@ -13,8 +13,12 @@ interface UserActionSheetProps {
   onHideUser: () => void;
   onHighlightUser: () => void;
   onMentionUser: () => void;
+  onTimeoutUser?: () => void;
+  onBanUser?: () => void;
   username: string;
   visible: boolean;
+  canModerateChat?: boolean;
+  canModerateUser?: boolean;
 }
 
 export function UserActionSheet({
@@ -26,8 +30,12 @@ export function UserActionSheet({
   onHideUser,
   onHighlightUser,
   onMentionUser,
+  onTimeoutUser,
+  onBanUser,
   username,
   visible,
+  canModerateChat,
+  canModerateUser,
 }: UserActionSheetProps) {
   return (
     <Modal
@@ -68,6 +76,20 @@ export function UserActionSheet({
               {isHighlighted ? 'Unhighlight User' : 'Highlight User'}
             </Text>
           </Button>
+
+          {canModerateChat && canModerateUser ? (
+            <>
+              <Button style={styles.actionButton} onPress={onTimeoutUser}>
+                <Icon icon="clock" size={18} />
+                <Text style={styles.actionText}>Timeout for 10m</Text>
+              </Button>
+
+              <Button style={styles.actionButton} onPress={onBanUser}>
+                <Icon icon="slash" size={18} />
+                <Text style={styles.actionText}>Ban User</Text>
+              </Button>
+            </>
+          ) : null}
         </View>
 
         <Button style={styles.closeButton} onPress={onClose}>

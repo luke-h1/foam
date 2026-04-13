@@ -3,6 +3,7 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import {
   getCompressedEmoteUrl,
   compressEmoteUrl,
@@ -14,63 +15,82 @@ import { EmoteActionSheet } from './EmoteActionSheet';
 type PartVariant = ParsedPart<'emote'>;
 
 interface EmoteRendererProps {
+  disableAnimations?: boolean;
   part: PartVariant;
   handleEmotePress: (part: PartVariant) => void;
 }
 
 export const EmoteRenderer = memo(
-  ({ part, handleEmotePress }: EmoteRendererProps) => {
+  ({
+    part,
+    handleEmotePress,
+    disableAnimations = false,
+  }: EmoteRendererProps) => {
     const { height, width } = useMemo(
       () => calculateAspectRatio(part.width || 20, part.height || 20, 30),
       [part.width, part.height],
     );
+    const displayUrl = useMemo(
+      () =>
+        getDisplayEmoteUrl({
+          url: part.url,
+          static_url: part.static_url,
+          disableAnimations,
+        }),
+      [disableAnimations, part.static_url, part.url],
+    );
 
     const [compressedUrl, setCompressedUrl] = useState<string | null>(() => {
       // Initialize with cached value if available
-      if (!part.url || part.url.startsWith('data:')) return null;
-      const cached = getCompressedEmoteUrl(part.url);
-      return cached && cached !== part.url ? cached : null;
+      if (!displayUrl || displayUrl.startsWith('data:')) return null;
+      const cached = getCompressedEmoteUrl(displayUrl);
+      return cached && cached !== displayUrl ? cached : null;
     });
 
     useEffect(() => {
-      // Reset if URL is cleared
-      if (!part.url) {
+      if (!displayUrl) {
         setCompressedUrl(null);
         return;
       }
 
-      // If already compressed (data URI), no need to compress again
-      if (part.url.startsWith('data:')) {
+      if (displayUrl.startsWith('data:')) {
         setCompressedUrl(null);
         return;
       }
 
-      // Check if already compressed in cache
-      const cached = getCompressedEmoteUrl(part.url);
-      if (cached && cached !== part.url) {
-        setCompressedUrl(cached);
+      const cached = getCompressedEmoteUrl(displayUrl);
+      setCompressedUrl(cached && cached !== displayUrl ? cached : null);
+    }, [displayUrl]);
+
+    useEffect(() => {
+      if (!displayUrl || displayUrl.startsWith('data:') || compressedUrl) {
         return;
       }
 
-      // Already have the right value, don't update
-      if (compressedUrl === null) {
-        // Start compression in background only if not cached
-        void compressEmoteUrl(part.url).then(compressed => {
-          // Update to compressed version when ready
-          if (compressed && compressed !== part.url) {
-            setCompressedUrl(compressed);
-          }
-        });
-      }
-    }, [part.url, compressedUrl]);
+      let cancelled = false;
+
+      void compressEmoteUrl(displayUrl).then(compressed => {
+        if (!cancelled && compressed && compressed !== displayUrl) {
+          setCompressedUrl(compressed);
+        }
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    }, [compressedUrl, displayUrl]);
 
     // Use compressed URL if available, otherwise use original URL
-    const imageUrl = compressedUrl || part.url || '';
+    const imageUrl = compressedUrl || displayUrl;
 
     // Add error handling for missing URLs
-    if (!part.url) {
+    if (!displayUrl) {
       return (
-        <EmoteActionSheet part={part} onPress={handleEmotePress}>
+        <EmoteActionSheet
+          disableAnimations={disableAnimations}
+          part={part}
+          onPress={handleEmotePress}
+        >
           <Button>
             <Text style={getNameStyle(width, height)}>{part.name || '?'}</Text>
           </Button>
@@ -79,7 +99,11 @@ export const EmoteRenderer = memo(
     }
 
     return (
-      <EmoteActionSheet part={part} onPress={handleEmotePress}>
+      <EmoteActionSheet
+        disableAnimations={disableAnimations}
+        part={part}
+        onPress={handleEmotePress}
+      >
         <Button>
           <Image
             useNitro

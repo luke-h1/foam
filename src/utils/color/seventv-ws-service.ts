@@ -866,6 +866,9 @@ export default class SevenTvWsService {
             name: emote.value.data.name,
             id: emote.value.id,
             url: `https://cdn.7tv.app/emote/${emote.value.id}/${emote4x?.name ?? '1x.avif'}`,
+            static_url: emote4x?.static_name
+              ? `https://cdn.7tv.app/emote/${emote.value.id}/${emote4x.static_name}`
+              : undefined,
             original_name: emote.value.data.name,
             creator:
               (emote.value.data.owner?.display_name ||
@@ -921,6 +924,9 @@ export default class SevenTvWsService {
               name: emote.old_value.data.name,
               id: emote.old_value.id,
               url: `https://cdn.7tv.app/emote/${emote.old_value.id}/1x.avif`,
+              static_url: oldEmote4x?.static_name
+                ? `https://cdn.7tv.app/emote/${emote.old_value.id}/${oldEmote4x.static_name}`
+                : undefined,
               flags: 0,
               original_name: emote.old_value.data.name,
               creator: emote.old_value.data.owner?.display_name ?? null,

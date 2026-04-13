@@ -6,12 +6,14 @@ import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useMemo } from 'react';
 import { Dimensions, Modal, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 
 interface Props {
+  disableAnimations?: boolean;
   visible: boolean;
   onClose: () => void;
   selectedEmote: ParsedPart<'emote'>;
@@ -22,7 +24,16 @@ const MAX_EMOTE_SIZE = Math.min(screenWidth * 0.4, 120); // 40% of screen width 
 const MIN_EMOTE_SIZE = 32;
 
 export function EmotePreviewSheet(props: Props) {
-  const { visible, onClose, selectedEmote } = props;
+  const { visible, onClose, selectedEmote, disableAnimations = false } = props;
+  const displayUrl = useMemo(
+    () =>
+      getDisplayEmoteUrl({
+        url: selectedEmote.url,
+        static_url: selectedEmote.static_url,
+        disableAnimations,
+      }),
+    [disableAnimations, selectedEmote.static_url, selectedEmote.url],
+  );
 
   const getEmoteSize = useCallback(() => {
     const originalWidth = selectedEmote.width || 28;
@@ -68,16 +79,14 @@ export function EmotePreviewSheet(props: Props) {
   const handleCopy = useCallback(
     (field: 'name' | 'url') => {
       void Clipboard.setStringAsync(
-        field === 'name'
-          ? selectedEmote.content
-          : (selectedEmote.url as string),
+        field === 'name' ? selectedEmote.content : displayUrl,
       ).then(() =>
         toast.success(
           `${field === 'name' ? 'Emote name' : 'Emote URL'} copied`,
         ),
       );
     },
-    [selectedEmote.content, selectedEmote.url],
+    [displayUrl, selectedEmote.content],
   );
 
   const actions = useMemo(
@@ -112,7 +121,7 @@ export function EmotePreviewSheet(props: Props) {
         <View style={styles.header}>
           <View style={styles.emoteContainer}>
             <Image
-              source={selectedEmote.url ?? ''}
+              source={displayUrl}
               contentFit="contain"
               transition={100}
               style={[styles.emoteImage, emoteSize]}

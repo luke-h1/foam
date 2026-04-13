@@ -99,6 +99,10 @@ interface ChatProps {
   channelName: string;
 }
 
+function normaliseChatUsername(value?: string | null): string {
+  return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
+}
+
 export const Chat = memo(({ channelName, channelId }: ChatProps) => {
   const { user } = useAuthContext();
   const preferences = usePreferences();
@@ -529,6 +533,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     partChannel,
     joinChannel,
     sendMessage,
+    sendChatCommand,
     getUserState,
   } = useTwitchChat({
     channel: channelName,
@@ -876,6 +881,32 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     setSelectedUser(usernameData);
   }, []);
 
+  const canModerateChat = useMemo(() => {
+    const currentUserState = getUserState();
+    const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
+    return (
+      currentUserState.mod === '1' ||
+      parsedBadges.broadcaster === '1' ||
+      normaliseChatUsername(user?.login) === normaliseChatUsername(channelName)
+    );
+  }, [channelName, getUserState, user?.login]);
+
+  const canModerateSelectedMessageUser = useMemo(() => {
+    return Boolean(
+      selectedMessage?.login?.trim() || selectedMessage?.username?.trim(),
+    );
+  }, [selectedMessage?.login, selectedMessage?.username]);
+
+  const canDeleteSelectedMessage = useMemo(() => {
+    return Boolean(selectedMessage?.messageData.message_id?.trim());
+  }, [selectedMessage?.messageData.message_id]);
+
+  const canModerateSelectedUser = useMemo(() => {
+    return Boolean(
+      selectedUser?.login?.trim() || selectedUser?.username.trim(),
+    );
+  }, [selectedUser?.login, selectedUser?.username]);
+
   const handleActionSheetReply = useCallback(() => {
     if (!selectedMessage) return;
     handleReply(selectedMessage.messageData);
@@ -910,6 +941,51 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     setSelectedMessage(null);
   }, [hidePhraseFromView, selectedMessage]);
 
+  const handleActionSheetDeleteMessage = useCallback(() => {
+    const messageId = selectedMessage?.messageData.message_id?.trim();
+    if (!messageId) {
+      return;
+    }
+
+    sendChatCommand(channelName, `/delete ${messageId}`);
+    toast.success('Delete command sent');
+    setSelectedMessage(null);
+  }, [channelName, selectedMessage?.messageData.message_id, sendChatCommand]);
+
+  const handleActionSheetTimeoutUser = useCallback(() => {
+    const target =
+      selectedMessage?.login?.trim() || selectedMessage?.username?.trim();
+    if (!target) {
+      return;
+    }
+
+    sendChatCommand(channelName, `/timeout ${target} 600`);
+    toast.success(`Timeout command sent for ${target}`);
+    setSelectedMessage(null);
+  }, [
+    channelName,
+    selectedMessage?.login,
+    selectedMessage?.username,
+    sendChatCommand,
+  ]);
+
+  const handleActionSheetBanUser = useCallback(() => {
+    const target =
+      selectedMessage?.login?.trim() || selectedMessage?.username?.trim();
+    if (!target) {
+      return;
+    }
+
+    sendChatCommand(channelName, `/ban ${target}`);
+    toast.success(`Ban command sent for ${target}`);
+    setSelectedMessage(null);
+  }, [
+    channelName,
+    selectedMessage?.login,
+    selectedMessage?.username,
+    sendChatCommand,
+  ]);
+
   const handleMentionSelectedUser = useCallback(() => {
     if (!selectedUser?.username) {
       return;
@@ -939,6 +1015,30 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
     toggleHighlightedUser(selectedUser?.username);
     setSelectedUser(null);
   }, [selectedUser, toggleHighlightedUser]);
+
+  const handleTimeoutSelectedUser = useCallback(() => {
+    const target =
+      selectedUser?.login?.trim() || selectedUser?.username?.trim();
+    if (!target) {
+      return;
+    }
+
+    sendChatCommand(channelName, `/timeout ${target} 600`);
+    toast.success(`Timeout command sent for ${target}`);
+    setSelectedUser(null);
+  }, [channelName, selectedUser, sendChatCommand]);
+
+  const handleBanSelectedUser = useCallback(() => {
+    const target =
+      selectedUser?.login?.trim() || selectedUser?.username?.trim();
+    if (!target) {
+      return;
+    }
+
+    sendChatCommand(channelName, `/ban ${target}`);
+    toast.success(`Ban command sent for ${target}`);
+    setSelectedUser(null);
+  }, [channelName, selectedUser, sendChatCommand]);
 
   const getMentionColor = useCallback(
     (username: string): string => {
@@ -1102,6 +1202,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             : undefined
         }
         density={preferences.chatDensity}
+        disableEmoteAnimations={preferences.disableEmoteAnimations}
         showTimestamp={preferences.chatTimestamps}
         highlightedUsers={highlightedUsers}
         showInlineReplyContext={preferences.showInlineReplyContext}
@@ -1116,6 +1217,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
       user?.login,
       user?.display_name,
       preferences.chatDensity,
+      preferences.disableEmoteAnimations,
       preferences.highlightOwnMentions,
       preferences.chatTimestamps,
       preferences.showInlineReplyContext,
@@ -1284,6 +1386,7 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
 
         {selectedEmote && (
           <EmotePreviewSheet
+            disableAnimations={preferences.disableEmoteAnimations}
             visible={Boolean(selectedEmote)}
             onClose={() => setSelectedEmote(null)}
             selectedEmote={selectedEmote}
@@ -1301,6 +1404,12 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             handleHidePhrase={handleActionSheetHidePhrase}
             handleHideUser={handleActionSheetHideUser}
             handleHighlightUser={handleActionSheetHighlightUser}
+            handleDeleteMessage={handleActionSheetDeleteMessage}
+            handleTimeoutUser={handleActionSheetTimeoutUser}
+            handleBanUser={handleActionSheetBanUser}
+            canModerateChat={canModerateChat}
+            canDeleteMessage={canDeleteSelectedMessage}
+            canModerateUser={canModerateSelectedMessageUser}
             isUserHighlighted={Boolean(
               selectedMessage.username &&
                 highlightedUsers.includes(
@@ -1320,10 +1429,14 @@ export const Chat = memo(({ channelName, channelId }: ChatProps) => {
             onCopyUsername={handleCopySelectedUsername}
             onHideUser={handleHideSelectedUser}
             onHighlightUser={handleHighlightSelectedUser}
+            onTimeoutUser={handleTimeoutSelectedUser}
+            onBanUser={handleBanSelectedUser}
             isHidden={hiddenUsers.includes(selectedUser.username.toLowerCase())}
             isHighlighted={highlightedUsers.includes(
               selectedUser.username.toLowerCase(),
             )}
+            canModerateChat={canModerateChat}
+            canModerateUser={canModerateSelectedUser}
           />
         )}
       </KeyboardAvoidingView>

@@ -21,6 +21,7 @@ export type AnyChatMessageType =
   | ChatMessageType<'usernotice', 'resub'>
   | ChatMessageType<'usernotice', 'subgift'>
   | ChatMessageType<'usernotice', 'anongiftpaidupgrade'>
+  | ChatMessageType<'usernotice', 'rewardgift'>
   | ChatMessageType<'usernotice', 'raid'>
   | ChatMessageType<'usernotice'>;
 
@@ -236,6 +237,21 @@ export const createUserNoticeMessage = ({
         isSpecialNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice', 'anongiftpaidupgrade'>;
+    }
+
+    case 'rewardgift': {
+      const trimmedText = text.trimEnd();
+
+      return {
+        ...baseMessage,
+        badges: [],
+        message: trimmedText
+          ? [{ type: 'text' as const, content: trimmedText }]
+          : [],
+        userstate,
+        notice_tags: { ...tags, ...emptyFields },
+        isChannelPointRedemption: true,
+      } as ChatMessageType<'usernotice', 'rewardgift'>;
     }
 
     case 'raid': {

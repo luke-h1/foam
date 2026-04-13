@@ -80,6 +80,7 @@ const ChevronIcon = ({ isOpen }: IconProps) => {
 
   useEffect(() => {
     rotation.value = withTiming<number>(isOpen ? 1 : 0, { duration: 200 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const animatedStyle = useAnimatedStyle(() => ({

@@ -1,5 +1,6 @@
 import { Menu, type Icon, type Item } from '@app/components/Menu/Menu';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { Text } from '@app/components/Text/Text';
 import { ChatPreferencePreview } from '@app/screens/Preferences/ChatPreferencesPreview';
 import { ChatPreferenceMenuItem } from '@app/screens/Preferences/components/ChatPreferenceMenuItem';
 import { Preferences, usePreferences } from '@app/store/preferenceStore';
@@ -17,6 +18,7 @@ type PreviewSwitchKey = keyof Pick<
   | 'show7tvBadges'
   | 'showBttvEmotes'
   | 'showBttvBadges'
+  | 'disableEmoteAnimations'
   | 'showFFzEmotes'
   | 'showFFzBadges'
   | 'showTwitchEmotes'
@@ -63,6 +65,7 @@ export function ChatPreferenceScreen() {
   const {
     chatDensity,
     chatTimestamps,
+    disableEmoteAnimations,
     highlightOwnMentions,
     showInlineReplyContext,
     showUnreadJumpPill,
@@ -87,6 +90,7 @@ export function ChatPreferenceScreen() {
       show7tvBadges,
       showBttvEmotes,
       showBttvBadges,
+      disableEmoteAnimations,
       showFFzEmotes,
       showFFzBadges,
       showTwitchEmotes,
@@ -337,10 +341,32 @@ export function ChatPreferenceScreen() {
         switchValues,
         update,
       }),
+      null,
+      buildChatPreferenceSwitchItem({
+        description: 'Show static versions of animated emotes',
+        icon: {
+          name: 'circle-off',
+          type: 'icon',
+          color: theme.colors.red.accent,
+        },
+        key: 'disableEmoteAnimations',
+        label: 'Disable Emote Animations',
+        preview: (
+          <View style={styles.preferenceNote}>
+            <Text color="gray.textLow" type="xs">
+              Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still
+              images in chat.
+            </Text>
+          </View>
+        ),
+        switchValues,
+        update,
+      }),
     ] satisfies Item[];
   }, [
     chatDensity,
     chatTimestamps,
+    disableEmoteAnimations,
     highlightOwnMentions,
     showInlineReplyContext,
     showUnreadJumpPill,
@@ -375,5 +401,9 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.gray.bg,
     flex: 1,
+  },
+  preferenceNote: {
+    justifyContent: 'center',
+    minHeight: theme.spacing['4xl'],
   },
 });
