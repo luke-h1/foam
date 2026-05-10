@@ -45,10 +45,9 @@ function summariseHomogeneousArray(value: unknown[]): string | null {
   return null;
 }
 
-function sanitiseLogValue(
-  value: unknown,
-  seen = new WeakSet<object>(),
-): unknown {
+function sanitiseLogValue(value: string, seen?: WeakSet<object>): string;
+function sanitiseLogValue(value: unknown, seen?: WeakSet<object>): unknown;
+function sanitiseLogValue(value: unknown, seen = new WeakSet<object>()) {
   if (value instanceof Error) {
     return {
       name: value.name,
