@@ -1,4 +1,9 @@
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/Text/Text';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { theme } from '@app/styles/themes';
+import { useRef } from 'react';
+import { ScrollView, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // todo - in the future, read from github md
@@ -39,9 +44,47 @@ All notable changes to this project will be documented in this file.
 `;
 
 export function ChangelogScreen() {
+  const scrollRef = useRef<ScrollView>(null);
+
+  useScrollToTop(scrollRef);
+
   return (
-    <SafeAreaView edges={['top']}>
-      <Text>{mockChangelog}</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScreenHeader
+        title="Changelog"
+        subtitle="Recent product updates"
+        size="medium"
+      />
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
+        <View style={styles.card}>
+          <Text variant="mono" type="xs" style={styles.changelogText}>
+            {mockChangelog}
+          </Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: theme.color.background.darkAltAlpha,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space20,
+  },
+  changelogText: {
+    lineHeight: 20,
+  },
+  container: {
+    backgroundColor: theme.color.background.dark,
+    flex: 1,
+  },
+  content: {
+    paddingBottom: theme.space44,
+    paddingHorizontal: theme.space20,
+  },
+});

@@ -5,11 +5,13 @@ import { useMemo } from 'react';
 interface UseUserSuggestionsProps {
   searchTerm: string;
   enabled: boolean;
+  maxSuggestions?: number;
 }
 
 export function useUserSuggestions({
   searchTerm,
   enabled,
+  maxSuggestions = 20,
 }: UseUserSuggestionsProps) {
   const ttvUsers = useTtvUsers();
 
@@ -27,9 +29,10 @@ export function useUserSuggestions({
 
     const results: ChatUser[] = [];
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const user of ttvUsers) {
-      // eslint-disable-next-line no-continue
+      if (results.length >= maxSuggestions) {
+        break;
+      }
       if (!user?.name) continue;
 
       const userName = user.name.toLowerCase();
@@ -39,7 +42,7 @@ export function useUserSuggestions({
     }
 
     return results;
-  }, [ttvUsers, searchTerm, enabled]);
+  }, [ttvUsers, searchTerm, enabled, maxSuggestions]);
 
   return {
     filteredUsers,

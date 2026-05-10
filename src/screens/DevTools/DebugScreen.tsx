@@ -5,27 +5,27 @@ import { Text } from '@app/components/Text/Text';
 import { TextField } from '@app/components/TextField/TextField';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
-import { AppStackParamList } from '@app/navigators/AppNavigator';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { NAMESPACE, storageService } from '@app/services/storage-service';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Alert, Platform, ScrollView, View, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 export function DebugScreen() {
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   const [reactQueryEnabled, setReactQueryEnabled] = useState(false);
   const [username, setUsername] = useState('');
   const [channelName, setChannelName] = useState('');
   const [channelId, setChannelId] = useState('');
+  const scrollRef = useRef<ScrollView>(null);
+
+  useScrollToTop(scrollRef);
 
   useEffect(() => {
     setReactQueryEnabled(debugOptions.ReactQueryDebug?.enabled ?? false);
@@ -76,10 +76,10 @@ export function DebugScreen() {
     if (!channelName.trim()) {
       return;
     }
-    navigation
-      .getParent()
-      ?.getParent()
-      ?.navigate('Chat', { channelName, channelId });
+    router.push({
+      pathname: '/chat',
+      params: { channelName, channelId },
+    });
   };
 
   return (
@@ -90,6 +90,7 @@ export function DebugScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
@@ -141,7 +142,7 @@ export function DebugScreen() {
               onPress={() => void handleConvertUsername()}
               style={styles.goBtn}
             >
-              <Icon icon="copy" size={16} color={theme.colors.gray.text} />
+              <Icon icon="copy" size={16} color={theme.color.text.dark} />
             </Button>
           </View>
 
@@ -216,94 +217,94 @@ export function DebugScreen() {
 
 const styles = StyleSheet.create({
   codeBlock: {
-    backgroundColor: theme.colors.gray.bgAltAlpha,
+    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
-    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius12,
+    padding: theme.space16,
   },
   codeText: {
-    color: theme.colors.grass.accent,
+    color: theme.colorGrass,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
   },
   content: {
-    padding: theme.spacing.lg,
+    padding: theme.space20,
     paddingBottom: 100,
   },
   copyBtn: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   destructiveBtn: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
   divider: {
-    backgroundColor: theme.colors.gray.borderAlpha,
+    backgroundColor: theme.colorBorderSecondary,
     height: 1,
-    marginVertical: theme.spacing.md,
+    marginVertical: theme.space16,
   },
   flex: {
     flex: 1,
   },
   goBtn: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
+    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     height: 44,
     justifyContent: 'center',
     width: 44,
   },
   hint: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.space12,
   },
   inputFlex: {
     flex: 1,
   },
   inputRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: theme.space12,
   },
   joinBtn: {
-    backgroundColor: theme.colors.blue.accent,
+    backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.space20,
   },
   joinBtnText: {
     color: '#fff',
   },
   label: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.space12,
   },
   row: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.space16,
   },
   rowText: {
     flex: 1,
   },
   screenContainer: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   title: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.space28,
   },
   tokenBox: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.bgAltAlpha,
+    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    padding: theme.spacing.sm,
+    gap: theme.space12,
+    padding: theme.space12,
   },
   tokenText: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     flex: 1,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
   },

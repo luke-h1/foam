@@ -24,6 +24,18 @@ Upgrade React Navigation to 8.x and handle the required breaking changes.
 - If the repo uses Expo, ensure development builds are used. Verify that either `expo-dev-client` is installed or the start workflow uses `expo start --dev-client`.
 - If the repo uses TypeScript, set `moduleResolution: 'bundler'` and enable either `strict: true` or `strictNullChecks: true`.
 
+## Official reference
+
+Fetch [llms.txt](https://reactnavigation.org/llms-8.x.txt) for a list of documentation links. During the migration, refer to the official documentation for API reference for the latest React Navigation 8.x versions.
+
+If custom navigators use built-in navigator views such as `StackView`, `BottomTabView` etc., check the actual implementation after the upgrade to verify the usage is still correct:
+
+- `NativeStackView`: `node_modules/@react-navigation/native-stack/src/views/NativeStackView.tsx`
+- `StackView`: `node_modules/@react-navigation/stack/src/views/Stack/StackView.tsx`
+- `BottomTabView`: `node_modules/@react-navigation/bottom-tabs/src/views/BottomTabViewCommon.tsx`
+- `DrawerView`: `node_modules/@react-navigation/drawer/src/views/DrawerView.tsx`
+- `MaterialTopTabView`: `node_modules/@react-navigation/material-top-tabs/src/views/MaterialTopTabView.tsx`
+
 ## Areas to review
 
 - Root navigator typing, common hook usage, static screen config objects, and custom navigator typings
@@ -79,7 +91,7 @@ const navigation = useNavigation('Profile');
 const route = useRoute('Profile');
 const focusedRouteName = useNavigationState(
   'Profile',
-  (state) => state.routes[state.index].name
+  (state) => state.routes[state.index].name,
 );
 ```
 
@@ -96,7 +108,7 @@ const navigation = useNavigation() as StackNavigationProp<
 const route = useRoute() as RouteProp<RootStackParamList, 'Profile'>;
 
 const focusedRouteName = useNavigationState(
-  (state) => state.routes[state.index].name as keyof RootStackParamList
+  (state) => state.routes[state.index].name as keyof RootStackParamList,
 );
 ```
 
@@ -120,9 +132,113 @@ const Stack = createNativeStackNavigator({
 });
 ```
 
-#### Custom navigators need updated overloads
+#### Custom navigators need updated types
 
-If the repo defines a custom navigator, update its `createNavigatorFactory` overloads and any local navigator wrapper typings.
+If the repo defines a custom navigator, update its `createNavigatorFactory` call and any local navigator wrapper typings. Define the type bag as an interface extending `NavigatorTypeBagBase` (use `this['ParamList']` for self-reference, and the new `ActionHelpers` field for action helpers like `TabActionHelpers`), then pass it as a type parameter to `createNavigatorFactory`. Add a `createXScreen` helper for static screen configs using the new `createScreenFactory`.
+
+The new shape should look like this:
+
+```tsx
+import * as React from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  type StyleProp,
+  type ViewStyle,
+  StyleSheet,
+} from 'react-native';
+import {
+  createNavigatorFactory,
+  createScreenFactory,
+  CommonActions,
+  type DefaultNavigatorOptions,
+  type NavigatorTypeBagBase,
+  type ParamListBase,
+  type TabActionHelpers,
+  type TabNavigationState,
+  TabRouter,
+  type TabRouterOptions,
+  useNavigationBuilder,
+  type NavigationProp,
+} from '@react-navigation/native';
+
+type MyNavigationConfig = {
+  // Additional props accepted by the view
+};
+
+type MyNavigationOptions = {
+  // Supported screen options
+};
+
+type MyNavigationEventMap = {
+  // Map of event name and the type of data
+};
+
+// The type of the navigation object for each screen
+type MyNavigationProp<
+  ParamList extends ParamListBase,
+  RouteName extends keyof ParamList = keyof ParamList,
+  NavigatorID extends string | undefined = undefined,
+> = NavigationProp<
+  ParamList,
+  RouteName,
+  NavigatorID,
+  TabNavigationState<ParamList>,
+  MyNavigationOptions,
+  MyNavigationEventMap
+> &
+  TabActionHelpers<ParamList>;
+
+// The props accepted by the component is a combination of 3 things
+type Props = DefaultNavigatorOptions<
+  ParamListBase,
+  string | undefined,
+  TabNavigationState<ParamListBase>,
+  MyNavigationOptions,
+  MyNavigationEventMap,
+  MyNavigationProp<ParamListBase>
+> &
+  TabRouterOptions &
+  MyNavigationConfig;
+
+function TabNavigator({ tabBarStyle, contentStyle, ...rest }: Props) {
+  const { state, navigation, descriptors, NavigationContent } =
+    useNavigationBuilder<
+      TabNavigationState<ParamListBase>,
+      TabRouterOptions,
+      TabActionHelpers<ParamListBase>,
+      MyNavigationOptions,
+      MyNavigationEventMap
+    >(TabRouter, rest);
+
+  return (
+    <NavigationContent>
+      {/* Implementation of the navigator UI using state, navigation, and descriptors */}
+    </NavigationContent>
+  );
+}
+
+// Types required for type-checking the navigator
+interface MyTabTypeBag extends NavigatorTypeBagBase {
+  State: TabNavigationState<this['ParamList']>;
+  ScreenOptions: MyNavigationOptions;
+  EventMap: MyNavigationEventMap;
+  ActionHelpers: TabActionHelpers<this['ParamList']>;
+  Navigator: typeof TabNavigator;
+}
+
+// The factory function for creating the navigator
+export const createMyNavigator =
+  createNavigatorFactory<MyTabTypeBag>(TabNavigator);
+
+// Helper for creating screen config with proper types for static configuration
+export const createMyScreen = createScreenFactory<MyTabTypeBag>();
+```
+
+The `NavigatorID` type parameter and `id` prop are no longer supported and need to be removed.
+
+The `describe` function no longer exists in the return type of `useNavigationBuilder`, so if the navigator used that for typing the descriptors, update it to use `descriptors[route.key].options` instead.
 
 ### 3. Update navigator behavior and option APIs
 
@@ -283,7 +399,7 @@ headerBackIcon: {
 ```
 
 ```tsx
-gestureResponseDistance: 50
+gestureResponseDistance: 50;
 ```
 
 ```tsx

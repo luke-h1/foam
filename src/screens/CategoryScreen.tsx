@@ -1,10 +1,14 @@
 import { EmptyState } from '@app/components/EmptyState/EmptyState';
-import { LiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
+import {
+  FlashList,
+  FlashListRef,
+  ListRenderItem,
+} from '@app/components/FlashList/FlashList';
+import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Spinner } from '@app/components/Spinner/Spinner';
 import { Text } from '@app/components/Text/Text';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { AppStackParamList } from '@app/navigators/AppNavigator';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import {
@@ -12,19 +16,19 @@ import {
   getPreviousPageParam,
 } from '@app/utils/pagination/pagination';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
-import { StackScreenProps } from '@react-navigation/stack';
-import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { FC, useCallback, useMemo, useRef } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 
-export const CategoryScreen: FC<
-  StackScreenProps<AppStackParamList, 'Category'>
-> = ({ route: { params } }) => {
-  const flashListRef = useRef(null);
-  const navigation = useAppNavigation();
+interface CategoryScreenProps {
+  id: string;
+}
 
-  const id = params?.id;
+export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
+  const flashListRef = useRef<FlashListRef<TwitchStream>>(null);
+
+  useScrollToTop(flashListRef);
 
   const {
     data: category,
@@ -58,7 +62,7 @@ export const CategoryScreen: FC<
   }, [hasNextPage, fetchNextPage]);
 
   const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
-    return <LiveStreamCard stream={item} />;
+    return <MemoizedLiveStreamCard stream={item} />;
   }, []);
 
   const allStreams =
@@ -84,7 +88,7 @@ export const CategoryScreen: FC<
             ?.replace('{width}', '300')
             ?.replace('{height}', '400') ?? ''
         }
-        onBack={() => navigation.goBack()}
+        onBack={() => router.back()}
         safeArea={false}
       >
         <View style={styles.sectionHeader}>
@@ -94,7 +98,7 @@ export const CategoryScreen: FC<
         </View>
       </ScreenHeader>
     ),
-    [category?.name, category?.box_art_url, totalViewers, navigation],
+    [category?.name, category?.box_art_url, totalViewers],
   );
 
   if (isCategoryLoading || isLoadingStreams) {
@@ -141,16 +145,16 @@ export const CategoryScreen: FC<
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   listContent: {
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: theme.space20,
   },
   sectionHeader: {
-    borderBottomColor: theme.colors.gray.border,
+    borderBottomColor: theme.color.border.dark,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
 });

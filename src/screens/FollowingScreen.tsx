@@ -1,17 +1,28 @@
+import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
 import { EmptyState } from '@app/components/EmptyState/EmptyState';
 import {
   AnimatedFlashList,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import { LiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
+import { Icon } from '@app/components/Icon/Icon';
+import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
+import { ScrollAdaptiveHeader } from '@app/components/ScrollAdaptiveHeader/ScrollAdaptiveHeader';
+import { Button } from '@app/components/Button/Button';
+import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { useRefresh } from '@app/hooks/useRefresh';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Redirect } from 'expo-router';
 import { useMemo, useCallback, useRef, useEffect, type JSX } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,9 +36,11 @@ export interface Section {
 }
 
 export default function FollowingScreen() {
-  const { user } = useAuthContext();
+  const { authState, user } = useAuthContext();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const streamListLayout = usePreference('streamListLayout');
+  const updatePreferences = useUpdatePreferences();
 
   const followingStreamsQuery = useMemo(
     () => twitchQueries.getFollowedStreams(user?.id as string),
@@ -59,6 +72,9 @@ export default function FollowingScreen() {
 
   const streamsArray = Array.isArray(streams) ? streams : [];
   const hasShownErrorToast = useRef(false);
+  const listRef = useRef(null);
+
+  useScrollToTop(listRef);
 
   useEffect(() => {
     if (!isError) {
@@ -66,16 +82,26 @@ export default function FollowingScreen() {
     }
   }, [isError]);
 
-  const renderItem: ListRenderItem<TwitchStream> = useCallback(({ item }) => {
-    return <LiveStreamCard stream={item} />;
-  }, []);
+  const renderItem: ListRenderItem<TwitchStream> = useCallback(
+    ({ item }) => {
+      return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
+    },
+    [streamListLayout],
+  );
+
+  if (!authState?.isLoggedIn) {
+    return <Redirect href="/tabs/top" />;
+  }
 
   if (isRefreshing || isLoading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <View style={styles.headerEyebrow} />
+        </View>
         {Array.from({ length: 5 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
-          <LiveStreamCardSkeleton key={index} />
+          <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
         ))}
       </View>
     );
@@ -108,7 +134,7 @@ export default function FollowingScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {Array.from({ length: 5 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
-          <LiveStreamCardSkeleton key={index} />
+          <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
         ))}
       </View>
     );
@@ -125,17 +151,127 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
+      <ScrollAdaptiveHeader
+        scrollY={scrollY}
+        topInset={insets.top}
+        title="Live from your channels"
+      />
       <RefreshIndicator
         scrollY={scrollY}
         isRefreshing={isRefreshing}
         contentInsetTop={insets.top}
       />
       <AnimatedFlashList<TwitchStream>
+        ref={listRef}
         data={streamsArray}
         keyExtractor={item => item.id}
         contentInsetAdjustmentBehavior="automatic"
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
-        contentContainerStyle={[styles.listContent, { paddingTop: insets.top }]}
+        ListHeaderComponent={
+          <View>
+            <EditorialSectionHeader
+              eyebrow="Following"
+              title="Live from your channels"
+              subtitle="A streaming-first feed of everyone you already care about."
+            />
+            <View style={styles.layoutToggleRow}>
+              <Button
+                onPress={() =>
+                  updatePreferences({ streamListLayout: 'compact' })
+                }
+                style={[
+                  styles.layoutToggleButton,
+                  streamListLayout === 'compact' &&
+                    styles.layoutToggleButtonActive,
+                ]}
+              >
+                <Icon
+                  icon="square"
+                  size={14}
+                  color={
+                    streamListLayout === 'compact'
+                      ? theme.color.text.dark
+                      : theme.color.textSecondary.dark
+                  }
+                />
+                <Text
+                  type="xxs"
+                  weight="semibold"
+                  style={[
+                    styles.layoutToggleText,
+                    streamListLayout === 'compact' &&
+                      styles.layoutToggleTextActive,
+                  ]}
+                >
+                  Compact
+                </Text>
+              </Button>
+              <Button
+                onPress={() => updatePreferences({ streamListLayout: 'media' })}
+                style={[
+                  styles.layoutToggleButton,
+                  streamListLayout === 'media' &&
+                    styles.layoutToggleButtonActive,
+                ]}
+              >
+                <Icon
+                  icon="image"
+                  size={14}
+                  color={
+                    streamListLayout === 'media'
+                      ? theme.color.text.dark
+                      : theme.color.textSecondary.dark
+                  }
+                />
+                <Text
+                  type="xxs"
+                  weight="semibold"
+                  style={[
+                    styles.layoutToggleText,
+                    streamListLayout === 'media' &&
+                      styles.layoutToggleTextActive,
+                  ]}
+                >
+                  Media
+                </Text>
+              </Button>
+              <Button
+                onPress={() => updatePreferences({ streamListLayout: 'text' })}
+                style={[
+                  styles.layoutToggleButton,
+                  streamListLayout === 'text' &&
+                    styles.layoutToggleButtonActive,
+                ]}
+              >
+                <Icon
+                  icon="align-left"
+                  size={14}
+                  color={
+                    streamListLayout === 'text'
+                      ? theme.color.text.dark
+                      : theme.color.textSecondary.dark
+                  }
+                />
+                <Text
+                  type="xxs"
+                  weight="semibold"
+                  style={[
+                    styles.layoutToggleText,
+                    streamListLayout === 'text' &&
+                      styles.layoutToggleTextActive,
+                  ]}
+                >
+                  Text First
+                </Text>
+              </Button>
+            </View>
+            <View style={styles.header} />
+          </View>
+        }
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: insets.top + 56 },
+        ]}
         renderItem={renderItem}
         onScroll={scrollHandler}
         refreshControl={refreshControl}
@@ -146,11 +282,56 @@ export default function FollowingScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
     overflow: 'hidden',
   },
+  header: {
+    borderBottomColor: theme.color.border.dark,
+    borderBottomWidth: 1,
+    marginBottom: theme.space12,
+    marginHorizontal: theme.space20,
+    minHeight: theme.space12,
+  },
+  headerEyebrow: {
+    backgroundColor: theme.colorDarkGreen,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    height: 6,
+    marginBottom: theme.space20,
+    opacity: 0.85,
+    width: 56,
+  },
   listContent: {
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: theme.space20,
+  },
+  layoutToggleButton: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  layoutToggleButtonActive: {
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.color.border.dark,
+  },
+  layoutToggleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.space8,
+    marginBottom: theme.space20,
+    marginHorizontal: theme.space20,
+  },
+  layoutToggleText: {
+    color: theme.color.textSecondary.dark,
+  },
+  layoutToggleTextActive: {
+    color: theme.color.text.dark,
   },
 });

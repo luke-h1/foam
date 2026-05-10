@@ -1,4 +1,4 @@
-import * as Haptics from 'expo-haptics';
+import { impact, notification } from '@app/services/haptics-service';
 import { ReactElement, useCallback, useState } from 'react';
 import { Platform, RefreshControl, RefreshControlProps } from 'react-native';
 import {
@@ -14,14 +14,14 @@ function fireThresholdHaptic() {
   if (Platform.OS === 'web') {
     return;
   }
-  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  void impact('medium');
 }
 
 function fireCompleteHaptic() {
   if (Platform.OS === 'web') {
     return;
   }
-  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  void notification('success');
 }
 
 interface UseRefreshOptions {

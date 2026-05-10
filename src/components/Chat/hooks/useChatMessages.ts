@@ -1,5 +1,6 @@
 import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { addMessages } from '@app/store/chatStore/messages';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { MutableRefObject, useCallback, useRef } from 'react';
 
@@ -37,6 +38,30 @@ function getCachedLightenedColor(
 type AnyMessage = ChatMessageType<any, any> & {
   cachedSenderColor?: string;
 };
+
+function normaliseLogin(value: string | undefined): string {
+  return value?.trim().toLowerCase() ?? '';
+}
+
+function createModeratedBufferMessage(
+  message: AnyMessage,
+  moderationNotice: string,
+): AnyMessage {
+  const plainText = replaceEmotesWithText(message.message).trim();
+
+  return {
+    ...message,
+    message: [
+      {
+        type: 'text',
+        content: plainText
+          ? `${plainText}\u2014${moderationNotice}`
+          : moderationNotice,
+      },
+    ],
+    moderationNotice,
+  };
+}
 
 interface UseChatMessagesOptions {
   isAtBottomRef: MutableRefObject<boolean>;
@@ -132,6 +157,53 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     seenKeysRef.current.clear();
   }, []);
 
+  const removeBufferedMessageById = useCallback((messageId: string) => {
+    if (!messageId.trim()) {
+      return;
+    }
+
+    messageBufferRef.current = messageBufferRef.current.filter(
+      message => message.message_id !== messageId,
+    );
+  }, []);
+
+  const moderateBufferedMessageById = useCallback(
+    (messageId: string, moderationNotice: string) => {
+      if (!messageId.trim()) {
+        return;
+      }
+
+      messageBufferRef.current = messageBufferRef.current.map(message =>
+        message.message_id === messageId
+          ? createModeratedBufferMessage(message, moderationNotice)
+          : message,
+      );
+    },
+    [],
+  );
+
+  const moderateBufferedMessagesByLogin = useCallback(
+    (login: string, moderationNotice: string) => {
+      const target = normaliseLogin(login);
+      if (!target) {
+        return;
+      }
+
+      messageBufferRef.current = messageBufferRef.current.map(message => {
+        const messageLogin = normaliseLogin(
+          message.userstate?.login ||
+            message.userstate?.username ||
+            message.sender,
+        );
+
+        return messageLogin === target
+          ? createModeratedBufferMessage(message, moderationNotice)
+          : message;
+      });
+    },
+    [],
+  );
+
   const cleanup = useCallback(() => {
     if (flushTimerRef.current) {
       clearInterval(flushTimerRef.current);
@@ -143,6 +215,9 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   return {
     handleNewMessage,
     clearLocalMessages,
+    removeBufferedMessageById,
+    moderateBufferedMessageById,
+    moderateBufferedMessagesByLogin,
     cleanup,
     forceFlush,
     getBufferSize: () => messageBufferRef.current.length,

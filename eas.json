@@ -61,12 +61,33 @@
         "simulator": true
       }
     },
-    "preview": {
-      "environment": "preview",
+    "internal": {
+      "extends": "base",
+      "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "preview"
+        "APP_VARIANT": "internal"
       },
-      "channel": "preview"
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "resourceClass": "medium"
+      },
+      "channel": "internal"
+    },
+    "testflight": {
+      "extends": "base",
+      "autoIncrement": true,
+      "env": {
+        "APP_VARIANT": "testflight"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "resourceClass": "medium"
+      },
+      "channel": "testflight"
     },
     "production": {
       "bun": "1.2.5",
@@ -78,6 +99,19 @@
     }
   },
   "submit": {
+    "internal": {
+      "ios": {
+        "ascAppId": "6768048580"
+      },
+      "android": {
+        "track": "internal"
+      }
+    },
+    "testflight": {
+      "ios": {
+        "ascAppId": "6768048560"
+      }
+    },
     "production": {
       "ios": {
         "ascAppId": "6742071860"

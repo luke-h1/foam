@@ -2,6 +2,17 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 
+const messageTextCache = new WeakMap<ParsedPart[], string>();
+const normalisedMessageFieldsCache = new WeakMap<
+  VisibleMessageShape,
+  {
+    body: string;
+    login: string;
+    sender: string;
+    username: string;
+  }
+>();
+
 interface VisibleMessageShape {
   message: ParsedPart[];
   message_id: string;
@@ -10,11 +21,9 @@ interface VisibleMessageShape {
 }
 
 export interface VisibleMessagesOptions {
-  currentUserId?: string;
   currentUsername?: string;
   hiddenPhrases?: string[];
   hiddenUsers?: string[];
-  pauseAnchorMessageId?: string | null;
   searchQuery?: string;
   showOnlyMentions?: boolean;
 }
@@ -24,7 +33,31 @@ function normalise(value: string | undefined | null): string {
 }
 
 function getMessageText(message: VisibleMessageShape): string {
-  return replaceEmotesWithText(message.message);
+  const cached = messageTextCache.get(message.message);
+  if (cached) {
+    return cached;
+  }
+
+  const text = replaceEmotesWithText(message.message);
+  messageTextCache.set(message.message, text);
+  return text;
+}
+
+function getNormalisedMessageFields(message: VisibleMessageShape) {
+  const cached = normalisedMessageFieldsCache.get(message);
+  if (cached) {
+    return cached;
+  }
+
+  const fields = {
+    body: normalise(getMessageText(message)),
+    login: normalise(message.userstate.login),
+    sender: normalise(message.sender),
+    username: normalise(message.userstate.username),
+  };
+
+  normalisedMessageFieldsCache.set(message, fields);
+  return fields;
 }
 
 function messageMentionsUsername(
@@ -36,121 +69,114 @@ function messageMentionsUsername(
     return false;
   }
 
-  return message.message.some(part => {
+  for (const part of message.message) {
     if (part.type !== 'mention') {
-      return false;
+      continue;
     }
 
-    return normalise(part.content.replace(/^@/, '')) === target;
-  });
+    if (normalise(part.content.replace(/^@/, '')) === target) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function messageMatchesSearch(
   message: VisibleMessageShape,
-  searchQuery: string | undefined,
+  searchQuery: string,
 ): boolean {
-  const query = normalise(searchQuery);
-  if (!query) {
+  if (!searchQuery) {
     return true;
   }
 
-  const sender = normalise(message.sender);
-  const username = normalise(message.userstate.username);
-  const login = normalise(message.userstate.login);
-  const body = normalise(getMessageText(message));
+  const { sender, username, login, body } = getNormalisedMessageFields(message);
 
   return (
-    sender.includes(query) ||
-    username.includes(query) ||
-    login.includes(query) ||
-    body.includes(query)
+    sender.includes(searchQuery) ||
+    username.includes(searchQuery) ||
+    login.includes(searchQuery) ||
+    body.includes(searchQuery)
   );
 }
 
 function messageHiddenByPhrase(
   message: VisibleMessageShape,
-  hiddenPhrases: string[],
+  hiddenPhrases: readonly string[],
 ): boolean {
   if (hiddenPhrases.length === 0) {
     return false;
   }
 
-  const body = normalise(getMessageText(message));
-  return hiddenPhrases.some(phrase => body.includes(normalise(phrase)));
+  const { body } = getNormalisedMessageFields(message);
+
+  for (const phrase of hiddenPhrases) {
+    if (body.includes(phrase)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function messageHiddenByUser(
   message: VisibleMessageShape,
-  hiddenUsers: string[],
+  hiddenUsers: ReadonlySet<string>,
 ): boolean {
-  if (hiddenUsers.length === 0) {
+  if (hiddenUsers.size === 0) {
     return false;
   }
 
-  const sender = normalise(message.sender);
-  const username = normalise(message.userstate.username);
-  const login = normalise(message.userstate.login);
-
-  return hiddenUsers.some(hiddenUser => {
-    const target = normalise(hiddenUser);
-    return target === sender || target === username || target === login;
-  });
-}
-
-function isOwnMessage(
-  message: VisibleMessageShape,
-  options: VisibleMessagesOptions,
-): boolean {
-  const currentUserId = normalise(options.currentUserId);
-  const currentUsername = normalise(options.currentUsername);
+  const { sender, username, login } = getNormalisedMessageFields(message);
 
   return (
-    (currentUserId.length > 0 &&
-      normalise(message.userstate['user-id']) === currentUserId) ||
-    (currentUsername.length > 0 &&
-      [message.sender, message.userstate.username, message.userstate.login]
-        .map(normalise)
-        .includes(currentUsername))
+    hiddenUsers.has(sender) ||
+    hiddenUsers.has(username) ||
+    hiddenUsers.has(login)
   );
+}
+
+function normaliseList(values: string[] | undefined): string[] {
+  if (!values || values.length === 0) {
+    return [];
+  }
+
+  const normalisedValues: string[] = [];
+
+  for (const value of values) {
+    const normalisedValue = normalise(value);
+    if (normalisedValue) {
+      normalisedValues.push(normalisedValue);
+    }
+  }
+
+  return normalisedValues;
 }
 
 export function getVisibleMessages<TMessage extends VisibleMessageShape>(
   messages: TMessage[],
   options: VisibleMessagesOptions = {},
 ): TMessage[] {
-  const hiddenUsers = (options.hiddenUsers ?? [])
-    .map(normalise)
-    .filter(Boolean);
-  const hiddenPhrases = (options.hiddenPhrases ?? [])
-    .map(normalise)
-    .filter(Boolean);
-  const pauseAnchorMessageId = options.pauseAnchorMessageId ?? null;
+  const searchQuery = normalise(options.searchQuery);
+  const showOnlyMentions = options.showOnlyMentions === true;
+  const hiddenUsers = new Set(normaliseList(options.hiddenUsers));
+  const hiddenPhrases = normaliseList(options.hiddenPhrases);
+  const hasSearch = searchQuery.length > 0;
+  const hasHiddenUsers = hiddenUsers.size > 0;
+  const hasHiddenPhrases = hiddenPhrases.length > 0;
 
-  let scopedMessages = messages;
-
-  if (pauseAnchorMessageId) {
-    const anchorIndex = messages.findIndex(
-      message => message.message_id === pauseAnchorMessageId,
-    );
-
-    if (anchorIndex >= 0) {
-      const beforeAnchor = messages.slice(0, anchorIndex + 1);
-      const ownAfterAnchor = messages
-        .slice(anchorIndex + 1)
-        .filter(message => isOwnMessage(message, options));
-
-      scopedMessages = [...beforeAnchor, ...ownAfterAnchor];
-    }
+  if (!showOnlyMentions && !hasSearch && !hasHiddenUsers && !hasHiddenPhrases) {
+    return messages;
   }
 
-  return scopedMessages.filter(message => {
-    if (options.showOnlyMentions) {
+  return messages.filter(message => {
+    if (showOnlyMentions) {
       if (!messageMentionsUsername(message, options.currentUsername)) {
         return false;
       }
     }
 
-    if (!messageMatchesSearch(message, options.searchQuery)) {
+    if (!messageMatchesSearch(message, searchQuery)) {
       return false;
     }
 
@@ -164,31 +190,4 @@ export function getVisibleMessages<TMessage extends VisibleMessageShape>(
 
     return true;
   });
-}
-
-export function getPausedPendingMessageCount<
-  TMessage extends VisibleMessageShape,
->(messages: TMessage[], options: VisibleMessagesOptions = {}): number {
-  const pauseAnchorMessageId = options.pauseAnchorMessageId ?? null;
-  if (!pauseAnchorMessageId) {
-    return 0;
-  }
-
-  const anchorIndex = messages.findIndex(
-    message => message.message_id === pauseAnchorMessageId,
-  );
-
-  if (anchorIndex < 0) {
-    return 0;
-  }
-
-  const afterAnchorMessages = messages.slice(anchorIndex + 1);
-  const resumeVisibleMessages = getVisibleMessages(afterAnchorMessages, {
-    ...options,
-    pauseAnchorMessageId: null,
-  });
-
-  return resumeVisibleMessages.filter(
-    message => !isOwnMessage(message, options),
-  ).length;
 }

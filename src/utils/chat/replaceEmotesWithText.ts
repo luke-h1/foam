@@ -43,6 +43,8 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
         case 'twitchClip':
         case 'sub':
         case 'resub':
+        case 'submysterygift':
+        case 'giftpaidupgrade':
         case 'anongiftpaidupgrade':
         case 'anongift':
           return part;

@@ -1,134 +1,244 @@
-import { Menu } from '@app/components/Menu/Menu';
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
+import * as Form from '@app/components/Form/Form';
+import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import {
+  SettingsLinkRow,
+  SettingsSection,
+} from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { SettingsStackParamList } from '@app/navigators/SettingsStackNavigator';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { View, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useRef } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BuildStatus } from './components/BuildStatus';
 
 export function SettingsIndexScreen() {
-  const { navigate } = useAppNavigation<SettingsStackParamList>();
-  const insets = useSafeAreaInsets();
+  const { user } = useAuthContext();
   const { config } = useRemoteConfig();
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
+
+  useScrollToTop(scrollRef);
+
   const { statusPageUrl, websiteUrl } = config;
+
+  if (Platform.OS === 'ios') {
+    return (
+      <View style={styles.container}>
+        <BodyScrollView contentContainerStyle={styles.iosContent}>
+          <ScreenHeader
+            title="Settings"
+            subtitle="Streaming controls"
+            size="medium"
+          />
+
+          <Form.Section title="Stream Experience">
+            <Form.Link
+              systemImage="bubble.left.and.bubble.right"
+              onPress={() => router.push('/tabs/settings/chat-preferences')}
+            >
+              Chat
+            </Form.Link>
+            <Form.Link
+              systemImage="paintpalette"
+              onPress={() => router.push('/tabs/settings/appearance')}
+            >
+              Appearance
+            </Form.Link>
+          </Form.Section>
+
+          <Form.Section title="Account">
+            <Form.Link
+              systemImage="person.circle"
+              onPress={() => {
+                if (user) {
+                  router.push('/tabs/settings/profile');
+                  return;
+                }
+
+                router.push('/login');
+              }}
+            >
+              {user ? 'Profile' : 'Sign In'}
+            </Form.Link>
+          </Form.Section>
+
+          <Form.Section title="Support & Feedback">
+            <Form.Link
+              systemImage="info.circle"
+              onPress={() => router.push('/tabs/settings/about')}
+            >
+              About Foam
+            </Form.Link>
+            <Form.Link
+              systemImage="questionmark.circle"
+              onPress={() => router.push('/tabs/settings/faq')}
+            >
+              FAQ
+            </Form.Link>
+            <Form.Link
+              systemImage="checkmark.shield"
+              onPress={() => openLinkInBrowser(statusPageUrl.value)}
+            >
+              Status
+            </Form.Link>
+            <Form.Link
+              systemImage="globe"
+              onPress={() => openLinkInBrowser(websiteUrl.value)}
+            >
+              Website
+            </Form.Link>
+          </Form.Section>
+
+          <Form.Section title="Developer">
+            <Form.Link
+              systemImage="hammer"
+              onPress={() => router.push('/tabs/settings/dev-tools')}
+            >
+              Dev Tools
+            </Form.Link>
+            <Form.Link
+              systemImage="ellipsis.circle"
+              onPress={() => router.push('/tabs/settings/other')}
+            >
+              Other
+            </Form.Link>
+          </Form.Section>
+        </BodyScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Menu
-        items={[
-          {
-            arrow: true,
-            icon: {
-              name: 'person.circle',
-              type: 'symbol',
-              color: theme.colors.blue.accent,
-            },
-            label: 'Profile',
-            description: 'Account info & preferences',
-            onPress: () => navigate('Profile'),
-          },
-          null,
-          {
-            arrow: true,
-            icon: {
-              name: 'paintpalette',
-              type: 'symbol',
-              color: theme.colors.violet.accent,
-            },
-            label: 'Appearance',
-            description: 'Theme, colors & display',
-            onPress: () => navigate('Appearance'),
-          },
-          null,
-          {
-            arrow: true,
-            icon: {
-              name: 'bubble.left.and.bubble.right',
-              type: 'symbol',
-              color: theme.colors.green.accent,
-            },
-            label: 'Chat',
-            description: 'Chat options',
-            onPress: () => navigate('ChatPreferences'),
-          },
-          null,
-          {
-            arrow: true,
-            icon: {
-              name: 'hammer',
-              type: 'symbol',
-              color: theme.colors.orange.accent,
-            },
-            label: 'Dev Tools',
-            description: 'Debug options & diagnostics',
-            onPress: () => navigate('DevTools'),
-          },
-          null,
-          {
-            arrow: true,
-            icon: {
-              name: 'ellipsis.circle',
-              type: 'symbol',
-              color: theme.colors.teal.accent,
-            },
-            label: 'Other',
-            description: 'Privacy, licenses & more',
-            onPress: () => navigate('Other'),
-          },
+      <ScrollView
+        ref={scrollRef}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom + theme.space56 },
         ]}
-      />
+      >
+        <ScreenHeader
+          title="Settings"
+          subtitle="Streaming controls, account tools, support, and diagnostics."
+          size="medium"
+        />
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 90 }]}>
-        <View style={styles.quickLinks}>
-          <PressableArea
-            onPress={() => openLinkInBrowser(websiteUrl.value)}
-            hitSlop={8}
-          >
-            <Text type="sm" color="gray.textLow">
-              Website
-            </Text>
-          </PressableArea>
-          <Text type="sm" color="gray.border">
-            •
-          </Text>
-          <PressableArea
+        <SettingsSection title="Stream Experience">
+          <SettingsLinkRow
+            title="Chat"
+            subtitle="Density, timestamps, mentions, emotes, and badges"
+            icon={{ icon: 'message-circle', color: theme.colorPlum }}
+            onPress={() => router.push('/tabs/settings/chat-preferences')}
+          />
+          <SettingsLinkRow
+            title="Appearance"
+            subtitle="Theme and visual mode"
+            icon={{ icon: 'sparkles', color: theme.colorAmber }}
+            onPress={() => router.push('/tabs/settings/appearance')}
+          />
+        </SettingsSection>
+
+        <SettingsSection title="Account">
+          <SettingsLinkRow
+            title={user ? 'Profile' : 'Sign In'}
+            subtitle={
+              user
+                ? 'Channel identity, blocked users, and sign-out controls'
+                : 'Connect your Twitch account to unlock following and chat'
+            }
+            icon={{ icon: 'user', color: theme.colorTeal }}
+            onPress={() => {
+              if (user) {
+                router.push('/tabs/settings/profile');
+                return;
+              }
+
+              router.push('/login');
+            }}
+          />
+        </SettingsSection>
+
+        <SettingsSection title="Support & Feedback">
+          <SettingsLinkRow
+            title="About Foam"
+            subtitle="What the app is built for and where to reach us"
+            icon={{ icon: 'info', color: theme.colorBlue }}
+            onPress={() => router.push('/tabs/settings/about')}
+          />
+          <SettingsLinkRow
+            title="FAQ"
+            subtitle="Common questions and help information"
+            icon={{ icon: 'help-circle', color: theme.colorGreen }}
+            onPress={() => router.push('/tabs/settings/faq')}
+          />
+          <SettingsLinkRow
+            title="Status"
+            subtitle="Check service availability and operational updates"
+            icon={{ icon: 'activity', color: theme.colorOrange }}
             onPress={() => openLinkInBrowser(statusPageUrl.value)}
-            hitSlop={8}
-          >
-            <Text type="sm" color="gray.textLow">
-              Status
-            </Text>
-          </PressableArea>
+          />
+          <SettingsLinkRow
+            title="Website"
+            subtitle="Product site and public links"
+            icon={{ icon: 'globe', color: theme.colorViolet }}
+            onPress={() => openLinkInBrowser(websiteUrl.value)}
+          />
+        </SettingsSection>
+
+        <SettingsSection title="Developer">
+          <SettingsLinkRow
+            title="Dev Tools"
+            subtitle="Diagnostics, cache tools, remote config, and Storybook"
+            icon={{ icon: 'tool', color: theme.colorOrange }}
+            onPress={() => router.push('/tabs/settings/dev-tools')}
+          />
+          <SettingsLinkRow
+            title="Other"
+            subtitle="Licenses, changelog, and supporting reference screens"
+            icon={{ icon: 'more-horizontal', color: theme.colorGrey }}
+            onPress={() => router.push('/tabs/settings/other')}
+          />
+        </SettingsSection>
+
+        <View style={styles.buildWrap}>
+          <BuildStatus />
+          <Text type="xs" color="gray.textLow" style={styles.buildNote}>
+            Build details and release state for this install of Foam.
+          </Text>
         </View>
-        <BuildStatus />
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  buildNote: {
+    marginTop: theme.space12,
+    paddingHorizontal: theme.space20,
+    textAlign: 'center',
+  },
+  buildWrap: {
+    alignItems: 'center',
+    marginTop: theme.space12,
+  },
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
-  footer: {
-    alignItems: 'center',
-    bottom: 0,
-    left: 0,
-    paddingTop: theme.spacing.lg,
-    position: 'absolute',
-    right: 0,
-    // backgroundColor: theme.colors.gray.bg,
+  content: {
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
   },
-  quickLinks: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    justifyContent: 'center',
-    marginBottom: theme.spacing.sm,
+  iosContent: {
+    paddingBottom: theme.space56,
+    paddingTop: theme.space12,
   },
 });

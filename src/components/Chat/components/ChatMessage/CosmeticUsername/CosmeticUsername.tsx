@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   hiddenText: {
-    fontSize: theme.font.fontSize.sm,
+    fontSize: theme.fontSize14,
     fontWeight: 'bold',
     opacity: 0,
   },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   maskText: {
     color: 'black',
-    fontSize: theme.font.fontSize.sm,
+    fontSize: theme.fontSize14,
     fontWeight: 'bold',
   },
   svgContainer: {

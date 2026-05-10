@@ -10,7 +10,8 @@ on:
         default: "production"
         options:
           - production
-          - preview
+          - testflight
+          - internal
       rollback_target:
         description: "OTA update group ID, or 'embedded' to revert to the native build"
         required: true

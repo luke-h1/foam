@@ -14,8 +14,9 @@ const twitchApiBaseUrl = mockServerUrl
   : 'https://api.twitch.tv/helix';
 
 export const twitchClientId =
-  (Constants.expoConfig?.extra?.TWITCH_CLIENT_ID as string | undefined) ??
-  process.env.TWITCH_CLIENT_ID;
+  (Constants.expoConfig?.extra?.EXPO_PUBLIC_TWITCH_CLIENT_ID as
+    | string
+    | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 
 export const twitchApi = new Client({
   baseURL: twitchApiBaseUrl,

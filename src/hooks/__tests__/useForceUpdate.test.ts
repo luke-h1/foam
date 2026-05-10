@@ -36,23 +36,27 @@ const createMockRemoteConfig = (
 });
 
 const createSimpleMockConfig = ({
-  preview = '0.0.0',
+  testflight = '0.0.0',
+  internal = '0.0.0',
   production = '0.0.0',
   development = '0.0.0',
 }: {
-  preview?: string;
+  testflight?: string;
+  internal?: string;
   production?: string;
   development?: string;
 }): UseRemoteConfigResult =>
   createMockRemoteConfig({
     android: {
       development,
-      preview,
+      internal,
+      testflight,
       production,
     },
     ios: {
       development,
-      preview,
+      internal,
+      testflight,
       production,
     },
   });
@@ -77,7 +81,7 @@ describe('useForceUpdate', () => {
     test('should return updateRequired=false for development variant', () => {
       process.env.APP_VARIANT = 'development';
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '2.0.0', production: '2.0.0' }),
+        createSimpleMockConfig({ testflight: '2.0.0', production: '2.0.0' }),
       );
 
       const {
@@ -90,14 +94,14 @@ describe('useForceUpdate', () => {
     });
   });
 
-  describe('preview variant', () => {
+  describe('testflight variant', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'preview';
+      process.env.APP_VARIANT = 'testflight';
     });
 
-    test('should return updateRequired=true when current version is below preview minimum', () => {
+    test('should return updateRequired=true when current version is below testflight minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '2.0.0', production: '1.0.0' }),
+        createSimpleMockConfig({ testflight: '2.0.0', production: '1.0.0' }),
       );
 
       const {
@@ -107,12 +111,12 @@ describe('useForceUpdate', () => {
       expect(current.updateRequired).toBe(true);
       expect(current.minimumVersion).toBe('2.0.0');
       expect(current.currentVersion).toBe('1.0.0');
-      expect(current.variant).toBe('preview');
+      expect(current.variant).toBe('testflight');
     });
 
-    test('should return updateRequired=false when current version equals preview minimum', () => {
+    test('should return updateRequired=false when current version equals testflight minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '1.0.0', production: '2.0.0' }),
+        createSimpleMockConfig({ testflight: '1.0.0', production: '2.0.0' }),
       );
 
       const {
@@ -121,12 +125,12 @@ describe('useForceUpdate', () => {
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('1.0.0');
-      expect(current.variant).toBe('preview');
+      expect(current.variant).toBe('testflight');
     });
 
-    test('should return updateRequired=false when current version is above preview minimum', () => {
+    test('should return updateRequired=false when current version is above testflight minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '0.9.0', production: '2.0.0' }),
+        createSimpleMockConfig({ testflight: '0.9.0', production: '2.0.0' }),
       );
 
       const {
@@ -135,12 +139,12 @@ describe('useForceUpdate', () => {
 
       expect(current.updateRequired).toBe(false);
       expect(current.minimumVersion).toBe('0.9.0');
-      expect(current.variant).toBe('preview');
+      expect(current.variant).toBe('testflight');
     });
 
-    test('should return updateRequired=false when preview minimum version is empty', () => {
+    test('should return updateRequired=false when testflight minimum version is empty', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '', production: '1.0.0' }),
+        createSimpleMockConfig({ testflight: '', production: '1.0.0' }),
       );
 
       const {
@@ -159,7 +163,7 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=true when current version is below production minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '1.0.0', production: '2.0.0' }),
+        createSimpleMockConfig({ testflight: '1.0.0', production: '2.0.0' }),
       );
 
       const {
@@ -174,7 +178,7 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when current version equals production minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '2.0.0', production: '1.0.0' }),
+        createSimpleMockConfig({ testflight: '2.0.0', production: '1.0.0' }),
       );
 
       const {
@@ -188,7 +192,7 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when current version is above production minimum', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '2.0.0', production: '0.9.0' }),
+        createSimpleMockConfig({ testflight: '2.0.0', production: '0.9.0' }),
       );
 
       const {
@@ -202,7 +206,7 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when production minimum version is empty', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '1.0.0', production: '' }),
+        createSimpleMockConfig({ testflight: '1.0.0', production: '' }),
       );
 
       const {
@@ -218,7 +222,7 @@ describe('useForceUpdate', () => {
     test('should return updateRequired=false for unknown variant', () => {
       process.env.APP_VARIANT = 'unknown';
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '2.0.0', production: '2.0.0' }),
+        createSimpleMockConfig({ testflight: '2.0.0', production: '2.0.0' }),
       );
 
       const {
@@ -232,12 +236,12 @@ describe('useForceUpdate', () => {
 
   describe('version comparison', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'preview';
+      process.env.APP_VARIANT = 'testflight';
     });
 
     test('should correctly identify when patch version update is required', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '1.0.1', production: '1.0.0' }),
+        createSimpleMockConfig({ testflight: '1.0.1', production: '1.0.0' }),
       );
 
       const {
@@ -249,7 +253,7 @@ describe('useForceUpdate', () => {
 
     test('should correctly identify when minor version update is required', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '1.1.0', production: '1.0.0' }),
+        createSimpleMockConfig({ testflight: '1.1.0', production: '1.0.0' }),
       );
 
       const {
@@ -261,7 +265,7 @@ describe('useForceUpdate', () => {
 
     test('should correctly identify when major version update is required', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '2.0.0', production: '1.0.0' }),
+        createSimpleMockConfig({ testflight: '2.0.0', production: '1.0.0' }),
       );
 
       const {
@@ -273,7 +277,7 @@ describe('useForceUpdate', () => {
 
     test('should return updateRequired=false when both versions are empty', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '', production: '' }),
+        createSimpleMockConfig({ testflight: '', production: '' }),
       );
 
       const {
@@ -286,12 +290,12 @@ describe('useForceUpdate', () => {
 
   describe('return values', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'preview';
+      process.env.APP_VARIANT = 'testflight';
     });
 
     test('should return all expected properties', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '1.0.0', production: '2.0.0' }),
+        createSimpleMockConfig({ testflight: '1.0.0', production: '2.0.0' }),
       );
 
       const {
@@ -306,7 +310,7 @@ describe('useForceUpdate', () => {
 
     test('should return current version from Application', () => {
       mockUseRemoteConfig.mockReturnValue(
-        createSimpleMockConfig({ preview: '1.0.0', production: '1.0.0' }),
+        createSimpleMockConfig({ testflight: '1.0.0', production: '1.0.0' }),
       );
 
       const {
@@ -319,7 +323,7 @@ describe('useForceUpdate', () => {
 
   describe('platform-specific versions', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'preview';
+      process.env.APP_VARIANT = 'testflight';
     });
 
     describe('iOS platform', () => {
@@ -327,17 +331,19 @@ describe('useForceUpdate', () => {
         mockPlatform.OS = 'ios';
       });
 
-      test('should use iOS preview version when on iOS', () => {
+      test('should use iOS testflight version when on iOS', () => {
         mockUseRemoteConfig.mockReturnValue(
           createMockRemoteConfig({
             android: {
               development: '0.0.0',
-              preview: '1.0.0',
+              internal: '0.0.0',
+              testflight: '1.0.0',
               production: '1.0.0',
             },
             ios: {
               development: '0.0.0',
-              preview: '2.0.0',
+              internal: '0.0.0',
+              testflight: '2.0.0',
               production: '1.0.0',
             },
           }),
@@ -357,12 +363,14 @@ describe('useForceUpdate', () => {
           createMockRemoteConfig({
             android: {
               development: '0.0.0',
-              preview: '1.0.0',
+              internal: '0.0.0',
+              testflight: '1.0.0',
               production: '1.0.0',
             },
             ios: {
               development: '0.0.0',
-              preview: '1.0.0',
+              internal: '0.0.0',
+              testflight: '1.0.0',
               production: '2.0.0',
             },
           }),
@@ -382,17 +390,19 @@ describe('useForceUpdate', () => {
         mockPlatform.OS = 'android';
       });
 
-      test('should use Android preview version when on Android', () => {
+      test('should use Android testflight version when on Android', () => {
         mockUseRemoteConfig.mockReturnValue(
           createMockRemoteConfig({
             android: {
               development: '0.0.0',
-              preview: '2.0.0',
+              internal: '0.0.0',
+              testflight: '2.0.0',
               production: '1.0.0',
             },
             ios: {
               development: '0.0.0',
-              preview: '1.0.0',
+              internal: '0.0.0',
+              testflight: '1.0.0',
               production: '1.0.0',
             },
           }),
@@ -412,12 +422,14 @@ describe('useForceUpdate', () => {
           createMockRemoteConfig({
             android: {
               development: '0.0.0',
-              preview: '1.0.0',
+              internal: '0.0.0',
+              testflight: '1.0.0',
               production: '2.0.0',
             },
             ios: {
               development: '0.0.0',
-              preview: '1.0.0',
+              internal: '0.0.0',
+              testflight: '1.0.0',
               production: '1.0.0',
             },
           }),

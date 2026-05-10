@@ -8,6 +8,7 @@ import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
+import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { batch } from '@legendapp/state';
 
 import { getPreferences } from '../preferenceStore';
@@ -134,7 +135,7 @@ export const clearChannelResources = () => {
   batch(() => {
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
-    chatStore$.emojis.set([]);
+    chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
     chatStore$.bits.set([]);
   });
   checkedUsersForPersonalEmotes.clear();
@@ -253,7 +254,7 @@ const loadChannelResourcesInternal = async (
               twitchBadgeService.listSanitisedGlobalBadges(),
               ffzService.getSanitisedGlobalBadges(),
               ffzService.getSanitisedChannelBadges(channelId),
-              chatterinoService.listSanitisedBadges(),
+              Promise.resolve(chatterinoService.listSanitisedBadges()),
             ]);
 
             if (exitIfAborted(signal, true)) return false;
@@ -372,7 +373,7 @@ const loadChannelResourcesInternal = async (
           twitchBadgeService.listSanitisedGlobalBadges(),
           ffzService.getSanitisedGlobalBadges(),
           ffzService.getSanitisedChannelBadges(channelId),
-          chatterinoService.listSanitisedBadges(),
+          Promise.resolve(chatterinoService.listSanitisedBadges()),
         ]),
       { channelId, services: 13 },
     );
@@ -563,7 +564,7 @@ export const clearAllCache = () => {
     chatStore$.persisted.lastGlobalUpdate.set(0);
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
-    chatStore$.emojis.set([]);
+    chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
     chatStore$.bits.set([]);
     chatStore$.ttvUsers.set([]);
     chatStore$.messages.set([]);

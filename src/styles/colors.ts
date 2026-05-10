@@ -1,22 +1,47 @@
-export const colorTokens = [
-  // accents
-  'accent',
-  'gray',
+import { Color } from './pallete';
 
-  // Blue variants
-  'blue',
-  'sky',
-  'cyan',
-  'indigo',
-  'iris',
+const tintColorLight = Color.violet[600];
+const tintColorDark = Color.green[500];
+const lightText = Color.zinc[950];
+const darkText = Color.zinc[50];
+const lightBackground = Color.zinc[50];
+const darkBackground = '#000000';
+const borderLight = `${Color.zinc[950]}20`;
+const borderDark = `${Color.zinc[50]}20`;
+const iconLight = Color.zinc[500];
+const iconDark = Color.zinc[300];
 
-  // Purple variants
-  'violet',
-  'purple',
-  'plum',
+export type ThemeColor =
+  | 'accent'
+  | 'amber'
+  | 'black'
+  | 'blue'
+  | 'grass'
+  | 'gray'
+  | 'green'
+  | 'orange'
+  | 'plum'
+  | 'red'
+  | 'teal'
+  | 'violet';
 
-  'red',
-  'green',
-] as const;
-
-export type ThemeColor = (typeof colorTokens)[number];
+export const colors = {
+  dark: {
+    background: darkBackground,
+    border: borderDark,
+    icon: iconDark,
+    tabIconDefault: iconDark,
+    tabIconSelected: tintColorDark,
+    text: darkText,
+    tint: tintColorDark,
+  },
+  light: {
+    background: lightBackground,
+    border: borderLight,
+    icon: iconLight,
+    tabIconDefault: iconLight,
+    tabIconSelected: tintColorLight,
+    text: lightText,
+    tint: tintColorLight,
+  },
+} as const;

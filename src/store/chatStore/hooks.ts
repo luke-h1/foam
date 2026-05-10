@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { usePreferences } from '../preferenceStore';
 import type { UserPaint } from './constants';
 import { emptyEmoteData } from './constants';
+import type { ChannelCacheType } from './constants';
 import { chatStore$ } from './state';
 
 export const useLoadingState = () => useSelector(chatStore$.loadingState);
@@ -14,13 +15,14 @@ export const useTtvUsers = () => useSelector(chatStore$.ttvUsers);
 export const useBits = () => useSelector(chatStore$.bits);
 export const useEmojis = () => useSelector(chatStore$.emojis);
 
-export const useCurrentEmoteData = () => {
-  const channelId = useSelector(chatStore$.currentChannelId);
-  const caches = useSelector(chatStore$.persisted.channelCaches);
-  const preferences = usePreferences();
-  if (!channelId) return emptyEmoteData;
-  const cache = caches?.[channelId];
-  if (!cache) return emptyEmoteData;
+function resolveEmoteData(
+  cache: ChannelCacheType | undefined,
+  preferences: ReturnType<typeof usePreferences>,
+) {
+  if (!cache) {
+    return emptyEmoteData;
+  }
+
   return {
     twitchChannelEmotes: preferences.showTwitchEmotes
       ? (cache.twitchChannelEmotes ?? [])
@@ -62,55 +64,27 @@ export const useCurrentEmoteData = () => {
       ? (cache.chatterinoBadges ?? [])
       : [],
   };
+}
+
+export const useCurrentEmoteData = () => {
+  const cache = useSelector(() => {
+    const channelId = chatStore$.currentChannelId.get();
+    return channelId
+      ? chatStore$.persisted.channelCaches[channelId]?.get()
+      : undefined;
+  });
+  const preferences = usePreferences();
+  return resolveEmoteData(cache, preferences);
 };
 
 export const useChannelEmoteData = (channelId: string | null) => {
-  const caches = useSelector(chatStore$.persisted.channelCaches);
+  const cache = useSelector(() =>
+    channelId
+      ? chatStore$.persisted.channelCaches[channelId]?.get()
+      : undefined,
+  );
   const preferences = usePreferences();
-  if (!channelId) return emptyEmoteData;
-  const cache = caches?.[channelId];
-  if (!cache) return emptyEmoteData;
-  return {
-    twitchChannelEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchChannelEmotes ?? [])
-      : [],
-    twitchGlobalEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchGlobalEmotes ?? [])
-      : [],
-    sevenTvChannelEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvChannelEmotes ?? [])
-      : [],
-    sevenTvGlobalEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvGlobalEmotes ?? [])
-      : [],
-    ffzChannelEmotes: preferences.showFFzEmotes
-      ? (cache.ffzChannelEmotes ?? [])
-      : [],
-    ffzGlobalEmotes: preferences.showFFzEmotes
-      ? (cache.ffzGlobalEmotes ?? [])
-      : [],
-    bttvGlobalEmotes: preferences.showBttvEmotes
-      ? (cache.bttvGlobalEmotes ?? [])
-      : [],
-    bttvChannelEmotes: preferences.showBttvEmotes
-      ? (cache.bttvChannelEmotes ?? [])
-      : [],
-    twitchChannelBadges: preferences.showTwitchBadges
-      ? (cache.twitchChannelBadges ?? [])
-      : [],
-    twitchGlobalBadges: preferences.showTwitchBadges
-      ? (cache.twitchGlobalBadges ?? [])
-      : [],
-    ffzChannelBadges: preferences.showFFzBadges
-      ? (cache.ffzChannelBadges ?? [])
-      : [],
-    ffzGlobalBadges: preferences.showFFzBadges
-      ? (cache.ffzGlobalBadges ?? [])
-      : [],
-    chatterinoBadges: preferences.showChatterinoEmotes
-      ? (cache.chatterinoBadges ?? [])
-      : [],
-  };
+  return resolveEmoteData(cache, preferences);
 };
 
 export const usePaints = () => useSelector(chatStore$.paints);

@@ -1,96 +1,88 @@
-import { Menu, MenuItem } from '@app/components/Menu/Menu';
+import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
+import * as Form from '@app/components/Form/Form';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Slider } from '@app/components/Slider/Slider';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import {
+  SettingsLinkRow,
+  SettingsSection,
+} from '@app/components/SettingsSection/SettingsSection';
 import { Preferences, usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { View, StyleSheet } from 'react-native';
-
-function FontScaleSlider() {
-  const { fontScaling, systemScaling, update } = usePreferences();
-
-  return (
-    <Slider
-      disabled={systemScaling}
-      max={1.2}
-      min={0.8}
-      onChange={next => {
-        update({
-          fontScaling: next,
-        });
-      }}
-      step={0.1}
-      style={styles.slider}
-      value={fontScaling}
-    />
-  );
-}
-
-function renderFontScaleSlider() {
-  return <FontScaleSlider />;
-}
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useRef } from 'react';
 
 export function SettingsAppearanceScreen() {
-  const { theme: selectedTheme, hapticFeedback, update } = usePreferences();
+  const { theme: selectedTheme, update } = usePreferences();
+  const scrollRef = useRef<ScrollView>(null);
+
+  useScrollToTop(scrollRef);
+
+  if (Platform.OS === 'ios') {
+    return (
+      <View style={styles.container}>
+        <BodyScrollView contentContainerStyle={styles.iosContent}>
+          <ScreenHeader
+            title="Appearance"
+            subtitle="Visual mode."
+            size="medium"
+          />
+          <Form.Section title="Theme">
+            <Form.Link
+              systemImage="moon"
+              hint="Foam Dark"
+              onPress={() =>
+                update({ theme: 'foam-dark' as Preferences['theme'] })
+              }
+            >
+              Theme
+            </Form.Link>
+          </Form.Section>
+        </BodyScrollView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Menu
-        header={
-          <ScreenHeader
-            title="Appearance"
-            subtitle="Theme, colors & display"
-            size="medium"
+      <ScrollView
+        ref={scrollRef}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
+        <ScreenHeader
+          title="Appearance"
+          subtitle="Visual mode."
+          size="medium"
+        />
+
+        <SettingsSection title="Theme">
+          <SettingsLinkRow
+            title="Theme"
+            subtitle="The redesigned app currently ships with one canonical visual mode"
+            icon={{ icon: 'moon', color: theme.colorAmber }}
+            value={selectedTheme === 'foam-dark' ? 'Foam Dark' : selectedTheme}
+            onPress={() => {
+              update({ theme: 'foam-dark' as Preferences['theme'] });
+            }}
           />
-        }
-        items={[
-          'Theme',
-          {
-            icon: {
-              name: selectedTheme === 'foam-dark' ? 'moon' : 'sun.and.horizon',
-              type: 'symbol',
-            },
-            label: 'Theme',
-            onSelect: (value: string) => {
-              update({ theme: value as Preferences['theme'] });
-            },
-            options: [
-              { label: 'Dark', value: 'foam-dark' },
-              { label: 'Light', value: 'foam-light' },
-            ],
-            title: 'Select Theme',
-            type: 'options',
-            value: selectedTheme,
-          } satisfies MenuItem,
-          null,
-          'Font Size',
-          renderFontScaleSlider,
-          null,
-          'Feedback',
-          {
-            icon: {
-              name: 'hand.tap',
-              type: 'symbol',
-            },
-            label: 'Haptic Feedback',
-            description: 'Vibration on interactions',
-            onSelect: (value: boolean) => {
-              update({ hapticFeedback: value });
-            },
-            type: 'switch',
-            value: hapticFeedback,
-          } satisfies MenuItem,
-        ]}
-      />
+        </SettingsSection>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
-  slider: {
-    marginHorizontal: theme.spacing.lg,
+  content: {
+    paddingBottom: theme.space56,
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
+  },
+  iosContent: {
+    paddingBottom: theme.space56,
   },
 });

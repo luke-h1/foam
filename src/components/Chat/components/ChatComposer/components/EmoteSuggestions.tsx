@@ -3,149 +3,142 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
-import { FlashList, ListRenderItem } from '@shopify/flash-list';
-import { useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
 interface EmoteSuggestionsProps {
   emotes: SanitisedEmote[];
   handleEmotePress: (set: SanitisedEmote) => void;
-  showSuggestions: boolean;
-  setShowSuggestions: (val: boolean) => void;
-  inputLayout: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
   suggestionOpacity: number;
   suggestionScale: number;
   suggestionTranslateY: number;
 }
 
-export function EmoteSuggestions({
+export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  showSuggestions: _showSuggestions,
   handleEmotePress,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setShowSuggestions: _setShowSuggestions,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  inputLayout: _inputLayout,
   suggestionOpacity,
   suggestionScale,
   suggestionTranslateY,
 }: EmoteSuggestionsProps) {
-  const suggestionsHeight = 280;
-
   const suggestionStyle = {
     opacity: suggestionOpacity,
     transform: [
       { scale: suggestionScale },
       { translateY: suggestionTranslateY },
     ],
-    height: suggestionsHeight,
-    maxHeight: suggestionsHeight,
   };
-
-  const renderEmoteItem: ListRenderItem<SanitisedEmote> = useCallback(
-    ({ item }) => (
-      <View style={styles.animatedItem}>
-        <Button
-          style={styles.suggestionItem}
-          onPress={() => handleEmotePress(item)}
-        >
-          <View style={styles.emoteContainer}>
-            <View>
-              <Image source={item.url} style={styles.emoteImage} useNitro />
-            </View>
-            <View style={styles.emoteTextContainer}>
-              <Text
-                style={styles.emoteName}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {item.name}
-              </Text>
-              <Text
-                style={styles.emoteSite}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {item.site}
-              </Text>
-            </View>
-          </View>
-        </Button>
-      </View>
-    ),
-    [handleEmotePress],
-  );
 
   if (suggestionOpacity === 0) {
     return null;
   }
 
   return (
-    <View
-      style={[styles.suggestionsContainer, suggestionStyle]}
-      pointerEvents="box-none"
-    >
-      <FlashList
-        style={styles.list}
-        keyboardShouldPersistTaps="handled"
-        data={emotes}
-        keyExtractor={item => item.id}
-        contentInsetAdjustmentBehavior="automatic"
-        renderItem={renderEmoteItem}
-        removeClippedSubviews
-        showsVerticalScrollIndicator={false}
-      />
+    <View style={[styles.suggestionsWrapper, suggestionStyle]}>
+      <View style={styles.suggestionsContainer}>
+        <Text style={styles.headerLabel}>Emotes</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          horizontal
+          keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator={false}
+        >
+          {emotes.map(item => (
+            <Button
+              key={item.id}
+              style={styles.suggestionItem}
+              onPress={() => handleEmotePress(item)}
+            >
+              <Image source={item.url} style={styles.emoteImage} useNitro />
+              <View style={styles.emoteTextContainer}>
+                <Text
+                  style={styles.emoteName}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.name}
+                </Text>
+                <Text
+                  style={styles.emoteSite}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.site}
+                </Text>
+              </View>
+            </Button>
+          ))}
+        </ScrollView>
+      </View>
     </View>
   );
-}
+});
+
+EmoteSuggestions.displayName = 'EmoteSuggestions';
 
 const styles = StyleSheet.create({
-  animatedItem: {},
-  emoteContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flex: 1,
-    gap: theme.spacing.sm,
-  },
   emoteImage: {
-    height: 32,
-    width: 32,
+    height: 28,
+    width: 28,
   },
   emoteName: {
     flexShrink: 1,
-    fontWeight: '500',
+    fontSize: theme.fontSize14,
+    fontWeight: '600',
   },
   emoteSite: {
+    color: theme.color.textSecondary.dark,
     flexShrink: 1,
-    marginTop: 2,
+    fontSize: theme.fontSize12,
+    marginTop: 1,
   },
   emoteTextContainer: {
-    flex: 1,
     justifyContent: 'center',
     minWidth: 0,
   },
-  list: { height: 280 },
+  headerLabel: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    paddingBottom: theme.space8,
+    textTransform: 'uppercase',
+  },
+  scrollContent: {
+    gap: theme.space8,
+    paddingRight: theme.space8,
+  },
   suggestionItem: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
     flexDirection: 'row',
-    minHeight: 52,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    gap: theme.space12,
+    minHeight: 48,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   suggestionsContainer: {
-    backgroundColor: theme.colors.gray.bg,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius28,
     borderWidth: 1,
-    marginBottom: theme.spacing.sm,
-    overflow: 'hidden',
+    paddingHorizontal: theme.space12,
+    paddingTop: theme.space12,
+    paddingBottom: theme.space12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+  },
+  suggestionsWrapper: {
+    marginBottom: theme.space8,
+    width: '100%',
+    zIndex: 2,
   },
 });

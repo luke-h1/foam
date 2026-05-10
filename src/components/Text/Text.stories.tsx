@@ -157,7 +157,7 @@ export const Colors: Story = {
       'red',
       'green',
       'violet',
-      'purple',
+      'plum',
     ] as const;
     return (
       <View style={{ gap: 8 }}>

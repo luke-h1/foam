@@ -8,7 +8,14 @@ import { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 interface SubscriptionNoticeProps {
-  part: ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'>;
+  part: ParsedPart<
+    | 'sub'
+    | 'resub'
+    | 'anongiftpaidupgrade'
+    | 'anongift'
+    | 'submysterygift'
+    | 'giftpaidupgrade'
+  >;
   notice_tags?: UserNoticeTags;
   parsedMessage?: ParsedPart[];
 }
@@ -72,6 +79,18 @@ export function SubscriptionNotice({
   const promoGiftTotal =
     'promoGiftTotal' in subscriptionEvent
       ? subscriptionEvent.promoGiftTotal
+      : undefined;
+  const massGiftCount =
+    'massGiftCount' in subscriptionEvent
+      ? subscriptionEvent.massGiftCount
+      : undefined;
+  const senderCount =
+    'senderCount' in subscriptionEvent
+      ? subscriptionEvent.senderCount
+      : undefined;
+  const senderName =
+    'senderName' in subscriptionEvent
+      ? subscriptionEvent.senderName
       : undefined;
 
   const getTierDisplay = () => {
@@ -210,6 +229,73 @@ export function SubscriptionNotice({
         );
         break;
       }
+      case 'submysterygift': {
+        parts.push(
+          <Text key="action" style={styles.descriptionText}>
+            Gifted{' '}
+          </Text>,
+        );
+        parts.push(
+          <Text key="count" style={styles.monthsHighlight}>
+            {massGiftCount ?? 0}
+          </Text>,
+        );
+        parts.push(
+          <Text key="tail" style={styles.descriptionText}>
+            {' '}
+            {tierDisplay} subscription{massGiftCount === 1 ? '' : 's'} to the
+            community
+          </Text>,
+        );
+        if (senderCount !== undefined && senderCount > 0) {
+          parts.push(
+            <Text key="senderCount" style={styles.descriptionText}>
+              . They&apos;ve gifted {senderCount} in the channel
+            </Text>,
+          );
+        }
+        parts.push(
+          <Text key="period" style={styles.descriptionText}>
+            .
+          </Text>,
+        );
+        break;
+      }
+      case 'giftpaidupgrade': {
+        parts.push(
+          <Text key="action" style={styles.descriptionText}>
+            Continuing the gift sub
+          </Text>,
+        );
+        if (senderName) {
+          parts.push(
+            <Text key="from" style={styles.descriptionText}>
+              {' '}
+              from{' '}
+            </Text>,
+          );
+          parts.push(
+            <Text key="sender" style={styles.recipientName}>
+              {senderName}
+            </Text>,
+          );
+        }
+        if (promoName) {
+          parts.push(
+            <Text key="promo" style={styles.descriptionText}>
+              {' '}
+              ({promoName}
+              {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
+            </Text>,
+          );
+        }
+        parts.push(
+          <Text key="period" style={styles.descriptionText}>
+            .
+          </Text>,
+        );
+        break;
+      }
       default:
         parts.push(
           <Text key="action" style={styles.descriptionText}>
@@ -255,7 +341,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   container: {
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.space8,
     width: '100%',
   },
   descriptionContainer: {
@@ -265,8 +351,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   descriptionText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.sm,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
   },
   emote: {
     height: 24,
@@ -282,16 +368,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: theme.spacing.xs,
+    marginTop: theme.space8,
   },
   messageText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.sm,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
     fontStyle: 'italic',
   },
   monthsHighlight: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.sm,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
     fontWeight: '700',
   },
   noticeRow: {
@@ -300,19 +386,19 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   recipientName: {
-    color: theme.colors.violet.accent,
-    fontSize: theme.font.fontSize.sm,
+    color: theme.colorViolet,
+    fontSize: theme.fontSize14,
     fontWeight: '600',
   },
   starColumn: {
-    marginRight: theme.spacing.sm,
+    marginRight: theme.space12,
   },
   starIcon: {
     alignItems: 'center',
   },
   username: {
-    color: theme.colors.violet.accent,
+    color: theme.colorViolet,
     fontWeight: '600',
-    marginRight: theme.spacing.xs,
+    marginRight: theme.space8,
   },
 });

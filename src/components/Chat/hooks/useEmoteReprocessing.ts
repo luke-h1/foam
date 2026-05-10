@@ -1,9 +1,10 @@
 import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
 import { updateMessage } from '@app/store/chatStore/messages';
+import { chatStore$ } from '@app/store/chatStore/state';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { type MutableRefObject, useEffect } from 'react';
+import { type MutableRefObject, useEffect, useRef } from 'react';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
@@ -13,14 +14,23 @@ export function useEmoteReprocessing({
   messages$,
   emoteLoadStatus,
   processedMessageIdsRef,
+  reprocessKey,
 }: {
   channelId: string;
   channelEmoteData: unknown;
   messages$: { peek: () => unknown[] };
   emoteLoadStatus: string;
   processedMessageIdsRef: MutableRefObject<Set<string>>;
+  reprocessKey?: string;
 }) {
+  const previousReprocessKeyRef = useRef(reprocessKey);
+
   useEffect(() => {
+    if (previousReprocessKeyRef.current !== reprocessKey) {
+      processedMessageIdsRef.current.clear();
+      previousReprocessKeyRef.current = reprocessKey;
+    }
+
     if (emoteLoadStatus !== 'success') {
       return;
     }
@@ -32,6 +42,7 @@ export function useEmoteReprocessing({
     }
 
     const hasEmotes =
+      chatStore$.emojis.peek().length > 0 ||
       emoteData.sevenTvGlobalEmotes.length > 0 ||
       emoteData.sevenTvChannelEmotes.length > 0 ||
       emoteData.twitchGlobalEmotes.length > 0 ||
@@ -47,28 +58,31 @@ export function useEmoteReprocessing({
       return;
     }
 
-    const textOnlyMessages = (currentMessages as AnyChatMessageType[]).filter(
-      msg =>
-        !processedMessageIdsRef.current.has(msg.message_id) &&
-        msg.sender !== 'System' &&
-        !('notice_tags' in msg) &&
-        msg.message.every((part: ParsedPart) => part.type === 'text'),
-    );
+    for (const msg of currentMessages as AnyChatMessageType[]) {
+      if (processedMessageIdsRef.current.has(msg.message_id)) {
+        continue;
+      }
 
-    textOnlyMessages.forEach(msg => {
+      if (msg.sender === 'System' || 'notice_tags' in msg) {
+        continue;
+      }
+
+      const textContent = getReprocessableText(msg.message as ParsedPart[]);
+
+      if (textContent == null) {
+        continue;
+      }
+
       processedMessageIdsRef.current.add(msg.message_id);
-      const textContent = msg.message
-        .filter((p: ParsedPart) => p.type === 'text')
-        .map((p: ParsedPart) => (p as { content: string }).content)
-        .join('');
 
       if (!textContent.trim()) {
-        return;
+        continue;
       }
 
       const replacedMessage = processEmotesWorklet({
         inputString: textContent.trimEnd(),
         userstate: msg.userstate,
+        emojiEmotes: chatStore$.emojis.peek(),
         sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
         sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
         twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
@@ -92,12 +106,33 @@ export function useEmoteReprocessing({
         message: replacedMessage,
         badges: replacedBadges,
       });
-    });
+    }
   }, [
     channelId,
     channelEmoteData,
     messages$,
     emoteLoadStatus,
     processedMessageIdsRef,
+    reprocessKey,
   ]);
+}
+
+function getReprocessableText(parts: ParsedPart[]): string | null {
+  let textContent = '';
+
+  for (const part of parts) {
+    if (part.type === 'text' || part.type === 'mention') {
+      textContent += part.content;
+      continue;
+    }
+
+    if (part.type === 'emote') {
+      textContent += part.original_name || part.name || part.content;
+      continue;
+    }
+
+    return null;
+  }
+
+  return textContent;
 }

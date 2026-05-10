@@ -22,10 +22,10 @@ const meta = {
         style={{
           flex: 1,
           backgroundColor: '#0E0E10',
-          padding: 16,
+          padding: 8,
         }}
       >
-        <View style={{ maxWidth: 600, width: '100%' }}>
+        <View style={{ maxWidth: 520, width: '100%' }}>
           <Story />
         </View>
       </ScrollView>
@@ -42,9 +42,17 @@ type Story = StoryObj<typeof meta>;
 
 const stvGlobalEmote1 = seventvSanitiisedGlobalEmoteSetFixture[0];
 const stvGlobalEmote2 = seventvSanitiisedGlobalEmoteSetFixture[1];
+const stvGlobalBaseEmote = seventvSanitiisedGlobalEmoteSetFixture.find(
+  emote => !emote.zero_width,
+);
 const stvChannelEmote1 = sevenTvSanitisedChannelEmoteSetFixture[0];
 
-if (!stvGlobalEmote1 || !stvGlobalEmote2 || !stvChannelEmote1) {
+if (
+  !stvGlobalEmote1 ||
+  !stvGlobalEmote2 ||
+  !stvGlobalBaseEmote ||
+  !stvChannelEmote1
+) {
   throw new Error('7TV emote fixtures are missing required emotes');
 }
 
@@ -151,6 +159,64 @@ export const WithEmotes: Story = {
       {
         type: 'text',
         content: '!',
+      },
+    ]),
+    onReply: () => {},
+  },
+};
+
+export const ZeroWidthSevenTv: Story = {
+  args: {
+    ...createBaseMessage([
+      {
+        type: 'text',
+        content: 'classic 7TV stack ',
+      },
+      {
+        type: 'emote',
+        content: stvGlobalBaseEmote.name,
+        original_name: stvGlobalBaseEmote.original_name,
+        name: stvGlobalBaseEmote.name,
+        id: stvGlobalBaseEmote.id,
+        url: stvGlobalBaseEmote.url,
+        static_url: stvGlobalBaseEmote.static_url,
+        site: stvGlobalBaseEmote.site,
+        width: stvGlobalBaseEmote.width,
+        height: stvGlobalBaseEmote.height,
+        aspect_ratio: stvGlobalBaseEmote.aspect_ratio,
+        zero_width: false,
+      },
+      {
+        type: 'emote',
+        content: stvGlobalEmote1.name,
+        original_name: stvGlobalEmote1.original_name,
+        name: stvGlobalEmote1.name,
+        id: stvGlobalEmote1.id,
+        url: stvGlobalEmote1.url,
+        static_url: stvGlobalEmote1.static_url,
+        site: stvGlobalEmote1.site,
+        width: stvGlobalEmote1.width,
+        height: stvGlobalEmote1.height,
+        aspect_ratio: stvGlobalEmote1.aspect_ratio,
+        zero_width: stvGlobalEmote1.zero_width,
+      },
+      {
+        type: 'emote',
+        content: stvGlobalEmote2.name,
+        original_name: stvGlobalEmote2.original_name,
+        name: stvGlobalEmote2.name,
+        id: stvGlobalEmote2.id,
+        url: stvGlobalEmote2.url,
+        static_url: stvGlobalEmote2.static_url,
+        site: stvGlobalEmote2.site,
+        width: stvGlobalEmote2.width,
+        height: stvGlobalEmote2.height,
+        aspect_ratio: stvGlobalEmote2.aspect_ratio,
+        zero_width: stvGlobalEmote2.zero_width,
+      },
+      {
+        type: 'text',
+        content: ' on one line',
       },
     ]),
     onReply: () => {},
@@ -433,6 +499,82 @@ export const AnonymousGift: Story = {
   },
 };
 
+export const CommunityGiftNotice: Story = {
+  args: {
+    ...createBaseMessage([
+      {
+        type: 'submysterygift',
+        subscriptionEvent: {
+          msgId: 'submysterygift',
+          displayName: 'MysteryGifter',
+          plan: '2000',
+          planName: 'Tier 1',
+          massGiftCount: 5,
+          senderCount: 42,
+        },
+      },
+    ]),
+    notice_tags: {
+      'msg-id': 'submysterygift',
+      'display-name': 'MysteryGifter',
+      'msg-param-sub-plan': '2000',
+      'msg-param-mass-gift-count': '5',
+      'msg-param-sender-count': '42',
+    },
+    onReply: () => {},
+  },
+};
+
+export const GiftPaidUpgrade: Story = {
+  args: {
+    ...createBaseMessage([
+      {
+        type: 'giftpaidupgrade',
+        subscriptionEvent: {
+          msgId: 'giftpaidupgrade',
+          displayName: 'UpgradeUser',
+          senderLogin: 'gifterlogin',
+          senderName: 'GiftSender',
+          promoName: 'Subtember',
+          promoGiftTotal: '12',
+        },
+      },
+    ]),
+    notice_tags: {
+      'msg-id': 'giftpaidupgrade',
+      'display-name': 'UpgradeUser',
+      'msg-param-sender-login': 'gifterlogin',
+      'msg-param-sender-name': 'GiftSender',
+      'msg-param-promo-name': 'Subtember',
+      'msg-param-promo-gift-total': '12',
+    },
+    onReply: () => {},
+  },
+};
+
+export const RaidNotice: Story = {
+  args: {
+    ...createBaseMessage([
+      {
+        type: 'text',
+        content: '500 raiders from RaidLeader have joined!',
+      },
+    ]),
+    sender: '',
+    timestamp: '14:02',
+    isTwitchSystemNotice: true,
+    notice_tags: {
+      'msg-id': 'raid',
+      'display-name': 'RaidLeader',
+      'msg-param-viewerCount': '500',
+      'msg-param-login': 'raidleader',
+      'msg-param-displayName': 'RaidLeader',
+      'system-msg': '500 raiders from RaidLeader have joined!',
+    },
+    onReply: () => {},
+  },
+};
+
 export const ViewerMilestone: Story = {
   args: {
     ...createBaseMessage([
@@ -633,5 +775,120 @@ export const NoUsername: Story = {
       { username: undefined, 'display-name': undefined },
     ),
     onReply: () => {},
+  },
+};
+
+export const ChatterinoSplit: Story = {
+  args: {
+    ...createBaseMessage([{ type: 'text', content: 'placeholder' }]),
+    onReply: () => {},
+  },
+  render: () => {
+    const splitMessages: ChatMessageType<'userstate'>[] = [
+      {
+        ...createBaseMessage(
+          [{ type: 'text', content: 'forsenCD teaTime' }],
+          {
+            username: 'modUser',
+            'display-name': 'ModUser',
+            color: '#00D9FF',
+            mod: '1',
+          },
+          mockModBadges,
+        ),
+        timestamp: '13:37',
+      },
+      {
+        ...createBaseMessage(
+          [
+            { type: 'text', content: 'hello ' },
+            { type: 'mention', content: '@testuser' },
+            {
+              type: 'text',
+              content: ' this line should read like a dense split row',
+            },
+          ],
+          {
+            username: 'firstTimer',
+            'display-name': 'FirstTimer',
+            color: '#9ACD32',
+            'first-msg': '1',
+          },
+        ),
+        timestamp: '13:38',
+      },
+      {
+        ...createBaseMessage(
+          [
+            {
+              type: 'text',
+              content:
+                'reply chains need to stay inline instead of turning into cards',
+            },
+          ],
+          {
+            username: 'replyUser',
+            'display-name': 'ReplyUser',
+            color: '#D269FF',
+          },
+        ),
+        parentDisplayName: 'OriginalUser',
+        replyBody: 'the original line being replied to',
+        replyDisplayName: 'OriginalUser',
+        timestamp: '13:39',
+      },
+      {
+        ...createBaseMessage(
+          [
+            {
+              type: 'text',
+              content:
+                'longer messages should wrap naturally without clipping even when the line gets verbose and carries on for a while with a couple of emotes ',
+            },
+            {
+              type: 'emote',
+              content: 'Kappa',
+              original_name: 'Kappa',
+              name: 'Kappa',
+              id: '25',
+              url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
+              site: 'Twitch Channel',
+            },
+            { type: 'text', content: ' and still remain readable.' },
+          ],
+          {
+            username: 'wrapTester',
+            'display-name': 'WrapTester',
+            color: '#FF6B6B',
+          },
+          mockBadges,
+        ),
+        timestamp: '13:40',
+      },
+      {
+        ...createBaseMessage(
+          [{ type: 'text', content: 'Now hosting somechannel' }],
+          {},
+        ),
+        sender: 'system',
+        timestamp: '13:41',
+      },
+    ];
+
+    return (
+      <View style={{ gap: 2 }}>
+        {splitMessages.map(message => (
+          <RichChatMessage
+            key={message.id}
+            {...message}
+            currentUsername="testuser"
+            currentUsernameNormalized="testuser"
+            density="compact"
+            showTimestamp
+            onReply={() => {}}
+          />
+        ))}
+      </View>
+    );
   },
 };

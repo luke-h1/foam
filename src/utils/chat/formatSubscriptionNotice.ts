@@ -10,7 +10,14 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 export function createSubscriptionPart(
   tags: UserNoticeTags,
   messageText?: string,
-): ParsedPart<'sub' | 'resub' | 'anongiftpaidupgrade' | 'anongift'> {
+): ParsedPart<
+  | 'sub'
+  | 'resub'
+  | 'anongiftpaidupgrade'
+  | 'anongift'
+  | 'submysterygift'
+  | 'giftpaidupgrade'
+> {
   const msgId = typeof tags['msg-id'] === 'string' ? tags['msg-id'] : '';
   const displayName =
     (typeof tags['display-name'] === 'string' ? tags['display-name'] : '') ||
@@ -154,6 +161,64 @@ export function createSubscriptionPart(
           msgId: 'anongiftpaidupgrade' as const,
           displayName,
           message: messageText || undefined,
+          promoName,
+          promoGiftTotal,
+        },
+      };
+    }
+    case 'submysterygift': {
+      const massGiftCountParam = tags['msg-param-mass-gift-count'];
+      const senderCountParam = tags['msg-param-sender-count'];
+      const plan =
+        typeof tags['msg-param-sub-plan'] === 'string'
+          ? tags['msg-param-sub-plan']
+          : '';
+
+      return {
+        type: 'submysterygift' as const,
+        subscriptionEvent: {
+          msgId: 'submysterygift' as const,
+          displayName,
+          message: messageText || undefined,
+          plan,
+          planName: getPlanName(plan),
+          massGiftCount:
+            typeof massGiftCountParam === 'string'
+              ? parseInt(massGiftCountParam, 10)
+              : undefined,
+          senderCount:
+            typeof senderCountParam === 'string'
+              ? parseInt(senderCountParam, 10)
+              : undefined,
+        },
+      };
+    }
+    case 'giftpaidupgrade': {
+      const senderLogin =
+        typeof tags['msg-param-sender-login'] === 'string'
+          ? tags['msg-param-sender-login']
+          : undefined;
+      const senderName =
+        typeof tags['msg-param-sender-name'] === 'string'
+          ? tags['msg-param-sender-name']
+          : undefined;
+      const promoName =
+        typeof tags['msg-param-promo-name'] === 'string'
+          ? tags['msg-param-promo-name']
+          : undefined;
+      const promoGiftTotal =
+        typeof tags['msg-param-promo-gift-total'] === 'string'
+          ? tags['msg-param-promo-gift-total']
+          : undefined;
+
+      return {
+        type: 'giftpaidupgrade' as const,
+        subscriptionEvent: {
+          msgId: 'giftpaidupgrade' as const,
+          displayName,
+          message: messageText || undefined,
+          senderLogin,
+          senderName,
           promoName,
           promoGiftTotal,
         },

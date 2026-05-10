@@ -12,7 +12,7 @@ export function DiagnosticsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
 });

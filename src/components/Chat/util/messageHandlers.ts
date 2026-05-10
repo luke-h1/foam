@@ -12,6 +12,7 @@ import {
 } from '@app/utils/chat/formatSubscriptionNotice';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
+import { formatDate } from '@app/utils/date-time/date';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import omit from 'lodash/omit';
 
@@ -20,14 +21,24 @@ export type AnyChatMessageType =
   | ChatMessageType<'usernotice', 'sub'>
   | ChatMessageType<'usernotice', 'resub'>
   | ChatMessageType<'usernotice', 'subgift'>
+  | ChatMessageType<'usernotice', 'submysterygift'>
+  | ChatMessageType<'usernotice', 'giftpaidupgrade'>
   | ChatMessageType<'usernotice', 'anongiftpaidupgrade'>
+  | ChatMessageType<'usernotice', 'rewardgift'>
   | ChatMessageType<'usernotice', 'raid'>
+  | ChatMessageType<'usernotice', 'unraid'>
+  | ChatMessageType<'usernotice', 'bitsbadgetier'>
+  | ChatMessageType<'usernotice', 'sharedchatnotice'>
   | ChatMessageType<'usernotice'>;
 
 interface CreateBaseMessageParams {
   tags: Record<string, string>;
   channelName: string;
   text: string;
+}
+
+function createChatTimestamp(date: Date | number = Date.now()): string {
+  return formatDate(date, 'HH:mm');
 }
 
 export const createUserStateFromTags = (
@@ -66,6 +77,7 @@ export const createBaseMessage = ({
     channel: channelName,
     message_id: messageId,
     message_nonce: messageNonce,
+    timestamp: createChatTimestamp(),
     sender: userstate.username || '',
     parentDisplayName: tags['reply-parent-display-name'] || '',
     replyDisplayName: tags['reply-parent-user-login'] || '',
@@ -120,6 +132,7 @@ export const createUserNoticeMessage = ({
     channel: channelName,
     message_id: messageId,
     message_nonce: messageNonce,
+    timestamp: createChatTimestamp(),
     sender: userstate.username || '',
     parentDisplayName:
       typeof tags['reply-parent-display-name'] === 'string'
@@ -226,6 +239,30 @@ export const createUserNoticeMessage = ({
       } as ChatMessageType<'usernotice', 'subgift'>;
     }
 
+    case 'submysterygift': {
+      return {
+        ...baseMessage,
+        badges: [],
+        message: [createSubscriptionPart(tags, text)],
+        userstate,
+        notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
+        ...emptyFields,
+      } as ChatMessageType<'usernotice', 'submysterygift'>;
+    }
+
+    case 'giftpaidupgrade': {
+      return {
+        ...baseMessage,
+        badges: [],
+        message: [createSubscriptionPart(tags, text)],
+        userstate,
+        notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
+        ...emptyFields,
+      } as ChatMessageType<'usernotice', 'giftpaidupgrade'>;
+    }
+
     case 'anongiftpaidupgrade': {
       return {
         ...baseMessage,
@@ -238,16 +275,66 @@ export const createUserNoticeMessage = ({
       } as ChatMessageType<'usernotice', 'anongiftpaidupgrade'>;
     }
 
-    case 'raid': {
+    case 'rewardgift': {
+      const trimmedText = text.trimEnd();
+
       return {
         ...baseMessage,
         badges: [],
-        message: [],
+        message: trimmedText
+          ? [{ type: 'text' as const, content: trimmedText }]
+          : [],
+        userstate,
+        notice_tags: { ...tags, ...emptyFields },
+        isChannelPointRedemption: true,
+      } as ChatMessageType<'usernotice', 'rewardgift'>;
+    }
+
+    case 'raid': {
+      const rawSystem =
+        typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
+      const systemLine = unescapeIrcTag(rawSystem);
+      const userLine = text.trimEnd();
+      const combined = [systemLine, userLine]
+        .filter(Boolean)
+        .join(systemLine && userLine ? ' ' : '');
+
+      return {
+        ...baseMessage,
+        badges: [],
+        message: combined ? [{ type: 'text' as const, content: combined }] : [],
         userstate,
         notice_tags: { ...tags, ...emptyFields },
         isSpecialNotice: true,
+        isTwitchSystemNotice: true,
         ...emptyFields,
       } as ChatMessageType<'usernotice', 'raid'>;
+    }
+
+    case 'unraid':
+    case 'bitsbadgetier':
+    case 'sharedchatnotice': {
+      const rawSystem =
+        typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
+      const systemLine = unescapeIrcTag(rawSystem);
+      const userLine = text.trimEnd();
+      const combined = [systemLine, userLine]
+        .filter(Boolean)
+        .join(systemLine && userLine ? ' ' : '');
+
+      return {
+        ...baseMessage,
+        userstate,
+        badges: [],
+        message: combined ? [{ type: 'text' as const, content: combined }] : [],
+        notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
+        isTwitchSystemNotice: true,
+        ...emptyFields,
+      } as ChatMessageType<
+        'usernotice',
+        'unraid' | 'bitsbadgetier' | 'sharedchatnotice'
+      >;
     }
 
     default: {
@@ -316,6 +403,7 @@ export const createSystemMessage = (
     channel: channelName,
     message_id: messageId,
     message_nonce: messageNonce,
+    timestamp: createChatTimestamp(),
     sender: 'System',
     parentDisplayName: '',
     replyDisplayName: '',

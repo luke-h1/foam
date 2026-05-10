@@ -28,9 +28,10 @@ export function Slider({
   style,
   thumbTintColor,
 }: SliderProps) {
-  const maxTrack = maximumTrackTintColor ?? theme.colors.gray.ui;
-  const minTrack = minimumTrackTintColor ?? theme.colors.accent.accent;
-  const thumb = thumbTintColor ?? theme.colors.accent.accent;
+  const maxTrack =
+    maximumTrackTintColor ?? theme.color.backgroundSecondary.dark;
+  const minTrack = minimumTrackTintColor ?? theme.colorDarkGreen;
+  const thumb = thumbTintColor ?? theme.colorDarkGreen;
   return (
     <View style={style}>
       {!disabled && step && min != null && max != null && (
@@ -65,15 +66,15 @@ export function Slider({
 const styles = StyleSheet.create({
   marker: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    height: theme.spacing.md,
-    width: theme.spacing.sm,
+    borderRadius: theme.borderRadius16,
+    height: theme.space16,
+    width: theme.space12,
   },
   markerDisabled: {
-    backgroundColor: theme.colors.gray.ui,
+    backgroundColor: theme.color.backgroundSecondary.dark,
   },
   markerEnabled: {
-    backgroundColor: theme.colors.accent.accent,
+    backgroundColor: theme.colorDarkGreen,
   },
   wrapper: {
     alignItems: 'center',

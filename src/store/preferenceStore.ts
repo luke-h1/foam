@@ -15,20 +15,22 @@ configureObservablePersistence({
 });
 
 export interface Preferences {
+  updatedAt: number;
   theme: Theme;
-  fontScaling: number;
-  systemScaling: boolean;
   hapticFeedback: boolean;
+  streamListLayout: 'compact' | 'media' | 'text';
   chatDensity: 'comfortable' | 'compact';
   chatTimestamps: boolean;
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
   showUnreadJumpPill: boolean;
+  emojiStyle: 'twitter' | 'google';
   show7TvEmotes: boolean;
   showBttvEmotes: boolean;
   showFFzEmotes: boolean;
   showChatterinoEmotes: boolean;
   showTwitchEmotes: boolean;
+  disableEmoteAnimations: boolean;
   showTwitchBadges: boolean;
   show7tvBadges: boolean;
   showFFzBadges: boolean;
@@ -36,20 +38,22 @@ export interface Preferences {
 }
 
 const initialPreferences: Preferences = {
+  updatedAt: Date.now(),
   theme: 'foam-dark',
-  fontScaling: 1,
-  systemScaling: false,
   hapticFeedback: true,
+  streamListLayout: 'compact',
   chatDensity: 'comfortable',
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
   showUnreadJumpPill: true,
+  emojiStyle: 'twitter',
   show7TvEmotes: true,
   showBttvEmotes: true,
   showFFzEmotes: true,
   showChatterinoEmotes: true,
   showTwitchEmotes: true,
+  disableEmoteAnimations: false,
   showTwitchBadges: true,
   show7tvBadges: true,
   showFFzBadges: true,
@@ -73,7 +77,31 @@ export function usePreferences(): Preferences & {
   return {
     ...preferences,
     update: (payload: Partial<Preferences>) => {
-      preferences$.assign(payload);
+      preferences$.assign({
+        ...payload,
+        updatedAt: Date.now(),
+      });
     },
   };
+}
+
+export function usePreference<K extends keyof Preferences>(
+  key: K,
+): Preferences[K] {
+  return useSelector(() => preferences$[key].get()) as Preferences[K];
+}
+
+export function useUpdatePreferences(): (
+  payload: Partial<Preferences>,
+) => void {
+  return (payload: Partial<Preferences>) => {
+    preferences$.assign({
+      ...payload,
+      updatedAt: Date.now(),
+    });
+  };
+}
+
+export function replacePreferences(preferences: Preferences): void {
+  preferences$.set(preferences);
 }

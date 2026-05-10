@@ -82,11 +82,16 @@ export function RefreshIndicator({
     opacity: refreshProgress.value,
   }));
 
-  const accentColor = theme.colors.grass.accent;
+  const accentColor = theme.colorGrass;
 
   return (
     <Animated.View style={[styles.container, containerStyle]}>
-      <View style={[styles.badge, { backgroundColor: theme.colors.gray.ui }]}>
+      <View
+        style={[
+          styles.badge,
+          { backgroundColor: theme.color.backgroundSecondary.dark },
+        ]}
+      >
         <Animated.View style={[styles.centered, arrowStyle]}>
           <IconSymbol name={ICON_NAME} size={18} color={accentColor} />
         </Animated.View>

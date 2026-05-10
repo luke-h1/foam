@@ -76,7 +76,7 @@ export function usePersistedState<T>(key: string, initialValue: T) {
       }
     };
 
-    void restorePersistedState();
+    restorePersistedState();
   }, [key]);
 
   // Wrapper for setValue that also persists the new value

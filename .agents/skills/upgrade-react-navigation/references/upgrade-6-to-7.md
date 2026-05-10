@@ -15,6 +15,10 @@ Upgrade React Navigation to 7.x and handle the required breaking changes.
 - If the repo uses `@react-navigation/drawer` on native, install or update `react-native-reanimated` to `3.x` and remove `useLegacyImplementation`.
 - If the repo uses TypeScript, set `moduleResolution: 'bundler'` and enable either `strict: true` or `strictNullChecks: true`.
 
+## Official reference
+
+Fetch [llms.txt](https://reactnavigation.org/llms.x.txt) for a list of documentation links. During the migration, refer to the official documentation for API reference for the latest React Navigation 7.x versions.
+
 ## Areas to review
 
 - Same-stack navigation calls, nested child navigation calls, and route-key navigation

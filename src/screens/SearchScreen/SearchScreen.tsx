@@ -1,12 +1,14 @@
+import { AnimatedInputBar } from '@app/components/AnimatedInputBar/AnimatedInputBar';
 import { Button } from '@app/components/Button/Button';
-import { FlashList } from '@app/components/FlashList/FlashList';
+import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Icon } from '@app/components/Icon/Icon';
+import { Image } from '@app/components/Image/Image';
+import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { SearchHistoryV2 } from '@app/components/SearchHistory/SearchHistoryV2';
 import { Text } from '@app/components/Text/Text';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
-import { useDebouncedEffect } from '@app/hooks/useDebouncedEffect';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { storageService } from '@app/services/storage-service';
 import {
   Category,
@@ -15,11 +17,17 @@ import {
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
-// eslint-disable-next-line no-restricted-imports
-import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, TextInput, View, StyleSheet } from 'react-native';
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Keyboard, ScrollView, View, StyleSheet } from 'react-native';
 import { StreamerCard } from './components/StreamerCard';
 
 interface SearchHistoryItem {
@@ -27,48 +35,75 @@ interface SearchHistoryItem {
   date: string;
 }
 
+type SearchFilter = 'channels' | 'categories';
+
+const SEARCH_QUICK_ACTIONS = [
+  {
+    title: 'Just Chatting',
+    subtitle: 'Jump into the busiest live conversations',
+    query: 'just chatting',
+  },
+  {
+    title: 'Valorant',
+    subtitle: 'Check competitive streams and ranked grinders',
+    query: 'valorant',
+  },
+  {
+    title: 'League',
+    subtitle: 'See top solo queue and pro-watch channels',
+    query: 'league of legends',
+  },
+];
+
 /**
  * Search screen with large title header style (like Settings)
  */
 export function SearchScreen() {
-  const navigation = useAppNavigation();
-  const inputRef = useRef<TextInput>(null);
-
   const [query, setQuery] = useState<string>('');
   const [isFocused, setIsFocused] = useState(false);
+  const [selectedFilter, setSelectedFilter] =
+    useState<SearchFilter>('channels');
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [searchResults, setSearchResults] = useState<SearchChannelResponse[]>(
     [],
   );
   const [categoryResults, setCategoryResults] = useState<Category[]>([]);
+  const listRef = useRef<FlashListRef<SearchChannelResponse | Category>>(null);
 
-  void ScreenOrientation.lockAsync(
-    ScreenOrientation.OrientationLock.PORTRAIT_UP,
-  );
+  useScrollToTop(listRef);
 
-  const fetchSearchHistory = () => {
+  const fetchSearchHistory = useCallback(() => {
     const history =
       storageService.getString<SearchHistoryItem[]>('previous_searches');
 
     if (history) {
-      history?.sort(
+      history.sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
-      setSearchHistory(history);
+      startTransition(() => {
+        setSearchHistory(history);
+      });
+      return;
     }
-  };
-
-  useDebouncedEffect(fetchSearchHistory, 300);
+    startTransition(() => {
+      setSearchHistory([]);
+    });
+  }, []);
 
   useEffect(() => {
-    void fetchSearchHistory();
-  }, [query]);
+    void ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.PORTRAIT_UP,
+    );
+    fetchSearchHistory();
+  }, [fetchSearchHistory]);
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
-      setSearchResults([]);
-      setCategoryResults([]);
+      startTransition(() => {
+        setSearchResults([]);
+        setCategoryResults([]);
+      });
       return;
     }
 
@@ -77,8 +112,10 @@ export function SearchScreen() {
       twitchService.searchCategories(value),
     ]);
 
-    setSearchResults(channelResults);
-    setCategoryResults(categories.data.slice(0, 10));
+    startTransition(() => {
+      setSearchResults(channelResults);
+      setCategoryResults(categories.data.slice(0, 10));
+    });
 
     const prevSearches =
       storageService.getString<SearchHistoryItem[]>('previous_searches') ?? [];
@@ -109,13 +146,19 @@ export function SearchScreen() {
     }
 
     storageService.set('previous_searches', prevSearches);
-    setSearchHistory(prevSearches);
+    startTransition(() => {
+      setSearchHistory(prevSearches);
+    });
   }, 400);
 
   const handleClearSearch = useCallback(() => {
     setQuery('');
     setSearchResults([]);
     setCategoryResults([]);
+  }, []);
+
+  const handleCategoryPress = useCallback((categoryId: string) => {
+    router.push(`/category/${categoryId}`);
   }, []);
 
   const handleQuerySearch = useCallback(
@@ -138,7 +181,7 @@ export function SearchScreen() {
     [handleQuerySearch],
   );
 
-  const ListFooterComponent = useMemo(() => {
+  const historySection = useMemo(() => {
     return searchResults.length === 0 && searchHistory.length > 0 ? (
       <SearchHistoryV2
         history={searchHistory.map(item => item.query)}
@@ -159,21 +202,21 @@ export function SearchScreen() {
     ) : null;
   }, [searchResults.length, searchHistory, handleQuerySearch]);
 
+  const ListFooterComponent = useMemo(() => {
+    return historySection;
+  }, [historySection]);
+
+  const activeResults = useMemo(
+    () => (selectedFilter === 'channels' ? searchResults : categoryResults),
+    [categoryResults, searchResults, selectedFilter],
+  );
+
   const renderItem: ListRenderItem<SearchChannelResponse> = useCallback(
     ({ item }) => {
       return (
         <Button
           onPress={() => {
-            navigation.navigate('Streams', {
-              screen: 'LiveStream',
-              params: { id: item.broadcaster_login },
-            });
-          }}
-          onPressIn={() => {
-            navigation.preload('Streams', {
-              screen: 'LiveStream',
-              params: { id: item.broadcaster_login },
-            });
+            router.push(`/streams/live-stream/${item.broadcaster_login}`);
           }}
           style={styles.resultItem}
         >
@@ -181,34 +224,63 @@ export function SearchScreen() {
         </Button>
       );
     },
-    [navigation],
+    [],
+  );
+
+  const renderCategoryItem: ListRenderItem<Category> = useCallback(
+    ({ item }) => {
+      const imageUrl =
+        item.box_art_url
+          ?.replace('{width}', '220')
+          ?.replace('{height}', '294') ?? '';
+
+      return (
+        <Button
+          onPress={() => handleCategoryPress(item.id)}
+          style={styles.categoryResultItem}
+        >
+          <Image source={imageUrl} style={styles.categoryResultImage} />
+          <View style={styles.categoryResultInfo}>
+            <Text type="sm" weight="semibold" numberOfLines={1}>
+              {item.name}
+            </Text>
+            <Text type="xs" color="gray.textLow" numberOfLines={1}>
+              Open category
+            </Text>
+          </View>
+        </Button>
+      );
+    },
+    [handleCategoryPress],
   );
 
   const handleFocus = useCallback(() => setIsFocused(true), []);
   const handleBlur = useCallback(() => setIsFocused(false), []);
   const handleCancel = useCallback(() => {
-    inputRef.current?.blur();
+    Keyboard.dismiss();
+    setIsFocused(false);
     handleClearSearch();
   }, [handleClearSearch]);
-
-  const handleCategoryPress = useCallback(
-    (categoryId: string) => {
-      navigation.navigate('Category', { id: categoryId });
-    },
-    [navigation],
-  );
 
   const ListHeaderComponent = useMemo(
     () => (
       <View style={styles.header}>
+        <Text type="4xl" weight="bold" style={styles.title}>
+          Search
+        </Text>
+        <Text type="sm" color="gray.textLow" style={styles.subtitle}>
+          Discover channels, categories, and live rooms.
+        </Text>
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
             <Icon icon="search" size={16} style={styles.searchIcon} />
-            <TextInput
-              ref={inputRef}
-              style={styles.searchInput}
-              placeholder="Channels, categories..."
-              placeholderTextColor="rgba(255,255,255,0.4)"
+            <AnimatedInputBar
+              containerStyle={styles.searchInputShell}
+              inputStyle={styles.searchInput}
+              inputWrapperStyle={styles.searchInputWrapper}
+              placeholderStyle={styles.searchPlaceholder}
+              placeholders={['Search channels, games, or categories']}
+              testID="search-input"
               value={query}
               onChangeText={handleTextChange}
               onFocus={handleFocus}
@@ -223,63 +295,80 @@ export function SearchScreen() {
                 style={styles.clearButton}
               >
                 <View style={styles.clearIcon}>
-                  <Icon icon="x" size={12} />
+                  <Icon icon="x" size={10} />
                 </View>
               </PressableArea>
             )}
           </View>
           {isFocused && (
             <PressableArea onPress={handleCancel} style={styles.cancelButton}>
-              <Text color="violet.accent">Cancel</Text>
+              <Text color="accent.accent" weight="semibold">
+                Cancel
+              </Text>
             </PressableArea>
           )}
         </View>
 
-        {/* Categories carousel */}
-        {categoryResults.length > 0 && (
-          <View style={styles.categoriesSection}>
-            <Text
-              type="xs"
-              weight="semibold"
-              color="gray.textLow"
-              style={styles.sectionTitle}
-            >
-              CATEGORIES
-            </Text>
+        <View style={styles.filterBar}>
+          <SegmentedControl
+            currentIndex={selectedFilter === 'channels' ? 0 : 1}
+            onChange={index =>
+              setSelectedFilter(index === 0 ? 'channels' : 'categories')
+            }
+            items={[{ label: 'Channels' }, { label: 'Categories' }]}
+          />
+        </View>
+
+        {query.length === 0 && searchResults.length === 0 && (
+          <View style={styles.quickActionsSection}>
+            <View style={styles.sectionHeader}>
+              <Text
+                type="xs"
+                weight="semibold"
+                color="gray.textLow"
+                style={styles.sectionTitle}
+              >
+                START WITH
+              </Text>
+              <Text type="2xl" weight="bold" style={styles.sectionHeadline}>
+                Quick routes
+              </Text>
+            </View>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesCarousel}
+              contentContainerStyle={styles.quickActionsRail}
             >
-              {categoryResults.map(category => (
-                <PressableArea
-                  key={category.id}
-                  onPress={() => handleCategoryPress(category.id)}
-                  style={styles.categoryCard}
+              {SEARCH_QUICK_ACTIONS.map(item => (
+                <Button
+                  key={item.query}
+                  style={styles.quickActionCard}
+                  onPress={() => {
+                    setQuery(item.query);
+                    void handleQuerySearch(item.query);
+                  }}
                 >
-                  <View style={styles.categoryImageContainer}>
-                    <Image
-                      source={category.box_art_url
-                        ?.replace('{width}', '285')
-                        ?.replace('{height}', '380')}
-                      style={styles.categoryImage}
-                    />
-                  </View>
                   <Text
-                    type="xxs"
-                    numberOfLines={2}
-                    style={styles.categoryName}
+                    type="sm"
+                    weight="semibold"
+                    style={styles.quickActionTitle}
                   >
-                    {category.name}
+                    {item.title}
                   </Text>
-                </PressableArea>
+                  <Text
+                    type="xs"
+                    color="gray.textLow"
+                    style={styles.quickActionSubtitle}
+                  >
+                    {item.subtitle}
+                  </Text>
+                </Button>
               ))}
             </ScrollView>
           </View>
         )}
 
-        {/* Channels section header */}
-        {searchResults.length > 0 && (
+        {query.length > 1 && activeResults.length > 0 && (
           <View style={styles.sectionHeader}>
             <Text
               type="xs"
@@ -287,7 +376,12 @@ export function SearchScreen() {
               color="gray.textLow"
               style={styles.sectionTitle}
             >
-              CHANNELS
+              {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
+            </Text>
+            <Text type="2xl" weight="bold" style={styles.sectionHeadline}>
+              {selectedFilter === 'channels'
+                ? 'Matching channels'
+                : 'Matching categories'}
             </Text>
           </View>
         )}
@@ -295,29 +389,38 @@ export function SearchScreen() {
     ),
     [
       query,
+      selectedFilter,
+      activeResults.length,
+      searchResults.length,
       handleTextChange,
+      handleQuerySearch,
       handleFocus,
       handleBlur,
       handleClearSearch,
       handleCancel,
       isFocused,
-      categoryResults,
-      handleCategoryPress,
-      searchResults.length,
     ],
   );
 
   return (
     <View style={styles.container}>
       <FlashList
+        ref={listRef}
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
-        data={searchResults}
+        data={activeResults}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         ListFooterComponent={ListFooterComponent}
         ListHeaderComponent={ListHeaderComponent}
-        renderItem={renderItem}
+        renderItem={
+          selectedFilter === 'channels'
+            ? (renderItem as ListRenderItem<SearchChannelResponse | Category>)
+            : (renderCategoryItem as ListRenderItem<
+                SearchChannelResponse | Category
+              >)
+        }
+        keyExtractor={item => item.id}
       />
     </View>
   );
@@ -325,93 +428,141 @@ export function SearchScreen() {
 
 const styles = StyleSheet.create({
   cancelButton: {
-    paddingVertical: theme.spacing.xs,
-  },
-  categoriesCarousel: {
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-  },
-  categoriesSection: {
-    marginTop: theme.spacing.lg,
-  },
-  categoryCard: {
     alignItems: 'center',
-    width: 95,
+    justifyContent: 'center',
+    minHeight: 44,
+    paddingHorizontal: theme.space8,
   },
-  categoryImage: {
-    height: '100%',
-    width: '100%',
-  },
-  categoryImageContainer: {
-    backgroundColor: theme.colors.gray.ui,
+  categoryResultImage: {
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: 8,
-    height: 127,
-    overflow: 'hidden',
-    width: 95,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
+    height: 76,
+    width: 54,
   },
-  categoryName: {
-    lineHeight: 14,
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
+  categoryResultInfo: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0,
+  },
+  categoryResultItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space16,
+    paddingHorizontal: theme.space20,
+    paddingVertical: 6,
   },
   clearButton: {
-    padding: theme.spacing.xs,
+    padding: theme.space8,
   },
   clearIcon: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 8,
-    height: 16,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderRadius: theme.borderRadius999,
+    height: 18,
     justifyContent: 'center',
-    width: 16,
+    width: 18,
   },
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
+  filterBar: {
+    alignSelf: 'stretch',
+    marginTop: theme.space12,
+  },
   header: {
-    paddingBottom: theme.spacing.sm,
+    paddingHorizontal: theme.space20,
+    paddingBottom: theme.space20,
+    paddingTop: theme.space20,
+  },
+  quickActionCard: {
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    marginRight: theme.space16,
+    minHeight: 104,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space16,
+    width: 190,
+  },
+  quickActionSubtitle: {
+    marginTop: theme.space8,
+  },
+  quickActionTitle: {
+    lineHeight: 20,
+  },
+  quickActionsRail: {
+    paddingHorizontal: 0,
+  },
+  quickActionsSection: {
+    marginTop: theme.space20,
   },
   resultItem: {
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.space20,
+    paddingVertical: 6,
   },
   searchBar: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: 10,
+    borderRadius: 14,
+    borderWidth: 1,
     flex: 1,
     flexDirection: 'row',
-    height: 36,
-    paddingHorizontal: theme.spacing.sm,
+    minHeight: 44,
+    paddingHorizontal: theme.space16,
   },
   searchBarContainer: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    gap: theme.space8,
   },
   searchIcon: {
-    marginRight: theme.spacing.xs,
-    opacity: 0.5,
+    marginRight: theme.space8,
+    opacity: 0.55,
   },
   searchInput: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     flex: 1,
     fontSize: 16,
     paddingVertical: 0,
   },
+  searchInputShell: {
+    flex: 1,
+    marginVertical: 0,
+  },
+  searchInputWrapper: {
+    minHeight: 44,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  searchPlaceholder: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 15,
+  },
   sectionHeader: {
-    marginBottom: theme.spacing.xs,
-    marginTop: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
+    gap: 2,
+    marginBottom: theme.space12,
+    marginTop: theme.space20,
+  },
+  sectionHeadline: {
+    lineHeight: 28,
   },
   sectionTitle: {
-    letterSpacing: 0.5,
-    paddingHorizontal: theme.spacing.md,
+    letterSpacing: 1,
+  },
+  subtitle: {
+    marginBottom: theme.space16,
+    maxWidth: 300,
+  },
+  title: {
+    lineHeight: 44,
+    marginBottom: 4,
   },
 });

@@ -3,6 +3,7 @@ import { FlashList, ListRenderItem } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/Text/Text';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
   clearPaints,
   clearSevenTvBadges,
@@ -17,7 +18,7 @@ import {
   listCachedImages,
 } from '@app/utils/image/image-cache';
 import { useSelector } from '@legendapp/state/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View, StyleSheet } from 'react-native';
 
 type TabType = 'images' | 'badges' | 'paints';
@@ -49,6 +50,9 @@ export function CachedImagesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('images');
   const [images, setImages] = useState<CachedImageInfo[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const listRef = useRef(null);
+
+  useScrollToTop(listRef);
 
   const badges = useSelector(chatStore$.badges);
   const paints = usePaints();
@@ -218,7 +222,7 @@ export function CachedImagesScreen() {
               styles.paintPreview,
               item.color
                 ? { backgroundColor: item.color }
-                : { backgroundColor: theme.colors.gray.ui },
+                : { backgroundColor: theme.color.backgroundSecondary.dark },
             ]}
           />
         </View>
@@ -274,7 +278,7 @@ export function CachedImagesScreen() {
             styles.tabButton,
             activeTab === 'images' && styles.tabButtonActive,
             activeTab === 'images' && {
-              backgroundColor: theme.colors.blue.accent,
+              backgroundColor: theme.colorBlue,
             },
           ]}
         >
@@ -293,7 +297,7 @@ export function CachedImagesScreen() {
             styles.tabButton,
             activeTab === 'badges' && styles.tabButtonActive,
             activeTab === 'badges' && {
-              backgroundColor: theme.colors.orange.accent,
+              backgroundColor: theme.colorOrange,
             },
           ]}
         >
@@ -312,8 +316,7 @@ export function CachedImagesScreen() {
             styles.tabButton,
             activeTab === 'paints' && styles.tabButtonActive,
             activeTab === 'paints' && {
-              backgroundColor:
-                theme.colors.violet?.accent || theme.colors.orange.accent,
+              backgroundColor: theme.colorViolet || theme.colorOrange,
             },
           ]}
         >
@@ -400,6 +403,7 @@ export function CachedImagesScreen() {
       case 'images':
         return (
           <FlashList
+            ref={listRef}
             data={images}
             contentInsetAdjustmentBehavior="automatic"
             renderItem={renderImageItem}
@@ -417,6 +421,7 @@ export function CachedImagesScreen() {
       case 'badges':
         return (
           <FlashList
+            ref={listRef}
             data={badgeList}
             contentInsetAdjustmentBehavior="automatic"
             renderItem={renderBadgeItem}
@@ -434,6 +439,7 @@ export function CachedImagesScreen() {
       case 'paints':
         return (
           <FlashList
+            ref={listRef}
             data={paintList}
             contentInsetAdjustmentBehavior="automatic"
             renderItem={renderPaintItem}
@@ -485,8 +491,8 @@ const styles = StyleSheet.create({
   },
   button: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 8,
     borderWidth: 1,
@@ -496,16 +502,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   buttonText: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     fontSize: 13,
     fontWeight: '500',
   },
   buttonTextDisabled: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     opacity: 0.5,
   },
   colorBadge: {
-    borderColor: theme.colors.gray.border,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 6,
     borderWidth: 1.5,
@@ -524,27 +530,27 @@ const styles = StyleSheet.create({
     paddingTop: 80,
   },
   emptySubtext: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     fontSize: 14,
     lineHeight: 21,
     opacity: 0.8,
     textAlign: 'center',
   },
   emptyText: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     fontSize: 19,
     fontWeight: '700',
     letterSpacing: -0.3,
     marginBottom: 10,
   },
   headerContainer: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     paddingBottom: 8,
   },
   item: {
     alignItems: 'flex-start',
-    backgroundColor: theme.colors.gray.ui,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 14,
     borderWidth: 1,
@@ -565,19 +571,19 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   itemMeta: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     fontSize: 12,
     fontWeight: '500',
   },
   itemName: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
     letterSpacing: -0.2,
   },
   itemPath: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     fontFamily: 'monospace',
     fontSize: 10,
     marginTop: 2,
@@ -589,7 +595,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   paintPreview: {
-    borderColor: theme.colors.gray.border,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     borderWidth: 2,
@@ -597,8 +603,8 @@ const styles = StyleSheet.create({
     width: 64,
   },
   pathContainer: {
-    backgroundColor: theme.colors.gray.ui,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     borderWidth: 1,
@@ -608,20 +614,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   pathLabel: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   pathValue: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     fontFamily: 'monospace',
     fontSize: 11,
     lineHeight: 16,
   },
   providerBadge: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     borderCurve: 'continuous',
     borderRadius: 4,
     marginLeft: 6,
@@ -629,18 +635,18 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   providerBadgeText: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   screenContainer: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   sizeBadge: {
-    backgroundColor: theme.colors.gray.bg,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 6,
     borderWidth: 1,
@@ -648,15 +654,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   sizeBadgeText: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     fontFamily: 'monospace',
     fontSize: 11,
     fontWeight: '600',
   },
   tabButton: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     borderWidth: 1,
@@ -669,7 +675,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   tabButtonText: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     fontSize: 13,
     fontWeight: '600',
     letterSpacing: 0.2,
@@ -691,7 +697,7 @@ const styles = StyleSheet.create({
     width: 64,
   },
   thumbnailContainer: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     overflow: 'hidden',

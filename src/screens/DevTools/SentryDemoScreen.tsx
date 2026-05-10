@@ -18,13 +18,13 @@ export function SentryDemoScreen() {
 
 const styles = StyleSheet.create({
   button: {
-    marginVertical: theme.spacing.md,
+    marginVertical: theme.space16,
   },
   buttonText: {
-    backgroundColor: theme.colors.accent.accent,
+    backgroundColor: theme.colorDarkGreen,
     borderCurve: 'continuous',
-    borderRadius: theme.spacing.lg,
-    padding: theme.spacing.lg,
+    borderRadius: theme.space20,
+    padding: theme.space20,
   },
   container: {
     alignContent: 'center',

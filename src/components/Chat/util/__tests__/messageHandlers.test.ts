@@ -340,7 +340,10 @@ describe('messageHandlers', () => {
       });
 
       expect(result.notice_tags?.['msg-id']).toBe('raid');
-      expect(result.message).toEqual([]);
+      expect(result.isTwitchSystemNotice).toBe(true);
+      expect(result.message).toEqual([
+        { type: 'text', content: '500 raiders from RaidLeader have joined!' },
+      ]);
     });
 
     test('should create anongiftpaidupgrade notice', () => {
@@ -368,6 +371,190 @@ describe('messageHandlers', () => {
       });
 
       expect(result.notice_tags?.['msg-id']).toBe('anongiftpaidupgrade');
+    });
+
+    test('should create submysterygift notice', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'submysterygift',
+        'msg-param-mass-gift-count': '5',
+        'msg-param-sender-count': '42',
+        'msg-param-sub-plan': '2000',
+        'display-name': 'MysteryGifter',
+        login: 'mysterygifter',
+        'system-msg': 'MysteryGifter gifted 5 Tier 1 Subs to the community!',
+        color: '#33CC99',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('submysterygift');
+      expect(result.message[0]?.type).toBe('submysterygift');
+    });
+
+    test('should create giftpaidupgrade notice', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'giftpaidupgrade',
+        'msg-param-sender-login': 'gifterlogin',
+        'msg-param-sender-name': 'GiftSender',
+        'msg-param-promo-name': 'Subtember',
+        'msg-param-promo-gift-total': '12',
+        'display-name': 'UpgradeUser',
+        login: 'upgradeuser',
+        'system-msg':
+          'UpgradeUser is continuing the gift sub they got from GiftSender!',
+        color: '#FF8800',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('giftpaidupgrade');
+      expect(result.message[0]?.type).toBe('giftpaidupgrade');
+    });
+
+    test('should create a channel point redemption notice without chat text', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'rewardgift',
+        'display-name': 'RewardUser',
+        login: 'rewarduser',
+        'system-msg': 'RewardUser redeemed Hydrate',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+        'room-id': '67890',
+        'custom-reward-id': 'reward-123',
+        'msg-param-reward-title': 'Hydrate',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('rewardgift');
+      expect(result.isChannelPointRedemption).toBe(true);
+      expect(result.isTwitchSystemNotice).not.toBe(true);
+      expect(result.message).toEqual([]);
+      expect(result.userstate['custom-reward-id']).toBe('reward-123');
+      expect(result.userstate['msg-param-reward-title']).toBe('Hydrate');
+    });
+
+    test('should create bitsbadgetier as a twitch system notice', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'bitsbadgetier',
+        'msg-param-threshold': '1000',
+        'display-name': 'Cheerer',
+        login: 'cheerer',
+        'system-msg': 'Cheerer earned the 1,000 Bits badge!',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('bitsbadgetier');
+      expect(result.isTwitchSystemNotice).toBe(true);
+      expect(result.message).toEqual([
+        { type: 'text', content: 'Cheerer earned the 1,000 Bits badge!' },
+      ]);
+    });
+
+    test('should create unraid as a twitch system notice', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'unraid',
+        'display-name': 'Streamer',
+        login: 'streamer',
+        'system-msg': 'The raid has been cancelled.',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('unraid');
+      expect(result.isTwitchSystemNotice).toBe(true);
+      expect(result.message).toEqual([
+        { type: 'text', content: 'The raid has been cancelled.' },
+      ]);
+    });
+
+    test('should create sharedchatnotice as a twitch system notice', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'sharedchatnotice',
+        'display-name': 'Streamer',
+        login: 'streamer',
+        'system-msg': 'Shared chat connected with partner channel.',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('sharedchatnotice');
+      expect(result.isTwitchSystemNotice).toBe(true);
+      expect(result.message).toEqual([
+        {
+          type: 'text',
+          content: 'Shared chat connected with partner channel.',
+        },
+      ]);
     });
 
     test('should handle unknown msg-id with default case', () => {

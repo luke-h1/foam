@@ -41,6 +41,9 @@ export const bttvEmoteService = {
       name: emote.code,
       id: emote.id,
       url: `https://cdn.betterttv.net/emote/${emote.id}/3x`,
+      static_url: emote.animated
+        ? `https://cdn.betterttv.net/emote/${emote.id}/3x.png`
+        : `https://cdn.betterttv.net/emote/${emote.id}/3x`,
       emote_link: `https://betterttv.com/emotes/${emote.id}`,
       original_name: emote.codeOriginal ?? 'UNKNOWN',
       creator: null,
@@ -62,6 +65,9 @@ export const bttvEmoteService = {
       name: emote.code,
       id: emote.id,
       url: `https://cdn.betterttv.net/emote/${emote.id}/3x`,
+      static_url: emote.animated
+        ? `https://cdn.betterttv.net/emote/${emote.id}/3x.png`
+        : `https://cdn.betterttv.net/emote/${emote.id}/3x`,
       emote_link: `https://betterttv.com/emotes/${emote.id}`,
       original_name: emote?.codeOriginal ?? 'UNKNOWN',
       creator: emote.user?.name || null,
@@ -73,6 +79,9 @@ export const bttvEmoteService = {
         name: emote.code,
         id: emote.id,
         url: `https://cdn.betterttv.net/emote/${emote.id}/3x`,
+        static_url: emote.animated
+          ? `https://cdn.betterttv.net/emote/${emote.id}/3x.png`
+          : `https://cdn.betterttv.net/emote/${emote.id}/3x`,
         emote_link: `https://betterttv.com/emotes/${emote.id}`,
         original_name: emote?.codeOriginal ?? 'UNKNOWN',
         creator: emote.user?.name || null,

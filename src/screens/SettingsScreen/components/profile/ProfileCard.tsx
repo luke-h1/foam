@@ -4,122 +4,173 @@ import { Modal } from '@app/components/Modal/Modal';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { resetRoot } from '@app/navigators/navigationUtilities';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { type ReactNode, useMemo, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
-interface ProfileMenuItem {
+interface ProfileSectionProps {
+  title?: string;
+  footer?: ReactNode;
+  children: ReactNode;
+}
+
+interface InfoRowProps {
+  label: string;
+  value: ReactNode;
+  valueColor?: string;
+}
+
+interface ActionRowProps {
   title: string;
-  description?: string;
   icon: string;
-  iconFamily?: 'Feather' | 'Ionicons';
-  onPress?: () => void;
-  variant?: 'default' | 'danger';
+  onPress: () => void;
+  color?: string;
+  destructive?: boolean;
+  showChevron?: boolean;
+}
+
+function ProfileSection({ title, footer, children }: ProfileSectionProps) {
+  return (
+    <View style={styles.section}>
+      {title ? (
+        <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
+          {title}
+        </Text>
+      ) : null}
+      <View style={styles.sectionBody}>{children}</View>
+      {footer ? <View style={styles.sectionFooter}>{footer}</View> : null}
+    </View>
+  );
+}
+
+function InfoRow({ label, value, valueColor }: InfoRowProps) {
+  return (
+    <View style={styles.row}>
+      <Text type="sm" weight="medium" style={styles.rowLabel}>
+        {label}
+      </Text>
+      {typeof value === 'string' || typeof value === 'number' ? (
+        <Text
+          type="xs"
+          color="gray.textLow"
+          numberOfLines={1}
+          style={[styles.rowValue, valueColor ? { color: valueColor } : null]}
+        >
+          {value}
+        </Text>
+      ) : (
+        <View style={styles.rowValueWrapper}>{value}</View>
+      )}
+    </View>
+  );
+}
+
+function ActionRow({
+  title,
+  icon,
+  onPress,
+  color = theme.colorWhite,
+  destructive = false,
+  showChevron = true,
+}: ActionRowProps) {
+  const iconColor = destructive ? theme.colorRed : color;
+
+  return (
+    <PressableArea style={styles.pressableFill} onPress={onPress}>
+      <View style={styles.actionRow}>
+        <Icon icon={icon} size={20} color={iconColor} />
+        <Text
+          type="sm"
+          weight="medium"
+          style={[styles.actionLabel, { color: iconColor }]}
+        >
+          {title}
+        </Text>
+        {showChevron ? (
+          <Icon icon="chevron-right" size={18} color={theme.colorGreyAlpha} />
+        ) : null}
+      </View>
+    </PressableArea>
+  );
+}
+
+function formatMemberSince(createdAt?: string) {
+  if (!createdAt) {
+    return 'Unknown';
+  }
+
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) {
+    return 'Unknown';
+  }
+
+  return date.toLocaleDateString(undefined, {
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
-  const { navigate } = useAppNavigation();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
 
-  const handleLogout = () => {
-    setShowLogoutModal(true);
-  };
+  useScrollToTop(scrollRef);
+
+  const memberSince = useMemo(
+    () => formatMemberSince(user?.created_at),
+    [user?.created_at],
+  );
 
   const confirmLogout = () => {
     setShowLogoutModal(false);
     void logout();
 
     setTimeout(() => {
-      resetRoot({
-        index: 0,
-        routes: [
-          {
-            name: 'Tabs',
-            state: {
-              index: 0,
-              routes: [{ name: 'Top' }],
-            },
-          },
-        ],
-      });
+      router.replace('/tabs/top');
     }, 300);
   };
-
-  const menuItems: ProfileMenuItem[] = user
-    ? [
-        {
-          title: 'My Channel',
-          description: 'View your channel',
-          icon: 'tv',
-          onPress: () =>
-            navigate('Streams', {
-              screen: 'StreamerProfile',
-              params: { id: user.id },
-            }),
-        },
-        {
-          title: 'Blocked Users',
-          description: 'Manage blocked users',
-          icon: 'user-x',
-          onPress: () =>
-            navigate('Preferences', {
-              screen: 'BlockedUsers',
-            }),
-        },
-      ]
-    : [];
 
   if (!user) {
     return (
       <ScrollView
+        ref={scrollRef}
         style={styles.main}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.loginCard}>
-          <LinearGradient
-            colors={[
-              theme.colors.accent.uiAlpha,
-              theme.colors.accent.bgAltAlpha,
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          />
-          <View style={styles.loginIconContainer}>
-            <View style={styles.loginIconCircle}>
-              <Icon icon="user" size={32} color={theme.colors.accent.accent} />
+        <ProfileSection>
+          <View style={styles.signInPrompt}>
+            <View style={styles.signInIcon}>
+              <Icon icon="user" size={30} color={theme.colorGreyHoverAlpha} />
             </View>
-          </View>
-          <Text type="xl" weight="bold" align="center" mb="sm">
-            Welcome to Foam
-          </Text>
-          <Text
-            type="sm"
-            color="gray.textLow"
-            align="center"
-            style={styles.loginDescription}
-          >
-            Sign in with your Twitch account to chat, follow streams, and unlock
-            all features
-          </Text>
-          <PressableArea
-            style={styles.loginButton}
-            onPress={() => navigate('Login')}
-          >
-            <Icon
-              icon="log-in"
-              size={20}
-              color={theme.colors.accent.contrast}
-            />
-            <Text weight="semibold" color="accent" contrast type="md">
-              Sign in with Twitch
+            <Text type="lg" weight="bold" align="center">
+              Not signed in
             </Text>
-          </PressableArea>
-        </View>
+            <Text
+              type="xs"
+              color="gray.textLow"
+              align="center"
+              style={styles.signInDescription}
+            >
+              Sign in with Twitch to use chat, follows, channel shortcuts, and
+              account controls.
+            </Text>
+            <PressableArea
+              style={styles.pressableFill}
+              onPress={() => router.push('/login')}
+            >
+              <View style={styles.primaryButton}>
+                <Icon icon="log-in" size={18} color={theme.colorBlack} />
+                <Text type="xs" weight="bold" color="accent" contrast>
+                  Sign in
+                </Text>
+              </View>
+            </PressableArea>
+          </View>
+        </ProfileSection>
       </ScrollView>
     );
   }
@@ -127,114 +178,90 @@ export function ProfileCard() {
   return (
     <>
       <ScrollView
+        ref={scrollRef}
         style={styles.main}
         contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Profile Header */}
-        <PressableArea
-          style={styles.profileHeader}
-          onPress={() =>
-            navigate('Streams', {
-              screen: 'StreamerProfile',
-              params: { id: user.id },
-            })
+        <ProfileSection
+          title="Account"
+          footer={
+            <Text type="xxs" color="gray.textLow" style={styles.footerText}>
+              User ID: {user.id}
+            </Text>
           }
         >
-          <View style={styles.avatarContainer}>
-            {user.profile_image_url ? (
-              <Image
-                source={{ uri: user.profile_image_url }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Icon icon="user" size={28} color={theme.colors.gray.textLow} />
-              </View>
-            )}
-          </View>
-          <View style={styles.profileInfo}>
-            <Text type="lg" weight="bold">
-              {user.display_name}
-            </Text>
-            <Text type="sm" color="gray.textLow">
-              Signed in • Tap to view profile
-            </Text>
-          </View>
-          <Icon
-            icon="chevron-right"
-            size={20}
-            color={theme.colors.gray.textLow}
-          />
-        </PressableArea>
-
-        {/* Menu Section */}
-        <View style={styles.section}>
-          <Text
-            type="xs"
-            weight="semibold"
-            color="gray.textLow"
-            style={styles.sectionTitle}
+          <PressableArea
+            style={styles.pressableFill}
+            onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
           >
-            ACCOUNT
-          </Text>
-          <View style={styles.menuCard}>
-            {menuItems.map((item, index) => (
-              <PressableArea
-                key={item.title}
-                style={[
-                  styles.menuItem,
-                  index < menuItems.length - 1 && styles.menuItemBorder,
-                ]}
-                onPress={item.onPress}
-              >
-                <View
-                  style={[
-                    styles.menuIconContainer,
-                    item.variant === 'danger' && styles.menuIconDanger,
-                  ]}
-                >
+            <View style={styles.identityRow}>
+              {user.profile_image_url ? (
+                <Image
+                  source={{ uri: user.profile_image_url }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
                   <Icon
-                    icon={item.icon}
-                    iconFamily={item.iconFamily}
-                    size={18}
-                    color={
-                      item.variant === 'danger'
-                        ? theme.colors.red.accent
-                        : theme.colors.accent.accent
-                    }
+                    icon="user"
+                    size={26}
+                    color={theme.colorGreyHoverAlpha}
                   />
                 </View>
-                <View style={styles.menuContent}>
-                  <Text
-                    weight="semibold"
-                    color={item.variant === 'danger' ? 'red' : 'gray'}
-                  >
-                    {item.title}
-                  </Text>
-                  {item.description && (
-                    <Text type="xs" color="gray.textLow">
-                      {item.description}
-                    </Text>
-                  )}
-                </View>
-                <Icon
-                  icon="chevron-right"
-                  size={18}
-                  color={theme.colors.gray.border}
-                />
-              </PressableArea>
-            ))}
-          </View>
-        </View>
-
-        {/* Logout Section */}
-        <View style={styles.section}>
-          <PressableArea style={styles.logoutButton} onPress={handleLogout}>
-            <Text weight="semibold" color="red">
-              Sign Out
-            </Text>
+              )}
+              <View style={styles.identityText}>
+                <Text type="lg" weight="bold" numberOfLines={1}>
+                  {user.display_name}
+                </Text>
+                <Text type="xs" color="gray.textLow" numberOfLines={1}>
+                  @{user.login}
+                </Text>
+              </View>
+              <Icon
+                icon="chevron-right"
+                size={18}
+                color={theme.colorGreyAlpha}
+              />
+            </View>
           </PressableArea>
-        </View>
+
+          <InfoRow label="Channel" value={user.broadcaster_type || 'Viewer'} />
+          <InfoRow label="Member Since" value={memberSince} />
+        </ProfileSection>
+
+        <ProfileSection title="Twitch">
+          <ActionRow
+            title="My Channel"
+            icon="tv"
+            color={theme.colorWhite}
+            onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
+          />
+          <ActionRow
+            title="Blocked Users"
+            icon="user-x"
+            color={theme.colorWhite}
+            onPress={() => router.push('/preferences/blocked-users')}
+          />
+        </ProfileSection>
+
+        <ProfileSection
+          title="Session"
+          footer={
+            <Text type="xxs" color="gray.textLow" style={styles.footerText}>
+              Signing out removes your saved Twitch token from this device.
+            </Text>
+          }
+        >
+          <ActionRow
+            title="Log out"
+            icon="log-out"
+            destructive
+            showChevron={false}
+            onPress={() => setShowLogoutModal(true)}
+          />
+        </ProfileSection>
       </ScrollView>
 
       <Modal
@@ -255,138 +282,131 @@ export function ProfileCard() {
 }
 
 const styles = StyleSheet.create({
-  avatar: {
-    borderRadius: 28,
-    borderWidth: 2,
-    height: 56,
-    width: 56,
+  actionLabel: {
+    flex: 1,
   },
-  avatarContainer: {
-    position: 'relative',
+  actionRow: {
+    alignItems: 'center',
+    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: theme.space12,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space16,
+  },
+  avatar: {
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius16,
+    height: 52,
+    width: 52,
   },
   avatarPlaceholder: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
-    borderColor: theme.colors.gray.border,
-    borderRadius: 28,
-    borderStyle: 'dashed',
-    borderWidth: 2,
-    height: 56,
-    justifyContent: 'center',
-    width: 56,
-  },
-  loginButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.accent.accent,
+    backgroundColor: theme.color.backgroundElement.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius16,
+    height: 52,
+    justifyContent: 'center',
+    width: 52,
+  },
+  footerText: {
+    lineHeight: 18,
+  },
+  identityRow: {
+    alignItems: 'center',
+    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
-    gap: theme.spacing.md,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing['2xl'],
-    paddingVertical: theme.spacing.lg,
-    width: '100%',
+    gap: theme.space12,
+    padding: theme.space16,
   },
-  loginCard: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderColor: theme.colors.gray.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
-    padding: theme.spacing['2xl'],
-  },
-  loginDescription: {
-    marginBottom: theme.spacing.xl,
-    maxWidth: 280,
-  },
-  loginIconCircle: {
-    alignItems: 'center',
-    borderRadius: 36,
-    borderWidth: 2,
-    height: 72,
-    justifyContent: 'center',
-    width: 72,
-  },
-  loginIconContainer: {
-    marginBottom: theme.spacing.xl,
-  },
-  logoutButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.red.uiAlpha,
-    borderColor: theme.colors.red.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    justifyContent: 'center',
-    padding: theme.spacing.lg,
+  identityText: {
+    flex: 1,
+    gap: theme.space4,
   },
   main: {
     flex: 1,
   },
-  menuCard: {
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderColor: theme.colors.gray.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    overflow: 'hidden',
+  pressableFill: {
+    alignSelf: 'stretch',
   },
-  menuContent: {
-    flex: 1,
-    gap: theme.spacing.xs,
-  },
-  menuIconContainer: {
+  primaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.colors.accent.uiAlpha,
+    alignSelf: 'stretch',
+    backgroundColor: theme.colorDarkGreen,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    height: 36,
+    borderRadius: theme.borderRadius10,
+    flexDirection: 'row',
+    gap: theme.space8,
     justifyContent: 'center',
-    width: 36,
+    marginTop: theme.space8,
+    paddingHorizontal: theme.space24,
+    paddingVertical: theme.space12,
   },
-  menuIconDanger: {
-    backgroundColor: theme.colors.red.uiAlpha,
-  },
-  menuItem: {
+  row: {
     alignItems: 'center',
+    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
+    gap: theme.space16,
+    paddingHorizontal: theme.space16,
+    paddingVertical: 14,
   },
-  menuItemBorder: {
-    borderBottomColor: theme.colors.gray.borderAlpha,
-    borderBottomWidth: 1,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderColor: theme.colors.gray.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
-  },
-  profileInfo: {
+  rowLabel: {
+    color: theme.colorWhite,
     flex: 1,
-    gap: theme.spacing.xs,
+  },
+  rowValue: {
+    maxWidth: '58%',
+    textAlign: 'right',
+  },
+  rowValueWrapper: {
+    alignItems: 'flex-end',
+    flexShrink: 1,
   },
   scrollContent: {
-    gap: theme.spacing.xl,
-    paddingBottom: theme.spacing['3xl'],
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
+    gap: theme.space24,
+    paddingBottom: theme.space56,
+    paddingTop: theme.space16,
   },
   section: {
-    gap: theme.spacing.sm,
+    gap: theme.space8,
+  },
+  sectionBody: {
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    marginHorizontal: theme.space16,
+    overflow: 'hidden',
+  },
+  sectionFooter: {
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space8,
   },
   sectionTitle: {
+    color: theme.colorGreyAlpha,
     letterSpacing: 0.5,
-    marginLeft: theme.spacing.sm,
+    paddingHorizontal: theme.space16,
+    textTransform: 'uppercase',
+  },
+  signInDescription: {
+    lineHeight: 20,
+    maxWidth: 300,
+  },
+  signInIcon: {
+    alignItems: 'center',
+    backgroundColor: theme.color.backgroundElement.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    height: 64,
+    justifyContent: 'center',
+    marginBottom: theme.space4,
+    width: 64,
+  },
+  signInPrompt: {
+    alignItems: 'center',
+    gap: theme.space12,
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space36,
   },
 });

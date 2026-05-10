@@ -1,5 +1,6 @@
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
+import { useNavigation } from 'expo-router';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -9,7 +10,6 @@ import Animated, {
   SharedValue,
   useAnimatedStyle,
 } from 'react-native-reanimated';
-import { useAppNavigation } from './useAppNavigation';
 import { useTargetMeasurement } from './useTargetMeasurement';
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function useHeader({ offsetY, title }: Props) {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation();
   const headerHeight = useHeaderHeight();
 
   const {
@@ -77,10 +77,10 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     overflow: 'hidden',
-    paddingVertical: theme.spacing.lg,
+    paddingVertical: theme.space20,
   },
   titleText: {
-    fontSize: theme.font.fontSize.md,
+    fontSize: theme.fontSize16,
     textAlign: 'center',
   },
 });

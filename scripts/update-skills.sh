@@ -10,7 +10,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-AGENTS=(-a cursor -a claude-code)
+AGENTS=(-a cursor -a claude-code -a codex)
 if [[ -n "$INSTALL_GLOBAL" ]]; then
     GLOBAL_FLAG=(-g)
     echo "Installing skills globally (user-level) for cursor + claude-code."
@@ -32,6 +32,8 @@ SKILLS=(
     "bunx skills add https://github.com/dammyjay93/interface-design --skill interface-design"
     "bunx skills add  callstackincubator/agent-device"
     "bunx skills add react-navigation/skills"
+    "bunx skills add mattpocock/skills"
+    "bunx skills add software-mansion-labs/skills"
 )
 
 for cmd in "${SKILLS[@]}"; do

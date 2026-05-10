@@ -95,7 +95,7 @@ const previewMessages = {
   }),
 } as const;
 
-const getMentionColor = () => theme.colors.violet.accent;
+const getMentionColor = () => theme.colorViolet;
 
 const parseTextForEmotes = (text: string): ParsedPart[] => [textPart(text)];
 
@@ -230,11 +230,7 @@ function ChatPreviewSurface({
         {previewState.showUnreadJumpPill ? (
           <View style={styles.jumpPillWrap}>
             <View style={styles.jumpPill}>
-              <Icon
-                color={theme.colors.amber.accentAlpha}
-                icon="arrow-down"
-                size={16}
-              />
+              <Icon color={theme.colorAmberAlpha} icon="arrow-down" size={16} />
               <Text style={styles.jumpPillText} weight="semibold">
                 Jump to latest
               </Text>
@@ -576,13 +572,13 @@ function buildProviderEmoteParts(
 function getProviderPreviewColor(provider: PreviewProvider) {
   switch (provider) {
     case '7tv':
-      return theme.colors.plum.accent;
+      return theme.colorPlum;
     case 'bttv':
-      return theme.colors.orange.accent;
+      return theme.colorOrange;
     case 'ffz':
-      return theme.colors.blue.accent;
+      return theme.colorBlue;
     case 'twitch':
-      return theme.colors.violet.accent;
+      return theme.colorViolet;
     default: {
       const unreachable: never = provider;
       return unreachable;
@@ -592,13 +588,13 @@ function getProviderPreviewColor(provider: PreviewProvider) {
 
 const styles = StyleSheet.create({
   chatSurface: {
-    backgroundColor: theme.colors.gray.bg,
-    borderColor: theme.colors.gray.borderAlpha,
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-    paddingTop: theme.spacing.xs,
+    paddingTop: theme.space8,
     position: 'relative',
   },
   chatSurfaceWithJumpPill: {
@@ -607,49 +603,49 @@ const styles = StyleSheet.create({
   jumpPill: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: theme.colors.black.bgAlpha,
+    backgroundColor: theme.colorBlackOverlay,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
+    borderRadius: theme.borderRadius28,
     elevation: 5,
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    shadowColor: theme.colors.black.accentAlpha,
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space12,
+    shadowColor: theme.colorBlackAlpha,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
   jumpPillCount: {
-    fontSize: theme.font.fontSize.xs,
+    fontSize: theme.fontSize12,
   },
   jumpPillText: {
-    fontSize: theme.font.fontSize.xs,
+    fontSize: theme.fontSize12,
   },
   jumpPillWrap: {
-    bottom: theme.spacing.sm,
+    bottom: theme.space12,
     left: 0,
     position: 'absolute',
     right: 0,
   },
   messageRow: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     flexDirection: 'row',
     flexWrap: 'wrap',
     maxHeight: 480,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.space12,
   },
   previewCard: {
-    paddingTop: theme.spacing.xs,
+    paddingTop: theme.space8,
   },
   providerPreviewSurface: {
-    backgroundColor: theme.colors.gray.bg,
-    borderColor: theme.colors.gray.borderAlpha,
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
     minHeight: 44,
     overflow: 'hidden',
-    paddingVertical: theme.spacing.xs,
+    paddingVertical: theme.space8,
   },
 });

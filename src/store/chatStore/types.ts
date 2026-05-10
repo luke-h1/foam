@@ -65,10 +65,12 @@ export interface ChatMessageType<
   channel: string;
   message_id: string;
   message_nonce: string;
+  timestamp?: string;
   sender: string;
   style?: ViewStyle;
   parentDisplayName?: string;
   isSpecialNotice?: boolean;
+  moderationNotice?: string;
   cachedSenderColor?: string;
   replyDisplayName: string;
   replyBody: string;

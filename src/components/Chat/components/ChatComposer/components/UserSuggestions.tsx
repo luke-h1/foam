@@ -2,7 +2,9 @@ import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
 import type { ChatUser } from '@app/store/chatStore/constants';
 import { theme } from '@app/styles/themes';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
 interface UserSuggestionsProps {
   users: ChatUser[];
@@ -10,7 +12,7 @@ interface UserSuggestionsProps {
   handleUserSelect: (user: ChatUser) => void;
 }
 
-export function UserSuggestions({
+export const UserSuggestions = memo(function UserSuggestions({
   users,
   showUserSuggestions,
   handleUserSelect,
@@ -22,11 +24,12 @@ export function UserSuggestions({
   return (
     <View style={styles.userSuggestionsWrapper}>
       <View style={styles.userSuggestionsContainer}>
+        <Text style={styles.headerLabel}>Mention</Text>
         <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.userSuggestionScroll}
+          horizontal
           keyboardShouldPersistTaps="handled"
+          showsHorizontalScrollIndicator={false}
         >
           {users.map(user => (
             <Button
@@ -34,47 +37,79 @@ export function UserSuggestions({
               style={styles.userSuggestionItem}
               onPress={() => handleUserSelect(user)}
             >
-              <Text style={[styles.userSuggestionText, { color: user?.color }]}>
-                {user?.name}
-              </Text>
+              <View
+                style={[
+                  styles.userColorDot,
+                  {
+                    backgroundColor:
+                      user?.color || theme.color.textSecondary.dark,
+                  },
+                ]}
+              />
+              <Text style={styles.userSuggestionText}>{user?.name}</Text>
             </Button>
           ))}
         </ScrollView>
       </View>
     </View>
   );
-}
+});
+
+UserSuggestions.displayName = 'UserSuggestions';
 
 const styles = StyleSheet.create({
+  headerLabel: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+    paddingBottom: theme.space8,
+    textTransform: 'uppercase',
+  },
+  userColorDot: {
+    borderRadius: 999,
+    height: 7,
+    width: 7,
+  },
   userSuggestionItem: {
-    backgroundColor: theme.colors.accent.accentHover,
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
-    marginRight: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   userSuggestionScroll: {
     flexDirection: 'row',
+    gap: theme.space8,
+    paddingRight: theme.space8,
   },
   userSuggestionText: {
-    fontWeight: '500',
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
+    fontWeight: '600',
   },
   userSuggestionsContainer: {
-    backgroundColor: theme.colors.accent.accent,
-    borderColor: theme.colors.accent.accent,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius28,
     borderWidth: 1,
-    elevation: 3,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    paddingHorizontal: theme.space12,
+    paddingBottom: theme.space12,
+    paddingTop: theme.space12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
   },
   userSuggestionsWrapper: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.space8,
     width: '100%',
+    zIndex: 2,
   },
 });

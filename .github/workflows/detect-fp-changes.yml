@@ -54,7 +54,7 @@ jobs:
 
           CHANGED_ANY="false"
 
-          for VARIANT in production preview; do
+          for VARIANT in production testflight internal; do
             echo "=== Variant: $VARIANT ==="
             export APP_VARIANT="$VARIANT"
 
@@ -105,17 +105,28 @@ jobs:
             </details>
 
             <details>
-            <summary>preview</summary>
+            <summary>testflight</summary>
 
             | Platform | Base | Head |
             |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_preview }}` | `${{ steps.fp.outputs.head_ios_preview }}` |
-            | Android | `${{ steps.fp.outputs.base_android_preview }}` | `${{ steps.fp.outputs.head_android_preview }}` |
+            | iOS | `${{ steps.fp.outputs.base_ios_testflight }}` | `${{ steps.fp.outputs.head_ios_testflight }}` |
+            | Android | `${{ steps.fp.outputs.base_android_testflight }}` | `${{ steps.fp.outputs.head_android_testflight }}` |
+
+            </details>
+
+            <details>
+            <summary>internal</summary>
+
+            | Platform | Base | Head |
+            |---|---|---|
+            | iOS | `${{ steps.fp.outputs.base_ios_internal }}` | `${{ steps.fp.outputs.head_ios_internal }}` |
+            | Android | `${{ steps.fp.outputs.base_android_internal }}` | `${{ steps.fp.outputs.head_android_internal }}` |
 
             </details>
 
             - production changed: **${{ steps.fp.outputs.changed_production }}**
-            - preview changed: **${{ steps.fp.outputs.changed_preview }}**
+            - testflight changed: **${{ steps.fp.outputs.changed_testflight }}**
+            - internal changed: **${{ steps.fp.outputs.changed_internal }}**
 
       - name: 💬 Comment on PR when fingerprints are unchanged
         if: ${{ steps.fp.outputs.changed != 'true' }}
@@ -136,17 +147,28 @@ jobs:
             </details>
 
             <details>
-            <summary>preview</summary>
+            <summary>testflight</summary>
 
             | Platform | Base | Head |
             |---|---|---|
-            | iOS | `${{ steps.fp.outputs.base_ios_preview }}` | `${{ steps.fp.outputs.head_ios_preview }}` |
-            | Android | `${{ steps.fp.outputs.base_android_preview }}` | `${{ steps.fp.outputs.head_android_preview }}` |
+            | iOS | `${{ steps.fp.outputs.base_ios_testflight }}` | `${{ steps.fp.outputs.head_ios_testflight }}` |
+            | Android | `${{ steps.fp.outputs.base_android_testflight }}` | `${{ steps.fp.outputs.head_android_testflight }}` |
+
+            </details>
+
+            <details>
+            <summary>internal</summary>
+
+            | Platform | Base | Head |
+            |---|---|---|
+            | iOS | `${{ steps.fp.outputs.base_ios_internal }}` | `${{ steps.fp.outputs.head_ios_internal }}` |
+            | Android | `${{ steps.fp.outputs.base_android_internal }}` | `${{ steps.fp.outputs.head_android_internal }}` |
 
             </details>
 
             - production changed: **${{ steps.fp.outputs.changed_production }}**
-            - preview changed: **${{ steps.fp.outputs.changed_preview }}**
+            - testflight changed: **${{ steps.fp.outputs.changed_testflight }}**
+            - internal changed: **${{ steps.fp.outputs.changed_internal }}**
 
       - name: 📊 Summary
         run: |
@@ -159,12 +181,19 @@ jobs:
           echo "| iOS | \`${{ steps.fp.outputs.base_ios_production }}\` | \`${{ steps.fp.outputs.head_ios_production }}\` | ${{ steps.fp.outputs.base_ios_production != steps.fp.outputs.head_ios_production }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Android | \`${{ steps.fp.outputs.base_android_production }}\` | \`${{ steps.fp.outputs.head_android_production }}\` | ${{ steps.fp.outputs.base_android_production != steps.fp.outputs.head_android_production }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "### testflight" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| iOS | \`${{ steps.fp.outputs.base_ios_preview }}\` | \`${{ steps.fp.outputs.head_ios_preview }}\` | ${{ steps.fp.outputs.base_ios_preview != steps.fp.outputs.head_ios_preview }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android | \`${{ steps.fp.outputs.base_android_preview }}\` | \`${{ steps.fp.outputs.head_android_preview }}\` | ${{ steps.fp.outputs.base_android_preview != steps.fp.outputs.head_android_preview }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| iOS | \`${{ steps.fp.outputs.base_ios_testflight }}\` | \`${{ steps.fp.outputs.head_ios_testflight }}\` | ${{ steps.fp.outputs.base_ios_testflight != steps.fp.outputs.head_ios_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android | \`${{ steps.fp.outputs.base_android_testflight }}\` | \`${{ steps.fp.outputs.head_android_testflight }}\` | ${{ steps.fp.outputs.base_android_testflight != steps.fp.outputs.head_android_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### internal" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| iOS | \`${{ steps.fp.outputs.base_ios_internal }}\` | \`${{ steps.fp.outputs.head_ios_internal }}\` | ${{ steps.fp.outputs.base_ios_internal != steps.fp.outputs.head_ios_internal }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android | \`${{ steps.fp.outputs.base_android_internal }}\` | \`${{ steps.fp.outputs.head_android_internal }}\` | ${{ steps.fp.outputs.base_android_internal != steps.fp.outputs.head_android_internal }} |" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 🧹 Clean up worktree
         if: always()

@@ -35,12 +35,17 @@ yarn-error.*
 *.tsbuildinfo
 
 !.env.example
-ios
-android
+/ios
+/android
 
 # expo modules
 modules/core-haptics/build
-!modules/**/ios
+!modules/**/android/
+!modules/**/android/**
+!modules/**/ios/
+!modules/**/ios/**
+!modules/core-haptics/android/
+!modules/core-haptics/ios/
 
 # Turborepo
 .turbo
@@ -79,8 +84,7 @@ coverage
 # ESLint
 .eslintcache
 
-maestro-debug-output/
-*.maestro-screenshot.png
+artifacts/detox/
 build-*.tar.gz
 
 # Bun
@@ -107,4 +111,8 @@ FOAM_ANDROID_TESTFLIGHT_KEY.json
 
 profile-*.json
 
+docs/plans
+.agent-device
 
+docs/
+build-artifacts/

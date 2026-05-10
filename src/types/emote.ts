@@ -15,6 +15,7 @@ interface SanitisedEmoteBase {
   id: string;
   name: string;
   url: string;
+  static_url?: string;
   original_name: string;
   creator: string | null;
   emote_link: string;
@@ -65,10 +66,22 @@ export interface TwitchSanitisedEmote extends SanitisedEmoteBase {
   actor?: StvUser;
 }
 
+export interface EmojiSanitisedEmote extends SanitisedEmoteBase {
+  site: 'Emoji';
+  emoji_hexcode?: string;
+  flags?: number;
+  aspect_ratio?: number;
+  zero_width?: boolean;
+  width?: number;
+  height?: number;
+  actor?: StvUser;
+}
+
 export type SanitisedEmote =
   | SevenTvSanitisedEmote
   | BttvSanitisedEmote
   | FfzSanitisedEmote
-  | TwitchSanitisedEmote;
+  | TwitchSanitisedEmote
+  | EmojiSanitisedEmote;
 
 export type EmoteSite = SanitisedEmote['site'];

@@ -55,6 +55,12 @@ export function BadgePreviewSheet(props: Props) {
           </View>
         </View>
         <View style={styles.actions}>
+          <Button onPress={onClose} style={styles.actionButton}>
+            <View style={styles.actionContent}>
+              <Icon icon="check" color="#fff" size={16} />
+              <Text style={styles.actionText}>Done</Text>
+            </View>
+          </Button>
           <Button
             onPress={() => handleCopy('name')}
             style={styles.actionButton}

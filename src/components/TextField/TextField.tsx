@@ -27,8 +27,10 @@ export interface TextFieldAccessoryProps {
   editable: boolean;
 }
 
-export interface TextFieldProps
-  extends Omit<TextInputProps, 'ref' | 'placeholder'> {
+export interface TextFieldProps extends Omit<
+  TextInputProps,
+  'ref' | 'placeholder'
+> {
   status?: 'error' | 'disabled';
   label?: TextProps['children'];
   LabelTextProps?: TextProps;
@@ -74,7 +76,7 @@ export const TextField = forwardRef(function TextField(
 
   const $inputWrapperStyles: StyleProp<ViewStyle> = [
     styles.inputWrapper,
-    status === 'error' && { borderColor: theme.colors.red.accent },
+    status === 'error' && { borderColor: theme.colorRed },
     TextInputProps.multiline && { minHeight: 112 },
     LeftAccessory && { paddingStart: 0 },
     RightAccessory && { paddingEnd: 0 },
@@ -83,14 +85,14 @@ export const TextField = forwardRef(function TextField(
 
   const $inputStyles: StyleProp<TextStyle> = [
     styles.input,
-    disabled && { color: theme.colors.accent.accentHoverAlpha },
+    disabled && { color: theme.colorAccentHoverAlpha },
     TextInputProps.multiline && { height: 'auto' },
     $inputStyleOverride,
   ];
 
   const $helperStyles = [
     styles.helper,
-    status === 'error' && { color: theme.colors.red.border },
+    status === 'error' && { color: theme.colorRedBorder },
     HelperTextProps?.style,
   ];
 
@@ -127,10 +129,10 @@ export const TextField = forwardRef(function TextField(
 
         <TextInput
           ref={input}
-          underlineColorAndroid={theme.colors.gray.bg}
+          underlineColorAndroid={theme.color.background.dark}
           textAlignVertical="center"
           placeholder={placeholderContent as string}
-          placeholderTextColor={theme.colors.gray.text}
+          placeholderTextColor={theme.color.text.dark}
           {...TextInputProps}
           editable={!disabled}
           style={$inputStyles}
@@ -156,38 +158,38 @@ export const TextField = forwardRef(function TextField(
 
 const styles = StyleSheet.create({
   helper: {
-    marginTop: theme.spacing.xs,
+    marginTop: theme.space8,
   },
   input: {
-    borderColor: theme.colors.gray.text,
+    borderColor: theme.color.text.dark,
     borderWidth: StyleSheet.hairlineWidth,
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     flex: 1,
-    marginVertical: theme.spacing.sm,
-    padding: theme.spacing.lg,
+    marginVertical: theme.space12,
+    padding: theme.space20,
   },
   inputWrapper: {
     alignItems: 'center',
     borderCurve: 'continuous',
     borderRadius: 4,
     borderWidth: 1,
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     flexDirection: 'row',
     overflow: 'hidden',
   },
   label: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.space12,
   },
   leftAccessory: {
     alignItems: 'center',
     height: 30,
     justifyContent: 'center',
-    marginStart: theme.spacing.xs,
+    marginStart: theme.space8,
   },
   rightAccessory: {
     alignItems: 'center',
     height: 30,
     justifyContent: 'center',
-    marginEnd: theme.spacing.sm,
+    marginEnd: theme.space12,
   },
 });

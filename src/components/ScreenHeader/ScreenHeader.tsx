@@ -1,16 +1,16 @@
-import { ThemeColor } from '@app/styles/colors';
-import { theme } from '@app/styles/themes';
-import { ColorScale } from '@app/styles/util/createPallete';
-import { useNavigation } from '@react-navigation/native';
+import {
+  theme,
+  type ThemeColor,
+  type ThemeColorToken,
+} from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton } from '../IconButton/IconButton';
 import { Image } from '../Image/Image';
 import { Text, TextType, TextWeight } from '../Text/Text';
-
-type NestedColorPath = `${ThemeColor}.${ColorScale | 'contrast'}`;
 
 /**
  * Unified header component that supports both standard and hero layouts
@@ -46,17 +46,16 @@ export interface ScreenHeaderProps {
   children?: ReactNode;
   /**
    * Size variant for the header (Text-like API)
-   * - large: Large title below nav row (default)
-   * - medium: Inline title in nav row
-   * - compact: Smaller inline title
+   * - large/medium: ai-tattoo-style bold title block
+   * - compact: Small inline title in nav row
    * - hero: Hero-style header with background
    */
   size?: 'large' | 'medium' | 'compact' | 'hero';
   type?: TextType;
   weight?: TextWeight;
-  color?: ThemeColor | NestedColorPath;
+  color?: ThemeColor | ThemeColorToken;
   subtitleType?: TextType;
-  subtitleColor?: ThemeColor | NestedColorPath;
+  subtitleColor?: ThemeColor | ThemeColorToken;
   /**
    * Whether to add top safe area padding
    */
@@ -93,31 +92,35 @@ export function ScreenHeader({
   featuredImage,
   heroHeight = 280,
 }: ScreenHeaderProps) {
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  const handleBack = onBack ?? (() => navigation.goBack());
+  const handleBack =
+    onBack ??
+    (() => {
+      if (router.canGoBack()) {
+        router.back();
+      }
+    });
 
   const isHero = size === 'hero';
-  const isInline = size === 'medium' || size === 'compact';
+  const isInline = size === 'compact';
 
   const getTitleType = (): TextType => {
     if (type) return type;
-    if (size === 'large') return '2xl';
-    if (size === 'medium') return 'lg';
+    if (size === 'large' || size === 'medium') return '4xl';
     if (size === 'hero') return 'xl';
     return 'md';
   };
 
   const getTitleWeight = (): TextWeight => {
     if (weight) return weight;
-    if (isHero || size === 'large') return 'bold';
+    if (isHero || size === 'large' || size === 'medium') return 'bold';
     return 'semibold';
   };
 
   const getSubtitleType = (): TextType => {
     if (subtitleType) return subtitleType;
-    return size === 'compact' ? 'xs' : 'sm';
+    return size === 'compact' ? 'xs' : 'xs';
   };
 
   const titleTypeValue = getTitleType();
@@ -256,24 +259,26 @@ export function ScreenHeader({
             showNavRow ? styles.titleSectionWithNav : null,
           ]}
         >
-          <Text
-            type={titleTypeValue}
-            weight={titleWeightValue}
-            color={titleColorValue}
-            style={styles.title}
-            numberOfLines={2}
-          >
-            {title}
-          </Text>
           {subtitle && (
             <Text
               type={subtitleTypeValue}
+              weight="semibold"
               color={subtitleColor}
-              style={styles.subtitle}
+              style={styles.standardEyebrow}
+              numberOfLines={1}
             >
               {subtitle}
             </Text>
           )}
+          <Text
+            type={titleTypeValue}
+            weight={titleWeightValue}
+            color={titleColorValue}
+            style={styles.standardTitle}
+            numberOfLines={2}
+          >
+            {title}
+          </Text>
         </View>
       )}
 
@@ -285,21 +290,21 @@ export function ScreenHeader({
 const styles = StyleSheet.create({
   backButton: {
     justifyContent: 'center',
-    marginLeft: -theme.spacing.xs,
+    marginLeft: -theme.space8,
   },
   container: {
     position: 'relative',
   },
   featuredImage: {
-    borderColor: theme.colors.violet.accent,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: 8,
-    borderWidth: 2,
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
     height: 134,
-    shadowColor: theme.colors.violet.accent,
+    shadowColor: theme.colorBlackAlpha,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOpacity: 0.4,
+    shadowRadius: 18,
     width: 100,
   },
   heroBackground: {
@@ -315,8 +320,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   heroContent: {
-    paddingBottom: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.space28,
+    paddingHorizontal: theme.space20,
   },
   heroGradient: {
     bottom: 0,
@@ -328,52 +333,58 @@ const styles = StyleSheet.create({
   heroInner: {
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: theme.spacing.md,
+    gap: theme.space16,
   },
   heroTitle: {
     lineHeight: 28,
   },
   inlineTitleSection: {
     flex: 1,
-    marginLeft: theme.spacing.xs,
+    marginLeft: theme.space12,
   },
 
   navRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    left: theme.spacing.sm,
+    left: theme.space20,
     position: 'absolute',
-    right: theme.spacing.sm,
+    right: theme.space20,
     zIndex: 10,
   },
   navSpacer: {
     flex: 1,
   },
   standardContainer: {
-    paddingBottom: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.space20,
+    paddingHorizontal: theme.space20,
   },
   standardNavRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    minHeight: 44,
+    marginBottom: theme.space8,
+    minHeight: 52,
+  },
+  standardEyebrow: {
+    letterSpacing: 1,
+    marginBottom: theme.space8,
+    textTransform: 'uppercase',
+  },
+  standardTitle: {
+    lineHeight: 44,
   },
   subtitle: {
     lineHeight: 20,
   },
   textContent: {
     flex: 1,
-    gap: theme.spacing.sm,
-    paddingBottom: theme.spacing.xs,
-  },
-  title: {
-    lineHeight: 34,
+    gap: theme.space12,
+    paddingBottom: theme.space8,
   },
   titleSection: {
-    gap: theme.spacing.xs,
+    gap: theme.space8,
   },
   titleSectionWithNav: {
-    marginTop: theme.spacing.xs,
+    marginTop: 0,
   },
 });
 

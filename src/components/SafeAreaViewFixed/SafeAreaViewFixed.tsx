@@ -41,7 +41,7 @@ export function SafeAreaViewFixed({
 }: Props) {
   const insets = useSafeAreaInsets();
   const dynamicTabBarHeight = useTabBarHeight();
-  const { tabBarHeight: themeTabBarHeight } = theme.spacing;
+  const themeTabBarHeight = theme.tabBarHeight;
   // Use dynamic height if available, fall back to theme value
   const tabBarHeight = dynamicTabBarHeight || themeTabBarHeight;
   const defaultEdges = edges === undefined;

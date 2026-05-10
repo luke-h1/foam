@@ -1,7 +1,10 @@
-import { ThemeColor } from '@app/styles/colors';
 import { getMargin, MarginProps } from '@app/styles/spacing';
-import { theme, type AppTheme } from '@app/styles/themes';
-import { ColorScale } from '@app/styles/util/createPallete';
+import {
+  resolveThemeColor,
+  theme,
+  type ThemeColor,
+  type ThemeColorToken,
+} from '@app/styles/themes';
 import { forwardRef, LegacyRef, ReactNode } from 'react';
 
 import {
@@ -12,33 +15,6 @@ import {
   StyleSheet,
   TextStyle,
 } from 'react-native';
-
-// Helper type for nested color paths
-type NestedColorPath = `${ThemeColor}.${ColorScale | 'contrast'}`;
-type ColorPathScale = ColorScale | 'contrast';
-type ThemeColorLookup = Partial<
-  Record<ThemeColor, Partial<Record<ColorPathScale, string>>>
-> & {
-  gray: Record<ColorPathScale, string>;
-};
-
-function getNestedColor(
-  currentTheme: AppTheme,
-  colorPath: ThemeColor | NestedColorPath,
-): string {
-  const colors = currentTheme.colors as ThemeColorLookup;
-
-  if (colorPath.includes('.')) {
-    const [colorName, colorScale] = colorPath.split('.') as [
-      ThemeColor,
-      ColorScale | 'contrast',
-    ];
-    return colors[colorName]?.[colorScale] || colors.gray.text;
-  }
-
-  const color = colorPath as ThemeColor;
-  return colors[color]?.text || colors.gray.text;
-}
 
 export type TextType =
   | 'default'
@@ -79,13 +55,14 @@ export type TextWeight =
   | 'black';
 
 export type TextVariant = 'default' | 'mono';
+type AppFontVariant = TextVariant | 'display';
 
 export interface TextProps extends RNTextProps, MarginProps {
   children?: ReactNode;
   type?: TextType;
   weight?: TextWeight;
-  variant?: TextVariant;
-  color?: ThemeColor | NestedColorPath;
+  variant?: AppFontVariant;
+  color?: ThemeColor | ThemeColorToken;
   contrast?: boolean;
   highContrast?: boolean;
   italic?: boolean;
@@ -164,31 +141,19 @@ export const Text = forwardRef<RNText, TextProps>(
     // Resolve color
     let resolvedColor: string;
 
-    if (typeof color === 'string' && color.includes('.')) {
-      resolvedColor = getNestedColor(theme, color as NestedColorPath);
-    } else {
-      const baseColor = color as ThemeColor;
-      const resolvedHighContrast = highContrast ?? baseColor === 'gray';
-      // eslint-disable-next-line no-nested-ternary
-      const contrastLevel = contrast
-        ? 'contrast'
-        : resolvedHighContrast
-          ? 'text'
-          : 'textLow';
-
-      const colors = theme.colors as ThemeColorLookup;
-      resolvedColor = colors[baseColor]?.[contrastLevel] || colors.gray.text;
-    }
+    resolvedColor = resolveThemeColor(color, { contrast, highContrast });
 
     const sizeStyle = sizeStyles[type];
+
+    const resolvedFontFamily = getFontFamily(variant, weight, italic);
 
     const textStyle: TextStyle = {
       ...getMargin(theme)({ m, mb, ml, mr, mt, mx, my }),
       color: resolvedColor,
-      fontFamily: variant === 'mono' ? 'monospace' : undefined,
-      fontStyle: italic ? 'italic' : 'normal',
+      fontFamily: resolvedFontFamily,
+      fontStyle: variant === 'mono' ? (italic ? 'italic' : 'normal') : 'normal',
       fontVariant: tabular ? ['tabular-nums'] : undefined,
-      fontWeight: weightMap[weight],
+      fontWeight: variant === 'mono' ? weightMap[weight] : undefined,
       textAlign: align,
     };
 
@@ -206,6 +171,48 @@ export const Text = forwardRef<RNText, TextProps>(
 );
 
 Text.displayName = 'Text';
+
+function getFontFamily(
+  variant: AppFontVariant,
+  weight: TextWeight,
+  italic?: boolean,
+): string | undefined {
+  if (variant === 'mono') {
+    return 'monospace';
+  }
+
+  if (variant === 'display') {
+    return italic
+      ? 'InstrumentSerif_400Regular_Italic'
+      : 'InstrumentSerif_400Regular';
+  }
+
+  const fontMap: Record<TextWeight, string> = italic
+    ? {
+        ultralight: theme.fontFamilyLightItalic,
+        thin: theme.fontFamilyLightItalic,
+        light: theme.fontFamilyLightItalic,
+        normal: theme.fontFamilyRegularItalic,
+        medium: theme.fontFamilyItalic,
+        semibold: theme.fontFamilySemiBoldItalic,
+        bold: theme.fontFamilyBoldItalic,
+        heavy: theme.fontFamilyHeavyItalic,
+        black: theme.fontFamilyBlackItalic,
+      }
+    : {
+        ultralight: theme.fontFamilyLight,
+        thin: theme.fontFamilyLight,
+        light: theme.fontFamilyLight,
+        normal: theme.fontFamilyRegular,
+        medium: theme.fontFamily,
+        semibold: theme.fontFamilySemiBold,
+        bold: theme.fontFamilyBold,
+        heavy: theme.fontFamilyHeavy,
+        black: theme.fontFamilyBlack,
+      };
+
+  return fontMap[weight];
+}
 
 // Helper function to increment/decrement text size
 export function addTextSize(type: TextType, by: number): TextType {

@@ -3,178 +3,95 @@ import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
-import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { countMetric } from '@app/services/sentry-service';
+import { useTwitchSignIn } from '@app/hooks/useTwitchSignIn';
 import { theme } from '@app/styles/themes';
-import { useAuthRequest } from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-import { useEffect } from 'react';
-import {
-  Dimensions,
-  Platform,
-  SafeAreaView,
-  View,
-  StyleSheet,
-} from 'react-native';
-import { toast } from 'sonner-native';
-
-WebBrowser.maybeCompleteAuthSession();
-
-const USER_SCOPES = [
-  'user:read:follows',
-  'user:read:blocked_users',
-  'user:read:emotes',
-  'user:manage:blocked_users',
-] as const;
-
-const CHANNEL_SCOPES = [
-  'channel:read:polls',
-  'channel:read:predictions',
-  'channel:moderate',
-] as const;
-
-const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
-const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
-
-const proxyUrl = new URL(
-  Platform.select({
-    native: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-    default: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    web: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    ios: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-  }),
-).toString();
-
-const { width: screenWidth } = Dimensions.get('window');
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView, View, StyleSheet } from 'react-native';
 
 export function LoginScreen() {
-  const navigation = useAppNavigation();
-  const { loginWithTwitch } = useAuthContext();
-
-  const discovery = {
-    authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
-    tokenEndpoint: 'https://id.twitch.tv/oauth2/token',
-    revocationEndpoint: 'https://id.twitch.tv/oauth2/revoke',
-  } as const;
-
-  const [request, response, promptAsync] = useAuthRequest(
-    {
-      clientId: process.env.TWITCH_CLIENT_ID,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET,
-      scopes: [
-        ...USER_SCOPES,
-        ...CHAT_SCOPES,
-        ...WHISPER_SCOPES,
-        ...CHANNEL_SCOPES,
-      ],
-      responseType: 'token',
-      redirectUri: proxyUrl,
-      usePKCE: true,
-      extraParams: {
-        force_verify: 'true',
-      },
-    },
-    discovery,
-  );
-
-  const handleAuth = async () => {
-    await loginWithTwitch(response);
-    if (response?.type === 'success') {
-      countMetric('auth.login.success', {
-        platform: Platform.OS,
-      });
-      toast.success('Logged in');
-
-      navigation.push('Tabs', {
-        screen: 'Following',
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (response && response?.type === 'success') {
-      void handleAuth();
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response]);
+  const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn();
+  const isDisabled = !isSignInReady || isPromptingAuth;
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.decorativeElements}>
-        <View style={styles.decorativeCircle} />
-        <View style={styles.decorativeCircle2} />
-      </View>
+      <Image
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+        source={require('../../assets/data/stream_thumbnail2.jpg')}
+        contentFit="cover"
+        transition={0}
+        containerStyle={styles.backgroundImageContainer}
+        style={styles.backgroundImage}
+      />
+      <LinearGradient
+        colors={[
+          'rgba(0,0,0,0.04)',
+          'rgba(0,0,0,0.48)',
+          theme.color.background.dark,
+        ]}
+        locations={[0, 0.42, 0.92]}
+        pointerEvents="none"
+        style={styles.backgroundFade}
+      />
 
       <View style={styles.content}>
-        <View style={styles.innerContent}>
-          <View style={styles.logoSection}>
+        <View style={styles.heroSpacer} />
+
+        <View style={styles.authContent}>
+          <View style={styles.brandRow}>
             <Image
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
               source={require('../../assets/app-icon/app-icon-production.png')}
               style={styles.appIcon}
               contentFit="cover"
             />
-
-            <View style={styles.titleContainer}>
-              <Text type="4xl" weight="bold" color="accent" align="center">
-                Welcome to Foam
+            <View style={styles.brandCopy}>
+              <Text type="xs" weight="semibold" style={styles.eyebrow}>
+                FOAM FOR TWITCH
+              </Text>
+              <Text type="4xl" weight="bold" color="gray.text">
+                Welcome back.
               </Text>
             </View>
-
-            <Text type="lg" color="gray" align="center" style={styles.subtitle}>
-              Experience Twitch like never before.{'\n'}
-              Enhanced chat • Third-party emotes • Clean UI
-            </Text>
           </View>
 
-          <View style={styles.actionSection}>
-            <Button
-              onPress={() =>
-                promptAsync({
-                  preferEphemeralSession: false,
-                })
-              }
-              onPressIn={() => {
-                navigation.preload('Tabs', { screen: 'Following' });
-              }}
-              disabled={!request}
-              style={[
-                styles.loginButton,
-                !request && styles.loginButtonDisabled,
-              ]}
-            >
-              <View style={styles.buttonContent}>
-                <BrandIcon name="twitch" />
-                <Text type="lg" color="gray.text" weight="semibold">
-                  Continue with Twitch
-                </Text>
-              </View>
-            </Button>
-          </View>
+          <Text type="lg" color="gray" style={styles.subtitle}>
+            Sign in to open your followed channels, richer chat, and third-party
+            emotes.
+          </Text>
 
-          <View style={styles.featuresSection}>
-            <View style={styles.featuresList}>
-              <View style={styles.featureItem}>
-                <View style={styles.featureDot} />
-                <Text type="sm" color="gray">
-                  BTTV, FFZ & 7TV emotes
-                </Text>
-              </View>
-              <View style={styles.featureItem}>
-                <View style={styles.featureDot} />
-                <Text type="sm" color="gray">
-                  Enhanced chat experience
-                </Text>
-              </View>
-              <View style={styles.featureItem}>
-                <View style={styles.featureDot} />
-                <Text type="sm" color="gray">
-                  Intuitive mobile interface
-                </Text>
-              </View>
+          <Button
+            accessibilityRole="button"
+            label="Continue with Twitch"
+            onPress={() => {
+              void startSignIn();
+            }}
+            disabled={isDisabled}
+            style={[
+              styles.loginButton,
+              isDisabled && styles.loginButtonDisabled,
+            ]}
+          >
+            <View style={styles.buttonContent}>
+              <BrandIcon name="twitch" size="lg" color={theme.colorWhite} />
+              <Text type="lg" color="gray.text" weight="semibold">
+                {isPromptingAuth ? 'Opening Twitch...' : 'Continue with Twitch'}
+              </Text>
             </View>
+          </Button>
+
+          <View style={styles.featureRow}>
+            <Text type="xs" color="gray" style={styles.featurePill}>
+              BTTV
+            </Text>
+            <Text type="xs" color="gray" style={styles.featurePill}>
+              FFZ
+            </Text>
+            <Text type="xs" color="gray" style={styles.featurePill}>
+              7TV
+            </Text>
+            <Text type="xs" color="gray" style={styles.featurePill}>
+              Twitch chat
+            </Text>
           </View>
         </View>
       </View>
@@ -183,117 +100,105 @@ export function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  actionSection: {
-    alignItems: 'center',
-    marginBottom: theme.spacing['4xl'],
+  container: {
+    flex: 1,
+    backgroundColor: theme.color.background.dark,
+  },
+  backgroundFade: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  backgroundImage: {
+    height: '100%',
+    opacity: 0.62,
     width: '100%',
   },
-  appIcon: {
-    borderCurve: 'continuous',
-    borderRadius: 20,
-    elevation: 8,
-    height: 100,
-    marginBottom: theme.spacing['2xl'],
-    shadowColor: theme.colors.accent.ui,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    width: 100,
-  },
-  buttonContent: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  container: {
-    backgroundColor: theme.colors.gray.ui,
-    flex: 1,
+  backgroundImageContainer: {
+    ...StyleSheet.absoluteFillObject,
   },
   content: {
-    alignItems: 'center',
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing['2xl'],
+    justifyContent: 'flex-end',
+    paddingHorizontal: theme.space20,
+    paddingBottom: theme.space36,
   },
-  decorativeCircle: {
-    backgroundColor: theme.colors.accent.ui,
-    borderRadius: 60,
-    height: 120,
-    position: 'absolute',
-    width: 120,
+  heroSpacer: {
+    flex: 1,
+    minHeight: theme.space84,
   },
-  decorativeCircle2: {
-    backgroundColor: theme.colors.violet.ui,
-    borderRadius: 40,
-    height: 80,
-    left: -20,
-    position: 'absolute',
-    top: 40,
-    width: 80,
+  appIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: theme.borderRadius16,
+    borderCurve: 'continuous',
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 12,
+    },
+    shadowOpacity: 0.36,
+    shadowRadius: 18,
+    elevation: 10,
   },
-  decorativeElements: {
-    opacity: 0.1,
-    position: 'absolute',
-    right: theme.spacing['2xl'],
-    top: theme.spacing['4xl'],
+  authContent: {
+    gap: theme.space24,
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
   },
-  featureDot: {
-    backgroundColor: theme.colors.accent.accent,
-    borderRadius: 2,
-    height: 4,
-    marginRight: theme.spacing.md,
-    width: 4,
+  brandCopy: {
+    flex: 1,
+    gap: theme.space4,
   },
-  featureItem: {
+  brandRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    marginBottom: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    gap: theme.space16,
   },
-  featuresList: {
-    alignItems: 'flex-start',
+  eyebrow: {
+    color: theme.colorDarkGreen,
+    letterSpacing: 0,
+    textTransform: 'uppercase',
   },
-  featuresSection: {
-    alignItems: 'center',
-    opacity: 0.8,
-  },
-  innerContent: {
-    alignItems: 'center',
-    maxWidth: 400,
-    width: '100%',
+  subtitle: {
+    color: theme.color.textSecondary.dark,
+    maxWidth: 360,
   },
   loginButton: {
-    alignItems: 'center',
     backgroundColor: '#9146ff',
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
-    boxShadow: '0px 4px 8px rgba(145, 70, 255, 0.3)',
+    paddingVertical: theme.space20,
+    paddingHorizontal: theme.space24,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
+    borderColor: '#a970ff',
+    alignItems: 'center',
     justifyContent: 'center',
-    maxWidth: 300,
-    minHeight: 56,
-    paddingHorizontal: theme.spacing['3xl'],
-    paddingVertical: theme.spacing.xl,
+    boxShadow: '0px 18px 40px rgba(145, 70, 255, 0.28)',
+    minHeight: 64,
     width: '100%',
   },
   loginButtonDisabled: {
-    backgroundColor: theme.colors.gray.accent,
-    shadowOpacity: 0,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.color.border.dark,
   },
-  logoSection: {
+  buttonContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing['6xl'],
+    justifyContent: 'center',
+    gap: theme.space12,
   },
-  subtitle: {
-    lineHeight: 22,
-    marginBottom: theme.spacing.lg,
-    maxWidth: screenWidth * 0.8,
-    textAlign: 'center',
+  featurePill: {
+    backgroundColor: theme.colorSurfaceAlpha,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    overflow: 'hidden',
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space4,
   },
-  titleContainer: {
+  featureRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+    flexWrap: 'wrap',
+    gap: theme.space8,
   },
 });

@@ -8,8 +8,10 @@ import { memo, useCallback, forwardRef } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export interface SettingsSheetProps
-  extends Omit<TrueSheetProps, 'children' | 'sizes'> {
+export interface SettingsSheetProps extends Omit<
+  TrueSheetProps,
+  'children' | 'sizes'
+> {
   chatDensity?: 'comfortable' | 'compact';
   highlightOwnMentions?: boolean;
   onRefetchEmotes?: () => void;
@@ -79,11 +81,11 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
     return (
       <TrueSheet
         ref={forwardedRef}
-        detents={[0.62]}
+        detents={[0.58]}
         cornerRadius={24}
         grabber={false}
         blurTint="dark"
-        backgroundColor="#1a1a1a"
+        backgroundColor={theme.color.background.dark}
         {...sheetProps}
       >
         <View style={styles.container}>
@@ -92,6 +94,9 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
           </View>
 
           <View style={styles.header}>
+            <Text style={styles.headerEyebrow} weight="semibold">
+              CHAT
+            </Text>
             <Text style={styles.headerTitle} weight="semibold">
               Settings
             </Text>
@@ -101,25 +106,32 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
             style={styles.menuScroll}
             contentContainerStyle={[
               styles.menuContainer,
-              { paddingBottom: bottomInset + theme.spacing.lg },
+              { paddingBottom: bottomInset + theme.space20 },
             ]}
             showsVerticalScrollIndicator={false}
           >
-            <Button style={styles.menuItem} onPress={handleRefetchEmotes}>
-              <Icon icon="refresh-cw" color={theme.colors.gray.borderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
-                Refetch Emotes & Badges
-              </Text>
-            </Button>
+            {onRefetchEmotes ? (
+              <Button
+                label="Refetch Emotes and Badges"
+                style={styles.menuItem}
+                onPress={handleRefetchEmotes}
+              >
+                <Icon icon="refresh-cw" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Refetch Emotes & Badges
+                </Text>
+              </Button>
+            ) : null}
 
             <Button
+              label="Toggle Chat Density"
               style={styles.menuItem}
               onPress={() => {
                 onToggleChatDensity?.();
                 dismissSheet();
               }}
             >
-              <Icon icon="align-left" color={theme.colors.gray.borderHover} />
+              <Icon icon="align-left" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Density
@@ -130,73 +142,93 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               </View>
             </Button>
 
-            <View style={styles.menuItem}>
-              <Icon icon="clock" color={theme.colors.gray.borderHover} />
+            <Button
+              label="Show Timestamps"
+              style={styles.menuItem}
+              onPress={() => onToggleShowTimestamps?.(!showTimestamps)}
+            >
+              <Icon icon="clock" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Show Timestamps
                 </Text>
                 <Switch
                   value={showTimestamps}
-                  onValueChange={onToggleShowTimestamps}
+                  onValueChange={value => onToggleShowTimestamps?.(value)}
                 />
               </View>
-            </View>
+            </Button>
 
-            <View style={styles.menuItem}>
-              <Icon icon="at-sign" color={theme.colors.gray.borderHover} />
+            <Button
+              label="Highlight Own Mentions"
+              style={styles.menuItem}
+              onPress={() =>
+                onToggleHighlightOwnMentions?.(!highlightOwnMentions)
+              }
+            >
+              <Icon icon="at-sign" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Highlight Own Mentions
                 </Text>
                 <Switch
                   value={highlightOwnMentions}
-                  onValueChange={onToggleHighlightOwnMentions}
+                  onValueChange={value => onToggleHighlightOwnMentions?.(value)}
                 />
               </View>
-            </View>
+            </Button>
 
-            <View style={styles.menuItem}>
-              <Icon
-                icon="corner-up-left"
-                color={theme.colors.gray.borderHover}
-              />
+            <Button
+              label="Inline Reply Context"
+              style={styles.menuItem}
+              onPress={() =>
+                onToggleInlineReplyContext?.(!showInlineReplyContext)
+              }
+            >
+              <Icon icon="corner-up-left" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Inline Reply Context
                 </Text>
                 <Switch
                   value={showInlineReplyContext}
-                  onValueChange={onToggleInlineReplyContext}
+                  onValueChange={value => onToggleInlineReplyContext?.(value)}
                 />
               </View>
-            </View>
+            </Button>
 
-            <View style={styles.menuItem}>
-              <Icon
-                icon="arrow-down-circle"
-                color={theme.colors.gray.borderHover}
-              />
+            <Button
+              label="Show Jump Pill"
+              style={styles.menuItem}
+              onPress={() => onToggleShowUnreadJumpPill?.(!showUnreadJumpPill)}
+            >
+              <Icon icon="arrow-down-circle" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Show Jump Pill
                 </Text>
                 <Switch
                   value={showUnreadJumpPill}
-                  onValueChange={onToggleShowUnreadJumpPill}
+                  onValueChange={value => onToggleShowUnreadJumpPill?.(value)}
                 />
               </View>
-            </View>
-
-            <Button style={styles.menuItem} onPress={handleReconnect}>
-              <Icon icon="wifi" color={theme.colors.gray.borderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
-                Reconnect
-              </Text>
             </Button>
 
+            {onReconnect ? (
+              <Button
+                label="Reconnect"
+                style={styles.menuItem}
+                onPress={handleReconnect}
+              >
+                <Icon icon="wifi" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Reconnect
+                </Text>
+              </Button>
+            ) : null}
+
             <View style={styles.menuItem}>
-              <Icon icon="activity" color={theme.colors.gray.borderHover} />
+              <Icon icon="activity" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Display Latency
@@ -209,15 +241,21 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               </View>
             </View>
 
-            <Button style={styles.menuItem} onPress={handleRefreshVideo}>
-              <Icon icon="video" color={theme.colors.gray.borderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
-                Refresh Video
-              </Text>
-            </Button>
+            {onRefreshVideo ? (
+              <Button
+                label="Refresh Video"
+                style={styles.menuItem}
+                onPress={handleRefreshVideo}
+              >
+                <Icon icon="video" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Refresh Video
+                </Text>
+              </Button>
+            ) : null}
 
             <View style={styles.menuItem}>
-              <Icon icon="repeat" color={theme.colors.gray.borderHover} />
+              <Icon icon="repeat" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Reconnection Attempts
@@ -240,48 +278,57 @@ export const SettingsSheet = memo(SettingsSheetComponent);
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   grabber: {
-    backgroundColor: theme.colors.gray.accent,
-    borderRadius: 2,
+    backgroundColor: theme.colorBorderHover,
+    borderRadius: 999,
     height: 4,
-    width: 36,
+    width: 44,
   },
   grabberContainer: {
     alignItems: 'center',
-    paddingBottom: theme.spacing.xs,
-    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.space8,
+    paddingTop: theme.space12,
   },
   header: {
-    marginBottom: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    borderBottomColor: theme.color.border.dark,
+    borderBottomWidth: 1,
+    marginBottom: theme.space8,
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space12,
+  },
+  headerEyebrow: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    letterSpacing: 1,
+    marginBottom: 2,
   },
   headerTitle: {
-    fontSize: theme.font.fontSize.lg,
+    fontSize: theme.fontSize16,
   },
   menuContainer: {
-    paddingTop: theme.spacing.xs,
+    paddingTop: 0,
   },
   menuItem: {
     alignItems: 'center',
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
     flexDirection: 'row',
-    gap: theme.spacing.lg,
-    marginBottom: theme.spacing.xs,
-    marginHorizontal: theme.spacing.md,
-    minHeight: theme.spacing['6xl'],
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-  },
-  menuItemPressed: {
-    opacity: 0.7,
+    gap: theme.space12,
+    marginBottom: theme.space8,
+    marginHorizontal: theme.space20,
+    minHeight: 50,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
   menuItemText: {
     flex: 1,
-    fontSize: theme.font.fontSize.md,
+    fontSize: theme.fontSize14,
   },
   menuItemTextContainer: {
     alignItems: 'center',
@@ -290,8 +337,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   menuItemValue: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.md,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
   },
   menuScroll: {
     flex: 1,

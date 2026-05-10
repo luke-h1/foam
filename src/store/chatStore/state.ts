@@ -1,4 +1,5 @@
 import { logger } from '@app/utils/logger';
+import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { observable } from '@legendapp/state';
 import {
   configureObservablePersistence,
@@ -17,11 +18,13 @@ import type {
   SanitisedEmote,
 } from './constants';
 import { MAX_CACHED_CHANNELS } from './constants';
+import { getPreferences } from '../preferenceStore';
 
 export interface ChatStoreState {
   persisted: {
     channelCaches: Record<string, ChannelCacheType>;
     lastGlobalUpdate: number;
+    recentMessagesByChannel: Record<string, ChatMessageType<never>[]>;
   };
   loadingState: ChatLoadingState;
   currentChannelId: string | null;
@@ -67,10 +70,11 @@ const initialChatStoreState: ChatStoreState = {
   persisted: {
     channelCaches: {},
     lastGlobalUpdate: 0,
+    recentMessagesByChannel: {},
   },
   loadingState: 'IDLE',
   currentChannelId: null,
-  emojis: [],
+  emojis: getEmojiEmotes(getPreferences().emojiStyle),
   bits: [],
   ttvUsers: [],
   messages: [],

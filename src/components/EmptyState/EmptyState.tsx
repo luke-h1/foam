@@ -1,225 +1,182 @@
 /* eslint-disable no-restricted-imports */
-/* eslint-disable no-shadow */
-import { theme } from '@app/styles/themes';
 import {
-  ImageProps,
+  EmptyLayout,
+  EmptyLayoutButton,
+  EmptyLayoutContent,
+  EmptyLayoutDescription,
+  EmptyLayoutHeader,
+  EmptyLayoutTitle,
+} from '@app/components/EmptyLayout/EmptyLayout';
+import {
+  Image,
+  type ImageProps as AppImageProps,
+} from '@app/components/Image/Image';
+import { theme } from '@app/styles/themes';
+import type {
   ImageStyle,
   StyleProp,
   TextProps,
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import { Button, ButtonProps } from '../Button/Button';
+import categoryApexImage from '../../../assets/data/category_apex.jpg';
 import { SafeAreaViewFixed } from '../SafeAreaViewFixed/SafeAreaViewFixed';
-import { Text } from '../Text/Text';
 
 interface EmptyStatePresetItem {
-  imageSource: ImageProps['source'];
+  imageSource: AppImageProps['source'];
   heading: TextProps['children'];
   content: TextProps['children'];
-  button: TextProps['children'];
+  button: string;
 }
 
-const EmptyStatePresets = {
+const EMPTY_STATE_PRESETS = {
   generic: {
-    imageSource: '../../../assets/data/category_apex.jpg',
-    heading: 'Empty',
-    content: 'No data found, click the button to refresh or reload the app',
-    button: "Let's try this again",
-  } as EmptyStatePresetItem,
-} as const;
+    imageSource: categoryApexImage,
+    heading: 'Nothing here yet',
+    content: 'Refresh to try again, or come back in a moment.',
+    button: 'Refresh',
+  },
+} satisfies Record<string, EmptyStatePresetItem>;
 
 interface EmptyStateProps {
-  /**
-   * An optional prop that specifies the text/image set to use for the empty state
-   */
-  preset?: keyof typeof EmptyStatePresets;
-
-  /**
-   * Style override for the container
-   */
+  preset?: keyof typeof EMPTY_STATE_PRESETS;
   style?: StyleProp<ViewStyle>;
-
-  /**
-   * An Image source to be displayed above the heading
-   */
-  imageSource?: ImageProps['source'];
-
-  /**
-   * Style overrides for image.
-   */
+  imageSource?: AppImageProps['source'];
   imageStyle?: StyleProp<ImageStyle>;
-  /**
-   * Pass any additional props directly to the Image component.
-   */
-  ImageProps?: Omit<ImageProps, 'source'>;
-  /**
-   * The heading text to display if not using `headingTx`.
-   */
+  imageProps?: Omit<AppImageProps, 'source'>;
   heading?: TextProps['children'];
-
-  /**
-   * Style overrides for heading text.
-   */
   headingStyle?: StyleProp<TextStyle>;
-  /**
-   * Pass any additional props directly to the heading Text component.
-   */
-  HeadingTextProps?: TextProps;
-  /**
-   * The content text to display if not using `contentTx`.
-   */
+  headingTextProps?: TextProps;
   content?: TextProps['children'];
-
-  /**
-   * Style overrides for content text.
-   */
   contentStyle?: StyleProp<TextStyle>;
-  /**
-   * Pass any additional props directly to the content Text component.
-   */
-  ContentTextProps?: TextProps;
-  /**
-   * The button text to display
-   */
-  button?: TextProps['children'];
-
-  /**
-   * Style overrides for button.
-   */
-  buttonStyle?: ButtonProps['style'];
-  /**
-   * Called when the button is pressed.
-   */
-  buttonOnPress?: ButtonProps['onPress'];
-  /**
-   * Pass any additional props directly to the Button component.
-   */
-  ButtonProps?: ButtonProps;
+  contentTextProps?: TextProps;
+  button?: string;
+  buttonStyle?: StyleProp<ViewStyle>;
+  buttonOnPress?: () => void;
 }
 
-/**
- * A component to use when there is no data to display. It can be utilized to direct the user what to do next.
- * @param {EmptyStateProps} props - The props for the `EmptyState` component.
- * @returns {JSX.Element} The rendered `EmptyState` component.
- */
-
-export function EmptyState(props: EmptyStateProps) {
-  // eslint-disable-next-line react/destructuring-assignment
-  const preset = EmptyStatePresets[props.preset ?? 'generic'];
-
-  const {
-    button = preset.button,
-    buttonOnPress,
-    content = preset.content,
-    heading = preset.heading,
-    imageSource = preset.imageSource,
-    contentStyle: $contentStyleOverride,
-    headingStyle: $headingStyleOverride,
-    ButtonProps,
-    ContentTextProps,
-    HeadingTextProps,
-  } = props;
-
-  const isImagePresent = !!imageSource;
-  const isHeadingPresent = !!heading;
-  const isContentPresent = !!content;
-  const isButtonPresent = !!button;
+export function EmptyState({
+  preset = 'generic',
+  style,
+  imageSource,
+  imageStyle,
+  imageProps,
+  heading,
+  headingStyle,
+  headingTextProps,
+  content,
+  contentStyle,
+  contentTextProps,
+  button,
+  buttonStyle,
+  buttonOnPress,
+}: EmptyStateProps) {
+  const presetConfig = EMPTY_STATE_PRESETS[preset];
+  const resolvedImageSource = imageSource ?? presetConfig.imageSource;
+  const resolvedHeading = heading ?? presetConfig.heading;
+  const resolvedContent = content ?? presetConfig.content;
+  const resolvedButton = button ?? presetConfig.button;
 
   return (
-    <SafeAreaViewFixed
-      style={getContainerStyle($contentStyleOverride as StyleProp<ViewStyle>)}
-    >
-      {isHeadingPresent && (
-        <Text
-          {...HeadingTextProps}
-          style={getHeadingStyle(
-            $headingStyleOverride,
-            isImagePresent,
-            isHeadingPresent,
-            isContentPresent,
-            HeadingTextProps,
-          )}
-        >
-          {heading}
-        </Text>
-      )}
+    <SafeAreaViewFixed style={[styles.container, style]}>
+      <EmptyLayout style={styles.emptyLayout} variant="outline">
+        <EmptyLayoutHeader>
+          {resolvedImageSource ? (
+            <EmptyLayoutContent style={styles.mediaWrap}>
+              <Image
+                {...imageProps}
+                source={resolvedImageSource}
+                style={[styles.image, imageStyle]}
+              />
+            </EmptyLayoutContent>
+          ) : null}
 
-      {isContentPresent && (
-        <Text
-          {...ContentTextProps}
-          style={getContentStyle(
-            isImagePresent,
-            isHeadingPresent,
-            isButtonPresent,
-            $contentStyleOverride as StyleProp<ViewStyle>,
-            ContentTextProps,
-          )}
-        >
-          {content}
-        </Text>
-      )}
+          {resolvedHeading ? (
+            <EmptyLayoutTitle
+              {...headingTextProps}
+              style={[
+                styles.heading,
+                resolvedImageSource ? styles.headingWithImage : null,
+                resolvedContent || resolvedButton
+                  ? styles.headingWithBody
+                  : null,
+                headingTextProps?.style,
+                headingStyle,
+              ]}
+            >
+              {resolvedHeading}
+            </EmptyLayoutTitle>
+          ) : null}
 
-      {isButtonPresent && (
-        <Button onPress={buttonOnPress} {...ButtonProps}>
-          {button}
-        </Button>
-      )}
+          {resolvedContent ? (
+            <EmptyLayoutDescription
+              {...contentTextProps}
+              style={[
+                styles.content,
+                resolvedImageSource || resolvedHeading
+                  ? styles.contentWithHeader
+                  : null,
+                resolvedButton ? styles.contentWithButton : null,
+                contentTextProps?.style,
+                contentStyle,
+              ]}
+            >
+              {resolvedContent}
+            </EmptyLayoutDescription>
+          ) : null}
+        </EmptyLayoutHeader>
+
+        {resolvedButton ? (
+          <EmptyLayoutButton
+            onPress={buttonOnPress}
+            style={buttonStyle}
+            variant="default"
+          >
+            {resolvedButton}
+          </EmptyLayoutButton>
+        ) : null}
+      </EmptyLayout>
     </SafeAreaViewFixed>
   );
 }
 
-function getContainerStyle(containerStyleOverride: StyleProp<ViewStyle>) {
-  return {
+const styles = {
+  container: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    ...(containerStyleOverride as object),
-  } as const;
-}
-
-function getHeadingStyle(
-  headingStyleOverride: StyleProp<TextStyle>,
-  isImagePresent: boolean,
-  isContentPresent: boolean,
-  isButtonPresent: boolean,
-  HeadingTextProps?: TextProps,
-) {
-  return {
+  },
+  content: {
+    paddingHorizontal: theme.space20,
     textAlign: 'center',
-    paddingHorizontal: theme.spacing.lg,
-    ...(isImagePresent && { marginTop: theme.spacing.sm }),
-    ...((isContentPresent || isButtonPresent) && {
-      marginBottom: theme.spacing.sm,
-    }),
-    headingStyleOverride,
-    ...(HeadingTextProps &&
-      HeadingTextProps.style && {
-        ...(HeadingTextProps.style as object),
-      }),
-  } as const;
-}
-
-function getContentStyle(
-  isImagePresent: boolean,
-  isHeadingPresent: boolean,
-  isButtonPresent: boolean,
-  contentStyleOverride: StyleProp<ViewStyle>,
-  ContentTextProps?: TextProps,
-) {
-  return {
+  },
+  contentWithButton: {
+    marginBottom: theme.space12,
+  },
+  contentWithHeader: {
+    marginTop: theme.space12,
+  },
+  emptyLayout: {
+    maxWidth: 420,
+    minHeight: 360,
+    width: '100%',
+  },
+  heading: {
+    paddingHorizontal: theme.space20,
     textAlign: 'center',
-    marginBottom: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    ...((isImagePresent || isHeadingPresent) && {
-      marginTop: theme.spacing.sm,
-    }),
-    ...(isButtonPresent && {
-      marginBottom: theme.spacing.sm,
-    }),
-    ...(contentStyleOverride as object),
-    ...(ContentTextProps?.style && {
-      ...(ContentTextProps.style as object),
-    }),
-  } as const;
-}
+  },
+  headingWithBody: {
+    marginBottom: theme.space12,
+  },
+  headingWithImage: {
+    marginTop: theme.space12,
+  },
+  image: {
+    borderRadius: theme.borderRadius20,
+    height: 112,
+    width: 112,
+  },
+  mediaWrap: {
+    marginBottom: theme.space20,
+  },
+} satisfies Record<string, ViewStyle | TextStyle>;

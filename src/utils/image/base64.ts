@@ -1,5 +1,5 @@
 import { Asset } from 'expo-asset';
-import { File } from 'expo-file-system/next';
+import { File } from 'expo-file-system';
 
 /**
  * Strip data URL prefix if present
@@ -86,6 +86,6 @@ export async function urlToBase64(url: string): Promise<string> {
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    throw new Error(`Failed to convert URL to base64: ${error}`);
+    throw new Error(`Failed to convert URL to base64: ${String(error)}`);
   }
 }

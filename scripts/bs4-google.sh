@@ -4,6 +4,17 @@
 
 set -e
 
+print_base64_file() {
+  local file="$1"
+
+  if [ ! -f "$file" ]; then
+    echo "Missing: $file"
+    return
+  fi
+
+  base64 -i "$file" | tr -d '\n'
+}
+
 echo ""
 echo "╔═══════════════════════════════════════════════════════════════╗"
 echo "║           GOOGLE SERVICES - BASE64 ENCODED FILES              ║"
@@ -18,21 +29,28 @@ echo ""
 echo "┌─────────────────────────────────────────────────────────────┐"
 echo "│ DEVELOPMENT                                                  │"
 echo "└─────────────────────────────────────────────────────────────┘"
-base64 -i google-services-dev.json | tr -d '\n'
+print_base64_file google-services-dev.json
 echo ""
 echo ""
 
 echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ PREVIEW                                                      │"
+echo "│ INTERNAL                                                     │"
 echo "└─────────────────────────────────────────────────────────────┘"
-base64 -i google-services-preview.json | tr -d '\n'
+print_base64_file google-services-internal.json
+echo ""
+echo ""
+
+echo "┌─────────────────────────────────────────────────────────────┐"
+echo "│ TESTFLIGHT                                                   │"
+echo "└─────────────────────────────────────────────────────────────┘"
+print_base64_file google-services-testflight.json
 echo ""
 echo ""
 
 echo "┌─────────────────────────────────────────────────────────────┐"
 echo "│ PRODUCTION                                                   │"
 echo "└─────────────────────────────────────────────────────────────┘"
-base64 -i google-services-prod.json | tr -d '\n'
+print_base64_file google-services-prod.json
 echo ""
 echo ""
 
@@ -44,21 +62,28 @@ echo ""
 echo "┌─────────────────────────────────────────────────────────────┐"
 echo "│ DEVELOPMENT                                                  │"
 echo "└─────────────────────────────────────────────────────────────┘"
-base64 -i GoogleService-Info-dev.plist | tr -d '\n'
+print_base64_file GoogleService-Info-dev.plist
 echo ""
 echo ""
 
 echo "┌─────────────────────────────────────────────────────────────┐"
-echo "│ PREVIEW                                                      │"
+echo "│ INTERNAL                                                     │"
 echo "└─────────────────────────────────────────────────────────────┘"
-base64 -i GoogleService-Info-preview.plist | tr -d '\n'
+print_base64_file GoogleService-Info-internal.plist
+echo ""
+echo ""
+
+echo "┌─────────────────────────────────────────────────────────────┐"
+echo "│ TESTFLIGHT                                                   │"
+echo "└─────────────────────────────────────────────────────────────┘"
+print_base64_file GoogleService-Info-testflight.plist
 echo ""
 echo ""
 
 echo "┌─────────────────────────────────────────────────────────────┐"
 echo "│ PRODUCTION                                                   │"
 echo "└─────────────────────────────────────────────────────────────┘"
-base64 -i GoogleService-Info-prod.plist | tr -d '\n'
+print_base64_file GoogleService-Info-prod.plist
 echo ""
 echo ""
 

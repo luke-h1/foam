@@ -352,6 +352,92 @@ describe('SubscriptionNotice', () => {
     });
   });
 
+  describe('submysterygift', () => {
+    test('displays community gift count and channel total', () => {
+      const part: ParsedPart<'submysterygift'> = {
+        type: 'submysterygift',
+        subscriptionEvent: {
+          msgId: 'submysterygift',
+          displayName: 'MysteryGifter',
+          plan: '2000',
+          planName: 'Tier 1',
+          massGiftCount: 5,
+          senderCount: 42,
+        },
+      };
+
+      render(<SubscriptionNotice part={part} />);
+
+      expect(screen.getByText('MysteryGifter')).toBeOnTheScreen();
+      expect(screen.getByText(/Gifted/)).toBeOnTheScreen();
+      expect(screen.getByText('5')).toBeOnTheScreen();
+      expect(
+        screen.getByText(/Tier 1 subscriptions to the community/),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(/They've gifted 42 in the channel/),
+      ).toBeOnTheScreen();
+    });
+
+    test('handles a single community gift cleanly', () => {
+      const part: ParsedPart<'submysterygift'> = {
+        type: 'submysterygift',
+        subscriptionEvent: {
+          msgId: 'submysterygift',
+          displayName: 'SoloGifter',
+          plan: '1000',
+          planName: 'Prime',
+          massGiftCount: 1,
+        },
+      };
+
+      render(<SubscriptionNotice part={part} />);
+
+      expect(screen.getByText(/Gifted/)).toBeOnTheScreen();
+      expect(screen.getByText('1')).toBeOnTheScreen();
+      expect(
+        screen.getByText(/Prime subscription to the community/),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  describe('giftpaidupgrade', () => {
+    test('displays the original gifter when available', () => {
+      const part: ParsedPart<'giftpaidupgrade'> = {
+        type: 'giftpaidupgrade',
+        subscriptionEvent: {
+          msgId: 'giftpaidupgrade',
+          displayName: 'UpgradeUser',
+          senderLogin: 'gifterlogin',
+          senderName: 'GiftSender',
+          promoName: 'Subtember',
+          promoGiftTotal: '12',
+        },
+      };
+
+      render(<SubscriptionNotice part={part} />);
+
+      expect(screen.getByText('UpgradeUser')).toBeOnTheScreen();
+      expect(screen.getByText(/Continuing the gift sub/)).toBeOnTheScreen();
+      expect(screen.getByText('GiftSender')).toBeOnTheScreen();
+      expect(screen.getByText(/\(Subtember, 12 total\)/)).toBeOnTheScreen();
+    });
+
+    test('renders without sender or promo metadata', () => {
+      const part: ParsedPart<'giftpaidupgrade'> = {
+        type: 'giftpaidupgrade',
+        subscriptionEvent: {
+          msgId: 'giftpaidupgrade',
+          displayName: 'UpgradeUser',
+        },
+      };
+
+      render(<SubscriptionNotice part={part} />);
+
+      expect(screen.getByText(/Continuing the gift sub/)).toBeOnTheScreen();
+    });
+  });
+
   describe('plan display', () => {
     test('maps plan code 1000 to Prime', () => {
       const part: ParsedPart<'sub'> = {

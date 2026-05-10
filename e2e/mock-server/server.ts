@@ -4,7 +4,7 @@
  * Mock Server for E2E Testing
  *
  * This server mocks the Twitch Helix API and other services for E2E testing
- * with Maestro. It provides deterministic responses for consistent test results.
+ * with Detox. It provides deterministic responses for consistent test results.
  *
  * Usage:
  *   bun run e2e:mock-server

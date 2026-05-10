@@ -115,7 +115,7 @@ export function Icon({
       <IconComponent
         name={icon}
         size={size}
-        color={color ?? theme.colors.gray.accentHoverAlpha}
+        color={color ?? theme.colorGreyHoverAlpha}
       />
     </Wrapper>
   );

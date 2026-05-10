@@ -24,7 +24,9 @@ export const FlashList = forwardRef(
 
 export const AnimatedFlashList = Animated.createAnimatedComponent(
   FlashList,
-) as <TItem = unknown>(props: ShopifyFlashListProps<TItem>) => ReactNode;
+) as <TItem = unknown>(
+  props: ShopifyFlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> },
+) => ReactNode;
 
 // Export ListRenderItem type
 export type ListRenderItem<TItem = unknown> = FlashListRenderItem<TItem>;

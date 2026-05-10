@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { SuggestionType } from '../ChatComposer';
 import { getCurrentWordAndType } from '../utils/getCurrentWordAndType';
 
@@ -16,31 +16,14 @@ interface UseWordInfoProps {
 }
 
 export function useWordInfo({ text, cursorPosition }: UseWordInfoProps) {
-  const [wordInfo, setWordInfo] = useState<WordInfo>({
-    word: '',
-    start: 0,
-    end: 0,
-    type: 'emote',
-    searchTerm: '',
-  });
-
-  const computedWordInfo = useMemo(() => {
-    return getCurrentWordAndType(text ?? '', cursorPosition);
-  }, [text, cursorPosition]);
-
-  useEffect(() => {
-    setWordInfo(computedWordInfo);
-  }, [computedWordInfo]);
-
-  const isUserMention = useMemo(
-    () => wordInfo.word.startsWith('@') && wordInfo.word.length > 1,
-    [wordInfo.word],
+  const wordInfo = useMemo<WordInfo>(
+    () => getCurrentWordAndType(text ?? '', cursorPosition),
+    [text, cursorPosition],
   );
-
-  const isEmoteSearch = useMemo(
-    () => !wordInfo.word.startsWith('@') && wordInfo.word.length > 0,
-    [wordInfo.word],
-  );
+  const isUserMention =
+    wordInfo.word.startsWith('@') && wordInfo.word.length > 1;
+  const isEmoteSearch =
+    !wordInfo.word.startsWith('@') && wordInfo.word.length > 0;
 
   return {
     wordInfo,

@@ -7,6 +7,7 @@ import { ParsedPart } from './replaceTextWithEmotes';
 interface EmoteProcessorParams {
   inputString: string;
   userstate: UserStateTags | null;
+  emojiEmotes?: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
   sevenTvChannelEmotes: SanitisedEmote[];
   sevenTvPersonalEmotes?: SanitisedEmote[];
@@ -23,6 +24,7 @@ const MAX_CACHE_SIZE = 1000;
 
 const createCacheKey = (
   inputString: string,
+  emojiEmotes: SanitisedEmote[],
   sevenTvGlobalEmotes: SanitisedEmote[],
   sevenTvChannelEmotes: SanitisedEmote[],
   sevenTvPersonalEmotes: SanitisedEmote[],
@@ -36,6 +38,7 @@ const createCacheKey = (
   'worklet';
 
   const emoteHash = [
+    emojiEmotes.length,
     sevenTvGlobalEmotes.length,
     sevenTvChannelEmotes.length,
     sevenTvPersonalEmotes.length,
@@ -48,6 +51,8 @@ const createCacheKey = (
   ].join('|');
 
   const firstLastIds = [
+    emojiEmotes[0]?.id || '',
+    emojiEmotes[emojiEmotes.length - 1]?.id || '',
     sevenTvChannelEmotes[0]?.id || '',
     sevenTvChannelEmotes[sevenTvChannelEmotes.length - 1]?.id || '',
     sevenTvGlobalEmotes[0]?.id || '',
@@ -66,6 +71,7 @@ export const processEmotesWorklet = (
 
   const {
     inputString,
+    emojiEmotes = [],
     sevenTvGlobalEmotes,
     sevenTvChannelEmotes,
     sevenTvPersonalEmotes = [],
@@ -83,6 +89,7 @@ export const processEmotesWorklet = (
 
   const cacheKey = createCacheKey(
     inputString,
+    emojiEmotes,
     sevenTvGlobalEmotes,
     sevenTvChannelEmotes,
     sevenTvPersonalEmotes,
@@ -99,6 +106,7 @@ export const processEmotesWorklet = (
     return cached;
   }
   const emoteMap = new Map<string, SanitisedEmote>();
+  const emojiMap = new Map<string, SanitisedEmote>();
 
   const personalEmotes = [...sevenTvPersonalEmotes];
 
@@ -110,6 +118,7 @@ export const processEmotesWorklet = (
   ];
 
   const globalEmotes = [
+    ...emojiEmotes,
     ...sevenTvGlobalEmotes,
     ...twitchGlobalEmotes,
     ...ffzGlobalEmotes,
@@ -129,6 +138,13 @@ export const processEmotesWorklet = (
   globalEmotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
+    }
+
+    if (emote.site === 'Emoji') {
+      const emojiHexcode = emote.emoji_hexcode ?? emote.id;
+      if (!emojiMap.has(emojiHexcode)) {
+        emojiMap.set(emojiHexcode, emote);
+      }
     }
   });
 
@@ -155,6 +171,13 @@ export const processEmotesWorklet = (
     let emote = emoteMap.get(word);
 
     if (!emote) {
+      const upperWord = [...word]
+        .map(char => char.codePointAt(0)?.toString(16).toUpperCase() || '')
+        .join('-');
+      emote = emojiMap.get(upperWord);
+    }
+
+    if (!emote) {
       const lowerWord = word.toLowerCase();
       const entries = Array.from(emoteMap.entries());
       for (let j = 0; j < entries.length; j += 1) {
@@ -174,11 +197,16 @@ export const processEmotesWorklet = (
         id: emote.id,
         name: emote.name,
         type: 'emote',
-        content: emote.name,
+        content:
+          emote.site === 'Emoji' && !word.startsWith(':') ? word : emote.name,
         creator: emote.creator || '',
         emote_link: emote.emote_link || '',
-        original_name: emote.original_name || '',
+        original_name:
+          emote.site === 'Emoji' && !word.startsWith(':')
+            ? word
+            : emote.original_name || '',
         site: emote.site || '',
+        static_url: emote.static_url,
         thumbnail: emote.url,
         url: emote.url,
         width: emote.width,

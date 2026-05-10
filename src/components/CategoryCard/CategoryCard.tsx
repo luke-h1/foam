@@ -1,7 +1,7 @@
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
 import { Category } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
-import { useCallback } from 'react';
+import { router } from 'expo-router';
+import { memo, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
@@ -16,11 +16,9 @@ const IMAGE_HEIGHT = 150;
 const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
 
 export function CategoryCard({ category }: Props) {
-  const navigation = useAppNavigation();
-
   const handlePress = useCallback(() => {
-    navigation.navigate('Category', { id: category.id });
-  }, [navigation, category.id]);
+    router.push(`/category/${category.id}`);
+  }, [category.id]);
 
   if (!category?.id) {
     return null;
@@ -42,19 +40,27 @@ export function CategoryCard({ category }: Props) {
   );
 }
 
+export const MemoizedCategoryCard = memo(CategoryCard);
+MemoizedCategoryCard.displayName = 'MemoizedCategoryCard';
+
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flex: 1,
   },
   image: {
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
     height: IMAGE_HEIGHT,
     width: IMAGE_WIDTH,
   },
   title: {
-    marginTop: theme.spacing.sm,
+    marginTop: theme.space12,
+    textAlign: 'center',
   },
   wrapper: {
-    marginBottom: 8,
+    marginBottom: theme.space16,
   },
 });

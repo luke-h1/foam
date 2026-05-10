@@ -610,7 +610,7 @@ const MAPPING = {
   'widget.extralarge.badge.plus': 'widgets-outline',
 } as Partial<
   Record<
-    import('expo-symbols').SymbolViewProps['name'],
+    Extract<import('expo-symbols').SymbolViewProps['name'], string>,
     React.ComponentProps<typeof MaterialCommunityIcons>['name']
   >
 >;
@@ -621,7 +621,7 @@ const MATERIAL_MAPPING = {
   iphone: 'smartphone',
 } as Partial<
   Record<
-    import('expo-symbols').SymbolViewProps['name'],
+    Extract<import('expo-symbols').SymbolViewProps['name'], string>,
     React.ComponentProps<typeof MaterialIcons>['name']
   >
 >;

@@ -1,15 +1,16 @@
-name: EAS production / preview deployment
+name: EAS app deployment
 on:
   workflow_dispatch:
     inputs:
       variant:
-        description: 'Production or preview deployment (build & submit)'
+        description: 'App variant to build/deploy'
         required: true
         type: choice
         default: 'production'
         options:
           - production
-          - preview
+          - testflight
+          - internal
       platform:
         description: 'The platform to deploy to'
         required: true

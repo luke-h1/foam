@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import type { ChatMessageType } from '@app/store/chatStore/constants';
+import { theme } from '@app/styles/themes';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { fireEvent, render } from '@testing-library/react-native';
@@ -85,7 +86,8 @@ describe('RichChatMessage chat features', () => {
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({
-      borderLeftWidth: 3,
+      borderLeftColor: theme.colorViolet,
+      borderLeftWidth: 2,
     });
   });
 
@@ -113,7 +115,8 @@ describe('RichChatMessage chat features', () => {
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({
-      minHeight: 32,
+      minHeight: 28,
+      paddingVertical: 1,
     });
   });
 
@@ -141,6 +144,33 @@ describe('RichChatMessage chat features', () => {
         'TestUser watched 5 consecutive streams and sparked a watch streak!',
       ),
     ).toBeOnTheScreen();
+    expect(queryByTestId('chat-username-button')).toBeNull();
+  });
+
+  test('renders a standalone channel point redemption summary without chat text', () => {
+    const message = createMockMessage(
+      [],
+      {
+        'display-name': 'RewardUser',
+        username: 'RewardUser',
+        login: 'rewarduser',
+        'room-id': '67890',
+        'custom-reward-id': 'reward-123',
+        'msg-param-reward-title': 'Hydrate',
+      },
+      {
+        sender: 'rewarduser',
+        isChannelPointRedemption: true,
+      },
+    );
+
+    const { getByText, queryByTestId } = render(
+      <RichChatMessage {...message} />,
+    );
+
+    expect(getByText('RewardUser')).toBeOnTheScreen();
+    expect(getByText('redeemed')).toBeOnTheScreen();
+    expect(getByText('Hydrate')).toBeOnTheScreen();
     expect(queryByTestId('chat-username-button')).toBeNull();
   });
 });

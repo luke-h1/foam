@@ -15,10 +15,25 @@ jest.mock('@app/services/twitch-service');
 
 jest.mock('../renderers/EmoteRenderer', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory must not reference outer scope
-  const { View } = require('react-native');
+  const { Text, View } = require('react-native');
   return {
-    EmoteRenderer: ({ part }: { part: { name?: string } }) => (
-      <View testID="emote-renderer">{part?.name ?? 'emote'}</View>
+    EmoteRenderer: ({
+      part,
+      disableAnimations,
+      shouldOverlayPrevious,
+    }: {
+      part: { name?: string };
+      disableAnimations?: boolean;
+      shouldOverlayPrevious?: boolean;
+    }) => (
+      <View
+        testID={disableAnimations ? 'emote-renderer-static' : 'emote-renderer'}
+      >
+        <Text>
+          {part?.name ?? 'emote'}
+          {shouldOverlayPrevious ? ':overlay' : ''}
+        </Text>
+      </View>
     ),
   };
 });
@@ -56,13 +71,14 @@ describe('RichChatMessage', () => {
   const mockOnReply = jest.fn();
   const mockOnMessageLongPress = jest.fn();
   const mockOnEmotePress = jest.fn();
+  const mockOnReplyContextPress = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('Long Press Reply', () => {
-    it('should call onReply when message is long pressed (regular messages)', () => {
+    test('should call onReply when message is long pressed (regular messages)', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Hello world!' },
       ]);
@@ -86,7 +102,7 @@ describe('RichChatMessage', () => {
       );
     });
 
-    it('should NOT call onReply when system messages (STV emote added) are long pressed', () => {
+    test('should NOT call onReply when system messages (STV emote added) are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'stv_emote_added',
@@ -130,7 +146,7 @@ describe('RichChatMessage', () => {
       expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT call onReply when system messages (STV emote removed) are long pressed', () => {
+    test('should NOT call onReply when system messages (STV emote removed) are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'stv_emote_removed',
@@ -174,7 +190,7 @@ describe('RichChatMessage', () => {
       expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT call onReply when subscription notices are long pressed', () => {
+    test('should NOT call onReply when subscription notices are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'sub',
@@ -198,7 +214,7 @@ describe('RichChatMessage', () => {
       expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT call onReply when resub notices are long pressed', () => {
+    test('should NOT call onReply when resub notices are long pressed', () => {
       const message = createMockMessage([
         {
           type: 'resub',
@@ -222,7 +238,7 @@ describe('RichChatMessage', () => {
       expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT call onReply when messages without username are long pressed', () => {
+    test('should NOT call onReply when messages without username are long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Anonymous message' }],
         { username: undefined },
@@ -237,7 +253,7 @@ describe('RichChatMessage', () => {
       expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT call onReply when System sender messages are long pressed', () => {
+    test('should NOT call onReply when System sender messages are long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Connected to channel' }],
         { username: 'System' },
@@ -253,7 +269,7 @@ describe('RichChatMessage', () => {
       expect(mockOnReply).not.toHaveBeenCalled();
     });
 
-    it('should NOT call onReply when system (lowercase) sender messages are long pressed', () => {
+    test('should NOT call onReply when system (lowercase) sender messages are long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Connection established' }],
         { username: 'system' },
@@ -270,8 +286,89 @@ describe('RichChatMessage', () => {
     });
   });
 
+  describe('Zero-width emotes', () => {
+    test('should mark zero-width emotes to overlay the previous emote only when consecutive', () => {
+      const message = createMockMessage([
+        {
+          type: 'emote',
+          content: 'Base',
+          original_name: 'Base',
+          name: 'Base',
+          id: 'base-1',
+          url: 'https://example.com/base.avif',
+          site: '7TV Global',
+          zero_width: false,
+          width: 128,
+          height: 128,
+        },
+        {
+          type: 'emote',
+          content: 'Overlay',
+          original_name: 'Overlay',
+          name: 'Overlay',
+          id: 'overlay-1',
+          url: 'https://example.com/overlay.avif',
+          site: '7TV Global',
+          zero_width: true,
+          width: 128,
+          height: 128,
+        },
+        {
+          type: 'text',
+          content: ' ',
+        },
+        {
+          type: 'emote',
+          content: 'Detached',
+          original_name: 'Detached',
+          name: 'Detached',
+          id: 'overlay-2',
+          url: 'https://example.com/detached.avif',
+          site: '7TV Global',
+          zero_width: true,
+          width: 128,
+          height: 128,
+        },
+      ]);
+
+      const { getByText } = render(<RichChatMessage {...message} />);
+
+      expect(getByText('Base')).toBeTruthy();
+      expect(getByText('Overlay:overlay')).toBeTruthy();
+      expect(getByText('Detached')).toBeTruthy();
+    });
+  });
+
+  describe('Reply Context Navigation', () => {
+    test('should call onReplyContextPress with the parent message id', () => {
+      const message = createMockMessage(
+        [{ type: 'text', content: 'This is a reply' }],
+        {
+          'reply-parent-msg-id': 'parent-msg-456',
+        },
+        {
+          parentDisplayName: 'OriginalUser',
+          replyBody: 'The original message',
+          replyDisplayName: 'OriginalUser',
+        },
+      );
+
+      const { getByTestId } = render(
+        <RichChatMessage
+          {...message}
+          onReplyContextPress={mockOnReplyContextPress}
+        />,
+      );
+
+      fireEvent.press(getByTestId('chat-reply-context-button'));
+
+      expect(mockOnReplyContextPress).toHaveBeenCalledTimes(1);
+      expect(mockOnReplyContextPress).toHaveBeenCalledWith('parent-msg-456');
+    });
+  });
+
   describe('Message Interactions', () => {
-    it('should call onMessageLongPress when message is long pressed', () => {
+    test('should call onMessageLongPress when message is long pressed', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Hello world!' },
       ]);
@@ -288,9 +385,19 @@ describe('RichChatMessage', () => {
       fireEvent(textElement, 'longPress');
 
       expect(mockOnMessageLongPress).toHaveBeenCalledTimes(1);
+      expect(mockOnMessageLongPress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: 'testuser',
+          login: 'testuser',
+          userId: '123456',
+          messageData: expect.objectContaining({
+            message_id: 'msg-123',
+          }),
+        }),
+      );
     });
 
-    it('should render emotes in messages', () => {
+    test('should render emotes in messages', () => {
       const emoteData: ParsedPart<'emote'> = {
         type: 'emote',
         content: 'Kappa',
@@ -316,7 +423,7 @@ describe('RichChatMessage', () => {
   });
 
   describe('First Message Indicator', () => {
-    it('should render first message indicator when first-msg is set', () => {
+    test('should render first message indicator when first-msg is set', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'My first message!' }],
         { 'first-msg': '1' },
@@ -326,10 +433,10 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(getByText('first message')).toBeTruthy();
+      expect(getByText('first-msg')).toBeTruthy();
     });
 
-    it('should NOT render first message indicator for regular messages', () => {
+    test('should NOT render first message indicator for regular messages', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Regular message' },
       ]);
@@ -338,12 +445,12 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(queryByText('first message')).toBeNull();
+      expect(queryByText('first-msg')).toBeNull();
     });
   });
 
   describe('Username Display', () => {
-    it('should display username with color when provided', () => {
+    test('should display username with color when provided', () => {
       const message = createMockMessage([{ type: 'text', content: 'Hello!' }], {
         username: 'ColoredUser',
         color: '#FF5500',
@@ -356,7 +463,7 @@ describe('RichChatMessage', () => {
       expect(getAllByText('ColoredUser:').length).toBeGreaterThan(0);
     });
 
-    it('should NOT display username when not provided', () => {
+    test('should NOT display username when not provided', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Anonymous message' }],
         { username: undefined },
@@ -372,7 +479,7 @@ describe('RichChatMessage', () => {
   });
 
   describe('Reply Data', () => {
-    it('should pass correct data to onReply callback when long pressed', () => {
+    test('should pass correct data to onReply callback when long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Test message' }],
         { username: 'TestUser', color: '#00FF00' },

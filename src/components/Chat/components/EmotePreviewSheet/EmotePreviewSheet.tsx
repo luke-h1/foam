@@ -6,12 +6,14 @@ import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useMemo } from 'react';
 import { Dimensions, Modal, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 
 interface Props {
+  disableAnimations?: boolean;
   visible: boolean;
   onClose: () => void;
   selectedEmote: ParsedPart<'emote'>;
@@ -22,7 +24,16 @@ const MAX_EMOTE_SIZE = Math.min(screenWidth * 0.4, 120); // 40% of screen width 
 const MIN_EMOTE_SIZE = 32;
 
 export function EmotePreviewSheet(props: Props) {
-  const { visible, onClose, selectedEmote } = props;
+  const { visible, onClose, selectedEmote, disableAnimations = false } = props;
+  const displayUrl = useMemo(
+    () =>
+      getDisplayEmoteUrl({
+        url: selectedEmote.url,
+        static_url: selectedEmote.static_url,
+        disableAnimations,
+      }),
+    [disableAnimations, selectedEmote.static_url, selectedEmote.url],
+  );
 
   const getEmoteSize = useCallback(() => {
     const originalWidth = selectedEmote.width || 28;
@@ -68,16 +79,14 @@ export function EmotePreviewSheet(props: Props) {
   const handleCopy = useCallback(
     (field: 'name' | 'url') => {
       void Clipboard.setStringAsync(
-        field === 'name'
-          ? selectedEmote.content
-          : (selectedEmote.url as string),
+        field === 'name' ? selectedEmote.content : displayUrl,
       ).then(() =>
         toast.success(
           `${field === 'name' ? 'Emote name' : 'Emote URL'} copied`,
         ),
       );
     },
-    [selectedEmote.content, selectedEmote.url],
+    [displayUrl, selectedEmote.content],
   );
 
   const actions = useMemo(
@@ -112,7 +121,7 @@ export function EmotePreviewSheet(props: Props) {
         <View style={styles.header}>
           <View style={styles.emoteContainer}>
             <Image
-              source={selectedEmote.url ?? ''}
+              source={displayUrl}
               contentFit="contain"
               transition={100}
               style={[styles.emoteImage, emoteSize]}
@@ -164,101 +173,101 @@ export function EmotePreviewSheet(props: Props) {
 
 export const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.gray.bgAlt,
+    backgroundColor: theme.color.background.darkAlt,
     flex: 1,
-    paddingBottom: theme.spacing['2xl'],
-    paddingHorizontal: theme.spacing['2xl'],
+    paddingBottom: theme.space36,
+    paddingHorizontal: theme.space36,
   },
   header: {
     alignItems: 'flex-start',
     flexDirection: 'row',
-    marginBottom: theme.spacing['3xl'],
-    paddingTop: theme.spacing.lg,
+    marginBottom: theme.space44,
+    paddingTop: theme.space20,
   },
   emoteContainer: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.bg,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
     borderWidth: 1,
     justifyContent: 'center',
-    marginRight: theme.spacing.xl,
-    minHeight: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
-    minWidth: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
-    padding: theme.spacing.lg,
+    marginRight: theme.space28,
+    minHeight: MAX_EMOTE_SIZE + theme.space20 * 2,
+    minWidth: MAX_EMOTE_SIZE + theme.space20 * 2,
+    padding: theme.space20,
   },
   emoteImage: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
   },
   emoteInfo: {
     flex: 1,
     justifyContent: 'center',
-    minHeight: MAX_EMOTE_SIZE + theme.spacing.lg * 2,
+    minHeight: MAX_EMOTE_SIZE + theme.space20 * 2,
   },
   emoteName: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.lg,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize18,
     fontWeight: 'bold',
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.space12,
   },
   metadataContainer: {
-    gap: theme.spacing.xs,
+    gap: theme.space8,
   },
   emoteMetadata: {
-    color: theme.colors.gray.textLow,
-    fontSize: theme.font.fontSize.sm,
-    lineHeight: theme.font.fontSize.sm * 1.3,
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize14,
+    lineHeight: theme.fontSize14 * 1.3,
   },
   actionsContainer: {
-    gap: theme.spacing.sm,
+    gap: theme.space12,
   },
   actionButton: {
-    backgroundColor: theme.colors.gray.bg,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
     borderWidth: 1,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.space28,
+    paddingVertical: theme.space20,
   },
   actionContent: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.md,
+    gap: theme.space16,
     justifyContent: 'flex-start',
   },
   actionText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.md,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize16,
     fontWeight: 'normal',
   },
   // Legacy styles for compatibility with BadgePreviewSheet
   meta: {
     alignItems: 'flex-start',
     flexDirection: 'row',
-    gap: theme.spacing.md,
+    gap: theme.space16,
     justifyContent: 'flex-start',
   },
   actions: {
-    marginTop: theme.spacing.xl,
+    marginTop: theme.space28,
   },
   actionsList: {
     flex: 1,
   },
   wrapper: {
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.space16,
   },
   imageContainer: {
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.space20,
   },
   emoteDetail: {
-    marginBottom: theme.spacing.xs / 2,
+    marginBottom: theme.space8 / 2,
   },
   contentContainer: {
     overflow: 'visible',
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: theme.space28,
   },
 });

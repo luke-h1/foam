@@ -10,8 +10,11 @@ const sentryWithExpoImage = Sentry as typeof Sentry & {
 
 sentryWithExpoImage.wrapExpoImage?.(ExpoImage);
 
+export const prefetchImage = (source: string | string[]) =>
+  ExpoImage.prefetch(source);
+
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
-  containerStyle?: ViewStyle;
+  containerStyle?: StyleProp<ViewStyle>;
   /**
    * Use NitroImage for faster rendering (direct native bindings)
    * Best for chat emotes and high-volume image lists
@@ -82,7 +85,9 @@ export const Image = function Image({
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={error => {
-          console.warn('Image loading error:', error);
+          if (__DEV__) {
+            console.warn('Image loading error:', error);
+          }
         }}
       />
     </View>
