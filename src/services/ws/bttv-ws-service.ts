@@ -78,7 +78,7 @@ export const bttvWsService = {
           };
         }
 
-        // return emoteData;
+        void emoteData;
 
         // respond to state change in chat
       } catch (e) {

@@ -1,11 +1,9 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { logger } from '@app/utils/logger';
-import { useNavigationState } from '@react-navigation/native';
 import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
-import { CHAT_SCREENS } from '../constants/chat';
+import { ReadyState } from '../hooks/ws/constants';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
-import { getActiveRouteName } from '../navigators/navigationUtilities';
 
 const TWITCH_CHAT_URL = 'wss://irc-ws.chat.twitch.tv:443';
 
@@ -33,6 +31,7 @@ interface UseTwitchChatOptions {
     tags: Record<string, string>,
     message: string,
   ) => void;
+  onReconnect?: () => void;
   onUserNotice?: (
     channel: string,
     tags: UserNoticeTags,
@@ -69,6 +68,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     onJoin,
     onPart,
     onNotice,
+    onReconnect,
     onUserNotice,
     onClearChat,
     onClearMessage,
@@ -82,11 +82,14 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     onUserStateAfterSend,
   } = options;
 
-  const hasInitialized = useRef(false);
-  const lastScreenRef = useRef<string | null>(null);
   const isAuthenticatedRef = useRef(false);
   const joinedChannelsRef = useRef<Set<string>>(new Set());
-  const getWebSocketRef = useRef<(() => WebSocket) | null>(null);
+  const pendingJoinChannelsRef = useRef<Set<string>>(new Set());
+  const anonymousNickRef = useRef(
+    `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
+  );
+  const pendingIrcMessagesRef = useRef<string[]>([]);
+  const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
   const messageBufferRef = useRef<string>('');
   const userStateRef = useRef<Record<string, string>>({});
   const pendingMessageRef = useRef<{
@@ -97,16 +100,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     replyParentMsgBody?: string;
   } | null>(null);
 
-  const currentScreen = useNavigationState(state => {
-    if (!state) return null;
-    return getActiveRouteName(state);
-  });
-
-  // Determine if we should be connected based on screen
   const shouldConnect = useMemo(() => {
-    if (!currentScreen) return false;
-    return CHAT_SCREENS.includes(currentScreen as 'Chat' | 'LiveStream');
-  }, [currentScreen]);
+    return Boolean(channel?.trim());
+  }, [channel]);
 
   // Stagger chat connection so stream WebView can establish first (reduces "max reconnect" failures)
   const [delayedShouldConnect, setDelayedShouldConnect] = useState(false);
@@ -274,12 +270,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    * Send IRC command
    */
   const sendIrcCommand = useCallback((command: string, ...params: string[]) => {
-    const ws = getWebSocketRef.current?.();
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      logger.chat.warn('Cannot send IRC command - WebSocket not open');
-      return;
-    }
-
     let message = command;
     if (params.length > 0) {
       const lastParam = params[params.length - 1];
@@ -303,57 +293,94 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     logger.chat.debug(`Sending IRC command: ${message}`);
-    ws.send(`${message}\r\n`);
-  }, []);
-
-  /**
-   * Authenticate with Twitch IRC
-   */
-  const authenticate = useCallback(() => {
-    if (!authState?.token?.accessToken || !user?.login) {
-      logger.chat.warn('Cannot authenticate - missing token or username');
+    const payload = `${message}\r\n`;
+    const sendMessageFn = sendIrcMessageRef.current;
+    if (!sendMessageFn) {
+      pendingIrcMessagesRef.current.push(payload);
       return;
     }
 
-    logger.chat.info('Authenticating with Twitch IRC...');
+    sendMessageFn(payload);
+  }, []);
 
-    /**
-     * Request the tags and commands capabilities.
-     * display tags containing metadata along with each IRC message.
-     */
-    sendIrcCommand('CAP REQ :twitch.tv/tags twitch.tv/commands');
+  const formatChannelName = useCallback((channelName: string): string => {
+    return channelName.startsWith('#') ? channelName : `#${channelName}`;
+  }, []);
 
-    /**
-     * Pass oAuth token - either anon or user token
-     */
-    sendIrcCommand('PASS', `oauth:${authState.token.accessToken}`);
-
-    /**
-     * The nickname to pass - either user nickname or the twitch default
-     */
-    sendIrcCommand('NICK', user.login ?? 'justinfan888');
-  }, [authState, user, sendIrcCommand]);
+  const markChannelJoined = useCallback(
+    (channelName: string) => {
+      const channelFormatted = formatChannelName(channelName);
+      pendingJoinChannelsRef.current.delete(channelFormatted);
+      joinedChannelsRef.current.add(channelFormatted);
+      return channelFormatted;
+    },
+    [formatChannelName],
+  );
 
   // Join a channel
   const joinChannel = useCallback(
     (channelName: string) => {
       if (!channelName) return;
 
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
       if (joinedChannelsRef.current.has(channelFormatted)) {
         logger.chat.debug(`Already joined channel: ${channelFormatted}`);
         return;
       }
+      if (pendingJoinChannelsRef.current.has(channelFormatted)) {
+        logger.chat.debug(
+          `Join already pending for channel: ${channelFormatted}`,
+        );
+        return;
+      }
 
       logger.chat.info(`Joining channel: ${channelFormatted}`);
+      pendingJoinChannelsRef.current.add(channelFormatted);
       sendIrcCommand('JOIN', channelFormatted);
-      joinedChannelsRef.current.add(channelFormatted);
     },
-    [sendIrcCommand],
+    [formatChannelName, sendIrcCommand],
   );
+
+  /**
+   * Authenticate with Twitch IRC
+   */
+  const authenticate = useCallback(() => {
+    const hasUserLogin = Boolean(user?.login?.trim());
+    const accessToken = authState?.token?.accessToken?.trim();
+    const canUseAuthenticatedChat = hasUserLogin && Boolean(accessToken);
+
+    const nickname = canUseAuthenticatedChat
+      ? (user?.login?.trim() ?? anonymousNickRef.current)
+      : anonymousNickRef.current;
+    const passToken = canUseAuthenticatedChat
+      ? `oauth:${accessToken}`
+      : 'SCHMOOPIIE';
+
+    logger.chat.info(
+      canUseAuthenticatedChat
+        ? 'Authenticating with Twitch IRC...'
+        : `Authenticating anonymously with Twitch IRC as ${nickname}...`,
+    );
+
+    if (hasUserLogin && !canUseAuthenticatedChat) {
+      logger.chat.warn(
+        '[useTwitchChat] Missing auth token, falling back to anonymous IRC mode',
+      );
+    }
+
+    sendIrcCommand('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    sendIrcCommand('PASS', passToken);
+    sendIrcCommand('NICK', nickname);
+
+    if (channel) {
+      setTimeout(() => {
+        if (isAuthenticatedRef.current) {
+          joinChannel(channel);
+        }
+      }, 250);
+    }
+  }, [authState, user, sendIrcCommand, channel, joinChannel]);
 
   /**
    * Part from a channel
@@ -362,20 +389,22 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     (channelName: string) => {
       if (!channelName) return;
 
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
-      if (!joinedChannelsRef.current.has(channelFormatted)) {
+      if (
+        !joinedChannelsRef.current.has(channelFormatted) &&
+        !pendingJoinChannelsRef.current.has(channelFormatted)
+      ) {
         return;
       }
 
       logger.chat.info(`Parting from channel: ${channelFormatted}`);
       sendIrcCommand('PART', channelFormatted);
       joinedChannelsRef.current.delete(channelFormatted);
+      pendingJoinChannelsRef.current.delete(channelFormatted);
       onPart?.(channelFormatted);
     },
-    [sendIrcCommand, onPart],
+    [formatChannelName, sendIrcCommand, onPart],
   );
 
   const handleIrcMessage = useCallback(
@@ -442,6 +471,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
               onMessage?.(channelName, tagsRecord, messageText);
             }
           }
+          break;
+        }
+
+        case 'RECONNECT': {
+          logger.chat.warn('Received Twitch IRC RECONNECT request');
+          onReconnect?.();
           break;
         }
 
@@ -512,6 +547,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           break;
         }
 
+        case 'CLEARMSG':
         case 'CLEARMESSAGE': {
           if (params.length >= 2 && tags) {
             const channelName = params[0];
@@ -533,6 +569,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             const channelName = params[0];
 
             if (channelName) {
+              markChannelJoined(channelName);
               logger.chat.debug(`ROOMSTATE in ${channelName}`);
               onRoomState?.(channelName, tagsRecord);
             }
@@ -546,6 +583,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             const channelName = params[0];
 
             if (channelName) {
+              markChannelJoined(channelName);
               logger.chat.debug(`USERSTATE in ${channelName}`);
               userStateRef.current = tagsRecord;
 
@@ -576,6 +614,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           if (params.length > 0) {
             const channelName = params[0];
             if (channelName) {
+              markChannelJoined(channelName);
               logger.chat.info(`✅ Joined channel: ${channelName}`);
               onJoin?.(channelName);
             }
@@ -588,6 +627,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             const channelName = params[0];
             if (channelName) {
               logger.chat.info(`Left channel: ${channelName}`);
+              pendingJoinChannelsRef.current.delete(channelName);
               joinedChannelsRef.current.delete(channelName);
               onPart?.(channelName);
             }
@@ -596,8 +636,14 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         }
 
         case '353': // RPL_NAMREPLY - user list
-        case '366': // RPL_ENDOFNAMES - end of user list
+        case '366': {
+          // RPL_ENDOFNAMES - end of user list
+          const roomName = params.find(param => param.startsWith('#'));
+          if (roomName) {
+            markChannelJoined(roomName);
+          }
           break;
+        }
 
         default:
           logger.chat.debug(
@@ -613,6 +659,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       onJoin,
       onPart,
       onNotice,
+      onReconnect,
       onUserNotice,
       onClearChat,
       onClearMessage,
@@ -624,6 +671,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       tagsToRecord,
       isUserBlocked,
       containsMutedWords,
+      markChannelJoined,
       user?.login,
     ],
   );
@@ -692,7 +740,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     [delayedShouldConnect],
   );
 
-  const { getWebSocket } = useWebsocket(
+  const {
+    getWebSocket,
+    sendMessage: sendWebSocketMessage,
+    readyState,
+  } = useWebsocket(
     delayedShouldConnect ? TWITCH_CHAT_URL : null,
     {
       onOpen: handleWebSocketOpen,
@@ -707,8 +759,16 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   );
 
   useEffect(() => {
-    getWebSocketRef.current = getWebSocket;
-  }, [getWebSocket]);
+    sendIrcMessageRef.current = sendWebSocketMessage;
+    const pendingMessages = pendingIrcMessagesRef.current.splice(0);
+    pendingMessages.forEach(message => sendWebSocketMessage(message));
+
+    return () => {
+      if (sendIrcMessageRef.current === sendWebSocketMessage) {
+        sendIrcMessageRef.current = null;
+      }
+    };
+  }, [sendWebSocketMessage]);
 
   // Join/part channel when it changes
   useEffect(() => {
@@ -734,47 +794,16 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   }, [channel, shouldConnect, joinChannel, partChannel]);
 
   useEffect(() => {
-    if (!currentScreen) return;
-
-    const isOnChatScreen = CHAT_SCREENS.includes(
-      currentScreen as 'Chat' | 'LiveStream',
-    );
-    const wasOnChatScreen = lastScreenRef.current
-      ? CHAT_SCREENS.includes(lastScreenRef.current as 'Chat' | 'LiveStream')
-      : false;
-
-    logger.chat.info('[useTwitchChat] Screen changed:', {
-      from: lastScreenRef.current,
-      to: currentScreen,
-      isOnChatScreen,
-      wasOnChatScreen,
-    });
-
-    if (wasOnChatScreen && !isOnChatScreen) {
-      logger.chat.info(
-        '[useTwitchChat] Left chat/livestream screen, disconnecting IRC',
-      );
-    } else if (!wasOnChatScreen && isOnChatScreen) {
-      logger.chat.info(
-        '[useTwitchChat] Entered chat/livestream screen, ensuring IRC connection',
-      );
-      hasInitialized.current = true;
-    }
-
-    lastScreenRef.current = currentScreen;
-  }, [currentScreen, shouldConnect]);
-
-  useEffect(() => {
     const joinedChannels = joinedChannelsRef.current;
+    const pendingJoinChannels = pendingJoinChannelsRef.current;
     return () => {
       logger.chat.info('[useTwitchChat] Cleaning up Twitch IRC client');
       joinedChannels.clear();
+      pendingJoinChannels.clear();
       messageBufferRef.current = '';
-      hasInitialized.current = false;
       isAuthenticatedRef.current = false;
       userStateRef.current = {};
       pendingMessageRef.current = null;
-      lastScreenRef.current = null;
     };
   }, []);
 
@@ -794,15 +823,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         return;
       }
 
-      const ws = getWebSocketRef.current?.();
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        logger.chat.warn('Cannot send message - WebSocket not open');
-        return;
-      }
-
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
       pendingMessageRef.current = {
         channel: channelFormatted,
@@ -831,9 +852,27 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
       const fullMessage = `${privmsgCommand} ${channelFormatted} :${message}`;
       logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);
-      ws.send(`${fullMessage}\r\n`);
+      sendWebSocketMessage(`${fullMessage}\r\n`);
     },
-    [],
+    [formatChannelName, sendWebSocketMessage],
+  );
+
+  const sendChatCommand = useCallback(
+    (channelName: string, command: string) => {
+      const trimmedCommand = command.trim();
+      if (trimmedCommand.length === 0) {
+        logger.chat.warn('Cannot send empty chat command');
+        return;
+      }
+
+      const channelFormatted = formatChannelName(channelName);
+      const fullMessage = `PRIVMSG ${channelFormatted} :${trimmedCommand}`;
+      logger.chat.debug(
+        `Sending chat command: ${fullMessage.substring(0, 100)}...`,
+      );
+      sendWebSocketMessage(`${fullMessage}\r\n`);
+    },
+    [formatChannelName, sendWebSocketMessage],
   );
 
   /**
@@ -841,15 +880,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    */
   const sendAction = useCallback(
     (channelName: string, action: string) => {
-      const channelFormatted = channelName.startsWith('#')
-        ? channelName
-        : `#${channelName}`;
+      const channelFormatted = formatChannelName(channelName);
 
       // ACTION format: PRIVMSG #channel :\x01ACTION <message>\x01
       const actionMessage = `\x01ACTION ${action}\x01`;
       sendMessage(channelFormatted, actionMessage);
     },
-    [sendMessage],
+    [formatChannelName, sendMessage],
   );
 
   /**
@@ -861,25 +898,45 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const isConnected = useCallback((): boolean => {
     const ws = getWebSocket();
-    return ws.readyState === WebSocket.OPEN && isAuthenticatedRef.current;
-  }, [getWebSocket]);
+    if (ws.readyState !== WebSocket.OPEN || !isAuthenticatedRef.current) {
+      return false;
+    }
+
+    if (!channel) {
+      return true;
+    }
+
+    return joinedChannelsRef.current.has(formatChannelName(channel));
+  }, [channel, formatChannelName, getWebSocket]);
+
+  const connectionState = useMemo(() => {
+    if (!delayedShouldConnect) {
+      return ReadyState.UNINSTANTIATED;
+    }
+
+    return readyState;
+  }, [delayedShouldConnect, readyState]);
 
   return useMemo(
     () => ({
+      connectionState,
       getWebSocket,
       isConnected,
       joinChannel,
       partChannel,
       sendMessage,
+      sendChatCommand,
       sendAction,
       getUserState,
     }),
     [
+      connectionState,
       getWebSocket,
       isConnected,
       joinChannel,
       partChannel,
       sendMessage,
+      sendChatCommand,
       sendAction,
       getUserState,
     ],

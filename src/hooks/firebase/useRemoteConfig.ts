@@ -10,6 +10,8 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 
 const remoteConfig = getRemoteConfig(getApp());
+let autoFetchStarted = false;
+let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
 void setConfigSettings(remoteConfig, {
   minimumFetchIntervalMillis: 300,
@@ -22,8 +24,18 @@ export interface RemoteConfigSchema {
    * Minimum version of the app required per platform and track
    */
   minimumVersion: {
-    android: { development: string; preview: string; production: string };
-    ios: { development: string; preview: string; production: string };
+    android: {
+      development: string;
+      internal: string;
+      testflight: string;
+      production: string;
+    };
+    ios: {
+      development: string;
+      internal: string;
+      testflight: string;
+      production: string;
+    };
   };
 
   /**
@@ -50,13 +62,32 @@ export type RemoteConfigType = {
 export const defaultRemoteConfig = {
   splash: '{"7tvUnavailable": false, "app": false}',
   minimumVersion:
-    '{"android": {"development": "0.0.0", "preview": "0.0.0", "production": "0.0.0"}, "ios": {"development": "0.0.0", "preview": "0.0.0", "production": "0.0.0"}}',
+    '{"android": {"development": "0.0.0", "internal": "0.0.0", "testflight": "0.0.0", "production": "0.0.0"}, "ios": {"development": "0.0.0", "internal": "0.0.0", "testflight": "0.0.0", "production": "0.0.0"}}',
   statusPageUrl: 'https://status.foam-app.com',
   websiteUrl: 'https://foam-app.com',
 } satisfies Record<RemoteConfigKey, string>;
 
 // Keys that contain JSON and need parsing
 const jsonKeys: RemoteConfigKey[] = ['splash', 'minimumVersion'];
+
+function getErrorMessage(error: unknown): string | null {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message;
+  }
+  return null;
+}
+
+function isRemoteConfigCancellation(error: unknown): boolean {
+  const message = getErrorMessage(error)?.toLowerCase();
+  return message?.includes('cancelled') ?? false;
+}
 
 function parseValue<K extends RemoteConfigKey>(
   key: K,
@@ -102,6 +133,40 @@ export type UseRemoteConfigResult = {
   isRefetching: boolean;
 };
 
+async function fetchRemoteConfig(): Promise<boolean> {
+  if (remoteConfigFetchPromise) {
+    return remoteConfigFetchPromise;
+  }
+
+  remoteConfigFetchPromise = fetchAndActivate(remoteConfig)
+    .then(activated => {
+      logger.remoteConfig.info('fetchAndActivate', {
+        activated,
+        message: activated
+          ? 'Fetched new config from server'
+          : 'Using cached config (no new data)',
+      });
+
+      return activated;
+    })
+    .catch(error => {
+      if (isRemoteConfigCancellation(error)) {
+        logger.remoteConfig.info('fetchAndActivate cancelled', {
+          error: getErrorMessage(error),
+        });
+        return false;
+      }
+
+      logger.remoteConfig.error('fetchAndActivate failed', error);
+      return false;
+    })
+    .finally(() => {
+      remoteConfigFetchPromise = null;
+    });
+
+  return remoteConfigFetchPromise;
+}
+
 export function useRemoteConfig(): UseRemoteConfigResult {
   const [config, setConfig] = useState<RemoteConfigType>(
     buildConfigFromDefaults,
@@ -132,24 +197,21 @@ export function useRemoteConfig(): UseRemoteConfigResult {
   const refetch = useCallback(async (): Promise<boolean> => {
     setIsRefetching(true);
     try {
-      const activated = await fetchAndActivate(remoteConfig);
-      logger.remoteConfig.info('fetchAndActivate (manual)', {
-        activated,
-        message: activated
-          ? 'Fetched new config from server'
-          : 'Using cached config (no new data)',
-      });
+      const activated = await fetchRemoteConfig();
       updateConfig();
       return activated;
-    } catch (error) {
-      logger.remoteConfig.error('fetchAndActivate failed', error);
-      return false;
     } finally {
       setIsRefetching(false);
     }
   }, [updateConfig]);
 
   useEffect(() => {
+    if (autoFetchStarted && !remoteConfigFetchPromise) {
+      updateConfig();
+      return;
+    }
+
+    autoFetchStarted = true;
     void refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

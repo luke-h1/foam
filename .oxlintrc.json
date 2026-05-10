@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "oxc",
+    "import",
+    "react",
+    "jsx-a11y",
+    "promise"
+  ],
+  "ignorePatterns": [
+    "commitlint.config.js",
+    "modules/**/node_modules",
+    "**/node_modules",
+    "**/.github",
+    "**/public",
+    "**/build",
+    "**/scripts/",
+    "**/coverage/",
+    ".expo",
+    ".storybook/storybook.requires.ts",
+    "metro.config.js"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-console": "off",
+    "no-extra-boolean-cast": "off",
+    "no-unused-expressions": "off",
+    "no-unsafe-finally": "off",
+    "no-misused-spread": "off",
+    "react-in-jsx-scope": "off"
+  },
+  "env": {
+    "builtin": true
+  }
+}

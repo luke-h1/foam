@@ -2,9 +2,9 @@ import { Text } from '@app/components/Text/Text';
 import { View, StyleSheet } from 'react-native';
 
 /**
- * Shown when the app is opened via the Twitch OAuth redirect (e.g. foam://auth#access_token=...).
- * The actual token handling and navigation are done in the Linking listener in AppNavigator;
- * this screen may show briefly until the app resets to Tabs.
+ * Shown when the app is opened via the Twitch OAuth redirect.
+ * The actual token handling and navigation are done in the root router layout.
+ * This screen may show briefly until the app redirects to the main tab flow.
  */
 export function AuthCallbackScreen() {
   return (

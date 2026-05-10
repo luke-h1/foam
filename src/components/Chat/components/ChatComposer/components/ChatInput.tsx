@@ -54,6 +54,7 @@ export const ChatInput = forwardRef<TextInput, ChatInputProps>(
           onBlur={onBlur}
           multiline
           scrollEnabled
+          selectionColor={theme.color.text.dark}
           textAlignVertical="top"
           style={[styles.input, textFieldProps.style]}
         />
@@ -66,16 +67,21 @@ ChatInput.displayName = 'ChatInput';
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.gray.ui,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
   },
   input: {
-    fontSize: 15,
-    maxHeight: 100,
-    minHeight: 40,
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize12,
+    maxHeight: 96,
+    minHeight: 38,
     paddingBottom: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingTop: 10,
   },
 });

@@ -1,9 +1,8 @@
 import { twitchService } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
-import { useNavigationState } from '@react-navigation/native';
+import { usePathname } from 'expo-router';
 import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { CHAT_SCREENS } from '../constants/chat';
-import { getActiveRouteName } from '../navigators/navigationUtilities';
 import { useWebsocket } from './ws/useWebsocket';
 
 interface EventSubMetadata {
@@ -51,6 +50,15 @@ type EventCallback = (data: EventSubMessage) => void;
 
 const DEFAULT_URL = 'wss://eventsub.wss.twitch.tv/ws';
 
+function getChatScreenFromPathname(
+  pathname: string | null,
+): (typeof CHAT_SCREENS)[number] | null {
+  if (!pathname) return null;
+  if (pathname === '/chat') return 'Chat';
+  if (pathname.startsWith('/streams/live-stream/')) return 'LiveStream';
+  return null;
+}
+
 export function useTwitchWs(): WebSocket {
   const hasInitialized = useRef(false);
   const lastScreenRef = useRef<string | null>(null);
@@ -67,11 +75,12 @@ export function useTwitchWs(): WebSocket {
   const eventCallbacksRef = useRef<Map<string, EventCallback[]>>(new Map());
   const activeSubscriptionsRef = useRef<Map<string, string>>(new Map());
   const getWebSocketRef = useRef<(() => WebSocket) | null>(null);
+  const pathname = usePathname();
 
-  const currentScreen = useNavigationState(state => {
-    if (!state) return null;
-    return getActiveRouteName(state);
-  }) as 'LiveStream' | 'Chat';
+  const currentScreen = useMemo(
+    () => getChatScreenFromPathname(pathname),
+    [pathname],
+  );
 
   // Determine if we should be connected based on screen
   const shouldConnect = useMemo(() => {

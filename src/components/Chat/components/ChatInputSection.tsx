@@ -32,8 +32,6 @@ interface ChatInputSectionProps {
   messageInput: string;
   onChangeText: (text: string) => void;
   onEmoteSelect: (emote: SanitisedEmote) => void;
-  onFocus: () => void;
-  onBlur: () => void;
   onSubmit: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
@@ -49,8 +47,6 @@ export const ChatInputSection = memo(
     messageInput,
     onChangeText,
     onEmoteSelect,
-    onFocus,
-    onBlur,
     onSubmit,
     onOpenEmoteSheet,
     onOpenSettingsSheet,
@@ -129,8 +125,6 @@ export const ChatInputSection = memo(
               value={messageInput}
               onChangeText={onChangeText}
               onEmoteSelect={handleEmoteSelect}
-              onFocus={onFocus}
-              onBlur={onBlur}
               placeholder={inputPlaceholder}
               editable
               autoComplete="off"
@@ -182,11 +176,13 @@ ChatInputSection.displayName = 'ChatInputSection';
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderRadius: 18,
-    height: 36,
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: 20,
+    borderWidth: 1,
+    height: 40,
     justifyContent: 'center',
-    width: 36,
+    width: 40,
   },
   inputContainer: {
     flex: 1,
@@ -195,31 +191,34 @@ const styles = StyleSheet.create({
   inputRow: {
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    gap: theme.space8,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
   replyContent: {
     flex: 1,
   },
   replyDismissButton: {
     alignItems: 'center',
-    borderRadius: 16,
-    height: 32,
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: 18,
+    borderWidth: 1,
+    height: 36,
     justifyContent: 'center',
     marginLeft: 'auto',
-    width: 32,
+    width: 36,
   },
   replyIndicator: {
-    backgroundColor: theme.colors.violet.accent,
+    backgroundColor: theme.colorViolet,
     borderRadius: 2,
     height: '100%',
-    marginRight: theme.spacing.sm,
+    marginRight: theme.space12,
     minHeight: 32,
     width: 3,
   },
   replyLabel: {
-    fontSize: theme.font.fontSize.xs,
+    fontSize: theme.fontSize12,
     opacity: 0.7,
   },
   replyLabelRow: {
@@ -228,35 +227,37 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   replyMessagePreview: {
-    fontSize: theme.font.fontSize.sm,
+    fontSize: theme.fontSize14,
     marginTop: 2,
     opacity: 0.6,
   },
   replyPaintedUsername: {
-    fontSize: theme.font.fontSize.xs,
+    fontSize: theme.fontSize12,
     fontWeight: '600',
   },
   replyPreview: {
     alignItems: 'center',
-    backgroundColor: theme.colors.accent.ui,
-    borderBottomColor: theme.colors.gray.border,
+    backgroundColor: theme.color.background.darkAltAlpha,
+    borderBottomColor: theme.color.border.dark,
     borderBottomWidth: 1,
     flexDirection: 'row',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
   sendButton: {
     alignItems: 'center',
-    backgroundColor: theme.colors.violet.accent,
-    borderRadius: 18,
-    height: 36,
+    backgroundColor: theme.colorDarkGreen,
+    borderRadius: 20,
+    height: 40,
     justifyContent: 'center',
-    width: 36,
+    width: 40,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.colors.gray.ui,
+    backgroundColor: theme.color.backgroundSecondary.dark,
   },
   wrapper: {
-    backgroundColor: theme.colors.black.bgAlpha,
+    backgroundColor: theme.colorBlackOverlay,
+    borderTopColor: theme.colorBorderSecondary,
+    borderTopWidth: 1,
   },
 });

@@ -4,6 +4,7 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView } from 'expo-symbols';
 import {
@@ -27,17 +28,38 @@ import { toast } from 'sonner-native';
 type PartVariant = ParsedPart<'emote'>;
 
 interface EmoteActionSheetProps {
+  disableAnimations?: boolean;
   part: PartVariant;
   onPress?: (part: PartVariant) => void;
   children: ReactNode;
 }
 
 export function EmoteActionSheet({
+  disableAnimations = false,
   part,
   onPress,
   children,
 }: EmoteActionSheetProps) {
   const [visible, setVisible] = useState(false);
+  const displayUrl = useMemo(
+    () =>
+      getDisplayEmoteUrl({
+        url: part.url,
+        static_url: part.static_url,
+        disableAnimations,
+      }),
+    [disableAnimations, part.static_url, part.url],
+  );
+  const previewPart = useMemo(
+    () =>
+      displayUrl === part.url
+        ? part
+        : {
+            ...part,
+            url: displayUrl,
+          },
+    [displayUrl, part],
+  );
 
   const openSheet = useCallback((e: GestureResponderEvent) => {
     e?.preventDefault?.();
@@ -59,16 +81,16 @@ export function EmoteActionSheet({
 
   const copyImageUrl = useCallback(() => {
     closeSheet();
-    if (!part.url) return;
-    void Clipboard.setStringAsync(part.url).then(() => {
+    if (!displayUrl) return;
+    void Clipboard.setStringAsync(displayUrl).then(() => {
       toast.success('Emote URL copied to clipboard');
     });
-  }, [part.url, closeSheet]);
+  }, [closeSheet, displayUrl]);
 
   const handlePreview = useCallback(() => {
     closeSheet();
-    onPress?.(part);
-  }, [onPress, part, closeSheet]);
+    onPress?.(previewPart);
+  }, [closeSheet, onPress, previewPart]);
 
   const actions = useMemo(
     () =>
@@ -85,7 +107,7 @@ export function EmoteActionSheet({
           icon: 'copy',
           label: 'Copy image URL',
           onPress: copyImageUrl,
-          visible: Boolean(part.url),
+          visible: Boolean(displayUrl),
         },
         {
           id: 'preview' as const,
@@ -95,7 +117,7 @@ export function EmoteActionSheet({
           visible: Boolean(onPress),
         },
       ].filter(action => action.visible),
-    [copyImageUrl, copyName, handlePreview, onPress, part.url],
+    [copyImageUrl, copyName, displayUrl, handlePreview, onPress],
   );
 
   const previewSubtitle = useMemo(() => {
@@ -151,14 +173,14 @@ export function EmoteActionSheet({
         onRequestClose={closeSheet}
       >
         <View style={styles.wrapper}>
-          {(part.url || part.name || part.original_name) && (
+          {(displayUrl || part.name || part.original_name) && (
             <View style={styles.previewCard}>
               <View style={styles.previewRow}>
-                {part.url ? (
+                {displayUrl ? (
                   <View style={styles.previewImageContainer}>
                     <Image
                       useNitro
-                      source={part.url}
+                      source={displayUrl}
                       style={styles.previewImage}
                       contentFit="contain"
                       transition={50}
@@ -212,9 +234,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: theme.space12,
     minHeight: Platform.select({ ios: 56, android: 56 }),
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.space16,
   },
   actionButtonWithDivider: {
     borderTopWidth: 0,
@@ -222,28 +244,28 @@ const styles = StyleSheet.create({
   actionGroup: {
     backgroundColor: 'transparent',
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
+    borderRadius: theme.borderRadius28,
     overflow: 'hidden',
   },
   actionIcon: {
     opacity: 0.9,
   },
   actionText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.md,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize16,
     fontWeight: Platform.select({ ios: '400', android: '400' }),
   },
   previewCard: {
     backgroundColor: 'transparent',
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius28,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space16,
   },
   previewHint: {
-    color: theme.colors.gray.textLow,
-    fontSize: theme.font.fontSize.lg,
-    lineHeight: theme.font.fontSize.lg * 1.2,
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize18,
+    lineHeight: theme.fontSize18 * 1.2,
     marginTop: 4,
   },
   previewImage: {
@@ -253,7 +275,7 @@ const styles = StyleSheet.create({
   previewImageContainer: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
     height: 56,
     justifyContent: 'center',
     overflow: 'hidden',
@@ -263,22 +285,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   previewName: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize['2xl'],
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize24,
     fontWeight: Platform.select({ ios: '700', android: '600' }),
-    lineHeight: theme.font.fontSize['2xl'] * 1.1,
+    lineHeight: theme.fontSize24 * 1.1,
   },
   previewRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.md,
+    gap: theme.space16,
   },
   wrapper: {
     backgroundColor: '#171b23',
     flex: 1,
-    gap: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+    gap: theme.space20,
+    paddingBottom: theme.space28,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space16,
   },
 });

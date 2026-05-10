@@ -119,25 +119,25 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
 const styles = StyleSheet.create({
   brandIconSkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     height: 20,
     width: 20,
   },
   card: {
     alignItems: 'center',
-    backgroundColor: theme.colors.black.accentAlpha,
+    backgroundColor: theme.colorBlackAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     flexDirection: 'row',
-    padding: theme.spacing.md,
+    padding: theme.space16,
     width: '100%',
   },
   container: {
-    marginVertical: theme.spacing.xs,
+    marginVertical: theme.space8,
   },
   createdBySkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     height: 13,
     marginTop: 2,
     width: '40%',
@@ -151,18 +151,18 @@ const styles = StyleSheet.create({
   },
   thumbnail: {
     height: 50,
-    marginRight: theme.spacing.md,
+    marginRight: theme.space16,
     width: 50,
   },
   titleRow: {
     alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.md,
+    gap: theme.space16,
   },
   titleSkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     height: 16,
     width: '60%',
   },

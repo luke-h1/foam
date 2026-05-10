@@ -1,5 +1,6 @@
 import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
 import { updateMessage } from '@app/store/chatStore/messages';
+import { chatStore$ } from '@app/store/chatStore/state';
 import { renderHook } from '@testing-library/react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
@@ -9,6 +10,14 @@ jest.mock('@app/store/chatStore/channelLoad', () => ({
 }));
 jest.mock('@app/store/chatStore/messages', () => ({
   updateMessage: jest.fn(),
+}));
+
+jest.mock('@app/store/chatStore/state', () => ({
+  chatStore$: {
+    emojis: {
+      peek: jest.fn(() => []),
+    },
+  },
 }));
 
 jest.mock('@app/utils/chat/emoteProcessor', () => ({
@@ -27,6 +36,11 @@ const mockGetCurrentEmoteData = getCurrentEmoteData as jest.MockedFunction<
 const mockUpdateMessage = updateMessage as jest.MockedFunction<
   typeof updateMessage
 >;
+const mockChatStore = chatStore$ as unknown as {
+  emojis: {
+    peek: jest.MockedFunction<() => unknown[]>;
+  };
+};
 
 function createTextOnlyMessage(
   messageId: string,
@@ -88,6 +102,7 @@ describe('useEmoteReprocessing', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockChatStore.emojis.peek.mockReturnValue([]);
     processedMessageIdsRef.current.clear();
   });
 

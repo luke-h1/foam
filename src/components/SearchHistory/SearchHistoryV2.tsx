@@ -122,13 +122,17 @@ function SwipeableHistoryItem({
         {/* Swipeable row */}
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.historyItem, animatedRowStyle]}>
-            <Icon icon="clock" color={theme.colors.gray.textLow} size={16} />
+            <Icon
+              icon="clock"
+              color={theme.color.textSecondary.dark}
+              size={16}
+            />
             <Text style={styles.query} numberOfLines={1}>
               {query}
             </Text>
             <Icon
               icon="arrow-up-left"
-              color={theme.colors.gray.textLow}
+              color={theme.color.textSecondary.dark}
               size={16}
             />
           </Animated.View>
@@ -212,7 +216,7 @@ export function SearchHistoryV2({
 const styles = StyleSheet.create({
   deleteAction: {
     alignItems: 'center',
-    backgroundColor: theme.colors.red.accent,
+    backgroundColor: theme.colorRed,
     bottom: 0,
     justifyContent: 'center',
     position: 'absolute',
@@ -230,21 +234,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.space12,
+    paddingHorizontal: theme.space16,
   },
   hint: {
-    marginTop: theme.spacing.md,
+    marginTop: theme.space16,
     opacity: 0.6,
     textAlign: 'center',
   },
   historyItem: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flexDirection: 'row',
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    gap: theme.space16,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space16,
   },
   historyList: {
     gap: 1,
@@ -254,13 +258,13 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   query: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     flex: 1,
   },
   sectionTitle: {
     letterSpacing: 0.5,
   },
   wrapper: {
-    paddingTop: theme.spacing.lg,
+    paddingTop: theme.space20,
   },
 });

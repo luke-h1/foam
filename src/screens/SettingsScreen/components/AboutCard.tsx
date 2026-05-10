@@ -32,14 +32,19 @@ export function AboutCard() {
     <View style={styles.main}>
       <View style={styles.wrapper}>
         <View style={styles.info}>
-          <Text weight="bold">Foam</Text>
+          <Text type="xl" weight="bold">
+            Foam
+          </Text>
+          <Text type="sm" color="gray.textLow" style={styles.infoText}>
+            Live streams, faster discovery, and chat tuned for mobile.
+          </Text>
         </View>
 
         <View style={styles.linkWrapper}>
           {links.map(link => (
             <View key={link.key} style={styles.linkContainer}>
               <IconButton
-                hitSlop={theme.spacing.md}
+                hitSlop={theme.space16}
                 icon={{
                   type: 'symbol',
                   name: link.icon,
@@ -66,14 +71,22 @@ const styles = StyleSheet.create({
   info: {
     alignItems: 'center',
   },
+  infoText: {
+    marginTop: theme.space8,
+    textAlign: 'center',
+  },
   link: {
-    backgroundColor: theme.colors.gray.ui,
+    alignItems: 'center',
+    backgroundColor: theme.color.background.darkAltAlpha,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.spacing.md,
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    justifyContent: 'center',
   },
   linkContainer: {
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    gap: theme.space8,
   },
   linkLabel: {
     textAlign: 'center',
@@ -82,15 +95,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing['4xl'],
+    gap: theme.space56,
     justifyContent: 'center',
   },
   main: {
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: theme.space16,
   },
   wrapper: {
     alignItems: 'center',
-    gap: theme.spacing.lg,
+    backgroundColor: theme.color.background.darkAltAlpha,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius28,
+    borderWidth: 1,
+    gap: theme.space20,
+    paddingHorizontal: theme.space28,
+    paddingVertical: theme.space28,
   },
 });

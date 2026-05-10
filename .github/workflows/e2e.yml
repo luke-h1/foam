@@ -153,10 +153,10 @@ jobs:
         env:
           APP_VARIANT: e2e
 
-      - name: 🎭 Install Maestro
+      - name: 🍎 Install applesimutils
         run: |
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+          brew tap wix/brew
+          brew install applesimutils
 
       - name: 📱 Boot Simulator
         run: |
@@ -168,19 +168,23 @@ jobs:
         run: |
           xcrun simctl install booted "$APP_PATH"
 
+      - name: 🔗 Expose app path for Detox
+        run: |
+          echo "DETOX_APP_PATH=$APP_PATH" >> $GITHUB_ENV
+
       - name: 🚀 Start mock server
         run: |
           bun run e2e:mock-server &
           sleep 3
 
-      - name: 🧪 Run Maestro tests
+      - name: 🧪 Run Detox tests
         run: |
-          bun run maestro:test
+          bun run detox:test:ci
 
       - name: 📤 Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: maestro-results
-          path: maestro-debug-output/
+          name: detox-results
+          path: artifacts/detox/
           retention-days: 7

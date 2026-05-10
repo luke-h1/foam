@@ -2,7 +2,7 @@ import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
 import { memo, useCallback } from 'react';
-import { Modal, View, StyleSheet } from 'react-native';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 
 type TestMessageType =
   | 'Prime Sub'
@@ -48,33 +48,45 @@ const ChatDebugModalComponent = ({
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="formSheet"
+      presentationStyle="overFullScreen"
+      transparent
       onRequestClose={onClose}
     >
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text weight="bold" style={styles.title}>
-            Debug Test Messages
-          </Text>
-        </View>
+      <View style={styles.backdrop}>
+        <View style={styles.sheet}>
+          <View style={styles.header}>
+            <Text weight="bold" style={styles.title}>
+              Debug Test Messages
+            </Text>
+            <Button onPress={onClose} style={styles.doneButton}>
+              <Text style={styles.doneText}>Done</Text>
+            </Button>
+          </View>
 
-        {DEBUG_OPTIONS.map(option => (
-          <Button
-            key={option.type}
-            onPress={() => handleTestMessage(option.type)}
-            style={styles.item}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
           >
-            <Text>{option.label}</Text>
-          </Button>
-        ))}
+            {DEBUG_OPTIONS.map(option => (
+              <Button
+                key={option.type}
+                onPress={() => handleTestMessage(option.type)}
+                style={styles.item}
+              >
+                <Text>{option.label}</Text>
+              </Button>
+            ))}
 
-        <Button onPress={onClearChatCache} style={styles.item}>
-          <Text>Clear Chat Cache</Text>
-        </Button>
+            <Button onPress={onClearChatCache} style={styles.item}>
+              <Text>Clear Chat Cache</Text>
+            </Button>
 
-        <Button onPress={onClearImageCache} style={styles.item}>
-          <Text>Clear Image Cache</Text>
-        </Button>
+            <Button onPress={onClearImageCache} style={styles.item}>
+              <Text>Clear Image Cache</Text>
+            </Button>
+          </ScrollView>
+        </View>
       </View>
     </Modal>
   );
@@ -87,21 +99,61 @@ export const ChatDebugModal = memo(ChatDebugModalComponent);
 export type { TestMessageType };
 
 const styles = StyleSheet.create({
-  content: {
+  backdrop: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.58)',
     flex: 1,
-    paddingBottom: theme.spacing['2xl'],
-    paddingHorizontal: theme.spacing.md,
+    justifyContent: 'center',
+    padding: theme.space20,
+  },
+  content: {
+    paddingBottom: theme.space36,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space8,
+  },
+  doneButton: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
+  },
+  doneText: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
+    fontWeight: '600',
   },
   header: {
     alignItems: 'center',
-    paddingVertical: theme.spacing.md,
+    borderBottomColor: theme.color.border.dark,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingVertical: theme.space16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   item: {
-    marginBottom: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
+    marginBottom: theme.space8,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space16,
+  },
+  scroll: {
+    flex: 1,
+  },
+  sheet: {
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: 24,
+    borderWidth: 1,
+    maxHeight: '82%',
+    overflow: 'hidden',
+    width: '100%',
   },
   title: {
-    fontSize: theme.font.fontSize.lg,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize18,
   },
 });

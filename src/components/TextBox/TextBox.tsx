@@ -101,11 +101,11 @@ export function TextBox({
           }}
           onSubmitEditing={onSubmitEditing}
           placeholder={placeholder}
-          placeholderTextColor={theme.colors.gray.accent}
+          placeholderTextColor={theme.colorGrey}
           ref={ref}
           returnKeyType={returnKeyType}
           secureTextEntry={secureTextEntry}
-          selectionColor={theme.colors.accent.accent}
+          selectionColor={theme.colorDarkGreen}
           textAlignVertical="center"
           value={value}
           style={[
@@ -132,20 +132,21 @@ export function TextBox({
 
 const styles = StyleSheet.create({
   input: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
     flex: 1,
-    fontSize: theme.font.fontSize.lg,
-    paddingHorizontal: theme.spacing.lg,
+    fontSize: theme.fontSize18,
+    paddingHorizontal: theme.space20,
   },
   main: {
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing['2xl'],
+    gap: theme.space16,
+    marginBottom: theme.space36,
   },
   wrapper: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
+    backgroundColor: theme.color.background.darkAltAlpha,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius28,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     flexGrow: 1,
@@ -157,21 +158,21 @@ function getWrapperStateStyle(focused: boolean, error: boolean) {
     borderColor: (() => {
       if (focused) {
         if (error) {
-          return theme.colors.red.accent;
+          return theme.colorRed;
         }
-        return theme.colors.accent.accent;
+        return theme.colorDarkGreen;
       }
       if (error) {
-        return theme.colors.red.borderUi;
+        return theme.colorRedBorderUi;
       }
-      return theme.colors.gray.borderUi;
+      return theme.colorBorderTertiary;
     })(),
   };
 }
 
 function getInputStateStyle(multiline: boolean) {
   return {
-    height: multiline ? undefined : theme.spacing['3xl'],
-    paddingVertical: multiline ? theme.spacing.lg : undefined,
+    height: multiline ? undefined : theme.space44,
+    paddingVertical: multiline ? theme.space20 : undefined,
   };
 }

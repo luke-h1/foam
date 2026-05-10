@@ -62,8 +62,8 @@ export function SearchBox({
 
 const styles = StyleSheet.create({
   clear: {
-    height: theme.spacing.xl,
-    width: theme.spacing.xl,
+    height: theme.space28,
+    width: theme.space28,
   },
   clearButton: {},
   content: {
@@ -72,10 +72,10 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   icon: {
-    marginLeft: theme.spacing.md,
+    marginLeft: theme.space16,
   },
   main: {
     flexGrow: 1,
-    height: theme.spacing['2xl'],
+    height: theme.space36,
   },
 });

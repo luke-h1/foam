@@ -22,10 +22,12 @@ function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
   switch (variant) {
     case 'development':
       return platformConfig?.development ?? '';
+    case 'internal':
+      return platformConfig?.internal ?? '';
+    case 'testflight':
+      return platformConfig?.testflight ?? '';
     case 'production':
       return platformConfig?.production ?? '';
-    case 'preview':
-      return platformConfig?.preview ?? '';
     default:
       return '';
   }
@@ -115,23 +117,23 @@ export function ForceUpdateModal() {
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colors.gray.bgAlt,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
     borderWidth: 1,
     maxWidth: 340,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.xl,
+    paddingHorizontal: theme.space28,
+    paddingVertical: theme.space28,
     width: '100%',
   },
   iconContainer: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colors.accent.ui,
+    backgroundColor: theme.colorDarkGreen,
     borderRadius: 36,
     height: 72,
     justifyContent: 'center' as const,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.space20,
     width: 72,
   },
   overlay: {
@@ -139,29 +141,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
     flex: 1,
     justifyContent: 'center' as const,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.space20,
   },
   subtitle: {
     lineHeight: 20,
-    marginBottom: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
+    marginBottom: theme.space20,
+    marginTop: theme.space12,
   },
   updateButton: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colors.accent.accent,
+    backgroundColor: theme.colorDarkGreen,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     justifyContent: 'center' as const,
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.space16,
     width: '100%',
   },
   versionInfo: {
-    backgroundColor: theme.colors.gray.ui,
+    backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.lg,
-    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius16,
+    gap: theme.space8,
+    marginBottom: theme.space20,
+    padding: theme.space16,
     width: '100%',
   },
   versionRow: {

@@ -12,6 +12,7 @@ import {
 } from '@app/store/chatStore/cosmetics';
 import type { SanitisedEmote } from '@app/types/emote';
 import { renderHook, act } from '@testing-library/react-native';
+import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 
 jest.mock('@app/store/chatStore/cosmetics', () => ({
@@ -33,16 +34,41 @@ jest.mock('@app/utils/logger', () => ({
   logger: { stvWs: { info: jest.fn(), debug: jest.fn() } },
 }));
 
+jest.mock('@app/utils/emote/stv/generateSevenTvEmoteNotice', () => ({
+  generateStvEmoteNotice: jest.fn(args => ({
+    id: `${args.type}-${args.emote.id}`,
+    channel: args.channelName,
+    message: [],
+    message_id: `${args.type}-${args.emote.id}`,
+    message_nonce: 'nonce',
+    badges: [],
+    sender: '',
+    replyDisplayName: '',
+    replyBody: '',
+    parentDisplayName: '',
+    userstate: {
+      'reply-parent-msg-id': '',
+      'reply-parent-msg-body': '',
+      'reply-parent-display-name': '',
+      'reply-parent-user-login': '',
+    },
+    isSpecialNotice: true,
+  })),
+}));
+
 const mockUpdateSevenTvEmotes = jest.fn();
 const mockFetchAndCacheUserCosmetics = jest.fn().mockResolvedValue(undefined);
 const mockCanFetchCosmetics = jest.fn().mockReturnValue(true);
+const mockOnEmoteNotice = jest.fn();
 
 const defaultProps = {
   channelId: 'twitch-123',
+  channelName: 'testchannel',
   sevenTvEmoteSetId: 'emote-set-1',
   canFetchCosmetics: mockCanFetchCosmetics,
   fetchAndCacheUserCosmetics: mockFetchAndCacheUserCosmetics,
   updateSevenTvEmotes: mockUpdateSevenTvEmotes,
+  onEmoteNotice: mockOnEmoteNotice,
 };
 
 describe('useChatSevenTvCallbacks', () => {
@@ -89,6 +115,35 @@ describe('useChatSevenTvCallbacks', () => {
         [{ id: 'e1' }],
         [{ id: 'e2' }],
       );
+    });
+
+    test('emits notice messages for added and removed emotes', () => {
+      const { result } = renderHook(() =>
+        useChatSevenTvCallbacks(defaultProps),
+      );
+
+      const added = [{ id: 'e1', name: 'Added' } as SanitisedEmote];
+      const removed = [{ id: 'e2', name: 'Removed' } as SanitisedEmote];
+
+      act(() => {
+        result.current.onEmoteUpdate({
+          channelId: 'c1',
+          added,
+          removed,
+        });
+      });
+
+      expect(generateStvEmoteNotice).toHaveBeenCalledWith({
+        channelName: 'testchannel',
+        emote: added[0],
+        type: 'added',
+      });
+      expect(generateStvEmoteNotice).toHaveBeenCalledWith({
+        channelName: 'testchannel',
+        emote: removed[0],
+        type: 'removed',
+      });
+      expect(mockOnEmoteNotice).toHaveBeenCalledTimes(2);
     });
   });
 

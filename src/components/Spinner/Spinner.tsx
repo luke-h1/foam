@@ -24,7 +24,7 @@ export function Spinner() {
 
 const styles = StyleSheet.create({
   circle: {
-    borderColor: theme.colors.black.bgAlpha,
+    borderColor: theme.colorBlackOverlay,
     borderRadius: 20,
     borderWidth: 5,
     height: 40,

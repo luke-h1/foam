@@ -108,51 +108,82 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
               months: number; // months
             };
           }
-        : TType extends 'anongiftpaidupgrade'
+        : TType extends 'submysterygift'
           ? {
               type: TType;
               subscriptionEvent: {
-                msgId: 'anongiftpaidupgrade';
+                msgId: 'submysterygift';
                 displayName: string;
                 message?: string;
-                promoName: string; // promo-name
-                promoGiftTotal: string; // promo-gift-total
+                plan?: string;
+                planName?: string;
+                massGiftCount?: number;
+                senderCount?: number;
               };
             }
-          : TType extends 'viewermilestone'
+          : TType extends 'giftpaidupgrade'
             ? {
                 type: TType;
-                category: string;
-                reward: string;
-                value: string;
-                content: string;
-                systemMsg: string; //"LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
-                login: string;
-                displayName: string;
+                subscriptionEvent: {
+                  msgId: 'giftpaidupgrade';
+                  displayName: string;
+                  message?: string;
+                  senderLogin?: string;
+                  senderName?: string;
+                  promoName?: string;
+                  promoGiftTotal?: string;
+                };
               }
-            : /**
-               * Normal message
-               */
-              Pick<
-                Partial<SanitisedEmote>,
-                'creator' | 'emote_link' | 'original_name' | 'site' | 'url'
-              > & {
-                id?: string;
-                name?: string;
-                flags?: number;
-                type: TType;
-                content: string;
-                color?: string;
-                width?: number;
-                height?: number;
-                aspect_ratio?: number;
-                zero_width?: boolean;
+            : TType extends 'anongiftpaidupgrade'
+              ? {
+                  type: TType;
+                  subscriptionEvent: {
+                    msgId: 'anongiftpaidupgrade';
+                    displayName: string;
+                    message?: string;
+                    promoName: string; // promo-name
+                    promoGiftTotal: string; // promo-gift-total
+                  };
+                }
+              : TType extends 'viewermilestone'
+                ? {
+                    type: TType;
+                    category: string;
+                    reward: string;
+                    value: string;
+                    content: string;
+                    systemMsg: string; //"LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
+                    login: string;
+                    displayName: string;
+                  }
+                : /**
+                   * Normal message
+                   */
+                  Pick<
+                    Partial<SanitisedEmote>,
+                    | 'creator'
+                    | 'emote_link'
+                    | 'original_name'
+                    | 'site'
+                    | 'static_url'
+                    | 'url'
+                  > & {
+                    id?: string;
+                    name?: string;
+                    flags?: number;
+                    type: TType;
+                    content: string;
+                    color?: string;
+                    width?: number;
+                    height?: number;
+                    aspect_ratio?: number;
+                    zero_width?: boolean;
 
-                /**
-                 * Used for emote and twitch clip previews
-                 */
-                thumbnail?: string;
-              };
+                    /**
+                     * Used for emote and twitch clip previews
+                     */
+                    thumbnail?: string;
+                  };
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
@@ -343,6 +374,7 @@ function parseLink(url: string): ParsedPart | null {
  */
 export function replaceTextWithEmotes({
   inputString,
+  emojiEmotes = [],
   sevenTvChannelEmotes,
   sevenTvGlobalEmotes,
   sevenTvPersonalEmotes = [],
@@ -356,6 +388,7 @@ export function replaceTextWithEmotes({
 }: {
   inputString: string;
   userstate: UserStateTags | null;
+  emojiEmotes?: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
   sevenTvChannelEmotes: SanitisedEmote[];
   sevenTvPersonalEmotes?: SanitisedEmote[];
@@ -371,6 +404,7 @@ export function replaceTextWithEmotes({
   }
 
   const emoteMap = new Map<string, SanitisedEmote>();
+  const emojiMap = new Map<string, SanitisedEmote>();
 
   /**
    * Personal emotes have the highest priority (only the sender can use them)
@@ -386,6 +420,7 @@ export function replaceTextWithEmotes({
   ] as const;
 
   const globalEmotes = [
+    ...emojiEmotes,
     ...sevenTvGlobalEmotes,
     ...twitchGlobalEmotes,
     ...ffzGlobalEmotes,
@@ -409,6 +444,10 @@ export function replaceTextWithEmotes({
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
     }
+
+    if (emote.site === 'Emoji' && !emojiMap.has(emote.id)) {
+      emojiMap.set(emote.id, emote);
+    }
   });
 
   const sanitizedInput = sanitizeInput(inputString);
@@ -420,18 +459,21 @@ export function replaceTextWithEmotes({
     splitParts.forEach(({ emoji, text }) => {
       if (emoji) {
         const unifiedEmoji = decodeEmojiToUnified(emoji);
-        const foundEmote = emoteMap.get(unifiedEmoji);
+        const foundEmote =
+          emojiMap.get(unifiedEmoji) ?? emoteMap.get(unifiedEmoji);
 
         if (foundEmote) {
           replacedParts.push({
             id: foundEmote.id,
             name: foundEmote.name,
             type: 'emote',
-            content: foundEmote.name,
+            content: foundEmote.site === 'Emoji' ? emoji : foundEmote.name,
             creator: foundEmote.creator,
             emote_link: foundEmote.emote_link,
-            original_name: foundEmote.original_name,
+            original_name:
+              foundEmote.site === 'Emoji' ? emoji : foundEmote.original_name,
             site: foundEmote.site,
+            static_url: foundEmote.static_url,
             thumbnail: foundEmote.url,
             url: foundEmote.url,
             aspect_ratio: foundEmote.aspect_ratio,
@@ -467,6 +509,7 @@ export function replaceTextWithEmotes({
                 creator: emoteInMention.creator,
                 emote_link: emoteInMention.emote_link,
                 original_name: emoteInMention.original_name,
+                static_url: emoteInMention.static_url,
                 url: emoteInMention.url,
                 thumbnail: emoteInMention.url,
                 site: emoteInMention.site,

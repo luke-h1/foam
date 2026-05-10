@@ -49,59 +49,17 @@ jobs:
 
       - name: 🔎 Fetch current rollout state
         id: current
-        run: |
-          set -euo pipefail
-
-          OTA_ID="${{ inputs.ota_id }}"
-          VIEW_OUTPUT="$(eas update:view "$OTA_ID" 2>&1 || true)"
-
-          echo "::group::eas update:view output ($OTA_ID)"
-          echo "$VIEW_OUTPUT"
-          echo "::endgroup::"
-
-          if [ -z "$VIEW_OUTPUT" ]; then
-            echo "::error::Failed to view update group. Make sure ota_id is an update group ID."
-            exit 1
-          fi
-
-          CURRENT_ROLLOUT="$(echo "$VIEW_OUTPUT" | awk -F'  +' '/^Rollout Percentage/{gsub(/%/,"",$NF); print $NF}' | tr -d '[:space:]')"
-
-          if [ -z "$CURRENT_ROLLOUT" ]; then
-            echo "::warning::No rollout percentage was found in eas update:view output. This update group likely is not a rollout update."
-            echo "is_rollout=false" >> "$GITHUB_OUTPUT"
-            echo "current_rollout=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "is_rollout=true" >> "$GITHUB_OUTPUT"
-          echo "current_rollout=$CURRENT_ROLLOUT" >> "$GITHUB_OUTPUT"
-          echo "Current rollout: $CURRENT_ROLLOUT%"
+        run: >
+          bunx tsx scripts/workflows/rollout-ota.ts fetch-current
+          --ota-id "${{ inputs.ota_id }}"
 
       - name: ✏️ Progress rollout
         if: ${{ steps.current.outputs.is_rollout == 'true' && steps.current.outputs.current_rollout != inputs.target_percentage }}
-        run: |
-          set -euo pipefail
-
-          OTA_ID="${{ inputs.ota_id }}"
-          TARGET="${{ inputs.target_percentage }}"
-          CURRENT="${{ steps.current.outputs.current_rollout }}"
-
-          if ! echo "$TARGET" | grep -Eq '^[0-9]+$'; then
-            echo "::error::target_percentage must be an integer between 1 and 100."
-            exit 1
-          fi
-
-          if [ "$TARGET" -lt 1 ] || [ "$TARGET" -gt 100 ]; then
-            echo "::error::target_percentage must be an integer between 1 and 100."
-            exit 1
-          fi
-
-          if [ "$TARGET" -lt "$CURRENT" ]; then
-            echo "::warning::Target rollout ($TARGET%) is lower than the current rollout ($CURRENT%). Proceeding anyway."
-          fi
-
-          echo "Setting rollout for $OTA_ID to $TARGET%..."
-          eas update:edit "$OTA_ID" --rollout-percentage "$TARGET" --non-interactive
+        run: >
+          bunx tsx scripts/workflows/rollout-ota.ts progress
+          --ota-id "${{ inputs.ota_id }}"
+          --target "${{ inputs.target_percentage }}"
+          --current "${{ steps.current.outputs.current_rollout }}"
 
       - name: 📊 Summary
         run: |

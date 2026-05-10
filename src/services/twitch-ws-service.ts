@@ -75,6 +75,10 @@ class TwitchWsService {
   private static isReconnecting: boolean = false;
 
   private static activeSubscriptions: Map<string, string> = new Map(); // eventType -> subscriptionId
+  private static subscriptionConfigs: Map<
+    string,
+    { version: string; condition: Record<string, string> }
+  > = new Map();
 
   // eslint-disable-next-line no-empty-function
   private constructor() {}
@@ -339,13 +343,20 @@ class TwitchWsService {
     condition: Record<string, string>,
     callback: EventCallback,
   ): Promise<void> {
+    TwitchWsService.addEventListener(eventType, callback);
+    TwitchWsService.subscriptionConfigs.set(eventType, { version, condition });
+
     if (!TwitchWsService.sessionId) {
-      logger.twitchWs.warn('💜 Cannot subscribe - no active session');
+      TwitchWsService.getInstance();
+      logger.twitchWs.info(
+        `💜 Delaying ${eventType} subscription until EventSub session is ready`,
+      );
       return;
     }
 
-    // Add callback first
-    TwitchWsService.addEventListener(eventType, callback);
+    if (TwitchWsService.activeSubscriptions.has(eventType)) {
+      return;
+    }
 
     try {
       const response = await twitchService.createEventSubscription({
@@ -379,23 +390,27 @@ class TwitchWsService {
     eventType: string,
     callback?: EventCallback,
   ): Promise<void> {
-    const subscriptionId = TwitchWsService.activeSubscriptions.get(eventType);
+    if (callback) {
+      TwitchWsService.removeEventListener(eventType, callback);
+      const remainingCallbacks = TwitchWsService.eventCallbacks.get(eventType);
+      if (remainingCallbacks && remainingCallbacks.length > 0) {
+        return;
+      }
+    } else {
+      TwitchWsService.eventCallbacks.delete(eventType);
+    }
 
+    TwitchWsService.subscriptionConfigs.delete(eventType);
+
+    const subscriptionId = TwitchWsService.activeSubscriptions.get(eventType);
     if (!subscriptionId) {
-      logger.twitchWs.warn(`💜 No active subscription found for ${eventType}`);
       return;
     }
 
     try {
       await twitchService.deleteEventSubscription(subscriptionId);
       TwitchWsService.activeSubscriptions.delete(eventType);
-
-      if (callback) {
-        TwitchWsService.removeEventListener(eventType, callback);
-      } else {
-        // Remove all callbacks for this event type
-        TwitchWsService.eventCallbacks.delete(eventType);
-      }
+      TwitchWsService.eventCallbacks.delete(eventType);
 
       logger.twitchWs.info(
         `💜 Successfully unsubscribed from ${eventType} (ID: ${subscriptionId})`,
@@ -412,7 +427,7 @@ class TwitchWsService {
    * Re-subscribe to events after reconnection
    */
   private static resubscribeToEvents(): void {
-    const eventTypes = Array.from(TwitchWsService.eventCallbacks.keys());
+    const eventTypes = Array.from(TwitchWsService.subscriptionConfigs.keys());
 
     if (eventTypes.length === 0) {
       return;
@@ -427,11 +442,13 @@ class TwitchWsService {
 
     eventTypes.forEach(eventType => {
       const callbacks = TwitchWsService.eventCallbacks.get(eventType);
-      if (callbacks && callbacks.length > 0) {
-        // For now, we'll need the caller to provide version and condition
-        // This is a limitation that could be improved by storing subscription metadata
-        logger.twitchWs.warn(
-          `💜 Cannot auto-resubscribe to ${eventType} - need version and condition info`,
+      const config = TwitchWsService.subscriptionConfigs.get(eventType);
+      if (callbacks && callbacks.length > 0 && config) {
+        void TwitchWsService.subscribeToEvent(
+          eventType,
+          config.version,
+          config.condition,
+          callbacks[0] as EventCallback,
         );
       }
     });
@@ -531,7 +548,12 @@ class TwitchWsService {
       TwitchWsService.eventCallbacks.set(eventType, []);
     }
 
-    TwitchWsService.eventCallbacks.get(eventType)?.push(callback);
+    const callbacks = TwitchWsService.eventCallbacks.get(eventType);
+    if (callbacks?.includes(callback)) {
+      return;
+    }
+
+    callbacks?.push(callback);
     logger.twitchWs.info(`💜 Added event listener for ${eventType}`);
   }
 

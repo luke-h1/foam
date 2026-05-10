@@ -3,35 +3,72 @@
 
 import axios from 'axios';
 import dotenv from 'dotenv';
-import express, { Request, Response } from 'express';
+import express from 'express';
 
 dotenv.config();
 
+const renderRedirectPage = ({
+  targetPrefix,
+  title,
+}: {
+  targetPrefix: string;
+  title: string;
+}) => `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>${title}</title>
+  </head>
+  <body>
+    <h1>Redirecting…</h1>
+    <script>
+      const search = window.location.search.replace(/^\\?/, '');
+      const hash = window.location.hash.replace(/^#/, '');
+      const params = new URLSearchParams(search);
+      const hashParams = new URLSearchParams(hash);
+
+      for (const [key, value] of hashParams.entries()) {
+        params.set(key, value);
+      }
+
+      const query = params.toString();
+      window.location.replace(query ? '${targetPrefix}?' + query : '${targetPrefix}');
+    </script>
+  </body>
+</html>
+`;
+
 const main = async () => {
-  const app = express();
+  const app: any = express();
 
-  app.get('/api/proxy-expo-go', async (req: Request, res: Response) => {
-    // This is fragile and won't work in many cases. It's just an example. Physical devices, and android emulators will need the full IP address instead of localhost.
-    // This also assumes the dev server is running on port 8081.
-    const redirectUri = `exp://localhost:8081/--/?${new URL(req.url, 'http://a').searchParams}`;
-
-    console.log(`Redirect to expo-go app -> ${redirectUri}`);
-
-    return res.status(302).redirect(redirectUri);
+  app.get('/api/proxy-expo-go', (_req: any, res: any) => {
+    return res.status(200).send(
+      renderRedirectPage({
+        targetPrefix: 'exp://localhost:8081/--/',
+        title: 'Redirecting to Expo Go',
+      }),
+    );
   });
 
-  app.get('/api/proxy', async (req: Request, res: Response) => {
-    const redirectUri = `foam://?${new URL(req.url, 'http://a').searchParams}`;
-
-    console.info(`redirecting to app with redirect_uri -> ${redirectUri}`);
-
-    return res.status(302).redirect(redirectUri);
+  app.get('/api/proxy', (_req: any, res: any) => {
+    return res
+      .status(200)
+      .send(
+        renderRedirectPage({
+          targetPrefix: 'foam://',
+          title: 'Redirecting to Foam',
+        }),
+      );
   });
 
   app.get(
     '/api/proxy/default-token',
-    // @ts-expect-error express type issue
-    async (req: Request, res: Response) => {
+    async (_req: any, res: any) => {
       const { data } = await axios.post(
         'https://id.twitch.tv/oauth2/token',
         null,
@@ -52,7 +89,7 @@ const main = async () => {
     },
   );
 
-  app.get('/api/stream', (req: Request, res: Response) => {
+  app.get('/api/stream', (req: any, res: any) => {
     const channel = (req.query.channel as string) || 'forsen';
     const video = req.query.video as string | undefined;
     const host = req.get('host') || 'localhost';
@@ -128,8 +165,7 @@ const main = async () => {
     `);
   });
 
-  // @ts-expect-error - express type definitions are incorrect
-  app.get('/api/pending', async (req: Request, res: Response) => {
+  app.get('/api/pending', async (req: any, res: any) => {
     return res.status(200).send(`
       <html>
         <head>

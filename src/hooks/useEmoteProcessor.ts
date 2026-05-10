@@ -5,6 +5,7 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useCallback } from 'react';
 
 interface UseEmoteProcessorParams {
+  emojiEmotes?: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
   sevenTvChannelEmotes: SanitisedEmote[];
   sevenTvPersonalEmotes?: SanitisedEmote[];

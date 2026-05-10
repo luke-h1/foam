@@ -13,6 +13,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, AppStateStatus, Platform } from 'react-native';
 
 const MINIMUM_MINIMIZE_TIME = 5 * 60e3; // 5 minutes
+const PERIODIC_CHECK_INTERVAL = 30 * 60e3; // 30 minutes
+
+type OTAUpdateUrgency = 'normal' | 'critical';
+
+type ExpoManifestLike = NonNullable<
+  ReturnType<typeof useUpdates>['currentlyRunning']['manifest']
+>;
+
+type OtaExtra = {
+  ota?: {
+    criticalIndex?: number;
+  };
+};
 
 async function setExtraParams() {
   await setExtraParamAsync(
@@ -34,7 +47,41 @@ interface UseOTAUpdatesOptions {
 
 export type OTAUpdateState = {
   status: 'idle' | 'checking' | 'downloading' | 'available' | 'pending';
+  urgency: OTAUpdateUrgency;
+  criticalIndex: number;
 };
+
+function getCriticalIndexFromManifest(
+  manifest?: Partial<ExpoManifestLike>,
+): number {
+  if (!manifest || !('extra' in manifest) || !manifest.extra) {
+    return 0;
+  }
+
+  const extra = manifest.extra as {
+    expoClient?: {
+      extra?: OtaExtra;
+    };
+  };
+
+  const maybeIndex = extra.expoClient?.extra?.ota?.criticalIndex;
+  return typeof maybeIndex === 'number' && Number.isFinite(maybeIndex)
+    ? maybeIndex
+    : 0;
+}
+
+function resolveUpdateUrgency(
+  currentManifest?: Partial<ExpoManifestLike>,
+  nextManifest?: Partial<ExpoManifestLike>,
+): { criticalIndex: number; urgency: OTAUpdateUrgency } {
+  const currentIndex = getCriticalIndexFromManifest(currentManifest);
+  const nextIndex = getCriticalIndexFromManifest(nextManifest);
+
+  return {
+    criticalIndex: nextIndex,
+    urgency: nextIndex > currentIndex ? 'critical' : 'normal',
+  };
+}
 
 export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
   const shouldReceiveUpdates = isEnabled && !__DEV__;
@@ -45,6 +92,15 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const updates = useUpdates();
+  const currentManifest = updates.currentlyRunning.manifest;
+  const pendingUrgency = resolveUpdateUrgency(
+    currentManifest,
+    updates.downloadedUpdate?.manifest,
+  );
+  const availableUrgency = resolveUpdateUrgency(
+    currentManifest,
+    updates.availableUpdate?.manifest,
+  );
 
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -54,15 +110,23 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
   // Determine update state from expo-updates
   const updateState: OTAUpdateState = useMemo(() => {
     let status: OTAUpdateState['status'] = 'idle';
+    let urgency: OTAUpdateUrgency = 'normal';
+    let criticalIndex = 0;
 
     if (updates.isUpdatePending) {
       status = 'pending';
+      urgency = pendingUrgency.urgency;
+      criticalIndex = pendingUrgency.criticalIndex;
     } else if (updates.isDownloading) {
       status = 'downloading';
+      urgency = availableUrgency.urgency;
+      criticalIndex = availableUrgency.criticalIndex;
     } else if (updates.isChecking) {
       status = 'checking';
     } else if (updates.isUpdateAvailable) {
       status = 'available';
+      urgency = availableUrgency.urgency;
+      criticalIndex = availableUrgency.criticalIndex;
     }
 
     // Log state changes as breadcrumbs (only when state actually changes)
@@ -78,17 +142,23 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
           isDownloading: updates.isDownloading,
           isChecking: updates.isChecking,
           isUpdateAvailable: updates.isUpdateAvailable,
+          urgency,
+          criticalIndex,
         },
       });
       previousState.current = status;
     }
 
-    return { status };
+    return { status, urgency, criticalIndex };
   }, [
     updates.isUpdatePending,
     updates.isDownloading,
     updates.isChecking,
     updates.isUpdateAvailable,
+    pendingUrgency.urgency,
+    pendingUrgency.criticalIndex,
+    availableUrgency.urgency,
+    availableUrgency.criticalIndex,
   ]);
 
   const checkForUpdates = useCallback(async () => {
@@ -116,6 +186,9 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
 
       const res = await checkForUpdateAsync();
       setLastChecked(new Date());
+      const urgency = res.isAvailable
+        ? resolveUpdateUrgency(currentManifest, res.manifest)
+        : { urgency: 'normal' as const, criticalIndex: 0 };
 
       sentryService.setContext('ota_update_check', {
         isAvailable: res.isAvailable,
@@ -128,6 +201,8 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
         buildVersion: nativeBuildVersion,
         platform: Platform.OS,
         timestamp: new Date().toISOString(),
+        urgency: urgency.urgency,
+        criticalIndex: urgency.criticalIndex,
       });
 
       if (res.isAvailable) {
@@ -138,13 +213,17 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
           level: 'info',
           data: {
             manifestId: res.manifest?.id,
+            urgency: urgency.urgency,
+            criticalIndex: urgency.criticalIndex,
           },
         });
 
         countMetric('ota.update.available', {
           channel: Updates.channel || 'unknown',
           environment: isProduction ? 'production' : 'non-production',
+          critical_index: urgency.criticalIndex,
           platform: Platform.OS,
+          urgency: urgency.urgency,
         });
 
         sentryService.addBreadcrumb({
@@ -164,15 +243,19 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
         countMetric('ota.update.fetched', {
           channel: Updates.channel || 'unknown',
           environment: isProduction ? 'production' : 'non-production',
+          critical_index: urgency.criticalIndex,
           platform: Platform.OS,
+          urgency: urgency.urgency,
         });
 
         sentryService.addBreadcrumb({
           category: 'ota',
-          message: 'OTA update fetched, waiting for pending state',
+          message:
+            urgency.urgency === 'critical'
+              ? 'Critical OTA update fetched and waiting for install'
+              : 'OTA update fetched in background; will apply on next cold start',
           level: 'info',
         });
-        // Modal will be shown by the useEffect that watches isUpdatePending
       } else {
         console.debug('No update available.');
         sentryService.addBreadcrumb({
@@ -183,7 +266,7 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
       }
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
-      console.error('OTA Update Error', { error: `${e}` });
+      console.error('OTA Update Error', { error: error.message });
 
       sentryService.captureException(error, {
         tags: {
@@ -193,12 +276,13 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
         extra: {
           channel: Updates.channel || 'unknown',
           buildVersion: nativeBuildVersion,
+          currentCriticalIndex: getCriticalIndexFromManifest(currentManifest),
           platform: Platform.OS,
           isProduction,
         },
       });
     }
-  }, [isProduction]);
+  }, [currentManifest, isProduction]);
 
   const handleApply = useCallback(async () => {
     setModalVisible(false);
@@ -218,8 +302,10 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
     countMetric('ota.update.applied', {
       channel: Updates.channel || 'unknown',
       environment: isProduction ? 'production' : 'non-production',
+      critical_index: updateState.criticalIndex,
       method: 'manual',
       platform: Platform.OS,
+      urgency: updateState.urgency,
     });
 
     sentryService.addBreadcrumb({
@@ -233,7 +319,7 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
     // state changes made before the reload won't persist anyway. The app will
     // start fresh with a clean navigation stack and re-hydrate auth from SecureStore.
     await reloadAsync();
-  }, [isProduction]);
+  }, [isProduction, updateState.criticalIndex, updateState.urgency]);
 
   const handleDismiss = useCallback(() => {
     setModalVisible(false);
@@ -297,45 +383,30 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
             : null,
           buildVersion: nativeBuildVersion,
           channel: Updates.channel || 'unknown',
+          criticalIndex: pendingUrgency.criticalIndex,
           isProduction,
           platform: Platform.OS,
+          urgency: pendingUrgency.urgency,
         },
       });
 
       countMetric('ota.update.pending', {
         channel: Updates.channel || 'unknown',
+        critical_index: pendingUrgency.criticalIndex,
         environment: isProduction ? 'production' : 'non-production',
         platform: Platform.OS,
+        urgency: pendingUrgency.urgency,
       });
 
-      if (isProduction) {
-        // In production, auto-reload immediately for instant OTA
+      if (pendingUrgency.urgency === 'critical') {
         sentryService.addBreadcrumb({
           category: 'ota',
-          message: 'OTA update auto-reloading in production',
+          message: 'Showing blocking install prompt for critical OTA update',
           level: 'info',
         });
 
-        countMetric('ota.update.applied', {
-          channel: Updates.channel || 'unknown',
-          environment: 'production',
-          method: 'auto',
-          platform: Platform.OS,
-        });
-
-        sentryService.addBreadcrumb({
-          category: 'ota',
-          message: 'Auto-reloading app in production to apply OTA update',
-          level: 'info',
-        });
-
-        // Note: We don't clear navigation state or React Query cache before reload
-        // because reloadAsync() completely restarts the app, and any JavaScript
-        // state changes made before the reload won't persist anyway. The app will
-        // start fresh with a clean navigation stack and re-hydrate auth from SecureStore.
-        void reloadAsync();
-      } else {
-        // In non-production, show modal to let user choose
+        setModalVisible(true);
+      } else if (!isProduction) {
         sentryService.addBreadcrumb({
           category: 'ota',
           message: 'Showing OTA update modal to user',
@@ -343,6 +414,14 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
         });
 
         setModalVisible(true);
+      } else {
+        sentryService.addBreadcrumb({
+          category: 'ota',
+          message:
+            'Non-critical OTA update downloaded in background; deferring install to next cold start',
+          level: 'info',
+        });
+        setModalVisible(false);
       }
     }
   }, [
@@ -351,6 +430,8 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
     updates.isChecking,
     updates.availableUpdate,
     isProduction,
+    pendingUrgency.criticalIndex,
+    pendingUrgency.urgency,
   ]);
 
   // After the app has been minimized for 5 minutes, we want to either A. install an update if one has become available
@@ -374,17 +455,19 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
 
           if (shouldUpdate) {
             if (updates.isUpdatePending) {
-              sentryService.addBreadcrumb({
-                category: 'ota',
-                message: 'App foregrounded with pending update, reloading',
-                level: 'info',
-                data: {
-                  timeSinceMinimize: Date.now() - lastMinimize.current,
-                  isProduction,
-                },
-              });
-
-              await reloadAsync();
+              if (pendingUrgency.urgency === 'critical') {
+                sentryService.addBreadcrumb({
+                  category: 'ota',
+                  message:
+                    'App foregrounded with pending critical update, showing install prompt',
+                  level: 'info',
+                  data: {
+                    timeSinceMinimize: Date.now() - lastMinimize.current,
+                    isProduction,
+                  },
+                });
+                setModalVisible(true);
+              }
             } else {
               sentryService.addBreadcrumb({
                 category: 'ota',
@@ -411,7 +494,27 @@ export function useOTAUpdates({ isReady }: UseOTAUpdatesOptions) {
       clearTimeout(timeout.current);
       subscription.remove();
     };
-  }, [updates.isUpdatePending, checkForUpdates, isReady, isProduction]);
+  }, [
+    updates.isUpdatePending,
+    checkForUpdates,
+    isReady,
+    isProduction,
+    pendingUrgency.urgency,
+  ]);
+
+  useEffect(() => {
+    if (!isReady || !shouldReceiveUpdates) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      void checkForUpdates();
+    }, PERIODIC_CHECK_INTERVAL);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [checkForUpdates, isReady, shouldReceiveUpdates]);
 
   return {
     lastChecked,

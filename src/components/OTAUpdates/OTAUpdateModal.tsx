@@ -23,6 +23,20 @@ export function OTAUpdateModal({
   const insets = useSafeAreaInsets();
   const isDownloading = updateState.status === 'downloading';
   const isPending = updateState.status === 'pending';
+  const isCritical = updateState.urgency === 'critical';
+  const title = isCritical ? 'Critical Update Ready' : 'Update Available';
+  const subtitle = isCritical
+    ? isPending
+      ? 'An urgent fix has been downloaded. Install it now to continue with the latest version of Foam.'
+      : 'An urgent fix is being downloaded now. Install will be available as soon as the download completes.'
+    : 'A new version of Foam has been downloaded and is ready to install. Relaunch to apply the update.';
+  const actionLabel = isDownloading
+    ? isCritical
+      ? 'Downloading critical update...'
+      : 'Downloading...'
+    : isCritical
+      ? 'Install update'
+      : 'Relaunch';
 
   return (
     <RNModal
@@ -36,13 +50,13 @@ export function OTAUpdateModal({
           <View style={styles.iconContainer}>
             <IconSymbol
               name="arrow.down.circle.fill"
-              color={theme.colors.green.accent}
+              color={theme.colorGreen}
               size={40}
             />
           </View>
 
           <Text color="gray" type="xl" weight="bold" align="center">
-            Update Available
+            {title}
           </Text>
 
           <Text
@@ -51,8 +65,7 @@ export function OTAUpdateModal({
             align="center"
             style={styles.subtitle}
           >
-            A new version of Foam has been downloaded and is ready to install.
-            Relaunch to apply the update.
+            {subtitle}
           </Text>
 
           <View style={styles.versionInfo}>
@@ -72,15 +85,17 @@ export function OTAUpdateModal({
             disabled={isDownloading || !isPending}
           >
             <Text color="accent" contrast type="md" weight="semibold">
-              {isDownloading ? 'Downloading...' : 'Relaunch'}
+              {actionLabel}
             </Text>
           </Button>
 
-          <Button onPress={onDismiss} style={styles.dismissButton}>
-            <Text color="gray.textLow" type="sm" weight="medium">
-              Defer
-            </Text>
-          </Button>
+          {!isCritical ? (
+            <Button onPress={onDismiss} style={styles.dismissButton}>
+              <Text color="gray.textLow" type="sm" weight="medium">
+                Defer
+              </Text>
+            </Button>
+          ) : null}
         </View>
       </View>
     </RNModal>
@@ -90,39 +105,39 @@ export function OTAUpdateModal({
 const styles = StyleSheet.create({
   applyButton: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colors.green.accent,
+    backgroundColor: theme.colorGreen,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     justifyContent: 'center' as const,
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.space16,
     width: '100%',
   },
   card: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colors.gray.bgAlt,
-    borderColor: theme.colors.gray.border,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
     borderWidth: 1,
     maxWidth: 340,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.xl,
+    paddingHorizontal: theme.space28,
+    paddingVertical: theme.space28,
     width: '100%',
   },
   dismissButton: {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    marginTop: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
+    marginTop: theme.space12,
+    paddingVertical: theme.space12,
     width: '100%',
   },
   iconContainer: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colors.green.uiAlpha,
+    backgroundColor: theme.colorGreenSurface,
     borderRadius: 36,
     height: 72,
     justifyContent: 'center' as const,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.space20,
     width: 72,
   },
   overlay: {
@@ -130,20 +145,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
     flex: 1,
     justifyContent: 'center' as const,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.space20,
   },
   subtitle: {
     lineHeight: 20,
-    marginBottom: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
+    marginBottom: theme.space20,
+    marginTop: theme.space12,
   },
   versionInfo: {
-    backgroundColor: theme.colors.gray.ui,
+    backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.lg,
-    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius16,
+    gap: theme.space8,
+    marginBottom: theme.space20,
+    padding: theme.space16,
     width: '100%',
   },
   versionRow: {

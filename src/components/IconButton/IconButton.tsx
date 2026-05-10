@@ -1,4 +1,4 @@
-import { Spacing } from '@app/styles/spacing';
+import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 import { type SFSymbol, SymbolView } from 'expo-symbols';
 import { Insets, StyleProp, ViewStyle, StyleSheet } from 'react-native';
@@ -55,8 +55,8 @@ export function IconButton({
       return (
         <SymbolView
           name={icon.name}
-          size={icon.size ?? theme.spacing[size]}
-          tintColor={icon.color ?? theme.colors.gray.accent}
+          size={icon.size ?? resolveSpacingValue(theme, size)}
+          tintColor={icon.color ?? theme.colorGrey}
         />
       );
     }
@@ -85,8 +85,10 @@ const styles = StyleSheet.create({
 });
 
 function getButtonSizeStyle(size: Spacing) {
+  const dimension = resolveSpacingValue(theme, size);
+
   return {
-    height: theme.spacing[size],
-    width: theme.spacing[size],
+    height: dimension,
+    width: dimension,
   };
 }

@@ -1,0 +1,15 @@
+{
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 80,
+  "sortPackageJson": true,
+  "ignorePatterns": [
+    "node_modules",
+    ".next",
+    "public",
+    "build"
+  ]
+}

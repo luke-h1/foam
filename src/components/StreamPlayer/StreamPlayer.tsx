@@ -2,9 +2,9 @@ import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/Text/Text';
+import { impact } from '@app/services/haptics-service';
 import { countMetric, sentryService } from '@app/services/sentry-service';
 import { theme } from '@app/styles/themes';
-import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   forwardRef,
@@ -23,7 +23,11 @@ import {
   View,
   StyleSheet,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  Directions,
+  Gesture,
+  GestureDetector,
+} from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -33,6 +37,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import type {
+  OnShouldStartLoadWithRequest,
   WebViewError,
   WebViewHttpError,
 } from 'react-native-webview/lib/WebViewTypes';
@@ -211,6 +216,10 @@ export interface StreamPlayerProps {
    */
   onVideoAreaPress?: () => void;
   /**
+   * Optional callback when the user swipes down on the video area.
+   */
+  onVideoAreaSwipeDown?: () => void;
+  /**
    * Callback when the embed WebView has finished loading. Use to sync IRC connections (only after player is ready).
    */
   onWebViewLoaded?: () => void;
@@ -225,6 +234,10 @@ export interface StreamPlayerProps {
    * When set, WebView loads Twitch embed via proxy instead of direct player URL.
    */
   streamProxyBaseUrl?: string;
+  /**
+   * Experiment: restrict top-level WebView navigations to Twitch player/auth URLs.
+   */
+  restrictWebViewNavigationToTwitchPlayer?: boolean;
   /**
    * Show custom overlay controls
    * @default true
@@ -248,11 +261,22 @@ interface PlayerState {
   channel?: string;
   currentTime: number;
   duration: number;
+  isPaused: boolean;
+  muted: boolean;
+  quality: string;
+  volume: number;
+}
+
+interface PlayerStatusState {
+  isBuffering: boolean;
+  isReady: boolean;
+}
+
+interface PlayerStateUpdatePayload {
   isBuffering: boolean;
   isPaused: boolean;
   isReady: boolean;
   muted: boolean;
-  quality: string;
   volume: number;
 }
 
@@ -260,7 +284,7 @@ type PlayerMessage =
   | { payload: { message: string }; type: 'error' }
   | { payload: { time: number }; type: 'currentTime' }
   | { payload: { duration: number }; type: 'duration' }
-  | { payload: PlayerState; type: 'stateUpdate' }
+  | { payload: PlayerStateUpdatePayload; type: 'stateUpdate' }
   | {
       payload: {
         currentTime: number;
@@ -292,16 +316,43 @@ type PlayerMessage =
   | { type: 'error'; payload: { message: string } }
   | { type: 'muteState'; payload: { muted: boolean; volume: number } };
 
+const TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES = [
+  'about:blank',
+  'https://id.twitch.tv/',
+  'https://www.twitch.tv/passport-callback',
+  'https://player.twitch.tv/',
+];
+
+function isAllowedTwitchPlayerNavigation(url: string, parent: string): boolean {
+  if (!url) {
+    return false;
+  }
+
+  const normalizedParent = parent.trim().toLowerCase();
+  const parentBaseUrl = normalizedParent
+    ? `https://${normalizedParent}/`
+    : null;
+
+  return (
+    TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES.some(prefix =>
+      url.startsWith(prefix),
+    ) ||
+    (parentBaseUrl != null && url.startsWith(parentBaseUrl))
+  );
+}
+
 function buildTwitchEmbedHtml(options: {
   channel: string;
   video?: string;
   parent: string;
   autoplay: boolean;
   muted: boolean;
+  debug: boolean;
   width: number | string;
   height: number | string;
 }): string {
-  const { channel, video, parent, autoplay, muted, width, height } = options;
+  const { channel, video, parent, autoplay, muted, debug, width, height } =
+    options;
   const safeChannel = channel.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const safeParent = parent.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const widthPx = typeof width === 'number' ? `${width}px` : width;
@@ -335,7 +386,11 @@ function buildTwitchEmbedHtml(options: {
 <body>
   <div id="twitch-player" style="width:${widthPx};height:${heightPx};"></div>
   <script>
+    var enableTrace = ${debug ? 'true' : 'false'};
     function post(type, payload) {
+      if (type === 'trace' && !enableTrace) {
+        return;
+      }
       try {
         window.ReactNativeWebView.postMessage(JSON.stringify({ type: type, payload: payload || {} }));
       } catch (e) {}
@@ -360,8 +415,15 @@ function buildTwitchEmbedHtml(options: {
         var player = new Twitch.Player('twitch-player', embedOpts);
         post('trace', { step: 'player_created', detail: 'Twitch.Player instance created' });
         window._twitchPlayer = player;
+        function emitMuteState() {
+          post('muteState', {
+            muted: player.getMuted(),
+            volume: player.getVolume()
+          });
+        }
         player.addEventListener(Twitch.Player.READY, function() {
           post('ready');
+          emitMuteState();
           if (player.getMuted()) {
             var unmuteDeadline = Date.now() + 5000;
             var unmuteTick = setInterval(function() {
@@ -414,9 +476,10 @@ function buildTwitchEmbedHtml(options: {
         window.playerControls = {
           play: function() { player.play(); },
           pause: function() { player.pause(); },
-          setMuted: function(m) { player.setMuted(m); },
-          unmute: function() { player.setMuted(false); player.setVolume(1); },
-          setVolume: function(v) { player.setVolume(v); if (v > 0) player.setMuted(false); },
+          mute: function() { player.setMuted(true); emitMuteState(); },
+          setMuted: function(m) { player.setMuted(m); emitMuteState(); },
+          unmute: function() { player.setMuted(false); player.setVolume(1); emitMuteState(); },
+          setVolume: function(v) { player.setVolume(v); if (v > 0) player.setMuted(false); emitMuteState(); },
           getCurrentTime: function() { post('currentTime', { time: player.getCurrentTime() }); },
           getDuration: function() { post('duration', { duration: player.getDuration() }); },
           seek: function(t) { player.seek(t); },
@@ -425,19 +488,6 @@ function buildTwitchEmbedHtml(options: {
           setQuality: function(q) { player.setQuality(q); },
           seekToLive: function() {}
         };
-        var lastMuted = player.getMuted();
-        var lastVol = player.getVolume();
-        setInterval(function() {
-          try {
-            var m = player.getMuted();
-            var v = player.getVolume();
-            if (m !== lastMuted || v !== lastVol) {
-              lastMuted = m;
-              lastVol = v;
-              post('muteState', { muted: m, volume: v });
-            }
-          } catch (e) {}
-        }, 400);
         post('trace', { step: 'player_ready', detail: 'listeners and controls attached' });
       } catch (e) {
         post('error', { message: 'initPlayer: ' + (e.message || String(e)) });
@@ -482,6 +532,11 @@ interface ControlsOverlayProps {
   streamInfo?: StreamInfo;
 }
 
+interface OverlayMetricsState {
+  duration: string;
+  latencySeconds: number;
+}
+
 function formatDuration(startedAt?: string): string {
   if (!startedAt) return '0:00';
   const start = new Date(startedAt).getTime();
@@ -518,32 +573,68 @@ function ControlsOverlay({
 }: ControlsOverlayProps) {
   const insets = useSafeAreaInsets();
   const opacity = useSharedValue(0);
-  const [duration, setDuration] = useState(() =>
-    formatDuration(streamInfo?.startedAt),
-  );
-  const [latencySeconds, setLatencySeconds] = useState<number>(0);
+  const [metrics, setMetrics] = useState<OverlayMetricsState>(() => ({
+    duration: formatDuration(streamInfo?.startedAt),
+    latencySeconds: 0,
+  }));
 
   useEffect(() => {
-    const update = () => {
-      const elapsedMs =
-        readyTimestamp != null
-          ? readyTimestamp - overlayStartTime
-          : Date.now() - overlayStartTime;
-      setLatencySeconds(elapsedMs / 1000);
+    if (!isVisible) {
+      return;
+    }
+
+    const nextLatencySeconds =
+      (readyTimestamp != null ? readyTimestamp : Date.now()) / 1000 -
+      overlayStartTime / 1000;
+
+    setMetrics(previous => {
+      if (previous.latencySeconds === nextLatencySeconds) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        latencySeconds: nextLatencySeconds,
+      };
+    });
+  }, [isVisible, overlayStartTime, readyTimestamp]);
+
+  useEffect(() => {
+    if (!isVisible || !streamInfo?.startedAt) {
+      return;
+    }
+
+    const updateDuration = () => {
+      const nextDuration = formatDuration(streamInfo.startedAt);
+      setMetrics(previous =>
+        previous.duration === nextDuration
+          ? previous
+          : {
+              ...previous,
+              duration: nextDuration,
+            },
+      );
     };
-    update();
-    const interval = setInterval(update, 500);
+
+    updateDuration();
+
+    const interval = setInterval(updateDuration, 1000);
     return () => clearInterval(interval);
-  }, [overlayStartTime, readyTimestamp]);
+  }, [isVisible, streamInfo?.startedAt]);
 
   useEffect(() => {
-    if (!streamInfo?.startedAt) return;
+    if (streamInfo?.startedAt) {
+      return;
+    }
 
-    const interval = setInterval(() => {
-      setDuration(formatDuration(streamInfo.startedAt));
-    }, 1000);
-
-    return () => clearInterval(interval);
+    setMetrics(previous =>
+      previous.duration === '0:00'
+        ? previous
+        : {
+            ...previous,
+            duration: '0:00',
+          },
+    );
   }, [streamInfo?.startedAt]);
 
   useEffect(() => {
@@ -576,16 +667,16 @@ function ControlsOverlay({
 
       <View
         pointerEvents="none"
-        style={[styles.latencyBadge, { top: insets.top + theme.spacing.sm }]}
+        style={[styles.latencyBadge, { top: insets.top + theme.space12 }]}
       >
         <Icon
-          color={theme.colors.gray.contrast}
+          color={theme.colorWhite}
           icon="clock"
           size={12}
           style={styles.latencyBadgeIcon}
         />
         <Text style={styles.latencyBadgeText}>
-          {latencySeconds.toFixed(1)}s
+          {metrics.latencySeconds.toFixed(1)}s
         </Text>
       </View>
 
@@ -597,11 +688,7 @@ function ControlsOverlay({
               style={styles.headerButton}
               onPress={onBackPress}
             >
-              <Icon
-                color={theme.colors.gray.contrast}
-                icon="chevron-left"
-                size={24}
-              />
+              <Icon color={theme.colorWhite} icon="chevron-left" size={24} />
             </Button>
           </View>
         )}
@@ -616,7 +703,7 @@ function ControlsOverlay({
           onPress={onPlayPausePress}
         >
           <Icon
-            color={theme.colors.gray.contrast}
+            color={theme.colorWhite}
             icon={paused ? 'play' : 'pause'}
             size={40}
           />
@@ -635,7 +722,7 @@ function ControlsOverlay({
         <View style={styles.streamMetadataRow}>
           <View style={styles.liveIndicator}>
             <View style={styles.liveDot} />
-            <Text style={styles.durationText}>{duration}</Text>
+            <Text style={styles.durationText}>{metrics.duration}</Text>
           </View>
           <Text numberOfLines={1} style={styles.streamerNameBottom}>
             {streamInfo?.userName || streamInfo?.userLogin || ''}
@@ -656,11 +743,7 @@ function ControlsOverlay({
               style={styles.controlButton}
               onPress={onRefresh}
             >
-              <Icon
-                color={theme.colors.gray.contrast}
-                icon="refresh-cw"
-                size={18}
-              />
+              <Icon color={theme.colorWhite} icon="refresh-cw" size={18} />
             </Button>
           </View>
         )}
@@ -673,7 +756,7 @@ function ControlsOverlay({
               onPress={onPipPress}
             >
               <Icon
-                color={theme.colors.gray.contrast}
+                color={theme.colorWhite}
                 icon="picture-in-picture-bottom-right"
                 iconFamily="MaterialCommunityIcons"
                 size={20}
@@ -705,10 +788,12 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       onReady,
       onRefresh,
       onVideoAreaPress,
+      onVideoAreaSwipeDown,
       onWebViewLoaded,
       parent = 'www.twitch.tv',
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       streamProxyBaseUrl: _streamProxyBaseUrl,
+      restrictWebViewNavigationToTwitchPlayer = false,
       showOverlayControls = true,
       streamInfo,
       video,
@@ -724,12 +809,14 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       channel,
       currentTime: 0,
       duration: 0,
-      isBuffering: true,
       isPaused: !autoplay,
-      isReady: false,
       muted: initialMuted,
       quality: 'auto',
       volume: 1,
+    });
+    const [playerStatus, setPlayerStatus] = useState<PlayerStatusState>({
+      isBuffering: true,
+      isReady: false,
     });
 
     const [controlsVisible, setControlsVisible] = useState(false);
@@ -738,8 +825,6 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       null,
     );
     const [overlayStartTime, setOverlayStartTime] = useState(() => Date.now());
-    const overlayStartTimeRef = useRef(overlayStartTime);
-    overlayStartTimeRef.current = overlayStartTime;
     const [readyTimestamp, setReadyTimestamp] = useState<number | null>(null);
     const [hasContentGate, setHasContentGate] = useState(false);
     const [overlayUnlocked, setOverlayUnlocked] = useState(false);
@@ -772,11 +857,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
     // Avoid WebView.reload(): with source={{ html, baseUrl: https://www.twitch.tv/ }} it loads twitch.tv, not the embed HTML (issue #524).
     const remountEmbedWebView = useCallback(() => {
-      setPlayerState(prev => ({
-        ...prev,
+      setPlayerStatus({
         isReady: false,
         isBuffering: true,
-      }));
+      });
       needsInitRef.current = true;
       setWebViewKey(k => k + 1);
     }, []);
@@ -808,11 +892,11 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
     // Reset stuck-detection refs when not ready or paused
     useEffect(() => {
-      if (!playerState.isReady || playerState.isPaused) {
+      if (!playerStatus.isReady || playerState.isPaused) {
         lastVideoTimeRef.current = -1;
         stuckCountRef.current = 0;
       }
-    }, [playerState.isReady, playerState.isPaused]);
+    }, [playerStatus.isReady, playerState.isPaused]);
 
     const currentTimeResolverRef = useRef<((value: number) => void) | null>(
       null,
@@ -969,11 +1053,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
                 component: 'StreamPlayer',
                 defer_overlay_until_user_unmute: deferOverlayUntilUserUnmute,
               });
-              setPlayerState(prev => ({
-                ...prev,
+              setPlayerStatus({
                 isReady: true,
                 isBuffering: false,
-              }));
+              });
               onReady?.();
               if (autoplay) {
                 play();
@@ -1013,18 +1096,34 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               onOffline?.();
               break;
             case 'stateUpdate':
-              setPlayerState(prev => {
+              setPlayerStatus(prev => {
                 const { payload } = message;
                 if (
-                  prev.isPaused === payload.isPaused &&
-                  prev.muted === payload.muted &&
-                  prev.volume === payload.volume &&
                   prev.isReady === payload.isReady &&
                   prev.isBuffering === payload.isBuffering
                 ) {
                   return prev;
                 }
-                return { ...prev, ...payload };
+                return {
+                  isReady: payload.isReady,
+                  isBuffering: payload.isBuffering,
+                };
+              });
+              setPlayerState(prev => {
+                const { payload } = message;
+                if (
+                  prev.isPaused === payload.isPaused &&
+                  prev.muted === payload.muted &&
+                  prev.volume === payload.volume
+                ) {
+                  return prev;
+                }
+                return {
+                  ...prev,
+                  isPaused: payload.isPaused,
+                  muted: payload.muted,
+                  volume: payload.volume,
+                };
               });
               break;
             case 'currentTime':
@@ -1040,11 +1139,13 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               }
               break;
             case 'trace':
-              console.warn(
-                '[StreamPlayer:embed]',
-                message.payload?.step ?? '?',
-                message.payload?.detail ?? '',
-              );
+              if (__DEV__) {
+                console.warn(
+                  '[StreamPlayer:embed]',
+                  message.payload?.step ?? '?',
+                  message.payload?.detail ?? '',
+                );
+              }
               break;
             case 'error':
               console.warn(
@@ -1099,6 +1200,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           parent,
           autoplay: true,
           muted: deferOverlayUntilUserUnmute ? true : initialMuted,
+          debug: __DEV__,
           width: '100%',
           height: '100%',
         }),
@@ -1161,10 +1263,18 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const handleVideoAreaDoubleTap = useCallback(() => {
       cancelPendingSingleTap();
       if (Platform.OS !== 'web') {
-        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        void impact('light');
       }
       onVideoAreaPress?.();
     }, [onVideoAreaPress, cancelPendingSingleTap]);
+
+    const handleVideoAreaSwipeDown = useCallback(() => {
+      cancelPendingSingleTap();
+      if (Platform.OS !== 'web') {
+        void impact('medium');
+      }
+      onVideoAreaSwipeDown?.();
+    }, [cancelPendingSingleTap, onVideoAreaSwipeDown]);
 
     const SINGLE_TAP_DELAY_MS = 400;
 
@@ -1181,16 +1291,37 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         .onEnd(() => {
           scheduleOnRN(handleSingleTapDelayed);
         });
-      if (!onVideoAreaPress) {
+      if (!onVideoAreaPress && !onVideoAreaSwipeDown) {
         return singleTap;
       }
-      const doubleTap = Gesture.Tap()
-        .numberOfTaps(2)
-        .onEnd(() => {
-          scheduleOnRN(handleVideoAreaDoubleTap);
-        });
-      return Gesture.Exclusive(doubleTap, singleTap);
-    }, [onVideoAreaPress, handleVideoAreaDoubleTap, handleSingleTapDelayed]);
+      const gestures = [];
+      if (onVideoAreaPress) {
+        gestures.push(
+          Gesture.Tap()
+            .numberOfTaps(2)
+            .onEnd(() => {
+              scheduleOnRN(handleVideoAreaDoubleTap);
+            }),
+        );
+      }
+      if (onVideoAreaSwipeDown) {
+        gestures.push(
+          Gesture.Fling()
+            .direction(Directions.DOWN)
+            .onEnd(() => {
+              scheduleOnRN(handleVideoAreaSwipeDown);
+            }),
+        );
+      }
+      gestures.push(singleTap);
+      return Gesture.Exclusive(...gestures);
+    }, [
+      onVideoAreaPress,
+      onVideoAreaSwipeDown,
+      handleVideoAreaDoubleTap,
+      handleVideoAreaSwipeDown,
+      handleSingleTapDelayed,
+    ]);
 
     const handlePlayPause = useCallback(() => {
       if (playerState.isPaused) {
@@ -1266,6 +1397,22 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       [channel, onError],
     );
 
+    const handleShouldStartLoadWithRequest =
+      useCallback<OnShouldStartLoadWithRequest>(
+        request => {
+          if (!restrictWebViewNavigationToTwitchPlayer) {
+            return true;
+          }
+
+          if (request.isTopFrame === false) {
+            return true;
+          }
+
+          return isAllowedTwitchPlayerNavigation(request.url, parent);
+        },
+        [parent, restrictWebViewNavigationToTwitchPlayer],
+      );
+
     const playerWidth: DimensionValue = width ?? '100%';
     const playerHeight: DimensionValue = height ?? '100%';
 
@@ -1301,6 +1448,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           }}
           onError={handleWebViewError}
           onHttpError={handleWebViewHttpError}
+          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
           onLoadEnd={() => {
             onWebViewLoaded?.();
             if (needsInitRef.current) {
@@ -1313,10 +1461,12 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
             }
           }}
           onLoadStart={() => {
-            console.warn('[StreamPlayer:WebView] onLoadStart', {
-              channel,
-              hasVideo: !!video,
-            });
+            if (__DEV__) {
+              console.warn('[StreamPlayer:WebView] onLoadStart', {
+                channel,
+                hasVideo: !!video,
+              });
+            }
           }}
           onMessage={handleMessage}
           onRenderProcessGone={() => {
@@ -1326,7 +1476,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
         {showOverlayControls &&
           !hasContentGate &&
-          playerState.isReady &&
+          playerStatus.isReady &&
           (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
             <GestureDetector gesture={overlayTapGesture}>
               <View
@@ -1360,28 +1510,24 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
 
         {showOverlayControls &&
           !hasContentGate &&
-          playerState.isReady &&
+          playerStatus.isReady &&
           (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
             <PressableArea
               onPress={toggleControlsInternal}
               style={[
                 styles.controlsTriggerButton,
-                { top: insets.top + theme.spacing.sm },
+                { top: insets.top + theme.space12 },
               ]}
               accessibilityLabel="Show player controls"
               accessibilityRole="button"
             >
-              <Icon
-                color={theme.colors.gray.contrast}
-                icon="more-horizontal"
-                size={24}
-              />
+              <Icon color={theme.colorWhite} icon="more-horizontal" size={24} />
             </PressableArea>
           )}
 
         {showOverlayControls &&
           !hasContentGate &&
-          playerState.isReady &&
+          playerStatus.isReady &&
           (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
             <ControlsOverlay
               isVisible={controlsVisible}
@@ -1404,18 +1550,27 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
               <View
                 style={[
                   styles.loginPromptOverlay,
-                  { paddingTop: insets.top + theme.spacing.sm },
+                  { paddingTop: insets.top + theme.space12 },
                 ]}
                 pointerEvents="box-none"
               >
                 <View style={styles.loginPromptBanner}>
                   <Text
                     color="gray.contrast"
+                    type="md"
+                    weight="bold"
+                    style={styles.loginPromptTitle}
+                  >
+                    Twitch sign-in required
+                  </Text>
+                  <Text
+                    color="gray.contrast"
                     type="sm"
                     style={styles.loginPromptText}
                   >
-                    Some streams require a Twitch account. Tap the video to log
-                    in if Twitch prompts you.
+                    This stream is behind Twitch&apos;s mature-content/account
+                    gate. Tap the video and complete the Twitch prompt to start
+                    playback.
                   </Text>
                   <PressableArea
                     onPress={() => setShowLoginPrompt(false)}
@@ -1474,9 +1629,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     bottom: 0,
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: theme.space12,
     left: 0,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.space16,
     paddingTop: 32,
     position: 'absolute',
     right: 0,
@@ -1514,9 +1669,9 @@ const styles = StyleSheet.create({
   },
   controlButtonContainer: {
     alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
+    backgroundColor: theme.colorBlackActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     height: 40,
     justifyContent: 'center',
     width: 40,
@@ -1530,37 +1685,37 @@ const styles = StyleSheet.create({
   },
   controlsTriggerButton: {
     alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
+    backgroundColor: theme.colorBlackActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.full,
+    borderRadius: theme.borderRadius999,
     height: 40,
     justifyContent: 'center',
-    padding: theme.spacing.sm,
+    padding: theme.space12,
     position: 'absolute',
-    right: theme.spacing.sm,
+    right: theme.space12,
     width: 40,
   },
   debugDismissButton: {
-    marginTop: theme.spacing.xs,
+    marginTop: theme.space8,
   },
   debugErrorOverlay: {
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    left: theme.spacing.sm,
+    backgroundColor: theme.colorBlackActiveContent,
+    left: theme.space12,
     maxWidth: '95%',
-    padding: theme.spacing.sm,
+    padding: theme.space12,
     position: 'absolute',
-    right: theme.spacing.sm,
+    right: theme.space12,
   },
   durationText: {
-    color: theme.colors.gray.contrast,
-    fontSize: theme.font.fontSize.xxs,
+    color: theme.colorWhite,
+    fontSize: theme.fontSize11,
     fontWeight: '500',
   },
   header: {
     alignItems: 'center',
     flexDirection: 'row',
     left: 0,
-    paddingHorizontal: theme.spacing.sm,
+    paddingHorizontal: theme.space12,
     position: 'absolute',
     right: 0,
     top: 0,
@@ -1574,43 +1729,43 @@ const styles = StyleSheet.create({
   },
   headerButtonContainer: {
     alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
+    backgroundColor: theme.colorBlackActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     height: 40,
     justifyContent: 'center',
     width: 40,
   },
   latencyBadge: {
     alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
-    borderColor: theme.colors.black.borderHoverAlpha,
+    backgroundColor: theme.colorBlackActiveContent,
+    borderColor: theme.colorBlackBorderHover,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.full,
+    borderRadius: theme.borderRadius999,
     borderWidth: 1,
     flexDirection: 'row',
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
+    gap: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
     position: 'absolute',
-    right: theme.spacing.sm + 48,
+    right: theme.space12 + 48,
     zIndex: 2,
   },
   latencyBadgeIcon: {
     opacity: 0.9,
   },
   latencyBadgeText: {
-    color: theme.colors.gray.contrast,
-    fontSize: theme.font.fontSize.xs,
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
     fontWeight: '600',
     letterSpacing: 0.2,
   },
   liveDot: {
-    backgroundColor: theme.colors.red.accent,
+    backgroundColor: theme.colorRed,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.full,
+    borderRadius: theme.borderRadius999,
     height: 8,
-    marginRight: theme.spacing.sm,
+    marginRight: theme.space12,
     width: 8,
   },
   liveIndicator: {
@@ -1620,24 +1775,32 @@ const styles = StyleSheet.create({
   loginPromptBanner: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
+    backgroundColor: theme.colorBlackActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     maxWidth: 340,
-    padding: theme.spacing.md,
+    padding: theme.space16,
   },
   loginPromptDismiss: {
-    marginTop: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
+    marginTop: theme.space12,
+    paddingVertical: theme.space8,
   },
   loginPromptOverlay: {
+    alignItems: 'center',
+    bottom: 0,
+    justifyContent: 'center',
     left: 0,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: theme.space16,
     position: 'absolute',
     right: 0,
     top: 0,
   },
   loginPromptText: {
+    maxWidth: 320,
+    textAlign: 'center',
+  },
+  loginPromptTitle: {
+    marginBottom: theme.space8,
     textAlign: 'center',
   },
   overlayTapTarget: {
@@ -1649,7 +1812,7 @@ const styles = StyleSheet.create({
   },
   playPauseButton: {
     alignItems: 'center',
-    backgroundColor: theme.colors.black.uiActiveAlpha,
+    backgroundColor: theme.colorBlackActiveContent,
     borderRadius: 44,
     height: 88,
     justifyContent: 'center',
@@ -1674,12 +1837,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     flex: 1,
-    gap: theme.spacing.sm,
+    gap: theme.space12,
   },
   streamerNameBottom: {
-    color: theme.colors.gray.contrast,
+    color: theme.colorWhite,
     flex: 1,
-    fontSize: theme.font.fontSize.xs,
+    fontSize: theme.fontSize12,
     fontWeight: '600',
     opacity: 0.95,
   },
@@ -1691,16 +1854,16 @@ const styles = StyleSheet.create({
     top: 0,
   },
   userIcon: {
-    backgroundColor: theme.colors.accent.accentAlpha,
+    backgroundColor: theme.colorAccentAlpha,
   },
   viewerCountRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.xs,
+    gap: theme.space8,
   },
   viewerCountText: {
-    color: theme.colors.gray.contrast,
-    fontSize: theme.font.fontSize.xxs,
+    color: theme.colorWhite,
+    fontSize: theme.fontSize11,
     fontWeight: '500',
   },
   webView: {

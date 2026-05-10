@@ -29,6 +29,11 @@ on:
         required: false
         type: boolean
         default: false
+      critical_update:
+        description: "Mark this OTA as critical"
+        required: false
+        type: boolean
+        default: false
 
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -127,72 +132,25 @@ jobs:
 
       - name: 🔄 Compare fingerprints
         id: compare
-        run: |
-          CHANGED="false"
-
-          if [ -f .fingerprint-cache/ios ]; then
-            PREV_IOS=$(cat .fingerprint-cache/ios)
-            if [ "$PREV_IOS" != "${{ steps.fingerprint.outputs.ios }}" ]; then
-              echo "⚠️ iOS fingerprint changed: $PREV_IOS → ${{ steps.fingerprint.outputs.ios }}"
-              CHANGED="true"
-            else
-              echo "✅ iOS fingerprint unchanged"
-            fi
-          else
-            echo "ℹ️ No previous iOS fingerprint found (first run)"
-            CHANGED="true"
-          fi
-
-          if [ -f .fingerprint-cache/android ]; then
-            PREV_ANDROID=$(cat .fingerprint-cache/android)
-            if [ "$PREV_ANDROID" != "${{ steps.fingerprint.outputs.android }}" ]; then
-              echo "⚠️ Android fingerprint changed: $PREV_ANDROID → ${{ steps.fingerprint.outputs.android }}"
-              CHANGED="true"
-            else
-              echo "✅ Android fingerprint unchanged"
-            fi
-          else
-            echo "ℹ️ No previous Android fingerprint found (first run)"
-            CHANGED="true"
-          fi
-
-          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts compare-fingerprints
+          --cache-dir .fingerprint-cache
+          --current-ios "${{ steps.fingerprint.outputs.ios }}"
+          --current-android "${{ steps.fingerprint.outputs.android }}"
 
       - name: 🤔 Decide deployment type
         id: decide
-        run: |
-          MANUAL_TYPE="${{ inputs.deploy_type }}"
-
-          if [ "$MANUAL_TYPE" == "ota" ]; then
-            echo "deploy-type=ota" >> $GITHUB_OUTPUT
-            echo "📦 Manual: OTA update requested"
-          elif [ "$MANUAL_TYPE" == "build" ]; then
-            echo "deploy-type=build" >> $GITHUB_OUTPUT
-            echo "🔨 Manual: Native build requested"
-          elif [ "${{ steps.compare.outputs.changed }}" == "true" ]; then
-            echo "deploy-type=build" >> $GITHUB_OUTPUT
-            echo "🔨 Auto: Native changes detected - build required"
-          else
-            echo "deploy-type=ota" >> $GITHUB_OUTPUT
-            echo "📦 Auto: No native changes - OTA update"
-          fi
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts decide-deploy-type
+          --manual-type "${{ inputs.deploy_type || 'auto' }}"
+          --fingerprint-changed "${{ steps.compare.outputs.changed }}"
 
       - name: 🏷️ Generate release tag (preliminary)
         id: tag
-        run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
-          DEPLOY_TYPE="${{ steps.decide.outputs.deploy-type }}"
-
-          if [ "$DEPLOY_TYPE" == "ota" ]; then
-            # Preliminary tag for OTA - final tag will use update group ID in release job
-            TAG="ota-pending"
-            echo "🏷️ OTA release - final tag will be determined after update (ota-{updateId})"
-          else
-            TAG="${VERSION}"
-            echo "🏷️ Native release tag: $TAG"
-          fi
-
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts preliminary-tag
+          --version "${{ needs.prepare.outputs.version }}"
+          --deploy-type "${{ steps.decide.outputs.deploy-type }}"
 
       - name: 📊 Summary
         run: |
@@ -362,35 +320,53 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
-      - name: 📦 Publish OTA Update
-        id: publish
-        run: |
-          PLATFORM="${{ inputs.platform || 'ios' }}"
+      - name: Restore critical OTA index
+        uses: actions/cache/restore@v4
+        with:
+          path: .ota-critical-cache
+          key: ota-critical-index-production-${{ github.sha }}
+          restore-keys: |
+            ota-critical-index-production-
 
-          if [ "$PLATFORM" == "all" ]; then
-            PLATFORM_FLAG="--platform all"
-          else
-            PLATFORM_FLAG="--platform $PLATFORM"
+      - name: Determine critical OTA metadata
+        id: critical_metadata
+        shell: bash
+        run: |
+          mkdir -p .ota-critical-cache
+          CURRENT_INDEX=0
+          if [ -f .ota-critical-cache/index ]; then
+            CURRENT_INDEX=$(cat .ota-critical-cache/index)
           fi
 
-          # Capture the JSON output from eas update
-          UPDATE_OUTPUT=$(eas update --channel production --environment production --message "Deploy: ${{ github.event.head_commit.message || github.sha }}" $PLATFORM_FLAG --non-interactive --clear-cache --json 2>/dev/null || echo "[]")
+          IS_CRITICAL=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.critical_update }}" = "true" ]; then
+            IS_CRITICAL=true
+          fi
 
-          # Parse update IDs from the JSON output
-          IOS_UPDATE_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[] | select(.platform == "ios") | .id' 2>/dev/null || echo "")
-          ANDROID_UPDATE_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[] | select(.platform == "android") | .id' 2>/dev/null || echo "")
-          UPDATE_GROUP_ID=$(echo "$UPDATE_OUTPUT" | jq -r '.[0].group' 2>/dev/null || echo "")
+          if printf '%s' "${{ github.event.head_commit.message || '' }}" | grep -qi '\[critical-ota\]'; then
+            IS_CRITICAL=true
+          fi
 
-          echo "ios_update_id=$IOS_UPDATE_ID" >> $GITHUB_OUTPUT
-          echo "android_update_id=$ANDROID_UPDATE_ID" >> $GITHUB_OUTPUT
-          echo "update_group_id=$UPDATE_GROUP_ID" >> $GITHUB_OUTPUT
+          NEXT_INDEX=$CURRENT_INDEX
+          if [ "$IS_CRITICAL" = "true" ]; then
+            NEXT_INDEX=$((CURRENT_INDEX + 1))
+          fi
 
-          echo "📦 Published OTA Update:"
-          echo "  iOS Update ID: $IOS_UPDATE_ID"
-          echo "  Android Update ID: $ANDROID_UPDATE_ID"
-          echo "  Update Group ID: $UPDATE_GROUP_ID"
+          echo "$NEXT_INDEX" > .ota-critical-cache/index
+          echo "current_index=$CURRENT_INDEX" >> "$GITHUB_OUTPUT"
+          echo "next_index=$NEXT_INDEX" >> "$GITHUB_OUTPUT"
+          echo "is_critical=$IS_CRITICAL" >> "$GITHUB_OUTPUT"
+
+      - name: 📦 Publish OTA Update
+        id: publish
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts publish-ota
+          --platform "${{ inputs.platform || 'ios' }}"
+          --message "$DEPLOY_MESSAGE"
         env:
           APP_VARIANT: production
+          DEPLOY_MESSAGE: Deploy: ${{ github.event.head_commit.message || github.sha }}
+          OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 
       - name: 💾 Save fingerprints for next run
         run: |
@@ -404,12 +380,20 @@ jobs:
           path: .fingerprint-cache
           key: fingerprint-${{ github.ref_name }}-${{ github.sha }}
 
+      - name: 💾 Save critical OTA index
+        uses: actions/cache/save@v4
+        with:
+          path: .ota-critical-cache
+          key: ota-critical-index-production-${{ github.sha }}
+
       - name: 📊 Summary
         run: |
           echo "## OTA Update Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** production" >> $GITHUB_STEP_SUMMARY
           echo "- **Platform:** ${{ inputs.platform || 'ios' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical:** ${{ steps.critical_metadata.outputs.is_critical }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical Index:** \`${{ steps.critical_metadata.outputs.next_index }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Update Group ID:** \`${{ steps.publish.outputs.update_group_id }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -442,26 +426,12 @@ jobs:
 
       - name: 🏷️ Determine release tag
         id: release_tag
-        run: |
-          DEPLOY_TYPE="${{ needs.detect-changes.outputs.deploy-type }}"
-          VERSION="${{ needs.prepare.outputs.version }}"
-          UPDATE_GROUP_ID="${{ needs.ota.outputs.update_group_id }}"
-
-          if [ "$DEPLOY_TYPE" == "ota" ] && [ -n "$UPDATE_GROUP_ID" ]; then
-            # Use ota-{updateId} format for OTA releases
-            TAG="ota-${UPDATE_GROUP_ID}"
-            echo "🏷️ OTA Release tag: $TAG (using update group ID)"
-          elif [ "$DEPLOY_TYPE" == "ota" ]; then
-            # Fallback if no update group ID (shouldn't happen)
-            TAG="ota-${VERSION}-${{ github.run_number }}"
-            echo "🏷️ OTA Release tag: $TAG (fallback)"
-          else
-            # Native builds use version-based tag
-            TAG="${VERSION}"
-            echo "🏷️ Native Release tag: $TAG"
-          fi
-
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts final-tag
+          --deploy-type "${{ needs.detect-changes.outputs.deploy-type }}"
+          --version "${{ needs.prepare.outputs.version }}"
+          --update-group-id "${{ needs.ota.outputs.update_group_id }}"
+          --run-number "${{ github.run_number }}"
 
       - name: 📝 Create Release
         id: create_release

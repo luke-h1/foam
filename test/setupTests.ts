@@ -13,7 +13,6 @@ import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
 import 'cross-fetch/polyfill';
-import '@app/hooks/useAppNavigation';
 import { configure as configureReassure } from 'reassure';
 import { TextEncoder, TextDecoder } from 'util';
 import mockFile from '../__mocks__/mockFile';
@@ -48,27 +47,7 @@ jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => {
   };
 });
 
-// include this section and the NativeAnimatedHelper section for mocking react-native-reanimated
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-
-  // The mock for `call` immediately calls the callback which is incorrect
-  // So we override it with a no-op
-  Reanimated.default.call = () => {};
-
-  return Reanimated;
-});
-
-// jest.mock('@app/hooks/useAppNavigation', () => {
-//   const mockNavigation: Partial<NativeStackNavigationProp<AppStackParamList>> =
-//     {
-//       navigate: jest.fn(),
-//       goBack: jest.fn(),
-//       ...jest.requireActual('@reac')
-//     };
-
-//   return () => mockNavigation as NativeStackNavigationProp<AppStackParamList>;
-// });
+jest.mock('react-native-worklets');
 
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');

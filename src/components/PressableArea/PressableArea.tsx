@@ -37,7 +37,7 @@ export const PressableArea = forwardRef(
 
 const styles = StyleSheet.create({
   pressable: {
-    flex: 1,
+    alignSelf: 'stretch',
   },
 });
 

@@ -4,8 +4,6 @@ module.exports = api => {
   const isTest = process.env.NODE_ENV === 'test';
 
   const plugins = [
-    // Don't inline env vars in tests so they can be mocked
-    !isTest && 'transform-inline-environment-variables',
     [
       'module-resolver',
       {

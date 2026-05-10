@@ -23,7 +23,6 @@ import {
   ViewProps,
   ViewStyle,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import { BodyScrollView } from '../BodyScrollView/BodyScrollView';
 import { IconSymbol, IconSymbolName } from '../IconSymbol/IconSymbol';
 
@@ -616,15 +615,15 @@ export function Section({
     }
 
     return (
-      <>
+      <React.Fragment key={child.key ?? `section-item-${index}`}>
         {child}
         {!isLastChild && <Separator />}
-      </>
+      </React.Fragment>
     );
   });
 
   const contents = (
-    <Animated.View
+    <View
       {...props}
       style={[
         listStyle === 'grouped'
@@ -644,7 +643,7 @@ export function Section({
       ]}
     >
       {childrenWithSeparator}
-    </Animated.View>
+    </View>
   );
 
   const padding = listStyle === 'grouped' ? 0 : 16;

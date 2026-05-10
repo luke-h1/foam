@@ -8,12 +8,13 @@ import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Skeleton } from '@app/components/Skeleton/Skeleton';
 import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchService, UserBlockList } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 
@@ -79,6 +80,10 @@ function BlockedUsersList({
   onRefresh,
   onUnblock,
 }: BlockedUsersListProps) {
+  const listRef = useRef(null);
+
+  useScrollToTop(listRef);
+
   const renderItem = useCallback<ListRenderItem<UserBlockList>>(
     ({ item }) => <BlockedUserItem user={item} onUnblock={onUnblock} />,
     [onUnblock],
@@ -92,6 +97,7 @@ function BlockedUsersList({
   if (isLoading && !data) {
     return (
       <FlashList
+        ref={listRef}
         data={Array.from({ length: SKELETON_COUNT })}
         renderItem={renderSkeletonItem}
         keyExtractor={(_, idx) => `skeleton-${idx}`}
@@ -122,6 +128,7 @@ function BlockedUsersList({
 
   return (
     <FlashList
+      ref={listRef}
       data={data}
       renderItem={renderItem}
       keyExtractor={item => item.user_id}
@@ -265,7 +272,7 @@ export function BlockedUsersScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   iconSkeleton: {
@@ -276,9 +283,9 @@ const styles = StyleSheet.create({
   itemContainer: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    gap: theme.space16,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space16,
   },
   loginSkeleton: {
     height: 14,
@@ -289,16 +296,16 @@ const styles = StyleSheet.create({
     width: 120,
   },
   unblockButton: {
-    padding: theme.spacing.xs,
+    padding: theme.space8,
   },
   unblockIconContainer: {
-    backgroundColor: theme.colors.red.uiAlpha,
+    backgroundColor: theme.colorRedSurface,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    padding: theme.spacing.xs,
+    borderRadius: theme.borderRadius16,
+    padding: theme.space8,
   },
   userInfo: {
     flex: 1,
-    gap: theme.spacing.xs,
+    gap: theme.space8,
   },
 });

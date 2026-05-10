@@ -18,6 +18,7 @@ export const extractEmotes = (
         creator: 'Unknown',
         emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/3.0`,
         url: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/3.0`,
+        static_url: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/static/dark/3.0`,
         site: 'Twitch Emote',
       };
     }),

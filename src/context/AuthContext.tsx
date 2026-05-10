@@ -2,9 +2,13 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchApi } from '@app/services/api';
 import {
   DefaultTokenResponse,
+  PaginatedList,
+  Category,
+  TwitchStream,
   UserInfoResponse,
   twitchService,
 } from '@app/services/twitch-service';
+import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitchAuth';
 import { logger } from '@app/utils/logger';
 import { queryClient } from '@app/utils/react-query/reacy-query';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
@@ -27,10 +31,19 @@ const prefetchInitialData = (userId?: string) => {
     const followedQuery = twitchQueries.getFollowedStreams(userId);
     void queryClient.prefetchQuery(followedQuery);
   }
-  void queryClient.prefetchQuery({
-    ...twitchQueries.getTopStreams(),
-    queryKey: twitchQueries.getTopStreams().queryKey,
-    queryFn: () => twitchQueries.getTopStreams().queryFn({}),
+  void queryClient.prefetchInfiniteQuery({
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage: PaginatedList<TwitchStream>) =>
+      lastPage?.pagination?.cursor,
+    ...twitchQueries.getTopStreamsInfinite(),
+  });
+  void queryClient.prefetchInfiniteQuery({
+    queryKey: ['TopCategories'],
+    queryFn: ({ pageParam }: { pageParam?: string }) =>
+      twitchService.getTopCategories(pageParam),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage: PaginatedList<Category>) =>
+      lastPage?.pagination?.cursor,
   });
 };
 
@@ -264,22 +277,44 @@ export const AuthContextProvider = ({
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
+    const successResponse = response?.type === 'success' ? response : null;
+
+    logger.auth.info('[AUTHDBG] AuthContext.loginWithTwitch start', {
+      responseType: response?.type ?? null,
+      responseUrl: successResponse?.url ?? null,
+      responseParams: successResponse?.params ?? null,
+      hasAuthentication: !!successResponse?.authentication,
+    });
+
     if (!response || response?.type !== 'success') {
       toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
       return null;
     }
 
-    if (!response.authentication) {
+    const parsedToken = parseTwitchAuthTokenFromResponse(response);
+
+    if (!parsedToken) {
+      logger.auth.warn('Auth response succeeded but did not contain a token', {
+        responseType: response.type,
+        hasAuthentication: !!response.authentication,
+        responseUrl: response.url,
+      });
+      toast.error("Couldn't authenticate with twitch");
       await doAnonAuth();
-      console.info('auth failed');
       return null;
     }
 
     const token = addExpirationTimestamp({
-      accessToken: response.authentication.accessToken,
-      expiresIn: response.authentication.expiresIn as number,
-      tokenType: response.authentication.tokenType,
+      accessToken: parsedToken.accessToken,
+      expiresIn: parsedToken.expiresIn,
+      tokenType: parsedToken.tokenType,
+    });
+
+    logger.auth.info('[AUTHDBG] AuthContext.loginWithTwitch token parsed', {
+      accessTokenPreview: `${token.accessToken.slice(0, 8)}…`,
+      expiresIn: token.expiresIn,
+      tokenType: token.tokenType,
     });
 
     // we have succeeded
@@ -303,6 +338,13 @@ export const AuthContextProvider = ({
       await SecureStore.deleteItemAsync(storageKeys.anon);
 
       await SecureStore.setItemAsync(storageKeys.user, JSON.stringify(token));
+      logger.auth.info(
+        '[AUTHDBG] AuthContext.loginWithTwitch user auth complete',
+        {
+          userId: u.id,
+          login: u.login,
+        },
+      );
     } catch (error) {
       logger.auth.error('Failed to get user info after login', error);
       await doAnonAuth();

@@ -2,7 +2,7 @@ import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Text } from '@app/components/Text/Text';
 import { theme } from '@app/styles/themes';
-import { Modal, StyleSheet, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 
 interface UserActionSheetProps {
   isHidden: boolean;
@@ -13,8 +13,12 @@ interface UserActionSheetProps {
   onHideUser: () => void;
   onHighlightUser: () => void;
   onMentionUser: () => void;
+  onTimeoutUser?: () => void;
+  onBanUser?: () => void;
   username: string;
   visible: boolean;
+  canModerateChat?: boolean;
+  canModerateUser?: boolean;
 }
 
 export function UserActionSheet({
@@ -26,53 +30,101 @@ export function UserActionSheet({
   onHideUser,
   onHighlightUser,
   onMentionUser,
+  onTimeoutUser,
+  onBanUser,
   username,
   visible,
+  canModerateChat,
+  canModerateUser,
 }: UserActionSheetProps) {
   return (
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="formSheet"
+      presentationStyle="overFullScreen"
+      transparent
       onRequestClose={onClose}
     >
-      <View style={styles.wrapper}>
-        <View style={styles.header}>
-          <Text style={styles.username}>{username}</Text>
-          {login && login !== username ? (
-            <Text style={styles.login}>@{login}</Text>
-          ) : null}
+      <View style={styles.backdrop}>
+        <View style={styles.wrapper}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.username}>{username}</Text>
+              {login && login !== username ? (
+                <Text style={styles.login}>@{login}</Text>
+              ) : null}
+            </View>
+            <Button style={styles.doneButton} onPress={onClose}>
+              <Text style={styles.doneText}>Done</Text>
+            </Button>
+          </View>
+
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.actionGroup}>
+              <Button
+                style={[styles.actionButton, styles.actionButtonBorder]}
+                onPress={onMentionUser}
+              >
+                <Icon icon="at-sign" size={18} />
+                <Text style={styles.actionText}>Mention</Text>
+              </Button>
+
+              <Button
+                style={[styles.actionButton, styles.actionButtonBorder]}
+                onPress={onCopyUsername}
+              >
+                <Icon icon="copy" size={18} />
+                <Text style={styles.actionText}>Copy Username</Text>
+              </Button>
+
+              <Button
+                style={[styles.actionButton, styles.actionButtonBorder]}
+                onPress={onHideUser}
+              >
+                <Icon icon="user-x" size={18} />
+                <Text style={styles.actionText}>
+                  {isHidden ? 'Unhide User' : 'Hide User'}
+                </Text>
+              </Button>
+
+              <Button
+                style={[
+                  styles.actionButton,
+                  !canModerateChat || !canModerateUser
+                    ? null
+                    : styles.actionButtonBorder,
+                ]}
+                onPress={onHighlightUser}
+              >
+                <Icon icon="star" size={18} />
+                <Text style={styles.actionText}>
+                  {isHighlighted ? 'Unhighlight User' : 'Highlight User'}
+                </Text>
+              </Button>
+
+              {canModerateChat && canModerateUser ? (
+                <>
+                  <Button
+                    style={[styles.actionButton, styles.actionButtonBorder]}
+                    onPress={onTimeoutUser}
+                  >
+                    <Icon icon="clock" size={18} />
+                    <Text style={styles.actionText}>Timeout for 10m</Text>
+                  </Button>
+
+                  <Button style={styles.actionButton} onPress={onBanUser}>
+                    <Icon icon="slash" size={18} />
+                    <Text style={styles.actionText}>Ban User</Text>
+                  </Button>
+                </>
+              ) : null}
+            </View>
+          </ScrollView>
         </View>
-
-        <View style={styles.actionGroup}>
-          <Button style={styles.actionButton} onPress={onMentionUser}>
-            <Icon icon="at-sign" size={18} />
-            <Text style={styles.actionText}>Mention</Text>
-          </Button>
-
-          <Button style={styles.actionButton} onPress={onCopyUsername}>
-            <Icon icon="copy" size={18} />
-            <Text style={styles.actionText}>Copy Username</Text>
-          </Button>
-
-          <Button style={styles.actionButton} onPress={onHideUser}>
-            <Icon icon="user-x" size={18} />
-            <Text style={styles.actionText}>
-              {isHidden ? 'Unhide User' : 'Hide User'}
-            </Text>
-          </Button>
-
-          <Button style={styles.actionButton} onPress={onHighlightUser}>
-            <Icon icon="star" size={18} />
-            <Text style={styles.actionText}>
-              {isHighlighted ? 'Unhighlight User' : 'Highlight User'}
-            </Text>
-          </Button>
-        </View>
-
-        <Button style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeText}>Done</Text>
-        </Button>
       </View>
     </Modal>
   );
@@ -81,55 +133,82 @@ export function UserActionSheet({
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    backgroundColor: theme.color.background.darkAlt,
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    gap: theme.space12,
+    minHeight: 48,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
+  },
+  actionButtonBorder: {
+    borderBottomColor: theme.color.border.dark,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionGroup: {
-    backgroundColor: theme.colors.gray.uiAlpha,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   actionText: {
-    fontSize: theme.font.fontSize.md,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
     fontWeight: '500',
   },
-  closeButton: {
+  backdrop: {
     alignItems: 'center',
-    alignSelf: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
-    marginTop: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.58)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: theme.space20,
   },
-  closeText: {
-    fontSize: theme.font.fontSize.sm,
+  doneButton: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space8,
+  },
+  doneText: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
     fontWeight: '600',
   },
   header: {
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.md,
+    alignItems: 'center',
+    borderBottomColor: theme.color.border.dark,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.space16,
+    paddingBottom: theme.space16,
   },
   login: {
-    color: theme.colors.gray.textLow,
-    fontSize: theme.font.fontSize.sm,
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize14,
   },
   username: {
-    fontSize: theme.font.fontSize.lg,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize18,
     fontWeight: '700',
   },
   wrapper: {
-    backgroundColor: '#171b23',
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: 24,
+    borderWidth: 1,
+    gap: theme.space16,
+    maxHeight: '82%',
+    overflow: 'hidden',
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
+    width: '100%',
+  },
+  scroll: {
     flex: 1,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.xl,
+  },
+  scrollContent: {
+    paddingBottom: theme.space20,
   },
 });

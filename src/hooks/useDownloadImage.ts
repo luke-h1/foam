@@ -1,7 +1,7 @@
 import { getAppAlbum } from '@app/utils/image/getAppAlbum';
 import { createId } from '@paralleldrive/cuid2';
 import { useMutation } from '@tanstack/react-query';
-import { Directory, File, Paths } from 'expo-file-system/next';
+import { Directory, File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 
 interface DownloadImageVariables {

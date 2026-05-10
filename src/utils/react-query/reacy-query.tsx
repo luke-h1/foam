@@ -1,4 +1,5 @@
 import { twitchQueries } from '@app/queries/twitchQueries';
+import Constants from 'expo-constants';
 import {
   listenNetworkConfirmed,
   listenNetworkLost,
@@ -25,19 +26,21 @@ const PERSISTED_QUERIES = [
   twitchQueries.getTopCategories().queryKey,
 ];
 
+const authProxyBaseUrl =
+  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
+    | string
+    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
+
 async function checkIsOnline(): Promise<boolean> {
   try {
     const controller = new AbortController();
     setTimeout(() => {
       controller.abort();
     }, 15e3);
-    const res = await fetch(
-      `${process.env.AUTH_PROXY_API_BASE_URL}/api/healthcheck`,
-      {
-        cache: 'no-store',
-        signal: controller.signal,
-      },
-    );
+    const res = await fetch(`${authProxyBaseUrl}/api/healthcheck`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    });
 
     const json = (await res.json()) as { version: string };
 

@@ -9,7 +9,7 @@ import { Variant } from '../../app.config';
 
 /**
  * Hook to check if a forced update is required based on Firebase Remote Config
- * Uses separate minimum versions for preview and production tracks per platform
+ * Uses separate minimum versions per app variant and platform
  * @returns Object containing whether update is required, minimum version, and optional custom update URL
  */
 
@@ -20,10 +20,12 @@ function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
   switch (variant) {
     case 'development':
       return platformConfig?.development ?? '';
+    case 'internal':
+      return platformConfig?.internal ?? '';
+    case 'testflight':
+      return platformConfig?.testflight ?? '';
     case 'production':
       return platformConfig?.production ?? '';
-    case 'preview':
-      return platformConfig?.preview ?? '';
     default:
       return '';
   }

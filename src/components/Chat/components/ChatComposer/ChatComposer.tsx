@@ -1,13 +1,14 @@
 import type { ChatUser } from '@app/store/chatStore/constants';
 import type { SanitisedEmote } from '@app/types/emote';
-import { useCallback, useEffect, useState, forwardRef, useMemo } from 'react';
 import {
-  TextInput,
-  TextInputProps,
-  View,
-  LayoutChangeEvent,
-  StyleSheet,
-} from 'react-native';
+  forwardRef,
+  memo,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+} from 'react';
+import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 import { ChatInput } from './components/ChatInput';
 import { EmoteSuggestions } from './components/EmoteSuggestions';
 import { UserSuggestions } from './components/UserSuggestions';
@@ -25,7 +26,7 @@ interface ChatComposerProps extends TextInputProps {
   placeholder?: string;
 }
 
-export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
+const ChatComposerComponent = forwardRef<TextInput, ChatComposerProps>(
   (
     {
       onEmoteSelect,
@@ -39,45 +40,36 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState(false);
-    const [showSuggestions, setShowSuggestions] = useState(false);
     const [cursorPosition, setCursorPosition] = useState(0);
-    const [inputLayout, setInputLayout] = useState({
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-    });
 
     const { wordInfo, isUserMention, isEmoteSearch } = useWordInfo({
       text: value,
       cursorPosition,
     });
+    const deferredEmoteSearchTerm = useDeferredValue(wordInfo.searchTerm);
+    const deferredMentionWord = useDeferredValue(wordInfo.word);
 
     const { filteredEmotes } = useEmoteSuggestions({
-      searchTerm: wordInfo.searchTerm,
+      searchTerm: deferredEmoteSearchTerm,
       maxSuggestions,
       prioritizeChannelEmotes,
     });
 
     const { filteredUsers } = useUserSuggestions({
-      searchTerm: wordInfo.word,
+      searchTerm: deferredMentionWord,
       enabled: isUserMention,
+      maxSuggestions,
     });
 
-    const handleHideComplete = useCallback(() => {
-      setShowSuggestions(false);
-    }, []);
-
-    const { opacity, scale, translateY, hide } = useSuggestionAnimations({
-      shouldShow: showSuggestions,
-      onHideComplete: handleHideComplete,
-    });
-
-    const shouldShowEmoteSuggestions =
+    const showEmoteSuggestions =
       isFocused &&
       isEmoteSearch &&
       filteredEmotes.length > 0 &&
       wordInfo.word.length > 0;
+
+    const { opacity, scale, translateY, hide } = useSuggestionAnimations({
+      shouldShow: showEmoteSuggestions,
+    });
 
     const shouldShowUserSuggestions =
       isFocused && isUserMention && filteredUsers.length > 0;
@@ -87,19 +79,6 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
         filteredUsers.filter((user): user is typeof user => user !== undefined),
       [filteredUsers],
     );
-
-    useEffect(() => {
-      if (shouldShowEmoteSuggestions) {
-        setShowSuggestions(true);
-      } else if (!shouldShowEmoteSuggestions && !shouldShowUserSuggestions) {
-        setShowSuggestions(false);
-      }
-    }, [shouldShowEmoteSuggestions, shouldShowUserSuggestions]);
-
-    const handleInputLayout = useCallback((event: LayoutChangeEvent) => {
-      const { x, y, width, height } = event.nativeEvent.layout;
-      setInputLayout({ x, y, width, height });
-    }, []);
 
     const handleTextChange = useCallback(
       (text: string) => {
@@ -135,7 +114,6 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
         onEmoteSelect?.(emote);
         onChangeText?.(newText);
 
-        setShowSuggestions(false);
         hide();
 
         setTimeout(() => {
@@ -160,23 +138,28 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
       },
       [value, wordInfo, onChangeText],
     );
+
+    const showSuggestionRail =
+      showEmoteSuggestions || shouldShowUserSuggestions;
+
     return (
       <View style={styles.mainContainer}>
-        <EmoteSuggestions
-          emotes={filteredEmotes}
-          handleEmotePress={handleEmotePress}
-          showSuggestions={showSuggestions}
-          setShowSuggestions={setShowSuggestions}
-          inputLayout={inputLayout}
-          suggestionOpacity={opacity}
-          suggestionScale={scale}
-          suggestionTranslateY={translateY}
-        />
-        <UserSuggestions
-          users={validUsers}
-          showUserSuggestions={shouldShowUserSuggestions}
-          handleUserSelect={handleUserSelect}
-        />
+        {showSuggestionRail ? (
+          <View style={styles.suggestionRail}>
+            <EmoteSuggestions
+              emotes={filteredEmotes}
+              handleEmotePress={handleEmotePress}
+              suggestionOpacity={opacity}
+              suggestionScale={scale}
+              suggestionTranslateY={translateY}
+            />
+            <UserSuggestions
+              users={validUsers}
+              showUserSuggestions={shouldShowUserSuggestions}
+              handleUserSelect={handleUserSelect}
+            />
+          </View>
+        ) : null}
         <View style={styles.inputWrapper}>
           <ChatInput
             ref={ref}
@@ -184,7 +167,6 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
             placeholder={placeholder}
             onChangeText={handleTextChange}
             onSelectionChange={handleSelectionChange}
-            onLayout={handleInputLayout}
             onFocus={handleFocus}
             onBlur={handleBlur}
             {...textFieldProps}
@@ -195,13 +177,27 @@ export const ChatComposer = forwardRef<TextInput, ChatComposerProps>(
   },
 );
 
+ChatComposerComponent.displayName = 'ChatComposer';
+
+export const ChatComposer = memo(ChatComposerComponent);
+
 ChatComposer.displayName = 'ChatComposer';
 
 const styles = StyleSheet.create({
   inputWrapper: {
     width: '100%',
+    zIndex: 1,
   },
   mainContainer: {
+    position: 'relative',
     width: '100%',
+  },
+  suggestionRail: {
+    bottom: '100%',
+    left: 0,
+    paddingBottom: 6,
+    position: 'absolute',
+    right: 0,
+    zIndex: 2,
   },
 });

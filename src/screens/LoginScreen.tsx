@@ -4,12 +4,18 @@ import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { countMetric } from '@app/services/sentry-service';
+import { sentryService } from '@app/services/sentry-service';
 import { theme } from '@app/styles/themes';
-import { useAuthRequest } from 'expo-auth-session';
+import { logger } from '@app/utils/logger';
+import {
+  type AuthSessionResult,
+  ResponseType,
+  useAuthRequest,
+} from 'expo-auth-session';
+import Constants from 'expo-constants';
+import { router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect } from 'react';
 import {
   Dimensions,
   Platform,
@@ -18,8 +24,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { toast } from 'sonner-native';
-
-WebBrowser.maybeCompleteAuthSession();
+import { LinearGradient } from 'expo-linear-gradient';
 
 const USER_SCOPES = [
   'user:read:follows',
@@ -37,40 +42,56 @@ const CHANNEL_SCOPES = [
 const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
 const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
+WebBrowser.maybeCompleteAuthSession();
+
+const authProxyBaseUrl =
+  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
+    | string
+    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
+
 const proxyUrl = new URL(
   Platform.select({
-    native: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
-    default: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    web: `${process.env.AUTH_PROXY_API_BASE_URL}/pending`,
-    ios: `${process.env.AUTH_PROXY_API_BASE_URL}/proxy`,
+    native: `${authProxyBaseUrl}/proxy`,
+    default: `${authProxyBaseUrl}/pending`,
+    web: `${authProxyBaseUrl}/pending`,
+    ios: `${authProxyBaseUrl}/proxy`,
   }),
 ).toString();
+const appReturnUrl = 'foam://';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+const redact = (value: string | null | undefined) =>
+  value ? `${value.slice(0, 8)}…` : null;
+
 export function LoginScreen() {
-  const navigation = useAppNavigation();
   const { loginWithTwitch } = useAuthContext();
+  const authSessionActiveRef = useRef(false);
+  const [isPromptingAuth, setIsPromptingAuth] = useState(false);
+  const [authResponse, setAuthResponse] = useState<AuthSessionResult | null>(
+    null,
+  );
 
   const discovery = {
     authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
-    tokenEndpoint: 'https://id.twitch.tv/oauth2/token',
     revocationEndpoint: 'https://id.twitch.tv/oauth2/revoke',
   } as const;
 
-  const [request, response, promptAsync] = useAuthRequest(
+  const [request, response] = useAuthRequest(
     {
-      clientId: process.env.TWITCH_CLIENT_ID,
-      clientSecret: process.env.TWITCH_CLIENT_SECRET,
+      clientId:
+        (Constants.expoConfig?.extra?.EXPO_PUBLIC_TWITCH_CLIENT_ID as
+          | string
+          | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
       scopes: [
         ...USER_SCOPES,
         ...CHAT_SCOPES,
         ...WHISPER_SCOPES,
         ...CHANNEL_SCOPES,
       ],
-      responseType: 'token',
+      responseType: ResponseType.Token,
       redirectUri: proxyUrl,
-      usePKCE: true,
+      usePKCE: false,
       extraParams: {
         force_verify: 'true',
       },
@@ -79,33 +100,160 @@ export function LoginScreen() {
   );
 
   const handleAuth = async () => {
-    await loginWithTwitch(response);
-    if (response?.type === 'success') {
-      countMetric('auth.login.success', {
-        platform: Platform.OS,
-      });
-      toast.success('Logged in');
+    const successResponse =
+      authResponse?.type === 'success' ? authResponse : null;
 
-      navigation.push('Tabs', {
-        screen: 'Following',
+    logger.auth.info('[AUTHDBG] LoginScreen.handleAuth start', {
+      responseType: authResponse?.type ?? null,
+      responseUrl: successResponse?.url ?? null,
+      hasAuthentication: !!successResponse?.authentication,
+      responseParams: successResponse?.params ?? null,
+      accessTokenPreview:
+        redact(successResponse?.authentication?.accessToken) ??
+        redact(
+          typeof successResponse?.params?.access_token === 'string'
+            ? successResponse.params.access_token
+            : null,
+        ),
+    });
+
+    await loginWithTwitch(authResponse);
+    if (authResponse?.type === 'success') {
+      sentryService.captureMessage('LoginSuccess');
+      toast.success('Logged in');
+      logger.auth.info('[AUTHDBG] LoginScreen.handleAuth success, routing');
+
+      router.replace('/tabs/following');
+    }
+
+    sentryService.captureMessage(authResponse?.type || 'unknownAuthEvent');
+  };
+
+  const handleContinueWithTwitch = async () => {
+    if (!request || authSessionActiveRef.current) {
+      logger.auth.info(
+        '[AUTHDBG] LoginScreen.handleContinueWithTwitch blocked',
+        {
+          hasRequest: !!request,
+          authSessionActive: authSessionActiveRef.current,
+        },
+      );
+      if (!request) {
+        toast.error('Twitch sign-in is not ready yet');
+      }
+      return;
+    }
+
+    authSessionActiveRef.current = true;
+    setIsPromptingAuth(true);
+
+    try {
+      const authUrl =
+        request.url ?? (await request.makeAuthUrlAsync(discovery));
+      logger.auth.info('[AUTHDBG] LoginScreen.promptAsync start', {
+        redirectUri: proxyUrl,
+        appReturnUrl,
+        authUrl,
+        responseType: ResponseType.Token,
+        usePKCE: false,
       });
+
+      const promptResult = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        appReturnUrl,
+        {
+          preferEphemeralSession: false,
+        },
+      );
+      let parsedResult: AuthSessionResult;
+      let successPromptResultRaw: typeof promptResult | null = null;
+
+      if (promptResult.type === 'success' && request) {
+        successPromptResultRaw = promptResult;
+        parsedResult = request.parseReturnUrl(promptResult.url);
+      } else {
+        switch (promptResult.type) {
+          case 'cancel':
+          case 'dismiss':
+          case 'opened':
+          case 'locked':
+            parsedResult = { type: promptResult.type };
+            break;
+          default:
+            parsedResult = { type: 'cancel' };
+            break;
+        }
+      }
+
+      const successPromptResult =
+        parsedResult.type === 'success' ? parsedResult : null;
+
+      setAuthResponse(parsedResult);
+
+      logger.auth.info('[AUTHDBG] LoginScreen.promptAsync result', {
+        type: parsedResult.type,
+        rawType: promptResult.type,
+        rawUrl: successPromptResultRaw?.url ?? null,
+        url: successPromptResult?.url ?? null,
+        params: successPromptResult?.params ?? null,
+        errorCode:
+          'errorCode' in parsedResult ? (parsedResult.errorCode ?? null) : null,
+        hasAuthentication: !!successPromptResult?.authentication,
+        accessTokenPreview:
+          redact(successPromptResult?.authentication?.accessToken) ??
+          redact(
+            typeof successPromptResult?.params.access_token === 'string'
+              ? successPromptResult.params.access_token
+              : null,
+          ),
+      });
+    } finally {
+      authSessionActiveRef.current = false;
+      setIsPromptingAuth(false);
+      logger.auth.info('[AUTHDBG] LoginScreen.promptAsync finally');
     }
   };
 
   useEffect(() => {
-    if (response && response?.type === 'success') {
+    logger.auth.info('[AUTHDBG] LoginScreen auth request state', {
+      hasRequest: !!request,
+      responseType: authResponse?.type ?? null,
+      loadedResponseType: response?.type ?? null,
+      redirectUri: proxyUrl,
+      appReturnUrl,
+      platform: Platform.OS,
+    });
+  }, [request, response, authResponse]);
+
+  useEffect(() => {
+    if (authResponse?.type === 'success') {
       void handleAuth();
+      return;
+    }
+
+    if (authResponse) {
+      logger.auth.warn('[AUTHDBG] LoginScreen non-success auth response', {
+        responseType: authResponse.type,
+        responseUrl: null,
+        responseParams: null,
+        errorCode:
+          'errorCode' in authResponse ? (authResponse.errorCode ?? null) : null,
+      });
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response]);
+  }, [authResponse]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.decorativeElements}>
-        <View style={styles.decorativeCircle} />
-        <View style={styles.decorativeCircle2} />
-      </View>
+      <LinearGradient
+        colors={['rgba(34,197,94,0.16)', 'rgba(34,197,94,0.03)', 'transparent']}
+        locations={[0, 0.35, 1]}
+        start={{ x: 0.15, y: 0 }}
+        end={{ x: 0.85, y: 1 }}
+        pointerEvents="none"
+        style={styles.accentGlow}
+      />
 
       <View style={styles.content}>
         <View style={styles.innerContent}>
@@ -118,7 +266,13 @@ export function LoginScreen() {
             />
 
             <View style={styles.titleContainer}>
-              <Text type="4xl" weight="bold" color="accent" align="center">
+              <Text
+                type="4xl"
+                weight="bold"
+                color="gray.text"
+                align="center"
+                variant="display"
+              >
                 Welcome to Foam
               </Text>
             </View>
@@ -131,18 +285,13 @@ export function LoginScreen() {
 
           <View style={styles.actionSection}>
             <Button
-              onPress={() =>
-                promptAsync({
-                  preferEphemeralSession: false,
-                })
-              }
-              onPressIn={() => {
-                navigation.preload('Tabs', { screen: 'Following' });
+              onPress={() => {
+                void handleContinueWithTwitch();
               }}
-              disabled={!request}
+              disabled={!request || isPromptingAuth}
               style={[
                 styles.loginButton,
-                !request && styles.loginButtonDisabled,
+                (!request || isPromptingAuth) && styles.loginButtonDisabled,
               ]}
             >
               <View style={styles.buttonContent}>
@@ -183,117 +332,111 @@ export function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  actionSection: {
-    alignItems: 'center',
-    marginBottom: theme.spacing['4xl'],
-    width: '100%',
-  },
-  appIcon: {
-    borderCurve: 'continuous',
-    borderRadius: 20,
-    elevation: 8,
-    height: 100,
-    marginBottom: theme.spacing['2xl'],
-    shadowColor: theme.colors.accent.ui,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    width: 100,
-  },
-  buttonContent: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
   container: {
-    backgroundColor: theme.colors.gray.ui,
     flex: 1,
+    backgroundColor: theme.color.background.dark,
+  },
+  accentGlow: {
+    ...StyleSheet.absoluteFillObject,
   },
   content: {
-    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing['2xl'],
-  },
-  decorativeCircle: {
-    backgroundColor: theme.colors.accent.ui,
-    borderRadius: 60,
-    height: 120,
-    position: 'absolute',
-    width: 120,
-  },
-  decorativeCircle2: {
-    backgroundColor: theme.colors.violet.ui,
-    borderRadius: 40,
-    height: 80,
-    left: -20,
-    position: 'absolute',
-    top: 40,
-    width: 80,
-  },
-  decorativeElements: {
-    opacity: 0.1,
-    position: 'absolute',
-    right: theme.spacing['2xl'],
-    top: theme.spacing['4xl'],
-  },
-  featureDot: {
-    backgroundColor: theme.colors.accent.accent,
-    borderRadius: 2,
-    height: 4,
-    marginRight: theme.spacing.md,
-    width: 4,
-  },
-  featureItem: {
     alignItems: 'center',
+    paddingHorizontal: theme.space36,
+  },
+  innerContent: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius28,
+    borderWidth: 1,
+    paddingHorizontal: theme.space28,
+    paddingVertical: theme.space44,
+    width: '100%',
+    maxWidth: 400,
+  },
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: theme.space56,
+  },
+  appIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 20,
+    borderCurve: 'continuous',
+    marginBottom: theme.space36,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 16,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  titleContainer: {
+    alignItems: 'center',
+    marginBottom: theme.space16,
+  },
+  subtitle: {
+    textAlign: 'center',
+    marginBottom: theme.space20,
+    color: theme.color.textSecondary.dark,
+    lineHeight: 24,
+    maxWidth: screenWidth * 0.8,
+  },
+  actionSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: theme.space44,
+  },
+  loginButton: {
+    backgroundColor: '#9146ff',
+    paddingVertical: theme.space28,
+    paddingHorizontal: theme.space44,
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    borderColor: '#a970ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0px 12px 32px rgba(145, 70, 255, 0.26)',
+    minHeight: 56,
+    width: '100%',
+    maxWidth: 300,
+  },
+  loginButtonDisabled: {
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.color.border.dark,
+  },
+  buttonContent: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featuresSection: {
+    alignItems: 'center',
+    borderTopColor: theme.color.border.dark,
+    borderTopWidth: 1,
+    opacity: 0.88,
+    paddingTop: theme.space28,
+    width: '100%',
   },
   featuresList: {
     alignItems: 'flex-start',
   },
-  featuresSection: {
+  featureItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    opacity: 0.8,
+    marginBottom: theme.space12,
+    paddingHorizontal: theme.space16,
   },
-  innerContent: {
-    alignItems: 'center',
-    maxWidth: 400,
-    width: '100%',
-  },
-  loginButton: {
-    alignItems: 'center',
-    backgroundColor: '#9146ff',
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
-    boxShadow: '0px 4px 8px rgba(145, 70, 255, 0.3)',
-    justifyContent: 'center',
-    maxWidth: 300,
-    minHeight: 56,
-    paddingHorizontal: theme.spacing['3xl'],
-    paddingVertical: theme.spacing.xl,
-    width: '100%',
-  },
-  loginButtonDisabled: {
-    backgroundColor: theme.colors.gray.accent,
-    shadowOpacity: 0,
-  },
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: theme.spacing['6xl'],
-  },
-  subtitle: {
-    lineHeight: 22,
-    marginBottom: theme.spacing.lg,
-    maxWidth: screenWidth * 0.8,
-    textAlign: 'center',
-  },
-  titleContainer: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+  featureDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.colorDarkGreen,
+    marginRight: theme.space16,
   },
 });

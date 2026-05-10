@@ -2,8 +2,10 @@
  * Base interface for common USERNOTICE tags
  * All USERNOTICE messages share these common tags
  */
-export interface BaseUserNoticeTags
-  extends Record<string, string | boolean | undefined> {
+export interface BaseUserNoticeTags extends Record<
+  string,
+  string | boolean | undefined
+> {
   'msg-id': string;
   id?: string;
   'display-name'?: string;
@@ -21,6 +23,9 @@ export interface BaseUserNoticeTags
   'user-id'?: string;
   'user-type'?: string;
   vip?: '0' | '1';
+  'custom-reward-id'?: string;
+  'msg-param-custom-reward-title'?: string;
+  'msg-param-reward-title'?: string;
 }
 
 export interface ViewerMilestoneTags extends BaseUserNoticeTags {
@@ -101,6 +106,21 @@ export interface AnonGiftPaidUpgradeTags extends BaseUserNoticeTags {
   'msg-param-promo-gift-total': string;
 }
 
+export interface SubMysteryGiftTags extends BaseUserNoticeTags {
+  'msg-id': 'submysterygift';
+  'msg-param-mass-gift-count'?: string;
+  'msg-param-sender-count'?: string;
+  'msg-param-sub-plan'?: MsgParamSubPlan;
+}
+
+export interface GiftPaidUpgradeTags extends BaseUserNoticeTags {
+  'msg-id': 'giftpaidupgrade';
+  'msg-param-sender-login'?: string;
+  'msg-param-sender-name'?: string;
+  'msg-param-promo-name'?: string;
+  'msg-param-promo-gift-total'?: string;
+}
+
 export interface RaidTags extends BaseUserNoticeTags {
   'msg-id': 'raid';
   /**
@@ -119,6 +139,23 @@ export interface RaidTags extends BaseUserNoticeTags {
   'msg-param-displayName': string;
 }
 
+export interface RewardGiftTags extends BaseUserNoticeTags {
+  'msg-id': 'rewardgift';
+}
+
+export interface UnraidTags extends BaseUserNoticeTags {
+  'msg-id': 'unraid';
+}
+
+export interface BitsBadgeTierTags extends BaseUserNoticeTags {
+  'msg-id': 'bitsbadgetier';
+  'msg-param-threshold'?: string;
+}
+
+export interface SharedChatNoticeTags extends BaseUserNoticeTags {
+  'msg-id': 'sharedchatnotice';
+}
+
 /**
  * Type mapping from msg-id values to their corresponding tag types
  */
@@ -127,8 +164,14 @@ export type UserNoticeVariantMap = {
   sub: SubscriptionTags;
   resub: SubscriptionTags;
   subgift: SubGiftTags;
+  submysterygift: SubMysteryGiftTags;
+  giftpaidupgrade: GiftPaidUpgradeTags;
   anongiftpaidupgrade: AnonGiftPaidUpgradeTags;
+  rewardgift: RewardGiftTags;
   raid: RaidTags;
+  unraid: UnraidTags;
+  bitsbadgetier: BitsBadgeTierTags;
+  sharedchatnotice: SharedChatNoticeTags;
 };
 
 /**
@@ -141,5 +184,11 @@ export type UserNoticeTags =
   | ViewerMilestoneTags
   | SubscriptionTags
   | SubGiftTags
+  | SubMysteryGiftTags
+  | GiftPaidUpgradeTags
   | AnonGiftPaidUpgradeTags
-  | RaidTags;
+  | RewardGiftTags
+  | RaidTags
+  | UnraidTags
+  | BitsBadgeTierTags
+  | SharedChatNoticeTags;

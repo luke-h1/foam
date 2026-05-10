@@ -13,6 +13,7 @@ import {
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
+const CHAT_DRAW_DISTANCE = 320;
 interface ChatListProps {
   data: AnyChatMessageType[];
   listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
@@ -36,6 +37,7 @@ export const ChatList = memo(
     contentContainerStyle,
   }: ChatListProps) => {
     const prevMessageCountRef = useRef(0);
+
     useEffect(() => {
       const count = Array.isArray(data) ? data.length : 0;
       if (
@@ -52,10 +54,16 @@ export const ChatList = memo(
       <FlashList
         data={data}
         ref={listRef}
+        drawDistance={CHAT_DRAW_DISTANCE}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
+        maintainVisibleContentPosition={{
+          autoscrollToBottomThreshold: 0.001,
+          startRenderingFromBottom: true,
+        }}
         onScroll={handleScroll}
         renderItem={renderItem}
+        style={styles.list}
         contentContainerStyle={contentContainerStyle}
         scrollEventThrottle={16}
       />
@@ -64,3 +72,9 @@ export const ChatList = memo(
 );
 
 ChatList.displayName = 'ChatList';
+
+const styles = {
+  list: {
+    flex: 1,
+  },
+} as const;

@@ -4,6 +4,7 @@ import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
 import { SearchBox } from '@app/components/SearchBox/SearchBox';
 import { Text } from '@app/components/Text/Text';
+import { BlurView } from 'expo-blur';
 import {
   cacheEmoteImages,
   getCachedEmoteUri,
@@ -32,6 +33,7 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -50,13 +52,13 @@ import {
   flattenProviderSets,
 } from './emoteMenuData';
 
-const MIN_CELL_SIZE = 44;
-const MAX_CELL_SIZE = 58;
-const GRID_HORIZONTAL_PADDING = 12;
-const RAIL_WIDTH = 58;
-const PROVIDER_BAR_HEIGHT = 60;
-const SEARCH_BAR_HEIGHT = 52;
-const SHEET_DETENT = 0.74;
+const MIN_CELL_SIZE = 38;
+const MAX_CELL_SIZE = 50;
+const GRID_HORIZONTAL_PADDING = 8;
+const RAIL_WIDTH = 52;
+const PROVIDER_BAR_HEIGHT = 54;
+const SEARCH_BAR_HEIGHT = 48;
+const SHEET_DETENT = 0.78;
 
 export type EmotePickerItem = string | SanitisedEmote;
 
@@ -231,11 +233,11 @@ const EmoteRow = memo(({ cellSize, items, onPress }: EmoteRowProps) => {
 EmoteRow.displayName = 'EmoteRow';
 
 function getProviderAccentColor(icon: EmoteMenuIcon): string {
-  if (icon === 'twitch') return theme.colors.plum.accent;
+  if (icon === 'twitch') return theme.colorPlum;
   if (icon === 'stv') return '#ffffff';
-  if (icon === 'ffz') return theme.colors.green.accent;
-  if (icon === 'bttv') return theme.colors.orange.accent;
-  return theme.colors.gray.text;
+  if (icon === 'ffz') return theme.colorGreen;
+  if (icon === 'bttv') return theme.colorOrange;
+  return theme.color.text.dark;
 }
 
 function getProviderAccentBackground(icon: EmoteMenuIcon): string {
@@ -274,7 +276,7 @@ function renderMenuIcon(
       <BrandIcon
         name={icon}
         size="sm"
-        color={isActive ? theme.colors.gray.text : getProviderAccentColor(icon)}
+        color={isActive ? theme.color.text.dark : getProviderAccentColor(icon)}
       />
     );
   }
@@ -377,7 +379,7 @@ const SetHeader = memo(({ set }: SetHeaderProps) => {
 
 SetHeader.displayName = 'SetHeader';
 
-export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
+const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
   ({ onEmoteSelect, onDidDismiss, onDidPresent, ...sheetProps }, ref) => {
     const { bottom: bottomInset } = useSafeAreaInsets();
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -474,10 +476,10 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
     );
     const activeProviderAccentColor = activeProvider
       ? getProviderAccentColor(activeProvider.icon)
-      : theme.colors.gray.text;
+      : theme.color.text.dark;
     const activeProviderAccentBackground = activeProvider
       ? getProviderAccentBackground(activeProvider.icon)
-      : theme.colors.gray.uiAlpha;
+      : theme.darkActiveContent;
 
     const filteredSets = useMemo(
       () => filterProviderSets(activeProvider, deferredSearchQuery),
@@ -652,10 +654,10 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
       <TrueSheet
         ref={ref}
         detents={[SHEET_DETENT]}
-        cornerRadius={24}
+        cornerRadius={20}
         grabber={false}
         blurTint="dark"
-        backgroundColor={theme.colors.gray.bg}
+        backgroundColor={theme.color.background.dark}
         {...sheetProps}
         onDidDismiss={handleDidDismiss}
         onDidPresent={handleDidPresent}
@@ -663,7 +665,7 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
         <View
           style={[
             styles.container,
-            { paddingBottom: bottomInset + theme.spacing.lg },
+            { paddingBottom: bottomInset + theme.space20 },
           ]}
         >
           <View style={styles.grabberContainer}>
@@ -671,6 +673,13 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
           </View>
 
           <View style={styles.header}>
+            {Platform.OS === 'ios' ? (
+              <BlurView
+                intensity={32}
+                style={StyleSheet.absoluteFill}
+                tint="dark"
+              />
+            ) : null}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -724,7 +733,7 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
 
           {showPlaceholder ? (
             <View style={styles.placeholderContent}>
-              <ActivityIndicator size="large" color={theme.colors.gray.text} />
+              <ActivityIndicator size="large" color={theme.color.text.dark} />
             </View>
           ) : (
             <View style={[styles.body, { height: bodyHeight }]}>
@@ -756,6 +765,13 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
               </View>
 
               <View style={[styles.rail, { height: bodyHeight }]}>
+                {Platform.OS === 'ios' ? (
+                  <BlurView
+                    intensity={28}
+                    style={StyleSheet.absoluteFill}
+                    tint="dark"
+                  />
+                ) : null}
                 <ScrollView
                   showsVerticalScrollIndicator={false}
                   contentContainerStyle={styles.railContent}
@@ -779,6 +795,8 @@ export const EmoteSheet = forwardRef<TrueSheet, EmoteSheetProps>(
   },
 );
 
+EmoteSheetComponent.displayName = 'EmoteSheet';
+export const EmoteSheet = memo(EmoteSheetComponent);
 EmoteSheet.displayName = 'EmoteSheet';
 
 const styles = StyleSheet.create({
@@ -786,17 +804,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: 'transparent',
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
+    borderRadius: theme.borderRadius16,
     borderWidth: 1,
     flexDirection: 'row',
-    gap: theme.spacing.xs,
-    height: 36,
-    paddingHorizontal: theme.spacing.md,
+    gap: theme.space8,
+    height: 32,
+    paddingHorizontal: theme.space12,
   },
   activeProviderBadgeText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '700',
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
   },
   body: {
     flex: 1,
@@ -804,7 +822,8 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   container: {
-    backgroundColor: theme.colors.gray.bg,
+    backgroundColor:
+      Platform.OS === 'ios' ? '#050507' : theme.color.background.dark,
     flex: 1,
   },
   contentPane: {
@@ -813,7 +832,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   emojiIconText: {
-    fontSize: theme.font.fontSize.lg,
+    fontSize: theme.fontSize18,
   },
   emojiText: {
     lineHeight: undefined,
@@ -821,14 +840,22 @@ const styles = StyleSheet.create({
   emoteCell: {
     alignItems: 'center',
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius12,
     justifyContent: 'center',
   },
   emoteCellInner: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.06)'
+        : theme.color.background.darkAlt,
+    borderColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: Platform.OS === 'ios' ? 14 : theme.borderRadius12,
+    borderWidth: 1,
     justifyContent: 'center',
     overflow: 'hidden',
   },
@@ -841,56 +868,62 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing['4xl'],
+    paddingHorizontal: theme.space28,
+    paddingTop: theme.space56,
   },
   emptyStateBody: {
-    color: theme.colors.gray.textLow,
-    fontSize: theme.font.fontSize.sm,
-    marginTop: theme.spacing.sm,
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize14,
+    marginTop: theme.space12,
     textAlign: 'center',
   },
   emptyStateTitle: {
-    fontSize: theme.font.fontSize.lg,
+    fontSize: theme.fontSize18,
     fontWeight: '700',
   },
   fallbackIconLabel: {
-    color: theme.colors.gray.textLow,
-    fontSize: theme.font.fontSize.xxs,
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
     fontWeight: '800',
     letterSpacing: 0.4,
   },
   ffzTextIcon: {
-    color: theme.colors.green.accent,
+    color: theme.colorGreen,
     letterSpacing: 0.6,
   },
   ffzTextIconActive: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
   },
   grabber: {
-    backgroundColor: theme.colors.gray.accent,
+    backgroundColor:
+      Platform.OS === 'ios' ? 'rgba(255,255,255,0.18)' : theme.colorGrey,
     borderRadius: 2,
     height: 4,
     width: 36,
   },
   grabberContainer: {
     alignItems: 'center',
-    paddingBottom: theme.spacing.xs,
-    paddingTop: theme.spacing.sm,
+    paddingBottom: 4,
+    paddingTop: theme.space8,
   },
   header: {
-    borderBottomColor: theme.colors.gray.border,
+    borderBottomColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.color.border.dark,
     borderBottomWidth: StyleSheet.hairlineWidth,
     minHeight: PROVIDER_BAR_HEIGHT + SEARCH_BAR_HEIGHT,
-    paddingBottom: theme.spacing.sm,
+    overflow: 'hidden',
+    paddingBottom: theme.space8,
+    position: 'relative',
   },
   list: {
     flex: 1,
   },
   listContent: {
-    paddingBottom: theme.spacing['3xl'],
+    paddingBottom: theme.space36,
     paddingHorizontal: GRID_HORIZONTAL_PADDING,
-    paddingTop: theme.spacing.sm,
+    paddingTop: theme.space8,
   },
   placeholderContent: {
     alignItems: 'center',
@@ -904,32 +937,38 @@ const styles = StyleSheet.create({
   providerBarContent: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    gap: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   providerChip: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderColor: 'transparent',
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.06)'
+        : theme.color.background.darkAlt,
+    borderColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
+    borderRadius: Platform.OS === 'ios' ? 18 : theme.borderRadius16,
     borderWidth: 1,
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    height: 42,
+    gap: theme.space8,
+    height: 36,
     justifyContent: 'center',
-    minWidth: 42,
-    paddingHorizontal: theme.spacing.md,
+    minWidth: 36,
+    paddingHorizontal: theme.space12,
     position: 'relative',
   },
   providerChipActive: {
-    minWidth: 112,
-    paddingRight: theme.spacing.lg,
+    minWidth: 96,
+    paddingRight: theme.space16,
   },
   providerChipCount: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.xxs,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize11,
     fontWeight: '700',
   },
   providerChipIcon: {
@@ -944,26 +983,31 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     height: 6,
     position: 'absolute',
-    right: theme.spacing.sm,
+    right: theme.space12,
     top: '50%',
     transform: [{ translateY: -3 }],
     width: 6,
   },
   providerChipTitle: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.xs,
-    fontWeight: '700',
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
   },
   rail: {
-    borderLeftColor: theme.colors.gray.border,
+    borderLeftColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.color.border.dark,
     borderLeftWidth: StyleSheet.hairlineWidth,
     minHeight: 0,
+    overflow: 'hidden',
+    position: 'relative',
     width: RAIL_WIDTH,
   },
   railContent: {
     alignItems: 'center',
-    paddingBottom: theme.spacing['2xl'],
-    paddingTop: theme.spacing.md,
+    paddingBottom: theme.space28,
+    paddingTop: theme.space12,
   },
   searchBox: {
     flex: 1,
@@ -971,71 +1015,98 @@ const styles = StyleSheet.create({
   searchContainer: {
     height: SEARCH_BAR_HEIGHT,
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.xs,
+    paddingHorizontal: theme.space12,
+    paddingTop: 2,
   },
   searchRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: theme.space12,
   },
   setHeader: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.06)'
+        : theme.color.background.darkAlt,
+    borderColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: Platform.OS === 'ios' ? 18 : theme.borderRadius16,
+    borderWidth: 1,
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
+    gap: theme.space12,
+    marginBottom: theme.space8,
+    marginTop: theme.space12,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space8,
   },
   setHeaderCount: {
-    color: theme.colors.gray.textLow,
-    fontSize: theme.font.fontSize.xxs,
+    color:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.56)'
+        : theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
     fontWeight: '700',
   },
   setHeaderIcon: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.darkActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    height: 28,
+    borderRadius: Platform.OS === 'ios' ? 12 : theme.borderRadius12,
+    height: 24,
     justifyContent: 'center',
-    width: 28,
+    width: 24,
   },
   setHeaderMeta: {
     flex: 1,
     gap: 1,
   },
   setHeaderTitle: {
-    fontSize: theme.font.fontSize.sm,
+    fontSize: theme.fontSize14,
     fontWeight: '700',
   },
   setRailButton: {
     alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.05)'
+        : theme.color.background.darkAlt,
+    borderColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
-    height: 38,
+    borderRadius: Platform.OS === 'ios' ? 14 : theme.borderRadius16,
+    borderWidth: 1,
+    height: 34,
     justifyContent: 'center',
-    marginBottom: theme.spacing.sm,
-    width: 38,
+    marginBottom: theme.space8,
+    width: 34,
   },
   setRailButtonActive: {
-    backgroundColor: 'rgba(145, 71, 255, 0.22)',
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.12)'
+        : 'rgba(145, 71, 255, 0.18)',
+    borderColor:
+      Platform.OS === 'ios' ? 'rgba(255,255,255,0.18)' : theme.colorPlum,
   },
   setRailEmoji: {
-    fontSize: theme.font.fontSize.md,
+    fontSize: theme.fontSize16,
   },
   setRailLabel: {
-    color: theme.colors.gray.textLow,
-    fontSize: theme.font.fontSize.xxs,
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
     fontWeight: '800',
     letterSpacing: 0.4,
   },
   setRailLabelActive: {
-    color: theme.colors.gray.text,
+    color: theme.color.text.dark,
   },
 });

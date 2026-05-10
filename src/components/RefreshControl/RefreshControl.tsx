@@ -1,5 +1,5 @@
+import { impact, notification } from '@app/services/haptics-service';
 import { theme } from '@app/styles/themes';
-import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from 'react';
 import { Platform, RefreshControl as RNRefreshControl } from 'react-native';
 
@@ -11,18 +11,18 @@ interface Props {
 export function RefreshControl({ onRefresh, offset }: Props) {
   const [refreshing, setRefreshing] = useState(false);
 
-  const tintColor = theme.colors.grass.accent;
+  const tintColor = theme.colorGrass;
 
   const refresh = useCallback(async () => {
     if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      void impact('medium');
     }
 
     setRefreshing(true);
     await onRefresh();
 
     if (Platform.OS !== 'web') {
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      void notification('success');
     }
 
     setRefreshing(false);
@@ -36,9 +36,9 @@ export function RefreshControl({ onRefresh, offset }: Props) {
       refreshing={refreshing}
       tintColor={tintColor}
       colors={[tintColor]}
-      progressBackgroundColor={theme.colors.gray.ui}
+      progressBackgroundColor={theme.color.backgroundSecondary.dark}
       title={refreshing ? 'Updating...' : ''}
-      titleColor={theme.colors.gray.textLow}
+      titleColor={theme.color.textSecondary.dark}
     />
   );
 }

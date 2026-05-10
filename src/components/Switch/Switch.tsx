@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { theme } from '@app/styles/themes';
+import { useCallback, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
   interpolateColor,
@@ -18,9 +19,9 @@ const SWITCH_HEIGHT = SWITCH_THUMB_SIZE + SWITCH_VERTICAL_PADDING * 2;
 const SWITCH_MAX_OFFSET =
   SWITCH_WIDTH - SWITCH_THUMB_SIZE - SWITCH_HORIZONTAL_PADDING * 2;
 
-const TRACK_DEFAULT_COLOR = '#4E505B';
-const TRACK_ACTIVE_COLOR = '#5965F2';
-const THUMB_COLOR = '#F5F5F5';
+const TRACK_DEFAULT_COLOR = theme.color.backgroundSecondary.dark;
+const TRACK_ACTIVE_COLOR = theme.colorDarkGreen;
+const THUMB_COLOR = theme.colorWhite;
 
 interface Props {
   value?: boolean;
@@ -30,6 +31,17 @@ interface Props {
 export function Switch({ onValueChange, value }: Props) {
   const offset = useSharedValue(value ? SWITCH_MAX_OFFSET : 0);
   const isOn = useSharedValue(value);
+
+  useEffect(() => {
+    isOn.set(value);
+    offset.set(
+      withSpring(value ? SWITCH_MAX_OFFSET : 0, {
+        damping: 25,
+        stiffness: 300,
+        mass: 4,
+      }),
+    );
+  }, [isOn, offset, value]);
 
   const toggleSwitch = useCallback(() => {
     const newValue = !isOn.get();
@@ -96,8 +108,10 @@ const styles = StyleSheet.create({
     width: SWITCH_THUMB_SIZE,
   },
   track: {
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: SWITCH_HEIGHT / 2,
+    borderWidth: 1,
     height: SWITCH_HEIGHT,
     paddingHorizontal: SWITCH_HORIZONTAL_PADDING,
     paddingVertical: SWITCH_VERTICAL_PADDING,

@@ -1,142 +1,81 @@
-import { ViewStyle } from 'react-native';
-import { AppTheme } from './themes';
+import type { AppTheme } from './themes';
 
-export const spacing = {
-  xs: 2,
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
-  '2xl': 24,
-  '3xl': 32,
-  '4xl': 40,
-  '5xl': 48,
-  '6xl': 56,
-  '7xl': 64,
-  headerHeight: 56,
-  tabBarHeight: 70,
-} as const;
-
-export type Spacing = keyof typeof spacing;
-
-export type MarginToken = '0' | 'auto' | Spacing | `-${Spacing}` | number;
+export type Spacing =
+  | 'xs'
+  | 'sm'
+  | 'md'
+  | 'lg'
+  | 'xl'
+  | '2xl'
+  | '3xl'
+  | '4xl'
+  | '6xl';
 
 export interface MarginProps {
-  m?: MarginToken;
-  mb?: MarginToken;
-  ml?: MarginToken;
-  mr?: MarginToken;
-  mt?: MarginToken;
-  mx?: MarginToken;
-  my?: MarginToken;
+  m?: Spacing | number;
+  mb?: Spacing | number;
+  ml?: Spacing | number;
+  mr?: Spacing | number;
+  mt?: Spacing | number;
+  mx?: Spacing | number;
+  my?: Spacing | number;
+}
+
+export function resolveSpacingValue(theme: AppTheme, value?: Spacing | number) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  switch (value) {
+    case 'xs':
+      return theme.space8;
+    case 'sm':
+      return theme.space12;
+    case 'md':
+      return theme.space16;
+    case 'lg':
+      return theme.space20;
+    case 'xl':
+      return theme.space28;
+    case '2xl':
+      return theme.space36;
+    case '3xl':
+      return theme.space44;
+    case '4xl':
+      return theme.space56;
+    case '6xl':
+      return theme.space72;
+    default:
+      return undefined;
+  }
 }
 
 export function getMargin(theme: AppTheme) {
-  return function styles({ m, mb, ml, mr, mt, mx, my }: MarginProps) {
-    const style: ViewStyle = {};
-
-    if (m) {
-      style.margin = getSpace(theme, m);
-    }
-
-    if (mb) {
-      style.marginBottom = getSpace(theme, mb);
-    }
-
-    if (ml) {
-      style.marginLeft = getSpace(theme, ml);
-    }
-
-    if (mr) {
-      style.marginRight = getSpace(theme, mr);
-    }
-
-    if (mt) {
-      style.marginTop = getSpace(theme, mt);
-    }
-
-    if (mx) {
-      style.marginHorizontal = getSpace(theme, mx);
-    }
-
-    if (my) {
-      style.marginVertical = getSpace(theme, my);
-    }
-
-    return style;
-  };
-}
-
-export type PaddingToken = '0' | Spacing | `-${Spacing}` | number;
-
-export interface PaddingProps {
-  p?: PaddingToken;
-  pb?: PaddingToken;
-  pl?: PaddingToken;
-  pr?: PaddingToken;
-  pt?: PaddingToken;
-  px?: PaddingToken;
-  py?: PaddingToken;
-}
-
-export function getPadding(theme: AppTheme) {
-  return function styles({ p, pb, pl, pr, pt, px, py }: PaddingProps) {
-    const style: ViewStyle = {};
-
-    if (p) {
-      style.padding = getSpace(theme, p);
-    }
-
-    if (pb) {
-      style.paddingBottom = getSpace(theme, pb);
-    }
-
-    if (pl) {
-      style.paddingLeft = getSpace(theme, pl);
-    }
-
-    if (pr) {
-      style.paddingRight = getSpace(theme, pr);
-    }
-
-    if (pt) {
-      style.paddingTop = getSpace(theme, pt);
-    }
-
-    if (px) {
-      style.paddingHorizontal = getSpace(theme, px);
-    }
-
-    if (py) {
-      style.paddingVertical = getSpace(theme, py);
-    }
-
-    return style;
-  };
-}
-
-function getSpace(theme: AppTheme, key: MarginToken | PaddingToken) {
-  if (typeof key === 'number') {
-    return key;
-  }
-
-  if (key === '0') {
-    return 0;
-  }
-
-  if (key === 'auto') {
-    return 'auto';
-  }
-
-  const negative = key.startsWith('-');
-
-  const token = (key.startsWith('-') ? key.slice(1) : key) as Spacing;
-
-  const value = theme.spacing[token];
-
-  if (negative) {
-    return -value;
-  }
-
-  return value;
+  return ({ m, mb, ml, mr, mt, mx, my }: MarginProps) => ({
+    ...(resolveSpacingValue(theme, m) !== undefined
+      ? { margin: resolveSpacingValue(theme, m) }
+      : null),
+    ...(resolveSpacingValue(theme, mb) !== undefined
+      ? { marginBottom: resolveSpacingValue(theme, mb) }
+      : null),
+    ...(resolveSpacingValue(theme, ml) !== undefined
+      ? { marginLeft: resolveSpacingValue(theme, ml) }
+      : null),
+    ...(resolveSpacingValue(theme, mr) !== undefined
+      ? { marginRight: resolveSpacingValue(theme, mr) }
+      : null),
+    ...(resolveSpacingValue(theme, mt) !== undefined
+      ? { marginTop: resolveSpacingValue(theme, mt) }
+      : null),
+    ...(resolveSpacingValue(theme, mx) !== undefined
+      ? { marginHorizontal: resolveSpacingValue(theme, mx) }
+      : null),
+    ...(resolveSpacingValue(theme, my) !== undefined
+      ? { marginVertical: resolveSpacingValue(theme, my) }
+      : null),
+  });
 }

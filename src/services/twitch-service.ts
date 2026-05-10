@@ -1,8 +1,20 @@
 /* eslint-disable camelcase */
 import axios, { AxiosHeaders } from 'axios';
+import type { TwitchHelixPoll } from '@app/types/twitch/poll';
+import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
+import Constants from 'expo-constants';
 import { twitchApi, mockServerUrl, isE2EMode, twitchClientId } from './api';
 
 const channelPointRewardTitleCache = new Map<string, string>();
+const authProxyBaseUrl =
+  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
+    | string
+    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
+
+const authProxyApiKey =
+  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
+    | string
+    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
 
 export interface PaginatedList<T> {
   data: T[];
@@ -248,10 +260,10 @@ export const twitchService = {
   getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { data } = await axios.post(
-      `${process.env.AUTH_PROXY_API_BASE_URL}/refresh-token?token=${refreshToken}`,
+      `${authProxyBaseUrl}/refresh-token?token=${refreshToken}&app=foam-app`,
       {
         headers: {
-          'x-api-key': process.env.AUTH_PROXY_API_KEY,
+          'x-api-key': authProxyApiKey,
         },
       },
     );
@@ -277,13 +289,13 @@ export const twitchService = {
     // Use mock server for E2E tests
     const tokenUrl = isE2EMode
       ? `${mockServerUrl}/token`
-      : `${process.env.AUTH_PROXY_API_BASE_URL}/token`;
+      : `${authProxyBaseUrl}/token`;
 
     const { data } = await axios.get<{ data: DefaultTokenResponse }>(tokenUrl, {
       headers: isE2EMode
         ? {}
         : {
-            'x-api-key': process.env.AUTH_PROXY_API_KEY,
+            'x-api-key': authProxyApiKey,
           },
     });
 
@@ -494,6 +506,52 @@ export const twitchService = {
       },
     });
     return result.data[0] as TwitchClip;
+  },
+
+  getPolls: async ({
+    broadcasterId,
+    id,
+    first,
+    after,
+  }: {
+    broadcasterId: string;
+    id?: string | string[];
+    first?: number;
+    after?: string;
+  }) => {
+    const ids = Array.isArray(id) ? id : id ? [id] : undefined;
+
+    return twitchApi.get<PaginatedList<TwitchHelixPoll>>('/polls', {
+      params: {
+        broadcaster_id: broadcasterId,
+        id: ids,
+        first,
+        after,
+      },
+    });
+  },
+
+  getPredictions: async ({
+    broadcasterId,
+    id,
+    first,
+    after,
+  }: {
+    broadcasterId: string;
+    id?: string | string[];
+    first?: number;
+    after?: string;
+  }) => {
+    const ids = Array.isArray(id) ? id : id ? [id] : undefined;
+
+    return twitchApi.get<PaginatedList<TwitchHelixPrediction>>('/predictions', {
+      params: {
+        broadcaster_id: broadcasterId,
+        id: ids,
+        first,
+        after,
+      },
+    });
   },
 
   /**

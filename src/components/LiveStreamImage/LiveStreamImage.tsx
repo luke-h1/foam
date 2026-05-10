@@ -31,8 +31,8 @@ const styles = StyleSheet.create({
   image: {},
   imageContainer: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
-    marginRight: theme.spacing.md,
+    borderRadius: theme.borderRadius12,
+    marginRight: theme.space16,
     overflow: 'hidden',
   },
 });

@@ -9,9 +9,10 @@ import {
   SevenTvWsMessage,
 } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
-import { useNavigationState } from '@react-navigation/native';
+import { usePathname } from 'expo-router';
 import { useCallback, useEffect, useRef, useMemo } from 'react';
-import { getActiveRouteName } from '../navigators/navigationUtilities';
+import type { SevenTvEmote, StvUser } from '@app/services/seventv-service';
+import { ReadyState } from './ws/constants';
 import { useWebsocket } from './ws/useWebsocket';
 
 export const SEVENTV_CHAT_SCREENS = ['Chat', 'LiveStream'];
@@ -84,6 +85,7 @@ type UseSeventvWsReturn = {
   subscribeToChannel: (channelId: string) => void;
   unsubscribeFromChannel: () => void;
   isConnected: () => boolean;
+  readyState: ReadyState;
   getConnectionState: () =>
     | 'DISCONNECTED'
     | 'CONNECTING'
@@ -96,6 +98,55 @@ type UseSeventvWsReturn = {
 const DEFAULT_URL = 'wss://events.7tv.io/v3';
 const ID_WAIT_TIMEOUT = 30000; // 30 seconds
 const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds
+
+function toSanitisedSevenTvEmote(
+  emote: SevenTvEmote,
+  actor: StvUser | undefined,
+): SanitisedEmote {
+  const bestFile =
+    emote.data.host.files.find(file => file.name === '4x.avif') ||
+    emote.data.host.files.find(file => file.name === '3x.avif') ||
+    emote.data.host.files.find(file => file.name === '2x.avif') ||
+    emote.data.host.files.find(file => file.name === '1x.avif');
+
+  return {
+    name: emote.name,
+    id: emote.id,
+    url: `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '1x.avif'}`,
+    original_name: emote.data.name,
+    creator:
+      (emote.data.owner?.display_name || emote.data.owner?.username) ??
+      'UNKNOWN',
+    emote_link: `https://7tv.app/emotes/${emote.id}`,
+    site: '7TV Channel' as const,
+    frame_count: bestFile?.frame_count ?? 1,
+    format: bestFile?.format ?? 'avif',
+    flags: emote.data.flags,
+    aspect_ratio:
+      bestFile && bestFile.height > 0 ? bestFile.width / bestFile.height : 1,
+    // eslint-disable-next-line no-bitwise
+    zero_width: Boolean(emote.data.flags & 256),
+    width: bestFile?.width ?? 0,
+    height: bestFile?.height ?? 0,
+    set_metadata: {
+      setId: '',
+      setName: '',
+      capacity: null,
+      ownerId: null,
+      kind: EmoteSetKind.Normal,
+      updatedAt: new Date().toISOString(),
+      totalCount: 0,
+    },
+    actor,
+  };
+}
+
+function getSevenTvChatScreenFromPathname(pathname: string | null) {
+  if (!pathname) return null;
+  if (pathname === '/chat') return 'Chat';
+  if (pathname.startsWith('/streams/live-stream/')) return 'LiveStream';
+  return null;
+}
 
 export function useSeventvWs(
   options?: UseSeventvWsOptions,
@@ -111,6 +162,7 @@ export function useSeventvWs(
   const entitlementDeleteCallbackRef = useRef(options?.onEntitlementDelete);
   const eventCallbackRef = useRef(options?.onEvent);
   const connectionTimestampRef = useRef<number | null>(null);
+  const pathname = usePathname();
 
   const twitchChannelIdRef = useRef(options?.twitchChannelId);
   const sevenTvEmoteSetIdRef = useRef(options?.sevenTvEmoteSetId);
@@ -130,10 +182,10 @@ export function useSeventvWs(
   twitchChannelIdRef.current = options?.twitchChannelId;
   sevenTvEmoteSetIdRef.current = options?.sevenTvEmoteSetId;
 
-  const currentScreen = useNavigationState(state => {
-    if (!state) return null;
-    return getActiveRouteName(state);
-  });
+  const currentScreen = useMemo(
+    () => getSevenTvChatScreenFromPathname(pathname),
+    [pathname],
+  );
 
   const shouldConnect = useMemo(() => {
     if (!currentScreen) return false;
@@ -164,101 +216,28 @@ export function useSeventvWs(
 
         if (body.pushed) {
           body.pushed.forEach(emote => {
-            const emote4x =
-              emote.value.data.host.files.find(
-                file => file.name === '4x.avif',
-              ) ||
-              emote.value.data.host.files.find(
-                file => file.name === '3x.avif',
-              ) ||
-              emote.value.data.host.files.find(
-                file => file.name === '2x.avif',
-              ) ||
-              emote.value.data.host.files.find(file => file.name === '1x.avif');
-
-            addedEmotes.push({
-              name: emote.value.name,
-              id: emote.value.id,
-              url: `https://cdn.7tv.app/emote/${emote.value.id}/${emote4x?.name ?? '1x.avif'}`,
-              original_name: emote.value.data.name,
-              creator:
-                (emote.value.data.owner?.display_name ||
-                  emote.value.data.owner?.username) ??
-                'UNKNOWN',
-              emote_link: `https://7tv.app/emotes/${emote.value.id}`,
-              site: '7TV Channel' as const,
-              frame_count: emote4x?.frame_count ?? 1,
-              format: emote4x?.format ?? 'avif',
-              flags: emote.value.data.flags,
-              aspect_ratio:
-                emote4x && emote4x.height > 0
-                  ? emote4x.width / emote4x.height
-                  : 1,
-              // eslint-disable-next-line no-bitwise
-              zero_width: Boolean(emote.value.data.flags & 256),
-              width: emote4x?.width ?? 0,
-              height: emote4x?.height ?? 0,
-              set_metadata: {
-                setId: '',
-                setName: '',
-                capacity: null,
-                ownerId: null,
-                kind: EmoteSetKind.Normal,
-                updatedAt: new Date().toISOString(),
-                totalCount: 0,
-              },
-              actor: body.actor,
-            });
+            addedEmotes.push(toSanitisedSevenTvEmote(emote.value, body.actor));
           });
         }
 
         if (body.pulled) {
           body.pulled.forEach(emote => {
             if (emote && emote.old_value) {
-              const oldEmote4x =
-                emote.old_value.data.host.files.find(
-                  file => file.name === '4x.avif',
-                ) ||
-                emote.old_value.data.host.files.find(
-                  file => file.name === '3x.avif',
-                ) ||
-                emote.old_value.data.host.files.find(
-                  file => file.name === '2x.avif',
-                ) ||
-                emote.old_value.data.host.files.find(
-                  file => file.name === '1x.avif',
-                );
-
-              removedEmotes.push({
-                name: emote.old_value.data.name,
-                id: emote.old_value.id,
-                url: `https://cdn.7tv.app/emote/${emote.old_value.id}/1x.avif`,
-                flags: 0,
-                original_name: emote.old_value.data.name,
-                creator: emote.old_value.data.owner?.display_name ?? null,
-                emote_link: `https://7tv.app/emotes/${emote.old_value.id}`,
-                site: '7TV Channel' as const,
-                frame_count: oldEmote4x?.frame_count ?? 1,
-                format: oldEmote4x?.format ?? 'avif',
-                aspect_ratio: oldEmote4x
-                  ? oldEmote4x.width / oldEmote4x.height
-                  : 1,
-                // eslint-disable-next-line no-bitwise
-                zero_width: Boolean(emote.old_value.data.flags & 256),
-                width: oldEmote4x?.width ?? 0,
-                height: oldEmote4x?.height ?? 0,
-                set_metadata: {
-                  setId: '',
-                  setName: '',
-                  capacity: null,
-                  ownerId: null,
-                  kind: EmoteSetKind.Normal,
-                  updatedAt: new Date().toISOString(),
-                  totalCount: 0,
-                },
-                actor: body.actor,
-              });
+              removedEmotes.push(
+                toSanitisedSevenTvEmote(emote.old_value, body.actor),
+              );
             }
+          });
+        }
+
+        if (body.updated) {
+          body.updated.forEach(emote => {
+            if (emote.old_value) {
+              removedEmotes.push(
+                toSanitisedSevenTvEmote(emote.old_value, body.actor),
+              );
+            }
+            addedEmotes.push(toSanitisedSevenTvEmote(emote.value, body.actor));
           });
         }
 
@@ -717,7 +696,9 @@ export function useSeventvWs(
 
           case 6: {
             logger.stvWs.warn(
-              `💚 Received invalid subscription condition: ${JSON.stringify(message.d)}`,
+              `💚 Received invalid subscription condition: ${JSON.stringify(
+                message.d,
+              )}`,
             );
             break;
           }
@@ -748,7 +729,7 @@ export function useSeventvWs(
     ],
   );
 
-  const { getWebSocket, sendJsonMessage } = useWebsocket(
+  const { getWebSocket, sendJsonMessage, readyState } = useWebsocket(
     shouldConnect ? DEFAULT_URL : null,
     {
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -959,6 +940,7 @@ export function useSeventvWs(
     subscribeToChannel,
     unsubscribeFromChannel,
     isConnected,
+    readyState,
     getConnectionState:
       getConnectionState as unknown as UseSeventvWsReturn['getConnectionState'],
   };

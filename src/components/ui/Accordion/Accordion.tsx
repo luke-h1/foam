@@ -1,16 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { androidTick, impact } from '@app/services/haptics-service';
 import { BlurView, type BlurViewProps } from 'expo-blur';
-import {
-  AndroidHaptics,
-  impactAsync,
-  ImpactFeedbackStyle,
-  performAndroidHapticsAsync,
-} from 'expo-haptics';
 import {
   Children,
   cloneElement,
   createContext,
   isValidElement,
+  type ComponentType,
   ReactElement,
   useCallback,
   useContext,
@@ -42,8 +38,9 @@ import {
   AccordionTriggerProps,
 } from './types';
 
-const AnimatedBlurView =
-  Animated.createAnimatedComponent<BlurViewProps>(BlurView);
+const AnimatedBlurView = Animated.createAnimatedComponent(
+  BlurView as ComponentType<BlurViewProps>,
+);
 
 const AccordionContext = createContext<AccordionContextValue | null>(null);
 
@@ -80,6 +77,7 @@ const ChevronIcon = ({ isOpen }: IconProps) => {
 
   useEffect(() => {
     rotation.value = withTiming<number>(isOpen ? 1 : 0, { duration: 200 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -304,9 +302,9 @@ const AccordionTrigger = ({ children }: AccordionTriggerProps) => {
   const onPress = useCallback(() => {
     toggleItem(value);
     if (Platform.OS === 'android') {
-      void performAndroidHapticsAsync(AndroidHaptics.Clock_Tick);
+      void androidTick();
     }
-    void impactAsync(ImpactFeedbackStyle.Medium);
+    void impact('medium');
   }, [toggleItem, value]);
 
   return (
@@ -408,7 +406,7 @@ const AccordionContent = ({ children }: AccordionContentProps) => {
                   ? 'dark'
                   : 'systemUltraThinMaterialDark'
               }
-              animatedProps={animatedBlurProps}
+              animatedProps={animatedBlurProps as never}
               // eslint-disable-next-line react-native/no-inline-styles
               style={{
                 overflow: 'hidden',

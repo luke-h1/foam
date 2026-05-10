@@ -21,7 +21,7 @@ export function useDebugOptions() {
     useState<DebugOptions>(fetchDebugOptions());
 
   useEffect(() => {
-    void storageService.clearExpired();
+    storageService.clearExpired();
 
     const handleStorageChange = () => {
       setDebugOptions(fetchDebugOptions());

@@ -11,9 +11,9 @@ export function Skeleton({ style }: SkeletonProps) {
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: theme.colors.black.bgAlpha,
+    backgroundColor: theme.colorBlackOverlay,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
+    borderRadius: theme.borderRadius16,
     opacity: 0.3,
   },
 });

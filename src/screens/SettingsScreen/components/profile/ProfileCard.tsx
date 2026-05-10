@@ -4,12 +4,13 @@ import { Modal } from '@app/components/Modal/Modal';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useAppNavigation } from '@app/hooks/useAppNavigation';
-import { resetRoot } from '@app/navigators/navigationUtilities';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
+import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { useRef, useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 interface ProfileMenuItem {
   title: string;
@@ -22,9 +23,11 @@ interface ProfileMenuItem {
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
-  const { navigate } = useAppNavigation();
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+
+  useScrollToTop(scrollRef);
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -35,18 +38,7 @@ export function ProfileCard() {
     void logout();
 
     setTimeout(() => {
-      resetRoot({
-        index: 0,
-        routes: [
-          {
-            name: 'Tabs',
-            state: {
-              index: 0,
-              routes: [{ name: 'Top' }],
-            },
-          },
-        ],
-      });
+      router.replace('/tabs/top');
     }, 300);
   };
 
@@ -56,20 +48,13 @@ export function ProfileCard() {
           title: 'My Channel',
           description: 'View your channel',
           icon: 'tv',
-          onPress: () =>
-            navigate('Streams', {
-              screen: 'StreamerProfile',
-              params: { id: user.id },
-            }),
+          onPress: () => router.push(`/streams/streamer-profile/${user.id}`),
         },
         {
           title: 'Blocked Users',
           description: 'Manage blocked users',
           icon: 'user-x',
-          onPress: () =>
-            navigate('Preferences', {
-              screen: 'BlockedUsers',
-            }),
+          onPress: () => router.push('/preferences/blocked-users'),
         },
       ]
     : [];
@@ -77,21 +62,19 @@ export function ProfileCard() {
   if (!user) {
     return (
       <ScrollView
+        ref={scrollRef}
         style={styles.main}
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.loginCard}>
           <LinearGradient
-            colors={[
-              theme.colors.accent.uiAlpha,
-              theme.colors.accent.bgAltAlpha,
-            ]}
+            colors={[theme.colorAccentSurface, theme.colorAccentSurface]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
           <View style={styles.loginIconContainer}>
             <View style={styles.loginIconCircle}>
-              <Icon icon="user" size={32} color={theme.colors.accent.accent} />
+              <Icon icon="user" size={32} color={theme.colorDarkGreen} />
             </View>
           </View>
           <Text type="xl" weight="bold" align="center" mb="sm">
@@ -108,13 +91,9 @@ export function ProfileCard() {
           </Text>
           <PressableArea
             style={styles.loginButton}
-            onPress={() => navigate('Login')}
+            onPress={() => router.push('/login')}
           >
-            <Icon
-              icon="log-in"
-              size={20}
-              color={theme.colors.accent.contrast}
-            />
+            <Icon icon="log-in" size={20} color={theme.colorBlack} />
             <Text weight="semibold" color="accent" contrast type="md">
               Sign in with Twitch
             </Text>
@@ -127,18 +106,14 @@ export function ProfileCard() {
   return (
     <>
       <ScrollView
+        ref={scrollRef}
         style={styles.main}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Profile Header */}
         <PressableArea
           style={styles.profileHeader}
-          onPress={() =>
-            navigate('Streams', {
-              screen: 'StreamerProfile',
-              params: { id: user.id },
-            })
-          }
+          onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
         >
           <View style={styles.avatarContainer}>
             {user.profile_image_url ? (
@@ -148,7 +123,11 @@ export function ProfileCard() {
               />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Icon icon="user" size={28} color={theme.colors.gray.textLow} />
+                <Icon
+                  icon="user"
+                  size={28}
+                  color={theme.color.textSecondary.dark}
+                />
               </View>
             )}
           </View>
@@ -163,7 +142,7 @@ export function ProfileCard() {
           <Icon
             icon="chevron-right"
             size={20}
-            color={theme.colors.gray.textLow}
+            color={theme.color.textSecondary.dark}
           />
         </PressableArea>
 
@@ -199,8 +178,8 @@ export function ProfileCard() {
                     size={18}
                     color={
                       item.variant === 'danger'
-                        ? theme.colors.red.accent
-                        : theme.colors.accent.accent
+                        ? theme.colorRed
+                        : theme.colorDarkGreen
                     }
                   />
                 </View>
@@ -220,7 +199,7 @@ export function ProfileCard() {
                 <Icon
                   icon="chevron-right"
                   size={18}
-                  color={theme.colors.gray.border}
+                  color={theme.color.border.dark}
                 />
               </PressableArea>
             ))}
@@ -255,138 +234,136 @@ export function ProfileCard() {
 }
 
 const styles = StyleSheet.create({
-  avatar: {
-    borderRadius: 28,
+  main: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space20,
+    paddingBottom: theme.space44,
+    gap: theme.space28,
+  },
+  // Login card styles
+  loginCard: {
+    backgroundColor: theme.darkActiveContent,
+    borderRadius: theme.borderRadius28,
+    padding: theme.space36,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colorBorderSecondary,
+  },
+
+  loginIconContainer: {
+    marginBottom: theme.space28,
+  },
+  loginIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
-    height: 56,
-    width: 56,
+  },
+  loginDescription: {
+    maxWidth: 280,
+    marginBottom: theme.space28,
+  },
+  loginButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.space16,
+    backgroundColor: theme.colorDarkGreen,
+    paddingVertical: theme.space20,
+    paddingHorizontal: theme.space36,
+    borderRadius: theme.borderRadius20,
+    width: '100%',
+  },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.darkActiveContent,
+    borderRadius: theme.borderRadius28,
+    padding: theme.space20,
+    gap: theme.space20,
+    borderWidth: 1,
+    borderColor: theme.colorBorderSecondary,
   },
   avatarContainer: {
     position: 'relative',
   },
-  avatarPlaceholder: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.ui,
-    borderColor: theme.colors.gray.border,
-    borderRadius: 28,
-    borderStyle: 'dashed',
-    borderWidth: 2,
-    height: 56,
-    justifyContent: 'center',
+  avatar: {
     width: 56,
-  },
-  loginButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.accent.accent,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing['2xl'],
-    paddingVertical: theme.spacing.lg,
-    width: '100%',
-  },
-  loginCard: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderColor: theme.colors.gray.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
-    borderWidth: 1,
-    overflow: 'hidden',
-    padding: theme.spacing['2xl'],
-  },
-  loginDescription: {
-    marginBottom: theme.spacing.xl,
-    maxWidth: 280,
-  },
-  loginIconCircle: {
-    alignItems: 'center',
-    borderRadius: 36,
+    height: 56,
+    borderRadius: 28,
     borderWidth: 2,
-    height: 72,
+  },
+  avatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    alignItems: 'center',
     justifyContent: 'center',
-    width: 72,
-  },
-  loginIconContainer: {
-    marginBottom: theme.spacing.xl,
-  },
-  logoutButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.red.uiAlpha,
-    borderColor: theme.colors.red.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-    justifyContent: 'center',
-    padding: theme.spacing.lg,
-  },
-  main: {
-    flex: 1,
-  },
-  menuCard: {
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderColor: theme.colors.gray.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  menuContent: {
-    flex: 1,
-    gap: theme.spacing.xs,
-  },
-  menuIconContainer: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.accent.uiAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.md,
-    height: 36,
-    justifyContent: 'center',
-    width: 36,
-  },
-  menuIconDanger: {
-    backgroundColor: theme.colors.red.uiAlpha,
-  },
-  menuItem: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
-  },
-  menuItemBorder: {
-    borderBottomColor: theme.colors.gray.borderAlpha,
-    borderBottomWidth: 1,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.gray.uiAlpha,
-    borderColor: theme.colors.gray.borderAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.spacing.lg,
-    padding: theme.spacing.lg,
+    borderWidth: 2,
+    borderColor: theme.color.border.dark,
+    borderStyle: 'dashed',
   },
   profileInfo: {
     flex: 1,
-    gap: theme.spacing.xs,
+    gap: theme.space8,
   },
-  scrollContent: {
-    gap: theme.spacing.xl,
-    paddingBottom: theme.spacing['3xl'],
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-  },
+  // Section styles
   section: {
-    gap: theme.spacing.sm,
+    gap: theme.space12,
   },
   sectionTitle: {
+    marginLeft: theme.space12,
     letterSpacing: 0.5,
-    marginLeft: theme.spacing.sm,
+  },
+  menuCard: {
+    backgroundColor: theme.darkActiveContent,
+    borderRadius: theme.borderRadius20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colorBorderSecondary,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.space20,
+    gap: theme.space20,
+  },
+  menuItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colorBorderSecondary,
+  },
+  menuIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: theme.borderRadius16,
+    backgroundColor: theme.colorAccentSurface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuIconDanger: {
+    backgroundColor: theme.colorRedSurface,
+  },
+  menuContent: {
+    flex: 1,
+    gap: theme.space8,
+  },
+  // Logout styles
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.space16,
+    backgroundColor: theme.colorRedSurface,
+    padding: theme.space20,
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    borderColor: theme.colorRedBorderAlpha,
   },
 });

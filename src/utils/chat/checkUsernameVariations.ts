@@ -9,10 +9,8 @@ export async function checkUsernameVariations(
     `@${tmiUsername},`,
   ];
 
-  const checks = await Promise.all(
-    variations.map(variation =>
-      new RegExp(`\\b${variation}\\b`, 'i').test(message),
-    ),
+  const checks = variations.map(variation =>
+    new RegExp(`\\b${variation}\\b`, 'i').test(message),
   );
 
   return checks.some(Boolean);

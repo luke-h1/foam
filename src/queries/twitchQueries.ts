@@ -57,6 +57,7 @@ export const twitchQueries = {
   },
   getTopStreamsInfinite(): {
     queryKey: string[];
+    staleTime: number;
     queryFn: ({
       pageParam,
     }: {
@@ -65,6 +66,7 @@ export const twitchQueries = {
   } {
     return {
       queryKey: ['topStreamsInfinite'],
+      staleTime: 60_000,
       queryFn: async ({ pageParam }: { pageParam?: string }) => {
         return twitchService.getTopStreams(pageParam);
       },
@@ -93,6 +95,7 @@ export const twitchQueries = {
   getCategory(id: string): UseQueryOptions<Category> {
     return {
       queryKey: ['category', id],
+      staleTime: 60_000,
       queryFn: () => twitchService.getCategory(id),
     };
   },
@@ -106,6 +109,7 @@ export const twitchQueries = {
   },
   getStreamsByCategory(id: string): {
     queryKey: string[];
+    staleTime: number;
     queryFn: ({
       pageParam,
     }: {
@@ -114,6 +118,7 @@ export const twitchQueries = {
   } {
     return {
       queryKey: ['streamsByCategory', id],
+      staleTime: 60_000,
       queryFn: ({ pageParam }: { pageParam?: string }) =>
         twitchService.getStreamsByCategory(id, pageParam),
     };

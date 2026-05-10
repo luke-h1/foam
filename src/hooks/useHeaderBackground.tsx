@@ -1,3 +1,4 @@
+import { useNavigation } from 'expo-router';
 import { useEffect } from 'react';
 import Animated, {
   SharedValue,
@@ -5,14 +6,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { colorKit } from 'reanimated-color-picker';
-import { useAppNavigation } from './useAppNavigation';
 
 interface Props {
   offsetY: SharedValue<number>;
 }
 
 export const useHeaderBackground = ({ offsetY }: Props) => {
-  const navigation = useAppNavigation();
+  const navigation = useNavigation();
 
   const rightContainerStyle = useAnimatedStyle(() => {
     return {

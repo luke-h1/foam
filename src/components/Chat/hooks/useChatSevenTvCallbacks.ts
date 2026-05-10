@@ -24,6 +24,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
 import { useCallback } from 'react';
+import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 
 import {
   get7TvCosmeticId,
@@ -39,10 +40,12 @@ function getDataFromChangeValue(value: {
 
 export function useChatSevenTvCallbacks({
   channelId,
+  channelName,
   sevenTvEmoteSetId,
   canFetchCosmetics,
   fetchAndCacheUserCosmetics,
   updateSevenTvEmotes,
+  onEmoteNotice,
 }: {
   channelId: string;
   sevenTvEmoteSetId: string | undefined;
@@ -53,6 +56,8 @@ export function useChatSevenTvCallbacks({
     added: SanitisedEmote[],
     removed: SanitisedEmote[],
   ) => void;
+  onEmoteNotice?: (message: ReturnType<typeof generateStvEmoteNotice>) => void;
+  channelName: string;
 }) {
   const onEmoteUpdate = useCallback(
     ({
@@ -68,8 +73,26 @@ export function useChatSevenTvCallbacks({
         `Channel ${cId}: +${added.length} -${removed.length} emotes`,
       );
       updateSevenTvEmotes(cId, added, removed);
+      added.forEach(emote => {
+        onEmoteNotice?.(
+          generateStvEmoteNotice({
+            channelName,
+            emote,
+            type: 'added',
+          }),
+        );
+      });
+      removed.forEach(emote => {
+        onEmoteNotice?.(
+          generateStvEmoteNotice({
+            channelName,
+            emote,
+            type: 'removed',
+          }),
+        );
+      });
     },
-    [updateSevenTvEmotes],
+    [channelName, onEmoteNotice, updateSevenTvEmotes],
   );
 
   const onCosmeticCreate = useCallback((data: CosmeticCreateCallbackData) => {

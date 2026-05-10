@@ -196,15 +196,15 @@ export function RemoteConfigScreen() {
 
 const styles = StyleSheet.create({
   appVariant: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.space12,
   },
   buttonText: {
     color: '#fff',
   },
   card: {
-    backgroundColor: theme.colors.gray.uiAlpha,
+    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
     overflow: 'hidden',
   },
   configHeader: {
@@ -213,36 +213,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   configItem: {
-    gap: theme.spacing.sm,
-    padding: theme.spacing.md,
+    gap: theme.space12,
+    padding: theme.space16,
   },
   configItemBorder: {
-    borderBottomColor: theme.colors.gray.borderAlpha,
+    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: 1,
   },
   contentContainer: {
-    gap: theme.spacing.xl,
-    padding: theme.spacing.lg,
+    gap: theme.space28,
+    padding: theme.space20,
     paddingBottom: 100,
   },
   defaultValueBox: {
-    backgroundColor: theme.colors.gray.bgAltAlpha,
+    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     opacity: 0.7,
-    padding: theme.spacing.sm,
+    padding: theme.space12,
   },
   defaultValueText: {
-    color: theme.colors.gray.textLow,
+    color: theme.color.textSecondary.dark,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
   },
   fetchButton: {
     alignItems: 'center',
-    backgroundColor: theme.colors.blue.accent,
+    backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.borderRadius20,
     flexDirection: 'row',
     gap: 8,
     justifyContent: 'center',
@@ -259,26 +259,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 12,
-    padding: theme.spacing.md,
+    padding: theme.space16,
   },
   section: {
-    gap: theme.spacing.sm,
+    gap: theme.space12,
   },
   sectionTitle: {
     letterSpacing: 0.5,
-    marginLeft: theme.spacing.xs,
+    marginLeft: theme.space8,
   },
   sourceTag: {
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.borderRadius12,
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
   valueBox: {
-    backgroundColor: theme.colors.gray.bgAltAlpha,
+    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.sm,
-    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius12,
+    padding: theme.space12,
   },
   valueLabel: {
     marginLeft: 2,
@@ -287,13 +287,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   valueText: {
-    color: theme.colors.grass.accent,
+    color: theme.colorGrass,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
   },
   valuesContainer: {
-    gap: theme.spacing.xs,
+    gap: theme.space8,
   },
 });
 
@@ -301,9 +301,9 @@ function getSourceTagStyle(source: string) {
   return {
     backgroundColor:
       source === 'remote'
-        ? theme.colors.green.accent
+        ? theme.colorGreen
         : source === 'default'
-          ? theme.colors.orange.accent
-          : theme.colors.gray.text,
+          ? theme.colorOrange
+          : theme.color.text.dark,
   };
 }

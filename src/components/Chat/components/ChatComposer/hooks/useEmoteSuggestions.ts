@@ -2,6 +2,13 @@ import { useCurrentEmoteData, useEmojis } from '@app/store/chatStore/hooks';
 import type { SanitisedEmote } from '@app/types/emote';
 import { useMemo } from 'react';
 
+interface SearchableEmote {
+  emote: SanitisedEmote;
+  isChannel: boolean;
+  lowerName: string;
+  lowerOriginalName?: string;
+}
+
 interface UseEmoteSuggestionsProps {
   searchTerm: string;
   maxSuggestions?: number;
@@ -25,54 +32,59 @@ export function useEmoteSuggestions({
   } = useCurrentEmoteData();
   const emojis = useEmojis();
 
-  const allEmotes = useMemo(() => {
-    const channelEmotes = [
-      ...sevenTvChannelEmotes,
-      ...twitchChannelEmotes,
-      ...bttvChannelEmotes,
-      ...ffzChannelEmotes,
-    ];
+  const searchableEmotes = useMemo(() => {
+    const emoteMap = new Map<string, SearchableEmote>();
 
-    const globalEmotes = [
-      ...sevenTvGlobalEmotes,
-      ...twitchGlobalEmotes,
-      ...bttvGlobalEmotes,
-      ...ffzGlobalEmotes,
-      ...emojis,
-    ];
+    const addEmotes = (
+      emotes: Array<SanitisedEmote | undefined>,
+      isChannel: boolean,
+    ) => {
+      for (const emote of emotes) {
+        if (!emote?.name) {
+          continue;
+        }
 
-    const emoteMap = new Map<string, SanitisedEmote>();
+        const dedupeKey =
+          emote.site === 'Emoji'
+            ? `emoji:${emote.id}`
+            : emote.name.toLowerCase();
 
-    globalEmotes.forEach(emote => {
-      if (emote && emote.name) {
-        emoteMap.set(emote.name.toLowerCase(), emote);
+        if (emoteMap.has(dedupeKey)) {
+          continue;
+        }
+
+        const lowerName = emote.name.toLowerCase();
+        emoteMap.set(dedupeKey, {
+          emote,
+          isChannel,
+          lowerName,
+          lowerOriginalName: emote.original_name?.toLowerCase(),
+        });
       }
-    });
+    };
 
-    // Add channel emotes (override global ones with same name)
-    channelEmotes.forEach(emote => {
-      if (emote && emote.name) {
-        emoteMap.set(emote.name.toLowerCase(), emote);
-      }
-    });
+    addEmotes(sevenTvGlobalEmotes, false);
+    addEmotes(twitchGlobalEmotes, false);
+    addEmotes(bttvGlobalEmotes, false);
+    addEmotes(ffzGlobalEmotes, false);
+    addEmotes(emojis, false);
+
+    // Channel emotes override global emotes with the same name.
+    addEmotes(sevenTvChannelEmotes, true);
+    addEmotes(twitchChannelEmotes, true);
+    addEmotes(bttvChannelEmotes, true);
+    addEmotes(ffzChannelEmotes, true);
 
     const uniqueEmotes = Array.from(emoteMap.values());
+    uniqueEmotes.sort((a, b) => {
+      if (prioritizeChannelEmotes && a.isChannel !== b.isChannel) {
+        return a.isChannel ? -1 : 1;
+      }
 
-    if (prioritizeChannelEmotes) {
-      const channelEmoteIds = new Set(channelEmotes.map(ce => ce.id));
+      return a.emote.name.localeCompare(b.emote.name);
+    });
 
-      return uniqueEmotes.sort((a, b) => {
-        const aIsChannel = channelEmoteIds.has(a.id);
-        const bIsChannel = channelEmoteIds.has(b.id);
-
-        if (aIsChannel && !bIsChannel) return -1;
-        if (!aIsChannel && bIsChannel) return 1;
-
-        return a.name.localeCompare(b.name);
-      });
-    }
-
-    return uniqueEmotes.sort((a, b) => a.name.localeCompare(b.name));
+    return uniqueEmotes;
   }, [
     sevenTvChannelEmotes,
     sevenTvGlobalEmotes,
@@ -85,6 +97,11 @@ export function useEmoteSuggestions({
     emojis,
     prioritizeChannelEmotes,
   ]);
+
+  const allEmotes = useMemo(
+    () => searchableEmotes.map(entry => entry.emote),
+    [searchableEmotes],
+  );
 
   const filteredEmotes = useMemo(() => {
     const trimmedSearch = searchTerm.trim();
@@ -99,24 +116,22 @@ export function useEmoteSuggestions({
     }
 
     const results: SanitisedEmote[] = [];
-    const maxResults = maxSuggestions;
 
-    // eslint-disable-next-line no-restricted-syntax
-    for (const emote of allEmotes) {
-      if (results.length >= maxResults) break;
+    for (const entry of searchableEmotes) {
+      if (results.length >= maxSuggestions) {
+        break;
+      }
 
-      const nameMatch = emote.name.toLowerCase().includes(lowerSearch);
-      const originalNameMatch = emote.original_name
-        ?.toLowerCase()
-        .includes(lowerSearch);
-
-      if (nameMatch || originalNameMatch) {
-        results.push(emote);
+      if (
+        entry.lowerName.includes(lowerSearch) ||
+        entry.lowerOriginalName?.includes(lowerSearch)
+      ) {
+        results.push(entry.emote);
       }
     }
 
     return results;
-  }, [allEmotes, searchTerm, maxSuggestions]);
+  }, [maxSuggestions, searchTerm, searchableEmotes]);
 
   return {
     filteredEmotes,

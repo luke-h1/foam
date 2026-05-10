@@ -43,6 +43,6 @@ describe('LiveStreamCard', () => {
 
     expect(screen.getByText('Test Stream Title')).toBeOnTheScreen();
     expect(screen.getByText('Test user')).toBeOnTheScreen();
-    expect(screen.getByText('10,000')).toBeOnTheScreen();
+    expect(screen.getByText('10,000 watching')).toBeOnTheScreen();
   });
 });

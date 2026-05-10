@@ -6,7 +6,7 @@ import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useMemo } from 'react';
-import { Modal, Platform, View, StyleSheet } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 interface Props {
   visible: boolean;
@@ -18,12 +18,26 @@ interface Props {
   handleHidePhrase?: () => void;
   handleHideUser?: () => void;
   handleHighlightUser?: () => void;
+  handleDeleteMessage?: () => void;
+  handleTimeoutUser?: () => void;
+  handleBanUser?: () => void;
   isUserHighlighted?: boolean;
+  canModerateChat?: boolean;
+  canDeleteMessage?: boolean;
+  canModerateUser?: boolean;
 }
 
 type ActionItem = {
   icon: string;
-  id: 'copy' | 'reply' | 'hide-user' | 'highlight-user' | 'hide-phrase';
+  id:
+    | 'copy'
+    | 'reply'
+    | 'hide-user'
+    | 'highlight-user'
+    | 'hide-phrase'
+    | 'delete-message'
+    | 'timeout-user'
+    | 'ban-user';
   label: string;
   onPress: () => void;
 };
@@ -39,7 +53,13 @@ export function ActionSheet(props: Props) {
     handleHidePhrase,
     handleHideUser,
     handleHighlightUser,
+    handleDeleteMessage,
+    handleTimeoutUser,
+    handleBanUser,
     isUserHighlighted,
+    canModerateChat,
+    canDeleteMessage,
+    canModerateUser,
   } = props;
 
   const actions = useMemo<ActionItem[]>(() => {
@@ -95,10 +115,53 @@ export function ActionSheet(props: Props) {
       });
     }
 
+    if (canModerateChat) {
+      if (canDeleteMessage) {
+        items.push({
+          id: 'delete-message',
+          icon: 'trash-2',
+          label: 'Delete Message',
+          onPress: () => {
+            handleDeleteMessage?.();
+            onClose();
+          },
+        });
+      }
+
+      if (canModerateUser) {
+        items.push(
+          {
+            id: 'timeout-user',
+            icon: 'clock',
+            label: 'Timeout for 10m',
+            onPress: () => {
+              handleTimeoutUser?.();
+              onClose();
+            },
+          },
+          {
+            id: 'ban-user',
+            icon: 'slash',
+            label: 'Ban User',
+            onPress: () => {
+              handleBanUser?.();
+              onClose();
+            },
+          },
+        );
+      }
+    }
+
     return items;
   }, [
+    canDeleteMessage,
+    canModerateChat,
+    canModerateUser,
+    handleBanUser,
     handleCopy,
+    handleDeleteMessage,
     handleReply,
+    handleTimeoutUser,
     username,
     handleHideUser,
     handleHighlightUser,
@@ -114,7 +177,10 @@ export function ActionSheet(props: Props) {
         | 'reply'
         | 'hide-user'
         | 'highlight-user'
-        | 'hide-phrase',
+        | 'hide-phrase'
+        | 'delete-message'
+        | 'timeout-user'
+        | 'ban-user',
     ) => {
       switch (actionId) {
         case 'copy':
@@ -127,6 +193,12 @@ export function ActionSheet(props: Props) {
           return 'star' as const;
         case 'hide-phrase':
           return 'nosign' as const;
+        case 'delete-message':
+          return 'trash' as const;
+        case 'timeout-user':
+          return 'clock' as const;
+        case 'ban-user':
+          return 'slash.circle' as const;
         default:
           return 'questionmark.circle' as const;
       }
@@ -171,42 +243,63 @@ export function ActionSheet(props: Props) {
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="formSheet"
+      presentationStyle="overFullScreen"
+      transparent
       onRequestClose={onClose}
     >
-      <View style={styles.wrapper}>
-        <View style={styles.previewCard}>
-          <View style={styles.messageLine}>
-            {username ? (
-              <Text style={styles.usernameText}>{username}: </Text>
-            ) : null}
-            {message.map(renderMessagePart)}
-          </View>
-        </View>
-
-        <View style={styles.actionGroup}>
-          {actions.map(action => (
-            <Button
-              key={action.label}
-              onPress={action.onPress}
-              style={styles.actionButton}
-            >
-              <View style={styles.actionContent}>
-                {Platform.OS === 'ios' ? (
-                  <SymbolView
-                    name={getSFSymbolName(action.id)}
-                    size={18}
-                    tintColor="#b7bdc9"
-                    weight="regular"
-                    style={styles.actionIcon}
-                  />
-                ) : (
-                  <Icon icon={action.icon} color="#b7bdc9" size={18} />
-                )}
-                <Text style={styles.actionText}>{action.label}</Text>
-              </View>
+      <View style={styles.backdrop}>
+        <View style={styles.wrapper}>
+          <View style={styles.header}>
+            <Text style={styles.title} weight="semibold">
+              Message Actions
+            </Text>
+            <Button onPress={onClose} style={styles.closeButton}>
+              <Text style={styles.closeText}>Done</Text>
             </Button>
-          ))}
+          </View>
+
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.previewCard}>
+              <View style={styles.messageLine}>
+                {username ? (
+                  <Text style={styles.usernameText}>{username}: </Text>
+                ) : null}
+                {message.map(renderMessagePart)}
+              </View>
+            </View>
+
+            <View style={styles.actionGroup}>
+              {actions.map((action, index) => (
+                <Button
+                  key={action.label}
+                  onPress={action.onPress}
+                  style={[
+                    styles.actionButton,
+                    index < actions.length - 1 && styles.actionButtonBorder,
+                  ]}
+                >
+                  <View style={styles.actionContent}>
+                    {Platform.OS === 'ios' ? (
+                      <SymbolView
+                        name={getSFSymbolName(action.id)}
+                        size={18}
+                        tintColor="#b7bdc9"
+                        weight="regular"
+                        style={styles.actionIcon}
+                      />
+                    ) : (
+                      <Icon icon={action.icon} color="#b7bdc9" size={18} />
+                    )}
+                    <Text style={styles.actionText}>{action.label}</Text>
+                  </View>
+                </Button>
+              ))}
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -215,28 +308,60 @@ export function ActionSheet(props: Props) {
 
 const styles = StyleSheet.create({
   actionButton: {
-    backgroundColor: 'transparent',
-    minHeight: Platform.select({ ios: 56, android: 56 }),
-    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.color.background.darkAlt,
+    minHeight: 48,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
+  },
+  actionButtonBorder: {
+    borderBottomColor: theme.color.border.dark,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionContent: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: theme.space12,
   },
   actionGroup: {
-    backgroundColor: 'transparent',
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.radii.xl,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   actionIcon: {
     opacity: 0.9,
   },
   actionText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.md,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
     fontWeight: Platform.select({ ios: '400', android: '400' }),
+  },
+  closeButton: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space8,
+  },
+  closeText: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
+    fontWeight: '600',
+  },
+  backdrop: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.58)',
+    flex: 1,
+    justifyContent: 'center',
+    padding: theme.space20,
+  },
+  header: {
+    alignItems: 'center',
+    borderBottomColor: theme.color.border.dark,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: theme.space16,
   },
   messageEmote: {
     height: 24,
@@ -249,27 +374,47 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   messageText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.lg,
-    lineHeight: theme.font.fontSize.lg * 1.25,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize16,
+    lineHeight: theme.fontSize16 * 1.25,
   },
   previewCard: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
+  },
+  title: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize16,
   },
   usernameText: {
-    color: theme.colors.gray.text,
-    fontSize: theme.font.fontSize.lg,
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize16,
     fontWeight: '600',
   },
   wrapper: {
-    backgroundColor: '#171b23',
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: 24,
+    borderWidth: 1,
+    gap: theme.space16,
+    maxHeight: '82%',
+    overflow: 'hidden',
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
+    width: '100%',
+  },
+  scroll: {
     flex: 1,
-    gap: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.md,
+  },
+  scrollContent: {
+    gap: theme.space16,
+    paddingBottom: theme.space20,
   },
 });
 
