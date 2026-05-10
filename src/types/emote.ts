@@ -68,6 +68,7 @@ export interface TwitchSanitisedEmote extends SanitisedEmoteBase {
 
 export interface EmojiSanitisedEmote extends SanitisedEmoteBase {
   site: 'Emoji';
+  emoji_hexcode?: string;
   flags?: number;
   aspect_ratio?: number;
   zero_width?: boolean;

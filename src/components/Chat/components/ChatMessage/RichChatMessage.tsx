@@ -419,6 +419,7 @@ function ChatMessageComponent<
               part={part}
               handleEmotePress={handleEmotePress}
               shouldOverlayPrevious={shouldOverlayPrevious}
+              targetSize={compact ? 24 : 30}
             />
           );
         }
@@ -558,7 +559,11 @@ function ChatMessageComponent<
           <Image
             useNitro
             source={badge.url}
-            style={[styles.badge, moderationNotice && styles.moderatedBadge]}
+            style={[
+              styles.badge,
+              compact && styles.badgeCompact,
+              moderationNotice && styles.moderatedBadge,
+            ]}
             transition={0}
           />
         </Button>
@@ -567,7 +572,7 @@ function ChatMessageComponent<
     }
 
     return renderedBadges;
-  }, [badges, handleBadgePress, moderationNotice]);
+  }, [badges, compact, handleBadgePress, moderationNotice]);
 
   const bodyVariant = getChatBodyVariant(isTwitchSystemNotice, message, sender);
 
@@ -823,13 +828,17 @@ const styles = StyleSheet.create({
     marginRight: 2,
     width: 20,
   },
+  badgeCompact: {
+    height: 16,
+    width: 16,
+  },
   chatContainer: {
     minHeight: 32,
     paddingVertical: 2,
   },
   chatContainerCompact: {
-    minHeight: 28,
-    paddingVertical: 1,
+    minHeight: 22,
+    paddingVertical: 0,
   },
   moderatedBadge: {
     opacity: 0.72,
@@ -863,6 +872,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   mentionCompact: {
+    fontSize: theme.fontSize11,
+    lineHeight: 14,
     marginHorizontal: 1,
   },
   mentionDefaultColor: {
@@ -885,8 +896,8 @@ const styles = StyleSheet.create({
     lineHeight: theme.space20,
   },
   messageTextCompact: {
-    fontSize: theme.fontSize12,
-    lineHeight: theme.space16,
+    fontSize: theme.fontSize11,
+    lineHeight: 14,
   },
   moderatedMessageText: {
     color: 'rgba(214, 214, 217, 0.72)',
@@ -983,14 +994,14 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize11,
   },
   timestampCompact: {
-    fontSize: theme.fontSize11,
+    fontSize: 10,
     marginRight: 2,
   },
   usernameButton: {
     alignSelf: 'center',
   },
   usernameCompact: {
-    fontSize: theme.fontSize12,
+    fontSize: theme.fontSize11,
   },
   viewerMilestoneContainer: {
     backgroundColor: 'rgba(145, 71, 255, 0.05)',

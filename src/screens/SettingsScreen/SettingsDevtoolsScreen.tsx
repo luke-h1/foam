@@ -54,7 +54,7 @@ export function SettingsDevtoolsScreen() {
             </Form.Link>
             <Form.Link
               systemImage="book.closed"
-              onPress={() => router.push('/storybook')}
+              onPress={() => router.push('/tabs/settings/storybook')}
             >
               Storybook
             </Form.Link>
@@ -110,7 +110,7 @@ export function SettingsDevtoolsScreen() {
             title="Storybook"
             subtitle="Component previews and design-system inspection"
             icon={{ icon: 'book-open', color: theme.colorTeal }}
-            onPress={() => router.push('/storybook')}
+            onPress={() => router.push('/tabs/settings/storybook')}
           />
         </SettingsSection>
       </ScrollView>

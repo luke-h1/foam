@@ -48,6 +48,8 @@ export function SettingsRow({
   icon,
   trailing,
   onPress,
+  accessibilityRole,
+  accessibilityState,
   danger,
 }: {
   title: string;
@@ -55,6 +57,10 @@ export function SettingsRow({
   icon?: RowIcon;
   trailing?: ReactNode;
   onPress?: () => void;
+  accessibilityRole?: 'button' | 'switch';
+  accessibilityState?: {
+    checked?: boolean;
+  };
   danger?: boolean;
 }) {
   const content = (
@@ -69,7 +75,7 @@ export function SettingsRow({
         >
           <Icon
             icon={icon.icon}
-            size={18}
+            size={20}
             color={icon.color || theme.colorDarkGreen}
           />
         </View>
@@ -92,7 +98,16 @@ export function SettingsRow({
 
   if (!onPress) return content;
 
-  return <PressableArea onPress={onPress}>{content}</PressableArea>;
+  return (
+    <PressableArea
+      accessibilityLabel={title}
+      accessibilityRole={accessibilityRole ?? 'button'}
+      accessibilityState={accessibilityState}
+      onPress={onPress}
+    >
+      {content}
+    </PressableArea>
+  );
 }
 
 export function SettingsToggleRow(props: {
@@ -107,6 +122,8 @@ export function SettingsToggleRow(props: {
   return (
     <SettingsRow
       {...rowProps}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
       trailing={<Switch value={value} onValueChange={onValueChange} />}
     />
   );
@@ -142,58 +159,53 @@ export function SettingsLinkRow(props: {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.color.border.dark,
+    backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius28,
-    borderWidth: 1,
+    borderRadius: theme.borderRadius12,
     overflow: 'hidden',
   },
   copy: {
     flex: 1,
     gap: theme.space8,
+    minWidth: 0,
   },
   footer: {
-    marginTop: theme.space12,
-    paddingHorizontal: theme.space12,
+    marginTop: theme.space8,
+    paddingHorizontal: theme.space16,
   },
   iconWrap: {
     alignItems: 'center',
-    backgroundColor: theme.colorAccentSurface,
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    borderWidth: 1,
-    height: 36,
+    height: 24,
     justifyContent: 'center',
-    width: 36,
+    width: 24,
   },
   iconWrapDanger: {
-    backgroundColor: theme.colorRedSurface,
-    borderColor: theme.colorRedBorderUi,
+    opacity: 0.9,
   },
   linkTrailing: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space12,
+    flexShrink: 1,
+    justifyContent: 'flex-end',
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: 1,
+    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
-    gap: theme.space16,
-    minHeight: 64,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space16,
+    gap: theme.space12,
+    minHeight: 56,
+    paddingHorizontal: theme.space16,
+    paddingVertical: 14,
   },
   section: {
-    gap: theme.space12,
-    marginBottom: theme.space28,
+    gap: theme.space8,
+    marginBottom: theme.space24,
   },
   sectionTitle: {
-    letterSpacing: 1.1,
-    paddingHorizontal: theme.space12,
+    letterSpacing: 0.5,
+    paddingHorizontal: theme.space16,
     textTransform: 'uppercase',
   },
 });

@@ -265,7 +265,7 @@ export function SearchScreen() {
   const ListHeaderComponent = useMemo(
     () => (
       <View style={styles.header}>
-        <Text type="5xl" variant="display" style={styles.title}>
+        <Text type="4xl" weight="bold" style={styles.title}>
           Search
         </Text>
         <Text type="sm" color="gray.textLow" style={styles.subtitle}>
@@ -330,7 +330,7 @@ export function SearchScreen() {
               >
                 START WITH
               </Text>
-              <Text type="2xl" variant="display" style={styles.sectionHeadline}>
+              <Text type="2xl" weight="bold" style={styles.sectionHeadline}>
                 Quick routes
               </Text>
             </View>
@@ -378,7 +378,7 @@ export function SearchScreen() {
             >
               {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
             </Text>
-            <Text type="2xl" variant="display" style={styles.sectionHeadline}>
+            <Text type="2xl" weight="bold" style={styles.sectionHeadline}>
               {selectedFilter === 'channels'
                 ? 'Matching channels'
                 : 'Matching categories'}

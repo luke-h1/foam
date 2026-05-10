@@ -110,14 +110,21 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
             ]}
             showsVerticalScrollIndicator={false}
           >
-            <Button style={styles.menuItem} onPress={handleRefetchEmotes}>
-              <Icon icon="refresh-cw" color={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
-                Refetch Emotes & Badges
-              </Text>
-            </Button>
+            {onRefetchEmotes ? (
+              <Button
+                label="Refetch Emotes and Badges"
+                style={styles.menuItem}
+                onPress={handleRefetchEmotes}
+              >
+                <Icon icon="refresh-cw" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Refetch Emotes & Badges
+                </Text>
+              </Button>
+            ) : null}
 
             <Button
+              label="Toggle Chat Density"
               style={styles.menuItem}
               onPress={() => {
                 onToggleChatDensity?.();
@@ -135,7 +142,11 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               </View>
             </Button>
 
-            <View style={styles.menuItem}>
+            <Button
+              label="Show Timestamps"
+              style={styles.menuItem}
+              onPress={() => onToggleShowTimestamps?.(!showTimestamps)}
+            >
               <Icon icon="clock" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -143,12 +154,18 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 </Text>
                 <Switch
                   value={showTimestamps}
-                  onValueChange={onToggleShowTimestamps}
+                  onValueChange={value => onToggleShowTimestamps?.(value)}
                 />
               </View>
-            </View>
+            </Button>
 
-            <View style={styles.menuItem}>
+            <Button
+              label="Highlight Own Mentions"
+              style={styles.menuItem}
+              onPress={() =>
+                onToggleHighlightOwnMentions?.(!highlightOwnMentions)
+              }
+            >
               <Icon icon="at-sign" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -156,12 +173,18 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 </Text>
                 <Switch
                   value={highlightOwnMentions}
-                  onValueChange={onToggleHighlightOwnMentions}
+                  onValueChange={value => onToggleHighlightOwnMentions?.(value)}
                 />
               </View>
-            </View>
+            </Button>
 
-            <View style={styles.menuItem}>
+            <Button
+              label="Inline Reply Context"
+              style={styles.menuItem}
+              onPress={() =>
+                onToggleInlineReplyContext?.(!showInlineReplyContext)
+              }
+            >
               <Icon icon="corner-up-left" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -169,12 +192,16 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 </Text>
                 <Switch
                   value={showInlineReplyContext}
-                  onValueChange={onToggleInlineReplyContext}
+                  onValueChange={value => onToggleInlineReplyContext?.(value)}
                 />
               </View>
-            </View>
+            </Button>
 
-            <View style={styles.menuItem}>
+            <Button
+              label="Show Jump Pill"
+              style={styles.menuItem}
+              onPress={() => onToggleShowUnreadJumpPill?.(!showUnreadJumpPill)}
+            >
               <Icon icon="arrow-down-circle" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -182,17 +209,23 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 </Text>
                 <Switch
                   value={showUnreadJumpPill}
-                  onValueChange={onToggleShowUnreadJumpPill}
+                  onValueChange={value => onToggleShowUnreadJumpPill?.(value)}
                 />
               </View>
-            </View>
-
-            <Button style={styles.menuItem} onPress={handleReconnect}>
-              <Icon icon="wifi" color={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
-                Reconnect
-              </Text>
             </Button>
+
+            {onReconnect ? (
+              <Button
+                label="Reconnect"
+                style={styles.menuItem}
+                onPress={handleReconnect}
+              >
+                <Icon icon="wifi" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Reconnect
+                </Text>
+              </Button>
+            ) : null}
 
             <View style={styles.menuItem}>
               <Icon icon="activity" color={theme.colorBorderHover} />
@@ -208,12 +241,18 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               </View>
             </View>
 
-            <Button style={styles.menuItem} onPress={handleRefreshVideo}>
-              <Icon icon="video" color={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
-                Refresh Video
-              </Text>
-            </Button>
+            {onRefreshVideo ? (
+              <Button
+                label="Refresh Video"
+                style={styles.menuItem}
+                onPress={handleRefreshVideo}
+              >
+                <Icon icon="video" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Refresh Video
+                </Text>
+              </Button>
+            ) : null}
 
             <View style={styles.menuItem}>
               <Icon icon="repeat" color={theme.colorBorderHover} />

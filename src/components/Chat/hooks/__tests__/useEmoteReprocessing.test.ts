@@ -240,16 +240,59 @@ describe('useEmoteReprocessing', () => {
     expect(mockUpdateMessage).not.toHaveBeenCalled();
   });
 
-  test('skips messages that already have emotes', () => {
+  test('reprocesses existing emote parts when reprocessKey changes', () => {
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    processedMessageIdsRef.current.add('1');
     const withEmote = {
       ...createTextOnlyMessage('1', 'n1', 'hello'),
       message: [
         { type: 'text', content: 'hi ' },
-        { type: 'emote', content: 'Kappa', id: 'e1', url: '' },
+        {
+          type: 'emote',
+          content: 'Kappa',
+          original_name: 'Kappa',
+          id: 'e1',
+          url: '',
+        },
       ],
     };
     const peek = jest.fn().mockReturnValue([withEmote]);
+
+    const { rerender } = renderHook(
+      ({ reprocessKey }: { reprocessKey: string }) =>
+        useEmoteReprocessing({
+          channelId,
+          channelEmoteData: {},
+          messages$: { peek },
+          emoteLoadStatus: 'success',
+          processedMessageIdsRef,
+          reprocessKey,
+        }),
+      {
+        initialProps: {
+          reprocessKey: 'twitter',
+        },
+      },
+    );
+
+    expect(mockUpdateMessage).not.toHaveBeenCalled();
+
+    rerender({ reprocessKey: 'google' });
+
+    expect(mockUpdateMessage).toHaveBeenCalledWith('1', 'n1', {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      message: expect.any(Array),
+      badges: [],
+    });
+  });
+
+  test('skips messages with non-chat content parts', () => {
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    const withMedia = {
+      ...createTextOnlyMessage('1', 'n1', 'hello'),
+      message: [{ type: 'twitchClip', content: 'https://example.com' }],
+    };
+    const peek = jest.fn().mockReturnValue([withMedia]);
 
     renderHook(() =>
       useEmoteReprocessing({

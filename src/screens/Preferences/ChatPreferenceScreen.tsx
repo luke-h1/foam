@@ -2,8 +2,9 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import * as Form from '@app/components/Form/Form';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { Image } from '@app/components/Image/Image';
 import {
-  SettingsLinkRow,
+  SettingsRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
@@ -11,12 +12,18 @@ import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/Text/Text';
 import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
+import type { SanitisedEmote } from '@app/types/emote';
 import {
   EMOJI_STYLE_OPTIONS,
+  getEmojiEmotes,
   type EmojiStyle,
 } from '@app/utils/emoji/emojiEmotes';
+import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+const DENSITY_LABELS = ['Comfortable', 'Compact'];
+const EMOJI_PREVIEW_SHORTCODES = [':joy:', ':heart:', ':fire:'];
 
 export function ChatPreferenceScreen() {
   const {
@@ -38,153 +45,244 @@ export function ChatPreferenceScreen() {
     update,
   } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
+  const [previewDensity, setPreviewDensity] = useState(chatDensity);
+  const [previewEmojiStyle, setPreviewEmojiStyle] = useState(emojiStyle);
+  const densityIndex = previewDensity === 'compact' ? 1 : 0;
+  const emojiLabels = EMOJI_STYLE_OPTIONS.map(option => option.label);
+  const emojiIndex = Math.max(
+    0,
+    EMOJI_STYLE_OPTIONS.findIndex(option => option.value === previewEmojiStyle),
+  );
+  const emojiPreviewEmotes = useMemo(() => {
+    const emotes = getEmojiEmotes(previewEmojiStyle);
+
+    return EMOJI_PREVIEW_SHORTCODES.map(shortcode =>
+      emotes.find(emote => emote.name === shortcode),
+    ).filter(Boolean) as SanitisedEmote[];
+  }, [previewEmojiStyle]);
+
+  useEffect(() => {
+    setPreviewDensity(chatDensity);
+  }, [chatDensity]);
+
+  useEffect(() => {
+    setPreviewEmojiStyle(emojiStyle);
+  }, [emojiStyle]);
+
+  const handleDensityChange = (value: string) => {
+    const nextDensity = value === 'Compact' ? 'compact' : 'comfortable';
+
+    setPreviewDensity(nextDensity);
+    update({
+      chatDensity: nextDensity,
+    });
+  };
+
+  const handleEmojiStyleChange = (value: string) => {
+    const option = EMOJI_STYLE_OPTIONS.find(option => option.label === value);
+
+    if (!option) {
+      return;
+    }
+
+    setPreviewEmojiStyle(option.value as EmojiStyle);
+    update({ emojiStyle: option.value as EmojiStyle });
+  };
 
   useScrollToTop(scrollRef);
-
-  const toggleDensity = () => {
-    update({
-      chatDensity: chatDensity === 'compact' ? 'comfortable' : 'compact',
-    });
-  };
-
-  const cycleEmojiStyle = () => {
-    const currentIndex = EMOJI_STYLE_OPTIONS.findIndex(
-      option => option.value === emojiStyle,
-    );
-    const nextOption =
-      EMOJI_STYLE_OPTIONS[(currentIndex + 1) % EMOJI_STYLE_OPTIONS.length]
-        ?.value ?? 'twitter';
-
-    update({
-      emojiStyle: nextOption as EmojiStyle,
-    });
-  };
-
-  const emojiStyleLabel =
-    EMOJI_STYLE_OPTIONS.find(option => option.value === emojiStyle)?.label ??
-    'Twitter';
 
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
         <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <View style={styles.iosIntro}>
-            <Text type="2xl" weight="bold">
-              Chat
-            </Text>
-            <Text type="sm" color="gray.textLow" style={styles.iosIntroCopy}>
-              Native grouped settings for message density, context, and provider
-              media.
-            </Text>
-          </View>
+          <ScreenHeader
+            title="Chat"
+            subtitle="Message controls"
+            size="medium"
+          />
 
           <Form.Section title="Layout">
-            <Form.Link
-              hint={chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
-              onPress={toggleDensity}
-            >
-              Message Density
-            </Form.Link>
-            <Form.Link hint={emojiStyleLabel} onPress={cycleEmojiStyle}>
-              Emoji Style
-            </Form.Link>
+            <Form.FormItem style={styles.iosControlItem}>
+              <View style={styles.iosControlBody}>
+                <View style={styles.controlCopy}>
+                  <Form.Text style={styles.iosControlTitle}>
+                    Message Density
+                  </Form.Text>
+                  <Form.Text style={styles.iosControlSubtitle}>
+                    {previewDensity === 'compact'
+                      ? 'Tighter rows for faster scanning'
+                      : 'Roomier rows with more breathing space'}
+                  </Form.Text>
+                </View>
+                <SegmentedControl
+                  appearance="dark"
+                  onValueChange={handleDensityChange}
+                  selectedIndex={densityIndex}
+                  style={styles.iosSegmentedControl}
+                  tintColor={theme.colorDarkGreen}
+                  values={DENSITY_LABELS}
+                />
+                <DensityPreview density={previewDensity} />
+              </View>
+            </Form.FormItem>
+          </Form.Section>
+
+          <Form.Section title="Emoji Style">
+            <Form.FormItem style={styles.iosControlItem}>
+              <View style={styles.iosControlBody}>
+                <View style={styles.controlCopy}>
+                  <Form.Text style={styles.iosControlTitle}>
+                    Emoji Set
+                  </Form.Text>
+                  <Form.Text style={styles.iosControlSubtitle}>
+                    Changes emoji images in existing chat messages
+                  </Form.Text>
+                </View>
+                <SegmentedControl
+                  appearance="dark"
+                  onValueChange={handleEmojiStyleChange}
+                  selectedIndex={emojiIndex}
+                  style={styles.iosSegmentedControl}
+                  tintColor={theme.colorDarkGreen}
+                  values={emojiLabels}
+                />
+                <EmojiStylePreview emotes={emojiPreviewEmotes} />
+              </View>
+            </Form.FormItem>
+          </Form.Section>
+
+          <Form.Section title="Context">
             <View style={styles.iosToggleRow}>
-              <Form.Text>Show Timestamps</Form.Text>
-              <Switch
-                value={chatTimestamps}
-                onValueChange={value => update({ chatTimestamps: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>
+                Show Timestamps
+              </Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={chatTimestamps}
+                  onValueChange={value => update({ chatTimestamps: value })}
+                />
+              </View>
             </View>
             <View style={styles.iosToggleRow}>
-              <Form.Text>Highlight Own Mentions</Form.Text>
-              <Switch
-                value={highlightOwnMentions}
-                onValueChange={value => update({ highlightOwnMentions: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>
+                Highlight Own Mentions
+              </Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={highlightOwnMentions}
+                  onValueChange={value =>
+                    update({ highlightOwnMentions: value })
+                  }
+                />
+              </View>
             </View>
             <View style={styles.iosToggleRow}>
-              <Form.Text>Inline Reply Context</Form.Text>
-              <Switch
-                value={showInlineReplyContext}
-                onValueChange={value =>
-                  update({ showInlineReplyContext: value })
-                }
-              />
+              <Form.Text style={styles.iosToggleLabel}>
+                Inline Reply Context
+              </Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showInlineReplyContext}
+                  onValueChange={value =>
+                    update({ showInlineReplyContext: value })
+                  }
+                />
+              </View>
             </View>
             <View style={styles.iosToggleRow}>
-              <Form.Text>Show Jump Pill</Form.Text>
-              <Switch
-                value={showUnreadJumpPill}
-                onValueChange={value => update({ showUnreadJumpPill: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>
+                Show Jump Pill
+              </Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showUnreadJumpPill}
+                  onValueChange={value => update({ showUnreadJumpPill: value })}
+                />
+              </View>
             </View>
           </Form.Section>
 
           <Form.Section title="7TV">
             <View style={styles.iosToggleRow}>
-              <Form.Text>Emotes</Form.Text>
-              <Switch
-                value={show7TvEmotes}
-                onValueChange={value => update({ show7TvEmotes: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={show7TvEmotes}
+                  onValueChange={value => update({ show7TvEmotes: value })}
+                />
+              </View>
             </View>
             <View style={styles.iosToggleRow}>
-              <Form.Text>Badges</Form.Text>
-              <Switch
-                value={show7tvBadges}
-                onValueChange={value => update({ show7tvBadges: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={show7tvBadges}
+                  onValueChange={value => update({ show7tvBadges: value })}
+                />
+              </View>
             </View>
           </Form.Section>
 
           <Form.Section title="BTTV">
             <View style={styles.iosToggleRow}>
-              <Form.Text>Emotes</Form.Text>
-              <Switch
-                value={showBttvEmotes}
-                onValueChange={value => update({ showBttvEmotes: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showBttvEmotes}
+                  onValueChange={value => update({ showBttvEmotes: value })}
+                />
+              </View>
             </View>
             <View style={styles.iosToggleRow}>
-              <Form.Text>Badges</Form.Text>
-              <Switch
-                value={showBttvBadges}
-                onValueChange={value => update({ showBttvBadges: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showBttvBadges}
+                  onValueChange={value => update({ showBttvBadges: value })}
+                />
+              </View>
             </View>
           </Form.Section>
 
           <Form.Section title="FFZ">
             <View style={styles.iosToggleRow}>
-              <Form.Text>Emotes</Form.Text>
-              <Switch
-                value={showFFzEmotes}
-                onValueChange={value => update({ showFFzEmotes: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showFFzEmotes}
+                  onValueChange={value => update({ showFFzEmotes: value })}
+                />
+              </View>
             </View>
             <View style={styles.iosToggleRow}>
-              <Form.Text>Badges</Form.Text>
-              <Switch
-                value={showFFzBadges}
-                onValueChange={value => update({ showFFzBadges: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showFFzBadges}
+                  onValueChange={value => update({ showFFzBadges: value })}
+                />
+              </View>
             </View>
           </Form.Section>
 
           <Form.Section title="Twitch">
             <View style={styles.iosToggleRow}>
-              <Form.Text>Emotes</Form.Text>
-              <Switch
-                value={showTwitchEmotes}
-                onValueChange={value => update({ showTwitchEmotes: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showTwitchEmotes}
+                  onValueChange={value => update({ showTwitchEmotes: value })}
+                />
+              </View>
             </View>
             <View style={styles.iosToggleRow}>
-              <Form.Text>Badges</Form.Text>
-              <Switch
-                value={showTwitchBadges}
-                onValueChange={value => update({ showTwitchBadges: value })}
-              />
+              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={showTwitchBadges}
+                  onValueChange={value => update({ showTwitchBadges: value })}
+                />
+              </View>
             </View>
           </Form.Section>
 
@@ -193,13 +291,17 @@ export function ChatPreferenceScreen() {
             footer="Animated Twitch, BTTV, FFZ, and 7TV emotes render as still images when disabled."
           >
             <View style={styles.iosToggleRow}>
-              <Form.Text>Disable Emote Animations</Form.Text>
-              <Switch
-                value={disableEmoteAnimations}
-                onValueChange={value =>
-                  update({ disableEmoteAnimations: value })
-                }
-              />
+              <Form.Text style={styles.iosToggleLabel}>
+                Disable Emote Animations
+              </Form.Text>
+              <View style={styles.iosSwitchSlot}>
+                <Switch
+                  value={disableEmoteAnimations}
+                  onValueChange={value =>
+                    update({ disableEmoteAnimations: value })
+                  }
+                />
+              </View>
             </View>
           </Form.Section>
         </BodyScrollView>
@@ -222,20 +324,52 @@ export function ChatPreferenceScreen() {
         />
 
         <SettingsSection title="Layout">
-          <SettingsLinkRow
+          <SettingsRow
             title="Message Density"
-            subtitle="Switch between compact and comfortable message rows"
-            icon={{ icon: 'align-left', color: theme.colorGrey }}
-            value={chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
-            onPress={toggleDensity}
+            subtitle={
+              previewDensity === 'compact'
+                ? 'Tighter rows for faster scanning'
+                : 'Roomier rows with more breathing space'
+            }
+            icon={{ icon: 'list', color: theme.colorGrey }}
+            trailing={
+              <SegmentedControl
+                appearance="dark"
+                onValueChange={handleDensityChange}
+                selectedIndex={densityIndex}
+                style={styles.segmentedControl}
+                tintColor={theme.colorDarkGreen}
+                values={DENSITY_LABELS}
+              />
+            }
           />
-          <SettingsLinkRow
-            title="Emoji Style"
-            subtitle="Choose the default emoji image set used in chat"
+          <View style={styles.settingsPreviewItem}>
+            <DensityPreview density={previewDensity} />
+          </View>
+        </SettingsSection>
+
+        <SettingsSection title="Emoji Style">
+          <SettingsRow
+            title="Emoji Set"
+            subtitle="Changes emoji images in existing chat messages"
             icon={{ icon: 'smile', color: theme.colorAmber }}
-            value={emojiStyleLabel}
-            onPress={cycleEmojiStyle}
+            trailing={
+              <SegmentedControl
+                appearance="dark"
+                onValueChange={handleEmojiStyleChange}
+                selectedIndex={emojiIndex}
+                style={styles.segmentedControl}
+                tintColor={theme.colorDarkGreen}
+                values={emojiLabels}
+              />
+            }
           />
+          <View style={styles.settingsPreviewItem}>
+            <EmojiStylePreview emotes={emojiPreviewEmotes} />
+          </View>
+        </SettingsSection>
+
+        <SettingsSection title="Context">
           <SettingsToggleRow
             title="Show Timestamps"
             subtitle="Display message timestamps inline"
@@ -351,6 +485,78 @@ export function ChatPreferenceScreen() {
   );
 }
 
+function DensityPreview({ density }: { density: 'comfortable' | 'compact' }) {
+  const compact = density === 'compact';
+
+  return (
+    <View style={[styles.previewPanel, compact && styles.previewPanelCompact]}>
+      <PreviewMessage
+        compact={compact}
+        time="12:42"
+        username="needlework"
+        message="linework healed clean"
+      />
+      <PreviewMessage
+        compact={compact}
+        time="12:43"
+        username="inkmod"
+        message="shading pass is ready"
+      />
+    </View>
+  );
+}
+
+function PreviewMessage({
+  compact,
+  message,
+  time,
+  username,
+}: {
+  compact: boolean;
+  message: string;
+  time: string;
+  username: string;
+}) {
+  return (
+    <View
+      style={[styles.previewMessage, compact && styles.previewMessageCompact]}
+    >
+      <Text style={[styles.previewTime, compact && styles.previewTextCompact]}>
+        {time}
+      </Text>
+      <Text
+        weight="bold"
+        style={[styles.previewUsername, compact && styles.previewTextCompact]}
+      >
+        {username}
+      </Text>
+      <Text style={[styles.previewText, compact && styles.previewTextCompact]}>
+        {message}
+      </Text>
+    </View>
+  );
+}
+
+function EmojiStylePreview({ emotes }: { emotes: SanitisedEmote[] }) {
+  return (
+    <View style={styles.previewPanel}>
+      <View style={styles.emojiPreviewRow}>
+        {emotes.map(emote => (
+          <View key={`${emote.site}-${emote.name}`} style={styles.emojiTile}>
+            <Image
+              cachePolicy="memory-disk"
+              contentFit="contain"
+              source={{ uri: emote.url }}
+              style={styles.emojiImage}
+              transition={0}
+            />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
@@ -365,20 +571,112 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space56,
     paddingTop: theme.space12,
   },
-  iosIntro: {
-    gap: theme.space8,
-    paddingBottom: theme.space12,
-    paddingHorizontal: 20,
+  controlCopy: {
+    flex: 1,
+    gap: theme.space4,
+    minWidth: 0,
   },
-  iosIntroCopy: {
-    maxWidth: 320,
+  iosControlItem: {
+    gap: theme.space12,
+  },
+  iosControlBody: {
+    gap: theme.space12,
+    width: '100%',
+  },
+  iosControlSubtitle: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize12,
+  },
+  iosControlTitle: {
+    fontWeight: '600',
+  },
+  iosSegmentedControl: {
+    height: 36,
+    width: '100%',
   },
   iosToggleRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: theme.space16,
     minHeight: 44,
     paddingHorizontal: 20,
     paddingVertical: 11,
+  },
+  iosToggleLabel: {
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  iosSwitchSlot: {
+    alignItems: 'flex-end',
+    flexShrink: 0,
+    width: 76,
+  },
+  emojiImage: {
+    height: 28,
+    width: 28,
+  },
+  emojiPreviewRow: {
+    flexDirection: 'row',
+    gap: theme.space8,
+  },
+  emojiTile: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: theme.borderRadius6,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  previewMessage: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space8,
+    minHeight: 30,
+  },
+  previewMessageCompact: {
+    gap: theme.space4,
+    minHeight: 20,
+  },
+  previewPanel: {
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: theme.borderRadius6,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: theme.space4,
+    padding: theme.space8,
+  },
+  previewPanelCompact: {
+    gap: theme.space2,
+    paddingVertical: theme.space4,
+  },
+  previewText: {
+    color: theme.color.text.dark,
+    flex: 1,
+    fontSize: theme.fontSize12,
+    lineHeight: 18,
+  },
+  previewTextCompact: {
+    fontSize: theme.fontSize11,
+    lineHeight: 14,
+  },
+  previewTime: {
+    color: theme.colorGreyAlpha,
+    fontSize: theme.fontSize11,
+  },
+  previewUsername: {
+    color: theme.colorLightGreen,
+    fontSize: theme.fontSize12,
+  },
+  segmentedControl: {
+    height: 36,
+    width: 180,
+  },
+  settingsPreviewItem: {
+    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    padding: theme.space16,
   },
 });

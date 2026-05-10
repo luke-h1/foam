@@ -92,7 +92,7 @@ const FeaturedStreamHero = memo(function FeaturedStreamHero({
           </Text>
           <Text
             type="2xl"
-            variant="display"
+            weight="bold"
             numberOfLines={2}
             style={styles.heroTitle}
           >

@@ -17,8 +17,6 @@ configureObservablePersistence({
 export interface Preferences {
   updatedAt: number;
   theme: Theme;
-  fontScaling: number;
-  systemScaling: boolean;
   hapticFeedback: boolean;
   streamListLayout: 'compact' | 'media' | 'text';
   chatDensity: 'comfortable' | 'compact';
@@ -42,8 +40,6 @@ export interface Preferences {
 const initialPreferences: Preferences = {
   updatedAt: Date.now(),
   theme: 'foam-dark',
-  fontScaling: 1,
-  systemScaling: false,
   hapticFeedback: true,
   streamListLayout: 'compact',
   chatDensity: 'comfortable',

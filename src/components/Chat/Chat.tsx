@@ -515,11 +515,13 @@ const ChatEmoteRuntime = memo(
   ({
     channelId,
     emoteLoadStatus,
+    emojiStyle,
     messages$,
     processedMessageIdsRef,
   }: {
     channelId: string;
     emoteLoadStatus: string;
+    emojiStyle: string;
     messages$: { peek: () => unknown[] };
     processedMessageIdsRef: MutableRefObject<Set<string>>;
   }) => {
@@ -531,6 +533,7 @@ const ChatEmoteRuntime = memo(
       messages$,
       emoteLoadStatus,
       processedMessageIdsRef,
+      reprocessKey: emojiStyle,
     });
 
     return null;
@@ -2208,6 +2211,7 @@ export const Chat = memo(
         <ChatEmoteRuntime
           channelId={channelId}
           emoteLoadStatus={emoteLoadStatus}
+          emojiStyle={preferences.emojiStyle}
           messages$={messages$}
           processedMessageIdsRef={processedMessageIdsRef}
         />

@@ -445,8 +445,11 @@ export function replaceTextWithEmotes({
       emoteMap.set(emote.name, emote);
     }
 
-    if (emote.site === 'Emoji' && !emojiMap.has(emote.id)) {
-      emojiMap.set(emote.id, emote);
+    if (emote.site === 'Emoji') {
+      const emojiHexcode = emote.emoji_hexcode ?? emote.id;
+      if (!emojiMap.has(emojiHexcode)) {
+        emojiMap.set(emojiHexcode, emote);
+      }
     }
   });
 

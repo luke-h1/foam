@@ -46,7 +46,7 @@ export function useEmoteSuggestions({
 
         const dedupeKey =
           emote.site === 'Emoji'
-            ? `emoji:${emote.id}`
+            ? `emoji:${emote.emoji_hexcode ?? emote.id}`
             : emote.name.toLowerCase();
 
         if (emoteMap.has(dedupeKey)) {

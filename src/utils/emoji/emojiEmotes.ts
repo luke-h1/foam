@@ -3,7 +3,7 @@ import emojibaseLegacyShortcodes from 'emojibase-data/en/shortcodes/emojibase-le
 import emojibaseShortcodes from 'emojibase-data/en/shortcodes/emojibase.json';
 import githubShortcodes from 'emojibase-data/en/shortcodes/github.json';
 
-import type { SanitisedEmote } from '@app/types/emote';
+import type { EmojiSanitisedEmote } from '@app/types/emote';
 
 export type EmojiStyle = 'twitter' | 'google';
 
@@ -60,14 +60,15 @@ function createEmojiEmote(
   hexcode: string,
   alias: string,
   style: EmojiStyle,
-): SanitisedEmote {
+): EmojiSanitisedEmote {
   const shortcode = `:${alias}:`;
   const url = EMOJI_CDN_BY_STYLE[style](hexcode);
 
   return {
-    id: hexcode,
+    id: `${hexcode}:${alias}`,
     name: shortcode,
     original_name: shortcode,
+    emoji_hexcode: hexcode,
     creator: null,
     emote_link: '',
     url,
@@ -80,9 +81,9 @@ function createEmojiEmote(
   };
 }
 
-const emojiEmoteCache = new Map<EmojiStyle, SanitisedEmote[]>();
+const emojiEmoteCache = new Map<EmojiStyle, EmojiSanitisedEmote[]>();
 
-export function getEmojiEmotes(style: EmojiStyle): SanitisedEmote[] {
+export function getEmojiEmotes(style: EmojiStyle): EmojiSanitisedEmote[] {
   const cached = emojiEmoteCache.get(style);
   if (cached) {
     return cached;

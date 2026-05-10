@@ -46,9 +46,8 @@ export interface ScreenHeaderProps {
   children?: ReactNode;
   /**
    * Size variant for the header (Text-like API)
-   * - large: Large title below nav row (default)
-   * - medium: Inline title in nav row
-   * - compact: Smaller inline title
+   * - large/medium: ai-tattoo-style bold title block
+   * - compact: Small inline title in nav row
    * - hero: Hero-style header with background
    */
   size?: 'large' | 'medium' | 'compact' | 'hero';
@@ -104,25 +103,24 @@ export function ScreenHeader({
     });
 
   const isHero = size === 'hero';
-  const isInline = size === 'medium' || size === 'compact';
+  const isInline = size === 'compact';
 
   const getTitleType = (): TextType => {
     if (type) return type;
-    if (size === 'large') return '2xl';
-    if (size === 'medium') return 'lg';
+    if (size === 'large' || size === 'medium') return '4xl';
     if (size === 'hero') return 'xl';
     return 'md';
   };
 
   const getTitleWeight = (): TextWeight => {
     if (weight) return weight;
-    if (isHero || size === 'large') return 'bold';
+    if (isHero || size === 'large' || size === 'medium') return 'bold';
     return 'semibold';
   };
 
   const getSubtitleType = (): TextType => {
     if (subtitleType) return subtitleType;
-    return size === 'compact' ? 'xs' : 'sm';
+    return size === 'compact' ? 'xs' : 'xs';
   };
 
   const titleTypeValue = getTitleType();
@@ -261,24 +259,26 @@ export function ScreenHeader({
             showNavRow ? styles.titleSectionWithNav : null,
           ]}
         >
-          <Text
-            type={titleTypeValue}
-            weight={titleWeightValue}
-            color={titleColorValue}
-            style={styles.title}
-            numberOfLines={2}
-          >
-            {title}
-          </Text>
           {subtitle && (
             <Text
               type={subtitleTypeValue}
+              weight="semibold"
               color={subtitleColor}
-              style={styles.subtitle}
+              style={styles.standardEyebrow}
+              numberOfLines={1}
             >
               {subtitle}
             </Text>
           )}
+          <Text
+            type={titleTypeValue}
+            weight={titleWeightValue}
+            color={titleColorValue}
+            style={styles.standardTitle}
+            numberOfLines={2}
+          >
+            {title}
+          </Text>
         </View>
       )}
 
@@ -355,20 +355,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   standardContainer: {
-    paddingBottom: theme.space16,
+    paddingBottom: theme.space20,
     paddingHorizontal: theme.space20,
   },
   standardNavRow: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius28,
-    borderWidth: 1,
     flexDirection: 'row',
-    marginBottom: theme.space16,
+    marginBottom: theme.space8,
     minHeight: 52,
-    paddingHorizontal: theme.space12,
+  },
+  standardEyebrow: {
+    letterSpacing: 1,
+    marginBottom: theme.space8,
+    textTransform: 'uppercase',
+  },
+  standardTitle: {
+    lineHeight: 44,
   },
   subtitle: {
     lineHeight: 20,
@@ -377,9 +379,6 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: theme.space12,
     paddingBottom: theme.space8,
-  },
-  title: {
-    lineHeight: 34,
   },
   titleSection: {
     gap: theme.space8,

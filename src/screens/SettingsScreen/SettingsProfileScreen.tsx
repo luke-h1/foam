@@ -7,11 +7,7 @@ import { ProfileCard } from './components/profile/ProfileCard';
 export function SettingsProfileScreen() {
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title="Profile"
-        subtitle="Account info & preferences"
-        size="medium"
-      />
+      <ScreenHeader title="Profile" subtitle="Account" size="medium" />
       <ProfileCard />
     </View>
   );

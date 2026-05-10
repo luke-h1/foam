@@ -108,7 +108,7 @@ export function TopScreen() {
           >
             LIVE RANKINGS
           </Text>
-          <Text type="5xl" variant="display" style={styles.title}>
+          <Text type="4xl" weight="bold" style={styles.title}>
             Top
           </Text>
         </Animated.View>

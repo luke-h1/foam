@@ -4,14 +4,11 @@ import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import {
   SettingsLinkRow,
   SettingsSection,
-  SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
-import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { router } from 'expo-router';
@@ -23,7 +20,6 @@ import { BuildStatus } from './components/BuildStatus';
 export function SettingsIndexScreen() {
   const { user } = useAuthContext();
   const { config } = useRemoteConfig();
-  const { hapticFeedback, update } = usePreferences();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -35,14 +31,11 @@ export function SettingsIndexScreen() {
     return (
       <View style={styles.container}>
         <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <View style={styles.iosIntro}>
-            <Text type="2xl" weight="bold">
-              Settings
-            </Text>
-            <Text type="sm" color="gray.textLow" style={styles.iosIntroCopy}>
-              Streaming controls, account tools, support, and diagnostics.
-            </Text>
-          </View>
+          <ScreenHeader
+            title="Settings"
+            subtitle="Streaming controls"
+            size="medium"
+          />
 
           <Form.Section title="Stream Experience">
             <Form.Link
@@ -57,19 +50,19 @@ export function SettingsIndexScreen() {
             >
               Appearance
             </Form.Link>
-            <View style={styles.iosToggleRow}>
-              <Form.Text systemImage="iphone">Haptic Feedback</Form.Text>
-              <Switch
-                value={hapticFeedback}
-                onValueChange={value => update({ hapticFeedback: value })}
-              />
-            </View>
           </Form.Section>
 
           <Form.Section title="Account">
             <Form.Link
               systemImage="person.circle"
-              onPress={() => router.push('/tabs/settings/profile')}
+              onPress={() => {
+                if (user) {
+                  router.push('/tabs/settings/profile');
+                  return;
+                }
+
+                router.push('/login');
+              }}
             >
               {user ? 'Profile' : 'Sign In'}
             </Form.Link>
@@ -147,16 +140,9 @@ export function SettingsIndexScreen() {
           />
           <SettingsLinkRow
             title="Appearance"
-            subtitle="Theme, text scale, and interface feedback"
+            subtitle="Theme and visual mode"
             icon={{ icon: 'sparkles', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/appearance')}
-          />
-          <SettingsToggleRow
-            title="Haptic Feedback"
-            subtitle="Subtle physical feedback for interactions"
-            icon={{ icon: 'smartphone', color: theme.colorBlue }}
-            value={hapticFeedback}
-            onValueChange={value => update({ hapticFeedback: value })}
           />
         </SettingsSection>
 
@@ -169,7 +155,14 @@ export function SettingsIndexScreen() {
                 : 'Connect your Twitch account to unlock following and chat'
             }
             icon={{ icon: 'user', color: theme.colorTeal }}
-            onPress={() => router.push('/tabs/settings/profile')}
+            onPress={() => {
+              if (user) {
+                router.push('/tabs/settings/profile');
+                return;
+              }
+
+              router.push('/login');
+            }}
           />
         </SettingsSection>
 
@@ -247,21 +240,5 @@ const styles = StyleSheet.create({
   iosContent: {
     paddingBottom: theme.space56,
     paddingTop: theme.space12,
-  },
-  iosIntro: {
-    gap: theme.space8,
-    paddingBottom: theme.space12,
-    paddingHorizontal: 20,
-  },
-  iosIntroCopy: {
-    maxWidth: 320,
-  },
-  iosToggleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    minHeight: 44,
-    paddingHorizontal: 20,
-    paddingVertical: 11,
   },
 });

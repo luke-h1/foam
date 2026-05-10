@@ -19,6 +19,7 @@ interface EmoteRendererProps {
   part: PartVariant;
   handleEmotePress: (part: PartVariant) => void;
   shouldOverlayPrevious?: boolean;
+  targetSize?: number;
 }
 
 export const EmoteRenderer = memo(
@@ -27,10 +28,12 @@ export const EmoteRenderer = memo(
     handleEmotePress,
     disableAnimations = false,
     shouldOverlayPrevious = false,
+    targetSize = 30,
   }: EmoteRendererProps) => {
     const { height, width } = useMemo(
-      () => calculateAspectRatio(part.width || 20, part.height || 20, 30),
-      [part.width, part.height],
+      () =>
+        calculateAspectRatio(part.width || 20, part.height || 20, targetSize),
+      [part.width, part.height, targetSize],
     );
     const displayUrl = useMemo(
       () =>

@@ -4,7 +4,7 @@ import { chatStore$ } from '@app/store/chatStore/state';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { type MutableRefObject, useEffect } from 'react';
+import { type MutableRefObject, useEffect, useRef } from 'react';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
@@ -14,14 +14,23 @@ export function useEmoteReprocessing({
   messages$,
   emoteLoadStatus,
   processedMessageIdsRef,
+  reprocessKey,
 }: {
   channelId: string;
   channelEmoteData: unknown;
   messages$: { peek: () => unknown[] };
   emoteLoadStatus: string;
   processedMessageIdsRef: MutableRefObject<Set<string>>;
+  reprocessKey?: string;
 }) {
+  const previousReprocessKeyRef = useRef(reprocessKey);
+
   useEffect(() => {
+    if (previousReprocessKeyRef.current !== reprocessKey) {
+      processedMessageIdsRef.current.clear();
+      previousReprocessKeyRef.current = reprocessKey;
+    }
+
     if (emoteLoadStatus !== 'success') {
       return;
     }
@@ -58,19 +67,9 @@ export function useEmoteReprocessing({
         continue;
       }
 
-      let textContent = '';
-      let allPartsAreText = true;
+      const textContent = getReprocessableText(msg.message as ParsedPart[]);
 
-      for (const part of msg.message as ParsedPart[]) {
-        if (part.type !== 'text') {
-          allPartsAreText = false;
-          break;
-        }
-
-        textContent += (part as { content: string }).content;
-      }
-
-      if (!allPartsAreText) {
+      if (textContent == null) {
         continue;
       }
 
@@ -114,5 +113,26 @@ export function useEmoteReprocessing({
     messages$,
     emoteLoadStatus,
     processedMessageIdsRef,
+    reprocessKey,
   ]);
+}
+
+function getReprocessableText(parts: ParsedPart[]): string | null {
+  let textContent = '';
+
+  for (const part of parts) {
+    if (part.type === 'text' || part.type === 'mention') {
+      textContent += part.content;
+      continue;
+    }
+
+    if (part.type === 'emote') {
+      textContent += part.original_name || part.name || part.content;
+      continue;
+    }
+
+    return null;
+  }
+
+  return textContent;
 }
