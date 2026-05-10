@@ -58,6 +58,7 @@ WebBrowser.maybeCompleteAuthSession();
 export function useTwitchSignIn() {
   const { loginWithTwitch } = useAuthContext();
   const authSessionActiveRef = useRef(false);
+  const handledAuthResponseKeyRef = useRef<string | null>(null);
   const [isPromptingAuth, setIsPromptingAuth] = useState(false);
   const [authResponse, setAuthResponse] = useState<AuthSessionResult | null>(
     null,
@@ -215,6 +216,23 @@ export function useTwitchSignIn() {
 
   useEffect(() => {
     if (authResponse?.type === 'success') {
+      const authResponseKey =
+        authResponse.url ||
+        authResponse.authentication?.accessToken ||
+        (typeof authResponse.params.access_token === 'string'
+          ? authResponse.params.access_token
+          : null);
+
+      if (
+        authResponseKey &&
+        handledAuthResponseKeyRef.current === authResponseKey
+      ) {
+        setAuthResponse(null);
+        return;
+      }
+
+      handledAuthResponseKeyRef.current = authResponseKey;
+      setAuthResponse(null);
       void completeAuth(authResponse);
       return;
     }
