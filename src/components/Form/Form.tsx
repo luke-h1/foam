@@ -61,7 +61,9 @@ const RefreshContextProvider: React.FC<{
 
   const refresh = async () => {
     const subscribers = Array.from(subscribersRef.current);
-    if (subscribers.length === 0) return;
+    if (subscribers.length === 0) {
+      return;
+    }
 
     setRefreshing(true);
     try {
@@ -119,7 +121,9 @@ export function List(props: ListProps) {
     </RefreshContextProvider>
   );
 }
-if (__DEV__) List.displayName = 'FormList';
+if (__DEV__) {
+  List.displayName = 'FormList';
+}
 
 function InnerList({
   contentContainerStyle,
@@ -285,7 +289,9 @@ export function Text({
   );
 }
 
-if (__DEV__) Text.displayName = 'FormText';
+if (__DEV__) {
+  Text.displayName = 'FormText';
+}
 
 // React Navigation compatible Link component
 export function Link({
@@ -376,7 +382,9 @@ export function Link({
   );
 }
 
-if (__DEV__) Link.displayName = 'FormLink';
+if (__DEV__) {
+  Link.displayName = 'FormLink';
+}
 
 export const FormFont = {
   // From inspecting SwiftUI `List { Text("Foo") }` in Xcode.

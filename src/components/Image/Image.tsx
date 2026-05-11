@@ -39,8 +39,12 @@ export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
  * Extract URL from various source formats
  */
 function getSourceUrl(source: ImageProps['source']): string | null {
-  if (typeof source === 'string') return source;
-  if (typeof source === 'object' && 'uri' in source) return source.uri;
+  if (typeof source === 'string') {
+    return source;
+  }
+  if (typeof source === 'object' && 'uri' in source) {
+    return source.uri;
+  }
   return null;
 }
 

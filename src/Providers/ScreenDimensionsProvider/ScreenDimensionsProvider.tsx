@@ -49,10 +49,11 @@ export const ScreenDimensionsProvider = ({ children }: PropsWithChildren) => {
 export const useScreenDimensions = () => {
   const context = use(ScreenDimensionsContext);
 
-  if (!context)
+  if (!context) {
     throw new Error(
       'useWindowDimensions must be used within WindowDimensionsProvider',
     );
+  }
 
   return context;
 };

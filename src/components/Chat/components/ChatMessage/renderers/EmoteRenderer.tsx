@@ -47,7 +47,9 @@ export const EmoteRenderer = memo(
 
     const [compressedUrl, setCompressedUrl] = useState<string | null>(() => {
       // Initialize with cached value if available
-      if (!displayUrl || displayUrl.startsWith('data:')) return null;
+      if (!displayUrl || displayUrl.startsWith('data:')) {
+        return null;
+      }
       const cached = getCompressedEmoteUrl(displayUrl);
       return cached && cached !== displayUrl ? cached : null;
     });

@@ -18,7 +18,9 @@ export function useChannelPointRewardTitle(
     void twitchService
       .getCustomChannelRewardTitle(broadcasterId, rewardId)
       .then(resolved => {
-        if (!cancelled) setTitle(resolved);
+        if (!cancelled) {
+          setTitle(resolved);
+        }
       });
 
     return () => {

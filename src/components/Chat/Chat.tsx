@@ -178,12 +178,21 @@ function parseRoomStateTags(tags: Record<string, string>): ParsedRoomState {
 function describeInitialRoomState(state: ParsedRoomState): string | null {
   const activeModes: string[] = [];
 
-  if (state.emoteOnly) activeModes.push('emote-only');
-  if (state.subsOnly) activeModes.push('subscribers-only');
-  if (state.r9k) activeModes.push('unique-chat');
-  if (state.slowSeconds > 0)
+  if (state.emoteOnly) {
+    activeModes.push('emote-only');
+  }
+  if (state.subsOnly) {
+    activeModes.push('subscribers-only');
+  }
+  if (state.r9k) {
+    activeModes.push('unique-chat');
+  }
+  if (state.slowSeconds > 0) {
     activeModes.push(`slow mode (${state.slowSeconds}s)`);
-  if (state.followersOnlyMinutes === 0) activeModes.push('followers-only');
+  }
+  if (state.followersOnlyMinutes === 0) {
+    activeModes.push('followers-only');
+  }
   if (state.followersOnlyMinutes > 0) {
     activeModes.push(`followers-only (${state.followersOnlyMinutes}m)`);
   }
@@ -632,11 +641,17 @@ const ChatMessagePane = memo(
     }, [hasMessages]);
 
     useEffect(() => {
-      if (!hasEverHadMessagesRef.current) return;
-      if (hasMessages) return;
+      if (!hasEverHadMessagesRef.current) {
+        return;
+      }
+      if (hasMessages) {
+        return;
+      }
 
       const now = Date.now();
-      if (now - lastEmptyLogAtRef.current < 2000) return;
+      if (now - lastEmptyLogAtRef.current < 2000) {
+        return;
+      }
       lastEmptyLogAtRef.current = now;
 
       logger.chat.warn('Chat messages became empty', {
@@ -744,23 +759,55 @@ const ChatInputShell = memo(
       const chatInputRef = useRef<TextInput>(null);
       const [messageInput, setMessageInput] = useState('');
       const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
+      const isAuthenticated = Boolean(user?.id && user?.login);
 
-      const handleComposerTextChange = useCallback((text: string) => {
-        setMessageInput(text);
-      }, []);
+      const handleComposerTextChange = useCallback(
+        (text: string) => {
+          if (!isAuthenticated) {
+            return;
+          }
+          setMessageInput(text);
+        },
+        [isAuthenticated],
+      );
 
-      const handleComposerEmoteSelect = useCallback((emote: SanitisedEmote) => {
-        setMessageInput(
-          prev => `${prev}${prev.length > 0 ? ' ' : ''}${emote.name} `,
-        );
-      }, []);
+      const handleComposerEmoteSelect = useCallback(
+        (emote: SanitisedEmote) => {
+          if (!isAuthenticated) {
+            return;
+          }
+          setMessageInput(
+            prev => `${prev}${prev.length > 0 ? ' ' : ''}${emote.name} `,
+          );
+        },
+        [isAuthenticated],
+      );
 
       const handleClearReply = useCallback(() => {
         setReplyTo(null);
       }, []);
 
+      useEffect(() => {
+        if (!isAuthenticated) {
+          setMessageInput('');
+          setReplyTo(null);
+        }
+      }, [isAuthenticated]);
+
       const handleSendMessage = useCallback(() => {
-        if (!messageInput.trim() || !isChatConnected()) return;
+        if (!messageInput.trim()) {
+          return;
+        }
+        if (!isAuthenticated) {
+          logger.chat.warn('Cannot send chat message while signed out');
+          return;
+        }
+
+        if (!isChatConnected()) {
+          logger.chat.warn(
+            'Sending chat message while IRC join state is stale',
+          );
+        }
 
         const messageText = replyTo
           ? `@${replyTo.username} ${messageInput}`
@@ -852,6 +899,7 @@ const ChatInputShell = memo(
         channelName,
         getUserState,
         isChatConnected,
+        isAuthenticated,
         messageInput,
         processMessageEmotes,
         replyTo,
@@ -863,11 +911,17 @@ const ChatInputShell = memo(
         ref,
         () => ({
           appendEmote: (emoteName: string) => {
+            if (!isAuthenticated) {
+              return;
+            }
             setMessageInput(
               prev => `${prev}${prev.length > 0 ? ' ' : ''}${emoteName} `,
             );
           },
           appendMention: (username: string) => {
+            if (!isAuthenticated) {
+              return;
+            }
             setMessageInput(prev => {
               const trimmed = prev.trim();
               if (!trimmed) {
@@ -881,9 +935,14 @@ const ChatInputShell = memo(
           clearReply: () => {
             setReplyTo(null);
           },
-          setReplyTo,
+          setReplyTo: nextReplyTo => {
+            if (!isAuthenticated) {
+              return;
+            }
+            setReplyTo(nextReplyTo);
+          },
         }),
-        [],
+        [isAuthenticated],
       );
 
       return (
@@ -898,6 +957,7 @@ const ChatInputShell = memo(
           replyTo={replyTo}
           onClearReply={handleClearReply}
           isConnected={connected}
+          isAuthenticated={isAuthenticated}
           inputRef={chatInputRef}
         />
       );
@@ -1037,13 +1097,17 @@ const ChatOverlayController = memo(
       }, []);
 
       const handleActionSheetReply = useCallback(() => {
-        if (!selectedMessage) return;
+        if (!selectedMessage) {
+          return;
+        }
         handleReply(selectedMessage.messageData);
         setSelectedMessage(null);
       }, [handleReply, selectedMessage]);
 
       const handleActionSheetCopy = useCallback(() => {
-        if (!selectedMessage) return;
+        if (!selectedMessage) {
+          return;
+        }
         const messageText = replaceEmotesWithText(selectedMessage.message);
         void Clipboard.setStringAsync(messageText).then(() =>
           toast.success('Copied to clipboard'),
@@ -2056,7 +2120,9 @@ export const Chat = memo(
 
     useEffect(() => {
       const fetchCurrentUserCosmetics = async () => {
-        if (!user?.id) return;
+        if (!user?.id) {
+          return;
+        }
 
         try {
           const sevenTvUserId = await sevenTvService.get7tvUserId(user.id);
@@ -2099,7 +2165,9 @@ export const Chat = memo(
     const wsConnected = readyState === ReadyState.OPEN && isConnected();
 
     useEffect(() => {
-      if (!wsConnected || !channelId) return;
+      if (!wsConnected || !channelId) {
+        return;
+      }
 
       const emoteSetId = getSevenTvEmoteSetId(channelId);
       if (!emoteSetId) {
@@ -2134,7 +2202,9 @@ export const Chat = memo(
     ]);
 
     useEffect(() => {
-      if (!wsConnected || !channelId || emoteLoadStatus !== 'success') return;
+      if (!wsConnected || !channelId || emoteLoadStatus !== 'success') {
+        return;
+      }
 
       const emoteSetId = getSevenTvEmoteSetId(channelId);
       if (emoteSetId && currentEmoteSetIdRef.current !== emoteSetId) {
@@ -2281,7 +2351,9 @@ export const Chat = memo(
       const lowerUsername = username.toLowerCase();
 
       const cached = mentionColorCache.current.get(lowerUsername);
-      if (cached) return cached;
+      if (cached) {
+        return cached;
+      }
 
       const color =
         getUserMessageColor(lowerUsername) ||
@@ -2294,10 +2366,14 @@ export const Chat = memo(
 
     const parseTextForEmotes = useCallback(
       (text: string): ParsedPart[] => {
-        if (!text || !text.trim()) return [];
+        if (!text || !text.trim()) {
+          return [];
+        }
 
         const emoteData = getCurrentEmoteData(channelId);
-        if (!emoteData) return [{ type: 'text', content: text }];
+        if (!emoteData) {
+          return [{ type: 'text', content: text }];
+        }
 
         const hasEmotes =
           chatStore$.emojis.peek().length > 0 ||
@@ -2307,7 +2383,9 @@ export const Chat = memo(
           emoteData.bttvGlobalEmotes.length > 0 ||
           emoteData.ffzGlobalEmotes.length > 0;
 
-        if (!hasEmotes) return [{ type: 'text', content: text }];
+        if (!hasEmotes) {
+          return [{ type: 'text', content: text }];
+        }
 
         return processEmotesWorklet({
           inputString: text.trimEnd(),
@@ -2571,7 +2649,7 @@ export const Chat = memo(
             <ChatMessagePane
               channelId={channelId}
               channelName={channelName}
-              connected={connected}
+              connected={twitchConnectionState === ReadyState.OPEN}
               currentUsername={currentUsername}
               hiddenUsers={hiddenUsers}
               hiddenPhrases={hiddenPhrases}

@@ -106,20 +106,32 @@ export function ScreenHeader({
   const isInline = size === 'compact';
 
   const getTitleType = (): TextType => {
-    if (type) return type;
-    if (size === 'large' || size === 'medium') return '4xl';
-    if (size === 'hero') return 'xl';
+    if (type) {
+      return type;
+    }
+    if (size === 'large' || size === 'medium') {
+      return '4xl';
+    }
+    if (size === 'hero') {
+      return 'xl';
+    }
     return 'md';
   };
 
   const getTitleWeight = (): TextWeight => {
-    if (weight) return weight;
-    if (isHero || size === 'large' || size === 'medium') return 'bold';
+    if (weight) {
+      return weight;
+    }
+    if (isHero || size === 'large' || size === 'medium') {
+      return 'bold';
+    }
     return 'semibold';
   };
 
   const getSubtitleType = (): TextType => {
-    if (subtitleType) return subtitleType;
+    if (subtitleType) {
+      return subtitleType;
+    }
     return size === 'compact' ? 'xs' : 'xs';
   };
 

@@ -56,7 +56,9 @@ function PaintedUsernameComponent({
   );
 
   const paint = useMemo(() => {
-    if (paintProp) return paintProp;
+    if (paintProp) {
+      return paintProp;
+    }
     return storePaint ?? null;
   }, [paintProp, storePaint]);
 
@@ -79,10 +81,14 @@ function PaintedUsernameComponent({
     }
 
     const shadows = indexedCollectionToArray(paint.shadows);
-    if (shadows.length === 0) return {};
+    if (shadows.length === 0) {
+      return {};
+    }
 
     const shadow = shadows[0];
-    if (!shadow) return {};
+    if (!shadow) {
+      return {};
+    }
 
     const shadowColor = sevenTvColorToCss(shadow.color);
 

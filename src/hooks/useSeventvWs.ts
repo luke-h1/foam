@@ -142,9 +142,15 @@ function toSanitisedSevenTvEmote(
 }
 
 function getSevenTvChatScreenFromPathname(pathname: string | null) {
-  if (!pathname) return null;
-  if (pathname === '/chat') return 'Chat';
-  if (pathname.startsWith('/streams/live-stream/')) return 'LiveStream';
+  if (!pathname) {
+    return null;
+  }
+  if (pathname === '/chat') {
+    return 'Chat';
+  }
+  if (pathname.startsWith('/streams/live-stream/')) {
+    return 'LiveStream';
+  }
   return null;
 }
 
@@ -188,7 +194,9 @@ export function useSeventvWs(
   );
 
   const shouldConnect = useMemo(() => {
-    if (!currentScreen) return false;
+    if (!currentScreen) {
+      return false;
+    }
     const isOnChatScreen = SEVENTV_CHAT_SCREENS.includes(currentScreen);
     const hasRequiredIds =
       options?.twitchChannelId && options?.sevenTvEmoteSetId;
@@ -901,7 +909,9 @@ export function useSeventvWs(
   }, [getWebSocket]);
 
   useEffect(() => {
-    if (!currentScreen) return;
+    if (!currentScreen) {
+      return;
+    }
 
     const isOnChatScreen = SEVENTV_CHAT_SCREENS.includes(currentScreen);
     const wasOnChatScreen = lastScreenRef.current

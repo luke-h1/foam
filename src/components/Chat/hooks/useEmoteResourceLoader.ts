@@ -42,7 +42,9 @@ export const useEmoteResourceLoader = ({
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const checkAndLoad = () => {
-      if (!isMountedRef.current || abortController.signal.aborted) return;
+      if (!isMountedRef.current || abortController.signal.aborted) {
+        return;
+      }
 
       const chatConnected = isChatConnected();
 
@@ -72,7 +74,9 @@ export const useEmoteResourceLoader = ({
     timeoutId = setTimeout(checkAndLoad, RETRY_INTERVAL_MS);
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       abortController.abort();
       emoteLoadingStartedRef.current = false;
     };

@@ -494,7 +494,7 @@ function buildTwitchEmbedHtml(options: {
           mute: function() { player.setMuted(true); emitMuteState(); },
           setMuted: function(m) { player.setMuted(m); emitMuteState(); },
           unmute: function() { player.setMuted(false); player.setVolume(1); emitMuteState(); },
-          setVolume: function(v) { player.setVolume(v); if (v > 0) player.setMuted(false); emitMuteState(); },
+          setVolume: function(v) { player.setVolume(v); if (v > 0) { player.setMuted(false); } emitMuteState(); },
           getCurrentTime: function() { post('currentTime', { time: player.getCurrentTime() }); },
           getDuration: function() { post('duration', { duration: player.getDuration() }); },
           seek: function(t) { player.seek(t); },
@@ -575,7 +575,9 @@ interface OverlayMetricsState {
 }
 
 function formatDuration(startedAt?: string): string {
-  if (!startedAt) return '0:00';
+  if (!startedAt) {
+    return '0:00';
+  }
   const start = new Date(startedAt).getTime();
   const now = Date.now();
   const seconds = Math.floor((now - start) / 1000);
@@ -591,7 +593,9 @@ function formatDuration(startedAt?: string): string {
 }
 
 function formatViewerCount(count?: number): string {
-  if (!count) return '0';
+  if (!count) {
+    return '0';
+  }
   return count.toLocaleString();
 }
 
@@ -877,7 +881,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     const [showLoginPrompt, setShowLoginPrompt] = useState(true);
 
     useEffect(() => {
-      if (hasContentGate) setShowLoginPrompt(true);
+      if (hasContentGate) {
+        setShowLoginPrompt(true);
+      }
     }, [hasContentGate]);
 
     useEffect(() => {

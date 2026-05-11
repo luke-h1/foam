@@ -214,7 +214,9 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
 };
 
 export const addMessages = (messages: ChatMessageType<never>[]) => {
-  if (messages.length === 0) return;
+  if (messages.length === 0) {
+    return;
+  }
   const newMessages = messages.filter(msg => {
     const key = getMessageKey(msg.message_id, msg.message_nonce);
     if (messageKeySet.has(key)) {

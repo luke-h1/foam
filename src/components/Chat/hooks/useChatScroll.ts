@@ -65,7 +65,9 @@ export const useChatScroll = ({
 
       isAtBottomRef.current = resolved;
 
-      if (lastAtBottomRef.current === resolved) return;
+      if (lastAtBottomRef.current === resolved) {
+        return;
+      }
 
       lastAtBottomRef.current = resolved;
 
@@ -78,27 +80,35 @@ export const useChatScroll = ({
         return;
       }
 
-      if (scrollThrottleRef.current) return;
+      if (scrollThrottleRef.current) {
+        return;
+      }
 
       scrollThrottleRef.current = setTimeout(() => {
         scrollThrottleRef.current = null;
         const { current } = isAtBottomRef;
         setIsAtBottom(current);
-        if (current) setUnreadCount(0);
+        if (current) {
+          setUnreadCount(0);
+        }
       }, SCROLL_THROTTLE_MS);
     },
     [],
   );
 
   const scrollToBottom = useCallback(() => {
-    if (getMessagesLength() === 0) return;
+    if (getMessagesLength() === 0) {
+      return;
+    }
 
     isScrollingToBottomRef.current = true;
     setIsScrollingToBottom(true);
 
     listRef.current?.scrollToEnd?.({ animated: false });
 
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
     scrollTimeoutRef.current = setTimeout(() => {
       isAtBottomRef.current = true;
       lastAtBottomRef.current = true;
@@ -114,8 +124,12 @@ export const useChatScroll = ({
   }, []);
 
   const cleanup = useCallback(() => {
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-    if (scrollThrottleRef.current) clearTimeout(scrollThrottleRef.current);
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    if (scrollThrottleRef.current) {
+      clearTimeout(scrollThrottleRef.current);
+    }
     scrollThrottleRef.current = null;
   }, []);
 

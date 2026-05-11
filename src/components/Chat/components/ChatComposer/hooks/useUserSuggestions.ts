@@ -33,7 +33,9 @@ export function useUserSuggestions({
       if (results.length >= maxSuggestions) {
         break;
       }
-      if (!user?.name) continue;
+      if (!user?.name) {
+        continue;
+      }
 
       const userName = user.name.toLowerCase();
       if (userName.includes(cleanSearch)) {

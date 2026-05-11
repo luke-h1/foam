@@ -53,9 +53,15 @@ const DEFAULT_URL = 'wss://eventsub.wss.twitch.tv/ws';
 function getChatScreenFromPathname(
   pathname: string | null,
 ): (typeof CHAT_SCREENS)[number] | null {
-  if (!pathname) return null;
-  if (pathname === '/chat') return 'Chat';
-  if (pathname.startsWith('/streams/live-stream/')) return 'LiveStream';
+  if (!pathname) {
+    return null;
+  }
+  if (pathname === '/chat') {
+    return 'Chat';
+  }
+  if (pathname.startsWith('/streams/live-stream/')) {
+    return 'LiveStream';
+  }
   return null;
 }
 
@@ -84,7 +90,9 @@ export function useTwitchWs(): WebSocket {
 
   // Determine if we should be connected based on screen
   const shouldConnect = useMemo(() => {
-    if (!currentScreen) return false;
+    if (!currentScreen) {
+      return false;
+    }
     return CHAT_SCREENS.includes(currentScreen);
   }, [currentScreen]);
 
@@ -393,7 +401,9 @@ export function useTwitchWs(): WebSocket {
   }, [getWebSocket]);
 
   useEffect(() => {
-    if (!currentScreen) return;
+    if (!currentScreen) {
+      return;
+    }
 
     const isOnChatScreen = CHAT_SCREENS.includes(currentScreen);
     const wasOnChatScreen = lastScreenRef.current

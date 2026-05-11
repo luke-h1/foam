@@ -18,7 +18,9 @@ export const websocketWrapper = (
   return new Proxy<WebSocket>(webSocket, {
     get: (obj, key: keyof WebSocket) => {
       const val = obj[key];
-      if ((key as string) === 'reconnect') return start;
+      if ((key as string) === 'reconnect') {
+        return start;
+      }
       if (typeof val === 'function') {
         console.error(
           'Calling methods directly on the websocket is not supported at this moment. You must use the methods returned by useWebSocket.',

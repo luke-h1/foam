@@ -108,7 +108,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    */
   const parseTags = useCallback((tagString: string): Map<string, string> => {
     const tags = new Map<string, string>();
-    if (!tagString) return tags;
+    if (!tagString) {
+      return tags;
+    }
 
     const parts = tagString.split(';');
     parts.forEach(part => {
@@ -136,7 +138,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       // Parse tags
       if (remaining.startsWith('@')) {
         const tagEnd = remaining.indexOf(' ');
-        if (tagEnd === -1) return null;
+        if (tagEnd === -1) {
+          return null;
+        }
         const tagString = remaining.substring(1, tagEnd);
         tags = parseTags(tagString);
         remaining = remaining.substring(tagEnd + 1).trim();
@@ -145,17 +149,23 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       // Parse prefix
       if (remaining.startsWith(':')) {
         const prefixEnd = remaining.indexOf(' ');
-        if (prefixEnd === -1) return null;
+        if (prefixEnd === -1) {
+          return null;
+        }
         prefix = remaining.substring(1, prefixEnd);
         remaining = remaining.substring(prefixEnd + 1).trim();
       }
 
       // Parse command and params
       const parts = remaining.split(' ');
-      if (parts.length === 0) return null;
+      if (parts.length === 0) {
+        return null;
+      }
 
       const command = parts[0];
-      if (!command) return null;
+      if (!command) {
+        return null;
+      }
 
       const params: string[] = [];
       const paramParts = parts.slice(1);
@@ -200,7 +210,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    */
   const isUserBlocked = useCallback(
     (username?: string): boolean => {
-      if (!username || blockedUsers.length === 0) return false;
+      if (!username || blockedUsers.length === 0) {
+        return false;
+      }
       return blockedUsers.some(
         blockedUser =>
           blockedUser.userLogin.toLowerCase() === username.toLowerCase(),
@@ -214,7 +226,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    */
   const containsMutedWords = useCallback(
     (message: string): boolean => {
-      if (mutedWords.length === 0) return false;
+      if (mutedWords.length === 0) {
+        return false;
+      }
 
       const messageLower = message.toLowerCase();
       const words = matchWholeWord ? messageLower.split(' ') : [messageLower];
@@ -281,7 +295,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Join a channel
   const joinChannel = useCallback(
     (channelName: string) => {
-      if (!channelName) return;
+      if (!channelName) {
+        return;
+      }
 
       const channelFormatted = formatChannelName(channelName);
 
@@ -348,7 +364,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
    */
   const partChannel = useCallback(
     (channelName: string) => {
-      if (!channelName) return;
+      if (!channelName) {
+        return;
+      }
 
       const channelFormatted = formatChannelName(channelName);
 
@@ -695,7 +713,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const shouldReconnect = useCallback(
     (event: CloseEvent) => {
-      if (event.code === 1000) return false;
+      if (event.code === 1000) {
+        return false;
+      }
       return shouldConnect;
     },
     [shouldConnect],
@@ -750,7 +770,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   // Join/part channel when it changes
   useEffect(() => {
-    if (!shouldConnect || !isAuthenticatedRef.current) return;
+    if (!shouldConnect || !isAuthenticatedRef.current) {
+      return;
+    }
 
     const previousChannel = Array.from(joinedChannelsRef.current)[0];
 

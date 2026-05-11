@@ -4,7 +4,9 @@ export const extractEmotes = (
   emotes: Record<string, string[]> | undefined,
   message: string,
 ): TwitchSanitisedEmote[] => {
-  if (!emotes) return [];
+  if (!emotes) {
+    return [];
+  }
   const graphemes = [...message];
   return Object.entries(emotes).flatMap(([emoteId, positions]) =>
     positions.map(position => {

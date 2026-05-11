@@ -32,7 +32,9 @@ export function DebugScreen() {
   }, [debugOptions]);
 
   useEffect(() => {
-    if (!channelName.trim()) return;
+    if (!channelName.trim()) {
+      return;
+    }
     const t = setTimeout(() => {
       void twitchService.getUser(channelName).then(r => setChannelId(r.id));
     }, 400);
@@ -56,7 +58,9 @@ export function DebugScreen() {
   };
 
   const handleConvertUsername = async () => {
-    if (!username.trim()) return;
+    if (!username.trim()) {
+      return;
+    }
     try {
       const res = await twitchService.getUser(username);
       await Clipboard.setStringAsync(res.id);

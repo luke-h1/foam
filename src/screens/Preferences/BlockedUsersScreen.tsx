@@ -299,7 +299,9 @@ export function BlockedUsersScreen() {
       queryClient.setQueryData<{ data: UserBlockList[] }>(
         userBlockListQuery.queryKey,
         old => {
-          if (!old?.data) return old;
+          if (!old?.data) {
+            return old;
+          }
           return {
             ...old,
             data: old.data.filter(

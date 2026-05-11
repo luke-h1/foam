@@ -78,8 +78,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const isFlushingRef = useRef(false);
 
   const flushBuffer = useCallback(() => {
-    if (messageBufferRef.current.length === 0) return;
-    if (isFlushingRef.current) return;
+    if (messageBufferRef.current.length === 0) {
+      return;
+    }
+    if (isFlushingRef.current) {
+      return;
+    }
 
     isFlushingRef.current = true;
 
@@ -94,7 +98,9 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   }, []);
 
   const startFlushTimer = useCallback(() => {
-    if (flushTimerRef.current) return;
+    if (flushTimerRef.current) {
+      return;
+    }
 
     flushTimerRef.current = setInterval(() => {
       flushBuffer();

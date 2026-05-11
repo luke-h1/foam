@@ -178,7 +178,9 @@ export const useWebsocket = (
       };
       startRef.current = () => {
         if (!expectClose) {
-          if (webSocketProxy.current) webSocketProxy.current = null;
+          if (webSocketProxy.current) {
+            webSocketProxy.current = null;
+          }
           removeListeners?.();
           void start();
         }
@@ -187,7 +189,9 @@ export const useWebsocket = (
       void start();
       return () => {
         expectClose = true;
-        if (webSocketProxy.current) webSocketProxy.current = null;
+        if (webSocketProxy.current) {
+          webSocketProxy.current = null;
+        }
         removeListeners?.();
         setLastMessage(undefined);
       };

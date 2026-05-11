@@ -39,6 +39,7 @@ interface ChatInputSectionProps {
   replyTo: ReplyToData | null;
   onClearReply: () => void;
   isConnected: boolean;
+  isAuthenticated: boolean;
   inputRef?: RefObject<TextInput | null>;
 }
 
@@ -54,6 +55,7 @@ export const ChatInputSection = memo(
     replyTo,
     onClearReply,
     isConnected,
+    isAuthenticated,
     inputRef,
   }: ChatInputSectionProps) => {
     const insets = useSafeAreaInsets();
@@ -66,10 +68,13 @@ export const ChatInputSection = memo(
       [onEmoteSelect],
     );
 
-    const canSend = messageInput.trim() && isConnected;
+    const canSend = Boolean(
+      messageInput.trim() && isConnected && isAuthenticated,
+    );
 
-    const inputPlaceholder =
-      replyTo !== null
+    const inputPlaceholder = !isAuthenticated
+      ? 'Sign in to send messages'
+      : replyTo !== null
         ? `Reply to ${replyTo.username}...`
         : 'Send a message...';
 
@@ -126,7 +131,7 @@ export const ChatInputSection = memo(
               onChangeText={onChangeText}
               onEmoteSelect={handleEmoteSelect}
               placeholder={inputPlaceholder}
-              editable
+              editable={isAuthenticated}
               autoComplete="off"
               autoCapitalize="none"
               autoCorrect={false}

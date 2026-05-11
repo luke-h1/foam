@@ -60,8 +60,12 @@ let hydrated = false;
 let validationStarted = false;
 
 function priorityRank(priority: ImageCachePriority | undefined): number {
-  if (priority === 'visible') return 0;
-  if (priority === 'interactive') return 1;
+  if (priority === 'visible') {
+    return 0;
+  }
+  if (priority === 'interactive') {
+    return 1;
+  }
   return 2;
 }
 
@@ -81,7 +85,9 @@ function hashString(str: string): string {
 function getFileExtensionFromUrl(url: string): string {
   try {
     const match = new URL(url).pathname.match(/\.(png|jpg|jpeg|gif|webp|svg)/i);
-    if (!match?.[1]) return 'img';
+    if (!match?.[1]) {
+      return 'img';
+    }
     return match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase();
   } catch {
     return 'img';
@@ -101,13 +107,19 @@ function getRecordStorageKey(key: string): string {
 }
 
 function hydrateManifest(): void {
-  if (hydrated) return;
+  if (hydrated) {
+    return;
+  }
   hydrated = true;
 
   manifestStorage.getAllKeys().forEach(storageKey => {
-    if (!storageKey.startsWith(RECORD_PREFIX)) return;
+    if (!storageKey.startsWith(RECORD_PREFIX)) {
+      return;
+    }
     const raw = manifestStorage.getString(storageKey);
-    if (!raw) return;
+    if (!raw) {
+      return;
+    }
 
     try {
       const record = JSON.parse(raw) as CacheRecord;
@@ -130,10 +142,14 @@ function removeRecord(key: string): void {
   manifest.delete(key);
   manifestStorage.remove(getRecordStorageKey(key));
 
-  if (!record) return;
+  if (!record) {
+    return;
+  }
   try {
     const file = new File(record.uri);
-    if (file.exists) file.delete();
+    if (file.exists) {
+      file.delete();
+    }
   } catch {
     // Ignore filesystem cleanup errors.
   }
@@ -175,7 +191,9 @@ function drainQueue(): void {
   while (activeDownloads < DOWNLOAD_CONCURRENCY && taskQueue.length > 0) {
     sortTasks();
     const task = taskQueue.shift();
-    if (!task) return;
+    if (!task) {
+      return;
+    }
 
     if (task.options.signal?.aborted) {
       inFlight.delete(task.key);
@@ -202,7 +220,9 @@ function enqueueDownload(
   run: () => Promise<string>,
 ): Promise<string> {
   const existing = inFlight.get(key);
-  if (existing) return existing;
+  if (existing) {
+    return existing;
+  }
 
   const promise = new Promise<string>((resolve, reject) => {
     taskQueue.push({
@@ -240,7 +260,9 @@ function evictIfNeeded(protectedKey: string): void {
 }
 
 function validateManifestSoon(): void {
-  if (validationStarted) return;
+  if (validationStarted) {
+    return;
+  }
   validationStarted = true;
 
   setTimeout(() => {
@@ -339,7 +361,9 @@ export function getCachedImageUri(
   options: Pick<CacheImageOptions, 'variant'> = {},
 ): string | null {
   hydrateManifest();
-  if (!url) return null;
+  if (!url) {
+    return null;
+  }
   return manifest.get(getCacheKey(url, options.variant))?.uri ?? null;
 }
 
@@ -354,13 +378,17 @@ export function deleteCachedImageByUrl(
   options: Pick<CacheImageOptions, 'variant'> = {},
 ): void {
   hydrateManifest();
-  if (!url) return;
+  if (!url) {
+    return;
+  }
   removeRecord(getCacheKey(url, options.variant));
 }
 
 export function deleteCachedImage(fileUri?: string): void {
   hydrateManifest();
-  if (!fileUri) return;
+  if (!fileUri) {
+    return;
+  }
 
   const record = Array.from(manifest.values()).find(
     item => item.uri === fileUri,
@@ -379,7 +407,9 @@ export function clearSessionCache(): void {
 
   try {
     const cacheDir = new Directory(Paths.cache, CACHE_DIR_NAME);
-    if (cacheDir.exists) cacheDir.delete();
+    if (cacheDir.exists) {
+      cacheDir.delete();
+    }
   } catch {
     // Ignore filesystem cleanup errors.
   }

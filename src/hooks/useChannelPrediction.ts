@@ -71,25 +71,33 @@ export function useChannelPrediction(channelId?: string) {
 
     const handleBegin = (message: EventSubMessage) => {
       const event = message.event as TwitchEventSubPrediction | undefined;
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       setPrediction(normaliseEventSubPrediction(event, 'active'));
     };
 
     const handleProgress = (message: EventSubMessage) => {
       const event = message.event as TwitchEventSubPrediction | undefined;
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       setPrediction(normaliseEventSubPrediction(event, 'active'));
     };
 
     const handleLock = (message: EventSubMessage) => {
       const event = message.event as TwitchEventSubPrediction | undefined;
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       setPrediction(normaliseEventSubPrediction(event, 'locked'));
     };
 
     const handleEnd = (message: EventSubMessage) => {
       const event = message.event as TwitchEventSubPrediction | undefined;
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       setPrediction(normaliseEventSubPrediction(event, 'resolved'));
     };
 

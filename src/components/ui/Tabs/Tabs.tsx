@@ -208,7 +208,9 @@ export const TopTabs: React.FC<TopTabsProps> = ({
 
   const scrollTabBarToIndex = useCallback(
     (index: number) => {
-      if (!isLayoutReady) return;
+      if (!isLayoutReady) {
+        return;
+      }
 
       try {
         tabBarFlatListRef.current?.scrollToIndex({
@@ -257,7 +259,9 @@ export const TopTabs: React.FC<TopTabsProps> = ({
   >(
     index: I,
   ) => {
-    if (index === activeIndex) return;
+    if (index === activeIndex) {
+      return;
+    }
     isTabPress.current = true;
 
     try {

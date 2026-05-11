@@ -42,6 +42,8 @@ jest.mock('sonner-native', () => ({
 }));
 
 jest.mock('@app/lib/sentry', () => ({
+  recordInfo: jest.fn(),
+  recordWarning: jest.fn(),
   sentryService: {
     captureMessage: jest.fn(),
   },
