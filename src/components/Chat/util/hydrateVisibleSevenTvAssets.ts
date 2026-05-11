@@ -33,6 +33,13 @@ function canHydrateMessage(message: AnyChatMessageType): boolean {
   return message.sender !== 'System' && !('notice_tags' in message);
 }
 
+function isMissingSharedChatSourceBadge(message: AnyChatMessageType): boolean {
+  return Boolean(
+    message.userstate['source-room-id'] &&
+    !message.badges.some(badge => badge.set === 'shared-chat-source'),
+  );
+}
+
 export async function hydrateVisibleSevenTvAssets({
   channelId,
   messages,
@@ -55,7 +62,11 @@ export async function hydrateVisibleSevenTvAssets({
     const cachedPersonalEmotes = getUserPersonalEmotes(userId, channelId);
     const cachedBadge = getUserBadge(userId);
 
-    if (cachedPersonalEmotes.length > 0 || cachedBadge) {
+    if (
+      cachedPersonalEmotes.length > 0 ||
+      cachedBadge ||
+      isMissingSharedChatSourceBadge(message)
+    ) {
       pending.push(Promise.resolve(reprocessMessage(message)));
     }
 

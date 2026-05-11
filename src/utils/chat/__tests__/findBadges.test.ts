@@ -147,6 +147,56 @@ describe('findBadges', () => {
       expect(result).toEqual([sourceSubscriberBadge]);
     });
 
+    test('uses source badges when the source room is the current room', () => {
+      const sourceSubscriberBadge = {
+        id: '3',
+        url: 'https://example.com/source-sub.png',
+        type: 'Twitch Subscriber Badge',
+        title: 'Source 3-Month Subscriber',
+        set: 'subscriber',
+      } as const;
+      const targetSubscriberBadge = {
+        id: '1',
+        url: 'https://example.com/target-sub.png',
+        type: 'Twitch Subscriber Badge',
+        title: 'Target Subscriber',
+        set: 'subscriber',
+      } as const;
+      const userstate: UserStateTags = {
+        'badges-raw': 'subscriber/1',
+        'room-id': 'source-room',
+        'source-room-id': 'source-room',
+        'source-badges': 'subscriber/3',
+        badges: {
+          subscriber: '1',
+        },
+        'user-id': '123456789',
+        username: 'testuser',
+        'display-name': 'TestUser',
+        color: '#FF0000',
+        mod: 'false',
+        subscriber: 'false',
+        turbo: 'false',
+        'user-type': '',
+        'reply-parent-display-name': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-msg-id': '',
+        'reply-parent-user-login': '',
+      };
+
+      const result = findBadges({
+        twitchGlobalBadges: [],
+        chatterinoBadges: [],
+        chatUsers: [],
+        ffzChannelBadges: [],
+        ffzGlobalBadges: [],
+        twitchChannelBadges: [targetSubscriberBadge, sourceSubscriberBadge],
+        userstate,
+      });
+
+      expect(result).toEqual([sourceSubscriberBadge]);
+    });
+
     test('prefers one channel badge over global fallback for the same raw badge', () => {
       const channelBadge = {
         id: '1000',

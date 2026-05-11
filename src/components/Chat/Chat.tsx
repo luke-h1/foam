@@ -458,7 +458,7 @@ function getSharedChatSourceRoomId(
   userstate: ReturnType<typeof createUserStateFromTags>,
 ): string | undefined {
   const sourceRoomId = userstate['source-room-id'];
-  if (!sourceRoomId || sourceRoomId === userstate['room-id']) {
+  if (!sourceRoomId) {
     return undefined;
   }
 

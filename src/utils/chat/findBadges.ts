@@ -37,16 +37,9 @@ const addBadge = (
 };
 
 const getRawTwitchBadges = (userstate: UserStateTags): string => {
-  const sourceRoomId = userstate['source-room-id'];
-  const currentRoomId = userstate['room-id'];
   const sourceBadges = userstate['source-badges'];
 
-  if (
-    sourceRoomId &&
-    sourceRoomId !== currentRoomId &&
-    sourceBadges &&
-    sourceBadges.length > 0
-  ) {
+  if (sourceBadges && sourceBadges.length > 0) {
     return sourceBadges;
   }
 

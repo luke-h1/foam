@@ -123,4 +123,24 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
     expect(reprocessMessage).toHaveBeenCalledWith(message);
   });
+
+  test('reprocesses visible shared chat messages missing the source badge', async () => {
+    const message = createMessage();
+    message.userstate['source-room-id'] = 'source-room';
+    const reprocessMessage = jest.fn();
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages: [message],
+      personalEmoteUsers: new Set(['twitch-user']),
+      cosmeticUsers: new Set(['twitch-user']),
+      getUserPersonalEmotes: jest.fn(() => []),
+      fetchUserPersonalEmotes: jest.fn(),
+      getUserBadge: jest.fn(() => undefined),
+      fetchUserCosmetics: jest.fn(),
+      reprocessMessage,
+    });
+
+    expect(reprocessMessage).toHaveBeenCalledWith(message);
+  });
 });
