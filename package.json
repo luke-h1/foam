@@ -298,7 +298,6 @@
     "core-js",
     "core-js-pure",
     "esbuild",
-    "nx",
     "protobufjs"
   ]
 }
