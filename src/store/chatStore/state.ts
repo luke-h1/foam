@@ -1,11 +1,8 @@
 import { logger } from '@app/utils/logger';
+import { ensureObservablePersistenceConfig } from '@app/lib/observablePersistence';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { observable } from '@legendapp/state';
-import {
-  configureObservablePersistence,
-  persistObservable,
-} from '@legendapp/state/persist';
-import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv';
+import { persistObservable } from '@legendapp/state/persist';
 
 import type {
   Bit,
@@ -37,10 +34,6 @@ export interface ChatStoreState {
   badges: Record<string, SanitisedBadgeSet>;
   userBadgeIds: Record<string, string>;
 }
-
-configureObservablePersistence({
-  pluginLocal: ObservablePersistMMKV,
-});
 
 export const limitChannelCaches = (
   channelCaches: Record<string, ChannelCacheType>,
@@ -84,8 +77,9 @@ const initialChatStoreState: ChatStoreState = {
   userBadgeIds: {},
 };
 
-export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
+ensureObservablePersistenceConfig();
 
+export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
 persistObservable(chatStore$.persisted, {
   local: 'chat-store-v2',
 });

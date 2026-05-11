@@ -1,14 +1,29 @@
 /* eslint-disable no-undef */
 import * as Form from '@app/components/Form/Form';
 import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
-import { sentryService } from '@app/services/sentry-service';
+import { recordInfo } from '@app/lib/sentry';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { ENV_SUPPORTS_OTA } from '../utils/envSupportsOta';
+import { theme } from '@app/styles/themes';
+
+const OTA_RELOAD_SCREEN_OPTIONS = {
+  backgroundColor: theme.color.background.dark,
+  fade: true,
+  spinner: {
+    color: theme.colorGreen,
+    size: 'large' as const,
+  },
+};
 
 export function OTADynamicSection() {
   const updates = Updates.useUpdates();
+  const reloadWithScreen = async () => {
+    await Updates.reloadAsync({
+      reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
+    });
+  };
 
   const fetchingTitle = (() => {
     if (updates.isDownloading) {
@@ -67,56 +82,48 @@ export function OTADynamicSection() {
           }
           void (async () => {
             if (updates.isUpdatePending) {
-              // Update is ready, reload immediately
-              sentryService.captureMessage(
-                'OTA reload triggered from dev tools',
-                {
-                  level: 'info',
-                  tags: {
-                    category: 'ota',
-                    action: 'dev_tools_reload',
-                    source: 'pending',
-                  },
+              recordInfo({
+                name: 'OTAUpdatesServiceInfo',
+                message: 'OTA reload triggered from dev tools',
+                params: {
+                  category: 'OTAUpdatesService',
+                  action: 'dev_tools_reload',
+                  source: 'pending',
+                  updateState: 'pending',
                 },
-              );
-              await Updates.reloadAsync();
+              });
+              await reloadWithScreen();
             } else if (updates.isUpdateAvailable) {
-              // Update is available but not fetched, fetch it first
-              sentryService.captureMessage(
-                'OTA check and fetch triggered from dev tools',
-                {
-                  level: 'info',
-                  tags: {
-                    category: 'ota',
-                    action: 'dev_tools_fetch',
-                    source: 'available',
-                  },
+              recordInfo({
+                name: 'OTAUpdatesServiceInfo',
+                message: 'OTA check and fetch triggered from dev tools',
+                params: {
+                  category: 'OTAUpdatesService',
+                  action: 'dev_tools_fetch',
+                  source: 'available',
+                  updateState: 'available',
                 },
-              );
+              });
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
                 await Updates.fetchUpdateAsync();
-                // After fetch, it should become pending, reload
-                await Updates.reloadAsync();
+                await reloadWithScreen();
               }
             } else {
-              // Check for updates
-              sentryService.captureMessage(
-                'OTA check triggered from dev tools',
-                {
-                  level: 'info',
-                  tags: {
-                    category: 'ota',
-                    action: 'dev_tools_check',
-                    source: 'idle',
-                  },
+              recordInfo({
+                name: 'OTAUpdatesServiceInfo',
+                message: 'OTA check triggered from dev tools',
+                params: {
+                  category: 'OTAUpdatesService',
+                  action: 'dev_tools_check',
+                  source: 'idle',
+                  updateState: 'idle',
                 },
-              );
+              });
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
                 await Updates.fetchUpdateAsync();
-                // After fetch, reload
-                await Updates.reloadAsync();
+                await reloadWithScreen();
               }
             }
           })();

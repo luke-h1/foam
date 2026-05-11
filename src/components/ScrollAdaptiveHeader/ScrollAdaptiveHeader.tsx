@@ -7,7 +7,7 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { theme } from '@app/styles/themes';
-import { Text } from '../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 
 interface ScrollAdaptiveHeaderProps {
   title: string;

@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Switch } from '@app/components/Switch/Switch';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
 import { memo, useCallback, forwardRef } from 'react';
@@ -142,11 +142,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               </View>
             </Button>
 
-            <Button
-              label="Show Timestamps"
-              style={styles.menuItem}
-              onPress={() => onToggleShowTimestamps?.(!showTimestamps)}
-            >
+            <View style={styles.menuItem}>
               <Icon icon="clock" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -157,15 +153,9 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                   onValueChange={value => onToggleShowTimestamps?.(value)}
                 />
               </View>
-            </Button>
+            </View>
 
-            <Button
-              label="Highlight Own Mentions"
-              style={styles.menuItem}
-              onPress={() =>
-                onToggleHighlightOwnMentions?.(!highlightOwnMentions)
-              }
-            >
+            <View style={styles.menuItem}>
               <Icon icon="at-sign" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -176,15 +166,9 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                   onValueChange={value => onToggleHighlightOwnMentions?.(value)}
                 />
               </View>
-            </Button>
+            </View>
 
-            <Button
-              label="Inline Reply Context"
-              style={styles.menuItem}
-              onPress={() =>
-                onToggleInlineReplyContext?.(!showInlineReplyContext)
-              }
-            >
+            <View style={styles.menuItem}>
               <Icon icon="corner-up-left" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -195,13 +179,9 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                   onValueChange={value => onToggleInlineReplyContext?.(value)}
                 />
               </View>
-            </Button>
+            </View>
 
-            <Button
-              label="Show Jump Pill"
-              style={styles.menuItem}
-              onPress={() => onToggleShowUnreadJumpPill?.(!showUnreadJumpPill)}
-            >
+            <View style={styles.menuItem}>
               <Icon icon="arrow-down-circle" color={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
@@ -212,7 +192,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                   onValueChange={value => onToggleShowUnreadJumpPill?.(value)}
                 />
               </View>
-            </Button>
+            </View>
 
             {onReconnect ? (
               <Button

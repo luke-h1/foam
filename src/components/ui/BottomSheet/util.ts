@@ -1,4 +1,4 @@
-import { androidToggle, impact } from '@app/services/haptics-service';
+import { androidToggle, impact } from '@app/lib/haptics';
 import { isValidElement, ReactElement, ReactNode } from 'react';
 import { Platform, SectionList, VirtualizedList } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';

@@ -1,4 +1,4 @@
-import Input, { InputProps } from '@app/components/Input/Input';
+import { Input, type ThemedInputProps } from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
 import { forwardRef, useCallback } from 'react';
 import {
@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 
-interface ChatInputProps extends Omit<InputProps, 'onChangeText'> {
+interface ChatInputProps extends Omit<ThemedInputProps, 'onChangeText'> {
   value?: string;
   onChangeText?: (text: string) => void;
   onSelectionChange?: (event: {
@@ -67,21 +67,17 @@ ChatInput.displayName = 'ChatInput';
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
+    backgroundColor: 'transparent',
   },
   input: {
     backgroundColor: 'transparent',
     borderColor: 'transparent',
     color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
-    maxHeight: 96,
-    minHeight: 38,
-    paddingBottom: 10,
-    paddingHorizontal: 12,
-    paddingTop: 10,
+    fontSize: theme.fontSize16,
+    maxHeight: 84,
+    minHeight: 40,
+    paddingBottom: 8,
+    paddingHorizontal: 0,
+    paddingTop: 8,
   },
 });

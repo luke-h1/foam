@@ -1,7 +1,7 @@
 import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Switch } from '@app/components/Switch/Switch';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -122,9 +122,11 @@ export function SettingsToggleRow(props: {
   return (
     <SettingsRow
       {...rowProps}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
-      trailing={<Switch value={value} onValueChange={onValueChange} />}
+      trailing={
+        <View>
+          <Switch value={value} onValueChange={onValueChange} />
+        </View>
+      }
     />
   );
 }

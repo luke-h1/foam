@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import { useAccentColor } from '@app/context/AccentColorContext';
-import { impact } from '@app/services/haptics-service';
+import { impact } from '@app/lib/haptics';
 import { colors } from '@app/styles/colors';
 import {
   UIColor,
@@ -21,7 +21,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Icon } from '../Icon/Icon';
-import { Text } from '../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 
 type ButtonVariant = 'solid' | 'outline' | 'soft' | 'subtle' | 'link';
 

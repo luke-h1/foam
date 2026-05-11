@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
-import { Text } from '@app/components/Text/Text';
-import { sentryService } from '@app/services/sentry-service';
+import { Text } from '@app/components/ui/Text/Text';
+import { sentryService } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { type ErrorInfo, useState } from 'react';

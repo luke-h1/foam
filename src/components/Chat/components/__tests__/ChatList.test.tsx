@@ -22,6 +22,7 @@ describe('ChatList', () => {
     render(
       <ChatList
         data={[]}
+        extraData={{ showTimestamps: false }}
         listRef={listRef}
         isAtBottomRef={isAtBottomRef}
         handleScroll={jest.fn()}
@@ -35,6 +36,7 @@ describe('ChatList', () => {
     expect(mockFlashList).toHaveBeenCalledWith(
       expect.objectContaining({
         drawDistance: 320,
+        extraData: { showTimestamps: false },
         maintainVisibleContentPosition: {
           autoscrollToBottomThreshold: 0.001,
           startRenderingFromBottom: true,

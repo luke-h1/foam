@@ -1,13 +1,14 @@
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
-import { sentryService, startSpanAsync } from '@app/services/sentry-service';
+import { startSpanAsync } from '@app/lib/sentry';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
+import { recordInfo } from '@app/lib/sentry';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { batch } from '@legendapp/state';
 
@@ -304,16 +305,26 @@ const loadChannelResourcesInternal = async (
                 badgesLastUpdated: Date.now(),
               });
             }
-            sentryService.addBreadcrumb({
-              category: 'chat',
+            recordInfo({
+              name: 'DataLoadingInfo',
               message: 'Refetched badges (3h TTL); using cached emotes',
-              data: { channelId, badgeCacheAge },
+              params: {
+                category: 'DataLoading',
+                action: 'badges_refetched_cached_emotes',
+                channelId,
+                badgeCacheAge,
+              },
             });
           } else {
-            sentryService.addBreadcrumb({
-              category: 'chat',
+            recordInfo({
+              name: 'DataLoadingInfo',
               message: 'Using cached channel resources',
-              data: { channelId, cacheAge },
+              params: {
+                category: 'DataLoading',
+                action: 'cached_channel_resources_used',
+                channelId,
+                cacheAge,
+              },
             });
           }
           batch(() => {
@@ -448,10 +459,16 @@ const loadChannelResourcesInternal = async (
       void notify7TVPresence(twitchUserId, channelId);
     }
 
-    sentryService.addBreadcrumb({
-      category: 'chat',
+    recordInfo({
+      name: 'DataLoadingInfo',
       message: 'Loaded channel resources',
-      data: { channelId, emotes: allEmotes.length, badges: allBadges.length },
+      params: {
+        category: 'DataLoading',
+        action: 'channel_resources_loaded',
+        channelId,
+        emoteCount: allEmotes.length,
+        badgeCount: allBadges.length,
+      },
     });
 
     cacheEmoteImages(allEmotes, signal).catch(() => {});

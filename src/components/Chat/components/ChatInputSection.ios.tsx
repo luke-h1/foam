@@ -4,7 +4,7 @@ import {
   IconSymbol,
   type IconSymbolName,
 } from '@app/components/IconSymbol/IconSymbol';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';

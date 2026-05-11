@@ -8,12 +8,25 @@ import { StyleSheet, View } from 'react-native';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
-import { Text } from '../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
   stream: TwitchStream;
   layout?: 'compact' | 'media' | 'text';
 }
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: 'English',
+  es: 'Spanish',
+  ja: 'Japanese',
+  ko: 'Korean',
+  fr: 'French',
+  de: 'German',
+  pt: 'Portuguese',
+};
+
+const CARD_SURFACE = 'rgba(255,255,255,0.035)';
+const CARD_BORDER = 'rgba(255,255,255,0.13)';
 
 export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const isMediaLayout = layout === 'media';
@@ -21,6 +34,13 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const thumbnailUrl = stream.thumbnail_url
     .replace('{width}', '1920')
     .replace('{height}', '1080');
+  const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
+  const languageLabel =
+    stream.tags?.find(tag =>
+      Object.values(LANGUAGE_NAMES).some(
+        language => language.toLowerCase() === tag.toLowerCase(),
+      ),
+    ) ?? LANGUAGE_NAMES[stream.language];
 
   const handleStreamPress = useCallback(() => {
     router.push(`/streams/live-stream/${stream.user_login}`);
@@ -58,6 +78,94 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     isTextLayout && styles.imageWrapperText,
     isMediaLayout && styles.imageWrapperMedia,
   ];
+
+  if (isMediaLayout) {
+    return (
+      <Button onPress={handleStreamPress} style={styles.mediaCardWrapper}>
+        <View style={styles.mediaContainer}>
+          <View style={styles.mediaImageShell}>
+            <Image
+              source={thumbnailUrl}
+              style={styles.mediaImage}
+              containerStyle={styles.mediaImageWrapper}
+              transition={150}
+            />
+            <View style={styles.liveBadge}>
+              <Text type="xxs" weight="bold" style={styles.liveBadgeText}>
+                LIVE
+              </Text>
+            </View>
+            <View style={styles.viewerBadge}>
+              <Text type="sm" weight="bold" style={styles.viewerBadgeText}>
+                {formatViewCount(stream.viewer_count)} watching
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.mediaDetailsRow}>
+            <PressableArea
+              onPress={handleStreamerPress}
+              onPressIn={handleStreamerPressIn}
+              style={styles.avatarPressable}
+              hitSlop={8}
+            >
+              {stream.profilePicture ? (
+                <Image
+                  source={stream.profilePicture}
+                  style={styles.avatarImage}
+                  containerStyle={styles.avatarImageWrapper}
+                  transition={150}
+                />
+              ) : (
+                <View style={styles.avatarFallback}>
+                  <Text type="md" weight="bold" style={styles.avatarInitial}>
+                    {avatarInitial}
+                  </Text>
+                </View>
+              )}
+            </PressableArea>
+
+            <View style={styles.mediaTextColumn}>
+              <Text
+                type="md"
+                weight="bold"
+                style={styles.mediaTitle}
+                numberOfLines={1}
+              >
+                {stream.title}
+              </Text>
+              <PressableArea onPress={handleCategoryPress} hitSlop={6}>
+                <Text
+                  type="sm"
+                  weight="medium"
+                  style={styles.mediaCategory}
+                  numberOfLines={1}
+                >
+                  {stream.game_name}
+                </Text>
+              </PressableArea>
+              <PressableArea
+                onPress={handleStreamerPress}
+                onPressIn={handleStreamerPressIn}
+                hitSlop={6}
+              >
+                <Text type="sm" style={styles.mediaUsername} numberOfLines={1}>
+                  {stream.user_name}
+                </Text>
+              </PressableArea>
+              {languageLabel ? (
+                <View style={styles.mediaTag}>
+                  <Text type="xs" weight="medium" style={styles.mediaTagText}>
+                    {languageLabel}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        </View>
+      </Button>
+    );
+  }
 
   return (
     <Button onPress={handleStreamPress} style={styles.cardWrapper}>
@@ -171,6 +279,35 @@ const styles = StyleSheet.create({
   cardWrapper: {
     width: '100%',
   },
+  avatarFallback: {
+    alignItems: 'center',
+    backgroundColor: theme.darkActiveContent,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  avatarImage: {
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    height: 48,
+    width: 48,
+  },
+  avatarImageWrapper: {
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    height: 48,
+    overflow: 'hidden',
+    width: 48,
+  },
+  avatarInitial: {
+    color: theme.color.text.dark,
+  },
+  avatarPressable: {
+    flexShrink: 0,
+    marginTop: 2,
+  },
   categoryBadge: {
     alignSelf: 'flex-start',
     backgroundColor: theme.darkActiveContent,
@@ -192,11 +329,11 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: 'flex-start',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: CARD_SURFACE,
+    borderColor: CARD_BORDER,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
-    borderWidth: 1,
+    borderWidth: 0.55,
     flexDirection: 'row',
     flexWrap: 'nowrap',
     marginHorizontal: theme.space16,
@@ -280,8 +417,83 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 4,
   },
+  liveBadge: {
+    backgroundColor: theme.colorDarkGreen,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius6,
+    left: theme.space12,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    position: 'absolute',
+    top: theme.space12,
+  },
+  liveBadgeText: {
+    color: theme.color.background.dark,
+    letterSpacing: 0.4,
+  },
   liveText: {
     color: theme.color.textSecondary.dark,
+  },
+  mediaCardWrapper: {
+    width: '100%',
+  },
+  mediaCategory: {
+    color: theme.color.textSecondary.dark,
+    lineHeight: 20,
+  },
+  mediaContainer: {
+    marginHorizontal: theme.space16,
+    marginVertical: theme.space12,
+  },
+  mediaDetailsRow: {
+    flexDirection: 'row',
+    gap: theme.space12,
+    marginTop: theme.space12,
+  },
+  mediaImage: {
+    aspectRatio: 16 / 9,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius16,
+    width: '100%',
+  },
+  mediaImageShell: {
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius16,
+    overflow: 'hidden',
+    position: 'relative',
+    width: '100%',
+  },
+  mediaImageWrapper: {
+    aspectRatio: 16 / 9,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius16,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  mediaTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.darkActiveContent,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    marginTop: theme.space8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  mediaTagText: {
+    color: theme.color.text.dark,
+    lineHeight: 16,
+  },
+  mediaTextColumn: {
+    flex: 1,
+    minWidth: 0,
+  },
+  mediaTitle: {
+    color: theme.color.text.dark,
+    lineHeight: 22,
+  },
+  mediaUsername: {
+    color: theme.color.textSecondary.dark,
+    lineHeight: 20,
   },
   metaDivider: {
     color: theme.color.textSecondary.dark,
@@ -322,5 +534,19 @@ const styles = StyleSheet.create({
   },
   viewersText: {
     color: theme.color.textSecondary.dark,
+  },
+  viewerBadge: {
+    backgroundColor: 'rgba(0,0,0,0.68)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius6,
+    bottom: theme.space12,
+    left: theme.space12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    position: 'absolute',
+  },
+  viewerBadgeText: {
+    color: theme.color.text.dark,
+    lineHeight: 20,
   },
 });

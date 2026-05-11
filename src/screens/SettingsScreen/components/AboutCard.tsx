@@ -1,5 +1,5 @@
 import { IconButton } from '@app/components/IconButton/IconButton';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { SFSymbol } from 'expo-symbols';

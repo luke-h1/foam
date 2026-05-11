@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { SymbolView } from 'expo-symbols';
@@ -214,6 +214,8 @@ export function ActionSheet(props: Props) {
           <Image
             key={`${part.type}-${part.id ?? index}-${index}`}
             useNitro
+            trackLoadTime
+            trackLoadContext="chat.message-action-sheet"
             source={part.url}
             style={styles.messageEmote}
             contentFit="contain"

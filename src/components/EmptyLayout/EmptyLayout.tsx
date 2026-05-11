@@ -2,9 +2,9 @@ import { Button } from '@app/components/ui/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { type ReactNode } from 'react';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import {
   // eslint-disable-next-line no-restricted-imports
-  Pressable,
   StyleSheet,
   View,
   type StyleProp,
@@ -136,9 +136,9 @@ export function EmptyLayoutButton({
   }
 
   return (
-    <Pressable onPress={onPress} style={style}>
+    <PressableArea onPress={onPress} style={style}>
       {children}
-    </Pressable>
+    </PressableArea>
   );
 }
 

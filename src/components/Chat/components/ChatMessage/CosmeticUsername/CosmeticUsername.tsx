@@ -14,7 +14,7 @@ import Svg, {
   Stop,
   Rect,
 } from 'react-native-svg';
-import { Text } from '../../../../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import {
   buildGradientConfig,
   GradientConfig,
@@ -47,7 +47,7 @@ function PaintedUsernameComponent({
   showColon = true,
   usernameTextStyle,
 }: PaintedUsernameProps) {
-  const displayUsername = showColon ? `${username}:` : username;
+  const displayUsername = showColon ? `${username}: ` : username;
   const paintId = useSelector(() =>
     userId ? chatStore$.userPaintIds[userId]?.get() : null,
   );

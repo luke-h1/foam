@@ -1,4 +1,3 @@
-import { sentryService } from '@app/services/sentry-service';
 import {
   logger as rnlogger,
   defLvlType,
@@ -129,7 +128,7 @@ function stringifyLogMessage(value: unknown): string {
   }
 }
 
-const createSentryTransport =
+const createGenericTransport =
   (): transportFunctionType<Record<string, unknown>> =>
   (props: TransportProps) => {
     if (!props?.level) {
@@ -144,32 +143,16 @@ const createSentryTransport =
     );
 
     if (level.text === 'error') {
-      sentryService.addBreadcrumb({
-        category,
-        message: msg,
-        level: 'error',
-      });
+      console.error(`[${category}]`, msg);
       if (errorFromArgs) {
-        sentryService.captureException(errorFromArgs, {
-          tags: { category },
-          extra: { logMessage: msg },
-        });
-      } else {
-        sentryService.captureMessage(msg, {
-          level: 'error',
-          tags: { category },
-        });
+        console.error(`[${category}]`, errorFromArgs);
       }
     } else if (level.text === 'warn') {
-      sentryService.addBreadcrumb({
-        category,
-        message: msg,
-        level: 'warning',
-      });
+      console.warn(`[${category}]`, msg);
     }
   };
 
-const sentryTransport = createSentryTransport();
+const genericTransport = createGenericTransport();
 
 const loggingConfig = {
   main: {
@@ -262,7 +245,7 @@ const loggingConfig = {
 >;
 
 const baseLogger = rnlogger.createLogger({
-  transport: [consoleTransport, sentryTransport],
+  transport: [consoleTransport, genericTransport],
   stringifyFunc: stringifyLogMessage,
   transportOptions: {
     colors: {

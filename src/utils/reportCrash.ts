@@ -1,4 +1,4 @@
-import { sentryService } from '@app/services/sentry-service';
+import { sentryService } from '@app/lib/sentry';
 
 export enum ErrorType {
   /**

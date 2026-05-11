@@ -14,6 +14,11 @@ const senderColorIndex = new Map<string, string>();
 const MAX_CHAT_MESSAGES = 600;
 const MAX_RECENT_MESSAGES = 80;
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
+const RECENT_MESSAGES_SYNC_DELAY_MS = 1000;
+
+let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingRecentMessagesChannelId: string | null = null;
+let pendingRecentMessages: ChatMessageType<never>[] | null = null;
 
 const getMessageKey = (messageId: string, messageNonce: string): string =>
   `${messageId}_${messageNonce}`;
@@ -21,6 +26,36 @@ const getMessageKey = (messageId: string, messageNonce: string): string =>
 const normaliseIndexKey = (value: string | undefined): string | null => {
   const normalised = value?.trim().toLowerCase();
   return normalised ? normalised : null;
+};
+
+const indexMessage = (message: ChatMessageType<never>, index: number) => {
+  const key = getMessageKey(message.message_id, message.message_nonce);
+  messageKeyToIndex.set(key, index);
+
+  if (message.message_id) {
+    messageIdToIndex.set(message.message_id, index);
+  }
+
+  if (message.userstate?.color && message.message_id) {
+    messageColorIndex.set(message.message_id, message.userstate.color);
+  }
+
+  const color = message.userstate?.color;
+  if (!color) {
+    return;
+  }
+
+  const senderKeys = [
+    normaliseIndexKey(message.sender),
+    normaliseIndexKey(message.userstate?.username),
+    normaliseIndexKey(message.userstate?.login),
+  ];
+
+  senderKeys.forEach(senderKey => {
+    if (senderKey) {
+      senderColorIndex.set(senderKey, color);
+    }
+  });
 };
 
 const rebuildMessageIndexes = () => {
@@ -32,33 +67,7 @@ const rebuildMessageIndexes = () => {
   const messages = chatStore$.messages.peek();
 
   messages.forEach((message, index) => {
-    const key = getMessageKey(message.message_id, message.message_nonce);
-    messageKeyToIndex.set(key, index);
-
-    if (message.message_id) {
-      messageIdToIndex.set(message.message_id, index);
-    }
-
-    if (message.userstate?.color && message.message_id) {
-      messageColorIndex.set(message.message_id, message.userstate.color);
-    }
-
-    const color = message.userstate?.color;
-    if (!color) {
-      return;
-    }
-
-    const senderKeys = [
-      normaliseIndexKey(message.sender),
-      normaliseIndexKey(message.userstate?.username),
-      normaliseIndexKey(message.userstate?.login),
-    ];
-
-    senderKeys.forEach(senderKey => {
-      if (senderKey) {
-        senderColorIndex.set(senderKey, color);
-      }
-    });
+    indexMessage(message, index);
   });
 };
 
@@ -94,31 +103,84 @@ const trimRecentMessageChannels = () => {
   );
 };
 
+const persistRecentMessagesForChannel = (
+  channelId: string,
+  nextMessages: ChatMessageType<never>[],
+) => {
+  const recentMessagesByChannel =
+    chatStore$.persisted.recentMessagesByChannel.peek() ?? {};
+  const existingMessages = recentMessagesByChannel[channelId];
+  if (existingMessages === nextMessages) {
+    return;
+  }
+
+  const nextRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
+  chatStore$.persisted.recentMessagesByChannel.set({
+    ...recentMessagesByChannel,
+    [channelId]: nextRecentMessages,
+  });
+  trimRecentMessageChannels();
+};
+
+const flushPendingRecentMessagesSync = () => {
+  if (recentMessagesSyncTimer) {
+    clearTimeout(recentMessagesSyncTimer);
+    recentMessagesSyncTimer = null;
+  }
+
+  const channelId = pendingRecentMessagesChannelId;
+  const nextMessages = pendingRecentMessages;
+
+  pendingRecentMessagesChannelId = null;
+  pendingRecentMessages = null;
+
+  if (!channelId || !nextMessages) {
+    return;
+  }
+
+  persistRecentMessagesForChannel(channelId, nextMessages);
+};
+
 const syncRecentMessagesForCurrentChannel = (
   nextMessages: ChatMessageType<never>[],
+  mode: 'defer' | 'immediate' = 'immediate',
 ) => {
   const currentChannelId = chatStore$.currentChannelId.peek();
   if (!currentChannelId) {
     return;
   }
 
-  const nextRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
-  chatStore$.persisted.recentMessagesByChannel.set({
-    ...(chatStore$.persisted.recentMessagesByChannel.peek() ?? {}),
-    [currentChannelId]: nextRecentMessages,
-  });
-  trimRecentMessageChannels();
+  if (mode === 'immediate') {
+    flushPendingRecentMessagesSync();
+    persistRecentMessagesForChannel(currentChannelId, nextMessages);
+    return;
+  }
+
+  pendingRecentMessagesChannelId = currentChannelId;
+  pendingRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
+
+  if (recentMessagesSyncTimer) {
+    return;
+  }
+
+  recentMessagesSyncTimer = setTimeout(
+    flushPendingRecentMessagesSync,
+    RECENT_MESSAGES_SYNC_DELAY_MS,
+  );
 };
 
-const trimMessageIndexes = () => {
+const trimMessageIndexes = (): boolean => {
+  let didTrim = false;
+
   while (messageKeyOrder.length > MAX_CHAT_MESSAGES) {
     const removedKey = messageKeyOrder.shift();
     if (removedKey) {
       messageKeySet.delete(removedKey);
+      didTrim = true;
     }
   }
 
-  rebuildMessageIndexes();
+  return didTrim;
 };
 
 export const addMessage = <TNoticeType extends NoticeVariants>(
@@ -131,6 +193,7 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
 
   messageKeySet.add(key);
   messageKeyOrder.push(key);
+  const nextMessageIndex = chatStore$.messages.peek().length;
   chatStore$.messages.push(message as ChatMessageType<never>);
   const nextMessages = chatStore$.messages.peek();
   const messageCount = nextMessages.length;
@@ -138,9 +201,13 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
     chatStore$.messages.set(
       nextMessages.slice(messageCount - MAX_CHAT_MESSAGES),
     );
+  } else {
+    indexMessage(message as ChatMessageType<never>, nextMessageIndex);
   }
   syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
-  trimMessageIndexes();
+  if (trimMessageIndexes()) {
+    rebuildMessageIndexes();
+  }
 };
 
 export const addMessages = (messages: ChatMessageType<never>[]) => {
@@ -160,17 +227,26 @@ export const addMessages = (messages: ChatMessageType<never>[]) => {
   }
 
   batch(() => {
+    const nextMessageStartIndex = chatStore$.messages.peek().length;
     chatStore$.messages.push(...newMessages);
 
     const messageCount = chatStore$.messages.peek().length;
+    let didTrimMessages = false;
     if (messageCount > MAX_CHAT_MESSAGES) {
+      didTrimMessages = true;
       chatStore$.messages.set(
         chatStore$.messages.peek().slice(messageCount - MAX_CHAT_MESSAGES),
       );
+    } else {
+      newMessages.forEach((message, index) => {
+        indexMessage(message, nextMessageStartIndex + index);
+      });
     }
 
-    syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
-    trimMessageIndexes();
+    syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), 'defer');
+    if (trimMessageIndexes() || didTrimMessages) {
+      rebuildMessageIndexes();
+    }
   });
 };
 
@@ -323,6 +399,7 @@ export const removeMessageById = (messageId: string) => {
 };
 
 export const clearMessages = () => {
+  flushPendingRecentMessagesSync();
   messageKeySet.clear();
   messageKeyOrder.length = 0;
   messageIdToIndex.clear();

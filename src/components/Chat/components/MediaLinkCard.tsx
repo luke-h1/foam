@@ -2,8 +2,8 @@ import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
-import { Skeleton } from '@app/components/Skeleton/Skeleton';
-import { Text } from '@app/components/Text/Text';
+import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import { Text } from '@app/components/ui/Text/Text';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
@@ -98,6 +98,8 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
         {thumbnail && (
           <Image
             useNitro
+            trackLoadTime
+            trackLoadContext="chat.media-link-card"
             source={thumbnail}
             style={styles.thumbnail}
             contentFit="contain"

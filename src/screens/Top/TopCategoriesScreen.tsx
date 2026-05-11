@@ -1,24 +1,25 @@
 import { MemoizedCategoryCard } from '@app/components/CategoryCard/CategoryCard';
-import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
-import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import {
   AnimatedFlashList,
   FlashList,
   FlashListRef,
 } from '@app/components/FlashList/FlashList';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
-import { Skeleton } from '@app/components/Skeleton/Skeleton';
+import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { Category, twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 const SKELETON_COUNT = 9;
 const SKELETON_COLUMNS = 3;
+const TOP_CATEGORY_SKELETON_KEY_PREFIX = 'skeleton-';
+
 function CategoryCardSkeleton() {
   return (
     <View style={styles.cardContainer}>
@@ -39,6 +40,10 @@ export function TopCategoriesScreen({
 }: TopCategoriesScreenProps = {}) {
   const [refreshing, setRefreshing] = useState(false);
   const listRef = useRef<FlashListRef<Category>>(null);
+  const skeletonData = useMemo(
+    () => Array.from({ length: SKELETON_COUNT }),
+    [],
+  );
 
   useScrollToTop(listRef);
 
@@ -88,13 +93,14 @@ export function TopCategoriesScreen({
   }, []);
 
   if (isLoading || refreshing) {
-    const skeletonData = Array.from({ length: SKELETON_COUNT });
     return (
       <View style={styles.wrapper}>
         <FlashList
-          contentInsetAdjustmentBehavior="never"
+          getItemType={() => 'category-skeleton'}
+          removeClippedSubviews
+          contentInsetAdjustmentBehavior="automatic"
           data={skeletonData}
-          keyExtractor={(_, idx) => `skeleton-${idx}`}
+          keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
           renderItem={loadingRenderItem}
           contentContainerStyle={{ paddingTop: contentTopInset }}
@@ -120,8 +126,10 @@ export function TopCategoriesScreen({
     setRefreshing(false);
   }, [refetch]);
 
-  const allCategories =
-    categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [];
+  const allCategories = useMemo(
+    () => categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [],
+    [categories],
+  );
 
   if (allCategories.length === 0) {
     return (
@@ -146,15 +154,9 @@ export function TopCategoriesScreen({
         data={allCategories}
         numColumns={3}
         removeClippedSubviews
-        contentInsetAdjustmentBehavior="never"
+        contentInsetAdjustmentBehavior="automatic"
+        getItemType={() => 'category-card'}
         contentContainerStyle={{ paddingTop: contentTopInset }}
-        ListHeaderComponent={
-          <EditorialSectionHeader
-            eyebrow="Discover"
-            title="Top categories"
-            subtitle="Browse the games and formats pulling the most attention across the platform."
-          />
-        }
         renderItem={renderItem}
         keyExtractor={item => item.id}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises

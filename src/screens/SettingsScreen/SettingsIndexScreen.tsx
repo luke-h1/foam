@@ -5,7 +5,7 @@ import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';

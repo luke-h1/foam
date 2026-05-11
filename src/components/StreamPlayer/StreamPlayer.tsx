@@ -1,9 +1,10 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { Text } from '@app/components/Text/Text';
-import { impact } from '@app/services/haptics-service';
-import { countMetric, sentryService } from '@app/services/sentry-service';
+import { Text } from '@app/components/ui/Text/Text';
+import { impact } from '@app/lib/haptics';
+import { countMetric } from '@app/lib/sentry';
+import { recordError } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -239,6 +240,12 @@ export interface StreamPlayerProps {
    */
   restrictWebViewNavigationToTwitchPlayer?: boolean;
   /**
+   * Load player.twitch.tv directly instead of generated embed HTML.
+   * This disables the JS player bridge but allows Twitch's own login/cookie UI
+   * to handle scrolling and interaction.
+   */
+  useRawTwitchPlayer?: boolean;
+  /**
    * Show custom overlay controls
    * @default true
    */
@@ -368,7 +375,15 @@ function buildTwitchEmbedHtml(options: {
   <link rel="preconnect" href="https://static.twitchcdn.net" crossorigin>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background: #000;
+    }
     #twitch-player { width: 100%; height: 100%; }
     .player-controls,
     #channel-player-disclosures,
@@ -510,6 +525,28 @@ function buildTwitchEmbedHtml(options: {
   </script>
 </body>
 </html>`;
+}
+
+function buildRawTwitchPlayerUrl(options: {
+  autoplay: boolean;
+  channel: string;
+  muted: boolean;
+  parent: string;
+  video?: string;
+}): string {
+  const params = new URLSearchParams({
+    autoplay: options.autoplay ? 'true' : 'false',
+    muted: options.muted ? 'true' : 'false',
+    parent: options.parent,
+  });
+
+  if (options.video) {
+    params.set('video', options.video);
+  } else {
+    params.set('channel', options.channel);
+  }
+
+  return `https://player.twitch.tv/?${params.toString()}`;
 }
 
 interface ControlsOverlayProps {
@@ -796,6 +833,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
       restrictWebViewNavigationToTwitchPlayer = false,
       showOverlayControls = true,
       streamInfo,
+      useRawTwitchPlayer = false,
       video,
       width,
     },
@@ -845,6 +883,7 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     useEffect(() => {
       onContentGateChange?.(hasContentGate);
     }, [hasContentGate, onContentGateChange]);
+
     const [lastHttpError, setLastHttpError] = useState<{
       url: string;
       statusCode: number;
@@ -1193,20 +1232,38 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
     );
 
     const webViewSource = useMemo(
-      () => ({
-        html: buildTwitchEmbedHtml({
-          channel: channel || 'twitch',
-          video,
-          parent,
-          autoplay: true,
-          muted: deferOverlayUntilUserUnmute ? true : initialMuted,
-          debug: __DEV__,
-          width: '100%',
-          height: '100%',
-        }),
-        baseUrl: `https://${parent}/`,
-      }),
-      [channel, video, parent, initialMuted, deferOverlayUntilUserUnmute],
+      () =>
+        useRawTwitchPlayer
+          ? {
+              uri: buildRawTwitchPlayerUrl({
+                channel: channel || 'twitch',
+                video,
+                parent,
+                autoplay: true,
+                muted: deferOverlayUntilUserUnmute ? true : initialMuted,
+              }),
+            }
+          : {
+              html: buildTwitchEmbedHtml({
+                channel: channel || 'twitch',
+                video,
+                parent,
+                autoplay: true,
+                muted: deferOverlayUntilUserUnmute ? true : initialMuted,
+                debug: __DEV__,
+                width: '100%',
+                height: '100%',
+              }),
+              baseUrl: `https://${parent}/`,
+            },
+      [
+        channel,
+        video,
+        parent,
+        initialMuted,
+        deferOverlayUntilUserUnmute,
+        useRawTwitchPlayer,
+      ],
     );
 
     const showControls = useCallback(() => {
@@ -1345,18 +1402,19 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           url: nativeEvent.url,
         });
 
-        sentryService.captureException(
-          new Error(`StreamPlayer WebView error: ${nativeEvent.description}`),
-          {
-            tags: { component: 'StreamPlayer', errorType: 'webview_error' },
-            extra: {
-              code: nativeEvent.code,
-              description: nativeEvent.description,
-              url: nativeEvent.url,
-              channel,
-            },
+        recordError({
+          name: 'StreamError',
+          message: `StreamPlayer WebView error: ${nativeEvent.description}`,
+          params: {
+            category: 'Stream',
+            action: 'webview_error',
+            code: nativeEvent.code,
+            description: nativeEvent.description,
+            url: nativeEvent.url,
+            channel,
           },
-        );
+          errorCause: nativeEvent,
+        });
 
         onError?.(nativeEvent.description);
       },
@@ -1377,20 +1435,19 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           statusCode: nativeEvent.statusCode,
         });
 
-        sentryService.captureException(
-          new Error(
-            `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
-          ),
-          {
-            tags: { component: 'StreamPlayer', errorType: 'http_error' },
-            extra: {
-              statusCode: nativeEvent.statusCode,
-              description: nativeEvent.description,
-              url: nativeEvent.url,
-              channel,
-            },
+        recordError({
+          name: 'StreamError',
+          message: `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
+          params: {
+            category: 'Stream',
+            action: 'webview_http_error',
+            statusCode: nativeEvent.statusCode,
+            description: nativeEvent.description,
+            url: nativeEvent.url,
+            channel,
           },
-        );
+          errorCause: nativeEvent,
+        });
 
         onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
       },
@@ -1434,7 +1491,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           domStorageEnabled
           javaScriptEnabled
           mediaPlaybackRequiresUserAction={false}
-          scrollEnabled={false}
+          scrollEnabled={useRawTwitchPlayer || hasContentGate}
+          keyboardDisplayRequiresUserAction={
+            !(useRawTwitchPlayer || hasContentGate)
+          }
           setBuiltInZoomControls={false}
           setDisplayZoomControls={false}
           setSupportMultipleWindows={false}
@@ -1442,7 +1502,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           thirdPartyCookiesEnabled
           originWhitelist={['*']}
           source={webViewSource}
-          style={[styles.webView, hasContentGate && styles.webViewScrollable]}
+          style={[
+            styles.webView,
+            (useRawTwitchPlayer || hasContentGate) && styles.webViewScrollable,
+          ]}
           onContentProcessDidTerminate={() => {
             remountEmbedWebView();
           }}
@@ -1451,6 +1514,9 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
           onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
           onLoadEnd={() => {
             onWebViewLoaded?.();
+            if (useRawTwitchPlayer) {
+              return;
+            }
             if (needsInitRef.current) {
               needsInitRef.current = false;
               if (autoplay) {
@@ -1614,7 +1680,7 @@ export function StreamPlayerPrewarm({
         allowsInlineMediaPlayback
         mediaPlaybackRequiresUserAction={false}
         originWhitelist={['*']}
-        scrollEnabled={false}
+        scrollEnabled
         setSupportMultipleWindows={false}
         sharedCookiesEnabled
         thirdPartyCookiesEnabled

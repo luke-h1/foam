@@ -1,6 +1,6 @@
-import { sentryService } from '@app/services/sentry-service';
 import { AllowedPrefix, logger } from '@app/utils/logger';
 import { RequestInterceptor } from '../Client';
+import { recordError } from '@app/lib/sentry';
 
 export const createLoggerInterceptor = (
   prefix: AllowedPrefix,
@@ -32,6 +32,15 @@ export const createLoggerInterceptor = (
   },
   onError: error => {
     logger[prefix].error(`Request error: ${JSON.stringify(error, null, 2)}`);
-    sentryService.captureException(error);
+    recordError({
+      name: 'NetworkError',
+      message: 'API request interceptor error',
+      params: {
+        category: 'Network',
+        action: 'request_interceptor_error',
+        prefix,
+      },
+      errorCause: error,
+    });
   },
 });

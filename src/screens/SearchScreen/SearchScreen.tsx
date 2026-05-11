@@ -5,11 +5,11 @@ import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { SearchHistoryV2 } from '@app/components/SearchHistory/SearchHistoryV2';
-import { Text } from '@app/components/Text/Text';
+import { SearchHistoryV2 } from '@app/components/ui/SearchHistory/SearchHistoryV2';
+import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { storageService } from '@app/services/storage-service';
+import { storageService } from '@app/lib/storage';
 import {
   Category,
   SearchChannelResponse,
@@ -55,6 +55,18 @@ const SEARCH_QUICK_ACTIONS = [
   },
 ];
 
+type SearchItem = SearchChannelResponse | Category;
+
+function isSearchChannelItem(item: SearchItem): item is SearchChannelResponse {
+  return 'broadcaster_login' in item;
+}
+
+function getSearchResultKey(item: SearchItem) {
+  return isSearchChannelItem(item)
+    ? `channel-${item.id}`
+    : `category-${item.id}`;
+}
+
 /**
  * Search screen with large title header style (like Settings)
  */
@@ -77,11 +89,11 @@ export function SearchScreen() {
       storageService.getString<SearchHistoryItem[]>('previous_searches');
 
     if (history) {
-      history.sort(
+      const sortedHistory = [...history].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
       startTransition(() => {
-        setSearchHistory(history);
+        setSearchHistory(sortedHistory);
       });
       return;
     }
@@ -153,8 +165,10 @@ export function SearchScreen() {
 
   const handleClearSearch = useCallback(() => {
     setQuery('');
-    setSearchResults([]);
-    setCategoryResults([]);
+    startTransition(() => {
+      setSearchResults([]);
+      setCategoryResults([]);
+    });
   }, []);
 
   const handleCategoryPress = useCallback((categoryId: string) => {
@@ -174,9 +188,49 @@ export function SearchScreen() {
       if (text.length > 2) {
         void handleQuerySearch(text);
       } else if (text.length === 0) {
-        setSearchResults([]);
-        setCategoryResults([]);
+        startTransition(() => {
+          setSearchResults([]);
+          setCategoryResults([]);
+        });
       }
+    },
+    [handleQuerySearch],
+  );
+
+  const handleSearchHistorySelect = useCallback(
+    (historyQuery: string) => {
+      setQuery(historyQuery);
+      void handleQuerySearch(historyQuery);
+    },
+    [handleQuerySearch],
+  );
+
+  const handleSearchHistoryClearAll = useCallback(() => {
+    setSearchHistory([]);
+    storageService.remove('previous_searches');
+  }, []);
+
+  const handleSearchHistoryClearItem = useCallback(
+    (historyQuery: string) => {
+      const newHistory = searchHistory.filter(
+        item => item.query !== historyQuery,
+      );
+      setSearchHistory(newHistory);
+      storageService.set('previous_searches', newHistory);
+    },
+    [searchHistory],
+  );
+
+  const handleFilterChange = useCallback((index: number) => {
+    startTransition(() => {
+      setSelectedFilter(index === 0 ? 'channels' : 'categories');
+    });
+  }, []);
+
+  const handleQuickActionPress = useCallback(
+    (actionQuery: string) => {
+      setQuery(actionQuery);
+      void handleQuerySearch(actionQuery);
     },
     [handleQuerySearch],
   );
@@ -185,22 +239,18 @@ export function SearchScreen() {
     return searchResults.length === 0 && searchHistory.length > 0 ? (
       <SearchHistoryV2
         history={searchHistory.map(item => item.query)}
-        onClearAll={() => {
-          setSearchHistory([]);
-          storageService.remove('previous_searches');
-        }}
-        onSelectItem={q => {
-          setQuery(q);
-          void handleQuerySearch(q);
-        }}
-        onClearItem={id => {
-          const newHistory = searchHistory.filter(item => item.query !== id);
-          setSearchHistory(newHistory);
-          storageService.set('previous_searches', newHistory);
-        }}
+        onClearAll={handleSearchHistoryClearAll}
+        onSelectItem={handleSearchHistorySelect}
+        onClearItem={handleSearchHistoryClearItem}
       />
     ) : null;
-  }, [searchResults.length, searchHistory, handleQuerySearch]);
+  }, [
+    searchResults.length,
+    searchHistory,
+    handleSearchHistoryClearAll,
+    handleSearchHistoryClearItem,
+    handleSearchHistorySelect,
+  ]);
 
   const ListFooterComponent = useMemo(() => {
     return historySection;
@@ -312,9 +362,7 @@ export function SearchScreen() {
         <View style={styles.filterBar}>
           <SegmentedControl
             currentIndex={selectedFilter === 'channels' ? 0 : 1}
-            onChange={index =>
-              setSelectedFilter(index === 0 ? 'channels' : 'categories')
-            }
+            onChange={handleFilterChange}
             items={[{ label: 'Channels' }, { label: 'Categories' }]}
           />
         </View>
@@ -343,10 +391,7 @@ export function SearchScreen() {
                 <Button
                   key={item.query}
                   style={styles.quickActionCard}
-                  onPress={() => {
-                    setQuery(item.query);
-                    void handleQuerySearch(item.query);
-                  }}
+                  onPress={() => handleQuickActionPress(item.query)}
                 >
                   <Text
                     type="sm"
@@ -393,11 +438,12 @@ export function SearchScreen() {
       activeResults.length,
       searchResults.length,
       handleTextChange,
-      handleQuerySearch,
       handleFocus,
       handleBlur,
       handleClearSearch,
       handleCancel,
+      handleFilterChange,
+      handleQuickActionPress,
       isFocused,
     ],
   );
@@ -406,6 +452,10 @@ export function SearchScreen() {
     <View style={styles.container}>
       <FlashList
         ref={listRef}
+        getItemType={item =>
+          isSearchChannelItem(item) ? 'search-channel' : 'search-category'
+        }
+        removeClippedSubviews
         showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="automatic"
         data={activeResults}
@@ -420,7 +470,7 @@ export function SearchScreen() {
                 SearchChannelResponse | Category
               >)
         }
-        keyExtractor={item => item.id}
+        keyExtractor={getSearchResultKey}
       />
     </View>
   );

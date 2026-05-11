@@ -8,7 +8,6 @@ import { SymbolWeight } from 'expo-symbols';
 import React, { Children, isValidElement, ReactNode } from 'react';
 import {
   Button,
-  GestureResponderEvent,
   OpaqueColorValue,
   RefreshControl,
   Text as RNText,
@@ -17,12 +16,11 @@ import {
   StyleSheet,
   TextProps,
   TextStyle,
-  TouchableHighlight,
-  TouchableOpacity,
   View,
   ViewProps,
   ViewStyle,
 } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { BodyScrollView } from '../BodyScrollView/BodyScrollView';
 import { IconSymbol, IconSymbolName } from '../IconSymbol/IconSymbol';
 
@@ -190,7 +188,14 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 20,
   },
+  itemRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 });
+
+type FormPressableProps = React.ComponentProps<typeof Pressable>;
 
 export function FormItem({
   children,
@@ -199,41 +204,38 @@ export function FormItem({
   style,
   ref,
 }: Pick<ViewProps, 'children'> & {
-  onPress?: (event: any) => void;
-  onLongPress?: (event: GestureResponderEvent) => void;
+  onPress?: FormPressableProps['onPress'];
+  onLongPress?: FormPressableProps['onLongPress'];
   style?: ViewStyle;
   ref?: React.Ref<View>;
 }) {
-  const itemStyle = [
+  const itemStyle: StyleProp<ViewStyle> = [
     styles.itemPadding,
-    {
-      width: '100%',
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
+    styles.itemRow,
     style,
   ];
 
   if (onPress == null && onLongPress == null) {
     return (
-      // @ts-expect-error react 19 types
       <View style={itemStyle}>
         <HStack style={{ minHeight: minItemHeight }}>{children}</HStack>
       </View>
     );
   }
   return (
-    <TouchableHighlight
+    <Pressable
       ref={ref}
-      underlayColor={AppleColors.systemGray4}
       onPress={onPress}
       onLongPress={onLongPress}
+      style={({ pressed }) => [
+        itemStyle,
+        pressed ? { backgroundColor: AppleColors.systemGray4 } : null,
+      ]}
     >
-      {/* @ts-expect-error react 19 types */}
-      <View style={itemStyle}>
+      <View>
         <HStack style={{ minHeight: minItemHeight }}>{children}</HStack>
       </View>
-    </TouchableHighlight>
+    </Pressable>
   );
 }
 
@@ -304,6 +306,7 @@ export function Link({
   headerRight?: boolean;
   bold?: boolean;
   onPress?: () => void;
+  style?: StyleProp<TextStyle>;
   children: React.ReactNode;
 }) {
   const font: TextStyle = {
@@ -317,7 +320,6 @@ export function Link({
         return (
           <div style={{ paddingRight: 16, width: '100%' }}>{children}</div>
         );
-        return <div style={{ paddingRight: 16 }}>{children}</div>;
       }
       const wrappedTextChildren = React.Children.map(children, child => {
         // Filter out empty children
@@ -342,31 +344,35 @@ export function Link({
       });
 
       return (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={{
+        <Pressable
+          style={({ pressed }) => [
             // Offset on the side so the margins line up. Unclear how to handle when this is used in headerLeft.
             // We should automatically detect it somehow.
-            marginRight: -8,
-          }}
+            {
+              marginRight: -8,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
           onPress={onPress}
         >
           {wrappedTextChildren}
-        </TouchableOpacity>
+        </Pressable>
       );
     }
     return children;
   })();
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <Pressable
       onPress={onPress}
       // @ts-ignore
-      style={mergedStyleProp<TextStyle>(font, props.style)}
+      style={({ pressed }) => [
+        mergedStyleProp<TextStyle>(font, props.style),
+        { opacity: pressed ? 0.7 : 1 },
+      ]}
     >
       {resolvedChildren}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

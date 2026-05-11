@@ -5,7 +5,7 @@ import {
   parse,
   toDate,
 } from 'date-fns';
-import { Text } from '../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
   children: Date | number | string;

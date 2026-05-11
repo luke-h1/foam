@@ -1,4 +1,4 @@
-import { impact, notification } from '@app/services/haptics-service';
+import { impact, notification } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 import { useCallback, useState } from 'react';
 import { Platform, RefreshControl as RNRefreshControl } from 'react-native';

@@ -38,6 +38,10 @@ function getDataFromChangeValue(value: {
   return value.value?.object?.data;
 }
 
+function shouldSuppressEmoteNotice(emote: SanitisedEmote): boolean {
+  return emote.name?.toLowerCase().includes('nnys') ?? false;
+}
+
 export function useChatSevenTvCallbacks({
   channelId,
   channelName,
@@ -74,6 +78,10 @@ export function useChatSevenTvCallbacks({
       );
       updateSevenTvEmotes(cId, added, removed);
       added.forEach(emote => {
+        if (shouldSuppressEmoteNotice(emote)) {
+          return;
+        }
+
         onEmoteNotice?.(
           generateStvEmoteNotice({
             channelName,
@@ -83,6 +91,10 @@ export function useChatSevenTvCallbacks({
         );
       });
       removed.forEach(emote => {
+        if (shouldSuppressEmoteNotice(emote)) {
+          return;
+        }
+
         onEmoteNotice?.(
           generateStvEmoteNotice({
             channelName,

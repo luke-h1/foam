@@ -16,7 +16,7 @@ import React, { useCallback, memo, useMemo, type ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '../../../Button/Button';
 import { Image } from '../../../Image/Image';
-import { Text } from '../../../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { MediaLinkCard } from '../MediaLinkCard';
 import { StvEmoteEvent } from '../StvEmoteEvent';
 import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
@@ -419,7 +419,7 @@ function ChatMessageComponent<
               part={part}
               handleEmotePress={handleEmotePress}
               shouldOverlayPrevious={shouldOverlayPrevious}
-              targetSize={compact ? 24 : 30}
+              targetSize={compact ? 22 : 26}
             />
           );
         }
@@ -558,6 +558,8 @@ function ChatMessageComponent<
         >
           <Image
             useNitro
+            trackLoadTime
+            trackLoadContext="chat.badge"
             source={badge.url}
             style={[
               styles.badge,
@@ -833,11 +835,11 @@ const styles = StyleSheet.create({
     width: 16,
   },
   chatContainer: {
-    minHeight: 32,
-    paddingVertical: 2,
+    minHeight: 0,
+    paddingVertical: 0,
   },
   chatContainerCompact: {
-    minHeight: 22,
+    minHeight: 0,
     paddingVertical: 0,
   },
   moderatedBadge: {
@@ -869,6 +871,8 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   mention: {
+    fontSize: theme.fontSize14,
+    lineHeight: 17,
     marginHorizontal: 2,
   },
   mentionCompact: {
@@ -887,13 +891,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   messageLine: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'wrap',
     flex: 1,
   },
   messageText: {
-    lineHeight: theme.space20,
+    fontSize: theme.fontSize14,
+    lineHeight: 17,
   },
   messageTextCompact: {
     fontSize: theme.fontSize11,
@@ -968,6 +973,8 @@ const styles = StyleSheet.create({
   },
   rewardSummaryText: {
     flexWrap: 'wrap',
+    fontSize: theme.fontSize14,
+    lineHeight: 17,
   },
   stvSystemRowAlignStart: {
     alignItems: 'flex-start',
@@ -986,7 +993,8 @@ const styles = StyleSheet.create({
   },
   systemMessageText: {
     color: theme.color.textSecondary.dark,
-    lineHeight: theme.space20,
+    fontSize: theme.fontSize14,
+    lineHeight: 17,
     textAlign: 'left',
   },
   timestamp: {

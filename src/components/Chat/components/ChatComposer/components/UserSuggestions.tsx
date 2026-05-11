@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import type { ChatUser } from '@app/store/chatStore/constants';
 import { theme } from '@app/styles/themes';
 import { memo } from 'react';

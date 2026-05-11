@@ -19,8 +19,8 @@ import type {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import categoryApexImage from '../../../assets/data/category_apex.jpg';
-import { SafeAreaViewFixed } from '../SafeAreaViewFixed/SafeAreaViewFixed';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import categoryApexImage from '../../../../assets/data/category_apex.jpg';
 
 interface EmptyStatePresetItem {
   imageSource: AppImageProps['source'];
@@ -78,7 +78,7 @@ export function EmptyState({
   const resolvedButton = button ?? presetConfig.button;
 
   return (
-    <SafeAreaViewFixed style={[styles.container, style]}>
+    <SafeAreaView style={[styles.container, style]}>
       <EmptyLayout style={styles.emptyLayout} variant="outline">
         <EmptyLayoutHeader>
           {resolvedImageSource ? (
@@ -136,7 +136,7 @@ export function EmptyState({
           </EmptyLayoutButton>
         ) : null}
       </EmptyLayout>
-    </SafeAreaViewFixed>
+    </SafeAreaView>
   );
 }
 

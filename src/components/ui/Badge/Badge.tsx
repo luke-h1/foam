@@ -12,7 +12,7 @@ import { SFSymbol } from 'expo-symbols';
 import React, { useMemo } from 'react';
 import { StyleSheet, useColorScheme, View, ViewStyle } from 'react-native';
 import { Icon } from '../Icon/Icon';
-import { Text } from '../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 
 type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle';
 

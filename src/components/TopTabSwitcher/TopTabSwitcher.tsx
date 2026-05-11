@@ -1,4 +1,4 @@
-import { selection } from '@app/services/haptics-service';
+import { selection } from '@app/lib/haptics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LayoutChangeEvent,
@@ -18,7 +18,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 type TopTabSwitcherProps = {

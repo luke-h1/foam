@@ -1,4 +1,4 @@
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { useNavigation } from 'expo-router';
 import { useHeaderHeight } from '@react-navigation/elements';

@@ -10,17 +10,17 @@ import React, {
 import {
   View,
   Text,
-  FlatList,
-  Pressable,
   StyleSheet,
   useWindowDimensions,
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
   type ScaledSize,
+  type FlatList,
   ViewStyle,
   Platform,
 } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,

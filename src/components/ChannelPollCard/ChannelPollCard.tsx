@@ -1,5 +1,5 @@
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { Badge } from '@app/components/ui/Badge/Badge';
 import { theme } from '@app/styles/themes';
 import type { ChannelPollState } from '@app/types/twitch/poll';

@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
@@ -112,6 +112,8 @@ export const EmoteRenderer = memo(
         <Button style={getButtonStyle(width, shouldOverlayPrevious)}>
           <Image
             useNitro
+            trackLoadTime
+            trackLoadContext="chat.emote"
             source={{
               uri: imageUrl,
             }}

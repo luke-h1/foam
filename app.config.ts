@@ -19,7 +19,6 @@ export type Variant =
   | "development"
   | "internal"
   | "testflight"
-  | "test"
   | "e2e"
   | "production";
 
@@ -55,16 +54,6 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     iosGoogleServicesFile: "./GoogleService-Info-testflight.plist",
     androidGoogleServicesFile: "./google-services-testflight.json",
   },
-  test: {
-    name: "Foam (test)",
-    icon: "./assets/splash/splash-image-production.png",
-    iosBundleIdentifier: "foam-tv-test",
-    androidPackageName: "com.lhowsam.foam.test",
-    splashImage: "./assets/splash/splash-image-production.png",
-    splashBackgroundColor: "#000000",
-    iosGoogleServicesFile: "./GoogleService-Info-test.plist",
-    androidGoogleServicesFile: "./google-services-test.json",
-  },
   e2e: {
     name: "Foam (E2E)",
     icon: "./assets/splash/splash-image-production.png",
@@ -96,6 +85,8 @@ const VERSION = "0.0.39";
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
+const enableICloudEntitlements =
+  process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === "true";
 
 const iosGoogleServicesFileExists = fs.existsSync(
   path.resolve(__dirname, appConfig.iosGoogleServicesFile)
@@ -233,7 +224,6 @@ const config: ExpoConfig = {
     ["app-icon-badge", appIconBadgeConfig],
     "@react-native-community/datetimepicker",
     "expo-secure-store",
-    "expo-background-task",
     [
       "expo-font",
       {
@@ -308,7 +298,7 @@ const config: ExpoConfig = {
     googleServicesFile: iosGoogleServicesFileExists
       ? appConfig.iosGoogleServicesFile
       : undefined,
-    icon: appConfig.icon,
+    icon: "./assets/app-icon.icon",
     config: {
       // needed for expo-secure-store
       usesNonExemptEncryption: false,
@@ -318,23 +308,30 @@ const config: ExpoConfig = {
       NSPhotoLibraryUsageDescription: "Used for saving emotes/badges",
       UIBackgroundModes: ["audio"],
     },
-    entitlements: {
-      "com.apple.developer.icloud-container-identifiers": [
-        iosICloudContainerIdentifier,
-      ],
-      "com.apple.developer.icloud-services": ["CloudDocuments"],
-      "com.apple.developer.ubiquity-container-identifiers": [
-        iosICloudContainerIdentifier,
-      ],
-      "com.apple.developer.ubiquity-kvstore-identifier":
-        "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
-    },
+    entitlements: enableICloudEntitlements
+      ? {
+          "com.apple.developer.icloud-container-identifiers": [
+            iosICloudContainerIdentifier,
+          ],
+          "com.apple.developer.icloud-services": ["CloudDocuments"],
+          "com.apple.developer.ubiquity-container-identifiers": [
+            iosICloudContainerIdentifier,
+          ],
+          "com.apple.developer.ubiquity-kvstore-identifier":
+            "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
+        }
+      : undefined,
   },
   android: {
     package: appConfig.androidPackageName,
     googleServicesFile: googleServicesExist
       ? appConfig.androidGoogleServicesFile
       : undefined,
+    adaptiveIcon: {
+      foregroundImage: "./assets/android-icon.png",
+      backgroundImage: "./assets/android-icon.png",
+      monochromeImage: "./assets/android-icon.png",
+    },
     intentFilters: [
       {
         action: "VIEW",

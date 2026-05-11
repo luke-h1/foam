@@ -2,7 +2,7 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useTwitchSignIn } from '@app/hooks/useTwitchSignIn';
 import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';

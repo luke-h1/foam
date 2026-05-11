@@ -1,5 +1,5 @@
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { useRef } from 'react';

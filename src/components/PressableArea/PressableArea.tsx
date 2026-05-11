@@ -1,6 +1,7 @@
 import { PropsWithChildren, Ref, forwardRef, useState } from 'react';
-// eslint-disable-next-line no-restricted-imports
-import { Pressable, PressableProps, View, StyleSheet } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
+import { StyleSheet, View } from 'react-native';
+import type { PressableProps } from 'react-native-gesture-handler';
 import { EaseView } from 'react-native-ease';
 
 export const PressableArea = forwardRef(

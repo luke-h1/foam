@@ -1,6 +1,6 @@
 import { ScrollAdaptiveHeader } from '@app/components/ScrollAdaptiveHeader/ScrollAdaptiveHeader';
 import { TopTabSwitcher } from '@app/components/TopTabSwitcher/TopTabSwitcher';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { useCallback, useState } from 'react';
 import { useWindowDimensions, View, StyleSheet } from 'react-native';
@@ -20,7 +20,7 @@ import { TopStreamsScreen } from './TopStreamsScreen';
 
 type Route = { key: string; title: string };
 
-const TOP_COPY_HEIGHT = 164;
+const TOP_COPY_HEIGHT = 96;
 const TOP_TAB_HEIGHT = 58;
 
 const ROUTES: Route[] = [
@@ -88,7 +88,7 @@ export function TopScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollAdaptiveHeader
         scrollY={scrollY}
-        subtitle="Live rankings"
+        subtitle="Discover"
         topInset={insets.top}
         title="Top"
       />
@@ -100,14 +100,6 @@ export function TopScreen() {
         ]}
       >
         <Animated.View style={[styles.hero, heroStyle]}>
-          <Text
-            type="xs"
-            weight="semibold"
-            color="gray.textLow"
-            style={styles.eyebrow}
-          >
-            LIVE RANKINGS
-          </Text>
           <Text type="4xl" weight="bold" style={styles.title}>
             Top
           </Text>

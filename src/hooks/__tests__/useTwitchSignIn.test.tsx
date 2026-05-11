@@ -41,7 +41,7 @@ jest.mock('sonner-native', () => ({
   },
 }));
 
-jest.mock('@app/services/sentry-service', () => ({
+jest.mock('@app/lib/sentry', () => ({
   sentryService: {
     captureMessage: jest.fn(),
   },

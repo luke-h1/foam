@@ -7,7 +7,7 @@ import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api';
 import { sevenTvV4Client } from '@app/services/gql/client';
-import { storage } from '@app/services/storage-service';
+import { storage } from '@app/lib/storage';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';
 import { useMMKVDevTools } from '@rozenite/mmkv-plugin';
@@ -16,7 +16,7 @@ import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plu
 import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
-import { selection } from '@app/services/haptics-service';
+import { selection } from '@app/lib/haptics';
 import { PressablesConfig } from 'pressto';
 import { PropsWithChildren } from 'react';
 import { StyleSheet } from 'react-native';

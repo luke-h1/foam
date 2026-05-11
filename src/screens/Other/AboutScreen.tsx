@@ -2,7 +2,7 @@ import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';

@@ -1,7 +1,8 @@
 import { theme } from '@app/styles/themes';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-// eslint-disable-next-line no-restricted-imports
-import { Pressable, StyleProp, StyleSheet, ViewStyle } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
+import { type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 const SIZE = theme.fontSize18;
 

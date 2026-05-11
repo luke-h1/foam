@@ -5,7 +5,7 @@ import { memo, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
-import { Text } from '../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
   category: Category;

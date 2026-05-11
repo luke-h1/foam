@@ -53,6 +53,8 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
                   source={item.url}
                   style={styles.emoteImage}
                   useNitro
+                  trackLoadTime
+                  trackLoadContext="chat.emote-suggestions"
                 />
               </View>
             </Button>

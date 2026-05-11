@@ -1,5 +1,5 @@
 import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
-import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import {
   AnimatedFlashList,
   ListRenderItem,
@@ -10,7 +10,7 @@ import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStrea
 import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
 import { ScrollAdaptiveHeader } from '@app/components/ScrollAdaptiveHeader/ScrollAdaptiveHeader';
 import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { useRefresh } from '@app/hooks/useRefresh';
@@ -89,6 +89,21 @@ export default function FollowingScreen() {
     [streamListLayout],
   );
 
+  const handleSetCompactLayout = useCallback(
+    () => updatePreferences({ streamListLayout: 'compact' }),
+    [updatePreferences],
+  );
+
+  const handleSetMediaLayout = useCallback(
+    () => updatePreferences({ streamListLayout: 'media' }),
+    [updatePreferences],
+  );
+
+  const handleSetTextLayout = useCallback(
+    () => updatePreferences({ streamListLayout: 'text' }),
+    [updatePreferences],
+  );
+
   if (!authState?.isLoggedIn) {
     return <Redirect href="/tabs/top" />;
   }
@@ -154,7 +169,7 @@ export default function FollowingScreen() {
       <ScrollAdaptiveHeader
         scrollY={scrollY}
         topInset={insets.top}
-        title="Live from your channels"
+        title="Following"
       />
       <RefreshIndicator
         scrollY={scrollY}
@@ -167,18 +182,13 @@ export default function FollowingScreen() {
         keyExtractor={item => item.id}
         contentInsetAdjustmentBehavior="automatic"
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+        getItemType={() => 'stream-card'}
         ListHeaderComponent={
           <View>
-            <EditorialSectionHeader
-              eyebrow="Following"
-              title="Live from your channels"
-              subtitle="A streaming-first feed of everyone you already care about."
-            />
+            <EditorialSectionHeader eyebrow="For you" title="Following" />
             <View style={styles.layoutToggleRow}>
               <Button
-                onPress={() =>
-                  updatePreferences({ streamListLayout: 'compact' })
-                }
+                onPress={handleSetCompactLayout}
                 style={[
                   styles.layoutToggleButton,
                   streamListLayout === 'compact' &&
@@ -207,7 +217,7 @@ export default function FollowingScreen() {
                 </Text>
               </Button>
               <Button
-                onPress={() => updatePreferences({ streamListLayout: 'media' })}
+                onPress={handleSetMediaLayout}
                 style={[
                   styles.layoutToggleButton,
                   streamListLayout === 'media' &&
@@ -236,7 +246,7 @@ export default function FollowingScreen() {
                 </Text>
               </Button>
               <Button
-                onPress={() => updatePreferences({ streamListLayout: 'text' })}
+                onPress={handleSetTextLayout}
                 style={[
                   styles.layoutToggleButton,
                   streamListLayout === 'text' &&
@@ -270,7 +280,7 @@ export default function FollowingScreen() {
         }
         contentContainerStyle={[
           styles.listContent,
-          { paddingTop: insets.top + 56 },
+          { paddingTop: insets.top + theme.space20 },
         ]}
         renderItem={renderItem}
         onScroll={scrollHandler}

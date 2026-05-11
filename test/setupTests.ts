@@ -100,8 +100,6 @@ jest.mock('expo-secure-store', () => ({
 // Mocks are in __mocks__ directory - Jest will auto-discover them
 jest.mock('react-native-nitro-modules');
 jest.mock('react-native-keyboard-controller');
-jest.mock('expo-task-manager');
-jest.mock('expo-background-task');
 jest.mock('expo-updates');
 
 // expo/fetch needs manual mock due to path structure

@@ -1,6 +1,6 @@
 import { SliderHandle } from '@app/components/ComparisonSlider/SliderHandle';
 import { Image, prefetchImage } from '@app/components/Image/Image';
-import { impact } from '@app/services/haptics-service';
+import { impact } from '@app/lib/haptics';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Dimensions,
@@ -13,11 +13,11 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export type ComparisonImagePair = {
   before: string;
@@ -97,8 +97,8 @@ export function ComparisonSlider({
 
             if (finished) {
               const nextIndex = (current.layerBIndex + 1) % imagePairs.length;
-              runOnJS(setLayerAIndex)(nextIndex);
-              runOnJS(setIsLayerAActive)(false);
+              scheduleOnRN<[number], void>(setLayerAIndex, nextIndex);
+              scheduleOnRN<[boolean], void>(setIsLayerAActive, false);
             }
           },
         );
@@ -114,8 +114,8 @@ export function ComparisonSlider({
 
             if (finished) {
               const nextIndex = (current.layerAIndex + 1) % imagePairs.length;
-              runOnJS(setLayerBIndex)(nextIndex);
-              runOnJS(setIsLayerAActive)(true);
+              scheduleOnRN<[number], void>(setLayerBIndex, nextIndex);
+              scheduleOnRN<[boolean], void>(setIsLayerAActive, true);
             }
           },
         );
@@ -137,7 +137,7 @@ export function ComparisonSlider({
       lastHapticX.value = sliderX.value;
 
       if (hapticsEnabled) {
-        runOnJS(playSoftImpact)();
+        scheduleOnRN(playSoftImpact);
       }
     })
     .onUpdate(event => {
@@ -149,14 +149,14 @@ export function ComparisonSlider({
         Math.abs(sliderX.value - lastHapticX.value) >= HAPTIC_TICK_INTERVAL
       ) {
         lastHapticX.value = sliderX.value;
-        runOnJS(playSoftImpact)();
+        scheduleOnRN(playSoftImpact);
       }
     })
     .onEnd(() => {
       savedSliderX.value = sliderX.value;
 
       if (hapticsEnabled) {
-        runOnJS(playMediumImpact)();
+        scheduleOnRN(playMediumImpact);
       }
     });
 

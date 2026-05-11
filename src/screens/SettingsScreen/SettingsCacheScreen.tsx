@@ -6,9 +6,9 @@ import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
-import { storageService } from '@app/services/storage-service';
+import { storageService } from '@app/lib/storage';
 import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { queryClient } from '@app/utils/react-query/reacy-query';

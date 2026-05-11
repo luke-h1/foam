@@ -706,7 +706,6 @@ export default class SevenTvWsService {
 
       switch (message.op) {
         case 0: {
-          // Add defensive checks to ensure message.d exists and has the expected structure
           if (!message.d) {
             logger.stvWs.error('message.d is undefined or null');
             break;
