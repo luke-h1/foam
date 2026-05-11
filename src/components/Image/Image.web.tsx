@@ -2,10 +2,13 @@
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
 import { sentryService } from '@app/lib/sentry';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-
-const WEB_IMAGE_CACHE_NAME = 'foam-image-cache-v1';
+import {
+  cacheImageFromUrl,
+  getCachedImageUri,
+  type ImageCachePriority,
+} from '@app/utils/image/image-cache';
 
 const getSourceUri = (source: ImageProps['source']) => {
   if (typeof source === 'string') {
@@ -27,57 +30,13 @@ const getSourceUri = (source: ImageProps['source']) => {
 const isCacheableWebUri = (uri: string | undefined): uri is string =>
   typeof uri === 'string' && /^https?:\/\//i.test(uri);
 
-const canUseCacheStorage = () =>
-  typeof globalThis.caches !== 'undefined' &&
-  typeof globalThis.fetch !== 'undefined' &&
-  typeof globalThis.URL !== 'undefined';
-
-const fetchCachedBlobUrl = async (uri: string) => {
-  if (!isCacheableWebUri(uri) || !canUseCacheStorage()) {
-    return;
-  }
-
-  const cache = await globalThis.caches.open(WEB_IMAGE_CACHE_NAME);
-  let response = await cache.match(uri);
-
-  if (!response) {
-    const fetched = await globalThis.fetch(uri, { cache: 'force-cache' });
-
-    if (!fetched.ok) {
-      return;
-    }
-
-    await cache.put(uri, fetched.clone());
-    response = fetched;
-  }
-
-  const blob = await response.blob();
-  return globalThis.URL.createObjectURL(blob);
-};
-
 export const prefetchImage = async (source: string | string[]) => {
   const sources = Array.isArray(source) ? source : [source];
 
   const results = await Promise.all(
     sources.map(async uri => {
-      if (!isCacheableWebUri(uri) || !canUseCacheStorage()) {
-        return ExpoImage.prefetch(uri);
-      }
-
       try {
-        const cache = await globalThis.caches.open(WEB_IMAGE_CACHE_NAME);
-
-        if (await cache.match(uri)) {
-          return true;
-        }
-
-        const response = await globalThis.fetch(uri, { cache: 'force-cache' });
-
-        if (!response.ok) {
-          return ExpoImage.prefetch(uri);
-        }
-
-        await cache.put(uri, response.clone());
+        await cacheImageFromUrl(uri, { priority: 'background' });
         return true;
       } catch {
         return ExpoImage.prefetch(uri);
@@ -102,6 +61,9 @@ export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
    * Label used for Sentry context when reporting image load timing
    */
   trackLoadContext?: string;
+  cachePriority?: ImageCachePriority;
+  cacheToFile?: boolean;
+  cacheVariant?: string;
   source?: string | { uri: string } | number;
 }
 
@@ -112,6 +74,9 @@ export const Image = function Image({
   transition = 500,
   source,
   cachePolicy,
+  cachePriority = 'visible',
+  cacheToFile = true,
+  cacheVariant = 'image',
   useNitro: _useNitro,
   trackLoadTime = false,
   trackLoadContext,
@@ -120,8 +85,14 @@ export const Image = function Image({
 }: ImageProps) {
   const sourceUri = useMemo(() => getSourceUri(source), [source]);
   const trackLoad = Boolean(trackLoadTime && sourceUri);
-  const objectUrlRef = useRef<string | undefined>(undefined);
-  const [cachedSource, setCachedSource] = useState<ImageProps['source']>();
+  const [cachedSource, setCachedSource] = useState<ImageProps['source']>(() => {
+    if (!sourceUri || !cacheToFile) {
+      return undefined;
+    }
+
+    const cachedUri = getCachedImageUri(sourceUri, { variant: cacheVariant });
+    return cachedUri ? { uri: cachedUri } : undefined;
+  });
   const reportImageLoadTime = useCallback(
     (timing: {
       mountTimestamp: number;
@@ -171,32 +142,42 @@ export const Image = function Image({
   const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
     'Image',
     reportImageLoadTime,
+    { fallbackToMountStartOnLoadEnd: true },
   );
 
   useEffect(() => {
     let isMounted = true;
-
-    const revokeObjectUrl = () => {
-      if (objectUrlRef.current) {
-        globalThis.URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = undefined;
-      }
-    };
-
-    revokeObjectUrl();
     setCachedSource(undefined);
 
-    if (cachePolicy === 'none' || !isCacheableWebUri(sourceUri)) {
+    if (
+      cachePolicy === 'none' ||
+      !cacheToFile ||
+      !isCacheableWebUri(sourceUri)
+    ) {
       return () => {
         isMounted = false;
       };
     }
 
     const cacheableSourceUri = sourceUri;
+    const existingCachedUri = getCachedImageUri(cacheableSourceUri, {
+      variant: cacheVariant,
+    });
+    if (existingCachedUri) {
+      setCachedSource({ uri: existingCachedUri });
+      return () => {
+        isMounted = false;
+      };
+    }
 
-    fetchCachedBlobUrl(cacheableSourceUri)
+    const controller = new AbortController();
+    cacheImageFromUrl(cacheableSourceUri, {
+      priority: cachePriority,
+      signal: controller.signal,
+      variant: cacheVariant,
+    })
       .then(objectUrl => {
-        if (!objectUrl) {
+        if (!objectUrl || objectUrl === cacheableSourceUri) {
           return;
         }
 
@@ -205,7 +186,6 @@ export const Image = function Image({
           return;
         }
 
-        objectUrlRef.current = objectUrl;
         setCachedSource({ uri: objectUrl });
       })
       .catch(() => {
@@ -216,9 +196,9 @@ export const Image = function Image({
 
     return () => {
       isMounted = false;
-      revokeObjectUrl();
+      controller.abort();
     };
-  }, [cachePolicy, sourceUri]);
+  }, [cachePolicy, cachePriority, cacheToFile, cacheVariant, sourceUri]);
 
   return (
     <View style={[styles.container, containerStyle]}>

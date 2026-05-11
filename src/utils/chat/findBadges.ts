@@ -13,6 +13,60 @@ interface FindBadgesParams {
   chatterinoBadges: SanitisedBadgeSet[];
 }
 
+const addBadge = (
+  badges: SanitisedBadgeSet[],
+  badge: SanitisedBadgeSet,
+  fallbackType: SanitisedBadgeSet['type'],
+): void => {
+  const existingBadge = badges.find(
+    existing => existing.id === badge.id && existing.set === badge.set,
+  );
+  if (existingBadge) {
+    return;
+  }
+
+  badges.push({
+    title: badge.title,
+    url: badge.url,
+    type: badge.type || fallbackType,
+    set: badge.set || '',
+    id: badge.id,
+    color: badge.color,
+    owner_username: badge.owner_username,
+  });
+};
+
+const getRawTwitchBadges = (userstate: UserStateTags): string => {
+  const sourceRoomId = userstate['source-room-id'];
+  const currentRoomId = userstate['room-id'];
+  const sourceBadges = userstate['source-badges'];
+
+  if (
+    sourceRoomId &&
+    sourceRoomId !== currentRoomId &&
+    sourceBadges &&
+    sourceBadges.length > 0
+  ) {
+    return sourceBadges;
+  }
+
+  return userstate['badges-raw'] || '';
+};
+
+const findTwitchChannelBadge = (
+  twitchChannelBadges: SanitisedBadgeSet[],
+  set: string,
+  version: string,
+): SanitisedBadgeSet | undefined =>
+  twitchChannelBadges.find(b => b.set === set && b.id === version);
+
+const findTwitchGlobalBadge = (
+  twitchGlobalBadges: SanitisedBadgeSet[],
+  set: string,
+  version: string,
+): SanitisedBadgeSet | undefined =>
+  twitchGlobalBadges.find(b => b.set === set && b.id === `${set}_${version}`);
+
 export function findBadges({
   userstate,
   twitchChannelBadges,
@@ -28,101 +82,39 @@ export function findBadges({
   /**
    * Twitch badges
    */
-  if (userstate['badges-raw'] && userstate['badges-raw'].length > 0) {
-    const rawBadges = userstate['badges-raw'].split(',');
+  const rawTwitchBadges = getRawTwitchBadges(userstate);
+
+  if (rawTwitchBadges.length > 0) {
+    const rawBadges = rawTwitchBadges.split(',');
 
     // eslint-disable-next-line no-restricted-syntax
-    for (const badge of rawBadges) {
-      /**
-       * Subscriber / channel badges
-       */
-      if (badge.split('/')[0] === 'subscriber') {
-        if (userstate.badges) {
-          if (userstate.badges.subscriber) {
-            // eslint-disable-next-line no-shadow
-            const badge = twitchChannelBadges.find(
-              b => b.id === userstate.badges?.subscriber,
-            );
-
-            if (badge) {
-              // Check if badge already exists to prevent duplicates
-              const existingBadge = badges.find(
-                existing =>
-                  existing.id === badge.id && existing.set === badge.set,
-              );
-              if (!existingBadge) {
-                badges.push({
-                  title: badge.title,
-                  url: badge.url,
-                  type: badge.type || 'Twitch Subscriber Badge',
-                  set: badge?.set || '',
-                  id: badge.id,
-                  color: badge.color,
-                  owner_username: badge.owner_username,
-                });
-              }
-              // eslint-disable-next-line no-continue
-              continue;
-            }
-          }
-        }
+    for (const rawBadge of rawBadges) {
+      const [set, version] = rawBadge.split('/');
+      if (!set || !version) {
+        // eslint-disable-next-line no-continue
+        continue;
       }
 
-      /**
-       * Bit badges
-       */
-      if (badge.split('/')[0] === 'bits') {
-        if (userstate.badges?.bits) {
-          // eslint-disable-next-line no-shadow
-          const badge = twitchChannelBadges.find(
-            b => b.id === userstate.badges?.bits,
-          );
+      const channelBadge = findTwitchChannelBadge(
+        twitchChannelBadges,
+        set,
+        version,
+      );
 
-          if (badge) {
-            // Check if badge already exists to prevent duplicates
-            const existingBadge = badges.find(
-              existing =>
-                existing.id === badge.id && existing.set === badge.set,
-            );
-            if (!existingBadge) {
-              badges.push({
-                title: badge.title,
-                url: badge.url,
-                type: badge.type || 'Twitch Badge',
-                set: badge?.set || '',
-                id: badge.id,
-                color: badge.color,
-                owner_username: badge.owner_username,
-              });
-            }
-          }
-        }
+      if (channelBadge) {
+        addBadge(badges, channelBadge, 'Twitch Channel Badge');
+        // eslint-disable-next-line no-continue
+        continue;
       }
 
-      /**
-       * Global badges
-       */
-      const globalBadge = twitchGlobalBadges.find(
-        b => b.id === `${badge.split('/')[0]}_${badge.split('/')[1]}`,
+      const globalBadge = findTwitchGlobalBadge(
+        twitchGlobalBadges,
+        set,
+        version,
       );
 
       if (globalBadge) {
-        // Check if badge already exists to prevent duplicates
-        const existingBadge = badges.find(
-          existing =>
-            existing.id === globalBadge.id && existing.set === globalBadge.set,
-        );
-        if (!existingBadge) {
-          badges.push({
-            title: globalBadge.title,
-            url: globalBadge.url,
-            type: globalBadge.type || 'Twitch Global Badge',
-            id: globalBadge.id,
-            set: globalBadge.set ?? '',
-            color: globalBadge.color,
-            owner_username: globalBadge.owner_username,
-          });
-        }
+        addBadge(badges, globalBadge, 'Twitch Global Badge');
       }
     }
   }

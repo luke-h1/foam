@@ -40,6 +40,7 @@ describe('emoji shortcode parsing', () => {
     sevenTvPersonalEmotes: [],
     twitchGlobalEmotes: [],
     twitchChannelEmotes: [],
+    twitchSubscriberEmotes: [],
     ffzChannelEmotes: [],
     ffzGlobalEmotes: [],
     bttvChannelEmotes: [],
@@ -81,6 +82,36 @@ describe('emoji shortcode parsing', () => {
         name: ':joy:',
         content: '😂',
         original_name: '😂',
+      }),
+    ]);
+  });
+
+  test('matches Twitch subscriber emotes separately from 7TV personal emotes', () => {
+    const result = replaceTextWithEmotes({
+      ...emptyParams,
+      inputString: 'SubHype',
+      twitchSubscriberEmotes: [
+        {
+          id: 'emotesv2_sub',
+          name: 'SubHype',
+          original_name: 'SubHype',
+          creator: null,
+          emote_link:
+            'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/default/dark/3.0',
+          url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/default/dark/3.0',
+          static_url:
+            'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/static/dark/3.0',
+          site: 'Twitch Subscriber',
+        },
+      ],
+    });
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        type: 'emote',
+        content: 'SubHype',
+        id: 'emotesv2_sub',
+        site: 'Twitch Subscriber',
       }),
     ]);
   });

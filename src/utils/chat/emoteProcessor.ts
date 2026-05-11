@@ -13,6 +13,7 @@ interface EmoteProcessorParams {
   sevenTvPersonalEmotes?: SanitisedEmote[];
   twitchGlobalEmotes: SanitisedEmote[];
   twitchChannelEmotes: SanitisedEmote[];
+  twitchSubscriberEmotes?: SanitisedEmote[];
   ffzChannelEmotes: SanitisedEmote[];
   ffzGlobalEmotes: SanitisedEmote[];
   bttvChannelEmotes: SanitisedEmote[];
@@ -30,6 +31,7 @@ const createCacheKey = (
   sevenTvPersonalEmotes: SanitisedEmote[],
   twitchGlobalEmotes: SanitisedEmote[],
   twitchChannelEmotes: SanitisedEmote[],
+  twitchSubscriberEmotes: SanitisedEmote[],
   ffzChannelEmotes: SanitisedEmote[],
   ffzGlobalEmotes: SanitisedEmote[],
   bttvChannelEmotes: SanitisedEmote[],
@@ -44,6 +46,7 @@ const createCacheKey = (
     sevenTvPersonalEmotes.length,
     twitchGlobalEmotes.length,
     twitchChannelEmotes.length,
+    twitchSubscriberEmotes.length,
     ffzChannelEmotes.length,
     ffzGlobalEmotes.length,
     bttvChannelEmotes.length,
@@ -59,6 +62,8 @@ const createCacheKey = (
     sevenTvGlobalEmotes[sevenTvGlobalEmotes.length - 1]?.id || '',
     sevenTvPersonalEmotes[0]?.id || '',
     sevenTvPersonalEmotes[sevenTvPersonalEmotes.length - 1]?.id || '',
+    twitchSubscriberEmotes[0]?.id || '',
+    twitchSubscriberEmotes[twitchSubscriberEmotes.length - 1]?.id || '',
   ].join('|');
 
   return `${emoteHash}:${firstLastIds}:${inputString}`;
@@ -77,6 +82,7 @@ export const processEmotesWorklet = (
     sevenTvPersonalEmotes = [],
     twitchGlobalEmotes,
     twitchChannelEmotes,
+    twitchSubscriberEmotes = [],
     ffzChannelEmotes,
     ffzGlobalEmotes,
     bttvChannelEmotes,
@@ -95,6 +101,7 @@ export const processEmotesWorklet = (
     sevenTvPersonalEmotes,
     twitchGlobalEmotes,
     twitchChannelEmotes,
+    twitchSubscriberEmotes,
     ffzChannelEmotes,
     ffzGlobalEmotes,
     bttvChannelEmotes,
@@ -108,7 +115,7 @@ export const processEmotesWorklet = (
   const emoteMap = new Map<string, SanitisedEmote>();
   const emojiMap = new Map<string, SanitisedEmote>();
 
-  const personalEmotes = [...sevenTvPersonalEmotes];
+  const twitchTagAndSubscriberEmotes = twitchSubscriberEmotes;
 
   const channelEmotes = [
     ...sevenTvChannelEmotes,
@@ -125,7 +132,11 @@ export const processEmotesWorklet = (
     ...bttvGlobalEmotes,
   ];
 
-  personalEmotes.forEach(emote => {
+  sevenTvPersonalEmotes.forEach(emote => {
+    emoteMap.set(emote.name, emote);
+  });
+
+  twitchTagAndSubscriberEmotes.forEach(emote => {
     emoteMap.set(emote.name, emote);
   });
 
@@ -175,21 +186,6 @@ export const processEmotesWorklet = (
         .map(char => char.codePointAt(0)?.toString(16).toUpperCase() || '')
         .join('-');
       emote = emojiMap.get(upperWord);
-    }
-
-    if (!emote) {
-      const lowerWord = word.toLowerCase();
-      const entries = Array.from(emoteMap.entries());
-      for (let j = 0; j < entries.length; j += 1) {
-        const entry = entries[j];
-        if (entry) {
-          const [emoteName, emoteData] = entry;
-          if (emoteName.toLowerCase() === lowerWord) {
-            emote = emoteData;
-            break;
-          }
-        }
-      }
     }
 
     if (emote) {

@@ -3,8 +3,7 @@ import {
   listenNetworkConfirmed,
   listenNetworkLost,
 } from '@app/utils/network/network-events';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { createQueryPersister } from '@app/utils/react-query/queryPersister';
 import {
   focusManager,
   onlineManager,
@@ -17,13 +16,24 @@ import {
 import { PropsWithChildren, useRef, useState } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 
+const WEB_QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
+
 /**
- * Any query keys in this array will be persisted to AsyncStorage
+ * Query roots safe to persist between web reloads. These are read-heavy Twitch
+ * lookups used by the home, category, following, and livestream screens.
  */
-const PERSISTED_QUERIES = [
-  twitchQueries.getTopStreams().queryKey,
-  twitchQueries.getTopCategories().queryKey,
-];
+const PERSISTED_QUERY_ROOTS = new Set([
+  twitchQueries.getTopStreams().queryKey[0],
+  twitchQueries.getTopStreamsInfinite().queryKey[0],
+  twitchQueries.getTopCategories().queryKey[0],
+  'category',
+  'channel',
+  'followedStreams',
+  'stream',
+  'streamsByCategory',
+  'user',
+  'userImage',
+]);
 
 const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
@@ -131,6 +141,7 @@ const createQueryClient = () => {
   return new QueryClient({
     defaultOptions: {
       queries: {
+        gcTime: Platform.OS === 'web' ? WEB_QUERY_CACHE_MAX_AGE : undefined,
         refetchOnWindowFocus: false,
         structuralSharing: false,
         retry: 3,
@@ -150,12 +161,12 @@ const dehydrateOptions: PersistQueryClientProviderProps['persistOptions']['dehyd
   {
     shouldDehydrateMutation: _ => false,
     shouldDehydrateQuery: query => {
-      const queryKeyStr = JSON.stringify(
-        (query as { queryKey?: unknown }).queryKey,
-      );
-      return PERSISTED_QUERIES.some(
-        persistedKey => JSON.stringify(persistedKey) === queryKeyStr,
-      );
+      const queryKey = (query as { queryKey?: unknown }).queryKey;
+      if (!Array.isArray(queryKey) || typeof queryKey[0] !== 'string') {
+        return false;
+      }
+
+      return PERSISTED_QUERY_ROOTS.has(queryKey[0]);
     },
   };
 
@@ -181,13 +192,13 @@ function QueryProviderInner({ children, currentUserId }: QueryProviderProps) {
   }
 
   const [persistOptions] = useState(() => {
-    const asyncPersister = createAsyncStoragePersister({
-      storage: AsyncStorage,
-      key: `query-cache-${currentUserId ?? 'logged-out'}`,
-    });
+    const persister = createQueryPersister(
+      `query-cache-${currentUserId ?? 'logged-out'}`,
+    );
     return {
-      persister: asyncPersister,
+      persister,
       dehydrateOptions,
+      maxAge: WEB_QUERY_CACHE_MAX_AGE,
     };
   });
 

@@ -193,19 +193,22 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
 
   messageKeySet.add(key);
   messageKeyOrder.push(key);
-  const nextMessageIndex = chatStore$.messages.peek().length;
-  chatStore$.messages.push(message as ChatMessageType<never>);
-  const nextMessages = chatStore$.messages.peek();
+  const currentMessages = chatStore$.messages.peek();
+  const nextMessageIndex = currentMessages.length;
+  const nextMessages = [...currentMessages, message as ChatMessageType<never>];
   const messageCount = nextMessages.length;
+  let didTrimMessages = false;
   if (messageCount > MAX_CHAT_MESSAGES) {
+    didTrimMessages = true;
     chatStore$.messages.set(
       nextMessages.slice(messageCount - MAX_CHAT_MESSAGES),
     );
   } else {
+    chatStore$.messages.set(nextMessages);
     indexMessage(message as ChatMessageType<never>, nextMessageIndex);
   }
   syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
-  if (trimMessageIndexes()) {
+  if (trimMessageIndexes() || didTrimMessages) {
     rebuildMessageIndexes();
   }
 };
@@ -227,17 +230,18 @@ export const addMessages = (messages: ChatMessageType<never>[]) => {
   }
 
   batch(() => {
-    const nextMessageStartIndex = chatStore$.messages.peek().length;
-    chatStore$.messages.push(...newMessages);
-
-    const messageCount = chatStore$.messages.peek().length;
+    const currentMessages = chatStore$.messages.peek();
+    const nextMessageStartIndex = currentMessages.length;
+    const nextMessages = [...currentMessages, ...newMessages];
+    const messageCount = nextMessages.length;
     let didTrimMessages = false;
     if (messageCount > MAX_CHAT_MESSAGES) {
       didTrimMessages = true;
       chatStore$.messages.set(
-        chatStore$.messages.peek().slice(messageCount - MAX_CHAT_MESSAGES),
+        nextMessages.slice(messageCount - MAX_CHAT_MESSAGES),
       );
     } else {
+      chatStore$.messages.set(nextMessages);
       newMessages.forEach((message, index) => {
         indexMessage(message, nextMessageStartIndex + index);
       });

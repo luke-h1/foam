@@ -108,6 +108,8 @@ export interface ChannelCacheType {
   lastUpdated: number;
   twitchChannelEmotes: SanitisedEmote[];
   twitchGlobalEmotes: SanitisedEmote[];
+  twitchSubscriberEmotes: SanitisedEmote[];
+  twitchSubscriberEmotesUserId?: string;
   sevenTvChannelEmotes: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
   sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
@@ -128,11 +130,13 @@ export interface ChannelCacheType {
 export const MAX_CACHED_CHANNELS = 10;
 export const MAX_COSMETIC_ENTRIES = 500;
 export const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
-export const BADGE_CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 hours
+export const BADGE_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 export const emptyEmoteData = {
   twitchChannelEmotes: [],
   twitchGlobalEmotes: [],
+  twitchSubscriberEmotes: [],
+  twitchSubscriberEmotesUserId: undefined,
   sevenTvChannelEmotes: [],
   sevenTvGlobalEmotes: [],
   sevenTvPersonalBadges: {},

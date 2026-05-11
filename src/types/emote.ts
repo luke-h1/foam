@@ -57,7 +57,7 @@ export interface FfzSanitisedEmote extends SanitisedEmoteBase {
 }
 
 export interface TwitchSanitisedEmote extends SanitisedEmoteBase {
-  site: 'Twitch Channel' | 'Twitch Global' | 'Twitch Emote';
+  site: 'Twitch Channel' | 'Twitch Global' | 'Twitch Subscriber';
   flags?: number;
   aspect_ratio?: number;
   zero_width?: boolean;

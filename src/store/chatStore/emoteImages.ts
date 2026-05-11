@@ -1,14 +1,19 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import type { CacheImageOptions } from '@app/utils/image/image-cache';
 import {
   cacheImageFromUrl,
   clearSessionCache,
   getCachedImageUri,
+  warmImageCache,
 } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
 
 const emoteImageCachePromises = new Map<string, Promise<string>>();
 
-export const cacheEmoteImage = async (emoteUrl: string): Promise<string> => {
+export const cacheEmoteImage = async (
+  emoteUrl: string,
+  options: CacheImageOptions = {},
+): Promise<string> => {
   if (
     !emoteUrl ||
     emoteUrl.startsWith('data:') ||
@@ -28,7 +33,11 @@ export const cacheEmoteImage = async (emoteUrl: string): Promise<string> => {
 
   const cachePromise = (async () => {
     try {
-      const fileUri = await cacheImageFromUrl(emoteUrl);
+      const fileUri = await cacheImageFromUrl(emoteUrl, {
+        priority: options.priority ?? 'visible',
+        signal: options.signal,
+        variant: options.variant,
+      });
       emoteImageCachePromises.delete(emoteUrl);
       return fileUri;
     } catch (error) {
@@ -60,6 +69,7 @@ export const getCachedEmoteUri = (emoteUrl: string): string => {
 export const cacheEmoteImages = async (
   emotes: SanitisedEmote[],
   signal?: AbortSignal,
+  priority: CacheImageOptions['priority'] = 'interactive',
 ): Promise<void> => {
   if (emotes.length === 0 || signal?.aborted) {
     return;
@@ -77,15 +87,7 @@ export const cacheEmoteImages = async (
     return;
   }
 
-  const BATCH_SIZE = 20;
-  for (let i = 0; i < urlsToCache.length; i += BATCH_SIZE) {
-    if (signal?.aborted) {
-      return;
-    }
-    const urlBatch = urlsToCache.slice(i, i + BATCH_SIZE);
-    // eslint-disable-next-line no-await-in-loop
-    await Promise.allSettled(urlBatch.map(url => cacheEmoteImage(url)));
-  }
+  warmImageCache(urlsToCache, { priority, signal, variant: 'emote' });
 };
 
 export const clearEmoteImageCache = (): void => {

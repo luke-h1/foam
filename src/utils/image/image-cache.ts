@@ -1,65 +1,146 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
+import { createMMKV } from 'react-native-mmkv';
 
 export const BLURHASH = 'LBDbA}oL00Na~B9u57={XRay-Uj[';
 
-/**
- * Image cache utility for storing generated images to disk
- * instead of keeping large base64 strings in memory
- */
+const CACHE_DIR_NAME = 'chat-img-cache';
+const RECORD_PREFIX = 'image-cache-record:';
+const MAX_CACHE_BYTES = 100 * 1024 * 1024;
+const MAX_CACHE_RECORDS = 5000;
+const DOWNLOAD_CONCURRENCY = 4;
 
-const SESSION_CACHE_DIR = 'chat-img-cache';
+export type ImageCachePriority = 'visible' | 'interactive' | 'background';
 
-/**
- * Generate a simple hash from a string (for consistent caching)
- * Uses a simple hash function since we don't need cryptographic security
- */
-function hashString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i += 1) {
-    const char = str.charCodeAt(i);
-    // eslint-disable-next-line no-bitwise
-    hash = (hash << 5) - hash + char;
-    // eslint-disable-next-line no-bitwise
-    hash &= hash; // Convert to 32-bit integer
-  }
-  // Convert to positive hex string
-  return Math.abs(hash).toString(16);
+export type CacheImageOptions = {
+  priority?: ImageCachePriority;
+  signal?: AbortSignal;
+  variant?: string;
+};
+
+export interface CachedImageInfo {
+  uri: string;
+  name: string;
+  size: number;
+  key?: string;
+  lastAccessed?: number;
+  sourceUrl?: string;
+  variant?: string;
 }
 
-/**
- * Get file extension from URL or default to 'jpg'
- */
+type CacheRecord = Required<
+  Pick<CachedImageInfo, 'key' | 'lastAccessed' | 'name' | 'size' | 'uri'>
+> & {
+  sourceUrl: string;
+  variant?: string;
+};
+
+type DownloadTask = {
+  key: string;
+  options: CacheImageOptions;
+  reject: (reason?: unknown) => void;
+  resolve: (uri: string) => void;
+  run: () => Promise<string>;
+  sequence: number;
+  url: string;
+};
+
+const manifestStorage = createMMKV({
+  id: 'image-cache-manifest',
+  compareBeforeSet: true,
+});
+
+const manifest = new Map<string, CacheRecord>();
+const inFlight = new Map<string, Promise<string>>();
+const taskQueue: DownloadTask[] = [];
+
+let activeDownloads = 0;
+let sequence = 0;
+let hydrated = false;
+let validationStarted = false;
+
+function priorityRank(priority: ImageCachePriority | undefined): number {
+  if (priority === 'visible') return 0;
+  if (priority === 'interactive') return 1;
+  return 2;
+}
+
+function hashString(str: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < str.length; i += 1) {
+    // eslint-disable-next-line no-bitwise
+    hash ^= str.charCodeAt(i);
+    // eslint-disable-next-line no-bitwise
+    hash +=
+      (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  // eslint-disable-next-line no-bitwise
+  return (hash >>> 0).toString(16);
+}
+
 function getFileExtensionFromUrl(url: string): string {
   try {
-    const urlObj = new URL(url);
-    const urlPath = urlObj.pathname;
-    const match = urlPath.match(/\.(png|jpg|jpeg|gif|webp|svg)/i);
-    if (match && match[1]) {
-      const ext = match[1].toLowerCase();
-      // Normalize jpeg to jpg
-      return ext === 'jpeg' ? 'jpg' : ext;
-    }
+    const match = new URL(url).pathname.match(/\.(png|jpg|jpeg|gif|webp|svg)/i);
+    if (!match?.[1]) return 'img';
+    return match[1].toLowerCase() === 'jpeg' ? 'jpg' : match[1].toLowerCase();
   } catch {
-    // Invalid URL, fall through to default
+    return 'img';
   }
-  return 'jpg';
 }
 
-/**
- * Generate a consistent filename from a URL
- */
-function getCachedFileName(url: string): string {
-  const hash = hashString(url);
-  const ext = getFileExtensionFromUrl(url);
-  return `${hash}.${ext}`;
+function isCacheableUri(uri: string | undefined): uri is string {
+  return typeof uri === 'string' && /^https?:\/\//i.test(uri);
 }
 
-/**
- * Ensure the cache directory exists using legacy API to avoid native bridge issues
- */
+function getCacheKey(url: string, variant = 'original'): string {
+  return `${hashString(`${variant}:${url}`)}-${variant.replace(/[^a-z0-9_-]/gi, '_')}`;
+}
+
+function getRecordStorageKey(key: string): string {
+  return `${RECORD_PREFIX}${key}`;
+}
+
+function hydrateManifest(): void {
+  if (hydrated) return;
+  hydrated = true;
+
+  manifestStorage.getAllKeys().forEach(storageKey => {
+    if (!storageKey.startsWith(RECORD_PREFIX)) return;
+    const raw = manifestStorage.getString(storageKey);
+    if (!raw) return;
+
+    try {
+      const record = JSON.parse(raw) as CacheRecord;
+      manifest.set(record.key, record);
+    } catch {
+      manifestStorage.remove(storageKey);
+    }
+  });
+
+  validateManifestSoon();
+}
+
+function persistRecord(record: CacheRecord): void {
+  manifest.set(record.key, record);
+  manifestStorage.set(getRecordStorageKey(record.key), JSON.stringify(record));
+}
+
+function removeRecord(key: string): void {
+  const record = manifest.get(key);
+  manifest.delete(key);
+  manifestStorage.remove(getRecordStorageKey(key));
+
+  if (!record) return;
+  try {
+    const file = new File(record.uri);
+    if (file.exists) file.delete();
+  } catch {
+    // Ignore filesystem cleanup errors.
+  }
+}
+
 async function ensureCacheDirectoryAsync(): Promise<Directory> {
-  const cacheDir = new Directory(Paths.cache, SESSION_CACHE_DIR);
+  const cacheDir = new Directory(Paths.cache, CACHE_DIR_NAME);
   if (!cacheDir.exists) {
     await FileSystemLegacy.makeDirectoryAsync(cacheDir.uri, {
       intermediates: true,
@@ -68,212 +149,260 @@ async function ensureCacheDirectoryAsync(): Promise<Directory> {
   return cacheDir;
 }
 
-/**
- * Synchronous version - assumes directory already exists or will be created
- */
 function ensureCacheDirectory(): Directory {
-  return new Directory(Paths.cache, SESSION_CACHE_DIR);
+  return new Directory(Paths.cache, CACHE_DIR_NAME);
 }
 
-/**
- * Save a base64 image to the file system and return the file URI
- * This significantly reduces memory usage by storing images on disk
- * instead of keeping large base64 strings in React state
- */
+function getCachedFile(cacheDir: Directory, key: string, url: string): File {
+  return new File(cacheDir, `${key}.${getFileExtensionFromUrl(url)}`);
+}
+
+function touchRecord(record: CacheRecord): string {
+  record.lastAccessed = Date.now();
+  manifest.set(record.key, record);
+  return record.uri;
+}
+
+function sortTasks(): void {
+  taskQueue.sort((a, b) => {
+    const priorityDelta =
+      priorityRank(a.options.priority) - priorityRank(b.options.priority);
+    return priorityDelta === 0 ? a.sequence - b.sequence : priorityDelta;
+  });
+}
+
+function drainQueue(): void {
+  while (activeDownloads < DOWNLOAD_CONCURRENCY && taskQueue.length > 0) {
+    sortTasks();
+    const task = taskQueue.shift();
+    if (!task) return;
+
+    if (task.options.signal?.aborted) {
+      inFlight.delete(task.key);
+      task.resolve(task.url);
+      continue;
+    }
+
+    activeDownloads += 1;
+    task
+      .run()
+      .then(task.resolve, task.reject)
+      .finally(() => {
+        activeDownloads -= 1;
+        inFlight.delete(task.key);
+        drainQueue();
+      });
+  }
+}
+
+function enqueueDownload(
+  key: string,
+  url: string,
+  options: CacheImageOptions,
+  run: () => Promise<string>,
+): Promise<string> {
+  const existing = inFlight.get(key);
+  if (existing) return existing;
+
+  const promise = new Promise<string>((resolve, reject) => {
+    taskQueue.push({
+      key,
+      options,
+      reject,
+      resolve,
+      run,
+      sequence: (sequence += 1),
+      url,
+    });
+    drainQueue();
+  });
+  inFlight.set(key, promise);
+  return promise;
+}
+
+function evictIfNeeded(protectedKey: string): void {
+  const records = Array.from(manifest.values());
+  let totalBytes = records.reduce((acc, record) => acc + record.size, 0);
+  if (totalBytes <= MAX_CACHE_BYTES && records.length <= MAX_CACHE_RECORDS) {
+    return;
+  }
+
+  records
+    .filter(record => record.key !== protectedKey)
+    .sort((a, b) => a.lastAccessed - b.lastAccessed)
+    .forEach(record => {
+      if (totalBytes <= MAX_CACHE_BYTES && manifest.size <= MAX_CACHE_RECORDS) {
+        return;
+      }
+      totalBytes -= record.size;
+      removeRecord(record.key);
+    });
+}
+
+function validateManifestSoon(): void {
+  if (validationStarted) return;
+  validationStarted = true;
+
+  setTimeout(() => {
+    Array.from(manifest.values()).forEach(record => {
+      try {
+        if (!new File(record.uri).exists) {
+          removeRecord(record.key);
+        }
+      } catch {
+        removeRecord(record.key);
+      }
+    });
+  }, 1000);
+}
+
 export function cacheBase64Image(
   base64: string,
   ext: 'png' | 'jpg' = 'png',
 ): string {
   const cacheDir = ensureCacheDirectory();
-  const fileName = `${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(7)}.${ext}`;
-  const file = new File(cacheDir, fileName);
-
-  // Write base64 string directly to file
-  // The File.write method accepts a string when writing base64 data
+  const key = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const file = new File(cacheDir, `${key}.${ext}`);
   file.write(base64);
-
   return file.uri;
 }
 
-/**
- * Download an image from a URL directly to disk (optimized - uses native download)
- * Uses URL hashing for consistent caching - same URL will always map to same file
- * Checks if file already exists before downloading to avoid redundant downloads
- *
- * @param url - The image URL (e.g., from S3)
- * @returns The file URI where the image was cached
- */
-export async function cacheImageFromUrl(url: string): Promise<string> {
-  const cacheDir = await ensureCacheDirectoryAsync();
-  const fileName = getCachedFileName(url);
-  const cachedFile = new File(cacheDir, fileName);
+export async function cacheImageFromUrl(
+  url: string,
+  options: CacheImageOptions = {},
+): Promise<string> {
+  hydrateManifest();
 
-  // Check if file already exists in cache
-  if (cachedFile.exists) {
-    return cachedFile.uri;
-  }
-
-  try {
-    // Download the file
-    const downloadedFile = await File.downloadFileAsync(url, cacheDir);
-
-    // If the downloaded file has a different name, rename it to our consistent hash-based name
-    if (downloadedFile.uri !== cachedFile.uri) {
-      // Re-check if cached file exists (race condition from parallel downloads)
-      if (cachedFile.exists) {
-        // Another download already created the file, delete the temp and return cached
-        try {
-          downloadedFile.delete();
-        } catch {
-          // Ignore delete errors
-        }
-        return cachedFile.uri;
-      }
-
-      try {
-        downloadedFile.move(cachedFile);
-        return cachedFile.uri;
-      } catch {
-        // If move fails, check if cached file now exists (race condition)
-        if (cachedFile.exists) {
-          try {
-            downloadedFile.delete();
-          } catch {
-            // Ignore delete errors
-          }
-          return cachedFile.uri;
-        }
-        // Otherwise return the downloaded file URI
-        return downloadedFile.uri;
-      }
-    }
-
-    return downloadedFile.uri;
-  } catch {
-    // If any error occurs but cached file now exists (race condition), return it
-    if (cachedFile.exists) {
-      return cachedFile.uri;
-    }
-    // Fallback to original URL - don't throw, just return the URL
-    // The image will still load from network
+  if (!isCacheableUri(url) || options.signal?.aborted) {
     return url;
   }
-}
 
-/**
- * Check if an image URL is already cached
- * @param url - The image URL to check
- * @returns The cached file URI if it exists, null otherwise
- */
-export function getCachedImageUri(url: string): string | null {
-  try {
-    const cacheDir = ensureCacheDirectory();
-    const fileName = getCachedFileName(url);
-    const cachedFile = new File(cacheDir, fileName);
+  const key = getCacheKey(url, options.variant);
+  const existing = manifest.get(key);
+  if (existing) {
+    return touchRecord(existing);
+  }
+
+  return enqueueDownload(key, url, options, async () => {
+    const cacheDir = await ensureCacheDirectoryAsync();
+    const cachedFile = getCachedFile(cacheDir, key, url);
 
     if (cachedFile.exists) {
+      const record: CacheRecord = {
+        key,
+        lastAccessed: Date.now(),
+        name: cachedFile.uri.split('/').pop() ?? key,
+        size: cachedFile.size ?? 0,
+        sourceUrl: url,
+        uri: cachedFile.uri,
+        variant: options.variant,
+      };
+      persistRecord(record);
+      evictIfNeeded(key);
       return cachedFile.uri;
     }
-  } catch {
-    // If directory doesn't exist or other error, return null
-  }
-  return null;
+
+    try {
+      const downloadedFile = await File.downloadFileAsync(url, cacheDir);
+
+      if (downloadedFile.uri !== cachedFile.uri) {
+        if (cachedFile.exists) {
+          downloadedFile.delete();
+        } else {
+          downloadedFile.move(cachedFile);
+        }
+      }
+
+      const record: CacheRecord = {
+        key,
+        lastAccessed: Date.now(),
+        name: cachedFile.uri.split('/').pop() ?? key,
+        size: cachedFile.size ?? downloadedFile.size ?? 0,
+        sourceUrl: url,
+        uri: cachedFile.uri,
+        variant: options.variant,
+      };
+      persistRecord(record);
+      evictIfNeeded(key);
+      return cachedFile.uri;
+    } catch {
+      if (cachedFile.exists) {
+        return cachedFile.uri;
+      }
+      return url;
+    }
+  });
 }
 
-/**
- * Read a cached image as base64 (useful for sharing/saving operations)
- * This allows us to store file URIs in state but still access base64 when needed
- */
-export function getCachedImageAsBase64(fileUri: string): string {
-  const file = new File(fileUri);
-  const base64 = file.base64() ?? '';
+export function getCachedImageUri(
+  url?: string,
+  options: Pick<CacheImageOptions, 'variant'> = {},
+): string | null {
+  hydrateManifest();
+  if (!url) return null;
+  return manifest.get(getCacheKey(url, options.variant))?.uri ?? null;
+}
 
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions
+export async function getCachedImageAsBase64(fileUri: string): Promise<string> {
+  const file = new File(fileUri);
+  const base64 = await file.base64();
   return `data:image/png;base64,${base64}`;
 }
 
-/**
- * Delete a cached image file by URL
- */
-export function deleteCachedImageByUrl(url: string): void {
-  try {
-    const cacheDir = ensureCacheDirectory();
-    const fileName = getCachedFileName(url);
-    const file = new File(cacheDir, fileName);
-    if (file.exists) {
-      file.delete();
-    }
-  } catch (error) {
-    console.error('Error deleting cached image:', error);
+export function deleteCachedImageByUrl(
+  url?: string,
+  options: Pick<CacheImageOptions, 'variant'> = {},
+): void {
+  hydrateManifest();
+  if (!url) return;
+  removeRecord(getCacheKey(url, options.variant));
+}
+
+export function deleteCachedImage(fileUri?: string): void {
+  hydrateManifest();
+  if (!fileUri) return;
+
+  const record = Array.from(manifest.values()).find(
+    item => item.uri === fileUri,
+  );
+  if (record) {
+    removeRecord(record.key);
   }
 }
 
-/**
- * Delete a cached image file by URI
- */
-export function deleteCachedImage(fileUri: string): void {
-  try {
-    const file = new File(fileUri);
-    if (file.exists) {
-      file.delete();
-    }
-  } catch (error) {
-    console.error('Error deleting cached image:', error);
-  }
-}
-
-/**
- * Clear all cached images from the session directory
- * Call this when resetting the playground session
- */
 export function clearSessionCache(): void {
+  hydrateManifest();
+  taskQueue.length = 0;
+  inFlight.clear();
+
+  Array.from(manifest.keys()).forEach(removeRecord);
+
   try {
-    const cacheDir = new Directory(Paths.cache, SESSION_CACHE_DIR);
-    if (cacheDir.exists) {
-      cacheDir.delete();
-    }
-  } catch (error) {
-    console.error('Error clearing session cache:', error);
+    const cacheDir = new Directory(Paths.cache, CACHE_DIR_NAME);
+    if (cacheDir.exists) cacheDir.delete();
+  } catch {
+    // Ignore filesystem cleanup errors.
   }
 }
 
-export interface CachedImageInfo {
-  uri: string;
-  name: string;
-  size: number;
-}
-
-/**
- * List all cached images in the session cache directory
- * @returns Array of cached image info objects
- */
 export function listCachedImages(): CachedImageInfo[] {
-  try {
-    const cacheDir = new Directory(Paths.cache, SESSION_CACHE_DIR);
-    if (!cacheDir.exists) {
-      return [];
-    }
-
-    const items = cacheDir.list();
-    return items
-      .filter((item): item is File => item instanceof File)
-      .map(file => ({
-        uri: file.uri,
-        name: file.uri.split('/').pop() ?? 'unknown',
-        size: file.size ?? 0,
-      }));
-  } catch (error) {
-    console.error('Error listing cached images:', error);
-    return [];
-  }
+  hydrateManifest();
+  return Array.from(manifest.values());
 }
 
-/**
- * Get the cache directory path
- */
 export function getCacheDirectoryPath(): string {
-  const cacheDir = new Directory(Paths.cache, SESSION_CACHE_DIR);
-  return cacheDir.uri;
+  return new Directory(Paths.cache, CACHE_DIR_NAME).uri;
+}
+
+export function warmImageCache(
+  urls: string[],
+  options: CacheImageOptions = {},
+): void {
+  hydrateManifest();
+  urls
+    .filter(isCacheableUri)
+    .filter(url => !getCachedImageUri(url, { variant: options.variant }))
+    .forEach(url => {
+      void cacheImageFromUrl(url, options);
+    });
 }

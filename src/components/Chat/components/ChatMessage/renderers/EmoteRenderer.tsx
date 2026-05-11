@@ -73,8 +73,12 @@ export const EmoteRenderer = memo(
       }
 
       let cancelled = false;
+      const controller = new AbortController();
 
-      void compressEmoteUrl(displayUrl).then(compressed => {
+      void compressEmoteUrl(displayUrl, {
+        priority: 'visible',
+        signal: controller.signal,
+      }).then(compressed => {
         if (!cancelled && compressed && compressed !== displayUrl) {
           setCompressedUrl(compressed);
         }
@@ -82,6 +86,7 @@ export const EmoteRenderer = memo(
 
       return () => {
         cancelled = true;
+        controller.abort();
       };
     }, [compressedUrl, displayUrl]);
 

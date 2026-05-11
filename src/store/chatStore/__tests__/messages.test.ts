@@ -94,6 +94,15 @@ describe('chatStore messages', () => {
     expect(chatStore$.messages.peek()).toHaveLength(1);
   });
 
+  test('addMessage publishes a new message array reference', () => {
+    const before = chatStore$.messages.peek();
+
+    addMessage(createMessage('msg-1', 'nonce-1', 'first'));
+
+    expect(chatStore$.messages.peek()).not.toBe(before);
+    expect(chatStore$.messages.peek()).toHaveLength(1);
+  });
+
   test('moderateMessageById replaces message content with a moderation notice', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'peepoHappy'));
 
@@ -168,11 +177,14 @@ describe('chatStore messages', () => {
   });
 
   test('addMessages indexes new messages without rebuilding the full window', () => {
+    const before = chatStore$.messages.peek();
+
     addMessages([
       createMessage('msg-1', 'nonce-1', 'first'),
       createMessage('msg-2', 'nonce-2', 'second'),
     ] as ChatMessageType<never>[]);
 
+    expect(chatStore$.messages.peek()).not.toBe(before);
     expect(getMessageById('msg-1')?.message).toEqual([
       { type: 'text', content: 'first' },
     ]);

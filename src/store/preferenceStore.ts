@@ -1,11 +1,12 @@
-import { NAMESPACE } from '@app/lib/storage';
-import { ensureObservablePersistenceConfig } from '@app/lib/observablePersistence';
+import {
+  createObservablePersistenceLocalConfig,
+  ensureObservablePersistenceConfig,
+  PREFERENCES_PERSISTENCE_KEY,
+} from '@app/lib/observablePersistence';
 import { Theme } from '@app/styles/themes';
 import { observable } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
-
-const PREFERENCE_STORAGE_KEY = `${NAMESPACE}_PREFERENCES`;
 
 export interface Preferences {
   updatedAt: number;
@@ -57,7 +58,7 @@ ensureObservablePersistenceConfig();
 
 export const preferences$ = observable(initialPreferences);
 persistObservable(preferences$, {
-  local: PREFERENCE_STORAGE_KEY,
+  local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
 
 export function getPreferences(): Preferences {

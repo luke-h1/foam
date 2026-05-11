@@ -1,5 +1,9 @@
 import { logger } from '@app/utils/logger';
-import { ensureObservablePersistenceConfig } from '@app/lib/observablePersistence';
+import {
+  CHAT_STORE_PERSISTENCE_KEY,
+  createObservablePersistenceLocalConfig,
+  ensureObservablePersistenceConfig,
+} from '@app/lib/observablePersistence';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { observable } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
@@ -81,5 +85,5 @@ ensureObservablePersistenceConfig();
 
 export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
 persistObservable(chatStore$.persisted, {
-  local: 'chat-store-v2',
+  local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),
 });

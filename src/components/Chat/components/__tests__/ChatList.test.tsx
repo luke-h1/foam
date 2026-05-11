@@ -41,7 +41,54 @@ describe('ChatList', () => {
           autoscrollToBottomThreshold: 0.001,
           startRenderingFromBottom: true,
         },
+        viewabilityConfig: {
+          itemVisiblePercentThreshold: 1,
+        },
       }),
     );
+  });
+
+  test('forwards visible messages from FlashList viewability', () => {
+    const listRef = { current: null };
+    const isAtBottomRef = { current: true };
+    const onViewableMessagesChange = jest.fn();
+    const visibleMessage = {
+      id: '1',
+      message_id: '1',
+      message_nonce: 'nonce',
+      message: [{ type: 'text', content: 'hello' }],
+      badges: [],
+      channel: 'channel',
+      sender: 'sender',
+      timestamp: '00:00',
+      userstate: {},
+    };
+
+    render(
+      <ChatList
+        data={[visibleMessage] as never}
+        listRef={listRef}
+        isAtBottomRef={isAtBottomRef}
+        handleScroll={jest.fn()}
+        renderItem={jest.fn()}
+        keyExtractor={jest.fn()}
+        getItemType={jest.fn()}
+        contentContainerStyle={undefined}
+        onViewableMessagesChange={onViewableMessagesChange}
+      />,
+    );
+
+    const props = mockFlashList.mock.calls[0]?.[0] as {
+      onViewableItemsChanged: (info: { viewableItems: unknown[] }) => void;
+    };
+
+    props.onViewableItemsChanged({
+      viewableItems: [
+        { item: visibleMessage, isViewable: true },
+        { item: { id: '2' }, isViewable: false },
+      ],
+    });
+
+    expect(onViewableMessagesChange).toHaveBeenCalledWith([visibleMessage]);
   });
 });

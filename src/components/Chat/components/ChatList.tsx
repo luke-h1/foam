@@ -14,6 +14,10 @@ import {
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
 const CHAT_DRAW_DISTANCE = 320;
+const CHAT_VIEWABILITY_CONFIG = {
+  itemVisiblePercentThreshold: 1,
+};
+
 interface ChatListProps {
   data: AnyChatMessageType[];
   listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
@@ -24,7 +28,13 @@ interface ChatListProps {
   getItemType: (item: AnyChatMessageType) => string;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
+  onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
 }
+
+type ViewableMessageToken = {
+  item?: AnyChatMessageType;
+  isViewable?: boolean | null;
+};
 
 export const ChatList = memo(
   ({
@@ -37,8 +47,31 @@ export const ChatList = memo(
     getItemType,
     contentContainerStyle,
     extraData,
+    onViewableMessagesChange,
   }: ChatListProps) => {
     const prevMessageCountRef = useRef(0);
+    const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
+
+    useEffect(() => {
+      onViewableMessagesChangeRef.current = onViewableMessagesChange;
+    }, [onViewableMessagesChange]);
+
+    const onViewableItemsChangedRef = useRef(
+      ({ viewableItems }: { viewableItems: ViewableMessageToken[] }) => {
+        const callback = onViewableMessagesChangeRef.current;
+        if (!callback) {
+          return;
+        }
+
+        const messages = viewableItems
+          .filter(item => item.isViewable && item.item)
+          .map(item => item.item as AnyChatMessageType);
+
+        if (messages.length > 0) {
+          callback(messages);
+        }
+      },
+    );
 
     useEffect(() => {
       const count = Array.isArray(data) ? data.length : 0;
@@ -69,6 +102,8 @@ export const ChatList = memo(
         style={styles.list}
         contentContainerStyle={contentContainerStyle}
         scrollEventThrottle={16}
+        viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
+        onViewableItemsChanged={onViewableItemsChangedRef.current}
       />
     );
   },

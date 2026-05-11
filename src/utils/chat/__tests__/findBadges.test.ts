@@ -96,5 +96,102 @@ describe('findBadges', () => {
         ]);
       },
     );
+
+    test('uses source badges for shared chat messages', () => {
+      const sourceSubscriberBadge = {
+        id: '3',
+        url: 'https://example.com/source-sub.png',
+        type: 'Twitch Subscriber Badge',
+        title: 'Source 3-Month Subscriber',
+        set: 'subscriber',
+      } as const;
+      const targetSubscriberBadge = {
+        id: '1',
+        url: 'https://example.com/target-sub.png',
+        type: 'Twitch Subscriber Badge',
+        title: 'Target Subscriber',
+        set: 'subscriber',
+      } as const;
+      const userstate: UserStateTags = {
+        'badges-raw': 'subscriber/1',
+        'room-id': 'target-room',
+        'source-room-id': 'source-room',
+        'source-badges': 'subscriber/3',
+        badges: {
+          subscriber: '1',
+        },
+        'user-id': '123456789',
+        username: 'testuser',
+        'display-name': 'TestUser',
+        color: '#FF0000',
+        mod: 'false',
+        subscriber: 'false',
+        turbo: 'false',
+        'user-type': '',
+        'reply-parent-display-name': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-msg-id': '',
+        'reply-parent-user-login': '',
+      };
+
+      const result = findBadges({
+        twitchGlobalBadges: [],
+        chatterinoBadges: [],
+        chatUsers: [],
+        ffzChannelBadges: [],
+        ffzGlobalBadges: [],
+        twitchChannelBadges: [targetSubscriberBadge, sourceSubscriberBadge],
+        userstate,
+      });
+
+      expect(result).toEqual([sourceSubscriberBadge]);
+    });
+
+    test('prefers one channel badge over global fallback for the same raw badge', () => {
+      const channelBadge = {
+        id: '1000',
+        url: 'https://example.com/channel-bits.png',
+        type: 'Twitch Bit Badge',
+        title: 'Channel Cheer 1000',
+        set: 'bits',
+      } as const;
+      const globalBadge = {
+        id: 'bits_1000',
+        url: 'https://example.com/global-bits.png',
+        type: 'Twitch Global Badge',
+        title: 'Global Cheer 1000',
+        set: 'bits',
+      } as const;
+      const userstate: UserStateTags = {
+        'badges-raw': 'bits/1000',
+        badges: {
+          bits: '1000',
+        },
+        'user-id': '123456789',
+        username: 'testuser',
+        'display-name': 'TestUser',
+        color: '#FF0000',
+        mod: 'false',
+        subscriber: 'false',
+        turbo: 'false',
+        'user-type': '',
+        'reply-parent-display-name': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-msg-id': '',
+        'reply-parent-user-login': '',
+      };
+
+      const result = findBadges({
+        twitchGlobalBadges: [globalBadge],
+        chatterinoBadges: [],
+        chatUsers: [],
+        ffzChannelBadges: [],
+        ffzGlobalBadges: [],
+        twitchChannelBadges: [channelBadge],
+        userstate,
+      });
+
+      expect(result).toEqual([channelBadge]);
+    });
   });
 });

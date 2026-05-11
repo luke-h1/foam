@@ -1,6 +1,10 @@
 import { logger } from '@app/utils/logger';
 import { observable } from '@legendapp/state';
-import { cacheImageFromUrl, getCachedImageUri } from './image-cache';
+import {
+  cacheImageFromUrl,
+  getCachedImageUri,
+  type CacheImageOptions,
+} from './image-cache';
 
 /**
  *  LOG  21:51:40 |  chat  | WARN : ❌ Failed to cache emote image https://cdn.7tv.app/emote/01GQFT1WF80002Q9KS8SKQMH...: “CFNetworkDownload_MmQVXk.tmp” couldn’t be moved to “chat-img-cache” because either the former doesn’t exist, or the folder containing the latter doesn’t exist.
@@ -15,7 +19,10 @@ const compressionPromises = new Map<string, Promise<string>>();
  * Uses Legend State for reactive caching to avoid re-caching the same URL
  * Returns the original URL immediately, then updates to cached file URI when ready
  */
-export async function compressEmoteUrl(url: string): Promise<string> {
+export async function compressEmoteUrl(
+  url: string,
+  options: CacheImageOptions = {},
+): Promise<string> {
   // If already a file URI or data URI, return as-is
   if (!url || url.startsWith('data:') || url.startsWith('file://')) {
     return url;
@@ -28,7 +35,7 @@ export async function compressEmoteUrl(url: string): Promise<string> {
   }
 
   // Check if file already exists on disk (before downloading)
-  const existingFileUri = getCachedImageUri(url);
+  const existingFileUri = getCachedImageUri(url, { variant: 'emote' });
   if (existingFileUri) {
     // Update in-memory cache for future lookups
     const currentCache = compressionCache$.peek();
@@ -49,7 +56,11 @@ export async function compressEmoteUrl(url: string): Promise<string> {
   const compressionPromise = (async () => {
     try {
       // Cache image to disk using image-cache utility
-      const fileUri = await cacheImageFromUrl(url);
+      const fileUri = await cacheImageFromUrl(url, {
+        priority: options.priority ?? 'visible',
+        signal: options.signal,
+        variant: 'emote',
+      });
 
       logger.chat.info(
         `✅ Cached emote to disk: ${url.substring(0, 50)}... → ${fileUri.substring(0, 50)}...`,
@@ -88,6 +99,12 @@ export function getCompressedEmoteUrl(url: string): string {
   const cached = compressionCache$.peek()[url];
   if (cached) {
     return cached;
+  }
+  const existingFileUri = getCachedImageUri(url, { variant: 'emote' });
+  if (existingFileUri) {
+    const currentCache = compressionCache$.peek();
+    compressionCache$.set({ ...currentCache, [url]: existingFileUri });
+    return existingFileUri;
   }
   return url;
 }

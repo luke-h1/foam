@@ -195,9 +195,35 @@ export function useSeventvWs(
     return isOnChatScreen && hasRequiredIds;
   }, [currentScreen, options?.twitchChannelId, options?.sevenTvEmoteSetId]);
 
+  const isActiveEmoteSetUpdate = useCallback(
+    (data: SevenTvEventData<'emote_set.update'>): boolean => {
+      const expectedEmoteSetId =
+        sevenTvEmoteSetIdRef.current || currentEmoteSetIdRef.current;
+      const receivedEmoteSetId = data.body.id;
+
+      if (!expectedEmoteSetId || !receivedEmoteSetId) {
+        return false;
+      }
+
+      if (receivedEmoteSetId !== expectedEmoteSetId) {
+        logger.stvWs.debug(
+          `Ignoring 7TV emote_set.update for ${receivedEmoteSetId}; active set is ${expectedEmoteSetId}`,
+        );
+        return false;
+      }
+
+      return true;
+    },
+    [],
+  );
+
   const handleEmoteSetUpdate = useCallback(
     (data: SevenTvEventData<'emote_set.update'>) => {
       try {
+        if (!isActiveEmoteSetUpdate(data)) {
+          return;
+        }
+
         if (connectionTimestampRef.current) {
           const timeSinceConnection =
             Date.now() - connectionTimestampRef.current;
@@ -258,7 +284,7 @@ export function useSeventvWs(
         logger.stvWs.error('Error handling emote set update:', error);
       }
     },
-    [],
+    [isActiveEmoteSetUpdate],
   );
 
   const handleCosmeticCreate = useCallback(
@@ -609,10 +635,14 @@ export function useSeventvWs(
 
             switch (message.d.type) {
               case 'emote_set.update': {
+                const data = message.d as SevenTvEventData<'emote_set.update'>;
+
+                if (!isActiveEmoteSetUpdate(data)) {
+                  return;
+                }
+
                 logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
-                handleEmoteSetUpdate(
-                  message.d as SevenTvEventData<'emote_set.update'>,
-                );
+                handleEmoteSetUpdate(data);
                 break;
               }
 
@@ -726,6 +756,7 @@ export function useSeventvWs(
       handleEntitlementCreate,
       handleEntitlementUpdate,
       handleEntitlementDelete,
+      isActiveEmoteSetUpdate,
     ],
   );
 

@@ -5,7 +5,12 @@ import {
 import { useAuthContext } from '@app/context/AuthContext';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { sevenTvService } from '@app/services/seventv-service';
+import {
+  twitchBadgeService,
+  type SanitisedBadgeSet,
+} from '@app/services/twitch-badge-service';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
+import { twitchService } from '@app/services/twitch-service';
 import {
   getCurrentEmoteData,
   getSevenTvEmoteSetId,
@@ -15,7 +20,10 @@ import {
   getUserPersonalEmotes,
 } from '@app/store/chatStore/channelLoad';
 import type { ChatMessageType } from '@app/store/chatStore/constants';
-import { fetchAndCacheUserCosmetics } from '@app/store/chatStore/cosmetics';
+import {
+  fetchAndCacheUserCosmetics,
+  getUserBadge,
+} from '@app/store/chatStore/cosmetics';
 import { useChannelEmoteData } from '@app/store/chatStore/hooks';
 import {
   addMessage,
@@ -27,6 +35,7 @@ import {
   moderateMessagesByLogin,
   removeMessageById,
   restoreRecentMessagesForChannel,
+  updateMessage,
 } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { usePreferences } from '@app/store/preferenceStore';
@@ -39,6 +48,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { batch } from '@legendapp/state';
@@ -115,6 +125,7 @@ import {
   createSystemMessage,
 } from './util/messageHandlers';
 import { formatNoticeMessage } from './util/formatNoticeMessage';
+import { hydrateVisibleSevenTvAssets } from './util/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from './util/reprocessMessages';
 import { getVisibleMessages } from './util/visibleMessages';
 
@@ -251,6 +262,7 @@ interface ChatMessagePaneProps {
   messageListExtraData?: unknown;
   onClearFilters: () => void;
   onToggleShowOnlyMentions: () => void;
+  onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
 }
 
 interface ChatInputShellHandle {
@@ -284,7 +296,7 @@ interface ChatInputShellProps {
     userstate: ReturnType<typeof createUserStateFromTags>,
     baseMessage: AnyChatMessageType,
     userId?: string,
-  ) => void;
+  ) => void | Promise<void>;
   sendMessage: (
     channel: string,
     message: string,
@@ -390,6 +402,170 @@ function normaliseChatUsername(value?: string | null): string {
   return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
 }
 
+const SHARED_CHAT_BADGE_CACHE_TTL = 60 * 60 * 1000;
+
+type TimedCacheEntry<T> = {
+  value: T;
+  expiresAt: number;
+};
+
+const sharedChatSourceBadgeCache = new Map<
+  string,
+  TimedCacheEntry<SanitisedBadgeSet | null>
+>();
+const sharedChatSourceBadgePromises = new Map<
+  string,
+  Promise<SanitisedBadgeSet | null>
+>();
+const sharedChatChannelBadgesCache = new Map<
+  string,
+  TimedCacheEntry<SanitisedBadgeSet[]>
+>();
+const sharedChatChannelBadgePromises = new Map<
+  string,
+  Promise<SanitisedBadgeSet[]>
+>();
+
+function getTimedCacheValue<T>(
+  cache: Map<string, TimedCacheEntry<T>>,
+  key: string,
+): T | undefined {
+  const cached = cache.get(key);
+  if (!cached) {
+    return undefined;
+  }
+
+  if (cached.expiresAt <= Date.now()) {
+    cache.delete(key);
+    return undefined;
+  }
+
+  return cached.value;
+}
+
+function setTimedCacheValue<T>(
+  cache: Map<string, TimedCacheEntry<T>>,
+  key: string,
+  value: T,
+): void {
+  cache.set(key, {
+    value,
+    expiresAt: Date.now() + SHARED_CHAT_BADGE_CACHE_TTL,
+  });
+}
+
+function getSharedChatSourceRoomId(
+  userstate: ReturnType<typeof createUserStateFromTags>,
+): string | undefined {
+  const sourceRoomId = userstate['source-room-id'];
+  if (!sourceRoomId || sourceRoomId === userstate['room-id']) {
+    return undefined;
+  }
+
+  return sourceRoomId;
+}
+
+async function getSharedChatSourceBadge(
+  sourceRoomId: string,
+): Promise<SanitisedBadgeSet | null> {
+  const cached = getTimedCacheValue(sharedChatSourceBadgeCache, sourceRoomId);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const existingPromise = sharedChatSourceBadgePromises.get(sourceRoomId);
+  if (existingPromise) {
+    return existingPromise;
+  }
+
+  const promise = twitchService
+    .getUser(undefined, sourceRoomId)
+    .then(user => {
+      if (!user || typeof user !== 'object' || !user.profile_image_url) {
+        return null;
+      }
+
+      return {
+        id: sourceRoomId,
+        set: 'shared-chat-source',
+        type: 'Twitch Shared Chat Source',
+        title: `Shared chat: ${user.display_name || user.login}`,
+        url: user.profile_image_url,
+        owner_username: user.login,
+      } satisfies SanitisedBadgeSet;
+    })
+    .catch(error => {
+      logger.chat.warn('Failed to fetch shared chat source room:', error);
+      return null;
+    })
+    .then(sourceBadge => {
+      setTimedCacheValue(sharedChatSourceBadgeCache, sourceRoomId, sourceBadge);
+      sharedChatSourceBadgePromises.delete(sourceRoomId);
+      return sourceBadge;
+    });
+
+  sharedChatSourceBadgePromises.set(sourceRoomId, promise);
+  return promise;
+}
+
+async function getSharedChatChannelBadges(
+  sourceRoomId: string,
+): Promise<SanitisedBadgeSet[]> {
+  const cached = getTimedCacheValue(sharedChatChannelBadgesCache, sourceRoomId);
+  if (cached) {
+    return cached;
+  }
+
+  const existingPromise = sharedChatChannelBadgePromises.get(sourceRoomId);
+  if (existingPromise) {
+    return existingPromise;
+  }
+
+  const promise = twitchBadgeService
+    .listSanitisedChannelBadges(sourceRoomId)
+    .catch(error => {
+      logger.chat.warn('Failed to fetch shared chat source badges:', error);
+      return [];
+    })
+    .then(sourceBadges => {
+      setTimedCacheValue(
+        sharedChatChannelBadgesCache,
+        sourceRoomId,
+        sourceBadges,
+      );
+      sharedChatChannelBadgePromises.delete(sourceRoomId);
+      return sourceBadges;
+    });
+
+  sharedChatChannelBadgePromises.set(sourceRoomId, promise);
+  return promise;
+}
+
+async function getSharedChatBadgeContext(
+  userstate: ReturnType<typeof createUserStateFromTags>,
+): Promise<{
+  sourceBadge: SanitisedBadgeSet | null;
+  sourceChannelBadges: SanitisedBadgeSet[] | null;
+}> {
+  const sourceRoomId = getSharedChatSourceRoomId(userstate);
+  if (!sourceRoomId) {
+    return {
+      sourceBadge: null,
+      sourceChannelBadges: null,
+    };
+  }
+
+  const [sourceBadge, sourceChannelBadges] = await Promise.all([
+    getSharedChatSourceBadge(sourceRoomId),
+    getSharedChatChannelBadges(sourceRoomId),
+  ]);
+
+  return {
+    sourceBadge,
+    sourceChannelBadges,
+  };
+}
+
 const ChatMessagePane = memo(
   ({
     channelId,
@@ -409,6 +585,7 @@ const ChatMessagePane = memo(
     messageListExtraData,
     onClearFilters,
     onToggleShowOnlyMentions,
+    onViewableMessagesChange,
   }: ChatMessagePaneProps) => {
     const rawMessages = useSelector(
       () => chatStore$.messages.get() as AnyChatMessageType[],
@@ -506,6 +683,7 @@ const ChatMessagePane = memo(
           getItemType={getItemType}
           extraData={messageListExtraData}
           contentContainerStyle={styles.listContent}
+          onViewableMessagesChange={onViewableMessagesChange}
         />
       </View>
     );
@@ -645,7 +823,7 @@ const ChatInputShell = memo(
           parentColor: replyTo?.color,
         };
 
-        processMessageEmotes(
+        void processMessageEmotes(
           messageText,
           optimisticUserstate,
           optimisticMessage,
@@ -1257,6 +1435,8 @@ export const Chat = memo(
     const currentUsername = user?.login ?? user?.display_name;
 
     const processedMessageIdsRef = useRef<Set<string>>(new Set());
+    const visiblePersonalEmoteUsersRef = useRef<Set<string>>(new Set());
+    const visibleCosmeticUsersRef = useRef<Set<string>>(new Set());
     const listRef = useRef<FlashListRef<AnyChatMessageType> | null>(null);
     const emoteSheetRef = useRef<TrueSheet>(null);
     const settingsSheetRef = useRef<TrueSheet>(null);
@@ -1288,6 +1468,8 @@ export const Chat = memo(
       setHighlightedUsers([]);
       setHighlightedReplyTargetMessageId(undefined);
       setShowOnlyMentions(false);
+      visiblePersonalEmoteUsersRef.current.clear();
+      visibleCosmeticUsersRef.current.clear();
     }, [channelId]);
 
     useEffect(() => {
@@ -1310,12 +1492,22 @@ export const Chat = memo(
     }, []);
 
     const fetchUserCosmetics = useCallback(
-      async (twitchUserId: string) => {
-        if (fetchedCosmeticsUsers.current.has(twitchUserId)) {
+      async (
+        twitchUserId: string,
+        options: {
+          allowAfterInitialWindow?: boolean;
+          retryMissingBadge?: boolean;
+        } = {},
+      ) => {
+        const existingBadgeId = chatStore$.userBadgeIds[twitchUserId]?.peek();
+        if (
+          fetchedCosmeticsUsers.current.has(twitchUserId) &&
+          (!options.retryMissingBadge || existingBadgeId)
+        ) {
           return;
         }
 
-        if (!canFetchCosmetics()) {
+        if (!options.allowAfterInitialWindow && !canFetchCosmetics()) {
           const chatStartTime = chatStartTimeRef.current;
           const elapsedSeconds = chatStartTime
             ? (Date.now() - chatStartTime) / 1000
@@ -1326,15 +1518,16 @@ export const Chat = memo(
           return;
         }
 
-        fetchedCosmeticsUsers.current.add(twitchUserId);
-
         const existingPaintId = chatStore$.userPaintIds[twitchUserId]?.peek();
-        if (existingPaintId) {
+        if (existingPaintId && existingBadgeId) {
+          fetchedCosmeticsUsers.current.add(twitchUserId);
           logger.stvWs.debug(
-            `User ${twitchUserId} already has paint: ${existingPaintId}`,
+            `User ${twitchUserId} already has paint and badge cosmetics`,
           );
           return;
         }
+
+        fetchedCosmeticsUsers.current.add(twitchUserId);
 
         try {
           logger.stvWs.info(`Fetching cosmetics for user ${twitchUserId}...`);
@@ -1413,7 +1606,7 @@ export const Chat = memo(
     );
 
     const processMessageEmotes = useCallback(
-      (
+      async (
         text: string,
         userstate: ReturnType<typeof createUserStateFromTags>,
         baseMessage: AnyChatMessageType,
@@ -1428,6 +1621,7 @@ export const Chat = memo(
         const hasEmotes =
           chatStore$.emojis.peek().length > 0 ||
           emoteData.twitchGlobalEmotes.length > 0 ||
+          emoteData.twitchSubscriberEmotes.length > 0 ||
           emoteData.sevenTvGlobalEmotes.length > 0 ||
           emoteData.bttvGlobalEmotes.length > 0 ||
           emoteData.ffzGlobalEmotes.length > 0;
@@ -1440,6 +1634,18 @@ export const Chat = memo(
         const personalEmotes = userId
           ? getUserPersonalEmotes(userId, channelId)
           : [];
+        const currentUserLogin = normaliseChatUsername(user?.login);
+        const senderLogin = normaliseChatUsername(
+          userstate.login || userstate.username,
+        );
+        const twitchTaggedSubscriberEmotes = extractEmotesFromTag(
+          userstate.emotes,
+          text.trimEnd(),
+        );
+        const twitchSubscriberEmotes =
+          senderLogin && senderLogin === currentUserLogin
+            ? emoteData.twitchSubscriberEmotes
+            : [];
 
         try {
           const replacedMessage = processEmotesWorklet({
@@ -1451,21 +1657,35 @@ export const Chat = memo(
             sevenTvPersonalEmotes: personalEmotes,
             twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
             twitchChannelEmotes: emoteData.twitchChannelEmotes,
+            twitchSubscriberEmotes: [
+              ...twitchTaggedSubscriberEmotes,
+              ...twitchSubscriberEmotes,
+            ],
             ffzChannelEmotes: emoteData.ffzChannelEmotes,
             ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
             bttvChannelEmotes: emoteData.bttvChannelEmotes,
             bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
           });
 
-          const replacedBadges = findBadges({
+          const { sourceBadge, sourceChannelBadges } =
+            await getSharedChatBadgeContext(userstate);
+
+          const foundBadges = findBadges({
             userstate,
             chatterinoBadges: emoteData.chatterinoBadges,
             chatUsers: [],
             ffzChannelBadges: emoteData.ffzChannelBadges,
             ffzGlobalBadges: emoteData.ffzGlobalBadges,
-            twitchChannelBadges: emoteData.twitchChannelBadges,
+            twitchChannelBadges:
+              sourceChannelBadges ?? emoteData.twitchChannelBadges,
             twitchGlobalBadges: emoteData.twitchGlobalBadges,
           });
+          const replacedBadges = sourceBadge
+            ? [
+                sourceBadge,
+                ...foundBadges.filter(badge => badge.set !== sourceBadge.set),
+              ]
+            : foundBadges;
 
           handleNewMessage({
             ...baseMessage,
@@ -1477,7 +1697,108 @@ export const Chat = memo(
           handleNewMessage(baseMessage);
         }
       },
-      [channelId, handleNewMessage],
+      [channelId, handleNewMessage, user?.login],
+    );
+
+    const reprocessVisibleMessageFromCache = useCallback(
+      async (message: AnyChatMessageType) => {
+        if (message.sender === 'System' || 'notice_tags' in message) {
+          return;
+        }
+
+        const emoteData = getCurrentEmoteData(channelId);
+        if (!emoteData) {
+          return;
+        }
+
+        const text = replaceEmotesWithText(message.message).trimEnd();
+        if (!text.trim()) {
+          return;
+        }
+
+        const userId = message.userstate['user-id'];
+        const personalEmotes = userId
+          ? getUserPersonalEmotes(userId, channelId)
+          : [];
+        const currentUserLogin = normaliseChatUsername(user?.login);
+        const senderLogin = normaliseChatUsername(
+          message.userstate.login || message.userstate.username,
+        );
+        const twitchTaggedSubscriberEmotes = extractEmotesFromTag(
+          message.userstate.emotes,
+          text,
+        );
+        const twitchSubscriberEmotes =
+          senderLogin && senderLogin === currentUserLogin
+            ? emoteData.twitchSubscriberEmotes
+            : [];
+
+        try {
+          const replacedMessage = processEmotesWorklet({
+            inputString: text,
+            userstate: message.userstate,
+            emojiEmotes: chatStore$.emojis.peek(),
+            sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+            sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+            sevenTvPersonalEmotes: personalEmotes,
+            twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+            twitchChannelEmotes: emoteData.twitchChannelEmotes,
+            twitchSubscriberEmotes: [
+              ...twitchTaggedSubscriberEmotes,
+              ...twitchSubscriberEmotes,
+            ],
+            ffzChannelEmotes: emoteData.ffzChannelEmotes,
+            ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+            bttvChannelEmotes: emoteData.bttvChannelEmotes,
+            bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
+          });
+
+          const { sourceBadge, sourceChannelBadges } =
+            await getSharedChatBadgeContext(message.userstate);
+
+          const foundBadges = findBadges({
+            userstate: message.userstate,
+            chatterinoBadges: emoteData.chatterinoBadges,
+            chatUsers: [],
+            ffzChannelBadges: emoteData.ffzChannelBadges,
+            ffzGlobalBadges: emoteData.ffzGlobalBadges,
+            twitchChannelBadges:
+              sourceChannelBadges ?? emoteData.twitchChannelBadges,
+            twitchGlobalBadges: emoteData.twitchGlobalBadges,
+          });
+          const replacedBadges = sourceBadge
+            ? [
+                sourceBadge,
+                ...foundBadges.filter(badge => badge.set !== sourceBadge.set),
+              ]
+            : foundBadges;
+
+          updateMessage(message.message_id, message.message_nonce, {
+            message: replacedMessage,
+            badges: replacedBadges,
+          });
+        } catch (error) {
+          logger.chat.debug('Failed to reprocess visible chat message:', error);
+        }
+      },
+      [channelId, user?.login],
+    );
+
+    const handleViewableMessagesChange = useCallback(
+      (visibleMessages: AnyChatMessageType[]) => {
+        void hydrateVisibleSevenTvAssets({
+          channelId,
+          messages: visibleMessages,
+          personalEmoteUsers: visiblePersonalEmoteUsersRef.current,
+          cosmeticUsers: visibleCosmeticUsersRef.current,
+          getUserPersonalEmotes,
+          fetchUserPersonalEmotes,
+          getUserBadge,
+          fetchUserCosmetics,
+          reprocessMessage: reprocessVisibleMessageFromCache,
+        });
+      },
+      [channelId, fetchUserCosmetics, reprocessVisibleMessageFromCache],
     );
 
     const reprocessAllMessages = useCallback(() => {
@@ -1513,7 +1834,12 @@ export const Chat = memo(
         const baseMessage = createBaseMessage({ tags, channelName, text });
         const messageWithParentColor = { ...baseMessage, parentColor };
 
-        processMessageEmotes(text, userstate, messageWithParentColor, userId);
+        void processMessageEmotes(
+          text,
+          userstate,
+          messageWithParentColor,
+          userId,
+        );
       },
       [channelId, channelName, fetchUserCosmetics, processMessageEmotes],
     );
@@ -1976,6 +2302,7 @@ export const Chat = memo(
         const hasEmotes =
           chatStore$.emojis.peek().length > 0 ||
           emoteData.twitchGlobalEmotes.length > 0 ||
+          emoteData.twitchSubscriberEmotes.length > 0 ||
           emoteData.sevenTvGlobalEmotes.length > 0 ||
           emoteData.bttvGlobalEmotes.length > 0 ||
           emoteData.ffzGlobalEmotes.length > 0;
@@ -1990,6 +2317,7 @@ export const Chat = memo(
           sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
           twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
           twitchChannelEmotes: emoteData.twitchChannelEmotes,
+          twitchSubscriberEmotes: emoteData.twitchSubscriberEmotes,
           ffzChannelEmotes: emoteData.ffzChannelEmotes,
           ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
           bttvChannelEmotes: emoteData.bttvChannelEmotes,
@@ -2258,6 +2586,7 @@ export const Chat = memo(
               messageListExtraData={messageListExtraData}
               onClearFilters={handleClearFilters}
               onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
+              onViewableMessagesChange={handleViewableMessagesChange}
             />
 
             {preferences.showUnreadJumpPill &&

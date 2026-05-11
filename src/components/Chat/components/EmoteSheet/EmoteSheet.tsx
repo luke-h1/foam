@@ -450,6 +450,7 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
       twitchGlobalEmotes,
+      twitchSubscriberEmotes,
     } = useCurrentEmoteData();
 
     const columns = Math.max(
@@ -489,6 +490,7 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
           sevenTvGlobalEmotes,
           twitchChannelEmotes,
           twitchGlobalEmotes,
+          twitchSubscriberEmotes,
           emojiSets: EMOJI_MENU_SECTIONS,
         }),
       [
@@ -500,6 +502,7 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
         sevenTvGlobalEmotes,
         twitchChannelEmotes,
         twitchGlobalEmotes,
+        twitchSubscriberEmotes,
       ],
     );
 
@@ -587,7 +590,11 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
       }
 
       const controller = new AbortController();
-      void cacheEmoteImages(preloadVisibleEmotes, controller.signal);
+      void cacheEmoteImages(
+        preloadVisibleEmotes,
+        controller.signal,
+        'interactive',
+      );
       return () => controller.abort();
     }, [isSheetPresented, preloadVisibleEmotes]);
 
