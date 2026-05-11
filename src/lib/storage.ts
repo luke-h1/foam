@@ -28,6 +28,8 @@ const storageEvents = new EventEmitter();
 
 export const storage = createMMKV({
   id: 'storageService',
+  compareBeforeSet: true,
+  mode: 'multi-process',
 });
 
 type NamespacePrefixes = 'image_cache';
@@ -40,7 +42,6 @@ export const storageService = {
     namespacePrefix?: NamespacePrefixes,
   ): T | null {
     const item = storage.getString(namespaceKey(key, namespacePrefix));
-
     if (!item) {
       return null;
     }

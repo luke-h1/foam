@@ -1,5 +1,5 @@
 import { storageKeys } from '@app/context/AuthContext';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from './secureStore';
 
 export const deleteTokens = async () => {
   await Promise.all([

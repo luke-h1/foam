@@ -20,11 +20,7 @@ export function SettingsDevtoolsScreen() {
     return (
       <View style={styles.container}>
         <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <ScreenHeader
-            title="Dev Tools"
-            subtitle="Diagnostics and internal tools for inspecting app state and behavior."
-            size="medium"
-          />
+          <ScreenHeader title="Dev Tools" size="medium" />
           <Form.Section title="Diagnostics">
             <Form.Link
               systemImage="stethoscope"

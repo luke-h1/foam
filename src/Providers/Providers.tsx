@@ -82,11 +82,13 @@ function QueryDevTools({ children }: PropsWithChildren) {
   );
 }
 
-function DevelopmentTooling() {
+function DevTools() {
   useNetworkActivityDevTools();
   usePerformanceMonitorDevTools();
   useMMKVDevTools({
-    storages: [storage],
+    storages: {
+      storageService: storage,
+    },
   });
 
   return null;
@@ -107,13 +109,13 @@ export function Providers({ children }: PropsWithChildren) {
         <ApolloProvider client={sevenTvV4Client}>
           <ScreenDimensionsProvider>
             <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-              <ErrorBoundary
-                catchErrors={BaseConfig.catchErrors}
-                onReset={() => setRecoveredFromError(true)}
-              >
-                <KeyboardProvider>
-                  <GestureHandlerRootView style={styles.gestureContainer}>
-                    {__DEV__ ? <DevelopmentTooling /> : null}
+              <GestureHandlerRootView style={styles.gestureContainer}>
+                <ErrorBoundary
+                  catchErrors={BaseConfig.catchErrors}
+                  onReset={() => setRecoveredFromError(true)}
+                >
+                  <KeyboardProvider>
+                    {__DEV__ ? <DevTools /> : null}
                     <QueryProviderWithAuth>
                       <PressablesConfig
                         globalHandlers={{
@@ -125,9 +127,9 @@ export function Providers({ children }: PropsWithChildren) {
                         {children}
                       </PressablesConfig>
                     </QueryProviderWithAuth>
-                  </GestureHandlerRootView>
-                </KeyboardProvider>
-              </ErrorBoundary>
+                  </KeyboardProvider>
+                </ErrorBoundary>
+              </GestureHandlerRootView>
             </SafeAreaProvider>
           </ScreenDimensionsProvider>
         </ApolloProvider>

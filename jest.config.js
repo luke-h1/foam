@@ -1,9 +1,7 @@
 const jestConfig = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['./test/setupTests.ts'],
-  setupFiles: [
-    './node_modules/react-native-gesture-handler/jestSetup.js',
-  ],
+  setupFiles: ['./node_modules/react-native-gesture-handler/jestSetup.js'],
   transform: {
     '^.+\\.(t|j)sx?$': 'babel-jest',
   },
@@ -17,11 +15,12 @@ const jestConfig = {
     '\\.otf$': '<rootDir>/__mocks__/fileMock.js',
     '^@bacons/apple-colors$': '<rootDir>/__mocks__/@bacons/apple-colors.ts',
     '^react-native-legal$': '<rootDir>/__mocks__/react-native-legal.ts',
-    '^(\\./|\\.\\./)*\\.storybook/storybook\\.requires(\\.(ts|tsx|js|jsx))?$':
-      '<rootDir>/__mocks__/.storybook/storybook.requires.tsx',
-    '^(\\./|\\.\\./)*\\.storybook/index(\\.(ts|tsx|js|jsx))?$':
-      '<rootDir>/__mocks__/.storybook/index.tsx',
-    '^(\\./|\\.\\./)*\\.storybook$': '<rootDir>/__mocks__/.storybook/index.tsx',
+    '^(\\./|\\.\\./)*\\.rnstorybook/storybook\\.requires(\\.(ts|tsx|js|jsx))?$':
+      '<rootDir>/__mocks__/.rnstorybook/storybook.requires.tsx',
+    '^(\\./|\\.\\./)*\\.rnstorybook/index(\\.(ts|tsx|js|jsx))?$':
+      '<rootDir>/__mocks__/.rnstorybook/index.tsx',
+    '^(\\./|\\.\\./)*\\.rnstorybook$':
+      '<rootDir>/__mocks__/.rnstorybook/index.tsx',
     '^@app/screens/StorybookScreen$':
       '<rootDir>/__mocks__/src/screens/StorybookScreen.tsx',
   },
@@ -46,7 +45,7 @@ const jestConfig = {
   cache: true,
   cacheDirectory: '<rootDir>/.jest-cache',
   // Use 50% of available CPUs
-  maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.50)),
+  maxWorkers: Math.max(1, Math.floor(require('os').cpus().length * 0.5)),
   clearMocks: true,
   resetMocks: false,
   restoreMocks: false,

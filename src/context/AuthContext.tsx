@@ -12,7 +12,7 @@ import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twit
 import { logger } from '@app/utils/logger';
 import { queryClient } from '@app/utils/react-query/reacy-query';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from '@app/utils/authentication/secureStore';
 import {
   createContext,
   ReactNode,

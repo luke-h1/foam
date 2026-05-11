@@ -1,5 +1,7 @@
 const { withRozenite } = require('@rozenite/metro');
-const withStorybook = require('@storybook/react-native/metro/withStorybook');
+const {
+  withStorybook,
+} = require('@storybook/react-native/metro/withStorybook');
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
 /** @type {import('expo/metro-config').MetroConfig} */
