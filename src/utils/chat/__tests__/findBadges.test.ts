@@ -105,6 +105,7 @@ describe('findBadges', () => {
         title: 'Source 3-Month Subscriber',
         set: 'subscriber',
       } as const;
+
       const targetSubscriberBadge = {
         id: '1',
         url: 'https://example.com/target-sub.png',
@@ -112,6 +113,7 @@ describe('findBadges', () => {
         title: 'Target Subscriber',
         set: 'subscriber',
       } as const;
+
       const userstate: UserStateTags = {
         'badges-raw': 'subscriber/1',
         'room-id': 'target-room',
@@ -155,6 +157,7 @@ describe('findBadges', () => {
         title: 'Source 3-Month Subscriber',
         set: 'subscriber',
       } as const;
+
       const targetSubscriberBadge = {
         id: '1',
         url: 'https://example.com/target-sub.png',
@@ -162,6 +165,7 @@ describe('findBadges', () => {
         title: 'Target Subscriber',
         set: 'subscriber',
       } as const;
+
       const userstate: UserStateTags = {
         'badges-raw': 'subscriber/1',
         'room-id': 'source-room',
@@ -205,6 +209,7 @@ describe('findBadges', () => {
         title: 'Channel Cheer 1000',
         set: 'bits',
       } as const;
+
       const globalBadge = {
         id: 'bits_1000',
         url: 'https://example.com/global-bits.png',
@@ -212,6 +217,7 @@ describe('findBadges', () => {
         title: 'Global Cheer 1000',
         set: 'bits',
       } as const;
+
       const userstate: UserStateTags = {
         'badges-raw': 'bits/1000',
         badges: {

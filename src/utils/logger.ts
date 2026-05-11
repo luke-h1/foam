@@ -246,7 +246,6 @@ const loggingConfig = {
 
 type LoggingMethods = Record<defLvlType, (...args: unknown[]) => void>;
 
-// Export allowed prefixes
 export type AllowedPrefix = keyof typeof loggingConfig;
 export const allowedPrefixes = Object.keys(loggingConfig) as AllowedPrefix[];
 
