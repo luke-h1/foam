@@ -1,7 +1,6 @@
 import '../utils/performance/wdyr';
 
-import * as Sentry from '@sentry/react-native';
-import { useFonts } from 'expo-font';
+import * as Font from 'expo-font';
 import { Stack, router, usePathname } from 'expo-router';
 import {
   InstrumentSerif_400Regular,
@@ -31,8 +30,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as WebBrowser from 'expo-web-browser';
 import type { RouterAction } from 'expo-quick-actions/router';
 import { useQuickActionCallback } from 'expo-quick-actions/hooks';
-import { useEffect, useLayoutEffect } from 'react';
-import { Linking, LogBox } from 'react-native';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { InteractionManager, Linking, LogBox } from 'react-native';
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
@@ -59,7 +58,7 @@ import {
   setNavigationReady,
   syncNavigationState,
 } from '../navigators/navigationUtilities';
-import { parseTwitchUrl } from '../navigators/twitchLinking';
+import { parseTwitchUrl, type TwitchLink } from '../navigators/twitchLinking';
 import { theme } from '../styles/themes';
 import { getEmojiEmotes } from '../utils/emoji/emojiEmotes';
 import { logger } from '../utils/logger';
@@ -71,16 +70,38 @@ configureReanimatedLogger({
 
 enableFreeze(true);
 
-const HOME_SCREEN_QUICK_ACTIONS: RouterAction[] = [
-  {
-    id: 'following',
-    title: 'Following',
-    subtitle: 'Open followed channels',
-    icon: 'favorite',
-    params: {
-      href: '/tabs/following',
-    },
-  },
+SplashScreen.setOptions({
+  duration: 450,
+  fade: true,
+});
+
+void SplashScreen.preventAutoHideAsync();
+WebBrowser.maybeCompleteAuthSession();
+
+const criticalFontMap = {
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+  Montserrat_400Regular,
+  Montserrat_400Regular_Italic,
+  Montserrat_500Medium,
+  Montserrat_500Medium_Italic,
+};
+
+const deferredFontMap = {
+  Montserrat_300Light,
+  Montserrat_300Light_Italic,
+  Montserrat_600SemiBold,
+  Montserrat_600SemiBold_Italic,
+  Montserrat_700Bold,
+  Montserrat_700Bold_Italic,
+  Montserrat_800ExtraBold,
+  Montserrat_800ExtraBold_Italic,
+  Montserrat_900Black,
+  Montserrat_900Black_Italic,
+};
+
+const fontLoadTimeoutMs = 1200;
+const quickActionsBase: RouterAction[] = [
   {
     id: 'live',
     title: 'Live',
@@ -100,18 +121,55 @@ const HOME_SCREEN_QUICK_ACTIONS: RouterAction[] = [
     },
   },
 ];
+const quickActionsAuthenticated: RouterAction[] = [
+  {
+    id: 'following',
+    title: 'Following',
+    subtitle: 'Open followed channels',
+    icon: 'favorite',
+    params: {
+      href: '/tabs/following',
+    },
+  },
+];
+const rootStackScreens = [
+  'index',
+  'tabs',
+  'tabs/following',
+  'streams',
+  'category/[id]',
+  'chat',
+  'login',
+  'auth',
+  'preferences',
+  'storybook',
+  'other',
+  'dev-tools',
+] as const;
+const logPrefix = '[AUTHDBG] RouterEffects';
 
-SplashScreen.setOptions({
-  duration: 450,
-  fade: true,
-});
+const getHomeQuickActions = (showFollowingAction: boolean): RouterAction[] => {
+  return [
+    ...(showFollowingAction ? quickActionsAuthenticated : []),
+    ...quickActionsBase,
+  ];
+};
 
-void SplashScreen.preventAutoHideAsync();
-WebBrowser.maybeCompleteAuthSession();
+function getChannelLoginFromTwitchLink(link: TwitchLink): string | null {
+  if (!link) {
+    return null;
+  }
+
+  if (link.type === 'vod') {
+    return null;
+  }
+
+  return link.channelLogin;
+}
 
 function RouterEffects() {
   const pathname = usePathname();
-  const { loginWithTwitch } = useAuthContext();
+  const { authState, loginWithTwitch, ready } = useAuthContext();
   const { recoveredFromError, setRecoveredFromError } = useRecoveredFromError();
 
   useOnAppStateChange();
@@ -142,6 +200,10 @@ function RouterEffects() {
   }, [pathname]);
 
   useEffect(() => {
+    const homeScreenQuickActions = getHomeQuickActions(
+      Boolean(ready && authState?.isLoggedIn),
+    );
+
     let cancelled = false;
 
     void QuickActions.isSupported()
@@ -150,7 +212,7 @@ function RouterEffects() {
           return;
         }
 
-        return QuickActions.setItems(HOME_SCREEN_QUICK_ACTIONS);
+        return QuickActions.setItems(homeScreenQuickActions);
       })
       .catch(error => {
         logger.main.warn('Failed to configure quick actions', error);
@@ -159,11 +221,11 @@ function RouterEffects() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authState?.isLoggedIn, ready]);
 
   useEffect(() => {
     async function handleIncomingUrl(url: string | null) {
-      logger.auth.info('[AUTHDBG] RouterEffects.handleIncomingUrl', {
+      logger.auth.info(`${logPrefix}.handleIncomingUrl`, {
         url,
       });
 
@@ -172,11 +234,11 @@ function RouterEffects() {
       }
 
       if (isAuthCallbackUrl(url)) {
-        logger.auth.info('[AUTHDBG] RouterEffects auth callback matched', {
+        logger.auth.info(`${logPrefix} auth callback matched`, {
           url,
         });
         const handled = await completeAuthWithCallbackUrl(url, loginWithTwitch);
-        logger.auth.info('[AUTHDBG] RouterEffects auth callback handled', {
+        logger.auth.info(`${logPrefix} auth callback handled`, {
           url,
           handled,
         });
@@ -187,7 +249,7 @@ function RouterEffects() {
       }
 
       const link = parseTwitchUrl(url);
-      logger.auth.info('[AUTHDBG] RouterEffects parseTwitchUrl result', {
+      logger.auth.info(`${logPrefix} parseTwitchUrl result`, {
         url,
         link: link ?? null,
       });
@@ -195,10 +257,7 @@ function RouterEffects() {
         return;
       }
 
-      const channelLogin =
-        link.type === 'channel' || link.type === 'video'
-          ? link.channelLogin
-          : null;
+      const channelLogin = getChannelLoginFromTwitchLink(link);
 
       if (channelLogin) {
         router.push(`/streams/live-stream/${channelLogin}`);
@@ -206,12 +265,12 @@ function RouterEffects() {
     }
 
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
-      logger.auth.info('[AUTHDBG] Linking event received', { url });
+      logger.auth.info(`${logPrefix} Linking event received`, { url });
       void handleIncomingUrl(url);
     });
 
     void Linking.getInitialURL().then((initialUrl: string | null) => {
-      logger.auth.info('[AUTHDBG] Linking.getInitialURL resolved', {
+      logger.auth.info(`${logPrefix} Linking.getInitialURL resolved`, {
         initialUrl,
       });
       if (initialUrl) {
@@ -224,7 +283,7 @@ function RouterEffects() {
     return () => {
       linkingSubscription.remove();
     };
-  }, [loginWithTwitch]);
+  }, [loginWithTwitch, ready, authState?.isLoggedIn]);
 
   return null;
 }
@@ -255,17 +314,9 @@ function RootLayoutNav() {
             },
           }}
         >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="tabs" />
-          <Stack.Screen name="streams" />
-          <Stack.Screen name="category/[id]" />
-          <Stack.Screen name="chat" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="preferences" />
-          <Stack.Screen name="storybook" />
-          <Stack.Screen name="other" />
-          <Stack.Screen name="dev-tools" />
+          {rootStackScreens.map(screenName => (
+            <Stack.Screen key={screenName} name={screenName} />
+          ))}
         </Stack>
         <OTAUpdates />
       </Providers>
@@ -274,25 +325,21 @@ function RootLayoutNav() {
 }
 
 function RootLayout() {
-  const [fontsLoaded] = useFonts({
-    InstrumentSerif_400Regular,
-    InstrumentSerif_400Regular_Italic,
-    Montserrat_300Light,
-    Montserrat_300Light_Italic,
-    Montserrat_400Regular,
-    Montserrat_400Regular_Italic,
-    Montserrat_500Medium,
-    Montserrat_500Medium_Italic,
-    Montserrat_600SemiBold,
-    Montserrat_600SemiBold_Italic,
-    Montserrat_700Bold,
-    Montserrat_700Bold_Italic,
-    Montserrat_800ExtraBold,
-    Montserrat_800ExtraBold_Italic,
-    Montserrat_900Black,
-    Montserrat_900Black_Italic,
-  });
+  const [fontsLoaded] = Font.useFonts(criticalFontMap);
+  const [hasFontTimeoutElapsed, setHasFontTimeoutElapsed] = useState(false);
+  const didHideSplash = useRef(false);
+  const didScheduleExtraFontLoad = useRef(false);
   const emojiStyle = usePreference('emojiStyle');
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setHasFontTimeoutElapsed(true);
+    }, fontLoadTimeoutMs);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
 
   useEffect(() => {
     if (__DEV__) {
@@ -302,20 +349,44 @@ function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded) {
+    const shouldRenderNow = fontsLoaded || hasFontTimeoutElapsed;
+    if (!shouldRenderNow) {
+      return;
+    }
+
+    if (!didHideSplash.current) {
+      didHideSplash.current = true;
       SplashScreen.hide();
     }
-  }, [fontsLoaded]);
+
+    if (
+      didScheduleExtraFontLoad.current ||
+      Object.keys(deferredFontMap).length === 0
+    ) {
+      return;
+    }
+
+    didScheduleExtraFontLoad.current = true;
+    const task = InteractionManager.runAfterInteractions(() => {
+      void Font.loadAsync(deferredFontMap).catch(error => {
+        logger.main.warn('Failed to load deferred fonts', error);
+      });
+    });
+
+    return () => {
+      task.cancel();
+    };
+  }, [fontsLoaded, hasFontTimeoutElapsed]);
 
   useEffect(() => {
     chatStore$.emojis.set(getEmojiEmotes(emojiStyle));
   }, [emojiStyle]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded && !hasFontTimeoutElapsed) {
     return null;
   }
 
   return <RootLayoutNav />;
 }
 
-export default Sentry.wrap(RootLayout);
+export default RootLayout;

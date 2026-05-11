@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as Clipboard from 'expo-clipboard';
@@ -39,6 +39,8 @@ export function BadgePreviewSheet(props: Props) {
         <View style={styles.meta}>
           <Image
             useNitro
+            trackLoadTime
+            trackLoadContext="chat.badge-preview"
             source={selectedBadge.url ?? ''}
             transition={50}
             style={badgetyles.badge}

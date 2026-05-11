@@ -145,6 +145,31 @@ describe('useChatSevenTvCallbacks', () => {
       });
       expect(mockOnEmoteNotice).toHaveBeenCalledTimes(2);
     });
+
+    test('suppresses visible notices for nnys emote changes', () => {
+      const { result } = renderHook(() =>
+        useChatSevenTvCallbacks(defaultProps),
+      );
+
+      const added = [{ id: 'e1', name: 'nnysPat' } as SanitisedEmote];
+      const removed = [{ id: 'e2', name: 'CoolNnysThing' } as SanitisedEmote];
+
+      act(() => {
+        result.current.onEmoteUpdate({
+          channelId: 'c1',
+          added,
+          removed,
+        });
+      });
+
+      expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
+        'c1',
+        added,
+        removed,
+      );
+      expect(generateStvEmoteNotice).not.toHaveBeenCalled();
+      expect(mockOnEmoteNotice).not.toHaveBeenCalled();
+    });
   });
 
   describe('onCosmeticCreate', () => {

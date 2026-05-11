@@ -1,5 +1,5 @@
 import { useAuthContext } from '@app/context/AuthContext';
-import { sentryService } from '@app/services/sentry-service';
+import { recordInfo, recordWarning } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import {
   type AuthSessionResult,
@@ -43,7 +43,7 @@ const proxyUrl = new URL(
   }),
 ).toString();
 
-const appReturnUrl = 'foam://';
+const appReturnUrl = 'foam://tabs/following';
 
 const discovery = {
   authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
@@ -108,28 +108,53 @@ export function useTwitchSignIn() {
       await loginWithTwitch(nextResponse);
 
       if (nextResponse?.type === 'success') {
-        sentryService.captureMessage('LoginSuccess');
+        const hasAuthentication =
+          'authentication' in nextResponse && !!nextResponse.authentication;
+
+        recordInfo({
+          name: 'AuthInfo',
+          message: 'Twitch sign in succeeded',
+          params: {
+            category: 'Auth',
+            action: 'login_success',
+            responseType: nextResponse.type,
+            hasAuthentication,
+          },
+        });
         toast.success('Logged in');
-        logger.auth.info('[AUTHDBG] useTwitchSignIn success, routing');
 
         router.replace('/tabs/following');
+        return;
       }
 
-      sentryService.captureMessage(nextResponse?.type || 'unknownAuthEvent');
+      const hasAuthentication = nextResponse
+        ? 'authentication' in nextResponse && !!nextResponse.authentication
+        : false;
+
+      recordWarning({
+        name: 'AuthWarning',
+        message: `Twitch sign in event: ${nextResponse?.type || 'unknownAuthEvent'}`,
+        params: {
+          category: 'Auth',
+          action: 'login_event_non_success',
+          responseType: nextResponse?.type ?? 'unknownAuthEvent',
+          hasAuthentication,
+        },
+        warningCause: nextResponse,
+      });
     },
     [loginWithTwitch],
   );
 
   const startSignIn = useCallback(async () => {
     if (!request || authSessionActiveRef.current) {
+      if (!request) {
+        toast.error('Twitch sign-in is not ready yet');
+      }
       logger.auth.info('[AUTHDBG] useTwitchSignIn prompt blocked', {
         hasRequest: !!request,
         authSessionActive: authSessionActiveRef.current,
       });
-
-      if (!request) {
-        toast.error('Twitch sign-in is not ready yet');
-      }
       return;
     }
 
@@ -156,7 +181,6 @@ export function useTwitchSignIn() {
       );
       let parsedResult: AuthSessionResult;
       let successPromptResultRaw: typeof promptResult | null = null;
-
       if (promptResult.type === 'success') {
         successPromptResultRaw = promptResult;
         parsedResult = request.parseReturnUrl(promptResult.url);

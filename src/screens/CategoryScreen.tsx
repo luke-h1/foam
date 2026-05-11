@@ -1,4 +1,4 @@
-import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import {
   FlashList,
   FlashListRef,
@@ -6,8 +6,7 @@ import {
 } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Spinner } from '@app/components/Spinner/Spinner';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { TwitchStream, twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
@@ -19,7 +18,7 @@ import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { FC, useCallback, useMemo, useRef } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
 
 interface CategoryScreenProps {
   id: string;
@@ -102,7 +101,11 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   );
 
   if (isCategoryLoading || isLoadingStreams) {
-    return <Spinner />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.color.text.dark} />
+      </View>
+    );
   }
 
   if (isCategoryError || isErrorStreams) {
@@ -117,7 +120,11 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   }
 
   if (!streams || !streams.pages) {
-    return <Spinner />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.color.text.dark} />
+      </View>
+    );
   }
 
   if (allStreams.length === 0) {
@@ -133,6 +140,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         keyExtractor={item => item.id}
         renderItem={renderItem}
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+        getItemType={() => 'category-stream'}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={renderHeader}
         onEndReachedThreshold={0.3}
@@ -150,6 +158,12 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: theme.space20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    flex: 1,
+    justifyContent: 'center',
   },
   sectionHeader: {
     borderBottomColor: theme.color.border.dark,

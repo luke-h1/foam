@@ -8,7 +8,7 @@ import Axios, {
 } from 'axios';
 import omit from 'lodash/omit';
 import qs from 'qs';
-import { sentryService } from '../sentry-service';
+import { recordError } from '@app/lib/sentry';
 
 export type RequestConfig = Omit<AxiosRequestConfig, 'method' | 'url'> & {
   cookie?: { name: string; value: string };
@@ -112,13 +112,25 @@ export default class Client {
       return response.data;
     } catch (error) {
       if (isAxiosError(error)) {
-        const errorMessage = `${config.url}_${config.method} request failed with ${JSON.stringify(error, null, 2)}`;
+        const status = error.response?.status;
+        const errorMessage = `${config.url}_${config.method} request failed`;
 
         if (__DEV__) {
           console.error(errorMessage);
         }
 
-        sentryService.captureException(errorMessage);
+        recordError({
+          name: 'APIError',
+          message: errorMessage,
+          params: {
+            category: 'API',
+            action: 'request_failed',
+            url: config.url,
+            method: config.method,
+            status,
+          },
+          errorCause: error,
+        });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return error.response?.data;

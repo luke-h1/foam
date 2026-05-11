@@ -1,6 +1,6 @@
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { memo } from 'react';
@@ -50,7 +50,13 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
               style={styles.suggestionItem}
               onPress={() => handleEmotePress(item)}
             >
-              <Image source={item.url} style={styles.emoteImage} useNitro />
+              <Image
+                source={item.url}
+                style={styles.emoteImage}
+                useNitro
+                trackLoadTime
+                trackLoadContext="chat.emote-suggestions"
+              />
               <View style={styles.emoteTextContainer}>
                 <Text
                   style={styles.emoteName}

@@ -11,7 +11,6 @@ import {
 } from '@app/components/StreamPlayer/StreamPlayer';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
-import { Text } from '@app/components/Text/Text';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { theme } from '@app/styles/themes';
 import { useQuery } from '@tanstack/react-query';
@@ -33,11 +32,8 @@ interface LiveStreamScreenProps {
   id: string;
 }
 
-const CHAT_SYNC_TIMEOUT_MS = 10_000;
-const CHAT_PLAYBACK_SYNC_DELAY_MS = 650;
 const OVERLAY_CHAT_WIDTH = 380;
 
-type ChatReleaseReason = 'content-gate' | 'fallback-timeout' | 'playback-sync';
 type FullscreenChatMode = 'sidebar' | 'overlay';
 
 export const LiveStreamScreen = memo(function LiveStreamScreen({
@@ -61,14 +57,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const [fullscreenChatMode, setFullscreenChatMode] =
     useState<FullscreenChatMode>('sidebar');
   const [hasContentGate, setHasContentGate] = useState(false);
-  const [isChatReleased, setChatReleased] = useState(false);
-  const [chatReleaseReason, setChatReleaseReason] =
-    useState<ChatReleaseReason | null>(null);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   const lastChatToggleTimeRef = useRef<number>(0);
-  const chatReleaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
   const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 
   useEffect(() => {
@@ -80,47 +70,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     };
   }, []);
 
-  const clearChatReleaseTimeout = useCallback(() => {
-    if (chatReleaseTimeoutRef.current) {
-      clearTimeout(chatReleaseTimeoutRef.current);
-      chatReleaseTimeoutRef.current = null;
-    }
+  const handleContentGateChange = useCallback((hasGate: boolean) => {
+    setHasContentGate(prev => (prev === hasGate ? prev : hasGate));
   }, []);
 
-  const releaseChat = useCallback(
-    (reason: ChatReleaseReason) => {
-      clearChatReleaseTimeout();
-      setChatReleaseReason(previous =>
-        previous === reason ? previous : reason,
-      );
-      setChatReleased(prev => (prev ? prev : true));
-    },
-    [clearChatReleaseTimeout],
-  );
-
-  const scheduleChatRelease = useCallback(
-    (delayMs: number, reason: ChatReleaseReason) => {
-      clearChatReleaseTimeout();
-      chatReleaseTimeoutRef.current = setTimeout(() => {
-        chatReleaseTimeoutRef.current = null;
-        setChatReleaseReason(previous =>
-          previous === reason ? previous : reason,
-        );
-        setChatReleased(true);
-      }, delayMs);
-    },
-    [clearChatReleaseTimeout],
-  );
-
-  const handleContentGateChange = useCallback(
-    (hasGate: boolean) => {
-      setHasContentGate(prev => (prev === hasGate ? prev : hasGate));
-      if (hasGate) {
-        releaseChat('content-gate');
-      }
-    },
-    [releaseChat],
-  );
+  const handlePlayerWebViewLoaded = useCallback(() => {
+    setHasContentGate(false);
+  }, []);
 
   const toggleChat = useCallback(() => {
     const now = Date.now();
@@ -133,16 +89,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   useEffect(() => {
     setHasContentGate(false);
-    setChatReleased(false);
-    setChatReleaseReason(null);
-    clearChatReleaseTimeout();
-    return () => {
-      clearChatReleaseTimeout();
-      if (__DEV__) {
-        console.log('🚪 LiveStreamScreen unmounting, forcing fast cleanup...');
-      }
-    };
-  }, [normalizedLogin, clearChatReleaseTimeout]);
+  }, [normalizedLogin]);
 
   const { data: stream } = useQuery({
     ...twitchQueries.getStream(normalizedLogin),
@@ -166,7 +113,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     if (hasContentGate) {
       return {
         width: Math.max(1, screenWidth),
-        height: Math.max(1, screenHeight * 0.75),
+        height: Math.max(1, screenHeight),
       };
     }
     return {
@@ -193,7 +140,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       height = screenHeight;
     } else {
       const videoHeight = hasContentGate
-        ? screenHeight * 0.75
+        ? screenHeight
         : screenWidth * (9 / 16);
       width = screenWidth;
       height = screenHeight - videoHeight;
@@ -291,29 +238,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const shouldMountChat =
     shouldRenderChat &&
     Boolean(resolvedChannelLogin) &&
-    Boolean(resolvedChannelId) &&
-    (hasContentGate || isChatReleased);
-
-  const handlePlayerPlay = useCallback(() => {
-    scheduleChatRelease(CHAT_PLAYBACK_SYNC_DELAY_MS, 'playback-sync');
-  }, [scheduleChatRelease]);
-
-  const handlePlayerError = useCallback(() => {
-    releaseChat('fallback-timeout');
-  }, [releaseChat]);
-
-  useEffect(() => {
-    if (!resolvedChannelLogin || hasContentGate || isChatReleased) {
-      return;
-    }
-
-    scheduleChatRelease(CHAT_SYNC_TIMEOUT_MS, 'fallback-timeout');
-  }, [
-    hasContentGate,
-    isChatReleased,
-    resolvedChannelLogin,
-    scheduleChatRelease,
-  ]);
+    Boolean(resolvedChannelId);
 
   const handleExitLandscape = useCallback(() => {
     if (!isLandscape) {
@@ -382,11 +307,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             autoplay
             muted={false}
             onContentGateChange={handleContentGateChange}
-            onError={handlePlayerError}
-            onPlay={handlePlayerPlay}
+            onWebViewLoaded={handlePlayerWebViewLoaded}
             onVideoAreaPress={isLandscape ? toggleChat : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             streamInfo={streamInfo}
+            useRawTwitchPlayer
           />
         ) : null}
         {isLandscape ? (
@@ -453,16 +378,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
                 tint="dark"
               />
             ) : null}
-            {chatReleaseReason === 'fallback-timeout' ? (
-              <View style={styles.chatSyncBanner}>
-                <Text color="gray.contrast" type="xxs" weight="semibold">
-                  Chat connected before playback.
-                </Text>
-                <Text color="gray.textLow" type="xxs">
-                  Messages may run ahead until video starts.
-                </Text>
-              </View>
-            ) : null}
             {prediction && resolvedChannelLogin ? (
               <ChannelPredictionCard
                 channelLogin={resolvedChannelLogin}
@@ -481,27 +396,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
               channelName={resolvedChannelLogin!}
               transparent={isLandscape && fullscreenChatMode === 'overlay'}
             />
-          </View>
-        ) : shouldRenderChat && resolvedChannelLogin && resolvedChannelId ? (
-          <View style={[styles.chatContent, styles.chatPlaceholder]}>
-            <Text
-              align="center"
-              color="gray.textLow"
-              testID="chat-sync-placeholder"
-              type="xs"
-              weight="medium"
-            >
-              Syncing chat to stream...
-            </Text>
-            <Text
-              align="center"
-              color="gray.accent"
-              style={styles.chatPlaceholderSubtext}
-              type="xxs"
-            >
-              Joining 10 seconds after the player appears, or 650ms after
-              playback starts.
-            </Text>
           </View>
         ) : null}
       </Animated.View>
@@ -525,26 +419,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10, 11, 16, 0.42)',
     borderLeftColor: theme.colorBorderSecondary,
     borderLeftWidth: StyleSheet.hairlineWidth,
-  },
-  chatPlaceholder: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderLeftColor: theme.colorBorderSecondary,
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    gap: theme.space8,
-    justifyContent: 'center',
-    paddingHorizontal: theme.space20,
-  },
-  chatPlaceholderSubtext: {
-    maxWidth: 220,
-  },
-  chatSyncBanner: {
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 2,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
   },
   container: {
     alignItems: 'center',

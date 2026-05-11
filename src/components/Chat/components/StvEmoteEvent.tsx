@@ -1,6 +1,6 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
@@ -52,6 +52,8 @@ export function StvEmoteEvent({
       <View style={styles.content}>
         <Image
           useNitro
+          trackLoadTime
+          trackLoadContext="chat.stv-emote-event"
           source={displayUrl}
           style={styles.emoteImage}
           transition={0}

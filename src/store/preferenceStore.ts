@@ -1,18 +1,11 @@
-import { NAMESPACE } from '@app/services/storage-service';
+import { NAMESPACE } from '@app/lib/storage';
+import { ensureObservablePersistenceConfig } from '@app/lib/observablePersistence';
 import { Theme } from '@app/styles/themes';
 import { observable } from '@legendapp/state';
-import {
-  configureObservablePersistence,
-  persistObservable,
-} from '@legendapp/state/persist';
-import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv';
+import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
 
 const PREFERENCE_STORAGE_KEY = `${NAMESPACE}_PREFERENCES`;
-
-configureObservablePersistence({
-  pluginLocal: ObservablePersistMMKV,
-});
 
 export interface Preferences {
   updatedAt: number;
@@ -60,8 +53,9 @@ const initialPreferences: Preferences = {
   showBttvBadges: true,
 };
 
-export const preferences$ = observable(initialPreferences);
+ensureObservablePersistenceConfig();
 
+export const preferences$ = observable(initialPreferences);
 persistObservable(preferences$, {
   local: PREFERENCE_STORAGE_KEY,
 });

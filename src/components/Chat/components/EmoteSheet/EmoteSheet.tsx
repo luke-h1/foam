@@ -2,8 +2,9 @@ import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
-import { SearchBox } from '@app/components/SearchBox/SearchBox';
-import { Text } from '@app/components/Text/Text';
+import { Icon } from '@app/components/Icon/Icon';
+import { Input } from '@app/components/ui/Input/Input';
+import { Text } from '@app/components/ui/Text/Text';
 import { BlurView } from 'expo-blur';
 import {
   cacheEmoteImages,
@@ -70,8 +71,54 @@ interface EmoteSection {
   data: string[];
 }
 
+interface SearchFilterBoxProps {
+  onChange?: (value: string) => void;
+  onSubmitEditing?: () => void;
+  placeholder?: string;
+  rightOnPress?: () => void;
+  value?: string;
+}
+
 interface EmoteSheetProps extends Omit<TrueSheetProps, 'children' | 'sizes'> {
   onEmoteSelect?: (item: EmotePickerItem) => void;
+}
+
+function EmoteSearchFilter({
+  onChange,
+  onSubmitEditing,
+  placeholder,
+  rightOnPress,
+  value,
+}: SearchFilterBoxProps) {
+  const hasValue = Boolean(value && value.length > 0);
+
+  return (
+    <View style={[styles.searchInputWrap]}>
+      <Icon icon="search" style={styles.searchIcon} />
+      <Input
+        autoCapitalize="none"
+        autoComplete="off"
+        autoCorrect={false}
+        onChangeText={onChange}
+        onSubmitEditing={onSubmitEditing ? () => onSubmitEditing() : undefined}
+        placeholder={placeholder}
+        radius="none"
+        returnKeyType="search"
+        style={styles.searchInput}
+        value={value}
+      />
+      <Button
+        onPress={() => hasValue && rightOnPress?.()}
+        style={[
+          styles.searchClearButton,
+          !hasValue && styles.searchClearButtonHidden,
+        ]}
+        disabled={!hasValue}
+      >
+        <Icon icon="x" />
+      </Button>
+    </View>
+  );
 }
 
 const EMOJI_SECTIONS: EmoteSection[] = [
@@ -194,6 +241,9 @@ const EmoteCell = memo(({ cellSize, item, onPress }: EmoteCellProps) => {
         ) : (
           <Image
             source={imageSource || item.url}
+            useNitro
+            trackLoadTime
+            trackLoadContext="chat.emote-sheet"
             style={[styles.emoteImage, { height: innerSize, width: innerSize }]}
             contentFit="contain"
             cachePolicy="memory-disk"
@@ -720,11 +770,11 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
                   </View>
                 ) : null}
 
-                <SearchBox
+                <EmoteSearchFilter
                   placeholder="filter"
                   onChange={handleSearchChange}
+                  onSubmitEditing={() => handleSearchChange(searchQuery)}
                   rightOnPress={handleClearSearch}
-                  style={styles.searchBox}
                   value={searchQuery}
                 />
               </View>
@@ -1009,9 +1059,6 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space28,
     paddingTop: theme.space12,
   },
-  searchBox: {
-    flex: 1,
-  },
   searchContainer: {
     height: SEARCH_BAR_HEIGHT,
     justifyContent: 'center',
@@ -1022,6 +1069,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space12,
+  },
+  searchInputWrap: {
+    alignItems: 'center',
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.05)'
+        : theme.color.background.darkAlt,
+    borderColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.08)'
+        : theme.color.border.dark,
+    borderCurve: 'continuous',
+    borderRadius: Platform.OS === 'ios' ? 18 : theme.borderRadius16,
+    borderWidth: 1,
+    flex: 1,
+    flexDirection: 'row',
+    gap: theme.space8,
+    minHeight: 40,
+    paddingHorizontal: theme.space12,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 38,
+    paddingHorizontal: 0,
+  },
+  searchIcon: {
+    color: theme.color.textSecondary.dark,
+    opacity: 0.8,
+  },
+  searchClearButton: {
+    alignItems: 'center',
+    backgroundColor:
+      Platform.OS === 'ios'
+        ? 'rgba(255,255,255,0.14)'
+        : 'rgba(255,255,255,0.12)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    height: 24,
+    justifyContent: 'center',
+    width: 24,
+  },
+  searchClearButtonHidden: {
+    opacity: 0,
+    pointerEvents: 'none',
   },
   setHeader: {
     alignItems: 'center',

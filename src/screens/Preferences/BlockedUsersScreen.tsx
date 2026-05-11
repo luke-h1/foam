@@ -1,11 +1,10 @@
 import { FlashList } from '@app/components/FlashList/FlashList';
 import { Icon } from '@app/components/Icon/Icon';
-import { Modal } from '@app/components/Modal/Modal';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Skeleton } from '@app/components/Skeleton/Skeleton';
-import { Text } from '@app/components/Text/Text';
+import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
@@ -13,8 +12,8 @@ import { twitchService, UserBlockList } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { useCallback, useMemo, useRef } from 'react';
+import { Alert, ScrollView, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 
 const SKELETON_COUNT = 5;
@@ -23,7 +22,7 @@ interface BlockedUserItemProps {
   user: UserBlockList;
   index: number;
   count: number;
-  onUnblock: (userId: string) => void;
+  onUnblock: (userId: string, userName: string) => void;
 }
 
 function BlockedUserItem({
@@ -33,8 +32,8 @@ function BlockedUserItem({
   onUnblock,
 }: BlockedUserItemProps) {
   const handlePress = useCallback(() => {
-    onUnblock(user.user_id);
-  }, [onUnblock, user.user_id]);
+    onUnblock(user.user_id, user.display_name);
+  }, [onUnblock, user.display_name, user.user_id]);
 
   return (
     <View
@@ -162,7 +161,7 @@ interface BlockedUsersListProps {
   isLoading: boolean;
   isError: boolean;
   onRefresh: () => Promise<unknown>;
-  onUnblock: (userId: string) => void;
+  onUnblock: (userId: string, userName: string) => void;
 }
 
 function BlockedUsersList({
@@ -271,9 +270,6 @@ function BlockedUsersList({
 export function BlockedUsersScreen() {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [selectedUserName, setSelectedUserName] = useState<string | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const userBlockListQuery = useMemo(
     () =>
@@ -316,9 +312,6 @@ export function BlockedUsersScreen() {
       return { previousData };
     },
     onSuccess: () => {
-      setIsModalVisible(false);
-      setSelectedUserId(null);
-      setSelectedUserName(null);
       toast.success('User unblocked successfully');
     },
     onError: (_error, _targetUserId, context) => {
@@ -344,28 +337,22 @@ export function BlockedUsersScreen() {
   }, [queryClient, userBlockListQuery.queryKey]);
 
   const handleUnblockRequest = useCallback(
-    (userId: string) => {
-      const blockedUser = data?.data?.find(u => u.user_id === userId);
-      if (blockedUser) {
-        setSelectedUserId(userId);
-        setSelectedUserName(blockedUser.display_name);
-        setIsModalVisible(true);
-      }
+    (userId: string, userName: string) => {
+      Alert.alert(
+        'Unblock User',
+        `Are you sure you want to unblock ${userName}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Unblock',
+            onPress: () => unblockMutation.mutate(userId),
+            style: 'destructive',
+          },
+        ],
+      );
     },
-    [data?.data],
+    [unblockMutation],
   );
-
-  const handleConfirmUnblock = useCallback(() => {
-    if (selectedUserId) {
-      unblockMutation.mutate(selectedUserId);
-    }
-  }, [selectedUserId, unblockMutation]);
-
-  const handleCancelUnblock = useCallback(() => {
-    setIsModalVisible(false);
-    setSelectedUserId(null);
-    setSelectedUserName(null);
-  }, []);
 
   return (
     <View style={styles.container}>
@@ -376,20 +363,6 @@ export function BlockedUsersScreen() {
         isError={isError}
         onRefresh={onRefresh}
         onUnblock={handleUnblockRequest}
-      />
-      <Modal
-        isVisible={isModalVisible}
-        title="Unblock User"
-        subtitle={`Are you sure you want to unblock ${selectedUserName}?`}
-        confirmOnPress={{
-          label: 'Unblock',
-          cta: handleConfirmUnblock,
-          disabled: unblockMutation.isPending,
-        }}
-        cancelOnPress={{
-          label: 'Cancel',
-          cta: handleCancelUnblock,
-        }}
       />
     </View>
   );

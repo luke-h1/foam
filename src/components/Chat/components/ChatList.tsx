@@ -23,6 +23,7 @@ interface ChatListProps {
   keyExtractor: (item: AnyChatMessageType) => string;
   getItemType: (item: AnyChatMessageType) => string;
   contentContainerStyle: StyleProp<ViewStyle>;
+  extraData?: unknown;
 }
 
 export const ChatList = memo(
@@ -35,6 +36,7 @@ export const ChatList = memo(
     keyExtractor,
     getItemType,
     contentContainerStyle,
+    extraData,
   }: ChatListProps) => {
     const prevMessageCountRef = useRef(0);
 
@@ -63,6 +65,7 @@ export const ChatList = memo(
         }}
         onScroll={handleScroll}
         renderItem={renderItem}
+        extraData={extraData}
         style={styles.list}
         contentContainerStyle={contentContainerStyle}
         scrollEventThrottle={16}

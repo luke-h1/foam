@@ -1,5 +1,5 @@
 import { LiveStreamImage } from '@app/components/LiveStreamImage/LiveStreamImage';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { SearchChannelResponse } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';

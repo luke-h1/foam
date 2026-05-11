@@ -1,6 +1,6 @@
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
@@ -40,6 +40,9 @@ export function SubscriptionNotice({
         return (
           <Image
             key={index}
+            useNitro
+            trackLoadTime
+            trackLoadContext="chat.subscription-notice-emote"
             source={messagePart.url}
             style={styles.emote}
             transition={0}

@@ -1,10 +1,15 @@
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
 import { type SFSymbol, SymbolView } from 'expo-symbols';
-import { Insets, StyleProp, ViewStyle, StyleSheet } from 'react-native';
+import {
+  ActivityIndicator,
+  Insets,
+  StyleProp,
+  ViewStyle,
+  StyleSheet,
+} from 'react-native';
 import { Button } from '../Button/Button';
 import { Icon } from '../Icon/Icon';
-import { Spinner } from '../Spinner/Spinner';
 
 type IconType =
   | {
@@ -44,7 +49,7 @@ export function IconButton({
 }: IconButtonProps) {
   const renderIcon = () => {
     if (loading) {
-      return <Spinner />;
+      return <ActivityIndicator color={theme.color.text.dark} />;
     }
 
     if (typeof icon === 'string') {

@@ -1,4 +1,4 @@
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { View, StyleSheet } from 'react-native';
 
 /**

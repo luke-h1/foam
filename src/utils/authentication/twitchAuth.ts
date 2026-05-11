@@ -59,7 +59,7 @@ export function parseTwitchAuthTokenFromUrl(
     if (fromQuery) {
       logger.auth.info('[AUTHDBG] parseTwitchAuthTokenFromUrl query token', {
         url,
-        accessTokenPreview: `${fromQuery.accessToken.slice(0, 8)}…`,
+        accessTokenPreview: `${fromQuery.accessToken.slice(0, 8)}...`,
         expiresIn: fromQuery.expiresIn,
       });
       return fromQuery;
@@ -73,7 +73,7 @@ export function parseTwitchAuthTokenFromUrl(
         url,
         matched: !!fromHash,
         accessTokenPreview: fromHash
-          ? `${fromHash.accessToken.slice(0, 8)}…`
+          ? `${fromHash.accessToken.slice(0, 8)}...`
           : null,
       },
     );
@@ -99,7 +99,7 @@ export function parseTwitchAuthTokenFromResponse(
       '[AUTHDBG] parseTwitchAuthTokenFromResponse authentication token',
       {
         responseUrl: response.url ?? null,
-        accessTokenPreview: `${response.authentication.accessToken.slice(0, 8)}…`,
+        accessTokenPreview: `${response.authentication.accessToken.slice(0, 8)}...`,
         expiresIn: getNormalizedExpiresIn(response.authentication.expiresIn),
       },
     );
@@ -121,7 +121,7 @@ export function parseTwitchAuthTokenFromResponse(
       {
         responseUrl: response.url ?? null,
         responseParams: response.params,
-        accessTokenPreview: `${fromParams.accessToken.slice(0, 8)}…`,
+        accessTokenPreview: `${fromParams.accessToken.slice(0, 8)}...`,
       },
     );
     return fromParams;

@@ -284,5 +284,29 @@ describe('useChatMessages', () => {
       expect(firstCall[0]).toHaveLength(250);
       expect(result.current.getBufferSize()).toBe(0);
     });
+
+    test('caps pending messages when flushing is delayed', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        for (let i = 0; i < 700; i += 1) {
+          result.current.handleNewMessage(createMockMessage(`${i}`));
+        }
+      });
+
+      expect(result.current.getBufferSize()).toBe(600);
+
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      const firstCall = (mockAddMessages as jest.Mock).mock
+        .calls[0] as unknown[];
+      const flushedMessages = firstCall[0] as ChatMessageType<never>[];
+
+      expect(flushedMessages).toHaveLength(600);
+      expect(flushedMessages[0]?.message_id).toBe('100');
+      expect(flushedMessages.at(-1)?.message_id).toBe('699');
+    });
   });
 });

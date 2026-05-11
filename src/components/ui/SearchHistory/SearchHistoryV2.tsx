@@ -11,9 +11,9 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import { Icon } from '../Icon/Icon';
-import { PressableArea } from '../PressableArea/PressableArea';
-import { Text } from '../Text/Text';
+import { Icon } from '@app/components/Icon/Icon';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { Text } from '@app/components/ui/Text/Text';
 
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;

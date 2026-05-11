@@ -71,7 +71,7 @@ import { toast } from 'sonner-native';
 import { formatDate } from '@app/utils/date-time/date';
 import { ReadyState } from '@app/hooks/ws/constants';
 
-import { Text } from '../Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
@@ -248,6 +248,7 @@ interface ChatMessagePaneProps {
   renderItem: ListRenderItem<AnyChatMessageType>;
   keyExtractor: (item: AnyChatMessageType) => string;
   getItemType: (item: AnyChatMessageType) => string;
+  messageListExtraData?: unknown;
   onClearFilters: () => void;
   onToggleShowOnlyMentions: () => void;
 }
@@ -405,6 +406,7 @@ const ChatMessagePane = memo(
     renderItem,
     keyExtractor,
     getItemType,
+    messageListExtraData,
     onClearFilters,
     onToggleShowOnlyMentions,
   }: ChatMessagePaneProps) => {
@@ -502,6 +504,7 @@ const ChatMessagePane = memo(
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           getItemType={getItemType}
+          extraData={messageListExtraData}
           contentContainerStyle={styles.listContent}
         />
       </View>
@@ -2099,6 +2102,26 @@ export const Chat = memo(
       () => normaliseChatUsername(currentUsernameForMentions),
       [currentUsernameForMentions],
     );
+    const messageListExtraData = useMemo(
+      () => ({
+        chatDensity: preferences.chatDensity,
+        currentUsernameNormalized,
+        disableEmoteAnimations: preferences.disableEmoteAnimations,
+        highlightedReplyTargetMessageId,
+        highlightedUsersKey: highlightedUsers.join('\u001f'),
+        showInlineReplyContext: preferences.showInlineReplyContext,
+        showTimestamps: preferences.chatTimestamps,
+      }),
+      [
+        currentUsernameNormalized,
+        highlightedReplyTargetMessageId,
+        highlightedUsers,
+        preferences.chatDensity,
+        preferences.disableEmoteAnimations,
+        preferences.showInlineReplyContext,
+        preferences.chatTimestamps,
+      ],
+    );
 
     const handleReplyContextPress = useCallback(
       (replyParentMessageId: string) => {
@@ -2232,6 +2255,7 @@ export const Chat = memo(
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               getItemType={getItemType}
+              messageListExtraData={messageListExtraData}
               onClearFilters={handleClearFilters}
               onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
             />
@@ -2351,24 +2375,22 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: theme.space20,
-    paddingTop: theme.space12,
+    paddingBottom: theme.space8,
+    paddingTop: 0,
   },
   messagePane: {
     flex: 1,
   },
   messageContainer: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    minHeight: 50,
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
+    minHeight: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 1,
     width: '100%',
   },
   wrapper: {
-    backgroundColor: theme.color.background.dark,
+    backgroundColor: '#222222',
     flex: 1,
   },
   wrapperTransparent: {

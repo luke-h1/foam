@@ -4,10 +4,10 @@ import {
   loadPreferencesFromICloud,
   savePreferencesToICloud,
   synchronizeICloudPreferences,
-} from '@app/services/icloud-sync-service';
+} from '@app/lib/icloud-sync';
 import { logger } from '@app/utils/logger';
 import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
+import { AppState, InteractionManager } from 'react-native';
 
 export function useIcloudPreferenceSync() {
   const preferences = usePreferences();
@@ -23,6 +23,14 @@ export function useIcloudPreferenceSync() {
     }
 
     let cancelled = false;
+    let pendingSync: { cancel: () => void } | null = null;
+
+    const queueRemoteSync = () => {
+      pendingSync?.cancel();
+      pendingSync = InteractionManager.runAfterInteractions(() => {
+        void applyRemotePreferences();
+      });
+    };
 
     const applyRemotePreferences = async () => {
       try {
@@ -48,16 +56,17 @@ export function useIcloudPreferenceSync() {
       }
     };
 
-    void applyRemotePreferences();
+    queueRemoteSync();
 
     const subscription = AppState.addEventListener('change', state => {
       if (state === 'active') {
-        void applyRemotePreferences();
+        queueRemoteSync();
       }
     });
 
     return () => {
       cancelled = true;
+      pendingSync?.cancel();
       subscription.remove();
     };
   }, []);

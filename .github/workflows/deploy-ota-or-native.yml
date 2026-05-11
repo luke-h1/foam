@@ -6,6 +6,15 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      variant:
+        description: "Release variant"
+        required: false
+        type: choice
+        default: "production"
+        options:
+          - production
+          - internal
+          - testflight
       deploy_type:
         description: "Deployment type"
         required: true
@@ -118,15 +127,16 @@ jobs:
           echo "📱 iOS Fingerprint: $IOS_FP"
           echo "🤖 Android Fingerprint: $ANDROID_FP"
         env:
-          APP_VARIANT: production
+          APP_VARIANT: ${{ inputs.variant || 'production' }}
 
       - name: 📂 Load previous fingerprints
         id: previous
         uses: actions/cache/restore@v4
         with:
           path: .fingerprint-cache
-          key: fingerprint-${{ github.ref_name }}
+          key: fingerprint-${{ github.ref_name }}-${{ inputs.variant || 'production' }}
           restore-keys: |
+            fingerprint-main-${{ inputs.variant || 'production' }}
             fingerprint-main
             fingerprint-
 
@@ -166,9 +176,9 @@ jobs:
   build:
     name: 🔨 Native Build
     needs: [prepare, detect-changes]
-    if: needs.detect-changes.outputs.deploy-type == 'build'
+    if: needs['detect-changes'].outputs['deploy-type'] == 'build'
     runs-on: macos-26
-    concurrency: eas-build-${{ inputs.platform || 'ios' }}
+    concurrency: eas-build-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
@@ -243,27 +253,45 @@ jobs:
 
       - name: 🔨 Build & Submit
         run: |
+          VARIANT="${{ inputs.variant || 'production' }}"
           PLATFORM="${{ inputs.platform || 'ios' }}"
 
+          build_ios() {
+            echo "Building iOS ($VARIANT)..."
+            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile "$VARIANT" --non-interactive --local --output=./build-artifacts/app.ipa
+            bun run eas submit -p ios --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.ipa
+          }
+
+          build_android() {
+            echo "Building Android ($VARIANT)..."
+            bun run eas build --platform android --profile "$VARIANT" --non-interactive --local --output=./build-artifacts/app.aab
+            bun run eas submit -p android --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.aab
+          }
+
+          if [ "$VARIANT" = "testflight" ] && [ "$PLATFORM" = "android" ]; then
+            echo "❌ TestFlight variant is not valid for Android platform"
+            exit 1
+          fi
+
           if [ "$PLATFORM" == "ios" ]; then
-            echo "Building iOS..."
-            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./build-artifacts/app.ipa && bun run eas submit -p ios --path ./build-artifacts/app.ipa
+            build_ios
           fi
 
           if [ "$PLATFORM" == "android" ]; then
-            echo "Building Android..."
-            bun run eas build --platform android --profile production --local --non-interactive --output=./build-artifacts/app.aab && bun run eas submit -p android --path ./build-artifacts/app.aab
+            build_android
           fi
 
           if [ "$PLATFORM" == "all" ]; then
-            echo "Building iOS..."
-            EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" bun run eas build --platform ios --profile production --local --non-interactive --output=./build-artifacts/app.ipa && bun run eas submit -p ios --path ./build-artifacts/app.ipa
-            echo "Building Android..."
-            bun run eas build --platform android --profile production --local --non-interactive --output=./build-artifacts/app.aab && bun run eas submit -p android --path ./build-artifacts/app.aab
+            build_ios
+            if [ "$VARIANT" != "testflight" ]; then
+              build_android
+            else
+              echo "Skipping Android for TestFlight variant"
+            fi
           fi
-  
+
         env:
-          APP_VARIANT: production
+          APP_VARIANT: ${{ inputs.variant || 'production' }}
           TWITCH_CLIENT_ID: ${{ env.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ env.TWITCH_CLIENT_SECRET }}
           AUTH_PROXY_API_BASE_URL: ${{ env.AUTH_PROXY_API_BASE_URL }}
@@ -272,21 +300,22 @@ jobs:
       - name: 💾 Save fingerprints for next run
         run: |
           mkdir -p .fingerprint-cache
-          echo "${{ needs.detect-changes.outputs.ios-fingerprint }}" > .fingerprint-cache/ios
-          echo "${{ needs.detect-changes.outputs.android-fingerprint }}" > .fingerprint-cache/android
+          echo "${{ needs['detect-changes'].outputs['ios-fingerprint'] }}" > .fingerprint-cache/ios
+          echo "${{ needs['detect-changes'].outputs['android-fingerprint'] }}" > .fingerprint-cache/android
 
       - name: 📂 Cache fingerprints
         uses: actions/cache/save@v4
         with:
           path: .fingerprint-cache
-          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}
+          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}-${{ inputs.variant || 'production' }}
 
       - name: 📊 Summary
         run: |
           echo "## Native Build Triggered" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Platform:** ${{ inputs.platform || 'ios' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Profile:** production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Variant:** ${{ inputs.variant || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Profile:** ${{ inputs.variant || 'production' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Auto-submit:** Yes" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Fingerprints saved for future comparison." >> $GITHUB_STEP_SUMMARY
@@ -294,9 +323,9 @@ jobs:
   ota:
     name: 📦 OTA Update
     needs: [prepare, detect-changes]
-    if: needs.detect-changes.outputs.deploy-type == 'ota'
+    if: needs['detect-changes'].outputs['deploy-type'] == 'ota'
     runs-on: ubuntu-latest
-    concurrency: eas-update-production
+    concurrency: eas-update-${{ inputs.variant || 'production' }}
     outputs:
       ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
       android_update_id: ${{ steps.publish.outputs.android_update_id }}
@@ -324,9 +353,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .ota-critical-cache
-          key: ota-critical-index-production-${{ github.sha }}
+          key: ota-critical-index-${{ inputs.variant || 'production' }}-${{ github.sha }}
           restore-keys: |
-            ota-critical-index-production-
+            ota-critical-index-${{ inputs.variant || 'production' }}-
 
       - name: Determine critical OTA metadata
         id: critical_metadata
@@ -362,35 +391,37 @@ jobs:
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts publish-ota
           --platform "${{ inputs.platform || 'ios' }}"
+          --variant "${{ inputs.variant || 'production' }}"
           --message "$DEPLOY_MESSAGE"
         env:
-          APP_VARIANT: production
-          DEPLOY_MESSAGE: Deploy: ${{ github.event.head_commit.message || github.sha }}
+          APP_VARIANT: ${{ inputs.variant || 'production' }}
+          DEPLOY_MESSAGE: "Deploy: ${{ github.event.head_commit.message || github.sha }}"
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 
       - name: 💾 Save fingerprints for next run
         run: |
           mkdir -p .fingerprint-cache
-          echo "${{ needs.detect-changes.outputs.ios-fingerprint }}" > .fingerprint-cache/ios
-          echo "${{ needs.detect-changes.outputs.android-fingerprint }}" > .fingerprint-cache/android
+          echo "${{ needs['detect-changes'].outputs['ios-fingerprint'] }}" > .fingerprint-cache/ios
+          echo "${{ needs['detect-changes'].outputs['android-fingerprint'] }}" > .fingerprint-cache/android
 
       - name: 📂 Cache fingerprints
         uses: actions/cache/save@v4
         with:
           path: .fingerprint-cache
-          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}
+          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}-${{ inputs.variant || 'production' }}
 
       - name: 💾 Save critical OTA index
         uses: actions/cache/save@v4
         with:
           path: .ota-critical-cache
-          key: ota-critical-index-production-${{ github.sha }}
+          key: ota-critical-index-${{ inputs.variant || 'production' }}-${{ github.sha }}
 
       - name: 📊 Summary
         run: |
           echo "## OTA Update Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch:** production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Variant:** ${{ inputs.variant || 'production' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Platform:** ${{ inputs.platform || 'ios' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Critical:** ${{ steps.critical_metadata.outputs.is_critical }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Critical Index:** \`${{ steps.critical_metadata.outputs.next_index }}\`" >> $GITHUB_STEP_SUMMARY
@@ -402,7 +433,7 @@ jobs:
   release:
     name: 📝 Create Release
     needs: [prepare, detect-changes, build, ota]
-    if: always() && needs.detect-changes.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
+    if: always() && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -410,7 +441,7 @@ jobs:
     outputs:
       version: ${{ needs.prepare.outputs.version }}
       tag: ${{ steps.release_tag.outputs.tag }}
-      deployment_type: ${{ needs.detect-changes.outputs.deploy-type }}
+      deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] }}
       release_notes: ${{ steps.create_release.outputs.release_notes }}
       has_release_notes_file: ${{ steps.check_release_notes.outputs.has_file }}
       ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
@@ -428,7 +459,7 @@ jobs:
         id: release_tag
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts final-tag
-          --deploy-type "${{ needs.detect-changes.outputs.deploy-type }}"
+          --deploy-type "${{ needs['detect-changes'].outputs['deploy-type'] }}"
           --version "${{ needs.prepare.outputs.version }}"
           --update-group-id "${{ needs.ota.outputs.update_group_id }}"
           --run-number "${{ github.run_number }}"
@@ -439,16 +470,16 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dry: ${{ inputs.dry_run }}
-          variant: production
+          variant: ${{ inputs.variant || 'production' }}
           version: ${{ needs.prepare.outputs.version }}
           tag: ${{ steps.release_tag.outputs.tag }}
-          deployment_type: ${{ needs.detect-changes.outputs.deploy-type == 'ota' && 'ota' || 'native' }}
-          ios_fingerprint: ${{ needs.detect-changes.outputs.ios-fingerprint || '' }}
-          android_fingerprint: ${{ needs.detect-changes.outputs.android-fingerprint || '' }}
+          deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'ota' || 'native' }}
+          ios_fingerprint: ${{ needs['detect-changes'].outputs['ios-fingerprint'] || '' }}
+          android_fingerprint: ${{ needs['detect-changes'].outputs['android-fingerprint'] || '' }}
           ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
           android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
           update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
-          commit_changelog: 'true'
+          commit_changelog: "true"
 
       - name: Check for release notes file
         id: check_release_notes
@@ -472,7 +503,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ steps.release_tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** \`${{ needs.prepare.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Type:** ${{ needs.detect-changes.outputs.deploy-type == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Type:** ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ GitHub release and CHANGELOG.md updated!" >> $GITHUB_STEP_SUMMARY
 
@@ -489,7 +520,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .ota-cache
-          key: ota-update-ids-production
+          key: ota-update-ids-${{ inputs.variant || 'production' }}
 
       - name: Get previous OTA IDs for Slack
         id: previous_ota
@@ -550,4 +581,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .ota-cache
-          key: ota-update-ids-production
+          key: ota-update-ids-${{ inputs.variant || 'production' }}

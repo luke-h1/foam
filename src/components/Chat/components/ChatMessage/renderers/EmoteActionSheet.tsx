@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
@@ -180,6 +180,8 @@ export function EmoteActionSheet({
                   <View style={styles.previewImageContainer}>
                     <Image
                       useNitro
+                      trackLoadTime
+                      trackLoadContext="chat.emote-action-sheet"
                       source={displayUrl}
                       style={styles.previewImage}
                       contentFit="contain"

@@ -20,8 +20,11 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from 'react';
 import { toast } from 'sonner-native';
+import { InteractionManager } from 'react-native';
+import { recordError } from '@app/lib/sentry';
 
 /**
  * Prefetch initial data for faster startup
@@ -47,6 +50,12 @@ const prefetchInitialData = (userId?: string) => {
   });
 };
 
+const queueInitialDataPrefetch = (userId?: string) => {
+  InteractionManager.runAfterInteractions(() => {
+    prefetchInitialData(userId);
+  });
+};
+
 export const storageKeys = {
   anon: 'V1_foam-anon', // anon token
   user: 'V1_foam-user', // logged in token
@@ -57,6 +66,7 @@ export const storageKeys = {
  * This allows proactive refresh before actual expiration
  */
 const TOKEN_EXPIRATION_BUFFER = 60; // 1 minute buffer
+const AUTH_STARTUP_TIMEOUT_MS = 12_000;
 
 /**
  * Check if a token is expired or will expire soon
@@ -113,6 +123,13 @@ interface AuthState {
   token: TwitchToken;
 }
 
+const getFallbackAnonToken = (): TwitchToken => ({
+  accessToken: '',
+  expiresIn: 3600,
+  tokenType: 'bearer',
+  expiresAt: Date.now() + 60 * 60 * 1000,
+});
+
 export interface AuthContextState {
   user?: UserInfoResponse;
   authState?: AuthState;
@@ -153,6 +170,58 @@ export const AuthContextProvider = ({
   });
 
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
+  const hasTimedOut = useRef(false);
+
+  const markAuthStateReadyFallback = (reason: string, error?: unknown) => {
+    if (state.ready || hasTimedOut.current) {
+      return;
+    }
+
+    let didApplyFallback = false;
+
+    setState(prev => {
+      if (prev.ready) {
+        return prev;
+      }
+
+      didApplyFallback = true;
+      return {
+        ...prev,
+        ready: true,
+        authState: prev.authState ?? {
+          isAnonAuth: true,
+          isLoggedIn: false,
+          token: getFallbackAnonToken(),
+        },
+      };
+    });
+
+    if (!didApplyFallback) {
+      return;
+    }
+
+    if (hasTimedOut.current) {
+      return;
+    }
+
+    hasTimedOut.current = true;
+    logger.auth.warn('Auth startup fallback triggered', {
+      reason,
+      errorType: error instanceof Error ? error.name : typeof error,
+    });
+
+    recordError({
+      name: 'AuthError',
+      message: `Auth context did not initialize in time: ${reason}`,
+      params: {
+        category: 'Auth',
+        action: 'startup_timeout',
+        reason,
+        errorType: error instanceof Error ? error.name : typeof error,
+      },
+      errorCause: error,
+    });
+  };
 
   const fetchAnonToken = async () => {
     try {
@@ -185,11 +254,10 @@ export const AuthContextProvider = ({
       await SecureStore.setItemAsync(storageKeys.anon, JSON.stringify(token));
       twitchApi.setAuthToken(result.access_token);
 
-      prefetchInitialData();
+      queueInitialDataPrefetch();
     } catch (e) {
       logger.auth.error('Failed to get anon auth', e);
-      // eslint-disable-next-line no-useless-return
-      return;
+      markAuthStateReadyFallback('fetchAnonToken failed', e);
     }
   };
 
@@ -251,8 +319,8 @@ export const AuthContextProvider = ({
       twitchApi.setAuthToken(twitchToken.accessToken);
       setUser(u);
 
-      // Prefetch initial data immediately after auth
-      prefetchInitialData(u.id);
+      // Prefetch initial data after first interactions
+      queueInitialDataPrefetch(u.id);
 
       await SecureStore.setItemAsync(
         storageKeys.user,
@@ -312,7 +380,7 @@ export const AuthContextProvider = ({
     });
 
     logger.auth.info('[AUTHDBG] AuthContext.loginWithTwitch token parsed', {
-      accessTokenPreview: `${token.accessToken.slice(0, 8)}…`,
+      accessTokenPreview: `${token.accessToken.slice(0, 8)}...`,
       expiresIn: token.expiresIn,
       tokenType: token.tokenType,
     });
@@ -333,7 +401,7 @@ export const AuthContextProvider = ({
       twitchApi.setAuthToken(token.accessToken);
       setUser(u);
 
-      prefetchInitialData(u.id);
+      queueInitialDataPrefetch(u.id);
 
       await SecureStore.deleteItemAsync(storageKeys.anon);
 
@@ -409,8 +477,8 @@ export const AuthContextProvider = ({
       });
       twitchApi.setAuthToken(token.accessToken);
 
-      // Prefetch top streams for anonymous users with cached token
-      prefetchInitialData();
+      // Prefetch top streams for anonymous users with cached token after first interactions
+      queueInitialDataPrefetch();
     } catch (error) {
       logger.auth.error('Token validation error, fetching new token', error);
       twitchApi.removeAuthToken();
@@ -419,41 +487,57 @@ export const AuthContextProvider = ({
   };
 
   const populateAuthState = async () => {
-    const [storedAnonToken, storedAuthToken] = await Promise.all([
-      SecureStore.getItemAsync(storageKeys.anon),
-      SecureStore.getItemAsync(storageKeys.user),
-    ]);
+    try {
+      const [storedAnonToken, storedAuthToken] = await Promise.all([
+        SecureStore.getItemAsync(storageKeys.anon),
+        SecureStore.getItemAsync(storageKeys.user),
+      ]);
 
-    if (storedAuthToken) {
-      try {
-        // Try to parse as TwitchToken first (new format with issuedAt)
-        const parsedAuthToken = JSON.parse(storedAuthToken) as
-          | TwitchToken
-          | TokenResponse;
-        await doAuth(parsedAuthToken);
-      } catch (error) {
-        logger.auth.error('Failed to parse stored user token', error);
-        await SecureStore.deleteItemAsync(storageKeys.user);
+      if (storedAuthToken) {
+        try {
+          // Try to parse as TwitchToken first (new format with issuedAt)
+          const parsedAuthToken = JSON.parse(storedAuthToken) as
+            | TwitchToken
+            | TokenResponse;
+          await doAuth(parsedAuthToken);
+        } catch (error) {
+          logger.auth.error('Failed to parse stored user token', error);
+          await SecureStore.deleteItemAsync(storageKeys.user);
+          await doAnonAuth();
+        }
+      } else if (storedAnonToken) {
+        try {
+          const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
+          await doAnonAuth(parsedAnonToken);
+        } catch (error) {
+          logger.auth.error('Failed to parse stored anon token', error);
+          await SecureStore.deleteItemAsync(storageKeys.anon);
+          await doAnonAuth();
+        }
+      } else {
         await doAnonAuth();
       }
-    } else if (storedAnonToken) {
-      try {
-        const parsedAnonToken = JSON.parse(storedAnonToken) as TwitchToken;
-        await doAnonAuth(parsedAnonToken);
-      } catch (error) {
-        logger.auth.error('Failed to parse stored anon token', error);
-        await SecureStore.deleteItemAsync(storageKeys.anon);
-        await doAnonAuth();
-      }
-    } else {
-      await doAnonAuth();
+    } catch (error) {
+      logger.auth.error(
+        'Auth bootstrap failed during initial state load',
+        error,
+      );
+      markAuthStateReadyFallback('populateAuthState failed', error);
     }
   };
 
   useEffect(() => {
-    void (async () => {
-      await populateAuthState();
-    })();
+    const startupTimeout = setTimeout(() => {
+      markAuthStateReadyFallback('startup timeout');
+    }, AUTH_STARTUP_TIMEOUT_MS);
+
+    void populateAuthState().catch(error => {
+      markAuthStateReadyFallback('populateAuthState rejected', error);
+    });
+
+    return () => {
+      clearTimeout(startupTimeout);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -479,11 +563,11 @@ export const AuthContextProvider = ({
       ready: state.ready,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.authState, user]);
+  }, [state.authState, state.ready, user]);
 
-  return state.ready ? (
+  return (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>
-  ) : null;
+  );
 };
 
 export function useAuthContext() {

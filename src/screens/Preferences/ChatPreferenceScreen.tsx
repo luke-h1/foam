@@ -9,7 +9,7 @@ import {
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Switch } from '@app/components/Switch/Switch';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -18,12 +18,46 @@ import {
   getEmojiEmotes,
   type EmojiStyle,
 } from '@app/utils/emoji/emojiEmotes';
+import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-const DENSITY_LABELS = ['Comfortable', 'Compact'];
+const DENSITY_OPTIONS = [
+  { label: 'Comfortable', value: 'comfortable' as const },
+  { label: 'Compact', value: 'compact' as const },
+] as const;
+const DENSITY_LABELS = DENSITY_OPTIONS.map(option => option.label);
 const EMOJI_PREVIEW_SHORTCODES = [':joy:', ':heart:', ':fire:'];
+
+function IosToggleRow({
+  custom: _custom,
+  label,
+  value,
+  onValueChange,
+}: {
+  custom?: true;
+  label: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}) {
+  return (
+    <View style={styles.iosToggleRow}>
+      <Text color="gray" style={styles.iosToggleLabel}>
+        {label}
+      </Text>
+      <View style={styles.iosSwitchSlot}>
+        <Switch value={value} onValueChange={onValueChange} />
+      </View>
+    </View>
+  );
+}
+
+type SegmentedControlChangeEvent = {
+  nativeEvent: {
+    selectedSegmentIndex: number;
+  };
+};
 
 export function ChatPreferenceScreen() {
   const {
@@ -55,10 +89,15 @@ export function ChatPreferenceScreen() {
   );
   const emojiPreviewEmotes = useMemo(() => {
     const emotes = getEmojiEmotes(previewEmojiStyle);
-
-    return EMOJI_PREVIEW_SHORTCODES.map(shortcode =>
+    const preview = EMOJI_PREVIEW_SHORTCODES.map(shortcode =>
       emotes.find(emote => emote.name === shortcode),
     ).filter(Boolean) as SanitisedEmote[];
+
+    if (preview.length > 0) {
+      return preview;
+    }
+
+    return emotes.slice(0, 3);
   }, [previewEmojiStyle]);
 
   useEffect(() => {
@@ -69,25 +108,71 @@ export function ChatPreferenceScreen() {
     setPreviewEmojiStyle(emojiStyle);
   }, [emojiStyle]);
 
-  const handleDensityChange = (value: string) => {
-    const nextDensity = value === 'Compact' ? 'compact' : 'comfortable';
+  const handleDensitySelect = useCallback(
+    (nextDensity: 'comfortable' | 'compact') => {
+      setPreviewDensity(nextDensity);
+      update({
+        chatDensity: nextDensity,
+      });
+    },
+    [update],
+  );
 
-    setPreviewDensity(nextDensity);
-    update({
-      chatDensity: nextDensity,
-    });
-  };
+  const handleDensityChange = useCallback(
+    (event: SegmentedControlChangeEvent) => {
+      const nextDensity =
+        DENSITY_OPTIONS[event.nativeEvent.selectedSegmentIndex]?.value;
 
-  const handleEmojiStyleChange = (value: string) => {
-    const option = EMOJI_STYLE_OPTIONS.find(option => option.label === value);
+      if (!nextDensity) {
+        return;
+      }
 
-    if (!option) {
-      return;
-    }
+      handleDensitySelect(nextDensity);
+    },
+    [handleDensitySelect],
+  );
 
-    setPreviewEmojiStyle(option.value as EmojiStyle);
-    update({ emojiStyle: option.value as EmojiStyle });
-  };
+  const handleDensityValueChange = useCallback(
+    (value: string) => {
+      const selected = DENSITY_OPTIONS.find(option => option.label === value);
+
+      if (!selected) {
+        return;
+      }
+
+      handleDensitySelect(selected.value);
+    },
+    [handleDensitySelect],
+  );
+
+  const handleEmojiStyleChange = useCallback(
+    (value: string) => {
+      const option = EMOJI_STYLE_OPTIONS.find(option => option.label === value);
+
+      if (!option) {
+        return;
+      }
+
+      setPreviewEmojiStyle(option.value as EmojiStyle);
+      update({ emojiStyle: option.value as EmojiStyle });
+    },
+    [update],
+  );
+
+  const handleEmojiStyleChangeByIndex = useCallback(
+    (event: SegmentedControlChangeEvent) => {
+      const option =
+        EMOJI_STYLE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+
+      if (!option) {
+        return;
+      }
+
+      setPreviewEmojiStyle(option.value as EmojiStyle);
+      update({ emojiStyle: option.value as EmojiStyle });
+    },
+    [update],
+  );
 
   useScrollToTop(scrollRef);
 
@@ -116,7 +201,8 @@ export function ChatPreferenceScreen() {
                 </View>
                 <SegmentedControl
                   appearance="dark"
-                  onValueChange={handleDensityChange}
+                  onChange={handleDensityChange}
+                  onValueChange={handleDensityValueChange}
                   selectedIndex={densityIndex}
                   style={styles.iosSegmentedControl}
                   tintColor={theme.colorDarkGreen}
@@ -140,6 +226,7 @@ export function ChatPreferenceScreen() {
                 </View>
                 <SegmentedControl
                   appearance="dark"
+                  onChange={handleEmojiStyleChangeByIndex}
                   onValueChange={handleEmojiStyleChange}
                   selectedIndex={emojiIndex}
                   style={styles.iosSegmentedControl}
@@ -152,157 +239,132 @@ export function ChatPreferenceScreen() {
           </Form.Section>
 
           <Form.Section title="Context">
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>
-                Show Timestamps
-              </Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={chatTimestamps}
-                  onValueChange={value => update({ chatTimestamps: value })}
-                />
-              </View>
-            </View>
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>
-                Highlight Own Mentions
-              </Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={highlightOwnMentions}
-                  onValueChange={value =>
-                    update({ highlightOwnMentions: value })
-                  }
-                />
-              </View>
-            </View>
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>
-                Inline Reply Context
-              </Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showInlineReplyContext}
-                  onValueChange={value =>
-                    update({ showInlineReplyContext: value })
-                  }
-                />
-              </View>
-            </View>
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>
-                Show Jump Pill
-              </Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showUnreadJumpPill}
-                  onValueChange={value => update({ showUnreadJumpPill: value })}
-                />
-              </View>
+            <IosToggleRow
+              custom
+              label="Show Timestamps"
+              value={chatTimestamps}
+              onValueChange={value => update({ chatTimestamps: value })}
+            />
+            <IosToggleRow
+              custom
+              label="Highlight Own Mentions"
+              value={highlightOwnMentions}
+              onValueChange={value => update({ highlightOwnMentions: value })}
+            />
+            <IosToggleRow
+              custom
+              label="Inline Reply Context"
+              value={showInlineReplyContext}
+              onValueChange={value => update({ showInlineReplyContext: value })}
+            />
+            <IosToggleRow
+              custom
+              label="Show Jump Pill"
+              value={showUnreadJumpPill}
+              onValueChange={value => update({ showUnreadJumpPill: value })}
+            />
+            <View style={styles.iosPreviewItem}>
+              <Text type="xs" color="gray.textLow" weight="semibold">
+                Preview
+              </Text>
+              <ChatPreferencePreview
+                variant="context"
+                value={{
+                  chatTimestamps,
+                  highlightOwnMentions,
+                  showInlineReplyContext,
+                  showUnreadJumpPill,
+                }}
+              />
             </View>
           </Form.Section>
 
           <Form.Section title="7TV">
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={show7TvEmotes}
-                  onValueChange={value => update({ show7TvEmotes: value })}
-                />
-              </View>
-            </View>
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={show7tvBadges}
-                  onValueChange={value => update({ show7tvBadges: value })}
-                />
-              </View>
-            </View>
+            <ProviderTogglePreviewItem
+              custom
+              enabled={show7TvEmotes}
+              label="Emotes"
+              onValueChange={value => update({ show7TvEmotes: value })}
+              provider="7tv"
+              variant="emotes"
+            />
+            <ProviderTogglePreviewItem
+              custom
+              enabled={show7tvBadges}
+              label="Badges"
+              onValueChange={value => update({ show7tvBadges: value })}
+              provider="7tv"
+              variant="badges"
+            />
           </Form.Section>
 
           <Form.Section title="BTTV">
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showBttvEmotes}
-                  onValueChange={value => update({ showBttvEmotes: value })}
-                />
-              </View>
-            </View>
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showBttvBadges}
-                  onValueChange={value => update({ showBttvBadges: value })}
-                />
-              </View>
-            </View>
+            <ProviderTogglePreviewItem
+              custom
+              enabled={showBttvEmotes}
+              label="Emotes"
+              onValueChange={value => update({ showBttvEmotes: value })}
+              provider="bttv"
+              variant="emotes"
+            />
+            <ProviderTogglePreviewItem
+              custom
+              enabled={showBttvBadges}
+              label="Badges"
+              onValueChange={value => update({ showBttvBadges: value })}
+              provider="bttv"
+              variant="badges"
+            />
           </Form.Section>
 
           <Form.Section title="FFZ">
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showFFzEmotes}
-                  onValueChange={value => update({ showFFzEmotes: value })}
-                />
-              </View>
-            </View>
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showFFzBadges}
-                  onValueChange={value => update({ showFFzBadges: value })}
-                />
-              </View>
-            </View>
+            <ProviderTogglePreviewItem
+              custom
+              enabled={showFFzEmotes}
+              label="Emotes"
+              onValueChange={value => update({ showFFzEmotes: value })}
+              provider="ffz"
+              variant="emotes"
+            />
+            <ProviderTogglePreviewItem
+              custom
+              enabled={showFFzBadges}
+              label="Badges"
+              onValueChange={value => update({ showFFzBadges: value })}
+              provider="ffz"
+              variant="badges"
+            />
           </Form.Section>
 
           <Form.Section title="Twitch">
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Emotes</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showTwitchEmotes}
-                  onValueChange={value => update({ showTwitchEmotes: value })}
-                />
-              </View>
-            </View>
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>Badges</Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={showTwitchBadges}
-                  onValueChange={value => update({ showTwitchBadges: value })}
-                />
-              </View>
-            </View>
+            <ProviderTogglePreviewItem
+              custom
+              enabled={showTwitchEmotes}
+              label="Emotes"
+              onValueChange={value => update({ showTwitchEmotes: value })}
+              provider="twitch"
+              variant="emotes"
+            />
+            <ProviderTogglePreviewItem
+              custom
+              enabled={showTwitchBadges}
+              label="Badges"
+              onValueChange={value => update({ showTwitchBadges: value })}
+              provider="twitch"
+              variant="badges"
+            />
           </Form.Section>
 
           <Form.Section
             title="Media"
             footer="Animated Twitch, BTTV, FFZ, and 7TV emotes render as still images when disabled."
           >
-            <View style={styles.iosToggleRow}>
-              <Form.Text style={styles.iosToggleLabel}>
-                Disable Emote Animations
-              </Form.Text>
-              <View style={styles.iosSwitchSlot}>
-                <Switch
-                  value={disableEmoteAnimations}
-                  onValueChange={value =>
-                    update({ disableEmoteAnimations: value })
-                  }
-                />
-              </View>
-            </View>
+            <IosToggleRow
+              custom
+              label="Disable Emote Animations"
+              value={disableEmoteAnimations}
+              onValueChange={value => update({ disableEmoteAnimations: value })}
+            />
           </Form.Section>
         </BodyScrollView>
       </View>
@@ -335,7 +397,8 @@ export function ChatPreferenceScreen() {
             trailing={
               <SegmentedControl
                 appearance="dark"
-                onValueChange={handleDensityChange}
+                onChange={handleDensityChange}
+                onValueChange={handleDensityValueChange}
                 selectedIndex={densityIndex}
                 style={styles.segmentedControl}
                 tintColor={theme.colorDarkGreen}
@@ -356,6 +419,7 @@ export function ChatPreferenceScreen() {
             trailing={
               <SegmentedControl
                 appearance="dark"
+                onChange={handleEmojiStyleChangeByIndex}
                 onValueChange={handleEmojiStyleChange}
                 selectedIndex={emojiIndex}
                 style={styles.segmentedControl}
@@ -401,6 +465,22 @@ export function ChatPreferenceScreen() {
             value={showUnreadJumpPill}
             onValueChange={value => update({ showUnreadJumpPill: value })}
           />
+          <View style={styles.settingsPreviewItem}>
+            <Text type="xs" color="gray.textLow" weight="semibold">
+              Preview
+            </Text>
+            <View style={styles.previewSpacer}>
+              <ChatPreferencePreview
+                variant="context"
+                value={{
+                  chatTimestamps,
+                  highlightOwnMentions,
+                  showInlineReplyContext,
+                  showUnreadJumpPill,
+                }}
+              />
+            </View>
+          </View>
         </SettingsSection>
 
         <SettingsSection title="7TV">
@@ -410,11 +490,21 @@ export function ChatPreferenceScreen() {
             value={show7TvEmotes}
             onValueChange={value => update({ show7TvEmotes: value })}
           />
+          <ProviderPreviewItem
+            enabled={show7TvEmotes}
+            provider="7tv"
+            variant="emotes"
+          />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render 7TV badges next to usernames"
             value={show7tvBadges}
             onValueChange={value => update({ show7tvBadges: value })}
+          />
+          <ProviderPreviewItem
+            enabled={show7tvBadges}
+            provider="7tv"
+            variant="badges"
           />
         </SettingsSection>
 
@@ -425,11 +515,21 @@ export function ChatPreferenceScreen() {
             value={showBttvEmotes}
             onValueChange={value => update({ showBttvEmotes: value })}
           />
+          <ProviderPreviewItem
+            enabled={showBttvEmotes}
+            provider="bttv"
+            variant="emotes"
+          />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render BetterTTV badges next to usernames"
             value={showBttvBadges}
             onValueChange={value => update({ showBttvBadges: value })}
+          />
+          <ProviderPreviewItem
+            enabled={showBttvBadges}
+            provider="bttv"
+            variant="badges"
           />
         </SettingsSection>
 
@@ -440,11 +540,21 @@ export function ChatPreferenceScreen() {
             value={showFFzEmotes}
             onValueChange={value => update({ showFFzEmotes: value })}
           />
+          <ProviderPreviewItem
+            enabled={showFFzEmotes}
+            provider="ffz"
+            variant="emotes"
+          />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render FrankerFaceZ badges next to usernames"
             value={showFFzBadges}
             onValueChange={value => update({ showFFzBadges: value })}
+          />
+          <ProviderPreviewItem
+            enabled={showFFzBadges}
+            provider="ffz"
+            variant="badges"
           />
         </SettingsSection>
 
@@ -455,11 +565,21 @@ export function ChatPreferenceScreen() {
             value={showTwitchEmotes}
             onValueChange={value => update({ showTwitchEmotes: value })}
           />
+          <ProviderPreviewItem
+            enabled={showTwitchEmotes}
+            provider="twitch"
+            variant="emotes"
+          />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render native Twitch badges next to usernames"
             value={showTwitchBadges}
             onValueChange={value => update({ showTwitchBadges: value })}
+          />
+          <ProviderPreviewItem
+            enabled={showTwitchBadges}
+            provider="twitch"
+            variant="badges"
           />
         </SettingsSection>
 
@@ -553,6 +673,60 @@ function EmojiStylePreview({ emotes }: { emotes: SanitisedEmote[] }) {
           </View>
         ))}
       </View>
+    </View>
+  );
+}
+
+function ProviderTogglePreviewItem({
+  custom: _custom,
+  enabled,
+  label,
+  onValueChange,
+  provider,
+  variant,
+}: {
+  custom?: true;
+  enabled: boolean;
+  label: string;
+  onValueChange: (value: boolean) => void;
+  provider: '7tv' | 'bttv' | 'ffz' | 'twitch';
+  variant: 'badges' | 'emotes';
+}) {
+  return (
+    <View style={styles.providerTogglePreviewItem}>
+      <View style={styles.providerToggleHeader}>
+        <Text color="gray" style={styles.iosToggleLabel}>
+          {label}
+        </Text>
+        <View style={styles.iosSwitchSlot}>
+          <Switch value={enabled} onValueChange={onValueChange} />
+        </View>
+      </View>
+      <ChatPreferencePreview
+        provider={provider}
+        variant={variant === 'emotes' ? 'providerEmotes' : 'providerBadges'}
+        value={enabled}
+      />
+    </View>
+  );
+}
+
+function ProviderPreviewItem({
+  enabled,
+  provider,
+  variant,
+}: {
+  enabled: boolean;
+  provider: '7tv' | 'bttv' | 'ffz' | 'twitch';
+  variant: 'badges' | 'emotes';
+}) {
+  return (
+    <View style={styles.providerPreviewItem}>
+      <ChatPreferencePreview
+        provider={provider}
+        variant={variant === 'emotes' ? 'providerEmotes' : 'providerBadges'}
+        value={enabled}
+      />
     </View>
   );
 }
@@ -678,5 +852,33 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     padding: theme.space16,
+  },
+  previewSpacer: {
+    marginTop: theme.space8,
+  },
+  providerToggleHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space16,
+    minHeight: 44,
+  },
+  providerTogglePreviewItem: {
+    gap: theme.space8,
+    paddingBottom: theme.space12,
+    paddingHorizontal: 20,
+    paddingTop: theme.space8,
+  },
+  providerPreviewItem: {
+    gap: theme.space8,
+    paddingBottom: theme.space12,
+    paddingHorizontal: 20,
+    paddingTop: theme.space4,
+  },
+  iosPreviewItem: {
+    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: theme.space8,
+    paddingHorizontal: 20,
+    paddingBottom: theme.space12,
   },
 });

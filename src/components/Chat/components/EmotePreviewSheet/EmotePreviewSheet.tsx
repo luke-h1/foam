@@ -2,7 +2,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
@@ -121,6 +121,9 @@ export function EmotePreviewSheet(props: Props) {
         <View style={styles.header}>
           <View style={styles.emoteContainer}>
             <Image
+              useNitro
+              trackLoadTime
+              trackLoadContext="chat.emote-preview"
               source={displayUrl}
               contentFit="contain"
               transition={100}

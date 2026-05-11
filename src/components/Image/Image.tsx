@@ -1,14 +1,10 @@
 /* eslint-disable no-restricted-imports */
-import * as Sentry from '@sentry/react-native';
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
+import { sentryService } from '@app/lib/sentry';
 import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native';
 import { NitroImage } from 'react-native-nitro-image';
-
-const sentryWithExpoImage = Sentry as typeof Sentry & {
-  wrapExpoImage?: (image: typeof ExpoImage) => void;
-};
-
-sentryWithExpoImage.wrapExpoImage?.(ExpoImage);
+import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
+import { useCallback, useRef, useEffect } from 'react';
 
 export const prefetchImage = (source: string | string[]) =>
   ExpoImage.prefetch(source);
@@ -20,6 +16,14 @@ export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
    * Best for chat emotes and high-volume image lists
    */
   useNitro?: boolean;
+  /**
+   * Track load timings and report to Sentry for observability
+   */
+  trackLoadTime?: boolean;
+  /**
+   * Label used for Sentry context when reporting image load timing
+   */
+  trackLoadContext?: string;
   source?: string | { uri: string } | number;
 }
 
@@ -40,10 +44,78 @@ export const Image = function Image({
   source,
   cachePolicy,
   useNitro = false,
+  trackLoadTime = false,
+  trackLoadContext,
   style,
   ...props
 }: ImageProps) {
   const url = getSourceUrl(source);
+  const imageRenderer = useNitro ? 'NitroImage' : 'Image';
+  const trackLoad = Boolean(trackLoadTime && url);
+
+  const reportImageLoadTime = useCallback(
+    (timing: {
+      mountTimestamp: number;
+      loadStartTimestamp: number;
+      loadEndTimestamp: number;
+    }) => {
+      if (!trackLoad) {
+        return;
+      }
+
+      const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
+      const startToLoadTimeMs =
+        timing.loadEndTimestamp - timing.loadStartTimestamp;
+      const safeHost = (() => {
+        if (!url) {
+          return undefined;
+        }
+        try {
+          return new URL(url).hostname;
+        } catch {
+          return undefined;
+        }
+      })();
+
+      sentryService.withScope(scope => {
+        scope.setTag('perf.image.renderer', imageRenderer);
+        scope.setTag('perf.image.context', trackLoadContext ?? 'chat-image');
+        scope.setContext('perf.image.load', {
+          urlHost: safeHost ?? 'unknown',
+          url: typeof source === 'string' ? source : 'uri-object',
+          durationFromMountMs: Math.round(totalLoadTimeMs),
+          durationFromLoadStartMs: Math.round(startToLoadTimeMs),
+        });
+        sentryService.captureMessage('chat.image.load_time', {
+          imageLoadTimeMs: Math.round(totalLoadTimeMs),
+          imageLoadStartTimeMs: Math.round(startToLoadTimeMs),
+          imageRenderer,
+          imageContext: trackLoadContext ?? 'chat-image',
+          host: safeHost,
+        });
+      });
+    },
+    [imageRenderer, trackLoad, trackLoadContext, url, source],
+  );
+
+  const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
+    imageRenderer,
+    reportImageLoadTime,
+    { fallbackToMountStartOnLoadEnd: useNitro },
+  );
+  const didReportNitroLoad = useRef(false);
+
+  useEffect(() => {
+    didReportNitroLoad.current = false;
+  }, [url]);
+
+  const handleNitroLoadEnd = useCallback(() => {
+    if (!useNitro || !trackLoad || didReportNitroLoad.current || !url) {
+      return;
+    }
+    didReportNitroLoad.current = true;
+    onLoadEnd();
+  }, [onLoadEnd, trackLoad, url, useNitro]);
 
   if (useNitro && url) {
     const resizeMode = ((): 'cover' | 'contain' | 'stretch' => {
@@ -60,7 +132,10 @@ export const Image = function Image({
     })();
 
     return (
-      <View style={[styles.container, containerStyle]}>
+      <View
+        style={[styles.container, containerStyle]}
+        onLayout={handleNitroLoadEnd}
+      >
         <NitroImage
           image={{ url }}
           style={style as StyleProp<ViewStyle>}
@@ -89,6 +164,8 @@ export const Image = function Image({
             console.warn('Image loading error:', error);
           }
         }}
+        onLoadStart={trackLoad ? onLoadStart : undefined}
+        onLoadEnd={trackLoad ? onLoadEnd : undefined}
       />
     </View>
   );

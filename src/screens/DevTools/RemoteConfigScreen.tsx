@@ -7,7 +7,7 @@ import {
   IconSymbol,
   IconSymbolName,
 } from '@app/components/IconSymbol/IconSymbol';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import {
   defaultRemoteConfig,
   RemoteConfigKey,

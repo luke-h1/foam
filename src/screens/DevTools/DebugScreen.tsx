@@ -1,12 +1,12 @@
 import { Button } from '@app/components/Button/Button';
 import { Icon } from '@app/components/Icon/Icon';
 import { Switch } from '@app/components/Switch/Switch';
-import { Text } from '@app/components/Text/Text';
-import { TextField } from '@app/components/TextField/TextField';
+import { Text } from '@app/components/ui/Text/Text';
+import { Input } from '@app/components/ui/Input/Input';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { NAMESPACE, storageService } from '@app/services/storage-service';
+import { NAMESPACE, storageService } from '@app/lib/storage';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
@@ -130,13 +130,15 @@ export function DebugScreen() {
             Username → ID
           </Text>
           <View style={styles.inputRow}>
-            <TextField
+            <Input
+              style={styles.input}
               placeholder="username"
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
               autoCorrect={false}
-              containerStyle={styles.inputFlex}
+              variant="outline"
+              radius="sm"
             />
             <Button
               onPress={() => void handleConvertUsername()}
@@ -177,13 +179,15 @@ export function DebugScreen() {
             Join channel
           </Text>
           <View style={styles.inputRow}>
-            <TextField
+            <Input
+              style={styles.input}
               placeholder="channel"
               value={channelName}
               onChangeText={setChannelName}
               autoCapitalize="none"
               autoCorrect={false}
-              containerStyle={styles.inputFlex}
+              variant="outline"
+              radius="sm"
             />
             <Button onPress={handleJoinChannel} style={styles.joinBtn}>
               <Text type="sm" weight="semibold" style={styles.joinBtnText}>
@@ -259,6 +263,9 @@ const styles = StyleSheet.create({
     marginTop: theme.space12,
   },
   inputFlex: {
+    flex: 1,
+  },
+  input: {
     flex: 1,
   },
   inputRow: {

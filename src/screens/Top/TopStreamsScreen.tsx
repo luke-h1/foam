@@ -1,21 +1,25 @@
-import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
 import { Button } from '@app/components/Button/Button';
-import { EmptyState } from '@app/components/EmptyState/EmptyState';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import {
   AnimatedFlashList,
   FlashListRef,
 } from '@app/components/FlashList/FlashList';
+import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
-import { usePreference } from '@app/store/preferenceStore';
+import {
+  type Preferences,
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import {
   getNextPageParam,
@@ -146,6 +150,86 @@ const FeaturedStreamHero = memo(function FeaturedStreamHero({
 
 FeaturedStreamHero.displayName = 'FeaturedStreamHero';
 
+type StreamListLayout = Preferences['streamListLayout'];
+
+const STREAM_LIST_LAYOUT_OPTIONS: Array<{
+  icon: string;
+  label: string;
+  value: StreamListLayout;
+}> = [
+  { icon: 'square', label: 'Compact', value: 'compact' },
+  { icon: 'image', label: 'Media', value: 'media' },
+  { icon: 'align-left', label: 'Text First', value: 'text' },
+];
+
+const StreamLayoutToggle = memo(function StreamLayoutToggle({
+  value,
+  onChange,
+}: {
+  value: StreamListLayout;
+  onChange: (value: StreamListLayout) => void;
+}) {
+  return (
+    <View style={styles.layoutToggleRow}>
+      {STREAM_LIST_LAYOUT_OPTIONS.map(option => {
+        const active = value === option.value;
+
+        return (
+          <Button
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            style={[
+              styles.layoutToggleButton,
+              active && styles.layoutToggleButtonActive,
+            ]}
+          >
+            <Icon
+              icon={option.icon}
+              size={14}
+              color={
+                active ? theme.color.text.dark : theme.color.textSecondary.dark
+              }
+            />
+            <Text
+              type="xxs"
+              weight="semibold"
+              style={[
+                styles.layoutToggleText,
+                active && styles.layoutToggleTextActive,
+              ]}
+            >
+              {option.label}
+            </Text>
+          </Button>
+        );
+      })}
+    </View>
+  );
+});
+
+StreamLayoutToggle.displayName = 'StreamLayoutToggle';
+
+interface TopStreamsListHeaderProps {
+  featuredStream?: TwitchStream;
+  streamListLayout: StreamListLayout;
+  onChangeLayout: (layout: StreamListLayout) => void;
+}
+
+const TopStreamsListHeader = memo(function TopStreamsListHeader({
+  featuredStream,
+  streamListLayout,
+  onChangeLayout,
+}: TopStreamsListHeaderProps) {
+  return (
+    <>
+      {featuredStream ? <FeaturedStreamHero stream={featuredStream} /> : null}
+      <StreamLayoutToggle value={streamListLayout} onChange={onChangeLayout} />
+    </>
+  );
+});
+
+TopStreamsListHeader.displayName = 'TopStreamsListHeader';
+
 interface TopStreamsScreenProps {
   contentTopInset?: number;
   scrollY?: SharedValue<number>;
@@ -157,6 +241,7 @@ export function TopStreamsScreen({
 }: TopStreamsScreenProps = {}) {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
+  const updatePreferences = useUpdatePreferences();
   const listRef = useRef<FlashListRef<TwitchStream>>(null);
 
   useScrollToTop(listRef);
@@ -206,22 +291,29 @@ export function TopStreamsScreen({
     [streamListLayout],
   );
 
-  const allStreams =
-    streams?.pages.flatMap(page => (page?.data ? page.data : [])) ?? [];
-  const [featuredStream, ...remainingStreams] = allStreams;
+  const allStreams = useMemo(
+    () => streams?.pages.flatMap(page => (page?.data ? page.data : [])) ?? [],
+    [streams],
+  );
+  const featuredStream = allStreams[0];
+  const remainingStreams = useMemo(() => allStreams.slice(1), [allStreams]);
+
+  const handleLayoutChange = useCallback(
+    (layout: StreamListLayout) => {
+      updatePreferences({ streamListLayout: layout });
+    },
+    [updatePreferences],
+  );
 
   const listHeader = useMemo(
     () => (
-      <>
-        {featuredStream ? <FeaturedStreamHero stream={featuredStream} /> : null}
-        <EditorialSectionHeader
-          eyebrow="Discover"
-          title="Top live streams"
-          subtitle="Start with the biggest audience in the room, then keep scrolling through the channels already pulling people in."
-        />
-      </>
+      <TopStreamsListHeader
+        featuredStream={featuredStream}
+        streamListLayout={streamListLayout}
+        onChangeLayout={handleLayoutChange}
+      />
     ),
-    [featuredStream],
+    [featuredStream, streamListLayout, handleLayoutChange],
   );
 
   if (refreshing || isLoading) {
@@ -262,11 +354,12 @@ export function TopStreamsScreen({
     <View style={styles.container}>
       <AnimatedFlashList
         ref={listRef}
-        contentInsetAdjustmentBehavior="never"
+        contentInsetAdjustmentBehavior="automatic"
         data={remainingStreams}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         removeClippedSubviews
+        getItemType={() => 'stream-item'}
         drawDistance={500}
         contentContainerStyle={[
           styles.listContent,
@@ -291,6 +384,35 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: theme.space20,
+  },
+  layoutToggleButton: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  layoutToggleButtonActive: {
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.color.border.dark,
+  },
+  layoutToggleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.space8,
+    marginBottom: theme.space20,
+    marginHorizontal: theme.space20,
+  },
+  layoutToggleText: {
+    color: theme.color.textSecondary.dark,
+  },
+  layoutToggleTextActive: {
+    color: theme.color.text.dark,
   },
   heroCard: {
     borderColor: theme.colorBorderSecondary,

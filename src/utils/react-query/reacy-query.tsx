@@ -1,5 +1,4 @@
 import { twitchQueries } from '@app/queries/twitchQueries';
-import Constants from 'expo-constants';
 import {
   listenNetworkConfirmed,
   listenNetworkLost,
@@ -26,10 +25,7 @@ const PERSISTED_QUERIES = [
   twitchQueries.getTopCategories().queryKey,
 ];
 
-const authProxyBaseUrl =
-  (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
-    | string
-    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
+const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
 async function checkIsOnline(): Promise<boolean> {
   try {

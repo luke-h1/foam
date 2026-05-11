@@ -1,4 +1,4 @@
-import { AllowedKey, storageService } from '@app/services/storage-service';
+import { AllowedKey, storageService } from '@app/lib/storage';
 import { useEffect, useState } from 'react';
 
 type DebugOptions = {

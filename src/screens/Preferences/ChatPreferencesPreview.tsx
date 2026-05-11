@@ -1,6 +1,6 @@
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { Icon } from '@app/components/Icon/Icon';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import {
   type ChannelCacheType,
@@ -42,6 +42,10 @@ export type ChatPreferencePreviewProps =
   | {
       variant: 'density';
       value: PreviewState['chatDensity'];
+    }
+  | {
+      variant: 'context';
+      value: Partial<PreviewState>;
     }
   | {
       variant: 'timestamps' | 'mentions' | 'inlineReply' | 'jumpPill';
@@ -109,6 +113,20 @@ export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
           messages={[previewMessages.plain, previewMessages.reply]}
           settings={{ chatDensity: value }}
           testID="chat-preference-preview-density"
+        />
+      );
+    }
+
+    case 'context': {
+      return (
+        <ChatPreviewSurface
+          messages={[
+            previewMessages.plain,
+            previewMessages.reply,
+            previewMessages.mention,
+          ]}
+          settings={value}
+          testID="chat-preference-preview-context"
         />
       );
     }
@@ -588,13 +606,13 @@ function getProviderPreviewColor(provider: PreviewProvider) {
 
 const styles = StyleSheet.create({
   chatSurface: {
-    backgroundColor: theme.color.background.dark,
+    backgroundColor: theme.color.backgroundSecondary.dark,
     borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-    paddingTop: theme.space8,
+    paddingVertical: theme.space8,
     position: 'relative',
   },
   chatSurfaceWithJumpPill: {
@@ -629,22 +647,22 @@ const styles = StyleSheet.create({
   },
   messageRow: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.borderRadius6,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    maxHeight: 480,
     paddingHorizontal: theme.space12,
+    paddingVertical: theme.space2,
   },
   previewCard: {
-    paddingTop: theme.space8,
+    width: '100%',
   },
   providerPreviewSurface: {
-    backgroundColor: theme.color.background.dark,
+    backgroundColor: theme.color.backgroundSecondary.dark,
     borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 44,
+    minHeight: 48,
     overflow: 'hidden',
     paddingVertical: theme.space8,
   },

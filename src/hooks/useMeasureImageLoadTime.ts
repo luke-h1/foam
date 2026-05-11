@@ -1,34 +1,58 @@
 import { logger } from '@app/utils/logger';
 import { useCallback, useReducer, useRef } from 'react';
 
+export type ImageLoadLabel = 'Image' | 'ExpoImage' | 'NitroImage';
+
+export type ImageLoadTiming = {
+  mountTimestamp: number;
+  loadStartTimestamp: number;
+  loadEndTimestamp: number;
+};
+
+type ImageLoadTimingOptions = {
+  fallbackToMountStartOnLoadEnd?: boolean;
+};
+
+export type ImageLoadTimingCallback = (timing: ImageLoadTiming) => void;
+
 export const imageComponentsLoadingTimes: Record<
-  'Image' | 'ExpoImage',
-  {
-    mountTimestamp: number;
-    loadStartTimestamp: number;
-    loadEndTimestamp: number;
-  }[]
+  ImageLoadLabel,
+  ImageLoadTiming[]
 > = {
   Image: [],
   ExpoImage: [],
+  NitroImage: [],
 };
 
-export function useMeasureImageLoadTime(label: 'Image' | 'ExpoImage') {
+export function useMeasureImageLoadTime(
+  label: ImageLoadLabel,
+  onLoadEndCallback?: ImageLoadTimingCallback,
+  options: ImageLoadTimingOptions = {},
+) {
   const imageMountTimestamp = useRef(performance.now());
   const imageLoadStartTimestamp = useRef<number | undefined>(undefined);
 
   const onLoadEnd = useCallback(() => {
-    if (!imageLoadStartTimestamp.current) {
+    const loadStartTimestamp = imageLoadStartTimestamp.current
+      ? imageLoadStartTimestamp.current
+      : options.fallbackToMountStartOnLoadEnd
+        ? imageMountTimestamp.current
+        : undefined;
+
+    if (!loadStartTimestamp) {
       logger.main.error('Image load start timestamp is not set');
       return;
     }
 
-    imageComponentsLoadingTimes[label].push({
+    const timing = {
       mountTimestamp: imageMountTimestamp.current,
-      loadStartTimestamp: imageLoadStartTimestamp.current,
+      loadStartTimestamp,
       loadEndTimestamp: performance.now(),
-    });
-  }, [label]);
+    };
+
+    imageComponentsLoadingTimes[label].push(timing);
+    onLoadEndCallback?.(timing);
+  }, [label, onLoadEndCallback, options.fallbackToMountStartOnLoadEnd]);
 
   const onLoadStart = useCallback(() => {
     imageLoadStartTimestamp.current = performance.now();
@@ -39,12 +63,12 @@ export function useMeasureImageLoadTime(label: 'Image' | 'ExpoImage') {
 
 export function resetImageComponentsLoadingTimes() {
   Object.keys(imageComponentsLoadingTimes).forEach(key => {
-    imageComponentsLoadingTimes[key as 'Image' | 'ExpoImage'] = [];
+    imageComponentsLoadingTimes[key as ImageLoadLabel] = [];
   });
 }
 
 function getTimersData(): Record<
-  'Image' | 'ExpoImage',
+  ImageLoadLabel,
   {
     averageLoadTimeFromMount: number;
     averageLoadTimeFromStartLoading: number;
@@ -71,7 +95,7 @@ function getTimersData(): Record<
       ];
     }),
   ) as Record<
-    'Image' | 'ExpoImage',
+    ImageLoadLabel,
     {
       averageLoadTimeFromMount: number;
       averageLoadTimeFromStartLoading: number;
@@ -84,7 +108,7 @@ export function useTimersData() {
 
   const resetTimers = useCallback(() => {
     Object.keys(imageComponentsLoadingTimes).forEach(key => {
-      imageComponentsLoadingTimes[key as 'Image' | 'ExpoImage'] = [];
+      imageComponentsLoadingTimes[key as ImageLoadLabel] = [];
     });
 
     // Force rerender this component

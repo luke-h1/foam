@@ -5,6 +5,7 @@ import { lightenColor } from '@app/utils/color/lightenColor';
 import { MutableRefObject, useCallback, useRef } from 'react';
 
 const BUFFER_FLUSH_INTERVAL_MS = 50;
+const MAX_BUFFERED_MESSAGES = 600;
 
 const colorCache = new Map<string, string>();
 const MAX_COLOR_CACHE_SIZE = 200;
@@ -73,7 +74,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const { isAtBottomRef, isScrollingToBottomRef, onUnreadIncrement } = options;
 
   const messageBufferRef = useRef<AnyMessage[]>([]);
-  const seenKeysRef = useRef<Set<string>>(new Set());
   const flushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isFlushingRef = useRef(false);
 
@@ -125,9 +125,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         return;
       }
 
-      seenKeysRef.current.add(key);
-
       messageBufferRef.current.push(messageWithCachedColor);
+      if (messageBufferRef.current.length > MAX_BUFFERED_MESSAGES) {
+        messageBufferRef.current = messageBufferRef.current.slice(
+          -MAX_BUFFERED_MESSAGES,
+        );
+      }
 
       const scrollingToBottom = isScrollingToBottomRef?.current ?? false;
       if (!isAtBottomRef.current && !scrollingToBottom) {
@@ -154,7 +157,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
   const clearLocalMessages = useCallback(() => {
     messageBufferRef.current = [];
-    seenKeysRef.current.clear();
   }, []);
 
   const removeBufferedMessageById = useCallback((messageId: string) => {

@@ -1,5 +1,5 @@
 import { BlurView, type BlurViewProps } from 'expo-blur';
-import { selection } from '@app/services/haptics-service';
+import { selection } from '@app/lib/haptics';
 import {
   type ComponentType,
   useCallback,
@@ -7,19 +7,15 @@ import {
   useMemo,
   useState,
 } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  type LayoutChangeEvent,
-} from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 const AnimatedBlurView = Animated.createAnimatedComponent(

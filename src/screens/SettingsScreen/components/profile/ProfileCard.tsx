@@ -1,14 +1,13 @@
 import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
-import { Modal } from '@app/components/Modal/Modal';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
-import { type ReactNode, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { type ReactNode, useMemo, useRef } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 interface ProfileSectionProps {
   title?: string;
@@ -114,8 +113,6 @@ function formatMemberSince(createdAt?: string) {
 
 export function ProfileCard() {
   const { user, logout } = useAuthContext();
-
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -126,12 +123,25 @@ export function ProfileCard() {
   );
 
   const confirmLogout = () => {
-    setShowLogoutModal(false);
-    void logout();
-
-    setTimeout(() => {
-      router.replace('/tabs/top');
-    }, 300);
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out of your account?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              await logout();
+              setTimeout(() => {
+                router.replace('/tabs/top');
+              }, 300);
+            })();
+          },
+        },
+      ],
+    );
   };
 
   if (!user) {
@@ -259,24 +269,10 @@ export function ProfileCard() {
             icon="log-out"
             destructive
             showChevron={false}
-            onPress={() => setShowLogoutModal(true)}
+            onPress={confirmLogout}
           />
         </ProfileSection>
       </ScrollView>
-
-      <Modal
-        title="Sign Out"
-        subtitle="Are you sure you want to sign out of your account?"
-        confirmOnPress={{
-          cta: confirmLogout,
-          label: 'Sign Out',
-        }}
-        cancelOnPress={{
-          cta: () => setShowLogoutModal(false),
-          label: 'Cancel',
-        }}
-        isVisible={showLogoutModal}
-      />
     </>
   );
 }

@@ -2,7 +2,7 @@ import { Button } from '@app/components/Button/Button';
 import { FlashList, ListRenderItem } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
   clearPaints,

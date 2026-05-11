@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { Icon } from '@app/components/Icon/Icon';
-import { Text } from '@app/components/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
@@ -176,10 +176,7 @@ ChatInputSection.displayName = 'ChatInputSection';
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: 20,
-    borderWidth: 1,
+    backgroundColor: 'transparent',
     height: 40,
     justifyContent: 'center',
     width: 40,
@@ -189,11 +186,11 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   inputRow: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space8,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    gap: theme.space4,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
   },
   replyContent: {
     flex: 1,
@@ -246,18 +243,18 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorDarkGreen,
-    borderRadius: 20,
+    backgroundColor: 'transparent',
     height: 40,
     justifyContent: 'center',
     width: 40,
   },
   sendButtonDisabled: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
+    backgroundColor: 'transparent',
+    opacity: 0.6,
   },
   wrapper: {
-    backgroundColor: theme.colorBlackOverlay,
-    borderTopColor: theme.colorBorderSecondary,
+    backgroundColor: '#2b2b2b',
+    borderTopColor: '#454545',
     borderTopWidth: 1,
   },
 });

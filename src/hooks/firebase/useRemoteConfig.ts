@@ -6,6 +6,7 @@ import {
   getAll,
   getRemoteConfig,
   setConfigSettings,
+  setDefaults,
 } from '@react-native-firebase/remote-config';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -71,8 +72,12 @@ export const defaultRemoteConfig = {
 const jsonKeys: RemoteConfigKey[] = ['splash', 'minimumVersion'];
 
 function getErrorMessage(error: unknown): string | null {
-  if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
   if (
     typeof error === 'object' &&
     error !== null &&
@@ -123,7 +128,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
   ) as RemoteConfigType;
 }
 
-remoteConfig.setDefaults(defaultRemoteConfig).catch(e => {
+setDefaults(remoteConfig, defaultRemoteConfig).catch(e => {
   logger.remoteConfig.error('Failed to set default remote config values', e);
 });
 

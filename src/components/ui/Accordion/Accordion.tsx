@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { androidTick, impact } from '@app/services/haptics-service';
+import { androidTick, impact } from '@app/lib/haptics';
 import { BlurView, type BlurViewProps } from 'expo-blur';
 import {
   Children,
@@ -18,10 +18,10 @@ import {
   LayoutChangeEvent,
   Platform,
   // eslint-disable-next-line no-restricted-imports
-  Pressable,
   StyleSheet,
   View,
 } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
   useAnimatedProps,

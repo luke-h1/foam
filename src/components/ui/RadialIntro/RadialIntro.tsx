@@ -4,10 +4,10 @@ import React, { useEffect, memo, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
-  Pressable,
   type ImageStyle,
   type ViewStyle,
 } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,

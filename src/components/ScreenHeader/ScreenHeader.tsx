@@ -10,7 +10,7 @@ import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton } from '../IconButton/IconButton';
 import { Image } from '../Image/Image';
-import { Text, TextType, TextWeight } from '../Text/Text';
+import { Text, TextType, TextWeight } from '@app/components/ui/Text/Text';
 
 /**
  * Unified header component that supports both standard and hero layouts

@@ -1,5 +1,5 @@
 /* eslint-disable react/destructuring-assignment */
-import { sentryService } from '@app/services/sentry-service';
+import { recordError } from '@app/lib/sentry';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { ErrorDetails, type ErrorDetailsProps } from './ErrorDetails';
 
@@ -41,7 +41,16 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    sentryService.captureException(error);
+    recordError({
+      name: 'ErrorBoundaryError',
+      message: error.message || 'Unhandled error boundary exception',
+      params: {
+        category: 'ErrorBoundary',
+        action: 'component_catch',
+        componentStack: errorInfo.componentStack,
+      },
+      errorCause: error,
+    });
   }
 
   // reset the error back to null

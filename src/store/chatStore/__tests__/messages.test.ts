@@ -1,6 +1,7 @@
 import type { ChatMessageType } from '../constants';
 import {
   addMessage,
+  addMessages,
   clearMessages,
   getMessageById,
   moderateMessageById,
@@ -9,6 +10,11 @@ import {
   restoreRecentMessagesForChannel,
 } from '../messages';
 import { chatStore$ } from '../state';
+
+jest.mock('@legendapp/state/persist', () => ({
+  configureObservablePersistence: jest.fn(),
+  persistObservable: jest.fn(),
+}));
 
 jest.mock('react-native-mmkv', () => ({
   MMKV: class MockMMKV {
@@ -71,6 +77,7 @@ describe('chatStore messages', () => {
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     clearMessages();
     chatStore$.currentChannelId.set(null);
     chatStore$.persisted.recentMessagesByChannel.set({});
@@ -133,5 +140,62 @@ describe('chatStore messages', () => {
     expect(
       chatStore$.messages.peek().map(message => message.message_id),
     ).toEqual(['msg-1', 'msg-2']);
+  });
+
+  test('addMessages defers recent-message persistence off the live chat path', () => {
+    jest.useFakeTimers();
+    chatStore$.currentChannelId.set('channel-1');
+
+    addMessages([
+      createMessage('msg-1', 'nonce-1', 'first'),
+      createMessage('msg-2', 'nonce-2', 'second'),
+    ] as ChatMessageType<never>[]);
+
+    expect(chatStore$.messages.peek()).toHaveLength(2);
+    expect(
+      chatStore$.persisted.recentMessagesByChannel.peek()['channel-1'],
+    ).toBeUndefined();
+
+    jest.advanceTimersByTime(1000);
+
+    expect(
+      chatStore$.persisted.recentMessagesByChannel
+        .peek()
+        ['channel-1']?.map(message => message.message_id),
+    ).toEqual(['msg-1', 'msg-2']);
+
+    jest.useRealTimers();
+  });
+
+  test('addMessages indexes new messages without rebuilding the full window', () => {
+    addMessages([
+      createMessage('msg-1', 'nonce-1', 'first'),
+      createMessage('msg-2', 'nonce-2', 'second'),
+    ] as ChatMessageType<never>[]);
+
+    expect(getMessageById('msg-1')?.message).toEqual([
+      { type: 'text', content: 'first' },
+    ]);
+    expect(getMessageById('msg-2')?.message).toEqual([
+      { type: 'text', content: 'second' },
+    ]);
+  });
+
+  test('addMessages keeps the in-memory chat window bounded', () => {
+    addMessages(
+      Array.from({ length: 650 }, (_, index) =>
+        createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
+      ) as ChatMessageType<never>[],
+    );
+
+    const messages = chatStore$.messages.peek();
+
+    expect(messages).toHaveLength(600);
+    expect(messages[0]?.message_id).toBe('msg-50');
+    expect(messages.at(-1)?.message_id).toBe('msg-649');
+    expect(getMessageById('msg-0')).toBeUndefined();
+    expect(getMessageById('msg-649')?.message).toEqual([
+      { type: 'text', content: '649' },
+    ]);
   });
 });
