@@ -179,6 +179,28 @@ function touchRecord(record: CacheRecord): string {
   return record.uri;
 }
 
+function cachedFileExists(record: CacheRecord): boolean {
+  try {
+    return new File(record.uri).exists;
+  } catch {
+    return false;
+  }
+}
+
+function getValidRecord(key: string): CacheRecord | undefined {
+  const record = manifest.get(key);
+  if (!record) {
+    return undefined;
+  }
+
+  if (!cachedFileExists(record)) {
+    removeRecord(key);
+    return undefined;
+  }
+
+  return record;
+}
+
 function sortTasks(): void {
   taskQueue.sort((a, b) => {
     const priorityDelta =
@@ -300,7 +322,7 @@ export async function cacheImageFromUrl(
   }
 
   const key = getCacheKey(url, options.variant);
-  const existing = manifest.get(key);
+  const existing = getValidRecord(key);
   if (existing) {
     return touchRecord(existing);
   }
@@ -364,7 +386,8 @@ export function getCachedImageUri(
   if (!url) {
     return null;
   }
-  return manifest.get(getCacheKey(url, options.variant))?.uri ?? null;
+  const record = getValidRecord(getCacheKey(url, options.variant));
+  return record ? touchRecord(record) : null;
 }
 
 export async function getCachedImageAsBase64(fileUri: string): Promise<string> {

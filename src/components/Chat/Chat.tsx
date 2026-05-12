@@ -575,6 +575,67 @@ async function getSharedChatBadgeContext(
   };
 }
 
+function getCachedSharedChatBadgeContext(
+  userstate: ReturnType<typeof createUserStateFromTags>,
+): {
+  isComplete: boolean;
+  sourceBadge: SanitisedBadgeSet | null | undefined;
+  sourceChannelBadges: SanitisedBadgeSet[] | undefined;
+} | null {
+  const sourceRoomId = getSharedChatSourceRoomId(userstate);
+  if (!sourceRoomId) {
+    return null;
+  }
+
+  const sourceBadge = getTimedCacheValue(
+    sharedChatSourceBadgeCache,
+    sourceRoomId,
+  );
+  const sourceChannelBadges = getTimedCacheValue(
+    sharedChatChannelBadgesCache,
+    sourceRoomId,
+  );
+
+  return {
+    isComplete: sourceBadge !== undefined && sourceChannelBadges !== undefined,
+    sourceBadge,
+    sourceChannelBadges,
+  };
+}
+
+type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
+
+function getMessageBadges({
+  emoteData,
+  sourceBadge,
+  sourceChannelBadges,
+  userstate,
+}: {
+  emoteData: ChatEmoteData;
+  sourceBadge?: SanitisedBadgeSet | null;
+  sourceChannelBadges?: SanitisedBadgeSet[] | null;
+  userstate: ReturnType<typeof createUserStateFromTags>;
+}): SanitisedBadgeSet[] {
+  const foundBadges = findBadges({
+    userstate,
+    chatterinoBadges: emoteData.chatterinoBadges,
+    chatUsers: [],
+    ffzChannelBadges: emoteData.ffzChannelBadges,
+    ffzGlobalBadges: emoteData.ffzGlobalBadges,
+    twitchChannelBadges: sourceChannelBadges ?? emoteData.twitchChannelBadges,
+    twitchGlobalBadges: emoteData.twitchGlobalBadges,
+  });
+
+  if (!sourceBadge) {
+    return foundBadges;
+  }
+
+  return [
+    sourceBadge,
+    ...foundBadges.filter(badge => badge.set !== sourceBadge.set),
+  ];
+}
+
 const ChatMessagePane = memo(
   ({
     channelId,
@@ -1731,31 +1792,44 @@ export const Chat = memo(
             bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
           });
 
-          const { sourceBadge, sourceChannelBadges } =
-            await getSharedChatBadgeContext(userstate);
-
-          const foundBadges = findBadges({
+          const cachedSharedBadgeContext =
+            getCachedSharedChatBadgeContext(userstate);
+          const badges = getMessageBadges({
             userstate,
-            chatterinoBadges: emoteData.chatterinoBadges,
-            chatUsers: [],
-            ffzChannelBadges: emoteData.ffzChannelBadges,
-            ffzGlobalBadges: emoteData.ffzGlobalBadges,
-            twitchChannelBadges:
-              sourceChannelBadges ?? emoteData.twitchChannelBadges,
-            twitchGlobalBadges: emoteData.twitchGlobalBadges,
+            emoteData,
+            sourceBadge: cachedSharedBadgeContext?.sourceBadge,
+            sourceChannelBadges: cachedSharedBadgeContext?.sourceChannelBadges,
           });
-          const replacedBadges = sourceBadge
-            ? [
-                sourceBadge,
-                ...foundBadges.filter(badge => badge.set !== sourceBadge.set),
-              ]
-            : foundBadges;
 
           handleNewMessage({
             ...baseMessage,
             message: replacedMessage,
-            badges: replacedBadges,
+            badges,
           });
+
+          if (cachedSharedBadgeContext?.isComplete === false) {
+            void getSharedChatBadgeContext(userstate)
+              .then(({ sourceBadge, sourceChannelBadges }) => {
+                updateMessage(
+                  baseMessage.message_id,
+                  baseMessage.message_nonce,
+                  {
+                    badges: getMessageBadges({
+                      userstate,
+                      emoteData,
+                      sourceBadge,
+                      sourceChannelBadges,
+                    }),
+                  },
+                );
+              })
+              .catch(error => {
+                logger.chat.debug(
+                  'Failed to update shared chat badges:',
+                  error,
+                );
+              });
+          }
         } catch (error) {
           logger.chat.error('Error processing emotes:', error);
           handleNewMessage(baseMessage);
@@ -1819,27 +1893,16 @@ export const Chat = memo(
 
           const { sourceBadge, sourceChannelBadges } =
             await getSharedChatBadgeContext(message.userstate);
-
-          const foundBadges = findBadges({
+          const badges = getMessageBadges({
             userstate: message.userstate,
-            chatterinoBadges: emoteData.chatterinoBadges,
-            chatUsers: [],
-            ffzChannelBadges: emoteData.ffzChannelBadges,
-            ffzGlobalBadges: emoteData.ffzGlobalBadges,
-            twitchChannelBadges:
-              sourceChannelBadges ?? emoteData.twitchChannelBadges,
-            twitchGlobalBadges: emoteData.twitchGlobalBadges,
+            emoteData,
+            sourceBadge,
+            sourceChannelBadges,
           });
-          const replacedBadges = sourceBadge
-            ? [
-                sourceBadge,
-                ...foundBadges.filter(badge => badge.set !== sourceBadge.set),
-              ]
-            : foundBadges;
 
           updateMessage(message.message_id, message.message_nonce, {
             message: replacedMessage,
-            badges: replacedBadges,
+            badges,
           });
         } catch (error) {
           logger.chat.debug('Failed to reprocess visible chat message:', error);
