@@ -58,7 +58,7 @@ export function reprocessMessages(
     text: string,
     userstate: AnyChatMessageType['userstate'],
     baseMessage: AnyChatMessageType,
-  ) => void,
+  ) => void | Promise<void>,
 ): void {
   if (messages.length === 0) {
     return;
@@ -72,7 +72,7 @@ export function reprocessMessages(
     const textContent = extractTextFromMessage(msg.message);
 
     if (textContent.trim()) {
-      processMessageEmotes(textContent, msg.userstate, msg);
+      void processMessageEmotes(textContent, msg.userstate, msg);
     }
   });
 }

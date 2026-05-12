@@ -96,7 +96,9 @@ export function SettingsRow({
     </View>
   );
 
-  if (!onPress) return content;
+  if (!onPress) {
+    return content;
+  }
 
   return (
     <PressableArea

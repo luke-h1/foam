@@ -7,4 +7,3 @@ export const view = {
     return () => <View testID="storybook-ui-mock" />;
   },
 };
-

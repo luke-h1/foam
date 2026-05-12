@@ -1,7 +1,7 @@
-import type { ExpoConfig } from "@expo/config";
-import type { AppIconBadgeConfig } from "app-icon-badge/types";
-import * as fs from "fs";
-import * as path from "path";
+import type { ExpoConfig } from '@expo/config';
+import type { AppIconBadgeConfig } from 'app-icon-badge/types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface AppVariantConfig {
   name: string;
@@ -16,165 +16,160 @@ interface AppVariantConfig {
 }
 
 export type Variant =
-  | "development"
-  | "internal"
-  | "testflight"
-  | "e2e"
-  | "production";
+  | 'development'
+  | 'internal'
+  | 'testflight'
+  | 'e2e'
+  | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
 const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   development: {
-    name: "Foam (dev)",
-    icon: "./assets/splash/splash-image-production.png",
-    iosBundleIdentifier: "foam-tv-dev",
-    androidPackageName: "com.lhowsam.foam.dev",
-    splashImage: "./assets/splash/splash-image-production.png",
-    splashBackgroundColor: "#000000",
-    iosGoogleServicesFile: "./GoogleService-Info-dev.plist",
-    androidGoogleServicesFile: "./google-services-dev.json",
+    name: 'Foam (dev)',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv-dev',
+    androidPackageName: 'com.lhowsam.foam.dev',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
+    iosGoogleServicesFile: './GoogleService-Info-dev.plist',
+    androidGoogleServicesFile: './google-services-dev.json',
   },
   internal: {
-    name: "Foam (internal)",
-    icon: "./assets/splash/splash-image-production.png",
-    iosBundleIdentifier: "foam-tv-internal",
-    androidPackageName: "com.lhowsam.foam.internal",
-    splashImage: "./assets/splash/splash-image-production.png",
-    splashBackgroundColor: "#000000",
-    iosGoogleServicesFile: "./GoogleService-Info-internal.plist",
-    androidGoogleServicesFile: "./google-services-internal.json",
+    name: 'Foam (internal)',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv-internal',
+    androidPackageName: 'com.lhowsam.foam.internal',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
+    iosGoogleServicesFile: './GoogleService-Info-internal.plist',
+    androidGoogleServicesFile: './google-services-internal.json',
   },
   testflight: {
-    name: "Foam (TestFlight)",
-    icon: "./assets/splash/splash-image-production.png",
-    iosBundleIdentifier: "foam-tv-testflight",
-    androidPackageName: "com.lhowsam.foam.testflight",
-    splashImage: "./assets/splash/splash-image-production.png",
-    splashBackgroundColor: "#000000",
-    iosGoogleServicesFile: "./GoogleService-Info-testflight.plist",
-    androidGoogleServicesFile: "./google-services-testflight.json",
+    name: 'Foam (TestFlight)',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv-testflight',
+    androidPackageName: 'com.lhowsam.foam.testflight',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
+    iosGoogleServicesFile: './GoogleService-Info-testflight.plist',
+    androidGoogleServicesFile: './google-services-testflight.json',
   },
   e2e: {
-    name: "Foam (E2E)",
-    icon: "./assets/splash/splash-image-production.png",
-    iosBundleIdentifier: "foam-tv-e2e",
-    androidPackageName: "com.lhowsam.foam.e2e",
-    splashImage: "./assets/splash/splash-image-production.png",
-    splashBackgroundColor: "#000000",
-    iosGoogleServicesFile: "./GoogleService-Info-prod.plist",
-    androidGoogleServicesFile: "./google-services-prod.json",
-    mockServerUrl: "http://localhost:3001",
+    name: 'Foam (E2E)',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv-e2e',
+    androidPackageName: 'com.lhowsam.foam.e2e',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
+    iosGoogleServicesFile: './GoogleService-Info-prod.plist',
+    androidGoogleServicesFile: './google-services-prod.json',
+    mockServerUrl: 'http://localhost:3001',
   },
   production: {
-    name: "Foam",
-    icon: "./assets/splash/splash-image-production.png",
-    iosBundleIdentifier: "foam-tv",
-    androidPackageName: "com.lhowsam.foam",
-    splashImage: "./assets/splash/splash-image-production.png",
-    splashBackgroundColor: "#000000",
+    name: 'Foam',
+    icon: './assets/splash/splash-image-production.png',
+    iosBundleIdentifier: 'foam-tv',
+    androidPackageName: 'com.lhowsam.foam',
+    splashImage: './assets/splash/splash-image-production.png',
+    splashBackgroundColor: '#000000',
     iosGoogleServicesFile:
       (process.env.IOS_GOOGLE_SERVICES_JSON as string) ||
-      "./GoogleService-Info-prod.plist",
-    androidGoogleServicesFile: "./google-services-prod.json",
+      './GoogleService-Info-prod.plist',
+    androidGoogleServicesFile: './google-services-prod.json',
   },
 } as const;
 
-const variant = (process.env.APP_VARIANT as Variant) || "development";
+const variant = (process.env.APP_VARIANT as Variant) || 'development';
 
-const VERSION = "0.0.39";
+const VERSION = '0.0.39';
 
 const appConfig = APP_VARIANT_CONFIG[variant];
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
 const enableICloudEntitlements =
-  process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === "true";
+  process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === 'true';
 
 const iosGoogleServicesFileExists = fs.existsSync(
-  path.resolve(__dirname, appConfig.iosGoogleServicesFile)
+  path.resolve(__dirname, appConfig.iosGoogleServicesFile),
 );
 
 const googleServicesExist = fs.existsSync(
-  path.resolve(__dirname, appConfig.androidGoogleServicesFile)
+  path.resolve(__dirname, appConfig.androidGoogleServicesFile),
 );
 
 const appIconBadgeConfig: AppIconBadgeConfig = {
-  enabled: variant !== "production",
+  enabled: variant !== 'production',
   badges: [
     {
       text: variant,
-      type: "banner",
-      color: "white",
-      background: "#FF0000",
+      type: 'banner',
+      color: 'white',
+      background: '#FF0000',
     },
     {
       text: VERSION,
-      type: "ribbon",
+      type: 'ribbon',
     },
   ],
 };
 
 const quickActions = [
   {
-    id: "following",
-    title: "Following",
-    subtitle: "Open followed channels",
-    icon: "favorite",
+    id: 'following',
+    title: 'Following',
+    subtitle: 'Open followed channels',
+    icon: 'favorite',
     params: {
-      href: "/tabs/following",
+      href: '/tabs/following',
     },
   },
   {
-    id: "live",
-    title: "Live",
-    subtitle: "Browse live streams",
-    icon: "play",
+    id: 'live',
+    title: 'Live',
+    subtitle: 'Browse live streams',
+    icon: 'play',
     params: {
-      href: "/tabs/top/streams",
+      href: '/tabs/top/streams',
     },
   },
   {
-    id: "search",
-    title: "Search",
-    subtitle: "Find streamers and categories",
-    icon: "search",
+    id: 'search',
+    title: 'Search',
+    subtitle: 'Find streamers and categories',
+    icon: 'search',
     params: {
-      href: "/tabs/search",
+      href: '/tabs/search',
     },
   },
 ] as const;
 
 const config: ExpoConfig = {
   name: appConfig.name,
-  slug: "foam",
+  slug: 'foam',
   version: VERSION,
-  scheme: "foam",
-  owner: "lukehowsam123",
-  icon: "./assets/app-icon/app-icon-production.png",
-  userInterfaceStyle: "dark",
-  splash: {
-    image: appConfig.splashImage,
-    resizeMode: "contain",
-    backgroundColor: appConfig.splashBackgroundColor,
-  },
+  scheme: 'foam',
+  owner: 'lukehowsam123',
+  icon: './assets/app-icon/app-icon-production.png',
+  userInterfaceStyle: 'dark',
   updates: {
-    url: "https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e",
+    url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
     // Configure the channel to "local" for local development, if we
     // compile/run locally EAS Build will configure this for us automatically
     // based on the value provided in the build profile, and that will
     // overwrite this value.
     requestHeaders: {
-      "expo-channel-name": "local",
+      'expo-channel-name': 'local',
     },
     // Disable automatic update checks on launch to prevent blank screen issues
     // Updates are checked manually after the app has fully loaded
-    checkAutomatically: "NEVER",
+    checkAutomatically: 'NEVER',
     fallbackToCacheTimeout: 30000,
   },
   runtimeVersion: {
-    policy: "appVersion",
+    policy: 'appVersion',
   },
   extra: {
     router: {
-      root: "src/app",
+      root: 'src/app',
     },
     EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL:
       process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL,
@@ -182,76 +177,76 @@ const config: ExpoConfig = {
     EXPO_PUBLIC_AUTH_PROXY_API_KEY: process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
     MOCK_SERVER_URL: appConfig.mockServerUrl,
     ota: {
-      criticalIndex: Number.parseInt(process.env.OTA_CRITICAL_INDEX ?? "0", 10),
+      criticalIndex: Number.parseInt(process.env.OTA_CRITICAL_INDEX ?? '0', 10),
     },
     updates: {
-      assetPatternsToBeBundled: ["**/*"],
+      assetPatternsToBeBundled: ['**/*'],
     },
     eas: {
-      projectId: "950a1e2f-6b25-4be7-adb2-3c16287a2b5e",
+      projectId: '950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
     },
   },
   plugins: [
-    "expo-router",
-    "expo-image",
-    "react-native-compressor",
+    'expo-router',
+    'expo-image',
+    'react-native-compressor',
     [
-      "@sentry/react-native/expo",
+      '@sentry/react-native/expo',
       {
-        url: "https://sentry.io/",
-        note: "Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.",
-        project: "foam",
-        organization: "luke-howsam",
+        url: 'https://sentry.io/',
+        note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
+        project: 'foam',
+        organization: 'luke-howsam',
         useNativeInit: true,
       },
     ],
     [
-      "expo-media-library",
+      'expo-media-library',
       {
         photosPermission:
-          "Allow $(PRODUCT_NAME) to access your photos to download emotes/badges",
-        savePhotosPermission: "Allow $(PRODUCT_NAME) to save emotes/badges.",
+          'Allow $(PRODUCT_NAME) to access your photos to download emotes/badges',
+        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save emotes/badges.',
         isAccessMediaLocationEnabled: true,
-        granularPermissions: ["audio", "photo"],
+        granularPermissions: ['audio', 'photo'],
       },
     ],
     [
-      "expo-quick-actions",
+      'expo-quick-actions',
       {
         iosActions: quickActions,
       },
     ],
-    ["app-icon-badge", appIconBadgeConfig],
-    "@react-native-community/datetimepicker",
-    "expo-secure-store",
+    ['app-icon-badge', appIconBadgeConfig],
+    '@react-native-community/datetimepicker',
+    'expo-secure-store',
     [
-      "expo-font",
+      'expo-font',
       {
         fonts: [
-          "node_modules/@expo-google-fonts/source-code-pro/400Regular",
-          "node_modules/@expo-google-fonts/source-code-pro/600SemiBold",
-          "node_modules/@expo-google-fonts/source-code-pro/700Bold",
+          'node_modules/@expo-google-fonts/source-code-pro/400Regular',
+          'node_modules/@expo-google-fonts/source-code-pro/600SemiBold',
+          'node_modules/@expo-google-fonts/source-code-pro/700Bold',
         ],
         android: {
           permissions: [
-            "android.permission.READ_EXTERNAL_STORAGE",
-            "android.permission.WRITE_EXTERNAL_STORAGE",
-            "android.permission.ACCESS_MEDIA_LOCATION",
+            'android.permission.READ_EXTERNAL_STORAGE',
+            'android.permission.WRITE_EXTERNAL_STORAGE',
+            'android.permission.ACCESS_MEDIA_LOCATION',
           ],
           fonts: [
             {
-              fontFamily: "SourceCodePro",
+              fontFamily: 'SourceCodePro',
               fontDefinitions: [
                 {
-                  path: "node_modules/@expo-google-fonts/source-code-pro/400Regular/SourceCodePro_400Regular.ttf",
+                  path: 'node_modules/@expo-google-fonts/source-code-pro/400Regular/SourceCodePro_400Regular.ttf',
                   weight: 400,
                 },
                 {
-                  path: "node_modules/@expo-google-fonts/source-code-pro/600SemiBold/SourceCodePro_600SemiBold.ttf",
+                  path: 'node_modules/@expo-google-fonts/source-code-pro/600SemiBold/SourceCodePro_600SemiBold.ttf',
                   weight: 600,
                 },
                 {
-                  path: "node_modules/@expo-google-fonts/source-code-pro/700Bold/SourceCodePro_700Bold.ttf",
+                  path: 'node_modules/@expo-google-fonts/source-code-pro/700Bold/SourceCodePro_700Bold.ttf',
                   weight: 700,
                 },
               ],
@@ -260,17 +255,17 @@ const config: ExpoConfig = {
         },
       },
     ],
-    "@bacons/apple-colors",
+    '@bacons/apple-colors',
     // '@bacons/apple-targets',
-    "react-native-legal",
-    "react-native-edge-to-edge",
+    'react-native-legal',
+    'react-native-edge-to-edge',
     [
-      "expo-build-properties",
+      'expo-build-properties',
       {
         ios: {
-          useFrameworks: "static",
-          forceStaticLinking: ["RNFBApp"],
-          deploymentTarget: "26.0",
+          useFrameworks: 'static',
+          forceStaticLinking: ['RNFBApp'],
+          deploymentTarget: '26.0',
         },
         android: {
           enableProguardInReleaseBuilds: true,
@@ -279,9 +274,9 @@ const config: ExpoConfig = {
         },
       },
     ],
-    "./src/plugins/withIosStaticFrameworkHeaderFix.js",
-    "@react-native-firebase/app",
-    "./src/plugins/withAndroidReleaseLintFix.js",
+    './src/plugins/withIosStaticFrameworkHeaderFix.js',
+    '@react-native-firebase/app',
+    './src/plugins/withAndroidReleaseLintFix.js',
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
     // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
@@ -292,33 +287,33 @@ const config: ExpoConfig = {
   },
   web: {},
   ios: {
-    appleTeamId: "XJA7HDCMMY",
+    appleTeamId: 'XJA7HDCMMY',
     supportsTablet: false,
     bundleIdentifier: appConfig.iosBundleIdentifier,
     googleServicesFile: iosGoogleServicesFileExists
       ? appConfig.iosGoogleServicesFile
       : undefined,
-    icon: "./assets/app-icon.icon",
+    icon: './assets/app-icon.icon',
     config: {
       // needed for expo-secure-store
       usesNonExemptEncryption: false,
     },
     infoPlist: {
       NSSupportsLiveActivities: true,
-      NSPhotoLibraryUsageDescription: "Used for saving emotes/badges",
-      UIBackgroundModes: ["audio"],
+      NSPhotoLibraryUsageDescription: 'Used for saving emotes/badges',
+      UIBackgroundModes: ['audio'],
     },
     entitlements: enableICloudEntitlements
       ? {
-          "com.apple.developer.icloud-container-identifiers": [
+          'com.apple.developer.icloud-container-identifiers': [
             iosICloudContainerIdentifier,
           ],
-          "com.apple.developer.icloud-services": ["CloudDocuments"],
-          "com.apple.developer.ubiquity-container-identifiers": [
+          'com.apple.developer.icloud-services': ['CloudDocuments'],
+          'com.apple.developer.ubiquity-container-identifiers': [
             iosICloudContainerIdentifier,
           ],
-          "com.apple.developer.ubiquity-kvstore-identifier":
-            "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
+          'com.apple.developer.ubiquity-kvstore-identifier':
+            '$(TeamIdentifierPrefix)$(CFBundleIdentifier)',
         }
       : undefined,
   },
@@ -328,19 +323,19 @@ const config: ExpoConfig = {
       ? appConfig.androidGoogleServicesFile
       : undefined,
     adaptiveIcon: {
-      foregroundImage: "./assets/android-icon.png",
-      backgroundImage: "./assets/android-icon.png",
-      monochromeImage: "./assets/android-icon.png",
+      foregroundImage: './assets/android-icon.png',
+      backgroundImage: './assets/android-icon.png',
+      monochromeImage: './assets/android-icon.png',
     },
     intentFilters: [
       {
-        action: "VIEW",
+        action: 'VIEW',
         autoVerify: true,
-        category: ["BROWSABLE", "DEFAULT"],
+        category: ['BROWSABLE', 'DEFAULT'],
         data: [
-          { scheme: "https", host: "www.twitch.tv" },
-          { scheme: "https", host: "twitch.tv" },
-          { scheme: "https", host: "m.twitch.tv" },
+          { scheme: 'https', host: 'www.twitch.tv' },
+          { scheme: 'https', host: 'twitch.tv' },
+          { scheme: 'https', host: 'm.twitch.tv' },
         ],
       },
     ],

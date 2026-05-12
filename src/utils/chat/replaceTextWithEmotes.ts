@@ -288,7 +288,9 @@ export function findEmotesInText(
       const emote = emoteMap.get(emoteName);
       if (emote) {
         const isTwitchEmote =
-          emote.site === 'Twitch Global' || emote.site === 'Twitch Channel';
+          emote.site === 'Twitch Global' ||
+          emote.site === 'Twitch Channel' ||
+          emote.site === 'Twitch Subscriber';
 
         if (isTwitchEmote) {
           const exactMatch = text.slice(currentIndex).startsWith(emoteName);
@@ -379,6 +381,7 @@ export function replaceTextWithEmotes({
   sevenTvGlobalEmotes,
   sevenTvPersonalEmotes = [],
   twitchGlobalEmotes,
+  twitchSubscriberEmotes = [],
   bttvChannelEmotes,
   bttvGlobalEmotes,
   ffzChannelEmotes,
@@ -394,6 +397,7 @@ export function replaceTextWithEmotes({
   sevenTvPersonalEmotes?: SanitisedEmote[];
   twitchGlobalEmotes: SanitisedEmote[];
   twitchChannelEmotes: SanitisedEmote[];
+  twitchSubscriberEmotes?: SanitisedEmote[];
   ffzChannelEmotes: SanitisedEmote[];
   ffzGlobalEmotes: SanitisedEmote[];
   bttvChannelEmotes: SanitisedEmote[];
@@ -405,12 +409,6 @@ export function replaceTextWithEmotes({
 
   const emoteMap = new Map<string, SanitisedEmote>();
   const emojiMap = new Map<string, SanitisedEmote>();
-
-  /**
-   * Personal emotes have the highest priority (only the sender can use them)
-   * Then channel emotes take priority over global emotes
-   */
-  const personalEmotes = [...sevenTvPersonalEmotes] as const;
 
   const channelEmotes = [
     ...sevenTvChannelEmotes,
@@ -427,8 +425,12 @@ export function replaceTextWithEmotes({
     ...bttvGlobalEmotes,
   ] as const;
 
-  // Add personal emotes first (highest priority)
-  personalEmotes.forEach(emote => {
+  // Add sender-scoped emotes first (highest priority).
+  sevenTvPersonalEmotes.forEach(emote => {
+    emoteMap.set(emote.name, emote);
+  });
+
+  twitchSubscriberEmotes.forEach(emote => {
     emoteMap.set(emote.name, emote);
   });
 

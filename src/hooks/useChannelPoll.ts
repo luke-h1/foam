@@ -62,19 +62,25 @@ export function useChannelPoll(channelId?: string) {
 
     const handleBegin = (message: EventSubMessage) => {
       const event = message.event as TwitchEventSubPoll | undefined;
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       setPoll(normaliseEventSubPoll(event, 'active'));
     };
 
     const handleProgress = (message: EventSubMessage) => {
       const event = message.event as TwitchEventSubPoll | undefined;
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       setPoll(normaliseEventSubPoll(event, 'active'));
     };
 
     const handleEnd = (message: EventSubMessage) => {
       const event = message.event as TwitchEventSubPoll | undefined;
-      if (!event) return;
+      if (!event) {
+        return;
+      }
       setPoll(normaliseEventSubPoll(event, 'completed'));
     };
 

@@ -38,7 +38,9 @@ export async function preloadEmotes(
     .filter(emote => emote.url && !preloadedUrls.has(emote.url))
     .slice(0, limit);
 
-  if (toPreload.length === 0) return;
+  if (toPreload.length === 0) {
+    return;
+  }
 
   // Preload in parallel batches of 10 to avoid overwhelming the network
   const BATCH_SIZE = 10;

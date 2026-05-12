@@ -43,7 +43,17 @@ const proxyUrl = new URL(
   }),
 ).toString();
 
-const appReturnUrl = 'foam://tabs/following';
+function getWebAuthRedirectUrl() {
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return `${window.location.origin}/auth`;
+  }
+
+  return 'https://foam-app.com/auth';
+}
+
+const redirectUri = Platform.OS === 'web' ? getWebAuthRedirectUrl() : proxyUrl;
+const appReturnUrl =
+  Platform.OS === 'web' ? getWebAuthRedirectUrl() : 'foam://tabs/following';
 
 const discovery = {
   authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
@@ -77,7 +87,7 @@ export function useTwitchSignIn() {
         ...CHANNEL_SCOPES,
       ],
       responseType: ResponseType.Token,
-      redirectUri: proxyUrl,
+      redirectUri,
       usePKCE: false,
       extraParams: {
         force_verify: 'true',
@@ -165,7 +175,7 @@ export function useTwitchSignIn() {
       const authUrl =
         request.url ?? (await request.makeAuthUrlAsync(discovery));
       logger.auth.info('[AUTHDBG] useTwitchSignIn prompt start', {
-        redirectUri: proxyUrl,
+        redirectUri,
         appReturnUrl,
         authUrl,
         responseType: ResponseType.Token,
@@ -232,7 +242,8 @@ export function useTwitchSignIn() {
       hasRequest: !!request,
       responseType: authResponse?.type ?? null,
       loadedResponseType: response?.type ?? null,
-      redirectUri: proxyUrl,
+      redirectUri,
+      proxyUrl,
       appReturnUrl,
       platform: Platform.OS,
     });

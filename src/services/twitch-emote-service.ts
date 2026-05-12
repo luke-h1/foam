@@ -3,14 +3,34 @@ import { twitchApi } from './api';
 import { PaginatedList, twitchService } from './twitch-service';
 
 export interface TwitchEmote {
-  id: `emotesv2_${string}`;
+  id: string;
   name: string;
-  emote_type: 'follower' | 'subscriptions';
+  emote_type:
+    | 'bitstier'
+    | 'channelpoints'
+    | 'follower'
+    | 'globals'
+    | 'hypetrain'
+    | 'none'
+    | 'owl2019'
+    | 'prime'
+    | 'rewards'
+    | 'smilies'
+    | 'subscriptions'
+    | 'turbo'
+    | 'twofactor';
   emote_set_id: string;
   owner_id: string;
   format: ['static' | 'animated'];
   scale: ['1.0', '2.0', '3.0'];
   theme_mode: ['light', 'dark'];
+}
+
+interface TwitchEmotePage {
+  data?: TwitchEmote[];
+  pagination?: {
+    cursor?: string;
+  };
 }
 
 interface TwitchGlobalEmote {
@@ -24,6 +44,30 @@ interface TwitchGlobalEmote {
   format: ['static' | 'animated'];
   scale: ['1.0', '2.0', '3.0'];
   theme_mode: ['light', 'dark'];
+}
+
+function toTwitchImageUrl(
+  emoteId: string,
+  format: 'default' | 'static' = 'default',
+): string {
+  return `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/${format}/dark/3.0`;
+}
+
+function sanitiseTwitchEmote(
+  emote: Pick<TwitchEmote, 'id' | 'name'>,
+  site: TwitchSanitisedEmote['site'],
+  creator: string | null,
+): TwitchSanitisedEmote {
+  return {
+    name: emote.name,
+    id: emote.id,
+    url: toTwitchImageUrl(emote.id),
+    static_url: toTwitchImageUrl(emote.id, 'static'),
+    emote_link: toTwitchImageUrl(emote.id),
+    creator,
+    original_name: emote.name,
+    site,
+  };
 }
 
 export const twitchEmoteService = {
@@ -40,16 +84,9 @@ export const twitchEmoteService = {
 
     const broadcaster = await twitchService.getUser(undefined, channelId);
 
-    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote => ({
-      name: emote.name,
-      id: emote.id,
-      url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
-      static_url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/static/dark/3.0`,
-      emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
-      creator: broadcaster.display_name,
-      original_name: emote.name,
-      site: 'Twitch Channel',
-    }));
+    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote =>
+      sanitiseTwitchEmote(emote, 'Twitch Channel', broadcaster.display_name),
+    );
 
     return sanitisedSet;
   },
@@ -59,17 +96,36 @@ export const twitchEmoteService = {
       '/chat/emotes/global',
     );
 
-    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote => ({
-      name: emote.name,
-      id: emote.id,
-      url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
-      static_url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/static/dark/3.0`,
-      emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/3.0`,
-      creator: null,
-      original_name: emote.name,
-      site: 'Twitch Global',
-    }));
+    const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote =>
+      sanitiseTwitchEmote(emote, 'Twitch Global', null),
+    );
 
     return sanitisedSet;
+  },
+
+  getSubscriberEmotes: async (
+    userId: string,
+    broadcasterId?: string,
+  ): Promise<TwitchSanitisedEmote[]> => {
+    const emotes: TwitchEmote[] = [];
+    let cursor: string | undefined;
+
+    do {
+      // eslint-disable-next-line no-await-in-loop
+      const result = await twitchApi.get<TwitchEmotePage>('/chat/emotes/user', {
+        params: {
+          user_id: userId,
+          broadcaster_id: broadcasterId,
+          after: cursor,
+        },
+      });
+
+      emotes.push(...(result.data ?? []));
+      cursor = result.pagination?.cursor;
+    } while (cursor);
+
+    return emotes.map<TwitchSanitisedEmote>(emote =>
+      sanitiseTwitchEmote(emote, 'Twitch Subscriber', null),
+    );
   },
 } as const;

@@ -244,6 +244,11 @@ const loggingConfig = {
   }
 >;
 
+type LoggingMethods = Record<defLvlType, (...args: unknown[]) => void>;
+
+export type AllowedPrefix = keyof typeof loggingConfig;
+export const allowedPrefixes = Object.keys(loggingConfig) as AllowedPrefix[];
+
 const baseLogger = rnlogger.createLogger({
   transport: [consoleTransport, genericTransport],
   stringifyFunc: stringifyLogMessage,
@@ -265,20 +270,23 @@ const baseLogger = rnlogger.createLogger({
     .map(([k]) => k),
 });
 
-const loggers = Object.fromEntries(
-  Object.entries(loggingConfig).map(([key]) => {
-    const extendedLogger = baseLogger.extend(key);
-    return [key, extendedLogger];
-  }),
-);
+const createExtendedLogger = (prefix: AllowedPrefix): LoggingMethods =>
+  baseLogger.extend(prefix);
 
-type LoggingMethods = Record<defLvlType, (...args: unknown[]) => void>;
-
-export const logger = loggers as Record<
-  keyof typeof loggingConfig,
-  LoggingMethods
->;
-
-// Export allowed prefixes
-export type AllowedPrefix = keyof typeof loggingConfig;
-export const allowedPrefixes = Object.keys(loggingConfig) as AllowedPrefix[];
+export const logger: Record<AllowedPrefix, LoggingMethods> = {
+  main: createExtendedLogger('main'),
+  api: createExtendedLogger('api'),
+  stv: createExtendedLogger('stv'),
+  bttv: createExtendedLogger('bttv'),
+  ffz: createExtendedLogger('ffz'),
+  twitch: createExtendedLogger('twitch'),
+  chat: createExtendedLogger('chat'),
+  auth: createExtendedLogger('auth'),
+  performance: createExtendedLogger('performance'),
+  cache: createExtendedLogger('cache'),
+  cachedPhotos: createExtendedLogger('cachedPhotos'),
+  filesystem: createExtendedLogger('filesystem'),
+  twitchWs: createExtendedLogger('twitchWs'),
+  stvWs: createExtendedLogger('stvWs'),
+  remoteConfig: createExtendedLogger('remoteConfig'),
+};

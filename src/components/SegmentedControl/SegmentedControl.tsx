@@ -41,7 +41,9 @@ export function SegmentedControl({
   const translateX = useSharedValue(0);
 
   const segmentWidth = useMemo(() => {
-    if (items.length === 0) return 0;
+    if (items.length === 0) {
+      return 0;
+    }
     return width / items.length;
   }, [items.length, width]);
 

@@ -209,7 +209,9 @@ export function ActionSheet(props: Props) {
   const renderMessagePart = useCallback((part: ParsedPart, index: number) => {
     switch (part.type) {
       case 'emote':
-        if (!part.url) return null;
+        if (!part.url) {
+          return null;
+        }
         return (
           <Image
             key={`${part.type}-${part.id ?? index}-${index}`}

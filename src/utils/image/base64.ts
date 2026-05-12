@@ -22,8 +22,12 @@ export function base64ToBytes(b64: string): Uint8Array {
 
   // compute output length
   let padding = 0;
-  if (len >= 2 && b64[len - 1] === '=') padding += 1;
-  if (len >= 2 && b64[len - 2] === '=') padding += 1;
+  if (len >= 2 && b64[len - 1] === '=') {
+    padding += 1;
+  }
+  if (len >= 2 && b64[len - 2] === '=') {
+    padding += 1;
+  }
   const outLen = (len / 4) * 3 - padding;
 
   const bytes = new Uint8Array(outLen);
@@ -41,11 +45,17 @@ export function base64ToBytes(b64: string): Uint8Array {
     const triple = (c1 << 18) | (c2 << 12) | (c3 << 6) | c4;
 
     // eslint-disable-next-line no-bitwise
-    if (byteIdx < outLen) bytes[(byteIdx += 1)] = (triple >> 16) & 0xff;
+    if (byteIdx < outLen) {
+      bytes[(byteIdx += 1)] = (triple >> 16) & 0xff;
+    }
     // eslint-disable-next-line no-bitwise
-    if (byteIdx < outLen) bytes[(byteIdx += 1)] = (triple >> 8) & 0xff;
+    if (byteIdx < outLen) {
+      bytes[(byteIdx += 1)] = (triple >> 8) & 0xff;
+    }
     // eslint-disable-next-line no-bitwise
-    if (byteIdx < outLen) bytes[(byteIdx += 1)] = triple & 0xff;
+    if (byteIdx < outLen) {
+      bytes[(byteIdx += 1)] = triple & 0xff;
+    }
   }
   return bytes;
 }
@@ -58,7 +68,9 @@ export async function assetToBase64(moduleId: number): Promise<string> {
   // 1. Resolve the static asset
   const [asset] = await Asset.loadAsync(moduleId);
   const uri = asset?.localUri ?? asset?.uri;
-  if (!uri) throw new Error('Unable to resolve asset URI');
+  if (!uri) {
+    throw new Error('Unable to resolve asset URI');
+  }
 
   // 2. Read as Base64 using FileSystem
   const file = new File(uri);

@@ -25,14 +25,26 @@ export function lightenColor(hex: string): string {
 
   // Check if the color is a single channel
   if (isSingleChannel(r, g, b)) {
-    if (r > 0) r = 255;
-    if (g > 0) g = 255;
-    if (b > 0) b = 230;
+    if (r > 0) {
+      r = 255;
+    }
+    if (g > 0) {
+      g = 255;
+    }
+    if (b > 0) {
+      b = 230;
+    }
   } else {
     // Ensure each channel is above the minimum threshold
-    if (r <= min) r = min + 1;
-    if (g <= min) g = min + 1;
-    if (b <= min) b = min + 1;
+    if (r <= min) {
+      r = min + 1;
+    }
+    if (g <= min) {
+      g = min + 1;
+    }
+    if (b <= min) {
+      b = min + 1;
+    }
   }
 
   return `rgb(${r}, ${g}, ${b})`;

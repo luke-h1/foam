@@ -49,7 +49,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
         }
         textBreakStrategy="simple"
       >
-        UrlPaintUser:
+        UrlPaintUser: 
       </Text>
     </View>
   </View>
@@ -112,7 +112,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
       }
       textBreakStrategy="simple"
     >
-      UrlPaintUser:
+      UrlPaintUser: 
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -167,7 +167,7 @@ exports[`PaintedUsername Snapshots should match snapshot with fallback color onl
         }
         textBreakStrategy="simple"
       >
-        FallbackUser:
+        FallbackUser: 
       </Text>
     </View>
   </View>
@@ -230,7 +230,7 @@ exports[`PaintedUsername Snapshots should match snapshot with fallback color onl
       }
       textBreakStrategy="simple"
     >
-      FallbackUser:
+      FallbackUser: 
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -292,7 +292,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
         }
         textBreakStrategy="simple"
       >
-        RoseGoldUser:
+        RoseGoldUser: 
       </Text>
     </View>
   </View>
@@ -364,7 +364,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
       }
       textBreakStrategy="simple"
     >
-      RoseGoldUser:
+      RoseGoldUser: 
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -419,7 +419,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
         }
         textBreakStrategy="simple"
       >
-        VeryLongUsernameForTestingPurposes:
+        VeryLongUsernameForTestingPurposes: 
       </Text>
     </View>
   </View>
@@ -484,7 +484,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
       }
       textBreakStrategy="simple"
     >
-      VeryLongUsernameForTestingPurposes:
+      VeryLongUsernameForTestingPurposes: 
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -546,7 +546,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         }
         textBreakStrategy="simple"
       >
-        DivisionUser:
+        DivisionUser: 
       </Text>
     </View>
   </View>
@@ -618,7 +618,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
       }
       textBreakStrategy="simple"
     >
-      DivisionUser:
+      DivisionUser: 
     </Text>
   </ViewManagerAdapter_ExpoLinearGradient>
 </RNCMaskedView>
@@ -680,7 +680,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
         }
         textBreakStrategy="simple"
       >
-        FlowerchildUser:
+        FlowerchildUser: 
       </Text>
     </View>
   </View>
@@ -811,7 +811,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
       }
       textBreakStrategy="simple"
     >
-      FlowerchildUser:
+      FlowerchildUser: 
     </Text>
   </View>
 </RNCMaskedView>

@@ -12,7 +12,9 @@ export type TwitchLink =
 const TWITCH_HOSTS = ['twitch.tv', 'www.twitch.tv', 'm.twitch.tv'];
 
 export function parseTwitchUrl(url: string | null): TwitchLink {
-  if (!url || typeof url !== 'string') return null;
+  if (!url || typeof url !== 'string') {
+    return null;
+  }
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase().replace(/^www\./, '');

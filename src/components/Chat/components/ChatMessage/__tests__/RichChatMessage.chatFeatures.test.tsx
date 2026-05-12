@@ -105,18 +105,18 @@ describe('RichChatMessage chat features', () => {
     });
   });
 
-  test('renders a denser row in compact mode', () => {
+  test('renders denser text in compact mode', () => {
     const message = createMockMessage([
       { type: 'text', content: 'hello world' },
     ]);
 
-    const { getByTestId } = render(
+    const { getByText } = render(
       <RichChatMessage {...message} density="compact" />,
     );
 
-    expect(getByTestId('chat-message')).toHaveStyle({
-      minHeight: 28,
-      paddingVertical: 1,
+    expect(getByText('hello world')).toHaveStyle({
+      fontSize: 11,
+      lineHeight: 14,
     });
   });
 

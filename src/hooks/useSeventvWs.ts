@@ -142,9 +142,15 @@ function toSanitisedSevenTvEmote(
 }
 
 function getSevenTvChatScreenFromPathname(pathname: string | null) {
-  if (!pathname) return null;
-  if (pathname === '/chat') return 'Chat';
-  if (pathname.startsWith('/streams/live-stream/')) return 'LiveStream';
+  if (!pathname) {
+    return null;
+  }
+  if (pathname === '/chat') {
+    return 'Chat';
+  }
+  if (pathname.startsWith('/streams/live-stream/')) {
+    return 'LiveStream';
+  }
   return null;
 }
 
@@ -188,16 +194,44 @@ export function useSeventvWs(
   );
 
   const shouldConnect = useMemo(() => {
-    if (!currentScreen) return false;
+    if (!currentScreen) {
+      return false;
+    }
     const isOnChatScreen = SEVENTV_CHAT_SCREENS.includes(currentScreen);
     const hasRequiredIds =
       options?.twitchChannelId && options?.sevenTvEmoteSetId;
     return isOnChatScreen && hasRequiredIds;
   }, [currentScreen, options?.twitchChannelId, options?.sevenTvEmoteSetId]);
 
+  const isActiveEmoteSetUpdate = useCallback(
+    (data: SevenTvEventData<'emote_set.update'>): boolean => {
+      const expectedEmoteSetId =
+        sevenTvEmoteSetIdRef.current || currentEmoteSetIdRef.current;
+      const receivedEmoteSetId = data.body.id;
+
+      if (!expectedEmoteSetId || !receivedEmoteSetId) {
+        return false;
+      }
+
+      if (receivedEmoteSetId !== expectedEmoteSetId) {
+        logger.stvWs.debug(
+          `Ignoring 7TV emote_set.update for ${receivedEmoteSetId}; active set is ${expectedEmoteSetId}`,
+        );
+        return false;
+      }
+
+      return true;
+    },
+    [],
+  );
+
   const handleEmoteSetUpdate = useCallback(
     (data: SevenTvEventData<'emote_set.update'>) => {
       try {
+        if (!isActiveEmoteSetUpdate(data)) {
+          return;
+        }
+
         if (connectionTimestampRef.current) {
           const timeSinceConnection =
             Date.now() - connectionTimestampRef.current;
@@ -258,7 +292,7 @@ export function useSeventvWs(
         logger.stvWs.error('Error handling emote set update:', error);
       }
     },
-    [],
+    [isActiveEmoteSetUpdate],
   );
 
   const handleCosmeticCreate = useCallback(
@@ -609,10 +643,14 @@ export function useSeventvWs(
 
             switch (message.d.type) {
               case 'emote_set.update': {
+                const data = message.d as SevenTvEventData<'emote_set.update'>;
+
+                if (!isActiveEmoteSetUpdate(data)) {
+                  return;
+                }
+
                 logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
-                handleEmoteSetUpdate(
-                  message.d as SevenTvEventData<'emote_set.update'>,
-                );
+                handleEmoteSetUpdate(data);
                 break;
               }
 
@@ -726,6 +764,7 @@ export function useSeventvWs(
       handleEntitlementCreate,
       handleEntitlementUpdate,
       handleEntitlementDelete,
+      isActiveEmoteSetUpdate,
     ],
   );
 
@@ -870,7 +909,9 @@ export function useSeventvWs(
   }, [getWebSocket]);
 
   useEffect(() => {
-    if (!currentScreen) return;
+    if (!currentScreen) {
+      return;
+    }
 
     const isOnChatScreen = SEVENTV_CHAT_SCREENS.includes(currentScreen);
     const wasOnChatScreen = lastScreenRef.current

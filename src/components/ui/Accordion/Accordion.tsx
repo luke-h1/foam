@@ -60,10 +60,11 @@ const useAccordion = () => {
 
 const useAccordionItem = () => {
   const context = useContext(AccordionItemContext);
-  if (!context)
+  if (!context) {
     throw new Error(
       'Trigger and Content Accordion must be within an ItemContext',
     );
+  }
   return context;
 };
 

@@ -108,13 +108,17 @@ export function useChatSevenTvCallbacks({
   );
 
   const onCosmeticCreate = useCallback((data: CosmeticCreateCallbackData) => {
-    if (!data.cosmetic?.object) return;
+    if (!data.cosmetic?.object) {
+      return;
+    }
     const { object } = data.cosmetic;
 
     if (data.kind === 'BADGE') {
       const badgeData = object.data as BadgeData & { ref_id?: string };
       const badgeId = get7TvCosmeticId(badgeData);
-      if (getBadge(badgeId)) return;
+      if (getBadge(badgeId)) {
+        return;
+      }
       const sanitised = sanitise7TvBadge(badgeData, badgeId);
       addBadge(sanitised);
       logger.stvWs.info(
@@ -123,7 +127,9 @@ export function useChatSevenTvCallbacks({
     } else if (data.kind === 'PAINT') {
       const paintData = object.data as PaintData & { ref_id?: string };
       const paintWithId = toPaintWithId(paintData);
-      if (getPaint(paintWithId.id)) return;
+      if (getPaint(paintWithId.id)) {
+        return;
+      }
       addPaint(paintWithId);
       logger.stvWs.info(
         `Added paint to cache: ${paintData.name} (id: ${paintWithId.id})`,
@@ -142,26 +148,32 @@ export function useChatSevenTvCallbacks({
           const paintId = cosmeticId || data.paintId;
           if (paintId) {
             if (!getPaint(paintId) && sevenTvUserId) {
-              if (canFetchCosmetics())
+              if (canFetchCosmetics()) {
                 await fetchAndCacheUserCosmetics(sevenTvUserId);
-              else
+              } else {
                 logger.stvWs.debug(
                   'Skipping cosmetic fetch for entitlement - 10s limit exceeded',
                 );
-            } else if (data.ttvUserId) setUserPaint(data.ttvUserId, paintId);
+              }
+            } else if (data.ttvUserId) {
+              setUserPaint(data.ttvUserId, paintId);
+            }
           }
         }
         if (entitlement.object.kind === 'BADGE') {
           const badgeId = cosmeticId || data.badgeId;
           if (badgeId) {
             if (!getBadge(badgeId) && sevenTvUserId) {
-              if (canFetchCosmetics())
+              if (canFetchCosmetics()) {
                 await fetchAndCacheUserCosmetics(sevenTvUserId);
-              else
+              } else {
                 logger.stvWs.debug(
                   'Skipping cosmetic fetch for entitlement - 10s limit exceeded',
                 );
-            } else if (data.ttvUserId) setUserBadge(data.ttvUserId, badgeId);
+              }
+            } else if (data.ttvUserId) {
+              setUserBadge(data.ttvUserId, badgeId);
+            }
           }
         }
       };
@@ -196,7 +208,9 @@ export function useChatSevenTvCallbacks({
         const badgeData = getDataFromChangeValue(
           entry as { value?: { object?: { data?: BadgeData } } },
         ) as (BadgeData & { ref_id?: string }) | undefined;
-        if (badgeData) return sanitise7TvBadge(badgeData);
+        if (badgeData) {
+          return sanitise7TvBadge(badgeData);
+        }
         return null;
       };
       changes.updated?.forEach(update => {
@@ -225,10 +239,16 @@ export function useChatSevenTvCallbacks({
   const onEntitlementUpdate = useCallback(
     (data: EntitlementUpdateCallbackData) => {
       if (data.ttvUserId) {
-        if (data.paintId) setUserPaint(data.ttvUserId, data.paintId);
-        else removeUserPaint(data.ttvUserId);
-        if (data.badgeId) setUserBadge(data.ttvUserId, data.badgeId);
-        else removeUserBadge(data.ttvUserId);
+        if (data.paintId) {
+          setUserPaint(data.ttvUserId, data.paintId);
+        } else {
+          removeUserPaint(data.ttvUserId);
+        }
+        if (data.badgeId) {
+          setUserBadge(data.ttvUserId, data.badgeId);
+        } else {
+          removeUserBadge(data.ttvUserId);
+        }
       }
     },
     [],

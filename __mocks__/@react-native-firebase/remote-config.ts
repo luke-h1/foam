@@ -3,6 +3,7 @@ export const getRemoteConfig = jest.fn(() => ({
 }));
 
 export const setConfigSettings = jest.fn();
+export const setDefaults = jest.fn().mockResolvedValue(undefined);
 export const fetchAndActivate = jest.fn().mockResolvedValue(true);
 export const getAll = jest.fn().mockReturnValue({});
 export const getValue = jest.fn();

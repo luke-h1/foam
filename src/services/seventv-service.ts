@@ -33,10 +33,14 @@ export function pickBestImage(images: readonly Image[]): Image | undefined {
   const scales = [4, 3, 2, 1];
 
   const result = scales.reduce<Image | undefined>((found, targetScale) => {
-    if (found) return found;
+    if (found) {
+      return found;
+    }
 
     const atScale = images.filter(img => img.scale === targetScale);
-    if (atScale.length === 0) return undefined;
+    if (atScale.length === 0) {
+      return undefined;
+    }
 
     const animated = atScale.filter(img => img.frameCount > 1);
     return animated.length > 0
@@ -215,10 +219,14 @@ function pickBestStaticImage(images: readonly Image[]): Image | undefined {
   const scales = [4, 3, 2, 1];
 
   return scales.reduce<Image | undefined>((found, targetScale) => {
-    if (found) return found;
+    if (found) {
+      return found;
+    }
 
     const atScale = images.filter(img => img.scale === targetScale);
-    if (atScale.length === 0) return undefined;
+    if (atScale.length === 0) {
+      return undefined;
+    }
 
     const staticImages = atScale.filter(img => img.frameCount <= 1);
     return staticImages.length > 0 ? pickBestFormat(staticImages) : undefined;

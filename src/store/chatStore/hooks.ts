@@ -30,6 +30,9 @@ function resolveEmoteData(
     twitchGlobalEmotes: preferences.showTwitchEmotes
       ? (cache.twitchGlobalEmotes ?? [])
       : [],
+    twitchSubscriberEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchSubscriberEmotes ?? [])
+      : [],
     sevenTvChannelEmotes: preferences.show7TvEmotes
       ? (cache.sevenTvChannelEmotes ?? [])
       : [],

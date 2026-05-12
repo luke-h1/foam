@@ -19,7 +19,7 @@ import {
   CACHE_DURATION,
   emptyEmoteData,
 } from './constants';
-import { cacheEmoteImages, clearEmoteImageCache } from './emoteImages';
+import { clearEmoteImageCache } from './emoteImages';
 import { chatStore$, limitChannelCaches } from './state';
 
 const channelLoadAbort = (() => {
@@ -34,7 +34,9 @@ const channelLoadAbort = (() => {
       return current;
     },
     abortActive(): void {
-      if (!current) return;
+      if (!current) {
+        return;
+      }
       current.abort();
       current = null;
       logger.main.info('🚫 Aborted current load request');
@@ -51,8 +53,12 @@ const exitIfAborted = (
   signal: AbortSignal | undefined,
   resetLoading: boolean,
 ): boolean => {
-  if (!signal?.aborted) return false;
-  if (resetLoading) chatStore$.loadingState.set('IDLE');
+  if (!signal?.aborted) {
+    return false;
+  }
+  if (resetLoading) {
+    chatStore$.loadingState.set('IDLE');
+  }
   return true;
 };
 
@@ -180,6 +186,9 @@ export interface LoadChannelResourcesOptions {
   twitchUserId?: string;
 }
 
+const deduplicateById = <T extends { id: string }>(items: T[]): T[] =>
+  Array.from(new Map(items.map(item => [item.id, item])).values());
+
 const loadChannelResourcesInternal = async (
   channelId: string,
   shouldForceRefresh: boolean,
@@ -207,6 +216,9 @@ const loadChannelResourcesInternal = async (
           (existingCache.bttvGlobalEmotes?.length || 0) === 0;
 
         const missingEmoteSetId = !existingCache.sevenTvEmoteSetId;
+        const missingCurrentSubscriberEmotes =
+          Boolean(twitchUserId) &&
+          existingCache.twitchSubscriberEmotesUserId !== twitchUserId;
 
         const badgeCacheAge =
           Date.now() -
@@ -216,12 +228,16 @@ const loadChannelResourcesInternal = async (
 
         if (!hasEmptyEmotes && cacheAge < CACHE_DURATION) {
           if (missingEmoteSetId) {
-            if (exitIfAborted(signal, true)) return false;
+            if (exitIfAborted(signal, true)) {
+              return false;
+            }
             try {
               const sevenTvSetId =
                 await sevenTvService.getEmoteSetId(channelId);
 
-              if (exitIfAborted(signal, true)) return false;
+              if (exitIfAborted(signal, true)) {
+                return false;
+              }
 
               const channelCache =
                 chatStore$.persisted.channelCaches[channelId];
@@ -233,7 +249,9 @@ const loadChannelResourcesInternal = async (
                 });
               }
             } catch (error) {
-              if (exitIfAborted(signal, true)) return false;
+              if (exitIfAborted(signal, true)) {
+                return false;
+              }
               logger.chat.warn(
                 'Failed to get 7TV emote set ID for cached data:',
                 error,
@@ -241,8 +259,41 @@ const loadChannelResourcesInternal = async (
             }
           }
 
+          if (missingCurrentSubscriberEmotes && twitchUserId) {
+            if (exitIfAborted(signal, true)) {
+              return false;
+            }
+
+            const twitchSubscriberEmotes = await Promise.allSettled([
+              twitchEmoteService.getSubscriberEmotes(twitchUserId, channelId),
+            ]);
+
+            if (exitIfAborted(signal, true)) {
+              return false;
+            }
+
+            const subscriberEmotes =
+              twitchSubscriberEmotes[0]?.status === 'fulfilled'
+                ? twitchSubscriberEmotes[0].value
+                : [];
+            const channelCache = chatStore$.persisted.channelCaches[channelId];
+
+            if (channelCache) {
+              channelCache.assign({
+                twitchSubscriberEmotes: subscriberEmotes,
+                twitchSubscriberEmotesUserId: twitchUserId,
+                emotes: deduplicateById([
+                  ...subscriberEmotes,
+                  ...(existingCache.emotes ?? []),
+                ]),
+              });
+            }
+          }
+
           if (badgesStale) {
-            if (exitIfAborted(signal, true)) return false;
+            if (exitIfAborted(signal, true)) {
+              return false;
+            }
 
             const [
               twitchChannelBadges,
@@ -258,15 +309,12 @@ const loadChannelResourcesInternal = async (
               Promise.resolve(chatterinoService.listSanitisedBadges()),
             ]);
 
-            if (exitIfAborted(signal, true)) return false;
+            if (exitIfAborted(signal, true)) {
+              return false;
+            }
 
             const getValue = <T>(r: PromiseSettledResult<T[]>): T[] =>
               r.status === 'fulfilled' ? r.value : [];
-
-            const deduplicateById = <T extends { id: string }>(
-              items: T[],
-            ): T[] =>
-              Array.from(new Map(items.map(item => [item.id, item])).values());
 
             const dedupedTwitchChannelBadges = deduplicateById(
               getValue(twitchChannelBadges),
@@ -307,7 +355,7 @@ const loadChannelResourcesInternal = async (
             }
             recordInfo({
               name: 'DataLoadingInfo',
-              message: 'Refetched badges (3h TTL); using cached emotes',
+              message: 'Refetched badges (1h TTL); using cached emotes',
               params: {
                 category: 'DataLoading',
                 action: 'badges_refetched_cached_emotes',
@@ -341,7 +389,9 @@ const loadChannelResourcesInternal = async (
 
     chatStore$.currentChannelId.set(channelId);
 
-    if (exitIfAborted(signal, true)) return false;
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
 
     let sevenTvSetId = 'global';
 
@@ -351,13 +401,16 @@ const loadChannelResourcesInternal = async (
       logger.chat.warn('Failed to get 7TV emote set ID:', error);
     }
 
-    if (exitIfAborted(signal, true)) return false;
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
 
     const [
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
       twitchGlobalEmotes,
+      twitchSubscriberEmotes,
       bttvGlobalEmotes,
       bttvChannelEmotes,
       ffzChannelEmotes,
@@ -376,6 +429,9 @@ const loadChannelResourcesInternal = async (
           sevenTvService.getSanitisedEmoteSet('global'),
           twitchEmoteService.getChannelEmotes(channelId),
           twitchEmoteService.getGlobalEmotes(),
+          twitchUserId
+            ? twitchEmoteService.getSubscriberEmotes(twitchUserId, channelId)
+            : Promise.resolve([]),
           bttvEmoteService.getSanitisedGlobalEmotes(),
           bttvEmoteService.getSanitisedChannelEmotes(channelId),
           ffzService.getSanitisedChannelEmotes(channelId),
@@ -386,21 +442,21 @@ const loadChannelResourcesInternal = async (
           ffzService.getSanitisedChannelBadges(channelId),
           Promise.resolve(chatterinoService.listSanitisedBadges()),
         ]),
-      { channelId, services: 13 },
+      { channelId, services: 14 },
     );
 
-    if (exitIfAborted(signal, true)) return false;
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
 
     const getValue = <T>(result: PromiseSettledResult<T[]>): T[] =>
       result.status === 'fulfilled' ? result.value : [];
-    const deduplicateById = <T extends { id: string }>(items: T[]): T[] =>
-      Array.from(new Map(items.map(item => [item.id, item])).values());
-
     const allEmotesRaw = [
       ...getValue(sevenTvChannelEmotes),
       ...getValue(sevenTvGlobalEmotes),
       ...getValue(twitchChannelEmotes),
       ...getValue(twitchGlobalEmotes),
+      ...getValue(twitchSubscriberEmotes),
       ...getValue(bttvGlobalEmotes),
       ...getValue(bttvChannelEmotes),
       ...getValue(ffzChannelEmotes),
@@ -419,7 +475,9 @@ const loadChannelResourcesInternal = async (
 
     const allBadges = deduplicateById(allBadgesRaw);
 
-    if (exitIfAborted(signal, true)) return false;
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
 
     const channelData: ChannelCacheType = {
       emotes: allEmotes,
@@ -428,6 +486,8 @@ const loadChannelResourcesInternal = async (
       badgesLastUpdated: Date.now(),
       twitchChannelEmotes: deduplicateById(getValue(twitchChannelEmotes)),
       twitchGlobalEmotes: deduplicateById(getValue(twitchGlobalEmotes)),
+      twitchSubscriberEmotes: deduplicateById(getValue(twitchSubscriberEmotes)),
+      twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
       sevenTvChannelEmotes: deduplicateById(getValue(sevenTvChannelEmotes)),
       sevenTvGlobalEmotes: deduplicateById(getValue(sevenTvGlobalEmotes)),
       bttvGlobalEmotes: deduplicateById(getValue(bttvGlobalEmotes)),
@@ -471,10 +531,11 @@ const loadChannelResourcesInternal = async (
       },
     });
 
-    cacheEmoteImages(allEmotes, signal).catch(() => {});
     return true;
   } catch (error) {
-    if (exitIfAborted(signal, true)) return false;
+    if (exitIfAborted(signal, true)) {
+      return false;
+    }
     logger.chat.error('Error loading channel resources:', error);
     chatStore$.loadingState.set('ERROR');
     return false;
@@ -594,7 +655,9 @@ export const refreshChannelResources = async (
   forceRefresh = false,
   twitchUserId?: string,
 ): Promise<boolean> => {
-  if (forceRefresh) clearCache(channelId);
+  if (forceRefresh) {
+    clearCache(channelId);
+  }
   return loadChannelResources({ channelId, forceRefresh, twitchUserId });
 };
 
@@ -617,6 +680,9 @@ export const getCurrentEmoteData = (channelId?: string) => {
       : [],
     twitchGlobalEmotes: preferences.showTwitchEmotes
       ? (cache.twitchGlobalEmotes ?? [])
+      : [],
+    twitchSubscriberEmotes: preferences.showTwitchEmotes
+      ? (cache.twitchSubscriberEmotes ?? [])
       : [],
     sevenTvChannelEmotes: preferences.show7TvEmotes
       ? (cache.sevenTvChannelEmotes ?? [])

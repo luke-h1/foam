@@ -11,7 +11,7 @@ import {
   screen,
 } from '@testing-library/react-native';
 import type { AuthSessionResult } from 'expo-auth-session';
-import * as _SecureStore from 'expo-secure-store';
+import * as _SecureStore from '@app/utils/authentication/secureStore';
 import { act, type FC, type PropsWithChildren } from 'react';
 import {
   AuthContextProvider,
@@ -22,7 +22,7 @@ import {
 
 jest.mock('@app/services/twitch-service');
 jest.mock('@app/services/api');
-jest.mock('expo-secure-store');
+jest.mock('@app/utils/authentication/secureStore');
 
 export const initalTestAuthContextProps: AuthContextState = {
   loginWithTwitch: jest.fn(),

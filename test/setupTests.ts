@@ -107,11 +107,27 @@ jest.mock('expo/fetch');
 
 jest.mock('pressto');
 
+jest.mock('sonner-native', () => ({
+  Toaster: () => null,
+  toast: {
+    error: jest.fn(),
+    info: jest.fn(),
+    success: jest.fn(),
+    warning: jest.fn(),
+  },
+}));
+
 jest.mock('react-native-ease', () => {
   const React = require('react');
   const { View } = require('react-native');
   return {
-    EaseView: ({ children, style, ...rest }: { children?: React.ReactNode; style?: unknown }) =>
-      React.createElement(View, { ...rest, style }, children),
+    EaseView: ({
+      children,
+      style,
+      ...rest
+    }: {
+      children?: React.ReactNode;
+      style?: unknown;
+    }) => React.createElement(View, { ...rest, style }, children),
   };
 });

@@ -24,10 +24,17 @@ export interface UserStateTags {
     [key: string]: string | undefined;
   };
   'badges-raw'?: string;
+  'source-badge-info'?: string;
+  'source-badges'?: string;
+  'source-id'?: string;
+  'source-msg-id'?: string;
+  'source-room-id'?: string;
+  'source-only'?: string;
   'user-type'?: '' | 'admin' | 'global_mod' | 'staff';
   mod?: string;
   subscriber?: string;
   turbo?: string;
+  emotes?: string;
   'emote-sets'?: string;
   'first-msg'?: string;
 

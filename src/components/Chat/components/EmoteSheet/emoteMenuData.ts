@@ -40,6 +40,7 @@ export interface EmoteMenuDataInput {
   sevenTvGlobalEmotes?: SanitisedEmote[];
   twitchChannelEmotes?: SanitisedEmote[];
   twitchGlobalEmotes?: SanitisedEmote[];
+  twitchSubscriberEmotes?: SanitisedEmote[];
 }
 
 function chunk<TItem>(items: TItem[], size: number): TItem[][] {
@@ -222,6 +223,13 @@ export function buildEmoteMenuProviders(
     ...groupSevenTvSets('Global', input.sevenTvGlobalEmotes ?? []),
   ];
   const twitchSets = sortSets([
+    makeSet(
+      'twitch-user',
+      'Twitch',
+      'Subscribed Emotes',
+      'twitch',
+      input.twitchSubscriberEmotes ?? [],
+    ),
     makeSet(
       'twitch-channel',
       'Twitch',

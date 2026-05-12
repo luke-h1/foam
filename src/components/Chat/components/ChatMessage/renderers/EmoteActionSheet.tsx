@@ -73,7 +73,9 @@ export function EmoteActionSheet({
   const copyName = useCallback(() => {
     closeSheet();
     const text = part.name ?? part.original_name ?? '';
-    if (!text) return;
+    if (!text) {
+      return;
+    }
     void Clipboard.setStringAsync(text).then(() => {
       toast.success('Emote name copied to clipboard');
     });
@@ -81,7 +83,9 @@ export function EmoteActionSheet({
 
   const copyImageUrl = useCallback(() => {
     closeSheet();
-    if (!displayUrl) return;
+    if (!displayUrl) {
+      return;
+    }
     void Clipboard.setStringAsync(displayUrl).then(() => {
       toast.success('Emote URL copied to clipboard');
     });

@@ -283,18 +283,34 @@ const EmoteRow = memo(({ cellSize, items, onPress }: EmoteRowProps) => {
 EmoteRow.displayName = 'EmoteRow';
 
 function getProviderAccentColor(icon: EmoteMenuIcon): string {
-  if (icon === 'twitch') return theme.colorPlum;
-  if (icon === 'stv') return '#ffffff';
-  if (icon === 'ffz') return theme.colorGreen;
-  if (icon === 'bttv') return theme.colorOrange;
+  if (icon === 'twitch') {
+    return theme.colorPlum;
+  }
+  if (icon === 'stv') {
+    return '#ffffff';
+  }
+  if (icon === 'ffz') {
+    return theme.colorGreen;
+  }
+  if (icon === 'bttv') {
+    return theme.colorOrange;
+  }
   return theme.color.text.dark;
 }
 
 function getProviderAccentBackground(icon: EmoteMenuIcon): string {
-  if (icon === 'twitch') return 'rgba(145, 71, 255, 0.22)';
-  if (icon === 'stv') return 'rgba(255, 255, 255, 0.12)';
-  if (icon === 'ffz') return 'rgba(49, 196, 141, 0.18)';
-  if (icon === 'bttv') return 'rgba(255, 155, 79, 0.18)';
+  if (icon === 'twitch') {
+    return 'rgba(145, 71, 255, 0.22)';
+  }
+  if (icon === 'stv') {
+    return 'rgba(255, 255, 255, 0.12)';
+  }
+  if (icon === 'ffz') {
+    return 'rgba(49, 196, 141, 0.18)';
+  }
+  if (icon === 'bttv') {
+    return 'rgba(255, 155, 79, 0.18)';
+  }
   return 'rgba(255, 214, 10, 0.16)';
 }
 
@@ -450,6 +466,7 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
       twitchGlobalEmotes,
+      twitchSubscriberEmotes,
     } = useCurrentEmoteData();
 
     const columns = Math.max(
@@ -489,6 +506,7 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
           sevenTvGlobalEmotes,
           twitchChannelEmotes,
           twitchGlobalEmotes,
+          twitchSubscriberEmotes,
           emojiSets: EMOJI_MENU_SECTIONS,
         }),
       [
@@ -500,6 +518,7 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
         sevenTvGlobalEmotes,
         twitchChannelEmotes,
         twitchGlobalEmotes,
+        twitchSubscriberEmotes,
       ],
     );
 
@@ -587,7 +606,11 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
       }
 
       const controller = new AbortController();
-      void cacheEmoteImages(preloadVisibleEmotes, controller.signal);
+      void cacheEmoteImages(
+        preloadVisibleEmotes,
+        controller.signal,
+        'interactive',
+      );
       return () => controller.abort();
     }, [isSheetPresented, preloadVisibleEmotes]);
 
