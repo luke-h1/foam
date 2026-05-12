@@ -1,9 +1,6 @@
 name: Deploy native or OTA
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       variant:
