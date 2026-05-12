@@ -103,7 +103,7 @@ function preliminaryTagCommand(args: string[]): void {
 
   if (deployType === 'ota') {
     console.log(
-      '🏷️ OTA release - final tag will be determined after update (ota-{updateId})',
+      '🏷️ OTA release - final tag will be determined after update (ota-{version}-{runNumber})',
     );
   } else {
     console.log(`🏷️ Native release tag: ${tag}`);
@@ -173,7 +173,6 @@ function finalTagCommand(args: string[]): void {
   const tag = getFinalReleaseTag({
     deployType: getRequiredArg(args, 'deploy-type') as 'ota' | 'build',
     version: getRequiredArg(args, 'version'),
-    updateGroupId: getRequiredArg(args, 'update-group-id', ''),
     runNumber: Number.parseInt(getRequiredArg(args, 'run-number'), 10),
   });
 

@@ -431,7 +431,7 @@ jobs:
           echo "✅ Update deployed instantly to all users!" >> $GITHUB_STEP_SUMMARY
 
   release:
-    name: 📝 Create Release
+    name: 📝 Changelog / Release
     needs: [prepare, detect-changes, build, ota]
     if: always() && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
     runs-on: ubuntu-latest
@@ -447,7 +447,7 @@ jobs:
       ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
       android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
       update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
-      release_url: https://github.com/${{ github.repository }}/releases/tag/${{ steps.release_tag.outputs.tag }}
+      release_url: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '' || format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.release_tag.outputs.tag) }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@v4
@@ -461,10 +461,9 @@ jobs:
           bunx tsx scripts/workflows/deploy-ota-or-native.ts final-tag
           --deploy-type "${{ needs['detect-changes'].outputs['deploy-type'] }}"
           --version "${{ needs.prepare.outputs.version }}"
-          --update-group-id "${{ needs.ota.outputs.update_group_id }}"
           --run-number "${{ github.run_number }}"
 
-      - name: 📝 Create Release
+      - name: 📝 Update changelog and release artifacts
         id: create_release
         uses: ./.github/actions/create-release
         with:
@@ -479,6 +478,7 @@ jobs:
           ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
           android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
           update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
+          create_release: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'false' || 'true' }}
           commit_changelog: "true"
 
       - name: Check for release notes file
@@ -499,13 +499,21 @@ jobs:
 
       - name: 📊 Summary
         run: |
-          echo "## Release Created" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs['detect-changes'].outputs['deploy-type'] }}" = "ota" ]; then
+            echo "## Changelog Updated" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Release Created" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** \`${{ steps.release_tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Version:** \`${{ needs.prepare.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Type:** ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ GitHub release and CHANGELOG.md updated!" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs['detect-changes'].outputs['deploy-type'] }}" = "ota" ]; then
+            echo "✅ CHANGELOG.md updated; GitHub release skipped for OTA." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ GitHub release and CHANGELOG.md updated!" >> $GITHUB_STEP_SUMMARY
+          fi
 
   slack-notify:
     name: 📢 Slack Notification

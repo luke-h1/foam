@@ -41,17 +41,17 @@ Each variant uses different iOS bundle identifiers and Android application ids s
 
 Core dependencies:
 
-| Library                                          | Category                       | Version | Description                                             |
-| ------------------------------------------------ | ------------------------------ | ------- | ------------------------------------------------------- |
+| Library                                          | Category                       | Version                                | Description                                             |
+| ------------------------------------------------ | ------------------------------ | -------------------------------------- | ------------------------------------------------------- |
 | [bun](https://bun.sh/)                           | Package manager & node runtime | 1.3.5 ([`.bun-version`](.bun-version)) | Fast package manager and Node-compatible runtime        |
-| [React Native](https://reactnative.dev/)         | Mobile framework               | 0.81.5  | Cross-platform mobile framework                         |
-| [React](https://react.dev/)                      | UI framework                   | 19.1.0  | Most popular UI framework worldwide                     |
-| [TypeScript](https://www.typescriptlang.org/)    | Language                       | 5.9.2   | Static typechecking                                     |
-| [Expo](https://expo.dev/)                        | SDK                            | ~54.0.33 | React Native framework / Expo modules                   |
-| [React Navigation](https://reactnavigation.org/) | Navigation                     | 7.x     | Routing and navigation library                          |
-| [Detox](https://wix.github.io/Detox/)            | E2E testing                    | 20.46.0 | Gray-box simulator testing                              |
-| [EAS](https://expo.dev/eas)                      | CI/CD                          | N/A     | Build the app binaries and submit the app to the stores |
-| [Storybook](https://storybook.js.org/)           | UI preview                     | 8.4.4   | UI development & preview tool for React Native          |
+| [React Native](https://reactnative.dev/)         | Mobile framework               | 0.81.5                                 | Cross-platform mobile framework                         |
+| [React](https://react.dev/)                      | UI framework                   | 19.1.0                                 | Most popular UI framework worldwide                     |
+| [TypeScript](https://www.typescriptlang.org/)    | Language                       | 5.9.2                                  | Static typechecking                                     |
+| [Expo](https://expo.dev/)                        | SDK                            | ~54.0.33                               | React Native framework / Expo modules                   |
+| [React Navigation](https://reactnavigation.org/) | Navigation                     | 7.x                                    | Routing and navigation library                          |
+| [Detox](https://wix.github.io/Detox/)            | E2E testing                    | 20.46.0                                | Gray-box simulator testing                              |
+| [EAS](https://expo.dev/eas)                      | CI/CD                          | N/A                                    | Build the app binaries and submit the app to the stores |
+| [Storybook](https://storybook.js.org/)           | UI preview                     | 8.4.4                                  | UI development & preview tool for React Native          |
 
 Additional inspiration on how this project is structured is coming from: [Obytess React Native Starter](https://starter.obytes.com/), [Aetherspace Green Stack Starter](https://github.com/Aetherspace/green-stack-starter-demo#readme), [online docs as Storybook website](https://main--62c9a236ee16e6611d719e94.chromatic.com/?path=/story/aetherspace-quickstart--page), [Infinite Red cookbook for React Native](https://ignitecookbook.com/).
 
@@ -325,17 +325,17 @@ If you get an error such as `no development servers found` then this means the l
 
 Pull requests run checks in [`.github/workflows/`](.github/workflows/):
 
-| Workflow | Purpose |
-| -------- | ------- |
-| [`typescript.yml`](.github/workflows/typescript.yml) | `bun run ts:check` |
-| [`lint.yml`](.github/workflows/lint.yml) | ESLint (`bun run lint`) |
-| [`prettier.yml`](.github/workflows/prettier.yml) | Prettier (`bun run prettier:check`) |
-| [`cz.yml`](.github/workflows/cz.yml) | Commitlint on the latest commit |
-| [`jest.yml`](.github/workflows/jest.yml) | Jest (see workflow for the exact command) |
-| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml) | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base |
-| [`label.yml`](.github/workflows/label.yml) | Applies labels via [labeler](https://github.com/actions/labeler) |
-| [`tsfixme-progress.yml`](.github/workflows/tsfixme-progress.yml) | Tracks `$TSFixMe` progress on PRs to `main` |
-| [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Optional ESLint on the `foam` runner when the PR has the `self-hosted-test` label |
+| Workflow                                                           | Trigger                                                                                 | Purpose                                                                                                                  |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [`typescript.yml`](.github/workflows/typescript.yml)               | Pull requests                                                                           | Runs `bun run ts:check`.                                                                                                 |
+| [`lint.yml`](.github/workflows/lint.yml)                           | Pull requests                                                                           | Runs Oxlint with `bun run lint`.                                                                                         |
+| [`prettier.yml`](.github/workflows/prettier.yml)                   | Pull requests                                                                           | Runs Oxfmt with `bun run format:check`.                                                                                  |
+| [`cz.yml`](.github/workflows/cz.yml)                               | Pull requests                                                                           | Runs commitlint from `HEAD^1`.                                                                                           |
+| [`jest.yml`](.github/workflows/jest.yml)                           | Pull requests                                                                           | Placeholder Jest workflow; currently echoes `bun run test` instead of executing it.                                      |
+| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml) | Pull requests                                                                           | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base and comments on PRs. |
+| [`label.yml`](.github/workflows/label.yml)                         | Pull requests                                                                           | Applies labels via [labeler](https://github.com/actions/labeler).                                                        |
+| [`anti-slop.yml`](.github/workflows/anti-slop.yml)                 | Pull requests via `pull_request_target`                                                  | Runs `peakoss/anti-slop`, exempts draft PRs, and adds the `slop` label on failure.                                       |
+| [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                    |
 
 Scheduled [CodeQL](.github/workflows/codeql.yml) runs weekly on the default branch.
 
@@ -348,7 +348,7 @@ flowchart LR
   PR --> Jest[jest.yml]
   PR --> FP[detect-fp-changes.yml]
   PR --> Label[label.yml]
-  PR --> TSFix[tsfixme-progress.yml]
+  PR --> Slop[anti-slop.yml]
   PR -->|label self-hosted-test| SH[self-hosted-runner.yml]
 ```
 
@@ -367,16 +367,16 @@ Additional build profiles (for example `e2e`) are used for Detox and CI; see [`e
 
 ## Deploy flows
 
-Production delivery is mostly automated on the default branch; internal and TestFlight builds can still be kicked off by hand.
+Production delivery is automated on the default branch. Internal, TestFlight, and forced production deploys can also be kicked off manually from GitHub Actions.
 
-| Workflow | When | What it does |
-| -------- | ---- | ------------- |
-| [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml) | Push to `main`, or **Run workflow** with optional `deploy_type` / `platform` / `dry_run` | Runs tests, compares [native fingerprints](https://docs.expo.dev/eas-update/fingerprint/) to the last cached values, then either runs **`eas update`** on the `production` channel (JS-only) or **`eas build --local`** + **`eas submit`** for iOS/Android (native change). Creates a GitHub Release and can notify Slack. Needs `EXPO_TOKEN`, `GITHUB_TOKEN`, `OP_SERVICE_ACCOUNT_TOKEN` (1Password secrets for env files, Google services plist/json, Sentry, Slack, etc.). |
-| [`eas-deploy.yml`](.github/workflows/eas-deploy.yml) | **Run workflow** only | Cloud EAS build for **`production`**, **`testflight`**, or **`internal`**, per chosen platform (`all` / `ios` / `android`). Uses `bun run build:<variant>:ios|android`. Requires `EXPO_TOKEN`. |
-| [`rollout-ota.yml`](.github/workflows/rollout-ota.yml) | **Run workflow** | Progresses staged rollout percentage for an existing update group (`eas update:edit --rollout-percentage`). |
-| [`rollback-ota.yml`](.github/workflows/rollback-ota.yml) | **Run workflow** | Rolls the `production`, `testflight`, or `internal` channel back to **`embedded`** (native bundle) or **republishes** a previous update group. |
-| [`e2e.yml`](.github/workflows/e2e.yml) | **Run workflow** | Fingerprinted iOS `e2e` profile build (local EAS on the self-hosted `foam` runner when the cache misses), artifact or cache restore, optional `eas update` on the `e2e` channel when the build is skipped, then Detox on `macos-latest` (see workflow for full steps). |
-| [`clear-cache.yml`](.github/workflows/clear-cache.yml) | **Run workflow** | Deletes GitHub Actions caches except OTA fingerprint / OTA id keys (see script in workflow). |
+| Workflow                                                                 | Trigger                                                                                                                                          | What it does                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml) | Push to `main`, or **Run workflow** with `variant`, `deploy_type`, `platform`, `dry_run`, and `critical_update` inputs. Pushes default to `production`, `auto`, and `ios`. | Runs `bun run test:ci` and `bun run ts:check`, compares cached native fingerprints for the selected variant, then either publishes an OTA with `eas update --channel <variant> --environment <variant>` or runs local `eas build` + `eas submit`. OTA deploys update `CHANGELOG.md`; native deploys update `CHANGELOG.md` and create a GitHub Release. Sends Slack notifications when release metadata is produced. |
+| [`eas-deploy.yml`](.github/workflows/eas-deploy.yml)                     | **Run workflow** with `variant` (`production`, `testflight`, `internal`) and `platform` (`all`, `ios`, `android`).                               | Runs the matching `bun run build:<variant>:<platform>` cloud EAS build script. The package scripts use `--no-wait`; iOS production and TestFlight scripts auto-submit. Requires `EXPO_TOKEN`.                                                                                                                                    |
+| [`rollout-ota.yml`](.github/workflows/rollout-ota.yml)                   | **Run workflow** with an OTA update group id and target rollout percentage.                                                                       | Fetches the current rollout state and progresses an existing rollout with `eas update:edit --rollout-percentage`.                                                                                                                                                                                                                                                                           |
+| [`rollback-ota.yml`](.github/workflows/rollback-ota.yml)                 | **Run workflow** with `channel`, `rollback_target`, and `platform`.                                                                               | Rolls the selected channel back to `embedded` by runtime version, or republishes a previous OTA update group to the selected channel.                                                                                                                                                                                                                                                        |
+| [`e2e.yml`](.github/workflows/e2e.yml)                                   | **Run workflow** with optional `force_rebuild`.                                                                                                   | Fingerprints the iOS `e2e` profile on the self-hosted `foam` runner, restores or builds a cached local EAS `.app`, optionally pushes an `e2e` OTA when the build is skipped, then runs Detox on `macos-latest`.                                                                                                                |
+| [`clear-cache.yml`](.github/workflows/clear-cache.yml)                   | **Run workflow**.                                                                                                                                 | Deletes GitHub Actions caches while preserving OTA fingerprint and production OTA id caches.                                                                                                                                                                                                                                                                                                |
 
 There is also a draft [EAS Workflows](https://docs.expo.dev/eas/workflows/get-started/) file at [`.eas/deploy-prod.yml`](.eas/deploy-prod.yml) (mostly commented / experimental); **GitHub Actions above are the source of truth** for how this repo deploys today.
 
@@ -388,9 +388,9 @@ flowchart TD
   A --> T[bun run test:ci and ts:check]
   P --> D[detect-changes fingerprints]
   T --> D
-  D -->|fingerprint changed or force build| B[build local EAS production + submit stores]
-  D -->|fingerprint unchanged or force OTA| U[eas update production channel]
-  B --> R[release GitHub tag and changelog]
+  D -->|fingerprint changed or force build| B[local EAS build + submit selected variant]
+  D -->|fingerprint unchanged or force OTA| U[eas update selected channel]
+  B --> R[tag and changelog]
   U --> R
   R --> S[Slack notify]
 ```
@@ -453,15 +453,15 @@ bun run detox:test:ci        # Terminal 2
 
 ### Commands
 
-| Command                       | Description                          |
-| ----------------------------- | ------------------------------------ |
-| `bun run detox:build:ios`     | Build iOS simulator app for Detox    |
-| `bun run detox:test`          | Run all local iOS Detox tests        |
-| `bun run detox:test:smoke`    | Run smoke tests only                 |
-| `bun run detox:test:ci`       | Run Detox against a prebuilt `.app`  |
-| `bun run e2e:build:ios`       | Build standalone app (CI)            |
-| `bun run e2e:build:android`   | Build standalone app (Android)       |
-| `bun run e2e:mock-server:dev` | Start mock server (auto-reload)      |
+| Command                       | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `bun run detox:build:ios`     | Build iOS simulator app for Detox   |
+| `bun run detox:test`          | Run all local iOS Detox tests       |
+| `bun run detox:test:smoke`    | Run smoke tests only                |
+| `bun run detox:test:ci`       | Run Detox against a prebuilt `.app` |
+| `bun run e2e:build:ios`       | Build standalone app (CI)           |
+| `bun run e2e:build:android`   | Build standalone app (Android)      |
+| `bun run e2e:mock-server:dev` | Start mock server (auto-reload)     |
 
 ### OTA updates for E2E
 

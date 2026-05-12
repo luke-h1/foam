@@ -136,7 +136,7 @@ runs:
 
           if [ "${{ inputs.deployment_type }}" = "ota" ]; then
             # For OTA releases, find the most recent tag (either OTA or native)
-            # OTA tags: ota-{updateGroupId}
+            # OTA tags: ota-{version}-{runNumber}; legacy tags may be ota-{updateGroupId}
             # Native tags: {version} or {version}-preview
 
             if [ "${{ inputs.variant }}" = "preview" ]; then

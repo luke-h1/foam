@@ -48,15 +48,10 @@ export function getPreliminaryReleaseTag(
 export function getFinalReleaseTag(input: {
   deployType: DeployType;
   version: string;
-  updateGroupId: string;
   runNumber: number;
 }): string {
   if (input.deployType !== 'ota') {
     return input.version;
-  }
-
-  if (input.updateGroupId !== '') {
-    return `ota-${input.updateGroupId}`;
   }
 
   return `ota-${input.version}-${input.runNumber}`;
