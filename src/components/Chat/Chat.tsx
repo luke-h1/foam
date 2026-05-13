@@ -265,6 +265,9 @@ interface ChatMessagePaneProps {
   listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
   isAtBottomRef: MutableRefObject<boolean>;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  handleScrollEndDrag: () => void;
+  handleMomentumScrollEnd: () => void;
   renderItem: ListRenderItem<AnyChatMessageType>;
   keyExtractor: (item: AnyChatMessageType) => string;
   getItemType: (item: AnyChatMessageType) => string;
@@ -649,6 +652,9 @@ const ChatMessagePane = memo(
     listRef,
     isAtBottomRef,
     handleScroll,
+    handleScrollBeginDrag,
+    handleScrollEndDrag,
+    handleMomentumScrollEnd,
     renderItem,
     keyExtractor,
     getItemType,
@@ -754,6 +760,9 @@ const ChatMessagePane = memo(
           listRef={listRef}
           isAtBottomRef={isAtBottomRef}
           handleScroll={handleScroll}
+          handleScrollBeginDrag={handleScrollBeginDrag}
+          handleScrollEndDrag={handleScrollEndDrag}
+          handleMomentumScrollEnd={handleMomentumScrollEnd}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           getItemType={getItemType}
@@ -1697,6 +1706,9 @@ export const Chat = memo(
       unreadCount,
       setUnreadCount,
       handleScroll,
+      handleScrollBeginDrag,
+      handleScrollEndDrag,
+      handleMomentumScrollEnd,
       scrollToBottom,
       cleanup: cleanupScroll,
     } = useChatScroll({
@@ -2721,6 +2733,9 @@ export const Chat = memo(
               listRef={listRef}
               isAtBottomRef={isAtBottomRef}
               handleScroll={handleScroll}
+              handleScrollBeginDrag={handleScrollBeginDrag}
+              handleScrollEndDrag={handleScrollEndDrag}
+              handleMomentumScrollEnd={handleMomentumScrollEnd}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               getItemType={getItemType}

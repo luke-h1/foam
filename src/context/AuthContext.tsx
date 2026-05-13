@@ -23,7 +23,7 @@ import {
   useRef,
 } from 'react';
 import { toast } from 'sonner-native';
-import { InteractionManager } from 'react-native';
+import { AppState, InteractionManager } from 'react-native';
 import { recordError } from '@app/lib/sentry';
 
 /**
@@ -67,6 +67,8 @@ export const storageKeys = {
  */
 const TOKEN_EXPIRATION_BUFFER = 60; // 1 minute buffer
 const AUTH_STARTUP_TIMEOUT_MS = 12_000;
+const USER_TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
+const USER_TOKEN_REFRESH_POLL_INTERVAL_MS = 60_000;
 
 /**
  * Check if a token is expired or will expire soon
@@ -114,8 +116,41 @@ export interface TwitchToken {
   accessToken: string;
   expiresIn: number;
   tokenType: string;
+  refreshToken?: string;
   expiresAt?: number; // Unix timestamp in milliseconds when token expires
 }
+
+const shouldProactivelyRefreshUserToken = (
+  token: TwitchToken,
+  now = Date.now(),
+) => {
+  if (!token.refreshToken || !token.expiresAt) {
+    return false;
+  }
+
+  return now >= token.expiresAt - USER_TOKEN_REFRESH_BUFFER_MS;
+};
+
+const normaliseTwitchToken = (
+  token: TokenResponse | TwitchToken,
+): TwitchToken | null => {
+  if (isTwitchToken(token)) {
+    return token;
+  }
+
+  if (token.expiresIn === undefined) {
+    logger.auth.warn('Token missing expiresIn, cannot proceed with auth');
+    return null;
+  }
+
+  const maybeStoredToken = token as Partial<TwitchToken>;
+  return addExpirationTimestamp({
+    accessToken: token.accessToken,
+    expiresIn: token.expiresIn,
+    tokenType: token.tokenType,
+    refreshToken: maybeStoredToken.refreshToken,
+  });
+};
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -171,6 +206,7 @@ export const AuthContextProvider = ({
 
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
   const hasTimedOut = useRef(false);
+  const userTokenRefreshInFlightRef = useRef(false);
 
   const markAuthStateReadyFallback = (reason: string, error?: unknown) => {
     if (state.ready || hasTimedOut.current) {
@@ -261,37 +297,137 @@ export const AuthContextProvider = ({
     }
   };
 
-  const doAuth = async (token: TokenResponse | TwitchToken) => {
-    // Convert TokenResponse to TwitchToken format if needed
-    let twitchToken: TwitchToken;
-
-    if (isTwitchToken(token)) {
-      twitchToken = token;
-    } else {
-      // TokenResponse has expiresIn as number | undefined, but we know it should be a number
-      // from expo-auth-session when authentication succeeds
-      if (token.expiresIn === undefined) {
-        logger.auth.warn('Token missing expiresIn, cannot proceed with auth');
-        await doAnonAuth();
-        return;
-      }
-      twitchToken = addExpirationTimestamp({
-        accessToken: token.accessToken,
-        expiresIn: token.expiresIn,
-        tokenType: token.tokenType,
+  const refreshUserToken = async (token: TwitchToken, reason: string) => {
+    if (!token.refreshToken) {
+      logger.auth.info('User token cannot be refreshed without refresh token', {
+        reason,
       });
+      return null;
+    }
+
+    try {
+      const refreshed = await twitchService.getRefreshToken(token.refreshToken);
+      const refreshedToken = addExpirationTimestamp({
+        accessToken: refreshed.access_token,
+        expiresIn: refreshed.expires_in,
+        tokenType: refreshed.token_type,
+        refreshToken: refreshed.refresh_token || token.refreshToken,
+      });
+
+      logger.auth.info('Refreshed stored user token', {
+        reason,
+        expiresIn: refreshedToken.expiresIn,
+      });
+
+      return refreshedToken;
+    } catch (error) {
+      logger.auth.warn('Failed to refresh stored user token', {
+        reason,
+        error,
+      });
+      return null;
+    }
+  };
+
+  const refreshCurrentUserToken = async (reason: string) => {
+    const currentAuthState = state.authState;
+
+    if (
+      !currentAuthState?.isLoggedIn ||
+      currentAuthState.isAnonAuth ||
+      userTokenRefreshInFlightRef.current
+    ) {
+      return false;
+    }
+
+    userTokenRefreshInFlightRef.current = true;
+
+    try {
+      const refreshedToken = await refreshUserToken(
+        currentAuthState.token,
+        reason,
+      );
+
+      if (!refreshedToken) {
+        return false;
+      }
+
+      twitchApi.setAuthToken(refreshedToken.accessToken);
+      await SecureStore.setItemAsync(
+        storageKeys.user,
+        JSON.stringify(refreshedToken),
+      );
+
+      setState(prev => {
+        if (
+          !prev.authState?.isLoggedIn ||
+          prev.authState.isAnonAuth ||
+          prev.authState.token.accessToken !==
+            currentAuthState.token.accessToken
+        ) {
+          return prev;
+        }
+
+        return {
+          ready: true,
+          authState: {
+            ...prev.authState,
+            token: refreshedToken,
+          },
+        };
+      });
+
+      return true;
+    } finally {
+      userTokenRefreshInFlightRef.current = false;
+    }
+  };
+
+  const doAuth = async (token: TokenResponse | TwitchToken) => {
+    let twitchToken = normaliseTwitchToken(token);
+
+    if (!twitchToken) {
+      await doAnonAuth();
+      return;
     }
 
     // Check if token is expired before making API calls
     if (isTokenExpired(twitchToken)) {
-      logger.auth.info(
-        'Stored user token is expired, clearing and falling back to anon auth',
-      );
-      await SecureStore.deleteItemAsync(storageKeys.anon);
+      const refreshedToken = await refreshUserToken(twitchToken, 'expired');
+
+      if (refreshedToken) {
+        twitchToken = refreshedToken;
+      } else {
+        logger.auth.info(
+          'Stored user token is expired, clearing and falling back to anon auth',
+        );
+        await SecureStore.deleteItemAsync(storageKeys.user);
+        await doAnonAuth();
+        return;
+      }
+    }
+
+    const refreshOrFallBackToAnon = async (reason: string, error?: unknown) => {
+      if (!twitchToken) {
+        await doAnonAuth();
+        return false;
+      }
+
+      const refreshedToken = await refreshUserToken(twitchToken, reason);
+
+      if (refreshedToken) {
+        twitchToken = refreshedToken;
+        return true;
+      }
+
+      logger.auth.warn('User token refresh unavailable, falling back to anon', {
+        reason,
+        error,
+      });
       await SecureStore.deleteItemAsync(storageKeys.user);
       await doAnonAuth();
-      return;
-    }
+      return false;
+    };
 
     try {
       const isValidToken = await twitchService.validateToken(
@@ -299,19 +435,14 @@ export const AuthContextProvider = ({
       );
 
       if (!isValidToken) {
-        // token isn't valid, do anon auth
-        logger.auth.warn('User token validation failed, clearing tokens');
-        await SecureStore.deleteItemAsync(storageKeys.anon);
-        await SecureStore.deleteItemAsync(storageKeys.user);
-        await doAnonAuth();
-        return;
+        if (!(await refreshOrFallBackToAnon('validation_failed'))) {
+          return;
+        }
       }
     } catch (error) {
-      logger.auth.warn('validateToken failed. Clearing tokens', error);
-      await SecureStore.deleteItemAsync(storageKeys.anon);
-      await SecureStore.deleteItemAsync(storageKeys.user);
-      await doAnonAuth();
-      return;
+      if (!(await refreshOrFallBackToAnon('validation_error', error))) {
+        return;
+      }
     }
 
     try {
@@ -377,12 +508,14 @@ export const AuthContextProvider = ({
       accessToken: parsedToken.accessToken,
       expiresIn: parsedToken.expiresIn,
       tokenType: parsedToken.tokenType,
+      refreshToken: parsedToken.refreshToken,
     });
 
     logger.auth.info('[AUTHDBG] AuthContext.loginWithTwitch token parsed', {
       accessTokenPreview: `${token.accessToken.slice(0, 8)}...`,
       expiresIn: token.expiresIn,
       tokenType: token.tokenType,
+      hasRefreshToken: !!token.refreshToken,
     });
 
     // we have succeeded
@@ -540,6 +673,49 @@ export const AuthContextProvider = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const refreshIfNeeded = (reason: string) => {
+      const currentAuthState = state.authState;
+
+      if (
+        !currentAuthState?.isLoggedIn ||
+        currentAuthState.isAnonAuth ||
+        !shouldProactivelyRefreshUserToken(currentAuthState.token)
+      ) {
+        return;
+      }
+
+      void refreshCurrentUserToken(reason);
+    };
+
+    refreshIfNeeded('token_state_changed');
+
+    const refreshInterval = setInterval(() => {
+      refreshIfNeeded('scheduled');
+    }, USER_TOKEN_REFRESH_POLL_INTERVAL_MS);
+
+    const appStateSubscription = AppState.addEventListener(
+      'change',
+      nextAppState => {
+        if (nextAppState === 'active') {
+          refreshIfNeeded('app_active');
+        }
+      },
+    );
+
+    return () => {
+      clearInterval(refreshInterval);
+      appStateSubscription.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    state.authState?.isAnonAuth,
+    state.authState?.isLoggedIn,
+    state.authState?.token.accessToken,
+    state.authState?.token.expiresAt,
+    state.authState?.token.refreshToken,
+  ]);
 
   const contextState: AuthContextState = useMemo(() => {
     return {

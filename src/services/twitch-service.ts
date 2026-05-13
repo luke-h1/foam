@@ -103,12 +103,17 @@ interface Emote {
   }[];
 }
 
-interface RefreshToken {
+export interface RefreshTokenResponse {
   access_token: string;
   refresh_token: string;
   expires_in: number;
   scope: string;
   token_type: string;
+}
+
+interface AuthProxyResponse<T> {
+  data: T | null;
+  error?: string | null;
 }
 
 interface TwitchTokenValidationResponse {
@@ -257,19 +262,28 @@ export const twitchService = {
   /**
    * @see https://dev.twitch.tv/docs/authentication/refresh-tokens#refreshing-access-tokens
    */
-  getRefreshToken: async (refreshToken: string): Promise<RefreshToken> => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data } = await axios.post(
-      `${authProxyBaseUrl}/refresh-token?token=${refreshToken}&app=foam-app`,
+  getRefreshToken: async (
+    refreshToken: string,
+  ): Promise<RefreshTokenResponse> => {
+    const { data } = await axios.post<AuthProxyResponse<RefreshTokenResponse>>(
+      `${authProxyBaseUrl}/refresh-token`,
+      null,
       {
+        params: {
+          token: refreshToken,
+          app: 'foam-app',
+        },
         headers: {
           'x-api-key': authProxyApiKey,
         },
       },
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return data;
+    if (!data.data) {
+      throw new Error(data.error ?? 'Failed to refresh Twitch token');
+    }
+
+    return data.data;
   },
 
   /**

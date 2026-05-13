@@ -11,6 +11,7 @@ export interface ParsedTwitchAuthToken {
   accessToken: string;
   expiresIn: number;
   tokenType: string;
+  refreshToken?: string;
 }
 
 function getNormalizedExpiresIn(value: unknown): number {
@@ -41,7 +42,35 @@ function parseTokenFields(
       getValue('expires_in') ?? getValue('expiresIn'),
     ),
     tokenType: getValue('token_type') ?? getValue('tokenType') ?? 'bearer',
+    refreshToken:
+      getValue('refresh_token') ?? getValue('refreshToken') ?? undefined,
   };
+}
+
+function parseRefreshTokenFromUrl(url: string | null | undefined) {
+  if (!url) {
+    return undefined;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    const queryRefreshToken =
+      parsedUrl.searchParams.get('refresh_token') ??
+      parsedUrl.searchParams.get('refreshToken');
+
+    if (queryRefreshToken) {
+      return queryRefreshToken;
+    }
+
+    const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
+    return (
+      hashParams.get('refresh_token') ??
+      hashParams.get('refreshToken') ??
+      undefined
+    );
+  } catch {
+    return undefined;
+  }
 }
 
 export function parseTwitchAuthTokenFromUrl(
@@ -95,18 +124,29 @@ export function parseTwitchAuthTokenFromResponse(
   }
 
   if (response.authentication?.accessToken) {
+    const refreshToken =
+      (typeof response.params.refresh_token === 'string'
+        ? response.params.refresh_token
+        : undefined) ??
+      (typeof response.params.refreshToken === 'string'
+        ? response.params.refreshToken
+        : undefined) ??
+      parseRefreshTokenFromUrl(response.url);
+
     logger.auth.info(
       '[AUTHDBG] parseTwitchAuthTokenFromResponse authentication token',
       {
         responseUrl: response.url ?? null,
         accessTokenPreview: `${response.authentication.accessToken.slice(0, 8)}...`,
         expiresIn: getNormalizedExpiresIn(response.authentication.expiresIn),
+        hasRefreshToken: !!refreshToken,
       },
     );
     return {
       accessToken: response.authentication.accessToken,
       expiresIn: getNormalizedExpiresIn(response.authentication.expiresIn),
       tokenType: response.authentication.tokenType,
+      refreshToken,
     };
   }
 
@@ -144,7 +184,7 @@ export function buildAuthSessionResultFromToken(
   return {
     type: 'success',
     url,
-    params: {},
+    params: token.refreshToken ? { refresh_token: token.refreshToken } : {},
     errorCode: null,
     error: undefined,
     authentication: new TokenResponse({

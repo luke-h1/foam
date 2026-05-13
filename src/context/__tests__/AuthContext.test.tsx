@@ -10,7 +10,7 @@ import {
   render,
   screen,
 } from '@testing-library/react-native';
-import type { AuthSessionResult } from 'expo-auth-session';
+import { TokenResponse, type AuthSessionResult } from 'expo-auth-session';
 import * as _SecureStore from '@app/utils/authentication/secureStore';
 import { act, type FC, type PropsWithChildren } from 'react';
 import {
@@ -69,6 +69,16 @@ describe('AuthContext', () => {
     </AuthContextProvider>
   );
 
+  const TestComponent = () => {
+    const { authState, user } = useAuthContext();
+    return (
+      <>
+        <Text>{authState?.isAnonAuth ? 'Anon' : 'User'}</Text>
+        <Text>{user ? user.display_name : 'No User'}</Text>
+      </>
+    );
+  };
+
   test('should populate auth state with anon token when no tokens are found', async () => {
     twitchService.getDefaultToken.mockResolvedValue({
       access_token: 'anon',
@@ -118,14 +128,17 @@ describe('AuthContext', () => {
 
     const succesfulOauthResponse: AuthSessionResult = {
       type: 'success',
-      params: {},
-      url: '',
+      params: {
+        refresh_token: 'refresh-token',
+      },
+      url: 'foam://auth?access_token=user-token&refresh_token=refresh-token',
+      errorCode: null,
       error: undefined,
-      authentication: {
+      authentication: new TokenResponse({
         accessToken: 'user-token',
         expiresIn: 3600,
         tokenType: 'bearer',
-      },
+      }),
     } as AuthSessionResult;
     twitchService.getUserInfo.mockResolvedValue(user);
 
@@ -178,7 +191,122 @@ describe('AuthContext', () => {
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
         'V1_foam-user',
         expect.stringMatching(
-          /"accessToken":"user-token","expiresIn":3600,"tokenType":"bearer","expiresAt":\d+/,
+          /"accessToken":"user-token","expiresIn":3600,"tokenType":"bearer","refreshToken":"refresh-token","expiresAt":\d+/,
+        ),
+      );
+    });
+  });
+
+  test('refreshes expired stored user token before falling back to anon auth', async () => {
+    const user: UserInfoResponse = {
+      id: '123',
+      login: 'test_user',
+      display_name: 'Test User',
+      type: '',
+      broadcaster_type: '',
+      description: '',
+      profile_image_url: '',
+      offline_image_url: '',
+      view_count: 0,
+      created_at: '',
+    };
+
+    SecureStore.getItemAsync.mockResolvedValueOnce(null);
+    SecureStore.getItemAsync.mockResolvedValueOnce(
+      JSON.stringify({
+        accessToken: 'expired-user-token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        refreshToken: 'stored-refresh-token',
+        expiresAt: Date.now() - 1000,
+      }),
+    );
+    twitchService.getRefreshToken.mockResolvedValueOnce({
+      access_token: 'refreshed-user-token',
+      expires_in: 3600,
+      token_type: 'bearer',
+      refresh_token: 'rotated-refresh-token',
+      scope: '',
+    });
+    twitchService.validateToken.mockResolvedValueOnce(true);
+    twitchService.getUserInfo.mockResolvedValueOnce(user);
+
+    render(
+      <AuthContextProvider>
+        <TestComponent />
+      </AuthContextProvider>,
+    );
+
+    await waitFor(() => {
+      expect(twitchService.getRefreshToken).toHaveBeenCalledWith(
+        'stored-refresh-token',
+      );
+      expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+        'refreshed-user-token',
+      );
+      expect(screen.getByText('User')).toBeOnTheScreen();
+      expect(screen.getByText('Test User')).toBeOnTheScreen();
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+        'V1_foam-user',
+        expect.stringMatching(
+          /"accessToken":"refreshed-user-token","expiresIn":3600,"tokenType":"bearer","refreshToken":"rotated-refresh-token","expiresAt":\d+/,
+        ),
+      );
+    });
+  });
+
+  test('proactively refreshes near-expiry user token after startup', async () => {
+    const user: UserInfoResponse = {
+      id: '123',
+      login: 'test_user',
+      display_name: 'Test User',
+      type: '',
+      broadcaster_type: '',
+      description: '',
+      profile_image_url: '',
+      offline_image_url: '',
+      view_count: 0,
+      created_at: '',
+    };
+
+    SecureStore.getItemAsync.mockResolvedValueOnce(null);
+    SecureStore.getItemAsync.mockResolvedValueOnce(
+      JSON.stringify({
+        accessToken: 'near-expiry-user-token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        refreshToken: 'stored-refresh-token',
+        expiresAt: Date.now() + 3 * 60 * 1000,
+      }),
+    );
+    twitchService.validateToken.mockResolvedValueOnce(true);
+    twitchService.getUserInfo.mockResolvedValueOnce(user);
+    twitchService.getRefreshToken.mockResolvedValueOnce({
+      access_token: 'background-refreshed-user-token',
+      expires_in: 3600,
+      token_type: 'bearer',
+      refresh_token: 'background-refresh-token',
+      scope: '',
+    });
+
+    render(
+      <AuthContextProvider>
+        <TestComponent />
+      </AuthContextProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('User')).toBeOnTheScreen();
+      expect(twitchService.getRefreshToken).toHaveBeenCalledWith(
+        'stored-refresh-token',
+      );
+      expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+        'background-refreshed-user-token',
+      );
+      expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+        'V1_foam-user',
+        expect.stringMatching(
+          /"accessToken":"background-refreshed-user-token","expiresIn":3600,"tokenType":"bearer","refreshToken":"background-refresh-token","expiresAt":\d+/,
         ),
       );
     });
@@ -242,15 +370,6 @@ describe('AuthContext', () => {
   });
 
   describe('App startup', () => {
-    const TestComponent = () => {
-      const { authState, user } = useAuthContext();
-      return (
-        <>
-          <Text>{authState?.isAnonAuth ? 'Anon' : 'User'}</Text>
-          <Text>{user ? user.display_name : 'No User'}</Text>
-        </>
-      );
-    };
     test('grants an anon token if user has no anon token and no user token', async () => {
       SecureStore.getItemAsync.mockResolvedValueOnce(null);
       SecureStore.getItemAsync.mockResolvedValueOnce(null);

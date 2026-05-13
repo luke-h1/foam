@@ -4,8 +4,9 @@ import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
-const BOTTOM_THRESHOLD = 200;
-const NOT_AT_BOTTOM_THRESHOLD = 80;
+const RETURN_TO_BOTTOM_THRESHOLD = 80;
+const USER_SCROLL_AWAY_THRESHOLD = 40;
+const SCROLL_DELTA_EPSILON = 1;
 const SCROLL_THROTTLE_MS = 150;
 
 interface UseChatScrollOptions {
@@ -26,6 +27,25 @@ export const useChatScroll = ({
   const scrollThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAtBottomRef = useRef<boolean | null>(null);
   const lastContentHeightRef = useRef(0);
+  const lastViewHeightRef = useRef(0);
+  const lastOffsetYRef = useRef<number | null>(null);
+  const isDraggingRef = useRef(false);
+
+  const handleScrollBeginDrag = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      isDraggingRef.current = true;
+      lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
+    },
+    [],
+  );
+
+  const handleScrollEndDrag = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
+
+  const handleMomentumScrollEnd = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -33,16 +53,31 @@ export const useChatScroll = ({
       const { y } = contentOffset;
       const contentHeight = contentSize?.height ?? 0;
       const viewHeight = layoutMeasurement?.height ?? 0;
-      const distanceFromEnd = contentHeight - viewHeight - y;
+      const distanceFromEnd = Math.max(0, contentHeight - viewHeight - y);
+      const previousOffsetY = lastOffsetYRef.current;
+      const hasPreviousOffset = previousOffsetY !== null;
+      const scrolledUp =
+        hasPreviousOffset && y < previousOffsetY - SCROLL_DELTA_EPSILON;
       const contentGrew = contentHeight > lastContentHeightRef.current;
+      const layoutChanged =
+        Math.abs(viewHeight - lastViewHeightRef.current) > SCROLL_DELTA_EPSILON;
       lastContentHeightRef.current = contentHeight;
+      lastViewHeightRef.current = viewHeight;
+      lastOffsetYRef.current = y;
 
       const atBottom =
-        contentHeight <= viewHeight || distanceFromEnd <= BOTTOM_THRESHOLD;
-      const notAtBottom =
-        contentHeight > viewHeight && distanceFromEnd > NOT_AT_BOTTOM_THRESHOLD;
+        contentHeight <= viewHeight ||
+        distanceFromEnd <= RETURN_TO_BOTTOM_THRESHOLD;
+      const userScrolledAway =
+        contentHeight > viewHeight &&
+        distanceFromEnd > USER_SCROLL_AWAY_THRESHOLD &&
+        (isDraggingRef.current
+          ? !hasPreviousOffset || scrolledUp
+          : hasPreviousOffset
+            ? scrolledUp && !contentGrew && !layoutChanged
+            : distanceFromEnd > RETURN_TO_BOTTOM_THRESHOLD);
 
-      if (contentGrew && lastAtBottomRef.current === true && !notAtBottom) {
+      if (lastAtBottomRef.current !== false && !userScrolledAway && !atBottom) {
         isAtBottomRef.current = true;
         lastAtBottomRef.current = true;
         if (scrollThrottleRef.current) {
@@ -53,15 +88,8 @@ export const useChatScroll = ({
         return;
       }
 
-      // When we were previously at bottom (or unknown/null), use the 200px threshold.
-      // When we were explicitly not at bottom, use hysteresis: require within 80px to be at bottom again.
       const resolved =
-        // eslint-disable-next-line no-nested-ternary
-        lastAtBottomRef.current === false
-          ? notAtBottom
-            ? false
-            : atBottom
-          : atBottom;
+        lastAtBottomRef.current === false ? atBottom : !userScrolledAway;
 
       isAtBottomRef.current = resolved;
 
@@ -141,6 +169,9 @@ export const useChatScroll = ({
     unreadCount,
     setUnreadCount,
     handleScroll,
+    handleScrollBeginDrag,
+    handleScrollEndDrag,
+    handleMomentumScrollEnd,
     scrollToBottom,
     incrementUnread,
     cleanup,

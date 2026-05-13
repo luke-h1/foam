@@ -23,6 +23,9 @@ interface ChatListProps {
   listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
   isAtBottomRef: MutableRefObject<boolean>;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  handleScrollEndDrag: () => void;
+  handleMomentumScrollEnd: () => void;
   renderItem: ListRenderItem<AnyChatMessageType>;
   keyExtractor: (item: AnyChatMessageType) => string;
   getItemType: (item: AnyChatMessageType) => string;
@@ -42,6 +45,9 @@ export const ChatList = memo(
     listRef,
     isAtBottomRef,
     handleScroll,
+    handleScrollBeginDrag,
+    handleScrollEndDrag,
+    handleMomentumScrollEnd,
     renderItem,
     keyExtractor,
     getItemType,
@@ -97,6 +103,9 @@ export const ChatList = memo(
           startRenderingFromBottom: true,
         }}
         onScroll={handleScroll}
+        onScrollBeginDrag={handleScrollBeginDrag}
+        onScrollEndDrag={handleScrollEndDrag}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
         renderItem={renderItem}
         extraData={extraData}
         style={styles.list}

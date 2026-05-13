@@ -146,7 +146,7 @@ describe('useChatScroll', () => {
       expect(result.current.isAtBottom).toBe(true);
     });
 
-    test('should consider within threshold as at bottom', () => {
+    test('should consider within return threshold as at bottom', () => {
       const { ref: listRef } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -156,16 +156,100 @@ describe('useChatScroll', () => {
         }),
       );
 
-      // Near end: y=1350 → distanceFromEnd = 150 (<= 200)
+      // Near end: y=1440 → distanceFromEnd = 60 (<= 80)
       act(() => {
         result.current.handleScroll(
-          createScrollEvent({ y: 1350 }, { height: 500 }, { height: 2000 }),
+          createScrollEvent({ y: 1440 }, { height: 500 }, { height: 2000 }),
         );
       });
       act(() => {
         jest.advanceTimersByTime(200);
       });
       expect(result.current.isAtBottom).toBe(true);
+    });
+
+    test('should show jump affordance after a small upward drag', () => {
+      const { ref: listRef } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.handleScroll(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      expect(result.current.isAtBottom).toBe(true);
+
+      act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.handleScroll(
+          createScrollEvent({ y: 1440 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+
+      expect(result.current.isAtBottom).toBe(false);
+      expect(result.current.isAtBottomRef.current).toBe(false);
+    });
+
+    test('should stay at bottom when fast message growth arrives before autoscroll', () => {
+      const { ref: listRef } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.handleScroll(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      expect(result.current.isAtBottom).toBe(true);
+
+      act(() => {
+        result.current.handleScroll(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2200 }),
+        );
+      });
+
+      expect(result.current.isAtBottom).toBe(true);
+      expect(result.current.isAtBottomRef.current).toBe(true);
+    });
+
+    test('should stay at bottom when layout height changes during rotation', () => {
+      const { ref: listRef } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.handleScroll(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      expect(result.current.isAtBottom).toBe(true);
+
+      act(() => {
+        result.current.handleScroll(
+          createScrollEvent({ y: 1500 }, { height: 380 }, { height: 2000 }),
+        );
+      });
+
+      expect(result.current.isAtBottom).toBe(true);
+      expect(result.current.isAtBottomRef.current).toBe(true);
     });
   });
 
