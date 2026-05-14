@@ -182,7 +182,7 @@ const main = async () => {
   app.get('/api/pending', async (req: any, res: any) => {
     const redirectUrl = `foam://?${new URL(
       req.url,
-      'http://foam/',
+      'http://foam/', // NOSONAR - only used for local development, not deployed.
     ).searchParams.toString()}`;
 
     return res.status(200).send(`
