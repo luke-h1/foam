@@ -1,21 +1,19 @@
 name: PR Quality
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
 permissions:
   contents: read
-  issues: read
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   anti-slop:
     name: Anti-Slop
     runs-on: ubuntu-latest
     steps:
-      - uses: peakoss/anti-slop@v0
+      - uses: peakoss/anti-slop@753c51043d0c43564e1df382c173233c56cdb5e4
         with:
           max-failures: 5
           exempt-draft-prs: true
-          failure-add-pr-labels: slop

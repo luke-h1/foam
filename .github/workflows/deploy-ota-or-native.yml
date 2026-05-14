@@ -44,6 +44,9 @@ on:
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-ota-or-native
   cancel-in-progress: false
@@ -57,7 +60,9 @@ jobs:
       tag: ${{ steps.get_version.outputs.tag }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
 
       - name: 📌 Get version from app.config.ts
         id: get_version
@@ -71,10 +76,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
 
       - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version-file: ".bun-version"
 
@@ -93,6 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: read
+      contents: read
     outputs:
       fingerprint-changed: ${{ steps.compare.outputs.changed }}
       ios-fingerprint: ${{ steps.fingerprint.outputs.ios }}
@@ -101,12 +109,13 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0 # Need history for comparison
+          persist-credentials: false
 
       - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version-file: ".bun-version"
 
@@ -128,7 +137,7 @@ jobs:
 
       - name: 📂 Load previous fingerprints
         id: previous
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .fingerprint-cache
           key: fingerprint-${{ github.ref_name }}-${{ inputs.variant || 'production' }}
@@ -142,22 +151,30 @@ jobs:
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts compare-fingerprints
           --cache-dir .fingerprint-cache
-          --current-ios "${{ steps.fingerprint.outputs.ios }}"
-          --current-android "${{ steps.fingerprint.outputs.android }}"
+          --current-ios "${STEPS_FINGERPRINT_OUTPUTS_IOS}"
+          --current-android "${STEPS_FINGERPRINT_OUTPUTS_ANDROID}"
+        env:
+          STEPS_FINGERPRINT_OUTPUTS_IOS: ${{ steps.fingerprint.outputs.ios }}
+          STEPS_FINGERPRINT_OUTPUTS_ANDROID: ${{ steps.fingerprint.outputs.android }}
 
       - name: 🤔 Decide deployment type
         id: decide
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts decide-deploy-type
           --manual-type "${{ inputs.deploy_type || 'auto' }}"
-          --fingerprint-changed "${{ steps.compare.outputs.changed }}"
+          --fingerprint-changed "${STEPS_COMPARE_OUTPUTS_CHANGED}"
+        env:
+          STEPS_COMPARE_OUTPUTS_CHANGED: ${{ steps.compare.outputs.changed }}
 
       - name: 🏷️ Generate release tag (preliminary)
         id: tag
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts preliminary-tag
-          --version "${{ needs.prepare.outputs.version }}"
-          --deploy-type "${{ steps.decide.outputs.deploy-type }}"
+          --version "${NEEDS_PREPARE_OUTPUTS_VERSION}"
+          --deploy-type "${STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE}"
+        env:
+          NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
+          STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE: ${{ steps.decide.outputs.deploy-type }}
 
       - name: 📊 Summary
         run: |
@@ -165,10 +182,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Platform | Fingerprint | Changed |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|-------------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| iOS | \`${{ steps.fingerprint.outputs.ios }}\` | ${{ steps.compare.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Android | \`${{ steps.fingerprint.outputs.android }}\` | ${{ steps.compare.outputs.changed }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| iOS | \`${STEPS_FINGERPRINT_OUTPUTS_IOS}\` | ${STEPS_COMPARE_OUTPUTS_CHANGED} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Android | \`${STEPS_FINGERPRINT_OUTPUTS_ANDROID}\` | ${STEPS_COMPARE_OUTPUTS_CHANGED} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Decision:** ${{ steps.decide.outputs.deploy-type == 'build' && '🔨 Native Build' || '📦 OTA Update' }}" >> $GITHUB_STEP_SUMMARY
+        env:
+          STEPS_FINGERPRINT_OUTPUTS_IOS: ${{ steps.fingerprint.outputs.ios }}
+          STEPS_COMPARE_OUTPUTS_CHANGED: ${{ steps.compare.outputs.changed }}
+          STEPS_FINGERPRINT_OUTPUTS_ANDROID: ${{ steps.fingerprint.outputs.android }}
 
   build:
     name: 🔨 Native Build
@@ -178,10 +199,12 @@ jobs:
     concurrency: eas-build-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
 
       - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version-file: ".bun-version"
 
@@ -190,9 +213,10 @@ jobs:
 
       - name: Load secrets
         id: load_secrets
-        uses: 1password/load-secrets-action@v3
+        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
         with:
           export-env: true
+          version: 2.34.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
@@ -239,7 +263,7 @@ jobs:
           fi
 
       - name: Λ Setup EAS
-        uses: expo/expo-github-action@v8
+        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
@@ -297,11 +321,14 @@ jobs:
       - name: 💾 Save fingerprints for next run
         run: |
           mkdir -p .fingerprint-cache
-          echo "${{ needs['detect-changes'].outputs['ios-fingerprint'] }}" > .fingerprint-cache/ios
-          echo "${{ needs['detect-changes'].outputs['android-fingerprint'] }}" > .fingerprint-cache/android
+          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}" > .fingerprint-cache/ios
+          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}" > .fingerprint-cache/android
+        env:
+          NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
+          NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
 
       - name: 📂 Cache fingerprints
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .fingerprint-cache
           key: fingerprint-${{ github.ref_name }}-${{ github.sha }}-${{ inputs.variant || 'production' }}
@@ -329,10 +356,12 @@ jobs:
       update_group_id: ${{ steps.publish.outputs.update_group_id }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
 
       - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version-file: ".bun-version"
 
@@ -340,14 +369,14 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Λ Setup EAS
-        uses: expo/expo-github-action@v8
+        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
       - name: Restore critical OTA index
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .ota-critical-cache
           key: ota-critical-index-${{ inputs.variant || 'production' }}-${{ github.sha }}
@@ -365,11 +394,11 @@ jobs:
           fi
 
           IS_CRITICAL=false
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.critical_update }}" = "true" ]; then
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${INPUTS_CRITICAL_UPDATE}" = "true" ]; then
             IS_CRITICAL=true
           fi
 
-          if printf '%s' "${{ github.event.head_commit.message || '' }}" | grep -qi '\[critical-ota\]'; then
+          if printf '%s' "${GITHUB_EVENT_HEAD_COMMIT_MESSAGE}" | grep -qi '\[critical-ota\]'; then
             IS_CRITICAL=true
           fi
 
@@ -382,6 +411,9 @@ jobs:
           echo "current_index=$CURRENT_INDEX" >> "$GITHUB_OUTPUT"
           echo "next_index=$NEXT_INDEX" >> "$GITHUB_OUTPUT"
           echo "is_critical=$IS_CRITICAL" >> "$GITHUB_OUTPUT"
+        env:
+          INPUTS_CRITICAL_UPDATE: ${{ inputs.critical_update }}
+          GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
 
       - name: 📦 Publish OTA Update
         id: publish
@@ -398,17 +430,20 @@ jobs:
       - name: 💾 Save fingerprints for next run
         run: |
           mkdir -p .fingerprint-cache
-          echo "${{ needs['detect-changes'].outputs['ios-fingerprint'] }}" > .fingerprint-cache/ios
-          echo "${{ needs['detect-changes'].outputs['android-fingerprint'] }}" > .fingerprint-cache/android
+          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}" > .fingerprint-cache/ios
+          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}" > .fingerprint-cache/android
+        env:
+          NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
+          NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
 
       - name: 📂 Cache fingerprints
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .fingerprint-cache
           key: fingerprint-${{ github.ref_name }}-${{ github.sha }}-${{ inputs.variant || 'production' }}
 
       - name: 💾 Save critical OTA index
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .ota-critical-cache
           key: ota-critical-index-${{ inputs.variant || 'production' }}-${{ github.sha }}
@@ -420,12 +455,16 @@ jobs:
           echo "- **Branch:** production" >> $GITHUB_STEP_SUMMARY
           echo "- **Variant:** ${{ inputs.variant || 'production' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Platform:** ${{ inputs.platform || 'ios' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Critical:** ${{ steps.critical_metadata.outputs.is_critical }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Critical Index:** \`${{ steps.critical_metadata.outputs.next_index }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical:** ${STEPS_CRITICAL_METADATA_OUTPUTS_IS_CRITICAL}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical Index:** \`${STEPS_CRITICAL_METADATA_OUTPUTS_NEXT_INDEX}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Update Group ID:** \`${{ steps.publish.outputs.update_group_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Update Group ID:** \`${STEPS_PUBLISH_OUTPUTS_UPDATE_GROUP_ID}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✅ Update deployed instantly to all users!" >> $GITHUB_STEP_SUMMARY
+        env:
+          STEPS_CRITICAL_METADATA_OUTPUTS_IS_CRITICAL: ${{ steps.critical_metadata.outputs.is_critical }}
+          STEPS_CRITICAL_METADATA_OUTPUTS_NEXT_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
+          STEPS_PUBLISH_OUTPUTS_UPDATE_GROUP_ID: ${{ steps.publish.outputs.update_group_id }}
 
   release:
     name: 📝 Changelog / Release
@@ -447,18 +486,22 @@ jobs:
       release_url: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '' || format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.release_tag.outputs.tag) }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: 🏷️ Determine release tag
         id: release_tag
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts final-tag
-          --deploy-type "${{ needs['detect-changes'].outputs['deploy-type'] }}"
-          --version "${{ needs.prepare.outputs.version }}"
+          --deploy-type "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}"
+          --version "${NEEDS_PREPARE_OUTPUTS_VERSION}"
           --run-number "${{ github.run_number }}"
+        env:
+          NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE: ${{ needs['detect-changes'].outputs['deploy-type'] }}
+          NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
 
       - name: 📝 Update changelog and release artifacts
         id: create_release
@@ -489,28 +532,32 @@ jobs:
 
       - name: Upload release notes for Slack
         if: steps.check_release_notes.outputs.has_file == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: release-notes
           path: .release-notes-body.md
 
       - name: 📊 Summary
         run: |
-          if [ "${{ needs['detect-changes'].outputs['deploy-type'] }}" = "ota" ]; then
+          if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" = "ota" ]; then
             echo "## Changelog Updated" >> $GITHUB_STEP_SUMMARY
           else
             echo "## Release Created" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** \`${{ steps.release_tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** \`${{ needs.prepare.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** \`${STEPS_RELEASE_TAG_OUTPUTS_TAG}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** \`${NEEDS_PREPARE_OUTPUTS_VERSION}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Type:** ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ needs['detect-changes'].outputs['deploy-type'] }}" = "ota" ]; then
+          if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" = "ota" ]; then
             echo "✅ CHANGELOG.md updated; GitHub release skipped for OTA." >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ GitHub release and CHANGELOG.md updated!" >> $GITHUB_STEP_SUMMARY
           fi
+        env:
+          NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE: ${{ needs['detect-changes'].outputs['deploy-type'] }}
+          STEPS_RELEASE_TAG_OUTPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
+          NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
 
   slack-notify:
     name: 📢 Slack Notification
@@ -519,10 +566,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
 
       - name: Restore previous OTA update IDs
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .ota-cache
           key: ota-update-ids-${{ inputs.variant || 'production' }}
@@ -544,15 +593,16 @@ jobs:
       - name: Download release notes
         if: needs.release.outputs.has_release_notes_file == 'true'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: release-notes
 
       - name: Load secrets
         id: secrets
-        uses: 1password/load-secrets-action@v3
+        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
         with:
           export-env: false
+          version: 2.34.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
@@ -578,12 +628,15 @@ jobs:
         if: needs.release.outputs.deployment_type == 'ota'
         run: |
           mkdir -p .ota-cache
-          echo "${{ needs.release.outputs.ios_update_id }}" > .ota-cache/ios
-          echo "${{ needs.release.outputs.android_update_id }}" > .ota-cache/android
+          echo "${NEEDS_RELEASE_OUTPUTS_IOS_UPDATE_ID}" > .ota-cache/ios
+          echo "${NEEDS_RELEASE_OUTPUTS_ANDROID_UPDATE_ID}" > .ota-cache/android
+        env:
+          NEEDS_RELEASE_OUTPUTS_IOS_UPDATE_ID: ${{ needs.release.outputs.ios_update_id }}
+          NEEDS_RELEASE_OUTPUTS_ANDROID_UPDATE_ID: ${{ needs.release.outputs.android_update_id }}
 
       - name: Save OTA cache
         if: needs.release.outputs.deployment_type == 'ota'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
           path: .ota-cache
           key: ota-update-ids-${{ inputs.variant || 'production' }}

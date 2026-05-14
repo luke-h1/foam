@@ -6,15 +6,17 @@ jobs:
     name: Label
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       pull-requests: write
       checks: write    
     steps:
       - name: 🏗 Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
+          persist-credentials: false
 
-      - uses: actions/labeler@v4
+      - uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594
         with:
           sync-labels: true
