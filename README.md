@@ -337,6 +337,7 @@ Pull requests run checks in [`.github/workflows/`](.github/workflows/):
 | [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests via `pull_request_target`                                               | Runs `peakoss/anti-slop`, exempts draft PRs, and adds the `slop` label on failure.                                        |
 | [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                     |
 | [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main`, and pushes to `main`                                  | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                  |
+| [`sonarqube.yml`](.github/workflows/sonarqube.yml)                   | Pull requests targeting `main`, and pushes to `main`                                  | Runs Jest coverage and uploads a SonarQube analysis using [`sonar-project.properties`](sonar-project.properties).          |
 
 Scheduled [CodeQL](.github/workflows/codeql.yml) runs weekly on the default branch.
 
@@ -351,19 +352,22 @@ flowchart LR
   PR --> Label[label.yml]
   PR --> Slop[anti-slop.yml]
   PR --> Zizmor[zizmor.yml]
+  PR --> Sonar[sonarqube.yml]
   PR -->|label self-hosted-test| SH[self-hosted-runner.yml]
   Main[main] --> Zizmor
+  Main --> Sonar
   Schedule[Weekly schedule] --> CodeQL[codeql.yml]
 ```
 
 ## CI/CD security
 
-GitHub Actions security is checked in two places:
+Static analysis and GitHub Actions security are checked in three places:
 
-| Workflow                                     | Trigger                                           | Purpose                                                                                               |
-| -------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [`zizmor.yml`](.github/workflows/zizmor.yml) | Pull requests targeting `main`, and `main` pushes | Scans workflow YAML for unsafe permissions, injection risks, unpinned actions, and related CI issues. |
-| [`codeql.yml`](.github/workflows/codeql.yml) | Weekly schedule on the default branch             | Runs GitHub's static analysis and uploads results to code scanning.                                   |
+| Workflow                                             | Trigger                                           | Purpose                                                                                               |
+| ---------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [`zizmor.yml`](.github/workflows/zizmor.yml)         | Pull requests targeting `main`, and `main` pushes | Scans workflow YAML for unsafe permissions, injection risks, unpinned actions, and related CI issues. |
+| [`sonarqube.yml`](.github/workflows/sonarqube.yml)   | Pull requests targeting `main`, and `main` pushes | Runs SonarQube static analysis with Jest coverage. Requires a `SONAR_TOKEN` repository secret.        |
+| [`codeql.yml`](.github/workflows/codeql.yml)         | Weekly schedule on the default branch             | Runs GitHub's static analysis and uploads results to code scanning.                                   |
 
 Keep workflow permissions scoped to the smallest set each job needs, keep `persist-credentials: false` on checkout unless a job must push, and pin third-party actions to full 40-character commit SHAs instead of floating tags like `@v4`.
 
@@ -372,6 +376,7 @@ To get the hash for an action release tag, resolve the tag to the commit SHA and
 ```sh
 git ls-remote https://github.com/actions/checkout "refs/tags/v4^{}" "refs/tags/v4"
 git ls-remote https://github.com/zizmorcore/zizmor-action "refs/tags/v0.1.1^{}" "refs/tags/v0.1.1"
+git ls-remote https://github.com/SonarSource/sonarqube-scan-action "refs/tags/v8.0.0^{}" "refs/tags/v8.0.0"
 ```
 
 Prefer the `refs/tags/<tag>^{}` line when it exists; that is the commit behind an annotated tag. If only `refs/tags/<tag>` is returned, use that SHA. For an action without a release tag, inspect the upstream repository and pin a specific commit:
