@@ -192,7 +192,7 @@ function RouterEffects() {
       return;
     }
 
-    router.replace(href as never);
+    router.replace(href);
   });
 
   useEffect(() => {

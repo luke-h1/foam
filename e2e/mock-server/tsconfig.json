@@ -2,11 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "noEmit": true,
-    "baseUrl": "../..",
-    "paths": {
-      "@app/*": ["src/*"]
-    }
+    "noEmit": true
   },
   "include": ["./**/*.ts", "../../src/services/twitch-service.ts"],
   "exclude": ["node_modules", "dist"]
