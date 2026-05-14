@@ -7,6 +7,10 @@ import express from 'express';
 
 dotenv.config();
 
+const DEFAULT_STREAM_CHANNEL = 'forsen';
+const TWITCH_CHANNEL_PATTERN = /^[a-zA-Z0-9_]{1,25}$/;
+const TWITCH_VIDEO_PATTERN = /^\d+$/;
+
 const renderRedirectPage = ({
   targetPrefix,
   title,
@@ -45,6 +49,7 @@ const renderRedirectPage = ({
 
 const main = async () => {
   const app: any = express();
+  app.disable('x-powered-by');
 
   app.get('/api/proxy-expo-go', (_req: any, res: any) => {
     return res.status(200).send(
@@ -80,13 +85,23 @@ const main = async () => {
       },
     );
 
-    console.info('serving token ->', JSON.stringify(data, null, 2));
+    console.info('serving Twitch default token');
     return res.status(200).json(data);
   });
 
   app.get('/api/stream', (req: any, res: any) => {
-    const channel = (req.query.channel as string) || 'forsen';
-    const video = req.query.video as string | undefined;
+    const requestedChannel =
+      typeof req.query.channel === 'string' ? req.query.channel : undefined;
+    const channel =
+      requestedChannel && TWITCH_CHANNEL_PATTERN.test(requestedChannel)
+        ? requestedChannel
+        : DEFAULT_STREAM_CHANNEL;
+    const requestedVideo =
+      typeof req.query.video === 'string' ? req.query.video : undefined;
+    const video =
+      requestedVideo && TWITCH_VIDEO_PATTERN.test(requestedVideo)
+        ? requestedVideo
+        : undefined;
     const host = req.get('host') || 'localhost';
     const parent = host.split(':')[0] ?? 'localhost';
     const safeChannel = encodeURIComponent(channel);
@@ -99,13 +114,13 @@ const main = async () => {
         )}&muted=false&low_latency=true`;
 
     res.send(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>${channel} - Twitch Stream</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	    <meta charset="UTF-8">
+	    <title>Twitch Stream</title>
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	    <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%;
@@ -165,6 +180,11 @@ const main = async () => {
   });
 
   app.get('/api/pending', async (req: any, res: any) => {
+    const redirectUrl = `foam://?${new URL(
+      req.url,
+      'http://foam/',
+    ).searchParams.toString()}`;
+
     return res.status(200).send(`
       <html>
         <head>
@@ -174,14 +194,12 @@ const main = async () => {
           <h1>Redirecting...</h1>
           <script>
             setTimeout(() => {
-              window.location.href = 'foam://?${
-                new URL(req.url, 'http://foam/').searchParams
-              }';
+              window.location.href = ${JSON.stringify(redirectUrl)};
             }, 1000);
           </script>
         </body>
-        </html>
-      `);
+      </html>
+    `);
   });
 
   const PORT = 4000;
