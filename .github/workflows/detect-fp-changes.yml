@@ -19,12 +19,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: ⬇️ Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version-file: ".bun-version"
 
@@ -86,7 +87,7 @@ jobs:
 
       - name: 💬 Comment on PR when fingerprints changed
         if: ${{ steps.fp.outputs.changed == 'true' }}
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405
         with:
           header: fingerprint-diff
           message: |
@@ -130,7 +131,7 @@ jobs:
 
       - name: 💬 Comment on PR when fingerprints are unchanged
         if: ${{ steps.fp.outputs.changed != 'true' }}
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405
         with:
           header: fingerprint-diff
           message: |
@@ -178,22 +179,35 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| iOS | \`${{ steps.fp.outputs.base_ios_production }}\` | \`${{ steps.fp.outputs.head_ios_production }}\` | ${{ steps.fp.outputs.base_ios_production != steps.fp.outputs.head_ios_production }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android | \`${{ steps.fp.outputs.base_android_production }}\` | \`${{ steps.fp.outputs.head_android_production }}\` | ${{ steps.fp.outputs.base_android_production != steps.fp.outputs.head_android_production }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| iOS | \`${STEPS_FP_OUTPUTS_BASE_IOS_PRODUCTION}\` | \`${STEPS_FP_OUTPUTS_HEAD_IOS_PRODUCTION}\` | ${{ steps.fp.outputs.base_ios_production != steps.fp.outputs.head_ios_production }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android | \`${STEPS_FP_OUTPUTS_BASE_ANDROID_PRODUCTION}\` | \`${STEPS_FP_OUTPUTS_HEAD_ANDROID_PRODUCTION}\` | ${{ steps.fp.outputs.base_android_production != steps.fp.outputs.head_android_production }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### testflight" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| iOS | \`${{ steps.fp.outputs.base_ios_testflight }}\` | \`${{ steps.fp.outputs.head_ios_testflight }}\` | ${{ steps.fp.outputs.base_ios_testflight != steps.fp.outputs.head_ios_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android | \`${{ steps.fp.outputs.base_android_testflight }}\` | \`${{ steps.fp.outputs.head_android_testflight }}\` | ${{ steps.fp.outputs.base_android_testflight != steps.fp.outputs.head_android_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| iOS | \`${STEPS_FP_OUTPUTS_BASE_IOS_TESTFLIGHT}\` | \`${STEPS_FP_OUTPUTS_HEAD_IOS_TESTFLIGHT}\` | ${{ steps.fp.outputs.base_ios_testflight != steps.fp.outputs.head_ios_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android | \`${STEPS_FP_OUTPUTS_BASE_ANDROID_TESTFLIGHT}\` | \`${STEPS_FP_OUTPUTS_HEAD_ANDROID_TESTFLIGHT}\` | ${{ steps.fp.outputs.base_android_testflight != steps.fp.outputs.head_android_testflight }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "### internal" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Platform | Base | Head | Changed |" >> "$GITHUB_STEP_SUMMARY"
           echo "|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| iOS | \`${{ steps.fp.outputs.base_ios_internal }}\` | \`${{ steps.fp.outputs.head_ios_internal }}\` | ${{ steps.fp.outputs.base_ios_internal != steps.fp.outputs.head_ios_internal }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Android | \`${{ steps.fp.outputs.base_android_internal }}\` | \`${{ steps.fp.outputs.head_android_internal }}\` | ${{ steps.fp.outputs.base_android_internal != steps.fp.outputs.head_android_internal }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| iOS | \`${STEPS_FP_OUTPUTS_BASE_IOS_INTERNAL}\` | \`${STEPS_FP_OUTPUTS_HEAD_IOS_INTERNAL}\` | ${{ steps.fp.outputs.base_ios_internal != steps.fp.outputs.head_ios_internal }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Android | \`${STEPS_FP_OUTPUTS_BASE_ANDROID_INTERNAL}\` | \`${STEPS_FP_OUTPUTS_HEAD_ANDROID_INTERNAL}\` | ${{ steps.fp.outputs.base_android_internal != steps.fp.outputs.head_android_internal }} |" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          STEPS_FP_OUTPUTS_BASE_IOS_PRODUCTION: ${{ steps.fp.outputs.base_ios_production }}
+          STEPS_FP_OUTPUTS_HEAD_IOS_PRODUCTION: ${{ steps.fp.outputs.head_ios_production }}
+          STEPS_FP_OUTPUTS_BASE_ANDROID_PRODUCTION: ${{ steps.fp.outputs.base_android_production }}
+          STEPS_FP_OUTPUTS_HEAD_ANDROID_PRODUCTION: ${{ steps.fp.outputs.head_android_production }}
+          STEPS_FP_OUTPUTS_BASE_IOS_TESTFLIGHT: ${{ steps.fp.outputs.base_ios_testflight }}
+          STEPS_FP_OUTPUTS_HEAD_IOS_TESTFLIGHT: ${{ steps.fp.outputs.head_ios_testflight }}
+          STEPS_FP_OUTPUTS_BASE_ANDROID_TESTFLIGHT: ${{ steps.fp.outputs.base_android_testflight }}
+          STEPS_FP_OUTPUTS_HEAD_ANDROID_TESTFLIGHT: ${{ steps.fp.outputs.head_android_testflight }}
+          STEPS_FP_OUTPUTS_BASE_IOS_INTERNAL: ${{ steps.fp.outputs.base_ios_internal }}
+          STEPS_FP_OUTPUTS_HEAD_IOS_INTERNAL: ${{ steps.fp.outputs.head_ios_internal }}
+          STEPS_FP_OUTPUTS_BASE_ANDROID_INTERNAL: ${{ steps.fp.outputs.base_android_internal }}
+          STEPS_FP_OUTPUTS_HEAD_ANDROID_INTERNAL: ${{ steps.fp.outputs.head_android_internal }}
 
       - name: 🧹 Clean up worktree
         if: always()

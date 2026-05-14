@@ -89,25 +89,35 @@ runs:
     - name: Check inputs
       shell: bash
       run: |
-        echo "dry=${{ inputs.dry }}"
-        echo "variant=${{ inputs.variant }}"
-        echo "version=${{ inputs.version }}"
-        echo "tag=${{ inputs.tag }}"
-        echo "deployment_type=${{ inputs.deployment_type }}"
-        if [ "${{ inputs.deployment_type }}" = "ota" ]; then
-          echo "update_group_id=${{ inputs.update_group_id }}"
-          echo "ios_update_id=${{ inputs.ios_update_id }}"
-          echo "android_update_id=${{ inputs.android_update_id }}"
-          if [ -n "${{ inputs.runtime_version }}" ]; then
-            echo "runtime_version=${{ inputs.runtime_version }}"
+        echo "dry=${INPUTS_DRY}"
+        echo "variant=${INPUTS_VARIANT}"
+        echo "version=${INPUTS_VERSION}"
+        echo "tag=${INPUTS_TAG}"
+        echo "deployment_type=${INPUTS_DEPLOYMENT_TYPE}"
+        if [ "${INPUTS_DEPLOYMENT_TYPE}" = "ota" ]; then
+          echo "update_group_id=${INPUTS_UPDATE_GROUP_ID}"
+          echo "ios_update_id=${INPUTS_IOS_UPDATE_ID}"
+          echo "android_update_id=${INPUTS_ANDROID_UPDATE_ID}"
+          if [ -n "${INPUTS_RUNTIME_VERSION}" ]; then
+            echo "runtime_version=${INPUTS_RUNTIME_VERSION}"
           fi
         fi
+      env:
+        INPUTS_DRY: ${{ inputs.dry }}
+        INPUTS_VARIANT: ${{ inputs.variant }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
+        INPUTS_UPDATE_GROUP_ID: ${{ inputs.update_group_id }}
+        INPUTS_IOS_UPDATE_ID: ${{ inputs.ios_update_id }}
+        INPUTS_ANDROID_UPDATE_ID: ${{ inputs.android_update_id }}
+        INPUTS_RUNTIME_VERSION: ${{ inputs.runtime_version }}
 
     - name: Check tag exists for early exit
       id: check_tag
       shell: bash
       run: |
-        TAG="${{ inputs.tag }}"
+        TAG="${INPUTS_TAG}"
         # Ensure we have all tags locally
         git fetch --tags origin 2>/dev/null || true
 
@@ -119,6 +129,8 @@ runs:
         else
           echo "tag_exists=false" >> $GITHUB_OUTPUT
         fi
+      env:
+        INPUTS_TAG: ${{ inputs.tag }}
 
     - name: Get previous tag for given variant
       id: get_previous_tag
@@ -129,17 +141,17 @@ runs:
         FOUND_PREVIOUS_TAG=""
 
         # Use provided previous_tag if available
-        if [ -n "${{ inputs.previous_tag }}" ]; then
-          FOUND_PREVIOUS_TAG="${{ inputs.previous_tag }}"
+        if [ -n "${INPUTS_PREVIOUS_TAG}" ]; then
+          FOUND_PREVIOUS_TAG="${INPUTS_PREVIOUS_TAG}"
         else
-          CURRENT_TAG="${{ inputs.tag }}"
+          CURRENT_TAG="${INPUTS_TAG}"
 
-          if [ "${{ inputs.deployment_type }}" = "ota" ]; then
+          if [ "${INPUTS_DEPLOYMENT_TYPE}" = "ota" ]; then
             # For OTA releases, find the most recent tag (either OTA or native)
             # OTA tags: ota-{version}-{runNumber}; legacy tags may be ota-{updateGroupId}
             # Native tags: {version} or {version}-preview
 
-            if [ "${{ inputs.variant }}" = "preview" ]; then
+            if [ "${INPUTS_VARIANT}" = "preview" ]; then
               # Find latest OTA tag for preview
               OTA_TAGS=$(git tag -l "ota-*" 2>/dev/null | grep -v "^${CURRENT_TAG}$" || true)
               if [ -n "$OTA_TAGS" ]; then
@@ -190,7 +202,7 @@ runs:
             fi
           else
             # For native builds, use the original logic
-            if [ "${{ inputs.variant }}" = "preview" ]; then
+            if [ "${INPUTS_VARIANT}" = "preview" ]; then
               FOUND_PREVIOUS_TAG=$(git tag -l 2>/dev/null | grep -E "preview$" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
             else
               FOUND_PREVIOUS_TAG=$(git tag -l 2>/dev/null | grep -v "preview" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
@@ -205,6 +217,11 @@ runs:
         fi
 
         echo "previous_tag=$FOUND_PREVIOUS_TAG" >> $GITHUB_OUTPUT
+      env:
+        INPUTS_PREVIOUS_TAG: ${{ inputs.previous_tag }}
+        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
+        INPUTS_VARIANT: ${{ inputs.variant }}
 
     - name: Install git-cliff
       if: steps.check_tag.outputs.tag_exists == 'false'
@@ -218,8 +235,8 @@ runs:
       if: steps.check_tag.outputs.tag_exists == 'false'
       shell: bash
       run: |
-        PREVIOUS="${{ steps.get_previous_tag.outputs.previous_tag }}"
-        TAG="${{ inputs.tag }}"
+        PREVIOUS="${STEPS_GET_PREVIOUS_TAG_OUTPUTS_PREVIOUS_TAG}"
+        TAG="${INPUTS_TAG}"
 
         if [ -z "$PREVIOUS" ]; then
           RELEASE_NOTES="Initial release"
@@ -267,6 +284,9 @@ runs:
         } >> $GITHUB_OUTPUT
 
         echo "$RELEASE_NOTES" > .release-notes-body.md
+      env:
+        STEPS_GET_PREVIOUS_TAG_OUTPUTS_PREVIOUS_TAG: ${{ steps.get_previous_tag.outputs.previous_tag }}
+        INPUTS_TAG: ${{ inputs.tag }}
 
     - name: Update CHANGELOG.md
       id: update_changelog
@@ -276,7 +296,7 @@ runs:
         # Generate the full changelog
         # Pass --tag to tell git-cliff that HEAD should be treated as this tag
         # This prevents commits from appearing as "unreleased" when they're being released
-        ~/.cargo/bin/git-cliff --config cliff.toml --tag "${{ inputs.tag }}" -o CHANGELOG.md
+        ~/.cargo/bin/git-cliff --config cliff.toml --tag "${INPUTS_TAG}" -o CHANGELOG.md
 
         # Check if changelog has changed
         if git diff --quiet CHANGELOG.md 2>/dev/null; then
@@ -287,33 +307,36 @@ runs:
           echo "changed=true" >> $GITHUB_OUTPUT
 
           # Configure git for commit (use the actor who triggered the workflow)
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
 
           # Commit and push directly to main
           git add CHANGELOG.md
-          git commit -m "chore(changelog): update CHANGELOG.md for ${{ inputs.tag }}"
-          git push origin HEAD:main
+          git commit -m "chore(changelog): update CHANGELOG.md for ${INPUTS_TAG}"
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: bearer ${INPUTS_GITHUB_TOKEN}" push "https://github.com/${GITHUB_REPOSITORY}.git" HEAD:main
 
           echo "CHANGELOG.md committed and pushed to main"
         fi
+      env:
+        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Get variant-specific app info
       id: get_app_info
       if: steps.check_tag.outputs.tag_exists == 'false'
       shell: bash
       run: |
-        if [ "${{ inputs.variant }}" = "preview" ]; then
+        if [ "${INPUTS_VARIANT}" = "preview" ]; then
           VARIANT_TYPE="Preview"
-        elif [ "${{ inputs.variant }}" = "internal" ]; then
+        elif [ "${INPUTS_VARIANT}" = "internal" ]; then
           VARIANT_TYPE="Internal"
-        elif [ "${{ inputs.variant }}" = "testflight" ]; then
+        elif [ "${INPUTS_VARIANT}" = "testflight" ]; then
           VARIANT_TYPE="TestFlight"
         else
           VARIANT_TYPE="Production"
         fi
 
-        DEPLOYMENT_TYPE="${{ inputs.deployment_type }}"
+        DEPLOYMENT_TYPE="${INPUTS_DEPLOYMENT_TYPE}"
         if [ "$DEPLOYMENT_TYPE" = "ota" ]; then
           DEPLOYMENT_LABEL="OTA Update"
         else
@@ -322,11 +345,14 @@ runs:
 
         echo "variant_type=$VARIANT_TYPE" >> $GITHUB_OUTPUT
         echo "deployment_label=$DEPLOYMENT_LABEL" >> $GITHUB_OUTPUT
+      env:
+        INPUTS_VARIANT: ${{ inputs.variant }}
+        INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
 
     - name: Create a new tag
       id: tag
       if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_exists == 'false' && inputs.create_tag != 'false' }}
-      uses: anothrNick/github-tag-action@1.67.0
+      uses: anothrNick/github-tag-action@a2c70ae13a881faf2b4953baaa9e49731997ab36
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         CUSTOM_TAG: ${{ inputs.tag }}
@@ -342,50 +368,50 @@ runs:
       run: |
         # GitHub release body = metadata + only this release's notes (.release-notes-body.md).
         # Do not include CHANGELOG.md (full cumulative changelog lives in repo only).
-        BODY="## ${{ steps.get_app_info.outputs.variant_type }} ${{ steps.get_app_info.outputs.deployment_label }}: ${{ inputs.tag }}
+        BODY="## ${STEPS_GET_APP_INFO_OUTPUTS_VARIANT_TYPE} ${STEPS_GET_APP_INFO_OUTPUTS_DEPLOYMENT_LABEL}: ${INPUTS_TAG}
 
-        **Deployment Type:** ${{ steps.get_app_info.outputs.deployment_label }}
-        **App Version:** \`${{ inputs.version }}\`
-        **Previous tag:** ${{ steps.get_previous_tag.outputs.previous_tag || 'N/A (initial release)' }}"
+        **Deployment Type:** ${STEPS_GET_APP_INFO_OUTPUTS_DEPLOYMENT_LABEL}
+        **App Version:** \`${INPUTS_VERSION}\`
+        **Previous tag:** ${PREVIOUS_TAG}"
 
         # Add OTA-specific info
-        if [ "${{ inputs.deployment_type }}" = "ota" ]; then
+        if [ "${INPUTS_DEPLOYMENT_TYPE}" = "ota" ]; then
           # Add Update Group ID (primary identifier for OTA updates)
-          if [ -n "${{ inputs.update_group_id }}" ]; then
+          if [ -n "${INPUTS_UPDATE_GROUP_ID}" ]; then
             BODY="${BODY}
 
         ### OTA Update Info
-        **Update Group ID:** \`${{ inputs.update_group_id }}\`"
+        **Update Group ID:** \`${INPUTS_UPDATE_GROUP_ID}\`"
           fi
 
           # Add target runtime version if specified
-          if [ -n "${{ inputs.runtime_version }}" ]; then
+          if [ -n "${INPUTS_RUNTIME_VERSION}" ]; then
             BODY="${BODY}
-        **Target Runtime Version:** \`${{ inputs.runtime_version }}\`"
+        **Target Runtime Version:** \`${INPUTS_RUNTIME_VERSION}\`"
           fi
 
           # Add platform-specific update IDs
-          if [ -n "${{ inputs.ios_update_id }}" ]; then
+          if [ -n "${INPUTS_IOS_UPDATE_ID}" ]; then
             BODY="${BODY}
-        **iOS Update ID:** \`${{ inputs.ios_update_id }}\`"
+        **iOS Update ID:** \`${INPUTS_IOS_UPDATE_ID}\`"
           fi
-          if [ -n "${{ inputs.android_update_id }}" ]; then
+          if [ -n "${INPUTS_ANDROID_UPDATE_ID}" ]; then
             BODY="${BODY}
-        **Android Update ID:** \`${{ inputs.android_update_id }}\`"
+        **Android Update ID:** \`${INPUTS_ANDROID_UPDATE_ID}\`"
           fi
 
           # Add fingerprints
-          if [ -n "${{ inputs.ios_fingerprint }}" ] || [ -n "${{ inputs.android_fingerprint }}" ]; then
+          if [ -n "${INPUTS_IOS_FINGERPRINT}" ] || [ -n "${INPUTS_ANDROID_FINGERPRINT}" ]; then
             BODY="${BODY}
 
         ### Fingerprints"
-            if [ -n "${{ inputs.ios_fingerprint }}" ]; then
+            if [ -n "${INPUTS_IOS_FINGERPRINT}" ]; then
               BODY="${BODY}
-        **iOS:** \`${{ inputs.ios_fingerprint }}\`"
+        **iOS:** \`${INPUTS_IOS_FINGERPRINT}\`"
             fi
-            if [ -n "${{ inputs.android_fingerprint }}" ]; then
+            if [ -n "${INPUTS_ANDROID_FINGERPRINT}" ]; then
               BODY="${BODY}
-        **Android:** \`${{ inputs.android_fingerprint }}\`"
+        **Android:** \`${INPUTS_ANDROID_FINGERPRINT}\`"
             fi
           fi
         fi
@@ -407,19 +433,42 @@ runs:
           echo "$BODY"
           echo "EOF"
         } >> $GITHUB_OUTPUT
+      env:
+        STEPS_GET_APP_INFO_OUTPUTS_VARIANT_TYPE: ${{ steps.get_app_info.outputs.variant_type }}
+        STEPS_GET_APP_INFO_OUTPUTS_DEPLOYMENT_LABEL: ${{ steps.get_app_info.outputs.deployment_label }}
+        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        PREVIOUS_TAG: ${{ steps.get_previous_tag.outputs.previous_tag || 'N/A (initial release)' }}
+        INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
+        INPUTS_UPDATE_GROUP_ID: ${{ inputs.update_group_id }}
+        INPUTS_RUNTIME_VERSION: ${{ inputs.runtime_version }}
+        INPUTS_IOS_UPDATE_ID: ${{ inputs.ios_update_id }}
+        INPUTS_ANDROID_UPDATE_ID: ${{ inputs.android_update_id }}
+        INPUTS_IOS_FINGERPRINT: ${{ inputs.ios_fingerprint }}
+        INPUTS_ANDROID_FINGERPRINT: ${{ inputs.android_fingerprint }}
 
     - name: Create a new release
       if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_exists == 'false' && inputs.create_release != 'false' }}
-      uses: ncipollo/release-action@v1
-      with:
-        token: ${{ inputs.github_token }}
-        tag: ${{ inputs.tag }}
-        draft: false
-        makeLatest: ${{ inputs.variant == 'production' && 'true' || 'legacy' }}
-        generateReleaseNotes: false
-        body: ${{ steps.build_release_body.outputs.body }}
+      shell: bash
+      run: |
+        printf '%s' "$RELEASE_BODY" > .release-body.md
+
+        latest_args=(--latest=false)
+        if [ "$INPUTS_VARIANT" = "production" ]; then
+          latest_args=(--latest)
+        fi
+
+        gh release create "$INPUTS_TAG" \
+          --repo "$GITHUB_REPOSITORY" \
+          --verify-tag \
+          --title "$INPUTS_TAG" \
+          --notes-file .release-body.md \
+          "${latest_args[@]}"
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GH_TOKEN: ${{ inputs.github_token }}
+        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_VARIANT: ${{ inputs.variant }}
+        RELEASE_BODY: ${{ steps.build_release_body.outputs.body }}
 
     - name: Dry run output
       if: ${{ inputs.dry == 'true' && steps.check_tag.outputs.tag_exists == 'false' }}
@@ -427,21 +476,21 @@ runs:
       run: |
         echo "========= DRY MODE =========="
         echo "Would create GitHub release:"
-        echo "Tag: ${{ inputs.tag }}"
-        echo "App Version: ${{ inputs.version }}"
-        echo "Variant: ${{ inputs.variant }}"
-        echo "Deployment Type: ${{ steps.get_app_info.outputs.deployment_label }}"
-        echo "Previous tag: ${{ steps.get_previous_tag.outputs.previous_tag }}"
-        if [ "${{ inputs.deployment_type }}" = "ota" ]; then
+        echo "Tag: ${INPUTS_TAG}"
+        echo "App Version: ${INPUTS_VERSION}"
+        echo "Variant: ${INPUTS_VARIANT}"
+        echo "Deployment Type: ${STEPS_GET_APP_INFO_OUTPUTS_DEPLOYMENT_LABEL}"
+        echo "Previous tag: ${STEPS_GET_PREVIOUS_TAG_OUTPUTS_PREVIOUS_TAG}"
+        if [ "${INPUTS_DEPLOYMENT_TYPE}" = "ota" ]; then
           echo ""
           echo "=== OTA Update Info ==="
-          echo "Update Group ID: ${{ inputs.update_group_id }}"
-          echo "iOS Update ID: ${{ inputs.ios_update_id }}"
-          echo "Android Update ID: ${{ inputs.android_update_id }}"
-          echo "iOS Fingerprint: ${{ inputs.ios_fingerprint }}"
-          echo "Android Fingerprint: ${{ inputs.android_fingerprint }}"
-          if [ -n "${{ inputs.runtime_version }}" ]; then
-            echo "Target Runtime Version: ${{ inputs.runtime_version }}"
+          echo "Update Group ID: ${INPUTS_UPDATE_GROUP_ID}"
+          echo "iOS Update ID: ${INPUTS_IOS_UPDATE_ID}"
+          echo "Android Update ID: ${INPUTS_ANDROID_UPDATE_ID}"
+          echo "iOS Fingerprint: ${INPUTS_IOS_FINGERPRINT}"
+          echo "Android Fingerprint: ${INPUTS_ANDROID_FINGERPRINT}"
+          if [ -n "${INPUTS_RUNTIME_VERSION}" ]; then
+            echo "Target Runtime Version: ${INPUTS_RUNTIME_VERSION}"
           fi
         fi
         echo ""
@@ -449,5 +498,19 @@ runs:
         echo "Would generate and commit CHANGELOG.md if changed"
         echo ""
         echo "=== Generated Changelog ==="
-        echo "${{ steps.generate_release_notes.outputs.release_notes }}"
+        echo "${STEPS_GENERATE_RELEASE_NOTES_OUTPUTS_RELEASE_NOTES}"
         echo "============================="
+      env:
+        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_VARIANT: ${{ inputs.variant }}
+        STEPS_GET_APP_INFO_OUTPUTS_DEPLOYMENT_LABEL: ${{ steps.get_app_info.outputs.deployment_label }}
+        STEPS_GET_PREVIOUS_TAG_OUTPUTS_PREVIOUS_TAG: ${{ steps.get_previous_tag.outputs.previous_tag }}
+        INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
+        INPUTS_UPDATE_GROUP_ID: ${{ inputs.update_group_id }}
+        INPUTS_IOS_UPDATE_ID: ${{ inputs.ios_update_id }}
+        INPUTS_ANDROID_UPDATE_ID: ${{ inputs.android_update_id }}
+        INPUTS_IOS_FINGERPRINT: ${{ inputs.ios_fingerprint }}
+        INPUTS_ANDROID_FINGERPRINT: ${{ inputs.android_fingerprint }}
+        INPUTS_RUNTIME_VERSION: ${{ inputs.runtime_version }}
+        STEPS_GENERATE_RELEASE_NOTES_OUTPUTS_RELEASE_NOTES: ${{ steps.generate_release_notes.outputs.release_notes }}
