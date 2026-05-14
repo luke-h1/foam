@@ -123,4 +123,64 @@ describe('useTwitchSignIn', () => {
       expect(mockedRouter.replace).toHaveBeenCalledWith('/tabs/following');
     });
   });
+
+  it('uses the success callback instead of navigating when provided', async () => {
+    const authResult = {
+      type: 'success',
+      params: {
+        access_token: 'token-456',
+      },
+      url: 'foam://auth#access_token=token-456',
+      authentication: {
+        accessToken: 'token-456',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+      },
+    } as const;
+
+    const request = {
+      url: 'https://id.twitch.tv/oauth2/authorize',
+      parseReturnUrl: jest.fn(() => authResult),
+    };
+    const loginWithTwitch = jest.fn();
+    const onSuccess = jest.fn();
+
+    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()] as never);
+    mockedOpenAuthSessionAsync.mockResolvedValue({
+      type: 'success',
+      url: authResult.url,
+    } as never);
+
+    const contextValue: AuthContextState = {
+      authState: undefined,
+      fetchAnonToken: jest.fn(),
+      loginWithTwitch,
+      logout: jest.fn(),
+      populateAuthState: jest.fn(),
+      ready: true,
+      user: undefined,
+    };
+
+    function Wrapper({ children }: PropsWithChildren) {
+      return (
+        <AuthContext.Provider value={contextValue}>
+          {children}
+        </AuthContext.Provider>
+      );
+    }
+
+    const { result } = renderHook(() => useTwitchSignIn({ onSuccess }), {
+      wrapper: Wrapper,
+    });
+
+    await act(async () => {
+      await result.current.startSignIn();
+    });
+
+    await waitFor(() => {
+      expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+      expect(mockedRouter.replace).not.toHaveBeenCalled();
+    });
+  });
 });

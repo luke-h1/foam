@@ -65,8 +65,13 @@ const redact = (value: string | null | undefined) =>
 
 WebBrowser.maybeCompleteAuthSession();
 
-export function useTwitchSignIn() {
+interface UseTwitchSignInOptions {
+  onSuccess?: () => Promise<void> | void;
+}
+
+export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
   const { loginWithTwitch } = useAuthContext();
+  const { onSuccess } = options;
   const authSessionActiveRef = useRef(false);
   const handledAuthResponseKeyRef = useRef<string | null>(null);
   const [isPromptingAuth, setIsPromptingAuth] = useState(false);
@@ -133,6 +138,11 @@ export function useTwitchSignIn() {
         });
         toast.success('Logged in');
 
+        if (onSuccess) {
+          await onSuccess();
+          return;
+        }
+
         router.replace('/tabs/following');
         return;
       }
@@ -153,7 +163,7 @@ export function useTwitchSignIn() {
         warningCause: nextResponse,
       });
     },
-    [loginWithTwitch],
+    [loginWithTwitch, onSuccess],
   );
 
   const startSignIn = useCallback(async () => {

@@ -170,7 +170,7 @@ export function ProfileCard() {
             </Text>
             <PressableArea
               style={styles.pressableFill}
-              onPress={() => router.push('/login')}
+              onPress={() => router.push('/auth-sheet')}
             >
               <View style={styles.primaryButton}>
                 <Icon icon="log-in" size={18} color={theme.colorBlack} />

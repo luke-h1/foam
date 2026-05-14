@@ -61,7 +61,7 @@ export function SettingsIndexScreen() {
                   return;
                 }
 
-                router.push('/login');
+                router.push('/auth-sheet');
               }}
             >
               {user ? 'Profile' : 'Sign In'}
@@ -161,7 +161,7 @@ export function SettingsIndexScreen() {
                 return;
               }
 
-              router.push('/login');
+              router.push('/auth-sheet');
             }}
           />
         </SettingsSection>

@@ -30,6 +30,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as WebBrowser from 'expo-web-browser';
 import type { RouterAction } from 'expo-quick-actions/router';
 import { useQuickActionCallback } from 'expo-quick-actions/hooks';
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { InteractionManager, Linking, LogBox } from 'react-native';
 import {
@@ -101,6 +102,7 @@ const deferredFontMap = {
 };
 
 const fontLoadTimeoutMs = 1200;
+
 const quickActionsBase: RouterAction[] = [
   {
     id: 'live',
@@ -139,7 +141,6 @@ const rootStackScreens = [
   'streams',
   'category/[id]',
   'chat',
-  'login',
   'auth',
   'preferences',
   'storybook',
@@ -317,6 +318,20 @@ function RootLayoutNav() {
           {rootStackScreens.map(screenName => (
             <Stack.Screen key={screenName} name={screenName} />
           ))}
+          <Stack.Screen
+            name="auth-sheet"
+            options={{
+              presentation: 'formSheet',
+              sheetGrabberVisible: true,
+              sheetAllowedDetents: [0.44, 0.68],
+              sheetCornerRadius: theme.borderRadius28,
+              contentStyle: {
+                backgroundColor: isLiquidGlassAvailable()
+                  ? theme.color.transparent.dark
+                  : theme.color.background.dark,
+              },
+            }}
+          />
         </Stack>
         <OTAUpdates />
       </Providers>
