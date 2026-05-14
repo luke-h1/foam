@@ -17,6 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWindowDimensions, View, StyleSheet } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -27,14 +28,34 @@ import {
   useSafeAreaFrame,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 
 interface LiveStreamScreenProps {
   id: string;
 }
 
-const OVERLAY_CHAT_WIDTH = 380;
+const DEFAULT_OVERLAY_CHAT_WIDTH = 380;
+const DEFAULT_SIDEBAR_CHAT_FRACTION = 0.35;
+const LANDSCAPE_CHAT_MIN_WIDTH = 280;
+const LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS = 220;
+const MAX_OVERLAY_CHAT_FRACTION = 0.68;
+const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 
 type FullscreenChatMode = 'sidebar' | 'overlay';
+type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
+
+function clampLandscapeChatWidth(
+  width: number,
+  screenWidth: number,
+  mode: FullscreenChatMode,
+) {
+  const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, screenWidth * 0.42);
+  const maxFraction =
+    mode === 'overlay' ? MAX_OVERLAY_CHAT_FRACTION : MAX_SIDEBAR_CHAT_FRACTION;
+  const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
+
+  return Math.min(maxWidth, Math.max(minWidth, width));
+}
 
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
@@ -56,6 +77,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const shouldRenderChat = !isLandscape || isChatVisible;
   const [fullscreenChatMode, setFullscreenChatMode] =
     useState<FullscreenChatMode>('sidebar');
+  const [landscapeChatCycleAction, setLandscapeChatCycleAction] =
+    useState<LandscapeChatCycleAction>('hide');
+  const [landscapeChatWidth, setLandscapeChatWidth] = useState<number | null>(
+    null,
+  );
   const [hasContentGate, setHasContentGate] = useState(false);
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   const lastChatToggleTimeRef = useRef<number>(0);
@@ -78,14 +104,80 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     setHasContentGate(false);
   }, []);
 
+  const commitLandscapeChatWidth = useCallback(
+    (width: number) => {
+      setLandscapeChatWidth(
+        clampLandscapeChatWidth(width, screenWidth, fullscreenChatMode),
+      );
+    },
+    [fullscreenChatMode, screenWidth],
+  );
+
+  const getLandscapeChatWidth = useCallback(
+    (mode: FullscreenChatMode) => {
+      const defaultWidth =
+        mode === 'overlay'
+          ? Math.min(DEFAULT_OVERLAY_CHAT_WIDTH, screenWidth * 0.46)
+          : screenWidth * DEFAULT_SIDEBAR_CHAT_FRACTION;
+
+      return clampLandscapeChatWidth(
+        landscapeChatWidth ?? defaultWidth,
+        screenWidth,
+        mode,
+      );
+    },
+    [landscapeChatWidth, screenWidth],
+  );
+
+  const applyLandscapeChatCycleAction = useCallback(
+    (action: LandscapeChatCycleAction) => {
+      switch (action) {
+        case 'hide':
+          setChatVisible(false);
+          setLandscapeChatCycleAction('show');
+          return;
+        case 'show':
+          setFullscreenChatMode('sidebar');
+          setChatVisible(true);
+          setLandscapeChatCycleAction('overlay');
+          return;
+        case 'overlay':
+          setFullscreenChatMode('overlay');
+          setChatVisible(true);
+          setLandscapeChatCycleAction('hide');
+          return;
+      }
+    },
+    [],
+  );
+
   const toggleChat = useCallback(() => {
     const now = Date.now();
     if (now - lastChatToggleTimeRef.current < CHAT_TOGGLE_DEBOUNCE_MS) {
       return;
     }
     lastChatToggleTimeRef.current = now;
-    setChatVisible(v => !v);
-  }, []);
+    setChatVisible(current => {
+      const nextVisible = !current;
+      setLandscapeChatCycleAction(
+        nextVisible
+          ? fullscreenChatMode === 'overlay'
+            ? 'hide'
+            : 'overlay'
+          : 'show',
+      );
+      return nextVisible;
+    });
+  }, [fullscreenChatMode]);
+
+  const cycleLandscapeChatMode = useCallback(() => {
+    const now = Date.now();
+    if (now - lastChatToggleTimeRef.current < CHAT_TOGGLE_DEBOUNCE_MS) {
+      return;
+    }
+    lastChatToggleTimeRef.current = now;
+    applyLandscapeChatCycleAction(landscapeChatCycleAction);
+  }, [applyLandscapeChatCycleAction, landscapeChatCycleAction]);
 
   useEffect(() => {
     setHasContentGate(false);
@@ -103,10 +195,12 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const getVideoDimensions = useCallback(() => {
     if (isLandscape) {
-      const videoFraction =
-        isChatVisible && fullscreenChatMode === 'sidebar' ? 0.65 : 1;
+      const landscapeChatWidth =
+        isChatVisible && fullscreenChatMode === 'sidebar'
+          ? getLandscapeChatWidth('sidebar')
+          : 0;
       return {
-        width: Math.max(1, screenWidth * videoFraction),
+        width: Math.max(1, screenWidth - landscapeChatWidth),
         height: Math.max(1, screenHeight),
       };
     }
@@ -122,6 +216,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     };
   }, [
     fullscreenChatMode,
+    getLandscapeChatWidth,
     hasContentGate,
     isChatVisible,
     isLandscape,
@@ -133,10 +228,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     let width: number;
     let height: number;
     if (isLandscape) {
-      width =
-        fullscreenChatMode === 'overlay'
-          ? Math.min(OVERLAY_CHAT_WIDTH, screenWidth * 0.46)
-          : screenWidth * 0.35;
+      width = getLandscapeChatWidth(fullscreenChatMode);
       height = screenHeight;
     } else {
       const videoHeight = hasContentGate
@@ -151,6 +243,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     };
   }, [
     fullscreenChatMode,
+    getLandscapeChatWidth,
     hasContentGate,
     isLandscape,
     screenHeight,
@@ -163,6 +256,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const chatHeight = useSharedValue(getChatDimensions().height);
   const chatOpacity = useSharedValue(1);
   const chatTranslateX = useSharedValue(0);
+  const resizeStartWidth = useSharedValue(0);
+  const resizeHandleOpacity = useSharedValue(0.42);
 
   const animatedChatStyle = useAnimatedStyle(() => ({
     width: chatWidth.value,
@@ -225,6 +320,58 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     height: videoHeight.value,
   }));
 
+  const animatedFullscreenControlsStyle = useAnimatedStyle(() => ({
+    right: theme.space16 + chatWidth.value,
+  }));
+
+  const animatedResizeHandleStyle = useAnimatedStyle(() => ({
+    opacity: resizeHandleOpacity.value,
+  }));
+
+  const resizeChatGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activateAfterLongPress(LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS)
+        .onBegin(() => {
+          resizeStartWidth.value = chatWidth.value;
+          resizeHandleOpacity.value = 0.9;
+        })
+        .onUpdate(event => {
+          const maxFraction =
+            fullscreenChatMode === 'overlay'
+              ? MAX_OVERLAY_CHAT_FRACTION
+              : MAX_SIDEBAR_CHAT_FRACTION;
+          const minWidth = Math.min(
+            LANDSCAPE_CHAT_MIN_WIDTH,
+            screenWidth * 0.42,
+          );
+          const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
+          const nextWidth = Math.min(
+            maxWidth,
+            Math.max(minWidth, resizeStartWidth.value - event.translationX),
+          );
+
+          chatWidth.value = nextWidth;
+          if (fullscreenChatMode === 'sidebar' && isChatVisible) {
+            videoWidth.value = Math.max(1, screenWidth - nextWidth);
+          }
+        })
+        .onFinalize(() => {
+          resizeHandleOpacity.value = 0.42;
+          scheduleOnRN(commitLandscapeChatWidth, chatWidth.value);
+        }),
+    [
+      chatWidth,
+      commitLandscapeChatWidth,
+      fullscreenChatMode,
+      isChatVisible,
+      resizeHandleOpacity,
+      resizeStartWidth,
+      screenWidth,
+      videoWidth,
+    ],
+  );
+
   const contentContainerStyle = useMemo(
     () => [styles.contentContainer, isLandscape && styles.row],
     [isLandscape],
@@ -252,9 +399,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const toggleFullscreenChatMode = useCallback(() => {
     setChatVisible(true);
-    setFullscreenChatMode(current =>
-      current === 'sidebar' ? 'overlay' : 'sidebar',
-    );
+    setFullscreenChatMode(current => {
+      const nextMode = current === 'sidebar' ? 'overlay' : 'sidebar';
+      setLandscapeChatCycleAction(nextMode === 'overlay' ? 'hide' : 'overlay');
+      return nextMode;
+    });
   }, []);
 
   const landscapeChatContainerStyle = useMemo(() => {
@@ -308,50 +457,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             muted={false}
             onContentGateChange={handleContentGateChange}
             onWebViewLoaded={handlePlayerWebViewLoaded}
-            onVideoAreaPress={isLandscape ? toggleChat : undefined}
+            onVideoAreaPress={isLandscape ? cycleLandscapeChatMode : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             streamInfo={streamInfo}
             useRawTwitchPlayer
           />
-        ) : null}
-        {isLandscape ? (
-          <View
-            style={[
-              styles.fullscreenChatControls,
-              { top: insets.top + theme.space12 },
-            ]}
-          >
-            <Button
-              label={isChatVisible ? 'Hide chat' : 'Show chat'}
-              onPress={toggleChat}
-              style={styles.fullscreenChatControlButton}
-            >
-              <Icon
-                color={theme.colorWhite}
-                icon={isChatVisible ? 'circle-off' : 'message-circle'}
-                size={16}
-              />
-            </Button>
-            <Button
-              label={
-                fullscreenChatMode === 'overlay'
-                  ? 'Use sidebar chat'
-                  : 'Use overlay chat'
-              }
-              onPress={toggleFullscreenChatMode}
-              style={styles.fullscreenChatControlButton}
-            >
-              <Icon
-                color={theme.colorWhite}
-                icon={
-                  fullscreenChatMode === 'overlay'
-                    ? 'panel-left'
-                    : 'monitor-play'
-                }
-                size={16}
-              />
-            </Button>
-          </View>
         ) : null}
       </Animated.View>
 
@@ -398,7 +508,56 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             />
           </View>
         ) : null}
+        {isLandscape && shouldMountChat ? (
+          <GestureDetector gesture={resizeChatGesture}>
+            <Animated.View
+              accessibilityLabel="Resize chat"
+              accessibilityRole="adjustable"
+              style={[styles.chatResizeHandle, animatedResizeHandleStyle]}
+            >
+              <View style={styles.chatResizeIndicator} />
+            </Animated.View>
+          </GestureDetector>
+        ) : null}
       </Animated.View>
+
+      {isLandscape ? (
+        <Animated.View
+          pointerEvents="box-none"
+          style={[
+            styles.fullscreenChatControls,
+            { top: insets.top + theme.space12 },
+            animatedFullscreenControlsStyle,
+          ]}
+        >
+          <Button
+            label={isChatVisible ? 'Hide chat' : 'Show chat'}
+            onPress={toggleChat}
+            style={styles.fullscreenChatControlButton}
+          >
+            <Icon
+              color={theme.colorWhite}
+              icon={isChatVisible ? 'eye-off' : 'message-circle'}
+              size={16}
+            />
+          </Button>
+          <Button
+            label={
+              fullscreenChatMode === 'overlay'
+                ? 'Use sidebar chat'
+                : 'Use overlay chat'
+            }
+            onPress={toggleFullscreenChatMode}
+            style={styles.fullscreenChatControlButton}
+          >
+            <Icon
+              color={theme.colorWhite}
+              icon={fullscreenChatMode === 'overlay' ? 'sidebar' : 'layout'}
+              size={16}
+            />
+          </Button>
+        </Animated.View>
+      ) : null}
     </View>
   );
 });
@@ -411,6 +570,22 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
     width: '100%',
+  },
+  chatResizeHandle: {
+    alignItems: 'center',
+    bottom: 0,
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    top: 0,
+    width: 24,
+    zIndex: 8,
+  },
+  chatResizeIndicator: {
+    backgroundColor: 'rgba(255,255,255,0.46)',
+    borderRadius: theme.borderRadius999,
+    height: 48,
+    width: 3,
   },
   overlayChatBlur: {
     ...StyleSheet.absoluteFillObject,
@@ -444,8 +619,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: theme.space8,
     position: 'absolute',
-    right: theme.space16,
-    zIndex: 4,
+    zIndex: 12,
   },
   row: {
     flexDirection: 'row',
