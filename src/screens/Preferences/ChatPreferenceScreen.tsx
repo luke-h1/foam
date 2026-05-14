@@ -21,7 +21,7 @@ import {
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const DENSITY_OPTIONS = [
   { label: 'Comfortable', value: 'comfortable' as const },
@@ -99,6 +99,20 @@ export function ChatPreferenceScreen() {
 
     return emotes.slice(0, 3);
   }, [previewEmojiStyle]);
+  const contextPreviewValue = useMemo(
+    () => ({
+      chatTimestamps,
+      highlightOwnMentions,
+      showInlineReplyContext,
+      showUnreadJumpPill,
+    }),
+    [
+      chatTimestamps,
+      highlightOwnMentions,
+      showInlineReplyContext,
+      showUnreadJumpPill,
+    ],
+  );
 
   useEffect(() => {
     setPreviewDensity(chatDensity);
@@ -269,12 +283,7 @@ export function ChatPreferenceScreen() {
               </Text>
               <ChatPreferencePreview
                 variant="context"
-                value={{
-                  chatTimestamps,
-                  highlightOwnMentions,
-                  showInlineReplyContext,
-                  showUnreadJumpPill,
-                }}
+                value={contextPreviewValue}
               />
             </View>
           </Form.Section>
@@ -472,12 +481,7 @@ export function ChatPreferenceScreen() {
             <View style={styles.previewSpacer}>
               <ChatPreferencePreview
                 variant="context"
-                value={{
-                  chatTimestamps,
-                  highlightOwnMentions,
-                  showInlineReplyContext,
-                  showUnreadJumpPill,
-                }}
+                value={contextPreviewValue}
               />
             </View>
           </View>
@@ -605,7 +609,11 @@ export function ChatPreferenceScreen() {
   );
 }
 
-function DensityPreview({ density }: { density: 'comfortable' | 'compact' }) {
+const DensityPreview = memo(function DensityPreview({
+  density,
+}: {
+  density: 'comfortable' | 'compact';
+}) {
   const compact = density === 'compact';
 
   return (
@@ -624,9 +632,11 @@ function DensityPreview({ density }: { density: 'comfortable' | 'compact' }) {
       />
     </View>
   );
-}
+});
 
-function PreviewMessage({
+DensityPreview.displayName = 'DensityPreview';
+
+const PreviewMessage = memo(function PreviewMessage({
   compact,
   message,
   time,
@@ -655,9 +665,15 @@ function PreviewMessage({
       </Text>
     </View>
   );
-}
+});
 
-function EmojiStylePreview({ emotes }: { emotes: SanitisedEmote[] }) {
+PreviewMessage.displayName = 'PreviewMessage';
+
+const EmojiStylePreview = memo(function EmojiStylePreview({
+  emotes,
+}: {
+  emotes: SanitisedEmote[];
+}) {
   return (
     <View style={styles.previewPanel}>
       <View style={styles.emojiPreviewRow}>
@@ -675,7 +691,9 @@ function EmojiStylePreview({ emotes }: { emotes: SanitisedEmote[] }) {
       </View>
     </View>
   );
-}
+});
+
+EmojiStylePreview.displayName = 'EmojiStylePreview';
 
 function ProviderTogglePreviewItem({
   custom: _custom,
@@ -711,7 +729,7 @@ function ProviderTogglePreviewItem({
   );
 }
 
-function ProviderPreviewItem({
+const ProviderPreviewItem = memo(function ProviderPreviewItem({
   enabled,
   provider,
   variant,
@@ -729,7 +747,9 @@ function ProviderPreviewItem({
       />
     </View>
   );
-}
+});
+
+ProviderPreviewItem.displayName = 'ProviderPreviewItem';
 
 const styles = StyleSheet.create({
   container: {

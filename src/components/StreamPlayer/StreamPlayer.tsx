@@ -9,6 +9,7 @@ import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   forwardRef,
+  memo,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -810,8 +811,8 @@ function ControlsOverlay({
   );
 }
 
-export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
-  function StreamPlayer(
+export const StreamPlayer = memo(
+  forwardRef<StreamPlayerRef, StreamPlayerProps>(function StreamPlayer(
     {
       autoplay = true,
       channel,
@@ -1659,8 +1660,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         )}
       </View>
     );
-  },
+  }),
 );
+
+StreamPlayer.displayName = 'StreamPlayer';
 
 export function StreamPlayerPrewarm({
   parent = 'www.twitch.tv',

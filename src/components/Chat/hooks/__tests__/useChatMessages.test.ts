@@ -217,6 +217,24 @@ describe('useChatMessages', () => {
 
       expect(onUnreadIncrement).not.toHaveBeenCalled();
     });
+
+    test('should not increment unread while jumping to bottom', () => {
+      const onUnreadIncrement = jest.fn();
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+          isScrollingToBottomRef: { current: true },
+          onUnreadIncrement,
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+
+      expect(onUnreadIncrement).not.toHaveBeenCalled();
+    });
   });
 
   describe('Cleanup', () => {

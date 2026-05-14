@@ -49,6 +49,12 @@ export function SettingsDevtoolsScreen() {
               Cached Images
             </Form.Link>
             <Form.Link
+              systemImage="list.bullet.rectangle"
+              onPress={() => router.push('/dev-tools/changelog')}
+            >
+              Changelog Demo
+            </Form.Link>
+            <Form.Link
               systemImage="book.closed"
               onPress={() => router.push('/tabs/settings/storybook')}
             >
@@ -101,6 +107,12 @@ export function SettingsDevtoolsScreen() {
             subtitle="Inspect and manage emote and badge media cache"
             icon={{ icon: 'image', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/cached-images')}
+          />
+          <SettingsLinkRow
+            title="Changelog Demo"
+            subtitle="Present sample native changelog payloads"
+            icon={{ icon: 'list', color: theme.colorBlue }}
+            onPress={() => router.push('/dev-tools/changelog')}
           />
           <SettingsLinkRow
             title="Storybook"
