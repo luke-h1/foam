@@ -15,7 +15,7 @@ import {
   type ParsedPart,
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useSelector } from '@legendapp/state/react';
-import { type ReactNode, useMemo } from 'react';
+import { memo, type ReactNode, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 
@@ -103,7 +103,9 @@ const getMentionColor = () => theme.colorViolet;
 
 const parseTextForEmotes = (text: string): ParsedPart[] => [textPart(text)];
 
-export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
+export const ChatPreferencePreview = memo(function ChatPreferencePreview(
+  props: ChatPreferencePreviewProps,
+) {
   const { variant, value } = props;
 
   switch (variant) {
@@ -200,9 +202,11 @@ export function ChatPreferencePreview(props: ChatPreferencePreviewProps) {
       return unreachable;
     }
   }
-}
+});
 
-function ChatPreviewSurface({
+ChatPreferencePreview.displayName = 'ChatPreferencePreview';
+
+const ChatPreviewSurface = memo(function ChatPreviewSurface({
   messages,
   settings,
   testID,
@@ -262,9 +266,11 @@ function ChatPreviewSurface({
       </View>
     </PreviewCard>
   );
-}
+});
 
-function ProviderAssetPreview({
+ChatPreviewSurface.displayName = 'ChatPreviewSurface';
+
+const ProviderAssetPreview = memo(function ProviderAssetPreview({
   enabled,
   provider,
   testID,
@@ -321,9 +327,11 @@ function ProviderAssetPreview({
       </View>
     </PreviewCard>
   );
-}
+});
 
-function PreviewCard({
+ProviderAssetPreview.displayName = 'ProviderAssetPreview';
+
+const PreviewCard = memo(function PreviewCard({
   children,
   testID,
 }: {
@@ -335,7 +343,9 @@ function PreviewCard({
       {children}
     </View>
   );
-}
+});
+
+PreviewCard.displayName = 'PreviewCard';
 
 function createPreviewMessage({
   badges = [],

@@ -1703,6 +1703,7 @@ export const Chat = memo(
       isAtBottom,
       isAtBottomRef,
       isScrollingToBottom,
+      isScrollingToBottomRef,
       unreadCount,
       setUnreadCount,
       handleScroll,
@@ -1726,6 +1727,7 @@ export const Chat = memo(
       forceFlush,
     } = useChatMessages({
       isAtBottomRef,
+      isScrollingToBottomRef,
       onUnreadIncrement: useCallback(
         (count: number) => setUnreadCount(prev => prev + count),
         [setUnreadCount],

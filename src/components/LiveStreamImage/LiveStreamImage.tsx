@@ -1,4 +1,5 @@
 import { theme } from '@app/styles/themes';
+import { memo } from 'react';
 import { View, ViewStyle, StyleSheet } from 'react-native';
 import { Image } from '../Image/Image';
 
@@ -9,7 +10,12 @@ interface Props {
   animated?: boolean;
 }
 
-export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
+export const LiveStreamImage = memo(function LiveStreamImage({
+  animated,
+  size,
+  style,
+  thumbnail,
+}: Props) {
   return (
     <View style={[styles.imageContainer, style]}>
       {thumbnail ? (
@@ -25,7 +31,9 @@ export function LiveStreamImage({ animated, size, style, thumbnail }: Props) {
       ) : null}
     </View>
   );
-}
+});
+
+LiveStreamImage.displayName = 'LiveStreamImage';
 
 const styles = StyleSheet.create({
   image: {},

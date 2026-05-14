@@ -1,6 +1,5 @@
 import { FlashList } from '@app/components/FlashList/FlashList';
 import { Icon } from '@app/components/Icon/Icon';
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
@@ -12,9 +11,10 @@ import { twitchService, UserBlockList } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef } from 'react';
+import { memo, useCallback, useMemo, useRef } from 'react';
 import { Alert, ScrollView, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
+import { BlockedUsersActionButton } from './components/BlockedUsersActionButton';
 
 const SKELETON_COUNT = 5;
 
@@ -25,7 +25,7 @@ interface BlockedUserItemProps {
   onUnblock: (userId: string, userName: string) => void;
 }
 
-function BlockedUserItem({
+const BlockedUserItem = memo(function BlockedUserItem({
   user,
   index,
   count,
@@ -43,36 +43,32 @@ function BlockedUserItem({
         index === count - 1 ? styles.lastItem : null,
       ]}
     >
-      <View style={styles.userIcon}>
-        <Icon icon="user-x" size={18} color={theme.colorGreyHoverAlpha} />
-      </View>
       <View style={styles.userInfo}>
-        <Text type="md" weight="medium">
+        <Text type="md" weight="bold" numberOfLines={1}>
           {user.display_name}
         </Text>
-        <Text type="sm" color="gray.textLow">
+        <Text type="sm" color="gray.textLow" numberOfLines={1}>
           @{user.user_login}
         </Text>
       </View>
-      <PressableArea
+      <BlockedUsersActionButton
+        label="Unblock"
         onPress={handlePress}
-        hitSlop={8}
         style={styles.unblockButton}
-      >
-        <Text type="xs" weight="bold" style={styles.unblockButtonLabel}>
-          Unblock
-        </Text>
-      </PressableArea>
+        variant="destructive"
+      />
     </View>
   );
-}
+});
+
+BlockedUserItem.displayName = 'BlockedUserItem';
 
 interface BlockedUserItemSkeletonProps {
   index: number;
   count: number;
 }
 
-function BlockedUserItemSkeleton({
+const BlockedUserItemSkeleton = memo(function BlockedUserItemSkeleton({
   index,
   count,
 }: BlockedUserItemSkeletonProps) {
@@ -84,7 +80,6 @@ function BlockedUserItemSkeleton({
         index === count - 1 ? styles.lastItem : null,
       ]}
     >
-      <Skeleton style={styles.userIconSkeleton} />
       <View style={styles.userInfo}>
         <Skeleton style={styles.nameSkeleton} />
         <Skeleton style={styles.loginSkeleton} />
@@ -92,7 +87,9 @@ function BlockedUserItemSkeleton({
       <Skeleton style={styles.iconSkeleton} />
     </View>
   );
-}
+});
+
+BlockedUserItemSkeleton.displayName = 'BlockedUserItemSkeleton';
 
 interface ListStatePanelProps {
   icon: string;
@@ -121,7 +118,7 @@ function ListStatePanel({
         onRefresh ? <RefreshControl onRefresh={onRefresh} /> : undefined
       }
     >
-      <View style={styles.section}>
+      <View style={styles.stateSection}>
         <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
           Blocked Accounts
         </Text>
@@ -141,18 +138,34 @@ function ListStatePanel({
             {description}
           </Text>
           {actionLabel && onAction ? (
-            <PressableArea style={styles.pressableFill} onPress={onAction}>
-              <View style={styles.retryButton}>
-                <Icon icon="refresh-cw" size={16} color={theme.colorBlack} />
-                <Text type="xs" weight="bold" color="accent" contrast>
-                  {actionLabel}
-                </Text>
-              </View>
-            </PressableArea>
+            <BlockedUsersActionButton
+              label={actionLabel}
+              onPress={onAction}
+              style={styles.retryButton}
+            />
           ) : null}
         </View>
       </View>
     </ScrollView>
+  );
+}
+
+interface BlockedUsersSectionHeaderProps {
+  count?: number;
+}
+
+function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
+  return (
+    <View style={styles.sectionHeader}>
+      <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
+        Blocked Accounts
+      </Text>
+      {typeof count === 'number' ? (
+        <Text type="xxs" color="gray.textLow" style={styles.sectionCountText}>
+          {count}
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -196,10 +209,7 @@ function BlockedUsersList({
 
   if (isLoading && !data) {
     return (
-      <View style={styles.listContainer}>
-        <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
-          Blocked Accounts
-        </Text>
+      <View style={styles.content}>
         <FlashList
           ref={listRef}
           data={Array.from({ length: SKELETON_COUNT })}
@@ -207,6 +217,8 @@ function BlockedUsersList({
           keyExtractor={(_, idx) => `skeleton-${idx}`}
           contentInsetAdjustmentBehavior="automatic"
           style={styles.list}
+          ListHeaderComponent={<BlockedUsersSectionHeader />}
+          maintainVisibleContentPosition={{ disabled: true }}
           scrollEnabled={false}
         />
       </View>
@@ -238,15 +250,7 @@ function BlockedUsersList({
   }
 
   return (
-    <View style={styles.listContainer}>
-      <View style={styles.sectionHeader}>
-        <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
-          Blocked Accounts
-        </Text>
-        <Text type="xxs" color="gray.textLow">
-          {data.length}
-        </Text>
-      </View>
+    <View style={styles.content}>
       <FlashList
         ref={listRef}
         data={data}
@@ -256,10 +260,11 @@ function BlockedUsersList({
         refreshControl={<RefreshControl onRefresh={onRefresh} />}
         contentContainerStyle={styles.listContent}
         style={styles.list}
+        ListHeaderComponent={<BlockedUsersSectionHeader count={data.length} />}
+        maintainVisibleContentPosition={{ disabled: true }}
         ListFooterComponent={
           <Text type="xxs" color="gray.textLow" style={styles.sectionFooter}>
-            Blocked accounts are hidden from Twitch interactions tied to your
-            account.
+            Unblocking restores normal Twitch interactions for that account.
           </Text>
         }
       />
@@ -284,7 +289,7 @@ export function BlockedUsersScreen() {
     enabled: !!user?.id,
   });
 
-  const unblockMutation = useMutation({
+  const { mutate: unblockUser } = useMutation({
     mutationFn: (targetUserId: string) =>
       twitchService.unblockUser(targetUserId),
     onMutate: async targetUserId => {
@@ -347,18 +352,22 @@ export function BlockedUsersScreen() {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Unblock',
-            onPress: () => unblockMutation.mutate(userId),
+            onPress: () => unblockUser(userId),
             style: 'destructive',
           },
         ],
       );
     },
-    [unblockMutation],
+    [unblockUser],
   );
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Blocked Users" subtitle="Moderation" size="medium" />
+      <ScreenHeader
+        title="Blocked Users"
+        subtitle="Moderation"
+        size="compact"
+      />
       <BlockedUsersList
         data={data?.data}
         isLoading={isLoading}
@@ -371,6 +380,9 @@ export function BlockedUsersScreen() {
 }
 
 const styles = StyleSheet.create({
+  content: {
+    flex: 1,
+  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
@@ -380,29 +392,24 @@ const styles = StyleSheet.create({
     borderTopRightRadius: theme.borderRadius12,
   },
   iconSkeleton: {
-    borderRadius: 10,
-    height: 20,
-    width: 20,
+    borderRadius: theme.borderRadius12,
+    height: 28,
+    width: 72,
   },
   itemContainer: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
     borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
     marginHorizontal: theme.space16,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space16,
+    minHeight: 64,
+    paddingVertical: theme.space12,
   },
   lastItem: {
     borderBottomLeftRadius: theme.borderRadius12,
     borderBottomRightRadius: theme.borderRadius12,
     borderBottomWidth: 0,
-  },
-  listContainer: {
-    flex: 1,
-    paddingTop: theme.space16,
   },
   list: {
     flex: 1,
@@ -418,23 +425,13 @@ const styles = StyleSheet.create({
     height: 16,
     width: 120,
   },
-  pressableFill: {
-    alignSelf: 'stretch',
-  },
   retryButton: {
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    backgroundColor: theme.colorDarkGreen,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
-    flexDirection: 'row',
-    gap: theme.space8,
-    justifyContent: 'center',
     marginTop: theme.space8,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space12,
   },
-  section: {
+  sectionCountText: {
+    paddingHorizontal: theme.space16,
+  },
+  stateSection: {
     gap: theme.space8,
   },
   sectionFooter: {
@@ -446,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingRight: theme.space16,
+    paddingBottom: theme.space8,
   },
   sectionTitle: {
     color: theme.colorGreyAlpha,
@@ -456,7 +453,6 @@ const styles = StyleSheet.create({
   },
   stateContent: {
     flexGrow: 1,
-    paddingTop: theme.space16,
     paddingBottom: theme.space24,
   },
   stateScroll: {
@@ -468,7 +464,7 @@ const styles = StyleSheet.create({
   },
   stateIcon: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundElement.dark,
+    backgroundColor: theme.colorRedSurface,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     height: 64,
@@ -479,39 +475,21 @@ const styles = StyleSheet.create({
   statePanel: {
     alignItems: 'center',
     backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
+    borderWidth: StyleSheet.hairlineWidth,
     gap: theme.space12,
     marginHorizontal: theme.space16,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space36,
   },
   unblockButton: {
-    backgroundColor: theme.colorRedSurface,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  unblockButtonLabel: {
-    color: theme.colorRed,
-  },
-  userIcon: {
-    alignItems: 'center',
-    backgroundColor: theme.color.backgroundElement.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    height: 40,
-    justifyContent: 'center',
-    width: 40,
-  },
-  userIconSkeleton: {
-    borderRadius: theme.borderRadius12,
-    height: 40,
-    width: 40,
+    flexShrink: 0,
   },
   userInfo: {
     flex: 1,
     gap: theme.space4,
+    minWidth: 0,
   },
 });

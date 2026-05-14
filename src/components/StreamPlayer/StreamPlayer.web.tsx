@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { forwardRef, useImperativeHandle, useMemo } from 'react';
+import { forwardRef, memo, useImperativeHandle, useMemo } from 'react';
 import { Linking, StyleSheet, View, type DimensionValue } from 'react-native';
 
 export interface StreamPlayerRef {
@@ -99,8 +99,8 @@ function buildTwitchPlayerUrl({
   return `https://player.twitch.tv/?${params.toString()}`;
 }
 
-export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
-  function StreamPlayer(
+export const StreamPlayer = memo(
+  forwardRef<StreamPlayerRef, StreamPlayerProps>(function StreamPlayer(
     {
       autoplay = true,
       channel,
@@ -191,8 +191,10 @@ export const StreamPlayer = forwardRef<StreamPlayerRef, StreamPlayerProps>(
         </View>
       </View>
     );
-  },
+  }),
 );
+
+StreamPlayer.displayName = 'StreamPlayer';
 
 export function StreamPlayerPrewarm() {
   return null;

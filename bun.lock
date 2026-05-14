@@ -166,10 +166,10 @@
     },
   },
   "trustedDependencies": [
-    "esbuild",
     "protobufjs",
     "core-js",
     "@shopify/react-native-skia",
+    "esbuild",
     "@sentry/cli",
   ],
   "packages": {
