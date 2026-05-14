@@ -99,7 +99,7 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title="Debug"
             subtitle="Manual debug helpers and experiments"
-            icon={{ icon: 'bug', color: theme.colorOrange }}
+            icon={{ icon: 'terminal', color: theme.colorOrange }}
             onPress={() => router.push('/tabs/settings/debug')}
           />
           <SettingsLinkRow

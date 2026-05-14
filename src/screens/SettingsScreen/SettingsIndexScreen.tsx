@@ -141,7 +141,7 @@ export function SettingsIndexScreen() {
           <SettingsLinkRow
             title="Appearance"
             subtitle="Theme and visual mode"
-            icon={{ icon: 'sparkles', color: theme.colorAmber }}
+            icon={{ icon: 'sliders', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/appearance')}
           />
         </SettingsSection>

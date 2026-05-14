@@ -599,7 +599,7 @@ export function ChatPreferenceScreen() {
           <SettingsToggleRow
             title="Disable Emote Animations"
             subtitle="Prefer static emote rendering"
-            icon={{ icon: 'circle-off', color: theme.colorRed }}
+            icon={{ icon: 'slash', color: theme.colorRed }}
             value={disableEmoteAnimations}
             onValueChange={value => update({ disableEmoteAnimations: value })}
           />

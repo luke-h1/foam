@@ -10,8 +10,14 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
 import { BlurView } from 'expo-blur';
-import { memo, RefObject, useCallback, useMemo } from 'react';
-import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
+import { memo, RefObject, useCallback, useMemo, useState } from 'react';
+import {
+  Keyboard,
+  LayoutChangeEvent,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -21,6 +27,9 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import { ChatComposer } from './ChatComposer/ChatComposer';
+
+const SHOW_SETTINGS_MIN_WIDTH = 260;
+const SHOW_DEBUG_MIN_WIDTH = 320;
 
 export interface ReplyToData {
   messageId: string;
@@ -87,6 +96,7 @@ export const ChatInputSection = memo(
   }: ChatInputSectionProps) => {
     const insets = useSafeAreaInsets();
     const composerDragOffset = useSharedValue(0);
+    const [composerWidth, setComposerWidth] = useState(0);
 
     const handleEmoteSelect = useCallback(
       (emote: SanitisedEmote) => {
@@ -109,6 +119,10 @@ export const ChatInputSection = memo(
 
     const dismissKeyboard = useCallback(() => {
       Keyboard.dismiss();
+    }, []);
+
+    const handleComposerLayout = useCallback((event: LayoutChangeEvent) => {
+      setComposerWidth(event.nativeEvent.layout.width);
     }, []);
 
     const composerPanGesture = useMemo(
@@ -138,6 +152,9 @@ export const ChatInputSection = memo(
           }),
       [composerDragOffset, dismissKeyboard],
     );
+
+    const showSettingsButton = composerWidth >= SHOW_SETTINGS_MIN_WIDTH;
+    const showDebugButton = composerWidth >= SHOW_DEBUG_MIN_WIDTH;
 
     return (
       <View
@@ -179,7 +196,7 @@ export const ChatInputSection = memo(
         <GestureDetector gesture={composerPanGesture}>
           <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
             <View style={styles.composerSurface}>
-              <View style={styles.composerBar}>
+              <View onLayout={handleComposerLayout} style={styles.composerBar}>
                 <View pointerEvents="none" style={styles.composerBarChrome}>
                   <BlurView
                     intensity={34}
@@ -214,14 +231,18 @@ export const ChatInputSection = memo(
                     </View>
                   </View>
 
-                  <ActionIconButton
-                    icon="gearshape"
-                    onPress={onOpenSettingsSheet}
-                  />
-                  <ActionIconButton
-                    icon="bolt.fill"
-                    onPress={onOpenDebugModal}
-                  />
+                  {showSettingsButton ? (
+                    <ActionIconButton
+                      icon="gearshape"
+                      onPress={onOpenSettingsSheet}
+                    />
+                  ) : null}
+                  {showDebugButton ? (
+                    <ActionIconButton
+                      icon="bolt.fill"
+                      onPress={onOpenDebugModal}
+                    />
+                  ) : null}
                   <ActionIconButton
                     disabled={!canSend}
                     icon="arrow.up"
@@ -247,6 +268,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderRadius: 18,
     borderWidth: 1,
+    flexShrink: 0,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -255,19 +277,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
   composerShell: {
-    paddingHorizontal: theme.space12,
     overflow: 'visible',
+    paddingHorizontal: theme.space12,
   },
   composerSurface: {
+    borderRadius: 28,
     overflow: 'visible',
-  },
-  composerBar: {
-    overflow: 'visible',
-    position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.24,
     shadowRadius: 24,
+  },
+  composerBar: {
+    borderRadius: 28,
+    maxWidth: '100%',
+    overflow: 'hidden',
+    position: 'relative',
   },
   composerBarChrome: {
     ...StyleSheet.absoluteFillObject,
@@ -280,7 +305,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flex: 1,
-    minWidth: 80,
+    minWidth: 0,
   },
   inputGlass: {
     minHeight: 46,
@@ -289,9 +314,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
-    paddingHorizontal: 10,
     paddingBottom: 10,
+    paddingHorizontal: 10,
     paddingTop: 10,
+    width: '100%',
   },
   replyContent: {
     flex: 1,
