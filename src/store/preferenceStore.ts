@@ -17,6 +17,7 @@ export interface Preferences {
   chatTimestamps: boolean;
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
+  showRecentMessages: boolean;
   showUnreadJumpPill: boolean;
   emojiStyle: 'twitter' | 'google';
   show7TvEmotes: boolean;
@@ -40,6 +41,7 @@ const initialPreferences: Preferences = {
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
+  showRecentMessages: true,
   showUnreadJumpPill: true,
   emojiStyle: 'twitter',
   show7TvEmotes: true,

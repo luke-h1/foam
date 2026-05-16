@@ -40,6 +40,14 @@ type AnyMessage = ChatMessageType<any, any> & {
   cachedSenderColor?: string;
 };
 
+type HandleNewMessageOptions = {
+  countUnread?: boolean;
+};
+
+function getBufferedMessageKey(message: AnyMessage): string {
+  return `${message.message_id}_${message.message_nonce}`;
+}
+
 function normaliseLogin(value: string | undefined): string {
   return value?.trim().toLowerCase() ?? '';
 }
@@ -108,8 +116,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   }, [flushBuffer]);
 
   const handleNewMessage = useCallback(
-    (newMessage: AnyMessage) => {
-      const key = `${newMessage.message_id}_${newMessage.message_nonce}`;
+    (newMessage: AnyMessage, options?: HandleNewMessageOptions) => {
+      const key = getBufferedMessageKey(newMessage);
 
       const messageWithCachedColor = {
         ...newMessage,
@@ -117,7 +125,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       };
 
       const existingIndex = messageBufferRef.current.findIndex(
-        msg => `${msg.message_id}_${msg.message_nonce}` === key,
+        msg => getBufferedMessageKey(msg) === key,
       );
 
       if (existingIndex >= 0) {
@@ -139,7 +147,11 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       }
 
       const scrollingToBottom = isScrollingToBottomRef?.current ?? false;
-      if (!isAtBottomRef.current && !scrollingToBottom) {
+      if (
+        options?.countUnread !== false &&
+        !isAtBottomRef.current &&
+        !scrollingToBottom
+      ) {
         onUnreadIncrement(1);
       }
 

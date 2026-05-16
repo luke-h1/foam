@@ -169,7 +169,7 @@ describe('messageHandlers', () => {
       ).toBe('Hello world!');
     });
 
-    test('should use nonce for message_nonce', () => {
+    test('should use the Twitch message id for message_nonce when present', () => {
       const params = {
         tags: {
           'display-name': 'TestUser',
@@ -182,7 +182,7 @@ describe('messageHandlers', () => {
 
       const result = createBaseMessage(params);
 
-      expect(result.message_nonce).toBe('test-nonce-123');
+      expect(result.message_nonce).toBe('msg-123');
     });
 
     test('should default message_id to "0" when id not in tags', () => {
@@ -198,6 +198,7 @@ describe('messageHandlers', () => {
       const result = createBaseMessage(params);
 
       expect(result.message_id).toBe('0');
+      expect(result.message_nonce).toBe('test-nonce-123');
     });
   });
 

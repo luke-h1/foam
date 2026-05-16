@@ -103,6 +103,18 @@ describe('chatStore messages', () => {
     expect(chatStore$.messages.peek()).toHaveLength(1);
   });
 
+  test('addMessages ignores duplicate message keys from historical replay', () => {
+    addMessages([
+      createMessage('msg-1', 'msg-1', 'historical'),
+      createMessage('msg-1', 'msg-1', 'live'),
+    ] as ChatMessageType<never>[]);
+
+    expect(chatStore$.messages.peek()).toHaveLength(1);
+    expect(getMessageById('msg-1')?.message).toEqual([
+      { type: 'text', content: 'historical' },
+    ]);
+  });
+
   test('moderateMessageById replaces message content with a moderation notice', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'peepoHappy'));
 
