@@ -87,6 +87,7 @@ export function parseIrcMessage(line: string): ParsedIrcMessage | null {
 }
 
 export const recentMessagesService = {
+  /* istanbul ignore next: network wrapper intentionally remains untested. */
   getRecentMessages: async (
     channelName: string,
     signal?: AbortSignal,

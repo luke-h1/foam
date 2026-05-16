@@ -26,4 +26,24 @@ describe('recent-messages-service', () => {
     expect(parsed?.command).toBe('PRIVMSG');
     expect(parsed?.params).toEqual(['#foam', 'hello chat']);
   });
+
+  test('parses IRC tag flags and ignores empty tag keys', () => {
+    const parsed = parseIrcMessage('@historical;=ignored;id=msg-3 PING');
+
+    expect(parsed).toEqual({
+      tags: {
+        historical: '',
+        id: 'msg-3',
+      },
+      prefix: undefined,
+      command: 'PING',
+      params: [],
+    });
+  });
+
+  test('returns null for empty or malformed IRC lines', () => {
+    expect(parseIrcMessage('')).toBeNull();
+    expect(parseIrcMessage('@display-name=TestUser')).toBeNull();
+    expect(parseIrcMessage(':testuser')).toBeNull();
+  });
 });
