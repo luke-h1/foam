@@ -67,6 +67,7 @@ export function ChatPreferenceScreen() {
     emojiStyle,
     highlightOwnMentions,
     showInlineReplyContext,
+    showRecentMessages,
     showUnreadJumpPill,
     show7TvEmotes,
     show7tvBadges,
@@ -253,6 +254,12 @@ export function ChatPreferenceScreen() {
           </Form.Section>
 
           <Form.Section title="Context">
+            <IosToggleRow
+              custom
+              label="Historical Recent Messages"
+              value={showRecentMessages !== false}
+              onValueChange={value => update({ showRecentMessages: value })}
+            />
             <IosToggleRow
               custom
               label="Show Timestamps"
@@ -443,6 +450,13 @@ export function ChatPreferenceScreen() {
         </SettingsSection>
 
         <SettingsSection title="Context">
+          <SettingsToggleRow
+            title="Historical Recent Messages"
+            subtitle="Load recent chat history from recent-messages.robotty.de"
+            icon={{ icon: 'history', color: theme.colorDarkGreen }}
+            value={showRecentMessages !== false}
+            onValueChange={value => update({ showRecentMessages: value })}
+          />
           <SettingsToggleRow
             title="Show Timestamps"
             subtitle="Display message timestamps inline"

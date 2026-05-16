@@ -9,6 +9,10 @@ import {
   twitchBadgeService,
   type SanitisedBadgeSet,
 } from '@app/services/twitch-badge-service';
+import {
+  parseIrcMessage,
+  recentMessagesService,
+} from '@app/services/recent-messages-service';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { twitchService } from '@app/services/twitch-service';
 import {
@@ -1563,6 +1567,7 @@ export const Chat = memo(
   ({ channelName, channelId, transparent = false }: ChatProps) => {
     const { user } = useAuthContext();
     const preferences = usePreferences();
+    const showRecentMessages = preferences.showRecentMessages !== false;
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
     const messages$ = chatStore$.messages;
@@ -1750,10 +1755,11 @@ export const Chat = memo(
         userstate: ReturnType<typeof createUserStateFromTags>,
         baseMessage: AnyChatMessageType,
         userId?: string,
+        countUnread = true,
       ) => {
         const emoteData = getCurrentEmoteData(channelId);
         if (!emoteData) {
-          handleNewMessage(baseMessage);
+          handleNewMessage(baseMessage, { countUnread });
           return;
         }
 
@@ -1766,7 +1772,7 @@ export const Chat = memo(
           emoteData.ffzGlobalEmotes.length > 0;
 
         if (!hasEmotes) {
-          handleNewMessage(baseMessage);
+          handleNewMessage(baseMessage, { countUnread });
           return;
         }
 
@@ -1815,11 +1821,14 @@ export const Chat = memo(
             sourceChannelBadges: cachedSharedBadgeContext?.sourceChannelBadges,
           });
 
-          handleNewMessage({
-            ...baseMessage,
-            message: replacedMessage,
-            badges,
-          });
+          handleNewMessage(
+            {
+              ...baseMessage,
+              message: replacedMessage,
+              badges,
+            },
+            { countUnread },
+          );
 
           if (cachedSharedBadgeContext?.isComplete === false) {
             void getSharedChatBadgeContext(userstate)
@@ -1846,7 +1855,7 @@ export const Chat = memo(
           }
         } catch (error) {
           logger.chat.error('Error processing emotes:', error);
-          handleNewMessage(baseMessage);
+          handleNewMessage(baseMessage, { countUnread });
         }
       },
       [channelId, handleNewMessage, user?.login],
@@ -1949,8 +1958,12 @@ export const Chat = memo(
       );
     }, [messages$, processMessageEmotes]);
 
-    const onMessage = useCallback(
-      (_channel: string, tags: Record<string, string>, text: string) => {
+    const handlePrivmsgMessage = useCallback(
+      async (
+        tags: Record<string, string>,
+        text: string,
+        countUnread = true,
+      ) => {
         const userstate = createUserStateFromTags(tags);
         const replyParentMessageId = tags['reply-parent-msg-id'];
         const replyParentDisplayName = tags['reply-parent-display-name'];
@@ -1975,14 +1988,22 @@ export const Chat = memo(
         const baseMessage = createBaseMessage({ tags, channelName, text });
         const messageWithParentColor = { ...baseMessage, parentColor };
 
-        void processMessageEmotes(
+        await processMessageEmotes(
           text,
           userstate,
           messageWithParentColor,
           userId,
+          countUnread,
         );
       },
       [channelId, channelName, fetchUserCosmetics, processMessageEmotes],
+    );
+
+    const onMessage = useCallback(
+      (_channel: string, tags: Record<string, string>, text: string) => {
+        void handlePrivmsgMessage(tags, text);
+      },
+      [handlePrivmsgMessage],
     );
 
     const onUserNotice = useCallback(
@@ -2135,6 +2156,77 @@ export const Chat = memo(
       roomStateRef.current = null;
     }, [appendSystemMessage]);
 
+    const handleRecentIrcMessage = useCallback(
+      async (line: string) => {
+        const ircMessage = parseIrcMessage(line);
+        if (!ircMessage?.tags) {
+          return;
+        }
+
+        const { command, params, tags } = ircMessage;
+        const channel = params[0];
+        if (!channel) {
+          return;
+        }
+
+        switch (command) {
+          case 'PRIVMSG': {
+            const text = params[1];
+            if (text) {
+              await handlePrivmsgMessage(tags, text, false);
+            }
+            break;
+          }
+          case 'USERNOTICE': {
+            const text = params[1] ?? '';
+            const message = createUserNoticeMessage({
+              tags: tags as UserNoticeTags,
+              channelName,
+              text,
+            });
+            handleNewMessage(message, { countUnread: false });
+            break;
+          }
+          case 'CLEARCHAT': {
+            const username = params[1];
+            const banDuration = tags['ban-duration']
+              ? Number.parseInt(tags['ban-duration'], 10)
+              : undefined;
+            onClearChat(channel, tags, username, banDuration);
+            break;
+          }
+          case 'CLEARMSG':
+          case 'CLEARMESSAGE': {
+            const targetMsgId = tags['target-msg-id'];
+            if (targetMsgId) {
+              onClearMessage(channel, tags, targetMsgId);
+            }
+            break;
+          }
+          case 'NOTICE': {
+            const text = params[1];
+            if (text) {
+              onNotice(channel, tags, text);
+            }
+            break;
+          }
+          case 'ROOMSTATE': {
+            onRoomState(channel, tags);
+            break;
+          }
+        }
+      },
+      [
+        channelName,
+        handleNewMessage,
+        handlePrivmsgMessage,
+        onClearChat,
+        onClearMessage,
+        onNotice,
+        onRoomState,
+      ],
+    );
+
     const {
       connectionState: twitchConnectionState,
       isConnected: isChatConnected,
@@ -2176,6 +2268,42 @@ export const Chat = memo(
       chatStore$.currentChannelId.set(channelId);
       restoreRecentMessagesForChannel(channelId);
     }, [channelId]);
+
+    useEffect(() => {
+      if (!showRecentMessages) {
+        return;
+      }
+
+      const abortController = new AbortController();
+
+      const loadRecentMessages = async () => {
+        try {
+          const recentMessages = await recentMessagesService.getRecentMessages(
+            channelName,
+            abortController.signal,
+          );
+
+          for (const message of recentMessages) {
+            if (abortController.signal.aborted) {
+              return;
+            }
+            await handleRecentIrcMessage(message);
+          }
+
+          forceFlush();
+        } catch (error) {
+          if (!abortController.signal.aborted) {
+            logger.chat.debug('Failed to load recent messages:', error);
+          }
+        }
+      };
+
+      void loadRecentMessages();
+
+      return () => {
+        abortController.abort();
+      };
+    }, [channelName, forceFlush, handleRecentIrcMessage, showRecentMessages]);
 
     const refetchEmotesRef = useRef(refetchEmotes);
     refetchEmotesRef.current = refetchEmotes;

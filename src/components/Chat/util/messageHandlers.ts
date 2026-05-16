@@ -67,7 +67,7 @@ export const createBaseMessage = ({
 }: CreateBaseMessageParams): ChatMessageType<'usernotice'> => {
   const userstate = createUserStateFromTags(tags);
   const messageId = userstate.id || '0';
-  const messageNonce = generateNonce();
+  const messageNonce = messageId !== '0' ? messageId : generateNonce();
 
   return {
     id: `${messageId}_${messageNonce}`,
