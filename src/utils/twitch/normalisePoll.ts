@@ -6,6 +6,7 @@ import type {
   TwitchHelixPoll,
   TwitchPollChoice,
 } from '@app/types/twitch/poll';
+import { percentageOf } from '@app/utils/number/percentageOf';
 
 function normaliseStatus(status: string | undefined): ChannelPollStatus {
   switch (status?.toLowerCase()) {
@@ -34,8 +35,7 @@ function toChoiceState(
     votes: choice.votes,
     channelPointsVotes: choice.channel_points_votes,
     bitsVotes: choice.bits_votes,
-    percentage:
-      totalVotes > 0 ? Math.round((choice.votes / totalVotes) * 100) : 0,
+    percentage: percentageOf(choice.votes, totalVotes),
   }));
 }
 

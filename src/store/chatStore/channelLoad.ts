@@ -186,8 +186,44 @@ export interface LoadChannelResourcesOptions {
   twitchUserId?: string;
 }
 
-const deduplicateById = <T extends { id: string }>(items: T[]): T[] =>
+type Identifiable = { id: string };
+
+type EmoteResourceSets = Pick<
+  ChannelCacheType,
+  | 'twitchChannelEmotes'
+  | 'twitchGlobalEmotes'
+  | 'twitchSubscriberEmotes'
+  | 'sevenTvChannelEmotes'
+  | 'sevenTvGlobalEmotes'
+  | 'bttvGlobalEmotes'
+  | 'bttvChannelEmotes'
+  | 'ffzChannelEmotes'
+  | 'ffzGlobalEmotes'
+>;
+
+type BadgeResourceSets = Pick<
+  ChannelCacheType,
+  | 'twitchChannelBadges'
+  | 'twitchGlobalBadges'
+  | 'ffzGlobalBadges'
+  | 'ffzChannelBadges'
+  | 'chatterinoBadges'
+>;
+
+const deduplicateById = <T extends Identifiable>(items: readonly T[]): T[] =>
   Array.from(new Map(items.map(item => [item.id, item])).values());
+
+const getSettledValue = <T>(
+  result: PromiseSettledResult<T[]> | undefined,
+): T[] => (result?.status === 'fulfilled' ? result.value : []);
+
+const getDedupedSettledValue = <T extends Identifiable>(
+  result: PromiseSettledResult<T[]> | undefined,
+): T[] => deduplicateById(getSettledValue(result));
+
+const combineUniqueById = <T extends Identifiable>(
+  ...itemGroups: readonly T[][]
+): T[] => deduplicateById(itemGroups.flat());
 
 const loadChannelResourcesInternal = async (
   channelId: string,
@@ -272,10 +308,7 @@ const loadChannelResourcesInternal = async (
               return false;
             }
 
-            const subscriberEmotes =
-              twitchSubscriberEmotes[0]?.status === 'fulfilled'
-                ? twitchSubscriberEmotes[0].value
-                : [];
+            const subscriberEmotes = getSettledValue(twitchSubscriberEmotes[0]);
             const channelCache = chatStore$.persisted.channelCaches[channelId];
 
             if (channelCache) {
@@ -313,43 +346,28 @@ const loadChannelResourcesInternal = async (
               return false;
             }
 
-            const getValue = <T>(r: PromiseSettledResult<T[]>): T[] =>
-              r.status === 'fulfilled' ? r.value : [];
+            const badgeResourceSets = {
+              twitchChannelBadges: getDedupedSettledValue(twitchChannelBadges),
+              twitchGlobalBadges: getDedupedSettledValue(twitchGlobalBadges),
+              ffzGlobalBadges: getDedupedSettledValue(ffzGlobalBadges),
+              ffzChannelBadges: getDedupedSettledValue(ffzChannelBadges),
+              chatterinoBadges: getDedupedSettledValue(chatterinoBadges),
+            } satisfies BadgeResourceSets;
 
-            const dedupedTwitchChannelBadges = deduplicateById(
-              getValue(twitchChannelBadges),
+            const allBadges = combineUniqueById<SanitisedBadgeSet>(
+              badgeResourceSets.twitchChannelBadges,
+              badgeResourceSets.twitchGlobalBadges,
+              badgeResourceSets.ffzGlobalBadges,
+              badgeResourceSets.ffzChannelBadges,
+              badgeResourceSets.chatterinoBadges,
             );
-            const dedupedTwitchGlobalBadges = deduplicateById(
-              getValue(twitchGlobalBadges),
-            );
-            const dedupedFfzGlobalBadges = deduplicateById(
-              getValue(ffzGlobalBadges),
-            );
-            const dedupedFfzChannelBadges = deduplicateById(
-              getValue(ffzChannelBadges),
-            );
-            const dedupedChatterinoBadges = deduplicateById(
-              getValue(chatterinoBadges),
-            );
-
-            const allBadges = deduplicateById([
-              ...dedupedTwitchChannelBadges,
-              ...dedupedTwitchGlobalBadges,
-              ...dedupedFfzGlobalBadges,
-              ...dedupedFfzChannelBadges,
-              ...dedupedChatterinoBadges,
-            ] satisfies SanitisedBadgeSet[]);
 
             const channelCache = chatStore$.persisted.channelCaches[channelId];
 
             if (channelCache) {
               channelCache.assign({
                 badges: allBadges,
-                twitchChannelBadges: dedupedTwitchChannelBadges,
-                twitchGlobalBadges: dedupedTwitchGlobalBadges,
-                ffzGlobalBadges: dedupedFfzGlobalBadges,
-                ffzChannelBadges: dedupedFfzChannelBadges,
-                chatterinoBadges: dedupedChatterinoBadges,
+                ...badgeResourceSets,
                 badgesLastUpdated: Date.now(),
               });
             }
@@ -449,31 +467,45 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    const getValue = <T>(result: PromiseSettledResult<T[]>): T[] =>
-      result.status === 'fulfilled' ? result.value : [];
-    const allEmotesRaw = [
-      ...getValue(sevenTvChannelEmotes),
-      ...getValue(sevenTvGlobalEmotes),
-      ...getValue(twitchChannelEmotes),
-      ...getValue(twitchGlobalEmotes),
-      ...getValue(twitchSubscriberEmotes),
-      ...getValue(bttvGlobalEmotes),
-      ...getValue(bttvChannelEmotes),
-      ...getValue(ffzChannelEmotes),
-      ...getValue(ffzGlobalEmotes),
-    ] satisfies SanitisedEmote[];
+    const emoteResourceSets = {
+      sevenTvChannelEmotes: getDedupedSettledValue(sevenTvChannelEmotes),
+      sevenTvGlobalEmotes: getDedupedSettledValue(sevenTvGlobalEmotes),
+      twitchChannelEmotes: getDedupedSettledValue(twitchChannelEmotes),
+      twitchGlobalEmotes: getDedupedSettledValue(twitchGlobalEmotes),
+      twitchSubscriberEmotes: getDedupedSettledValue(twitchSubscriberEmotes),
+      bttvGlobalEmotes: getDedupedSettledValue(bttvGlobalEmotes),
+      bttvChannelEmotes: getDedupedSettledValue(bttvChannelEmotes),
+      ffzChannelEmotes: getDedupedSettledValue(ffzChannelEmotes),
+      ffzGlobalEmotes: getDedupedSettledValue(ffzGlobalEmotes),
+    } satisfies EmoteResourceSets;
 
-    const allEmotes = deduplicateById(allEmotesRaw);
+    const badgeResourceSets = {
+      twitchChannelBadges: getDedupedSettledValue(twitchChannelBadges),
+      twitchGlobalBadges: getDedupedSettledValue(twitchGlobalBadges),
+      ffzGlobalBadges: getDedupedSettledValue(ffzGlobalBadges),
+      ffzChannelBadges: getDedupedSettledValue(ffzChannelBadges),
+      chatterinoBadges: getDedupedSettledValue(chatterinoBadges),
+    } satisfies BadgeResourceSets;
 
-    const allBadgesRaw = [
-      ...getValue(twitchChannelBadges),
-      ...getValue(twitchGlobalBadges),
-      ...getValue(ffzGlobalBadges),
-      ...getValue(ffzChannelBadges),
-      ...getValue(chatterinoBadges),
-    ] satisfies SanitisedBadgeSet[];
+    const allEmotes = combineUniqueById<SanitisedEmote>(
+      emoteResourceSets.sevenTvChannelEmotes,
+      emoteResourceSets.sevenTvGlobalEmotes,
+      emoteResourceSets.twitchChannelEmotes,
+      emoteResourceSets.twitchGlobalEmotes,
+      emoteResourceSets.twitchSubscriberEmotes,
+      emoteResourceSets.bttvGlobalEmotes,
+      emoteResourceSets.bttvChannelEmotes,
+      emoteResourceSets.ffzChannelEmotes,
+      emoteResourceSets.ffzGlobalEmotes,
+    );
 
-    const allBadges = deduplicateById(allBadgesRaw);
+    const allBadges = combineUniqueById<SanitisedBadgeSet>(
+      badgeResourceSets.twitchChannelBadges,
+      badgeResourceSets.twitchGlobalBadges,
+      badgeResourceSets.ffzGlobalBadges,
+      badgeResourceSets.ffzChannelBadges,
+      badgeResourceSets.chatterinoBadges,
+    );
 
     if (exitIfAborted(signal, true)) {
       return false;
@@ -484,21 +516,9 @@ const loadChannelResourcesInternal = async (
       badges: allBadges,
       lastUpdated: Date.now(),
       badgesLastUpdated: Date.now(),
-      twitchChannelEmotes: deduplicateById(getValue(twitchChannelEmotes)),
-      twitchGlobalEmotes: deduplicateById(getValue(twitchGlobalEmotes)),
-      twitchSubscriberEmotes: deduplicateById(getValue(twitchSubscriberEmotes)),
+      ...emoteResourceSets,
       twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
-      sevenTvChannelEmotes: deduplicateById(getValue(sevenTvChannelEmotes)),
-      sevenTvGlobalEmotes: deduplicateById(getValue(sevenTvGlobalEmotes)),
-      bttvGlobalEmotes: deduplicateById(getValue(bttvGlobalEmotes)),
-      bttvChannelEmotes: deduplicateById(getValue(bttvChannelEmotes)),
-      ffzChannelEmotes: deduplicateById(getValue(ffzChannelEmotes)),
-      ffzGlobalEmotes: deduplicateById(getValue(ffzGlobalEmotes)),
-      twitchChannelBadges: deduplicateById(getValue(twitchChannelBadges)),
-      twitchGlobalBadges: deduplicateById(getValue(twitchGlobalBadges)),
-      ffzGlobalBadges: deduplicateById(getValue(ffzGlobalBadges)),
-      ffzChannelBadges: deduplicateById(getValue(ffzChannelBadges)),
-      chatterinoBadges: deduplicateById(getValue(chatterinoBadges)),
+      ...badgeResourceSets,
       sevenTvPersonalBadges: {},
       sevenTvPersonalEmotes: {},
       sevenTvEmoteSetId: sevenTvSetId !== 'global' ? sevenTvSetId : undefined,

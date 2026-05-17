@@ -36,7 +36,7 @@ function createMessage(
   messageId: string,
   messageNonce: string,
   content: string,
-): ChatMessageType<'usernotice'> {
+): ChatMessageType<never> {
   return {
     id: `${messageId}_${messageNonce}`,
     userstate: {
@@ -259,6 +259,37 @@ describe('chatStore messages', () => {
 
     expect(chatStore$.messages.peek()).toHaveLength(1);
     expect(chatStore$.messages.peek()[0]?.message_id).toBe('msg-1');
+  });
+
+  test('message part arrays do not warn when mixed emote and text parts are updated', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const message = createMessage('msg-1', 'nonce-1', 'first');
+
+    addMessage({
+      ...message,
+      message: [
+        {
+          type: 'emote',
+          content: 'WW',
+          id: '01F71VQYHR000D3ZZ6Q11NR7TV',
+          name: 'WW',
+          url: 'https://cdn.7tv.app/emote/01F71VQYHR000D3ZZ6Q11NR7TV/4x.avif',
+        },
+        { type: 'text', content: ' ' },
+        { type: 'text', content: 'HillaryClintonsEmails_' },
+      ],
+    });
+
+    updateMessage('msg-1', 'nonce-1', {
+      message: [{ type: 'text', content: 'updated' }],
+    });
+
+    expect(warnSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('Multiple elements in array have the same ID'),
+      expect.anything(),
+    );
+
+    warnSpy.mockRestore();
   });
 
   test('addMessages keeps the in-memory chat window bounded', () => {

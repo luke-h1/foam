@@ -6,6 +6,7 @@ import type {
   TwitchHelixPrediction,
   TwitchPredictionOutcome,
 } from '@app/types/twitch/prediction';
+import { percentageOf } from '@app/utils/number/percentageOf';
 
 function normaliseStatus(status: string | undefined): ChannelPredictionStatus {
   switch (status?.toLowerCase()) {
@@ -43,10 +44,7 @@ function toOutcomeState(
     color: normaliseOutcomeColor(outcome.color),
     users: outcome.users,
     channelPoints: outcome.channel_points,
-    percentage:
-      totalChannelPoints > 0
-        ? Math.round((outcome.channel_points / totalChannelPoints) * 100)
-        : 0,
+    percentage: percentageOf(outcome.channel_points, totalChannelPoints),
     isWinner: Boolean(winningOutcomeId && winningOutcomeId === outcome.id),
   }));
 }

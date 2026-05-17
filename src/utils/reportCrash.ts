@@ -12,8 +12,7 @@ export enum ErrorType {
   HANDLED = 'Handled',
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const reportCrash = (error: any, type = ErrorType.FATAL) => {
+export const reportCrash = (error: unknown, type = ErrorType.FATAL) => {
   if (__DEV__ || process.env.NODE_ENV === 'development') {
     const message = error instanceof Error ? error.message : 'Unknown';
     console.error(error);

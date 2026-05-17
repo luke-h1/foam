@@ -5,25 +5,20 @@ import { rgbToHex } from './rgbToHex';
 export function lightenColor(hex: string): string {
   const min = 60;
 
-  // Convert to hex format if it's in RGB format
-
   hex = rgbToHex(hex);
 
-  // Validate the hex color format
   if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
-    return hex; // Return the original input if invalid
+    return hex;
   }
 
   const rgb = hexToRgb(hex);
 
-  // Ensure `hexToRgb` returned a valid object
   if (!rgb) {
-    return hex; // Return the original input if conversion fails
+    return hex;
   }
 
   let { r, g, b } = rgb;
 
-  // Check if the color is a single channel
   if (isSingleChannel(r, g, b)) {
     if (r > 0) {
       r = 255;
@@ -35,7 +30,6 @@ export function lightenColor(hex: string): string {
       b = 230;
     }
   } else {
-    // Ensure each channel is above the minimum threshold
     if (r <= min) {
       r = min + 1;
     }

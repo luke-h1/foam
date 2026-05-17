@@ -1,43 +1,54 @@
 import EventEmitter from 'eventemitter3';
 
 type UnlistenFn = () => void;
+type NetworkEventName =
+  | 'soft-reset'
+  | 'session-dropped'
+  | 'network-confirmed'
+  | 'network-lost';
 
 const emitter = new EventEmitter();
 
-// a "soft reset" typically means scrolling to top and loading latest
-// but it can depend on the screen
+function emitNetworkEvent(eventName: NetworkEventName): void {
+  emitter.emit(eventName);
+}
+
+function listenNetworkEvent(
+  eventName: NetworkEventName,
+  fn: () => void,
+): UnlistenFn {
+  emitter.on(eventName, fn);
+  return () => emitter.off(eventName, fn);
+}
+
 export function emitSoftReset() {
-  emitter.emit('soft-reset');
+  emitNetworkEvent('soft-reset');
 }
 
 export function listenSoftReset(fn: () => void): UnlistenFn {
-  emitter.on('soft-reset', fn);
-  return () => emitter.off('soft-reset', fn);
+  return listenNetworkEvent('soft-reset', fn);
 }
 
 export function emitSessionDropped() {
-  emitter.emit('session-dropped');
+  emitNetworkEvent('session-dropped');
 }
 
 export function listenSessionDropped(fn: () => void): UnlistenFn {
-  emitter.on('session-dropped', fn);
-  return () => emitter.off('session-dropped', fn);
+  return listenNetworkEvent('session-dropped', fn);
 }
 
 export function emitNetworkConfirmed() {
-  emitter.emit('network-confirmed');
+  emitNetworkEvent('network-confirmed');
 }
 
 export function listenNetworkConfirmed(fn: () => void): UnlistenFn {
-  emitter.on('network-confirmed', fn);
-  return () => emitter.off('network-confirmed', fn);
+  return listenNetworkEvent('network-confirmed', fn);
 }
 
 export function emitNetworkLost() {
-  emitter.emit('network-lost');
+  emitNetworkEvent('network-lost');
 }
 
 export function listenNetworkLost(fn: () => void): UnlistenFn {
-  emitter.on('network-lost', fn);
-  return () => emitter.off('network-lost', fn);
+  return listenNetworkEvent('network-lost', fn);
 }

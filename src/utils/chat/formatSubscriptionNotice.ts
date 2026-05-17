@@ -4,9 +4,45 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 
-/**
- * Creates a subscription part from notice_tags
- */
+function getTagValue(
+  tags: Record<string, string | boolean | undefined>,
+  key: string,
+): string {
+  const value = tags[key];
+  return typeof value === 'string' ? value : '';
+}
+
+function getTagNumber(
+  tags: Record<string, string | boolean | undefined>,
+  key: string,
+  fallback?: number,
+): number | undefined {
+  const value = getTagValue(tags, key);
+  return value ? parseInt(value, 10) : fallback;
+}
+
+function getSharedStreakValue(
+  tags: Record<string, string | boolean | undefined>,
+): boolean | undefined {
+  const value = getTagValue(tags, 'msg-param-should-share-streak');
+  return value ? value === '1' : undefined;
+}
+
+function getPlanName(planCode: string): string | undefined {
+  switch (planCode) {
+    case '1000':
+      return 'Prime';
+    case '2000':
+      return 'Tier 1';
+    case '3000':
+      return 'Tier 2';
+    case '3001':
+      return 'Tier 3';
+    default:
+      return undefined;
+  }
+}
+
 export function createSubscriptionPart(
   tags: UserNoticeTags,
   messageText?: string,
@@ -18,48 +54,18 @@ export function createSubscriptionPart(
   | 'submysterygift'
   | 'giftpaidupgrade'
 > {
-  const msgId = typeof tags['msg-id'] === 'string' ? tags['msg-id'] : '';
+  const msgId = getTagValue(tags, 'msg-id');
   const displayName =
-    (typeof tags['display-name'] === 'string' ? tags['display-name'] : '') ||
-    (typeof tags.login === 'string' ? tags.login : '') ||
+    getTagValue(tags, 'display-name') ||
+    getTagValue(tags, 'login') ||
     'Anonymous';
-
-  const getPlanName = (planCode: string): string | undefined => {
-    switch (planCode) {
-      case '1000':
-        return 'Prime';
-      case '2000':
-        return 'Tier 1';
-      case '3000':
-        return 'Tier 2';
-      case '3001':
-        return 'Tier 3';
-      default:
-        return undefined;
-    }
-  };
 
   switch (msgId) {
     case 'sub': {
-      const plan =
-        typeof tags['msg-param-sub-plan'] === 'string'
-          ? tags['msg-param-sub-plan']
-          : '';
-      const cumulativeMonths = tags['msg-param-cumulative-months'];
-      const months =
-        typeof cumulativeMonths === 'string'
-          ? parseInt(cumulativeMonths, 10)
-          : undefined;
-      const streakMonthsParam = tags['msg-param-streak-months'];
-      const streakMonths =
-        typeof streakMonthsParam === 'string'
-          ? parseInt(streakMonthsParam, 10)
-          : undefined;
-      const shouldShareStreakParam = tags['msg-param-should-share-streak'];
-      const shouldShareStreak =
-        typeof shouldShareStreakParam === 'string'
-          ? shouldShareStreakParam === '1'
-          : undefined;
+      const plan = getTagValue(tags, 'msg-param-sub-plan');
+      const months = getTagNumber(tags, 'msg-param-cumulative-months');
+      const streakMonths = getTagNumber(tags, 'msg-param-streak-months');
+      const shouldShareStreak = getSharedStreakValue(tags);
 
       return {
         type: 'sub',
@@ -76,25 +82,10 @@ export function createSubscriptionPart(
       };
     }
     case 'resub': {
-      const plan =
-        typeof tags['msg-param-sub-plan'] === 'string'
-          ? tags['msg-param-sub-plan']
-          : '';
-      const cumulativeMonths = tags['msg-param-cumulative-months'];
-      const months =
-        typeof cumulativeMonths === 'string'
-          ? parseInt(cumulativeMonths, 10)
-          : 0; // Default to 0 if not provided
-      const streakMonthsParam = tags['msg-param-streak-months'];
-      const streakMonths =
-        typeof streakMonthsParam === 'string'
-          ? parseInt(streakMonthsParam, 10)
-          : undefined;
-      const shouldShareStreakParam = tags['msg-param-should-share-streak'];
-      const shouldShareStreak =
-        typeof shouldShareStreakParam === 'string'
-          ? shouldShareStreakParam === '1'
-          : undefined;
+      const plan = getTagValue(tags, 'msg-param-sub-plan');
+      const months = getTagNumber(tags, 'msg-param-cumulative-months', 0) ?? 0;
+      const streakMonths = getTagNumber(tags, 'msg-param-streak-months');
+      const shouldShareStreak = getSharedStreakValue(tags);
 
       return {
         type: 'resub',
@@ -111,24 +102,14 @@ export function createSubscriptionPart(
       };
     }
     case 'subgift': {
-      const plan =
-        typeof tags['msg-param-sub-plan'] === 'string'
-          ? tags['msg-param-sub-plan']
-          : '';
-      const recipientDisplayName =
-        typeof tags['msg-param-recipient-display-name'] === 'string'
-          ? tags['msg-param-recipient-display-name']
-          : '';
-      const recipientId =
-        typeof tags['msg-param-recipient-id'] === 'string'
-          ? tags['msg-param-recipient-id']
-          : '';
-      const giftMonthsParam = tags['msg-param-gift-months'];
-      const giftMonths =
-        typeof giftMonthsParam === 'string' ? parseInt(giftMonthsParam, 10) : 0;
-      const monthsParam = tags['msg-param-months'];
-      const months =
-        typeof monthsParam === 'string' ? parseInt(monthsParam, 10) : 0;
+      const plan = getTagValue(tags, 'msg-param-sub-plan');
+      const recipientDisplayName = getTagValue(
+        tags,
+        'msg-param-recipient-display-name',
+      );
+      const recipientId = getTagValue(tags, 'msg-param-recipient-id');
+      const giftMonths = getTagNumber(tags, 'msg-param-gift-months', 0) ?? 0;
+      const months = getTagNumber(tags, 'msg-param-months', 0) ?? 0;
 
       return {
         type: 'anongift' as const,
@@ -146,14 +127,8 @@ export function createSubscriptionPart(
       };
     }
     case 'anongiftpaidupgrade': {
-      const promoName =
-        typeof tags['msg-param-promo-name'] === 'string'
-          ? tags['msg-param-promo-name']
-          : '';
-      const promoGiftTotal =
-        typeof tags['msg-param-promo-gift-total'] === 'string'
-          ? tags['msg-param-promo-gift-total']
-          : '';
+      const promoName = getTagValue(tags, 'msg-param-promo-name');
+      const promoGiftTotal = getTagValue(tags, 'msg-param-promo-gift-total');
 
       return {
         type: 'anongiftpaidupgrade' as const,
@@ -167,12 +142,7 @@ export function createSubscriptionPart(
       };
     }
     case 'submysterygift': {
-      const massGiftCountParam = tags['msg-param-mass-gift-count'];
-      const senderCountParam = tags['msg-param-sender-count'];
-      const plan =
-        typeof tags['msg-param-sub-plan'] === 'string'
-          ? tags['msg-param-sub-plan']
-          : '';
+      const plan = getTagValue(tags, 'msg-param-sub-plan');
 
       return {
         type: 'submysterygift' as const,
@@ -182,34 +152,19 @@ export function createSubscriptionPart(
           message: messageText || undefined,
           plan,
           planName: getPlanName(plan),
-          massGiftCount:
-            typeof massGiftCountParam === 'string'
-              ? parseInt(massGiftCountParam, 10)
-              : undefined,
-          senderCount:
-            typeof senderCountParam === 'string'
-              ? parseInt(senderCountParam, 10)
-              : undefined,
+          massGiftCount: getTagNumber(tags, 'msg-param-mass-gift-count'),
+          senderCount: getTagNumber(tags, 'msg-param-sender-count'),
         },
       };
     }
     case 'giftpaidupgrade': {
       const senderLogin =
-        typeof tags['msg-param-sender-login'] === 'string'
-          ? tags['msg-param-sender-login']
-          : undefined;
+        getTagValue(tags, 'msg-param-sender-login') || undefined;
       const senderName =
-        typeof tags['msg-param-sender-name'] === 'string'
-          ? tags['msg-param-sender-name']
-          : undefined;
-      const promoName =
-        typeof tags['msg-param-promo-name'] === 'string'
-          ? tags['msg-param-promo-name']
-          : undefined;
+        getTagValue(tags, 'msg-param-sender-name') || undefined;
+      const promoName = getTagValue(tags, 'msg-param-promo-name') || undefined;
       const promoGiftTotal =
-        typeof tags['msg-param-promo-gift-total'] === 'string'
-          ? tags['msg-param-promo-gift-total']
-          : undefined;
+        getTagValue(tags, 'msg-param-promo-gift-total') || undefined;
 
       return {
         type: 'giftpaidupgrade' as const,
@@ -225,15 +180,8 @@ export function createSubscriptionPart(
       };
     }
     default: {
-      const plan =
-        typeof tags['msg-param-sub-plan'] === 'string'
-          ? tags['msg-param-sub-plan']
-          : '';
-      const cumulativeMonths = tags['msg-param-cumulative-months'];
-      const months =
-        typeof cumulativeMonths === 'string'
-          ? parseInt(cumulativeMonths, 10)
-          : undefined;
+      const plan = getTagValue(tags, 'msg-param-sub-plan');
+      const months = getTagNumber(tags, 'msg-param-cumulative-months');
 
       return {
         type: 'sub' as const,
@@ -250,37 +198,25 @@ export function createSubscriptionPart(
   }
 }
 
-/**
- * Creates a viewermilestone part from notice_tags
- */
 export function createViewerMilestonePart(
   tags: ViewerMilestoneTags,
   messageText?: string,
 ): ParsedPart<'viewermilestone'> {
-  const category =
-    typeof tags['msg-param-category'] === 'string'
-      ? tags['msg-param-category']
-      : '';
-  const reward =
-    typeof tags['msg-param-copoReward'] === 'string'
-      ? tags['msg-param-copoReward']
-      : '';
-  const value =
-    typeof tags['msg-param-value'] === 'string' ? tags['msg-param-value'] : '';
+  const category = getTagValue(tags, 'msg-param-category');
+  const reward = getTagValue(tags, 'msg-param-copoReward');
+  const value = getTagValue(tags, 'msg-param-value');
   const content = messageText || '';
 
   const systemMsg = tags['system-msg'] ?? '';
   const login = tags.login ?? '';
   const displayName = tags['display-name'] ?? '';
 
-  // Construct the message based on category and value
   let constructedMessage = '';
   if (category === 'watch-streak' && displayName && value) {
     const streamCount = parseInt(value, 10);
     const streamText = streamCount === 1 ? 'stream' : 'streams';
     constructedMessage = `${displayName} watched ${value} consecutive ${streamText} and sparked a watch streak!`;
   } else if (systemMsg) {
-    // Fallback to system-msg if we can't construct one
     constructedMessage = systemMsg;
   }
 

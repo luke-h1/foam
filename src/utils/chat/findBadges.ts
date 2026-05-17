@@ -13,15 +13,29 @@ interface FindBadgesParams {
   chatterinoBadges: SanitisedBadgeSet[];
 }
 
+const hasBadge = (
+  badges: SanitisedBadgeSet[],
+  badge: SanitisedBadgeSet,
+): boolean =>
+  badges.some(
+    existing => existing.id === badge.id && existing.set === badge.set,
+  );
+
+const addBadgeIfMissing = (
+  badges: SanitisedBadgeSet[],
+  badge: SanitisedBadgeSet,
+): void => {
+  if (!hasBadge(badges, badge)) {
+    badges.push(badge);
+  }
+};
+
 const addBadge = (
   badges: SanitisedBadgeSet[],
   badge: SanitisedBadgeSet,
   fallbackType: SanitisedBadgeSet['type'],
 ): void => {
-  const existingBadge = badges.find(
-    existing => existing.id === badge.id && existing.set === badge.set,
-  );
-  if (existingBadge) {
+  if (hasBadge(badges, badge)) {
     return;
   }
 
@@ -65,27 +79,18 @@ export function findBadges({
   twitchChannelBadges,
   twitchGlobalBadges,
   ffzGlobalBadges,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ffzChannelBadges: _ffzChannelBadges,
   chatUsers,
   chatterinoBadges,
 }: FindBadgesParams): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
 
-  /**
-   * Twitch badges
-   */
   const rawTwitchBadges = getRawTwitchBadges(userstate);
 
   if (rawTwitchBadges.length > 0) {
-    const rawBadges = rawTwitchBadges.split(',');
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const rawBadge of rawBadges) {
+    rawTwitchBadges.split(',').forEach(rawBadge => {
       const [set, version] = rawBadge.split('/');
       if (!set || !version) {
-        // eslint-disable-next-line no-continue
-        continue;
+        return;
       }
 
       const channelBadge = findTwitchChannelBadge(
@@ -96,8 +101,7 @@ export function findBadges({
 
       if (channelBadge) {
         addBadge(badges, channelBadge, 'Twitch Channel Badge');
-        // eslint-disable-next-line no-continue
-        continue;
+        return;
       }
 
       const globalBadge = findTwitchGlobalBadge(
@@ -109,7 +113,7 @@ export function findBadges({
       if (globalBadge) {
         addBadge(badges, globalBadge, 'Twitch Global Badge');
       }
-    }
+    });
   }
 
   const globalFfzBadges = ffzGlobalBadges.filter(
@@ -117,20 +121,15 @@ export function findBadges({
   );
 
   globalFfzBadges.forEach(b => {
-    const existingBadge = badges.find(
-      existing => existing.id === b.id && existing.set === b.id,
-    );
-    if (!existingBadge) {
-      badges.push({
-        title: b.title,
-        id: b.id,
-        set: b.id,
-        type: 'FFZ Global Badge',
-        url: b.url,
-        color: b.color,
-        owner_username: b.owner_username,
-      });
-    }
+    addBadgeIfMissing(badges, {
+      title: b.title,
+      id: b.id,
+      set: b.id,
+      type: 'FFZ Global Badge',
+      url: b.url,
+      color: b.color,
+      owner_username: b.owner_username,
+    });
   });
 
   const stvUser = chatUsers.find(u => u.name === `@${userstate.username}`);
@@ -141,26 +140,14 @@ export function findBadges({
     );
 
     if (stvBadge) {
-      const existingBadge = badges.find(
-        existing =>
-          existing.id === stvBadge.id && existing.set === stvBadge.set,
-      );
-      if (!existingBadge) {
-        badges.push(stvBadge);
-      }
+      addBadgeIfMissing(badges, stvBadge);
     }
   }
 
   if (userstate['user-id']) {
     const storeBadge = getUserBadge(userstate['user-id']);
     if (storeBadge) {
-      const existingBadge = badges.find(
-        existing =>
-          existing.id === storeBadge.id && existing.set === storeBadge.set,
-      );
-      if (!existingBadge) {
-        badges.push(storeBadge);
-      }
+      addBadgeIfMissing(badges, storeBadge);
     }
   }
 
@@ -169,14 +156,7 @@ export function findBadges({
   );
 
   if (chatterinoBadge) {
-    const existingBadge = badges.find(
-      existing =>
-        existing.id === chatterinoBadge.id &&
-        existing.set === chatterinoBadge.set,
-    );
-    if (!existingBadge) {
-      badges.push(chatterinoBadge);
-    }
+    addBadgeIfMissing(badges, chatterinoBadge);
   }
 
   return badges;

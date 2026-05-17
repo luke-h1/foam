@@ -47,6 +47,23 @@ function parseTokenFields(
   };
 }
 
+function getHashParams(parsedUrl: URL): URLSearchParams {
+  return new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
+}
+
+function getFirstParamValue(
+  params: URLSearchParams,
+  ...keys: string[]
+): string | undefined {
+  for (const key of keys) {
+    const value = params.get(key);
+    if (value) {
+      return value;
+    }
+  }
+  return undefined;
+}
+
 function parseRefreshTokenFromUrl(url: string | null | undefined) {
   if (!url) {
     return undefined;
@@ -54,19 +71,17 @@ function parseRefreshTokenFromUrl(url: string | null | undefined) {
 
   try {
     const parsedUrl = new URL(url);
-    const queryRefreshToken =
-      parsedUrl.searchParams.get('refresh_token') ??
-      parsedUrl.searchParams.get('refreshToken');
-
-    if (queryRefreshToken) {
-      return queryRefreshToken;
-    }
-
-    const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
     return (
-      hashParams.get('refresh_token') ??
-      hashParams.get('refreshToken') ??
-      undefined
+      getFirstParamValue(
+        parsedUrl.searchParams,
+        'refresh_token',
+        'refreshToken',
+      ) ??
+      getFirstParamValue(
+        getHashParams(parsedUrl),
+        'refresh_token',
+        'refreshToken',
+      )
     );
   } catch {
     return undefined;
@@ -94,7 +109,7 @@ export function parseTwitchAuthTokenFromUrl(
       return fromQuery;
     }
 
-    const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
+    const hashParams = getHashParams(parsedUrl);
     const fromHash = parseTokenFields(key => hashParams.get(key));
     logger.auth.info(
       '[AUTHDBG] parseTwitchAuthTokenFromUrl hash parse result',

@@ -3,7 +3,6 @@ export function hexToRgb(
 ): { r: number; g: number; b: number } | null {
   hex = hex.replace(/^#/, '');
 
-  // Handle shorthand hex codes (e.g., #abc -> #aabbcc)
   if (hex.length === 3) {
     hex = hex
       .split('')
@@ -11,9 +10,8 @@ export function hexToRgb(
       .join('');
   }
 
-  // Ensure the hex code is valid
   if (hex.length !== 6 || Number.isNaN(parseInt(hex, 16))) {
-    return null; // Return null for invalid hex codes
+    return null;
   }
 
   const bigint = parseInt(hex, 16);
