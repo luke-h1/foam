@@ -112,10 +112,13 @@ See [Expo React Native project](https://docs.expo.dev/get-started/set-up-your-en
 
 - If you're on Mac you can just use the iOS simulator (via Xcode) to run the app
 
-6. Start the proxy server
-   The proxy server is responsible for proxying authentication requests to Twitch. This is due to a new requirement where Twitch do not let you proxy non `http` URLs. Locally this is just a simple Express server for developer convenience. In TestFlight, TestTrack and production, an AWS lambda backed by API gateway is responsible for performing this proxying.
+6. Start the local proxy server
+   The local proxy lives in `local-proxy/proxy.ts` and runs with Bun's HTTP server. It proxies authentication requests to Twitch because Twitch redirect URLs must use `http` or `https`. In TestFlight, TestTrack and production, the auth proxy is an AWS Lambda behind API Gateway.
 
 - `bun run start:proxy`
+
+- If port `4000` is already in use, override it with `PORT=4100 bun run start:proxy`
+- If you need to bind a specific interface, set `HOST`, for example `HOST=127.0.0.1 PORT=4100 bun run start:proxy`
 
 7. Install development build on your simulator
 
@@ -197,7 +200,7 @@ To run the `production` variant of the app locally, you'll need to follow these 
 
    Ensure your `.env` file contains the correct values
 
-2. **Start the proxy server** (if needed for local testing and not using the auth proxy lambda)
+2. **Start the local proxy server** (if needed for local testing and not using the auth proxy lambda)
 
    ```bash
    bun run start:proxy

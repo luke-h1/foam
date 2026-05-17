@@ -1,0 +1,82 @@
+diff --git a/build/icon/withIosIcon.js b/build/icon/withIosIcon.js
+index f2719e57d8ad38bdb5223a768534c07bb36ee6d6..d3773ac51241b044e18df84c77217187b58a4deb 100644
+--- a/build/icon/withIosIcon.js
++++ b/build/icon/withIosIcon.js
+@@ -31,11 +31,26 @@ const fs = __importStar(require("fs"));
+ const path_1 = require("path");
+ // TODO: support dark, tinted, and universal icons for widgets.
+ const withIosIcon = (config, { cwd, type, iconFilePath, isTransparent = false }) => {
++    // Check if iconFilePath is a .icon folder (iOS 26 liquid glass icons)
++    const isIconFolder = iconFilePath && iconFilePath.endsWith('.icon');
+     return (0, config_plugins_1.withDangerousMod)(config, [
+         "ios",
+         async (config) => {
+             const projectRoot = config.modRequest.projectRoot;
+             const namedProjectRoot = (0, path_1.join)(projectRoot, cwd);
++            // Handle .icon folder (iOS 26 liquid glass icons)
++            if (isIconFolder) {
++                const path = require("path");
++                const iconFolderName = path.basename(iconFilePath);
++                const destPath = (0, path_1.join)(namedProjectRoot, "Assets.xcassets", iconFolderName);
++                const srcPath = (0, path_1.join)(projectRoot, iconFilePath);
++                // Create Assets.xcassets directory and copy the .icon folder
++                await fs.promises.mkdir((0, path_1.join)(namedProjectRoot, "Assets.xcassets"), {
++                    recursive: true,
++                });
++                await fs.promises.cp(srcPath, destPath, { recursive: true });
++                return config;
++            }
+             if (type === "watch") {
+                 // Ensure the Images.xcassets/AppIcon.appiconset path exists
+                 await fs.promises.mkdir((0, path_1.join)(namedProjectRoot, IMAGESET_PATH), {
+diff --git a/build/withWidget.js b/build/withWidget.js
+index 781abaccf32ec47b38cc090d5b5a0b2038da8393..7bfe27ce2ca9c8f614523c45808008ea205230b9 100644
+--- a/build/withWidget.js
++++ b/build/withWidget.js
+@@ -16,6 +16,13 @@ const target_1 = require("./target");
+ const withEasCredentials_1 = require("./withEasCredentials");
+ const withXcodeChanges_1 = require("./withXcodeChanges");
+ const DEFAULT_DEPLOYMENT_TARGET = "18.0";
++// Helper function to get the correct icon name for .icon folders
++function getIconName(icon) {
++    if (icon && icon.endsWith('.icon')) {
++        return path_1.default.basename(icon, '.icon');
++    }
++    return "AppIcon";
++}
+ function memoize(fn) {
+     const cache = new Map();
+     return ((...args) => {
+@@ -253,6 +260,7 @@ const withWidget = (config, props) => {
+         deploymentTarget: (_f = props.deploymentTarget) !== null && _f !== void 0 ? _f : DEFAULT_DEPLOYMENT_TARGET,
+         bundleId,
+         icon: props.icon,
++        iconName: props.icon ? getIconName(props.icon) : "AppIcon",
+         orientation: config.orientation,
+         hasAccentColor: !!((_g = props.colors) === null || _g === void 0 ? void 0 : _g.$accent),
+         deviceFamilies,
+diff --git a/build/withXcodeChanges.js b/build/withXcodeChanges.js
+index 34a927d4599c1f3b480fc8494811db40255112e7..5f472873eccb0168de35fc2d07e7f084b5762203 100644
+--- a/build/withXcodeChanges.js
++++ b/build/withXcodeChanges.js
+@@ -558,10 +558,11 @@ function getDeviceFamilyBuildSettings(deviceFamilies) {
+         TARGETED_DEVICE_FAMILY: families.join(","),
+     };
+ }
+-function createWidgetConfigurationList(project, { name, displayName, cwd, bundleId, deploymentTarget, currentProjectVersion, }) {
++function createWidgetConfigurationList(project, { name, displayName, cwd, bundleId, deploymentTarget, currentProjectVersion, iconName, }) {
+     const debugBuildConfig = xcode_1.XCBuildConfiguration.create(project, {
+         name: "Debug",
+         buildSettings: {
++            ASSETCATALOG_COMPILER_APPICON_NAME: iconName || "AppIcon",
+             ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: "$accent",
+             ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: "$widgetBackground",
+             CLANG_ANALYZER_NONNULL: "YES",
+@@ -601,6 +602,7 @@ function createWidgetConfigurationList(project, { name, displayName, cwd, bundle
+     const releaseBuildConfig = xcode_1.XCBuildConfiguration.create(project, {
+         name: "Release",
+         buildSettings: {
++            ASSETCATALOG_COMPILER_APPICON_NAME: iconName || "AppIcon",
+             ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: "$accent",
+             ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: "$widgetBackground",
+             CLANG_ANALYZER_NONNULL: "YES",

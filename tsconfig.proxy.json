@@ -14,16 +14,18 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "5.0",
     "resolveJsonModule": true,
     "sourceMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
+    "types": ["node"],
     "baseUrl": ".",
     "isolatedModules": true,
     "noEmit": false,
     "noImplicitReturns": true
   },
-  "include": ["src", "test", "src/types/env.d.ts"],
+  "include": ["local-proxy/proxy.ts", "src/types/env.d.ts"],
   "exclude": ["node_modules"]
 }
