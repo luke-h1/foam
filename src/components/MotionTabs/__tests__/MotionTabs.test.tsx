@@ -1,11 +1,14 @@
-import type { AnimatedTabBarProps } from '@react-navigation/bottom-tabs';
 import { fireEvent, render } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import { Platform, Text } from 'react-native';
 import { AnimatedTabBar } from '../animated-tab-bar';
 import { MorphTab } from '../components/morph-tab';
 import { TabToolbar } from '../components/tab-toolbar';
-import type { MotionTabItem, MotionTabPalette } from '../types';
+import type {
+  AnimatedTabBarProps,
+  MotionTabItem,
+  MotionTabPalette,
+} from '../types';
 import { getNavItems } from '../utils/nav-items';
 import { palette } from '../utils/palette';
 
@@ -116,7 +119,13 @@ describe('MotionTabs', () => {
 
   test('returns null when a descriptor has no tab icon', () => {
     const props = createTabBarProps();
-    props.descriptors['settings-key'].options.tabBarIcon = undefined;
+    const settingsDescriptor = props.descriptors['settings-key'];
+
+    if (!settingsDescriptor) {
+      throw new Error('Expected settings descriptor to exist');
+    }
+
+    settingsDescriptor.options.tabBarIcon = undefined;
 
     const items = getNavItems({
       descriptors: props.descriptors,

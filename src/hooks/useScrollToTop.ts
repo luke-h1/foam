@@ -1,9 +1,8 @@
 import { useScrollToTop as useNavigationScrollToTop } from '@react-navigation/native';
 import { Ref, RefObject, useMemo, useRef } from 'react';
-import type { ScrollView } from 'react-native';
-import type { WebView } from 'react-native-webview';
 
 type ScrollOptions = { x?: number; y?: number; animated?: boolean };
+type WebScrollable = { injectJavaScript: (script: string) => void };
 
 type ScrollableView =
   | { scrollToTop: () => void }
@@ -14,22 +13,24 @@ type ScrollableView =
   | { scrollResponderScrollTo: (options: ScrollOptions) => void };
 
 type ScrollableWrapper =
-  | { getScrollResponder: () => ScrollView | null }
+  | { getScrollResponder: () => ScrollableView | null }
   | { getNode: () => ScrollableView }
   | ScrollableView
   | null;
 
 type ScrollableRef =
-  | RefObject<ScrollableWrapper | WebView>
-  | Ref<ScrollableWrapper | WebView>;
+  | RefObject<ScrollableWrapper | WebScrollable>
+  | Ref<ScrollableWrapper | WebScrollable>;
 
 function isRefObject(
   ref: ScrollableRef,
-): ref is RefObject<ScrollableWrapper | WebView> {
+): ref is RefObject<ScrollableWrapper | WebScrollable> {
   return typeof ref === 'object' && ref !== null && 'current' in ref;
 }
 
-function getScrollableNode(ref: ScrollableRef): ScrollableWrapper | WebView {
+function getScrollableNode(
+  ref: ScrollableRef,
+): ScrollableWrapper | WebScrollable {
   if (!isRefObject(ref) || ref.current == null) {
     return null;
   }
@@ -58,7 +59,7 @@ function getScrollableNode(ref: ScrollableRef): ScrollableWrapper | WebView {
 }
 
 function scrollToOffset(
-  scrollable: ScrollableWrapper | WebView,
+  scrollable: ScrollableWrapper | WebScrollable,
   offset: number,
 ) {
   if (!scrollable) {
