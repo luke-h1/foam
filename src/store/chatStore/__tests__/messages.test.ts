@@ -8,6 +8,7 @@ import {
   moderateMessagesByLogin,
   removeMessageById,
   restoreRecentMessagesForChannel,
+  updateMessage,
 } from '../messages';
 import { chatStore$ } from '../state';
 
@@ -163,6 +164,23 @@ describe('chatStore messages', () => {
     ).toEqual(['msg-1', 'msg-2']);
   });
 
+  test('restoreRecentMessagesForChannel skips sparse persisted entries', () => {
+    chatStore$.persisted.recentMessagesByChannel.set({
+      'channel-1': [
+        undefined,
+        { message_id: '', message_nonce: '', message: [] },
+        createMessage('msg-1', 'nonce-1', 'first'),
+      ] as unknown as ChatMessageType<never>[],
+    });
+
+    const restoredCount = restoreRecentMessagesForChannel('channel-1');
+
+    expect(restoredCount).toBe(1);
+    expect(
+      chatStore$.messages.peek().map(message => message.message_id),
+    ).toEqual(['msg-1']);
+  });
+
   test('addMessages defers recent-message persistence off the live chat path', () => {
     jest.useFakeTimers();
     chatStore$.currentChannelId.set('channel-1');
@@ -188,6 +206,33 @@ describe('chatStore messages', () => {
     jest.useRealTimers();
   });
 
+  test('updateMessage defers recent-message persistence off the hydration path', () => {
+    jest.useFakeTimers();
+
+    addMessage(createMessage('msg-1', 'nonce-1', 'first'));
+    chatStore$.currentChannelId.set('channel-1');
+
+    updateMessage('msg-1', 'nonce-1', {
+      message: [{ type: 'text', content: 'hydrated' }],
+    });
+
+    expect(getMessageById('msg-1')?.message).toEqual([
+      { type: 'text', content: 'hydrated' },
+    ]);
+    expect(
+      chatStore$.persisted.recentMessagesByChannel.peek()['channel-1'],
+    ).toBeUndefined();
+
+    jest.advanceTimersByTime(1000);
+
+    expect(
+      chatStore$.persisted.recentMessagesByChannel.peek()['channel-1']?.[0]
+        ?.message,
+    ).toEqual([{ type: 'text', content: 'hydrated' }]);
+
+    jest.useRealTimers();
+  });
+
   test('addMessages indexes new messages without rebuilding the full window', () => {
     const before = chatStore$.messages.peek();
 
@@ -203,6 +248,17 @@ describe('chatStore messages', () => {
     expect(getMessageById('msg-2')?.message).toEqual([
       { type: 'text', content: 'second' },
     ]);
+  });
+
+  test('addMessages skips sparse or incomplete entries', () => {
+    addMessages([
+      undefined,
+      { message_id: '', message_nonce: '', message: [] },
+      createMessage('msg-1', 'nonce-1', 'first'),
+    ] as unknown as ChatMessageType<never>[]);
+
+    expect(chatStore$.messages.peek()).toHaveLength(1);
+    expect(chatStore$.messages.peek()[0]?.message_id).toBe('msg-1');
   });
 
   test('addMessages keeps the in-memory chat window bounded', () => {

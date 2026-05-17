@@ -92,7 +92,41 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(1);
 
       act(() => {
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(15);
+      });
+
+      expect(mockAddMessages).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(1);
+      });
+
+      expect(mockAddMessages).toHaveBeenCalledWith([
+        expect.objectContaining({
+          message_id: '1',
+          message_nonce: 'nonce-1',
+        }),
+      ]);
+      expect(result.current.getBufferSize()).toBe(0);
+    });
+
+    test('uses the wider batch window when the user is reading backlog', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        jest.advanceTimersByTime(49);
+      });
+
+      expect(mockAddMessages).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(1);
       });
 
       expect(mockAddMessages).toHaveBeenCalledWith([
@@ -115,7 +149,7 @@ describe('useChatMessages', () => {
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
         result.current.handleNewMessage(createMockMessage('2'));
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(50);
       });
 
       expect(mockAddMessages).toHaveBeenCalled();
@@ -182,7 +216,7 @@ describe('useChatMessages', () => {
   });
 
   describe('Unread Count', () => {
-    test('should increment unread for each message when not at bottom', () => {
+    test('should batch unread increments while not at bottom', () => {
       const onUnreadIncrement = jest.fn();
       const { result } = renderHook(() =>
         useChatMessages({
@@ -197,8 +231,14 @@ describe('useChatMessages', () => {
         result.current.handleNewMessage(createMockMessage('2'));
       });
 
-      expect(onUnreadIncrement).toHaveBeenCalledTimes(2);
-      expect(onUnreadIncrement).toHaveBeenCalledWith(1);
+      expect(onUnreadIncrement).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
+
+      expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
+      expect(onUnreadIncrement).toHaveBeenCalledWith(2);
     });
 
     test('should not increment unread when at bottom', () => {
@@ -216,6 +256,26 @@ describe('useChatMessages', () => {
       });
 
       expect(onUnreadIncrement).not.toHaveBeenCalled();
+    });
+
+    test('flushes pending unread count on forceFlush', () => {
+      const onUnreadIncrement = jest.fn();
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+          onUnreadIncrement,
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        result.current.handleNewMessage(createMockMessage('2'));
+        result.current.forceFlush();
+      });
+
+      expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
+      expect(onUnreadIncrement).toHaveBeenCalledWith(2);
     });
 
     test('should not increment unread while jumping to bottom', () => {
@@ -287,7 +347,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(250);
 
       act(() => {
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(50);
       });
 
       expect(mockAddMessages).toHaveBeenCalledWith(
@@ -315,7 +375,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(600);
 
       act(() => {
-        jest.advanceTimersByTime(100);
+        jest.advanceTimersByTime(50);
       });
 
       const firstCall = (mockAddMessages as jest.Mock).mock
@@ -325,6 +385,27 @@ describe('useChatMessages', () => {
       expect(flushedMessages).toHaveLength(600);
       expect(flushedMessages[0]?.message_id).toBe('100');
       expect(flushedMessages.at(-1)?.message_id).toBe('699');
+    });
+
+    test('caps pending unread count with the retained high-volume buffer', () => {
+      const onUnreadIncrement = jest.fn();
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+          onUnreadIncrement,
+        }),
+      );
+
+      act(() => {
+        for (let i = 0; i < 700; i += 1) {
+          result.current.handleNewMessage(createMockMessage(`${i}`));
+        }
+        jest.advanceTimersByTime(50);
+      });
+
+      expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
+      expect(onUnreadIncrement).toHaveBeenCalledWith(600);
     });
   });
 });

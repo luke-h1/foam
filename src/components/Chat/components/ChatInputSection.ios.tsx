@@ -29,7 +29,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 
 const SHOW_SETTINGS_MIN_WIDTH = 260;
-const SHOW_DEBUG_MIN_WIDTH = 320;
 
 export interface ReplyToData {
   messageId: string;
@@ -48,7 +47,6 @@ interface ChatInputSectionProps {
   onSubmit: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
-  onOpenDebugModal: () => void;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
   isConnected: boolean;
@@ -87,7 +85,6 @@ export const ChatInputSection = memo(
     onSubmit,
     onOpenEmoteSheet,
     onOpenSettingsSheet,
-    onOpenDebugModal,
     replyTo,
     onClearReply,
     isConnected,
@@ -154,7 +151,6 @@ export const ChatInputSection = memo(
     );
 
     const showSettingsButton = composerWidth >= SHOW_SETTINGS_MIN_WIDTH;
-    const showDebugButton = composerWidth >= SHOW_DEBUG_MIN_WIDTH;
 
     return (
       <View
@@ -235,12 +231,6 @@ export const ChatInputSection = memo(
                     <ActionIconButton
                       icon="gearshape"
                       onPress={onOpenSettingsSheet}
-                    />
-                  ) : null}
-                  {showDebugButton ? (
-                    <ActionIconButton
-                      icon="bolt.fill"
-                      onPress={onOpenDebugModal}
                     />
                   ) : null}
                   <ActionIconButton

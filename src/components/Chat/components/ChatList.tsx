@@ -14,6 +14,7 @@ import {
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
 const CHAT_DRAW_DISTANCE = 320;
+const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 };
@@ -26,6 +27,8 @@ interface ChatListProps {
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollEndDrag: () => void;
   handleMomentumScrollEnd: () => void;
+  handleEndReached: () => void;
+  handleContentSizeChange: () => void;
   renderItem: ListRenderItem<AnyChatMessageType>;
   keyExtractor: (item: AnyChatMessageType) => string;
   getItemType: (item: AnyChatMessageType) => string;
@@ -48,6 +51,8 @@ export const ChatList = memo(
     handleScrollBeginDrag,
     handleScrollEndDrag,
     handleMomentumScrollEnd,
+    handleEndReached,
+    handleContentSizeChange,
     renderItem,
     keyExtractor,
     getItemType,
@@ -99,6 +104,7 @@ export const ChatList = memo(
         keyExtractor={keyExtractor}
         getItemType={getItemType}
         maintainVisibleContentPosition={{
+          animateAutoScrollToBottom: false,
           autoscrollToBottomThreshold: 0.001,
           startRenderingFromBottom: true,
         }}
@@ -106,6 +112,9 @@ export const ChatList = memo(
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}
         onMomentumScrollEnd={handleMomentumScrollEnd}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={CHAT_END_REACHED_THRESHOLD}
+        onContentSizeChange={handleContentSizeChange}
         renderItem={renderItem}
         extraData={extraData}
         style={styles.list}

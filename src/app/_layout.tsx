@@ -274,6 +274,7 @@ function RouterEffects() {
       logger.auth.info(`${logPrefix} Linking.getInitialURL resolved`, {
         initialUrl,
       });
+
       if (initialUrl) {
         setTimeout(() => {
           void handleIncomingUrl(initialUrl);
@@ -323,7 +324,7 @@ function RootLayoutNav() {
             options={{
               presentation: 'formSheet',
               sheetGrabberVisible: true,
-              sheetAllowedDetents: [0.44, 0.68],
+              sheetAllowedDetents: [0.85],
               sheetCornerRadius: theme.borderRadius28,
               contentStyle: {
                 backgroundColor: isLiquidGlassAvailable()

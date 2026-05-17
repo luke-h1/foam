@@ -8,7 +8,7 @@ import { useWebsocket } from '../hooks/ws/useWebsocket';
 const TWITCH_CHAT_URL = 'wss://irc-ws.chat.twitch.tv:443';
 
 interface IrcMessage {
-  tags?: Map<string, string>;
+  tags?: Record<string, string>;
   prefix?: string;
   command: string;
   params: string[];
@@ -106,19 +106,33 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   /**
    * Parse IRC message tags (format: @key=value;key2=value2)
    */
-  const parseTags = useCallback((tagString: string): Map<string, string> => {
-    const tags = new Map<string, string>();
+  const parseTags = useCallback((tagString: string): Record<string, string> => {
+    const tags: Record<string, string> = {};
     if (!tagString) {
       return tags;
     }
 
-    const parts = tagString.split(';');
-    parts.forEach(part => {
-      const [key, value] = part.split('=');
+    let start = 0;
+    while (start <= tagString.length) {
+      const separatorIndex = tagString.indexOf(';', start);
+      const endIndex =
+        separatorIndex === -1 ? tagString.length : separatorIndex;
+      const part = tagString.slice(start, endIndex);
+      const valueSeparatorIndex = part.indexOf('=');
+      const key =
+        valueSeparatorIndex === -1 ? part : part.slice(0, valueSeparatorIndex);
+
       if (key) {
-        tags.set(key, value || '');
+        tags[key] =
+          valueSeparatorIndex === -1 ? '' : part.slice(valueSeparatorIndex + 1);
       }
-    });
+
+      if (separatorIndex === -1) {
+        break;
+      }
+      start = separatorIndex + 1;
+    }
+
     return tags;
   }, []);
 
@@ -132,7 +146,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       let remaining = line.trim();
-      let tags: Map<string, string> | undefined;
+      let tags: Record<string, string> | undefined;
       let prefix: string | undefined;
 
       // Parse tags
@@ -156,53 +170,33 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         remaining = remaining.substring(prefixEnd + 1).trim();
       }
 
-      // Parse command and params
-      const parts = remaining.split(' ');
-      if (parts.length === 0) {
-        return null;
-      }
-
-      const command = parts[0];
+      const commandEnd = remaining.indexOf(' ');
+      const command =
+        commandEnd === -1 ? remaining : remaining.slice(0, commandEnd);
       if (!command) {
         return null;
       }
 
       const params: string[] = [];
-      const paramParts = parts.slice(1);
-
-      // Find trailing parameter (starts with ':')
-      const trailingIndex = paramParts.findIndex(part => part.startsWith(':'));
+      const paramString =
+        commandEnd === -1 ? '' : remaining.slice(commandEnd + 1);
+      const trailingIndex = paramString.indexOf(' :');
 
       if (trailingIndex >= 0) {
-        // Add all params before the trailing one
-        params.push(...paramParts.slice(0, trailingIndex));
-        // Add trailing parameter (everything after ':' including spaces)
-        const trailing = paramParts.slice(trailingIndex).join(' ').substring(1);
-        params.push(trailing);
-      } else {
-        // No trailing parameter, add all params
-        params.push(...paramParts);
+        const leading = paramString.slice(0, trailingIndex);
+        if (leading) {
+          params.push(...leading.split(' '));
+        }
+        params.push(paramString.slice(trailingIndex + 2));
+      } else if (paramString.startsWith(':')) {
+        params.push(paramString.slice(1));
+      } else if (paramString) {
+        params.push(...paramString.split(' '));
       }
 
       return { tags, prefix, command, params };
     },
     [parseTags],
-  );
-
-  /**
-   * Convert tags Map to Record for easier access
-   */
-  const tagsToRecord = useCallback(
-    (tags?: Map<string, string>): Record<string, string> => {
-      const record: Record<string, string> = {};
-      if (tags) {
-        tags.forEach((value, key) => {
-          record[key] = value;
-        });
-      }
-      return record;
-    },
-    [],
   );
 
   /**
@@ -389,7 +383,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const handleIrcMessage = useCallback(
     (message: IrcMessage) => {
       const { command, tags, params } = message;
-      const tagsRecord = tagsToRecord(tags);
+      const tagsRecord = tags ?? {};
 
       switch (command) {
         case '001': // RPL_WELCOME - server welcome message
@@ -647,7 +641,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       onGlobalUserState,
       onWelcome,
       onUserStateAfterSend,
-      tagsToRecord,
       isUserBlocked,
       containsMutedWords,
       markChannelJoined,
@@ -658,31 +651,34 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       try {
-        // IRC messages are text-based, can be multiple messages per event
-        const text = event.data as string;
-        messageBufferRef.current += text;
+        const text = `${messageBufferRef.current}${event.data as string}`;
+        let cursor = 0;
 
-        // Split by \r\n but handle partial messages
-        const lines = messageBufferRef.current.split('\r\n');
+        while (cursor < text.length) {
+          const lineEnd = text.indexOf('\r\n', cursor);
+          if (lineEnd === -1) {
+            break;
+          }
 
-        // Keep the last incomplete line in buffer
-        messageBufferRef.current = lines.pop() || '';
+          const line = text.slice(cursor, lineEnd);
+          cursor = lineEnd + 2;
 
-        // Process complete lines
-        lines
-          .filter(line => line.trim())
-          .forEach(line => {
-            // Handle raw PING messages (not parsed as IRC)
-            if (line === 'PING :tmi.twitch.tv') {
-              sendIrcCommand('PONG', 'tmi.twitch.tv');
-              return;
-            }
+          if (!line) {
+            continue;
+          }
 
-            const ircMessage = parseIrcMessage(line);
-            if (ircMessage) {
-              handleIrcMessage(ircMessage);
-            }
-          });
+          if (line === 'PING :tmi.twitch.tv') {
+            sendIrcCommand('PONG', 'tmi.twitch.tv');
+            continue;
+          }
+
+          const ircMessage = parseIrcMessage(line);
+          if (ircMessage) {
+            handleIrcMessage(ircMessage);
+          }
+        }
+
+        messageBufferRef.current = text.slice(cursor);
       } catch (e) {
         logger.chat.error('Failed to parse IRC message:', e);
       }

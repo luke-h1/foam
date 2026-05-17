@@ -34,6 +34,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const thumbnailUrl = stream.thumbnail_url
     .replace('{width}', '1920')
     .replace('{height}', '1080');
+
   const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
   const languageLabel =
     stream.tags?.find(tag =>
@@ -129,8 +130,9 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               <Text
                 type="md"
                 weight="bold"
-                style={styles.mediaTitle}
                 numberOfLines={1}
+                variant="mono"
+                style={styles.title}
               >
                 {stream.title}
               </Text>
@@ -189,11 +191,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               style={styles.usernameButton}
               hitSlop={8}
             >
-              <Text
-                type={isTextLayout ? 'xs' : 'sm'}
-                weight="semibold"
-                style={styles.username}
-              >
+              <Text type={isTextLayout ? 'xs' : 'sm'} style={styles.username}>
                 {stream.user_name}
               </Text>
             </PressableArea>
@@ -241,7 +239,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             </Text>
           </View>
 
-          {!isTextLayout ? (
+          {isTextLayout ? null : (
             <PressableArea
               onPress={handleCategoryPress}
               style={[
@@ -254,7 +252,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 {stream.game_name}
               </Text>
             </PressableArea>
-          ) : null}
+          )}
         </View>
 
         {isTextLayout ? (
@@ -323,7 +321,7 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   categoryText: {
-    color: theme.color.textSecondary.dark,
+    color: theme.color.text.dark,
     fontWeight: '500',
     lineHeight: 14,
   },

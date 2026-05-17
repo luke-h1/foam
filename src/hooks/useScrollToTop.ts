@@ -1,115 +1,127 @@
-import { navigationRef } from '@app/navigators/navigationUtilities';
-import { ReactNode, Ref, RefObject, useEffect, useRef } from 'react';
-import type { ScrollView } from 'react-native';
-import type { WebView } from 'react-native-webview';
+import { useScrollToTop as useNavigationScrollToTop } from '@react-navigation/native';
+import { Ref, RefObject, useMemo, useRef } from 'react';
 
 type ScrollOptions = { x?: number; y?: number; animated?: boolean };
+type WebScrollable = { injectJavaScript: (script: string) => void };
 
 type ScrollableView =
   | { scrollToTop: () => void }
   | { scrollTo: (options: ScrollOptions) => void }
   | {
-      scrollToOffset: (options: {
-        offset?: number;
-        animated?: boolean;
-      }) => void;
+      scrollToOffset: (options: { offset: number; animated?: boolean }) => void;
     }
   | { scrollResponderScrollTo: (options: ScrollOptions) => void };
 
 type ScrollableWrapper =
-  | { getScrollResponder: () => ReactNode | ScrollView }
+  | { getScrollResponder: () => ScrollableView | null }
   | { getNode: () => ScrollableView }
-  | ScrollableView;
+  | ScrollableView
+  | null;
+
+type ScrollableRef =
+  | RefObject<ScrollableWrapper | WebScrollable>
+  | Ref<ScrollableWrapper | WebScrollable>;
+
+function isRefObject(
+  ref: ScrollableRef,
+): ref is RefObject<ScrollableWrapper | WebScrollable> {
+  return typeof ref === 'object' && ref !== null && 'current' in ref;
+}
 
 function getScrollableNode(
-  ref: RefObject<ScrollableWrapper> | RefObject<WebView>,
-) {
-  if (ref?.current == null) {
+  ref: ScrollableRef,
+): ScrollableWrapper | WebScrollable {
+  if (!isRefObject(ref) || ref.current == null) {
     return null;
   }
 
+  const current = ref.current;
+
   if (
-    'scrollToTop' in ref.current ||
-    'scrollTo' in ref.current ||
-    'scrollToOffset' in ref.current ||
-    'scrollResponderScrollTo' in ref.current
+    'scrollToTop' in current ||
+    'scrollTo' in current ||
+    'scrollToOffset' in current ||
+    'scrollResponderScrollTo' in current ||
+    'injectJavaScript' in current
   ) {
-    // This is already a scrollable node.
-    return ref.current;
+    return current;
   }
-  if ('getScrollResponder' in ref.current) {
-    // If the view is a wrapper like FlatList, SectionList etc.
-    // We need to use `getScrollResponder` to get access to the scroll responder
-    return ref.current.getScrollResponder();
+
+  if ('getScrollResponder' in current) {
+    return current.getScrollResponder();
   }
-  if ('getNode' in ref.current) {
-    // When a `ScrollView` is wraped in `Animated.createAnimatedComponent`
-    // we need to use `getNode` to get the ref to the actual scrollview.
-    // Note that `getNode` is deprecated in newer versions of react-native
-    // this is why we check if we already have a scrollable node above.
-    return ref.current.getNode();
+
+  if ('getNode' in current) {
+    return current.getNode();
   }
-  return ref.current;
+
+  return current;
 }
 
-export function useScrollToTop(
-  ref:
-    | RefObject<ScrollableWrapper>
-    | RefObject<WebView>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    | Ref<any>,
-  offset: number = 0,
+function scrollToOffset(
+  scrollable: ScrollableWrapper | WebScrollable,
+  offset: number,
 ) {
-  useEffect(() => {
-    // Check if navigation is ready before setting up listeners
-    if (!navigationRef.isReady()) {
-      return;
-    }
+  if (!scrollable) {
+    return;
+  }
 
-    // Listen to navigation state changes to detect tab presses
-    const unsubscribe = navigationRef.addListener('state', () => {
-      if (!navigationRef.isReady()) {
-        return;
-      }
+  if ('scrollToTop' in scrollable && offset === 0) {
+    scrollable.scrollToTop();
+    return;
+  }
 
-      // eslint-disable-next-line no-undef
-      requestAnimationFrame(() => {
-        const scrollable = getScrollableNode(
-          ref as RefObject<ScrollableWrapper> | RefObject<WebView>,
-        ) as ScrollableWrapper | WebView;
+  if ('scrollTo' in scrollable) {
+    scrollable.scrollTo({ y: offset, animated: true });
+    return;
+  }
 
-        if (scrollable) {
-          if ('scrollToTop' in scrollable) {
-            scrollable.scrollToTop();
-          } else if ('scrollTo' in scrollable) {
-            scrollable.scrollTo({ y: offset, animated: true });
-          } else if ('scrollToOffset' in scrollable) {
-            scrollable.scrollToOffset({ offset, animated: true });
-          } else if ('scrollResponderScrollTo' in scrollable) {
-            scrollable.scrollResponderScrollTo({
-              y: offset,
-              animated: true,
-            });
-          } else if ('injectJavaScript' in scrollable) {
-            scrollable.injectJavaScript(
-              `;window.scrollTo({ top: ${offset}, behavior: 'smooth' }); true;`,
-            );
-          }
-        }
-      });
+  if ('scrollToOffset' in scrollable) {
+    scrollable.scrollToOffset({ offset, animated: true });
+    return;
+  }
+
+  if ('scrollResponderScrollTo' in scrollable) {
+    scrollable.scrollResponderScrollTo({
+      y: offset,
+      animated: true,
     });
+    return;
+  }
 
-    return () => {
-      unsubscribe();
-    };
-  }, [ref, offset]);
+  if ('injectJavaScript' in scrollable) {
+    scrollable.injectJavaScript(
+      `;window.scrollTo({ top: ${offset}, behavior: 'smooth' }); true;`,
+    );
+  }
+}
+
+export function useScrollToTop(ref: ScrollableRef, offset: number = 0) {
+  const scrollToTopRef = useMemo<RefObject<ScrollableView | null>>(
+    () => ({
+      get current() {
+        const scrollable = getScrollableNode(ref);
+
+        if (!scrollable) {
+          return null;
+        }
+
+        return {
+          scrollToTop: () => scrollToOffset(scrollable, offset),
+        };
+      },
+    }),
+    [ref, offset],
+  );
+
+  useNavigationScrollToTop(scrollToTopRef);
 }
 
 export const useScrollRef =
   process.env.EXPO_OS === 'web'
     ? () => undefined
     : () => {
-        const ref = useRef(null);
+        const ref = useRef<ScrollableWrapper>(null);
 
         useScrollToTop(ref);
 

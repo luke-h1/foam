@@ -53,7 +53,7 @@ function getWebAuthRedirectUrl() {
 
 const redirectUri = Platform.OS === 'web' ? getWebAuthRedirectUrl() : proxyUrl;
 const appReturnUrl =
-  Platform.OS === 'web' ? getWebAuthRedirectUrl() : 'foam://tabs/following';
+  Platform.OS === 'web' ? getWebAuthRedirectUrl() : 'foam://auth';
 
 const discovery = {
   authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',

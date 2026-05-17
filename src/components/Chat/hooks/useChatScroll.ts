@@ -10,6 +10,7 @@ const SCROLL_DELTA_EPSILON = 1;
 const SCROLL_THROTTLE_MS = 150;
 const SCROLL_TO_BOTTOM_RETRY_MS = 50;
 const SCROLL_TO_BOTTOM_SETTLE_MS = 300;
+const BOTTOM_CONTENT_CHANGE_ANCHOR_MS = 600;
 
 interface UseChatScrollOptions {
   listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
@@ -30,11 +31,19 @@ export const useChatScroll = ({
   const scrollRetryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
     null,
   );
+  const bottomContentAnchorTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const bottomContentAnchorTickRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const shouldAnchorBottomOnContentChangeRef = useRef(false);
   const lastAtBottomRef = useRef<boolean | null>(null);
   const lastContentHeightRef = useRef(0);
   const lastViewHeightRef = useRef(0);
   const lastOffsetYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
+  const hasUserScrollIntentRef = useRef(false);
 
   const clearScrollToBottomTimers = useCallback(() => {
     if (scrollTimeoutRef.current) {
@@ -47,15 +56,37 @@ export const useChatScroll = ({
     }
   }, []);
 
+  const clearBottomContentAnchor = useCallback(() => {
+    shouldAnchorBottomOnContentChangeRef.current = false;
+
+    if (bottomContentAnchorTimeoutRef.current) {
+      clearTimeout(bottomContentAnchorTimeoutRef.current);
+      bottomContentAnchorTimeoutRef.current = null;
+    }
+    if (bottomContentAnchorTickRef.current) {
+      clearTimeout(bottomContentAnchorTickRef.current);
+      bottomContentAnchorTickRef.current = null;
+    }
+  }, []);
+
+  const scrollToEndOnce = useCallback(() => {
+    if (!isAtBottomRef.current || isDraggingRef.current) {
+      return;
+    }
+
+    listRef.current?.scrollToEnd?.({ animated: false });
+  }, [listRef]);
+
   const handleScrollBeginDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       clearScrollToBottomTimers();
+      clearBottomContentAnchor();
       isDraggingRef.current = true;
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
       lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
     },
-    [clearScrollToBottomTimers],
+    [clearBottomContentAnchor, clearScrollToBottomTimers],
   );
 
   const handleScrollEndDrag = useCallback(() => {
@@ -64,6 +95,20 @@ export const useChatScroll = ({
 
   const handleMomentumScrollEnd = useCallback(() => {
     isDraggingRef.current = false;
+  }, []);
+
+  const markAtBottom = useCallback(() => {
+    isAtBottomRef.current = true;
+    lastAtBottomRef.current = true;
+    hasUserScrollIntentRef.current = false;
+
+    if (scrollThrottleRef.current) {
+      clearTimeout(scrollThrottleRef.current);
+      scrollThrottleRef.current = null;
+    }
+
+    setIsAtBottom(true);
+    setUnreadCount(0);
   }, []);
 
   const handleScroll = useCallback(
@@ -82,8 +127,6 @@ export const useChatScroll = ({
       const scrolledDownOrStationary =
         !hasPreviousOffset || y >= previousOffsetY - SCROLL_DELTA_EPSILON;
       const contentGrew = contentHeight > lastContentHeightRef.current;
-      const layoutChanged =
-        Math.abs(viewHeight - lastViewHeightRef.current) > SCROLL_DELTA_EPSILON;
       const previousDistanceFromEnd =
         previousContentHeight > previousViewHeight
           ? Math.max(0, previousContentHeight - previousViewHeight - y)
@@ -99,30 +142,31 @@ export const useChatScroll = ({
       const atBottom =
         contentHeight <= viewHeight ||
         distanceFromEnd <= RETURN_TO_BOTTOM_THRESHOLD;
-      const userScrolledAway =
+      const userDraggedAway =
         contentHeight > viewHeight &&
+        isDraggingRef.current &&
         distanceFromEnd > USER_SCROLL_AWAY_THRESHOLD &&
-        (isDraggingRef.current
-          ? !hasPreviousOffset || scrolledUp
-          : hasPreviousOffset
-            ? scrolledUp && !contentGrew && !layoutChanged
-            : distanceFromEnd > RETURN_TO_BOTTOM_THRESHOLD);
+        (!hasPreviousOffset || scrolledUp);
 
-      if (lastAtBottomRef.current !== false && !userScrolledAway && !atBottom) {
-        isAtBottomRef.current = true;
-        lastAtBottomRef.current = true;
-        if (scrollThrottleRef.current) {
-          clearTimeout(scrollThrottleRef.current);
-          scrollThrottleRef.current = null;
-        }
-        setIsAtBottom(true);
+      if (userDraggedAway) {
+        hasUserScrollIntentRef.current = true;
+      }
+
+      if (!userDraggedAway && atBottom && hasUserScrollIntentRef.current) {
+        markAtBottom();
         return;
       }
 
-      const resolved =
-        lastAtBottomRef.current === false
+      if (!hasUserScrollIntentRef.current && !userDraggedAway && !atBottom) {
+        markAtBottom();
+        return;
+      }
+
+      const resolved = userDraggedAway
+        ? false
+        : hasUserScrollIntentRef.current
           ? atBottom || reachedPreviousEndDuringGrowth
-          : !userScrolledAway;
+          : true;
 
       isAtBottomRef.current = resolved;
 
@@ -150,11 +194,12 @@ export const useChatScroll = ({
         const { current } = isAtBottomRef;
         setIsAtBottom(current);
         if (current) {
+          hasUserScrollIntentRef.current = false;
           setUnreadCount(0);
         }
       }, SCROLL_THROTTLE_MS);
     },
-    [],
+    [markAtBottom],
   );
 
   const scrollToBottom = useCallback(() => {
@@ -165,13 +210,24 @@ export const useChatScroll = ({
     isScrollingToBottomRef.current = true;
     setIsScrollingToBottom(true);
 
-    isAtBottomRef.current = true;
-    lastAtBottomRef.current = true;
-    setIsAtBottom(true);
-    setUnreadCount(0);
+    markAtBottom();
 
     const scrollToEnd = () => {
-      listRef.current?.scrollToEnd?.({ animated: false });
+      const list = listRef.current;
+      if (!list) {
+        return;
+      }
+
+      list.scrollToEnd?.({ animated: false });
+      const newestIndex = getMessagesLength() - 1;
+      if (newestIndex < 0) {
+        return;
+      }
+      void list.scrollToIndex?.({
+        animated: false,
+        index: newestIndex,
+        viewPosition: 1,
+      });
     };
 
     scrollToEnd();
@@ -183,14 +239,44 @@ export const useChatScroll = ({
     );
     scrollTimeoutRef.current = setTimeout(() => {
       clearScrollToBottomTimers();
-      isAtBottomRef.current = true;
-      lastAtBottomRef.current = true;
-      setIsAtBottom(true);
-      setUnreadCount(0);
+      markAtBottom();
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
     }, SCROLL_TO_BOTTOM_SETTLE_MS);
-  }, [clearScrollToBottomTimers, listRef, getMessagesLength]);
+  }, [clearScrollToBottomTimers, listRef, getMessagesLength, markAtBottom]);
+
+  const maintainBottomAfterContentChange = useCallback(() => {
+    if (getMessagesLength() === 0 || !isAtBottomRef.current) {
+      return;
+    }
+
+    markAtBottom();
+    shouldAnchorBottomOnContentChangeRef.current = true;
+
+    if (bottomContentAnchorTimeoutRef.current) {
+      clearTimeout(bottomContentAnchorTimeoutRef.current);
+    }
+    bottomContentAnchorTimeoutRef.current = setTimeout(() => {
+      shouldAnchorBottomOnContentChangeRef.current = false;
+      bottomContentAnchorTimeoutRef.current = null;
+    }, BOTTOM_CONTENT_CHANGE_ANCHOR_MS);
+
+    if (bottomContentAnchorTickRef.current) {
+      clearTimeout(bottomContentAnchorTickRef.current);
+    }
+    bottomContentAnchorTickRef.current = setTimeout(() => {
+      bottomContentAnchorTickRef.current = null;
+      scrollToEndOnce();
+    }, 0);
+  }, [getMessagesLength, markAtBottom, scrollToEndOnce]);
+
+  const handleContentSizeChange = useCallback(() => {
+    if (!shouldAnchorBottomOnContentChangeRef.current) {
+      return;
+    }
+
+    scrollToEndOnce();
+  }, [scrollToEndOnce]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);
@@ -198,11 +284,12 @@ export const useChatScroll = ({
 
   const cleanup = useCallback(() => {
     clearScrollToBottomTimers();
+    clearBottomContentAnchor();
     if (scrollThrottleRef.current) {
       clearTimeout(scrollThrottleRef.current);
     }
     scrollThrottleRef.current = null;
-  }, [clearScrollToBottomTimers]);
+  }, [clearBottomContentAnchor, clearScrollToBottomTimers]);
 
   return {
     isAtBottom,
@@ -215,7 +302,10 @@ export const useChatScroll = ({
     handleScrollBeginDrag,
     handleScrollEndDrag,
     handleMomentumScrollEnd,
+    handleEndReached: markAtBottom,
+    handleContentSizeChange,
     scrollToBottom,
+    maintainBottomAfterContentChange,
     incrementUnread,
     cleanup,
   };

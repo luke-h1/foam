@@ -4,7 +4,8 @@ import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { MutableRefObject, useCallback, useRef } from 'react';
 
-const BUFFER_FLUSH_INTERVAL_MS = 50;
+const LIVE_BUFFER_FLUSH_INTERVAL_MS = 16;
+const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 50;
 const MAX_BUFFERED_MESSAGES = 600;
 
 const colorCache = new Map<string, string>();
@@ -82,11 +83,18 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const { isAtBottomRef, isScrollingToBottomRef, onUnreadIncrement } = options;
 
   const messageBufferRef = useRef<AnyMessage[]>([]);
-  const flushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFlushingRef = useRef(false);
+  const pendingUnreadCountRef = useRef(0);
 
   const flushBuffer = useCallback(() => {
+    flushTimerRef.current = null;
+
     if (messageBufferRef.current.length === 0) {
+      if (pendingUnreadCountRef.current > 0) {
+        onUnreadIncrement(pendingUnreadCountRef.current);
+        pendingUnreadCountRef.current = 0;
+      }
       return;
     }
     if (isFlushingRef.current) {
@@ -102,18 +110,26 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       addMessages(messagesToFlush as ChatMessageType<never>[]);
     }
 
-    isFlushingRef.current = false;
-  }, []);
-
-  const startFlushTimer = useCallback(() => {
-    if (flushTimerRef.current) {
-      return;
+    if (pendingUnreadCountRef.current > 0) {
+      onUnreadIncrement(pendingUnreadCountRef.current);
+      pendingUnreadCountRef.current = 0;
     }
 
-    flushTimerRef.current = setInterval(() => {
-      flushBuffer();
-    }, BUFFER_FLUSH_INTERVAL_MS);
-  }, [flushBuffer]);
+    isFlushingRef.current = false;
+  }, [onUnreadIncrement]);
+
+  const startFlushTimer = useCallback(
+    (delayMs: number) => {
+      if (flushTimerRef.current) {
+        return;
+      }
+
+      flushTimerRef.current = setTimeout(() => {
+        flushBuffer();
+      }, delayMs);
+    },
+    [flushBuffer],
+  );
 
   const handleNewMessage = useCallback(
     (newMessage: AnyMessage, options?: HandleNewMessageOptions) => {
@@ -141,8 +157,14 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
       messageBufferRef.current.push(messageWithCachedColor);
       if (messageBufferRef.current.length > MAX_BUFFERED_MESSAGES) {
+        const droppedCount =
+          messageBufferRef.current.length - MAX_BUFFERED_MESSAGES;
         messageBufferRef.current = messageBufferRef.current.slice(
           -MAX_BUFFERED_MESSAGES,
+        );
+        pendingUnreadCountRef.current = Math.max(
+          0,
+          pendingUnreadCountRef.current - droppedCount,
         );
       }
 
@@ -152,12 +174,16 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         !isAtBottomRef.current &&
         !scrollingToBottom
       ) {
-        onUnreadIncrement(1);
+        pendingUnreadCountRef.current += 1;
       }
 
-      startFlushTimer();
+      const flushDelay =
+        isAtBottomRef.current || scrollingToBottom
+          ? LIVE_BUFFER_FLUSH_INTERVAL_MS
+          : BACKLOG_BUFFER_FLUSH_INTERVAL_MS;
+      startFlushTimer(flushDelay);
     },
-    [isAtBottomRef, isScrollingToBottomRef, onUnreadIncrement, startFlushTimer],
+    [isAtBottomRef, isScrollingToBottomRef, startFlushTimer],
   );
 
   const forceFlush = useCallback(() => {
@@ -171,10 +197,16 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     if (bufferedMessages.length > 0) {
       addMessages(bufferedMessages as ChatMessageType<never>[]);
     }
-  }, []);
+
+    if (pendingUnreadCountRef.current > 0) {
+      onUnreadIncrement(pendingUnreadCountRef.current);
+      pendingUnreadCountRef.current = 0;
+    }
+  }, [onUnreadIncrement]);
 
   const clearLocalMessages = useCallback(() => {
     messageBufferRef.current = [];
+    pendingUnreadCountRef.current = 0;
   }, []);
 
   const removeBufferedMessageById = useCallback((messageId: string) => {
@@ -226,10 +258,11 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
   const cleanup = useCallback(() => {
     if (flushTimerRef.current) {
-      clearInterval(flushTimerRef.current);
+      clearTimeout(flushTimerRef.current);
       flushTimerRef.current = null;
     }
     messageBufferRef.current = [];
+    pendingUnreadCountRef.current = 0;
   }, []);
 
   return {

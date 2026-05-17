@@ -78,6 +78,8 @@ import {
   StyleSheet,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -86,9 +88,9 @@ import { formatDate } from '@app/utils/date-time/date';
 import { ReadyState } from '@app/hooks/ws/constants';
 
 import { Text } from '@app/components/ui/Text/Text';
+import { prefetchImage } from '@app/components/Image/Image';
 import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
-import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
 import { ChatList } from './components/ChatList';
 import type { EmotePressData } from './components/ChatMessage/RichChatMessage';
@@ -114,14 +116,6 @@ import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSevenTvCallbacks } from './hooks/useChatSevenTvCallbacks';
 import { useEmoteReprocessing } from './hooks/useEmoteReprocessing';
 import {
-  createTestPrimeSubNotice,
-  createTestTier1SubNotice,
-  createTestTier2SubNotice,
-  createTestTier3SubNotice,
-  createTestSubNotice,
-  createTestViewerMilestoneNotice,
-} from './util/createTestUserNotices';
-import {
   AnyChatMessageType,
   createUserStateFromTags,
   createBaseMessage,
@@ -132,8 +126,10 @@ import { formatNoticeMessage } from './util/formatNoticeMessage';
 import { hydrateVisibleSevenTvAssets } from './util/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from './util/reprocessMessages';
 import { getVisibleMessages } from './util/visibleMessages';
+import { cacheImageFromUrl } from '@app/utils/image/image-cache';
 
 interface ChatProps {
+  applyTopInset?: boolean;
   channelId: string;
   channelName: string;
   transparent?: boolean;
@@ -163,6 +159,8 @@ const SUPPRESSED_NOTICE_IDS = new Set([
   ...ROOMSTATE_NOTICE_IDS,
   'delete_message_success',
 ]);
+
+const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
 function parseRoomStateTags(tags: Record<string, string>): ParsedRoomState {
   const followersOnlyRaw = Number.parseInt(tags['followers-only'] ?? '-1', 10);
@@ -257,6 +255,12 @@ function describeRoomStateChanges(
   return changes;
 }
 
+function isRenderableChatMessage(
+  message: AnyChatMessageType | undefined,
+): message is AnyChatMessageType {
+  return Boolean(message?.message_id && message.message_nonce);
+}
+
 interface ChatMessagePaneProps {
   channelId: string;
   channelName: string;
@@ -272,9 +276,12 @@ interface ChatMessagePaneProps {
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollEndDrag: () => void;
   handleMomentumScrollEnd: () => void;
+  handleEndReached: () => void;
+  handleContentSizeChange: () => void;
   renderItem: ListRenderItem<AnyChatMessageType>;
   keyExtractor: (item: AnyChatMessageType) => string;
   getItemType: (item: AnyChatMessageType) => string;
+  listContentStyle: StyleProp<ViewStyle>;
   messageListExtraData?: unknown;
   onClearFilters: () => void;
   onToggleShowOnlyMentions: () => void;
@@ -290,7 +297,6 @@ interface ChatInputShellHandle {
 
 interface ChatOverlayControllerHandle {
   openBadge: (badge: BadgePressData) => void;
-  openDebugModal: () => void;
   openEmotePreview: (emote: EmotePressData) => void;
   openEmoteSheet: () => void;
   openMessageActions: (message: MessageActionData<'usernotice'>) => void;
@@ -304,7 +310,6 @@ interface ChatInputShellProps {
   connected: boolean;
   getUserState: () => Record<string, string>;
   isChatConnected: () => boolean;
-  onOpenDebugModal: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
   processMessageEmotes: (
@@ -333,7 +338,6 @@ interface ChatOverlayLayerProps {
   emoteSheetRef: RefObject<TrueSheet | null>;
   highlightedUsers: string[];
   hiddenUsers: string[];
-  isDebugModalVisible: boolean;
   onActionSheetBanUser: () => void;
   onActionSheetCopy: () => void;
   onActionSheetDeleteMessage: () => void;
@@ -344,7 +348,6 @@ interface ChatOverlayLayerProps {
   onActionSheetTimeoutUser: () => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
-  onCloseDebugModal: () => void;
   onCloseSelectedBadge: () => void;
   onCloseSelectedEmote: () => void;
   onCloseSelectedMessage: () => void;
@@ -365,7 +368,6 @@ interface ChatOverlayLayerProps {
   onToggleShowTimestamps: (value: boolean) => void;
   onToggleShowUnreadJumpPill: (value: boolean) => void;
   onBanSelectedUser: () => void;
-  onTestMessage: (type: TestMessageType) => void;
   selectedBadge: BadgePressData | null;
   selectedEmote: EmotePressData | null;
   selectedMessage: MessageActionData<'usernotice'> | null;
@@ -398,7 +400,6 @@ interface ChatOverlayControllerProps {
   onInsertEmote: (item: EmotePickerItem) => void;
   onSettingsReconnect: () => void;
   onSettingsRefetchEmotes: () => void;
-  onTestMessage: (type: TestMessageType) => void;
   onToggleChatDensity: () => void;
   onToggleHighlightOwnMentions: (value: boolean) => void;
   onToggleInlineReplyContext: (value: boolean) => void;
@@ -659,16 +660,23 @@ const ChatMessagePane = memo(
     handleScrollBeginDrag,
     handleScrollEndDrag,
     handleMomentumScrollEnd,
+    handleEndReached,
+    handleContentSizeChange,
     renderItem,
     keyExtractor,
     getItemType,
+    listContentStyle,
     messageListExtraData,
     onClearFilters,
     onToggleShowOnlyMentions,
     onViewableMessagesChange,
   }: ChatMessagePaneProps) => {
-    const rawMessages = useSelector(
-      () => chatStore$.messages.get() as AnyChatMessageType[],
+    const storedMessages = useSelector(
+      () => chatStore$.messages.get() as Array<AnyChatMessageType | undefined>,
+    );
+    const rawMessages = useMemo(
+      () => storedMessages.filter(isRenderableChatMessage),
+      [storedMessages],
     );
     const hasMessages = rawMessages.length > 0;
     const hasEverHadMessagesRef = useRef(false);
@@ -767,11 +775,13 @@ const ChatMessagePane = memo(
           handleScrollBeginDrag={handleScrollBeginDrag}
           handleScrollEndDrag={handleScrollEndDrag}
           handleMomentumScrollEnd={handleMomentumScrollEnd}
+          handleEndReached={handleEndReached}
+          handleContentSizeChange={handleContentSizeChange}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           getItemType={getItemType}
           extraData={messageListExtraData}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={listContentStyle}
           onViewableMessagesChange={onViewableMessagesChange}
         />
       </View>
@@ -821,7 +831,6 @@ const ChatInputShell = memo(
         connected,
         getUserState,
         isChatConnected,
-        onOpenDebugModal,
         onOpenEmoteSheet,
         onOpenSettingsSheet,
         processMessageEmotes,
@@ -1027,7 +1036,6 @@ const ChatInputShell = memo(
           onSubmit={handleSendMessage}
           onOpenEmoteSheet={onOpenEmoteSheet}
           onOpenSettingsSheet={onOpenSettingsSheet}
-          onOpenDebugModal={onOpenDebugModal}
           replyTo={replyTo}
           onClearReply={handleClearReply}
           isConnected={connected}
@@ -1062,7 +1070,6 @@ const ChatOverlayController = memo(
         onInsertEmote,
         onSettingsReconnect,
         onSettingsRefetchEmotes,
-        onTestMessage,
         onToggleChatDensity,
         onToggleHighlightOwnMentions,
         onToggleInlineReplyContext,
@@ -1089,7 +1096,6 @@ const ChatOverlayController = memo(
       );
       const [selectedUser, setSelectedUser] =
         useState<UsernamePressData | null>(null);
-      const [isDebugModalVisible, setIsDebugModalVisible] = useState(false);
       const [isEmoteSheetMounted, setIsEmoteSheetMounted] = useState(false);
       const [isSettingsSheetMounted, setIsSettingsSheetMounted] =
         useState(false);
@@ -1099,7 +1105,6 @@ const ChatOverlayController = memo(
         setSelectedMessage(null);
         setSelectedEmote(null);
         setSelectedUser(null);
-        setIsDebugModalVisible(false);
         setIsEmoteSheetMounted(false);
         setIsSettingsSheetMounted(false);
       }, [channelId]);
@@ -1132,7 +1137,6 @@ const ChatOverlayController = memo(
         ref,
         () => ({
           openBadge: setSelectedBadge,
-          openDebugModal: () => setIsDebugModalVisible(true),
           openEmotePreview: setSelectedEmote,
           openEmoteSheet: () => setIsEmoteSheetMounted(true),
           openMessageActions: setSelectedMessage,
@@ -1164,10 +1168,6 @@ const ChatOverlayController = memo(
 
       const handleSettingsSheetDidDismiss = useCallback(() => {
         setIsSettingsSheetMounted(false);
-      }, []);
-
-      const handleCloseDebugModal = useCallback(() => {
-        setIsDebugModalVisible(false);
       }, []);
 
       const handleActionSheetReply = useCallback(() => {
@@ -1346,7 +1346,6 @@ const ChatOverlayController = memo(
           emoteSheetRef={emoteSheetRef}
           highlightedUsers={highlightedUsers}
           hiddenUsers={hiddenUsers}
-          isDebugModalVisible={isDebugModalVisible}
           onActionSheetBanUser={handleActionSheetBanUser}
           onActionSheetCopy={handleActionSheetCopy}
           onActionSheetDeleteMessage={handleActionSheetDeleteMessage}
@@ -1358,7 +1357,6 @@ const ChatOverlayController = memo(
           onBanSelectedUser={handleBanSelectedUser}
           onClearChatCache={onClearChatCache}
           onClearImageCache={onClearImageCache}
-          onCloseDebugModal={handleCloseDebugModal}
           onCloseSelectedBadge={handleCloseSelectedBadge}
           onCloseSelectedEmote={handleCloseSelectedEmote}
           onCloseSelectedMessage={handleCloseSelectedMessage}
@@ -1372,7 +1370,6 @@ const ChatOverlayController = memo(
           onMentionSelectedUser={handleMentionSelectedUser}
           onSettingsReconnect={onSettingsReconnect}
           onSettingsRefetchEmotes={onSettingsRefetchEmotes}
-          onTestMessage={onTestMessage}
           onTimeoutSelectedUser={handleTimeoutSelectedUser}
           onToggleChatDensity={onToggleChatDensity}
           onToggleHighlightOwnMentions={onToggleHighlightOwnMentions}
@@ -1410,7 +1407,6 @@ const ChatOverlayLayer = memo(
     emoteSheetRef,
     highlightedUsers,
     hiddenUsers,
-    isDebugModalVisible,
     onActionSheetBanUser,
     onActionSheetCopy,
     onActionSheetDeleteMessage,
@@ -1422,7 +1418,6 @@ const ChatOverlayLayer = memo(
     onBanSelectedUser,
     onClearChatCache,
     onClearImageCache,
-    onCloseDebugModal,
     onCloseSelectedBadge,
     onCloseSelectedEmote,
     onCloseSelectedMessage,
@@ -1436,7 +1431,6 @@ const ChatOverlayLayer = memo(
     onMentionSelectedUser,
     onSettingsReconnect,
     onSettingsRefetchEmotes,
-    onTestMessage,
     onTimeoutSelectedUser,
     onToggleChatDensity,
     onToggleHighlightOwnMentions,
@@ -1471,6 +1465,8 @@ const ChatOverlayLayer = memo(
             ref={settingsSheetRef}
             chatDensity={chatDensity}
             highlightOwnMentions={highlightOwnMentions}
+            onClearChatCache={onClearChatCache}
+            onClearImageCache={onClearImageCache}
             onDidDismiss={onSettingsSheetDidDismiss}
             onRefetchEmotes={onSettingsRefetchEmotes}
             onReconnect={onSettingsReconnect}
@@ -1482,16 +1478,6 @@ const ChatOverlayLayer = memo(
             showInlineReplyContext={showInlineReplyContext}
             showTimestamps={showTimestamps}
             showUnreadJumpPill={showUnreadJumpPill}
-          />
-        ) : null}
-
-        {isDebugModalVisible ? (
-          <ChatDebugModal
-            visible
-            onClose={onCloseDebugModal}
-            onTestMessage={onTestMessage}
-            onClearChatCache={onClearChatCache}
-            onClearImageCache={onClearImageCache}
           />
         ) : null}
 
@@ -1564,7 +1550,12 @@ const ChatOverlayLayer = memo(
 ChatOverlayLayer.displayName = 'ChatOverlayLayer';
 
 export const Chat = memo(
-  ({ channelName, channelId, transparent = false }: ChatProps) => {
+  ({
+    applyTopInset = true,
+    channelName,
+    channelId,
+    transparent = false,
+  }: ChatProps) => {
     const { user } = useAuthContext();
     const preferences = usePreferences();
     const showRecentMessages = preferences.showRecentMessages !== false;
@@ -1576,6 +1567,11 @@ export const Chat = memo(
     const processedMessageIdsRef = useRef<Set<string>>(new Set());
     const visiblePersonalEmoteUsersRef = useRef<Set<string>>(new Set());
     const visibleCosmeticUsersRef = useRef<Set<string>>(new Set());
+    const hydratedVisibleAssetKeysRef = useRef<Set<string>>(new Set());
+    const pendingVisibleMessagesRef = useRef<AnyChatMessageType[]>([]);
+    const visibleAssetHydrationTimerRef = useRef<ReturnType<
+      typeof setTimeout
+    > | null>(null);
     const listRef = useRef<FlashListRef<AnyChatMessageType> | null>(null);
     const emoteSheetRef = useRef<TrueSheet>(null);
     const settingsSheetRef = useRef<TrueSheet>(null);
@@ -1609,6 +1605,7 @@ export const Chat = memo(
       setShowOnlyMentions(false);
       visiblePersonalEmoteUsersRef.current.clear();
       visibleCosmeticUsersRef.current.clear();
+      hydratedVisibleAssetKeysRef.current.clear();
     }, [channelId]);
 
     useEffect(() => {
@@ -1616,6 +1613,10 @@ export const Chat = memo(
         if (highlightedReplyTargetTimeoutRef.current) {
           clearTimeout(highlightedReplyTargetTimeoutRef.current);
           highlightedReplyTargetTimeoutRef.current = null;
+        }
+        if (visibleAssetHydrationTimerRef.current) {
+          clearTimeout(visibleAssetHydrationTimerRef.current);
+          visibleAssetHydrationTimerRef.current = null;
         }
       };
     }, []);
@@ -1704,6 +1705,11 @@ export const Chat = memo(
       enabled: true,
     });
 
+    const getMessagesLength = useCallback(
+      () => messages$.peek().length,
+      [messages$],
+    );
+
     const {
       isAtBottom,
       isAtBottomRef,
@@ -1715,11 +1721,14 @@ export const Chat = memo(
       handleScrollBeginDrag,
       handleScrollEndDrag,
       handleMomentumScrollEnd,
+      handleEndReached,
+      handleContentSizeChange,
       scrollToBottom,
+      maintainBottomAfterContentChange,
       cleanup: cleanupScroll,
     } = useChatScroll({
       listRef,
-      getMessagesLength: () => messages$.peek().length,
+      getMessagesLength,
     });
 
     const {
@@ -1750,7 +1759,7 @@ export const Chat = memo(
     );
 
     const processMessageEmotes = useCallback(
-      async (
+      (
         text: string,
         userstate: ReturnType<typeof createUserStateFromTags>,
         baseMessage: AnyChatMessageType,
@@ -1934,21 +1943,73 @@ export const Chat = memo(
       [channelId, user?.login],
     );
 
+    const warmVisibleImages = useCallback(
+      ({
+        badgeUrls,
+        emoteUrls,
+      }: {
+        badgeUrls: string[];
+        emoteUrls: string[];
+      }) => {
+        const warm = (url: string, variant: 'badge' | 'emote') => {
+          void cacheImageFromUrl(url, {
+            priority: 'visible',
+            variant,
+          }).then(cachedUri => {
+            if (cachedUri !== url) {
+              void prefetchImage(cachedUri);
+            }
+          });
+        };
+
+        badgeUrls.forEach(url => warm(url, 'badge'));
+        emoteUrls.forEach(url => warm(url, 'emote'));
+      },
+      [],
+    );
+
     const handleViewableMessagesChange = useCallback(
       (visibleMessages: AnyChatMessageType[]) => {
-        void hydrateVisibleSevenTvAssets({
-          channelId,
-          messages: visibleMessages,
-          personalEmoteUsers: visiblePersonalEmoteUsersRef.current,
-          cosmeticUsers: visibleCosmeticUsersRef.current,
-          getUserPersonalEmotes,
-          fetchUserPersonalEmotes,
-          getUserBadge,
-          fetchUserCosmetics,
-          reprocessMessage: reprocessVisibleMessageFromCache,
-        });
+        pendingVisibleMessagesRef.current = visibleMessages;
+        if (visibleAssetHydrationTimerRef.current) {
+          return;
+        }
+
+        visibleAssetHydrationTimerRef.current = setTimeout(() => {
+          visibleAssetHydrationTimerRef.current = null;
+          const messages = pendingVisibleMessagesRef.current;
+          pendingVisibleMessagesRef.current = [];
+          const shouldMaintainBottom = isAtBottomRef.current;
+
+          void hydrateVisibleSevenTvAssets({
+            channelId,
+            messages,
+            hydratedMessageKeys: hydratedVisibleAssetKeysRef.current,
+            personalEmoteUsers: visiblePersonalEmoteUsersRef.current,
+            cosmeticUsers: visibleCosmeticUsersRef.current,
+            disableEmoteAnimations: preferences.disableEmoteAnimations,
+            getUserPersonalEmotes,
+            fetchUserPersonalEmotes,
+            getUserBadge,
+            fetchUserCosmetics,
+            warmVisibleImages,
+            reprocessMessage: reprocessVisibleMessageFromCache,
+          }).then(() => {
+            if (shouldMaintainBottom && isAtBottomRef.current) {
+              maintainBottomAfterContentChange();
+            }
+          });
+        }, VISIBLE_ASSET_HYDRATION_DELAY_MS);
       },
-      [channelId, fetchUserCosmetics, reprocessVisibleMessageFromCache],
+      [
+        channelId,
+        fetchUserCosmetics,
+        isAtBottomRef,
+        maintainBottomAfterContentChange,
+        preferences.disableEmoteAnimations,
+        reprocessVisibleMessageFromCache,
+        warmVisibleImages,
+      ],
     );
 
     const reprocessAllMessages = useCallback(() => {
@@ -1959,20 +2020,12 @@ export const Chat = memo(
     }, [messages$, processMessageEmotes]);
 
     const handlePrivmsgMessage = useCallback(
-      async (
-        tags: Record<string, string>,
-        text: string,
-        countUnread = true,
-      ) => {
+      (tags: Record<string, string>, text: string, countUnread = true) => {
         const userstate = createUserStateFromTags(tags);
         const replyParentMessageId = tags['reply-parent-msg-id'];
         const replyParentDisplayName = tags['reply-parent-display-name'];
 
         const userId = tags['user-id'];
-        if (userId) {
-          void fetchUserCosmetics(userId);
-          void fetchUserPersonalEmotes(userId, channelId);
-        }
 
         let parentColor: string | undefined;
         if (replyParentDisplayName?.trim()) {
@@ -1988,7 +2041,7 @@ export const Chat = memo(
         const baseMessage = createBaseMessage({ tags, channelName, text });
         const messageWithParentColor = { ...baseMessage, parentColor };
 
-        await processMessageEmotes(
+        processMessageEmotes(
           text,
           userstate,
           messageWithParentColor,
@@ -1996,12 +2049,12 @@ export const Chat = memo(
           countUnread,
         );
       },
-      [channelId, channelName, fetchUserCosmetics, processMessageEmotes],
+      [channelName, processMessageEmotes],
     );
 
     const onMessage = useCallback(
       (_channel: string, tags: Record<string, string>, text: string) => {
-        void handlePrivmsgMessage(tags, text);
+        handlePrivmsgMessage(tags, text);
       },
       [handlePrivmsgMessage],
     );
@@ -2173,7 +2226,7 @@ export const Chat = memo(
           case 'PRIVMSG': {
             const text = params[1];
             if (text) {
-              await handlePrivmsgMessage(tags, text, false);
+              handlePrivmsgMessage(tags, text, false);
             }
             break;
           }
@@ -2266,8 +2319,11 @@ export const Chat = memo(
 
     useEffect(() => {
       chatStore$.currentChannelId.set(channelId);
-      restoreRecentMessagesForChannel(channelId);
-    }, [channelId]);
+      const restoredCount = restoreRecentMessagesForChannel(channelId);
+      if (restoredCount > 0) {
+        scrollToBottom();
+      }
+    }, [channelId, scrollToBottom]);
 
     useEffect(() => {
       if (!showRecentMessages) {
@@ -2291,6 +2347,7 @@ export const Chat = memo(
           }
 
           forceFlush();
+          scrollToBottom();
         } catch (error) {
           if (!abortController.signal.aborted) {
             logger.chat.debug('Failed to load recent messages:', error);
@@ -2303,7 +2360,13 @@ export const Chat = memo(
       return () => {
         abortController.abort();
       };
-    }, [channelName, forceFlush, handleRecentIrcMessage, showRecentMessages]);
+    }, [
+      channelName,
+      forceFlush,
+      handleRecentIrcMessage,
+      scrollToBottom,
+      showRecentMessages,
+    ]);
 
     const refetchEmotesRef = useRef(refetchEmotes);
     refetchEmotesRef.current = refetchEmotes;
@@ -2462,10 +2525,6 @@ export const Chat = memo(
       overlayControllerRef.current?.openSettingsSheet();
     }, []);
 
-    const handleOpenDebugModal = useCallback(() => {
-      overlayControllerRef.current?.openDebugModal();
-    }, []);
-
     const appendMentionToComposer = useCallback((username: string) => {
       inputShellRef.current?.appendMention(username);
     }, []);
@@ -2610,24 +2669,6 @@ export const Chat = memo(
       [channelId],
     );
 
-    const handleTestMessage = useCallback(
-      (type: TestMessageType) => {
-        const testMessages: Record<TestMessageType, () => AnyChatMessageType> =
-          {
-            'Prime Sub': () => createTestPrimeSubNotice(1),
-            'Tier 1 Sub': () => createTestTier1SubNotice(1),
-            'Tier 2 Sub': () => createTestTier2SubNotice(1),
-            'Tier 3 Sub': () => createTestTier3SubNotice(1),
-            'Default Sub': createTestSubNotice,
-            'Viewer Milestone': createTestViewerMilestoneNotice,
-          };
-
-        const testMessage = testMessages[type]();
-        handleNewMessage({ ...testMessage, channel: channelName });
-      },
-      [channelName, handleNewMessage],
-    );
-
     const handleClearChatCache = useCallback(() => {
       try {
         clearCache(channelId);
@@ -2733,6 +2774,7 @@ export const Chat = memo(
         preferences.chatTimestamps,
       ],
     );
+    const listContentStyle = useMemo(() => styles.listContent, []);
 
     const handleReplyContextPress = useCallback(
       (replyParentMessageId: string) => {
@@ -2839,7 +2881,7 @@ export const Chat = memo(
         style={[
           styles.wrapper,
           transparent && styles.wrapperTransparent,
-          { paddingTop: insets.top },
+          applyTopInset && { paddingTop: insets.top },
         ]}
       >
         <ChatEmoteRuntime
@@ -2866,9 +2908,12 @@ export const Chat = memo(
               handleScrollBeginDrag={handleScrollBeginDrag}
               handleScrollEndDrag={handleScrollEndDrag}
               handleMomentumScrollEnd={handleMomentumScrollEnd}
+              handleEndReached={handleEndReached}
+              handleContentSizeChange={handleContentSizeChange}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               getItemType={getItemType}
+              listContentStyle={listContentStyle}
               messageListExtraData={messageListExtraData}
               onClearFilters={handleClearFilters}
               onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
@@ -2895,7 +2940,6 @@ export const Chat = memo(
               isChatConnected={isChatConnected}
               onOpenEmoteSheet={handleOpenEmoteSheet}
               onOpenSettingsSheet={handleOpenSettingsSheet}
-              onOpenDebugModal={handleOpenDebugModal}
               processMessageEmotes={processMessageEmotes}
               sendMessage={sendMessage}
               user={user}
@@ -2921,7 +2965,6 @@ export const Chat = memo(
             onInsertEmote={handleEmoteSelect}
             onSettingsReconnect={handleSettingsReconnect}
             onSettingsRefetchEmotes={handleSettingsRefetchEmotes}
-            onTestMessage={handleTestMessage}
             onToggleChatDensity={handleToggleChatDensity}
             onToggleHighlightOwnMentions={handleToggleHighlightOwnMentions}
             onToggleInlineReplyContext={handleToggleInlineReplyContext}

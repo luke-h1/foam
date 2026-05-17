@@ -29,6 +29,8 @@ describe('ChatList', () => {
         handleScrollBeginDrag={jest.fn()}
         handleScrollEndDrag={jest.fn()}
         handleMomentumScrollEnd={jest.fn()}
+        handleEndReached={jest.fn()}
+        handleContentSizeChange={jest.fn()}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -41,12 +43,14 @@ describe('ChatList', () => {
         drawDistance: 320,
         extraData: { showTimestamps: false },
         maintainVisibleContentPosition: {
+          animateAutoScrollToBottom: false,
           autoscrollToBottomThreshold: 0.001,
           startRenderingFromBottom: true,
         },
         viewabilityConfig: {
           itemVisiblePercentThreshold: 1,
         },
+        onEndReachedThreshold: 0.02,
       }),
     );
   });
@@ -76,6 +80,8 @@ describe('ChatList', () => {
         handleScrollBeginDrag={jest.fn()}
         handleScrollEndDrag={jest.fn()}
         handleMomentumScrollEnd={jest.fn()}
+        handleEndReached={jest.fn()}
+        handleContentSizeChange={jest.fn()}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -96,5 +102,74 @@ describe('ChatList', () => {
     });
 
     expect(onViewableMessagesChange).toHaveBeenCalledWith([visibleMessage]);
+  });
+
+  test('scrolls to the newest message after data grows at bottom', () => {
+    const scrollToEnd = jest.fn();
+    const listRef = { current: { scrollToEnd } };
+    const isAtBottomRef = { current: true };
+    const message = {
+      id: '1',
+      message_id: '1',
+      message_nonce: 'nonce',
+      message: [{ type: 'text', content: 'hello' }],
+      badges: [],
+      channel: 'channel',
+      sender: 'sender',
+      timestamp: '00:00',
+      userstate: {},
+    };
+
+    render(
+      <ChatList
+        data={[message] as never}
+        listRef={listRef as never}
+        isAtBottomRef={isAtBottomRef}
+        handleScroll={jest.fn()}
+        handleScrollBeginDrag={jest.fn()}
+        handleScrollEndDrag={jest.fn()}
+        handleMomentumScrollEnd={jest.fn()}
+        handleEndReached={jest.fn()}
+        handleContentSizeChange={jest.fn()}
+        renderItem={jest.fn()}
+        keyExtractor={jest.fn()}
+        getItemType={jest.fn()}
+        contentContainerStyle={undefined}
+      />,
+    );
+
+    expect(scrollToEnd).toHaveBeenCalledTimes(1);
+  });
+
+  test('passes bounded content-size anchoring through to FlashList', () => {
+    const scrollToEnd = jest.fn();
+    const listRef = { current: { scrollToEnd } };
+    const isAtBottomRef = { current: true };
+    const handleContentSizeChange = jest.fn();
+
+    render(
+      <ChatList
+        data={[]}
+        listRef={listRef as never}
+        isAtBottomRef={isAtBottomRef}
+        handleScroll={jest.fn()}
+        handleScrollBeginDrag={jest.fn()}
+        handleScrollEndDrag={jest.fn()}
+        handleMomentumScrollEnd={jest.fn()}
+        handleEndReached={jest.fn()}
+        handleContentSizeChange={handleContentSizeChange}
+        renderItem={jest.fn()}
+        keyExtractor={jest.fn()}
+        getItemType={jest.fn()}
+        contentContainerStyle={undefined}
+      />,
+    );
+
+    const props = mockFlashList.mock.calls[0]?.[0] as {
+      onContentSizeChange?: () => void;
+    };
+
+    expect(props.onContentSizeChange).toBe(handleContentSizeChange);
+    expect(scrollToEnd).not.toHaveBeenCalled();
   });
 });

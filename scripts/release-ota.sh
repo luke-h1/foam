@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-variant="${1:-production}"
+usage() {
+  echo "Usage: scripts/release-ota.sh <internal|testflight|production> [ios|android|all] [message]"
+}
+
+variant="${1:-}"
 platform="${2:-all}"
+message="${3:-}"
 
 case "$variant" in
   internal | testflight | production) ;;
   *)
-    echo "Usage: scripts/release-ota.sh [internal|testflight|production] [ios|android|all]"
+    usage
     exit 1
     ;;
 esac
@@ -17,13 +22,29 @@ case "$platform" in
   *)
     echo "Invalid platform: $platform"
     echo "Expected one of: ios, android, all"
+    usage
     exit 1
     ;;
 esac
 
-APP_VARIANT="$variant" eas update \
-  --channel "$variant" \
-  --environment "$variant" \
-  --platform "$platform" \
-  --clear-cache \
+dotenv_bin="${DOTENV_BIN:-./node_modules/.bin/dotenv}"
+
+if [ ! -x "$dotenv_bin" ]; then
+  echo "Missing dotenv CLI at $dotenv_bin. Run bun install first."
+  exit 1
+fi
+
+args=(
+  update
+  --channel "$variant"
+  --platform "$platform"
+  --clear-cache
   --non-interactive
+)
+
+if [ -n "$message" ]; then
+  args+=(--message "$message")
+fi
+
+echo "Publishing OTA to $variant ($platform) using local dotenv cascade"
+"$dotenv_bin" -c "$variant" -v "APP_VARIANT=$variant" -- eas "${args[@]}"

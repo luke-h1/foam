@@ -1,7 +1,7 @@
 import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
 import { updateMessage } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
 
@@ -194,6 +194,64 @@ describe('useEmoteReprocessing', () => {
       badges: [],
     });
     expect(processedMessageIdsRef.current.has('msg-1')).toBe(true);
+  });
+
+  test('yields between large reprocessing batches', () => {
+    jest.useFakeTimers();
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    const messages = Array.from({ length: 30 }, (_, index) =>
+      createTextOnlyMessage(`msg-${index}`, `nonce-${index}`, 'hello world'),
+    );
+    const peek = jest.fn().mockReturnValue(messages);
+
+    renderHook(() =>
+      useEmoteReprocessing({
+        channelId,
+        channelEmoteData: emoteDataWithEmotes,
+        messages$: { peek },
+        emoteLoadStatus: 'success',
+        processedMessageIdsRef,
+      }),
+    );
+
+    expect(mockUpdateMessage).toHaveBeenCalledTimes(24);
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(mockUpdateMessage).toHaveBeenCalledTimes(30);
+    jest.useRealTimers();
+  });
+
+  test('skips sparse or incomplete message entries', () => {
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    const validMessage = createTextOnlyMessage('msg-1', 'nonce-1', 'hello');
+    const peek = jest
+      .fn()
+      .mockReturnValue([
+        undefined,
+        { message_id: '', message: [] },
+        { message_id: 'bad', message: undefined },
+        validMessage,
+      ]);
+
+    renderHook(() =>
+      useEmoteReprocessing({
+        channelId,
+        channelEmoteData: emoteDataWithEmotes,
+        messages$: { peek },
+        emoteLoadStatus: 'success',
+        processedMessageIdsRef,
+      }),
+    );
+
+    expect(mockUpdateMessage).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMessage).toHaveBeenCalledWith('msg-1', 'nonce-1', {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      message: expect.any(Array),
+      badges: [],
+    });
   });
 
   test('skips messages already in processedMessageIdsRef', () => {

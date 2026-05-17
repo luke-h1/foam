@@ -7,9 +7,12 @@ import {
   clearMessages,
   moderateMessagesByLogin,
   removeMessageById,
+  restoreRecentMessagesForChannel,
 } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { useChatMessages } from '../hooks/useChatMessages';
+
+const mockScrollToBottom = jest.fn();
 
 jest.mock('@app/components/FlashList/FlashList', () => ({
   FlashList: () => null,
@@ -200,10 +203,6 @@ jest.mock('../components/BadgePreviewSheet/BadgePreviewSheet', () => ({
   BadgePreviewSheet: () => null,
 }));
 
-jest.mock('../components/ChatDebugModal', () => ({
-  ChatDebugModal: () => null,
-}));
-
 jest.mock('../components/ChatInputSection', () => ({
   ChatInputSection: () => null,
 }));
@@ -271,7 +270,10 @@ jest.mock('../hooks/useChatScroll', () => ({
     handleScrollBeginDrag: jest.fn(),
     handleScrollEndDrag: jest.fn(),
     handleMomentumScrollEnd: jest.fn(),
-    scrollToBottom: jest.fn(),
+    handleEndReached: jest.fn(),
+    handleContentSizeChange: jest.fn(),
+    scrollToBottom: mockScrollToBottom,
+    maintainBottomAfterContentChange: jest.fn(),
     cleanup: jest.fn(),
   }),
 }));
@@ -289,6 +291,9 @@ const mockedGetRecentMessages = jest.mocked(
   recentMessagesService.getRecentMessages,
 );
 const mockedUseChatMessages = jest.mocked(useChatMessages);
+const mockedRestoreRecentMessagesForChannel = jest.mocked(
+  restoreRecentMessagesForChannel,
+);
 const mockedChatStore = chatStore$ as unknown as {
   messages: {
     get: jest.MockedFunction<() => unknown[]>;
@@ -335,6 +340,7 @@ const setPreferences = (showRecentMessages = true) => {
 describe('Chat recent messages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedRestoreRecentMessagesForChannel.mockReturnValue(0);
     mockedChatStore.messages.get.mockReturnValue([]);
     mockedChatStore.messages.peek.mockReturnValue([]);
     setPreferences();
@@ -411,6 +417,16 @@ describe('Chat recent messages', () => {
     expect(removeMessageById).toHaveBeenCalledWith('msg-2');
     expect(addMessage).toHaveBeenCalled();
     expect(clearMessages).not.toHaveBeenCalled();
+    expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
+  });
+
+  test('settles to bottom after restoring persisted recent messages', () => {
+    setPreferences(false);
+    mockedRestoreRecentMessagesForChannel.mockReturnValueOnce(12);
+
+    render(<Chat channelId="channel-1" channelName="foam" />);
+
+    expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
   });
 
   test('does not load recent messages when the preference is disabled', () => {

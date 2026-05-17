@@ -69,6 +69,23 @@ function createMessage(): AnyChatMessageType {
   } as AnyChatMessageType;
 }
 
+function createMessageForUser(userId: string): AnyChatMessageType {
+  const message = createMessage();
+  return {
+    ...message,
+    id: `message-${userId}_nonce-${userId}`,
+    message_id: `message-${userId}`,
+    message_nonce: `nonce-${userId}`,
+    sender: `Sender${userId}`,
+    userstate: {
+      ...message.userstate,
+      'user-id': userId,
+      login: `sender-${userId}`,
+      username: `Sender${userId}`,
+    },
+  } as AnyChatMessageType;
+}
+
 describe('hydrateVisibleSevenTvAssets', () => {
   test('fetches personal emotes on visible cache miss and reprocesses once image data resolves', async () => {
     const message = createMessage();
@@ -80,8 +97,10 @@ describe('hydrateVisibleSevenTvAssets', () => {
     await hydrateVisibleSevenTvAssets({
       channelId: 'channel-id',
       messages: [message],
+      hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(),
       cosmeticUsers: new Set(['twitch-user']),
+      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes,
       getUserBadge: jest.fn(() => undefined),
@@ -96,6 +115,26 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(reprocessMessage).toHaveBeenCalledWith(message);
   });
 
+  test('limits visible-user personal emote fetches per hydration pass', async () => {
+    const fetchUserPersonalEmotes = jest.fn().mockResolvedValue([]);
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages: ['1', '2', '3', '4', '5'].map(createMessageForUser),
+      hydratedMessageKeys: new Set(),
+      personalEmoteUsers: new Set(),
+      cosmeticUsers: new Set(['1', '2', '3', '4', '5']),
+      disableEmoteAnimations: false,
+      getUserPersonalEmotes: jest.fn(() => []),
+      fetchUserPersonalEmotes,
+      getUserBadge: jest.fn(() => undefined),
+      fetchUserCosmetics: jest.fn(),
+      reprocessMessage: jest.fn(),
+    });
+
+    expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(3);
+  });
+
   test('fetches missing 7TV badge data for visible chat and reprocesses once cached', async () => {
     const message = createMessage();
     const reprocessMessage = jest.fn();
@@ -108,8 +147,10 @@ describe('hydrateVisibleSevenTvAssets', () => {
     await hydrateVisibleSevenTvAssets({
       channelId: 'channel-id',
       messages: [message],
+      hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(['twitch-user']),
       cosmeticUsers: new Set(),
+      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
       getUserBadge,
@@ -124,6 +165,26 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(reprocessMessage).toHaveBeenCalledWith(message);
   });
 
+  test('limits visible-user cosmetic fetches per hydration pass', async () => {
+    const fetchUserCosmetics = jest.fn().mockResolvedValue(undefined);
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages: ['1', '2', '3', '4', '5'].map(createMessageForUser),
+      hydratedMessageKeys: new Set(),
+      personalEmoteUsers: new Set(['1', '2', '3', '4', '5']),
+      cosmeticUsers: new Set(),
+      disableEmoteAnimations: false,
+      getUserPersonalEmotes: jest.fn(() => []),
+      fetchUserPersonalEmotes: jest.fn(),
+      getUserBadge: jest.fn(() => undefined),
+      fetchUserCosmetics,
+      reprocessMessage: jest.fn(),
+    });
+
+    expect(fetchUserCosmetics).toHaveBeenCalledTimes(3);
+  });
+
   test('reprocesses visible shared chat messages missing the source badge', async () => {
     const message = createMessage();
     message.userstate['source-room-id'] = 'source-room';
@@ -132,8 +193,10 @@ describe('hydrateVisibleSevenTvAssets', () => {
     await hydrateVisibleSevenTvAssets({
       channelId: 'channel-id',
       messages: [message],
+      hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(['twitch-user']),
       cosmeticUsers: new Set(['twitch-user']),
+      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
       getUserBadge: jest.fn(() => undefined),
@@ -142,5 +205,66 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(reprocessMessage).toHaveBeenCalledWith(message);
+  });
+
+  test('does not reprocess already-hydrated visible messages with the same assets', async () => {
+    const message = createMessage();
+    const hydratedMessageKeys = new Set<string>();
+    const reprocessMessage = jest.fn();
+
+    const params = {
+      channelId: 'channel-id',
+      messages: [message],
+      hydratedMessageKeys,
+      personalEmoteUsers: new Set(['twitch-user']),
+      cosmeticUsers: new Set(['twitch-user']),
+      disableEmoteAnimations: false,
+      getUserPersonalEmotes: jest.fn(() => [sevenTvPersonalEmote]),
+      fetchUserPersonalEmotes: jest.fn(),
+      getUserBadge: jest.fn(() => sevenTvBadge),
+      fetchUserCosmetics: jest.fn(),
+      reprocessMessage,
+    };
+
+    await hydrateVisibleSevenTvAssets(params);
+    await hydrateVisibleSevenTvAssets(params);
+
+    expect(reprocessMessage).toHaveBeenCalledTimes(1);
+  });
+
+  test('warms visible badge and emote image URLs in bounded batches', async () => {
+    const message = createMessage();
+    message.badges = [sevenTvBadge];
+    message.message = [
+      {
+        type: 'emote',
+        id: 'personal-emote',
+        name: 'Personal',
+        content: 'Personal',
+        url: sevenTvPersonalEmote.url,
+        static_url: 'https://cdn.7tv.app/emote/personal-emote/static.webp',
+      },
+    ] as ParsedPart[];
+    const warmVisibleImages = jest.fn();
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages: [message],
+      hydratedMessageKeys: new Set(),
+      personalEmoteUsers: new Set(['twitch-user']),
+      cosmeticUsers: new Set(['twitch-user']),
+      disableEmoteAnimations: true,
+      getUserPersonalEmotes: jest.fn(() => []),
+      fetchUserPersonalEmotes: jest.fn(),
+      getUserBadge: jest.fn(() => undefined),
+      fetchUserCosmetics: jest.fn(),
+      warmVisibleImages,
+      reprocessMessage: jest.fn(),
+    });
+
+    expect(warmVisibleImages).toHaveBeenCalledWith({
+      badgeUrls: [sevenTvBadge.url],
+      emoteUrls: ['https://cdn.7tv.app/emote/personal-emote/static.webp'],
+    });
   });
 });

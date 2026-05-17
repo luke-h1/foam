@@ -12,6 +12,7 @@ import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPo
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
+import { useMappingHelper } from '@shopify/flash-list';
 import React, { useCallback, memo, useMemo, type ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '../../../Button/Button';
@@ -95,14 +96,74 @@ function renderParts(
   message: ParsedPart[],
   renderer: (part: ParsedPart, index: number) => ReactNode,
 ): ReactNode[] {
-  const renderedParts = new Array<ReactNode>(message.length);
-  let index = 0;
-  for (const part of message) {
-    renderedParts[index] = renderer(part, index);
-    index += 1;
+  const renderedParts: ReactNode[] = [];
+  let currentTextPart: ParsedPart<'text'> | null = null;
+  let currentTextIndex = 0;
+
+  const pushCurrentTextPart = () => {
+    if (!currentTextPart) {
+      return;
+    }
+
+    renderedParts.push(renderer(currentTextPart, currentTextIndex));
+    currentTextPart = null;
+  };
+
+  for (let index = 0; index < message.length; index += 1) {
+    const part = message[index];
+    if (!part) {
+      continue;
+    }
+
+    if (part.type === 'text') {
+      if (currentTextPart) {
+        currentTextPart = {
+          type: 'text',
+          content: currentTextPart.content + part.content,
+        };
+      } else {
+        currentTextPart = part;
+        currentTextIndex = index;
+      }
+      continue;
+    }
+
+    pushCurrentTextPart();
+    renderedParts.push(renderer(part, index));
   }
 
+  pushCurrentTextPart();
+
   return renderedParts;
+}
+
+function getPartIdentity(part: ParsedPart, index: number): string {
+  switch (part.type) {
+    case 'emote':
+    case 'mention':
+    case 'stvEmote':
+    case 'twitchClip':
+    case 'text':
+      return `${part.type}-${part.id ?? part.content ?? index}`;
+
+    case 'stv_emote_added':
+    case 'stv_emote_removed':
+      return `${part.type}-${part.stvEvents.data.id}-${index}`;
+
+    case 'viewermilestone':
+      return `${part.type}-${part.login}-${part.value}-${index}`;
+
+    case 'sub':
+    case 'resub':
+    case 'anongiftpaidupgrade':
+    case 'anongift':
+    case 'submysterygift':
+    case 'giftpaidupgrade':
+      return `${part.type}-${part.subscriptionEvent.displayName}-${index}`;
+
+    default:
+      return `${part.type}-${index}`;
+  }
 }
 
 /**
@@ -294,6 +355,7 @@ function ChatMessageComponent<
   onReplyContextPress?: (replyParentMessageId: string) => void;
   highlightedMessageId?: string;
 }) {
+  const { getMappingKey } = useMappingHelper();
   const compact = density === 'compact';
   const mentionsCurrentUser = messageMentionsUser(message, currentUsername);
   const fallbackHighlightedUserSet = useMemo(() => {
@@ -311,6 +373,11 @@ function ChatMessageComponent<
   const isHighlightedSender =
     messageSenderKey.length > 0 &&
     effectiveHighlightedUserSet?.has(messageSenderKey);
+  const getPartKey = useCallback(
+    (part: ParsedPart, index: number) =>
+      getMappingKey(getPartIdentity(part, index), index),
+    [getMappingKey],
+  );
 
   const handleEmotePress = useCallback(
     (part: EmotePressData) => {
@@ -382,7 +449,7 @@ function ChatMessageComponent<
         case 'text': {
           return (
             <Text
-              key={index}
+              key={getPartKey(part, index)}
               color="gray.text"
               style={[
                 styles.messageText,
@@ -397,13 +464,21 @@ function ChatMessageComponent<
 
         case 'stvEmote': {
           return (
-            <MediaLinkCard key={index} type="stvEmote" url={part.content} />
+            <MediaLinkCard
+              key={getPartKey(part, index)}
+              type="stvEmote"
+              url={part.content}
+            />
           );
         }
 
         case 'twitchClip': {
           return (
-            <MediaLinkCard key={index} type="twitchClip" url={part.content} />
+            <MediaLinkCard
+              key={getPartKey(part, index)}
+              type="twitchClip"
+              url={part.content}
+            />
           );
         }
 
@@ -415,7 +490,7 @@ function ChatMessageComponent<
           return (
             <EmoteRenderer
               disableAnimations={disableEmoteAnimations}
-              key={index}
+              key={getPartKey(part, index)}
               part={part}
               handleEmotePress={handleEmotePress}
               shouldOverlayPrevious={shouldOverlayPrevious}
@@ -436,7 +511,7 @@ function ChatMessageComponent<
             currentUsernameNormalized === normaliseUsername(mentionedUsername);
 
           return (
-            <Text key={`message-${index}`}>
+            <Text key={getPartKey(part, index)}>
               <Text
                 style={[
                   styles.mention,
@@ -455,7 +530,7 @@ function ChatMessageComponent<
         case 'stv_emote_added': {
           return (
             <StvEmoteEvent
-              key={index}
+              key={getPartKey(part, index)}
               disableAnimations={disableEmoteAnimations}
               part={part}
             />
@@ -465,7 +540,7 @@ function ChatMessageComponent<
         case 'stv_emote_removed': {
           return (
             <StvEmoteEvent
-              key={index}
+              key={getPartKey(part, index)}
               disableAnimations={disableEmoteAnimations}
               part={part}
             />
@@ -487,7 +562,7 @@ function ChatMessageComponent<
           if (notice_tags) {
             return (
               <SubscriptionNotice
-                key={index}
+                key={getPartKey(part, index)}
                 part={part}
                 notice_tags={notice_tags as UserNoticeTags}
                 parsedMessage={parsedSubMessage}
@@ -496,7 +571,7 @@ function ChatMessageComponent<
           }
           return (
             <SubscriptionNotice
-              key={index}
+              key={getPartKey(part, index)}
               part={part}
               parsedMessage={parsedSubMessage}
             />
@@ -504,7 +579,9 @@ function ChatMessageComponent<
         }
 
         case 'viewermilestone': {
-          return <ViewerMileStoneNotice key={index} part={part} />;
+          return (
+            <ViewerMileStoneNotice key={getPartKey(part, index)} part={part} />
+          );
         }
 
         default:
@@ -517,6 +594,7 @@ function ChatMessageComponent<
       compact,
       disableEmoteAnimations,
       getMentionColor,
+      getPartKey,
       highlightedUserSet,
       effectiveHighlightedUserSet,
       parseTextForEmotes,
@@ -532,7 +610,7 @@ function ChatMessageComponent<
     (part: ParsedPart, index: number) => {
       if (part.type === 'text') {
         return (
-          <Text key={index} style={styles.systemMessageText}>
+          <Text key={getPartKey(part, index)} style={styles.systemMessageText}>
             {part.content}
           </Text>
         );
@@ -540,7 +618,7 @@ function ChatMessageComponent<
 
       return renderMessagePart(part, index);
     },
-    [renderMessagePart],
+    [getPartKey, renderMessagePart],
   );
 
   const renderBadges = useCallback(() => {
@@ -553,14 +631,17 @@ function ChatMessageComponent<
     for (const badge of badges) {
       renderedBadges[index] = (
         <Button
-          key={`${badge.set}-${badge.id}-${badge.type}-${badge.url}-${index}`}
+          key={getMappingKey(
+            `${badge.set}-${badge.id}-${badge.type}-${badge.url}`,
+            index,
+          )}
           onPress={() => handleBadgePress(badge)}
         >
           <Image
             useNitro
-            trackLoadTime
-            trackLoadContext="chat.badge"
             source={badge.url}
+            cachePriority="visible"
+            cacheVariant="badge"
             style={[
               styles.badge,
               compact && styles.badgeCompact,
@@ -574,7 +655,7 @@ function ChatMessageComponent<
     }
 
     return renderedBadges;
-  }, [badges, compact, handleBadgePress, moderationNotice]);
+  }, [badges, compact, getMappingKey, handleBadgePress, moderationNotice]);
 
   const bodyVariant = getChatBodyVariant(isTwitchSystemNotice, message, sender);
 
