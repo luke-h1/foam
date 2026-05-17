@@ -56,7 +56,7 @@
     },
     "internal": {
       "extends": "base",
-      "environment": "development",
+      "environment": "internal",
       "autoIncrement": true,
       "env": {
         "APP_VARIANT": "internal"

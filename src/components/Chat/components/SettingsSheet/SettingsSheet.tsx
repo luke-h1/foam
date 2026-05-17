@@ -14,6 +14,8 @@ export interface SettingsSheetProps extends Omit<
 > {
   chatDensity?: 'comfortable' | 'compact';
   highlightOwnMentions?: boolean;
+  onClearChatCache?: () => void;
+  onClearImageCache?: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
   onRefreshVideo?: () => void;
@@ -33,6 +35,8 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
   (
     {
       onRefetchEmotes,
+      onClearChatCache,
+      onClearImageCache,
       onReconnect,
       onRefreshVideo,
       onToggleChatDensity,
@@ -68,6 +72,16 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
       dismissSheet();
     }, [onRefetchEmotes, dismissSheet]);
 
+    const handleClearChatCache = useCallback(() => {
+      onClearChatCache?.();
+      dismissSheet();
+    }, [onClearChatCache, dismissSheet]);
+
+    const handleClearImageCache = useCallback(() => {
+      onClearImageCache?.();
+      dismissSheet();
+    }, [onClearImageCache, dismissSheet]);
+
     const handleReconnect = useCallback(() => {
       onReconnect?.();
       dismissSheet();
@@ -86,6 +100,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
         grabber={false}
         blurTint="dark"
         backgroundColor={theme.color.background.dark}
+        scrollable
         {...sheetProps}
       >
         <View style={styles.container}>
@@ -203,6 +218,32 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 <Icon icon="wifi" color={theme.colorBorderHover} />
                 <Text style={styles.menuItemText} weight="semibold">
                   Reconnect
+                </Text>
+              </Button>
+            ) : null}
+
+            {onClearChatCache ? (
+              <Button
+                label="Clear Chat Cache"
+                style={styles.menuItem}
+                onPress={handleClearChatCache}
+              >
+                <Icon icon="database" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Clear Chat Cache
+                </Text>
+              </Button>
+            ) : null}
+
+            {onClearImageCache ? (
+              <Button
+                label="Clear Image Cache"
+                style={styles.menuItem}
+                onPress={handleClearImageCache}
+              >
+                <Icon icon="trash-2" color={theme.colorBorderHover} />
+                <Text style={styles.menuItemText} weight="semibold">
+                  Clear Image Cache
                 </Text>
               </Button>
             ) : null}

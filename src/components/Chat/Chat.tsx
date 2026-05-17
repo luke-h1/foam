@@ -91,7 +91,6 @@ import { Text } from '@app/components/ui/Text/Text';
 import { prefetchImage } from '@app/components/Image/Image';
 import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
-import { ChatDebugModal, TestMessageType } from './components/ChatDebugModal';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
 import { ChatList } from './components/ChatList';
 import type { EmotePressData } from './components/ChatMessage/RichChatMessage';
@@ -116,14 +115,6 @@ import { useChatMessages } from './hooks/useChatMessages';
 import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSevenTvCallbacks } from './hooks/useChatSevenTvCallbacks';
 import { useEmoteReprocessing } from './hooks/useEmoteReprocessing';
-import {
-  createTestPrimeSubNotice,
-  createTestTier1SubNotice,
-  createTestTier2SubNotice,
-  createTestTier3SubNotice,
-  createTestSubNotice,
-  createTestViewerMilestoneNotice,
-} from './util/createTestUserNotices';
 import {
   AnyChatMessageType,
   createUserStateFromTags,
@@ -306,7 +297,6 @@ interface ChatInputShellHandle {
 
 interface ChatOverlayControllerHandle {
   openBadge: (badge: BadgePressData) => void;
-  openDebugModal: () => void;
   openEmotePreview: (emote: EmotePressData) => void;
   openEmoteSheet: () => void;
   openMessageActions: (message: MessageActionData<'usernotice'>) => void;
@@ -320,7 +310,6 @@ interface ChatInputShellProps {
   connected: boolean;
   getUserState: () => Record<string, string>;
   isChatConnected: () => boolean;
-  onOpenDebugModal: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
   processMessageEmotes: (
@@ -349,7 +338,6 @@ interface ChatOverlayLayerProps {
   emoteSheetRef: RefObject<TrueSheet | null>;
   highlightedUsers: string[];
   hiddenUsers: string[];
-  isDebugModalVisible: boolean;
   onActionSheetBanUser: () => void;
   onActionSheetCopy: () => void;
   onActionSheetDeleteMessage: () => void;
@@ -360,7 +348,6 @@ interface ChatOverlayLayerProps {
   onActionSheetTimeoutUser: () => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
-  onCloseDebugModal: () => void;
   onCloseSelectedBadge: () => void;
   onCloseSelectedEmote: () => void;
   onCloseSelectedMessage: () => void;
@@ -381,7 +368,6 @@ interface ChatOverlayLayerProps {
   onToggleShowTimestamps: (value: boolean) => void;
   onToggleShowUnreadJumpPill: (value: boolean) => void;
   onBanSelectedUser: () => void;
-  onTestMessage: (type: TestMessageType) => void;
   selectedBadge: BadgePressData | null;
   selectedEmote: EmotePressData | null;
   selectedMessage: MessageActionData<'usernotice'> | null;
@@ -414,7 +400,6 @@ interface ChatOverlayControllerProps {
   onInsertEmote: (item: EmotePickerItem) => void;
   onSettingsReconnect: () => void;
   onSettingsRefetchEmotes: () => void;
-  onTestMessage: (type: TestMessageType) => void;
   onToggleChatDensity: () => void;
   onToggleHighlightOwnMentions: (value: boolean) => void;
   onToggleInlineReplyContext: (value: boolean) => void;
@@ -846,7 +831,6 @@ const ChatInputShell = memo(
         connected,
         getUserState,
         isChatConnected,
-        onOpenDebugModal,
         onOpenEmoteSheet,
         onOpenSettingsSheet,
         processMessageEmotes,
@@ -1052,7 +1036,6 @@ const ChatInputShell = memo(
           onSubmit={handleSendMessage}
           onOpenEmoteSheet={onOpenEmoteSheet}
           onOpenSettingsSheet={onOpenSettingsSheet}
-          onOpenDebugModal={onOpenDebugModal}
           replyTo={replyTo}
           onClearReply={handleClearReply}
           isConnected={connected}
@@ -1087,7 +1070,6 @@ const ChatOverlayController = memo(
         onInsertEmote,
         onSettingsReconnect,
         onSettingsRefetchEmotes,
-        onTestMessage,
         onToggleChatDensity,
         onToggleHighlightOwnMentions,
         onToggleInlineReplyContext,
@@ -1114,7 +1096,6 @@ const ChatOverlayController = memo(
       );
       const [selectedUser, setSelectedUser] =
         useState<UsernamePressData | null>(null);
-      const [isDebugModalVisible, setIsDebugModalVisible] = useState(false);
       const [isEmoteSheetMounted, setIsEmoteSheetMounted] = useState(false);
       const [isSettingsSheetMounted, setIsSettingsSheetMounted] =
         useState(false);
@@ -1124,7 +1105,6 @@ const ChatOverlayController = memo(
         setSelectedMessage(null);
         setSelectedEmote(null);
         setSelectedUser(null);
-        setIsDebugModalVisible(false);
         setIsEmoteSheetMounted(false);
         setIsSettingsSheetMounted(false);
       }, [channelId]);
@@ -1157,7 +1137,6 @@ const ChatOverlayController = memo(
         ref,
         () => ({
           openBadge: setSelectedBadge,
-          openDebugModal: () => setIsDebugModalVisible(true),
           openEmotePreview: setSelectedEmote,
           openEmoteSheet: () => setIsEmoteSheetMounted(true),
           openMessageActions: setSelectedMessage,
@@ -1189,10 +1168,6 @@ const ChatOverlayController = memo(
 
       const handleSettingsSheetDidDismiss = useCallback(() => {
         setIsSettingsSheetMounted(false);
-      }, []);
-
-      const handleCloseDebugModal = useCallback(() => {
-        setIsDebugModalVisible(false);
       }, []);
 
       const handleActionSheetReply = useCallback(() => {
@@ -1371,7 +1346,6 @@ const ChatOverlayController = memo(
           emoteSheetRef={emoteSheetRef}
           highlightedUsers={highlightedUsers}
           hiddenUsers={hiddenUsers}
-          isDebugModalVisible={isDebugModalVisible}
           onActionSheetBanUser={handleActionSheetBanUser}
           onActionSheetCopy={handleActionSheetCopy}
           onActionSheetDeleteMessage={handleActionSheetDeleteMessage}
@@ -1383,7 +1357,6 @@ const ChatOverlayController = memo(
           onBanSelectedUser={handleBanSelectedUser}
           onClearChatCache={onClearChatCache}
           onClearImageCache={onClearImageCache}
-          onCloseDebugModal={handleCloseDebugModal}
           onCloseSelectedBadge={handleCloseSelectedBadge}
           onCloseSelectedEmote={handleCloseSelectedEmote}
           onCloseSelectedMessage={handleCloseSelectedMessage}
@@ -1397,7 +1370,6 @@ const ChatOverlayController = memo(
           onMentionSelectedUser={handleMentionSelectedUser}
           onSettingsReconnect={onSettingsReconnect}
           onSettingsRefetchEmotes={onSettingsRefetchEmotes}
-          onTestMessage={onTestMessage}
           onTimeoutSelectedUser={handleTimeoutSelectedUser}
           onToggleChatDensity={onToggleChatDensity}
           onToggleHighlightOwnMentions={onToggleHighlightOwnMentions}
@@ -1435,7 +1407,6 @@ const ChatOverlayLayer = memo(
     emoteSheetRef,
     highlightedUsers,
     hiddenUsers,
-    isDebugModalVisible,
     onActionSheetBanUser,
     onActionSheetCopy,
     onActionSheetDeleteMessage,
@@ -1447,7 +1418,6 @@ const ChatOverlayLayer = memo(
     onBanSelectedUser,
     onClearChatCache,
     onClearImageCache,
-    onCloseDebugModal,
     onCloseSelectedBadge,
     onCloseSelectedEmote,
     onCloseSelectedMessage,
@@ -1461,7 +1431,6 @@ const ChatOverlayLayer = memo(
     onMentionSelectedUser,
     onSettingsReconnect,
     onSettingsRefetchEmotes,
-    onTestMessage,
     onTimeoutSelectedUser,
     onToggleChatDensity,
     onToggleHighlightOwnMentions,
@@ -1496,6 +1465,8 @@ const ChatOverlayLayer = memo(
             ref={settingsSheetRef}
             chatDensity={chatDensity}
             highlightOwnMentions={highlightOwnMentions}
+            onClearChatCache={onClearChatCache}
+            onClearImageCache={onClearImageCache}
             onDidDismiss={onSettingsSheetDidDismiss}
             onRefetchEmotes={onSettingsRefetchEmotes}
             onReconnect={onSettingsReconnect}
@@ -1507,16 +1478,6 @@ const ChatOverlayLayer = memo(
             showInlineReplyContext={showInlineReplyContext}
             showTimestamps={showTimestamps}
             showUnreadJumpPill={showUnreadJumpPill}
-          />
-        ) : null}
-
-        {isDebugModalVisible ? (
-          <ChatDebugModal
-            visible
-            onClose={onCloseDebugModal}
-            onTestMessage={onTestMessage}
-            onClearChatCache={onClearChatCache}
-            onClearImageCache={onClearImageCache}
           />
         ) : null}
 
@@ -2564,10 +2525,6 @@ export const Chat = memo(
       overlayControllerRef.current?.openSettingsSheet();
     }, []);
 
-    const handleOpenDebugModal = useCallback(() => {
-      overlayControllerRef.current?.openDebugModal();
-    }, []);
-
     const appendMentionToComposer = useCallback((username: string) => {
       inputShellRef.current?.appendMention(username);
     }, []);
@@ -2710,24 +2667,6 @@ export const Chat = memo(
         });
       },
       [channelId],
-    );
-
-    const handleTestMessage = useCallback(
-      (type: TestMessageType) => {
-        const testMessages: Record<TestMessageType, () => AnyChatMessageType> =
-          {
-            'Prime Sub': () => createTestPrimeSubNotice(1),
-            'Tier 1 Sub': () => createTestTier1SubNotice(1),
-            'Tier 2 Sub': () => createTestTier2SubNotice(1),
-            'Tier 3 Sub': () => createTestTier3SubNotice(1),
-            'Default Sub': createTestSubNotice,
-            'Viewer Milestone': createTestViewerMilestoneNotice,
-          };
-
-        const testMessage = testMessages[type]();
-        handleNewMessage({ ...testMessage, channel: channelName });
-      },
-      [channelName, handleNewMessage],
     );
 
     const handleClearChatCache = useCallback(() => {
@@ -3001,7 +2940,6 @@ export const Chat = memo(
               isChatConnected={isChatConnected}
               onOpenEmoteSheet={handleOpenEmoteSheet}
               onOpenSettingsSheet={handleOpenSettingsSheet}
-              onOpenDebugModal={handleOpenDebugModal}
               processMessageEmotes={processMessageEmotes}
               sendMessage={sendMessage}
               user={user}
@@ -3027,7 +2965,6 @@ export const Chat = memo(
             onInsertEmote={handleEmoteSelect}
             onSettingsReconnect={handleSettingsReconnect}
             onSettingsRefetchEmotes={handleSettingsRefetchEmotes}
-            onTestMessage={handleTestMessage}
             onToggleChatDensity={handleToggleChatDensity}
             onToggleHighlightOwnMentions={handleToggleHighlightOwnMentions}
             onToggleInlineReplyContext={handleToggleInlineReplyContext}

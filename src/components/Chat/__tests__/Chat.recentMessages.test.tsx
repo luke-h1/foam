@@ -203,10 +203,6 @@ jest.mock('../components/BadgePreviewSheet/BadgePreviewSheet', () => ({
   BadgePreviewSheet: () => null,
 }));
 
-jest.mock('../components/ChatDebugModal', () => ({
-  ChatDebugModal: () => null,
-}));
-
 jest.mock('../components/ChatInputSection', () => ({
   ChatInputSection: () => null,
 }));

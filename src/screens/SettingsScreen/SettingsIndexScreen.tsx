@@ -22,6 +22,7 @@ export function SettingsIndexScreen() {
   const { config } = useRemoteConfig();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const isTestflight = process.env.APP_VARIANT === 'testflight';
 
   useScrollToTop(scrollRef);
 
@@ -43,6 +44,12 @@ export function SettingsIndexScreen() {
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             >
               Chat
+            </Form.Link>
+            <Form.Link
+              systemImage="externaldrive"
+              onPress={() => router.push('/tabs/settings/cache')}
+            >
+              Cache
             </Form.Link>
             <Form.Link
               systemImage="paintpalette"
@@ -95,13 +102,15 @@ export function SettingsIndexScreen() {
             </Form.Link>
           </Form.Section>
 
-          <Form.Section title="Developer">
-            <Form.Link
-              systemImage="hammer"
-              onPress={() => router.push('/tabs/settings/dev-tools')}
-            >
-              Dev Tools
-            </Form.Link>
+          <Form.Section title={isTestflight ? 'More' : 'Developer'}>
+            {!isTestflight ? (
+              <Form.Link
+                systemImage="hammer"
+                onPress={() => router.push('/tabs/settings/dev-tools')}
+              >
+                Dev Tools
+              </Form.Link>
+            ) : null}
             <Form.Link
               systemImage="ellipsis.circle"
               onPress={() => router.push('/tabs/settings/other')}
@@ -137,6 +146,12 @@ export function SettingsIndexScreen() {
             subtitle="Density, timestamps, mentions, emotes, and badges"
             icon={{ icon: 'message-circle', color: theme.colorPlum }}
             onPress={() => router.push('/tabs/settings/chat-preferences')}
+          />
+          <SettingsLinkRow
+            title="Cache"
+            subtitle="Clear local app data, emotes, badges, and media"
+            icon={{ icon: 'database', color: theme.colorGreen }}
+            onPress={() => router.push('/tabs/settings/cache')}
           />
           <SettingsLinkRow
             title="Appearance"
@@ -193,13 +208,15 @@ export function SettingsIndexScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title="Developer">
-          <SettingsLinkRow
-            title="Dev Tools"
-            subtitle="Diagnostics, cache tools, remote config, and Storybook"
-            icon={{ icon: 'tool', color: theme.colorOrange }}
-            onPress={() => router.push('/tabs/settings/dev-tools')}
-          />
+        <SettingsSection title={isTestflight ? 'More' : 'Developer'}>
+          {!isTestflight ? (
+            <SettingsLinkRow
+              title="Dev Tools"
+              subtitle="Diagnostics, cache tools, remote config, and Storybook"
+              icon={{ icon: 'tool', color: theme.colorOrange }}
+              onPress={() => router.push('/tabs/settings/dev-tools')}
+            />
+          ) : null}
           <SettingsLinkRow
             title="Other"
             subtitle="Licenses, changelog, and supporting reference screens"

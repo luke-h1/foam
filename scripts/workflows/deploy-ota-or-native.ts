@@ -131,8 +131,6 @@ function publishOtaCommand(args: string[]): void {
         'update',
         '--channel',
         variant,
-        '--environment',
-        variant,
         '--message',
         message,
         ...platformArgs,

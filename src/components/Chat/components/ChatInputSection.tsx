@@ -35,7 +35,6 @@ interface ChatInputSectionProps {
   onSubmit: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
-  onOpenDebugModal: () => void;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
   isConnected: boolean;
@@ -51,7 +50,6 @@ export const ChatInputSection = memo(
     onSubmit,
     onOpenEmoteSheet,
     onOpenSettingsSheet,
-    onOpenDebugModal,
     replyTo,
     onClearReply,
     isConnected,
@@ -148,14 +146,6 @@ export const ChatInputSection = memo(
             hitSlop={createHorizontalHitslop(44)}
           >
             <Icon icon="settings" size={22} />
-          </Button>
-
-          <Button
-            style={styles.actionButton}
-            onPress={onOpenDebugModal}
-            hitSlop={createHitslop(20)}
-          >
-            <Icon icon="zap" size={20} />
           </Button>
 
           <Button
