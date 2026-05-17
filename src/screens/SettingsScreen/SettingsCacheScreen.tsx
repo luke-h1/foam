@@ -7,7 +7,7 @@ import {
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
 import { storageService } from '@app/lib/storage';
-import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
+import { clearChatCosmeticsCache } from '@app/store/chatStore/channelLoad';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
@@ -15,6 +15,7 @@ import { queryClient } from '@app/utils/react-query/reacy-query';
 import { Platform, ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { useRef } from 'react';
 import { toast } from 'sonner-native';
+import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
 
 export function SettingsCacheScreen() {
   const scrollRef = useRef<ScrollView>(null);
@@ -40,9 +41,9 @@ export function SettingsCacheScreen() {
     );
   };
 
-  const handleClearImageCache = () => {
+  const handleClearChatCache = () => {
     Alert.alert(
-      'Clear Image Cache',
+      'Clear chat Cache',
       'This removes cached emotes, badges, and other downloaded media from this device.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -50,10 +51,11 @@ export function SettingsCacheScreen() {
           text: 'Clear',
           style: 'destructive',
           onPress: () => {
+            clearChatCosmeticsCache();
             clearEmoteImageCache();
             storageService.clearImageCache();
             void clearImageCache().then(() => {
-              toast.success('Image cache cleared');
+              toast.success('Chat cache cleared');
             });
           },
         },
@@ -67,7 +69,7 @@ export function SettingsCacheScreen() {
         <BodyScrollView contentContainerStyle={styles.iosContent}>
           <ScreenHeader
             title="Cache"
-            subtitle="Reset cached app data when streams, badges, or emotes need a clean refresh."
+            subtitle="Reset cached app data"
             size="medium"
           />
 
@@ -79,10 +81,10 @@ export function SettingsCacheScreen() {
               systemImage="externaldrive.badge.minus"
               onPress={handleClearData}
             >
-              Clear Data
+              Clear all cached data (will cause a logout)
             </Form.Link>
-            <Form.Link systemImage="trash" onPress={handleClearImageCache}>
-              Clear Image Cache
+            <Form.Link systemImage="trash" onPress={handleClearChatCache}>
+              Clear emote/badge/cosmetics cache
             </Form.Link>
           </Form.Section>
         </BodyScrollView>
@@ -124,7 +126,7 @@ export function SettingsCacheScreen() {
             title="Clear Image Cache"
             subtitle="Remove locally cached emote and badge media"
             icon={{ icon: 'trash-2', color: theme.colorRed }}
-            onPress={handleClearImageCache}
+            onPress={handleClearChatCache}
             danger
           />
         </SettingsSection>

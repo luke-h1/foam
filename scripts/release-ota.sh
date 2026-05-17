@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: scripts/release-ota.sh <internal|testflight|production> [ios|android|all] [message]"
+  echo "Usage: bun run ota -- <internal|testflight|production> [ios|android|all] [message]"
 }
 
 variant="${1:-}"
@@ -47,4 +47,4 @@ if [ -n "$message" ]; then
 fi
 
 echo "Publishing OTA to $variant ($platform) using local dotenv cascade"
-"$dotenv_bin" -c "$variant" -v "APP_VARIANT=$variant" -- eas "${args[@]}"
+"$dotenv_bin" -c "$variant" -v "EXPO_PUBLIC_APP_VARIANT=$variant" -- eas "${args[@]}"

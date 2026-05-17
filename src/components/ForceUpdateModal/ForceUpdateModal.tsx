@@ -37,7 +37,8 @@ export function ForceUpdateModal() {
   const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
 
-  const variant = (process.env.APP_VARIANT ?? 'development') as Variant;
+  const variant = (process.env.EXPO_PUBLIC_APP_VARIANT ??
+    'development') as Variant;
   const minimumVersion = getMinimumVersion(variant, remoteConfig);
   const currentVersion = Application.nativeApplicationVersion ?? 'Unknown';
 

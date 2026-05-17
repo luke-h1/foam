@@ -15,7 +15,8 @@
     "metro.config.js"
   ],
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "perf": "error"
   },
   "rules": {
     "curly": "error",

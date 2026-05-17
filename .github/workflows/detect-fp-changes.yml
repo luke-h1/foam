@@ -57,7 +57,7 @@ jobs:
 
           for VARIANT in production testflight internal; do
             echo "=== Variant: $VARIANT ==="
-            export APP_VARIANT="$VARIANT"
+            export EXPO_PUBLIC_APP_VARIANT="$VARIANT"
 
             echo "Computing HEAD fingerprints..."
             HEAD_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
@@ -65,7 +65,7 @@ jobs:
 
             echo "Computing BASE fingerprints..."
             pushd .__pr_base__ >/dev/null
-            export APP_VARIANT="$VARIANT"
+            export EXPO_PUBLIC_APP_VARIANT="$VARIANT"
             BASE_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
             BASE_ANDROID="$(bunx expo-updates fingerprint:generate --platform android | jq -r '.hash')"
             popd >/dev/null

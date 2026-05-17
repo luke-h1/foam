@@ -39,11 +39,12 @@ export function useSafeAreaInsetsStyle<
 ): SafeAreaInsetsStyle<Property, Edges> {
   const insets = useSafeAreaInsets();
 
-  return safeAreaEdges.reduce((acc, e) => {
-    const value = edgeInsetMap[e] ?? e;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    return { ...acc, [`${property}${propertySuffixMap[e]}`]: insets[value] };
-  }, {}) as SafeAreaInsetsStyle<Property, Edges>;
+  const style = {} as Record<string, number>;
+
+  for (const edge of safeAreaEdges) {
+    const value = edgeInsetMap[edge] ?? edge;
+    style[`${property}${propertySuffixMap[edge]}`] = insets[value];
+  }
+
+  return style as SafeAreaInsetsStyle<Property, Edges>;
 }

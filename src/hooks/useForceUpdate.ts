@@ -40,7 +40,7 @@ export type UseForceUpdateResult = {
 
 export function useForceUpdate(): UseForceUpdateResult {
   const { config: remoteConfig } = useRemoteConfig();
-  const variant = process.env.APP_VARIANT as Variant;
+  const variant = process.env.EXPO_PUBLIC_APP_VARIANT as Variant;
 
   const minimumVersion = getMinimumVersion(variant, remoteConfig);
   const currentVersion = Application.nativeApplicationVersion;

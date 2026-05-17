@@ -1,6 +1,6 @@
 import { AuthContext, type AuthContextState } from '@app/context/AuthContext';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { useState, type PropsWithChildren } from 'react';
+import { useMemo, useState, type PropsWithChildren } from 'react';
 import { toast } from 'sonner-native';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -88,19 +88,22 @@ describe('useTwitchSignIn', () => {
     function Wrapper({ children }: PropsWithChildren) {
       const [version, setVersion] = useState(0);
 
-      const contextValue: AuthContextState = {
-        authState: undefined,
-        fetchAnonToken: jest.fn(),
-        loginWithTwitch: async response => {
-          loginWithTwitch(response);
-          setVersion(currentVersion => currentVersion + 1);
-          return null;
-        },
-        logout: jest.fn(),
-        populateAuthState: jest.fn(),
-        ready: version >= 0,
-        user: undefined,
-      };
+      const contextValue: AuthContextState = useMemo(
+        () => ({
+          authState: undefined,
+          fetchAnonToken: jest.fn(),
+          loginWithTwitch: async response => {
+            loginWithTwitch(response);
+            setVersion(currentVersion => currentVersion + 1);
+            return null;
+          },
+          logout: jest.fn(),
+          populateAuthState: jest.fn(),
+          ready: version >= 0,
+          user: undefined,
+        }),
+        [version],
+      );
 
       return (
         <AuthContext.Provider value={contextValue}>
@@ -151,17 +154,20 @@ describe('useTwitchSignIn', () => {
       url: authResult.url,
     } as never);
 
-    const contextValue: AuthContextState = {
-      authState: undefined,
-      fetchAnonToken: jest.fn(),
-      loginWithTwitch,
-      logout: jest.fn(),
-      populateAuthState: jest.fn(),
-      ready: true,
-      user: undefined,
-    };
-
     function Wrapper({ children }: PropsWithChildren) {
+      const contextValue: AuthContextState = useMemo(
+        () => ({
+          authState: undefined,
+          fetchAnonToken: jest.fn(),
+          loginWithTwitch,
+          logout: jest.fn(),
+          populateAuthState: jest.fn(),
+          ready: true,
+          user: undefined,
+        }),
+        [],
+      );
+
       return (
         <AuthContext.Provider value={contextValue}>
           {children}

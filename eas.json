@@ -11,7 +11,7 @@
       "extends": "base",
       "withoutCredentials": true,
       "env": {
-        "APP_VARIANT": "e2e",
+        "EXPO_PUBLIC_APP_VARIANT": "e2e",
         "MOCK_SERVER_URL": "http://localhost:3001"
       },
       "ios": {
@@ -29,7 +29,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "e2e",
+        "EXPO_PUBLIC_APP_VARIANT": "e2e",
         "MOCK_SERVER_URL": "http://localhost:3001"
       },
       "ios": {
@@ -41,7 +41,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "development"
+        "EXPO_PUBLIC_APP_VARIANT": "development"
       },
       "android": {
         "buildType": "apk"
@@ -59,7 +59,7 @@
       "environment": "internal",
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "internal"
+        "EXPO_PUBLIC_APP_VARIANT": "internal"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -74,7 +74,7 @@
       "environment": "testflight",
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "testflight"
+        "EXPO_PUBLIC_APP_VARIANT": "testflight"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -89,7 +89,7 @@
       "environment": "production",
       "autoIncrement": true,
       "env": {
-        "APP_VARIANT": "production"
+        "EXPO_PUBLIC_APP_VARIANT": "production"
       },
       "channel": "production"
     }

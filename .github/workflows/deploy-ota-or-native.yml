@@ -133,7 +133,7 @@ jobs:
           echo "📱 iOS Fingerprint: $IOS_FP"
           echo "🤖 Android Fingerprint: $ANDROID_FP"
         env:
-          APP_VARIANT: ${{ inputs.variant || 'production' }}
+          EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
 
       - name: 📂 Load previous fingerprints
         id: previous
@@ -312,7 +312,7 @@ jobs:
           fi
 
         env:
-          APP_VARIANT: ${{ inputs.variant || 'production' }}
+          EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
           TWITCH_CLIENT_ID: ${{ env.TWITCH_CLIENT_ID }}
           TWITCH_CLIENT_SECRET: ${{ env.TWITCH_CLIENT_SECRET }}
           AUTH_PROXY_API_BASE_URL: ${{ env.AUTH_PROXY_API_BASE_URL }}
@@ -423,7 +423,7 @@ jobs:
           --variant "${{ inputs.variant || 'production' }}"
           --message "$DEPLOY_MESSAGE"
         env:
-          APP_VARIANT: ${{ inputs.variant || 'production' }}
+          EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
           DEPLOY_MESSAGE: "Deploy: ${{ github.event.head_commit.message || github.sha }}"
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 

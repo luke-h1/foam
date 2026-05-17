@@ -135,6 +135,36 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(3);
   });
 
+  test('does not fetch or reprocess 7TV personal emotes when disabled', async () => {
+    const message = createMessage();
+    const personalEmoteUsers = new Set<string>();
+    const getUserPersonalEmotes = jest.fn(() => [sevenTvPersonalEmote]);
+    const fetchUserPersonalEmotes = jest
+      .fn()
+      .mockResolvedValue([sevenTvPersonalEmote]);
+    const reprocessMessage = jest.fn();
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages: [message],
+      hydratedMessageKeys: new Set(),
+      personalEmoteUsers,
+      cosmeticUsers: new Set(['twitch-user']),
+      disableEmoteAnimations: false,
+      getUserPersonalEmotes,
+      fetchUserPersonalEmotes,
+      getUserBadge: jest.fn(() => undefined),
+      fetchUserCosmetics: jest.fn(),
+      hydratePersonalEmotes: false,
+      reprocessMessage,
+    });
+
+    expect(getUserPersonalEmotes).not.toHaveBeenCalled();
+    expect(fetchUserPersonalEmotes).not.toHaveBeenCalled();
+    expect(personalEmoteUsers.has('twitch-user')).toBe(false);
+    expect(reprocessMessage).not.toHaveBeenCalled();
+  });
+
   test('fetches missing 7TV badge data for visible chat and reprocesses once cached', async () => {
     const message = createMessage();
     const reprocessMessage = jest.fn();
@@ -183,6 +213,34 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(fetchUserCosmetics).toHaveBeenCalledTimes(3);
+  });
+
+  test('does not fetch or reprocess 7TV badges when disabled', async () => {
+    const message = createMessage();
+    const cosmeticUsers = new Set<string>();
+    const getUserBadge = jest.fn(() => sevenTvBadge);
+    const fetchUserCosmetics = jest.fn().mockResolvedValue(undefined);
+    const reprocessMessage = jest.fn();
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages: [message],
+      hydratedMessageKeys: new Set(),
+      personalEmoteUsers: new Set(['twitch-user']),
+      cosmeticUsers,
+      disableEmoteAnimations: false,
+      getUserPersonalEmotes: jest.fn(() => []),
+      fetchUserPersonalEmotes: jest.fn(),
+      getUserBadge,
+      fetchUserCosmetics,
+      hydrateCosmetics: false,
+      reprocessMessage,
+    });
+
+    expect(getUserBadge).not.toHaveBeenCalled();
+    expect(fetchUserCosmetics).not.toHaveBeenCalled();
+    expect(cosmeticUsers.has('twitch-user')).toBe(false);
+    expect(reprocessMessage).not.toHaveBeenCalled();
   });
 
   test('reprocesses visible shared chat messages missing the source badge', async () => {

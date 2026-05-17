@@ -87,7 +87,7 @@ export function RemoteConfigScreen() {
           CONFIG VALUES
         </Text>
         <Text type="xs" color="gray.textLow" style={styles.appVariant}>
-          App variant: {process.env.APP_VARIANT}
+          App variant: {process.env.EXPO_PUBLIC_APP_VARIANT}
         </Text>
         <View style={styles.card}>
           {configKeys.map((key, index) => {

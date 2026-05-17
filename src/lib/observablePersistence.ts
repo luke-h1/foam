@@ -1,6 +1,12 @@
 import { Platform } from 'react-native';
-import type { PersistOptionsLocal } from '@legendapp/state';
-import { configureObservablePersistence } from '@legendapp/state/persist';
+import type {
+  ObservablePersistLocal,
+  PersistOptionsLocal,
+} from '@legendapp/state';
+import {
+  configureObservablePersistence,
+  mapPersistences,
+} from '@legendapp/state/persist';
 import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv';
 import { ObservablePersistIndexedDbJson } from './observablePersistIndexedDbJson';
 
@@ -42,6 +48,29 @@ export function createObservablePersistenceLocalConfig<T>(
       itemID: 'state',
     },
   };
+}
+
+export async function clearChatStorePersistence(): Promise<void> {
+  ensureObservablePersistenceConfig();
+
+  const config = createObservablePersistenceLocalConfig(
+    CHAT_STORE_PERSISTENCE_KEY,
+  );
+  const pluginClass =
+    Platform.OS === 'web'
+      ? ObservablePersistIndexedDbJson
+      : ObservablePersistMMKV;
+  const entry = mapPersistences.get(pluginClass);
+
+  if (!entry?.persist) {
+    return;
+  }
+
+  const persist = entry.persist as ObservablePersistLocal;
+  await Promise.all([
+    persist.deleteTable(CHAT_STORE_PERSISTENCE_KEY, config),
+    persist.deleteMetadata(CHAT_STORE_PERSISTENCE_KEY, config),
+  ]);
 }
 
 export function ensureObservablePersistenceConfig(): void {

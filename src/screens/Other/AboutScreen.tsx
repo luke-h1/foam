@@ -97,14 +97,7 @@ export function AboutScreen() {
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
-        <AboutSection
-          footer={
-            <Text type="xxs" color="gray.textLow" style={styles.footerText}>
-              Foam is built around live discovery, fast chat, and stream context
-              that stays readable on mobile.
-            </Text>
-          }
-        >
+        <AboutSection>
           <View style={styles.identityRow}>
             <Image source={appIconProduction} style={styles.appIcon} />
             <View style={styles.identityText}>
@@ -119,9 +112,12 @@ export function AboutScreen() {
         </AboutSection>
 
         <AboutSection title="Built For">
-          <InfoRow label="Discovery" value="Browse live context quickly" />
-          <InfoRow label="Viewing" value="Follow streams without clutter" />
-          <InfoRow label="Chat" value="Fast emotes and readable threads" />
+          <InfoRow
+            label="Chat"
+            value="Emotes, cosmetics and desktop like chat"
+          />
+          <InfoRow label="Discovery" value="Find and discover new streamers" />
+          <InfoRow label="Viewing" value="Viewing without clutter" />
         </AboutSection>
 
         <AboutSection title="Resources">
@@ -137,15 +133,7 @@ export function AboutScreen() {
           />
         </AboutSection>
 
-        <AboutSection
-          title="Build"
-          footer={
-            <Text type="xxs" color="gray.textLow" style={styles.footerText}>
-              OTA identifies the currently bundled update running on this
-              device.
-            </Text>
-          }
-        >
+        <AboutSection title="Build">
           <InfoRow
             label="Version"
             value={Application.nativeApplicationVersion ?? 'Unknown'}

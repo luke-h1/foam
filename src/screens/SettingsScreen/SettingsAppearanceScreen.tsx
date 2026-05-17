@@ -6,7 +6,7 @@ import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
-import { Preferences, usePreferences } from '@app/store/preferenceStore';
+import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
@@ -30,9 +30,7 @@ export function SettingsAppearanceScreen() {
             <Form.Link
               systemImage="moon"
               hint="Foam Dark"
-              onPress={() =>
-                update({ theme: 'foam-dark' as Preferences['theme'] })
-              }
+              onPress={() => update({ theme: 'foam-dark' })}
             >
               Theme
             </Form.Link>
@@ -63,7 +61,7 @@ export function SettingsAppearanceScreen() {
             icon={{ icon: 'moon', color: theme.colorAmber }}
             value={selectedTheme === 'foam-dark' ? 'Foam Dark' : selectedTheme}
             onPress={() => {
-              update({ theme: 'foam-dark' as Preferences['theme'] });
+              update({ theme: 'foam-dark' });
             }}
           />
         </SettingsSection>

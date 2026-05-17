@@ -94,7 +94,7 @@ jobs:
         run: |
           eas build --profile e2e --platform ios --local --non-interactive --output=e2e-build.tar.gz
         env:
-          APP_VARIANT: e2e
+          EXPO_PUBLIC_APP_VARIANT: e2e
 
       - name: 💾 Save build to cache
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
@@ -161,7 +161,7 @@ jobs:
           echo "🚀 Pushing OTA update for JS changes..."
           eas update --channel e2e --message "E2E: ${E2E_UPDATE_MESSAGE}" --non-interactive || true
         env:
-          APP_VARIANT: e2e
+          EXPO_PUBLIC_APP_VARIANT: e2e
           E2E_UPDATE_MESSAGE: ${{ github.event.pull_request.title || github.sha }}
 
       - name: 🍎 Install applesimutils

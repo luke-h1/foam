@@ -22,7 +22,10 @@ export function SettingsIndexScreen() {
   const { config } = useRemoteConfig();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const isTestflight = process.env.APP_VARIANT === 'testflight';
+  const shouldShowDevTools =
+    process.env.EXPO_PUBLIC_APP_VARIANT === 'development' ||
+    process.env.EXPO_PUBLIC_APP_VARIANT === 'internal' ||
+    process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e';
 
   useScrollToTop(scrollRef);
 
@@ -102,8 +105,8 @@ export function SettingsIndexScreen() {
             </Form.Link>
           </Form.Section>
 
-          <Form.Section title={isTestflight ? 'More' : 'Developer'}>
-            {!isTestflight ? (
+          <Form.Section title={shouldShowDevTools ? 'Developer' : 'More'}>
+            {shouldShowDevTools ? (
               <Form.Link
                 systemImage="hammer"
                 onPress={() => router.push('/tabs/settings/dev-tools')}
@@ -208,8 +211,8 @@ export function SettingsIndexScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title={isTestflight ? 'More' : 'Developer'}>
-          {!isTestflight ? (
+        <SettingsSection title={shouldShowDevTools ? 'Developer' : 'More'}>
+          {shouldShowDevTools ? (
             <SettingsLinkRow
               title="Dev Tools"
               subtitle="Diagnostics, cache tools, remote config, and Storybook"

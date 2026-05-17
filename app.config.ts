@@ -23,7 +23,7 @@ export type Variant =
   | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
-const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
+const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   development: {
     name: 'Foam (dev)',
     icon: './assets/splash/splash-image-production.png',
@@ -79,11 +79,12 @@ const APP_VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   },
 } as const;
 
-const variant = (process.env.APP_VARIANT as Variant) || 'development';
+const variant =
+  (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
 const VERSION = '0.0.39';
 
-const appConfig = APP_VARIANT_CONFIG[variant];
+const appConfig = VARIANT_CONFIG[variant];
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
 const enableICloudEntitlements =
   process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === 'true';
@@ -168,6 +169,7 @@ const config: ExpoConfig = {
     policy: 'appVersion',
   },
   extra: {
+    EXPO_PUBLIC_APP_VARIANT: variant,
     router: {
       root: 'src/app',
     },

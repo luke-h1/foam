@@ -1,6 +1,6 @@
 import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 
-const appVariant = process.env.APP_VARIANT ?? 'development';
+const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
 
 type BreadcrumbLevel = 'info' | 'warning' | 'error';
 type MetricAttributes = Record<string, string | number | boolean>;

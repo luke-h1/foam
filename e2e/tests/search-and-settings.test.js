@@ -1,3 +1,5 @@
+// @ts-check
+
 describe('search and settings', () => {
   test('searches channels and categories', async () => {
     await waitFor(element(by.text('Search')))

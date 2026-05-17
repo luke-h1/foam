@@ -1,3 +1,6 @@
+// @ts-check
+
+/** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
   rootDir: '..',
   testMatch: ['<rootDir>/e2e/tests/**/*.test.js'],

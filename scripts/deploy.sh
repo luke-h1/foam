@@ -60,7 +60,7 @@ build_ios() {
   local profile="$1"
   local artifact_path="./build-artifacts/app-${profile}.ipa"
 
-  APP_VARIANT=$profile EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" \
+  EXPO_PUBLIC_APP_VARIANT=$profile EXPO_PUBLIC_ENABLE_TREESHACKING=1 EXPO_APPLE_TEAM_ID="XJA7HDCMMY" \
     bun run eas build \
       --local \
       --platform ios \

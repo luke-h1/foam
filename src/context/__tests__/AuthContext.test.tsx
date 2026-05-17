@@ -241,9 +241,9 @@ describe('AuthContext', () => {
       expect(twitchService.getRefreshToken).toHaveBeenCalledWith(
         'stored-refresh-token',
       );
-      expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+      expect(twitchApi.setAuthToken.mock.calls).toContainEqual([
         'refreshed-user-token',
-      );
+      ]);
       expect(screen.getByText('User')).toBeOnTheScreen();
       expect(screen.getByText('Test User')).toBeOnTheScreen();
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
@@ -300,9 +300,9 @@ describe('AuthContext', () => {
       expect(twitchService.getRefreshToken).toHaveBeenCalledWith(
         'stored-refresh-token',
       );
-      expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+      expect(twitchApi.setAuthToken.mock.calls).toContainEqual([
         'background-refreshed-user-token',
-      );
+      ]);
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
         'V1_foam-user',
         expect.stringMatching(

@@ -29,6 +29,8 @@ type HydrateVisibleSevenTvAssetsParams = {
     twitchUserId: string,
     options?: FetchUserCosmeticsOptions,
   ) => Promise<void>;
+  hydratePersonalEmotes?: boolean;
+  hydrateCosmetics?: boolean;
   warmVisibleImages?: (assets: {
     badgeUrls: string[];
     emoteUrls: string[];
@@ -97,6 +99,8 @@ export async function hydrateVisibleSevenTvAssets({
   fetchUserPersonalEmotes,
   getUserBadge,
   fetchUserCosmetics,
+  hydratePersonalEmotes = true,
+  hydrateCosmetics = true,
   warmVisibleImages,
   reprocessMessage,
 }: HydrateVisibleSevenTvAssetsParams): Promise<void> {
@@ -113,9 +117,11 @@ export async function hydrateVisibleSevenTvAssets({
     }
 
     const hydrationKey = getHydrationKey({
-      badge: getUserBadge(userId),
+      badge: hydrateCosmetics ? getUserBadge(userId) : undefined,
       message,
-      personalEmotes: getUserPersonalEmotes(userId, channelId),
+      personalEmotes: hydratePersonalEmotes
+        ? getUserPersonalEmotes(userId, channelId)
+        : [],
     });
     if (hydratedMessageKeys.has(hydrationKey)) {
       return undefined;
@@ -150,8 +156,10 @@ export async function hydrateVisibleSevenTvAssets({
       );
     });
 
-    const cachedPersonalEmotes = getUserPersonalEmotes(userId, channelId);
-    const cachedBadge = getUserBadge(userId);
+    const cachedPersonalEmotes = hydratePersonalEmotes
+      ? getUserPersonalEmotes(userId, channelId)
+      : [];
+    const cachedBadge = hydrateCosmetics ? getUserBadge(userId) : undefined;
 
     if (
       cachedPersonalEmotes.length > 0 ||
@@ -161,7 +169,11 @@ export async function hydrateVisibleSevenTvAssets({
       pending.push(Promise.resolve(reprocessIfChanged(message)));
     }
 
-    if (cachedPersonalEmotes.length === 0 && !personalEmoteUsers.has(userId)) {
+    if (
+      hydratePersonalEmotes &&
+      cachedPersonalEmotes.length === 0 &&
+      !personalEmoteUsers.has(userId)
+    ) {
       if (personalEmoteFetchesStarted < MAX_PERSONAL_EMOTE_FETCHES_PER_PASS) {
         personalEmoteFetchesStarted += 1;
         personalEmoteUsers.add(userId);
@@ -176,7 +188,7 @@ export async function hydrateVisibleSevenTvAssets({
       }
     }
 
-    if (!cachedBadge && !cosmeticUsers.has(userId)) {
+    if (hydrateCosmetics && !cachedBadge && !cosmeticUsers.has(userId)) {
       if (cosmeticFetchesStarted < MAX_COSMETIC_FETCHES_PER_PASS) {
         cosmeticFetchesStarted += 1;
         cosmeticUsers.add(userId);

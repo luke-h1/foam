@@ -49,7 +49,7 @@ async function setExtraParams() {
 
 export function useOTAUpdates() {
   const shouldReceiveUpdates = isEnabled && !__DEV__;
-  const isProduction = process.env.APP_VARIANT === 'production';
+  const isProduction = process.env.EXPO_PUBLIC_APP_VARIANT === 'production';
   const appState = useRef<AppStateStatus>('active');
   const lastMinimize = useRef(0);
   const ranInitialCheck = useRef(false);

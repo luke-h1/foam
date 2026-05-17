@@ -143,7 +143,7 @@ function publishOtaCommand(args: string[]): void {
         env: Object.fromEntries(
           Object.entries({
             ...process.env,
-            APP_VARIANT: variant,
+            EXPO_PUBLIC_APP_VARIANT: variant,
           }).map(([key, value]) => [key, value == null ? '' : String(value)]),
         ) as NodeJS.ProcessEnv,
         stdio: ['ignore', 'pipe', 'pipe'],

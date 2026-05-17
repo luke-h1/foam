@@ -1,3 +1,5 @@
+// @ts-check
+
 describe('navigation', () => {
   test('browses top streams and opens a stream', async () => {
     await waitFor(element(by.id('top-tab-streams')))

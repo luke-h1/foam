@@ -1,18 +1,19 @@
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
-import { startSpanAsync } from '@app/lib/sentry';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
-import { recordInfo } from '@app/lib/sentry';
+import { recordInfo, startSpanAsync } from '@app/lib/sentry';
+import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { batch } from '@legendapp/state';
 
 import { getPreferences } from '../preferenceStore';
+import { clearPaintsAndBadges } from './cosmetics';
 import type { ChannelCacheType } from './constants';
 import {
   BADGE_CACHE_DURATION,
@@ -668,6 +669,24 @@ export const clearAllCache = () => {
     chatStore$.messages.set([]);
   });
   clearEmoteImageCache();
+};
+
+export const clearChatCosmeticsCache = (): void => {
+  batch(() => {
+    chatStore$.persisted.channelCaches.set({});
+    chatStore$.persisted.recentMessagesByChannel.set({});
+    chatStore$.persisted.lastGlobalUpdate.set(0);
+    chatStore$.currentChannelId.set(null);
+    chatStore$.loadingState.set('IDLE');
+    chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
+    chatStore$.bits.set([]);
+    chatStore$.ttvUsers.set([]);
+    chatStore$.messages.set([]);
+    clearPaintsAndBadges();
+  });
+  clearPersonalEmotesCache();
+  clearEmoteImageCache();
+  void clearChatStorePersistence();
 };
 
 export const refreshChannelResources = async (

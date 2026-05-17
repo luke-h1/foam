@@ -62,24 +62,24 @@ const createSimpleMockConfig = ({
   });
 
 describe('useForceUpdate', () => {
-  const originalAppVariant = process.env.APP_VARIANT;
+  const originalAppVariant = process.env.EXPO_PUBLIC_APP_VARIANT;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    delete process.env.APP_VARIANT;
+    delete process.env.EXPO_PUBLIC_APP_VARIANT;
   });
 
   afterAll(() => {
     if (originalAppVariant !== undefined) {
-      process.env.APP_VARIANT = originalAppVariant;
+      process.env.EXPO_PUBLIC_APP_VARIANT = originalAppVariant;
     } else {
-      delete process.env.APP_VARIANT;
+      delete process.env.EXPO_PUBLIC_APP_VARIANT;
     }
   });
 
   describe('development variant', () => {
     test('should return updateRequired=false for development variant', () => {
-      process.env.APP_VARIANT = 'development';
+      process.env.EXPO_PUBLIC_APP_VARIANT = 'development';
       mockUseRemoteConfig.mockReturnValue(
         createSimpleMockConfig({ testflight: '2.0.0', production: '2.0.0' }),
       );
@@ -96,7 +96,7 @@ describe('useForceUpdate', () => {
 
   describe('testflight variant', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'testflight';
+      process.env.EXPO_PUBLIC_APP_VARIANT = 'testflight';
     });
 
     test('should return updateRequired=true when current version is below testflight minimum', () => {
@@ -158,7 +158,7 @@ describe('useForceUpdate', () => {
 
   describe('production variant', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'production';
+      process.env.EXPO_PUBLIC_APP_VARIANT = 'production';
     });
 
     test('should return updateRequired=true when current version is below production minimum', () => {
@@ -220,7 +220,7 @@ describe('useForceUpdate', () => {
 
   describe('unknown variant', () => {
     test('should return updateRequired=false for unknown variant', () => {
-      process.env.APP_VARIANT = 'unknown';
+      process.env.EXPO_PUBLIC_APP_VARIANT = 'unknown';
       mockUseRemoteConfig.mockReturnValue(
         createSimpleMockConfig({ testflight: '2.0.0', production: '2.0.0' }),
       );
@@ -236,7 +236,7 @@ describe('useForceUpdate', () => {
 
   describe('version comparison', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'testflight';
+      process.env.EXPO_PUBLIC_APP_VARIANT = 'testflight';
     });
 
     test('should correctly identify when patch version update is required', () => {
@@ -290,7 +290,7 @@ describe('useForceUpdate', () => {
 
   describe('return values', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'testflight';
+      process.env.EXPO_PUBLIC_APP_VARIANT = 'testflight';
     });
 
     test('should return all expected properties', () => {
@@ -323,7 +323,7 @@ describe('useForceUpdate', () => {
 
   describe('platform-specific versions', () => {
     beforeEach(() => {
-      process.env.APP_VARIANT = 'testflight';
+      process.env.EXPO_PUBLIC_APP_VARIANT = 'testflight';
     });
 
     describe('iOS platform', () => {
@@ -358,7 +358,7 @@ describe('useForceUpdate', () => {
       });
 
       test('should use iOS production version when on iOS with production variant', () => {
-        process.env.APP_VARIANT = 'production';
+        process.env.EXPO_PUBLIC_APP_VARIANT = 'production';
         mockUseRemoteConfig.mockReturnValue(
           createMockRemoteConfig({
             android: {
@@ -417,7 +417,7 @@ describe('useForceUpdate', () => {
       });
 
       test('should use Android production version when on Android with production variant', () => {
-        process.env.APP_VARIANT = 'production';
+        process.env.EXPO_PUBLIC_APP_VARIANT = 'production';
         mockUseRemoteConfig.mockReturnValue(
           createMockRemoteConfig({
             android: {

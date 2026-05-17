@@ -1,15 +1,14 @@
 {
   "arrowParens": "avoid",
+  "bracketSpacing": true,
   "endOfLine": "lf",
+  "insertFinalNewline": true,
   "semi": true,
   "singleQuote": true,
+  "tabWidth": 2,
   "trailingComma": "all",
+  "useTabs": false,
   "printWidth": 80,
   "sortPackageJson": true,
-  "ignorePatterns": [
-    "node_modules",
-    ".next",
-    "public",
-    "build"
-  ]
+  "ignorePatterns": ["node_modules", ".next", "public", "build"]
 }

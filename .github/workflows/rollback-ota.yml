@@ -71,7 +71,7 @@ jobs:
           CHANNEL="${{ inputs.channel }}"
           PLATFORM="${{ inputs.platform }}"
 
-          export APP_VARIANT="$CHANNEL"
+          export EXPO_PUBLIC_APP_VARIANT="$CHANNEL"
 
           RUNTIME_VERSION_IOS=""
           RUNTIME_VERSION_ANDROID=""

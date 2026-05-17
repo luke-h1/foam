@@ -795,15 +795,15 @@ const ChatEmoteRuntime = memo(
   ({
     channelId,
     emoteLoadStatus,
-    emojiStyle,
     messages$,
     processedMessageIdsRef,
+    reprocessKey,
   }: {
     channelId: string;
     emoteLoadStatus: string;
-    emojiStyle: string;
     messages$: { peek: () => unknown[] };
     processedMessageIdsRef: MutableRefObject<Set<string>>;
+    reprocessKey: string;
   }) => {
     const channelEmoteData = useChannelEmoteData(channelId);
 
@@ -813,7 +813,7 @@ const ChatEmoteRuntime = memo(
       messages$,
       emoteLoadStatus,
       processedMessageIdsRef,
-      reprocessKey: emojiStyle,
+      reprocessKey,
     });
 
     return null;
@@ -1704,6 +1704,33 @@ export const Chat = memo(
       channelId,
       enabled: true,
     });
+    const chatAssetPreferenceKey = useMemo(
+      () =>
+        [
+          preferences.emojiStyle,
+          preferences.show7TvEmotes,
+          preferences.showBttvEmotes,
+          preferences.showFFzEmotes,
+          preferences.showTwitchEmotes,
+          preferences.show7tvBadges,
+          preferences.showBttvBadges,
+          preferences.showFFzBadges,
+          preferences.showTwitchBadges,
+          preferences.showChatterinoEmotes,
+        ].join('|'),
+      [
+        preferences.emojiStyle,
+        preferences.show7TvEmotes,
+        preferences.showBttvEmotes,
+        preferences.showFFzEmotes,
+        preferences.showTwitchEmotes,
+        preferences.show7tvBadges,
+        preferences.showBttvBadges,
+        preferences.showFFzBadges,
+        preferences.showTwitchBadges,
+        preferences.showChatterinoEmotes,
+      ],
+    );
 
     const getMessagesLength = useCallback(
       () => messages$.peek().length,
@@ -1785,9 +1812,10 @@ export const Chat = memo(
           return;
         }
 
-        const personalEmotes = userId
-          ? getUserPersonalEmotes(userId, channelId)
-          : [];
+        const personalEmotes =
+          userId && preferences.show7TvEmotes
+            ? getUserPersonalEmotes(userId, channelId)
+            : [];
         const currentUserLogin = normaliseChatUsername(user?.login);
         const senderLogin = normaliseChatUsername(
           userstate.login || userstate.username,
@@ -1867,7 +1895,7 @@ export const Chat = memo(
           handleNewMessage(baseMessage, { countUnread });
         }
       },
-      [channelId, handleNewMessage, user?.login],
+      [channelId, handleNewMessage, preferences.show7TvEmotes, user?.login],
     );
 
     const reprocessVisibleMessageFromCache = useCallback(
@@ -1887,9 +1915,10 @@ export const Chat = memo(
         }
 
         const userId = message.userstate['user-id'];
-        const personalEmotes = userId
-          ? getUserPersonalEmotes(userId, channelId)
-          : [];
+        const personalEmotes =
+          userId && preferences.show7TvEmotes
+            ? getUserPersonalEmotes(userId, channelId)
+            : [];
         const currentUserLogin = normaliseChatUsername(user?.login);
         const senderLogin = normaliseChatUsername(
           message.userstate.login || message.userstate.username,
@@ -1940,7 +1969,7 @@ export const Chat = memo(
           logger.chat.debug('Failed to reprocess visible chat message:', error);
         }
       },
-      [channelId, user?.login],
+      [channelId, preferences.show7TvEmotes, user?.login],
     );
 
     const warmVisibleImages = useCallback(
@@ -1992,6 +2021,8 @@ export const Chat = memo(
             fetchUserPersonalEmotes,
             getUserBadge,
             fetchUserCosmetics,
+            hydratePersonalEmotes: preferences.show7TvEmotes,
+            hydrateCosmetics: preferences.show7tvBadges,
             warmVisibleImages,
             reprocessMessage: reprocessVisibleMessageFromCache,
           }).then(() => {
@@ -2007,6 +2038,8 @@ export const Chat = memo(
         isAtBottomRef,
         maintainBottomAfterContentChange,
         preferences.disableEmoteAnimations,
+        preferences.show7TvEmotes,
+        preferences.show7tvBadges,
         reprocessVisibleMessageFromCache,
         warmVisibleImages,
       ],
@@ -2343,6 +2376,7 @@ export const Chat = memo(
             if (abortController.signal.aborted) {
               return;
             }
+            // oxlint-disable-next-line no-await-in-loop -- Recent messages must replay in server order.
             await handleRecentIrcMessage(message);
           }
 
@@ -2887,9 +2921,9 @@ export const Chat = memo(
         <ChatEmoteRuntime
           channelId={channelId}
           emoteLoadStatus={emoteLoadStatus}
-          emojiStyle={preferences.emojiStyle}
           messages$={messages$}
           processedMessageIdsRef={processedMessageIdsRef}
+          reprocessKey={chatAssetPreferenceKey}
         />
         <View style={styles.keyboardAvoidingView}>
           <View style={styles.chatContainer}>
