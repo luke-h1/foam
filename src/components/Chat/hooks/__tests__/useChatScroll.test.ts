@@ -83,6 +83,10 @@ describe('useChatScroll', () => {
 
       expect(typeof result.current.handleScroll).toBe('function');
       expect(typeof result.current.scrollToBottom).toBe('function');
+      expect(typeof result.current.maintainBottomAfterContentChange).toBe(
+        'function',
+      );
+      expect(typeof result.current.handleContentSizeChange).toBe('function');
       expect(typeof result.current.cleanup).toBe('function');
       expect(typeof result.current.incrementUnread).toBe('function');
     });
@@ -99,8 +103,11 @@ describe('useChatScroll', () => {
         }),
       );
 
-      // Scrolled up: y=500, view 500, content 2000 → distanceFromEnd = 1000 (> 250)
+      // Scrolled up: y=500, view 500, content 2000 -> distanceFromEnd = 1000.
       act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
         result.current.handleScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
@@ -125,6 +132,9 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
         result.current.handleScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
@@ -134,7 +144,7 @@ describe('useChatScroll', () => {
       });
       expect(result.current.isAtBottom).toBe(false);
 
-      // Scrolled to end: y=1500, view 500, content 2000 → distanceFromEnd = 0
+      // Scrolled to end: y=1500, view 500, content 2000 -> distanceFromEnd = 0.
       act(() => {
         result.current.handleScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
@@ -156,7 +166,7 @@ describe('useChatScroll', () => {
         }),
       );
 
-      // Near end: y=1440 → distanceFromEnd = 60 (<= 80)
+      // Near end: y=1440 -> distanceFromEnd = 60.
       act(() => {
         result.current.handleScroll(
           createScrollEvent({ y: 1440 }, { height: 500 }, { height: 2000 }),
@@ -263,6 +273,9 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
         result.current.handleScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
@@ -303,6 +316,9 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
         result.current.handleScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
@@ -341,6 +357,9 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
         result.current.handleScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
@@ -362,6 +381,43 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(200);
       });
 
+      expect(result.current.unreadCount).toBe(0);
+    });
+
+    test('should clear jump affordance when FlashList reports end reached', () => {
+      const { ref: listRef } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.handleScroll(
+          createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+      act(() => {
+        result.current.incrementUnread(260);
+      });
+
+      expect(result.current.isAtBottom).toBe(false);
+      expect(result.current.unreadCount).toBe(260);
+
+      act(() => {
+        result.current.handleEndReached();
+      });
+
+      expect(result.current.isAtBottom).toBe(true);
+      expect(result.current.isAtBottomRef.current).toBe(true);
       expect(result.current.unreadCount).toBe(0);
     });
 
@@ -420,6 +476,9 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
         result.current.handleScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
@@ -536,6 +595,99 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.scrollToBottom();
+      });
+
+      expect(mocks.scrollToEnd).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Bottom anchoring after content height changes', () => {
+    test('should keep bottom pinned during bounded hydrated content changes', () => {
+      const { ref: listRef, mocks } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.maintainBottomAfterContentChange();
+      });
+
+      expect(result.current.isScrollingToBottom).toBe(false);
+
+      act(() => {
+        jest.advanceTimersByTime(0);
+      });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        result.current.handleContentSizeChange();
+      });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
+
+      act(() => {
+        jest.advanceTimersByTime(600);
+        result.current.handleContentSizeChange();
+      });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
+    });
+
+    test('should cancel hydrated content anchoring when the user drags away', () => {
+      const { ref: listRef, mocks } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.maintainBottomAfterContentChange();
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.handleContentSizeChange();
+        jest.advanceTimersByTime(0);
+      });
+
+      expect(mocks.scrollToEnd).not.toHaveBeenCalled();
+    });
+
+    test('should not arm hydrated content anchoring when already away from bottom', () => {
+      const { ref: listRef, mocks } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.handleScroll(
+          createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      expect(result.current.isAtBottomRef.current).toBe(false);
+
+      act(() => {
+        result.current.maintainBottomAfterContentChange();
+        result.current.handleContentSizeChange();
+        jest.advanceTimersByTime(0);
       });
 
       expect(mocks.scrollToEnd).not.toHaveBeenCalled();

@@ -73,6 +73,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     1,
     safeFrame.height > 0 ? safeFrame.height : windowHeight,
   );
+  const portraitTopInset = isLandscape ? 0 : insets.top;
+  const layoutHeight = Math.max(1, screenHeight - portraitTopInset);
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
   const shouldRenderChat = !isLandscape || isChatVisible;
   const [fullscreenChatMode, setFullscreenChatMode] =
@@ -201,13 +203,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           : 0;
       return {
         width: Math.max(1, screenWidth - landscapeChatWidth),
-        height: Math.max(1, screenHeight),
+        height: Math.max(1, layoutHeight),
       };
     }
     if (hasContentGate) {
       return {
         width: Math.max(1, screenWidth),
-        height: Math.max(1, screenHeight),
+        height: Math.max(1, layoutHeight),
       };
     }
     return {
@@ -220,7 +222,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     hasContentGate,
     isChatVisible,
     isLandscape,
-    screenHeight,
+    layoutHeight,
     screenWidth,
   ]);
 
@@ -229,13 +231,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     let height: number;
     if (isLandscape) {
       width = getLandscapeChatWidth(fullscreenChatMode);
-      height = screenHeight;
+      height = layoutHeight;
     } else {
       const videoHeight = hasContentGate
-        ? screenHeight
+        ? layoutHeight
         : screenWidth * (9 / 16);
       width = screenWidth;
-      height = screenHeight - videoHeight;
+      height = layoutHeight - videoHeight;
     }
     return {
       width: Math.max(1, width),
@@ -246,7 +248,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     getLandscapeChatWidth,
     hasContentGate,
     isLandscape,
-    screenHeight,
+    layoutHeight,
     screenWidth,
   ]);
 
@@ -303,7 +305,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     isChatVisible,
     hasContentGate,
     screenWidth,
-    screenHeight,
     getVideoDimensions,
     getChatDimensions,
     layoutAnimationConfig,
@@ -373,8 +374,12 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   );
 
   const contentContainerStyle = useMemo(
-    () => [styles.contentContainer, isLandscape && styles.row],
-    [isLandscape],
+    () => [
+      styles.contentContainer,
+      !isLandscape && { paddingTop: portraitTopInset },
+      isLandscape && styles.row,
+    ],
+    [isLandscape, portraitTopInset],
   );
 
   const resolvedChannelLogin =
@@ -502,6 +507,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             ) : null}
             <Chat
               key={resolvedChannelId}
+              applyTopInset={isLandscape}
               channelId={resolvedChannelId!}
               channelName={resolvedChannelLogin!}
               transparent={isLandscape && fullscreenChatMode === 'overlay'}

@@ -488,18 +488,27 @@ function getLiveProviderEmotes(
     switch (provider) {
       case '7tv':
         emotes.push(
-          ...cache.sevenTvChannelEmotes,
-          ...cache.sevenTvGlobalEmotes,
+          ...(cache.sevenTvChannelEmotes ?? []),
+          ...(cache.sevenTvGlobalEmotes ?? []),
         );
         break;
       case 'bttv':
-        emotes.push(...cache.bttvChannelEmotes, ...cache.bttvGlobalEmotes);
+        emotes.push(
+          ...(cache.bttvChannelEmotes ?? []),
+          ...(cache.bttvGlobalEmotes ?? []),
+        );
         break;
       case 'ffz':
-        emotes.push(...cache.ffzChannelEmotes, ...cache.ffzGlobalEmotes);
+        emotes.push(
+          ...(cache.ffzChannelEmotes ?? []),
+          ...(cache.ffzGlobalEmotes ?? []),
+        );
         break;
       case 'twitch':
-        emotes.push(...cache.twitchChannelEmotes, ...cache.twitchGlobalEmotes);
+        emotes.push(
+          ...(cache.twitchChannelEmotes ?? []),
+          ...(cache.twitchGlobalEmotes ?? []),
+        );
         break;
       default: {
         const unreachable: never = provider;
@@ -534,10 +543,16 @@ function getLiveProviderBadges(
   caches.forEach(cache => {
     switch (provider) {
       case 'ffz':
-        badges.push(...cache.ffzChannelBadges, ...cache.ffzGlobalBadges);
+        badges.push(
+          ...(cache.ffzChannelBadges ?? []),
+          ...(cache.ffzGlobalBadges ?? []),
+        );
         break;
       case 'twitch':
-        badges.push(...cache.twitchChannelBadges, ...cache.twitchGlobalBadges);
+        badges.push(
+          ...(cache.twitchChannelBadges ?? []),
+          ...(cache.twitchGlobalBadges ?? []),
+        );
         break;
       default:
         break;

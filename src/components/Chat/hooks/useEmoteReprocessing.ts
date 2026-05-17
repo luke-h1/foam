@@ -8,6 +8,8 @@ import { type MutableRefObject, useEffect, useRef } from 'react';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
+const EMOTE_REPROCESS_BATCH_SIZE = 24;
+
 export function useEmoteReprocessing({
   channelId,
   channelEmoteData,
@@ -58,25 +60,33 @@ export function useEmoteReprocessing({
       return;
     }
 
-    for (const msg of currentMessages as AnyChatMessageType[]) {
-      if (processedMessageIdsRef.current.has(msg.message_id)) {
-        continue;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let index = 0;
+
+    const processMessage = (msg: AnyChatMessageType | undefined) => {
+      if (!msg?.message_id || !Array.isArray(msg.message)) {
+        return;
       }
 
       if (msg.sender === 'System' || 'notice_tags' in msg) {
-        continue;
+        return;
+      }
+
+      if (processedMessageIdsRef.current.has(msg.message_id)) {
+        return;
       }
 
       const textContent = getReprocessableText(msg.message as ParsedPart[]);
 
       if (textContent == null) {
-        continue;
+        return;
       }
 
       processedMessageIdsRef.current.add(msg.message_id);
 
       if (!textContent.trim()) {
-        continue;
+        return;
       }
 
       const replacedMessage = processEmotesWorklet({
@@ -106,7 +116,38 @@ export function useEmoteReprocessing({
         message: replacedMessage,
         badges: replacedBadges,
       });
-    }
+    };
+
+    const processBatch = () => {
+      if (cancelled) {
+        return;
+      }
+
+      let processedInBatch = 0;
+      while (
+        index < currentMessages.length &&
+        processedInBatch < EMOTE_REPROCESS_BATCH_SIZE
+      ) {
+        processMessage(
+          currentMessages[index] as AnyChatMessageType | undefined,
+        );
+        index += 1;
+        processedInBatch += 1;
+      }
+
+      if (index < currentMessages.length) {
+        timer = setTimeout(processBatch, 0);
+      }
+    };
+
+    processBatch();
+
+    return () => {
+      cancelled = true;
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
   }, [
     channelId,
     channelEmoteData,

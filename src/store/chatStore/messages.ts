@@ -23,6 +23,12 @@ let pendingRecentMessages: ChatMessageType<never>[] | null = null;
 const getMessageKey = (messageId: string, messageNonce: string): string =>
   `${messageId}_${messageNonce}`;
 
+const isValidChatMessage = <TNoticeType extends NoticeVariants>(
+  message: ChatMessageType<TNoticeType> | undefined,
+): message is ChatMessageType<TNoticeType> => {
+  return Boolean(message?.message_id && message.message_nonce);
+};
+
 const normaliseIndexKey = (value: string | undefined): string | null => {
   const normalised = value?.trim().toLowerCase();
   return normalised ? normalised : null;
@@ -114,7 +120,9 @@ const persistRecentMessagesForChannel = (
     return;
   }
 
-  const nextRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
+  const nextRecentMessages = nextMessages
+    .filter(isValidChatMessage)
+    .slice(-MAX_RECENT_MESSAGES);
   chatStore$.persisted.recentMessagesByChannel.set({
     ...recentMessagesByChannel,
     [channelId]: nextRecentMessages,
@@ -184,8 +192,12 @@ const trimMessageIndexes = (): boolean => {
 };
 
 export const addMessage = <TNoticeType extends NoticeVariants>(
-  message: ChatMessageType<TNoticeType>,
+  message: ChatMessageType<TNoticeType> | undefined,
 ) => {
+  if (!isValidChatMessage(message)) {
+    return;
+  }
+
   const key = getMessageKey(message.message_id, message.message_nonce);
   if (messageKeySet.has(key)) {
     return;
@@ -213,11 +225,17 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
   }
 };
 
-export const addMessages = (messages: ChatMessageType<never>[]) => {
+export const addMessages = (
+  messages: Array<ChatMessageType<never> | undefined>,
+) => {
   if (messages.length === 0) {
     return;
   }
-  const newMessages = messages.filter(msg => {
+  const newMessages = messages.filter((msg): msg is ChatMessageType<never> => {
+    if (!isValidChatMessage(msg)) {
+      return false;
+    }
+
     const key = getMessageKey(msg.message_id, msg.message_nonce);
     if (messageKeySet.has(key)) {
       return false;
@@ -270,7 +288,7 @@ export const updateMessage = (
     const msg$ = chatStore$.messages[index];
     if (msg$) {
       msg$.set(prev => ({ ...prev, ...updates }));
-      syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
+      syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), 'defer');
     }
   }
 };
@@ -415,8 +433,9 @@ export const clearMessages = () => {
 };
 
 export const restoreRecentMessagesForChannel = (channelId: string): number => {
-  const recentMessages =
-    chatStore$.persisted.recentMessagesByChannel[channelId]?.peek() ?? [];
+  const recentMessages = (
+    chatStore$.persisted.recentMessagesByChannel[channelId]?.peek() ?? []
+  ).filter(isValidChatMessage);
 
   if (recentMessages.length === 0) {
     clearMessages();

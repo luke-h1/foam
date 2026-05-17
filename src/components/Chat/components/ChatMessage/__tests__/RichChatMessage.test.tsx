@@ -77,6 +77,20 @@ describe('RichChatMessage', () => {
     jest.clearAllMocks();
   });
 
+  test('coalesces adjacent text parts into one rendered text node', () => {
+    const message = createMockMessage([
+      { type: 'text', content: 'Hello' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'world' },
+    ]);
+
+    const { getByText, queryByText } = render(<RichChatMessage {...message} />);
+
+    expect(getByText('Hello world')).toBeTruthy();
+    expect(queryByText('Hello')).toBeNull();
+    expect(queryByText('world')).toBeNull();
+  });
+
   describe('Long Press Reply', () => {
     test('should call onReply when message is long pressed (regular messages)', () => {
       const message = createMockMessage([

@@ -1,5 +1,3 @@
-import 'react-native-reanimated';
-
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart } from './replaceTextWithEmotes';
@@ -22,58 +20,187 @@ interface EmoteProcessorParams {
 
 const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
+const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
+const baseCollectionCache = new Map<string, EmoteCollection>();
+const MAX_BASE_COLLECTION_CACHE_SIZE = 64;
+
+type EmoteCollection = {
+  cacheKey: string;
+  emojiMap: ReadonlyMap<string, SanitisedEmote>;
+  emoteMap: ReadonlyMap<string, SanitisedEmote>;
+};
+
+let nextEmoteArrayId = 0;
+
+function getEmoteArrayId(emotes: SanitisedEmote[]): number {
+  let id = emoteArrayIds.get(emotes);
+  if (id === undefined) {
+    nextEmoteArrayId += 1;
+    id = nextEmoteArrayId;
+    emoteArrayIds.set(emotes, id);
+  }
+  return id;
+}
 
 const createCacheKey = (
   inputString: string,
-  emojiEmotes: SanitisedEmote[],
-  sevenTvGlobalEmotes: SanitisedEmote[],
-  sevenTvChannelEmotes: SanitisedEmote[],
+  baseCollectionKey: string,
   sevenTvPersonalEmotes: SanitisedEmote[],
-  twitchGlobalEmotes: SanitisedEmote[],
-  twitchChannelEmotes: SanitisedEmote[],
   twitchSubscriberEmotes: SanitisedEmote[],
-  ffzChannelEmotes: SanitisedEmote[],
-  ffzGlobalEmotes: SanitisedEmote[],
-  bttvChannelEmotes: SanitisedEmote[],
-  bttvGlobalEmotes: SanitisedEmote[],
 ): string => {
-  'worklet';
-
-  const emoteHash = [
-    emojiEmotes.length,
-    sevenTvGlobalEmotes.length,
-    sevenTvChannelEmotes.length,
+  const scopedEmoteHash = [
     sevenTvPersonalEmotes.length,
-    twitchGlobalEmotes.length,
-    twitchChannelEmotes.length,
     twitchSubscriberEmotes.length,
-    ffzChannelEmotes.length,
-    ffzGlobalEmotes.length,
-    bttvChannelEmotes.length,
-    bttvGlobalEmotes.length,
   ].join('|');
 
   const firstLastIds = [
-    emojiEmotes[0]?.id || '',
-    emojiEmotes[emojiEmotes.length - 1]?.id || '',
-    sevenTvChannelEmotes[0]?.id || '',
-    sevenTvChannelEmotes[sevenTvChannelEmotes.length - 1]?.id || '',
-    sevenTvGlobalEmotes[0]?.id || '',
-    sevenTvGlobalEmotes[sevenTvGlobalEmotes.length - 1]?.id || '',
     sevenTvPersonalEmotes[0]?.id || '',
     sevenTvPersonalEmotes[sevenTvPersonalEmotes.length - 1]?.id || '',
     twitchSubscriberEmotes[0]?.id || '',
     twitchSubscriberEmotes[twitchSubscriberEmotes.length - 1]?.id || '',
   ].join('|');
 
-  return `${emoteHash}:${firstLastIds}:${inputString}`;
+  return `${baseCollectionKey}:${scopedEmoteHash}:${firstLastIds}:${inputString}`;
 };
+
+function getBaseCollectionKey(
+  emojiEmotes: SanitisedEmote[],
+  sevenTvGlobalEmotes: SanitisedEmote[],
+  sevenTvChannelEmotes: SanitisedEmote[],
+  twitchGlobalEmotes: SanitisedEmote[],
+  twitchChannelEmotes: SanitisedEmote[],
+  ffzChannelEmotes: SanitisedEmote[],
+  ffzGlobalEmotes: SanitisedEmote[],
+  bttvChannelEmotes: SanitisedEmote[],
+  bttvGlobalEmotes: SanitisedEmote[],
+): string {
+  return [
+    getEmoteArrayId(emojiEmotes),
+    getEmoteArrayId(sevenTvGlobalEmotes),
+    getEmoteArrayId(sevenTvChannelEmotes),
+    getEmoteArrayId(twitchGlobalEmotes),
+    getEmoteArrayId(twitchChannelEmotes),
+    getEmoteArrayId(ffzChannelEmotes),
+    getEmoteArrayId(ffzGlobalEmotes),
+    getEmoteArrayId(bttvChannelEmotes),
+    getEmoteArrayId(bttvGlobalEmotes),
+  ].join('|');
+}
+
+function setIfMissing(
+  emoteMap: Map<string, SanitisedEmote>,
+  emotes: SanitisedEmote[],
+): void {
+  emotes.forEach(emote => {
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, emote);
+    }
+  });
+}
+
+function getBaseCollection({
+  bttvChannelEmotes,
+  bttvGlobalEmotes,
+  emojiEmotes,
+  ffzChannelEmotes,
+  ffzGlobalEmotes,
+  sevenTvChannelEmotes,
+  sevenTvGlobalEmotes,
+  twitchChannelEmotes,
+  twitchGlobalEmotes,
+}: Pick<
+  Required<EmoteProcessorParams>,
+  | 'bttvChannelEmotes'
+  | 'bttvGlobalEmotes'
+  | 'emojiEmotes'
+  | 'ffzChannelEmotes'
+  | 'ffzGlobalEmotes'
+  | 'sevenTvChannelEmotes'
+  | 'sevenTvGlobalEmotes'
+  | 'twitchChannelEmotes'
+  | 'twitchGlobalEmotes'
+>): EmoteCollection {
+  const cacheKey = getBaseCollectionKey(
+    emojiEmotes,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+  );
+  const cached = baseCollectionCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const emoteMap = new Map<string, SanitisedEmote>();
+  const emojiMap = new Map<string, SanitisedEmote>();
+
+  setIfMissing(emoteMap, sevenTvChannelEmotes);
+  setIfMissing(emoteMap, twitchChannelEmotes);
+  setIfMissing(emoteMap, ffzChannelEmotes);
+  setIfMissing(emoteMap, bttvChannelEmotes);
+  setIfMissing(emoteMap, emojiEmotes);
+  setIfMissing(emoteMap, sevenTvGlobalEmotes);
+  setIfMissing(emoteMap, twitchGlobalEmotes);
+  setIfMissing(emoteMap, ffzGlobalEmotes);
+  setIfMissing(emoteMap, bttvGlobalEmotes);
+
+  emojiEmotes.forEach(emote => {
+    if (emote.site !== 'Emoji') {
+      return;
+    }
+
+    const emojiHexcode = emote.emoji_hexcode ?? emote.id;
+    if (!emojiMap.has(emojiHexcode)) {
+      emojiMap.set(emojiHexcode, emote);
+    }
+  });
+
+  const collection = { cacheKey, emojiMap, emoteMap };
+  if (baseCollectionCache.size >= MAX_BASE_COLLECTION_CACHE_SIZE) {
+    const firstKey = baseCollectionCache.keys().next().value;
+    if (firstKey) {
+      baseCollectionCache.delete(firstKey);
+    }
+  }
+  baseCollectionCache.set(cacheKey, collection);
+  return collection;
+}
+
+function createScopedEmoteLookup(
+  baseEmoteMap: ReadonlyMap<string, SanitisedEmote>,
+  sevenTvPersonalEmotes: SanitisedEmote[],
+  twitchSubscriberEmotes: SanitisedEmote[],
+): (name: string) => SanitisedEmote | undefined {
+  if (
+    sevenTvPersonalEmotes.length === 0 &&
+    twitchSubscriberEmotes.length === 0
+  ) {
+    return name => baseEmoteMap.get(name);
+  }
+
+  const personalEmoteMap = new Map<string, SanitisedEmote>();
+  const subscriberEmoteMap = new Map<string, SanitisedEmote>();
+  sevenTvPersonalEmotes.forEach(emote => {
+    personalEmoteMap.set(emote.name, emote);
+  });
+  twitchSubscriberEmotes.forEach(emote => {
+    subscriberEmoteMap.set(emote.name, emote);
+  });
+
+  return name =>
+    personalEmoteMap.get(name) ??
+    subscriberEmoteMap.get(name) ??
+    baseEmoteMap.get(name);
+}
 
 export const processEmotesWorklet = (
   params: EmoteProcessorParams,
 ): ParsedPart[] => {
-  'worklet';
-
   const {
     inputString,
     emojiEmotes = [],
@@ -93,71 +220,34 @@ export const processEmotesWorklet = (
     return [{ type: 'text', content: inputString }];
   }
 
-  const cacheKey = createCacheKey(
-    inputString,
-    emojiEmotes,
-    sevenTvGlobalEmotes,
-    sevenTvChannelEmotes,
-    sevenTvPersonalEmotes,
-    twitchGlobalEmotes,
-    twitchChannelEmotes,
-    twitchSubscriberEmotes,
-    ffzChannelEmotes,
-    ffzGlobalEmotes,
+  const baseCollection = getBaseCollection({
     bttvChannelEmotes,
     bttvGlobalEmotes,
+    emojiEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    sevenTvChannelEmotes,
+    sevenTvGlobalEmotes,
+    twitchChannelEmotes,
+    twitchGlobalEmotes,
+  });
+  const cacheKey = createCacheKey(
+    inputString,
+    baseCollection.cacheKey,
+    sevenTvPersonalEmotes,
+    twitchSubscriberEmotes,
   );
 
   const cached = cache.get(cacheKey);
   if (cached) {
     return cached;
   }
-  const emoteMap = new Map<string, SanitisedEmote>();
-  const emojiMap = new Map<string, SanitisedEmote>();
-
-  const twitchTagAndSubscriberEmotes = twitchSubscriberEmotes;
-
-  const channelEmotes = [
-    ...sevenTvChannelEmotes,
-    ...twitchChannelEmotes,
-    ...ffzChannelEmotes,
-    ...bttvChannelEmotes,
-  ];
-
-  const globalEmotes = [
-    ...emojiEmotes,
-    ...sevenTvGlobalEmotes,
-    ...twitchGlobalEmotes,
-    ...ffzGlobalEmotes,
-    ...bttvGlobalEmotes,
-  ];
-
-  sevenTvPersonalEmotes.forEach(emote => {
-    emoteMap.set(emote.name, emote);
-  });
-
-  twitchTagAndSubscriberEmotes.forEach(emote => {
-    emoteMap.set(emote.name, emote);
-  });
-
-  channelEmotes.forEach(emote => {
-    if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, emote);
-    }
-  });
-
-  globalEmotes.forEach(emote => {
-    if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, emote);
-    }
-
-    if (emote.site === 'Emoji') {
-      const emojiHexcode = emote.emoji_hexcode ?? emote.id;
-      if (!emojiMap.has(emojiHexcode)) {
-        emojiMap.set(emojiHexcode, emote);
-      }
-    }
-  });
+  const getEmote = createScopedEmoteLookup(
+    baseCollection.emoteMap,
+    sevenTvPersonalEmotes,
+    twitchSubscriberEmotes,
+  );
+  const emojiMap = baseCollection.emojiMap;
 
   const words = inputString.split(/(\s+)/);
   const result: ParsedPart[] = [];
@@ -179,9 +269,9 @@ export const processEmotesWorklet = (
       continue;
     }
 
-    let emote = emoteMap.get(word);
+    let emote = getEmote(word);
 
-    if (!emote) {
+    if (!emote && word.length <= 8) {
       const upperWord = [...word]
         .map(char => char.codePointAt(0)?.toString(16).toUpperCase() || '')
         .join('-');
@@ -216,22 +306,16 @@ export const processEmotesWorklet = (
     i += 1;
   }
 
-  const hasEmotes = result.some(
-    part => part.type === 'emote' || part.type === 'stvEmote',
-  );
-
-  if (hasEmotes) {
-    if (cache.size >= MAX_CACHE_SIZE) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const firstKey = cache.keys().next().value;
-      if (firstKey) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        cache.delete(firstKey);
-      }
+  if (cache.size >= MAX_CACHE_SIZE) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const firstKey = cache.keys().next().value;
+    if (firstKey) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      cache.delete(firstKey);
     }
-
-    cache.set(cacheKey, result);
   }
+
+  cache.set(cacheKey, result);
 
   return result;
 };

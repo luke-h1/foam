@@ -5,6 +5,9 @@ import {
   UserCosmeticsDocument,
   UserCosmeticsQuery,
   UserCosmeticsQueryVariables,
+  UserByConnectionDocument,
+  UserByConnectionQuery,
+  UserByConnectionQueryVariables,
   UserPersonalEmotesQueryDocument,
   UserPersonalEmotesQueryQuery,
   UserPersonalEmotesQueryQueryVariables,
@@ -235,10 +238,23 @@ function pickBestStaticImage(images: readonly Image[]): Image | undefined {
 
 export const sevenTvService = {
   get7tvUserId: async (twitchUserId: string): Promise<string> => {
-    const result = await sevenTvApi.get<{ user: { id: string } }>(
-      `/users/twitch/${twitchUserId}`,
-    );
-    return result.user.id;
+    const { data, error } = await sevenTvV4Client.query<
+      UserByConnectionQuery,
+      UserByConnectionQueryVariables
+    >({
+      query: UserByConnectionDocument,
+      variables: { platformId: twitchUserId },
+    });
+
+    if (error) {
+      logger.stv.warn(
+        `Failed to resolve 7TV user for Twitch user ${twitchUserId}:`,
+        error.message,
+      );
+      return '';
+    }
+
+    return data?.users?.userByConnection?.id ?? '';
   },
 
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {

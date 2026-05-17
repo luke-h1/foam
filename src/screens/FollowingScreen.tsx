@@ -9,6 +9,7 @@ import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStrea
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
 import { ScrollAdaptiveHeader } from '@app/components/ScrollAdaptiveHeader/ScrollAdaptiveHeader';
+import { useBottomTabOverflow } from '@app/components/TabBarBackground/TabBarBackground';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
@@ -39,6 +40,7 @@ export default function FollowingScreen() {
   const { authState, user } = useAuthContext();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const tabBarOverflow = useBottomTabOverflow();
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
@@ -180,7 +182,7 @@ export default function FollowingScreen() {
         ref={listRef}
         data={streamsArray}
         keyExtractor={item => item.id}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
         getItemType={() => 'stream-card'}
         ListHeaderComponent={
@@ -280,7 +282,10 @@ export default function FollowingScreen() {
         }
         contentContainerStyle={[
           styles.listContent,
-          { paddingTop: insets.top + theme.space20 },
+          {
+            paddingBottom: tabBarOverflow + theme.space20,
+            paddingTop: insets.top + theme.space20,
+          },
         ]}
         renderItem={renderItem}
         onScroll={scrollHandler}

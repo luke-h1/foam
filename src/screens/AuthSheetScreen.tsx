@@ -9,7 +9,7 @@ import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useCallback } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function AuthSheetScreen() {
@@ -29,11 +29,7 @@ export function AuthSheetScreen() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
-      <ScrollView
-        bounces={false}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.appIconFrame}>
             <Image
@@ -99,7 +95,7 @@ export function AuthSheetScreen() {
           <FeatureItem icon="star" label="BTTV, FFZ, and 7TV emotes" />
           <FeatureItem icon="users" label="Minimal UI" />
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -214,7 +210,7 @@ const styles = StyleSheet.create({
     boxShadow: 'none',
     opacity: 0.64,
   },
-  scrollContent: {
+  content: {
     alignSelf: 'center',
     gap: theme.space20,
     justifyContent: 'center',
