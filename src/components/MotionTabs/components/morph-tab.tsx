@@ -31,7 +31,9 @@ const MorphTab = memo(function MorphTab({
 
   return (
     <Pressable
+      accessibilityLabel={item.label}
       accessibilityRole="button"
+      accessibilityState={{ selected: active }}
       onPress={handlePress}
       onPressIn={motion.hold}
       onPressOut={motion.release}
