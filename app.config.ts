@@ -2,6 +2,7 @@ import type { ExpoConfig } from '@expo/config';
 import type { AppIconBadgeConfig } from 'app-icon-badge/types';
 import * as fs from 'fs';
 import * as path from 'path';
+import bootsplash from 'react-native-bootsplash/expo';
 
 interface AppVariantConfig {
   name: string;
@@ -149,6 +150,7 @@ const config: ExpoConfig = {
   version: VERSION,
   scheme: 'foam',
   owner: 'lukehowsam123',
+  platforms: ['android', 'ios', 'web'],
   icon: './assets/app-icon/app-icon-production.png',
   userInterfaceStyle: 'dark',
   updates: {
@@ -191,6 +193,12 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-image',
+    bootsplash({
+      logo: appConfig.splashImage,
+      logoWidth: 100,
+      background: appConfig.splashBackgroundColor,
+      assetsOutput: 'assets/bootsplash',
+    }),
     'react-native-compressor',
     [
       '@sentry/react-native/expo',

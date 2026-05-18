@@ -455,7 +455,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           <StreamPlayer
             ref={streamPlayerRef}
             channel={resolvedChannelLogin}
-            deferOverlayUntilUserUnmute
             height="100%"
             width="100%"
             autoplay
