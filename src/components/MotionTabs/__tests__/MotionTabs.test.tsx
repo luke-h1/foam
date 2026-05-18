@@ -173,7 +173,12 @@ describe('MotionTabs', () => {
       />,
     );
 
-    fireEvent(getAllByText('Chat')[0], 'layout', {
+    const chatLabel = getAllByText('Chat')[0];
+    if (!chatLabel) {
+      throw new Error('Expected Chat label to render');
+    }
+
+    fireEvent(chatLabel, 'layout', {
       nativeEvent: { layout: { width: 41 } },
     });
     fireEvent(getByLabelText('Chat'), 'pressIn');

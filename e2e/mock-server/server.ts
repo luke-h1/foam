@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 /**
  * Mock Server for E2E Testing
@@ -11,9 +10,6 @@
  *
  * The server runs on port 3001 by default (configurable via MOCK_SERVER_PORT env var)
  */
-
-import cors from 'cors';
-import express, { Request, Response, NextFunction } from 'express';
 
 import {
   getTopCategoriesResponse,
@@ -33,116 +29,119 @@ import {
   getFollowedStreams,
 } from './fixtures/users';
 
-const app = express(); // NOSONAR - dev-only E2E mock server is not shipped.
-const PORT = process.env.MOCK_SERVER_PORT || 3001;
+declare const Bun: {
+  serve(options: {
+    port: number;
+    fetch(request: Request): Response | Promise<Response>;
+  }): unknown;
+};
 
-// Middleware
-app.use(cors()); // NOSONAR - dev-only mock server accepts local test clients.
-app.use(express.json());
+type Handler = (request: Request, url: URL) => Response;
 
-// Request logging middleware
-app.use((req: Request, _res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`); // NOSONAR - dev-only request logging.
-  next();
-});
+const PORT = Number(process.env.MOCK_SERVER_PORT ?? 3001);
 
-// Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+const responseHeaders = {
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Origin': '*',
+};
 
-// GET /helix/streams - Get top streams or stream by user_login
-app.get('/helix/streams', (req: Request, res: Response) => {
-  const { user_login, game_id, after } = req.query;
+const json = (body: unknown, init?: ResponseInit) =>
+  new Response(JSON.stringify(body), {
+    ...init,
+    headers: {
+      ...responseHeaders,
+      'Content-Type': 'application/json; charset=utf-8',
+      ...init?.headers,
+    },
+  });
 
-  if (user_login) {
-    const stream = getStreamByLogin(user_login as string);
-    res.json({ data: stream ? [stream] : [] });
-    return;
+const firstParam = (url: URL, name: string) =>
+  url.searchParams.get(name) ?? undefined;
+
+const withRouteParams = (
+  pathname: string,
+  pattern: RegExp,
+  handler: Handler,
+): Handler | undefined => (pattern.test(pathname) ? handler : undefined);
+
+const health = () =>
+  json({ status: 'ok', timestamp: new Date().toISOString() });
+
+const streams: Handler = (_request, url) => {
+  const userLogin = firstParam(url, 'user_login');
+  const gameId = firstParam(url, 'game_id');
+  const after = firstParam(url, 'after');
+
+  if (userLogin) {
+    const stream = getStreamByLogin(userLogin);
+    return json({ data: stream ? [stream] : [] });
   }
 
-  if (game_id) {
-    const categoryStreams = mockStreams.filter(s => s.game_id === game_id);
-    res.json({
+  if (gameId) {
+    const categoryStreams = mockStreams.filter(s => s.game_id === gameId);
+    return json({
       data: categoryStreams,
       pagination: {},
     });
-    return;
   }
 
-  const response = getTopStreamsResponse(after as string | undefined);
-  res.json(response);
-});
+  return json(getTopStreamsResponse(after));
+};
 
-app.get('/helix/streams/followed', (req: Request, res: Response) => {
-  const { user_id } = req.query;
-  const response = getFollowedStreams(user_id as string);
-  res.json(response);
-});
+const followedStreams: Handler = (_request, url) =>
+  json(getFollowedStreams(firstParam(url, 'user_id') ?? ''));
 
-app.get('/helix/games/top', (req: Request, res: Response) => {
-  const { after } = req.query;
-  const response = getTopCategoriesResponse(after as string | undefined);
-  res.json(response);
-});
+const topGames: Handler = (_request, url) =>
+  json(getTopCategoriesResponse(firstParam(url, 'after')));
 
-app.get('/helix/games', (req: Request, res: Response) => {
-  const { id } = req.query;
-  const category = getCategoryById(id as string);
-  res.json({ data: category ? [category] : [] });
-});
+const games: Handler = (_request, url) => {
+  const category = getCategoryById(firstParam(url, 'id') ?? '');
+  return json({ data: category ? [category] : [] });
+};
 
-app.get('/helix/search/categories', (req: Request, res: Response) => {
-  const { query } = req.query;
-  const response = searchCategories(query as string);
-  res.json(response);
-});
+const searchGameCategories: Handler = (_request, url) =>
+  json(searchCategories(firstParam(url, 'query') ?? ''));
 
-app.get('/helix/search/channels', (req: Request, res: Response) => {
-  const { query } = req.query;
-  const channels = searchChannels(query as string);
-  res.json({ data: channels });
-});
+const searchGameChannels: Handler = (_request, url) =>
+  json({ data: searchChannels(firstParam(url, 'query') ?? '') });
 
-app.get('/helix/users', (req: Request, res: Response) => {
-  const { login, id } = req.query;
+const users: Handler = (_request, url) => {
+  const login = firstParam(url, 'login');
+  const id = firstParam(url, 'id');
 
   if (login) {
-    const user = getUserByLogin(login as string);
-    res.json({ data: user ? [user] : [] });
-    return;
+    const user = getUserByLogin(login);
+    return json({ data: user ? [user] : [] });
   }
 
   if (id) {
-    const user = getUserById(id as string);
-    res.json({ data: user ? [user] : [] });
-    return;
+    const user = getUserById(id);
+    return json({ data: user ? [user] : [] });
   }
 
   const testUser = getUserByLogin('testuser');
-  res.json({ data: testUser ? [testUser] : [] });
-});
+  return json({ data: testUser ? [testUser] : [] });
+};
 
-app.get('/helix/channels', (req: Request, res: Response) => {
-  const { broadcaster_id } = req.query;
-  const user = getUserById(broadcaster_id as string);
+const channels: Handler = (_request, url) => {
+  const user = getUserById(firstParam(url, 'broadcaster_id') ?? '');
 
-  if (user) {
-    res.json([
-      {
-        broadcasterId: user.id,
-        broadcasterLogin: user.login,
-        broadcasterName: user.display_name,
-      },
-    ]);
-    return;
+  if (!user) {
+    return json([]);
   }
 
-  res.json([]);
-});
+  return json([
+    {
+      broadcasterId: user.id,
+      broadcasterLogin: user.login,
+      broadcasterName: user.display_name,
+    },
+  ]);
+};
 
-app.get('/helix/chat/emotes/global', (_req: Request, res: Response) => {
-  res.json({
+const globalTwitchEmotes = () =>
+  json({
     data: [
       {
         id: '1',
@@ -172,53 +171,47 @@ app.get('/helix/chat/emotes/global', (_req: Request, res: Response) => {
       },
     ],
   });
-});
 
-// GET /token - Get anonymous token
-app.get('/token', (_req: Request, res: Response) => {
-  res.json({
+const anonymousToken = () =>
+  json({
     data: {
       access_token: 'mock_access_token_for_e2e_testing',
       expires_in: 3600,
       token_type: 'bearer',
     },
   });
-});
 
-app.post('/oauth2/token', (_req: Request, res: Response) => {
-  res.json({
+const refreshedToken = () =>
+  json({
     access_token: 'mock_refreshed_access_token',
     refresh_token: 'mock_refresh_token',
     expires_in: 3600,
     scope: 'user:read:email',
     token_type: 'bearer',
   });
-});
 
-app.get('/oauth2/validate', (req: Request, res: Response) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    res.json({
-      client_id: 'mock_client_id',
-      scopes: null,
-      expires_in: 3600,
-    });
-    return;
+const validateOauth: Handler = request => {
+  const authHeader = request.headers.get('authorization');
+
+  if (!authHeader?.startsWith('Bearer ')) {
+    return json({ message: 'Unauthorized' }, { status: 401 });
   }
-  res.status(401).json({ message: 'Unauthorized' });
-});
 
-// BetterTTV global emotes
-app.get('/3/cached/emotes/global', (_req: Request, res: Response) => {
-  res.json([
+  return json({
+    client_id: 'mock_client_id',
+    scopes: null,
+    expires_in: 3600,
+  });
+};
+
+const globalBttvEmotes = () =>
+  json([
     { id: 'bttv1', code: 'OMEGALUL', imageType: 'png', animated: false },
     { id: 'bttv2', code: 'monkaS', imageType: 'png', animated: false },
   ]);
-});
 
-// BetterTTV channel emotes
-app.get('/3/cached/users/twitch/:userId', (_req: Request, res: Response) => {
-  res.json({
+const channelBttvEmotes = () =>
+  json({
     channelEmotes: [
       {
         id: 'bttvch1',
@@ -229,11 +222,9 @@ app.get('/3/cached/users/twitch/:userId', (_req: Request, res: Response) => {
     ],
     sharedEmotes: [],
   });
-});
 
-// FrankerFaceZ emotes
-app.get('/v1/room/id/:userId', (_req: Request, res: Response) => {
-  res.json({
+const ffzRoom = () =>
+  json({
     room: { set: 1 },
     sets: {
       1: {
@@ -247,11 +238,9 @@ app.get('/v1/room/id/:userId', (_req: Request, res: Response) => {
       },
     },
   });
-});
 
-// 7TV emotes
-app.get('/v3/emote-sets/global', (_req: Request, res: Response) => {
-  res.json({
+const sevenTvGlobalEmotes = () =>
+  json({
     emotes: [
       {
         id: '7tv1',
@@ -260,62 +249,107 @@ app.get('/v3/emote-sets/global', (_req: Request, res: Response) => {
       },
     ],
   });
-});
 
-app.get('/mock/streams', (_req: Request, res: Response) => {
-  res.json(mockStreams);
-});
+const reset = () => json({ status: 'reset complete' });
 
-app.get('/mock/categories', (_req: Request, res: Response) => {
-  res.json(mockCategories);
-});
+const routes: Record<string, Partial<Record<string, Handler>>> = {
+  GET: {
+    '/3/cached/emotes/global': globalBttvEmotes,
+    '/health': health,
+    '/helix/channels': channels,
+    '/helix/chat/emotes/global': globalTwitchEmotes,
+    '/helix/games': games,
+    '/helix/games/top': topGames,
+    '/helix/search/categories': searchGameCategories,
+    '/helix/search/channels': searchGameChannels,
+    '/helix/streams': streams,
+    '/helix/streams/followed': followedStreams,
+    '/helix/users': users,
+    '/mock/categories': () => json(mockCategories),
+    '/mock/streams': () => json(mockStreams),
+    '/oauth2/validate': validateOauth,
+    '/token': anonymousToken,
+    '/v3/emote-sets/global': sevenTvGlobalEmotes,
+  },
+  POST: {
+    '/mock/reset': reset,
+    '/oauth2/token': refreshedToken,
+  },
+};
 
-// POST /mock/reset - Reset any stateful mock data (currently stateless)
-app.post('/mock/reset', (_req: Request, res: Response) => {
-  // Reset any stateful mock data here if needed
-  res.json({ status: 'reset complete' });
-});
+const paramRoutes: Record<string, Array<[RegExp, Handler]>> = {
+  GET: [
+    [/^\/3\/cached\/users\/twitch\/[^/]+$/, channelBttvEmotes],
+    [/^\/v1\/room\/id\/[^/]+$/, ffzRoom],
+  ],
+};
 
-// 404 handler
-app.use((_req: Request, res: Response) => {
-  console.warn(`[404] Route not found: ${_req.method} ${_req.path}`); // NOSONAR - dev-only request logging.
-  res.status(404).json({ error: 'Not found' });
-});
+const getHandler = (method: string, pathname: string) =>
+  routes[method]?.[pathname] ??
+  paramRoutes[method]
+    ?.map(([pattern, handler]) => withRouteParams(pathname, pattern, handler))
+    .find((handler): handler is Handler => handler !== undefined);
 
-// Error handler
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[Error]', err.message);
-  res.status(500).json({ error: 'Internal server error' });
-});
+const handleRequest = (request: Request) => {
+  const url = new URL(request.url);
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: responseHeaders,
+      status: 204,
+    });
+  }
+
+  console.log(
+    `[${new Date().toISOString()}] ${request.method} ${url.pathname}`,
+  ); // NOSONAR - dev-only request logging.
+
+  const handler = getHandler(request.method, url.pathname);
+
+  if (!handler) {
+    console.warn(`[404] Route not found: ${request.method} ${url.pathname}`); // NOSONAR - dev-only request logging.
+    return json({ error: 'Not found' }, { status: 404 });
+  }
+
+  return handler(request, url);
+};
 
 // todo - add chat support
 // todo - add dummy stream support
 
-app.listen(PORT, () => {
-  console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║                    Foam E2E Mock Server                          ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Server running at: http://localhost:${PORT}                     ║
-║                                                                  ║
-║  Available endpoints:                                            ║
-║  - GET  /health                    Health check                  ║
-║  - GET  /helix/streams             Top streams                   ║
-║  - GET  /helix/streams/followed    Followed streams              ║
-║  - GET  /helix/games/top           Top categories                ║
-║  - GET  /helix/games               Category by ID                ║
-║  - GET  /helix/search/categories   Search categories             ║
-║  - GET  /helix/search/channels     Search channels               ║
-║  - GET  /helix/users               User info                     ║
-║  - GET  /helix/channels            Channel info                  ║
-║  - GET  /token                     Auth token                    ║
-║                                                                  ║
-║  Debug endpoints:                                                ║
-║  - GET  /mock/streams              List all mock streams         ║
-║  - GET  /mock/categories           List all mock categories      ║
-║  - POST /mock/reset                Reset mock state              ║
-╚══════════════════════════════════════════════════════════════════╝
-  `);
+Bun.serve({
+  port: PORT,
+  fetch: request => {
+    try {
+      return handleRequest(request);
+    } catch (error) {
+      console.error('[Error]', error);
+      return json({ error: 'Internal server error' }, { status: 500 });
+    }
+  },
 });
 
-export default app;
+console.log(`
+╔══════════════════════════════════════════════════════════════════╗
+║                    Foam E2E Mock Server                         ║
+╠══════════════════════════════════════════════════════════════════╣
+║  Server running at: http://localhost:${PORT}                    ║
+║                                                                 ║
+║  Available endpoints:                                           ║
+║  - GET  /health                    Health check                 ║
+║  - GET  /helix/streams             Top streams                  ║
+║  - GET  /helix/streams/followed    Followed streams             ║
+║  - GET  /helix/games/top           Top categories               ║
+║  - GET  /helix/games               Category by ID               ║
+║  - GET  /helix/search/categories   Search categories            ║
+║  - GET  /helix/search/channels     Search channels              ║
+║  - GET  /helix/users               User info                    ║
+║  - GET  /helix/channels            Channel info                 ║
+║  - GET  /token                     Auth token                   ║
+║                                                                 ║
+║  Debug endpoints:                                               ║
+║  - GET  /mock/streams              List all mock streams        ║
+║  - GET  /mock/categories           List all mock categories     ║
+║  - POST /mock/reset                Reset mock state             ║
+╚══════════════════════════════════════════════════════════════════╝
+`);

@@ -84,8 +84,8 @@
     "e2e:dev:android": "EXPO_PUBLIC_APP_VARIANT=e2e expo run:android",
     "e2e:prebuild": "EXPO_PUBLIC_APP_VARIANT=e2e expo prebuild",
     "e2e:prebuild:clean": "EXPO_PUBLIC_APP_VARIANT=e2e expo prebuild --clean",
-    "e2e:mock-server": "tsx e2e/mock-server/server.ts",
-    "e2e:mock-server:dev": "tsx watch e2e/mock-server/server.ts"
+    "e2e:mock-server": "bun e2e/mock-server/server.ts",
+    "e2e:mock-server:dev": "bun --watch e2e/mock-server/server.ts"
   },
   "dependencies": {
     "@apollo/client": "4.1.9",
