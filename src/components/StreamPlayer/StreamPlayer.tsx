@@ -1246,8 +1246,8 @@ export const StreamPlayer = memo(
                 channel: channel || 'twitch',
                 video,
                 parent,
-                autoplay: true,
-                muted: deferOverlayUntilUserUnmute ? true : initialMuted,
+                autoplay,
+                muted: initialMuted,
               }),
             }
           : {
@@ -1255,22 +1255,15 @@ export const StreamPlayer = memo(
                 channel: channel || 'twitch',
                 video,
                 parent,
-                autoplay: true,
-                muted: deferOverlayUntilUserUnmute ? true : initialMuted,
+                autoplay,
+                muted: initialMuted,
                 debug: __DEV__,
                 width: '100%',
                 height: '100%',
               }),
               baseUrl: `https://${parent}/`,
             },
-      [
-        channel,
-        video,
-        parent,
-        initialMuted,
-        deferOverlayUntilUserUnmute,
-        useRawTwitchPlayer,
-      ],
+      [autoplay, channel, video, parent, initialMuted, useRawTwitchPlayer],
     );
 
     const showControls = useCallback(() => {

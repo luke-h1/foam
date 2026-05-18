@@ -26,7 +26,6 @@ import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as QuickActions from 'expo-quick-actions';
-import * as SplashScreen from 'expo-splash-screen';
 import * as WebBrowser from 'expo-web-browser';
 import type { RouterAction } from 'expo-quick-actions/router';
 import { useQuickActionCallback } from 'expo-quick-actions/hooks';
@@ -37,6 +36,7 @@ import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
+import BootSplash from 'react-native-bootsplash';
 import { enableFreeze } from 'react-native-screens';
 import { Providers } from '../Providers/Providers';
 import { ForceUpdateModal } from '../components/ForceUpdateModal/ForceUpdateModal';
@@ -71,12 +71,6 @@ configureReanimatedLogger({
 
 enableFreeze(true);
 
-SplashScreen.setOptions({
-  duration: 450,
-  fade: true,
-});
-
-void SplashScreen.preventAutoHideAsync();
 WebBrowser.maybeCompleteAuthSession();
 
 const criticalFontMap = {
@@ -372,7 +366,7 @@ function RootLayout() {
 
     if (!didHideSplash.current) {
       didHideSplash.current = true;
-      SplashScreen.hide();
+      void BootSplash.hide({ fade: true });
     }
 
     if (

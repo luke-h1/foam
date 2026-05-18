@@ -3,26 +3,14 @@ import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { Redirect, useRouter } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
   const router = useRouter();
 
   if (!ready) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={theme.colorGreen} />
-        <Text
-          type="sm"
-          color="gray.textLow"
-          align="center"
-          style={styles.message}
-        >
-          Starting Foam...
-        </Text>
-      </View>
-    );
+    return null;
   }
 
   if (!authState) {
