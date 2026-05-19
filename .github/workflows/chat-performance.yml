@@ -118,6 +118,7 @@ jobs:
         with:
           header: chat-performance
           path: .reassure/pr-comment.md
+          GITHUB_TOKEN: ${{ secrets.PR_COMMENT_GITHUB_TOKEN || github.token }}
 
       - name: Fail on chat performance errors
         if: steps.perf.outcome == 'failure'
