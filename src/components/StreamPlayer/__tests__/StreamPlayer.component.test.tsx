@@ -189,6 +189,44 @@ describe('StreamPlayer component messaging', () => {
     expect(mockWebViewProps.length).toBeGreaterThan(3);
   });
 
+  test('uses the raw Twitch player URL and nudges playback after load', () => {
+    const onWebViewLoaded = jest.fn();
+
+    render(
+      <StreamPlayer
+        channel="cohhcarnage"
+        height={200}
+        muted={false}
+        onWebViewLoaded={onWebViewLoaded}
+        width={300}
+      />,
+    );
+
+    expect(latestWebViewProps().source).toEqual({
+      uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
+    });
+
+    const { onLoadEnd } = latestWebViewProps();
+    act(() => {
+      (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
+        nativeEvent: {
+          url: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
+        },
+      });
+    });
+
+    expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('const shouldAutoplay = true'),
+    );
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('const targetMuted = false'),
+    );
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('video.play()'),
+    );
+  });
+
   test('keeps external auth windows inside the current WebView', () => {
     render(
       <StreamPlayer

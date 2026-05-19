@@ -576,6 +576,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onVideoAreaPress={isLandscape ? cycleLandscapeChatMode : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             onWebViewLoaded={handlePlayerLoaded}
+            showOverlayControls={false}
             streamInfo={streamInfo}
           />
         ) : null}

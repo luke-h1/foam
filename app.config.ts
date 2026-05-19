@@ -83,7 +83,7 @@ const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
-const VERSION = '0.0.39';
+const VERSION = '0.0.40';
 
 const appConfig = VARIANT_CONFIG[variant];
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;

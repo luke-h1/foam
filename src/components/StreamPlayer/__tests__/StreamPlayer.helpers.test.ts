@@ -93,7 +93,7 @@ describe('StreamPlayer helpers', () => {
         parent: 'www.twitch.tv',
       }),
     ).toBe(
-      'https://player.twitch.tv/?autoplay=true&muted=false&parent=www.twitch.tv&channel=cohhcarnage',
+      'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
     );
     expect(
       buildRawTwitchPlayerUrl({
@@ -104,7 +104,7 @@ describe('StreamPlayer helpers', () => {
         video: '123',
       }),
     ).toBe(
-      'https://player.twitch.tv/?autoplay=false&muted=true&parent=www.twitch.tv&video=123',
+      'https://player.twitch.tv/?video=123&autoplay=false&muted=true&parent=www.twitch.tv',
     );
   });
 

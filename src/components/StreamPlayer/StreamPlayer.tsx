@@ -258,7 +258,7 @@ export interface StreamPlayerProps {
   useRawTwitchPlayer?: boolean;
   /**
    * Show custom overlay controls
-   * @default true
+   * @default false
    */
   showOverlayControls?: boolean;
   /**
@@ -394,6 +394,78 @@ const TWITCH_AUTH_HELPER_SCRIPT = `
 })();
 true;
 `;
+
+function buildRawTwitchAutoplayScript(options: {
+  autoplay: boolean;
+  muted: boolean;
+}): string {
+  return `
+(() => {
+  if (window.__foamRawTwitchPlaybackBridgeStarted) {
+    return true;
+  }
+  window.__foamRawTwitchPlaybackBridgeStarted = true;
+
+  const shouldAutoplay = ${options.autoplay ? 'true' : 'false'};
+  const targetMuted = ${options.muted ? 'true' : 'false'};
+  const post = (type, payload = {}) => {
+    try {
+      window.ReactNativeWebView?.postMessage(JSON.stringify({ type, payload }));
+    } catch {}
+  };
+  const syncVideo = video => {
+    if (!video) {
+      return false;
+    }
+
+    video.setAttribute('playsinline', 'true');
+    video.setAttribute('webkit-playsinline', 'true');
+    video.muted = targetMuted;
+    if (!targetMuted) {
+      video.volume = 1;
+    }
+
+    if (!video.__foamRawTwitchPlaybackBridgeBound) {
+      video.__foamRawTwitchPlaybackBridgeBound = true;
+      video.addEventListener('play', () => post('play'));
+      video.addEventListener('playing', () => {
+        video.muted = targetMuted;
+        if (!targetMuted) {
+          video.volume = 1;
+        }
+        post('playing');
+        post('muteState', { muted: video.muted, volume: video.volume });
+      });
+      video.addEventListener('pause', () => post('pause'));
+      video.addEventListener('ended', () => post('ended'));
+      post('ready');
+    }
+
+    post('muteState', { muted: video.muted, volume: video.volume });
+    if (shouldAutoplay) {
+      const result = video.play();
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => post('playbackBlocked'));
+      }
+    }
+    return true;
+  };
+  const findAndSync = () => syncVideo(document.querySelector('video'));
+  findAndSync();
+  const observer = new MutationObserver(findAndSync);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  const startedAt = Date.now();
+  const retry = setInterval(() => {
+    const found = findAndSync();
+    if (found || Date.now() - startedAt > 10000) {
+      clearInterval(retry);
+      observer.disconnect();
+    }
+  }, 250);
+})();
+true;
+`;
+}
 
 export function isAllowedTwitchPlayerNavigation(
   url: string,
@@ -727,17 +799,19 @@ export function buildRawTwitchPlayerUrl(options: {
   parent: string;
   video?: string;
 }): string {
-  const params = new URLSearchParams({
-    autoplay: options.autoplay ? 'true' : 'false',
-    muted: options.muted ? 'true' : 'false',
-    parent: options.parent,
-  });
+  const params = new URLSearchParams();
 
   if (options.video) {
     params.set('video', options.video);
   } else {
     params.set('channel', options.channel);
   }
+
+  if (!options.autoplay) {
+    params.set('autoplay', 'false');
+  }
+  params.set('muted', options.muted ? 'true' : 'false');
+  params.set('parent', options.parent);
 
   return `https://player.twitch.tv/?${params.toString()}`;
 }
@@ -1014,7 +1088,7 @@ export const StreamPlayer = memo(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       streamProxyBaseUrl: _streamProxyBaseUrl,
       restrictWebViewNavigationToTwitchPlayer = false,
-      showOverlayControls = true,
+      showOverlayControls = false,
       streamInfo,
       useRawTwitchPlayer = true,
       video,
@@ -1460,8 +1534,8 @@ export const StreamPlayer = memo(
             channel: channelName,
             video,
             parent,
-            autoplay: true,
-            muted: sourceMuted,
+            autoplay,
+            muted: initialMuted,
           }),
         };
       }
@@ -1494,6 +1568,7 @@ export const StreamPlayer = memo(
       channel,
       video,
       parent,
+      autoplay,
       initialMuted,
       deferOverlayUntilUserUnmute,
       useRawTwitchPlayer,
@@ -1784,6 +1859,12 @@ export const StreamPlayer = memo(
               return;
             }
             if (useRawTwitchPlayer) {
+              webViewRef.current?.injectJavaScript(
+                buildRawTwitchAutoplayScript({
+                  autoplay,
+                  muted: initialMuted,
+                }),
+              );
               return;
             }
             if (needsInitRef.current) {
