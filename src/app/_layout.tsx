@@ -63,6 +63,7 @@ import { parseTwitchUrl, type TwitchLink } from '../navigators/twitchLinking';
 import { theme } from '../styles/themes';
 import { getEmojiEmotes } from '../utils/emoji/emojiEmotes';
 import { logger } from '../utils/logger';
+import { init as initSentry, wrapWithSentry } from '../lib/sentry';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -72,6 +73,7 @@ configureReanimatedLogger({
 enableFreeze(true);
 
 WebBrowser.maybeCompleteAuthSession();
+initSentry();
 
 const criticalFontMap = {
   InstrumentSerif_400Regular,
@@ -399,4 +401,4 @@ function RootLayout() {
   return <RootLayoutNav />;
 }
 
-export default RootLayout;
+export default wrapWithSentry(RootLayout);

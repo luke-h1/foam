@@ -9,6 +9,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { sentryService } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { router } from 'expo-router';
@@ -30,6 +31,9 @@ export function SettingsIndexScreen() {
   useScrollToTop(scrollRef);
 
   const { statusPageUrl, websiteUrl } = config;
+  const handleSendFeedback = () => {
+    sentryService.showFeedbackWidget();
+  };
 
   if (Platform.OS === 'ios') {
     return (
@@ -90,6 +94,9 @@ export function SettingsIndexScreen() {
               onPress={() => router.push('/tabs/settings/faq')}
             >
               FAQ
+            </Form.Link>
+            <Form.Link systemImage="paperplane" onPress={handleSendFeedback}>
+              Send Feedback
             </Form.Link>
             <Form.Link
               systemImage="checkmark.shield"
@@ -196,6 +203,12 @@ export function SettingsIndexScreen() {
             subtitle="Common questions and help information"
             icon={{ icon: 'help-circle', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/faq')}
+          />
+          <SettingsLinkRow
+            title="Send Feedback"
+            subtitle="Report a bug or share what could be better"
+            icon={{ icon: 'send', color: theme.colorTeal }}
+            onPress={handleSendFeedback}
           />
           <SettingsLinkRow
             title="Status"

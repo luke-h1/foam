@@ -1,6 +1,10 @@
+import * as Sentry from '@sentry/react-native';
 import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
+import type { ComponentType } from 'react';
 
 const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
+let didInitializeSentry = false;
+let didLogMissingDsn = false;
 
 type BreadcrumbLevel = 'info' | 'warning' | 'error';
 type MetricAttributes = Record<string, string | number | boolean>;
@@ -83,6 +87,11 @@ function createBreadcrumbMessage({
   return `${scope} ${levelLabel} ${message ?? ''}${suffix}`.trim();
 }
 
+function getSentryDsn() {
+  const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
+  return dsn && dsn.length > 0 ? dsn : undefined;
+}
+
 export const sentryService: SentryRecordLike = {
   addBreadcrumb: breadcrumb => {
     const mappedLevel =
@@ -108,7 +117,12 @@ export const sentryService: SentryRecordLike = {
     log('info', `message: ${message}${contextText}`);
   },
   showFeedbackWidget: () => {
-    log('warn', 'feedback widget disabled; metrics moved to logs');
+    try {
+      init();
+      Sentry.showFeedbackWidget();
+    } catch (error) {
+      log('error', `feedback widget failed: ${stringifyForLog(error)}`);
+    }
   },
   logger: {
     warn: (...args) => console.warn('[warn]', ...args),
@@ -131,7 +145,30 @@ export const sentryService: SentryRecordLike = {
 };
 
 export function init() {
-  log('info', `sentry disabled in ${appVariant}; using generic logs`);
+  if (didInitializeSentry) {
+    return;
+  }
+
+  const dsn = getSentryDsn();
+  if (!dsn) {
+    if (!didLogMissingDsn) {
+      log('info', `sentry disabled in ${appVariant}; using generic logs`);
+      didLogMissingDsn = true;
+    }
+    return;
+  }
+
+  Sentry.init({
+    dsn,
+    environment: appVariant,
+  });
+  didInitializeSentry = true;
+}
+
+export function wrapWithSentry<P extends Record<string, unknown>>(
+  RootComponent: ComponentType<P>,
+) {
+  return Sentry.wrap(RootComponent);
 }
 
 export function countMetric(
