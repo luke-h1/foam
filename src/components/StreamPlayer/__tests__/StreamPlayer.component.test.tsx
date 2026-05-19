@@ -8,13 +8,15 @@ jest.mock('react-native-webview', () => {
   const { View } = require('react-native');
 
   return {
-    WebView: React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
-      mockWebViewProps.push(props);
-      React.useImperativeHandle(ref, () => ({
-        injectJavaScript: mockInjectJavaScript,
-      }));
-      return React.createElement(View, { testID: 'stream-webview' });
-    }),
+    WebView: React.forwardRef(
+      (props: Record<string, unknown>, ref: unknown) => {
+        mockWebViewProps.push(props);
+        React.useImperativeHandle(ref, () => ({
+          injectJavaScript: mockInjectJavaScript,
+        }));
+        return React.createElement(View, { testID: 'stream-webview' });
+      },
+    ),
   };
 });
 
@@ -76,7 +78,10 @@ describe('StreamPlayer component messaging', () => {
 
   test('maps player bridge messages to callbacks and state updates', () => {
     const onContentGateChange = jest.fn();
+    const onEnded = jest.fn();
     const onError = jest.fn();
+    const onOffline = jest.fn();
+    const onOnline = jest.fn();
     const onPause = jest.fn();
     const onPlaybackLatencyChange = jest.fn();
     const onPlay = jest.fn();
@@ -88,7 +93,10 @@ describe('StreamPlayer component messaging', () => {
         height={200}
         muted
         onContentGateChange={onContentGateChange}
+        onEnded={onEnded}
         onError={onError}
+        onOffline={onOffline}
+        onOnline={onOnline}
         onPause={onPause}
         onPlaybackLatencyChange={onPlaybackLatencyChange}
         onPlay={onPlay}
@@ -99,8 +107,12 @@ describe('StreamPlayer component messaging', () => {
     );
 
     sendPlayerMessage('ready');
+    sendPlayerMessage('play');
     sendPlayerMessage('playing');
     sendPlayerMessage('pause');
+    sendPlayerMessage('ended');
+    sendPlayerMessage('online');
+    sendPlayerMessage('offline');
     sendPlayerMessage('contentGateDetected', { hasContentGate: true });
     sendPlayerMessage('playbackStats', { hlsLatencyBroadcaster: 3.4 });
     sendPlayerMessage('muteState', { muted: false, volume: 1 });
@@ -109,6 +121,9 @@ describe('StreamPlayer component messaging', () => {
     expect(onReady).toHaveBeenCalledTimes(1);
     expect(onPlay).toHaveBeenCalledTimes(1);
     expect(onPause).toHaveBeenCalledTimes(1);
+    expect(onEnded).toHaveBeenCalledTimes(1);
+    expect(onOnline).toHaveBeenCalledTimes(1);
+    expect(onOffline).toHaveBeenCalledTimes(1);
     expect(onContentGateChange).toHaveBeenCalledWith(true);
     expect(onPlaybackLatencyChange).toHaveBeenCalledWith(3.4);
     expect(onError).toHaveBeenCalledWith('embed failed');
@@ -116,7 +131,65 @@ describe('StreamPlayer component messaging', () => {
 
   test('remounts the WebView after Twitch auth completes', () => {
     jest.useFakeTimers();
+    const onWebViewLoaded = jest.fn();
 
+    render(
+      <StreamPlayer
+        channel="cohhcarnage"
+        height={200}
+        muted
+        onWebViewLoaded={onWebViewLoaded}
+        showOverlayControls={false}
+        width={300}
+      />,
+    );
+
+    const initialSource = latestWebViewProps().source;
+
+    sendPlayerMessage('twitchAuthComplete');
+    sendPlayerMessage('twitchAuthComplete');
+    act(() => {
+      jest.advanceTimersByTime(750);
+    });
+
+    expect(latestWebViewProps().source).toBe(initialSource);
+    expect(mockWebViewProps.length).toBeGreaterThan(1);
+
+    const propsAfterBridgeAuth = latestWebViewProps();
+    act(() => {
+      (
+        propsAfterBridgeAuth.onNavigationStateChange as (event: {
+          url: string;
+        }) => void
+      )({
+        url: 'https://www.twitch.tv/passport-callback#access_token=abc',
+      });
+    });
+    act(() => {
+      jest.advanceTimersByTime(750);
+    });
+
+    const propsAfterNavigationAuth = latestWebViewProps();
+    act(() => {
+      (
+        propsAfterNavigationAuth.onLoadEnd as (event: {
+          nativeEvent: { url: string };
+        }) => void
+      )({
+        nativeEvent: {
+          url: 'https://www.twitch.tv/passport-callback#access_token=abc',
+        },
+      });
+    });
+    act(() => {
+      jest.advanceTimersByTime(750);
+    });
+
+    expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
+    expect(mockWebViewProps.length).toBeGreaterThan(3);
+  });
+
+  test('keeps external auth windows inside the current WebView', () => {
     render(
       <StreamPlayer
         channel="cohhcarnage"
@@ -127,15 +200,27 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
-    const initialSource = latestWebViewProps().source;
+    const { onOpenWindow } = latestWebViewProps();
+    const openWindow = onOpenWindow as (event: {
+      nativeEvent: { targetUrl?: string };
+    }) => void;
 
-    sendPlayerMessage('twitchAuthComplete');
     act(() => {
-      jest.advanceTimersByTime(750);
+      openWindow({ nativeEvent: { targetUrl: '' } });
+      openWindow({ nativeEvent: { targetUrl: 'foam://stream/cohhcarnage' } });
     });
 
-    expect(latestWebViewProps().source).toBe(initialSource);
-    expect(mockWebViewProps.length).toBeGreaterThan(1);
+    expect(mockInjectJavaScript).not.toHaveBeenCalled();
+
+    act(() => {
+      openWindow({
+        nativeEvent: { targetUrl: 'https://www.twitch.tv/login' },
+      });
+    });
+
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      'window.location.href = "https://www.twitch.tv/login"; true;',
+    );
   });
 
   test('blocks app navigation while allowing iframe navigation', () => {
@@ -153,25 +238,31 @@ describe('StreamPlayer component messaging', () => {
     const { onShouldStartLoadWithRequest } = latestWebViewProps();
 
     expect(
-      (onShouldStartLoadWithRequest as (request: {
-        isTopFrame?: boolean;
-        url: string;
-      }) => boolean)({ url: 'foam://stream/cohhcarnage' }),
+      (
+        onShouldStartLoadWithRequest as (request: {
+          isTopFrame?: boolean;
+          url: string;
+        }) => boolean
+      )({ url: 'foam://stream/cohhcarnage' }),
     ).toBe(false);
     expect(
-      (onShouldStartLoadWithRequest as (request: {
-        isTopFrame?: boolean;
-        url: string;
-      }) => boolean)({
+      (
+        onShouldStartLoadWithRequest as (request: {
+          isTopFrame?: boolean;
+          url: string;
+        }) => boolean
+      )({
         isTopFrame: false,
         url: 'https://evil.example/frame',
       }),
     ).toBe(true);
     expect(
-      (onShouldStartLoadWithRequest as (request: {
-        isTopFrame?: boolean;
-        url: string;
-      }) => boolean)({
+      (
+        onShouldStartLoadWithRequest as (request: {
+          isTopFrame?: boolean;
+          url: string;
+        }) => boolean
+      )({
         isTopFrame: true,
         url: 'https://evil.example/top',
       }),

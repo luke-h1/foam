@@ -13,6 +13,7 @@ describe('StreamPlayer helpers', () => {
   });
 
   test('allows only Twitch, parent, and hosted player navigation targets', () => {
+    expect(isAllowedTwitchPlayerNavigation('', 'www.twitch.tv')).toBe(false);
     expect(
       isAllowedTwitchPlayerNavigation(
         'https://id.twitch.tv/oauth2/authorize',
@@ -30,6 +31,13 @@ describe('StreamPlayer helpers', () => {
       isAllowedTwitchPlayerNavigation(
         'https://evil.example/player',
         'www.twitch.tv',
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedTwitchPlayerNavigation(
+        'https://foo.example/player',
+        'www.twitch.tv',
+        'not a url',
       ),
     ).toBe(false);
   });
@@ -64,6 +72,14 @@ describe('StreamPlayer helpers', () => {
         debug: false,
         muted: true,
         playerWebsiteUrl: 'not a url',
+      }),
+    ).toBeNull();
+    expect(
+      buildHostedTwitchPlayerUrl({
+        autoplay: true,
+        channel: 'cohhcarnage',
+        debug: false,
+        muted: true,
       }),
     ).toBeNull();
   });

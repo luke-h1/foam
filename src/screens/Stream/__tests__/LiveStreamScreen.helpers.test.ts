@@ -2,9 +2,12 @@ jest.mock('@app/components/Chat/Chat', () => ({
   Chat: () => null,
 }));
 
-jest.mock('@app/components/ChannelPredictionCard/ChannelPredictionCard', () => ({
-  ChannelPredictionCard: () => null,
-}));
+jest.mock(
+  '@app/components/ChannelPredictionCard/ChannelPredictionCard',
+  () => ({
+    ChannelPredictionCard: () => null,
+  }),
+);
 
 jest.mock('@app/components/ChannelPollCard/ChannelPollCard', () => ({
   ChannelPollCard: () => null,

@@ -209,6 +209,20 @@ describe('chat performance comment workflow', () => {
     );
   });
 
+  test('labels the spread between runs in plain language', () => {
+    expect(
+      buildCurrentTable([
+        {
+          name: 'renders rows',
+          type: 'render',
+          runs: 3,
+          meanDuration: 12.345,
+          stdevDuration: 1.234,
+        },
+      ]),
+    ).toContain('| Scenario | Mean | Typical time swing | Count |');
+  });
+
   test('builds a failure comment with current measurements and report details', () => {
     expect(
       buildChatPerformanceComment({

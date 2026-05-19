@@ -39,14 +39,14 @@ export function buildCurrentTable(entries: ReassureEntry[]): string {
 
   const rows = entries
     .map(entry => {
-      const stdev = entry.stdevDuration ?? 0;
+      const runVariation = entry.stdevDuration ?? 0;
       const count = entry.meanCount ?? 1;
-      return `| ${entry.name} | ${formatMs(entry.meanDuration)} | ${formatMs(stdev)} | ${count.toFixed(2)} |`;
+      return `| ${entry.name} | ${formatMs(entry.meanDuration)} | ${formatMs(runVariation)} | ${count.toFixed(2)} |`;
     })
     .join('\n');
 
   return [
-    '| Scenario | Mean | Std dev | Count |',
+    '| Scenario | Mean | Typical time swing | Count |',
     '|---|---:|---:|---:|',
     rows,
   ].join('\n');
