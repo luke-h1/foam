@@ -13,9 +13,12 @@ import {
   UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
 import type {
+  EmoteImageVariantSet,
+  EmoteImageVariants,
   SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
 } from '@app/types/emote';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
 import { sevenTvApi } from './api';
 import { sevenTvV4Client } from './gql/client';
@@ -218,6 +221,73 @@ function pickBestV3File(files: SevenTvFile[]): SevenTvFile | undefined {
   );
 }
 
+function fileScale(file: SevenTvFile): '1x' | '2x' | '3x' | '4x' | null {
+  const match = /^([1-4])x\./.exec(file.name);
+  if (!match?.[1]) {
+    return null;
+  }
+  return `${match[1]}x` as '1x' | '2x' | '3x' | '4x';
+}
+
+function buildV3ImageVariants(
+  emoteId: string,
+  files: SevenTvFile[],
+): EmoteImageVariants {
+  const variants = files.reduce<{
+    animated: EmoteImageVariantSet;
+    static: EmoteImageVariantSet;
+  }>(
+    (variants, file) => {
+      const scale = fileScale(file);
+      if (!scale) {
+        return variants;
+      }
+
+      const url = `https://cdn.7tv.app/emote/${emoteId}/${file.name}`;
+      if (file.frame_count > 1) {
+        variants.animated[scale] = url;
+      } else {
+        variants.static[scale] = url;
+      }
+
+      if (file.static_name) {
+        variants.static[scale] =
+          `https://cdn.7tv.app/emote/${emoteId}/${file.static_name}`;
+      }
+
+      return variants;
+    },
+    { animated: {}, static: {} },
+  );
+
+  return createEmoteImageVariants(variants);
+}
+
+function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
+  const variants = images.reduce<{
+    animated: EmoteImageVariantSet;
+    static: EmoteImageVariantSet;
+  }>(
+    (variants, image) => {
+      const scale = `${image.scale}x` as '1x' | '2x' | '3x' | '4x';
+      if (!['1x', '2x', '3x', '4x'].includes(scale)) {
+        return variants;
+      }
+
+      if (image.frameCount > 1) {
+        variants.animated[scale] = image.url;
+      } else {
+        variants.static[scale] = image.url;
+      }
+
+      return variants;
+    },
+    { animated: {}, static: {} },
+  );
+
+  return createEmoteImageVariants(variants);
+}
+
 function pickBestStaticImage(images: readonly Image[]): Image | undefined {
   const scales = [4, 3, 2, 1];
 
@@ -291,6 +361,10 @@ export const sevenTvService = {
     return result.emotes.map(emote => {
       const { owner } = emote.data;
       const bestFile = pickBestV3File(emote.data.host.files);
+      const imageVariants = buildV3ImageVariants(
+        emote.id,
+        emote.data.host.files,
+      );
 
       return {
         name: emote.name,
@@ -299,6 +373,7 @@ export const sevenTvService = {
         static_url: bestFile?.static_name
           ? `https://cdn.7tv.app/emote/${emote.id}/${bestFile.static_name}`
           : undefined,
+        image_variants: imageVariants,
         flags: emote.data.flags,
         original_name: emote.data.name,
         creator: (owner?.display_name || owner?.username) ?? null,
@@ -382,6 +457,7 @@ export const sevenTvService = {
 
       const bestImage = pickBestImage(emote.images);
       const bestStaticImage = pickBestStaticImage(emote.images);
+      const imageVariants = buildV4ImageVariants(emote.images);
 
       const imgScale = bestImage?.scale ?? 1;
       const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
@@ -392,6 +468,7 @@ export const sevenTvService = {
         id: emote.id,
         url: bestImage?.url ?? '',
         static_url: bestStaticImage?.url,
+        image_variants: imageVariants,
         flags: emote.flags.animated ? 1 : 0,
         original_name: emote.defaultName,
         creator: emote.owner?.mainConnection?.platformDisplayName ?? null,

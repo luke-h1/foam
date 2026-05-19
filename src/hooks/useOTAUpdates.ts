@@ -178,7 +178,6 @@ export function useOTAUpdates() {
       'Update Available',
       'A new version has been downloaded and is ready to install. Relaunch now?',
       [
-        { text: 'Later', style: 'cancel' },
         {
           text: 'Relaunch',
           style: 'default',
@@ -204,6 +203,7 @@ export function useOTAUpdates() {
           },
         },
       ],
+      { cancelable: false },
     );
   }, [applyUpdate, isProduction]);
 

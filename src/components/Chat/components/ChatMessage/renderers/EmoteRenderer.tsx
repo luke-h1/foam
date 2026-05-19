@@ -34,11 +34,12 @@ export const EmoteRenderer = memo(
     const displayUrl = useMemo(
       () =>
         getDisplayEmoteUrl({
+          image_variants: part.image_variants,
           url: part.url,
           static_url: part.static_url,
           disableAnimations,
         }),
-      [disableAnimations, part.static_url, part.url],
+      [disableAnimations, part.image_variants, part.static_url, part.url],
     );
 
     if (!displayUrl) {

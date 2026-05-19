@@ -1,0 +1,4 @@
+.vercel
+.astro
+dist
+node_modules

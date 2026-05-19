@@ -1,5 +1,6 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
+import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '../logger';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
@@ -163,6 +164,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                     Partial<SanitisedEmote>,
                     | 'creator'
                     | 'emote_link'
+                    | 'image_variants'
                     | 'original_name'
                     | 'site'
                     | 'static_url'
@@ -207,16 +209,13 @@ const DELIMITER_REGEX = /[\s,.!?()[\]{}<>:;'"\\]/;
 export function findEmotesInText(
   text: string,
   emoteMap: Map<string, SanitisedEmote>,
+  sortedEmoteNames = getSortedEmoteNames(emoteMap),
 ): FindEmotesInTextReturn[] {
   const foundEmotes: {
     emote: SanitisedEmote;
     start: number;
     end: number;
   }[] = [];
-
-  const sortedEmoteNames = Array.from(emoteMap.keys()).sort(
-    (a, b) => b.length - a.length,
-  );
 
   let currentIndex = 0;
 
@@ -334,6 +333,10 @@ export function findEmotesInText(
   return foundEmotes;
 }
 
+function getSortedEmoteNames(emoteMap: Map<string, SanitisedEmote>): string[] {
+  return Array.from(emoteMap.keys()).sort((a, b) => b.length - a.length);
+}
+
 export const SEVENTV_EMOTE_LINK_REGEX =
   /https?:\/\/(?:www\.)?7tv\.app\/emotes\/([a-zA-Z0-9]+)/i;
 export const TWITCH_CLIP_REGEX =
@@ -427,35 +430,37 @@ export function replaceTextWithEmotes({
 
   // Add sender-scoped emotes first (highest priority).
   sevenTvPersonalEmotes.forEach(emote => {
-    emoteMap.set(emote.name, emote);
+    emoteMap.set(emote.name, withResolvedEmoteImageVariants(emote));
   });
 
   twitchSubscriberEmotes.forEach(emote => {
-    emoteMap.set(emote.name, emote);
+    emoteMap.set(emote.name, withResolvedEmoteImageVariants(emote));
   });
 
   // Add channel emotes, only if not already set by personal emotes
   channelEmotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, emote);
+      emoteMap.set(emote.name, withResolvedEmoteImageVariants(emote));
     }
   });
 
   // add global emotes, only if not already set by personal or channel emotes
   globalEmotes.forEach(emote => {
+    const resolvedEmote = withResolvedEmoteImageVariants(emote);
     if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, emote);
+      emoteMap.set(emote.name, resolvedEmote);
     }
 
-    if (emote.site === 'Emoji') {
-      const emojiHexcode = emote.emoji_hexcode ?? emote.id;
+    if (resolvedEmote.site === 'Emoji') {
+      const emojiHexcode = resolvedEmote.emoji_hexcode ?? resolvedEmote.id;
       if (!emojiMap.has(emojiHexcode)) {
-        emojiMap.set(emojiHexcode, emote);
+        emojiMap.set(emojiHexcode, resolvedEmote);
       }
     }
   });
 
   const sanitizedInput = sanitizeInput(inputString);
+  const sortedEmoteNames = getSortedEmoteNames(emoteMap);
 
   try {
     const splitParts = splitTextWithTwemoji(sanitizedInput);
@@ -475,6 +480,7 @@ export function replaceTextWithEmotes({
             content: foundEmote.site === 'Emoji' ? emoji : foundEmote.name,
             creator: foundEmote.creator,
             emote_link: foundEmote.emote_link,
+            image_variants: foundEmote.image_variants,
             original_name:
               foundEmote.site === 'Emoji' ? emoji : foundEmote.original_name,
             site: foundEmote.site,
@@ -513,6 +519,7 @@ export function replaceTextWithEmotes({
                 content: emoteInMention.name,
                 creator: emoteInMention.creator,
                 emote_link: emoteInMention.emote_link,
+                image_variants: emoteInMention.image_variants,
                 original_name: emoteInMention.original_name,
                 static_url: emoteInMention.static_url,
                 url: emoteInMention.url,
@@ -558,7 +565,11 @@ export function replaceTextWithEmotes({
                   ...directEmote,
                 });
               } else {
-                const foundEmotes = findEmotesInText(word, emoteMap);
+                const foundEmotes = findEmotesInText(
+                  word,
+                  emoteMap,
+                  sortedEmoteNames,
+                );
                 if (foundEmotes.length > 0) {
                   let lastIndex = 0;
                   foundEmotes.forEach(({ emote, start, end }) => {

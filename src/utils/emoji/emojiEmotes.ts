@@ -4,6 +4,7 @@ import emojibaseShortcodes from 'emojibase-data/en/shortcodes/emojibase.json';
 import githubShortcodes from 'emojibase-data/en/shortcodes/github.json';
 
 import type { EmojiSanitisedEmote } from '@app/types/emote';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 
 export type EmojiStyle = 'twitter' | 'google';
 
@@ -63,6 +64,14 @@ function createEmojiEmote(
 ): EmojiSanitisedEmote {
   const shortcode = `:${alias}:`;
   const url = EMOJI_CDN_BY_STYLE[style](hexcode);
+  const imageVariants = createEmoteImageVariants({
+    animated: {
+      '4x': url,
+    },
+    static: {
+      '4x': url,
+    },
+  });
 
   return {
     id: `${hexcode}:${alias}`,
@@ -73,6 +82,7 @@ function createEmojiEmote(
     emote_link: '',
     url,
     static_url: url,
+    image_variants: imageVariants,
     site: 'Emoji',
     width: 72,
     height: 72,

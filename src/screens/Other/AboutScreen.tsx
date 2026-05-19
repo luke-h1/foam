@@ -35,7 +35,12 @@ function AboutSection({ title, footer, children }: AboutSectionProps) {
   return (
     <View style={styles.section}>
       {title ? (
-        <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
+        <Text
+          type="xs"
+          weight="semibold"
+          color="gray.textLow"
+          style={styles.sectionTitle}
+        >
           {title}
         </Text>
       ) : null}
@@ -48,16 +53,11 @@ function AboutSection({ title, footer, children }: AboutSectionProps) {
 function InfoRow({ label, value }: InfoRowProps) {
   return (
     <View style={styles.row}>
-      <Text type="sm" weight="medium" style={styles.rowLabel}>
+      <Text weight="semibold" color="gray" style={styles.rowLabel}>
         {label}
       </Text>
       {typeof value === 'string' || typeof value === 'number' ? (
-        <Text
-          type="xs"
-          color="gray.textLow"
-          numberOfLines={1}
-          style={styles.rowValue}
-        >
+        <Text type="xs" color="gray.textLow" selectable>
           {value}
         </Text>
       ) : (
@@ -72,7 +72,7 @@ function ActionRow({ title, icon, onPress }: ActionRowProps) {
     <PressableArea style={styles.pressableFill} onPress={onPress}>
       <View style={styles.actionRow}>
         <Icon icon={icon} size={20} color={theme.colorWhite} />
-        <Text type="sm" weight="medium" style={styles.actionLabel}>
+        <Text weight="semibold" color="gray" style={styles.actionLabel}>
           {title}
         </Text>
         <Icon icon="chevron-right" size={18} color={theme.colorGreyAlpha} />
@@ -114,10 +114,16 @@ export function AboutScreen() {
         <AboutSection title="Built For">
           <InfoRow
             label="Chat"
-            value="Emotes, cosmetics and desktop like chat"
+            value="Native feeling chat with 7TV, BTTV and FFZ support. Inspired by projects such as Chatterino and the 7TV Chrome extension"
           />
-          <InfoRow label="Discovery" value="Find and discover new streamers" />
-          <InfoRow label="Viewing" value="Viewing without clutter" />
+          <InfoRow
+            label="Discovery"
+            value="Find and discover new streamers without the clutter"
+          />
+          <InfoRow
+            label="Viewing"
+            value="A viewing experience to rival desktop"
+          />
         </AboutSection>
 
         <AboutSection title="Resources">
@@ -151,7 +157,6 @@ export function AboutScreen() {
 
 const styles = StyleSheet.create({
   actionLabel: {
-    color: theme.colorWhite,
     flex: 1,
   },
   actionRow: {
@@ -193,24 +198,16 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   row: {
-    alignItems: 'center',
     borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: theme.space16,
+    gap: theme.space8,
     paddingHorizontal: theme.space16,
     paddingVertical: 14,
   },
   rowLabel: {
-    color: theme.colorWhite,
-    flex: 1,
-  },
-  rowValue: {
-    maxWidth: '58%',
-    textAlign: 'right',
+    minWidth: 0,
   },
   rowValueWrapper: {
-    alignItems: 'flex-end',
     flexShrink: 1,
   },
   scrollContent: {
@@ -233,7 +230,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space8,
   },
   sectionTitle: {
-    color: theme.colorGreyAlpha,
     letterSpacing: 0.5,
     paddingHorizontal: theme.space16,
     textTransform: 'uppercase',

@@ -4,6 +4,7 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView } from 'expo-symbols';
@@ -44,11 +45,12 @@ export function EmoteActionSheet({
   const displayUrl = useMemo(
     () =>
       getDisplayEmoteUrl({
+        image_variants: part.image_variants,
         url: part.url,
         static_url: part.static_url,
         disableAnimations,
       }),
-    [disableAnimations, part.static_url, part.url],
+    [disableAnimations, part.image_variants, part.static_url, part.url],
   );
   const previewPart = useMemo(
     () =>
@@ -91,6 +93,38 @@ export function EmoteActionSheet({
     });
   }, [closeSheet, displayUrl]);
 
+  const copy2xImageUrl = useCallback(() => {
+    closeSheet();
+    const url = pickEmoteVariantUrl({
+      fallbackUrl: displayUrl,
+      imageVariants: part.image_variants,
+      preferredKind: disableAnimations ? 'static' : 'animated',
+      preferredScale: '2x',
+    });
+    if (!url) {
+      return;
+    }
+    void Clipboard.setStringAsync(url).then(() => {
+      toast.success('2x emote URL copied to clipboard');
+    });
+  }, [closeSheet, disableAnimations, displayUrl, part.image_variants]);
+
+  const copy4xImageUrl = useCallback(() => {
+    closeSheet();
+    const url = pickEmoteVariantUrl({
+      fallbackUrl: displayUrl,
+      imageVariants: part.image_variants,
+      preferredKind: disableAnimations ? 'static' : 'animated',
+      preferredScale: '4x',
+    });
+    if (!url) {
+      return;
+    }
+    void Clipboard.setStringAsync(url).then(() => {
+      toast.success('4x emote URL copied to clipboard');
+    });
+  }, [closeSheet, disableAnimations, displayUrl, part.image_variants]);
+
   const handlePreview = useCallback(() => {
     closeSheet();
     onPress?.(previewPart);
@@ -114,6 +148,20 @@ export function EmoteActionSheet({
           visible: Boolean(displayUrl),
         },
         {
+          id: 'copy-url-2x' as const,
+          icon: 'copy',
+          label: 'Copy 2x image URL',
+          onPress: copy2xImageUrl,
+          visible: Boolean(part.image_variants),
+        },
+        {
+          id: 'copy-url-4x' as const,
+          icon: 'copy',
+          label: 'Copy 4x image URL',
+          onPress: copy4xImageUrl,
+          visible: Boolean(part.image_variants),
+        },
+        {
           id: 'preview' as const,
           icon: 'external-link',
           label: 'Preview',
@@ -121,7 +169,16 @@ export function EmoteActionSheet({
           visible: Boolean(onPress),
         },
       ].filter(action => action.visible),
-    [copyImageUrl, copyName, displayUrl, handlePreview, onPress],
+    [
+      copy2xImageUrl,
+      copy4xImageUrl,
+      copyImageUrl,
+      copyName,
+      displayUrl,
+      handlePreview,
+      onPress,
+      part.image_variants,
+    ],
   );
 
   const previewSubtitle = useMemo(() => {
@@ -141,10 +198,19 @@ export function EmoteActionSheet({
   }, [part.creator, part.site]);
 
   const getSFSymbolName = useCallback(
-    (actionId: 'copy-name' | 'copy-url' | 'preview') => {
+    (
+      actionId:
+        | 'copy-name'
+        | 'copy-url'
+        | 'copy-url-2x'
+        | 'copy-url-4x'
+        | 'preview',
+    ) => {
       switch (actionId) {
         case 'copy-name':
         case 'copy-url':
+        case 'copy-url-2x':
+        case 'copy-url-4x':
           return 'doc.on.doc' as const;
         case 'preview':
           return 'arrow.up.right.square' as const;
@@ -187,6 +253,7 @@ export function EmoteActionSheet({
                       trackLoadTime
                       trackLoadContext="chat.emote-action-sheet"
                       source={displayUrl}
+                      cacheVariant="emote"
                       style={styles.previewImage}
                       contentFit="contain"
                       transition={50}

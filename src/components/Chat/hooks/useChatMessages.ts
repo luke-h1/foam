@@ -131,7 +131,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     [flushBuffer],
   );
 
-  const handleNewMessage = useCallback(
+  const enqueueMessage = useCallback(
     (newMessage: AnyMessage, options?: HandleNewMessageOptions) => {
       const key = getBufferedMessageKey(newMessage);
 
@@ -184,6 +184,13 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       startFlushTimer(flushDelay);
     },
     [isAtBottomRef, isScrollingToBottomRef, startFlushTimer],
+  );
+
+  const handleNewMessage = useCallback(
+    (newMessage: AnyMessage, options?: HandleNewMessageOptions) => {
+      enqueueMessage(newMessage, options);
+    },
+    [enqueueMessage],
   );
 
   const forceFlush = useCallback(() => {

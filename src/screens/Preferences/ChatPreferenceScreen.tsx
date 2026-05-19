@@ -9,7 +9,7 @@ import {
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Switch } from '@app/components/Switch/Switch';
-import { Text } from '@app/components/ui/Text/Text';
+import { Text, type TextType } from '@app/components/ui/Text/Text';
 import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -29,25 +29,84 @@ const DENSITY_OPTIONS = [
 ] as const;
 const DENSITY_LABELS = DENSITY_OPTIONS.map(option => option.label);
 const EMOJI_PREVIEW_SHORTCODES = [':joy:', ':heart:', ':fire:'];
+const HISTORICAL_RECENT_MESSAGES_EXPLAINER =
+  'Loads historical recent messages in chat through the third-party API service at recent-messages.robotty.de.';
+type ContextPreviewValue = {
+  chatTimestamps: boolean;
+  highlightOwnMentions: boolean;
+  showInlineReplyContext: boolean;
+  showUnreadJumpPill: boolean;
+};
+type ProviderPreviewValue = {
+  show7TvEmotes: boolean;
+  show7tvBadges: boolean;
+  showBttvEmotes: boolean;
+  showBttvBadges: boolean;
+  showFFzEmotes: boolean;
+  showFFzBadges: boolean;
+  showTwitchEmotes: boolean;
+  showTwitchBadges: boolean;
+};
+
+function sameContextPreview(
+  left: ContextPreviewValue,
+  right: ContextPreviewValue,
+) {
+  return (
+    left.chatTimestamps === right.chatTimestamps &&
+    left.highlightOwnMentions === right.highlightOwnMentions &&
+    left.showInlineReplyContext === right.showInlineReplyContext &&
+    left.showUnreadJumpPill === right.showUnreadJumpPill
+  );
+}
+
+function sameProviderPreview(
+  left: ProviderPreviewValue,
+  right: ProviderPreviewValue,
+) {
+  return (
+    left.show7TvEmotes === right.show7TvEmotes &&
+    left.show7tvBadges === right.show7tvBadges &&
+    left.showBttvEmotes === right.showBttvEmotes &&
+    left.showBttvBadges === right.showBttvBadges &&
+    left.showFFzEmotes === right.showFFzEmotes &&
+    left.showFFzBadges === right.showFFzBadges &&
+    left.showTwitchEmotes === right.showTwitchEmotes &&
+    left.showTwitchBadges === right.showTwitchBadges
+  );
+}
 
 function IosToggleRow({
   custom: _custom,
   label,
+  subtitle,
   value,
   onValueChange,
 }: {
   custom?: true;
   label: string;
+  subtitle?: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
 }) {
   return (
     <View style={styles.iosToggleRow}>
-      <Text color="gray" style={styles.iosToggleLabel}>
-        {label}
-      </Text>
+      <View style={styles.iosToggleCopy}>
+        <Text color="gray" style={styles.iosToggleLabel} weight="semibold">
+          {label}
+        </Text>
+        {subtitle ? (
+          <Text color="gray.textLow" style={styles.iosToggleSubtitle} type="xs">
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
       <View style={styles.iosSwitchSlot}>
-        <Switch value={value} onValueChange={onValueChange} />
+        <Switch
+          accessibilityLabel={label}
+          value={value}
+          onValueChange={onValueChange}
+        />
       </View>
     </View>
   );
@@ -82,6 +141,25 @@ export function ChatPreferenceScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const [previewDensity, setPreviewDensity] = useState(chatDensity);
   const [previewEmojiStyle, setPreviewEmojiStyle] = useState(emojiStyle);
+  const [previewContext, setPreviewContext] = useState<ContextPreviewValue>({
+    chatTimestamps,
+    highlightOwnMentions,
+    showInlineReplyContext,
+    showUnreadJumpPill,
+  });
+  const [previewDisableEmoteAnimations, setPreviewDisableEmoteAnimations] =
+    useState(disableEmoteAnimations);
+  const [previewProviders, setPreviewProviders] =
+    useState<ProviderPreviewValue>({
+      show7TvEmotes,
+      show7tvBadges,
+      showBttvEmotes,
+      showBttvBadges,
+      showFFzEmotes,
+      showFFzBadges,
+      showTwitchEmotes,
+      showTwitchBadges,
+    });
   const densityIndex = previewDensity === 'compact' ? 1 : 0;
   const emojiLabels = EMOJI_STYLE_OPTIONS.map(option => option.label);
   const emojiIndex = Math.max(
@@ -102,16 +180,16 @@ export function ChatPreferenceScreen() {
   }, [previewEmojiStyle]);
   const contextPreviewValue = useMemo(
     () => ({
-      chatTimestamps,
-      highlightOwnMentions,
-      showInlineReplyContext,
-      showUnreadJumpPill,
+      chatTimestamps: previewContext.chatTimestamps,
+      highlightOwnMentions: previewContext.highlightOwnMentions,
+      showInlineReplyContext: previewContext.showInlineReplyContext,
+      showUnreadJumpPill: previewContext.showUnreadJumpPill,
     }),
     [
-      chatTimestamps,
-      highlightOwnMentions,
-      showInlineReplyContext,
-      showUnreadJumpPill,
+      previewContext.chatTimestamps,
+      previewContext.highlightOwnMentions,
+      previewContext.showInlineReplyContext,
+      previewContext.showUnreadJumpPill,
     ],
   );
 
@@ -122,6 +200,90 @@ export function ChatPreferenceScreen() {
   useEffect(() => {
     setPreviewEmojiStyle(emojiStyle);
   }, [emojiStyle]);
+
+  useEffect(() => {
+    const nextContext = {
+      chatTimestamps,
+      highlightOwnMentions,
+      showInlineReplyContext,
+      showUnreadJumpPill,
+    };
+    setPreviewContext(previous =>
+      sameContextPreview(previous, nextContext) ? previous : nextContext,
+    );
+  }, [
+    chatTimestamps,
+    highlightOwnMentions,
+    showInlineReplyContext,
+    showUnreadJumpPill,
+  ]);
+
+  useEffect(() => {
+    setPreviewDisableEmoteAnimations(disableEmoteAnimations);
+  }, [disableEmoteAnimations]);
+
+  useEffect(() => {
+    const nextProviders = {
+      show7TvEmotes,
+      show7tvBadges,
+      showBttvEmotes,
+      showBttvBadges,
+      showFFzEmotes,
+      showFFzBadges,
+      showTwitchEmotes,
+      showTwitchBadges,
+    };
+    setPreviewProviders(previous =>
+      sameProviderPreview(previous, nextProviders) ? previous : nextProviders,
+    );
+  }, [
+    show7TvEmotes,
+    show7tvBadges,
+    showBttvEmotes,
+    showBttvBadges,
+    showFFzEmotes,
+    showFFzBadges,
+    showTwitchEmotes,
+    showTwitchBadges,
+  ]);
+
+  const handleContextToggle = useCallback(
+    (key: keyof ContextPreviewValue, value: boolean) => {
+      setPreviewContext(previous =>
+        previous[key] === value
+          ? previous
+          : {
+              ...previous,
+              [key]: value,
+            },
+      );
+      update({ [key]: value });
+    },
+    [update],
+  );
+
+  const handleProviderToggle = useCallback(
+    (key: keyof ProviderPreviewValue, value: boolean) => {
+      setPreviewProviders(previous =>
+        previous[key] === value
+          ? previous
+          : {
+              ...previous,
+              [key]: value,
+            },
+      );
+      update({ [key]: value });
+    },
+    [update],
+  );
+
+  const handleDisableEmoteAnimationsToggle = useCallback(
+    (value: boolean) => {
+      setPreviewDisableEmoteAnimations(value);
+      update({ disableEmoteAnimations: value });
+    },
+    [update],
+  );
 
   const handleDensitySelect = useCallback(
     (nextDensity: 'comfortable' | 'compact') => {
@@ -205,14 +367,14 @@ export function ChatPreferenceScreen() {
             <Form.FormItem style={styles.iosControlItem}>
               <View style={styles.iosControlBody}>
                 <View style={styles.controlCopy}>
-                  <Form.Text style={styles.iosControlTitle}>
+                  <Text color="gray" weight="semibold">
                     Message Density
-                  </Form.Text>
-                  <Form.Text style={styles.iosControlSubtitle}>
+                  </Text>
+                  <Text color="gray.textLow" type="xs">
                     {previewDensity === 'compact'
                       ? 'Tighter rows for faster scanning'
-                      : 'Roomier rows with more breathing space'}
-                  </Form.Text>
+                      : 'Comfy rows with more breathing space'}
+                  </Text>
                 </View>
                 <SegmentedControl
                   appearance="dark"
@@ -232,12 +394,12 @@ export function ChatPreferenceScreen() {
             <Form.FormItem style={styles.iosControlItem}>
               <View style={styles.iosControlBody}>
                 <View style={styles.controlCopy}>
-                  <Form.Text style={styles.iosControlTitle}>
+                  <Text color="gray" weight="semibold">
                     Emoji Set
-                  </Form.Text>
-                  <Form.Text style={styles.iosControlSubtitle}>
+                  </Text>
+                  <Text color="gray.textLow" type="xs">
                     Changes emoji images in existing chat messages
-                  </Form.Text>
+                  </Text>
                 </View>
                 <SegmentedControl
                   appearance="dark"
@@ -257,37 +419,44 @@ export function ChatPreferenceScreen() {
             <IosToggleRow
               custom
               label="Historical Recent Messages"
+              subtitle={HISTORICAL_RECENT_MESSAGES_EXPLAINER}
               value={showRecentMessages !== false}
               onValueChange={value => update({ showRecentMessages: value })}
             />
             <IosToggleRow
               custom
               label="Show Timestamps"
-              value={chatTimestamps}
-              onValueChange={value => update({ chatTimestamps: value })}
+              value={previewContext.chatTimestamps}
+              onValueChange={value =>
+                handleContextToggle('chatTimestamps', value)
+              }
             />
             <IosToggleRow
               custom
               label="Highlight Own Mentions"
-              value={highlightOwnMentions}
-              onValueChange={value => update({ highlightOwnMentions: value })}
+              value={previewContext.highlightOwnMentions}
+              onValueChange={value =>
+                handleContextToggle('highlightOwnMentions', value)
+              }
             />
             <IosToggleRow
               custom
               label="Inline Reply Context"
-              value={showInlineReplyContext}
-              onValueChange={value => update({ showInlineReplyContext: value })}
+              value={previewContext.showInlineReplyContext}
+              onValueChange={value =>
+                handleContextToggle('showInlineReplyContext', value)
+              }
             />
             <IosToggleRow
               custom
               label="Show Jump Pill"
-              value={showUnreadJumpPill}
-              onValueChange={value => update({ showUnreadJumpPill: value })}
+              value={previewContext.showUnreadJumpPill}
+              onValueChange={value =>
+                handleContextToggle('showUnreadJumpPill', value)
+              }
             />
             <View style={styles.iosPreviewItem}>
-              <Text type="xs" color="gray.textLow" weight="semibold">
-                Preview
-              </Text>
+              <PreviewLabel />
               <ChatPreferencePreview
                 variant="context"
                 value={contextPreviewValue}
@@ -298,17 +467,21 @@ export function ChatPreferenceScreen() {
           <Form.Section title="7TV">
             <ProviderTogglePreviewItem
               custom
-              enabled={show7TvEmotes}
+              enabled={previewProviders.show7TvEmotes}
               label="Emotes"
-              onValueChange={value => update({ show7TvEmotes: value })}
+              onValueChange={value =>
+                handleProviderToggle('show7TvEmotes', value)
+              }
               provider="7tv"
               variant="emotes"
             />
             <ProviderTogglePreviewItem
               custom
-              enabled={show7tvBadges}
+              enabled={previewProviders.show7tvBadges}
               label="Badges"
-              onValueChange={value => update({ show7tvBadges: value })}
+              onValueChange={value =>
+                handleProviderToggle('show7tvBadges', value)
+              }
               provider="7tv"
               variant="badges"
             />
@@ -317,17 +490,21 @@ export function ChatPreferenceScreen() {
           <Form.Section title="BTTV">
             <ProviderTogglePreviewItem
               custom
-              enabled={showBttvEmotes}
+              enabled={previewProviders.showBttvEmotes}
               label="Emotes"
-              onValueChange={value => update({ showBttvEmotes: value })}
+              onValueChange={value =>
+                handleProviderToggle('showBttvEmotes', value)
+              }
               provider="bttv"
               variant="emotes"
             />
             <ProviderTogglePreviewItem
               custom
-              enabled={showBttvBadges}
+              enabled={previewProviders.showBttvBadges}
               label="Badges"
-              onValueChange={value => update({ showBttvBadges: value })}
+              onValueChange={value =>
+                handleProviderToggle('showBttvBadges', value)
+              }
               provider="bttv"
               variant="badges"
             />
@@ -336,17 +513,21 @@ export function ChatPreferenceScreen() {
           <Form.Section title="FFZ">
             <ProviderTogglePreviewItem
               custom
-              enabled={showFFzEmotes}
+              enabled={previewProviders.showFFzEmotes}
               label="Emotes"
-              onValueChange={value => update({ showFFzEmotes: value })}
+              onValueChange={value =>
+                handleProviderToggle('showFFzEmotes', value)
+              }
               provider="ffz"
               variant="emotes"
             />
             <ProviderTogglePreviewItem
               custom
-              enabled={showFFzBadges}
+              enabled={previewProviders.showFFzBadges}
               label="Badges"
-              onValueChange={value => update({ showFFzBadges: value })}
+              onValueChange={value =>
+                handleProviderToggle('showFFzBadges', value)
+              }
               provider="ffz"
               variant="badges"
             />
@@ -355,32 +536,39 @@ export function ChatPreferenceScreen() {
           <Form.Section title="Twitch">
             <ProviderTogglePreviewItem
               custom
-              enabled={showTwitchEmotes}
+              enabled={previewProviders.showTwitchEmotes}
               label="Emotes"
-              onValueChange={value => update({ showTwitchEmotes: value })}
+              onValueChange={value =>
+                handleProviderToggle('showTwitchEmotes', value)
+              }
               provider="twitch"
               variant="emotes"
             />
             <ProviderTogglePreviewItem
               custom
-              enabled={showTwitchBadges}
+              enabled={previewProviders.showTwitchBadges}
               label="Badges"
-              onValueChange={value => update({ showTwitchBadges: value })}
+              onValueChange={value =>
+                handleProviderToggle('showTwitchBadges', value)
+              }
               provider="twitch"
               variant="badges"
             />
           </Form.Section>
 
-          <Form.Section
-            title="Media"
-            footer="Animated Twitch, BTTV, FFZ, and 7TV emotes render as still images when disabled."
-          >
+          <Form.Section title="Media">
             <IosToggleRow
               custom
               label="Disable Emote Animations"
-              value={disableEmoteAnimations}
-              onValueChange={value => update({ disableEmoteAnimations: value })}
+              value={previewDisableEmoteAnimations}
+              onValueChange={handleDisableEmoteAnimationsToggle}
             />
+            <View style={styles.iosPreviewItem}>
+              <ChatPreferencePreview
+                variant="emoteAnimations"
+                value={previewDisableEmoteAnimations}
+              />
+            </View>
           </Form.Section>
         </BodyScrollView>
       </View>
@@ -395,11 +583,7 @@ export function ChatPreferenceScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <ScreenHeader
-          title="Chat"
-          subtitle="Native grouped settings for message density, context, and provider media."
-          size="medium"
-        />
+        <ScreenHeader title="Chat" subtitle="Message controls" size="medium" />
 
         <SettingsSection title="Layout">
           <SettingsRow
@@ -452,7 +636,7 @@ export function ChatPreferenceScreen() {
         <SettingsSection title="Context">
           <SettingsToggleRow
             title="Historical Recent Messages"
-            subtitle="Load recent chat history from recent-messages.robotty.de"
+            subtitle={HISTORICAL_RECENT_MESSAGES_EXPLAINER}
             icon={{ icon: 'history', color: theme.colorDarkGreen }}
             value={showRecentMessages !== false}
             onValueChange={value => update({ showRecentMessages: value })}
@@ -461,22 +645,28 @@ export function ChatPreferenceScreen() {
             title="Show Timestamps"
             subtitle="Display message timestamps inline"
             icon={{ icon: 'clock', color: theme.colorBlue }}
-            value={chatTimestamps}
-            onValueChange={value => update({ chatTimestamps: value })}
+            value={previewContext.chatTimestamps}
+            onValueChange={value =>
+              handleContextToggle('chatTimestamps', value)
+            }
           />
           <SettingsToggleRow
             title="Highlight Own Mentions"
             subtitle="Accent messages that mention your username"
             icon={{ icon: 'at-sign', color: theme.colorViolet }}
-            value={highlightOwnMentions}
-            onValueChange={value => update({ highlightOwnMentions: value })}
+            value={previewContext.highlightOwnMentions}
+            onValueChange={value =>
+              handleContextToggle('highlightOwnMentions', value)
+            }
           />
           <SettingsToggleRow
             title="Inline Reply Context"
             subtitle="Show the replied-to message above responses"
             icon={{ icon: 'corner-up-left', color: theme.colorPlum }}
-            value={showInlineReplyContext}
-            onValueChange={value => update({ showInlineReplyContext: value })}
+            value={previewContext.showInlineReplyContext}
+            onValueChange={value =>
+              handleContextToggle('showInlineReplyContext', value)
+            }
           />
           <SettingsToggleRow
             title="Show Jump Pill"
@@ -485,13 +675,13 @@ export function ChatPreferenceScreen() {
               icon: 'arrow-down-circle',
               color: theme.colorAmber,
             }}
-            value={showUnreadJumpPill}
-            onValueChange={value => update({ showUnreadJumpPill: value })}
+            value={previewContext.showUnreadJumpPill}
+            onValueChange={value =>
+              handleContextToggle('showUnreadJumpPill', value)
+            }
           />
           <View style={styles.settingsPreviewItem}>
-            <Text type="xs" color="gray.textLow" weight="semibold">
-              Preview
-            </Text>
+            <PreviewLabel />
             <View style={styles.previewSpacer}>
               <ChatPreferencePreview
                 variant="context"
@@ -505,22 +695,26 @@ export function ChatPreferenceScreen() {
           <SettingsToggleRow
             title="Emotes"
             subtitle="Render 7TV emotes in chat"
-            value={show7TvEmotes}
-            onValueChange={value => update({ show7TvEmotes: value })}
+            value={previewProviders.show7TvEmotes}
+            onValueChange={value =>
+              handleProviderToggle('show7TvEmotes', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={show7TvEmotes}
+            enabled={previewProviders.show7TvEmotes}
             provider="7tv"
             variant="emotes"
           />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render 7TV badges next to usernames"
-            value={show7tvBadges}
-            onValueChange={value => update({ show7tvBadges: value })}
+            value={previewProviders.show7tvBadges}
+            onValueChange={value =>
+              handleProviderToggle('show7tvBadges', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={show7tvBadges}
+            enabled={previewProviders.show7tvBadges}
             provider="7tv"
             variant="badges"
           />
@@ -530,22 +724,26 @@ export function ChatPreferenceScreen() {
           <SettingsToggleRow
             title="Emotes"
             subtitle="Render BetterTTV emotes in chat"
-            value={showBttvEmotes}
-            onValueChange={value => update({ showBttvEmotes: value })}
+            value={previewProviders.showBttvEmotes}
+            onValueChange={value =>
+              handleProviderToggle('showBttvEmotes', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={showBttvEmotes}
+            enabled={previewProviders.showBttvEmotes}
             provider="bttv"
             variant="emotes"
           />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render BetterTTV badges next to usernames"
-            value={showBttvBadges}
-            onValueChange={value => update({ showBttvBadges: value })}
+            value={previewProviders.showBttvBadges}
+            onValueChange={value =>
+              handleProviderToggle('showBttvBadges', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={showBttvBadges}
+            enabled={previewProviders.showBttvBadges}
             provider="bttv"
             variant="badges"
           />
@@ -555,22 +753,26 @@ export function ChatPreferenceScreen() {
           <SettingsToggleRow
             title="Emotes"
             subtitle="Render FrankerFaceZ emotes in chat"
-            value={showFFzEmotes}
-            onValueChange={value => update({ showFFzEmotes: value })}
+            value={previewProviders.showFFzEmotes}
+            onValueChange={value =>
+              handleProviderToggle('showFFzEmotes', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={showFFzEmotes}
+            enabled={previewProviders.showFFzEmotes}
             provider="ffz"
             variant="emotes"
           />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render FrankerFaceZ badges next to usernames"
-            value={showFFzBadges}
-            onValueChange={value => update({ showFFzBadges: value })}
+            value={previewProviders.showFFzBadges}
+            onValueChange={value =>
+              handleProviderToggle('showFFzBadges', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={showFFzBadges}
+            enabled={previewProviders.showFFzBadges}
             provider="ffz"
             variant="badges"
           />
@@ -580,22 +782,26 @@ export function ChatPreferenceScreen() {
           <SettingsToggleRow
             title="Emotes"
             subtitle="Render native Twitch emotes in chat"
-            value={showTwitchEmotes}
-            onValueChange={value => update({ showTwitchEmotes: value })}
+            value={previewProviders.showTwitchEmotes}
+            onValueChange={value =>
+              handleProviderToggle('showTwitchEmotes', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={showTwitchEmotes}
+            enabled={previewProviders.showTwitchEmotes}
             provider="twitch"
             variant="emotes"
           />
           <SettingsToggleRow
             title="Badges"
             subtitle="Render native Twitch badges next to usernames"
-            value={showTwitchBadges}
-            onValueChange={value => update({ showTwitchBadges: value })}
+            value={previewProviders.showTwitchBadges}
+            onValueChange={value =>
+              handleProviderToggle('showTwitchBadges', value)
+            }
           />
           <ProviderPreviewItem
-            enabled={showTwitchBadges}
+            enabled={previewProviders.showTwitchBadges}
             provider="twitch"
             variant="badges"
           />
@@ -614,9 +820,15 @@ export function ChatPreferenceScreen() {
             title="Disable Emote Animations"
             subtitle="Prefer static emote rendering"
             icon={{ icon: 'slash', color: theme.colorRed }}
-            value={disableEmoteAnimations}
-            onValueChange={value => update({ disableEmoteAnimations: value })}
+            value={previewDisableEmoteAnimations}
+            onValueChange={handleDisableEmoteAnimationsToggle}
           />
+          <View style={styles.settingsPreviewItem}>
+            <ChatPreferencePreview
+              variant="emoteAnimations"
+              value={previewDisableEmoteAnimations}
+            />
+          </View>
         </SettingsSection>
       </ScrollView>
     </View>
@@ -661,20 +873,24 @@ const PreviewMessage = memo(function PreviewMessage({
   time: string;
   username: string;
 }) {
+  const messageType: TextType = compact ? 'xxs' : 'caption';
+
   return (
     <View
       style={[styles.previewMessage, compact && styles.previewMessageCompact]}
     >
-      <Text style={[styles.previewTime, compact && styles.previewTextCompact]}>
+      <Text color="gray.textLow" style={styles.previewTime} type="xxs">
         {time}
       </Text>
       <Text
+        color="accent.accentHover"
+        type={messageType}
         weight="bold"
-        style={[styles.previewUsername, compact && styles.previewTextCompact]}
+        style={styles.previewUsername}
       >
         {username}
       </Text>
-      <Text style={[styles.previewText, compact && styles.previewTextCompact]}>
+      <Text color="gray" type={messageType} style={styles.previewText}>
         {message}
       </Text>
     </View>
@@ -709,6 +925,14 @@ const EmojiStylePreview = memo(function EmojiStylePreview({
 
 EmojiStylePreview.displayName = 'EmojiStylePreview';
 
+function PreviewLabel() {
+  return (
+    <Text color="gray.textLow" type="xxs" weight="semibold">
+      Preview
+    </Text>
+  );
+}
+
 function ProviderTogglePreviewItem({
   custom: _custom,
   enabled,
@@ -727,11 +951,19 @@ function ProviderTogglePreviewItem({
   return (
     <View style={styles.providerTogglePreviewItem}>
       <View style={styles.providerToggleHeader}>
-        <Text color="gray" style={styles.iosToggleLabel}>
+        <Text
+          color="gray"
+          style={[styles.iosToggleLabel, styles.providerToggleLabel]}
+          weight="semibold"
+        >
           {label}
         </Text>
         <View style={styles.iosSwitchSlot}>
-          <Switch value={enabled} onValueChange={onValueChange} />
+          <Switch
+            accessibilityLabel={label}
+            value={enabled}
+            onValueChange={onValueChange}
+          />
         </View>
       </View>
       <ChatPreferencePreview
@@ -791,13 +1023,6 @@ const styles = StyleSheet.create({
     gap: theme.space12,
     width: '100%',
   },
-  iosControlSubtitle: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-  },
-  iosControlTitle: {
-    fontWeight: '600',
-  },
   iosSegmentedControl: {
     height: 36,
     width: '100%',
@@ -810,9 +1035,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 11,
   },
-  iosToggleLabel: {
+  iosToggleCopy: {
     flex: 1,
+    gap: theme.space4,
+    minWidth: 0,
+  },
+  iosToggleLabel: {
     flexShrink: 1,
+    minWidth: 0,
+  },
+  iosToggleSubtitle: {
+    flexShrink: 1,
+    lineHeight: 17,
     minWidth: 0,
   },
   iosSwitchSlot: {
@@ -861,22 +1095,13 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space4,
   },
   previewText: {
-    color: theme.color.text.dark,
     flex: 1,
-    fontSize: theme.fontSize12,
-    lineHeight: 18,
-  },
-  previewTextCompact: {
-    fontSize: theme.fontSize11,
-    lineHeight: 14,
   },
   previewTime: {
-    color: theme.colorGreyAlpha,
-    fontSize: theme.fontSize11,
+    minWidth: 34,
   },
   previewUsername: {
-    color: theme.colorLightGreen,
-    fontSize: theme.fontSize12,
+    flexShrink: 0,
   },
   segmentedControl: {
     height: 36,
@@ -895,6 +1120,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: theme.space16,
     minHeight: 44,
+  },
+  providerToggleLabel: {
+    flex: 1,
   },
   providerTogglePreviewItem: {
     gap: theme.space8,

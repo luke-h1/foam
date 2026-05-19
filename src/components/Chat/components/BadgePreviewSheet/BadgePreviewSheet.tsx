@@ -42,6 +42,7 @@ export function BadgePreviewSheet(props: Props) {
             trackLoadTime
             trackLoadContext="chat.badge-preview"
             source={selectedBadge.url ?? ''}
+            cacheVariant="badge"
             transition={50}
             style={badgetyles.badge}
           />

@@ -125,6 +125,7 @@ export function EmotePreviewSheet(props: Props) {
               trackLoadTime
               trackLoadContext="chat.emote-preview"
               source={displayUrl}
+              cacheVariant="emote"
               contentFit="contain"
               transition={100}
               style={[styles.emoteImage, emoteSize]}

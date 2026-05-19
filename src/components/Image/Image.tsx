@@ -58,6 +58,7 @@ export const Image = function Image({
   cachePriority = 'visible',
   cacheToFile = true,
   cacheVariant = 'image',
+  recyclingKey,
   useNitro = false,
   trackLoadTime = false,
   trackLoadContext,
@@ -215,6 +216,7 @@ export const Image = function Image({
         cachePolicy={cachePolicy}
         transition={transition}
         decodeFormat="rgb"
+        recyclingKey={recyclingKey ?? resolvedUrl ?? undefined}
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={error => {

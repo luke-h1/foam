@@ -29,9 +29,9 @@ interface ChatListProps {
   handleMomentumScrollEnd: () => void;
   handleEndReached: () => void;
   handleContentSizeChange: () => void;
-  renderItem: ListRenderItem<AnyChatMessageType>;
-  keyExtractor: (item: AnyChatMessageType) => string;
-  getItemType: (item: AnyChatMessageType) => string;
+  renderItem: ListRenderItem<AnyChatMessageType | undefined>;
+  keyExtractor: (item: AnyChatMessageType | undefined, index: number) => string;
+  getItemType: (item: AnyChatMessageType | undefined) => string;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;

@@ -51,6 +51,7 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
                 <Image
                   contentFit="contain"
                   source={item.url}
+                  cacheVariant="emote"
                   style={styles.emoteImage}
                   useNitro
                   trackLoadTime

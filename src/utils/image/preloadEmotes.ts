@@ -5,6 +5,7 @@
  * when they appear in chat. Uses NitroImage's WebImages.preload() API.
  */
 import type { SanitisedEmote } from '@app/types/emote';
+import { getEmoteImageCacheUrls } from '@app/utils/emote/emoteImageVariants';
 
 // Lazy import to avoid loading nitro modules at app startup
 type WebImagesType = { preload: (url: string) => void };
@@ -33,10 +34,31 @@ export async function preloadEmotes(
 ): Promise<void> {
   const webImages = await getWebImages();
 
-  // Filter out already preloaded URLs
-  const toPreload = emotes
-    .filter(emote => emote.url && !preloadedUrls.has(emote.url))
-    .slice(0, limit);
+  const toPreload: string[] = [];
+  const seen = new Set<string>();
+
+  // Keep copy-only variants out of the eager preload path. They remain on the
+  // emote metadata for copy actions, but warming every 2x/4x static/animated
+  // URL would multiply channel-entry network work.
+  for (const emote of emotes) {
+    const urls = getEmoteImageCacheUrls(emote);
+    for (const url of urls) {
+      if (toPreload.length >= limit) {
+        break;
+      }
+
+      if (seen.has(url) || preloadedUrls.has(url)) {
+        continue;
+      }
+
+      seen.add(url);
+      toPreload.push(url);
+    }
+
+    if (toPreload.length >= limit) {
+      break;
+    }
+  }
 
   if (toPreload.length === 0) {
     return;
@@ -44,7 +66,7 @@ export async function preloadEmotes(
 
   // Preload in parallel batches of 10 to avoid overwhelming the network
   const BATCH_SIZE = 10;
-  const batches: SanitisedEmote[][] = [];
+  const batches: string[][] = [];
   for (let i = 0; i < toPreload.length; i += BATCH_SIZE) {
     batches.push(toPreload.slice(i, i + BATCH_SIZE));
   }
@@ -53,11 +75,11 @@ export async function preloadEmotes(
     // Sequential batches to avoid overwhelming the network
     // eslint-disable-next-line no-await-in-loop
     await Promise.allSettled(
-      batch.map(emote => {
+      batch.map(url => {
         try {
           // preload is synchronous - it just queues the download
-          webImages.preload(emote.url);
-          preloadedUrls.add(emote.url);
+          webImages.preload(url);
+          preloadedUrls.add(url);
           return Promise.resolve();
         } catch {
           // Silently ignore preload failures - emote will load on demand

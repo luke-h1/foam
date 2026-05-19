@@ -11,11 +11,19 @@ export interface SevenTvEmoteSetMetadata {
   totalCount: number;
 }
 
+export type EmoteImageScale = '1x' | '2x' | '3x' | '4x';
+export type EmoteImageVariantKind = 'animated' | 'static';
+export type EmoteImageVariantSet = Partial<Record<EmoteImageScale, string>>;
+export type EmoteImageVariants = Partial<
+  Record<EmoteImageVariantKind, EmoteImageVariantSet>
+>;
+
 interface SanitisedEmoteBase {
   id: string;
   name: string;
   url: string;
   static_url?: string;
+  image_variants?: EmoteImageVariants;
   original_name: string;
   creator: string | null;
   emote_link: string;

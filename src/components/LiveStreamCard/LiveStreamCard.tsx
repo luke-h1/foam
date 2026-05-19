@@ -47,6 +47,10 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     router.push(`/streams/live-stream/${stream.user_login}`);
   }, [stream.user_login]);
 
+  const handleStreamPressIn = useCallback(() => {
+    router.prefetch(`/streams/live-stream/${stream.user_login}`);
+  }, [stream.user_login]);
+
   const handleStreamerPressIn = useCallback(() => {
     router.prefetch(`/streams/streamer-profile/${stream.user_login}`);
   }, [stream.user_login]);
@@ -82,7 +86,11 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
   if (isMediaLayout) {
     return (
-      <Button onPress={handleStreamPress} style={styles.mediaCardWrapper}>
+      <Button
+        onPress={handleStreamPress}
+        onPressIn={handleStreamPressIn}
+        style={styles.mediaCardWrapper}
+      >
         <View style={styles.mediaContainer}>
           <View style={styles.mediaImageShell}>
             <Image
@@ -170,7 +178,11 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   }
 
   return (
-    <Button onPress={handleStreamPress} style={styles.cardWrapper}>
+    <Button
+      onPress={handleStreamPress}
+      onPressIn={handleStreamPressIn}
+      style={styles.cardWrapper}
+    >
       <View style={cardStyles}>
         {!isTextLayout ? (
           <View style={imageContainerStyle}>

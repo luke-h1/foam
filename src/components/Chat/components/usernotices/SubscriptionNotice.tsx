@@ -44,6 +44,7 @@ export function SubscriptionNotice({
             trackLoadTime
             trackLoadContext="chat.subscription-notice-emote"
             source={messagePart.url}
+            cacheVariant="emote"
             style={styles.emote}
             transition={0}
           />
