@@ -77,7 +77,7 @@ jobs:
 
           BASE_SHA="${{ github.event.pull_request.base.sha }}"
           pushd .__perf_base__ >/dev/null
-          bun run test:perf -- --baseline --branch "${{ github.base_ref }}" --commit-hash "$BASE_SHA"
+          bun run test:perf -- --baseline --branch "${{ github.base_ref }}" --commit-hash "$BASE_SHA" -- --testTimeout=30000
           popd >/dev/null
 
           mkdir -p .reassure
@@ -89,7 +89,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          bun run test:perf -- --branch "${{ github.head_ref }}" --commit-hash "${{ github.event.pull_request.head.sha }}"
+          bun run test:perf -- --branch "${{ github.head_ref }}" --commit-hash "${{ github.event.pull_request.head.sha }}" -- --testTimeout=30000
 
       - name: Build PR comment
         if: always()

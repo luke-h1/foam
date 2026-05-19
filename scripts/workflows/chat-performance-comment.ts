@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { getRequiredArg } from './github-actions';
 
 interface ReassureEntry {
@@ -85,6 +86,7 @@ function main(): void {
     .filter(line => line !== '')
     .join('\n');
 
+  mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, body, 'utf8');
 }
 
