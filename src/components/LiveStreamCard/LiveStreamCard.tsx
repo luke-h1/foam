@@ -1,45 +1,45 @@
-import { TwitchStream } from "@app/services/twitch-service";
-import { theme } from "@app/styles/themes";
-import { router } from "expo-router";
-import { elapsedStreamTime } from "@app/utils/string/elapsedStreamTime";
-import { formatViewCount } from "@app/utils/string/formatViewCount";
-import { memo, useCallback } from "react";
-import { StyleSheet, View } from "react-native";
-import { Button } from "../Button/Button";
-import { Image } from "../Image/Image";
-import { PressableArea } from "../PressableArea/PressableArea";
-import { Text } from "@app/components/ui/Text/Text";
+import { TwitchStream } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
+import { router } from 'expo-router';
+import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
+import { formatViewCount } from '@app/utils/string/formatViewCount';
+import { memo, useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Button } from '../Button/Button';
+import { Image } from '../Image/Image';
+import { PressableArea } from '../PressableArea/PressableArea';
+import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
   stream: TwitchStream;
-  layout?: "compact" | "media" | "text";
+  layout?: 'compact' | 'media' | 'text';
 }
 
 const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  es: "Spanish",
-  ja: "Japanese",
-  ko: "Korean",
-  fr: "French",
-  de: "German",
-  pt: "Portuguese",
+  en: 'English',
+  es: 'Spanish',
+  ja: 'Japanese',
+  ko: 'Korean',
+  fr: 'French',
+  de: 'German',
+  pt: 'Portuguese',
 };
 
-const CARD_SURFACE = "rgba(255,255,255,0.035)";
-const CARD_BORDER = "rgba(255,255,255,0.13)";
+const CARD_SURFACE = 'rgba(255,255,255,0.035)';
+const CARD_BORDER = 'rgba(255,255,255,0.13)';
 
-export function LiveStreamCard({ stream, layout = "compact" }: Props) {
-  const isMediaLayout = layout === "media";
-  const isTextLayout = layout === "text";
+export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
+  const isMediaLayout = layout === 'media';
+  const isTextLayout = layout === 'text';
   const thumbnailUrl = stream.thumbnail_url
-    .replace("{width}", "1920")
-    .replace("{height}", "1080");
+    .replace('{width}', '1920')
+    .replace('{height}', '1080');
 
   const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
   const languageLabel =
-    stream.tags?.find((tag) =>
+    stream.tags?.find(tag =>
       Object.values(LANGUAGE_NAMES).some(
-        (language) => language.toLowerCase() === tag.toLowerCase(),
+        language => language.toLowerCase() === tag.toLowerCase(),
       ),
     ) ?? LANGUAGE_NAMES[stream.language];
 
@@ -191,7 +191,7 @@ export function LiveStreamCard({ stream, layout = "compact" }: Props) {
               style={styles.usernameButton}
               hitSlop={8}
             >
-              <Text type={isTextLayout ? "xs" : "sm"} style={styles.username}>
+              <Text type={isTextLayout ? 'xs' : 'sm'} style={styles.username}>
                 {stream.user_name}
               </Text>
             </PressableArea>
@@ -210,8 +210,8 @@ export function LiveStreamCard({ stream, layout = "compact" }: Props) {
           </View>
 
           <Text
-            type={isTextLayout ? "sm" : "xs"}
-            weight={isTextLayout ? "semibold" : "medium"}
+            type={isTextLayout ? 'sm' : 'xs'}
+            weight={isTextLayout ? 'semibold' : 'medium'}
             style={[
               styles.title,
               isMediaLayout && styles.titleMedia,
@@ -271,32 +271,32 @@ export function LiveStreamCard({ stream, layout = "compact" }: Props) {
 }
 
 export const MemoizedLiveStreamCard = memo(LiveStreamCard);
-MemoizedLiveStreamCard.displayName = "MemoizedLiveStreamCard";
+MemoizedLiveStreamCard.displayName = 'MemoizedLiveStreamCard';
 
 const styles = StyleSheet.create({
   cardWrapper: {
-    width: "100%",
+    width: '100%',
   },
   avatarFallback: {
-    alignItems: "center",
+    alignItems: 'center',
     backgroundColor: theme.darkActiveContent,
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 48,
-    justifyContent: "center",
+    justifyContent: 'center',
     width: 48,
   },
   avatarImage: {
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 48,
     width: 48,
   },
   avatarImageWrapper: {
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 48,
-    overflow: "hidden",
+    overflow: 'hidden',
     width: 48,
   },
   avatarInitial: {
@@ -307,9 +307,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   categoryBadge: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     backgroundColor: theme.darkActiveContent,
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     paddingHorizontal: 7,
     paddingVertical: 3,
@@ -318,26 +318,26 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   categoryBadgeText: {
-    marginLeft: "auto",
+    marginLeft: 'auto',
   },
   categoryText: {
     color: theme.color.text.dark,
-    fontWeight: "500",
+    fontWeight: '500',
     lineHeight: 14,
   },
   container: {
-    alignItems: "flex-start",
+    alignItems: 'flex-start',
     backgroundColor: CARD_SURFACE,
     borderColor: CARD_BORDER,
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 0.55,
-    flexDirection: "row",
-    flexWrap: "nowrap",
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
     marginHorizontal: theme.space16,
     marginVertical: 5,
     minHeight: 112,
-    overflow: "hidden",
+    overflow: 'hidden',
     paddingHorizontal: theme.space12,
     paddingVertical: 10,
   },
@@ -345,35 +345,35 @@ const styles = StyleSheet.create({
     minHeight: 124,
   },
   containerText: {
-    alignItems: "stretch",
+    alignItems: 'stretch',
     minHeight: 104,
   },
   details: {
     flex: 1,
     flexShrink: 1,
     gap: 5,
-    justifyContent: "flex-start",
+    justifyContent: 'flex-start',
     minHeight: 76,
     minWidth: 0,
   },
   headerRow: {
-    alignItems: "center",
-    flexDirection: "row",
+    alignItems: 'center',
+    flexDirection: 'row',
     gap: theme.space8,
   },
   image: {
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     height: 88,
     width: 132,
   },
   imageContainer: {
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     flexShrink: 0,
     height: 88,
     marginRight: theme.space12,
-    overflow: "hidden",
+    overflow: 'hidden',
     width: 132,
   },
   imageContainerMedia: {
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     width: 164,
   },
   imageContainerText: {
-    alignSelf: "center",
+    alignSelf: 'center',
     height: 76,
     marginLeft: theme.space12,
     marginRight: 0,
@@ -396,10 +396,10 @@ const styles = StyleSheet.create({
     width: 108,
   },
   imageWrapper: {
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     height: 88,
-    overflow: "hidden",
+    overflow: 'hidden',
     width: 132,
   },
   imageWrapperMedia: {
@@ -411,18 +411,18 @@ const styles = StyleSheet.create({
     width: 108,
   },
   liveMeta: {
-    alignItems: "center",
-    flexDirection: "row",
+    alignItems: 'center',
+    flexDirection: 'row',
     gap: 4,
   },
   liveBadge: {
     backgroundColor: theme.colorDarkGreen,
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
     left: theme.space12,
     paddingHorizontal: 7,
     paddingVertical: 3,
-    position: "absolute",
+    position: 'absolute',
     top: theme.space12,
   },
   liveBadgeText: {
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     color: theme.color.textSecondary.dark,
   },
   mediaCardWrapper: {
-    width: "100%",
+    width: '100%',
   },
   mediaCategory: {
     color: theme.color.textSecondary.dark,
@@ -444,34 +444,34 @@ const styles = StyleSheet.create({
     marginVertical: theme.space12,
   },
   mediaDetailsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: theme.space12,
     marginTop: theme.space12,
   },
   mediaImage: {
     aspectRatio: 16 / 9,
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    width: "100%",
+    width: '100%',
   },
   mediaImageShell: {
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    overflow: "hidden",
-    position: "relative",
-    width: "100%",
+    overflow: 'hidden',
+    position: 'relative',
+    width: '100%',
   },
   mediaImageWrapper: {
     aspectRatio: 16 / 9,
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    overflow: "hidden",
-    width: "100%",
+    overflow: 'hidden',
+    width: '100%',
   },
   mediaTag: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     backgroundColor: theme.darkActiveContent,
-    borderCurve: "continuous",
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     marginTop: theme.space8,
     paddingHorizontal: 10,
@@ -498,16 +498,16 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   metadataRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
   },
   metadataRowText: {
-    marginTop: "auto",
+    marginTop: 'auto',
   },
   redDot: {
-    backgroundColor: "#ff4444",
+    backgroundColor: '#ff4444',
     borderRadius: 3,
     height: 6,
     width: 6,
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     color: theme.color.textSecondary.dark,
   },
   usernameButton: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     flex: 1,
     minWidth: 0,
   },
@@ -534,14 +534,14 @@ const styles = StyleSheet.create({
     color: theme.color.textSecondary.dark,
   },
   viewerBadge: {
-    backgroundColor: "rgba(0,0,0,0.68)",
-    borderCurve: "continuous",
+    backgroundColor: 'rgba(0,0,0,0.68)',
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
     bottom: theme.space12,
     left: theme.space12,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    position: "absolute",
+    position: 'absolute',
   },
   viewerBadgeText: {
     color: theme.color.text.dark,
