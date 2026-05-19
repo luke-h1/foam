@@ -395,7 +395,7 @@ const TWITCH_AUTH_HELPER_SCRIPT = `
 true;
 `;
 
-function isAllowedTwitchPlayerNavigation(
+export function isAllowedTwitchPlayerNavigation(
   url: string,
   parent: string,
   playerWebsiteUrl?: string,
@@ -430,7 +430,7 @@ function getBaseUrl(url: string): string | null {
   }
 }
 
-function buildHostedTwitchPlayerUrl(options: {
+export function buildHostedTwitchPlayerUrl(options: {
   autoplay: boolean;
   channel: string;
   debug: boolean;
@@ -720,7 +720,7 @@ function buildTwitchEmbedHtml(options: {
 </html>`;
 }
 
-function buildRawTwitchPlayerUrl(options: {
+export function buildRawTwitchPlayerUrl(options: {
   autoplay: boolean;
   channel: string;
   muted: boolean;
@@ -742,11 +742,11 @@ function buildRawTwitchPlayerUrl(options: {
   return `https://player.twitch.tv/?${params.toString()}`;
 }
 
-function isAppUrl(url: string): boolean {
+export function isAppUrl(url: string): boolean {
   return url.startsWith('foam://') || url.startsWith('exp+foam://');
 }
 
-function isTwitchPassportCallbackUrl(url: string): boolean {
+export function isTwitchPassportCallbackUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return (
@@ -775,7 +775,7 @@ interface OverlayMetricsState {
   duration: string;
 }
 
-function formatDuration(startedAt?: string): string {
+export function formatDuration(startedAt?: string): string {
   if (!startedAt) {
     return '0:00';
   }

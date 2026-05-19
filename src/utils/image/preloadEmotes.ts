@@ -13,7 +13,9 @@ let WebImages: WebImagesType | null = null;
 
 async function getWebImages(): Promise<WebImagesType> {
   if (!WebImages) {
-    const module = await import('react-native-nitro-web-image');
+    const module = require('react-native-nitro-web-image') as {
+      WebImages: WebImagesType;
+    };
     WebImages = module.WebImages as WebImagesType;
   }
   return WebImages;

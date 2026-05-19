@@ -3,22 +3,6 @@ name: Chat performance
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - '.github/workflows/chat-performance.yml'
-      - 'scripts/workflows/chat-performance-comment.ts'
-      - 'src/components/Chat/**'
-      - 'src/screens/Preferences/ChatPreferenceScreen.tsx'
-      - 'src/screens/Preferences/ChatPreferencesPreview.tsx'
-      - 'src/screens/Preferences/chatPreferencePreviewFixtures.ts'
-      - 'src/store/chatStore/**'
-      - 'src/types/chat/**'
-      - 'src/types/emote.ts'
-      - 'src/utils/chat/**'
-      - 'src/utils/emote/**'
-      - 'src/utils/emoji/**'
-      - 'src/utils/image/preloadEmotes.ts'
-      - 'package.json'
-      - 'bun.lock'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

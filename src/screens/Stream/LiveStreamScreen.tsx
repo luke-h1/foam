@@ -43,8 +43,8 @@ const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 
-type FullscreenChatMode = 'sidebar' | 'overlay';
-type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
+export type FullscreenChatMode = 'sidebar' | 'overlay';
+export type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
 
 function VideoDelayIndicator({
   latencySeconds,
@@ -62,7 +62,7 @@ function VideoDelayIndicator({
   );
 }
 
-function clampLandscapeChatWidth(
+export function clampLandscapeChatWidth(
   width: number,
   screenWidth: number,
   mode: FullscreenChatMode,
@@ -75,7 +75,7 @@ function clampLandscapeChatWidth(
   return Math.min(maxWidth, Math.max(minWidth, width));
 }
 
-function getDefaultLandscapeChatWidth(
+export function getDefaultLandscapeChatWidth(
   mode: FullscreenChatMode,
   screenWidth: number,
 ): number {
@@ -86,7 +86,7 @@ function getDefaultLandscapeChatWidth(
   return screenWidth * DEFAULT_SIDEBAR_CHAT_FRACTION;
 }
 
-function getNextChatCycleAction(
+export function getNextChatCycleAction(
   nextChatVisible: boolean,
   fullscreenChatMode: FullscreenChatMode,
 ): LandscapeChatCycleAction {
@@ -95,6 +95,84 @@ function getNextChatCycleAction(
   }
 
   return fullscreenChatMode === 'overlay' ? 'hide' : 'overlay';
+}
+
+export function getLiveStreamVideoDimensions({
+  fullscreenChatMode,
+  hasContentGate,
+  isChatVisible,
+  isLandscape,
+  landscapeChatWidth,
+  layoutHeight,
+  screenWidth,
+}: {
+  fullscreenChatMode: FullscreenChatMode;
+  hasContentGate: boolean;
+  isChatVisible: boolean;
+  isLandscape: boolean;
+  landscapeChatWidth: number | null;
+  layoutHeight: number;
+  screenWidth: number;
+}): { width: number; height: number } {
+  if (isLandscape) {
+    const visibleSidebarChatWidth =
+      isChatVisible && fullscreenChatMode === 'sidebar'
+        ? clampLandscapeChatWidth(
+            landscapeChatWidth ??
+              getDefaultLandscapeChatWidth('sidebar', screenWidth),
+            screenWidth,
+            'sidebar',
+          )
+        : 0;
+    return {
+      width: Math.max(1, screenWidth - visibleSidebarChatWidth),
+      height: Math.max(1, layoutHeight),
+    };
+  }
+  if (hasContentGate) {
+    return {
+      width: Math.max(1, screenWidth),
+      height: Math.max(1, layoutHeight),
+    };
+  }
+  return {
+    width: Math.max(1, screenWidth),
+    height: Math.max(1, screenWidth * (9 / 16)),
+  };
+}
+
+export function getLiveStreamChatDimensions({
+  fullscreenChatMode,
+  hasContentGate,
+  isLandscape,
+  landscapeChatWidth,
+  layoutHeight,
+  screenWidth,
+}: {
+  fullscreenChatMode: FullscreenChatMode;
+  hasContentGate: boolean;
+  isLandscape: boolean;
+  landscapeChatWidth: number | null;
+  layoutHeight: number;
+  screenWidth: number;
+}): { width: number; height: number } {
+  if (isLandscape) {
+    return {
+      width: clampLandscapeChatWidth(
+        landscapeChatWidth ??
+          getDefaultLandscapeChatWidth(fullscreenChatMode, screenWidth),
+        screenWidth,
+        fullscreenChatMode,
+      ),
+      height: Math.max(1, layoutHeight),
+    };
+  }
+
+  const videoHeight = hasContentGate ? layoutHeight : screenWidth * (9 / 16);
+  return {
+    width: Math.max(1, screenWidth),
+    height: Math.max(1, layoutHeight - videoHeight),
+  };
 }
 
 export const LiveStreamScreen = memo(function LiveStreamScreen({
@@ -151,17 +229,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       );
     },
     [fullscreenChatMode, screenWidth],
-  );
-
-  const getLandscapeChatWidth = useCallback(
-    (mode: FullscreenChatMode) => {
-      return clampLandscapeChatWidth(
-        landscapeChatWidth ?? getDefaultLandscapeChatWidth(mode, screenWidth),
-        screenWidth,
-        mode,
-      );
-    },
-    [landscapeChatWidth, screenWidth],
   );
 
   const applyLandscapeChatCycleAction = useCallback(
@@ -255,58 +322,39 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   });
 
   const videoDimensions = useMemo(() => {
-    if (isLandscape) {
-      const landscapeChatWidth =
-        isChatVisible && fullscreenChatMode === 'sidebar'
-          ? getLandscapeChatWidth('sidebar')
-          : 0;
-      return {
-        width: Math.max(1, screenWidth - landscapeChatWidth),
-        height: Math.max(1, layoutHeight),
-      };
-    }
-    if (hasContentGate) {
-      return {
-        width: Math.max(1, screenWidth),
-        height: Math.max(1, layoutHeight),
-      };
-    }
-    return {
-      width: Math.max(1, screenWidth),
-      height: Math.max(1, screenWidth * (9 / 16)),
-    };
+    return getLiveStreamVideoDimensions({
+      fullscreenChatMode,
+      hasContentGate,
+      isChatVisible,
+      isLandscape,
+      landscapeChatWidth,
+      layoutHeight,
+      screenWidth,
+    });
   }, [
     fullscreenChatMode,
-    getLandscapeChatWidth,
     hasContentGate,
     isChatVisible,
     isLandscape,
+    landscapeChatWidth,
     layoutHeight,
     screenWidth,
   ]);
 
   const chatDimensions = useMemo(() => {
-    let width: number;
-    let height: number;
-    if (isLandscape) {
-      width = getLandscapeChatWidth(fullscreenChatMode);
-      height = layoutHeight;
-    } else {
-      const videoHeight = hasContentGate
-        ? layoutHeight
-        : screenWidth * (9 / 16);
-      width = screenWidth;
-      height = layoutHeight - videoHeight;
-    }
-    return {
-      width: Math.max(1, width),
-      height: Math.max(1, height),
-    };
+    return getLiveStreamChatDimensions({
+      fullscreenChatMode,
+      hasContentGate,
+      isLandscape,
+      landscapeChatWidth,
+      layoutHeight,
+      screenWidth,
+    });
   }, [
     fullscreenChatMode,
-    getLandscapeChatWidth,
     hasContentGate,
     isLandscape,
+    landscapeChatWidth,
     layoutHeight,
     screenWidth,
   ]);
