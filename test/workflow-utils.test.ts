@@ -209,18 +209,84 @@ describe('chat performance comment workflow', () => {
     );
   });
 
-  test('labels the spread between runs in plain language', () => {
-    expect(
-      buildCurrentTable([
+  test('renders current measurements as a syntax-highlighted diff block', () => {
+    const red = '\u{1F534}';
+    const green = '\u{1F7E2}';
+    const yellow = '\u{1F7E1}';
+    const table = buildCurrentTable(
+      [
         {
-          name: 'renders rows',
+          name: 'slower rows',
           type: 'render',
           runs: 3,
           meanDuration: 12.345,
           stdevDuration: 1.234,
         },
-      ]),
-    ).toContain('| Scenario | Mean | Typical time swing | Count |');
+        {
+          name: 'faster rows',
+          type: 'render',
+          runs: 3,
+          meanDuration: 8.345,
+          stdevDuration: 0.234,
+        },
+        {
+          name: 'noisy rows',
+          type: 'render',
+          runs: 3,
+          meanDuration: 10,
+          stdevDuration: 2,
+        },
+      ],
+      [
+        `| slower rows | render | 10.0 ms -> 12.0 ms ${red} |`,
+        `| faster rows | render | 12.0 ms -> 10.0 ms ${green} |`,
+        `| noisy rows | render | noisy ${yellow} |`,
+      ].join('\n'),
+    );
+
+    expect(table).toContain('```diff');
+    expect(table).toContain('  Scenario');
+    expect(table).toContain('Typical time swing');
+    expect(table).toContain('- slower rows');
+    expect(table).toContain('+ faster rows');
+    expect(table).toContain('! noisy rows');
+  });
+
+  test('colors measurements against the base run when the report has no marker', () => {
+    const table = buildCurrentTable(
+      [
+        {
+          name: 'slower rows',
+          type: 'render',
+          runs: 3,
+          meanDuration: 12,
+        },
+        {
+          name: 'faster rows',
+          type: 'render',
+          runs: 3,
+          meanDuration: 8,
+        },
+      ],
+      '',
+      [
+        {
+          name: 'slower rows',
+          type: 'render',
+          runs: 3,
+          meanDuration: 10,
+        },
+        {
+          name: 'faster rows',
+          type: 'render',
+          runs: 3,
+          meanDuration: 10,
+        },
+      ],
+    );
+
+    expect(table).toContain('- slower rows');
+    expect(table).toContain('+ faster rows');
   });
 
   test('builds a failure comment with current measurements and report details', () => {
@@ -240,7 +306,7 @@ describe('chat performance comment workflow', () => {
         runUrl: 'https://github.com/luke-h1/foam/actions/runs/1',
         status: 'failure',
       }),
-    ).toContain('| renders rows | 12.35ms | 1.23ms | 2.00 |');
+    ).toContain('  renders rows  12.35ms');
   });
 
   test('builds a syntax-highlighted diff summary for the comment', () => {
