@@ -219,6 +219,7 @@ export function ActionSheet(props: Props) {
             trackLoadTime
             trackLoadContext="chat.message-action-sheet"
             source={part.url}
+            cacheVariant="emote"
             style={styles.messageEmote}
             contentFit="contain"
             transition={0}

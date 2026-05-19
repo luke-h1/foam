@@ -172,7 +172,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   return (
     <Button onPress={handleStreamPress} style={styles.cardWrapper}>
       <View style={cardStyles}>
-        {!isTextLayout ? (
+        {isTextLayout ? null : (
           <View style={imageContainerStyle}>
             <Image
               source={thumbnailUrl}
@@ -181,7 +181,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               transition={150}
             />
           </View>
-        ) : null}
+        )}
 
         <View style={styles.details}>
           <View style={styles.headerRow}>

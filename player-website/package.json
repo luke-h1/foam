@@ -1,0 +1,21 @@
+{
+  "name": "@foam/player-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 3000",
+    "dev:local": "astro dev --host 127.0.0.1 --port 3000",
+    "build": "astro build",
+    "deploy": "vercel deploy --prod --yes",
+    "deploy:preview": "vercel deploy --yes",
+    "preview": "astro preview --host 0.0.0.0 --port 3000",
+    "preview:local": "astro preview --host 127.0.0.1 --port 3000"
+  },
+  "dependencies": {
+    "astro": "^6.3.5"
+  },
+  "devDependencies": {
+    "vercel": "^54.1.0"
+  }
+}

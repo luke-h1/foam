@@ -131,10 +131,10 @@ function ChatListPerfFixture() {
       handleMomentumScrollEnd={jest.fn()}
       handleEndReached={jest.fn()}
       handleContentSizeChange={jest.fn()}
-      keyExtractor={item => item.id}
+      keyExtractor={(item, index) => item?.id ?? `missing-${index}`}
       getItemType={() => 'chat-message'}
       contentContainerStyle={undefined}
-      renderItem={({ item }) => renderChatMessage(item)}
+      renderItem={({ item }) => (item ? renderChatMessage(item) : null)}
     />
   );
 }

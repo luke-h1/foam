@@ -181,6 +181,44 @@ describe('chatStore messages', () => {
     ).toEqual(['msg-1']);
   });
 
+  test('restoreRecentMessagesForChannel dedupes persisted entries by id', () => {
+    chatStore$.persisted.recentMessagesByChannel.set({
+      'channel-1': [
+        createMessage('msg-1', 'msg-1', 'first'),
+        createMessage('msg-1', 'msg-1', 'duplicate key'),
+        {
+          ...createMessage('msg-2', 'msg-2', 'duplicate id'),
+          id: 'msg-1_msg-1',
+        },
+        createMessage('msg-3', 'msg-3', 'third'),
+      ],
+    });
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const restoredCount = restoreRecentMessagesForChannel('channel-1');
+
+    expect(restoredCount).toBe(2);
+    expect(
+      chatStore$.messages.peek().map(message => message.message_id),
+    ).toEqual(['msg-1', 'msg-3']);
+    expect(warnSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('Multiple elements in array have the same ID'),
+      expect.anything(),
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  test('normalises stored message id to the chat message key', () => {
+    addMessage({
+      ...createMessage('msg-1', 'nonce-1', 'first'),
+      id: 'duplicate-id-from-source',
+    });
+
+    expect(chatStore$.messages.peek()[0]?.id).toBe('msg-1_nonce-1');
+  });
+
   test('addMessages defers recent-message persistence off the live chat path', () => {
     jest.useFakeTimers();
     chatStore$.currentChannelId.set('channel-1');

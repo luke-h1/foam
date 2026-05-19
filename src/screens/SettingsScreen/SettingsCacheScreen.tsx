@@ -1,6 +1,8 @@
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import * as Form from '@app/components/Form/Form';
+import { Icon } from '@app/components/Icon/Icon';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import {
   SettingsLinkRow,
@@ -43,7 +45,7 @@ export function SettingsCacheScreen() {
 
   const handleClearChatCache = () => {
     Alert.alert(
-      'Clear chat Cache',
+      'Clear Chat Cache',
       'This removes cached emotes, badges, and other downloaded media from this device.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -73,19 +75,21 @@ export function SettingsCacheScreen() {
             size="medium"
           />
 
-          <Form.Section
-            title="Danger Zone"
-            footer="Use these only when stream metadata, badges, or emotes need a hard refresh."
-          >
-            <Form.Link
-              systemImage="externaldrive.badge.minus"
+          <Form.Section footer="Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.">
+            <CacheActionRow
+              custom
+              icon="database"
+              title="Clear Local Data"
+              subtitle="Signs you out, clears stored app data, and forces fresh stream fetches next time."
               onPress={handleClearData}
-            >
-              Clear all cached data (will cause a logout)
-            </Form.Link>
-            <Form.Link systemImage="trash" onPress={handleClearChatCache}>
-              Clear emote/badge/cosmetics cache
-            </Form.Link>
+            />
+            <CacheActionRow
+              custom
+              icon="trash-2"
+              title="Clear Chat Media Cache"
+              subtitle="Removes downloaded emotes, badges, cosmetics, and image cache entries from this device."
+              onPress={handleClearChatCache}
+            />
           </Form.Section>
         </BodyScrollView>
       </View>
@@ -117,14 +121,14 @@ export function SettingsCacheScreen() {
         >
           <SettingsLinkRow
             title="Clear Data"
-            subtitle="Refetch stream, category, emote, and badge state"
+            subtitle="Sign out and refetch stream, category, emote, and badge state"
             icon={{ icon: 'database', color: theme.colorRed }}
             onPress={handleClearData}
             danger
           />
           <SettingsLinkRow
             title="Clear Image Cache"
-            subtitle="Remove locally cached emote and badge media"
+            subtitle="Remove downloaded emote, badge, cosmetic, and image cache entries"
             icon={{ icon: 'trash-2', color: theme.colorRed }}
             onPress={handleClearChatCache}
             danger
@@ -132,6 +136,42 @@ export function SettingsCacheScreen() {
         </SettingsSection>
       </ScrollView>
     </View>
+  );
+}
+
+function CacheActionRow({
+  custom: _custom,
+  icon,
+  title,
+  subtitle,
+  onPress,
+}: {
+  custom?: true;
+  icon: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
+  return (
+    <PressableArea
+      accessibilityLabel={title}
+      accessibilityRole="button"
+      onPress={onPress}
+    >
+      <View style={styles.iosActionRow}>
+        <View style={styles.iosActionIcon}>
+          <Icon icon={icon} color={theme.colorRed} size={18} />
+        </View>
+        <View style={styles.iosActionCopy}>
+          <Text color="gray" weight="semibold">
+            {title}
+          </Text>
+          <Text color="gray.textLow" type="xs">
+            {subtitle}
+          </Text>
+        </View>
+      </View>
+    </PressableArea>
   );
 }
 
@@ -147,5 +187,25 @@ const styles = StyleSheet.create({
   },
   iosContent: {
     paddingBottom: theme.space56,
+  },
+  iosActionRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: theme.space12,
+    minHeight: 68,
+    paddingHorizontal: 20,
+    paddingVertical: theme.space12,
+  },
+  iosActionIcon: {
+    alignItems: 'center',
+    height: 24,
+    justifyContent: 'center',
+    marginTop: 2,
+    width: 24,
+  },
+  iosActionCopy: {
+    flex: 1,
+    gap: theme.space4,
+    minWidth: 0,
   },
 });

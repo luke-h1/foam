@@ -28,6 +28,7 @@ type PreviewMessage = ChatMessageType<'usernotice'>;
 type PreviewState = {
   chatDensity: 'comfortable' | 'compact';
   chatTimestamps: boolean;
+  disableEmoteAnimations: boolean;
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
   showUnreadJumpPill: boolean;
@@ -52,6 +53,10 @@ export type ChatPreferencePreviewProps =
       value: boolean;
     }
   | {
+      variant: 'emoteAnimations';
+      value: boolean;
+    }
+  | {
       provider: PreviewProvider;
       value: boolean;
       variant: 'providerEmotes' | 'providerBadges';
@@ -60,6 +65,7 @@ export type ChatPreferencePreviewProps =
 const PREVIEW_DEFAULTS: PreviewState = {
   chatDensity: 'comfortable',
   chatTimestamps: true,
+  disableEmoteAnimations: false,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
   showUnreadJumpPill: false,
@@ -96,6 +102,20 @@ const previewMessages = {
       textPart(' thanks for subscribing!'),
     ],
     userId: '103',
+  }),
+  emoteAnimations: createPreviewMessage({
+    color: '#F59E0B',
+    displayName: 'EmoteFan',
+    id: 'preview-emote-animations',
+    login: 'emotefan',
+    message: [
+      textPart(' these render '),
+      ...buildProviderEmoteParts(
+        'bttv',
+        chatPreferencePreviewFixtures.bttv.emotes.slice(0, 2),
+      ),
+    ],
+    userId: '104',
   }),
 } as const;
 
@@ -173,6 +193,16 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
       );
     }
 
+    case 'emoteAnimations': {
+      return (
+        <ChatPreviewSurface
+          messages={[previewMessages.emoteAnimations]}
+          settings={{ disableEmoteAnimations: value }}
+          testID="chat-preference-preview-emote-animations"
+        />
+      );
+    }
+
     case 'providerEmotes': {
       const { provider } = props;
       return (
@@ -207,10 +237,12 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
 ChatPreferencePreview.displayName = 'ChatPreferencePreview';
 
 const ChatPreviewSurface = memo(function ChatPreviewSurface({
+  label,
   messages,
   settings,
   testID,
 }: {
+  label?: string;
   messages: PreviewMessage[];
   settings?: Partial<PreviewState>;
   testID: string;
@@ -241,6 +273,7 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
                 : undefined
             }
             density={previewState.chatDensity}
+            disableEmoteAnimations={previewState.disableEmoteAnimations}
             getMentionColor={getMentionColor}
             parseTextForEmotes={parseTextForEmotes}
             showInlineReplyContext={previewState.showInlineReplyContext}
@@ -261,6 +294,13 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
                 3
               </Text>
             </View>
+          </View>
+        ) : null}
+        {label ? (
+          <View style={styles.previewStatePill}>
+            <Text style={styles.previewStatePillText} weight="semibold">
+              {label}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -680,6 +720,20 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     width: '100%',
+  },
+  previewStatePill: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.colorBlackOverlay,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius28,
+    marginHorizontal: theme.space12,
+    marginTop: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space4,
+  },
+  previewStatePillText: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
   },
   providerPreviewSurface: {
     backgroundColor: theme.color.backgroundSecondary.dark,

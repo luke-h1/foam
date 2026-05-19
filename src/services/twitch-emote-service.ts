@@ -1,4 +1,5 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { twitchApi } from './api';
 import { PaginatedList, twitchService } from './twitch-service';
 
@@ -49,8 +50,9 @@ interface TwitchGlobalEmote {
 function toTwitchImageUrl(
   emoteId: string,
   format: 'default' | 'static' = 'default',
+  scale: '1.0' | '2.0' | '3.0' = '3.0',
 ): string {
-  return `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/${format}/dark/3.0`;
+  return `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/${format}/dark/${scale}`;
 }
 
 function sanitiseTwitchEmote(
@@ -58,11 +60,23 @@ function sanitiseTwitchEmote(
   site: TwitchSanitisedEmote['site'],
   creator: string | null,
 ): TwitchSanitisedEmote {
+  const imageVariants = createEmoteImageVariants({
+    animated: {
+      '2x': toTwitchImageUrl(emote.id, 'default', '2.0'),
+      '4x': toTwitchImageUrl(emote.id, 'default', '3.0'),
+    },
+    static: {
+      '2x': toTwitchImageUrl(emote.id, 'static', '2.0'),
+      '4x': toTwitchImageUrl(emote.id, 'static', '3.0'),
+    },
+  });
+
   return {
     name: emote.name,
     id: emote.id,
     url: toTwitchImageUrl(emote.id),
     static_url: toTwitchImageUrl(emote.id, 'static'),
+    image_variants: imageVariants,
     emote_link: toTwitchImageUrl(emote.id),
     creator,
     original_name: emote.name,

@@ -23,6 +23,36 @@ let pendingRecentMessages: ChatMessageType<never>[] | null = null;
 const getMessageKey = (messageId: string, messageNonce: string): string =>
   `${messageId}_${messageNonce}`;
 
+const getMessageStoreId = (message: ChatMessageType<never>): string =>
+  message.id?.trim() ||
+  getMessageKey(message.message_id, message.message_nonce);
+
+const dedupeMessagesForStore = (
+  messages: Array<ChatMessageType<never> | undefined>,
+): ChatMessageType<never>[] => {
+  const seenKeys = new Set<string>();
+  const seenIds = new Set<string>();
+  const uniqueMessages: ChatMessageType<never>[] = [];
+
+  messages.forEach(message => {
+    if (!isValidChatMessage(message)) {
+      return;
+    }
+
+    const key = getMessageKey(message.message_id, message.message_nonce);
+    const id = getMessageStoreId(message);
+    if (seenKeys.has(key) || seenIds.has(id)) {
+      return;
+    }
+
+    seenKeys.add(key);
+    seenIds.add(id);
+    uniqueMessages.push(message);
+  });
+
+  return uniqueMessages;
+};
+
 const prepareMessagePartsForStore = (
   messageId: string,
   messageNonce: string,
@@ -44,8 +74,10 @@ const prepareMessagePartsForStore = (
 const prepareMessageForStore = (
   message: ChatMessageType<never>,
 ): ChatMessageType<never> => {
+  const messageKey = getMessageKey(message.message_id, message.message_nonce);
   return {
     ...message,
+    id: messageKey,
     message: prepareMessagePartsForStore(
       message.message_id,
       message.message_nonce,
@@ -122,7 +154,9 @@ const rebuildMessageIndexes = () => {
   const messages = chatStore$.messages.peek();
 
   messages.forEach((message, index) => {
-    indexMessage(message, index);
+    if (isValidChatMessage(message)) {
+      indexMessage(message, index);
+    }
   });
 };
 
@@ -169,9 +203,8 @@ const persistRecentMessagesForChannel = (
     return;
   }
 
-  const nextRecentMessages = nextMessages
-    .filter(isValidChatMessage)
-    .slice(-MAX_RECENT_MESSAGES);
+  const nextRecentMessages =
+    dedupeMessagesForStore(nextMessages).slice(-MAX_RECENT_MESSAGES);
   chatStore$.persisted.recentMessagesByChannel.set({
     ...recentMessagesByChannel,
     [channelId]: nextRecentMessages,
@@ -214,7 +247,8 @@ const syncRecentMessagesForCurrentChannel = (
   }
 
   pendingRecentMessagesChannelId = currentChannelId;
-  pendingRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
+  pendingRecentMessages =
+    dedupeMessagesForStore(nextMessages).slice(-MAX_RECENT_MESSAGES);
 
   if (recentMessagesSyncTimer) {
     return;
@@ -257,7 +291,7 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
   );
   messageKeySet.add(key);
   messageKeyOrder.push(key);
-  const currentMessages = chatStore$.messages.peek();
+  const currentMessages = dedupeMessagesForStore(chatStore$.messages.peek());
   const nextMessageIndex = currentMessages.length;
   const nextMessages = [...currentMessages, storedMessage];
   const messageCount = nextMessages.length;
@@ -304,7 +338,7 @@ export const addMessages = (
   const storedMessages = newMessages.map(prepareMessageForStore);
 
   batch(() => {
-    const currentMessages = chatStore$.messages.peek();
+    const currentMessages = dedupeMessagesForStore(chatStore$.messages.peek());
     const nextMessageStartIndex = currentMessages.length;
     const nextMessages = [...currentMessages, ...storedMessages];
     const messageCount = nextMessages.length;
@@ -412,6 +446,10 @@ export const moderateMessagesByLogin = (
   const currentMessages = chatStore$.messages.peek();
 
   currentMessages.forEach((message, index) => {
+    if (!isValidChatMessage(message)) {
+      return;
+    }
+
     const messageLogin = normaliseLogin(
       message.userstate?.login || message.userstate?.username || message.sender,
     );
@@ -460,7 +498,7 @@ export const removeMessageById = (messageId: string) => {
 
   const currentMessages = chatStore$.messages.peek();
   const removedMessages = currentMessages.filter(
-    message => message.message_id === messageId,
+    message => isValidChatMessage(message) && message.message_id === messageId,
   );
 
   if (removedMessages.length === 0) {
@@ -478,7 +516,10 @@ export const removeMessageById = (messageId: string) => {
   });
 
   chatStore$.messages.set(
-    currentMessages.filter(message => message.message_id !== messageId),
+    currentMessages.filter(
+      message =>
+        !isValidChatMessage(message) || message.message_id !== messageId,
+    ),
   );
 
   syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
@@ -496,9 +537,9 @@ export const clearMessages = () => {
 };
 
 export const restoreRecentMessagesForChannel = (channelId: string): number => {
-  const recentMessages = (
-    chatStore$.persisted.recentMessagesByChannel[channelId]?.peek() ?? []
-  ).filter(isValidChatMessage);
+  const recentMessages = dedupeMessagesForStore(
+    chatStore$.persisted.recentMessagesByChannel[channelId]?.peek() ?? [],
+  );
 
   if (recentMessages.length === 0) {
     clearMessages();

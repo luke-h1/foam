@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import type { FfzSanitisedEmote } from '@app/types/emote';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
 import { ffzApi } from './api';
 import { SanitisedBadgeSet } from './twitch-badge-service';
@@ -89,6 +90,50 @@ export interface FfzBadgeUsers {
   [badgeId: string]: string[];
 }
 
+function toFfzStaticUrl(emoteId: number, scale: '2x' | '4x'): string {
+  return `https://cdn.frankerfacez.com/emote/${emoteId}/${scale === '2x' ? '2' : '4'}`;
+}
+
+function toFfzAnimatedUrl(emoteId: number, scale: '2x' | '4x'): string {
+  return `https://cdn.frankerfacez.com/emote/${emoteId}/animated/${scale === '2x' ? '2' : '4'}`;
+}
+
+function sanitiseFfzEmote(
+  emote: FfzEmoticon,
+  site: FfzSanitisedEmote['site'],
+  creator: string | null,
+): FfzSanitisedEmote {
+  const staticVariants = {
+    '2x': emote.urls['2'] || toFfzStaticUrl(emote.id, '2x'),
+    '4x': emote.urls['4'] || toFfzStaticUrl(emote.id, '4x'),
+  };
+  const animatedVariants = emote.animated
+    ? {
+        '2x': toFfzAnimatedUrl(emote.id, '2x'),
+        '4x': toFfzAnimatedUrl(emote.id, '4x'),
+      }
+    : staticVariants;
+  const imageVariants = createEmoteImageVariants({
+    animated: animatedVariants,
+    static: staticVariants,
+  });
+
+  return {
+    name: emote.name,
+    id: emote.id.toString(),
+    url: animatedVariants['4x'],
+    static_url: staticVariants['4x'],
+    image_variants: imageVariants,
+    emote_link: `https://www.frankerfacez.com/emoticon/${emote.id}`,
+    creator,
+    site,
+    original_name: 'UNKNOWN',
+    width: emote.width,
+    height: emote.height,
+    aspect_ratio: emote.height > 0 ? emote.width / emote.height : 1,
+  };
+}
+
 export const ffzService = {
   getSanitisedGlobalEmotes: async (): Promise<FfzSanitisedEmote[]> => {
     try {
@@ -99,27 +144,9 @@ export const ffzService = {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         result.default_sets[0]
-      ].emoticons.map<FfzSanitisedEmote>((emote: FfzEmoticon) => {
-        return {
-          name: emote.name,
-          id: emote.id.toString(),
-
-          url: emote.animated
-            ? `https://cdn.frankerfacez.com/emote/${emote.id}/animated/4`
-            : `https://cdn.frankerfacez.com/emote/${emote.id}/4`,
-          static_url: emote.animated
-            ? `https://cdn.frankerfacez.com/emote/${emote.id}/4`
-            : undefined,
-          emote_link: `https://www.frankerfacez.com/emoticon/${emote.id}`,
-
-          creator: 'UNKNOWN',
-          site: 'Global FFZ',
-          original_name: 'UNKNOWN',
-          width: emote.width,
-          height: emote.height,
-          aspect_ratio: emote.height > 0 ? emote.width / emote.height : 1,
-        } satisfies FfzSanitisedEmote;
-      });
+      ].emoticons.map<FfzSanitisedEmote>((emote: FfzEmoticon) =>
+        sanitiseFfzEmote(emote, 'Global FFZ', 'UNKNOWN'),
+      );
 
       return sanitisedSet as FfzSanitisedEmote[];
     } catch (error) {
@@ -218,27 +245,9 @@ export const ffzService = {
         const emoteSet = result.sets[result.room.set];
         const sanitistedSet =
           emoteSet?.emoticons &&
-          emoteSet?.emoticons.map<FfzSanitisedEmote>(emote => {
-            const { owner } = emote;
-
-            return {
-              name: emote.name,
-              id: emote.id.toString(),
-              url: emote.animated
-                ? `https://cdn.frankerfacez.com/emote/${emote.id}/animated/4`
-                : `https://cdn.frankerfacez.com/emote/${emote.id}/4`,
-              static_url: emote.animated
-                ? `https://cdn.frankerfacez.com/emote/${emote.id}/4`
-                : undefined,
-              emote_link: `https://www.frankerfacez.com/emoticon/${emote.id}`,
-              creator: owner.name ?? 'unknown',
-              site: 'FFZ',
-              original_name: 'UNKNOWN',
-              width: emote.width,
-              height: emote.height,
-              aspect_ratio: emote.height > 0 ? emote.width / emote.height : 1,
-            } satisfies FfzSanitisedEmote;
-          });
+          emoteSet?.emoticons.map<FfzSanitisedEmote>(emote =>
+            sanitiseFfzEmote(emote, 'FFZ', emote.owner.name ?? 'unknown'),
+          );
         return sanitistedSet ?? [];
       }
       return [];

@@ -1,4 +1,13 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+
+function toTwitchTaggedEmoteUrl(
+  emoteId: string,
+  format: 'default' | 'static',
+  scale: '2.0' | '3.0',
+): string {
+  return `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/${format}/dark/${scale}`;
+}
 
 export const extractEmotes = (
   emotes: Record<string, string[]> | undefined,
@@ -8,11 +17,31 @@ export const extractEmotes = (
     return [];
   }
   const graphemes = [...message];
+  const imageVariantsByEmoteId = new Map<
+    string,
+    TwitchSanitisedEmote['image_variants']
+  >();
+
   return Object.entries(emotes).flatMap(([emoteId, positions]) =>
     positions.map(position => {
       const [start, end] = position.split('-').map(Number);
 
       const name = graphemes.slice(start, (end as number) + 1).join('');
+      let imageVariants = imageVariantsByEmoteId.get(emoteId);
+      if (!imageVariants) {
+        imageVariants = createEmoteImageVariants({
+          animated: {
+            '2x': toTwitchTaggedEmoteUrl(emoteId, 'default', '2.0'),
+            '4x': toTwitchTaggedEmoteUrl(emoteId, 'default', '3.0'),
+          },
+          static: {
+            '2x': toTwitchTaggedEmoteUrl(emoteId, 'static', '2.0'),
+            '4x': toTwitchTaggedEmoteUrl(emoteId, 'static', '3.0'),
+          },
+        });
+        imageVariantsByEmoteId.set(emoteId, imageVariants);
+      }
+
       return {
         id: emoteId,
         name,
@@ -21,6 +50,7 @@ export const extractEmotes = (
         emote_link: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/3.0`,
         url: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/3.0`,
         static_url: `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/static/dark/3.0`,
+        image_variants: imageVariants,
         site: 'Twitch Subscriber',
       };
     }),

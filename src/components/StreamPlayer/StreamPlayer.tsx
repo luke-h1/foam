@@ -46,6 +46,11 @@ import type {
 import { scheduleOnRN } from 'react-native-worklets';
 import { streamWebViewWarmupPool } from './WebViewWarmupPool';
 
+const TWITCH_PLAYER_WEBSITE_URL = (
+  process.env.EXPO_PUBLIC_TWITCH_PLAYER_WEBSITE_URL ??
+  process.env.EXPO_PUBLIC_PLAYER_URL
+)?.trim();
+
 export interface StreamPlayerRef {
   /**
    * Force refresh the player (hard reload)
@@ -202,6 +207,10 @@ export interface StreamPlayerProps {
    */
   onPause?: () => void;
   /**
+   * Callback with Twitch's reported latency from broadcaster to viewer.
+   */
+  onPlaybackLatencyChange?: (latencySeconds: number) => void;
+  /**
    * Callback when the stream plays
    */
   onPlay?: () => void;
@@ -244,6 +253,7 @@ export interface StreamPlayerProps {
    * Load player.twitch.tv directly instead of generated embed HTML.
    * This disables the JS player bridge but allows Twitch's own login/cookie UI
    * to handle scrolling and interaction.
+   * @default true
    */
   useRawTwitchPlayer?: boolean;
   /**
@@ -288,11 +298,22 @@ interface PlayerStateUpdatePayload {
   volume: number;
 }
 
+interface PlaybackStatsPayload {
+  bufferSize?: number;
+  displayResolution?: string;
+  fps?: number;
+  hlsLatencyBroadcaster?: number | null;
+  playbackRate?: number;
+  skippedFrames?: number;
+  videoResolution?: string;
+}
+
 type PlayerMessage =
   | { payload: { message: string }; type: 'error' }
   | { payload: { time: number }; type: 'currentTime' }
   | { payload: { duration: number }; type: 'duration' }
   | { payload: PlayerStateUpdatePayload; type: 'stateUpdate' }
+  | { payload: PlaybackStatsPayload; type: 'playbackStats' }
   | {
       payload: {
         currentTime: number;
@@ -319,8 +340,11 @@ type PlayerMessage =
   | { type: 'online' }
   | { type: 'pause' }
   | { type: 'play' }
+  | { type: 'playbackBlocked' }
+  | { type: 'playing' }
   | { type: 'ready' }
   | { type: 'trace'; payload: { step: string; detail?: string } }
+  | { type: 'twitchAuthComplete' }
   | { type: 'error'; payload: { message: string } }
   | { type: 'muteState'; payload: { muted: boolean; volume: number } };
 
@@ -331,7 +355,51 @@ const TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES = [
   'https://player.twitch.tv/',
 ];
 
-function isAllowedTwitchPlayerNavigation(url: string, parent: string): boolean {
+const TWITCH_AUTH_HELPER_SCRIPT = `
+(() => {
+  const post = type => {
+    try {
+      window.ReactNativeWebView?.postMessage(JSON.stringify({ type }));
+    } catch {}
+  };
+
+  window.open = url => {
+    if (typeof url === 'string' && url.length > 0) {
+      window.location.assign(url);
+    }
+    return window;
+  };
+
+  let postedAuthComplete = false;
+  const detectAuthComplete = () => {
+    if (postedAuthComplete || !document.body) {
+      return;
+    }
+
+    const text = document.body.textContent?.toLowerCase() ?? '';
+    if (
+      (text.includes("you're logged in") || text.includes("you’re logged in")) &&
+      text.includes('refresh the page')
+    ) {
+      postedAuthComplete = true;
+      post('twitchAuthComplete');
+    }
+  };
+
+  detectAuthComplete();
+  new MutationObserver(detectAuthComplete).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+})();
+true;
+`;
+
+export function isAllowedTwitchPlayerNavigation(
+  url: string,
+  parent: string,
+  playerWebsiteUrl?: string,
+): boolean {
   if (!url) {
     return false;
   }
@@ -340,13 +408,58 @@ function isAllowedTwitchPlayerNavigation(url: string, parent: string): boolean {
   const parentBaseUrl = normalizedParent
     ? `https://${normalizedParent}/`
     : null;
+  const playerWebsiteBaseUrl = playerWebsiteUrl
+    ? getBaseUrl(playerWebsiteUrl)
+    : null;
 
   return (
     TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES.some(prefix =>
       url.startsWith(prefix),
     ) ||
-    (parentBaseUrl != null && url.startsWith(parentBaseUrl))
+    (parentBaseUrl != null && url.startsWith(parentBaseUrl)) ||
+    (playerWebsiteBaseUrl != null && url.startsWith(playerWebsiteBaseUrl))
   );
+}
+
+function getBaseUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.protocol}//${parsed.host}/`;
+  } catch {
+    return null;
+  }
+}
+
+export function buildHostedTwitchPlayerUrl(options: {
+  autoplay: boolean;
+  channel: string;
+  debug: boolean;
+  muted: boolean;
+  playerWebsiteUrl?: string;
+  video?: string;
+}): string | null {
+  if (!options.playerWebsiteUrl) {
+    return null;
+  }
+
+  try {
+    const url = new URL(options.playerWebsiteUrl);
+    url.searchParams.set('autoplay', options.autoplay ? 'true' : 'false');
+    url.searchParams.set('muted', options.muted ? 'true' : 'false');
+    url.searchParams.set('debug', options.debug ? 'true' : 'false');
+
+    if (options.video) {
+      url.searchParams.set('video', options.video);
+      url.searchParams.delete('channel');
+    } else {
+      url.searchParams.set('channel', options.channel);
+      url.searchParams.delete('video');
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 function buildTwitchEmbedHtml(options: {
@@ -403,6 +516,7 @@ function buildTwitchEmbedHtml(options: {
   <div id="twitch-player" style="width:${widthPx};height:${heightPx};"></div>
   <script>
     var enableTrace = ${debug ? 'true' : 'false'};
+    var initialMuted = ${muted ? 'true' : 'false'};
     function post(type, payload) {
       if (type === 'trace' && !enableTrace) {
         return;
@@ -437,10 +551,58 @@ function buildTwitchEmbedHtml(options: {
             volume: player.getVolume()
           });
         }
+        function disableCaptions() {
+          try {
+            if (typeof player.disableCaptions === 'function') {
+              player.disableCaptions();
+            }
+          } catch (e) {}
+        }
+        function emitPlaybackStats() {
+          try {
+            if (typeof player.getPlaybackStats !== 'function') {
+              return;
+            }
+            var stats = player.getPlaybackStats();
+            if (!stats) {
+              return;
+            }
+            post('playbackStats', {
+              bufferSize: stats.bufferSize,
+              displayResolution: stats.displayResolution,
+              fps: stats.fps,
+              hlsLatencyBroadcaster:
+                typeof stats.hlsLatencyBroadcaster === 'number'
+                  ? stats.hlsLatencyBroadcaster
+                  : null,
+              playbackRate: stats.playbackRate,
+              skippedFrames: stats.skippedFrames,
+              videoResolution: stats.videoResolution
+            });
+          } catch (e) {}
+        }
+        var playbackStatsInterval = null;
+        var lastBlockedEventAt = 0;
+        function startPlaybackStats() {
+          emitPlaybackStats();
+          if (playbackStatsInterval) {
+            return;
+          }
+          playbackStatsInterval = setInterval(emitPlaybackStats, 1000);
+        }
+        function stopPlaybackStats() {
+          if (!playbackStatsInterval) {
+            return;
+          }
+          clearInterval(playbackStatsInterval);
+          playbackStatsInterval = null;
+        }
         player.addEventListener(Twitch.Player.READY, function() {
+          disableCaptions();
           post('ready');
           emitMuteState();
-          if (player.getMuted()) {
+          startPlaybackStats();
+          if (!initialMuted && player.getMuted()) {
             var unmuteDeadline = Date.now() + 5000;
             var unmuteTick = setInterval(function() {
               var el = null;
@@ -463,30 +625,60 @@ function buildTwitchEmbedHtml(options: {
               }
             }, 100);
           }
-          var startWatchingDeadline = Date.now() + 10000;
-          var startWatchingTick = setInterval(function() {
-            var btn = null;
-            try {
-              var nodes = document.querySelectorAll('button, a, [role=button]');
-              for (var i = 0; i < nodes.length; i++) {
-                var t = (nodes[i].textContent || '').toLowerCase();
-                if (t.indexOf('Start Watching') !== -1) { btn = nodes[i]; break; }
-              }
-            } catch (e) {}
-            if (btn) {
-              clearInterval(startWatchingTick);
-              btn.click();
-            } else if (Date.now() > startWatchingDeadline) {
-              clearInterval(startWatchingTick);
+        });
+        var pendingPauseTimer = null;
+        function clearPendingPause() {
+          if (!pendingPauseTimer) {
+            return;
+          }
+          clearTimeout(pendingPauseTimer);
+          pendingPauseTimer = null;
+        }
+        function postPauseIfStillPaused() {
+          pendingPauseTimer = null;
+          try {
+            if (typeof player.isPaused === 'function' && !player.isPaused()) {
+              return;
             }
-          }, 300);
+          } catch (e) {}
+          post('pause');
+        }
+        function postPlaybackBlocked() {
+          var now = Date.now();
+          if (now - lastBlockedEventAt < 2000) {
+            return;
+          }
+          lastBlockedEventAt = now;
+          post('playbackBlocked');
+        }
+        player.addEventListener(Twitch.Player.PLAY, function() {
+          clearPendingPause();
+          post('play');
         });
-        player.addEventListener(Twitch.Player.PLAY, function() { post('play'); });
-        player.addEventListener(Twitch.Player.PAUSE, function() { post('pause'); });
+        player.addEventListener(Twitch.Player.PAUSE, function() {
+          clearPendingPause();
+          pendingPauseTimer = setTimeout(postPauseIfStillPaused, 750);
+        });
+        player.addEventListener(Twitch.Player.PLAYBACK_BLOCKED, function() {
+          postPlaybackBlocked();
+        });
+        player.addEventListener(Twitch.Player.CAPTIONS, function() {
+          disableCaptions();
+        });
         player.addEventListener(Twitch.Player.PLAYING, function() {
-          post('stateUpdate', { isBuffering: false, isPaused: false, isReady: true });
+          clearPendingPause();
+          disableCaptions();
+          post('playing');
+          post('stateUpdate', {
+            isBuffering: false,
+            isPaused: false,
+            isReady: true,
+            muted: player.getMuted(),
+            volume: player.getVolume()
+          });
+          startPlaybackStats();
         });
-        player.addEventListener(Twitch.Player.ENDED, function() { post('ended'); });
+        player.addEventListener(Twitch.Player.ENDED, function() { stopPlaybackStats(); post('ended'); });
         player.addEventListener(Twitch.Player.OFFLINE, function() { post('offline'); });
         player.addEventListener(Twitch.Player.ONLINE, function() { post('online'); });
         window.playerControls = {
@@ -528,7 +720,7 @@ function buildTwitchEmbedHtml(options: {
 </html>`;
 }
 
-function buildRawTwitchPlayerUrl(options: {
+export function buildRawTwitchPlayerUrl(options: {
   autoplay: boolean;
   channel: string;
   muted: boolean;
@@ -550,32 +742,40 @@ function buildRawTwitchPlayerUrl(options: {
   return `https://player.twitch.tv/?${params.toString()}`;
 }
 
+export function isAppUrl(url: string): boolean {
+  return url.startsWith('foam://') || url.startsWith('exp+foam://');
+}
+
+export function isTwitchPassportCallbackUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.hostname === 'www.twitch.tv' &&
+      parsed.pathname.startsWith('/passport-callback')
+    );
+  } catch {
+    return false;
+  }
+}
+
 interface ControlsOverlayProps {
   isVisible: boolean;
-  /**
-   * Timestamp when webview loaded
-   */
-  overlayStartTime: number;
+  latencySeconds?: number | null;
   onBackPress?: () => void;
   onPipPress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onToggleControls: () => void;
   paused: boolean;
-  /**
-   * Timestamp when player fired 'ready', or null if not ready yet.
-   */
-  readyTimestamp: number | null;
   showPip?: boolean;
   streamInfo?: StreamInfo;
 }
 
 interface OverlayMetricsState {
   duration: string;
-  latencySeconds: number;
 }
 
-function formatDuration(startedAt?: string): string {
+export function formatDuration(startedAt?: string): string {
   if (!startedAt) {
     return '0:00';
   }
@@ -602,14 +802,13 @@ function formatViewerCount(count?: number): string {
 
 function ControlsOverlay({
   isVisible,
-  overlayStartTime,
+  latencySeconds,
   onBackPress,
   onPipPress,
   onPlayPausePress,
   onRefresh,
   onToggleControls,
   paused,
-  readyTimestamp,
   showPip = Platform.OS === 'ios',
   streamInfo,
 }: ControlsOverlayProps) {
@@ -617,29 +816,7 @@ function ControlsOverlay({
   const opacity = useSharedValue(0);
   const [metrics, setMetrics] = useState<OverlayMetricsState>(() => ({
     duration: formatDuration(streamInfo?.startedAt),
-    latencySeconds: 0,
   }));
-
-  useEffect(() => {
-    if (!isVisible) {
-      return;
-    }
-
-    const nextLatencySeconds =
-      (readyTimestamp != null ? readyTimestamp : Date.now()) / 1000 -
-      overlayStartTime / 1000;
-
-    setMetrics(previous => {
-      if (previous.latencySeconds === nextLatencySeconds) {
-        return previous;
-      }
-
-      return {
-        ...previous,
-        latencySeconds: nextLatencySeconds,
-      };
-    });
-  }, [isVisible, overlayStartTime, readyTimestamp]);
 
   useEffect(() => {
     if (!isVisible || !streamInfo?.startedAt) {
@@ -718,7 +895,7 @@ function ControlsOverlay({
           style={styles.latencyBadgeIcon}
         />
         <Text style={styles.latencyBadgeText}>
-          {metrics.latencySeconds.toFixed(1)}s
+          {latencySeconds == null ? '--' : `${latencySeconds.toFixed(1)}s`}
         </Text>
       </View>
 
@@ -826,6 +1003,7 @@ export const StreamPlayer = memo(
       onOffline,
       onOnline,
       onPause,
+      onPlaybackLatencyChange,
       onPlay,
       onReady,
       onRefresh,
@@ -838,7 +1016,7 @@ export const StreamPlayer = memo(
       restrictWebViewNavigationToTwitchPlayer = false,
       showOverlayControls = true,
       streamInfo,
-      useRawTwitchPlayer = false,
+      useRawTwitchPlayer = true,
       video,
       width,
     },
@@ -861,32 +1039,29 @@ export const StreamPlayer = memo(
       isBuffering: true,
       isReady: false,
     });
+    const authCompletionReloadTimeoutRef = useRef<ReturnType<
+      typeof setTimeout
+    > | null>(null);
 
     const [controlsVisible, setControlsVisible] = useState(false);
     const controlsVisibleRef = useRef(false);
     const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
       null,
     );
-    const [overlayStartTime, setOverlayStartTime] = useState(() => Date.now());
-    const [readyTimestamp, setReadyTimestamp] = useState<number | null>(null);
+    const [playbackLatencySeconds, setPlaybackLatencySeconds] = useState<
+      number | null
+    >(null);
     const [hasContentGate, setHasContentGate] = useState(false);
     const [overlayUnlocked, setOverlayUnlocked] = useState(false);
     const [webViewKey, setWebViewKey] = useState(0);
+    const usesHostedPlayer =
+      !useRawTwitchPlayer && Boolean(TWITCH_PLAYER_WEBSITE_URL);
 
     useEffect(() => {
-      setOverlayStartTime(Date.now());
-      setReadyTimestamp(null);
+      setPlaybackLatencySeconds(null);
       setOverlayUnlocked(false);
       needsInitRef.current = true;
     }, [channel, video]);
-    const [showLoginPrompt, setShowLoginPrompt] = useState(true);
-
-    useEffect(() => {
-      if (hasContentGate) {
-        setShowLoginPrompt(true);
-      }
-    }, [hasContentGate]);
-
     useEffect(() => {
       onContentGateChange?.(hasContentGate);
     }, [hasContentGate, onContentGateChange]);
@@ -913,6 +1088,17 @@ export const StreamPlayer = memo(
 
     const forceRefresh = remountEmbedWebView;
 
+    const scheduleAuthCompletionReload = useCallback(() => {
+      if (authCompletionReloadTimeoutRef.current) {
+        return;
+      }
+
+      authCompletionReloadTimeoutRef.current = setTimeout(() => {
+        authCompletionReloadTimeoutRef.current = null;
+        remountEmbedWebView();
+      }, 750);
+    }, [remountEmbedWebView]);
+
     useEffect(() => {
       const handleAppStateChange = (nextAppState: AppStateStatus) => {
         if (appStateRef.current === 'background' && nextAppState === 'active') {
@@ -929,6 +1115,10 @@ export const StreamPlayer = memo(
 
       return () => {
         subscription.remove();
+        if (authCompletionReloadTimeoutRef.current) {
+          clearTimeout(authCompletionReloadTimeoutRef.current);
+          authCompletionReloadTimeoutRef.current = null;
+        }
       };
     }, [remountEmbedWebView]);
 
@@ -1092,8 +1282,6 @@ export const StreamPlayer = memo(
 
           switch (message.type) {
             case 'ready': {
-              const readyAt = Date.now();
-              setReadyTimestamp(readyAt);
               countMetric('stream.ready', {
                 autoplay,
                 component: 'StreamPlayer',
@@ -1104,15 +1292,6 @@ export const StreamPlayer = memo(
                 isBuffering: false,
               });
               onReady?.();
-              if (autoplay) {
-                play();
-                // Retry playing the stream so flaky streams still play
-                const retryPlay = () => {
-                  play();
-                };
-                setTimeout(retryPlay, 400);
-                setTimeout(retryPlay, 1200);
-              }
               if (!initialMuted && !deferOverlayUntilUserUnmute) {
                 const unmuteDeadline = Date.now() + 5000;
                 const unmuteInterval = setInterval(() => {
@@ -1125,6 +1304,9 @@ export const StreamPlayer = memo(
               break;
             }
             case 'play':
+              setPlayerState(prev => ({ ...prev, isPaused: false }));
+              break;
+            case 'playing':
               setPlayerState(prev => ({ ...prev, isPaused: false }));
               onPlay?.();
               break;
@@ -1203,6 +1385,34 @@ export const StreamPlayer = memo(
             case 'contentGateDetected':
               setHasContentGate(message.payload?.hasContentGate ?? false);
               break;
+            case 'playbackBlocked':
+              break;
+            case 'twitchAuthComplete':
+              scheduleAuthCompletionReload();
+              break;
+            case 'playbackStats': {
+              const latency = message.payload.hlsLatencyBroadcaster;
+              const hasUsableLiveLatency =
+                typeof latency === 'number' &&
+                Number.isFinite(latency) &&
+                latency > 0.25 &&
+                latency < 600;
+
+              if (usesHostedPlayer) {
+                const nextHasContentGate = !hasUsableLiveLatency;
+                setHasContentGate(nextHasContentGate);
+                onContentGateChange?.(nextHasContentGate);
+              }
+
+              if (hasUsableLiveLatency) {
+                setPlaybackLatencySeconds(latency);
+                onPlaybackLatencyChange?.(latency);
+              } else if (usesHostedPlayer) {
+                setPlaybackLatencySeconds(null);
+                onPlaybackLatencyChange?.(0);
+              }
+              break;
+            }
             case 'muteState': {
               const { muted: m, volume: v } = message.payload;
               setPlayerState(prev =>
@@ -1230,41 +1440,64 @@ export const StreamPlayer = memo(
         onError,
         onOffline,
         onOnline,
+        onContentGateChange,
         onPause,
+        onPlaybackLatencyChange,
         onPlay,
         onReady,
-        play,
+        scheduleAuthCompletionReload,
         unmute,
+        usesHostedPlayer,
       ],
     );
 
-    const webViewSource = useMemo(
-      () =>
-        useRawTwitchPlayer
-          ? {
-              uri: buildRawTwitchPlayerUrl({
-                channel: channel || 'twitch',
-                video,
-                parent,
-                autoplay,
-                muted: initialMuted,
-              }),
-            }
-          : {
-              html: buildTwitchEmbedHtml({
-                channel: channel || 'twitch',
-                video,
-                parent,
-                autoplay,
-                muted: initialMuted,
-                debug: __DEV__,
-                width: '100%',
-                height: '100%',
-              }),
-              baseUrl: `https://${parent}/`,
-            },
-      [autoplay, channel, video, parent, initialMuted, useRawTwitchPlayer],
-    );
+    const webViewSource = useMemo(() => {
+      const channelName = channel || 'twitch';
+      const sourceMuted = deferOverlayUntilUserUnmute ? true : initialMuted;
+      if (useRawTwitchPlayer) {
+        return {
+          uri: buildRawTwitchPlayerUrl({
+            channel: channelName,
+            video,
+            parent,
+            autoplay: true,
+            muted: sourceMuted,
+          }),
+        };
+      }
+
+      const hostedPlayerUrl = buildHostedTwitchPlayerUrl({
+        channel: channelName,
+        video,
+        autoplay: true,
+        muted: sourceMuted,
+        debug: __DEV__,
+        playerWebsiteUrl: TWITCH_PLAYER_WEBSITE_URL,
+      });
+
+      return hostedPlayerUrl
+        ? { uri: hostedPlayerUrl }
+        : {
+            html: buildTwitchEmbedHtml({
+              channel: channelName,
+              video,
+              parent,
+              autoplay: true,
+              muted: sourceMuted,
+              debug: __DEV__,
+              width: '100%',
+              height: '100%',
+            }),
+            baseUrl: `https://${parent}/`,
+          };
+    }, [
+      channel,
+      video,
+      parent,
+      initialMuted,
+      deferOverlayUntilUserUnmute,
+      useRawTwitchPlayer,
+    ]);
 
     const showControls = useCallback(() => {
       controlsVisibleRef.current = true;
@@ -1457,6 +1690,10 @@ export const StreamPlayer = memo(
     const handleShouldStartLoadWithRequest =
       useCallback<OnShouldStartLoadWithRequest>(
         request => {
+          if (isAppUrl(request.url)) {
+            return false;
+          }
+
           if (!restrictWebViewNavigationToTwitchPlayer) {
             return true;
           }
@@ -1465,13 +1702,24 @@ export const StreamPlayer = memo(
             return true;
           }
 
-          return isAllowedTwitchPlayerNavigation(request.url, parent);
+          return isAllowedTwitchPlayerNavigation(
+            request.url,
+            parent,
+            TWITCH_PLAYER_WEBSITE_URL,
+          );
         },
         [parent, restrictWebViewNavigationToTwitchPlayer],
       );
 
     const playerWidth: DimensionValue = width ?? '100%';
     const playerHeight: DimensionValue = height ?? '100%';
+    const allowsTwitchInteraction =
+      usesHostedPlayer || useRawTwitchPlayer || hasContentGate;
+    const shouldShowNativeControls =
+      showOverlayControls &&
+      !allowsTwitchInteraction &&
+      playerStatus.isReady &&
+      (!deferOverlayUntilUserUnmute || overlayUnlocked);
 
     return (
       <View
@@ -1490,40 +1738,56 @@ export const StreamPlayer = memo(
           cacheEnabled
           domStorageEnabled
           javaScriptEnabled
+          javaScriptCanOpenWindowsAutomatically
           mediaPlaybackRequiresUserAction={false}
-          scrollEnabled={useRawTwitchPlayer || hasContentGate}
-          keyboardDisplayRequiresUserAction={
-            !(useRawTwitchPlayer || hasContentGate)
-          }
+          injectedJavaScript={TWITCH_AUTH_HELPER_SCRIPT}
+          injectedJavaScriptBeforeContentLoaded={TWITCH_AUTH_HELPER_SCRIPT}
+          injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
+          injectedJavaScriptForMainFrameOnly={false}
+          scrollEnabled={allowsTwitchInteraction}
+          keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
           setBuiltInZoomControls={false}
           setDisplayZoomControls={false}
-          setSupportMultipleWindows={false}
+          setSupportMultipleWindows
           sharedCookiesEnabled
           thirdPartyCookiesEnabled
           originWhitelist={['*']}
           source={webViewSource}
           style={[
             styles.webView,
-            (useRawTwitchPlayer || hasContentGate) && styles.webViewScrollable,
+            allowsTwitchInteraction && styles.webViewScrollable,
           ]}
           onContentProcessDidTerminate={() => {
             remountEmbedWebView();
           }}
           onError={handleWebViewError}
           onHttpError={handleWebViewHttpError}
+          onOpenWindow={event => {
+            const targetUrl = event.nativeEvent.targetUrl;
+            if (!targetUrl || isAppUrl(targetUrl)) {
+              return;
+            }
+            webViewRef.current?.injectJavaScript(
+              `window.location.href = ${JSON.stringify(targetUrl)}; true;`,
+            );
+          }}
+          onNavigationStateChange={event => {
+            if (isTwitchPassportCallbackUrl(event.url)) {
+              scheduleAuthCompletionReload();
+            }
+          }}
           onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-          onLoadEnd={() => {
+          onLoadEnd={event => {
             onWebViewLoaded?.();
+            if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
+              scheduleAuthCompletionReload();
+              return;
+            }
             if (useRawTwitchPlayer) {
               return;
             }
             if (needsInitRef.current) {
               needsInitRef.current = false;
-              if (autoplay) {
-                setTimeout(() => {
-                  play();
-                }, 80);
-              }
             }
           }}
           onLoadStart={() => {
@@ -1540,18 +1804,15 @@ export const StreamPlayer = memo(
           }}
         />
 
-        {showOverlayControls &&
-          !hasContentGate &&
-          playerStatus.isReady &&
-          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
-            <GestureDetector gesture={overlayTapGesture}>
-              <View
-                style={styles.touchBlockOverlay}
-                accessibilityLabel="Show player controls"
-                accessibilityRole="button"
-              />
-            </GestureDetector>
-          )}
+        {shouldShowNativeControls && (
+          <GestureDetector gesture={overlayTapGesture}>
+            <View
+              style={styles.touchBlockOverlay}
+              accessibilityLabel="Show player controls"
+              accessibilityRole="button"
+            />
+          </GestureDetector>
+        )}
 
         {__DEV__ && lastHttpError && (
           <View
@@ -1574,82 +1835,32 @@ export const StreamPlayer = memo(
           </View>
         )}
 
-        {showOverlayControls &&
-          !hasContentGate &&
-          playerStatus.isReady &&
-          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
-            <PressableArea
-              onPress={toggleControlsInternal}
-              style={[
-                styles.controlsTriggerButton,
-                { top: insets.top + theme.space12 },
-              ]}
-              accessibilityLabel="Show player controls"
-              accessibilityRole="button"
-            >
-              <Icon color={theme.colorWhite} icon="more-horizontal" size={24} />
-            </PressableArea>
-          )}
+        {shouldShowNativeControls && (
+          <PressableArea
+            onPress={toggleControlsInternal}
+            style={[
+              styles.controlsTriggerButton,
+              { top: insets.top + theme.space12 },
+            ]}
+            accessibilityLabel="Show player controls"
+            accessibilityRole="button"
+          >
+            <Icon color={theme.colorWhite} icon="more-horizontal" size={24} />
+          </PressableArea>
+        )}
 
-        {showOverlayControls &&
-          !hasContentGate &&
-          playerStatus.isReady &&
-          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
-            <ControlsOverlay
-              isVisible={controlsVisible}
-              overlayStartTime={overlayStartTime}
-              onBackPress={onBackPress}
-              onPipPress={handlePipPress}
-              onPlayPausePress={handlePlayPause}
-              onRefresh={onRefresh}
-              onToggleControls={toggleControlsInternal}
-              paused={playerState.isPaused}
-              readyTimestamp={readyTimestamp}
-              streamInfo={streamInfo}
-            />
-          )}
-
-        {hasContentGate && (
-          // eslint-disable-next-line react/jsx-no-useless-fragment
-          <>
-            {showLoginPrompt && (
-              <View
-                style={[
-                  styles.loginPromptOverlay,
-                  { paddingTop: insets.top + theme.space12 },
-                ]}
-                pointerEvents="box-none"
-              >
-                <View style={styles.loginPromptBanner}>
-                  <Text
-                    color="gray.contrast"
-                    type="md"
-                    weight="bold"
-                    style={styles.loginPromptTitle}
-                  >
-                    Twitch sign-in required
-                  </Text>
-                  <Text
-                    color="gray.contrast"
-                    type="sm"
-                    style={styles.loginPromptText}
-                  >
-                    This stream is behind Twitch&apos;s mature-content/account
-                    gate. Tap the video and complete the Twitch prompt to start
-                    playback.
-                  </Text>
-                  <PressableArea
-                    onPress={() => setShowLoginPrompt(false)}
-                    style={styles.loginPromptDismiss}
-                  >
-                    <Text color="accent" weight="semibold" type="sm">
-                      Got it
-                    </Text>
-                  </PressableArea>
-                </View>
-              </View>
-            )}
-          </>
+        {shouldShowNativeControls && (
+          <ControlsOverlay
+            isVisible={controlsVisible}
+            latencySeconds={playbackLatencySeconds}
+            onBackPress={onBackPress}
+            onPipPress={handlePipPress}
+            onPlayPausePress={handlePlayPause}
+            onRefresh={onRefresh}
+            onToggleControls={toggleControlsInternal}
+            paused={playerState.isPaused}
+            streamInfo={streamInfo}
+          />
         )}
       </View>
     );
@@ -1839,37 +2050,6 @@ const styles = StyleSheet.create({
   liveIndicator: {
     alignItems: 'center',
     flexDirection: 'row',
-  },
-  loginPromptBanner: {
-    alignItems: 'center',
-    alignSelf: 'center',
-    backgroundColor: theme.colorBlackActiveContent,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    maxWidth: 340,
-    padding: theme.space16,
-  },
-  loginPromptDismiss: {
-    marginTop: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  loginPromptOverlay: {
-    alignItems: 'center',
-    bottom: 0,
-    justifyContent: 'center',
-    left: 0,
-    paddingHorizontal: theme.space16,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-  },
-  loginPromptText: {
-    maxWidth: 320,
-    textAlign: 'center',
-  },
-  loginPromptTitle: {
-    marginBottom: theme.space8,
-    textAlign: 'center',
   },
   overlayTapTarget: {
     bottom: 0,

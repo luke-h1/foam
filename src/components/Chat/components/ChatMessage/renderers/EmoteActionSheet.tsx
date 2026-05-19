@@ -3,7 +3,9 @@ import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView } from 'expo-symbols';
@@ -26,6 +28,17 @@ import {
 import { toast } from 'sonner-native';
 
 type PartVariant = ParsedPart<'emote'>;
+type ActionId =
+  | 'copy-name'
+  | 'copy-url'
+  | 'copy-url-2x'
+  | 'copy-url-4x'
+  | 'preview';
+
+const COPY_IMAGE_VARIANT_ACTIONS = [
+  { id: 'copy-url-2x', label: 'Copy 2x image URL', scale: '2x' },
+  { id: 'copy-url-4x', label: 'Copy 4x image URL', scale: '4x' },
+] as const;
 
 interface EmoteActionSheetProps {
   disableAnimations?: boolean;
@@ -44,11 +57,12 @@ export function EmoteActionSheet({
   const displayUrl = useMemo(
     () =>
       getDisplayEmoteUrl({
+        image_variants: part.image_variants,
         url: part.url,
         static_url: part.static_url,
         disableAnimations,
       }),
-    [disableAnimations, part.static_url, part.url],
+    [disableAnimations, part.image_variants, part.static_url, part.url],
   );
   const previewPart = useMemo(
     () =>
@@ -91,6 +105,25 @@ export function EmoteActionSheet({
     });
   }, [closeSheet, displayUrl]);
 
+  const copyScaledImageUrl = useCallback(
+    (scale: EmoteImageScale) => {
+      closeSheet();
+      const url = pickEmoteVariantUrl({
+        fallbackUrl: displayUrl,
+        imageVariants: part.image_variants,
+        preferredKind: disableAnimations ? 'static' : 'animated',
+        preferredScale: scale,
+      });
+      if (!url) {
+        return;
+      }
+      void Clipboard.setStringAsync(url).then(() => {
+        toast.success(`${scale} emote URL copied to clipboard`);
+      });
+    },
+    [closeSheet, disableAnimations, displayUrl, part.image_variants],
+  );
+
   const handlePreview = useCallback(() => {
     closeSheet();
     onPress?.(previewPart);
@@ -113,6 +146,13 @@ export function EmoteActionSheet({
           onPress: copyImageUrl,
           visible: Boolean(displayUrl),
         },
+        ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
+          id: action.id,
+          icon: 'copy',
+          label: action.label,
+          onPress: () => copyScaledImageUrl(action.scale),
+          visible: Boolean(part.image_variants),
+        })),
         {
           id: 'preview' as const,
           icon: 'external-link',
@@ -121,7 +161,15 @@ export function EmoteActionSheet({
           visible: Boolean(onPress),
         },
       ].filter(action => action.visible),
-    [copyImageUrl, copyName, displayUrl, handlePreview, onPress],
+    [
+      copyImageUrl,
+      copyName,
+      copyScaledImageUrl,
+      displayUrl,
+      handlePreview,
+      onPress,
+      part.image_variants,
+    ],
   );
 
   const previewSubtitle = useMemo(() => {
@@ -140,21 +188,20 @@ export function EmoteActionSheet({
     return 'Emote actions';
   }, [part.creator, part.site]);
 
-  const getSFSymbolName = useCallback(
-    (actionId: 'copy-name' | 'copy-url' | 'preview') => {
-      switch (actionId) {
-        case 'copy-name':
-        case 'copy-url':
-          return 'doc.on.doc' as const;
-        case 'preview':
-          return 'arrow.up.right.square' as const;
+  const getSFSymbolName = useCallback((actionId: ActionId) => {
+    switch (actionId) {
+      case 'copy-name':
+      case 'copy-url':
+      case 'copy-url-2x':
+      case 'copy-url-4x':
+        return 'doc.on.doc' as const;
+      case 'preview':
+        return 'arrow.up.right.square' as const;
 
-        default:
-          return 'doc.on.doc' as const;
-      }
-    },
-    [],
-  );
+      default:
+        return 'doc.on.doc' as const;
+    }
+  }, []);
 
   const triggerChild = isValidElement(children)
     ? cloneElement(
@@ -187,6 +234,7 @@ export function EmoteActionSheet({
                       trackLoadTime
                       trackLoadContext="chat.emote-action-sheet"
                       source={displayUrl}
+                      cacheVariant="emote"
                       style={styles.previewImage}
                       contentFit="contain"
                       transition={50}

@@ -55,6 +55,7 @@ export function StvEmoteEvent({
           trackLoadTime
           trackLoadContext="chat.stv-emote-event"
           source={displayUrl}
+          cacheVariant="emote"
           style={styles.emoteImage}
           transition={0}
           contentFit="contain"

@@ -8,6 +8,34 @@ import { memo, useCallback, forwardRef } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+function ToggleMenuItem({
+  icon,
+  label,
+  onValueChange,
+  value,
+}: {
+  icon: string;
+  label: string;
+  onValueChange?: (value: boolean) => void;
+  value: boolean;
+}) {
+  return (
+    <View style={styles.menuItem}>
+      <Icon icon={icon} color={theme.colorBorderHover} />
+      <View style={styles.menuItemTextContainer}>
+        <Text style={styles.menuItemText} weight="semibold">
+          {label}
+        </Text>
+        <Switch
+          accessibilityLabel={label}
+          value={value}
+          onValueChange={onValueChange}
+        />
+      </View>
+    </View>
+  );
+}
+
 export interface SettingsSheetProps extends Omit<
   TrueSheetProps,
   'children' | 'sizes'
@@ -157,57 +185,33 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
               </View>
             </Button>
 
-            <View style={styles.menuItem}>
-              <Icon icon="clock" color={theme.colorBorderHover} />
-              <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText} weight="semibold">
-                  Show Timestamps
-                </Text>
-                <Switch
-                  value={showTimestamps}
-                  onValueChange={value => onToggleShowTimestamps?.(value)}
-                />
-              </View>
-            </View>
+            <ToggleMenuItem
+              icon="clock"
+              label="Show Timestamps"
+              value={showTimestamps}
+              onValueChange={onToggleShowTimestamps}
+            />
 
-            <View style={styles.menuItem}>
-              <Icon icon="at-sign" color={theme.colorBorderHover} />
-              <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText} weight="semibold">
-                  Highlight Own Mentions
-                </Text>
-                <Switch
-                  value={highlightOwnMentions}
-                  onValueChange={value => onToggleHighlightOwnMentions?.(value)}
-                />
-              </View>
-            </View>
+            <ToggleMenuItem
+              icon="at-sign"
+              label="Highlight Own Mentions"
+              value={highlightOwnMentions}
+              onValueChange={onToggleHighlightOwnMentions}
+            />
 
-            <View style={styles.menuItem}>
-              <Icon icon="corner-up-left" color={theme.colorBorderHover} />
-              <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText} weight="semibold">
-                  Inline Reply Context
-                </Text>
-                <Switch
-                  value={showInlineReplyContext}
-                  onValueChange={value => onToggleInlineReplyContext?.(value)}
-                />
-              </View>
-            </View>
+            <ToggleMenuItem
+              icon="corner-up-left"
+              label="Inline Reply Context"
+              value={showInlineReplyContext}
+              onValueChange={onToggleInlineReplyContext}
+            />
 
-            <View style={styles.menuItem}>
-              <Icon icon="arrow-down-circle" color={theme.colorBorderHover} />
-              <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText} weight="semibold">
-                  Show Jump Pill
-                </Text>
-                <Switch
-                  value={showUnreadJumpPill}
-                  onValueChange={value => onToggleShowUnreadJumpPill?.(value)}
-                />
-              </View>
-            </View>
+            <ToggleMenuItem
+              icon="arrow-down-circle"
+              label="Show Jump Pill"
+              value={showUnreadJumpPill}
+              onValueChange={onToggleShowUnreadJumpPill}
+            />
 
             {onReconnect ? (
               <Button

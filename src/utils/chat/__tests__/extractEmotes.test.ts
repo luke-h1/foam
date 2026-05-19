@@ -16,6 +16,16 @@ describe('extractEmotes', () => {
         id: 'emotesv2_sub',
         name: 'SubHype',
         original_name: 'SubHype',
+        image_variants: {
+          animated: {
+            '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/default/dark/2.0',
+            '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/default/dark/3.0',
+          },
+          static: {
+            '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/static/dark/2.0',
+            '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/static/dark/3.0',
+          },
+        },
         site: 'Twitch Subscriber',
         url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_sub/default/dark/3.0',
       }),

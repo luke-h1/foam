@@ -1,4 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import { getEmoteImageCacheUrls } from '@app/utils/emote/emoteImageVariants';
 import type { CacheImageOptions } from '@app/utils/image/image-cache';
 import {
   cacheImageFromUrl,
@@ -14,6 +15,7 @@ export const cacheEmoteImage = async (
   emoteUrl: string,
   options: CacheImageOptions = {},
 ): Promise<string> => {
+  const variant = options.variant ?? 'emote';
   if (
     !emoteUrl ||
     emoteUrl.startsWith('data:') ||
@@ -21,7 +23,7 @@ export const cacheEmoteImage = async (
   ) {
     return emoteUrl;
   }
-  const existingFileUri = getCachedImageUri(emoteUrl);
+  const existingFileUri = getCachedImageUri(emoteUrl, { variant });
   if (existingFileUri) {
     return existingFileUri;
   }
@@ -36,7 +38,7 @@ export const cacheEmoteImage = async (
       const fileUri = await cacheImageFromUrl(emoteUrl, {
         priority: options.priority ?? 'visible',
         signal: options.signal,
-        variant: options.variant,
+        variant,
       });
       emoteImageCachePromises.delete(emoteUrl);
       return fileUri;
@@ -62,7 +64,7 @@ export const getCachedEmoteUri = (emoteUrl: string): string => {
   ) {
     return emoteUrl;
   }
-  const cachedUri = getCachedImageUri(emoteUrl);
+  const cachedUri = getCachedImageUri(emoteUrl, { variant: 'emote' });
   return cachedUri ?? emoteUrl;
 };
 
@@ -75,12 +77,23 @@ export const cacheEmoteImages = async (
     return;
   }
 
-  const urls = emotes.map(e => e.url).filter(Boolean);
-  const urlsToCache = urls.filter(url => {
-    if (url.startsWith('data:') || url.startsWith('file://')) {
-      return false;
-    }
-    return !getCachedImageUri(url);
+  const urlsToCache: string[] = [];
+  const seen = new Set<string>();
+
+  emotes.forEach(emote => {
+    getEmoteImageCacheUrls(emote).forEach(url => {
+      if (
+        seen.has(url) ||
+        url.startsWith('data:') ||
+        url.startsWith('file://') ||
+        getCachedImageUri(url, { variant: 'emote' })
+      ) {
+        return;
+      }
+
+      seen.add(url);
+      urlsToCache.push(url);
+    });
   });
 
   if (urlsToCache.length === 0) {

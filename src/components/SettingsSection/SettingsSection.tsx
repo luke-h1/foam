@@ -126,7 +126,11 @@ export function SettingsToggleRow(props: {
       {...rowProps}
       trailing={
         <View>
-          <Switch value={value} onValueChange={onValueChange} />
+          <Switch
+            accessibilityLabel={rowProps.title}
+            value={value}
+            onValueChange={onValueChange}
+          />
         </View>
       }
     />

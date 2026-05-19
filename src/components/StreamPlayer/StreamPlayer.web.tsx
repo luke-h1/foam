@@ -54,11 +54,8 @@ export interface StreamPlayerProps {
   onVideoAreaSwipeDown?: () => void;
   onWebViewLoaded?: () => void;
   parent?: string;
-  restrictWebViewNavigationToTwitchPlayer?: boolean;
   showOverlayControls?: boolean;
   streamInfo?: StreamInfo;
-  streamProxyBaseUrl?: string;
-  useRawTwitchPlayer?: boolean;
   video?: string;
   width?: DimensionValue;
 }
@@ -195,10 +192,6 @@ export const StreamPlayer = memo(
 );
 
 StreamPlayer.displayName = 'StreamPlayer';
-
-export function StreamPlayerPrewarm() {
-  return null;
-}
 
 const styles = StyleSheet.create({
   container: {

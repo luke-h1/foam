@@ -177,8 +177,11 @@ const config: ExpoConfig = {
     },
     EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL:
       process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL,
+    EXPO_PUBLIC_PLAYER_URL: process.env.EXPO_PUBLIC_PLAYER_URL,
     EXPO_PUBLIC_TWITCH_CLIENT_ID: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
     EXPO_PUBLIC_AUTH_PROXY_API_KEY: process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
+    EXPO_PUBLIC_TWITCH_PLAYER_WEBSITE_URL:
+      process.env.EXPO_PUBLIC_TWITCH_PLAYER_WEBSITE_URL,
     MOCK_SERVER_URL: appConfig.mockServerUrl,
     ota: {
       criticalIndex: Number.parseInt(process.env.OTA_CRITICAL_INDEX ?? '0', 10),

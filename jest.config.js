@@ -36,6 +36,9 @@ const jestConfig = {
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
+    'scripts/workflows/chat-performance-comment.ts',
+    'scripts/workflows/*-utils.ts',
+    'scripts/workflows/github-actions.ts',
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**',

@@ -278,9 +278,9 @@ interface ChatMessagePaneProps {
   handleMomentumScrollEnd: () => void;
   handleEndReached: () => void;
   handleContentSizeChange: () => void;
-  renderItem: ListRenderItem<AnyChatMessageType>;
-  keyExtractor: (item: AnyChatMessageType) => string;
-  getItemType: (item: AnyChatMessageType) => string;
+  renderItem: ListRenderItem<AnyChatMessageType | undefined>;
+  keyExtractor: (item: AnyChatMessageType | undefined, index: number) => string;
+  getItemType: (item: AnyChatMessageType | undefined) => string;
   listContentStyle: StyleProp<ViewStyle>;
   messageListExtraData?: unknown;
   onClearFilters: () => void;
@@ -317,6 +317,7 @@ interface ChatInputShellProps {
     userstate: ReturnType<typeof createUserStateFromTags>,
     baseMessage: AnyChatMessageType,
     userId?: string,
+    countUnread?: boolean,
   ) => void | Promise<void>;
   sendMessage: (
     channel: string,
@@ -711,7 +712,7 @@ const ChatMessagePane = memo(
       showOnlyMentions,
     ]);
 
-    const listData = visibleMessages;
+    const listData = visibleMessages.filter(isRenderableChatMessage);
 
     useEffect(() => {
       if (hasMessages) {
@@ -957,6 +958,8 @@ const ChatInputShell = memo(
           messageText,
           optimisticUserstate,
           optimisticMessage,
+          undefined,
+          false,
         );
 
         if (replyTo) {
@@ -2843,46 +2846,52 @@ export const Chat = memo(
 
     const renderItem = useCallback(
       // eslint-disable-next-line react/no-unused-prop-types
-      ({ item: msg }: { item: AnyChatMessageType }) => (
-        <RichChatMessage
-          id={msg.id}
-          channel={msg.channel}
-          message={msg.message}
-          userstate={msg.userstate}
-          badges={msg.badges}
-          message_id={msg.message_id}
-          message_nonce={msg.message_nonce}
-          sender={msg.sender}
-          style={styles.messageContainer}
-          parentDisplayName={msg.parentDisplayName}
-          parentColor={msg.parentColor}
-          replyDisplayName={msg.replyDisplayName}
-          replyBody={msg.replyBody}
-          onBadgePress={handleBadgeLongPressRef.current}
-          onMessageLongPress={handleMessageLongPressRef.current}
-          onEmotePress={handleEmotePressRef.current}
-          onUsernamePress={handleUsernamePress}
-          getMentionColor={getMentionColorRef.current}
-          parseTextForEmotes={parseTextForEmotesRef.current}
-          isChannelPointRedemption={msg.isChannelPointRedemption}
-          isTwitchSystemNotice={msg.isTwitchSystemNotice}
-          currentUsername={currentUsernameForMentions}
-          currentUsernameNormalized={currentUsernameNormalized}
-          density={preferences.chatDensity}
-          disableEmoteAnimations={preferences.disableEmoteAnimations}
-          showTimestamp={preferences.chatTimestamps}
-          highlightedUserSet={highlightedUserSet}
-          showInlineReplyContext={preferences.showInlineReplyContext}
-          onReplyContextPress={handleReplyContextPress}
-          highlightedMessageId={highlightedReplyTargetMessageId}
-          // @ts-expect-error - notice_tags union type not narrowing correctly
-          notice_tags={
-            'notice_tags' in msg && msg.notice_tags
-              ? msg.notice_tags
-              : undefined
-          }
-        />
-      ),
+      ({ item: msg }: { item: AnyChatMessageType | undefined }) => {
+        if (!isRenderableChatMessage(msg)) {
+          return null;
+        }
+
+        return (
+          <RichChatMessage
+            id={msg.id}
+            channel={msg.channel}
+            message={msg.message}
+            userstate={msg.userstate}
+            badges={msg.badges}
+            message_id={msg.message_id}
+            message_nonce={msg.message_nonce}
+            sender={msg.sender}
+            style={styles.messageContainer}
+            parentDisplayName={msg.parentDisplayName}
+            parentColor={msg.parentColor}
+            replyDisplayName={msg.replyDisplayName}
+            replyBody={msg.replyBody}
+            onBadgePress={handleBadgeLongPressRef.current}
+            onMessageLongPress={handleMessageLongPressRef.current}
+            onEmotePress={handleEmotePressRef.current}
+            onUsernamePress={handleUsernamePress}
+            getMentionColor={getMentionColorRef.current}
+            parseTextForEmotes={parseTextForEmotesRef.current}
+            isChannelPointRedemption={msg.isChannelPointRedemption}
+            isTwitchSystemNotice={msg.isTwitchSystemNotice}
+            currentUsername={currentUsernameForMentions}
+            currentUsernameNormalized={currentUsernameNormalized}
+            density={preferences.chatDensity}
+            disableEmoteAnimations={preferences.disableEmoteAnimations}
+            showTimestamp={preferences.chatTimestamps}
+            highlightedUserSet={highlightedUserSet}
+            showInlineReplyContext={preferences.showInlineReplyContext}
+            onReplyContextPress={handleReplyContextPress}
+            highlightedMessageId={highlightedReplyTargetMessageId}
+            // @ts-expect-error - notice_tags union type not narrowing correctly
+            notice_tags={
+              'notice_tags' in msg && msg.notice_tags
+                ? msg.notice_tags
+                : undefined
+            }
+          />
+        );
+      },
       [
         handleUsernamePress,
         handleReplyContextPress,
@@ -2898,11 +2907,18 @@ export const Chat = memo(
     );
 
     const keyExtractor = useCallback(
-      (item: AnyChatMessageType) => `${item.message_id}_${item.message_nonce}`,
+      (item: AnyChatMessageType | undefined, index: number) =>
+        isRenderableChatMessage(item)
+          ? `${item.message_id}_${item.message_nonce}`
+          : `invalid-message-${index}`,
       [],
     );
 
-    const getItemType = useCallback((item: AnyChatMessageType) => {
+    const getItemType = useCallback((item: AnyChatMessageType | undefined) => {
+      if (!isRenderableChatMessage(item)) {
+        return 'invalid';
+      }
+
       if (item.sender?.toLowerCase() === 'system') {
         return 'system-notice';
       }

@@ -247,6 +247,7 @@ const EmoteCell = memo(({ cellSize, item, onPress }: EmoteCellProps) => {
             style={[styles.emoteImage, { height: innerSize, width: innerSize }]}
             contentFit="contain"
             cachePolicy="memory-disk"
+            cacheVariant="emote"
             transition={0}
             placeholder={BLURHASH}
             recyclingKey={item.id}

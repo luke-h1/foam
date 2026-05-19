@@ -77,6 +77,7 @@ export const Image = function Image({
   cachePriority = 'visible',
   cacheToFile = true,
   cacheVariant = 'image',
+  recyclingKey,
   useNitro: _useNitro,
   trackLoadTime = false,
   trackLoadContext,
@@ -210,6 +211,7 @@ export const Image = function Image({
         cachePolicy={cachePolicy}
         transition={transition}
         decodeFormat="rgb"
+        recyclingKey={recyclingKey ?? sourceUri}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onLoadStart={trackLoad ? onLoadStart : undefined}
         onLoadEnd={trackLoad ? onLoadEnd : undefined}
