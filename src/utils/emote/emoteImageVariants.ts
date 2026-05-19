@@ -92,23 +92,13 @@ export function pickEmoteVariantUrl({
 }
 
 export function getEmoteImageVariantUrls(emote: SanitisedEmote): string[] {
-  const urls = new Set<string>();
-  if (emote.url) {
-    urls.add(emote.url);
-  }
-  if (emote.static_url) {
-    urls.add(emote.static_url);
-  }
+  const urls = new Set(getEmoteImageCacheUrls(emote));
 
   Object.values(emote.image_variants?.animated ?? {}).forEach(url => {
-    if (url) {
-      urls.add(url);
-    }
+    addUrl(urls, url);
   });
   Object.values(emote.image_variants?.static ?? {}).forEach(url => {
-    if (url) {
-      urls.add(url);
-    }
+    addUrl(urls, url);
   });
 
   return Array.from(urls);
@@ -116,14 +106,16 @@ export function getEmoteImageVariantUrls(emote: SanitisedEmote): string[] {
 
 export function getEmoteImageCacheUrls(emote: SanitisedEmote): string[] {
   const urls = new Set<string>();
-  if (emote.url) {
-    urls.add(emote.url);
-  }
-  if (emote.static_url) {
-    urls.add(emote.static_url);
-  }
+  addUrl(urls, emote.url);
+  addUrl(urls, emote.static_url);
 
   return Array.from(urls);
+}
+
+function addUrl(urls: Set<string>, url?: string | null): void {
+  if (url) {
+    urls.add(url);
+  }
 }
 
 export function withResolvedEmoteImageVariants<T extends SanitisedEmote>(

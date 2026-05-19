@@ -3,6 +3,7 @@ import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
@@ -27,6 +28,17 @@ import {
 import { toast } from 'sonner-native';
 
 type PartVariant = ParsedPart<'emote'>;
+type ActionId =
+  | 'copy-name'
+  | 'copy-url'
+  | 'copy-url-2x'
+  | 'copy-url-4x'
+  | 'preview';
+
+const COPY_IMAGE_VARIANT_ACTIONS = [
+  { id: 'copy-url-2x', label: 'Copy 2x image URL', scale: '2x' },
+  { id: 'copy-url-4x', label: 'Copy 4x image URL', scale: '4x' },
+] as const;
 
 interface EmoteActionSheetProps {
   disableAnimations?: boolean;
@@ -93,37 +105,24 @@ export function EmoteActionSheet({
     });
   }, [closeSheet, displayUrl]);
 
-  const copy2xImageUrl = useCallback(() => {
-    closeSheet();
-    const url = pickEmoteVariantUrl({
-      fallbackUrl: displayUrl,
-      imageVariants: part.image_variants,
-      preferredKind: disableAnimations ? 'static' : 'animated',
-      preferredScale: '2x',
-    });
-    if (!url) {
-      return;
-    }
-    void Clipboard.setStringAsync(url).then(() => {
-      toast.success('2x emote URL copied to clipboard');
-    });
-  }, [closeSheet, disableAnimations, displayUrl, part.image_variants]);
-
-  const copy4xImageUrl = useCallback(() => {
-    closeSheet();
-    const url = pickEmoteVariantUrl({
-      fallbackUrl: displayUrl,
-      imageVariants: part.image_variants,
-      preferredKind: disableAnimations ? 'static' : 'animated',
-      preferredScale: '4x',
-    });
-    if (!url) {
-      return;
-    }
-    void Clipboard.setStringAsync(url).then(() => {
-      toast.success('4x emote URL copied to clipboard');
-    });
-  }, [closeSheet, disableAnimations, displayUrl, part.image_variants]);
+  const copyScaledImageUrl = useCallback(
+    (scale: EmoteImageScale) => {
+      closeSheet();
+      const url = pickEmoteVariantUrl({
+        fallbackUrl: displayUrl,
+        imageVariants: part.image_variants,
+        preferredKind: disableAnimations ? 'static' : 'animated',
+        preferredScale: scale,
+      });
+      if (!url) {
+        return;
+      }
+      void Clipboard.setStringAsync(url).then(() => {
+        toast.success(`${scale} emote URL copied to clipboard`);
+      });
+    },
+    [closeSheet, disableAnimations, displayUrl, part.image_variants],
+  );
 
   const handlePreview = useCallback(() => {
     closeSheet();
@@ -147,20 +146,13 @@ export function EmoteActionSheet({
           onPress: copyImageUrl,
           visible: Boolean(displayUrl),
         },
-        {
-          id: 'copy-url-2x' as const,
+        ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
+          id: action.id,
           icon: 'copy',
-          label: 'Copy 2x image URL',
-          onPress: copy2xImageUrl,
+          label: action.label,
+          onPress: () => copyScaledImageUrl(action.scale),
           visible: Boolean(part.image_variants),
-        },
-        {
-          id: 'copy-url-4x' as const,
-          icon: 'copy',
-          label: 'Copy 4x image URL',
-          onPress: copy4xImageUrl,
-          visible: Boolean(part.image_variants),
-        },
+        })),
         {
           id: 'preview' as const,
           icon: 'external-link',
@@ -170,10 +162,9 @@ export function EmoteActionSheet({
         },
       ].filter(action => action.visible),
     [
-      copy2xImageUrl,
-      copy4xImageUrl,
       copyImageUrl,
       copyName,
+      copyScaledImageUrl,
       displayUrl,
       handlePreview,
       onPress,
@@ -197,30 +188,20 @@ export function EmoteActionSheet({
     return 'Emote actions';
   }, [part.creator, part.site]);
 
-  const getSFSymbolName = useCallback(
-    (
-      actionId:
-        | 'copy-name'
-        | 'copy-url'
-        | 'copy-url-2x'
-        | 'copy-url-4x'
-        | 'preview',
-    ) => {
-      switch (actionId) {
-        case 'copy-name':
-        case 'copy-url':
-        case 'copy-url-2x':
-        case 'copy-url-4x':
-          return 'doc.on.doc' as const;
-        case 'preview':
-          return 'arrow.up.right.square' as const;
+  const getSFSymbolName = useCallback((actionId: ActionId) => {
+    switch (actionId) {
+      case 'copy-name':
+      case 'copy-url':
+      case 'copy-url-2x':
+      case 'copy-url-4x':
+        return 'doc.on.doc' as const;
+      case 'preview':
+        return 'arrow.up.right.square' as const;
 
-        default:
-          return 'doc.on.doc' as const;
-      }
-    },
-    [],
-  );
+      default:
+        return 'doc.on.doc' as const;
+    }
+  }, []);
 
   const triggerChild = isValidElement(children)
     ? cloneElement(

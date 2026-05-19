@@ -1715,6 +1715,11 @@ export const StreamPlayer = memo(
     const playerHeight: DimensionValue = height ?? '100%';
     const allowsTwitchInteraction =
       usesHostedPlayer || useRawTwitchPlayer || hasContentGate;
+    const shouldShowNativeControls =
+      showOverlayControls &&
+      !allowsTwitchInteraction &&
+      playerStatus.isReady &&
+      (!deferOverlayUntilUserUnmute || overlayUnlocked);
 
     return (
       <View
@@ -1799,19 +1804,15 @@ export const StreamPlayer = memo(
           }}
         />
 
-        {showOverlayControls &&
-          !allowsTwitchInteraction &&
-          !hasContentGate &&
-          playerStatus.isReady &&
-          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
-            <GestureDetector gesture={overlayTapGesture}>
-              <View
-                style={styles.touchBlockOverlay}
-                accessibilityLabel="Show player controls"
-                accessibilityRole="button"
-              />
-            </GestureDetector>
-          )}
+        {shouldShowNativeControls && (
+          <GestureDetector gesture={overlayTapGesture}>
+            <View
+              style={styles.touchBlockOverlay}
+              accessibilityLabel="Show player controls"
+              accessibilityRole="button"
+            />
+          </GestureDetector>
+        )}
 
         {__DEV__ && lastHttpError && (
           <View
@@ -1834,41 +1835,33 @@ export const StreamPlayer = memo(
           </View>
         )}
 
-        {showOverlayControls &&
-          !allowsTwitchInteraction &&
-          !hasContentGate &&
-          playerStatus.isReady &&
-          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
-            <PressableArea
-              onPress={toggleControlsInternal}
-              style={[
-                styles.controlsTriggerButton,
-                { top: insets.top + theme.space12 },
-              ]}
-              accessibilityLabel="Show player controls"
-              accessibilityRole="button"
-            >
-              <Icon color={theme.colorWhite} icon="more-horizontal" size={24} />
-            </PressableArea>
-          )}
+        {shouldShowNativeControls && (
+          <PressableArea
+            onPress={toggleControlsInternal}
+            style={[
+              styles.controlsTriggerButton,
+              { top: insets.top + theme.space12 },
+            ]}
+            accessibilityLabel="Show player controls"
+            accessibilityRole="button"
+          >
+            <Icon color={theme.colorWhite} icon="more-horizontal" size={24} />
+          </PressableArea>
+        )}
 
-        {showOverlayControls &&
-          !allowsTwitchInteraction &&
-          !hasContentGate &&
-          playerStatus.isReady &&
-          (!deferOverlayUntilUserUnmute || overlayUnlocked) && (
-            <ControlsOverlay
-              isVisible={controlsVisible}
-              latencySeconds={playbackLatencySeconds}
-              onBackPress={onBackPress}
-              onPipPress={handlePipPress}
-              onPlayPausePress={handlePlayPause}
-              onRefresh={onRefresh}
-              onToggleControls={toggleControlsInternal}
-              paused={playerState.isPaused}
-              streamInfo={streamInfo}
-            />
-          )}
+        {shouldShowNativeControls && (
+          <ControlsOverlay
+            isVisible={controlsVisible}
+            latencySeconds={playbackLatencySeconds}
+            onBackPress={onBackPress}
+            onPipPress={handlePipPress}
+            onPlayPausePress={handlePlayPause}
+            onRefresh={onRefresh}
+            onToggleControls={toggleControlsInternal}
+            paused={playerState.isPaused}
+            streamInfo={streamInfo}
+          />
+        )}
       </View>
     );
   }),
