@@ -7,7 +7,13 @@ import { useSelector } from '@legendapp/state/react';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useMemo } from 'react';
-import { type StyleProp, TextStyle, View, StyleSheet } from 'react-native';
+import {
+  type StyleProp,
+  TextStyle,
+  View,
+  StyleSheet,
+  Image,
+} from 'react-native';
 import Svg, {
   Defs,
   RadialGradient as SvgRadialGradient,
@@ -103,6 +109,7 @@ function PaintedUsernameComponent({
   }, [paint]);
 
   const isRadial = paint?.function === 'RADIAL_GRADIENT';
+  const isAssetPaint = paint?.function === 'URL' && !!paint.image_url;
 
   const renderGradient = () => {
     if (isRadial) {
@@ -139,6 +146,23 @@ function PaintedUsernameComponent({
             </Svg>
           </View>
           {/* Invisible text to size the gradient correctly */}
+          <Text style={[styles.hiddenText, usernameTextStyle, shadowStyle]}>
+            {displayUsername}
+          </Text>
+        </View>
+      );
+    }
+
+    if (isAssetPaint) {
+      return (
+        <View style={styles.gradient}>
+          <View style={styles.svgContainer}>
+            <Image
+              source={{ uri: paint.image_url }}
+              style={styles.assetPaintImage}
+              resizeMode={paint.repeat ? 'repeat' : 'cover'}
+            />
+          </View>
           <Text style={[styles.hiddenText, usernameTextStyle, shadowStyle]}>
             {displayUsername}
           </Text>
@@ -202,6 +226,13 @@ const styles = StyleSheet.create({
   },
   svgGradient: {
     position: 'absolute',
+  },
+  assetPaintImage: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
 });
 
