@@ -1,5 +1,6 @@
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { render } from '@testing-library/react-native';
+import { Image } from 'react-native';
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
 
 jest.mock('@app/store/chatStore/state', () => ({
@@ -130,6 +131,39 @@ describe('PaintedUsername', () => {
       );
 
       expect(getAllByText('UrlPaint:').length).toBeGreaterThanOrEqual(1);
+    });
+
+    test('should render URL paint as asset image with repeat resize mode', () => {
+      const urlPaint = createPaintData({
+        function: 'URL',
+        image_url: 'https://cdn.7tv.app/paint/test/2x.webp',
+        repeat: true,
+      });
+
+      const { UNSAFE_getByType } = render(
+        <PaintedUsername username="AssetRepeat" paint={urlPaint} />,
+      );
+
+      const paintImage = UNSAFE_getByType(Image);
+      expect(paintImage.props.source).toEqual({
+        uri: 'https://cdn.7tv.app/paint/test/2x.webp',
+      });
+      expect(paintImage.props.resizeMode).toBe('repeat');
+    });
+
+    test('should render URL paint as asset image with cover resize mode', () => {
+      const urlPaint = createPaintData({
+        function: 'URL',
+        image_url: 'https://cdn.7tv.app/paint/test/4x.webp',
+        repeat: false,
+      });
+
+      const { UNSAFE_getByType } = render(
+        <PaintedUsername username="AssetCover" paint={urlPaint} />,
+      );
+
+      const paintImage = UNSAFE_getByType(Image);
+      expect(paintImage.props.resizeMode).toBe('cover');
     });
 
     test('should handle single stop gradient by duplicating color', () => {
