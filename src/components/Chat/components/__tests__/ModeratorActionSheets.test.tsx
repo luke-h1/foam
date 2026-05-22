@@ -92,6 +92,56 @@ describe('Moderator action sheets', () => {
     expect(queryByText('Ban User')).toBeTruthy();
   });
 
+  test('shows pinned message actions for moderators with a message id', () => {
+    const onPinMessage = jest.fn();
+    const onUpdatePinnedMessage = jest.fn();
+    const onUnpinMessage = jest.fn();
+
+    const { rerender, queryByText, getByText } = render(
+      <ActionSheet
+        visible
+        onClose={jest.fn()}
+        message={[{ type: 'text', content: 'pin this' }]}
+        username="viewer"
+        handleReply={jest.fn()}
+        handleCopy={jest.fn()}
+        canModerateChat
+        canPinMessage
+        handlePinMessage={onPinMessage}
+        handleUpdatePinnedMessage={onUpdatePinnedMessage}
+        handleUnpinMessage={onUnpinMessage}
+      />,
+    );
+
+    fireEvent.press(getByText('Pin Message'));
+    expect(onPinMessage).toHaveBeenCalledTimes(1);
+    expect(queryByText('Refresh Pin')).toBeNull();
+    expect(queryByText('Unpin Message')).toBeNull();
+
+    rerender(
+      <ActionSheet
+        visible
+        onClose={jest.fn()}
+        message={[{ type: 'text', content: 'pin this' }]}
+        username="viewer"
+        handleReply={jest.fn()}
+        handleCopy={jest.fn()}
+        canModerateChat
+        canPinMessage
+        isPinnedMessage
+        handlePinMessage={onPinMessage}
+        handleUpdatePinnedMessage={onUpdatePinnedMessage}
+        handleUnpinMessage={onUnpinMessage}
+      />,
+    );
+
+    fireEvent.press(getByText('Refresh Pin'));
+    expect(onUpdatePinnedMessage).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(getByText('Unpin Message'));
+    expect(onUnpinMessage).toHaveBeenCalledTimes(1);
+  });
+
   test('shows moderator user actions only when the viewer can moderate chat', () => {
     const onTimeoutUser = jest.fn();
     const onBanUser = jest.fn();

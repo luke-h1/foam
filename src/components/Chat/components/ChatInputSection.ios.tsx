@@ -41,6 +41,8 @@ export interface ReplyToData {
 }
 
 interface ChatInputSectionProps {
+  canPinNextMessage?: boolean;
+  isSending?: boolean;
   messageInput: string;
   onChangeText: (text: string) => void;
   onEmoteSelect: (emote: SanitisedEmote) => void;
@@ -49,26 +51,47 @@ interface ChatInputSectionProps {
   onOpenSettingsSheet: () => void;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
+  onTogglePinNextMessage?: () => void;
+  pinNextMessage?: boolean;
   isConnected: boolean;
   isAuthenticated: boolean;
   inputRef?: RefObject<TextInput | null>;
 }
 
 interface ActionIconButtonProps {
+  active?: boolean;
   disabled?: boolean;
   icon: IconSymbolName;
+  label?: string;
   onPress: () => void;
 }
 
-function ActionIconButton({ disabled, icon, onPress }: ActionIconButtonProps) {
+function ActionIconButton({
+  active,
+  disabled,
+  icon,
+  label,
+  onPress,
+}: ActionIconButtonProps) {
   return (
     <Button
+      label={label}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.actionButton, disabled && styles.actionButtonDisabled]}
+      style={[
+        styles.actionButton,
+        active && styles.actionButtonActive,
+        disabled && styles.actionButtonDisabled,
+      ]}
     >
       <IconSymbol
-        color={disabled ? 'rgba(255,255,255,0.36)' : '#ffffff'}
+        color={
+          disabled
+            ? 'rgba(255,255,255,0.36)'
+            : active
+              ? '#ffffff'
+              : 'rgba(255,255,255,0.86)'
+        }
         name={icon}
         size={18}
         weight="medium"
@@ -79,6 +102,8 @@ function ActionIconButton({ disabled, icon, onPress }: ActionIconButtonProps) {
 
 export const ChatInputSection = memo(
   ({
+    canPinNextMessage,
+    isSending,
     messageInput,
     onChangeText,
     onEmoteSelect,
@@ -87,6 +112,8 @@ export const ChatInputSection = memo(
     onOpenSettingsSheet,
     replyTo,
     onClearReply,
+    onTogglePinNextMessage,
+    pinNextMessage,
     isConnected,
     isAuthenticated,
     inputRef,
@@ -103,7 +130,10 @@ export const ChatInputSection = memo(
     );
 
     const canSend =
-      messageInput.trim().length > 0 && isConnected && isAuthenticated;
+      messageInput.trim().length > 0 &&
+      isConnected &&
+      isAuthenticated &&
+      !isSending;
     const inputPlaceholder = !isAuthenticated
       ? 'Sign in to send messages'
       : replyTo !== null
@@ -233,6 +263,18 @@ export const ChatInputSection = memo(
                       onPress={onOpenSettingsSheet}
                     />
                   ) : null}
+                  {canPinNextMessage ? (
+                    <ActionIconButton
+                      active={pinNextMessage}
+                      icon={pinNextMessage ? 'pin.fill' : 'pin'}
+                      label={
+                        pinNextMessage
+                          ? 'Send and pin message'
+                          : 'Pin next message'
+                      }
+                      onPress={onTogglePinNextMessage ?? (() => undefined)}
+                    />
+                  ) : null}
                   <ActionIconButton
                     disabled={!canSend}
                     icon="arrow.up"
@@ -262,6 +304,9 @@ const styles = StyleSheet.create({
     height: 36,
     justifyContent: 'center',
     width: 36,
+  },
+  actionButtonActive: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   actionButtonDisabled: {
     backgroundColor: 'rgba(255,255,255,0.06)',

@@ -18,12 +18,18 @@ interface Props {
   handleHidePhrase?: () => void;
   handleHideUser?: () => void;
   handleHighlightUser?: () => void;
+  handlePinMessage?: () => void;
+  handleUpdatePinnedMessage?: () => void;
+  handleUnpinMessage?: () => void;
   handleDeleteMessage?: () => void;
   handleTimeoutUser?: () => void;
   handleBanUser?: () => void;
   isUserHighlighted?: boolean;
+  isPinnedMessage?: boolean;
+  isPinnedMessageBusy?: boolean;
   canModerateChat?: boolean;
   canDeleteMessage?: boolean;
+  canPinMessage?: boolean;
   canModerateUser?: boolean;
 }
 
@@ -35,6 +41,9 @@ type ActionItem = {
     | 'hide-user'
     | 'highlight-user'
     | 'hide-phrase'
+    | 'pin-message'
+    | 'update-pin'
+    | 'unpin-message'
     | 'delete-message'
     | 'timeout-user'
     | 'ban-user';
@@ -53,12 +62,18 @@ export function ActionSheet(props: Props) {
     handleHidePhrase,
     handleHideUser,
     handleHighlightUser,
+    handlePinMessage,
+    handleUpdatePinnedMessage,
+    handleUnpinMessage,
     handleDeleteMessage,
     handleTimeoutUser,
     handleBanUser,
     isUserHighlighted,
+    isPinnedMessage,
+    isPinnedMessageBusy,
     canModerateChat,
     canDeleteMessage,
+    canPinMessage,
     canModerateUser,
   } = props;
 
@@ -116,6 +131,41 @@ export function ActionSheet(props: Props) {
     }
 
     if (canModerateChat) {
+      if (canPinMessage && !isPinnedMessageBusy) {
+        if (isPinnedMessage) {
+          items.push(
+            {
+              id: 'update-pin',
+              icon: 'rotate-cw',
+              label: 'Refresh Pin',
+              onPress: () => {
+                handleUpdatePinnedMessage?.();
+                onClose();
+              },
+            },
+            {
+              id: 'unpin-message',
+              icon: 'map-pin',
+              label: 'Unpin Message',
+              onPress: () => {
+                handleUnpinMessage?.();
+                onClose();
+              },
+            },
+          );
+        } else {
+          items.push({
+            id: 'pin-message',
+            icon: 'map-pin',
+            label: 'Pin Message',
+            onPress: () => {
+              handlePinMessage?.();
+              onClose();
+            },
+          });
+        }
+      }
+
       if (canDeleteMessage) {
         items.push({
           id: 'delete-message',
@@ -157,15 +207,21 @@ export function ActionSheet(props: Props) {
     canDeleteMessage,
     canModerateChat,
     canModerateUser,
+    canPinMessage,
     handleBanUser,
     handleCopy,
     handleDeleteMessage,
     handleReply,
+    handlePinMessage,
     handleTimeoutUser,
+    handleUnpinMessage,
+    handleUpdatePinnedMessage,
     username,
     handleHideUser,
     handleHighlightUser,
     isUserHighlighted,
+    isPinnedMessage,
+    isPinnedMessageBusy,
     handleHidePhrase,
     onClose,
   ]);
@@ -178,6 +234,9 @@ export function ActionSheet(props: Props) {
         | 'hide-user'
         | 'highlight-user'
         | 'hide-phrase'
+        | 'pin-message'
+        | 'update-pin'
+        | 'unpin-message'
         | 'delete-message'
         | 'timeout-user'
         | 'ban-user',
@@ -193,6 +252,12 @@ export function ActionSheet(props: Props) {
           return 'star' as const;
         case 'hide-phrase':
           return 'nosign' as const;
+        case 'pin-message':
+          return 'pin' as const;
+        case 'update-pin':
+          return 'pin.fill' as const;
+        case 'unpin-message':
+          return 'pin.slash' as const;
         case 'delete-message':
           return 'trash' as const;
         case 'timeout-user':

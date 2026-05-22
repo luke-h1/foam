@@ -29,6 +29,8 @@ export interface ReplyToData {
 }
 
 interface ChatInputSectionProps {
+  canPinNextMessage?: boolean;
+  isSending?: boolean;
   messageInput: string;
   onChangeText: (text: string) => void;
   onEmoteSelect: (emote: SanitisedEmote) => void;
@@ -37,6 +39,8 @@ interface ChatInputSectionProps {
   onOpenSettingsSheet: () => void;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
+  onTogglePinNextMessage?: () => void;
+  pinNextMessage?: boolean;
   isConnected: boolean;
   isAuthenticated: boolean;
   inputRef?: RefObject<TextInput | null>;
@@ -44,6 +48,8 @@ interface ChatInputSectionProps {
 
 export const ChatInputSection = memo(
   ({
+    canPinNextMessage,
+    isSending,
     messageInput,
     onChangeText,
     onEmoteSelect,
@@ -52,6 +58,8 @@ export const ChatInputSection = memo(
     onOpenSettingsSheet,
     replyTo,
     onClearReply,
+    onTogglePinNextMessage,
+    pinNextMessage,
     isConnected,
     isAuthenticated,
     inputRef,
@@ -67,7 +75,7 @@ export const ChatInputSection = memo(
     );
 
     const canSend = Boolean(
-      messageInput.trim() && isConnected && isAuthenticated,
+      messageInput.trim() && isConnected && isAuthenticated && !isSending,
     );
 
     const inputPlaceholder = !isAuthenticated
@@ -140,6 +148,26 @@ export const ChatInputSection = memo(
             />
           </View>
 
+          {canPinNextMessage ? (
+            <Button
+              label={
+                pinNextMessage ? 'Send and pin message' : 'Pin next message'
+              }
+              style={[
+                styles.actionButton,
+                pinNextMessage && styles.actionButtonActive,
+              ]}
+              onPress={onTogglePinNextMessage}
+              hitSlop={createHorizontalHitslop(44)}
+            >
+              <Icon
+                icon="map-pin"
+                size={20}
+                color={pinNextMessage ? '#fff' : undefined}
+              />
+            </Button>
+          ) : null}
+
           <Button
             style={styles.actionButton}
             onPress={onOpenSettingsSheet}
@@ -175,6 +203,10 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     width: 40,
+  },
+  actionButtonActive: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 20,
   },
   inputContainer: {
     flex: 1,

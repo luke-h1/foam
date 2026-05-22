@@ -258,6 +258,95 @@ export interface UserBlockListRequestParams {
   after?: number;
 }
 
+export type TwitchChatMessageFragment = {
+  type: 'text' | 'cheermote' | 'emote' | 'mention';
+  text: string;
+  cheermote?: unknown;
+  emote?: {
+    id?: string;
+    emote_set_id?: string;
+    owner_id?: string;
+    format?: string[];
+  };
+  mention?: {
+    user_id?: string;
+    user_login?: string;
+    user_name?: string;
+  };
+};
+
+export type TwitchPinnedChatMessage = {
+  broadcaster_id?: string;
+  broadcaster_login?: string;
+  broadcaster_name?: string;
+  created_at?: string;
+  expires_at?: string | null;
+  message?:
+    | string
+    | {
+        fragments?: TwitchChatMessageFragment[];
+        text?: string;
+      };
+  message_id: string;
+  moderator_id?: string;
+  moderator_login?: string;
+  moderator_name?: string;
+  pinned_by_login?: string;
+  pinned_by_name?: string;
+  pinned_by_user_id?: string;
+  updated_at?: string;
+};
+
+export type TwitchSendChatMessageResult = {
+  drop_reason?: {
+    code: string;
+    message: string;
+  } | null;
+  is_sent: boolean;
+  message_id: string;
+};
+
+type PinnedChatMessageParams = {
+  broadcasterId: string;
+  moderatorId: string;
+};
+
+type PinnedChatMessageMutationParams = PinnedChatMessageParams & {
+  durationSeconds?: number;
+  messageId: string;
+};
+
+type SendChatMessageParams = {
+  broadcasterId: string;
+  forSourceOnly?: boolean;
+  message: string;
+  pin?: boolean;
+  replyParentMessageId?: string;
+  senderId: string;
+};
+
+function normalizeDuration(durationSeconds: number | undefined) {
+  if (!durationSeconds) {
+    return undefined;
+  }
+
+  return Math.max(1, Math.trunc(durationSeconds));
+}
+
+export function getPinnedChatMessageText(
+  pinnedMessage: TwitchPinnedChatMessage,
+): string {
+  if (typeof pinnedMessage.message === 'string') {
+    return pinnedMessage.message;
+  }
+
+  return (
+    pinnedMessage.message?.text ??
+    pinnedMessage.message?.fragments?.map(fragment => fragment.text).join('') ??
+    ''
+  );
+}
+
 export const twitchService = {
   /**
    * @see https://dev.twitch.tv/docs/authentication/refresh-tokens#refreshing-access-tokens
@@ -294,6 +383,116 @@ export const twitchService = {
       '/chat/emotes/global',
     );
     return data;
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#get-pinned-chat-message
+   */
+  getPinnedChatMessage: async ({
+    broadcasterId,
+    moderatorId,
+  }: PinnedChatMessageParams): Promise<TwitchPinnedChatMessage | null> => {
+    const result = await twitchApi.get<{ data?: TwitchPinnedChatMessage[] }>(
+      '/chat/pins',
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+
+    return result.data?.[0] ?? null;
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#pin-chat-message
+   */
+  pinChatMessage: async ({
+    broadcasterId,
+    durationSeconds,
+    messageId,
+    moderatorId,
+  }: PinnedChatMessageMutationParams): Promise<void> => {
+    await twitchApi.put(
+      '/chat/pins',
+      {
+        duration: normalizeDuration(durationSeconds),
+        message_id: messageId,
+      },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#update-pinned-chat-message
+   */
+  updatePinnedChatMessage: async ({
+    broadcasterId,
+    durationSeconds,
+    messageId,
+    moderatorId,
+  }: PinnedChatMessageMutationParams): Promise<void> => {
+    await twitchApi.patch(
+      '/chat/pins',
+      {
+        duration: normalizeDuration(durationSeconds),
+        message_id: messageId,
+      },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#unpin-chat-message
+   */
+  unpinChatMessage: async ({
+    broadcasterId,
+    moderatorId,
+  }: PinnedChatMessageParams): Promise<void> => {
+    await twitchApi.delete('/chat/pins', {
+      params: {
+        broadcaster_id: broadcasterId,
+        moderator_id: moderatorId,
+      },
+    });
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#send-chat-message
+   */
+  sendChatMessage: async ({
+    broadcasterId,
+    forSourceOnly,
+    message,
+    pin,
+    replyParentMessageId,
+    senderId,
+  }: SendChatMessageParams): Promise<
+    TwitchSendChatMessageResult | undefined
+  > => {
+    const result = await twitchApi.post<{
+      data?: TwitchSendChatMessageResult[];
+    }>('/chat/messages', {
+      broadcaster_id: broadcasterId,
+      for_source_only: forSourceOnly,
+      message,
+      pin,
+      reply_parent_message_id: replyParentMessageId,
+      sender_id: senderId,
+    });
+
+    return result.data?.[0];
   },
 
   /**

@@ -89,6 +89,8 @@ import { ReadyState } from '@app/hooks/ws/constants';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { prefetchImage } from '@app/components/Image/Image';
+import { Icon } from '@app/components/Icon/Icon';
+import { Button } from '@app/components/Button/Button';
 import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
 import { ChatInputSection, ReplyToData } from './components/ChatInputSection';
@@ -115,6 +117,10 @@ import { useChatMessages } from './hooks/useChatMessages';
 import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSevenTvCallbacks } from './hooks/useChatSevenTvCallbacks';
 import { useEmoteReprocessing } from './hooks/useEmoteReprocessing';
+import {
+  usePinnedChatMessage,
+  type PinnedChatMessageViewModel,
+} from './hooks/usePinnedChatMessage';
 import {
   AnyChatMessageType,
   createUserStateFromTags,
@@ -261,7 +267,74 @@ function isRenderableChatMessage(
   return Boolean(message?.message_id && message.message_nonce);
 }
 
+const PinnedMessageBanner = memo(
+  ({
+    canModerateChat,
+    onRefresh,
+    onUnpin,
+    pinnedMessage,
+    pinnedMessageBusy,
+  }: {
+    canModerateChat: boolean;
+    onRefresh: () => void;
+    onUnpin: () => void;
+    pinnedMessage: PinnedChatMessageViewModel | null;
+    pinnedMessageBusy: boolean;
+  }) => {
+    if (!pinnedMessage?.text.trim()) {
+      return null;
+    }
+
+    const title = pinnedMessage.senderName
+      ? `${pinnedMessage.senderName} pinned`
+      : 'Pinned message';
+
+    return (
+      <View style={styles.pinnedMessageBanner}>
+        <View style={styles.pinnedIconShell}>
+          <Icon icon="map-pin" color="#ffffff" size={16} />
+        </View>
+        <View style={styles.pinnedMessageContent}>
+          <Text
+            numberOfLines={1}
+            style={styles.pinnedMessageTitle}
+            weight="semibold"
+          >
+            {title}
+          </Text>
+          <Text numberOfLines={2} style={styles.pinnedMessageText}>
+            {pinnedMessage.text}
+          </Text>
+        </View>
+        {canModerateChat ? (
+          <View style={styles.pinnedMessageActions}>
+            <Button
+              disabled={pinnedMessageBusy}
+              label="Refresh pin"
+              onPress={onRefresh}
+              style={styles.pinnedMessageActionButton}
+            >
+              <Icon icon="rotate-cw" color="rgba(255,255,255,0.78)" size={14} />
+            </Button>
+            <Button
+              disabled={pinnedMessageBusy}
+              label="Unpin message"
+              onPress={onUnpin}
+              style={styles.pinnedMessageActionButton}
+            >
+              <Icon icon="x" color="rgba(255,255,255,0.78)" size={15} />
+            </Button>
+          </View>
+        ) : null}
+      </View>
+    );
+  },
+);
+
+PinnedMessageBanner.displayName = 'PinnedMessageBanner';
+
 interface ChatMessagePaneProps {
+  canModerateChat: boolean;
   channelId: string;
   channelName: string;
   connected: boolean;
@@ -284,8 +357,12 @@ interface ChatMessagePaneProps {
   listContentStyle: StyleProp<ViewStyle>;
   messageListExtraData?: unknown;
   onClearFilters: () => void;
+  onRefreshPinnedMessage: () => void;
+  onUnpinPinnedMessage: () => void;
   onToggleShowOnlyMentions: () => void;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
+  pinnedMessage: PinnedChatMessageViewModel | null;
+  pinnedMessageBusy: boolean;
 }
 
 interface ChatInputShellHandle {
@@ -305,6 +382,7 @@ interface ChatOverlayControllerHandle {
 }
 
 interface ChatInputShellProps {
+  canPinNextMessage: boolean;
   channelId: string;
   channelName: string;
   connected: boolean;
@@ -312,6 +390,7 @@ interface ChatInputShellProps {
   isChatConnected: () => boolean;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
+  onPinnedMessageChanged: (message: PinnedChatMessageViewModel) => void;
   processMessageEmotes: (
     text: string,
     userstate: ReturnType<typeof createUserStateFromTags>,
@@ -334,6 +413,7 @@ interface ChatOverlayLayerProps {
   canModerateChat: boolean;
   canModerateSelectedMessageUser: boolean;
   canModerateSelectedUser: boolean;
+  canPinSelectedMessage: boolean;
   connected: boolean;
   disableEmoteAnimations: boolean;
   emoteSheetRef: RefObject<TrueSheet | null>;
@@ -345,7 +425,10 @@ interface ChatOverlayLayerProps {
   onActionSheetHidePhrase: () => void;
   onActionSheetHideUser: () => void;
   onActionSheetHighlightUser: () => void;
+  onActionSheetPinMessage: () => void;
   onActionSheetReply: () => void;
+  onActionSheetUpdatePinnedMessage: () => void;
+  onActionSheetUnpinPinnedMessage: () => void;
   onActionSheetTimeoutUser: () => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
@@ -376,6 +459,8 @@ interface ChatOverlayLayerProps {
   settingsSheetRef: RefObject<TrueSheet | null>;
   shouldRenderSettingsSheet: boolean;
   shouldRenderEmoteSheet: boolean;
+  pinnedMessageBusy: boolean;
+  pinnedMessageId?: string;
   chatDensity: 'comfortable' | 'compact';
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
@@ -399,6 +484,8 @@ interface ChatOverlayControllerProps {
   onClearChatCache: () => void;
   onClearImageCache: () => void;
   onInsertEmote: (item: EmotePickerItem) => void;
+  onPinMessage: (message: MessageActionData<'usernotice'>) => void;
+  onRefreshPinnedMessage: (messageId: string) => void;
   onSettingsReconnect: () => void;
   onSettingsRefetchEmotes: () => void;
   onToggleChatDensity: () => void;
@@ -406,6 +493,9 @@ interface ChatOverlayControllerProps {
   onToggleInlineReplyContext: (value: boolean) => void;
   onToggleShowTimestamps: (value: boolean) => void;
   onToggleShowUnreadJumpPill: (value: boolean) => void;
+  onUnpinPinnedMessage: () => void;
+  pinnedMessageBusy: boolean;
+  pinnedMessageId?: string;
   sendChatCommand: (channel: string, message: string) => void;
   settingsSheetRef: RefObject<TrueSheet | null>;
   showInlineReplyContext: boolean;
@@ -647,6 +737,7 @@ function getMessageBadges({
 
 const ChatMessagePane = memo(
   ({
+    canModerateChat,
     channelId,
     channelName,
     connected,
@@ -669,8 +760,12 @@ const ChatMessagePane = memo(
     listContentStyle,
     messageListExtraData,
     onClearFilters,
+    onRefreshPinnedMessage,
+    onUnpinPinnedMessage,
     onToggleShowOnlyMentions,
     onViewableMessagesChange,
+    pinnedMessage,
+    pinnedMessageBusy,
   }: ChatMessagePaneProps) => {
     const storedMessages = useSelector(
       () => chatStore$.messages.get() as Array<AnyChatMessageType | undefined>,
@@ -757,6 +852,14 @@ const ChatMessagePane = memo(
           showOnlyMentions={showOnlyMentions}
         />
 
+        <PinnedMessageBanner
+          canModerateChat={canModerateChat}
+          onRefresh={onRefreshPinnedMessage}
+          onUnpin={onUnpinPinnedMessage}
+          pinnedMessage={pinnedMessage}
+          pinnedMessageBusy={pinnedMessageBusy}
+        />
+
         {visibleMessages.length === 0 && rawMessages.length > 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateTitle}>
@@ -827,6 +930,7 @@ const ChatInputShell = memo(
   forwardRef<ChatInputShellHandle, ChatInputShellProps>(
     (
       {
+        canPinNextMessage,
         channelId,
         channelName,
         connected,
@@ -834,6 +938,7 @@ const ChatInputShell = memo(
         isChatConnected,
         onOpenEmoteSheet,
         onOpenSettingsSheet,
+        onPinnedMessageChanged,
         processMessageEmotes,
         sendMessage,
         user,
@@ -843,7 +948,12 @@ const ChatInputShell = memo(
       const chatInputRef = useRef<TextInput>(null);
       const [messageInput, setMessageInput] = useState('');
       const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
+      const [pinNextMessage, setPinNextMessage] = useState(false);
+      const [isSendingPinnedMessage, setIsSendingPinnedMessage] =
+        useState(false);
       const isAuthenticated = Boolean(user?.id && user?.login);
+      const canPinCurrentMessage =
+        canPinNextMessage && !replyTo && !isSendingPinnedMessage;
 
       const handleComposerTextChange = useCallback(
         (text: string) => {
@@ -875,10 +985,25 @@ const ChatInputShell = memo(
         if (!isAuthenticated) {
           setMessageInput('');
           setReplyTo(null);
+          setPinNextMessage(false);
         }
       }, [isAuthenticated]);
 
-      const handleSendMessage = useCallback(() => {
+      useEffect(() => {
+        if (!canPinCurrentMessage) {
+          setPinNextMessage(false);
+        }
+      }, [canPinCurrentMessage]);
+
+      const handleTogglePinNextMessage = useCallback(() => {
+        if (!canPinCurrentMessage) {
+          return;
+        }
+
+        setPinNextMessage(value => !value);
+      }, [canPinCurrentMessage]);
+
+      const handleSendMessage = useCallback(async () => {
         if (!messageInput.trim()) {
           return;
         }
@@ -896,6 +1021,7 @@ const ChatInputShell = memo(
         const messageText = replyTo
           ? `@${replyTo.username} ${messageInput}`
           : messageInput;
+        const shouldPinMessage = canPinCurrentMessage && pinNextMessage;
         const currentUserState = getUserState();
         const badgeData = parseBadges(
           (currentUserState.badges as unknown as string) || '',
@@ -938,14 +1064,33 @@ const ChatInputShell = memo(
             })
           : [];
 
+        let optimisticMessageId = `${Date.now()}`;
+        if (shouldPinMessage) {
+          setIsSendingPinnedMessage(true);
+          try {
+            const sendResult = await twitchService.sendChatMessage({
+              broadcasterId: channelId,
+              message: messageText,
+              pin: true,
+              senderId: user?.id ?? '',
+            });
+            optimisticMessageId = sendResult?.message_id || optimisticMessageId;
+          } catch (error) {
+            logger.chat.error('issue sending pinned message', error);
+            toast.error('Could not send pinned message');
+            setIsSendingPinnedMessage(false);
+            return;
+          }
+        }
+
         const optimisticMessage: AnyChatMessageType = {
-          id: `${Date.now()}_optimistic`,
+          id: `${optimisticMessageId}_${optimisticMessageId}`,
           userstate: optimisticUserstate,
           message: [{ type: 'text', content: messageText.trimEnd() }],
           badges: userBadges,
           channel: channelName,
-          message_id: `${Date.now()}`,
-          message_nonce: `${Date.now()}_nonce`,
+          message_id: optimisticMessageId,
+          message_nonce: optimisticMessageId,
           timestamp: formatDate(Date.now(), 'HH:mm'),
           sender: senderName,
           parentDisplayName: replyTo?.username || '',
@@ -962,7 +1107,15 @@ const ChatInputShell = memo(
           false,
         );
 
-        if (replyTo) {
+        if (shouldPinMessage) {
+          onPinnedMessageChanged({
+            messageId: optimisticMessage.message_id,
+            senderName,
+            text: messageText.trimEnd(),
+          });
+          toast.success('Message pinned');
+          setIsSendingPinnedMessage(false);
+        } else if (replyTo) {
           try {
             sendMessage(
               channelName,
@@ -980,13 +1133,17 @@ const ChatInputShell = memo(
 
         setMessageInput('');
         setReplyTo(null);
+        setPinNextMessage(false);
       }, [
+        canPinCurrentMessage,
         channelId,
         channelName,
         getUserState,
         isChatConnected,
         isAuthenticated,
         messageInput,
+        onPinnedMessageChanged,
+        pinNextMessage,
         processMessageEmotes,
         replyTo,
         sendMessage,
@@ -1043,7 +1200,11 @@ const ChatInputShell = memo(
           onClearReply={handleClearReply}
           isConnected={connected}
           isAuthenticated={isAuthenticated}
+          canPinNextMessage={canPinCurrentMessage}
           inputRef={chatInputRef}
+          isSending={isSendingPinnedMessage}
+          onTogglePinNextMessage={handleTogglePinNextMessage}
+          pinNextMessage={pinNextMessage}
         />
       );
     },
@@ -1071,6 +1232,8 @@ const ChatOverlayController = memo(
         onClearChatCache,
         onClearImageCache,
         onInsertEmote,
+        onPinMessage,
+        onRefreshPinnedMessage,
         onSettingsReconnect,
         onSettingsRefetchEmotes,
         onToggleChatDensity,
@@ -1078,6 +1241,9 @@ const ChatOverlayController = memo(
         onToggleInlineReplyContext,
         onToggleShowTimestamps,
         onToggleShowUnreadJumpPill,
+        onUnpinPinnedMessage,
+        pinnedMessageBusy,
+        pinnedMessageId,
         sendChatCommand,
         settingsSheetRef,
         showInlineReplyContext,
@@ -1159,6 +1325,12 @@ const ChatOverlayController = memo(
         return Boolean(selectedMessage?.messageData.message_id?.trim());
       }, [selectedMessage?.messageData.message_id]);
 
+      const canPinSelectedMessage = useMemo(() => {
+        return Boolean(
+          !pinnedMessageBusy && selectedMessage?.messageData.message_id?.trim(),
+        );
+      }, [pinnedMessageBusy, selectedMessage?.messageData.message_id]);
+
       const canModerateSelectedUser = useMemo(() => {
         return Boolean(
           selectedUser?.login?.trim() || selectedUser?.username.trim(),
@@ -1225,6 +1397,30 @@ const ChatOverlayController = memo(
         selectedMessage?.messageData.message_id,
         sendChatCommand,
       ]);
+
+      const handleActionSheetPinMessage = useCallback(() => {
+        if (!selectedMessage) {
+          return;
+        }
+
+        onPinMessage(selectedMessage);
+        setSelectedMessage(null);
+      }, [onPinMessage, selectedMessage]);
+
+      const handleActionSheetUpdatePinnedMessage = useCallback(() => {
+        const messageId = selectedMessage?.messageData.message_id?.trim();
+        if (!messageId) {
+          return;
+        }
+
+        onRefreshPinnedMessage(messageId);
+        setSelectedMessage(null);
+      }, [onRefreshPinnedMessage, selectedMessage?.messageData.message_id]);
+
+      const handleActionSheetUnpinPinnedMessage = useCallback(() => {
+        onUnpinPinnedMessage();
+        setSelectedMessage(null);
+      }, [onUnpinPinnedMessage]);
 
       const handleActionSheetTimeoutUser = useCallback(() => {
         const target =
@@ -1344,6 +1540,7 @@ const ChatOverlayController = memo(
           canModerateChat={canModerateChat}
           canModerateSelectedMessageUser={canModerateSelectedMessageUser}
           canModerateSelectedUser={canModerateSelectedUser}
+          canPinSelectedMessage={canPinSelectedMessage}
           connected={connected}
           disableEmoteAnimations={disableEmoteAnimations}
           emoteSheetRef={emoteSheetRef}
@@ -1355,7 +1552,12 @@ const ChatOverlayController = memo(
           onActionSheetHidePhrase={handleActionSheetHidePhrase}
           onActionSheetHideUser={handleActionSheetHideUser}
           onActionSheetHighlightUser={handleActionSheetHighlightUser}
+          onActionSheetPinMessage={handleActionSheetPinMessage}
           onActionSheetReply={handleActionSheetReply}
+          onActionSheetUpdatePinnedMessage={
+            handleActionSheetUpdatePinnedMessage
+          }
+          onActionSheetUnpinPinnedMessage={handleActionSheetUnpinPinnedMessage}
           onActionSheetTimeoutUser={handleActionSheetTimeoutUser}
           onBanSelectedUser={handleBanSelectedUser}
           onClearChatCache={onClearChatCache}
@@ -1386,6 +1588,8 @@ const ChatOverlayController = memo(
           settingsSheetRef={settingsSheetRef}
           shouldRenderSettingsSheet={isSettingsSheetMounted}
           shouldRenderEmoteSheet={isEmoteSheetMounted}
+          pinnedMessageBusy={pinnedMessageBusy}
+          pinnedMessageId={pinnedMessageId}
           chatDensity={chatDensity}
           highlightOwnMentions={highlightOwnMentions}
           showInlineReplyContext={showInlineReplyContext}
@@ -1405,6 +1609,7 @@ const ChatOverlayLayer = memo(
     canModerateChat,
     canModerateSelectedMessageUser,
     canModerateSelectedUser,
+    canPinSelectedMessage,
     connected,
     disableEmoteAnimations,
     emoteSheetRef,
@@ -1416,7 +1621,10 @@ const ChatOverlayLayer = memo(
     onActionSheetHidePhrase,
     onActionSheetHideUser,
     onActionSheetHighlightUser,
+    onActionSheetPinMessage,
     onActionSheetReply,
+    onActionSheetUpdatePinnedMessage,
+    onActionSheetUnpinPinnedMessage,
     onActionSheetTimeoutUser,
     onBanSelectedUser,
     onClearChatCache,
@@ -1447,6 +1655,8 @@ const ChatOverlayLayer = memo(
     settingsSheetRef,
     shouldRenderSettingsSheet,
     shouldRenderEmoteSheet,
+    pinnedMessageBusy,
+    pinnedMessageId,
     chatDensity,
     highlightOwnMentions,
     showInlineReplyContext,
@@ -1512,12 +1722,20 @@ const ChatOverlayLayer = memo(
             handleHidePhrase={onActionSheetHidePhrase}
             handleHideUser={onActionSheetHideUser}
             handleHighlightUser={onActionSheetHighlightUser}
+            handlePinMessage={onActionSheetPinMessage}
+            handleUpdatePinnedMessage={onActionSheetUpdatePinnedMessage}
+            handleUnpinMessage={onActionSheetUnpinPinnedMessage}
             handleDeleteMessage={onActionSheetDeleteMessage}
             handleTimeoutUser={onActionSheetTimeoutUser}
             handleBanUser={onActionSheetBanUser}
             canModerateChat={canModerateChat}
             canDeleteMessage={canDeleteSelectedMessage}
+            canPinMessage={canPinSelectedMessage}
             canModerateUser={canModerateSelectedMessageUser}
+            isPinnedMessage={
+              pinnedMessageId === selectedMessage.messageData.message_id
+            }
+            isPinnedMessageBusy={pinnedMessageBusy}
             isUserHighlighted={Boolean(
               selectedMessage.username &&
               highlightedUsers.includes(selectedMessage.username.toLowerCase()),
@@ -2648,6 +2866,20 @@ export const Chat = memo(
       );
     }, [channelName, getUserState, user?.login]);
 
+    const {
+      handlePinMessage,
+      handlePinnedMessageChanged,
+      handleRefreshPinnedMessage,
+      handleUnpinPinnedMessage,
+      pinnedMessage,
+      pinnedMessageBusy,
+      pinnedMessageId,
+    } = usePinnedChatMessage({
+      canModerateChat,
+      channelId,
+      moderatorId: user?.id,
+    });
+
     const getMentionColor = useCallback((username: string): string => {
       const lowerUsername = username.toLowerCase();
 
@@ -2944,6 +3176,7 @@ export const Chat = memo(
         <View style={styles.keyboardAvoidingView}>
           <View style={styles.chatContainer}>
             <ChatMessagePane
+              canModerateChat={canModerateChat}
               channelId={channelId}
               channelName={channelName}
               connected={twitchConnectionState === ReadyState.OPEN}
@@ -2966,8 +3199,12 @@ export const Chat = memo(
               listContentStyle={listContentStyle}
               messageListExtraData={messageListExtraData}
               onClearFilters={handleClearFilters}
+              onRefreshPinnedMessage={handleRefreshPinnedMessage}
               onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
+              onUnpinPinnedMessage={handleUnpinPinnedMessage}
               onViewableMessagesChange={handleViewableMessagesChange}
+              pinnedMessage={pinnedMessage}
+              pinnedMessageBusy={pinnedMessageBusy}
             />
 
             {preferences.showUnreadJumpPill &&
@@ -2983,6 +3220,7 @@ export const Chat = memo(
           <KeyboardStickyView style={styles.inputStickyView}>
             <ChatInputShell
               ref={inputShellRef}
+              canPinNextMessage={canModerateChat}
               channelId={channelId}
               channelName={channelName}
               connected={connected}
@@ -2990,6 +3228,7 @@ export const Chat = memo(
               isChatConnected={isChatConnected}
               onOpenEmoteSheet={handleOpenEmoteSheet}
               onOpenSettingsSheet={handleOpenSettingsSheet}
+              onPinnedMessageChanged={handlePinnedMessageChanged}
               processMessageEmotes={processMessageEmotes}
               sendMessage={sendMessage}
               user={user}
@@ -3013,6 +3252,8 @@ export const Chat = memo(
             onClearChatCache={handleClearChatCache}
             onClearImageCache={handleDebugClearImageCache}
             onInsertEmote={handleEmoteSelect}
+            onPinMessage={handlePinMessage}
+            onRefreshPinnedMessage={handleRefreshPinnedMessage}
             onSettingsReconnect={handleSettingsReconnect}
             onSettingsRefetchEmotes={handleSettingsRefetchEmotes}
             onToggleChatDensity={handleToggleChatDensity}
@@ -3020,6 +3261,9 @@ export const Chat = memo(
             onToggleInlineReplyContext={handleToggleInlineReplyContext}
             onToggleShowTimestamps={handleToggleShowTimestamps}
             onToggleShowUnreadJumpPill={handleToggleShowUnreadJumpPill}
+            onUnpinPinnedMessage={handleUnpinPinnedMessage}
+            pinnedMessageBusy={pinnedMessageBusy}
+            pinnedMessageId={pinnedMessageId}
             sendChatCommand={sendChatCommand}
             settingsSheetRef={settingsSheetRef}
             chatDensity={preferences.chatDensity}
@@ -3096,6 +3340,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 1,
     width: '100%',
+  },
+  pinnedIconShell: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(145,91,255,0.28)',
+    borderRadius: 18,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
+  pinnedMessageActionButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderCurve: 'continuous',
+    borderRadius: 16,
+    borderWidth: 1,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  pinnedMessageActions: {
+    flexDirection: 'row',
+    gap: theme.space8,
+  },
+  pinnedMessageBanner: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(34,34,38,0.96)',
+    borderBottomColor: 'rgba(255,255,255,0.10)',
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    gap: theme.space12,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space8,
+  },
+  pinnedMessageContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  pinnedMessageText: {
+    color: 'rgba(255,255,255,0.82)',
+    fontSize: theme.fontSize12,
+    lineHeight: 18,
+  },
+  pinnedMessageTitle: {
+    color: '#ffffff',
+    fontSize: theme.fontSize12,
+    lineHeight: 16,
   },
   wrapper: {
     backgroundColor: '#222222',

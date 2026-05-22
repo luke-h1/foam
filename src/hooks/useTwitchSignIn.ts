@@ -26,7 +26,11 @@ const CHANNEL_SCOPES = [
   'channel:moderate',
 ] as const;
 
-const CHAT_SCOPES = ['chat:read', 'chat:edit'] as const;
+const CHAT_SCOPES = ['chat:read', 'chat:edit', 'user:write:chat'] as const;
+const MODERATOR_CHAT_SCOPES = [
+  'moderator:read:chat_messages',
+  'moderator:manage:chat_messages',
+] as const;
 const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
 const authProxyBaseUrl =
@@ -88,6 +92,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
       scopes: [
         ...USER_SCOPES,
         ...CHAT_SCOPES,
+        ...MODERATOR_CHAT_SCOPES,
         ...WHISPER_SCOPES,
         ...CHANNEL_SCOPES,
       ],
