@@ -1,4 +1,4 @@
-import { useScrollToTop as useNavigationScrollToTop } from '@react-navigation/native';
+import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
 import { Ref, RefObject, useMemo, useRef } from 'react';
 
 type ScrollOptions = { x?: number; y?: number; animated?: boolean };

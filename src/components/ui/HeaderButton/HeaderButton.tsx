@@ -1,6 +1,5 @@
 import { theme } from '@app/styles/themes';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import type { ComponentProps } from 'react';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Pressable } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -10,26 +9,24 @@ import Animated, {
 import { HeaderButtonProps } from './HeaderButton.ios';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const MATERIAL_ICON_FALLBACK = 'close';
-const sfToMaterial: Record<
-  string,
-  ComponentProps<typeof MaterialCommunityIcons>['name']
-> = {
-  xmark: 'close',
-  'chevron.left': 'chevron-left',
-  'chevron.right': 'chevron-right',
-  'chevron.up': 'chevron-up',
-  'chevron.down': 'chevron-down',
+const sfSymbolFallback = 'xmark';
+const headerSymbols: Record<string, SymbolViewProps['name']> = {
+  xmark: 'xmark',
+  'chevron.left': 'chevron.left',
+  'chevron.right': 'chevron.right',
+  'chevron.up': 'chevron.up',
+  'chevron.down': 'chevron.down',
   plus: 'plus',
-  trash: 'trash-can-outline',
-  gear: 'cog',
-  ellipsis: 'dots-horizontal',
+  trash: 'trash',
+  gear: 'gear',
+  ellipsis: 'ellipsis',
 };
 
 export function HeaderButton({ imageProps, buttonProps }: HeaderButtonProps) {
   const scale = useSharedValue(1);
   const iconName =
-    sfToMaterial[imageProps?.systemName ?? 'xmark'] ?? MATERIAL_ICON_FALLBACK;
+    headerSymbols[imageProps?.systemName ?? sfSymbolFallback] ??
+    sfSymbolFallback;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -47,10 +44,10 @@ export function HeaderButton({ imageProps, buttonProps }: HeaderButtonProps) {
       }}
       style={animatedStyle}
     >
-      <MaterialCommunityIcons
+      <SymbolView
         name={iconName}
         size={theme.fontSize18}
-        color={imageProps?.color || theme.color.text.dark}
+        tintColor={imageProps?.color || theme.color.text.dark}
       />
     </AnimatedPressable>
   );

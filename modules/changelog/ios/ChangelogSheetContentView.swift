@@ -135,21 +135,11 @@ private struct ChangelogSheetPresentationModifier: ViewModifier {
   let backgroundStyle: AnyShapeStyle
 
   func body(content: Content) -> some View {
-    if #available(iOS 16.4, *) {
-      content
-        .presentationDetents([
-          isIPad ? .large : .fraction(0.85)
-        ])
-        .presentationDragIndicator(.visible)
-        .presentationBackground(backgroundStyle)
-    } else if #available(iOS 16.0, *) {
-      content
-        .presentationDetents([
-          isIPad ? .large : .fraction(0.85)
-        ])
-        .presentationDragIndicator(.visible)
-    } else {
-      content
-    }
+    content
+      .presentationDetents([
+        isIPad ? .large : .fraction(0.85)
+      ])
+      .presentationDragIndicator(.visible)
+      .presentationBackground(backgroundStyle)
   }
 }

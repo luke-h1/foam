@@ -1,5 +1,5 @@
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import {
@@ -285,7 +285,11 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
         {previewState.showUnreadJumpPill ? (
           <View style={styles.jumpPillWrap}>
             <View style={styles.jumpPill}>
-              <Icon color={theme.colorAmberAlpha} icon="arrow-down" size={16} />
+              <SymbolView
+                tintColor={theme.colorAmberAlpha}
+                name="arrow.down"
+                size={16}
+              />
               <Text style={styles.jumpPillText} weight="semibold">
                 Jump to latest
               </Text>

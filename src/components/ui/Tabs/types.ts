@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { LayoutChangeEvent } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
 interface Tab {
@@ -27,7 +28,7 @@ interface TabItemProps {
   tab: Tab;
   isActive: boolean;
   onPress: () => void;
-  onLayout: (event: unknown) => void;
+  onLayout: (event: LayoutChangeEvent) => void;
   activeColor?: string;
   inactiveColor?: string;
 }

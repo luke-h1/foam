@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { androidTick, impact } from '@app/lib/haptics';
 import { BlurView, type BlurViewProps } from 'expo-blur';
+import { SymbolView } from 'expo-symbols';
 import {
   Children,
   cloneElement,
@@ -91,7 +91,7 @@ const ChevronIcon = ({ isOpen }: IconProps) => {
 
   return (
     <Animated.View style={animatedStyle}>
-      <Ionicons name="chevron-down" size={20} color={theme.iconColor} />
+      <SymbolView name="chevron.down" size={20} tintColor={theme.iconColor} />
     </Animated.View>
   );
 };

@@ -1,15 +1,15 @@
-import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 type RowIcon =
   | {
       color?: string;
-      icon: string;
+      icon: SymbolViewProps['name'];
     }
   | undefined;
 
@@ -73,10 +73,10 @@ export function SettingsRow({
             icon.color ? { backgroundColor: `${icon.color}20` } : null,
           ]}
         >
-          <Icon
-            icon={icon.icon}
+          <SymbolView
+            name={icon.icon}
             size={20}
-            color={icon.color || theme.colorDarkGreen}
+            tintColor={icon.color || theme.colorDarkGreen}
           />
         </View>
       ) : null}
@@ -92,7 +92,14 @@ export function SettingsRow({
         ) : null}
       </View>
 
-      {trailing ?? (onPress ? <Icon icon="chevron-right" size={18} /> : null)}
+      {trailing ??
+        (onPress ? (
+          <SymbolView
+            name="chevron.right"
+            size={18}
+            tintColor={theme.colorGreyHoverAlpha}
+          />
+        ) : null)}
     </View>
   );
 
@@ -158,7 +165,13 @@ export function SettingsLinkRow(props: {
               {value}
             </Text>
           ) : null}
-          {onPress ? <Icon icon="chevron-right" size={18} /> : null}
+          {onPress ? (
+            <SymbolView
+              name="chevron.right"
+              size={18}
+              tintColor={theme.colorGreyHoverAlpha}
+            />
+          ) : null}
         </View>
       }
     />

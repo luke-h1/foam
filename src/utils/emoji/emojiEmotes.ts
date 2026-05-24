@@ -21,10 +21,10 @@ const EMOJI_CDN_BY_STYLE: Record<EmojiStyle, (hexcode: string) => string> = {
     `https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/72/emoji_u${hexcode.toLowerCase()}.png`,
 };
 
-export const EMOJI_STYLE_OPTIONS: Array<{
+export const EMOJI_STYLE_OPTIONS: {
   label: string;
   value: EmojiStyle;
-}> = [
+}[] = [
   { label: 'Twitter', value: 'twitter' },
   { label: 'Google', value: 'google' },
 ];

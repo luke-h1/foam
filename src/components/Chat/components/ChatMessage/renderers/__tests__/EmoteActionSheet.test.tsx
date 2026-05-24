@@ -19,10 +19,6 @@ jest.mock('expo-symbols', () => ({
   SymbolView: () => null,
 }));
 
-jest.mock('@app/components/Icon/Icon', () => ({
-  Icon: () => null,
-}));
-
 jest.mock('@app/components/Image/Image', () => ({
   Image: () => null,
 }));

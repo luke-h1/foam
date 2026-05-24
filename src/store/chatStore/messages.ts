@@ -1,9 +1,9 @@
-import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { batch } from '@legendapp/state';
+import type { NoticeVariants } from "@app/types/chat/irc-tags/noticevariant";
+import { replaceEmotesWithText } from "@app/utils/chat/replaceEmotesWithText";
+import { batch } from "@legendapp/state";
 
-import type { Bit, ChatMessageType, ChatUser } from './constants';
-import { chatStore$ } from './state';
+import type { Bit, ChatMessageType, ChatUser } from "./constants";
+import { chatStore$ } from "./state";
 
 const messageKeySet = new Set<string>();
 const messageKeyOrder: string[] = [];
@@ -28,13 +28,13 @@ const getMessageStoreId = (message: ChatMessageType<never>): string =>
   getMessageKey(message.message_id, message.message_nonce);
 
 const dedupeMessagesForStore = (
-  messages: Array<ChatMessageType<never> | undefined>,
+  messages: (ChatMessageType<never> | undefined)[],
 ): ChatMessageType<never>[] => {
   const seenKeys = new Set<string>();
   const seenIds = new Set<string>();
   const uniqueMessages: ChatMessageType<never>[] = [];
 
-  messages.forEach(message => {
+  messages.forEach((message) => {
     if (!isValidChatMessage(message)) {
       return;
     }
@@ -56,12 +56,12 @@ const dedupeMessagesForStore = (
 const prepareMessagePartsForStore = (
   messageId: string,
   messageNonce: string,
-  messageParts: ChatMessageType<never>['message'],
-): ChatMessageType<never>['message'] => {
+  messageParts: ChatMessageType<never>["message"],
+): ChatMessageType<never>["message"] => {
   const messageKey = getMessageKey(messageId, messageNonce);
   return messageParts.map((part, index) => {
     const storedPart = { ...part };
-    Object.defineProperty(storedPart, 'id', {
+    Object.defineProperty(storedPart, "id", {
       configurable: true,
       enumerable: false,
       value: `${messageKey}:${index}`,
@@ -90,7 +90,7 @@ const prepareMessageUpdates = (
   messageId: string,
   messageNonce: string,
   updates: Partial<
-    Pick<ChatMessageType<never>, 'message' | 'badges' | 'moderationNotice'>
+    Pick<ChatMessageType<never>, "message" | "badges" | "moderationNotice">
   >,
 ) =>
   updates.message
@@ -112,7 +112,7 @@ const isValidChatMessage = <TNoticeType extends NoticeVariants>(
 
 const normaliseIndexKey = (value: string | undefined): string | null => {
   const normalised = value?.trim().toLowerCase();
-  return normalised ? normalised : null;
+  return normalised || null;
 };
 
 const indexMessage = (message: ChatMessageType<never>, index: number) => {
@@ -138,7 +138,7 @@ const indexMessage = (message: ChatMessageType<never>, index: number) => {
     normaliseIndexKey(message.userstate?.login),
   ];
 
-  senderKeys.forEach(senderKey => {
+  senderKeys.forEach((senderKey) => {
     if (senderKey) {
       senderColorIndex.set(senderKey, color);
     }
@@ -233,14 +233,14 @@ const flushPendingRecentMessagesSync = () => {
 
 const syncRecentMessagesForCurrentChannel = (
   nextMessages: ChatMessageType<never>[],
-  mode: 'defer' | 'immediate' = 'immediate',
+  mode: "defer" | "immediate" = "immediate",
 ) => {
   const currentChannelId = chatStore$.currentChannelId.peek();
   if (!currentChannelId) {
     return;
   }
 
-  if (mode === 'immediate') {
+  if (mode === "immediate") {
     flushPendingRecentMessagesSync();
     persistRecentMessagesForChannel(currentChannelId, nextMessages);
     return;
@@ -286,9 +286,7 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
     return;
   }
 
-  const storedMessage = prepareMessageForStore(
-    message as ChatMessageType<never>,
-  );
+  const storedMessage = prepareMessageForStore(message);
   messageKeySet.add(key);
   messageKeyOrder.push(key);
   const currentMessages = dedupeMessagesForStore(chatStore$.messages.peek());
@@ -312,7 +310,7 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
 };
 
 export const addMessages = (
-  messages: Array<ChatMessageType<never> | undefined>,
+  messages: (ChatMessageType<never> | undefined)[],
 ) => {
   if (messages.length === 0) {
     return;
@@ -355,7 +353,7 @@ export const addMessages = (
       });
     }
 
-    syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), 'defer');
+    syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), "defer");
     if (trimMessageIndexes() || didTrimMessages) {
       rebuildMessageIndexes();
     }
@@ -366,13 +364,13 @@ export const updateMessage = (
   messageId: string,
   messageNonce: string,
   updates: Partial<
-    Pick<ChatMessageType<never>, 'message' | 'badges' | 'moderationNotice'>
+    Pick<ChatMessageType<never>, "message" | "badges" | "moderationNotice">
   >,
 ) => {
   const key = getMessageKey(messageId, messageNonce);
   const index = messageKeyToIndex.get(key);
 
-  if (typeof index === 'number') {
+  if (typeof index === "number") {
     const msg$ = chatStore$.messages[index];
     if (msg$) {
       const preparedUpdates = prepareMessageUpdates(
@@ -380,14 +378,14 @@ export const updateMessage = (
         messageNonce,
         updates,
       );
-      msg$.set(prev => ({ ...prev, ...preparedUpdates }));
-      syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), 'defer');
+      msg$.set((prev) => ({ ...prev, ...preparedUpdates }));
+      syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), "defer");
     }
   }
 };
 
 function normaliseLogin(value: string | undefined): string {
-  return value?.trim().toLowerCase() ?? '';
+  return value?.trim().toLowerCase() ?? "";
 }
 
 function createModeratedText(
@@ -410,7 +408,7 @@ export const moderateMessageById = (
   const key = getMessageKey(message.message_id, message.message_nonce);
   const index = messageKeyToIndex.get(key);
 
-  if (typeof index !== 'number') {
+  if (typeof index !== "number") {
     return;
   }
 
@@ -419,12 +417,12 @@ export const moderateMessageById = (
     return;
   }
 
-  msg$.set(prev => ({
+  msg$.set((prev) => ({
     ...prev,
     ...prepareMessageUpdates(prev.message_id, prev.message_nonce, {
       message: [
         {
-          type: 'text',
+          type: "text",
           content: createModeratedText(prev, moderationNotice),
         },
       ],
@@ -463,12 +461,12 @@ export const moderateMessagesByLogin = (
       return;
     }
 
-    msg$.set(prev => ({
+    msg$.set((prev) => ({
       ...prev,
       ...prepareMessageUpdates(prev.message_id, prev.message_nonce, {
         message: [
           {
-            type: 'text',
+            type: "text",
             content: createModeratedText(prev, moderationNotice),
           },
         ],
@@ -484,7 +482,7 @@ export const getMessageById = (
   messageId: string,
 ): ChatMessageType<never> | undefined => {
   const index = messageIdToIndex.get(messageId);
-  if (typeof index !== 'number') {
+  if (typeof index !== "number") {
     return undefined;
   }
 
@@ -498,14 +496,15 @@ export const removeMessageById = (messageId: string) => {
 
   const currentMessages = chatStore$.messages.peek();
   const removedMessages = currentMessages.filter(
-    message => isValidChatMessage(message) && message.message_id === messageId,
+    (message) =>
+      isValidChatMessage(message) && message.message_id === messageId,
   );
 
   if (removedMessages.length === 0) {
     return;
   }
 
-  removedMessages.forEach(message => {
+  removedMessages.forEach((message) => {
     const key = getMessageKey(message.message_id, message.message_nonce);
     messageKeySet.delete(key);
 
@@ -517,7 +516,7 @@ export const removeMessageById = (messageId: string) => {
 
   chatStore$.messages.set(
     currentMessages.filter(
-      message =>
+      (message) =>
         !isValidChatMessage(message) || message.message_id !== messageId,
     ),
   );
@@ -553,7 +552,7 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
   messageColorIndex.clear();
   senderColorIndex.clear();
 
-  recentMessages.forEach(message => {
+  recentMessages.forEach((message) => {
     const key = getMessageKey(message.message_id, message.message_nonce);
     messageKeySet.add(key);
     messageKeyOrder.push(key);
@@ -575,7 +574,7 @@ export const getUserMessageColor = (username: string): string | undefined => {
 
 export const addTtvUser = (user: ChatUser) => {
   const existingUsers = chatStore$.ttvUsers.peek();
-  if (!existingUsers.some(u => u.userId === user.userId)) {
+  if (!existingUsers.some((u) => u.userId === user.userId)) {
     chatStore$.ttvUsers.push(user);
   }
 };

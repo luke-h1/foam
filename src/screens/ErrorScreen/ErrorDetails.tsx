@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { sentryService } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
@@ -40,7 +40,11 @@ export function ErrorDetails(props: ErrorDetailsProps) {
     >
       <View style={styles.topSection}>
         <View style={styles.iconContainer}>
-          <Icon icon="alert-circle" size={48} />
+          <SymbolView
+            name="exclamationmark.circle"
+            size={48}
+            tintColor={theme.colorGreyHoverAlpha}
+          />
         </View>
         <Text type="xl" weight="semibold" style={styles.heading} align="center">
           Something went wrong

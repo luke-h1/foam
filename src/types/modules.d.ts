@@ -5,12 +5,12 @@ declare module '@modules/core-haptics' {
   }
 
   export interface HapticPatternData {
-    events: Array<{
+    events: {
       eventType: 'hapticTransient' | 'hapticContinuous';
       time?: number;
       eventDuration?: number;
       parameters?: HapticEventParameter[];
-    }>;
+    }[];
   }
 
   export interface NativeCoreHapticsModule {

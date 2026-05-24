@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import * as Form from '@app/components/Form/Form';
-import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
+import { SymbolView } from 'expo-symbols';
 import { recordInfo } from '@app/lib/sentry';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
@@ -132,7 +132,7 @@ export function OTADynamicSection() {
           isLoading ? (
             <ActivityIndicator animating />
           ) : (
-            <IconSymbol name="arrow.clockwise" color={AC.secondaryLabel} />
+            <SymbolView name="arrow.clockwise" tintColor={AC.secondaryLabel} />
           )
         }
       >

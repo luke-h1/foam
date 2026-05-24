@@ -50,7 +50,7 @@ interface UseTwitchChatOptions {
   onGlobalUserState?: (tags: Record<string, string>) => void;
   onWelcome?: () => void;
   // Filtering options
-  blockedUsers?: Array<{ userLogin: string }>;
+  blockedUsers?: { userLogin: string }[];
   mutedWords?: string[];
   matchWholeWord?: boolean;
   // User state callback - called when user state is received after sending a message

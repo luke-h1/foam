@@ -1,21 +1,21 @@
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 import type {
   ObservablePersistLocal,
   PersistOptionsLocal,
-} from '@legendapp/state';
+} from "@legendapp/state";
 import {
   configureObservablePersistence,
   mapPersistences,
-} from '@legendapp/state/persist';
-import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv';
-import { ObservablePersistIndexedDbJson } from './observablePersistIndexedDbJson';
+} from "@legendapp/state/persist";
+import { ObservablePersistMMKV } from "@legendapp/state/persist-plugins/mmkv";
+import { ObservablePersistIndexedDbJson } from "./observablePersistIndexedDbJson";
 
 let initialized = false;
 
-export const CHAT_STORE_PERSISTENCE_KEY = 'chat-store-v2';
-export const PREFERENCES_PERSISTENCE_KEY = 'FOAM_V1_PREFERENCES';
+export const CHAT_STORE_PERSISTENCE_KEY = "chat-store-v2";
+export const PREFERENCES_PERSISTENCE_KEY = "FOAM_V1_PREFERENCES";
 
-const WEB_OBSERVABLE_DATABASE_NAME = 'foam-observable-cache';
+const WEB_OBSERVABLE_DATABASE_NAME = "foam-observable-cache";
 const WEB_OBSERVABLE_DATABASE_VERSION = 1;
 const WEB_OBSERVABLE_TABLE_NAMES = [
   CHAT_STORE_PERSISTENCE_KEY,
@@ -23,7 +23,7 @@ const WEB_OBSERVABLE_TABLE_NAMES = [
 ];
 
 function clearLegacyWebLocalStorageCaches(): void {
-  if (typeof globalThis.localStorage === 'undefined') {
+  if (globalThis.localStorage === undefined) {
     return;
   }
 
@@ -32,8 +32,8 @@ function clearLegacyWebLocalStorageCaches(): void {
     globalThis.localStorage.removeItem(`${CHAT_STORE_PERSISTENCE_KEY}__m`);
 
     Object.keys(globalThis.localStorage)
-      .filter(key => key.startsWith('query-cache-'))
-      .forEach(key => globalThis.localStorage.removeItem(key));
+      .filter((key) => key.startsWith("query-cache-"))
+      .forEach((key) => globalThis.localStorage.removeItem(key));
   } catch {
     // localStorage can be unavailable or already over quota in private modes.
   }
@@ -45,7 +45,7 @@ export function createObservablePersistenceLocalConfig<T>(
   return {
     name,
     indexedDB: {
-      itemID: 'state',
+      itemID: "state",
     },
   };
 }
@@ -57,7 +57,7 @@ export async function clearChatStorePersistence(): Promise<void> {
     CHAT_STORE_PERSISTENCE_KEY,
   );
   const pluginClass =
-    Platform.OS === 'web'
+    Platform.OS === "web"
       ? ObservablePersistIndexedDbJson
       : ObservablePersistMMKV;
   const entry = mapPersistences.get(pluginClass);
@@ -80,7 +80,7 @@ export function ensureObservablePersistenceConfig(): void {
 
   initialized = true;
 
-  if (Platform.OS === 'web') {
+  if (Platform.OS === "web") {
     clearLegacyWebLocalStorageCaches();
 
     configureObservablePersistence({

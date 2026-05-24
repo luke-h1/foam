@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
@@ -60,7 +60,7 @@ export function BadgePreviewSheet(props: Props) {
         <View style={styles.actions}>
           <Button onPress={onClose} style={styles.actionButton}>
             <View style={styles.actionContent}>
-              <Icon icon="check" color="#fff" size={16} />
+              <SymbolView name="checkmark" tintColor="#fff" size={16} />
               <Text style={styles.actionText}>Done</Text>
             </View>
           </Button>
@@ -69,13 +69,13 @@ export function BadgePreviewSheet(props: Props) {
             style={styles.actionButton}
           >
             <View style={styles.actionContent}>
-              <Icon icon="copy" color="#fff" size={16} />
+              <SymbolView name="doc.on.doc" tintColor="#fff" size={16} />
               <Text style={styles.actionText}>Copy Badge name</Text>
             </View>
           </Button>
           <Button onPress={() => handleCopy('url')} style={styles.actionButton}>
             <View style={styles.actionContent}>
-              <Icon icon="copy" color="#fff" size={16} />
+              <SymbolView name="doc.on.doc" tintColor="#fff" size={16} />
               <Text style={styles.actionText}>Copy Badge URL</Text>
             </View>
           </Button>
@@ -84,7 +84,11 @@ export function BadgePreviewSheet(props: Props) {
             style={styles.actionButton}
           >
             <View style={styles.actionContent}>
-              <Icon icon="external-link" color="#fff" size={16} />
+              <SymbolView
+                name="arrow.up.right.square"
+                tintColor="#fff"
+                size={16}
+              />
               <Text style={styles.actionText}>Open in Browser</Text>
             </View>
           </Button>

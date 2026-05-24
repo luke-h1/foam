@@ -1,6 +1,5 @@
 /* eslint-disable react-native/no-unused-styles, react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
@@ -8,6 +7,7 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useCallback, useMemo } from 'react';
 import { Dimensions, Modal, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
@@ -89,20 +89,26 @@ export function EmotePreviewSheet(props: Props) {
     [displayUrl, selectedEmote.content],
   );
 
-  const actions = useMemo(
+  const actions = useMemo<
+    {
+      icon: SymbolViewProps['name'];
+      label: string;
+      onPress: () => void;
+    }[]
+  >(
     () => [
       {
-        icon: 'copy',
+        icon: 'doc.on.doc',
         label: 'Copy emote name',
         onPress: () => handleCopy('name'),
       },
       {
-        icon: 'copy',
+        icon: 'doc.on.doc',
         label: 'Copy emote URL',
         onPress: () => handleCopy('url'),
       },
       {
-        icon: 'external-link',
+        icon: 'arrow.up.right.square',
         label: 'Open in Browser',
         onPress: () => openLinkInBrowser(selectedEmote.emote_link as string),
       },
@@ -164,7 +170,7 @@ export function EmotePreviewSheet(props: Props) {
               style={styles.actionButton}
             >
               <View style={styles.actionContent}>
-                <Icon icon={action.icon} color="#fff" size={18} />
+                <SymbolView name={action.icon} tintColor="#fff" size={18} />
                 <Text style={styles.actionText}>{action.label}</Text>
               </View>
             </Button>

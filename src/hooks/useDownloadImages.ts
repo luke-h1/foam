@@ -1,9 +1,8 @@
-import { getAppAlbum } from '@app/utils/image/getAppAlbum';
+import { saveFilesToAppAlbum } from '@app/utils/image/saveFilesToAppAlbum';
 import { createId } from '@paralleldrive/cuid2';
 import { useMutation } from '@tanstack/react-query';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import compact from 'lodash/compact';
 
 interface DownloadImageVariables {
   urls: string[];
@@ -30,16 +29,11 @@ export function useDownloadImages() {
         overwrite: true,
       });
 
-      const assets = await Promise.all(
-        urls.map(async url => {
-          const file = await File.downloadFileAsync(url, directory);
-
-          return MediaLibrary.createAssetAsync(file.uri);
-        }),
+      const files = await Promise.all(
+        urls.map(url => File.downloadFileAsync(url, directory)),
       );
 
-      const album = await getAppAlbum();
-      await MediaLibrary.addAssetsToAlbumAsync(compact(assets), album);
+      await saveFilesToAppAlbum(files.map(file => file.uri));
       directory.delete();
     },
   });

@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   overlayBorder: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },

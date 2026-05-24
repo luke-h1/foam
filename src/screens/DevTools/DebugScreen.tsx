@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/ui/Text/Text';
 import { Input } from '@app/components/ui/Input/Input';
@@ -148,7 +148,11 @@ export function DebugScreen() {
               onPress={() => void handleConvertUsername()}
               style={styles.goBtn}
             >
-              <Icon icon="copy" size={16} color={theme.color.text.dark} />
+              <SymbolView
+                name="doc.on.doc"
+                size={16}
+                tintColor={theme.color.text.dark}
+              />
             </Button>
           </View>
 

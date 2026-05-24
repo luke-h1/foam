@@ -1,4 +1,7 @@
-import { MemoizedCategoryCard } from '@app/components/CategoryCard/CategoryCard';
+import {
+  CATEGORY_CARD_HEIGHT,
+  MemoizedCategoryCard,
+} from '@app/components/CategoryCard/CategoryCard';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import {
   AnimatedFlashList,
@@ -97,13 +100,15 @@ export function TopCategoriesScreen({
       <View style={styles.wrapper}>
         <FlashList
           getItemType={() => 'category-skeleton'}
-          removeClippedSubviews
           contentInsetAdjustmentBehavior="automatic"
           data={skeletonData}
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
           renderItem={loadingRenderItem}
-          contentContainerStyle={{ paddingTop: contentTopInset }}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingTop: contentTopInset },
+          ]}
         />
       </View>
     );
@@ -153,10 +158,12 @@ export function TopCategoriesScreen({
         ref={listRef}
         data={allCategories}
         numColumns={3}
-        removeClippedSubviews
         contentInsetAdjustmentBehavior="automatic"
         getItemType={() => 'category-card'}
-        contentContainerStyle={{ paddingTop: contentTopInset }}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: contentTopInset },
+        ]}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -172,7 +179,11 @@ export function TopCategoriesScreen({
 const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
-    margin: 5,
+    marginHorizontal: 5,
+    minHeight: CATEGORY_CARD_HEIGHT,
+  },
+  listContent: {
+    paddingBottom: theme.space20,
   },
   skeletonImage: {
     alignSelf: 'center',
@@ -186,7 +197,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     borderCurve: 'continuous',
     borderRadius: 4,
-    height: 18,
+    height: 40,
+    marginBottom: theme.space16,
     width: 80,
   },
   wrapper: {

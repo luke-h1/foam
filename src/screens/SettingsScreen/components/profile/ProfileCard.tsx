@@ -1,4 +1,3 @@
-import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
@@ -6,6 +5,7 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { type ReactNode, useMemo, useRef } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -23,7 +23,7 @@ interface InfoRowProps {
 
 interface ActionRowProps {
   title: string;
-  icon: string;
+  icon: SymbolViewProps['name'];
   onPress: () => void;
   color?: string;
   destructive?: boolean;
@@ -79,7 +79,7 @@ function ActionRow({
   return (
     <PressableArea style={styles.pressableFill} onPress={onPress}>
       <View style={styles.actionRow}>
-        <Icon icon={icon} size={20} color={iconColor} />
+        <SymbolView name={icon} size={20} tintColor={iconColor} />
         <Text
           type="sm"
           weight="medium"
@@ -88,7 +88,11 @@ function ActionRow({
           {title}
         </Text>
         {showChevron ? (
-          <Icon icon="chevron-right" size={18} color={theme.colorGreyAlpha} />
+          <SymbolView
+            name="chevron.right"
+            size={18}
+            tintColor={theme.colorGreyAlpha}
+          />
         ) : null}
       </View>
     </PressableArea>
@@ -154,7 +158,11 @@ export function ProfileCard() {
         <ProfileSection>
           <View style={styles.signInPrompt}>
             <View style={styles.signInIcon}>
-              <Icon icon="user" size={30} color={theme.colorGreyHoverAlpha} />
+              <SymbolView
+                name="person"
+                size={30}
+                tintColor={theme.colorGreyHoverAlpha}
+              />
             </View>
             <Text type="lg" weight="bold" align="center">
               Not signed in
@@ -173,7 +181,11 @@ export function ProfileCard() {
               onPress={() => router.push('/auth-sheet')}
             >
               <View style={styles.primaryButton}>
-                <Icon icon="log-in" size={18} color={theme.colorBlack} />
+                <SymbolView
+                  name="arrow.right.square"
+                  size={18}
+                  tintColor={theme.colorBlack}
+                />
                 <Text type="xs" weight="bold" color="accent" contrast>
                   Sign in
                 </Text>
@@ -214,10 +226,10 @@ export function ProfileCard() {
                 />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Icon
-                    icon="user"
+                  <SymbolView
+                    name="person"
                     size={26}
-                    color={theme.colorGreyHoverAlpha}
+                    tintColor={theme.colorGreyHoverAlpha}
                   />
                 </View>
               )}
@@ -229,10 +241,10 @@ export function ProfileCard() {
                   @{user.login}
                 </Text>
               </View>
-              <Icon
-                icon="chevron-right"
+              <SymbolView
+                name="chevron.right"
                 size={18}
-                color={theme.colorGreyAlpha}
+                tintColor={theme.colorGreyAlpha}
               />
             </View>
           </PressableArea>
@@ -250,7 +262,7 @@ export function ProfileCard() {
           />
           <ActionRow
             title="Blocked Users"
-            icon="user-x"
+            icon="person.crop.circle.badge.xmark"
             color={theme.colorWhite}
             onPress={() => router.push('/preferences/blocked-users')}
           />
@@ -266,7 +278,7 @@ export function ProfileCard() {
         >
           <ActionRow
             title="Log out"
-            icon="log-out"
+            icon="arrow.left.square"
             destructive
             showChevron={false}
             onPress={confirmLogout}

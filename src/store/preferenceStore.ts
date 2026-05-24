@@ -2,25 +2,25 @@ import {
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
   PREFERENCES_PERSISTENCE_KEY,
-} from '@app/lib/observablePersistence';
-import { Theme } from '@app/styles/themes';
-import { observable } from '@legendapp/state';
-import { persistObservable } from '@legendapp/state/persist';
-import { useSelector } from '@legendapp/state/react';
-import { useCallback } from 'react';
+} from "@app/lib/observablePersistence";
+import { Theme } from "@app/styles/themes";
+import { observable } from "@legendapp/state";
+import { persistObservable } from "@legendapp/state/persist";
+import { useSelector } from "@legendapp/state/react";
+import { useCallback } from "react";
 
 export interface Preferences {
   updatedAt: number;
   theme: Theme;
   hapticFeedback: boolean;
-  streamListLayout: 'compact' | 'media' | 'text';
-  chatDensity: 'comfortable' | 'compact';
+  streamListLayout: "compact" | "media" | "text";
+  chatDensity: "comfortable" | "compact";
   chatTimestamps: boolean;
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
   showRecentMessages: boolean;
   showUnreadJumpPill: boolean;
-  emojiStyle: 'twitter' | 'google';
+  emojiStyle: "twitter" | "google";
   show7TvEmotes: boolean;
   showBttvEmotes: boolean;
   showFFzEmotes: boolean;
@@ -35,16 +35,16 @@ export interface Preferences {
 
 const initialPreferences: Preferences = {
   updatedAt: Date.now(),
-  theme: 'foam-dark',
+  theme: "foam-dark",
   hapticFeedback: true,
-  streamListLayout: 'compact',
-  chatDensity: 'comfortable',
+  streamListLayout: "compact",
+  chatDensity: "comfortable",
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
   showRecentMessages: true,
   showUnreadJumpPill: true,
-  emojiStyle: 'twitter',
+  emojiStyle: "twitter",
   show7TvEmotes: true,
   showBttvEmotes: true,
   showFFzEmotes: true,

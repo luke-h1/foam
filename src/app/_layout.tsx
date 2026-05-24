@@ -1,7 +1,13 @@
 import '../utils/performance/wdyr';
 
 import * as Font from 'expo-font';
-import { Stack, router, usePathname } from 'expo-router';
+import {
+  DarkTheme,
+  Stack,
+  ThemeProvider,
+  router,
+  usePathname,
+} from 'expo-router';
 import {
   InstrumentSerif_400Regular,
   InstrumentSerif_400Regular_Italic,
@@ -22,7 +28,6 @@ import {
   Montserrat_900Black,
   Montserrat_900Black_Italic,
 } from '@expo-google-fonts/montserrat';
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import 'expo-dev-client';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as QuickActions from 'expo-quick-actions';

@@ -3,10 +3,6 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { Button } from '@app/components/Button/Button';
-import {
-  IconSymbol,
-  IconSymbolName,
-} from '@app/components/IconSymbol/IconSymbol';
 import { Text } from '@app/components/ui/Text/Text';
 import {
   defaultRemoteConfig,
@@ -15,9 +11,10 @@ import {
 } from '@app/hooks/firebase/useRemoteConfig';
 import { theme } from '@app/styles/themes';
 import * as AC from '@bacons/apple-colors';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
 
-function getSourceIcon(source: string): IconSymbolName {
+function getSourceIcon(source: string): SymbolViewProps['name'] {
   switch (source) {
     case 'remote':
       return 'cloud.fill' as const;
@@ -69,7 +66,7 @@ export function RemoteConfigScreen() {
           {isRefetching ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <IconSymbol name="arrow.clockwise" size={16} color="#fff" />
+            <SymbolView name="arrow.clockwise" size={16} tintColor="#fff" />
           )}
           <Text type="sm" weight="semibold" style={styles.buttonText}>
             {isRefetching ? 'Fetching...' : 'Fetch from server'}
@@ -103,10 +100,10 @@ export function RemoteConfigScreen() {
               >
                 <View style={styles.configHeader}>
                   <View style={styles.keyRow}>
-                    <IconSymbol
+                    <SymbolView
                       name={getSourceIcon(entry.source)}
                       size={14}
-                      color={
+                      tintColor={
                         entry.source === 'remote'
                           ? AC.systemGreen
                           : AC.systemOrange
@@ -173,16 +170,20 @@ export function RemoteConfigScreen() {
         </Text>
         <View style={styles.card}>
           <View style={[styles.legendItem, styles.configItemBorder]}>
-            <IconSymbol name="cloud.fill" size={16} color={AC.systemGreen} />
+            <SymbolView
+              name="cloud.fill"
+              size={16}
+              tintColor={AC.systemGreen}
+            />
             <Text type="sm" color="gray.text">
               Remote - fetched from Firebase
             </Text>
           </View>
           <View style={styles.legendItem}>
-            <IconSymbol
+            <SymbolView
               name="arrow.down.circle.fill"
               size={16}
-              color={AC.systemOrange}
+              tintColor={AC.systemOrange}
             />
             <Text type="sm" color="gray.text">
               Default - using local fallback

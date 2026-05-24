@@ -35,11 +35,9 @@ yarn-error.*
 *.tsbuildinfo
 
 !.env.example
-ios
-android
-!modules/activity-controller/ios
-!modules/activity-controller/android
-modules/activity-controller/android/build
+/ios
+/android
+modules/*/android/build
 
 # Turborepo
 .turbo

@@ -10,7 +10,7 @@ import {
   UISize,
   RADIUS_VALUES,
 } from '@app/styles/ui';
-import { SFSymbol } from 'expo-symbols';
+import { SFSymbol, SymbolView } from 'expo-symbols';
 import { PressableScale } from 'pressto';
 import { useEffect, useMemo, useRef } from 'react';
 import {
@@ -20,7 +20,6 @@ import {
   useColorScheme,
   ViewStyle,
 } from 'react-native';
-import { Icon } from '../Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 
 type ButtonVariant = 'solid' | 'outline' | 'soft' | 'subtle' | 'link';
@@ -412,10 +411,18 @@ export function Button({
       {displayIcon &&
         (loading ? (
           <Animated.View style={{ transform: [{ rotate: spinInterpolate }] }}>
-            <Icon symbol={displayIcon} size={size} color={iconColor} />
+            <SymbolView
+              name={displayIcon}
+              size={SYMBOL_SIZE[size]}
+              tintColor={iconColor}
+            />
           </Animated.View>
         ) : (
-          <Icon symbol={displayIcon} size={size} color={iconColor} />
+          <SymbolView
+            name={displayIcon}
+            size={SYMBOL_SIZE[size]}
+            tintColor={iconColor}
+          />
         ))}
       {title && <Text style={textStyles}>{title}</Text>}
     </PressableScale>
@@ -481,3 +488,12 @@ const TEXT_SIZE_STYLES = {
   xl: styles.xlText,
   '2xl': styles.xxlText,
 } as const;
+
+const SYMBOL_SIZE = {
+  xs: 14,
+  sm: 18,
+  md: 22,
+  lg: 26,
+  xl: 30,
+  '2xl': 34,
+} satisfies Record<UISize, number>;

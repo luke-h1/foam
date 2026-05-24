@@ -1,7 +1,7 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { useNavigation } from 'expo-router';
-import { useHeaderHeight } from '@react-navigation/elements';
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {

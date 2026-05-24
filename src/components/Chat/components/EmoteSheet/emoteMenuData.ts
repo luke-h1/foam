@@ -28,12 +28,12 @@ export interface EmoteMenuDataInput {
   bttvChannelEmotes?: SanitisedEmote[];
   bttvGlobalEmotes?: SanitisedEmote[];
   emojis?: string[];
-  emojiSets?: Array<{
+  emojiSets?: {
     data: string[];
     icon: `emoji:${string}`;
     id: string;
     title: string;
-  }>;
+  }[];
   ffzChannelEmotes?: SanitisedEmote[];
   ffzGlobalEmotes?: SanitisedEmote[];
   sevenTvChannelEmotes?: SanitisedEmote[];
@@ -141,11 +141,11 @@ function groupSevenTvSets(
 }
 
 function createEmojiSets(emojis: string[]): EmoteMenuSet[] {
-  const categories: Array<{
+  const categories: {
     icon: `emoji:${string}`;
     id: string;
     title: string;
-  }> = [
+  }[] = [
     { id: 'emoji-smileys', title: 'Smileys', icon: 'emoji:😀' },
     { id: 'emoji-gestures', title: 'Gestures', icon: 'emoji:👍' },
     { id: 'emoji-hearts', title: 'Hearts', icon: 'emoji:❤️' },
@@ -170,12 +170,12 @@ function createEmojiSets(emojis: string[]): EmoteMenuSet[] {
 
 function createEmojiSetsFromInput(
   emojiSets:
-    | Array<{
+    | {
         data: string[];
         icon: `emoji:${string}`;
         id: string;
         title: string;
-      }>
+      }[]
     | undefined,
 ): EmoteMenuSet[] {
   if (!emojiSets?.length) {

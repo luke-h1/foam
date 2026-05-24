@@ -1,6 +1,5 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
@@ -14,6 +13,7 @@ import {
   TwitchAnd7TVVariant,
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useQueries } from '@tanstack/react-query';
+import { SymbolView } from 'expo-symbols';
 import { View, StyleSheet } from 'react-native';
 
 type MediaLinkCardProps = {
@@ -112,7 +112,7 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
           </View>
           <Text>By {createdBy}</Text>
         </View>
-        <Icon icon="external-link" />
+        <SymbolView name="arrow.up.right.square" tintColor={theme.colorWhite} />
       </View>
     </Button>
   );

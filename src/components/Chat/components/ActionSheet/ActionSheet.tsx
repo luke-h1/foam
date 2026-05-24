@@ -1,10 +1,9 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { SymbolView } from 'expo-symbols';
 import { useCallback, useMemo } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -34,7 +33,6 @@ interface Props {
 }
 
 type ActionItem = {
-  icon: string;
   id:
     | 'copy'
     | 'reply'
@@ -81,7 +79,6 @@ export function ActionSheet(props: Props) {
     const items: ActionItem[] = [
       {
         id: 'copy',
-        icon: 'copy',
         label: 'Copy Message',
         onPress: () => {
           handleCopy();
@@ -90,7 +87,6 @@ export function ActionSheet(props: Props) {
       },
       {
         id: 'reply',
-        icon: 'corner-up-left',
         label: 'Reply',
         onPress: () => {
           handleReply();
@@ -99,7 +95,6 @@ export function ActionSheet(props: Props) {
       },
       {
         id: 'hide-phrase',
-        icon: 'slash',
         label: 'Hide Phrase',
         onPress: () => {
           handleHidePhrase?.();
@@ -111,7 +106,6 @@ export function ActionSheet(props: Props) {
     if (username) {
       items.splice(2, 0, {
         id: 'hide-user',
-        icon: 'user-x',
         label: 'Hide User',
         onPress: () => {
           handleHideUser?.();
@@ -121,7 +115,6 @@ export function ActionSheet(props: Props) {
 
       items.splice(3, 0, {
         id: 'highlight-user',
-        icon: 'star',
         label: isUserHighlighted ? 'Unhighlight User' : 'Highlight User',
         onPress: () => {
           handleHighlightUser?.();
@@ -136,7 +129,6 @@ export function ActionSheet(props: Props) {
           items.push(
             {
               id: 'update-pin',
-              icon: 'rotate-cw',
               label: 'Refresh Pin',
               onPress: () => {
                 handleUpdatePinnedMessage?.();
@@ -145,7 +137,6 @@ export function ActionSheet(props: Props) {
             },
             {
               id: 'unpin-message',
-              icon: 'map-pin',
               label: 'Unpin Message',
               onPress: () => {
                 handleUnpinMessage?.();
@@ -156,7 +147,6 @@ export function ActionSheet(props: Props) {
         } else {
           items.push({
             id: 'pin-message',
-            icon: 'map-pin',
             label: 'Pin Message',
             onPress: () => {
               handlePinMessage?.();
@@ -169,7 +159,6 @@ export function ActionSheet(props: Props) {
       if (canDeleteMessage) {
         items.push({
           id: 'delete-message',
-          icon: 'trash-2',
           label: 'Delete Message',
           onPress: () => {
             handleDeleteMessage?.();
@@ -182,7 +171,6 @@ export function ActionSheet(props: Props) {
         items.push(
           {
             id: 'timeout-user',
-            icon: 'clock',
             label: 'Timeout for 10m',
             onPress: () => {
               handleTimeoutUser?.();
@@ -191,7 +179,6 @@ export function ActionSheet(props: Props) {
           },
           {
             id: 'ban-user',
-            icon: 'slash',
             label: 'Ban User',
             onPress: () => {
               handleBanUser?.();
@@ -353,17 +340,13 @@ export function ActionSheet(props: Props) {
                   ]}
                 >
                   <View style={styles.actionContent}>
-                    {Platform.OS === 'ios' ? (
-                      <SymbolView
-                        name={getSFSymbolName(action.id)}
-                        size={18}
-                        tintColor="#b7bdc9"
-                        weight="regular"
-                        style={styles.actionIcon}
-                      />
-                    ) : (
-                      <Icon icon={action.icon} color="#b7bdc9" size={18} />
-                    )}
+                    <SymbolView
+                      name={getSFSymbolName(action.id)}
+                      size={18}
+                      tintColor="#b7bdc9"
+                      weight="regular"
+                      style={styles.actionIcon}
+                    />
                     <Text style={styles.actionText}>{action.label}</Text>
                   </View>
                 </Button>

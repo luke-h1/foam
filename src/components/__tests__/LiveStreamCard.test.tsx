@@ -3,7 +3,7 @@ import {
   TwitchStream,
 } from '@app/services/twitch-service';
 import render from '@app/test/render';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer } from 'expo-router/react-navigation';
 import { screen } from '@testing-library/react-native';
 import { LiveStreamCard } from '../LiveStreamCard/LiveStreamCard';
 

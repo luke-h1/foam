@@ -1,12 +1,12 @@
-import { logger } from '@app/utils/logger';
+import { logger } from "@app/utils/logger";
 import {
   CHAT_STORE_PERSISTENCE_KEY,
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
-} from '@app/lib/observablePersistence';
-import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
-import { observable } from '@legendapp/state';
-import { persistObservable } from '@legendapp/state/persist';
+} from "@app/lib/observablePersistence";
+import { getEmojiEmotes } from "@app/utils/emoji/emojiEmotes";
+import { observable } from "@legendapp/state";
+import { persistObservable } from "@legendapp/state/persist";
 
 import type {
   Bit,
@@ -17,9 +17,9 @@ import type {
   PaintData,
   SanitisedBadgeSet,
   SanitisedEmote,
-} from './constants';
-import { MAX_CACHED_CHANNELS } from './constants';
-import { getPreferences } from '../preferenceStore';
+} from "./constants";
+import { MAX_CACHED_CHANNELS } from "./constants";
+import { getPreferences } from "../preferenceStore";
 
 export interface ChatStoreState {
   persisted: {
@@ -47,7 +47,7 @@ export const limitChannelCaches = (
   if (entries.length <= MAX_CACHED_CHANNELS) {
     return channelCaches;
   }
-  const sorted = entries.sort((a, b) => {
+  const sorted = entries.toSorted((a, b) => {
     if (a[0] === currentChannelId) {
       return -1;
     }
@@ -69,7 +69,7 @@ const initialChatStoreState: ChatStoreState = {
     lastGlobalUpdate: 0,
     recentMessagesByChannel: {},
   },
-  loadingState: 'IDLE',
+  loadingState: "IDLE",
   currentChannelId: null,
   emojis: getEmojiEmotes(getPreferences().emojiStyle),
   bits: [],

@@ -85,9 +85,10 @@ export const Image = function Image({
   ...props
 }: ImageProps) {
   const sourceUri = useMemo(() => getSourceUri(source), [source]);
+  const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
   const trackLoad = Boolean(trackLoadTime && sourceUri);
   const [cachedSource, setCachedSource] = useState<ImageProps['source']>(() => {
-    if (!sourceUri || !cacheToFile) {
+    if (!sourceUri || !shouldUseFileCache) {
       return undefined;
     }
 
@@ -152,7 +153,7 @@ export const Image = function Image({
 
     if (
       cachePolicy === 'none' ||
-      !cacheToFile ||
+      !shouldUseFileCache ||
       !isCacheableWebUri(sourceUri)
     ) {
       return () => {
@@ -199,7 +200,7 @@ export const Image = function Image({
       isMounted = false;
       controller.abort();
     };
-  }, [cachePolicy, cachePriority, cacheToFile, cacheVariant, sourceUri]);
+  }, [cachePolicy, cachePriority, cacheVariant, shouldUseFileCache, sourceUri]);
 
   return (
     <View style={[styles.container, containerStyle]}>

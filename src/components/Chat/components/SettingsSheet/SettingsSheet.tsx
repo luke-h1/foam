@@ -1,9 +1,9 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
 import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { memo, useCallback, forwardRef } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,14 +14,14 @@ function ToggleMenuItem({
   onValueChange,
   value,
 }: {
-  icon: string;
+  icon: SymbolViewProps['name'];
   label: string;
   onValueChange?: (value: boolean) => void;
   value: boolean;
 }) {
   return (
     <View style={styles.menuItem}>
-      <Icon icon={icon} color={theme.colorBorderHover} />
+      <SymbolView name={icon} tintColor={theme.colorBorderHover} />
       <View style={styles.menuItemTextContainer}>
         <Text style={styles.menuItemText} weight="semibold">
           {label}
@@ -159,7 +159,10 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 style={styles.menuItem}
                 onPress={handleRefetchEmotes}
               >
-                <Icon icon="refresh-cw" color={theme.colorBorderHover} />
+                <SymbolView
+                  name="arrow.clockwise"
+                  tintColor={theme.colorBorderHover}
+                />
                 <Text style={styles.menuItemText} weight="semibold">
                   Refetch Emotes & Badges
                 </Text>
@@ -174,7 +177,10 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 dismissSheet();
               }}
             >
-              <Icon icon="align-left" color={theme.colorBorderHover} />
+              <SymbolView
+                name="text.alignleft"
+                tintColor={theme.colorBorderHover}
+              />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Density
@@ -193,21 +199,21 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
             />
 
             <ToggleMenuItem
-              icon="at-sign"
+              icon="at"
               label="Highlight Own Mentions"
               value={highlightOwnMentions}
               onValueChange={onToggleHighlightOwnMentions}
             />
 
             <ToggleMenuItem
-              icon="corner-up-left"
+              icon="arrowshape.turn.up.left"
               label="Inline Reply Context"
               value={showInlineReplyContext}
               onValueChange={onToggleInlineReplyContext}
             />
 
             <ToggleMenuItem
-              icon="arrow-down-circle"
+              icon="arrow.down.circle"
               label="Show Jump Pill"
               value={showUnreadJumpPill}
               onValueChange={onToggleShowUnreadJumpPill}
@@ -219,7 +225,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 style={styles.menuItem}
                 onPress={handleReconnect}
               >
-                <Icon icon="wifi" color={theme.colorBorderHover} />
+                <SymbolView name="wifi" tintColor={theme.colorBorderHover} />
                 <Text style={styles.menuItemText} weight="semibold">
                   Reconnect
                 </Text>
@@ -232,7 +238,10 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 style={styles.menuItem}
                 onPress={handleClearChatCache}
               >
-                <Icon icon="database" color={theme.colorBorderHover} />
+                <SymbolView
+                  name="cylinder"
+                  tintColor={theme.colorBorderHover}
+                />
                 <Text style={styles.menuItemText} weight="semibold">
                   Clear Chat Cache
                 </Text>
@@ -245,7 +254,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 style={styles.menuItem}
                 onPress={handleClearImageCache}
               >
-                <Icon icon="trash-2" color={theme.colorBorderHover} />
+                <SymbolView name="trash" tintColor={theme.colorBorderHover} />
                 <Text style={styles.menuItemText} weight="semibold">
                   Clear Image Cache
                 </Text>
@@ -253,7 +262,10 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
             ) : null}
 
             <View style={styles.menuItem}>
-              <Icon icon="activity" color={theme.colorBorderHover} />
+              <SymbolView
+                name="waveform.path.ecg"
+                tintColor={theme.colorBorderHover}
+              />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Display Latency
@@ -272,7 +284,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
                 style={styles.menuItem}
                 onPress={handleRefreshVideo}
               >
-                <Icon icon="video" color={theme.colorBorderHover} />
+                <SymbolView name="video" tintColor={theme.colorBorderHover} />
                 <Text style={styles.menuItemText} weight="semibold">
                   Refresh Video
                 </Text>
@@ -280,7 +292,7 @@ const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
             ) : null}
 
             <View style={styles.menuItem}>
-              <Icon icon="repeat" color={theme.colorBorderHover} />
+              <SymbolView name="repeat" tintColor={theme.colorBorderHover} />
               <View style={styles.menuItemTextContainer}>
                 <Text style={styles.menuItemText} weight="semibold">
                   Reconnection Attempts

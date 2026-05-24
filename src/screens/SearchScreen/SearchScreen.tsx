@@ -1,7 +1,7 @@
 import { AnimatedInputBar } from '@app/components/AnimatedInputBar/AnimatedInputBar';
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Image } from '@app/components/Image/Image';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
@@ -323,7 +323,12 @@ export function SearchScreen() {
         </Text>
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
-            <Icon icon="search" size={16} style={styles.searchIcon} />
+            <SymbolView
+              name="magnifyingglass"
+              size={16}
+              tintColor={theme.colorGreyHoverAlpha}
+              style={styles.searchIcon}
+            />
             <AnimatedInputBar
               containerStyle={styles.searchInputShell}
               inputStyle={styles.searchInput}
@@ -345,7 +350,11 @@ export function SearchScreen() {
                 style={styles.clearButton}
               >
                 <View style={styles.clearIcon}>
-                  <Icon icon="x" size={10} />
+                  <SymbolView
+                    name="xmark"
+                    size={10}
+                    tintColor={theme.colorGreyHoverAlpha}
+                  />
                 </View>
               </PressableArea>
             )}

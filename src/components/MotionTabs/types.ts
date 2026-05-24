@@ -1,4 +1,4 @@
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import type { ReactNode } from 'react';
 
 interface MotionTabPalette {

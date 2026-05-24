@@ -1,5 +1,4 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
 import { impact } from '@app/lib/haptics';
@@ -7,6 +6,7 @@ import { countMetric } from '@app/lib/sentry';
 import { recordError } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SymbolView } from 'expo-symbols';
 import {
   forwardRef,
   memo,
@@ -962,10 +962,10 @@ function ControlsOverlay({
         pointerEvents="none"
         style={[styles.latencyBadge, { top: insets.top + theme.space12 }]}
       >
-        <Icon
-          color={theme.colorWhite}
-          icon="clock"
+        <SymbolView
+          name="clock"
           size={12}
+          tintColor={theme.colorWhite}
           style={styles.latencyBadgeIcon}
         />
         <Text style={styles.latencyBadgeText}>
@@ -981,7 +981,11 @@ function ControlsOverlay({
               style={styles.headerButton}
               onPress={onBackPress}
             >
-              <Icon color={theme.colorWhite} icon="chevron-left" size={24} />
+              <SymbolView
+                name="chevron.left"
+                size={24}
+                tintColor={theme.colorWhite}
+              />
             </Button>
           </View>
         )}
@@ -995,10 +999,10 @@ function ControlsOverlay({
           style={styles.playPauseButton}
           onPress={onPlayPausePress}
         >
-          <Icon
-            color={theme.colorWhite}
-            icon={paused ? 'play' : 'pause'}
+          <SymbolView
+            name={paused ? 'play.fill' : 'pause.fill'}
             size={40}
+            tintColor={theme.colorWhite}
           />
         </Button>
       </View>
@@ -1021,7 +1025,12 @@ function ControlsOverlay({
             {streamInfo?.userName || streamInfo?.userLogin || ''}
           </Text>
           <View style={styles.viewerCountRow}>
-            <Icon icon="user" size={14} style={styles.userIcon} />
+            <SymbolView
+              name="person"
+              size={14}
+              style={styles.userIcon}
+              tintColor={theme.colorWhite}
+            />
             <Text style={styles.viewerCountText}>
               {formatViewerCount(streamInfo?.viewerCount)}
             </Text>
@@ -1036,7 +1045,11 @@ function ControlsOverlay({
               style={styles.controlButton}
               onPress={onRefresh}
             >
-              <Icon color={theme.colorWhite} icon="refresh-cw" size={18} />
+              <SymbolView
+                name="arrow.clockwise"
+                size={18}
+                tintColor={theme.colorWhite}
+              />
             </Button>
           </View>
         )}
@@ -1048,12 +1061,7 @@ function ControlsOverlay({
               style={styles.controlButton}
               onPress={onPipPress}
             >
-              <Icon
-                color={theme.colorWhite}
-                icon="picture-in-picture-bottom-right"
-                iconFamily="MaterialCommunityIcons"
-                size={20}
-              />
+              <SymbolView name="pip" size={20} tintColor={theme.colorWhite} />
             </Button>
           </View>
         )}
@@ -1926,7 +1934,11 @@ export const StreamPlayer = memo(
             accessibilityLabel="Show player controls"
             accessibilityRole="button"
           >
-            <Icon color={theme.colorWhite} icon="more-horizontal" size={24} />
+            <SymbolView
+              name="ellipsis"
+              size={24}
+              tintColor={theme.colorWhite}
+            />
           </PressableArea>
         )}
 

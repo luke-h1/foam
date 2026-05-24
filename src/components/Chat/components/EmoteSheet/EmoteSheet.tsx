@@ -2,10 +2,10 @@ import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
-import { Icon } from '@app/components/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
 import { BlurView } from 'expo-blur';
+import { SymbolView } from 'expo-symbols';
 import {
   cacheEmoteImages,
   getCachedEmoteUri,
@@ -55,11 +55,18 @@ import {
 
 const MIN_CELL_SIZE = 38;
 const MAX_CELL_SIZE = 50;
+const CELL_GAP = 4;
 const GRID_HORIZONTAL_PADDING = 8;
 const RAIL_WIDTH = 52;
 const PROVIDER_BAR_HEIGHT = 54;
 const SEARCH_BAR_HEIGHT = 48;
 const SHEET_DETENT = 0.78;
+const MENU_BACKGROUND = '#0b0b0d';
+const MENU_HEADER_BACKGROUND = 'rgba(128, 128, 128, 0.06)';
+const MENU_ACTIVE_SURFACE = 'rgba(128, 128, 128, 0.32)';
+const MENU_BORDER = 'rgba(255, 255, 255, 0.10)';
+const MENU_MUTED_TEXT = 'rgba(255, 255, 255, 0.62)';
+const MENU_SURFACE = 'rgba(128, 128, 128, 0.10)';
 
 export type EmotePickerItem = string | SanitisedEmote;
 
@@ -94,18 +101,26 @@ function EmoteSearchFilter({
 
   return (
     <View style={[styles.searchInputWrap]}>
-      <Icon icon="search" style={styles.searchIcon} />
+      <SymbolView
+        name="magnifyingglass"
+        style={styles.searchIcon}
+        tintColor={theme.color.textSecondary.dark}
+      />
       <Input
         autoCapitalize="none"
         autoComplete="off"
         autoCorrect={false}
+        color="white"
         onChangeText={onChange}
         onSubmitEditing={onSubmitEditing ? () => onSubmitEditing() : undefined}
         placeholder={placeholder}
+        placeholderTextColor="rgba(255,255,255,0.42)"
         radius="none"
         returnKeyType="search"
+        size="sm"
         style={styles.searchInput}
         value={value}
+        variant="soft"
       />
       <Button
         onPress={() => hasValue && rightOnPress?.()}
@@ -115,7 +130,7 @@ function EmoteSearchFilter({
         ]}
         disabled={!hasValue}
       >
-        <Icon icon="x" />
+        <SymbolView name="xmark" tintColor={theme.color.text.dark} />
       </Button>
     </View>
   );
@@ -224,7 +239,7 @@ const EmoteCell = memo(({ cellSize, item, onPress }: EmoteCellProps) => {
     return getCachedEmoteUri(item.url);
   }, [item]);
 
-  const innerSize = Math.round(cellSize * 0.72);
+  const innerSize = Math.round(cellSize * 0.78);
 
   return (
     <Button
@@ -299,22 +314,6 @@ function getProviderAccentColor(icon: EmoteMenuIcon): string {
   return theme.color.text.dark;
 }
 
-function getProviderAccentBackground(icon: EmoteMenuIcon): string {
-  if (icon === 'twitch') {
-    return 'rgba(145, 71, 255, 0.22)';
-  }
-  if (icon === 'stv') {
-    return 'rgba(255, 255, 255, 0.12)';
-  }
-  if (icon === 'ffz') {
-    return 'rgba(49, 196, 141, 0.18)';
-  }
-  if (icon === 'bttv') {
-    return 'rgba(255, 155, 79, 0.18)';
-  }
-  return 'rgba(255, 214, 10, 0.16)';
-}
-
 function renderMenuIcon(
   icon: EmoteMenuIcon,
   isActive: boolean,
@@ -361,36 +360,16 @@ interface ProviderChipProps {
 
 const ProviderChip = memo(
   ({ isActive, onPress, provider }: ProviderChipProps) => {
-    const accentColor = getProviderAccentColor(provider.icon);
-
     return (
       <Button
-        style={[
-          styles.providerChip,
-          isActive && styles.providerChipActive,
-          isActive && {
-            backgroundColor: getProviderAccentBackground(provider.icon),
-            borderColor: accentColor,
-          },
-        ]}
+        style={[styles.providerChip, isActive && styles.providerChipActive]}
         onPress={onPress}
       >
         <View style={styles.providerChipIcon}>
           {renderMenuIcon(provider.icon, isActive, provider.title.slice(0, 2))}
         </View>
         {isActive ? (
-          <View style={styles.providerChipMeta}>
-            <Text style={styles.providerChipTitle}>{provider.title}</Text>
-            <Text style={styles.providerChipCount}>{provider.emoteCount}</Text>
-          </View>
-        ) : null}
-        {isActive ? (
-          <View
-            style={[
-              styles.providerChipSelectedDot,
-              { backgroundColor: accentColor },
-            ]}
-          />
+          <Text style={styles.providerChipTitle}>{provider.title}</Text>
         ) : null}
       </Button>
     );
@@ -436,10 +415,9 @@ const SetHeader = memo(({ set }: SetHeaderProps) => {
       <View style={styles.setHeaderIcon}>
         {renderMenuIcon(set.icon, true, set.shortLabel)}
       </View>
-      <View style={styles.setHeaderMeta}>
-        <Text style={styles.setHeaderTitle}>{set.title}</Text>
-        <Text style={styles.setHeaderCount}>{set.emotes.length} emotes</Text>
-      </View>
+      <Text numberOfLines={1} style={styles.setHeaderTitle}>
+        {set.title}
+      </Text>
     </View>
   );
 });
@@ -470,22 +448,17 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
       twitchSubscriberEmotes,
     } = useCurrentEmoteData();
 
+    const gridWidth = screenWidth - GRID_HORIZONTAL_PADDING * 2 - RAIL_WIDTH;
     const columns = Math.max(
       4,
       Math.min(
         7,
-        Math.floor(
-          (screenWidth - GRID_HORIZONTAL_PADDING * 2 - RAIL_WIDTH) /
-            MIN_CELL_SIZE,
-        ),
+        Math.floor((gridWidth + CELL_GAP) / (MIN_CELL_SIZE + CELL_GAP)),
       ),
     );
     const cellSize = Math.min(
       MAX_CELL_SIZE,
-      Math.max(
-        MIN_CELL_SIZE,
-        (screenWidth - GRID_HORIZONTAL_PADDING * 2 - RAIL_WIDTH) / columns,
-      ),
+      Math.max(MIN_CELL_SIZE, (gridWidth - CELL_GAP * (columns - 1)) / columns),
     );
     const bodyHeight = Math.max(
       360,
@@ -544,12 +517,6 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
       () => providers.find(provider => provider.id === activeProviderId),
       [activeProviderId, providers],
     );
-    const activeProviderAccentColor = activeProvider
-      ? getProviderAccentColor(activeProvider.icon)
-      : theme.color.text.dark;
-    const activeProviderAccentBackground = activeProvider
-      ? getProviderAccentBackground(activeProvider.icon)
-      : theme.darkActiveContent;
 
     const filteredSets = useMemo(
       () => filterProviderSets(activeProvider, deferredSearchQuery),
@@ -676,7 +643,7 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
 
     const onViewableItemsChanged = useCallback(
       (info: {
-        viewableItems: Array<{ index: number | null; item: EmoteMenuListItem }>;
+        viewableItems: { index: number | null; item: EmoteMenuListItem }[];
       }) => {
         const firstVisible = info.viewableItems
           .filter(item => item.index != null)
@@ -728,10 +695,10 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
       <TrueSheet
         ref={ref}
         detents={[SHEET_DETENT]}
-        cornerRadius={20}
+        cornerRadius={8}
         grabber={false}
         blurTint="dark"
-        backgroundColor={theme.color.background.dark}
+        backgroundColor={MENU_BACKGROUND}
         {...sheetProps}
         onDidDismiss={handleDidDismiss}
         onDidPresent={handleDidPresent}
@@ -773,29 +740,8 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
 
             <View style={styles.searchContainer}>
               <View style={styles.searchRow}>
-                {activeProvider ? (
-                  <View
-                    style={[
-                      styles.activeProviderBadge,
-                      {
-                        backgroundColor: activeProviderAccentBackground,
-                        borderColor: activeProviderAccentColor,
-                      },
-                    ]}
-                  >
-                    {renderMenuIcon(
-                      activeProvider.icon,
-                      true,
-                      activeProvider.title.slice(0, 2),
-                    )}
-                    <Text style={styles.activeProviderBadgeText}>
-                      {activeProvider.title}
-                    </Text>
-                  </View>
-                ) : null}
-
                 <EmoteSearchFilter
-                  placeholder="filter"
+                  placeholder="Search emotes"
                   onChange={handleSearchChange}
                   onSubmitEditing={() => handleSearchChange(searchQuery)}
                   rightOnPress={handleClearSearch}
@@ -874,30 +820,13 @@ export const EmoteSheet = memo(EmoteSheetComponent);
 EmoteSheet.displayName = 'EmoteSheet';
 
 const styles = StyleSheet.create({
-  activeProviderBadge: {
-    alignItems: 'center',
-    borderColor: 'transparent',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.space8,
-    height: 32,
-    paddingHorizontal: theme.space12,
-  },
-  activeProviderBadgeText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
-    fontWeight: '600',
-  },
   body: {
     flex: 1,
     flexDirection: 'row',
     minHeight: 0,
   },
   container: {
-    backgroundColor:
-      Platform.OS === 'ios' ? '#050507' : theme.color.background.dark,
+    backgroundColor: MENU_BACKGROUND,
     flex: 1,
   },
   contentPane: {
@@ -913,29 +842,20 @@ const styles = StyleSheet.create({
   },
   emoteCell: {
     alignItems: 'center',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    backgroundColor: MENU_HEADER_BACKGROUND,
+    borderRadius: 4,
     justifyContent: 'center',
+    padding: 3,
   },
   emoteCellInner: {
     alignItems: 'center',
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.06)'
-        : theme.color.background.darkAlt,
-    borderColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: Platform.OS === 'ios' ? 14 : theme.borderRadius12,
-    borderWidth: 1,
     justifyContent: 'center',
     overflow: 'hidden',
   },
   emoteImage: {},
   emoteRow: {
     flexDirection: 'row',
+    gap: CELL_GAP,
     justifyContent: 'flex-start',
     paddingVertical: 2,
   },
@@ -959,11 +879,11 @@ const styles = StyleSheet.create({
     color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     fontWeight: '800',
-    letterSpacing: 0.4,
+    letterSpacing: 0,
   },
   ffzTextIcon: {
     color: theme.colorGreen,
-    letterSpacing: 0.6,
+    letterSpacing: 0,
   },
   ffzTextIconActive: {
     color: theme.color.text.dark,
@@ -981,11 +901,9 @@ const styles = StyleSheet.create({
     paddingTop: theme.space8,
   },
   header: {
-    borderBottomColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.color.border.dark,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: MENU_HEADER_BACKGROUND,
+    borderBottomColor: MENU_BORDER,
+    borderBottomWidth: 1,
     minHeight: PROVIDER_BAR_HEIGHT + SEARCH_BAR_HEIGHT,
     overflow: 'hidden',
     paddingBottom: theme.space8,
@@ -997,7 +915,7 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: theme.space36,
     paddingHorizontal: GRID_HORIZONTAL_PADDING,
-    paddingTop: theme.space8,
+    paddingTop: theme.space4,
   },
   placeholderContent: {
     alignItems: 'center',
@@ -1017,62 +935,33 @@ const styles = StyleSheet.create({
   },
   providerChip: {
     alignItems: 'center',
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.06)'
-        : theme.color.background.darkAlt,
-    borderColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: Platform.OS === 'ios' ? 18 : theme.borderRadius16,
-    borderWidth: 1,
+    backgroundColor: MENU_HEADER_BACKGROUND,
+    borderRadius: 4,
     flexDirection: 'row',
     gap: theme.space8,
-    height: 36,
+    height: 38,
     justifyContent: 'center',
-    minWidth: 36,
+    minWidth: 40,
     paddingHorizontal: theme.space12,
     position: 'relative',
   },
   providerChipActive: {
+    backgroundColor: MENU_ACTIVE_SURFACE,
     minWidth: 96,
-    paddingRight: theme.space16,
-  },
-  providerChipCount: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize11,
-    fontWeight: '700',
   },
   providerChipIcon: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  providerChipMeta: {
-    alignItems: 'flex-start',
-    gap: 0,
-  },
-  providerChipSelectedDot: {
-    borderRadius: 3,
-    height: 6,
-    position: 'absolute',
-    right: theme.space12,
-    top: '50%',
-    transform: [{ translateY: -3 }],
-    width: 6,
-  },
   providerChipTitle: {
     color: theme.color.text.dark,
     fontSize: theme.fontSize12,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   rail: {
-    borderLeftColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.color.border.dark,
-    borderLeftWidth: StyleSheet.hairlineWidth,
+    backgroundColor: MENU_HEADER_BACKGROUND,
+    borderLeftColor: MENU_BORDER,
+    borderLeftWidth: 1,
     minHeight: 0,
     overflow: 'hidden',
     position: 'relative',
@@ -1081,32 +970,22 @@ const styles = StyleSheet.create({
   railContent: {
     alignItems: 'center',
     paddingBottom: theme.space28,
-    paddingTop: theme.space12,
+    paddingTop: theme.space8,
+    width: '100%',
   },
   searchContainer: {
     height: SEARCH_BAR_HEIGHT,
     justifyContent: 'center',
     paddingHorizontal: theme.space12,
-    paddingTop: 2,
   },
   searchRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space12,
   },
   searchInputWrap: {
     alignItems: 'center',
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.05)'
-        : theme.color.background.darkAlt,
-    borderColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: Platform.OS === 'ios' ? 18 : theme.borderRadius16,
-    borderWidth: 1,
+    backgroundColor: MENU_SURFACE,
+    borderRadius: 4,
     flex: 1,
     flexDirection: 'row',
     gap: theme.space8,
@@ -1114,25 +993,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space12,
   },
   searchInput: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    borderWidth: 0,
+    color: theme.color.text.dark,
     flex: 1,
-    minHeight: 38,
+    fontSize: theme.fontSize16,
+    fontWeight: '500',
+    height: 40,
+    minHeight: 40,
     paddingHorizontal: 0,
   },
   searchIcon: {
     color: theme.color.textSecondary.dark,
-    opacity: 0.8,
+    opacity: 0.7,
   },
   searchClearButton: {
     alignItems: 'center',
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.14)'
-        : 'rgba(255,255,255,0.12)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    height: 24,
+    backgroundColor: MENU_ACTIVE_SURFACE,
+    borderRadius: 4,
+    height: 28,
     justifyContent: 'center',
-    width: 24,
+    width: 28,
   },
   searchClearButtonHidden: {
     opacity: 0,
@@ -1140,86 +1022,50 @@ const styles = StyleSheet.create({
   },
   setHeader: {
     alignItems: 'center',
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.06)'
-        : theme.color.background.darkAlt,
-    borderColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: Platform.OS === 'ios' ? 18 : theme.borderRadius16,
-    borderWidth: 1,
+    backgroundColor: MENU_HEADER_BACKGROUND,
+    borderBottomColor: MENU_BORDER,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
-    gap: theme.space12,
-    marginBottom: theme.space8,
-    marginTop: theme.space12,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
-  },
-  setHeaderCount: {
-    color:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.56)'
-        : theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    fontWeight: '700',
+    gap: theme.space8,
+    marginBottom: theme.space4,
+    marginTop: theme.space4,
+    minHeight: 40,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space4,
   },
   setHeaderIcon: {
     alignItems: 'center',
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.darkActiveContent,
-    borderCurve: 'continuous',
-    borderRadius: Platform.OS === 'ios' ? 12 : theme.borderRadius12,
+    borderRadius: 4,
     height: 24,
     justifyContent: 'center',
     width: 24,
   },
-  setHeaderMeta: {
-    flex: 1,
-    gap: 1,
-  },
   setHeaderTitle: {
+    color: theme.color.text.dark,
+    flex: 1,
     fontSize: theme.fontSize14,
-    fontWeight: '700',
+    fontWeight: '600',
+    letterSpacing: 0,
   },
   setRailButton: {
     alignItems: 'center',
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.05)'
-        : theme.color.background.darkAlt,
-    borderColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.08)'
-        : theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: Platform.OS === 'ios' ? 14 : theme.borderRadius16,
-    borderWidth: 1,
-    height: 34,
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    height: 46,
     justifyContent: 'center',
-    marginBottom: theme.space8,
-    width: 34,
+    width: RAIL_WIDTH,
   },
   setRailButtonActive: {
-    backgroundColor:
-      Platform.OS === 'ios'
-        ? 'rgba(255,255,255,0.12)'
-        : 'rgba(145, 71, 255, 0.18)',
-    borderColor:
-      Platform.OS === 'ios' ? 'rgba(255,255,255,0.18)' : theme.colorPlum,
+    backgroundColor: MENU_ACTIVE_SURFACE,
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,
   },
   setRailLabel: {
-    color: theme.color.textSecondary.dark,
+    color: MENU_MUTED_TEXT,
     fontSize: theme.fontSize11,
     fontWeight: '800',
-    letterSpacing: 0.4,
+    letterSpacing: 0,
   },
   setRailLabelActive: {
     color: theme.color.text.dark,

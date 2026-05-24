@@ -1,9 +1,6 @@
-import {
-  IconSymbol,
-  IconSymbolName,
-} from '@app/components/IconSymbol/IconSymbol';
 import { REFRESH_THRESHOLD } from '@app/hooks/useRefresh';
 import { theme } from '@app/styles/themes';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useEffect } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import Animated, {
@@ -16,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const INDICATOR_SIZE = 36;
-const ICON_NAME: IconSymbolName = 'arrow.down';
+const ICON_NAME: SymbolViewProps['name'] = 'arrow.down';
 
 interface RefreshIndicatorProps {
   scrollY: SharedValue<number>;
@@ -93,7 +90,7 @@ export function RefreshIndicator({
         ]}
       >
         <Animated.View style={[styles.centered, arrowStyle]}>
-          <IconSymbol name={ICON_NAME} size={18} color={accentColor} />
+          <SymbolView name={ICON_NAME} size={18} tintColor={accentColor} />
         </Animated.View>
         <Animated.View style={[styles.centered, spinnerStyle]}>
           <ActivityIndicator size="small" color={accentColor} />

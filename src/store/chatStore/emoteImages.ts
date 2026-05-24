@@ -1,13 +1,13 @@
-import type { SanitisedEmote } from '@app/types/emote';
-import { getEmoteImageCacheUrls } from '@app/utils/emote/emoteImageVariants';
-import type { CacheImageOptions } from '@app/utils/image/image-cache';
+import type { SanitisedEmote } from "@app/types/emote";
+import { getEmoteImageCacheUrls } from "@app/utils/emote/emoteImageVariants";
+import type { CacheImageOptions } from "@app/utils/image/image-cache";
 import {
   cacheImageFromUrl,
   clearSessionCache,
   getCachedImageUri,
   warmImageCache,
-} from '@app/utils/image/image-cache';
-import { logger } from '@app/utils/logger';
+} from "@app/utils/image/image-cache";
+import { logger } from "@app/utils/logger";
 
 const emoteImageCachePromises = new Map<string, Promise<string>>();
 
@@ -15,11 +15,11 @@ export const cacheEmoteImage = async (
   emoteUrl: string,
   options: CacheImageOptions = {},
 ): Promise<string> => {
-  const variant = options.variant ?? 'emote';
+  const variant = options.variant ?? "emote";
   if (
     !emoteUrl ||
-    emoteUrl.startsWith('data:') ||
-    emoteUrl.startsWith('file://')
+    emoteUrl.startsWith("data:") ||
+    emoteUrl.startsWith("file://")
   ) {
     return emoteUrl;
   }
@@ -36,7 +36,7 @@ export const cacheEmoteImage = async (
   const cachePromise = (async () => {
     try {
       const fileUri = await cacheImageFromUrl(emoteUrl, {
-        priority: options.priority ?? 'visible',
+        priority: options.priority ?? "visible",
         signal: options.signal,
         variant,
       });
@@ -59,19 +59,19 @@ export const cacheEmoteImage = async (
 export const getCachedEmoteUri = (emoteUrl: string): string => {
   if (
     !emoteUrl ||
-    emoteUrl.startsWith('data:') ||
-    emoteUrl.startsWith('file://')
+    emoteUrl.startsWith("data:") ||
+    emoteUrl.startsWith("file://")
   ) {
     return emoteUrl;
   }
-  const cachedUri = getCachedImageUri(emoteUrl, { variant: 'emote' });
+  const cachedUri = getCachedImageUri(emoteUrl, { variant: "emote" });
   return cachedUri ?? emoteUrl;
 };
 
 export const cacheEmoteImages = async (
   emotes: SanitisedEmote[],
   signal?: AbortSignal,
-  priority: CacheImageOptions['priority'] = 'interactive',
+  priority: CacheImageOptions["priority"] = "interactive",
 ): Promise<void> => {
   if (emotes.length === 0 || signal?.aborted) {
     return;
@@ -80,13 +80,13 @@ export const cacheEmoteImages = async (
   const urlsToCache: string[] = [];
   const seen = new Set<string>();
 
-  emotes.forEach(emote => {
-    getEmoteImageCacheUrls(emote).forEach(url => {
+  emotes.forEach((emote) => {
+    getEmoteImageCacheUrls(emote).forEach((url) => {
       if (
         seen.has(url) ||
-        url.startsWith('data:') ||
-        url.startsWith('file://') ||
-        getCachedImageUri(url, { variant: 'emote' })
+        url.startsWith("data:") ||
+        url.startsWith("file://") ||
+        getCachedImageUri(url, { variant: "emote" })
       ) {
         return;
       }
@@ -100,7 +100,7 @@ export const cacheEmoteImages = async (
     return;
   }
 
-  warmImageCache(urlsToCache, { priority, signal, variant: 'emote' });
+  warmImageCache(urlsToCache, { priority, signal, variant: "emote" });
 };
 
 export const clearEmoteImageCache = (): void => {

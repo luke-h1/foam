@@ -4,7 +4,7 @@ import { useScrollRef, useScrollToTop } from '../useScrollToTop';
 
 const mockUseNavigationScrollToTop = jest.fn();
 
-jest.mock('@react-navigation/native', () => ({
+jest.mock('expo-router', () => ({
   useScrollToTop: (ref: RefObject<{ scrollToTop: () => void } | null>) =>
     mockUseNavigationScrollToTop(ref),
 }));
