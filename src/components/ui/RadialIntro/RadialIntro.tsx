@@ -251,7 +251,7 @@ const OrbitArm = memo<OrbitArmProps>(
         />
         <AnimatedBlurView
           style={[
-            StyleSheet.absoluteFillObject,
+            StyleSheet.absoluteFill,
             styles.blurOverlay,
             blurOverlayStyle,
           ]}

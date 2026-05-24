@@ -1,4 +1,5 @@
 import { theme } from '@app/styles/themes';
+import { SymbolView } from 'expo-symbols';
 import { useCallback } from 'react';
 import { Alert, View, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -11,7 +12,6 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
 
@@ -115,24 +115,24 @@ function SwipeableHistoryItem({
             style={styles.deleteActionButton}
             hitSlop={8}
           >
-            <Icon icon="trash" size={20} color="#fff" />
+            <SymbolView name="trash" size={20} tintColor="#fff" />
           </PressableArea>
         </Animated.View>
 
         {/* Swipeable row */}
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.historyItem, animatedRowStyle]}>
-            <Icon
-              icon="clock"
-              color={theme.color.textSecondary.dark}
+            <SymbolView
+              name="clock"
+              tintColor={theme.color.textSecondary.dark}
               size={16}
             />
             <Text style={styles.query} numberOfLines={1}>
               {query}
             </Text>
-            <Icon
-              icon="arrow-up-left"
-              color={theme.color.textSecondary.dark}
+            <SymbolView
+              name="arrow.up.left"
+              tintColor={theme.color.textSecondary.dark}
               size={16}
             />
           </Animated.View>

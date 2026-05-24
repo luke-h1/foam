@@ -154,19 +154,22 @@ export function SettingsIndexScreen() {
           <SettingsLinkRow
             title="Chat"
             subtitle="Density, timestamps, mentions, emotes, and badges"
-            icon={{ icon: 'message-circle', color: theme.colorPlum }}
+            icon={{
+              icon: 'bubble.left.and.bubble.right',
+              color: theme.colorPlum,
+            }}
             onPress={() => router.push('/tabs/settings/chat-preferences')}
           />
           <SettingsLinkRow
             title="Cache"
             subtitle="Clear local app data, emotes, badges, and media"
-            icon={{ icon: 'database', color: theme.colorGreen }}
+            icon={{ icon: 'externaldrive', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/cache')}
           />
           <SettingsLinkRow
             title="Appearance"
             subtitle="Theme and visual mode"
-            icon={{ icon: 'sliders', color: theme.colorAmber }}
+            icon={{ icon: 'paintpalette', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/appearance')}
           />
         </SettingsSection>
@@ -179,7 +182,7 @@ export function SettingsIndexScreen() {
                 ? 'Channel identity, blocked users, and sign-out controls'
                 : 'Connect your Twitch account to unlock following and chat'
             }
-            icon={{ icon: 'user', color: theme.colorTeal }}
+            icon={{ icon: 'person.circle', color: theme.colorTeal }}
             onPress={() => {
               if (user) {
                 router.push('/tabs/settings/profile');
@@ -195,25 +198,25 @@ export function SettingsIndexScreen() {
           <SettingsLinkRow
             title="About Foam"
             subtitle="What the app is built for and where to reach us"
-            icon={{ icon: 'info', color: theme.colorBlue }}
+            icon={{ icon: 'info.circle', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
             title="FAQ"
             subtitle="Common questions and help information"
-            icon={{ icon: 'help-circle', color: theme.colorGreen }}
+            icon={{ icon: 'questionmark.circle', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/faq')}
           />
           <SettingsLinkRow
             title="Send Feedback"
             subtitle="Report a bug or share what could be better"
-            icon={{ icon: 'send', color: theme.colorTeal }}
+            icon={{ icon: 'paperplane', color: theme.colorTeal }}
             onPress={handleSendFeedback}
           />
           <SettingsLinkRow
             title="Status"
             subtitle="Check service availability and operational updates"
-            icon={{ icon: 'activity', color: theme.colorOrange }}
+            icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
             onPress={() => openLinkInBrowser(statusPageUrl.value)}
           />
           <SettingsLinkRow
@@ -229,14 +232,14 @@ export function SettingsIndexScreen() {
             <SettingsLinkRow
               title="Dev Tools"
               subtitle="Diagnostics, cache tools, remote config, and Storybook"
-              icon={{ icon: 'tool', color: theme.colorOrange }}
+              icon={{ icon: 'hammer', color: theme.colorOrange }}
               onPress={() => router.push('/tabs/settings/dev-tools')}
             />
           ) : null}
           <SettingsLinkRow
             title="Other"
             subtitle="Licenses, changelog, and supporting reference screens"
-            icon={{ icon: 'more-horizontal', color: theme.colorGrey }}
+            icon={{ icon: 'ellipsis.circle', color: theme.colorGrey }}
             onPress={() => router.push('/tabs/settings/other')}
           />
         </SettingsSection>

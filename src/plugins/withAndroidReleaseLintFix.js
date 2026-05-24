@@ -6,6 +6,8 @@ const {
   withProjectBuildGradle,
 } = require('@expo/config-plugins');
 
+const EXPO_ROOT_PROJECT_PLUGIN = 'apply plugin: "expo-root-project"';
+
 const LINT_DISABLE_BLOCK = `
 subprojects { sub ->
   sub.plugins.withId('com.android.library') {
@@ -42,11 +44,20 @@ const withAndroidReleaseLintFix = config => {
   });
 
   config = withProjectBuildGradle(config, gradleConfig => {
-    if (
-      gradleConfig.modResults.language === 'groovy' &&
-      !gradleConfig.modResults.contents.includes('checkReleaseBuilds false')
-    ) {
-      gradleConfig.modResults.contents += LINT_DISABLE_BLOCK;
+    if (gradleConfig.modResults.language === 'groovy') {
+      const contents = gradleConfig.modResults.contents.replace(
+        LINT_DISABLE_BLOCK,
+        '',
+      );
+
+      if (contents.includes('checkReleaseBuilds false')) {
+        gradleConfig.modResults.contents = contents;
+      } else {
+        gradleConfig.modResults.contents = contents.replace(
+          EXPO_ROOT_PROJECT_PLUGIN,
+          `${LINT_DISABLE_BLOCK}\n\n${EXPO_ROOT_PROJECT_PLUGIN}`,
+        );
+      }
     }
     return gradleConfig;
   });

@@ -1,5 +1,4 @@
 import { FlashList } from '@app/components/FlashList/FlashList';
-import { Icon } from '@app/components/Icon/Icon';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
@@ -11,6 +10,7 @@ import { twitchService, UserBlockList } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { memo, useCallback, useMemo, useRef } from 'react';
 import { Alert, ScrollView, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
@@ -92,7 +92,7 @@ const BlockedUserItemSkeleton = memo(function BlockedUserItemSkeleton({
 BlockedUserItemSkeleton.displayName = 'BlockedUserItemSkeleton';
 
 interface ListStatePanelProps {
-  icon: string;
+  icon: SymbolViewProps['name'];
   title: string;
   description: string;
   actionLabel?: string;
@@ -124,7 +124,11 @@ function ListStatePanel({
         </Text>
         <View style={styles.statePanel}>
           <View style={styles.stateIcon}>
-            <Icon icon={icon} size={28} color={theme.colorGreyHoverAlpha} />
+            <SymbolView
+              name={icon}
+              size={28}
+              tintColor={theme.colorGreyHoverAlpha}
+            />
           </View>
           <Text type="lg" weight="bold" align="center">
             {title}
@@ -228,7 +232,7 @@ function BlockedUsersList({
   if (isError) {
     return (
       <ListStatePanel
-        icon="alert-circle"
+        icon="exclamationmark.circle"
         title="Could not load blocked users"
         description="Twitch did not return your blocked users list. Refresh and try again."
         actionLabel="Retry"

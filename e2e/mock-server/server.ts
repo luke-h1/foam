@@ -277,7 +277,7 @@ const routes: Record<string, Partial<Record<string, Handler>>> = {
   },
 };
 
-const paramRoutes: Record<string, Array<[RegExp, Handler]>> = {
+const paramRoutes: Record<string, [RegExp, Handler][]> = {
   GET: [
     [/^\/3\/cached\/users\/twitch\/[^/]+$/, channelBttvEmotes],
     [/^\/v1\/room\/id\/[^/]+$/, ffzRoom],

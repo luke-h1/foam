@@ -1,6 +1,6 @@
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
-import { type SFSymbol, SymbolView } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import {
   ActivityIndicator,
   Insets,
@@ -9,22 +9,15 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Button } from '../Button/Button';
-import { Icon } from '../Icon/Icon';
 
 type IconType =
   | {
       color?: string;
-      name: SFSymbol;
+      name: SymbolViewProps['name'];
       size?: number;
       type: 'symbol';
     }
-  | {
-      color?: string;
-      name: string;
-      size?: number;
-      type: 'icon';
-    }
-  | string; // For backward compatibility
+  | SymbolViewProps['name'];
 
 interface IconButtonProps {
   hitSlop?: number | Insets;
@@ -52,8 +45,14 @@ export function IconButton({
       return <ActivityIndicator color={theme.color.text.dark} />;
     }
 
-    if (typeof icon === 'string') {
-      return <Icon icon={icon} />;
+    if (typeof icon === 'string' || !('type' in icon)) {
+      return (
+        <SymbolView
+          name={icon}
+          size={resolveSpacingValue(theme, size)}
+          tintColor={theme.colorGrey}
+        />
+      );
     }
 
     if (icon.type === 'symbol') {
@@ -65,8 +64,7 @@ export function IconButton({
         />
       );
     }
-
-    return <Icon icon={icon.name} color={icon.color} size={icon.size} />;
+    return null;
   };
 
   return (

@@ -12,11 +12,16 @@ import { forwardRef, useMemo } from 'react';
 import {
   StyleSheet,
   TextInput,
-  TextInputProps,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+  type ViewStyle,
   useColorScheme,
 } from 'react-native';
 
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
+export type InputRef = TextInput;
+export type InputSelection = { start: number; end: number };
 
 const generateVariantConfig = (
   color: UIColor,
@@ -173,16 +178,35 @@ const generateVariantConfigFromBase = (
   };
 };
 
-export type ThemedInputProps = TextInputProps & {
+export type ThemedInputProps = Omit<
+  TextInputProps,
+  | 'onBlur'
+  | 'onContentSizeChange'
+  | 'onFocus'
+  | 'onSelectionChange'
+  | 'onSubmitEditing'
+  | 'style'
+> & {
   size?: UISize;
   variant?: InputVariant;
   color?: UIColor;
+  onBlur?: () => void;
+  onContentSizeChange?: (size: { width: number; height: number }) => void;
+  onFocus?: () => void;
+  onSelectionChange?: (selection: InputSelection) => void;
+  onSubmitEditing?: (text: string) => void;
   radius?: UIRadius;
+  style?: StyleProp<TextStyle & ViewStyle>;
 };
 
-export const Input = forwardRef<TextInput, ThemedInputProps>(
+export const Input = forwardRef<InputRef, ThemedInputProps>(
   (
     {
+      onBlur,
+      onContentSizeChange,
+      onFocus,
+      onSelectionChange,
+      onSubmitEditing,
       style,
       placeholderTextColor,
       size = 'md',
@@ -195,10 +219,9 @@ export const Input = forwardRef<TextInput, ThemedInputProps>(
   ) => {
     const colorScheme = useColorScheme();
     const { accentHex } = useAccentColor();
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
     const variantConfig = useMemo(() => {
-      const scheme = colorScheme as 'light' | 'dark';
-
       if (color) {
         const variants = generateVariantConfig(color, scheme);
         return variants[variant];
@@ -206,7 +229,7 @@ export const Input = forwardRef<TextInput, ThemedInputProps>(
       const baseHex = accentHex || colors[scheme].tint;
       const variants = generateVariantConfigFromBase(baseHex, scheme);
       return variants[variant];
-    }, [color, colorScheme, variant, accentHex]);
+    }, [color, scheme, variant, accentHex]);
 
     const inputStyles = useMemo(() => {
       const baseStyles = {
@@ -247,10 +270,27 @@ export const Input = forwardRef<TextInput, ThemedInputProps>(
     return (
       <TextInput
         ref={ref}
-        style={inputStyles}
+        onBlur={onBlur ? () => onBlur() : undefined}
+        onContentSizeChange={
+          onContentSizeChange
+            ? event => onContentSizeChange(event.nativeEvent.contentSize)
+            : undefined
+        }
+        onFocus={onFocus ? () => onFocus() : undefined}
+        onSelectionChange={
+          onSelectionChange
+            ? event => onSelectionChange(event.nativeEvent.selection)
+            : undefined
+        }
+        onSubmitEditing={
+          onSubmitEditing
+            ? event => onSubmitEditing(event.nativeEvent.text)
+            : undefined
+        }
         placeholderTextColor={
           placeholderTextColor || variantConfig.placeholderColor
         }
+        style={inputStyles}
         {...rest}
       />
     );

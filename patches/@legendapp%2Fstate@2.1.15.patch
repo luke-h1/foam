@@ -1,0 +1,97 @@
+diff --git a/persist-plugins/mmkv.js b/persist-plugins/mmkv.js
+index 8380fd33f9471919851b54cdabcefe7c6867c11f..c570847efcdc2b251caea1e57b1630c8fbfb3aa3 100644
+--- a/persist-plugins/mmkv.js
++++ b/persist-plugins/mmkv.js
+@@ -12,7 +12,7 @@ class ObservablePersistMMKV {
+         this.storages = new Map([
+             [
+                 symbolDefault,
+-                new reactNativeMmkv.MMKV({
++                reactNativeMmkv.createMMKV({
+                     id: `obsPersist`,
+                 }),
+             ],
+@@ -52,7 +52,7 @@ class ObservablePersistMMKV {
+     deleteTable(table, config) {
+         const storage = this.getStorage(config);
+         delete this.data[table];
+-        storage.delete(table);
++        storage.remove(table);
+     }
+     deleteMetadata(table, config) {
+         this.deleteTable(table + MetadataSuffix, config);
+@@ -64,7 +64,7 @@ class ObservablePersistMMKV {
+             const key = JSON.stringify(mmkv);
+             let storage = this.storages.get(key);
+             if (!storage) {
+-                storage = new reactNativeMmkv.MMKV(mmkv);
++                storage = reactNativeMmkv.createMMKV(mmkv);
+                 this.storages.set(key, storage);
+             }
+             return storage;
+@@ -89,7 +89,7 @@ class ObservablePersistMMKV {
+             }
+         }
+         else {
+-            storage.delete(table);
++            storage.remove(table);
+         }
+     }
+ }
+diff --git a/persist-plugins/mmkv.mjs b/persist-plugins/mmkv.mjs
+index b9558f860b7ed371413b909a433356a587fe9e63..1323b1f37a9dae0472f5ed3caf0f30e8bdb76c9c 100644
+--- a/persist-plugins/mmkv.mjs
++++ b/persist-plugins/mmkv.mjs
+@@ -1,5 +1,5 @@
+ import { setAtPath, internal } from '@legendapp/state';
+-import { MMKV } from 'react-native-mmkv';
++import { createMMKV } from 'react-native-mmkv';
+ 
+ const symbolDefault = Symbol();
+ const MetadataSuffix = '__m';
+@@ -10,7 +10,7 @@ class ObservablePersistMMKV {
+         this.storages = new Map([
+             [
+                 symbolDefault,
+-                new MMKV({
++                createMMKV({
+                     id: `obsPersist`,
+                 }),
+             ],
+@@ -50,7 +50,7 @@ class ObservablePersistMMKV {
+     deleteTable(table, config) {
+         const storage = this.getStorage(config);
+         delete this.data[table];
+-        storage.delete(table);
++        storage.remove(table);
+     }
+     deleteMetadata(table, config) {
+         this.deleteTable(table + MetadataSuffix, config);
+@@ -62,7 +62,7 @@ class ObservablePersistMMKV {
+             const key = JSON.stringify(mmkv);
+             let storage = this.storages.get(key);
+             if (!storage) {
+-                storage = new MMKV(mmkv);
++                storage = createMMKV(mmkv);
+                 this.storages.set(key, storage);
+             }
+             return storage;
+@@ -87,7 +87,7 @@ class ObservablePersistMMKV {
+             }
+         }
+         else {
+-            storage.delete(table);
++            storage.remove(table);
+         }
+     }
+ }
+diff --git a/src/observableInterfaces.d.ts b/src/observableInterfaces.d.ts
+index 95846d39c1cadde4ce2e896678be01da2d461b74..18b325eacbd2826987fe8cb884fddc6dc010e94d 100644
+--- a/src/observableInterfaces.d.ts
++++ b/src/observableInterfaces.d.ts
+@@ -1,4 +1,4 @@
+-import type { MMKVConfiguration } from 'react-native-mmkv';
++import type { Configuration as MMKVConfiguration } from 'react-native-mmkv';
+ import type { AsyncStorageStatic } from '@react-native-async-storage/async-storage';
+ import type { DatabaseReference, Query } from 'firebase/database';
+ import type { symbolGetNode, symbolOpaque } from './globals';

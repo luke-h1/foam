@@ -4,7 +4,7 @@ import {
   AnimatedFlashList,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
@@ -197,10 +197,10 @@ export default function FollowingScreen() {
                     styles.layoutToggleButtonActive,
                 ]}
               >
-                <Icon
-                  icon="square"
+                <SymbolView
+                  name="square"
                   size={14}
-                  color={
+                  tintColor={
                     streamListLayout === 'compact'
                       ? theme.color.text.dark
                       : theme.color.textSecondary.dark
@@ -226,10 +226,10 @@ export default function FollowingScreen() {
                     styles.layoutToggleButtonActive,
                 ]}
               >
-                <Icon
-                  icon="image"
+                <SymbolView
+                  name="photo"
                   size={14}
-                  color={
+                  tintColor={
                     streamListLayout === 'media'
                       ? theme.color.text.dark
                       : theme.color.textSecondary.dark
@@ -255,10 +255,10 @@ export default function FollowingScreen() {
                     styles.layoutToggleButtonActive,
                 ]}
               >
-                <Icon
-                  icon="align-left"
+                <SymbolView
+                  name="text.alignleft"
                   size={14}
-                  color={
+                  tintColor={
                     streamListLayout === 'text'
                       ? theme.color.text.dark
                       : theme.color.textSecondary.dark

@@ -8,10 +8,9 @@ import {
   UIRadius,
   RADIUS_VALUES,
 } from '@app/styles/ui';
-import { SFSymbol } from 'expo-symbols';
+import { SFSymbol, SymbolView } from 'expo-symbols';
 import React, { useMemo } from 'react';
 import { StyleSheet, useColorScheme, View, ViewStyle } from 'react-native';
-import { Icon } from '../Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 
 type BadgeVariant = 'solid' | 'outline' | 'soft' | 'subtle';
@@ -253,7 +252,11 @@ export function Badge({
   return (
     <View style={[...badgeStyles, shouldCenterIcon && styles.iconOnly]}>
       {symbol && (
-        <Icon symbol={symbol as SFSymbol} size={size} color={iconColor} />
+        <SymbolView
+          name={symbol as SFSymbol}
+          size={SYMBOL_SIZE[size]}
+          tintColor={iconColor}
+        />
       )}
       {children && <Text style={textStyles}>{children}</Text>}
     </View>
@@ -335,3 +338,12 @@ const TEXT_SIZE_STYLES = {
   xl: styles.xlText,
   '2xl': styles.xxlText,
 } as const;
+
+const SYMBOL_SIZE = {
+  xs: 14,
+  sm: 18,
+  md: 22,
+  lg: 26,
+  xl: 30,
+  '2xl': 34,
+} satisfies Record<UISize, number>;

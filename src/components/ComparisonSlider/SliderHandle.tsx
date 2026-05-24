@@ -1,5 +1,5 @@
+import { SymbolView } from 'expo-symbols';
 import { StyleSheet, View } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type SliderHandleProps = {
   size: number;
@@ -14,11 +14,7 @@ export function SliderHandle({ size }: SliderHandleProps) {
 
   return (
     <View style={[styles.handle, handleSizeStyle]}>
-      <MaterialCommunityIcons
-        color="white"
-        name="unfold-more-vertical"
-        size={24}
-      />
+      <SymbolView name="arrow.up.arrow.down" size={24} tintColor="white" />
     </View>
   );
 }

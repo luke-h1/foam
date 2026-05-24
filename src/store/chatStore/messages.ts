@@ -28,7 +28,7 @@ const getMessageStoreId = (message: ChatMessageType<never>): string =>
   getMessageKey(message.message_id, message.message_nonce);
 
 const dedupeMessagesForStore = (
-  messages: Array<ChatMessageType<never> | undefined>,
+  messages: (ChatMessageType<never> | undefined)[],
 ): ChatMessageType<never>[] => {
   const seenKeys = new Set<string>();
   const seenIds = new Set<string>();
@@ -112,7 +112,7 @@ const isValidChatMessage = <TNoticeType extends NoticeVariants>(
 
 const normaliseIndexKey = (value: string | undefined): string | null => {
   const normalised = value?.trim().toLowerCase();
-  return normalised ? normalised : null;
+  return normalised || null;
 };
 
 const indexMessage = (message: ChatMessageType<never>, index: number) => {
@@ -286,9 +286,7 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
     return;
   }
 
-  const storedMessage = prepareMessageForStore(
-    message as ChatMessageType<never>,
-  );
+  const storedMessage = prepareMessageForStore(message);
   messageKeySet.add(key);
   messageKeyOrder.push(key);
   const currentMessages = dedupeMessagesForStore(chatStore$.messages.peek());
@@ -312,7 +310,7 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
 };
 
 export const addMessages = (
-  messages: Array<ChatMessageType<never> | undefined>,
+  messages: (ChatMessageType<never> | undefined)[],
 ) => {
   if (messages.length === 0) {
     return;

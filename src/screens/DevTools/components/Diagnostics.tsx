@@ -1,6 +1,6 @@
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import * as Form from '@app/components/Form/Form';
-import { IconSymbol } from '@app/components/IconSymbol/IconSymbol';
+import { SymbolView } from 'expo-symbols';
 import * as AC from '@bacons/apple-colors';
 import { Linking, StyleSheet } from 'react-native';
 import { AppStoreSection } from './AppStoreSection';
@@ -18,7 +18,7 @@ export function Diagnostics() {
           <Form.Text
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onPress={() => Linking.openSettings()}
-            hint={<IconSymbol name="gear" color={AC.secondaryLabel} />}
+            hint={<SymbolView name="gear" tintColor={AC.secondaryLabel} />}
           >
             Open System Settings
           </Form.Text>

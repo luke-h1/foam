@@ -3,8 +3,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable no-restricted-imports */
 import * as AppleColors from '@bacons/apple-colors';
-import { useNavigation } from '@react-navigation/native';
-import { SymbolWeight } from 'expo-symbols';
+import { useNavigation } from 'expo-router';
+import {
+  SymbolView,
+  type SymbolViewProps,
+  type SymbolWeight,
+} from 'expo-symbols';
 import React, { Children, isValidElement, ReactNode } from 'react';
 import {
   Button,
@@ -22,7 +26,6 @@ import {
 } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { BodyScrollView } from '../BodyScrollView/BodyScrollView';
-import { IconSymbol, IconSymbolName } from '../IconSymbol/IconSymbol';
 
 type ListStyle = 'grouped' | 'auto';
 
@@ -251,14 +254,14 @@ const Colors = {
 };
 
 type SystemImageCustomProps = {
-  name: IconSymbolName;
+  name: SymbolViewProps['name'];
   color?: OpaqueColorValue;
   size?: number;
   weight?: SymbolWeight;
   style?: StyleProp<TextStyle>;
 };
 
-type SystemImageProps = IconSymbolName | SystemImageCustomProps;
+type SystemImageProps = SymbolViewProps['name'] | SystemImageCustomProps;
 
 /** Text but with iOS default color and sizes. */
 export function Text({
@@ -459,12 +462,12 @@ export function Section({
     // Set the hint for the hintBoolean prop.
     if (resolvedProps.hintBoolean != null) {
       resolvedProps.hint ??= resolvedProps.hintBoolean ? (
-        <IconSymbol
+        <SymbolView
           name="checkmark.circle.fill"
-          color={AppleColors.systemGreen}
+          tintColor={AppleColors.systemGreen}
         />
       ) : (
-        <IconSymbol name="slash.circle" color={AppleColors.systemGray} />
+        <SymbolView name="slash.circle" tintColor={AppleColors.systemGray} />
       );
     }
 
@@ -530,7 +533,7 @@ export function Section({
       if (hintView || resolvedProps.systemImage) {
         child = (
           <HStack>
-            <SymbolView
+            <SystemImageView
               systemImage={resolvedProps.systemImage}
               style={resolvedProps.style}
             />
@@ -603,7 +606,7 @@ export function Section({
         children: (
           <FormItem>
             <HStack>
-              <SymbolView
+              <SystemImageView
                 systemImage={resolvedProps.systemImage}
                 style={resolvedProps.style}
               />
@@ -782,7 +785,7 @@ function isStringishNode(node: React.ReactNode): boolean {
   return containsStringChildren;
 }
 
-function SymbolView({
+function SystemImageView({
   systemImage,
   style,
 }: {
@@ -801,15 +804,15 @@ function SymbolView({
   const symbolProps: SystemImageCustomProps =
     typeof systemImage === 'object' && 'name' in systemImage
       ? systemImage
-      : { name: systemImage as unknown as string };
+      : { name: systemImage as SymbolViewProps['name'] };
 
   return (
-    <IconSymbol
+    <SymbolView
       name={symbolProps.name}
       size={symbolProps.size ?? 20}
       style={[{ marginRight: 8 }, symbolProps.style]}
       weight={symbolProps.weight}
-      color={
+      tintColor={
         symbolProps.color ?? extractStyle(style, 'color') ?? AppleColors.label
       }
     />
@@ -828,14 +831,16 @@ function LinkChevronIcon({
       if (React.isValidElement(systemImage)) {
         return systemImage;
       }
+      const symbolProps: SystemImageCustomProps =
+        typeof systemImage === 'object' && 'name' in systemImage
+          ? systemImage
+          : { name: systemImage as SymbolViewProps['name'] };
+
       return (
-        <IconSymbol
-          // @ts-ignore
-          name={systemImage.name}
-          // @ts-ignore
-          size={systemImage.size ?? size}
-          // @ts-ignore
-          color={systemImage.color ?? AppleColors.tertiaryLabel}
+        <SymbolView
+          name={symbolProps.name}
+          size={symbolProps.size ?? size}
+          tintColor={symbolProps.color ?? AppleColors.tertiaryLabel}
         />
       );
     }
@@ -845,14 +850,14 @@ function LinkChevronIcon({
     typeof systemImage === 'string' ? systemImage : 'chevron.right';
 
   return (
-    <IconSymbol
-      name={resolvedName as IconSymbolName}
+    <SymbolView
+      name={resolvedName as SymbolViewProps['name']}
       size={size}
       weight="bold"
       // from xcode, not sure which color is the exact match
       // #BFBFBF
       // #9D9DA0
-      color={AppleColors.tertiaryLabel}
+      tintColor={AppleColors.tertiaryLabel}
     />
   );
 }

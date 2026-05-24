@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useEffect, useMemo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { recordError, sentryService } from '@app/lib/sentry';
@@ -54,7 +54,11 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
         >
           <View style={styles.panel}>
             <View style={styles.iconWrap}>
-              <Icon icon="alert-triangle" size={22} color={theme.colorAmber} />
+              <SymbolView
+                name="exclamationmark.triangle"
+                size={22}
+                tintColor={theme.colorAmber}
+              />
             </View>
 
             <View style={styles.copy}>

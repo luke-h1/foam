@@ -1,1 +1,1 @@
-export { Switch } from './Switch.shared';
+export { Switch } from './Switch.native';

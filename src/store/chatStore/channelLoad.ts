@@ -282,7 +282,7 @@ const loadChannelResourcesInternal = async (
               if (channelCache) {
                 channelCache.assign({
                   sevenTvEmoteSetId:
-                    sevenTvSetId !== 'global' ? sevenTvSetId : undefined,
+                    sevenTvSetId === 'global' ? undefined : sevenTvSetId,
                 });
               }
             } catch (error) {
@@ -522,7 +522,7 @@ const loadChannelResourcesInternal = async (
       ...badgeResourceSets,
       sevenTvPersonalBadges: {},
       sevenTvPersonalEmotes: {},
-      sevenTvEmoteSetId: sevenTvSetId !== 'global' ? sevenTvSetId : undefined,
+      sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
     };
 
     batch(() => {

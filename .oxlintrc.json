@@ -19,6 +19,7 @@
     "perf": "error"
   },
   "rules": {
+    "array-type": "error",
     "curly": "error",
     "no-console": "off",
     "no-extra-boolean-cast": "off",

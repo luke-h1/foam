@@ -2,10 +2,8 @@ import { BlurView } from 'expo-blur';
 import { memo, useEffect, useState } from 'react';
 import {
   StyleSheet,
-  TextInput,
   View,
   type StyleProp,
-  type TextInputProps,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
@@ -20,8 +18,9 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { Input, type ThemedInputProps } from '@app/components/ui/Input/Input';
 
-type AnimatedInputBarProps = TextInputProps & {
+type AnimatedInputBarProps = ThemedInputProps & {
   placeholders: string[];
   animationInterval?: number;
   containerStyle?: StyleProp<ViewStyle>;
@@ -186,6 +185,8 @@ export const AnimatedInputBar = memo(function AnimatedInputBar({
   characterExitDuration = 200,
   characterDelayIncrement = 30,
   blurAnimationDuration = 400,
+  onBlur,
+  onFocus,
   ...props
 }: AnimatedInputBarProps) {
   const [isFocused, setIsFocused] = useState(false);
@@ -262,23 +263,28 @@ export const AnimatedInputBar = memo(function AnimatedInputBar({
 
         <Animated.View
           pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFillObject,
-            styles.blurMask,
-            blurOverlayStyle,
-          ]}
+          style={[StyleSheet.absoluteFill, styles.blurMask, blurOverlayStyle]}
         >
-          <BlurView intensity={20} style={StyleSheet.absoluteFillObject} />
+          <BlurView intensity={20} style={StyleSheet.absoluteFill} />
         </Animated.View>
 
-        <TextInput
+        <Input
           {...props}
-          onBlur={() => setIsFocused(false)}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur?.();
+          }}
           onChangeText={handleChangeText}
-          onFocus={() => setIsFocused(true)}
+          onFocus={() => {
+            setIsFocused(true);
+            onFocus?.();
+          }}
           placeholderTextColor="transparent"
+          radius="none"
+          size="sm"
           style={[styles.input, inputStyle]}
           value={inputValue}
+          variant="soft"
         />
       </View>
     </View>
@@ -295,9 +301,14 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   input: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    borderWidth: 0,
     color: '#fafafa',
+    minHeight: 36,
     fontSize: 16,
     fontWeight: '400',
+    height: 36,
     paddingVertical: 0,
   },
   inputWrapper: {

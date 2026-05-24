@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
@@ -16,7 +16,11 @@ export function ResumeScroll({
   return (
     <View style={styles.resumeButtonContainer}>
       <Button style={styles.resumeButton} onPress={onScrollToBottom}>
-        <Icon icon="arrow-down" size={16} color={theme.colorAmberAlpha} />
+        <SymbolView
+          name="arrow.down"
+          size={16}
+          tintColor={theme.colorAmberAlpha}
+        />
         <Text style={styles.resumeText}>Jump to latest</Text>
         {unreadCount > 0 && (
           <Text style={styles.resumeCount}> {unreadCount}</Text>

@@ -74,7 +74,6 @@ import {
 } from 'react';
 import {
   View,
-  TextInput,
   StyleSheet,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
@@ -88,8 +87,9 @@ import { formatDate } from '@app/utils/date-time/date';
 import { ReadyState } from '@app/hooks/ws/constants';
 
 import { Text } from '@app/components/ui/Text/Text';
+import type { InputRef } from '@app/components/ui/Input/Input';
 import { prefetchImage } from '@app/components/Image/Image';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Button } from '@app/components/Button/Button';
 import { ActionSheet } from './components/ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './components/BadgePreviewSheet/BadgePreviewSheet';
@@ -292,7 +292,7 @@ const PinnedMessageBanner = memo(
     return (
       <View style={styles.pinnedMessageBanner}>
         <View style={styles.pinnedIconShell}>
-          <Icon icon="map-pin" color="#ffffff" size={16} />
+          <SymbolView name="mappin" tintColor="#ffffff" size={16} />
         </View>
         <View style={styles.pinnedMessageContent}>
           <Text
@@ -314,7 +314,11 @@ const PinnedMessageBanner = memo(
               onPress={onRefresh}
               style={styles.pinnedMessageActionButton}
             >
-              <Icon icon="rotate-cw" color="rgba(255,255,255,0.78)" size={14} />
+              <SymbolView
+                name="arrow.clockwise"
+                tintColor="rgba(255,255,255,0.78)"
+                size={14}
+              />
             </Button>
             <Button
               disabled={pinnedMessageBusy}
@@ -322,7 +326,11 @@ const PinnedMessageBanner = memo(
               onPress={onUnpin}
               style={styles.pinnedMessageActionButton}
             >
-              <Icon icon="x" color="rgba(255,255,255,0.78)" size={15} />
+              <SymbolView
+                name="xmark"
+                tintColor="rgba(255,255,255,0.78)"
+                size={15}
+              />
             </Button>
           </View>
         ) : null}
@@ -768,7 +776,7 @@ const ChatMessagePane = memo(
     pinnedMessageBusy,
   }: ChatMessagePaneProps) => {
     const storedMessages = useSelector(
-      () => chatStore$.messages.get() as Array<AnyChatMessageType | undefined>,
+      () => chatStore$.messages.get() as (AnyChatMessageType | undefined)[],
     );
     const rawMessages = useMemo(
       () => storedMessages.filter(isRenderableChatMessage),
@@ -945,7 +953,7 @@ const ChatInputShell = memo(
       },
       ref,
     ) => {
-      const chatInputRef = useRef<TextInput>(null);
+      const chatInputRef = useRef<InputRef>(null);
       const [messageInput, setMessageInput] = useState('');
       const [replyTo, setReplyTo] = useState<ReplyToData | null>(null);
       const [pinNextMessage, setPinNextMessage] = useState(false);

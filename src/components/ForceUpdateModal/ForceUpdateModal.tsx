@@ -12,7 +12,7 @@ import { Modal as RNModal, Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
-import { IconSymbol } from '../IconSymbol/IconSymbol';
+import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 
 function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
@@ -64,7 +64,7 @@ export function ForceUpdateModal() {
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
         <View style={styles.card}>
           <View style={styles.iconContainer}>
-            <IconSymbol name="arrow.up" />
+            <SymbolView name="arrow.up" />
           </View>
 
           <Text color="gray" type="xl" weight="bold" align="center">

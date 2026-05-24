@@ -122,7 +122,7 @@ interface TwitchTokenValidationResponse {
   expires_in: number;
 }
 
-interface TwitchClip {
+export interface TwitchClip {
   id: string;
   url: string;
   embed_url: string;
@@ -144,6 +144,24 @@ interface TwitchClip {
 
 interface TwitchClipResponse {
   data: TwitchClip[];
+}
+
+export interface TwitchClipDownload {
+  clip_id: string;
+  landscape_download_url: string | null;
+  portrait_download_url: string | null;
+}
+
+interface TwitchClipDownloadResponse {
+  data: TwitchClipDownload[];
+}
+
+export interface TwitchClipsRequestParams {
+  broadcasterId: string;
+  after?: string;
+  endedAt?: string;
+  first?: number;
+  startedAt?: string;
 }
 
 type EventSubStatus =
@@ -713,12 +731,61 @@ export const twitchService = {
     });
   },
   getClip: async (id: string): Promise<TwitchClip> => {
-    const result = await twitchApi.get<TwitchClipResponse>('clips', {
+    const result = await twitchApi.get<TwitchClipResponse>('/clips', {
       params: {
         id,
       },
     });
     return result.data[0] as TwitchClip;
+  },
+
+  getClips: async ({
+    after,
+    broadcasterId,
+    endedAt,
+    first = 20,
+    startedAt,
+  }: TwitchClipsRequestParams): Promise<PaginatedList<TwitchClip>> => {
+    return twitchApi.get<PaginatedList<TwitchClip>>('/clips', {
+      params: {
+        broadcaster_id: broadcasterId,
+        first,
+        ...(after && { after }),
+        ...(endedAt && { ended_at: endedAt }),
+        ...(startedAt && { started_at: startedAt }),
+      },
+    });
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#get-clips-download
+   */
+  getClipDownload: async ({
+    broadcasterId,
+    clipId,
+    editorId,
+  }: {
+    broadcasterId: string;
+    clipId: string;
+    editorId: string;
+  }): Promise<TwitchClipDownload | null> => {
+    const result = await twitchApi.get<
+      TwitchClipDownloadResponse & { error?: string; message?: string }
+    >('/clips/downloads', {
+      params: {
+        broadcaster_id: broadcasterId,
+        clip_id: clipId,
+        editor_id: editorId,
+      },
+    });
+
+    if (!result || !Array.isArray(result.data)) {
+      throw new Error(
+        result?.message ?? result?.error ?? 'Failed to get clip download URL',
+      );
+    }
+
+    return result.data[0] ?? null;
   },
 
   getPolls: async ({

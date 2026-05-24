@@ -1,7 +1,8 @@
 import { Button } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
+import type { InputRef } from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
@@ -10,10 +11,25 @@ import {
   createHorizontalHitslop,
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
-import { memo, RefObject, useCallback, useRef } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { memo, RefObject, useCallback, useMemo } from 'react';
+import { Keyboard, View, StyleSheet } from 'react-native';
+import {
+  Directions,
+  Gesture,
+  GestureDetector,
+} from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 import { ChatComposer } from './ChatComposer/ChatComposer';
+
+const COMPOSER_DISMISS_DRAG_DISTANCE = 34;
+const COMPOSER_DISMISS_VELOCITY = 520;
+const COMPOSER_DRAG_LIMIT = 64;
 
 export interface ReplyToData {
   messageId: string;
@@ -43,7 +59,7 @@ interface ChatInputSectionProps {
   pinNextMessage?: boolean;
   isConnected: boolean;
   isAuthenticated: boolean;
-  inputRef?: RefObject<TextInput | null>;
+  inputRef?: RefObject<InputRef | null>;
 }
 
 export const ChatInputSection = memo(
@@ -65,7 +81,7 @@ export const ChatInputSection = memo(
     inputRef,
   }: ChatInputSectionProps) => {
     const insets = useSafeAreaInsets();
-    const containerRef = useRef<View>(null);
+    const composerDragOffset = useSharedValue(0);
 
     const handleEmoteSelect = useCallback(
       (emote: SanitisedEmote) => {
@@ -84,11 +100,61 @@ export const ChatInputSection = memo(
         ? `Reply to ${replyTo.username}...`
         : 'Send a message...';
 
+    const composerAnimatedStyle = useAnimatedStyle(() => ({
+      transform: [{ translateY: composerDragOffset.value }],
+    }));
+
+    const dismissComposer = useCallback(() => {
+      inputRef?.current?.blur();
+      Keyboard.dismiss();
+    }, [inputRef]);
+
+    const composerPanGesture = useMemo(
+      () =>
+        Gesture.Pan()
+          .activeOffsetY(4)
+          .failOffsetX([-40, 40])
+          .onUpdate(event => {
+            composerDragOffset.value = Math.max(
+              0,
+              Math.min(event.translationY, COMPOSER_DRAG_LIMIT),
+            );
+          })
+          .onEnd(event => {
+            const shouldDismiss =
+              event.translationY > COMPOSER_DISMISS_DRAG_DISTANCE ||
+              event.velocityY > COMPOSER_DISMISS_VELOCITY;
+
+            if (shouldDismiss) {
+              scheduleOnRN(dismissComposer);
+            }
+          })
+          .onFinalize(() => {
+            composerDragOffset.value = withSpring(0, {
+              damping: 18,
+              stiffness: 220,
+            });
+          }),
+      [composerDragOffset, dismissComposer],
+    );
+
+    const composerFlingGesture = useMemo(
+      () =>
+        Gesture.Fling()
+          .direction(Directions.DOWN)
+          .onEnd(() => {
+            scheduleOnRN(dismissComposer);
+          }),
+      [dismissComposer],
+    );
+
+    const composerGesture = useMemo(
+      () => Gesture.Simultaneous(composerPanGesture, composerFlingGesture),
+      [composerFlingGesture, composerPanGesture],
+    );
+
     return (
-      <View
-        ref={containerRef}
-        style={[styles.wrapper, { paddingBottom: insets.bottom }]}
-      >
+      <View style={[styles.wrapper, { paddingBottom: insets.bottom }]}>
         {replyTo && (
           <View style={styles.replyPreview}>
             <View style={styles.replyIndicator} />
@@ -116,79 +182,101 @@ export const ChatInputSection = memo(
               onPress={onClearReply}
               hitSlop={createHitslop(20)}
             >
-              <Icon icon="x" size={18} />
+              <SymbolView
+                name="xmark"
+                size={18}
+                tintColor={theme.colorGreyHoverAlpha}
+              />
             </Button>
           </View>
         )}
 
-        <View style={styles.inputRow}>
-          <Button
-            style={styles.actionButton}
-            onPress={onOpenEmoteSheet}
-            hitSlop={createHorizontalHitslop(44)}
-          >
-            <Icon icon="smile" size={22} />
-          </Button>
+        <GestureDetector gesture={composerGesture}>
+          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
+            <View style={styles.swipeHandle} />
+            <View style={styles.inputRow}>
+              <Button
+                style={styles.actionButton}
+                onPress={onOpenEmoteSheet}
+                hitSlop={createHorizontalHitslop(44)}
+              >
+                <SymbolView
+                  name="face.smiling"
+                  size={22}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
+              </Button>
 
-          <View style={styles.inputContainer}>
-            <ChatComposer
-              ref={inputRef}
-              value={messageInput}
-              onChangeText={onChangeText}
-              onEmoteSelect={handleEmoteSelect}
-              placeholder={inputPlaceholder}
-              editable={isAuthenticated}
-              autoComplete="off"
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholderTextColor="#8E8E93"
-              onSubmitEditing={onSubmit}
-              returnKeyType="send"
-              prioritizeChannelEmotes
-            />
-          </View>
+              <View style={styles.inputContainer}>
+                <ChatComposer
+                  ref={inputRef}
+                  value={messageInput}
+                  onChangeText={onChangeText}
+                  onEmoteSelect={handleEmoteSelect}
+                  placeholder={inputPlaceholder}
+                  editable={isAuthenticated}
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholderTextColor="#8E8E93"
+                  onSubmitEditing={onSubmit}
+                  returnKeyType="send"
+                  prioritizeChannelEmotes
+                />
+              </View>
 
-          {canPinNextMessage ? (
-            <Button
-              label={
-                pinNextMessage ? 'Send and pin message' : 'Pin next message'
-              }
-              style={[
-                styles.actionButton,
-                pinNextMessage && styles.actionButtonActive,
-              ]}
-              onPress={onTogglePinNextMessage}
-              hitSlop={createHorizontalHitslop(44)}
-            >
-              <Icon
-                icon="map-pin"
-                size={20}
-                color={pinNextMessage ? '#fff' : undefined}
-              />
-            </Button>
-          ) : null}
+              {canPinNextMessage ? (
+                <Button
+                  label={
+                    pinNextMessage ? 'Send and pin message' : 'Pin next message'
+                  }
+                  style={[
+                    styles.actionButton,
+                    pinNextMessage && styles.actionButtonActive,
+                  ]}
+                  onPress={onTogglePinNextMessage}
+                  hitSlop={createHorizontalHitslop(44)}
+                >
+                  <SymbolView
+                    name="mappin"
+                    size={20}
+                    tintColor={
+                      pinNextMessage ? '#fff' : theme.colorGreyHoverAlpha
+                    }
+                  />
+                </Button>
+              ) : null}
 
-          <Button
-            style={styles.actionButton}
-            onPress={onOpenSettingsSheet}
-            hitSlop={createHorizontalHitslop(44)}
-          >
-            <Icon icon="settings" size={22} />
-          </Button>
+              <Button
+                style={styles.actionButton}
+                onPress={onOpenSettingsSheet}
+                hitSlop={createHorizontalHitslop(44)}
+              >
+                <SymbolView
+                  name="gearshape"
+                  size={22}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
+              </Button>
 
-          <Button
-            style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
-            onPress={onSubmit}
-            disabled={!canSend}
-            hitSlop={createHitslop(20)}
-          >
-            <Icon
-              icon="arrow-up"
-              size={20}
-              color={canSend ? '#fff' : undefined}
-            />
-          </Button>
-        </View>
+              <Button
+                style={[
+                  styles.sendButton,
+                  !canSend && styles.sendButtonDisabled,
+                ]}
+                onPress={onSubmit}
+                disabled={!canSend}
+                hitSlop={createHitslop(20)}
+              >
+                <SymbolView
+                  name="arrow.up"
+                  size={20}
+                  tintColor={canSend ? '#fff' : theme.colorGreyHoverAlpha}
+                />
+              </Button>
+            </View>
+          </Animated.View>
+        </GestureDetector>
       </View>
     );
   },
@@ -199,25 +287,36 @@ ChatInputSection.displayName = 'ChatInputSection';
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    height: 40,
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: 22,
+    borderWidth: 1,
+    height: 44,
     justifyContent: 'center',
-    width: 40,
+    width: 44,
   },
   actionButtonActive: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+  },
+  composerShell: {
+    paddingHorizontal: theme.space16,
   },
   inputContainer: {
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.colorBorderSecondary,
+    borderRadius: 20,
+    borderWidth: 1,
     flex: 1,
-    minWidth: 80,
+    minHeight: 48,
+    minWidth: 0,
+    overflow: 'hidden',
   },
   inputRow: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: theme.space4,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    gap: theme.space8,
+    paddingBottom: theme.space8,
+    paddingTop: 4,
   },
   replyContent: {
     flex: 1,
@@ -270,18 +369,29 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    height: 40,
+    backgroundColor: theme.colorViolet,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 22,
+    borderWidth: 1,
+    height: 44,
     justifyContent: 'center',
-    width: 40,
+    width: 44,
   },
   sendButtonDisabled: {
-    backgroundColor: 'transparent',
+    backgroundColor: theme.darkActiveContent,
     opacity: 0.6,
   },
+  swipeHandle: {
+    alignSelf: 'center',
+    backgroundColor: theme.colorGreyHoverAlpha,
+    borderRadius: 999,
+    height: 4,
+    marginBottom: 2,
+    opacity: 0.5,
+    width: 34,
+  },
   wrapper: {
-    backgroundColor: '#2b2b2b',
-    borderTopColor: '#454545',
-    borderTopWidth: 1,
+    backgroundColor: 'transparent',
+    gap: theme.space8,
   },
 });

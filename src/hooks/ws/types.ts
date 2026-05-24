@@ -32,12 +32,7 @@ export type ReadyStateState = {
   [url: string]: ReadyState;
 };
 
-export type WebSocketMessage =
-  | string
-  | ArrayBuffer
-  | SharedArrayBuffer
-  | Blob
-  | ArrayBufferView;
+export type WebSocketMessage = string | ArrayBuffer | Blob | ArrayBufferView;
 
 export type SendMessage = (message: WebSocketMessage) => void;
 export type SendJsonMessage = (jsonMessage: unknown) => void;

@@ -1,26 +1,26 @@
-import { Input, type ThemedInputProps } from '@app/components/ui/Input/Input';
+import {
+  Input,
+  type InputRef,
+  type InputSelection,
+  type ThemedInputProps,
+} from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
 import { forwardRef, useCallback } from 'react';
-import {
-  TextInput,
-  View,
-  LayoutChangeEvent,
-  FocusEvent,
-  StyleSheet,
-} from 'react-native';
+import { View, LayoutChangeEvent, StyleSheet } from 'react-native';
 
-interface ChatInputProps extends Omit<ThemedInputProps, 'onChangeText'> {
+interface ChatInputProps extends Omit<
+  ThemedInputProps,
+  'onChangeText' | 'onSelectionChange'
+> {
   value?: string;
   onChangeText?: (text: string) => void;
-  onSelectionChange?: (event: {
-    nativeEvent: { selection: { start: number; end: number } };
-  }) => void;
+  onSelectionChange?: (selection: InputSelection) => void;
   onLayout?: (event: LayoutChangeEvent) => void;
-  onFocus?: (e: FocusEvent) => void;
-  onBlur?: (e: FocusEvent) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-export const ChatInput = forwardRef<TextInput, ChatInputProps>(
+export const ChatInput = forwardRef<InputRef, ChatInputProps>(
   (
     {
       value = '',
@@ -74,10 +74,10 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     color: theme.color.text.dark,
     fontSize: theme.fontSize16,
-    maxHeight: 84,
-    minHeight: 40,
-    paddingBottom: 8,
-    paddingHorizontal: 0,
-    paddingTop: 8,
+    maxHeight: 120,
+    minHeight: 48,
+    paddingBottom: 12,
+    paddingHorizontal: 10,
+    paddingTop: 12,
   },
 });

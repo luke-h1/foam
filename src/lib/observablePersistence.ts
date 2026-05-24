@@ -23,7 +23,7 @@ const WEB_OBSERVABLE_TABLE_NAMES = [
 ];
 
 function clearLegacyWebLocalStorageCaches(): void {
-  if (typeof globalThis.localStorage === 'undefined') {
+  if (globalThis.localStorage === undefined) {
     return;
   }
 

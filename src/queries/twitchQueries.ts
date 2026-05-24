@@ -8,6 +8,8 @@ import {
   PaginatedList,
   UserBlockListRequestParams,
   UserBlockList,
+  TwitchClip,
+  TwitchClipsRequestParams,
 } from '@app/services/twitch-service';
 import { UseQueryOptions } from '@tanstack/react-query';
 
@@ -53,6 +55,40 @@ export const twitchQueries = {
     return {
       queryKey: ['user', userId],
       queryFn: () => twitchService.getUser(userId),
+    };
+  },
+  getClips(
+    params: TwitchClipsRequestParams,
+  ): UseQueryOptions<PaginatedList<TwitchClip>> {
+    return {
+      queryKey: [
+        'clips',
+        params.broadcasterId,
+        params.startedAt,
+        params.endedAt,
+      ],
+      queryFn: () => twitchService.getClips(params),
+    };
+  },
+  getClipsInfinite(params: Omit<TwitchClipsRequestParams, 'after'>): {
+    queryKey: (string | undefined)[];
+    staleTime: number;
+    queryFn: ({
+      pageParam,
+    }: {
+      pageParam?: string;
+    }) => Promise<PaginatedList<TwitchClip>>;
+  } {
+    return {
+      queryKey: [
+        'clipsInfinite',
+        params.broadcasterId,
+        params.startedAt,
+        params.endedAt,
+      ],
+      staleTime: 60_000,
+      queryFn: ({ pageParam }: { pageParam?: string }) =>
+        twitchService.getClips({ ...params, after: pageParam }),
     };
   },
   getTopStreamsInfinite(): {

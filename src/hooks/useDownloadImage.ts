@@ -1,4 +1,4 @@
-import { getAppAlbum } from '@app/utils/image/getAppAlbum';
+import { saveFilesToAppAlbum } from '@app/utils/image/saveFilesToAppAlbum';
 import { createId } from '@paralleldrive/cuid2';
 import { useMutation } from '@tanstack/react-query';
 import { Directory, File, Paths } from 'expo-file-system';
@@ -31,10 +31,7 @@ export function useDownloadImage() {
 
       const file = await File.downloadFileAsync(url, directory);
 
-      const album = await getAppAlbum();
-      const asset = await MediaLibrary.createAssetAsync(file.uri);
-
-      await MediaLibrary.addAssetsToAlbumAsync([asset], album);
+      await saveFilesToAppAlbum(file.uri);
 
       directory.delete();
     },

@@ -84,7 +84,7 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title="App Diagnostics"
             subtitle="Version, environment, and runtime details"
-            icon={{ icon: 'activity', color: theme.colorBlue }}
+            icon={{ icon: 'stethoscope', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/diagnostics')}
           />
           <SettingsLinkRow
@@ -99,25 +99,25 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title="Debug"
             subtitle="Manual debug helpers and experiments"
-            icon={{ icon: 'terminal', color: theme.colorOrange }}
+            icon={{ icon: 'ladybug', color: theme.colorOrange }}
             onPress={() => router.push('/tabs/settings/debug')}
           />
           <SettingsLinkRow
             title="Cached Images"
             subtitle="Inspect and manage emote and badge media cache"
-            icon={{ icon: 'image', color: theme.colorGreen }}
+            icon={{ icon: 'photo.stack', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/cached-images')}
           />
           <SettingsLinkRow
             title="Changelog Demo"
             subtitle="Present sample native changelog payloads"
-            icon={{ icon: 'list', color: theme.colorBlue }}
+            icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
             onPress={() => router.push('/dev-tools/changelog')}
           />
           <SettingsLinkRow
             title="Storybook"
             subtitle="Component previews and design-system inspection"
-            icon={{ icon: 'book-open', color: theme.colorTeal }}
+            icon={{ icon: 'book.closed', color: theme.colorTeal }}
             onPress={() => router.push('/tabs/settings/storybook')}
           />
         </SettingsSection>

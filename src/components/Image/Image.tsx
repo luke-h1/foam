@@ -66,8 +66,9 @@ export const Image = function Image({
   ...props
 }: ImageProps) {
   const url = getSourceUrl(source);
+  const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
   const [fileCachedUrl, setFileCachedUrl] = useState<string | null>(() =>
-    url && cacheToFile
+    url && shouldUseFileCache
       ? getCachedImageUri(url, { variant: cacheVariant })
       : null,
   );
@@ -138,7 +139,7 @@ export const Image = function Image({
   }, [resolvedUrl]);
 
   useEffect(() => {
-    if (!url || !cacheToFile) {
+    if (!url || !shouldUseFileCache) {
       setFileCachedUrl(null);
       return;
     }
@@ -166,7 +167,7 @@ export const Image = function Image({
       cancelled = true;
       controller.abort();
     };
-  }, [cachePriority, cacheToFile, cacheVariant, url]);
+  }, [cachePriority, cacheVariant, shouldUseFileCache, url]);
 
   const handleNitroLoadEnd = useCallback(() => {
     if (!useNitro || !trackLoad || didReportNitroLoad.current || !resolvedUrl) {

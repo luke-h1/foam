@@ -353,7 +353,7 @@ export async function cacheImageFromUrl(
         if (cachedFile.exists) {
           downloadedFile.delete();
         } else {
-          downloadedFile.move(cachedFile);
+          await downloadedFile.move(cachedFile);
         }
       }
 

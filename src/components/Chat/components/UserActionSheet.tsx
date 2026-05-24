@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
@@ -69,7 +69,11 @@ export function UserActionSheet({
                 style={[styles.actionButton, styles.actionButtonBorder]}
                 onPress={onMentionUser}
               >
-                <Icon icon="at-sign" size={18} />
+                <SymbolView
+                  name="at"
+                  size={18}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
                 <Text style={styles.actionText}>Mention</Text>
               </Button>
 
@@ -77,7 +81,11 @@ export function UserActionSheet({
                 style={[styles.actionButton, styles.actionButtonBorder]}
                 onPress={onCopyUsername}
               >
-                <Icon icon="copy" size={18} />
+                <SymbolView
+                  name="doc.on.doc"
+                  size={18}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
                 <Text style={styles.actionText}>Copy Username</Text>
               </Button>
 
@@ -85,7 +93,11 @@ export function UserActionSheet({
                 style={[styles.actionButton, styles.actionButtonBorder]}
                 onPress={onHideUser}
               >
-                <Icon icon="user-x" size={18} />
+                <SymbolView
+                  name="person.crop.circle.badge.xmark"
+                  size={18}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
                 <Text style={styles.actionText}>
                   {isHidden ? 'Unhide User' : 'Hide User'}
                 </Text>
@@ -100,7 +112,11 @@ export function UserActionSheet({
                 ]}
                 onPress={onHighlightUser}
               >
-                <Icon icon="star" size={18} />
+                <SymbolView
+                  name="star"
+                  size={18}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
                 <Text style={styles.actionText}>
                   {isHighlighted ? 'Unhighlight User' : 'Highlight User'}
                 </Text>
@@ -112,12 +128,20 @@ export function UserActionSheet({
                     style={[styles.actionButton, styles.actionButtonBorder]}
                     onPress={onTimeoutUser}
                   >
-                    <Icon icon="clock" size={18} />
+                    <SymbolView
+                      name="clock"
+                      size={18}
+                      tintColor={theme.colorGreyHoverAlpha}
+                    />
                     <Text style={styles.actionText}>Timeout for 10m</Text>
                   </Button>
 
                   <Button style={styles.actionButton} onPress={onBanUser}>
-                    <Icon icon="slash" size={18} />
+                    <SymbolView
+                      name="slash.circle"
+                      size={18}
+                      tintColor={theme.colorGreyHoverAlpha}
+                    />
                     <Text style={styles.actionText}>Ban User</Text>
                   </Button>
                 </>

@@ -1,5 +1,10 @@
 import type { ChatUser } from '@app/store/chatStore/constants';
 import type { SanitisedEmote } from '@app/types/emote';
+import type {
+  InputRef,
+  InputSelection,
+  ThemedInputProps,
+} from '@app/components/ui/Input/Input';
 import {
   forwardRef,
   memo,
@@ -8,7 +13,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ChatInput } from './components/ChatInput';
 import { EmoteSuggestions } from './components/EmoteSuggestions';
 import { UserSuggestions } from './components/UserSuggestions';
@@ -19,14 +24,14 @@ import { useWordInfo } from './hooks/useWordInfo';
 
 export type SuggestionType = 'emote' | 'user';
 
-interface ChatComposerProps extends TextInputProps {
+interface ChatComposerProps extends ThemedInputProps {
   onEmoteSelect?: (emote: SanitisedEmote) => void;
   maxSuggestions?: number;
   prioritizeChannelEmotes?: boolean;
   placeholder?: string;
 }
 
-const ChatComposerComponent = forwardRef<TextInput, ChatComposerProps>(
+const ChatComposerComponent = forwardRef<InputRef, ChatComposerProps>(
   (
     {
       onEmoteSelect,
@@ -87,14 +92,9 @@ const ChatComposerComponent = forwardRef<TextInput, ChatComposerProps>(
       [onChangeText],
     );
 
-    const handleSelectionChange = useCallback(
-      (event: {
-        nativeEvent: { selection: { start: number; end: number } };
-      }) => {
-        setCursorPosition(event.nativeEvent.selection.start);
-      },
-      [],
-    );
+    const handleSelectionChange = useCallback((selection: InputSelection) => {
+      setCursorPosition(selection.start);
+    }, []);
 
     const handleFocus = useCallback(() => {
       setIsFocused(true);

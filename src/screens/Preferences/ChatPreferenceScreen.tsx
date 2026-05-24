@@ -20,6 +20,7 @@ import {
 } from '@app/utils/emoji/emojiEmotes';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
+import type { SymbolViewProps } from 'expo-symbols';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -81,22 +82,22 @@ const CONTEXT_TOGGLE_ROWS = [
     key: 'highlightOwnMentions',
     label: 'Highlight Own Mentions',
     subtitle: 'Accent messages that mention your username',
-    icon: { icon: 'at-sign', color: theme.colorViolet },
+    icon: { icon: 'at', color: theme.colorViolet },
   },
   {
     key: 'showInlineReplyContext',
     label: 'Inline Reply Context',
     subtitle: 'Show the replied-to message above responses',
-    icon: { icon: 'corner-up-left', color: theme.colorPlum },
+    icon: { icon: 'arrowshape.turn.up.left', color: theme.colorPlum },
   },
   {
     key: 'showUnreadJumpPill',
     label: 'Show Jump Pill',
     subtitle: 'Display the unread jump-to-latest affordance',
-    icon: { icon: 'arrow-down-circle', color: theme.colorAmber },
+    icon: { icon: 'arrow.down.circle', color: theme.colorAmber },
   },
 ] as const satisfies readonly {
-  icon: { color: string; icon: string };
+  icon: { color: string; icon: SymbolViewProps['name'] };
   key: ContextPreviewKey;
   label: string;
   subtitle: string;
@@ -580,7 +581,7 @@ export function ChatPreferenceScreen() {
                 ? 'Tighter rows for faster scanning'
                 : 'Roomier rows with more breathing space'
             }
-            icon={{ icon: 'list', color: theme.colorGrey }}
+            icon={{ icon: 'list.bullet', color: theme.colorGrey }}
             trailing={
               <SegmentedControl
                 appearance="dark"
@@ -602,7 +603,7 @@ export function ChatPreferenceScreen() {
           <SettingsRow
             title="Emoji Set"
             subtitle="Changes emoji images in existing chat messages"
-            icon={{ icon: 'smile', color: theme.colorAmber }}
+            icon={{ icon: 'face.smiling', color: theme.colorAmber }}
             trailing={
               <SegmentedControl
                 appearance="dark"
@@ -624,7 +625,10 @@ export function ChatPreferenceScreen() {
           <SettingsToggleRow
             title="Historical Recent Messages"
             subtitle={HISTORICAL_RECENT_MESSAGES_EXPLAINER}
-            icon={{ icon: 'history', color: theme.colorDarkGreen }}
+            icon={{
+              icon: 'clock.arrow.circlepath',
+              color: theme.colorDarkGreen,
+            }}
             value={showRecentMessages !== false}
             onValueChange={value => update({ showRecentMessages: value })}
           />
@@ -689,7 +693,7 @@ export function ChatPreferenceScreen() {
           <SettingsToggleRow
             title="Disable Emote Animations"
             subtitle="Prefer static emote rendering"
-            icon={{ icon: 'slash', color: theme.colorRed }}
+            icon={{ icon: 'slash.circle', color: theme.colorRed }}
             value={previewDisableEmoteAnimations}
             onValueChange={handleDisableEmoteAnimationsToggle}
           />

@@ -1,7 +1,7 @@
 import { act, render } from '@testing-library/react-native';
 
 const mockInjectJavaScript = jest.fn();
-const mockWebViewProps: Array<Record<string, unknown>> = [];
+const mockWebViewProps: Record<string, unknown>[] = [];
 
 jest.mock('react-native-webview', () => {
   const React = require('react');
@@ -74,6 +74,7 @@ describe('StreamPlayer component messaging', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   test('maps player bridge messages to callbacks and state updates', () => {
@@ -86,6 +87,7 @@ describe('StreamPlayer component messaging', () => {
     const onPlaybackLatencyChange = jest.fn();
     const onPlay = jest.fn();
     const onReady = jest.fn();
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     render(
       <StreamPlayer
@@ -127,6 +129,10 @@ describe('StreamPlayer component messaging', () => {
     expect(onContentGateChange).toHaveBeenCalledWith(true);
     expect(onPlaybackLatencyChange).toHaveBeenCalledWith(3.4);
     expect(onError).toHaveBeenCalledWith('embed failed');
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[StreamPlayer:embed ERROR]',
+      'embed failed',
+    );
   });
 
   test('remounts the WebView after Twitch auth completes', () => {
@@ -224,6 +230,38 @@ describe('StreamPlayer component messaging', () => {
     );
     expect(mockInjectJavaScript).toHaveBeenCalledWith(
       expect.stringContaining('video.play()'),
+    );
+  });
+
+  test('uses the Twitch clip embed URL for clips', () => {
+    const onWebViewLoaded = jest.fn();
+
+    render(
+      <StreamPlayer
+        clip="AnimatedOptimisticWasabiVoteNay"
+        height={200}
+        muted={false}
+        onWebViewLoaded={onWebViewLoaded}
+        width={300}
+      />,
+    );
+
+    expect(latestWebViewProps().source).toEqual({
+      uri: 'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
+    });
+
+    const { onLoadEnd } = latestWebViewProps();
+    act(() => {
+      (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
+        nativeEvent: {
+          url: 'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
+        },
+      });
+    });
+
+    expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('const shouldAutoplay = true'),
     );
   });
 

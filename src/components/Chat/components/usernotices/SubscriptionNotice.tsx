@@ -1,9 +1,9 @@
-import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { SymbolView } from 'expo-symbols';
 import { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 
@@ -315,7 +315,12 @@ export function SubscriptionNotice({
     <View style={styles.container}>
       <View style={styles.noticeRow}>
         <View style={styles.starColumn}>
-          <Icon icon="star" size={14} color="#FFD700" style={styles.starIcon} />
+          <SymbolView
+            name="star.fill"
+            size={14}
+            tintColor="#FFD700"
+            style={styles.starIcon}
+          />
         </View>
         <View style={styles.bodyColumn}>
           <View style={styles.headerLine}>

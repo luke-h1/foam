@@ -35,7 +35,7 @@ const prefetchInitialData = (userId?: string) => {
     void queryClient.prefetchQuery(followedQuery);
   }
   void queryClient.prefetchInfiniteQuery({
-    initialPageParam: undefined,
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: PaginatedList<TwitchStream>) =>
       lastPage?.pagination?.cursor,
     ...twitchQueries.getTopStreamsInfinite(),
@@ -44,7 +44,7 @@ const prefetchInitialData = (userId?: string) => {
     queryKey: ['TopCategories'],
     queryFn: ({ pageParam }: { pageParam?: string }) =>
       twitchService.getTopCategories(pageParam),
-    initialPageParam: undefined,
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: PaginatedList<Category>) =>
       lastPage?.pagination?.cursor,
   });

@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { memo } from 'react';
@@ -34,12 +34,20 @@ export const ChatViewControls = memo(
               ]}
               onPress={onToggleShowOnlyMentions}
             >
-              <Icon icon="at-sign" size={14} />
+              <SymbolView
+                name="at"
+                size={14}
+                tintColor={theme.colorGreyHoverAlpha}
+              />
               <Text style={styles.filterChipText}>Mentions</Text>
             </Button>
 
             <Button style={styles.clearChip} onPress={onClearFilters}>
-              <Icon icon="x" size={14} />
+              <SymbolView
+                name="xmark"
+                size={14}
+                tintColor={theme.colorGreyHoverAlpha}
+              />
               <Text style={styles.filterChipText}>Clear</Text>
             </Button>
           </View>

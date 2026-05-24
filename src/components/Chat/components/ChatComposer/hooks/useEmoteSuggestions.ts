@@ -36,7 +36,7 @@ export function useEmoteSuggestions({
     const emoteMap = new Map<string, SearchableEmote>();
 
     const addEmotes = (
-      emotes: Array<SanitisedEmote | undefined>,
+      emotes: (SanitisedEmote | undefined)[],
       isChannel: boolean,
     ) => {
       for (const emote of emotes) {

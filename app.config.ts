@@ -2,7 +2,6 @@ import type { ExpoConfig } from '@expo/config';
 import type { AppIconBadgeConfig } from 'app-icon-badge/types';
 import * as fs from 'fs';
 import * as path from 'path';
-import bootsplash from 'react-native-bootsplash/expo';
 
 interface AppVariantConfig {
   name: string;
@@ -197,12 +196,8 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-image',
-    bootsplash({
-      logo: appConfig.splashImage,
-      logoWidth: 100,
-      background: appConfig.splashBackgroundColor,
-      assetsOutput: 'assets/bootsplash',
-    }),
+    '@rnrepo/expo-config-plugin',
+    ['react-native-bootsplash', { assetsDir: 'assets/bootsplash' }],
     'react-native-compressor',
     [
       '@sentry/react-native/expo',
@@ -231,7 +226,6 @@ const config: ExpoConfig = {
       },
     ],
     ['app-icon-badge', appIconBadgeConfig],
-    '@react-native-community/datetimepicker',
     'expo-secure-store',
     [
       'expo-font',
@@ -288,6 +282,7 @@ const config: ExpoConfig = {
         },
       },
     ],
+    ['./src/plugins/withPodDeploymentTarget.js', { minIosVersion: '16.4' }],
     './src/plugins/withIosStaticFrameworkHeaderFix.js',
     '@react-native-firebase/app',
     './src/plugins/withAndroidReleaseLintFix.js',

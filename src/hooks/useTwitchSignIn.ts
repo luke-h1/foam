@@ -3,6 +3,7 @@ import { recordInfo, recordWarning } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import {
   type AuthSessionResult,
+  DiscoveryDocument,
   ResponseType,
   useAuthRequest,
 } from 'expo-auth-session';
@@ -25,6 +26,8 @@ const CHANNEL_SCOPES = [
   'channel:read:predictions',
   'channel:moderate',
 ] as const;
+
+const CLIP_SCOPES = ['channel:manage:clips', 'editor:manage:clips'] as const;
 
 const CHAT_SCOPES = ['chat:read', 'chat:edit', 'user:write:chat'] as const;
 const MODERATOR_CHAT_SCOPES = [
@@ -62,7 +65,8 @@ const appReturnUrl =
 const discovery = {
   authorizationEndpoint: 'https://id.twitch.tv/oauth2/authorize',
   revocationEndpoint: 'https://id.twitch.tv/oauth2/revoke',
-} as const;
+  tokenEndpoint: 'https://id.twitch.tv/oauth2/token',
+} satisfies DiscoveryDocument;
 
 const redact = (value: string | null | undefined) =>
   value ? `${value.slice(0, 8)}...` : null;
@@ -95,6 +99,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         ...MODERATOR_CHAT_SCOPES,
         ...WHISPER_SCOPES,
         ...CHANNEL_SCOPES,
+        ...CLIP_SCOPES,
       ],
       responseType: ResponseType.Token,
       redirectUri,

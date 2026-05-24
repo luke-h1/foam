@@ -1,21 +1,19 @@
-import { Icon } from '@app/components/Icon/Icon';
 import { AnimatedTabBar } from '@app/components/MotionTabs/animated-tab-bar';
 import { useAuthContext } from '@app/context/AuthContext';
 import { theme } from '@app/styles/themes';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Tabs } from 'expo-router';
-import type { ComponentProps } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { Platform, StyleSheet, type ColorValue } from 'react-native';
 
 type TabBarIconProps = {
-  color: string;
+  color: ColorValue;
   size: number;
 };
 
 const renderTabIcon =
-  (icon: string, iconFamily?: ComponentProps<typeof Icon>['iconFamily']) =>
+  (name: SymbolViewProps['name']) =>
   ({ color, size }: TabBarIconProps) => (
-    <Icon icon={icon} iconFamily={iconFamily} color={color} size={size} />
+    <SymbolView name={name} tintColor={String(color)} size={size} />
   );
 
 export default function TabsLayout() {
@@ -33,14 +31,14 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: theme.colorGreyAlpha,
         tabBarStyle: styles.tabBar,
       }}
-      tabBar={(props: BottomTabBarProps) => <AnimatedTabBar {...props} />}
+      tabBar={props => <AnimatedTabBar {...props} />}
     >
       <Tabs.Protected guard={showFollowingTab}>
         <Tabs.Screen
           name="following"
           options={{
             title: 'Following',
-            tabBarIcon: renderTabIcon('users'),
+            tabBarIcon: renderTabIcon('person.2'),
           }}
         />
       </Tabs.Protected>
@@ -48,21 +46,21 @@ export default function TabsLayout() {
         name="top"
         options={{
           title: 'Top',
-          tabBarIcon: renderTabIcon('bar-chart-2'),
+          tabBarIcon: renderTabIcon('chart.bar.xaxis'),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: renderTabIcon('search'),
+          tabBarIcon: renderTabIcon('magnifyingglass'),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: renderTabIcon('settings'),
+          tabBarIcon: renderTabIcon('gearshape'),
         }}
       />
     </Tabs>

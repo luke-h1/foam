@@ -26,7 +26,7 @@ const packRgba = (color: {
   a: number;
 }): number =>
   // eslint-disable-next-line no-bitwise
-  (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a | 0;
+  Math.trunc((color.r << 24) | (color.g << 16) | (color.b << 8) | color.a);
 
 const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
   const firstLayer = paint.data.layers[0];
@@ -44,7 +44,6 @@ const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
   // eslint-disable-next-line no-underscore-dangle
   switch (ty?.__typename) {
     case 'PaintLayerTypeLinearGradient':
-      paintFunction = 'LINEAR_GRADIENT';
       angle = ty.angle;
       repeat = ty.repeating;
       ty.stops.forEach((stop, index) => {

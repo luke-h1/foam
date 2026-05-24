@@ -1,5 +1,5 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
@@ -8,7 +8,6 @@ import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
-import { SymbolView } from 'expo-symbols';
 import {
   ReactNode,
   useCallback,
@@ -134,28 +133,24 @@ export function EmoteActionSheet({
       [
         {
           id: 'copy-name' as const,
-          icon: 'copy',
           label: 'Copy name',
           onPress: copyName,
           visible: true,
         },
         {
           id: 'copy-url' as const,
-          icon: 'copy',
           label: 'Copy image URL',
           onPress: copyImageUrl,
           visible: Boolean(displayUrl),
         },
         ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
           id: action.id,
-          icon: 'copy',
           label: action.label,
           onPress: () => copyScaledImageUrl(action.scale),
           visible: Boolean(part.image_variants),
         })),
         {
           id: 'preview' as const,
-          icon: 'external-link',
           label: 'Preview',
           onPress: handlePreview,
           visible: Boolean(onPress),
@@ -262,17 +257,13 @@ export function EmoteActionSheet({
                   index > 0 && styles.actionButtonWithDivider,
                 ]}
               >
-                {Platform.OS === 'ios' ? (
-                  <SymbolView
-                    name={getSFSymbolName(action.id)}
-                    size={19}
-                    tintColor="#b7bdc9"
-                    weight="regular"
-                    style={styles.actionIcon}
-                  />
-                ) : (
-                  <Icon icon={action.icon} color="#b7bdc9" size={18} />
-                )}
+                <SymbolView
+                  name={getSFSymbolName(action.id)}
+                  size={19}
+                  tintColor="#b7bdc9"
+                  weight="regular"
+                  style={styles.actionIcon}
+                />
                 <Text style={styles.actionText}>{action.label}</Text>
               </Button>
             ))}

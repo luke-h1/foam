@@ -3,9 +3,9 @@ import { fetch } from 'expo/fetch';
 
 type AppStoreLookupResponse = {
   resultCount: number;
-  results: Array<{
+  results: {
     trackId?: number | string;
-  }>;
+  }[];
 };
 
 export async function getAppStoreLink(bundleId: string) {

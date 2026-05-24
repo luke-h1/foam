@@ -1,5 +1,4 @@
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
 import { impact } from '@app/lib/haptics';
@@ -7,6 +6,7 @@ import { countMetric } from '@app/lib/sentry';
 import { recordError } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SymbolView } from 'expo-symbols';
 import {
   forwardRef,
   memo,
@@ -166,6 +166,10 @@ export interface StreamPlayerProps {
    * Twitch channel name
    */
   channel?: string;
+  /**
+   * Twitch clip slug
+   */
+  clip?: string;
 
   /**
    * Height of the player
@@ -352,6 +356,7 @@ const TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES = [
   'about:blank',
   'https://id.twitch.tv/',
   'https://www.twitch.tv/passport-callback',
+  'https://clips.twitch.tv/',
   'https://player.twitch.tv/',
 ];
 
@@ -442,6 +447,21 @@ function buildRawTwitchAutoplayScript(options: {
     }
 
     post('muteState', { muted: video.muted, volume: video.volume });
+    window.playerControls = {
+      play: function() { video.play(); },
+      pause: function() { video.pause(); },
+      mute: function() { video.muted = true; post('muteState', { muted: video.muted, volume: video.volume }); },
+      setMuted: function(m) { video.muted = !!m; post('muteState', { muted: video.muted, volume: video.volume }); },
+      unmute: function() { video.muted = false; video.volume = 1; post('muteState', { muted: video.muted, volume: video.volume }); },
+      setVolume: function(v) { video.volume = v; if (v > 0) { video.muted = false; } post('muteState', { muted: video.muted, volume: video.volume }); },
+      getCurrentTime: function() { post('currentTime', { time: video.currentTime || 0 }); },
+      getDuration: function() { post('duration', { duration: video.duration || 0 }); },
+      seek: function(t) { video.currentTime = t; },
+      setChannel: function() {},
+      setVideo: function() {},
+      setQuality: function() {},
+      seekToLive: function() {}
+    };
     if (shouldAutoplay) {
       const result = video.play();
       if (result && typeof result.catch === 'function') {
@@ -816,6 +836,24 @@ export function buildRawTwitchPlayerUrl(options: {
   return `https://player.twitch.tv/?${params.toString()}`;
 }
 
+export function buildTwitchClipPlayerUrl(options: {
+  autoplay: boolean;
+  clip: string;
+  muted: boolean;
+  parent: string;
+  preload?: 'auto' | 'metadata' | 'none';
+}): string {
+  const params = new URLSearchParams({
+    clip: options.clip,
+    parent: options.parent,
+    autoplay: options.autoplay ? 'true' : 'false',
+    muted: options.muted ? 'true' : 'false',
+    preload: options.preload ?? 'metadata',
+  });
+
+  return `https://clips.twitch.tv/embed?${params.toString()}`;
+}
+
 export function isAppUrl(url: string): boolean {
   return url.startsWith('foam://') || url.startsWith('exp+foam://');
 }
@@ -962,10 +1000,10 @@ function ControlsOverlay({
         pointerEvents="none"
         style={[styles.latencyBadge, { top: insets.top + theme.space12 }]}
       >
-        <Icon
-          color={theme.colorWhite}
-          icon="clock"
+        <SymbolView
+          name="clock"
           size={12}
+          tintColor={theme.colorWhite}
           style={styles.latencyBadgeIcon}
         />
         <Text style={styles.latencyBadgeText}>
@@ -981,7 +1019,11 @@ function ControlsOverlay({
               style={styles.headerButton}
               onPress={onBackPress}
             >
-              <Icon color={theme.colorWhite} icon="chevron-left" size={24} />
+              <SymbolView
+                name="chevron.left"
+                size={24}
+                tintColor={theme.colorWhite}
+              />
             </Button>
           </View>
         )}
@@ -995,10 +1037,10 @@ function ControlsOverlay({
           style={styles.playPauseButton}
           onPress={onPlayPausePress}
         >
-          <Icon
-            color={theme.colorWhite}
-            icon={paused ? 'play' : 'pause'}
+          <SymbolView
+            name={paused ? 'play.fill' : 'pause.fill'}
             size={40}
+            tintColor={theme.colorWhite}
           />
         </Button>
       </View>
@@ -1021,7 +1063,12 @@ function ControlsOverlay({
             {streamInfo?.userName || streamInfo?.userLogin || ''}
           </Text>
           <View style={styles.viewerCountRow}>
-            <Icon icon="user" size={14} style={styles.userIcon} />
+            <SymbolView
+              name="person"
+              size={14}
+              style={styles.userIcon}
+              tintColor={theme.colorWhite}
+            />
             <Text style={styles.viewerCountText}>
               {formatViewerCount(streamInfo?.viewerCount)}
             </Text>
@@ -1036,7 +1083,11 @@ function ControlsOverlay({
               style={styles.controlButton}
               onPress={onRefresh}
             >
-              <Icon color={theme.colorWhite} icon="refresh-cw" size={18} />
+              <SymbolView
+                name="arrow.clockwise"
+                size={18}
+                tintColor={theme.colorWhite}
+              />
             </Button>
           </View>
         )}
@@ -1048,12 +1099,7 @@ function ControlsOverlay({
               style={styles.controlButton}
               onPress={onPipPress}
             >
-              <Icon
-                color={theme.colorWhite}
-                icon="picture-in-picture-bottom-right"
-                iconFamily="MaterialCommunityIcons"
-                size={20}
-              />
+              <SymbolView name="pip" size={20} tintColor={theme.colorWhite} />
             </Button>
           </View>
         )}
@@ -1067,6 +1113,7 @@ export const StreamPlayer = memo(
     {
       autoplay = true,
       channel,
+      clip,
       deferOverlayUntilUserUnmute = false,
       height,
       muted: initialMuted = false,
@@ -1135,7 +1182,7 @@ export const StreamPlayer = memo(
       setPlaybackLatencySeconds(null);
       setOverlayUnlocked(false);
       needsInitRef.current = true;
-    }, [channel, video]);
+    }, [channel, clip, video]);
     useEffect(() => {
       onContentGateChange?.(hasContentGate);
     }, [hasContentGate, onContentGateChange]);
@@ -1197,8 +1244,10 @@ export const StreamPlayer = memo(
     }, [remountEmbedWebView]);
 
     useEffect(() => {
-      streamWebViewWarmupPool.startWarmup(parent);
-    }, [parent]);
+      if (!clip) {
+        streamWebViewWarmupPool.startWarmup(parent);
+      }
+    }, [clip, parent]);
 
     // Reset stuck-detection refs when not ready or paused
     useEffect(() => {
@@ -1528,6 +1577,17 @@ export const StreamPlayer = memo(
     const webViewSource = useMemo(() => {
       const channelName = channel || 'twitch';
       const sourceMuted = deferOverlayUntilUserUnmute ? true : initialMuted;
+      if (clip) {
+        return {
+          uri: buildTwitchClipPlayerUrl({
+            clip,
+            parent,
+            autoplay,
+            muted: initialMuted,
+          }),
+        };
+      }
+
       if (useRawTwitchPlayer) {
         return {
           uri: buildRawTwitchPlayerUrl({
@@ -1566,6 +1626,7 @@ export const StreamPlayer = memo(
           };
     }, [
       channel,
+      clip,
       video,
       parent,
       autoplay,
@@ -1789,9 +1850,10 @@ export const StreamPlayer = memo(
     const playerWidth: DimensionValue = width ?? '100%';
     const playerHeight: DimensionValue = height ?? '100%';
     const allowsTwitchInteraction =
-      usesHostedPlayer || useRawTwitchPlayer || hasContentGate;
+      Boolean(clip) || usesHostedPlayer || useRawTwitchPlayer || hasContentGate;
     const shouldShowNativeControls =
       showOverlayControls &&
+      !clip &&
       !allowsTwitchInteraction &&
       playerStatus.isReady &&
       (!deferOverlayUntilUserUnmute || overlayUnlocked);
@@ -1858,7 +1920,7 @@ export const StreamPlayer = memo(
               scheduleAuthCompletionReload();
               return;
             }
-            if (useRawTwitchPlayer) {
+            if (useRawTwitchPlayer || clip) {
               webViewRef.current?.injectJavaScript(
                 buildRawTwitchAutoplayScript({
                   autoplay,
@@ -1875,6 +1937,7 @@ export const StreamPlayer = memo(
             if (__DEV__) {
               console.warn('[StreamPlayer:WebView] onLoadStart', {
                 channel,
+                hasClip: !!clip,
                 hasVideo: !!video,
               });
             }
@@ -1926,7 +1989,11 @@ export const StreamPlayer = memo(
             accessibilityLabel="Show player controls"
             accessibilityRole="button"
           >
-            <Icon color={theme.colorWhite} icon="more-horizontal" size={24} />
+            <SymbolView
+              name="ellipsis"
+              size={24}
+              tintColor={theme.colorWhite}
+            />
           </PressableArea>
         )}
 

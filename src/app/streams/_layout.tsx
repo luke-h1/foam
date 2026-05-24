@@ -16,6 +16,13 @@ export default function StreamsLayout() {
           presentation: 'modal',
         }}
       />
+      <Stack.Screen
+        name="clip/[id]"
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
     </Stack>
   );
 }

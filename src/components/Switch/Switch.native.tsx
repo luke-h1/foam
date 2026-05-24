@@ -1,19 +1,19 @@
-import { theme } from '@app/styles/themes';
+import { Host, Switch as ExpoSwitch } from '@expo/ui';
 import { memo, useCallback, useEffect, useState } from 'react';
 import {
   StyleSheet,
-  Switch as NativeSwitch,
+  View,
   type SwitchProps as NativeSwitchProps,
 } from 'react-native';
 
 export const Switch = memo(function Switch({
+  accessibilityLabel,
   accessibilityState,
   disabled,
   onValueChange,
   style,
-  trackColor,
+  testID,
   value,
-  ...props
 }: NativeSwitchProps) {
   const [displayValue, setDisplayValue] = useState(Boolean(value));
 
@@ -30,32 +30,32 @@ export const Switch = memo(function Switch({
   );
 
   return (
-    <NativeSwitch
-      {...props}
+    <View
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="switch"
       accessibilityState={{
         ...accessibilityState,
         checked: displayValue,
         disabled: disabled ?? accessibilityState?.disabled,
       }}
-      disabled={disabled}
-      ios_backgroundColor={theme.color.backgroundTertiary.dark}
-      onValueChange={handleValueChange}
-      style={[styles.switch, style]}
-      thumbColor={theme.colorWhite}
-      trackColor={
-        trackColor ?? {
-          false: theme.color.backgroundTertiary.dark,
-          true: theme.colorDarkGreen,
-        }
-      }
-      value={displayValue}
-    />
+      style={style}
+      testID={testID}
+    >
+      <Host colorScheme="dark" style={styles.host}>
+        <ExpoSwitch
+          disabled={disabled}
+          onValueChange={handleValueChange}
+          testID={testID}
+          value={displayValue}
+        />
+      </Host>
+    </View>
   );
 });
 
 const styles = StyleSheet.create({
-  switch: {
-    transform: [{ scale: 0.92 }],
+  host: {
+    height: 36,
+    width: 64,
   },
 });

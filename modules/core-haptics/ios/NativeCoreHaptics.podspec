@@ -9,8 +9,8 @@ Pod::Spec.new do |s|
   s.authors        = 'Foam'
   s.homepage       = 'https://github.com/luke-h1/foam.git'
   s.platforms      = {
-    :ios => '15.1',
-    :tvos => '15.1'
+    :ios => '16.4',
+    :tvos => '16.4'
   }
   s.swift_version  = '5.9'
   s.source         = { git: 'https://github.com/luke-h1/foam.git', tag: "v#{s.version}" }

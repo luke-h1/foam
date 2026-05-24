@@ -4,7 +4,6 @@ import {
   AnimatedFlashList,
   FlashListRef,
 } from '@app/components/FlashList/FlashList';
-import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
@@ -30,6 +29,7 @@ import { formatViewCount } from '@app/utils/string/formatViewCount';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
@@ -152,14 +152,14 @@ FeaturedStreamHero.displayName = 'FeaturedStreamHero';
 
 type StreamListLayout = Preferences['streamListLayout'];
 
-const STREAM_LIST_LAYOUT_OPTIONS: Array<{
-  icon: string;
+const STREAM_LIST_LAYOUT_OPTIONS: {
+  icon: SymbolViewProps['name'];
   label: string;
   value: StreamListLayout;
-}> = [
+}[] = [
   { icon: 'square', label: 'Compact', value: 'compact' },
-  { icon: 'image', label: 'Media', value: 'media' },
-  { icon: 'align-left', label: 'Text First', value: 'text' },
+  { icon: 'photo', label: 'Media', value: 'media' },
+  { icon: 'text.alignleft', label: 'Text First', value: 'text' },
 ];
 
 const StreamLayoutToggle = memo(function StreamLayoutToggle({
@@ -183,10 +183,10 @@ const StreamLayoutToggle = memo(function StreamLayoutToggle({
               active && styles.layoutToggleButtonActive,
             ]}
           >
-            <Icon
-              icon={option.icon}
+            <SymbolView
+              name={option.icon}
               size={14}
-              color={
+              tintColor={
                 active ? theme.color.text.dark : theme.color.textSecondary.dark
               }
             />
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     marginTop: theme.space8,
   },
   heroGradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   heroImage: {
     height: 420,

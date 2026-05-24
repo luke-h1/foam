@@ -1,6 +1,5 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
@@ -9,11 +8,13 @@ import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import {
   SEVENTV_EMOTE_LINK_REGEX,
-  TWITCH_CHANNEL_CLIP_REGEX,
-  TWITCH_CLIP_REGEX,
   TwitchAnd7TVVariant,
+  getTwitchClipIdFromUrl,
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useQueries } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
+import { useCallback, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 type MediaLinkCardProps = {
@@ -22,6 +23,7 @@ type MediaLinkCardProps = {
 };
 
 export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
+  const twitchClipId = useMemo(() => getTwitchClipIdFromUrl(url), [url]);
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
       {
@@ -36,16 +38,21 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
       {
         queryKey: ['twitchClip', url],
         queryFn: () => {
-          const twitchClipMatch = url.match(TWITCH_CLIP_REGEX);
-          const twitchChannelClipMatch = url.match(TWITCH_CHANNEL_CLIP_REGEX);
-          const clipId =
-            twitchClipMatch?.[1] ?? twitchChannelClipMatch?.[1] ?? '';
-          return twitchService.getClip(clipId);
+          if (!twitchClipId) {
+            throw new Error('Missing Twitch clip ID');
+          }
+          return twitchService.getClip(twitchClipId);
         },
-        enabled: type === 'twitchClip',
+        enabled: type === 'twitchClip' && Boolean(twitchClipId),
       },
     ],
   });
+
+  const handlePress = useCallback(() => {
+    if (type === 'twitchClip' && twitchClipId) {
+      router.push(`/streams/clip/${encodeURIComponent(twitchClipId)}`);
+    }
+  }, [twitchClipId, type]);
 
   const getBrandIcon = () => {
     switch (type) {
@@ -84,7 +91,9 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
       : twitchClip.data?.thumbnail_url;
 
   const title =
-    type === 'stvEmote' ? sevenTvEmote.data?.name : twitchClip.data?.title;
+    type === 'stvEmote'
+      ? (sevenTvEmote.data?.name ?? '7TV emote')
+      : (twitchClip.data?.title ?? 'Twitch clip');
 
   const createdBy =
     type === 'stvEmote'
@@ -93,7 +102,7 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
       : twitchClip.data?.creator_name;
 
   return (
-    <Button style={styles.container} onPress={() => {}}>
+    <Button style={styles.container} onPress={handlePress}>
       <View style={styles.card}>
         {thumbnail && (
           <Image
@@ -110,9 +119,12 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
             {getBrandIcon()}
             <Text style={styles.iconName}>{title}</Text>
           </View>
-          <Text>By {createdBy}</Text>
+          {createdBy ? <Text>By {createdBy}</Text> : null}
         </View>
-        <Icon icon="external-link" />
+        <SymbolView
+          name={type === 'twitchClip' ? 'play.rectangle.fill' : 'sparkles'}
+          tintColor={theme.colorWhite}
+        />
       </View>
     </Button>
   );

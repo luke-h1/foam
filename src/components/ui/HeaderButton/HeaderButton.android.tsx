@@ -1,15 +1,20 @@
 import { theme } from '@app/styles/themes';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { SymbolView, type AndroidSymbol, type SFSymbol } from 'expo-symbols';
+import {
+  StyleSheet,
+  type ColorValue,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { type StyleProp, type ViewStyle } from 'react-native';
-import { StyleSheet } from 'react-native';
 
 const SIZE = theme.fontSize18;
+const SF_SYMBOL_FALLBACK: SFSymbol = 'xmark';
 
 export interface HeaderButtonProps {
   imageProps?: {
-    systemName?: string;
-    color?: string;
+    systemName?: SFSymbol;
+    color?: ColorValue;
     size?: number;
   };
   buttonProps?: {
@@ -19,36 +24,49 @@ export interface HeaderButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const sfToMaterial: Record<string, string> = {
-  xmark: 'close',
-  'chevron.left': 'chevron-left',
-  'chevron.right': 'chevron-right',
-  'chevron.up': 'chevron-up',
-  'chevron.down': 'chevron-down',
-  plus: 'plus',
-  trash: 'trash-can-outline',
-  gear: 'cog',
-  ellipsis: 'dots-horizontal',
-};
+function getAndroidHeaderSymbol(systemName: SFSymbol): AndroidSymbol {
+  switch (systemName) {
+    case 'chevron.left':
+      return 'chevron_left';
+    case 'chevron.right':
+      return 'chevron_right';
+    case 'chevron.up':
+      return 'expand_less';
+    case 'chevron.down':
+      return 'expand_more';
+    case 'plus':
+      return 'add';
+    case 'trash':
+      return 'delete';
+    case 'gear':
+      return 'settings';
+    case 'ellipsis':
+      return 'more_horiz';
+    case 'xmark':
+    default:
+      return 'close';
+  }
+}
 
 export function HeaderButton({
   imageProps,
   buttonProps,
   style,
 }: HeaderButtonProps) {
-  const sf = imageProps?.systemName || 'xmark';
-  const iconName = sfToMaterial[sf] || 'close';
+  const systemName = imageProps?.systemName ?? SF_SYMBOL_FALLBACK;
 
   return (
     <Pressable
       onPress={buttonProps?.onPress}
       style={[styles.button, { width: SIZE, height: SIZE }, style]}
     >
-      <MaterialCommunityIcons
-        // @ts-expect-error fix type type
-        name={iconName as unknown}
+      <SymbolView
+        name={{
+          ios: systemName,
+          android: getAndroidHeaderSymbol(systemName),
+        }}
         size={imageProps?.size || SIZE}
-        color={imageProps?.color || 'white'}
+        tintColor={imageProps?.color || 'white'}
       />
     </Pressable>
   );

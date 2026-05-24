@@ -5,7 +5,7 @@ import {
 } from '@tanstack/react-query';
 
 export const getNextPageParam: GetNextPageParamFunction<
-  string,
+  string | undefined,
   PaginatedList<TwitchStream>
 > = lastPage => {
   if (!lastPage || !lastPage.pagination) {
@@ -15,7 +15,7 @@ export const getNextPageParam: GetNextPageParamFunction<
 };
 
 export const getPreviousPageParam: GetPreviousPageParamFunction<
-  string,
+  string | undefined,
   PaginatedList<TwitchStream>
 > = firstPage => {
   if (!firstPage || !firstPage.pagination) {

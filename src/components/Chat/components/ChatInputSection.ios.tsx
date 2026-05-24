@@ -1,34 +1,51 @@
-import { Button } from '@app/components/Button/Button';
+import { Button as PressableButton } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
-import {
-  IconSymbol,
-  type IconSymbolName,
-} from '@app/components/IconSymbol/IconSymbol';
 import { Text } from '@app/components/ui/Text/Text';
+import type { InputRef } from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
-import { BlurView } from 'expo-blur';
-import { memo, RefObject, useCallback, useMemo, useState } from 'react';
 import {
-  Keyboard,
-  LayoutChangeEvent,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+  Button as SwiftUIButton,
+  GlassEffectContainer,
+  Host,
+  Image,
+} from '@expo/ui/swift-ui';
+import {
+  accessibilityLabel,
+  background,
+  buttonStyle,
+  clipShape,
+  disabled as disabledModifier,
+  padding,
+  tint,
+  type ViewModifier,
+} from '@expo/ui/swift-ui/modifiers';
+import { BlurView } from 'expo-blur';
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import { SymbolView } from 'expo-symbols';
+import { memo, RefObject, useCallback, useMemo, useState } from 'react';
+import { Keyboard, LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  Directions,
+  Gesture,
+  GestureDetector,
+} from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
+import type { SFSymbol } from 'sf-symbols-typescript';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 
 const SHOW_SETTINGS_MIN_WIDTH = 260;
+const COMPOSER_DISMISS_DRAG_DISTANCE = 34;
+const COMPOSER_DISMISS_VELOCITY = 520;
+const COMPOSER_DRAG_LIMIT = 64;
 
 export interface ReplyToData {
   messageId: string;
@@ -55,15 +72,16 @@ interface ChatInputSectionProps {
   pinNextMessage?: boolean;
   isConnected: boolean;
   isAuthenticated: boolean;
-  inputRef?: RefObject<TextInput | null>;
+  inputRef?: RefObject<InputRef | null>;
 }
 
 interface ActionIconButtonProps {
   active?: boolean;
   disabled?: boolean;
-  icon: IconSymbolName;
+  icon: SFSymbol;
   label?: string;
   onPress: () => void;
+  prominent?: boolean;
 }
 
 function ActionIconButton({
@@ -72,31 +90,67 @@ function ActionIconButton({
   icon,
   label,
   onPress,
+  prominent,
 }: ActionIconButtonProps) {
+  const liquidGlassAvailable = isLiquidGlassAvailable();
+  const isHighlighted = Boolean(active || prominent);
+  const resolvedButtonStyle = liquidGlassAvailable
+    ? prominent
+      ? 'glassProminent'
+      : 'glass'
+    : prominent
+      ? 'bordered'
+      : 'plain';
+  const iconColor = disabled
+    ? 'rgba(255,255,255,0.36)'
+    : isHighlighted
+      ? '#ffffff'
+      : 'rgba(255,255,255,0.86)';
+  const handlePress = () => {
+    if (!disabled) {
+      onPress();
+    }
+  };
+  const buttonModifiers: ViewModifier[] = [
+    tint(iconColor),
+    buttonStyle(resolvedButtonStyle),
+    background(
+      prominent
+        ? theme.colorViolet
+        : liquidGlassAvailable
+          ? 'transparent'
+          : active
+            ? 'rgba(255,255,255,0.18)'
+            : 'rgba(255,255,255,0.12)',
+    ),
+    clipShape('circle'),
+    disabledModifier(Boolean(disabled)),
+  ];
+
+  if (label) {
+    buttonModifiers.push(accessibilityLabel(label));
+  }
+
   return (
-    <Button
-      label={label}
-      disabled={disabled}
-      onPress={onPress}
-      style={[
-        styles.actionButton,
-        active && styles.actionButtonActive,
-        disabled && styles.actionButtonDisabled,
-      ]}
-    >
-      <IconSymbol
-        color={
-          disabled
-            ? 'rgba(255,255,255,0.36)'
-            : active
-              ? '#ffffff'
-              : 'rgba(255,255,255,0.86)'
-        }
-        name={icon}
-        size={18}
-        weight="medium"
-      />
-    </Button>
+    <Host matchContents style={styles.actionButtonHost}>
+      <GlassEffectContainer>
+        <SwiftUIButton onPress={handlePress} modifiers={buttonModifiers}>
+          <Image
+            color={iconColor}
+            modifiers={[
+              padding({ vertical: 6, horizontal: 0 }),
+              clipShape('circle'),
+              padding({
+                horizontal: liquidGlassAvailable ? 0 : 12,
+                vertical: liquidGlassAvailable ? 0 : 8,
+              }),
+            ]}
+            size={18}
+            systemName={icon}
+          />
+        </SwiftUIButton>
+      </GlassEffectContainer>
+    </Host>
   );
 }
 
@@ -144,9 +198,10 @@ export const ChatInputSection = memo(
       transform: [{ translateY: composerDragOffset.value }],
     }));
 
-    const dismissKeyboard = useCallback(() => {
+    const dismissComposer = useCallback(() => {
+      inputRef?.current?.blur();
       Keyboard.dismiss();
-    }, []);
+    }, [inputRef]);
 
     const handleComposerLayout = useCallback((event: LayoutChangeEvent) => {
       setComposerWidth(event.nativeEvent.layout.width);
@@ -155,20 +210,21 @@ export const ChatInputSection = memo(
     const composerPanGesture = useMemo(
       () =>
         Gesture.Pan()
-          .activeOffsetY(8)
-          .failOffsetX([-24, 24])
-          .onChange(event => {
+          .activeOffsetY(4)
+          .failOffsetX([-40, 40])
+          .onUpdate(event => {
             composerDragOffset.value = Math.max(
               0,
-              Math.min(event.translationY, 56),
+              Math.min(event.translationY, COMPOSER_DRAG_LIMIT),
             );
           })
           .onEnd(event => {
             const shouldDismiss =
-              event.translationY > 44 || event.velocityY > 700;
+              event.translationY > COMPOSER_DISMISS_DRAG_DISTANCE ||
+              event.velocityY > COMPOSER_DISMISS_VELOCITY;
 
             if (shouldDismiss) {
-              scheduleOnRN(dismissKeyboard);
+              scheduleOnRN(dismissComposer);
             }
           })
           .onFinalize(() => {
@@ -177,7 +233,22 @@ export const ChatInputSection = memo(
               stiffness: 220,
             });
           }),
-      [composerDragOffset, dismissKeyboard],
+      [composerDragOffset, dismissComposer],
+    );
+
+    const composerFlingGesture = useMemo(
+      () =>
+        Gesture.Fling()
+          .direction(Directions.DOWN)
+          .onEnd(() => {
+            scheduleOnRN(dismissComposer);
+          }),
+      [dismissComposer],
+    );
+
+    const composerGesture = useMemo(
+      () => Gesture.Simultaneous(composerPanGesture, composerFlingGesture),
+      [composerFlingGesture, composerPanGesture],
     );
 
     const showSettingsButton = composerWidth >= SHOW_SETTINGS_MIN_WIDTH;
@@ -213,75 +284,70 @@ export const ChatInputSection = memo(
                 </Text>
               ) : null}
             </View>
-            <Button onPress={onClearReply} style={styles.replyDismissButton}>
-              <IconSymbol color="#ffffff" name="xmark" size={16} />
-            </Button>
+            <PressableButton
+              onPress={onClearReply}
+              style={styles.replyDismissButton}
+            >
+              <SymbolView tintColor="#ffffff" name="xmark" size={16} />
+            </PressableButton>
           </View>
         ) : null}
 
-        <GestureDetector gesture={composerPanGesture}>
+        <GestureDetector gesture={composerGesture}>
           <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
-            <View style={styles.composerSurface}>
-              <View onLayout={handleComposerLayout} style={styles.composerBar}>
-                <View pointerEvents="none" style={styles.composerBarChrome}>
-                  <BlurView
-                    intensity={34}
-                    style={StyleSheet.absoluteFill}
-                    tint="dark"
-                  />
-                </View>
+            <View onLayout={handleComposerLayout} style={styles.inputRow}>
+              <ActionIconButton
+                icon="face.smiling"
+                label="Open emote picker"
+                onPress={onOpenEmoteSheet}
+              />
 
-                <View style={styles.inputRow}>
-                  <ActionIconButton
-                    icon="face.smiling"
-                    onPress={onOpenEmoteSheet}
-                  />
-
-                  <View style={styles.inputContainer}>
-                    <View style={styles.inputGlass}>
-                      <ChatComposer
-                        ref={inputRef}
-                        autoCapitalize="none"
-                        autoComplete="off"
-                        autoCorrect={false}
-                        editable={isAuthenticated}
-                        onChangeText={onChangeText}
-                        onEmoteSelect={handleEmoteSelect}
-                        onSubmitEditing={onSubmit}
-                        placeholder={inputPlaceholder}
-                        placeholderTextColor="rgba(255,255,255,0.46)"
-                        prioritizeChannelEmotes
-                        returnKeyType="send"
-                        value={messageInput}
-                      />
-                    </View>
-                  </View>
-
-                  {showSettingsButton ? (
-                    <ActionIconButton
-                      icon="gearshape"
-                      onPress={onOpenSettingsSheet}
-                    />
-                  ) : null}
-                  {canPinNextMessage ? (
-                    <ActionIconButton
-                      active={pinNextMessage}
-                      icon={pinNextMessage ? 'pin.fill' : 'pin'}
-                      label={
-                        pinNextMessage
-                          ? 'Send and pin message'
-                          : 'Pin next message'
-                      }
-                      onPress={onTogglePinNextMessage ?? (() => undefined)}
-                    />
-                  ) : null}
-                  <ActionIconButton
-                    disabled={!canSend}
-                    icon="arrow.up"
-                    onPress={onSubmit}
-                  />
-                </View>
+              <View style={styles.inputContainer}>
+                <ChatComposer
+                  ref={inputRef}
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  autoCorrect={false}
+                  color="white"
+                  editable={isAuthenticated}
+                  onChangeText={onChangeText}
+                  onEmoteSelect={handleEmoteSelect}
+                  onSubmitEditing={onSubmit}
+                  placeholder={inputPlaceholder}
+                  placeholderTextColor="rgba(255,255,255,0.46)"
+                  prioritizeChannelEmotes
+                  radius="xl"
+                  returnKeyType="send"
+                  style={styles.nativeInput}
+                  value={messageInput}
+                  variant="soft"
+                />
               </View>
+
+              {showSettingsButton ? (
+                <ActionIconButton
+                  icon="gearshape"
+                  label="Open chat settings"
+                  onPress={onOpenSettingsSheet}
+                />
+              ) : null}
+              {canPinNextMessage ? (
+                <ActionIconButton
+                  active={pinNextMessage}
+                  icon={pinNextMessage ? 'pin.fill' : 'pin'}
+                  label={
+                    pinNextMessage ? 'Send and pin message' : 'Pin next message'
+                  }
+                  onPress={onTogglePinNextMessage ?? (() => undefined)}
+                />
+              ) : null}
+              <ActionIconButton
+                disabled={!canSend}
+                icon="arrow.up"
+                label="Send message"
+                onPress={onSubmit}
+                prominent={canSend}
+              />
             </View>
           </Animated.View>
         </GestureDetector>
@@ -293,65 +359,36 @@ export const ChatInputSection = memo(
 ChatInputSection.displayName = 'ChatInputSection';
 
 const styles = StyleSheet.create({
-  actionButton: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderCurve: 'continuous',
-    borderRadius: 18,
-    borderWidth: 1,
+  actionButtonHost: {
     flexShrink: 0,
-    height: 36,
-    justifyContent: 'center',
-    width: 36,
-  },
-  actionButtonActive: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-  actionButtonDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    height: 48,
+    width: 48,
   },
   composerShell: {
     overflow: 'visible',
-    paddingHorizontal: theme.space12,
-  },
-  composerSurface: {
-    borderRadius: 28,
-    overflow: 'visible',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.24,
-    shadowRadius: 24,
-  },
-  composerBar: {
-    borderRadius: 28,
-    maxWidth: '100%',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  composerBarChrome: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10,10,12,0.58)',
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderCurve: 'continuous',
-    borderRadius: 28,
-    borderWidth: 1,
-    overflow: 'hidden',
+    paddingHorizontal: theme.space16,
   },
   inputContainer: {
     flex: 1,
     minWidth: 0,
   },
-  inputGlass: {
-    minHeight: 46,
+  nativeInput: {
+    backgroundColor: theme.darkActiveContent,
+    borderRadius: 20,
+    borderWidth: 0,
+    maxHeight: 120,
+    minHeight: 48,
+    paddingBottom: 12,
+    paddingHorizontal: 10,
+    paddingTop: 12,
   },
   inputRow: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     flexDirection: 'row',
     gap: 8,
-    paddingBottom: 10,
-    paddingHorizontal: 10,
-    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 0,
+    paddingTop: 4,
     width: '100%',
   },
   replyContent: {

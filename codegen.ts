@@ -31,7 +31,10 @@ const config: CodegenConfig = {
     },
   },
   hooks: {
-    afterAllFileWrite: ['prettier --write'],
+    afterAllFileWrite: [
+      'bun scripts/normalise-array-type-syntax.mjs',
+      'prettier --write',
+    ],
   },
 };
 

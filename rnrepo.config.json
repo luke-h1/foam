@@ -1,0 +1,5 @@
+{
+  "denyList": {
+    "ios": ["react-native-screens", "react-native-worklets"]
+  }
+}

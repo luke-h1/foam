@@ -76,13 +76,13 @@ export function SettingsOtherScreen() {
           <SettingsLinkRow
             title="About Foam"
             subtitle="What the app is built for"
-            icon={{ icon: 'info', color: theme.colorBlue }}
+            icon={{ icon: 'info.circle', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
             title="FAQ"
             subtitle="Common questions and product guidance"
-            icon={{ icon: 'help-circle', color: theme.colorGreen }}
+            icon={{ icon: 'questionmark.circle', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/faq')}
           />
           <SettingsLinkRow
@@ -97,7 +97,7 @@ export function SettingsOtherScreen() {
           <SettingsLinkRow
             title="OSS Licenses"
             subtitle="Open-source software used by the app"
-            icon={{ icon: 'file-text', color: theme.colorViolet }}
+            icon={{ icon: 'doc.text', color: theme.colorViolet }}
             onPress={() => router.push('/tabs/settings/licenses')}
           />
         </SettingsSection>

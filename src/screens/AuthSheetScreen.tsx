@@ -1,6 +1,5 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
-import { Icon } from '@app/components/Icon/Icon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { useTwitchSignIn } from '@app/hooks/useTwitchSignIn';
@@ -8,6 +7,7 @@ import { impact } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -91,20 +91,26 @@ export function AuthSheetScreen() {
         </Button>
 
         <View style={styles.featureList}>
-          <FeatureItem icon="message-circle" label="Twitch chat" />
+          <FeatureItem icon="message" label="Twitch chat" />
           <FeatureItem icon="star" label="BTTV, FFZ, and 7TV emotes" />
-          <FeatureItem icon="users" label="Minimal UI" />
+          <FeatureItem icon="person.2" label="Minimal UI" />
         </View>
       </View>
     </SafeAreaView>
   );
 }
 
-function FeatureItem({ icon, label }: { icon: string; label: string }) {
+function FeatureItem({
+  icon,
+  label,
+}: {
+  icon: SymbolViewProps['name'];
+  label: string;
+}) {
   return (
     <View style={styles.featureItem}>
       <View style={styles.featureIcon}>
-        <Icon icon={icon} size={15} color={theme.colorGreyHover} />
+        <SymbolView name={icon} size={15} tintColor={theme.colorGreyHover} />
       </View>
       <Text
         type="xs"

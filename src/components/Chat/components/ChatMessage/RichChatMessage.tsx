@@ -626,7 +626,7 @@ function ChatMessageComponent<
       return null;
     }
 
-    const renderedBadges = new Array<ReactNode>(badges.length);
+    const renderedBadges: ReactNode[] = new Array(badges.length);
     let index = 0;
     for (const badge of badges) {
       renderedBadges[index] = (
@@ -879,7 +879,7 @@ function ChatMessageComponent<
 const MemoizedRichChatMessage = memo(ChatMessageComponent);
 MemoizedRichChatMessage.displayName = 'RichChatMessage';
 
-export const RichChatMessage = MemoizedRichChatMessage as <
+export const RichChatMessage = MemoizedRichChatMessage as unknown as <
   TNoticeType extends NoticeVariants,
   TVariant extends TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap

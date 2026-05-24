@@ -14,6 +14,14 @@ interface Props {
 const IMAGE_ASPECT_RATIO = 110 / 155;
 const IMAGE_HEIGHT = 150;
 const IMAGE_WIDTH = IMAGE_HEIGHT * IMAGE_ASPECT_RATIO;
+const IMAGE_SOURCE_SCALE = 2;
+const IMAGE_SOURCE_WIDTH = Math.round(IMAGE_WIDTH * IMAGE_SOURCE_SCALE);
+const IMAGE_SOURCE_HEIGHT = IMAGE_HEIGHT * IMAGE_SOURCE_SCALE;
+const TITLE_LINE_HEIGHT = 24;
+const TITLE_MAX_LINES = 2;
+const TITLE_HEIGHT = TITLE_LINE_HEIGHT * TITLE_MAX_LINES;
+export const CATEGORY_CARD_HEIGHT =
+  IMAGE_HEIGHT + theme.space12 + TITLE_HEIGHT + theme.space16;
 
 export function CategoryCard({ category }: Props) {
   const handlePress = useCallback(() => {
@@ -29,12 +37,14 @@ export function CategoryCard({ category }: Props) {
       <View style={styles.wrapper}>
         <Image
           source={category.box_art_url
-            ?.replace('{width}', '200')
-            ?.replace('{height}', '250')}
+            ?.replace('{width}', String(IMAGE_SOURCE_WIDTH))
+            ?.replace('{height}', String(IMAGE_SOURCE_HEIGHT))}
           style={styles.image}
-          contentFit="contain"
+          contentFit="cover"
         />
-        <Text style={styles.title}>{category.name}</Text>
+        <Text numberOfLines={TITLE_MAX_LINES} style={styles.title}>
+          {category.name}
+        </Text>
       </View>
     </Button>
   );
@@ -57,10 +67,15 @@ const styles = StyleSheet.create({
     width: IMAGE_WIDTH,
   },
   title: {
+    lineHeight: TITLE_LINE_HEIGHT,
     marginTop: theme.space12,
+    minHeight: TITLE_HEIGHT,
     textAlign: 'center',
+    width: IMAGE_WIDTH + theme.space24,
   },
   wrapper: {
-    marginBottom: theme.space16,
+    alignItems: 'center',
+    minHeight: CATEGORY_CARD_HEIGHT,
+    paddingBottom: theme.space16,
   },
 });

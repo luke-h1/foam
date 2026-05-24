@@ -3,7 +3,7 @@ import { Button } from '@app/components/Button/Button';
 import { Chat } from '@app/components/Chat/Chat';
 import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
 import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
-import { Icon } from '@app/components/Icon/Icon';
+import { SymbolView } from 'expo-symbols';
 import {
   StreamPlayer,
   StreamPlayerPrewarm,
@@ -628,7 +628,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
               />
             ) : (
               <View style={styles.chatConnectionNotice}>
-                <Icon color={theme.colorGrey} icon="message-circle" size={24} />
+                <SymbolView
+                  tintColor={theme.colorGrey}
+                  name="message"
+                  size={24}
+                />
                 <Text
                   align="center"
                   color="gray.contrast"
@@ -671,9 +675,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPress={toggleChat}
             style={styles.fullscreenChatControlButton}
           >
-            <Icon
-              color={theme.colorWhite}
-              icon={isChatVisible ? 'eye-off' : 'message-circle'}
+            <SymbolView
+              tintColor={theme.colorWhite}
+              name={isChatVisible ? 'eye.slash' : 'message'}
               size={16}
             />
           </Button>
@@ -686,9 +690,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPress={toggleFullscreenChatMode}
             style={styles.fullscreenChatControlButton}
           >
-            <Icon
-              color={theme.colorWhite}
-              icon={fullscreenChatMode === 'overlay' ? 'sidebar' : 'layout'}
+            <SymbolView
+              tintColor={theme.colorWhite}
+              name={
+                fullscreenChatMode === 'overlay'
+                  ? 'sidebar.left'
+                  : 'rectangle.split.2x1'
+              }
               size={16}
             />
           </Button>
@@ -731,7 +739,7 @@ const styles = StyleSheet.create({
     width: 3,
   },
   overlayChatBlur: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   overlayChatContent: {
     backgroundColor: 'rgba(10, 11, 16, 0.42)',

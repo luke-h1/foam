@@ -1,7 +1,6 @@
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import * as Form from '@app/components/Form/Form';
-import { Icon } from '@app/components/Icon/Icon';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import {
@@ -14,6 +13,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { queryClient } from '@app/utils/react-query/reacy-query';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Platform, ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { useRef } from 'react';
 import { toast } from 'sonner-native';
@@ -78,14 +78,14 @@ export function SettingsCacheScreen() {
           <Form.Section footer="Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.">
             <CacheActionRow
               custom
-              icon="database"
+              icon="externaldrive"
               title="Clear Local Data"
               subtitle="Signs you out, clears stored app data, and forces fresh stream fetches next time."
               onPress={handleClearData}
             />
             <CacheActionRow
               custom
-              icon="trash-2"
+              icon="trash"
               title="Clear Chat Media Cache"
               subtitle="Removes downloaded emotes, badges, cosmetics, and image cache entries from this device."
               onPress={handleClearChatCache}
@@ -122,14 +122,14 @@ export function SettingsCacheScreen() {
           <SettingsLinkRow
             title="Clear Data"
             subtitle="Sign out and refetch stream, category, emote, and badge state"
-            icon={{ icon: 'database', color: theme.colorRed }}
+            icon={{ icon: 'externaldrive', color: theme.colorRed }}
             onPress={handleClearData}
             danger
           />
           <SettingsLinkRow
             title="Clear Image Cache"
             subtitle="Remove downloaded emote, badge, cosmetic, and image cache entries"
-            icon={{ icon: 'trash-2', color: theme.colorRed }}
+            icon={{ icon: 'trash', color: theme.colorRed }}
             onPress={handleClearChatCache}
             danger
           />
@@ -147,7 +147,7 @@ function CacheActionRow({
   onPress,
 }: {
   custom?: true;
-  icon: string;
+  icon: SymbolViewProps['name'];
   title: string;
   subtitle: string;
   onPress: () => void;
@@ -160,7 +160,7 @@ function CacheActionRow({
     >
       <View style={styles.iosActionRow}>
         <View style={styles.iosActionIcon}>
-          <Icon icon={icon} color={theme.colorRed} size={18} />
+          <SymbolView name={icon} tintColor={theme.colorRed} size={18} />
         </View>
         <View style={styles.iosActionCopy}>
           <Text color="gray" weight="semibold">

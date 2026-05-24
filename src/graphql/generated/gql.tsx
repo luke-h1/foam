@@ -65,10 +65,10 @@ export type Badge = {
   createdById: Scalars['Id']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['Id']['output'];
-  images: Array<Image>;
+  images: Image[];
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Array<Scalars['String']['output']>;
+  tags: Scalars['String']['output'][];
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -97,7 +97,7 @@ export type BadgeProgressNextBadge = {
 export type BadgeQuery = {
   __typename?: 'BadgeQuery';
   badge?: Maybe<Badge>;
-  badges: Array<Badge>;
+  badges: Badge[];
 };
 
 export type BadgeQueryBadgeArgs = {
@@ -144,7 +144,7 @@ export type CodeEffect = CodeEffectDirectEntitlement | CodeEffectSpecialEvent;
 
 export type CodeEffectDirectEntitlement = {
   __typename?: 'CodeEffectDirectEntitlement';
-  entitlements: Array<EntitlementNodeAny>;
+  entitlements: EntitlementNodeAny[];
 };
 
 export type CodeEffectSpecialEvent = {
@@ -177,7 +177,7 @@ export type CreateRedeemCodeBatchInput = {
   number: Scalars['Int']['input'];
   specialEventId: Scalars['Id']['input'];
   subscriptionEffect?: InputMaybe<RedeemCodeSubscriptionEffectInput>;
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
   uses: Scalars['Int']['input'];
 };
 
@@ -188,14 +188,14 @@ export type CreateRedeemCodeInput = {
   name: Scalars['String']['input'];
   specialEventId: Scalars['Id']['input'];
   subscriptionEffect?: InputMaybe<RedeemCodeSubscriptionEffectInput>;
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
   uses: Scalars['Int']['input'];
 };
 
 export type CreateSpecialEventInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
 };
 
 export type EditorEmotePermission = {
@@ -246,22 +246,22 @@ export type EditorUserPermissionInput = {
 export type Emote = {
   __typename?: 'Emote';
   aspectRatio: Scalars['Float']['output'];
-  attribution: Array<EmoteAttribution>;
+  attribution: EmoteAttribution[];
   channels: UserSearchResult;
   defaultName: Scalars['String']['output'];
   deleted: Scalars['Boolean']['output'];
-  events: Array<EmoteEvent>;
+  events: EmoteEvent[];
   flags: EmoteFlags;
   id: Scalars['Id']['output'];
-  images: Array<Image>;
+  images: Image[];
   imagesPending: Scalars['Boolean']['output'];
-  inEmoteSets: Array<EmoteInEmoteSetResponse>;
+  inEmoteSets: EmoteInEmoteSetResponse[];
   owner?: Maybe<User>;
   ownerId: Scalars['Id']['output'];
   ranking?: Maybe<Scalars['Int']['output']>;
   scores: EmoteScores;
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Array<Scalars['String']['output']>;
+  tags: Scalars['String']['output'][];
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -276,7 +276,7 @@ export type EmoteEventsArgs = {
 };
 
 export type EmoteInEmoteSetsArgs = {
-  emoteSetIds: Array<Scalars['Id']['input']>;
+  emoteSetIds: Scalars['Id']['input'][];
 };
 
 export type EmoteRankingArgs = {
@@ -292,12 +292,12 @@ export type EmoteAttribution = {
 
 export type EmoteBatchOperation = {
   __typename?: 'EmoteBatchOperation';
-  delete: Array<Emote>;
-  flags: Array<Emote>;
-  merge: Array<Emote>;
-  name: Array<Emote>;
-  owner: Array<Emote>;
-  tags: Array<Emote>;
+  delete: Emote[];
+  flags: Emote[];
+  merge: Emote[];
+  name: Emote[];
+  owner: Emote[];
+  tags: Emote[];
 };
 
 export type EmoteBatchOperationDeleteArgs = {
@@ -321,7 +321,7 @@ export type EmoteBatchOperationOwnerArgs = {
 };
 
 export type EmoteBatchOperationTagsArgs = {
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
 };
 
 export type EmoteEvent = {
@@ -381,7 +381,7 @@ export type EmoteMutationEmoteArgs = {
 };
 
 export type EmoteMutationEmotesArgs = {
-  ids: Array<Scalars['Id']['input']>;
+  ids: Scalars['Id']['input'][];
 };
 
 export type EmoteOperation = {
@@ -411,7 +411,7 @@ export type EmoteOperationOwnerArgs = {
 };
 
 export type EmoteOperationTagsArgs = {
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
 };
 
 export type EmotePermission = {
@@ -457,7 +457,7 @@ export type EmoteScores = {
 
 export type EmoteSearchResult = {
   __typename?: 'EmoteSearchResult';
-  items: Array<Emote>;
+  items: Emote[];
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -473,7 +473,7 @@ export type EmoteSet = {
   owner?: Maybe<User>;
   ownerId?: Maybe<Scalars['Id']['output']>;
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Array<Scalars['String']['output']>;
+  tags: Scalars['String']['output'][];
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -512,7 +512,7 @@ export type EmoteSetEmoteId = {
 
 export type EmoteSetEmoteSearchResult = {
   __typename?: 'EmoteSetEmoteSearchResult';
-  items: Array<EmoteSetEmote>;
+  items: EmoteSetEmote[];
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -546,7 +546,7 @@ export type EmoteSetMutation = {
 export type EmoteSetMutationCreateArgs = {
   name: Scalars['String']['input'];
   ownerId?: InputMaybe<Scalars['Id']['input']>;
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
 };
 
 export type EmoteSetMutationEmoteSetArgs = {
@@ -584,7 +584,7 @@ export type EmoteSetOperationRemoveEmoteArgs = {
 };
 
 export type EmoteSetOperationTagsArgs = {
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
 };
 
 export type EmoteSetOperationUpdateEmoteAliasArgs = {
@@ -611,7 +611,7 @@ export type EmoteSetPermission = {
 export type EmoteSetQuery = {
   __typename?: 'EmoteSetQuery';
   emoteSet?: Maybe<EmoteSet>;
-  emoteSets: Array<EmoteSet>;
+  emoteSets: EmoteSet[];
   global: EmoteSet;
 };
 
@@ -620,7 +620,7 @@ export type EmoteSetQueryEmoteSetArgs = {
 };
 
 export type EmoteSetQueryEmoteSetsArgs = {
-  ids: Array<Scalars['Id']['input']>;
+  ids: Scalars['Id']['input'][];
 };
 
 export type EntitlementEdgeAnyAny = {
@@ -777,8 +777,8 @@ export type EventEmoteDataChangeOwner = {
 
 export type EventEmoteDataChangeTags = {
   __typename?: 'EventEmoteDataChangeTags';
-  newTags: Array<Scalars['String']['output']>;
-  oldTags: Array<Scalars['String']['output']>;
+  newTags: Scalars['String']['output'][];
+  oldTags: Scalars['String']['output'][];
 };
 
 export type EventEmoteDataDelete = {
@@ -835,8 +835,8 @@ export type EventEmoteSetDataChangeName = {
 
 export type EventEmoteSetDataChangeTags = {
   __typename?: 'EventEmoteSetDataChangeTags';
-  newTags: Array<Scalars['String']['output']>;
-  oldTags: Array<Scalars['String']['output']>;
+  newTags: Scalars['String']['output'][];
+  oldTags: Scalars['String']['output'][];
 };
 
 export type EventEmoteSetDataCreate = {
@@ -1016,14 +1016,14 @@ export type Paint = {
   id: Scalars['Id']['output'];
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Array<Scalars['String']['output']>;
+  tags: Scalars['String']['output'][];
   updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PaintData = {
   __typename?: 'PaintData';
-  layers: Array<PaintLayer>;
-  shadows: Array<PaintShadow>;
+  layers: PaintLayer[];
+  shadows: PaintShadow[];
 };
 
 export type PaintGradientStop = {
@@ -1047,21 +1047,21 @@ export type PaintLayerType =
 
 export type PaintLayerTypeImage = {
   __typename?: 'PaintLayerTypeImage';
-  images: Array<Image>;
+  images: Image[];
 };
 
 export type PaintLayerTypeLinearGradient = {
   __typename?: 'PaintLayerTypeLinearGradient';
   angle: Scalars['Int']['output'];
   repeating: Scalars['Boolean']['output'];
-  stops: Array<PaintGradientStop>;
+  stops: PaintGradientStop[];
 };
 
 export type PaintLayerTypeRadialGradient = {
   __typename?: 'PaintLayerTypeRadialGradient';
   repeating: Scalars['Boolean']['output'];
   shape: PaintRadialGradientShape;
-  stops: Array<PaintGradientStop>;
+  stops: PaintGradientStop[];
 };
 
 export type PaintLayerTypeSingleColor = {
@@ -1079,7 +1079,7 @@ export type PaintPermission = {
 export type PaintQuery = {
   __typename?: 'PaintQuery';
   paint?: Maybe<Paint>;
-  paints: Array<Paint>;
+  paints: Paint[];
 };
 
 export type PaintQueryPaintArgs = {
@@ -1155,7 +1155,7 @@ export type ProductMutationCreateArgs = {
 export type ProductQuery = {
   __typename?: 'ProductQuery';
   subscriptionProduct?: Maybe<SubscriptionProduct>;
-  subscriptionProducts: Array<SubscriptionProduct>;
+  subscriptionProducts: SubscriptionProduct[];
 };
 
 export type ProductQuerySubscriptionProductArgs = {
@@ -1198,8 +1198,8 @@ export enum Ranking {
 
 export type RawEntitlements = {
   __typename?: 'RawEntitlements';
-  edges: Array<EntitlementEdgeAnyAny>;
-  nodes: Array<EntitlementNodeAny>;
+  edges: EntitlementEdgeAnyAny[];
+  nodes: EntitlementNodeAny[];
 };
 
 export type RedeemCode = {
@@ -1216,14 +1216,14 @@ export type RedeemCode = {
   remainingUses: Scalars['Int']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
   subscriptionEffect?: Maybe<RedeemCodeSubscriptionEffect>;
-  tags: Array<Scalars['String']['output']>;
+  tags: Scalars['String']['output'][];
   updatedAt: Scalars['DateTime']['output'];
 };
 
 export type RedeemCodeMutation = {
   __typename?: 'RedeemCodeMutation';
   create: RedeemCode;
-  createBatch: Array<RedeemCode>;
+  createBatch: RedeemCode[];
   redeemCode: RedeemCodeOperation;
 };
 
@@ -1263,7 +1263,7 @@ export type RedeemCodeQueryRedeemCodesArgs = {
 
 export type RedeemCodeSearchResult = {
   __typename?: 'RedeemCodeSearchResult';
-  items: Array<RedeemCode>;
+  items: RedeemCode[];
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -1296,7 +1296,7 @@ export type Role = {
   id: Scalars['Id']['output'];
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Array<Scalars['String']['output']>;
+  tags: Scalars['String']['output'][];
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -1309,7 +1309,7 @@ export type RolePermission = {
 
 export type RoleQuery = {
   __typename?: 'RoleQuery';
-  roles: Array<Role>;
+  roles: Role[];
 };
 
 export type SearchQuery = {
@@ -1360,7 +1360,7 @@ export type SpecialEvent = {
   id: Scalars['Id']['output'];
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Array<Scalars['String']['output']>;
+  tags: Scalars['String']['output'][];
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -1375,12 +1375,12 @@ export type SpecialEventMutationCreateArgs = {
 
 export type SpecialEventQuery = {
   __typename?: 'SpecialEventQuery';
-  specialEvents: Array<SpecialEvent>;
+  specialEvents: SpecialEvent[];
 };
 
 export type StoreQuery = {
   __typename?: 'StoreQuery';
-  monthlyPaints: Array<Paint>;
+  monthlyPaints: Paint[];
 };
 
 export type SubscribeResponse = {
@@ -1414,7 +1414,7 @@ export type SubscriptionInfo = {
   __typename?: 'SubscriptionInfo';
   activePeriod?: Maybe<SubscriptionPeriod>;
   endDate?: Maybe<Scalars['DateTime']['output']>;
-  periods: Array<SubscriptionPeriod>;
+  periods: SubscriptionPeriod[];
   totalDays: Scalars['Int']['output'];
 };
 
@@ -1460,7 +1460,7 @@ export type SubscriptionPeriodCreatedBySystem = {
 
 export type SubscriptionProduct = {
   __typename?: 'SubscriptionProduct';
-  benefits: Array<SubscriptionBenefit>;
+  benefits: SubscriptionBenefit[];
   defaultVariant: SubscriptionProductVariant;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['Id']['output'];
@@ -1468,7 +1468,7 @@ export type SubscriptionProduct = {
   providerId: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
   updatedAt: Scalars['DateTime']['output'];
-  variants: Array<SubscriptionProductVariant>;
+  variants: SubscriptionProductVariant[];
 };
 
 export enum SubscriptionProductKind {
@@ -1501,7 +1501,7 @@ export enum SubscriptionState {
 
 export type Tags = {
   match: TagsMatch;
-  tags: Array<Scalars['String']['input']>;
+  tags: Scalars['String']['input'][];
 };
 
 export enum TagsMatch {
@@ -1516,12 +1516,12 @@ export type Ticket = {
   id: Scalars['Id']['output'];
   kind: TicketKind;
   locked: Scalars['Boolean']['output'];
-  members: Array<TicketMember>;
+  members: TicketMember[];
   open: Scalars['Boolean']['output'];
   priority: TicketPriority;
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Array<Scalars['String']['output']>;
-  targets: Array<TicketTarget>;
+  tags: Scalars['String']['output'][];
+  targets: TicketTarget[];
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -1605,28 +1605,28 @@ export type TimePeriodInput = {
 export type User = {
   __typename?: 'User';
   billing: Billing;
-  connections: Array<UserConnection>;
+  connections: UserConnection[];
   createdAt: Scalars['DateTime']['output'];
-  editableEmoteSetIds: Array<Scalars['Id']['output']>;
-  editorFor: Array<UserEditor>;
-  editors: Array<UserEditor>;
-  emoteSets: Array<EmoteSet>;
-  events: Array<UserEvent>;
+  editableEmoteSetIds: Scalars['Id']['output'][];
+  editorFor: UserEditor[];
+  editors: UserEditor[];
+  emoteSets: EmoteSet[];
+  events: UserEvent[];
   highestRoleColor?: Maybe<Color>;
   highestRoleRank: Scalars['Int']['output'];
   id: Scalars['Id']['output'];
   inventory: UserInventory;
   mainConnection?: Maybe<UserConnection>;
-  ownedEmoteSets: Array<EmoteSet>;
-  ownedEmotes: Array<Emote>;
+  ownedEmoteSets: EmoteSet[];
+  ownedEmotes: Emote[];
   permissions: Permissions;
   personalEmoteSet?: Maybe<EmoteSet>;
   rawEntitlements: RawEntitlements;
-  relatedEvents: Array<AnyEvent>;
-  roleIds: Array<Scalars['Id']['output']>;
-  roles: Array<Role>;
+  relatedEvents: AnyEvent[];
+  roleIds: Scalars['Id']['output'][];
+  roles: Role[];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  specialEmoteSets: Array<EmoteSet>;
+  specialEmoteSets: EmoteSet[];
   stripeCustomerId?: Maybe<Scalars['CustomerId']['output']>;
   style: UserStyle;
   updatedAt: Scalars['DateTime']['output'];
@@ -1750,9 +1750,9 @@ export type UserEvent = {
 
 export type UserInventory = {
   __typename?: 'UserInventory';
-  badges: Array<InventoryEntitlementEdgeAnyBadge>;
-  paints: Array<InventoryEntitlementEdgeAnyPaint>;
-  products: Array<InventoryEntitlementEdgeAnyProduct>;
+  badges: InventoryEntitlementEdgeAnyBadge[];
+  paints: InventoryEntitlementEdgeAnyPaint[];
+  products: InventoryEntitlementEdgeAnyProduct[];
 };
 
 export type UserMutation = {
@@ -1822,7 +1822,7 @@ export type UserPermission = {
 export type UserProfilePicture = {
   __typename?: 'UserProfilePicture';
   id: Scalars['Id']['output'];
-  images: Array<Image>;
+  images: Image[];
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['Id']['output'];
 };
@@ -1852,7 +1852,7 @@ export type UserQueryUserByConnectionArgs = {
 
 export type UserSearchResult = {
   __typename?: 'UserSearchResult';
-  items: Array<User>;
+  items: User[];
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -1909,11 +1909,11 @@ export type BadgeQueryQuery = {
       id: string;
       name: string;
       description?: string | null;
-      tags: Array<string>;
+      tags: string[];
       createdById: string;
       updatedAt: string;
       searchUpdatedAt?: string | null;
-      images: Array<{
+      images: {
         __typename?: 'Image';
         url: string;
         mime: string;
@@ -1922,7 +1922,7 @@ export type BadgeQueryQuery = {
         width: number;
         height: number;
         frameCount: number;
-      }>;
+      }[];
     } | null;
   };
 };
@@ -1933,16 +1933,16 @@ export type BadgesQueryQuery = {
   __typename?: 'Query';
   badges: {
     __typename?: 'BadgeQuery';
-    badges: Array<{
+    badges: {
       __typename?: 'Badge';
       id: string;
       name: string;
       description?: string | null;
-      tags: Array<string>;
+      tags: string[];
       createdById: string;
       updatedAt: string;
       searchUpdatedAt?: string | null;
-      images: Array<{
+      images: {
         __typename?: 'Image';
         url: string;
         mime: string;
@@ -1951,8 +1951,8 @@ export type BadgesQueryQuery = {
         width: number;
         height: number;
         frameCount: number;
-      }>;
-    }>;
+      }[];
+    }[];
   };
 };
 
@@ -1968,14 +1968,14 @@ export type EmoteQueryQuery = {
       __typename?: 'Emote';
       id: string;
       defaultName: string;
-      tags: Array<string>;
+      tags: string[];
       flags: {
         __typename?: 'EmoteFlags';
         animated: boolean;
         defaultZeroWidth: boolean;
         publicListed: boolean;
       };
-      images: Array<{
+      images: {
         __typename?: 'Image';
         url: string;
         mime: string;
@@ -1984,7 +1984,7 @@ export type EmoteQueryQuery = {
         width: number;
         height: number;
         frameCount: number;
-      }>;
+      }[];
       owner?: {
         __typename?: 'User';
         id: string;
@@ -2016,7 +2016,7 @@ export type EmoteSetCustomQuery = {
       emotes: {
         __typename?: 'EmoteSetEmoteSearchResult';
         totalCount: number;
-        items: Array<{
+        items: {
           __typename?: 'EmoteSetEmote';
           id: string;
           alias: string;
@@ -2024,9 +2024,9 @@ export type EmoteSetCustomQuery = {
           emote: {
             __typename?: 'Emote';
             id: string;
-            tags: Array<string>;
+            tags: string[];
             aspectRatio: number;
-            images: Array<{
+            images: {
               __typename?: 'Image';
               url: string;
               mime: string;
@@ -2035,10 +2035,10 @@ export type EmoteSetCustomQuery = {
               width: number;
               height: number;
               frameCount: number;
-            }>;
+            }[];
           };
           flags: { __typename?: 'EmoteSetEmoteFlags'; zeroWidth: boolean };
-        }>;
+        }[];
       };
     } | null;
   };
@@ -2057,17 +2057,17 @@ export type PaintQueryQuery = {
       id: string;
       name: string;
       description?: string | null;
-      tags: Array<string>;
+      tags: string[];
       createdById: string;
       updatedAt: string;
       data: {
         __typename?: 'PaintData';
-        layers: Array<{
+        layers: {
           __typename?: 'PaintLayer';
           id: string;
           opacity: number;
-        }>;
-        shadows: Array<{
+        }[];
+        shadows: {
           __typename?: 'PaintShadow';
           offsetX: number;
           offsetY: number;
@@ -2080,7 +2080,7 @@ export type PaintQueryQuery = {
             b: number;
             a: number;
           };
-        }>;
+        }[];
       };
     } | null;
   };
@@ -2092,22 +2092,22 @@ export type PaintsQueryQuery = {
   __typename?: 'Query';
   paints: {
     __typename?: 'PaintQuery';
-    paints: Array<{
+    paints: {
       __typename?: 'Paint';
       id: string;
       name: string;
       description?: string | null;
-      tags: Array<string>;
+      tags: string[];
       createdById: string;
       updatedAt: string;
       data: {
         __typename?: 'PaintData';
-        layers: Array<{
+        layers: {
           __typename?: 'PaintLayer';
           id: string;
           opacity: number;
-        }>;
-        shadows: Array<{
+        }[];
+        shadows: {
           __typename?: 'PaintShadow';
           offsetX: number;
           offsetY: number;
@@ -2120,9 +2120,9 @@ export type PaintsQueryQuery = {
             b: number;
             a: number;
           };
-        }>;
+        }[];
       };
-    }>;
+    }[];
   };
 };
 
@@ -2137,12 +2137,12 @@ export type UserByConnectionQuery = {
     userByConnection?: {
       __typename?: 'User';
       id: string;
-      emoteSets: Array<{
+      emoteSets: {
         __typename?: 'EmoteSet';
         id: string;
         name: string;
         kind: EmoteSetKind;
-      }>;
+      }[];
     } | null;
   };
 };
@@ -2158,12 +2158,12 @@ export type UserCosmeticsQuery = {
     user?: {
       __typename?: 'User';
       id: string;
-      connections: Array<{
+      connections: {
         __typename?: 'UserConnection';
         platform: Platform;
         platformId: string;
         platformDisplayName: string;
-      }>;
+      }[];
       style: {
         __typename?: 'UserStyle';
         activePaintId?: string | null;
@@ -2174,14 +2174,14 @@ export type UserCosmeticsQuery = {
           name: string;
           data: {
             __typename?: 'PaintData';
-            layers: Array<{
+            layers: {
               __typename?: 'PaintLayer';
               id: string;
               opacity: number;
               ty:
                 | {
                     __typename?: 'PaintLayerTypeImage';
-                    images: Array<{
+                    images: {
                       __typename?: 'Image';
                       url: string;
                       mime: string;
@@ -2190,13 +2190,13 @@ export type UserCosmeticsQuery = {
                       width: number;
                       height: number;
                       frameCount: number;
-                    }>;
+                    }[];
                   }
                 | {
                     __typename?: 'PaintLayerTypeLinearGradient';
                     angle: number;
                     repeating: boolean;
-                    stops: Array<{
+                    stops: {
                       __typename?: 'PaintGradientStop';
                       at: number;
                       color: {
@@ -2206,13 +2206,13 @@ export type UserCosmeticsQuery = {
                         b: number;
                         a: number;
                       };
-                    }>;
+                    }[];
                   }
                 | {
                     __typename?: 'PaintLayerTypeRadialGradient';
                     repeating: boolean;
                     shape: PaintRadialGradientShape;
-                    stops: Array<{
+                    stops: {
                       __typename?: 'PaintGradientStop';
                       at: number;
                       color: {
@@ -2222,7 +2222,7 @@ export type UserCosmeticsQuery = {
                         b: number;
                         a: number;
                       };
-                    }>;
+                    }[];
                   }
                 | {
                     __typename?: 'PaintLayerTypeSingleColor';
@@ -2234,8 +2234,8 @@ export type UserCosmeticsQuery = {
                       a: number;
                     };
                   };
-            }>;
-            shadows: Array<{
+            }[];
+            shadows: {
               __typename?: 'PaintShadow';
               offsetX: number;
               offsetY: number;
@@ -2247,7 +2247,7 @@ export type UserCosmeticsQuery = {
                 b: number;
                 a: number;
               };
-            }>;
+            }[];
           };
         } | null;
         activeBadge?: {
@@ -2255,7 +2255,7 @@ export type UserCosmeticsQuery = {
           id: string;
           name: string;
           description?: string | null;
-          images: Array<{
+          images: {
             __typename?: 'Image';
             url: string;
             mime: string;
@@ -2264,7 +2264,7 @@ export type UserCosmeticsQuery = {
             width: number;
             height: number;
             frameCount: number;
-          }>;
+          }[];
         } | null;
       };
     } | null;
@@ -2288,7 +2288,7 @@ export type UserPersonalEmotesQueryQuery = {
         name: string;
         emotes: {
           __typename?: 'EmoteSetEmoteSearchResult';
-          items: Array<{
+          items: {
             __typename?: 'EmoteSetEmote';
             id: string;
             alias: string;
@@ -2302,7 +2302,7 @@ export type UserPersonalEmotesQueryQuery = {
                 approvedPersonal: boolean;
                 defaultZeroWidth: boolean;
               };
-              images: Array<{
+              images: {
                 __typename?: 'Image';
                 url: string;
                 mime: string;
@@ -2311,7 +2311,7 @@ export type UserPersonalEmotesQueryQuery = {
                 width: number;
                 height: number;
                 frameCount: number;
-              }>;
+              }[];
               owner?: {
                 __typename?: 'User';
                 id: string;
@@ -2321,7 +2321,7 @@ export type UserPersonalEmotesQueryQuery = {
                 } | null;
               } | null;
             };
-          }>;
+          }[];
         };
       } | null;
     } | null;
