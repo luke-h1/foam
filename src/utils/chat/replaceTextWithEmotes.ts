@@ -340,10 +340,17 @@ function getSortedEmoteNames(emoteMap: Map<string, SanitisedEmote>): string[] {
 export const SEVENTV_EMOTE_LINK_REGEX =
   /https?:\/\/(?:www\.)?7tv\.app\/emotes\/([a-zA-Z0-9]+)/i;
 export const TWITCH_CLIP_REGEX =
-  /https?:\/\/(?:www\.)?clips\.twitch\.tv\/([a-zA-Z0-9-]+)/i;
+  /https?:\/\/(?:www\.)?clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/i;
 
 export const TWITCH_CHANNEL_CLIP_REGEX =
-  /https?:\/\/(?:www\.)?twitch\.tv\/[a-zA-Z0-9_]+\/clip\/([a-zA-Z0-9-]+)/i;
+  /https?:\/\/(?:www\.)?twitch\.tv\/(?:[a-zA-Z0-9_]+\/)?clip\/([a-zA-Z0-9_-]+)/i;
+
+export function getTwitchClipIdFromUrl(url: string): string | null {
+  const twitchClipMatch = url.match(TWITCH_CLIP_REGEX);
+  const twitchChannelClipMatch = url.match(TWITCH_CHANNEL_CLIP_REGEX);
+
+  return twitchClipMatch?.[1] ?? twitchChannelClipMatch?.[1] ?? null;
+}
 
 function parseLink(url: string): ParsedPart | null {
   const sevenTvMatch = url.match(SEVENTV_EMOTE_LINK_REGEX);
@@ -355,9 +362,7 @@ function parseLink(url: string): ParsedPart | null {
     };
   }
 
-  const twitchClipMatch = url.match(TWITCH_CLIP_REGEX);
-  const twitchChannelClipMatch = url.match(TWITCH_CHANNEL_CLIP_REGEX);
-  const clipId = twitchClipMatch?.[1] ?? twitchChannelClipMatch?.[1] ?? '';
+  const clipId = getTwitchClipIdFromUrl(url);
 
   if (clipId) {
     return {

@@ -233,6 +233,38 @@ describe('StreamPlayer component messaging', () => {
     );
   });
 
+  test('uses the Twitch clip embed URL for clips', () => {
+    const onWebViewLoaded = jest.fn();
+
+    render(
+      <StreamPlayer
+        clip="AnimatedOptimisticWasabiVoteNay"
+        height={200}
+        muted={false}
+        onWebViewLoaded={onWebViewLoaded}
+        width={300}
+      />,
+    );
+
+    expect(latestWebViewProps().source).toEqual({
+      uri: 'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
+    });
+
+    const { onLoadEnd } = latestWebViewProps();
+    act(() => {
+      (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
+        nativeEvent: {
+          url: 'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
+        },
+      });
+    });
+
+    expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('const shouldAutoplay = true'),
+    );
+  });
+
   test('keeps external auth windows inside the current WebView', () => {
     render(
       <StreamPlayer

@@ -1,27 +1,27 @@
-import { bttvEmoteService } from "@app/services/bttv-emote-service";
-import { chatterinoService } from "@app/services/chatterino-service";
-import { ffzService } from "@app/services/ffz-service";
-import { sevenTvService } from "@app/services/seventv-service";
-import { twitchBadgeService } from "@app/services/twitch-badge-service";
-import type { SanitisedBadgeSet } from "@app/services/twitch-badge-service";
-import { twitchEmoteService } from "@app/services/twitch-emote-service";
-import type { SanitisedEmote } from "@app/types/emote";
-import { logger } from "@app/utils/logger";
-import { recordInfo, startSpanAsync } from "@app/lib/sentry";
-import { clearChatStorePersistence } from "@app/lib/observablePersistence";
-import { getEmojiEmotes } from "@app/utils/emoji/emojiEmotes";
-import { batch } from "@legendapp/state";
+import { bttvEmoteService } from '@app/services/bttv-emote-service';
+import { chatterinoService } from '@app/services/chatterino-service';
+import { ffzService } from '@app/services/ffz-service';
+import { sevenTvService } from '@app/services/seventv-service';
+import { twitchBadgeService } from '@app/services/twitch-badge-service';
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import type { SanitisedEmote } from '@app/types/emote';
+import { logger } from '@app/utils/logger';
+import { recordInfo, startSpanAsync } from '@app/lib/sentry';
+import { clearChatStorePersistence } from '@app/lib/observablePersistence';
+import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
+import { batch } from '@legendapp/state';
 
-import { getPreferences } from "../preferenceStore";
-import { clearPaintsAndBadges } from "./cosmetics";
-import type { ChannelCacheType } from "./constants";
+import { getPreferences } from '../preferenceStore';
+import { clearPaintsAndBadges } from './cosmetics';
+import type { ChannelCacheType } from './constants';
 import {
   BADGE_CACHE_DURATION,
   CACHE_DURATION,
   emptyEmoteData,
-} from "./constants";
-import { clearEmoteImageCache } from "./emoteImages";
-import { chatStore$, limitChannelCaches } from "./state";
+} from './constants';
+import { clearEmoteImageCache } from './emoteImages';
+import { chatStore$, limitChannelCaches } from './state';
 
 const channelLoadAbort = (() => {
   let current: AbortController | null = null;
@@ -29,7 +29,7 @@ const channelLoadAbort = (() => {
     startNext(): AbortController {
       if (current) {
         current.abort();
-        logger.main.info("🚫 Aborted previous load request");
+        logger.main.info('🚫 Aborted previous load request');
       }
       current = new AbortController();
       return current;
@@ -40,7 +40,7 @@ const channelLoadAbort = (() => {
       }
       current.abort();
       current = null;
-      logger.main.info("🚫 Aborted current load request");
+      logger.main.info('🚫 Aborted current load request');
     },
   };
 })();
@@ -58,7 +58,7 @@ const exitIfAborted = (
     return false;
   }
   if (resetLoading) {
-    chatStore$.loadingState.set("IDLE");
+    chatStore$.loadingState.set('IDLE');
   }
   return true;
 };
@@ -142,7 +142,7 @@ export const clearPersonalEmotesCache = () => {
 export const clearChannelResources = () => {
   batch(() => {
     chatStore$.currentChannelId.set(null);
-    chatStore$.loadingState.set("IDLE");
+    chatStore$.loadingState.set('IDLE');
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
     chatStore$.bits.set([]);
   });
@@ -155,7 +155,7 @@ export const notify7TVPresence = async (
 ): Promise<void> => {
   if (!twitchUserId || !twitchChannelId) {
     logger.stvWs.debug(
-      "Skipping 7TV presence notification: missing user or channel ID",
+      'Skipping 7TV presence notification: missing user or channel ID',
     );
     return;
   }
@@ -191,32 +191,32 @@ type Identifiable = { id: string };
 
 type EmoteResourceSets = Pick<
   ChannelCacheType,
-  | "twitchChannelEmotes"
-  | "twitchGlobalEmotes"
-  | "twitchSubscriberEmotes"
-  | "sevenTvChannelEmotes"
-  | "sevenTvGlobalEmotes"
-  | "bttvGlobalEmotes"
-  | "bttvChannelEmotes"
-  | "ffzChannelEmotes"
-  | "ffzGlobalEmotes"
+  | 'twitchChannelEmotes'
+  | 'twitchGlobalEmotes'
+  | 'twitchSubscriberEmotes'
+  | 'sevenTvChannelEmotes'
+  | 'sevenTvGlobalEmotes'
+  | 'bttvGlobalEmotes'
+  | 'bttvChannelEmotes'
+  | 'ffzChannelEmotes'
+  | 'ffzGlobalEmotes'
 >;
 
 type BadgeResourceSets = Pick<
   ChannelCacheType,
-  | "twitchChannelBadges"
-  | "twitchGlobalBadges"
-  | "ffzGlobalBadges"
-  | "ffzChannelBadges"
-  | "chatterinoBadges"
+  | 'twitchChannelBadges'
+  | 'twitchGlobalBadges'
+  | 'ffzGlobalBadges'
+  | 'ffzChannelBadges'
+  | 'chatterinoBadges'
 >;
 
 const deduplicateById = <T extends Identifiable>(items: readonly T[]): T[] =>
-  Array.from(new Map(items.map((item) => [item.id, item])).values());
+  Array.from(new Map(items.map(item => [item.id, item])).values());
 
 const getSettledValue = <T>(
   result: PromiseSettledResult<T[]> | undefined,
-): T[] => (result?.status === "fulfilled" ? result.value : []);
+): T[] => (result?.status === 'fulfilled' ? result.value : []);
 
 const getDedupedSettledValue = <T extends Identifiable>(
   result: PromiseSettledResult<T[]> | undefined,
@@ -235,7 +235,7 @@ const loadChannelResourcesInternal = async (
   if (signal?.aborted) {
     return false;
   }
-  chatStore$.loadingState.set("LOADING");
+  chatStore$.loadingState.set('LOADING');
   try {
     if (!shouldForceRefresh) {
       const caches = chatStore$.persisted.channelCaches.peek();
@@ -282,7 +282,7 @@ const loadChannelResourcesInternal = async (
               if (channelCache) {
                 channelCache.assign({
                   sevenTvEmoteSetId:
-                    sevenTvSetId === "global" ? undefined : sevenTvSetId,
+                    sevenTvSetId === 'global' ? undefined : sevenTvSetId,
                 });
               }
             } catch (error) {
@@ -290,7 +290,7 @@ const loadChannelResourcesInternal = async (
                 return false;
               }
               logger.chat.warn(
-                "Failed to get 7TV emote set ID for cached data:",
+                'Failed to get 7TV emote set ID for cached data:',
                 error,
               );
             }
@@ -373,22 +373,22 @@ const loadChannelResourcesInternal = async (
               });
             }
             recordInfo({
-              name: "DataLoadingInfo",
-              message: "Refetched badges (1h TTL); using cached emotes",
+              name: 'DataLoadingInfo',
+              message: 'Refetched badges (1h TTL); using cached emotes',
               params: {
-                category: "DataLoading",
-                action: "badges_refetched_cached_emotes",
+                category: 'DataLoading',
+                action: 'badges_refetched_cached_emotes',
                 channelId,
                 badgeCacheAge,
               },
             });
           } else {
             recordInfo({
-              name: "DataLoadingInfo",
-              message: "Using cached channel resources",
+              name: 'DataLoadingInfo',
+              message: 'Using cached channel resources',
               params: {
-                category: "DataLoading",
-                action: "cached_channel_resources_used",
+                category: 'DataLoading',
+                action: 'cached_channel_resources_used',
                 channelId,
                 cacheAge,
               },
@@ -396,7 +396,7 @@ const loadChannelResourcesInternal = async (
           }
           batch(() => {
             chatStore$.currentChannelId.set(channelId);
-            chatStore$.loadingState.set("COMPLETED");
+            chatStore$.loadingState.set('COMPLETED');
           });
           if (twitchUserId) {
             void notify7TVPresence(twitchUserId, channelId);
@@ -412,12 +412,12 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    let sevenTvSetId = "global";
+    let sevenTvSetId = 'global';
 
     try {
       sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
     } catch (error) {
-      logger.chat.warn("Failed to get 7TV emote set ID:", error);
+      logger.chat.warn('Failed to get 7TV emote set ID:', error);
     }
 
     if (exitIfAborted(signal, true)) {
@@ -440,12 +440,12 @@ const loadChannelResourcesInternal = async (
       ffzChannelBadges,
       chatterinoBadges,
     ] = await startSpanAsync(
-      "fetch-emotes-and-badges",
-      "http.client",
+      'fetch-emotes-and-badges',
+      'http.client',
       () =>
         Promise.allSettled([
           sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
-          sevenTvService.getSanitisedEmoteSet("global"),
+          sevenTvService.getSanitisedEmoteSet('global'),
           twitchEmoteService.getChannelEmotes(channelId),
           twitchEmoteService.getGlobalEmotes(),
           twitchUserId
@@ -522,7 +522,7 @@ const loadChannelResourcesInternal = async (
       ...badgeResourceSets,
       sevenTvPersonalBadges: {},
       sevenTvPersonalEmotes: {},
-      sevenTvEmoteSetId: sevenTvSetId === "global" ? undefined : sevenTvSetId,
+      sevenTvEmoteSetId: sevenTvSetId === 'global' ? undefined : sevenTvSetId,
     };
 
     batch(() => {
@@ -533,7 +533,7 @@ const loadChannelResourcesInternal = async (
           channelId,
         ),
       );
-      chatStore$.loadingState.set("COMPLETED");
+      chatStore$.loadingState.set('COMPLETED');
     });
 
     if (twitchUserId) {
@@ -541,11 +541,11 @@ const loadChannelResourcesInternal = async (
     }
 
     recordInfo({
-      name: "DataLoadingInfo",
-      message: "Loaded channel resources",
+      name: 'DataLoadingInfo',
+      message: 'Loaded channel resources',
       params: {
-        category: "DataLoading",
-        action: "channel_resources_loaded",
+        category: 'DataLoading',
+        action: 'channel_resources_loaded',
         channelId,
         emoteCount: allEmotes.length,
         badgeCount: allBadges.length,
@@ -557,8 +557,8 @@ const loadChannelResourcesInternal = async (
     if (exitIfAborted(signal, true)) {
       return false;
     }
-    logger.chat.error("Error loading channel resources:", error);
-    chatStore$.loadingState.set("ERROR");
+    logger.chat.error('Error loading channel resources:', error);
+    chatStore$.loadingState.set('ERROR');
     return false;
   }
 };
@@ -568,7 +568,7 @@ export const loadChannelResources = async (
   forceRefresh = false,
 ): Promise<boolean> => {
   const opts: LoadChannelResourcesOptions =
-    typeof options === "string"
+    typeof options === 'string'
       ? { channelId: options, forceRefresh }
       : options;
 
@@ -580,8 +580,8 @@ export const loadChannelResources = async (
   } = opts;
 
   return startSpanAsync(
-    "load-channel-resources",
-    "chat.load",
+    'load-channel-resources',
+    'chat.load',
     () =>
       loadChannelResourcesInternal(
         channelId,
@@ -625,7 +625,7 @@ export const expireCache = (channelId?: string) => {
     }
   } else {
     const caches = chatStore$.persisted.channelCaches.peek() ?? {};
-    Object.keys(caches).forEach((id) => {
+    Object.keys(caches).forEach(id => {
       const cache = chatStore$.persisted.channelCaches[id];
       if (cache) {
         cache.lastUpdated.set(0);
@@ -652,7 +652,7 @@ export const clearCache = (channelId?: string) => {
       chatStore$.persisted.channelCaches.set({});
       chatStore$.persisted.lastGlobalUpdate.set(0);
       chatStore$.currentChannelId.set(null);
-      chatStore$.loadingState.set("IDLE");
+      chatStore$.loadingState.set('IDLE');
     });
   }
 };
@@ -662,7 +662,7 @@ export const clearAllCache = () => {
     chatStore$.persisted.channelCaches.set({});
     chatStore$.persisted.lastGlobalUpdate.set(0);
     chatStore$.currentChannelId.set(null);
-    chatStore$.loadingState.set("IDLE");
+    chatStore$.loadingState.set('IDLE');
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
     chatStore$.bits.set([]);
     chatStore$.ttvUsers.set([]);
@@ -677,7 +677,7 @@ export const clearChatCosmeticsCache = (): void => {
     chatStore$.persisted.recentMessagesByChannel.set({});
     chatStore$.persisted.lastGlobalUpdate.set(0);
     chatStore$.currentChannelId.set(null);
-    chatStore$.loadingState.set("IDLE");
+    chatStore$.loadingState.set('IDLE');
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
     chatStore$.bits.set([]);
     chatStore$.ttvUsers.set([]);

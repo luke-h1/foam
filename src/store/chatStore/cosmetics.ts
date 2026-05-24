@@ -1,23 +1,23 @@
-import { PaintRadialGradientShape } from "@app/graphql/generated/gql";
+import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import {
   V4Badge,
   V4Paint,
   sevenTvService,
-} from "@app/services/seventv-service";
-import type { SanitisedBadgeSet } from "@app/services/twitch-badge-service";
-import { IndexedCollection } from "@app/services/ws/util/indexedCollection";
+} from '@app/services/seventv-service';
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import {
   type PaintData,
   type PaintFunction,
   type PaintShape,
   type PaintShadow,
-} from "@app/utils/color/seventv-ws-service";
-import { logger } from "@app/utils/logger";
-import { batch } from "@legendapp/state";
+} from '@app/utils/color/seventv-ws-service';
+import { logger } from '@app/utils/logger';
+import { batch } from '@legendapp/state';
 
-import type { UserPaint } from "./constants";
-import { MAX_COSMETIC_ENTRIES } from "./constants";
-import { chatStore$ } from "./state";
+import type { UserPaint } from './constants';
+import { MAX_COSMETIC_ENTRIES } from './constants';
+import { chatStore$ } from './state';
 
 const packRgba = (color: {
   r: number;
@@ -31,19 +31,19 @@ const packRgba = (color: {
 const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
   const firstLayer = paint.data.layers[0];
   const ty = firstLayer?.ty;
-  let paintFunction: PaintFunction = "LINEAR_GRADIENT";
+  let paintFunction: PaintFunction = 'LINEAR_GRADIENT';
   let angle = 0;
-  let shape: PaintShape = "circle";
+  let shape: PaintShape = 'circle';
   let repeat = false;
   let color: number | null = null;
-  let imageUrl = "";
+  let imageUrl = '';
 
   const stopsIndexed: IndexedCollection<{ at: number; color: number }> = {
     length: 0,
   };
   // eslint-disable-next-line no-underscore-dangle
   switch (ty?.__typename) {
-    case "PaintLayerTypeLinearGradient":
+    case 'PaintLayerTypeLinearGradient':
       angle = ty.angle;
       repeat = ty.repeating;
       ty.stops.forEach((stop, index) => {
@@ -52,24 +52,24 @@ const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
       stopsIndexed.length = ty.stops.length;
       break;
 
-    case "PaintLayerTypeRadialGradient":
-      paintFunction = "RADIAL_GRADIENT";
+    case 'PaintLayerTypeRadialGradient':
+      paintFunction = 'RADIAL_GRADIENT';
       repeat = ty.repeating;
       shape =
-        ty.shape === PaintRadialGradientShape.Ellipse ? "ellipse" : "circle";
+        ty.shape === PaintRadialGradientShape.Ellipse ? 'ellipse' : 'circle';
       ty.stops.forEach((stop, index) => {
         stopsIndexed[index] = { at: stop.at, color: packRgba(stop.color) };
       });
       stopsIndexed.length = ty.stops.length;
       break;
 
-    case "PaintLayerTypeSingleColor":
+    case 'PaintLayerTypeSingleColor':
       color = packRgba(ty.color);
       break;
 
-    case "PaintLayerTypeImage":
-      paintFunction = "URL";
-      imageUrl = ty.images[0]?.url ?? "";
+    case 'PaintLayerTypeImage':
+      paintFunction = 'URL';
+      imageUrl = ty.images[0]?.url ?? '';
       break;
 
     default:
@@ -106,17 +106,17 @@ const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
 
 const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
   const bestImage =
-    badge.images.find((img) => img.scale === 4) ??
-    badge.images.find((img) => img.scale === 3) ??
+    badge.images.find(img => img.scale === 4) ??
+    badge.images.find(img => img.scale === 3) ??
     badge.images[0];
 
   return {
     id: badge.id,
     url: bestImage?.url ?? `https://cdn.7tv.app/badge/${badge.id}/4x.webp`,
-    type: "7TV Badge",
+    type: '7TV Badge',
     title: badge.description || badge.name,
     set: badge.id,
-    provider: "7tv",
+    provider: '7tv',
   };
 };
 

@@ -17,7 +17,6 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
@@ -148,8 +147,8 @@ function ClipCard({
   width: number;
 }) {
   const handleView = useCallback(() => {
-    openLinkInBrowser(clip.url);
-  }, [clip.url]);
+    router.push(`/streams/clip/${encodeURIComponent(clip.id)}`);
+  }, [clip.id]);
 
   return (
     <View style={[styles.clipCard, { width }]}>

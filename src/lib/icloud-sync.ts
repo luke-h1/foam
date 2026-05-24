@@ -1,12 +1,12 @@
-import type { ICloudSyncNativeModule } from "@modules/icloud-sync";
-import type { Preferences } from "@app/store/preferenceStore";
+import type { ICloudSyncNativeModule } from '@modules/icloud-sync';
+import type { Preferences } from '@app/store/preferenceStore';
 
-const ICLOUD_PREFERENCES_KEY = "preferences.v1";
+const ICLOUD_PREFERENCES_KEY = 'preferences.v1';
 
 let cachedICloudSyncModule: ICloudSyncNativeModule | null | undefined;
 
 function getICloudSyncModule(): ICloudSyncNativeModule | null {
-  if (process.env.EXPO_OS !== "ios") {
+  if (process.env.EXPO_OS !== 'ios') {
     return null;
   }
 
@@ -17,7 +17,7 @@ function getICloudSyncModule(): ICloudSyncNativeModule | null {
   try {
     cachedICloudSyncModule =
       // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
-      require("@modules/icloud-sync").default ?? null;
+      require('@modules/icloud-sync').default ?? null;
   } catch {
     cachedICloudSyncModule = null;
   }

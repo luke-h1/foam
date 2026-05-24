@@ -1,13 +1,13 @@
-import { useSelector } from "@legendapp/state/react";
-import { useMemo } from "react";
+import { useSelector } from '@legendapp/state/react';
+import { useMemo } from 'react';
 
-import { usePreferences } from "../preferenceStore";
+import { usePreferences } from '../preferenceStore';
 import {
   emptyEmoteData,
   type ChannelCacheType,
   type UserPaint,
-} from "./constants";
-import { chatStore$ } from "./state";
+} from './constants';
+import { chatStore$ } from './state';
 
 export const useLoadingState = () => useSelector(chatStore$.loadingState);
 export const useCurrentChannelId = () =>

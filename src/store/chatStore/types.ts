@@ -1,21 +1,21 @@
-import type { SanitisedBadgeSet } from "@app/services/twitch-badge-service";
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 
-import type { ClearChatTags } from "@app/types/chat/irc-tags/clearchat";
-import type { ClearMsgTags } from "@app/types/chat/irc-tags/clearmsg";
-import type { GlobalUserStateTags } from "@app/types/chat/irc-tags/globaluserstate";
-import type { NoticeTags } from "@app/types/chat/irc-tags/notice";
-import type { NoticeVariants } from "@app/types/chat/irc-tags/noticevariant";
-import type { RoomStateTags } from "@app/types/chat/irc-tags/roomstate";
+import type { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
+import type { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
+import type { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
+import type { NoticeTags } from '@app/types/chat/irc-tags/notice';
+import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
+import type { RoomStateTags } from '@app/types/chat/irc-tags/roomstate';
 import type {
   UserNoticeTags,
   UserNoticeTagsByVariant,
   UserNoticeVariantMap,
-} from "@app/types/chat/irc-tags/usernotice";
-import type { UserStateTags } from "@app/types/chat/irc-tags/userstate";
-import type { SanitisedEmote } from "@app/types/emote";
-import type { ParsedPart } from "@app/utils/chat/replaceTextWithEmotes";
-import type { PaintData } from "@app/utils/color/seventv-ws-service";
-import type { ViewStyle } from "react-native";
+} from '@app/types/chat/irc-tags/usernotice';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { SanitisedEmote } from '@app/types/emote';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import type { ViewStyle } from 'react-native';
 
 export type { PaintData, SanitisedBadgeSet, SanitisedEmote };
 
@@ -54,7 +54,7 @@ export interface Bit {
 
 export interface ChatMessageType<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends "usernotice"
+  TVariant extends TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
     : never = never,
 > {
@@ -75,32 +75,32 @@ export interface ChatMessageType<
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;
-  notice_tags?: TNoticeType extends "userstate"
+  notice_tags?: TNoticeType extends 'userstate'
     ? UserStateTags
-    : TNoticeType extends "usernotice"
+    : TNoticeType extends 'usernotice'
       ? TVariant extends keyof UserNoticeVariantMap
         ? UserNoticeTagsByVariant<TVariant>
         : UserNoticeTags
-      : TNoticeType extends "clearchat"
+      : TNoticeType extends 'clearchat'
         ? ClearChatTags
-        : TNoticeType extends "clearmsg"
+        : TNoticeType extends 'clearmsg'
           ? ClearMsgTags
-          : TNoticeType extends "globalusernotice"
+          : TNoticeType extends 'globalusernotice'
             ? GlobalUserStateTags
-            : TNoticeType extends "roomstate"
+            : TNoticeType extends 'roomstate'
               ? RoomStateTags
-              : TNoticeType extends "notice"
+              : TNoticeType extends 'notice'
                 ? NoticeTags
                 : never;
 }
 
 export type ChatLoadingState =
-  | "IDLE"
-  | "RESTORING_FROM_CACHE"
-  | "RESTORED_FROM_CACHE"
-  | "LOADING"
-  | "COMPLETED"
-  | "ERROR";
+  | 'IDLE'
+  | 'RESTORING_FROM_CACHE'
+  | 'RESTORED_FROM_CACHE'
+  | 'LOADING'
+  | 'COMPLETED'
+  | 'ERROR';
 
 export interface ChannelCacheType {
   emotes: SanitisedEmote[];

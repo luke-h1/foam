@@ -1,5 +1,5 @@
-import { useAccentColor } from "@app/context/AccentColorContext";
-import { colors } from "@app/styles/colors";
+import { useAccentColor } from '@app/context/AccentColorContext';
+import { colors } from '@app/styles/colors';
 import {
   getColorValue,
   InputColorConfig,
@@ -7,8 +7,8 @@ import {
   UIColor,
   UIRadius,
   UISize,
-} from "@app/styles/ui";
-import { forwardRef, useMemo } from "react";
+} from '@app/styles/ui';
+import { forwardRef, useMemo } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -17,86 +17,86 @@ import {
   type TextStyle,
   type ViewStyle,
   useColorScheme,
-} from "react-native";
+} from 'react-native';
 
-type InputVariant = "outline" | "soft" | "subtle" | "underline";
+type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
 export type InputRef = TextInput;
 export type InputSelection = { start: number; end: number };
 
 const generateVariantConfig = (
   color: UIColor,
-  colorScheme: "light" | "dark",
+  colorScheme: 'light' | 'dark',
 ): Record<InputVariant, InputColorConfig> => {
-  const isDark = colorScheme === "dark";
+  const isDark = colorScheme === 'dark';
 
-  if (color === "black") {
-    const bgColor = getColorValue("black", 50);
-    const borderColor = getColorValue("black", 50);
-    const placeholderColor = getColorValue("black", isDark ? 800 : 300);
+  if (color === 'black') {
+    const bgColor = getColorValue('black', 50);
+    const borderColor = getColorValue('black', 50);
+    const placeholderColor = getColorValue('black', isDark ? 800 : 300);
 
     return {
       outline: {
-        backgroundColor: "transparent",
+        backgroundColor: 'transparent',
         borderColor,
-        textColor: getColorValue("black", 50),
+        textColor: getColorValue('black', 50),
         placeholderColor,
         borderWidth: 1,
       },
       soft: {
-        backgroundColor: `${bgColor}${isDark ? "20" : "10"}`,
-        borderColor: "transparent",
-        textColor: getColorValue("black", 50),
+        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
+        borderColor: 'transparent',
+        textColor: getColorValue('black', 50),
         placeholderColor,
         borderWidth: 0,
       },
       subtle: {
-        backgroundColor: `${bgColor}${isDark ? "20" : "10"}`,
+        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
         borderColor,
-        textColor: getColorValue("black", 50),
+        textColor: getColorValue('black', 50),
         placeholderColor,
         borderWidth: 1,
       },
       underline: {
-        backgroundColor: "transparent",
+        backgroundColor: 'transparent',
         borderColor,
-        textColor: getColorValue("black", 50),
+        textColor: getColorValue('black', 50),
         placeholderColor,
         borderWidth: 1,
       },
     };
   }
 
-  if (color === "white") {
-    const bgColor = getColorValue("white", 950);
-    const borderColor = getColorValue("white", 950);
-    const placeholderColor = getColorValue("white", isDark ? 800 : 300);
+  if (color === 'white') {
+    const bgColor = getColorValue('white', 950);
+    const borderColor = getColorValue('white', 950);
+    const placeholderColor = getColorValue('white', isDark ? 800 : 300);
 
     return {
       outline: {
-        backgroundColor: "transparent",
+        backgroundColor: 'transparent',
         borderColor,
-        textColor: getColorValue("white", 950),
+        textColor: getColorValue('white', 950),
         placeholderColor,
         borderWidth: 1,
       },
       soft: {
-        backgroundColor: `${bgColor}${isDark ? "20" : "10"}`,
-        borderColor: "transparent",
-        textColor: getColorValue("white", 950),
+        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
+        borderColor: 'transparent',
+        textColor: getColorValue('white', 950),
         placeholderColor,
         borderWidth: 0,
       },
       subtle: {
-        backgroundColor: `${bgColor}${isDark ? "20" : "10"}`,
+        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
         borderColor,
-        textColor: getColorValue("white", 950),
+        textColor: getColorValue('white', 950),
         placeholderColor,
         borderWidth: 1,
       },
       underline: {
-        backgroundColor: "transparent",
+        backgroundColor: 'transparent',
         borderColor,
-        textColor: getColorValue("white", 950),
+        textColor: getColorValue('white', 950),
         placeholderColor,
         borderWidth: 1,
       },
@@ -105,7 +105,7 @@ const generateVariantConfig = (
 
   return {
     outline: {
-      backgroundColor: "transparent",
+      backgroundColor: 'transparent',
       borderColor: getColorValue(color, isDark ? 500 : 600),
       textColor: getColorValue(color, isDark ? 500 : 600),
       placeholderColor: getColorValue(color, isDark ? 800 : 300),
@@ -113,16 +113,16 @@ const generateVariantConfig = (
     },
     soft: {
       backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? "20" : "10"
+        isDark ? '20' : '10'
       }`,
-      borderColor: "transparent",
+      borderColor: 'transparent',
       textColor: getColorValue(color, isDark ? 500 : 600),
       placeholderColor: getColorValue(color, isDark ? 800 : 300),
       borderWidth: 0,
     },
     subtle: {
       backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? "20" : "10"
+        isDark ? '20' : '10'
       }`,
       borderColor: getColorValue(color, isDark ? 500 : 600),
       textColor: getColorValue(color, isDark ? 500 : 600),
@@ -130,7 +130,7 @@ const generateVariantConfig = (
       borderWidth: 1,
     },
     underline: {
-      backgroundColor: "transparent",
+      backgroundColor: 'transparent',
       borderColor: getColorValue(color, isDark ? 500 : 600),
       textColor: getColorValue(color, isDark ? 500 : 600),
       placeholderColor: getColorValue(color, isDark ? 800 : 300),
@@ -141,35 +141,35 @@ const generateVariantConfig = (
 
 const generateVariantConfigFromBase = (
   baseHex: string,
-  colorScheme: "light" | "dark",
+  colorScheme: 'light' | 'dark',
 ): Record<InputVariant, InputColorConfig> => {
-  const isDark = colorScheme === "dark";
-  const placeholderColor = `${baseHex}${isDark ? "99" : "66"}`;
+  const isDark = colorScheme === 'dark';
+  const placeholderColor = `${baseHex}${isDark ? '99' : '66'}`;
 
   return {
     outline: {
-      backgroundColor: "transparent",
+      backgroundColor: 'transparent',
       borderColor: baseHex,
       textColor: baseHex,
       placeholderColor,
       borderWidth: 1,
     },
     soft: {
-      backgroundColor: `${baseHex}${isDark ? "20" : "10"}`,
-      borderColor: "transparent",
+      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
+      borderColor: 'transparent',
       textColor: baseHex,
       placeholderColor,
       borderWidth: 0,
     },
     subtle: {
-      backgroundColor: `${baseHex}${isDark ? "20" : "10"}`,
+      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
       borderColor: baseHex,
       textColor: baseHex,
       placeholderColor,
       borderWidth: 1,
     },
     underline: {
-      backgroundColor: "transparent",
+      backgroundColor: 'transparent',
       borderColor: baseHex,
       textColor: baseHex,
       placeholderColor,
@@ -180,12 +180,12 @@ const generateVariantConfigFromBase = (
 
 export type ThemedInputProps = Omit<
   TextInputProps,
-  | "onBlur"
-  | "onContentSizeChange"
-  | "onFocus"
-  | "onSelectionChange"
-  | "onSubmitEditing"
-  | "style"
+  | 'onBlur'
+  | 'onContentSizeChange'
+  | 'onFocus'
+  | 'onSelectionChange'
+  | 'onSubmitEditing'
+  | 'style'
 > & {
   size?: UISize;
   variant?: InputVariant;
@@ -209,17 +209,17 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
       onSubmitEditing,
       style,
       placeholderTextColor,
-      size = "md",
-      variant = "outline",
+      size = 'md',
+      variant = 'outline',
       color,
-      radius = "default",
+      radius = 'default',
       ...rest
     },
     ref,
   ) => {
     const colorScheme = useColorScheme();
     const { accentHex } = useAccentColor();
-    const scheme = colorScheme === "light" ? "light" : "dark";
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
     const variantConfig = useMemo(() => {
       if (color) {
@@ -239,7 +239,7 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
         fontSize: FONT_SIZE_STYLES[size].fontSize,
       };
 
-      if (variant === "underline") {
+      if (variant === 'underline') {
         return [
           styles.input,
           SIZE_STYLES[size],
@@ -273,18 +273,18 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
         onBlur={onBlur ? () => onBlur() : undefined}
         onContentSizeChange={
           onContentSizeChange
-            ? (event) => onContentSizeChange(event.nativeEvent.contentSize)
+            ? event => onContentSizeChange(event.nativeEvent.contentSize)
             : undefined
         }
         onFocus={onFocus ? () => onFocus() : undefined}
         onSelectionChange={
           onSelectionChange
-            ? (event) => onSelectionChange(event.nativeEvent.selection)
+            ? event => onSelectionChange(event.nativeEvent.selection)
             : undefined
         }
         onSubmitEditing={
           onSubmitEditing
-            ? (event) => onSubmitEditing(event.nativeEvent.text)
+            ? event => onSubmitEditing(event.nativeEvent.text)
             : undefined
         }
         placeholderTextColor={
@@ -297,10 +297,10 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
   },
 );
 
-Input.displayName = "Input";
+Input.displayName = 'Input';
 
 const styles = StyleSheet.create({
-  input: { paddingHorizontal: 16, width: "100%" },
+  input: { paddingHorizontal: 16, width: '100%' },
   lg: { height: 56 },
   md: { height: 48 },
   sm: { height: 36 },
@@ -315,7 +315,7 @@ const SIZE_STYLES = {
   md: styles.md,
   lg: styles.lg,
   xl: styles.xl,
-  "2xl": styles.xxl,
+  '2xl': styles.xxl,
 } as const;
 
 const FONT_SIZE_STYLES = {
@@ -324,5 +324,5 @@ const FONT_SIZE_STYLES = {
   md: { fontSize: 16 },
   lg: { fontSize: 18 },
   xl: { fontSize: 20 },
-  "2xl": { fontSize: 22 },
+  '2xl': { fontSize: 22 },
 } as const;

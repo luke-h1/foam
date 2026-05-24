@@ -162,7 +162,7 @@ function getChannelLoginFromTwitchLink(link: TwitchLink): string | null {
     return null;
   }
 
-  if (link.type === 'vod') {
+  if (link.type === 'vod' || link.type === 'clip') {
     return null;
   }
 
@@ -256,6 +256,11 @@ function RouterEffects() {
         link: link ?? null,
       });
       if (!link) {
+        return;
+      }
+
+      if (link.type === 'clip') {
+        router.push(`/streams/clip/${encodeURIComponent(link.clipId)}`);
         return;
       }
 

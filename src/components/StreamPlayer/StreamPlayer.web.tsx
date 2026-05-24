@@ -37,6 +37,7 @@ export interface StreamInfo {
 export interface StreamPlayerProps {
   autoplay?: boolean;
   channel?: string;
+  clip?: string;
   deferOverlayUntilUserUnmute?: boolean;
   height?: DimensionValue;
   muted?: boolean;
@@ -71,16 +72,30 @@ function getEmbedParent(parent?: string): string {
 function buildTwitchPlayerUrl({
   autoplay,
   channel,
+  clip,
   muted,
   parent,
   video,
 }: {
   autoplay: boolean;
   channel?: string;
+  clip?: string;
   muted: boolean;
   parent: string;
   video?: string;
 }) {
+  if (clip) {
+    const params = new URLSearchParams({
+      clip,
+      parent,
+      autoplay: autoplay ? 'true' : 'false',
+      muted: muted ? 'true' : 'false',
+      preload: 'metadata',
+    });
+
+    return `https://clips.twitch.tv/embed?${params.toString()}`;
+  }
+
   const params = new URLSearchParams({
     autoplay: autoplay ? 'true' : 'false',
     muted: muted ? 'true' : 'false',
@@ -101,6 +116,7 @@ export const StreamPlayer = memo(
     {
       autoplay = true,
       channel,
+      clip,
       height,
       muted = false,
       onReady,
@@ -118,11 +134,12 @@ export const StreamPlayer = memo(
         buildTwitchPlayerUrl({
           autoplay,
           channel,
+          clip,
           muted,
           parent: embedParent,
           video,
         }),
-      [autoplay, channel, embedParent, muted, video],
+      [autoplay, channel, clip, embedParent, muted, video],
     );
 
     useImperativeHandle(
@@ -157,7 +174,7 @@ export const StreamPlayer = memo(
         style={[styles.container, { width: playerWidth, height: playerHeight }]}
       >
         <iframe
-          title="Twitch stream player"
+          title="Twitch video player"
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
           onLoad={() => {
@@ -167,25 +184,27 @@ export const StreamPlayer = memo(
           src={playerUrl}
           style={styles.iframe}
         />
-        <View style={styles.footer}>
-          <Text color="gray.contrast" type="xs" numberOfLines={1}>
-            {channel ?? 'Twitch'} on Twitch
-          </Text>
-          <Button
-            onPress={() => {
-              void Linking.openURL(
-                video
-                  ? `https://www.twitch.tv/videos/${video}`
-                  : `https://www.twitch.tv/${channel ?? ''}`,
-              );
-            }}
-            style={styles.openButton}
-          >
-            <Text color="gray.contrast" type="xs" weight="semibold">
-              Open
+        {!clip && (
+          <View style={styles.footer}>
+            <Text color="gray.contrast" type="xs" numberOfLines={1}>
+              {channel ?? 'Twitch'} on Twitch
             </Text>
-          </Button>
-        </View>
+            <Button
+              onPress={() => {
+                void Linking.openURL(
+                  video
+                    ? `https://www.twitch.tv/videos/${video}`
+                    : `https://www.twitch.tv/${channel ?? ''}`,
+                );
+              }}
+              style={styles.openButton}
+            >
+              <Text color="gray.contrast" type="xs" weight="semibold">
+                Open
+              </Text>
+            </Button>
+          </View>
+        )}
       </View>
     );
   }),
