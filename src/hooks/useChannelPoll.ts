@@ -1,6 +1,7 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { twitchService } from '@app/services/twitch-service';
+import { recordWarning } from '@app/lib/sentry';
 import type {
   ChannelPollState,
   TwitchEventSubPoll,
@@ -46,6 +47,17 @@ export function useChannelPoll(channelId?: string) {
       })
       .catch(error => {
         logger.twitchWs.warn('Failed to fetch initial helix poll state', error);
+        recordWarning({
+          name: 'twitch_polls_warning',
+          message: 'Failed to fetch initial Twitch poll state',
+          params: {
+            action: 'initial_poll_fetch_failed',
+            channel_id: channelId,
+            provider: 'twitch',
+            screen: 'chat',
+          },
+          warningCause: error,
+        });
       });
 
     return () => {

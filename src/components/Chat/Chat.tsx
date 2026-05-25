@@ -6,10 +6,6 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { sevenTvService } from '@app/services/seventv-service';
 import {
-  twitchBadgeService,
-  type SanitisedBadgeSet,
-} from '@app/services/twitch-badge-service';
-import {
   parseIrcMessage,
   recentMessagesService,
 } from '@app/services/recent-messages-service';
@@ -128,9 +124,23 @@ import {
   createUserNoticeMessage,
   createSystemMessage,
 } from './util/messageHandlers';
+import { isRenderableChatMessage } from './util/chatMessages';
+import { normaliseChatUsername } from './util/chatUsernames';
 import { formatNoticeMessage } from './util/formatNoticeMessage';
 import { hydrateVisibleSevenTvAssets } from './util/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from './util/reprocessMessages';
+import {
+  describeInitialRoomState,
+  describeRoomStateChanges,
+  parseRoomStateTags,
+  SUPPRESSED_NOTICE_IDS,
+  type ParsedRoomState,
+} from './util/roomState';
+import {
+  getCachedSharedChatBadgeContext,
+  getMessageBadges,
+  getSharedChatBadgeContext,
+} from './util/sharedChatBadges';
 import { getVisibleMessages } from './util/visibleMessages';
 import { cacheImageFromUrl } from '@app/utils/image/image-cache';
 
@@ -141,131 +151,7 @@ interface ChatProps {
   transparent?: boolean;
 }
 
-type ParsedRoomState = {
-  emoteOnly: boolean;
-  followersOnlyMinutes: number;
-  r9k: boolean;
-  slowSeconds: number;
-  subsOnly: boolean;
-};
-
-const ROOMSTATE_NOTICE_IDS = new Set([
-  'emote_only_off',
-  'emote_only_on',
-  'followers_off',
-  'followers_on',
-  'followers_on_zero',
-  'slow_off',
-  'slow_on',
-  'subs_off',
-  'subs_on',
-]);
-
-const SUPPRESSED_NOTICE_IDS = new Set([
-  ...ROOMSTATE_NOTICE_IDS,
-  'delete_message_success',
-]);
-
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
-
-function parseRoomStateTags(tags: Record<string, string>): ParsedRoomState {
-  const followersOnlyRaw = Number.parseInt(tags['followers-only'] ?? '-1', 10);
-  const slowRaw = Number.parseInt(tags.slow ?? '0', 10);
-
-  return {
-    emoteOnly: tags.emote_only === '1',
-    followersOnlyMinutes: Number.isNaN(followersOnlyRaw)
-      ? -1
-      : followersOnlyRaw,
-    r9k: tags.r9k === '1',
-    slowSeconds: Number.isNaN(slowRaw) ? 0 : slowRaw,
-    subsOnly: tags['subs-only'] === '1',
-  };
-}
-
-function describeInitialRoomState(state: ParsedRoomState): string | null {
-  const activeModes: string[] = [];
-
-  if (state.emoteOnly) {
-    activeModes.push('emote-only');
-  }
-  if (state.subsOnly) {
-    activeModes.push('subscribers-only');
-  }
-  if (state.r9k) {
-    activeModes.push('unique-chat');
-  }
-  if (state.slowSeconds > 0) {
-    activeModes.push(`slow mode (${state.slowSeconds}s)`);
-  }
-  if (state.followersOnlyMinutes === 0) {
-    activeModes.push('followers-only');
-  }
-  if (state.followersOnlyMinutes > 0) {
-    activeModes.push(`followers-only (${state.followersOnlyMinutes}m)`);
-  }
-
-  if (activeModes.length === 0) {
-    return null;
-  }
-
-  return `Chat modes active: ${activeModes.join(', ')}`;
-}
-
-function describeRoomStateChanges(
-  previous: ParsedRoomState,
-  next: ParsedRoomState,
-): string[] {
-  const changes: string[] = [];
-
-  if (previous.emoteOnly !== next.emoteOnly) {
-    changes.push(
-      next.emoteOnly ? 'Emote-only mode enabled' : 'Emote-only mode disabled',
-    );
-  }
-
-  if (previous.subsOnly !== next.subsOnly) {
-    changes.push(
-      next.subsOnly
-        ? 'Subscribers-only mode enabled'
-        : 'Subscribers-only mode disabled',
-    );
-  }
-
-  if (previous.r9k !== next.r9k) {
-    changes.push(
-      next.r9k ? 'Unique-chat mode enabled' : 'Unique-chat mode disabled',
-    );
-  }
-
-  if (previous.slowSeconds !== next.slowSeconds) {
-    changes.push(
-      next.slowSeconds > 0
-        ? `Slow mode enabled (${next.slowSeconds}s)`
-        : 'Slow mode disabled',
-    );
-  }
-
-  if (previous.followersOnlyMinutes !== next.followersOnlyMinutes) {
-    if (next.followersOnlyMinutes < 0) {
-      changes.push('Followers-only mode disabled');
-    } else if (next.followersOnlyMinutes === 0) {
-      changes.push('Followers-only mode enabled');
-    } else {
-      changes.push(
-        `Followers-only mode enabled (${next.followersOnlyMinutes}m)`,
-      );
-    }
-  }
-
-  return changes;
-}
-
-function isRenderableChatMessage(
-  message: AnyChatMessageType | undefined,
-): message is AnyChatMessageType {
-  return Boolean(message?.message_id && message.message_nonce);
-}
 
 const PinnedMessageBanner = memo(
   ({
@@ -512,235 +398,6 @@ interface ChatOverlayControllerProps {
   chatDensity: 'comfortable' | 'compact';
   highlightOwnMentions: boolean;
   toggleHighlightedUser: (username: string | undefined) => void;
-}
-
-function normaliseChatUsername(value?: string | null): string {
-  return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
-}
-
-const SHARED_CHAT_BADGE_CACHE_TTL = 60 * 60 * 1000;
-
-type TimedCacheEntry<T> = {
-  value: T;
-  expiresAt: number;
-};
-
-const sharedChatSourceBadgeCache = new Map<
-  string,
-  TimedCacheEntry<SanitisedBadgeSet | null>
->();
-const sharedChatSourceBadgePromises = new Map<
-  string,
-  Promise<SanitisedBadgeSet | null>
->();
-const sharedChatChannelBadgesCache = new Map<
-  string,
-  TimedCacheEntry<SanitisedBadgeSet[]>
->();
-const sharedChatChannelBadgePromises = new Map<
-  string,
-  Promise<SanitisedBadgeSet[]>
->();
-
-function getTimedCacheValue<T>(
-  cache: Map<string, TimedCacheEntry<T>>,
-  key: string,
-): T | undefined {
-  const cached = cache.get(key);
-  if (!cached) {
-    return undefined;
-  }
-
-  if (cached.expiresAt <= Date.now()) {
-    cache.delete(key);
-    return undefined;
-  }
-
-  return cached.value;
-}
-
-function setTimedCacheValue<T>(
-  cache: Map<string, TimedCacheEntry<T>>,
-  key: string,
-  value: T,
-): void {
-  cache.set(key, {
-    value,
-    expiresAt: Date.now() + SHARED_CHAT_BADGE_CACHE_TTL,
-  });
-}
-
-function getSharedChatSourceRoomId(
-  userstate: ReturnType<typeof createUserStateFromTags>,
-): string | undefined {
-  const sourceRoomId = userstate['source-room-id'];
-  if (!sourceRoomId) {
-    return undefined;
-  }
-
-  return sourceRoomId;
-}
-
-async function getSharedChatSourceBadge(
-  sourceRoomId: string,
-): Promise<SanitisedBadgeSet | null> {
-  const cached = getTimedCacheValue(sharedChatSourceBadgeCache, sourceRoomId);
-  if (cached !== undefined) {
-    return cached;
-  }
-
-  const existingPromise = sharedChatSourceBadgePromises.get(sourceRoomId);
-  if (existingPromise) {
-    return existingPromise;
-  }
-
-  const promise = twitchService
-    .getUser(undefined, sourceRoomId)
-    .then(user => {
-      if (!user || typeof user !== 'object' || !user.profile_image_url) {
-        return null;
-      }
-
-      return {
-        id: sourceRoomId,
-        set: 'shared-chat-source',
-        type: 'Twitch Shared Chat Source',
-        title: `Shared chat: ${user.display_name || user.login}`,
-        url: user.profile_image_url,
-        owner_username: user.login,
-      } satisfies SanitisedBadgeSet;
-    })
-    .catch(error => {
-      logger.chat.warn('Failed to fetch shared chat source room:', error);
-      return null;
-    })
-    .then(sourceBadge => {
-      setTimedCacheValue(sharedChatSourceBadgeCache, sourceRoomId, sourceBadge);
-      sharedChatSourceBadgePromises.delete(sourceRoomId);
-      return sourceBadge;
-    });
-
-  sharedChatSourceBadgePromises.set(sourceRoomId, promise);
-  return promise;
-}
-
-async function getSharedChatChannelBadges(
-  sourceRoomId: string,
-): Promise<SanitisedBadgeSet[]> {
-  const cached = getTimedCacheValue(sharedChatChannelBadgesCache, sourceRoomId);
-  if (cached) {
-    return cached;
-  }
-
-  const existingPromise = sharedChatChannelBadgePromises.get(sourceRoomId);
-  if (existingPromise) {
-    return existingPromise;
-  }
-
-  const promise = twitchBadgeService
-    .listSanitisedChannelBadges(sourceRoomId)
-    .catch(error => {
-      logger.chat.warn('Failed to fetch shared chat source badges:', error);
-      return [];
-    })
-    .then(sourceBadges => {
-      setTimedCacheValue(
-        sharedChatChannelBadgesCache,
-        sourceRoomId,
-        sourceBadges,
-      );
-      sharedChatChannelBadgePromises.delete(sourceRoomId);
-      return sourceBadges;
-    });
-
-  sharedChatChannelBadgePromises.set(sourceRoomId, promise);
-  return promise;
-}
-
-async function getSharedChatBadgeContext(
-  userstate: ReturnType<typeof createUserStateFromTags>,
-): Promise<{
-  sourceBadge: SanitisedBadgeSet | null;
-  sourceChannelBadges: SanitisedBadgeSet[] | null;
-}> {
-  const sourceRoomId = getSharedChatSourceRoomId(userstate);
-  if (!sourceRoomId) {
-    return {
-      sourceBadge: null,
-      sourceChannelBadges: null,
-    };
-  }
-
-  const [sourceBadge, sourceChannelBadges] = await Promise.all([
-    getSharedChatSourceBadge(sourceRoomId),
-    getSharedChatChannelBadges(sourceRoomId),
-  ]);
-
-  return {
-    sourceBadge,
-    sourceChannelBadges,
-  };
-}
-
-function getCachedSharedChatBadgeContext(
-  userstate: ReturnType<typeof createUserStateFromTags>,
-): {
-  isComplete: boolean;
-  sourceBadge: SanitisedBadgeSet | null | undefined;
-  sourceChannelBadges: SanitisedBadgeSet[] | undefined;
-} | null {
-  const sourceRoomId = getSharedChatSourceRoomId(userstate);
-  if (!sourceRoomId) {
-    return null;
-  }
-
-  const sourceBadge = getTimedCacheValue(
-    sharedChatSourceBadgeCache,
-    sourceRoomId,
-  );
-  const sourceChannelBadges = getTimedCacheValue(
-    sharedChatChannelBadgesCache,
-    sourceRoomId,
-  );
-
-  return {
-    isComplete: sourceBadge !== undefined && sourceChannelBadges !== undefined,
-    sourceBadge,
-    sourceChannelBadges,
-  };
-}
-
-type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
-
-function getMessageBadges({
-  emoteData,
-  sourceBadge,
-  sourceChannelBadges,
-  userstate,
-}: {
-  emoteData: ChatEmoteData;
-  sourceBadge?: SanitisedBadgeSet | null;
-  sourceChannelBadges?: SanitisedBadgeSet[] | null;
-  userstate: ReturnType<typeof createUserStateFromTags>;
-}): SanitisedBadgeSet[] {
-  const foundBadges = findBadges({
-    userstate,
-    chatterinoBadges: emoteData.chatterinoBadges,
-    chatUsers: [],
-    ffzChannelBadges: emoteData.ffzChannelBadges,
-    ffzGlobalBadges: emoteData.ffzGlobalBadges,
-    twitchChannelBadges: sourceChannelBadges ?? emoteData.twitchChannelBadges,
-    twitchGlobalBadges: emoteData.twitchGlobalBadges,
-  });
-
-  if (!sourceBadge) {
-    return foundBadges;
-  }
-
-  return [
-    sourceBadge,
-    ...foundBadges.filter(badge => badge.set !== sourceBadge.set),
-  ];
 }
 
 const ChatMessagePane = memo(

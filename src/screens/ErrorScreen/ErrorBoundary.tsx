@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
     });
 
     recordError({
-      name: 'ErrorBoundaryError',
+      name: 'error_boundary_error',
       message: error.message || 'Unhandled error boundary exception',
       params: {
         category: 'ErrorBoundary',

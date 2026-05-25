@@ -12,6 +12,10 @@ import {
 } from 'react-native';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import {
+  getViewableChatMessages,
+  type ViewableMessageToken,
+} from './ChatList/utils';
 
 const CHAT_DRAW_DISTANCE = 320;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
@@ -36,11 +40,6 @@ interface ChatListProps {
   extraData?: unknown;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
 }
-
-type ViewableMessageToken = {
-  item?: AnyChatMessageType;
-  isViewable?: boolean | null;
-};
 
 export const ChatList = memo(
   ({
@@ -74,9 +73,7 @@ export const ChatList = memo(
           return;
         }
 
-        const messages = viewableItems
-          .filter(item => item.isViewable && item.item)
-          .map(item => item.item as AnyChatMessageType);
+        const messages = getViewableChatMessages(viewableItems);
 
         if (messages.length > 0) {
           callback(messages);

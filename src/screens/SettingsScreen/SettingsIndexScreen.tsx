@@ -9,7 +9,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { sentryService } from '@app/lib/sentry';
+import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { router } from 'expo-router';
@@ -32,7 +32,7 @@ export function SettingsIndexScreen() {
 
   const { statusPageUrl, websiteUrl } = config;
   const handleSendFeedback = () => {
-    sentryService.showFeedbackWidget();
+    showFeedbackWidget();
   };
 
   if (Platform.OS === 'ios') {
@@ -209,7 +209,7 @@ export function SettingsIndexScreen() {
           />
           <SettingsLinkRow
             title="Send Feedback"
-            subtitle="Report a bug or share what could be better"
+            subtitle="Share feedback, ideas, or what could be better"
             icon={{ icon: 'paperplane', color: theme.colorTeal }}
             onPress={handleSendFeedback}
           />

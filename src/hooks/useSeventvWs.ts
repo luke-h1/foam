@@ -9,6 +9,7 @@ import {
   SevenTvWsMessage,
 } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
+import { recordInfo, recordWarning } from '@app/lib/sentry';
 import { usePathname } from 'expo-router';
 import { useCallback, useEffect, useRef, useMemo } from 'react';
 import type { SevenTvEmote, StvUser } from '@app/services/seventv-service';
@@ -738,6 +739,17 @@ export function useSeventvWs(
                 message.d,
               )}`,
             );
+            recordWarning({
+              name: 'seven_tv_ws_warning',
+              message: '7TV WebSocket returned invalid subscription condition',
+              params: {
+                action: 'invalid_subscription_condition',
+                channel_id: twitchChannelIdRef.current,
+                provider: 'seven_tv',
+                screen: currentScreen,
+                seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+              },
+            });
             break;
           }
 
@@ -754,9 +766,22 @@ export function useSeventvWs(
         logger.stvWs.error(
           `Failed to parse STV message ${JSON.stringify(e, null, 2)}`,
         );
+        recordWarning({
+          name: 'seven_tv_ws_warning',
+          message: 'Failed to parse 7TV WebSocket message',
+          params: {
+            action: 'message_parse_failed',
+            channel_id: twitchChannelIdRef.current,
+            provider: 'seven_tv',
+            screen: currentScreen,
+            seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+          },
+          warningCause: e,
+        });
       }
     },
     [
+      currentScreen,
       handleEmoteSetUpdate,
       handleCosmeticCreate,
       handleCosmeticUpdate,
@@ -782,6 +807,17 @@ export function useSeventvWs(
         }
 
         logger.stvWs.info('💚 SevenTV WebSocket setup complete');
+        recordInfo({
+          name: 'seven_tv_ws_info',
+          message: '7TV WebSocket connected',
+          params: {
+            action: 'connected',
+            channel_id: twitchChannelIdRef.current,
+            provider: 'seven_tv',
+            screen: currentScreen,
+            seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+          },
+        });
       },
       onMessage: (event: MessageEvent) => {
         handleMessage(event);
@@ -790,12 +826,39 @@ export function useSeventvWs(
         logger.stvWs.warn(
           `🟢 SevenTV WebSocket closed: ${event.code} - ${event.reason}`,
         );
+        if (event.code !== 1000) {
+          recordWarning({
+            name: 'seven_tv_ws_warning',
+            message: '7TV WebSocket closed unexpectedly',
+            params: {
+              action: 'closed',
+              channel_id: twitchChannelIdRef.current,
+              code: event.code,
+              provider: 'seven_tv',
+              reason: event.reason,
+              screen: currentScreen,
+              seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+            },
+          });
+        }
         hasInitialSubscriptionsRef.current = false;
       },
       onError: (error: Event) => {
         logger.stvWs.error(
           `💚 SevenTv WS error: ${JSON.stringify(error, null, 2)}`,
         );
+        recordWarning({
+          name: 'seven_tv_ws_warning',
+          message: '7TV WebSocket error',
+          params: {
+            action: 'error',
+            channel_id: twitchChannelIdRef.current,
+            provider: 'seven_tv',
+            screen: currentScreen,
+            seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+          },
+          warningCause: error,
+        });
       },
       shouldReconnect: (event: CloseEvent) => {
         return !!(shouldConnect && event.code !== 1000);

@@ -50,11 +50,20 @@ export default function FollowingScreen() {
     [user],
   );
 
-  const { scrollHandler, scrollY, isRefreshing, refreshControl } = useRefresh({
-    onRefresh: () =>
+  const refetchFollowingStreams = useCallback(
+    () =>
       queryClient.refetchQueries({
         queryKey: followingStreamsQuery.queryKey,
       }),
+    [followingStreamsQuery.queryKey, queryClient],
+  );
+
+  const handleRefreshFollowing = useCallback(() => {
+    void refetchFollowingStreams();
+  }, [refetchFollowingStreams]);
+
+  const { scrollHandler, scrollY, isRefreshing, refreshControl } = useRefresh({
+    onRefresh: refetchFollowingStreams,
   });
 
   const {
@@ -127,8 +136,11 @@ export default function FollowingScreen() {
   if (!user?.id) {
     return (
       <EmptyState
-        content="Log in to see streams from channels you follow"
+        button={null}
+        content="Log in to see streams from channels you follow."
         heading="Your followed streams"
+        iconName="person.2"
+        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
     );
   }
@@ -140,8 +152,12 @@ export default function FollowingScreen() {
     }
     return (
       <EmptyState
-        content="Failed to fetch followed streams"
-        heading="No followed streams"
+        button="Refresh"
+        buttonOnPress={handleRefreshFollowing}
+        content="Twitch did not return your followed streams."
+        heading="Couldn't load following"
+        iconName="exclamationmark.triangle"
+        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
     );
   }
@@ -160,8 +176,12 @@ export default function FollowingScreen() {
   if (streamsArray.length === 0) {
     return (
       <EmptyState
-        content="None of your followed streamers are live"
-        heading="It's empty in here"
+        button="Refresh"
+        buttonOnPress={handleRefreshFollowing}
+        content="None of your followed streamers are live right now."
+        heading="No one is live"
+        iconName="antenna.radiowaves.left.and.right"
+        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
     );
   }
@@ -348,5 +368,12 @@ const styles = StyleSheet.create({
   },
   layoutToggleTextActive: {
     color: theme.color.text.dark,
+  },
+  stateContainer: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.space20,
   },
 });

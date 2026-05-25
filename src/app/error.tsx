@@ -6,7 +6,7 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { SymbolView } from 'expo-symbols';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
-import { recordError, sentryService } from '@app/lib/sentry';
+import { recordError, showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
 export default function AppError({ error, retry }: ErrorBoundaryProps) {
@@ -22,7 +22,7 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
 
   useEffect(() => {
     recordError({
-      name: 'ErrorBoundaryError',
+      name: 'error_boundary_error',
       message: errorMessage,
       params: {
         category: 'ErrorBoundary',
@@ -34,7 +34,7 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
   }, [errorMessage, error]);
 
   const handleReportBug = () => {
-    sentryService.showFeedbackWidget();
+    showFeedbackWidget();
   };
 
   return (

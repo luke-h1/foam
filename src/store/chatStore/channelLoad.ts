@@ -7,7 +7,13 @@ import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
-import { recordInfo, startSpanAsync } from '@app/lib/sentry';
+import {
+  recordError,
+  recordInfo,
+  recordWarning,
+  startSpanAsync,
+} from '@app/lib/sentry';
+import type { MonitoringWarningName } from '@app/lib/sentry';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { batch } from '@legendapp/state';
@@ -105,6 +111,20 @@ export const fetchUserPersonalEmotes = async (
           logger.stv.info(
             `Cached ${personalEmotes.length} personal emotes for user ${twitchUserId}`,
           );
+          recordInfo({
+            name: 'seven_tv_emotes_info',
+            message: 'Cached 7TV personal emotes',
+            params: {
+              action: 'personal_emotes_cached',
+              channel_id: channelId,
+              emote_count: personalEmotes.length,
+              provider: 'seven_tv',
+              resource_type: 'emotes',
+              scope: 'personal',
+              screen: 'chat',
+              twitch_user_id: twitchUserId,
+            },
+          });
         }
       }
       return personalEmotes;
@@ -113,6 +133,20 @@ export const fetchUserPersonalEmotes = async (
         `Failed to fetch personal emotes for user ${twitchUserId}:`,
         error,
       );
+      recordWarning({
+        name: 'seven_tv_emotes_warning',
+        message: 'Failed to fetch 7TV personal emotes',
+        params: {
+          action: 'personal_emotes_failed',
+          channel_id: channelId,
+          provider: 'seven_tv',
+          resource_type: 'emotes',
+          scope: 'personal',
+          screen: 'chat',
+          twitch_user_id: twitchUserId,
+        },
+        warningCause: error,
+      });
       checkedUsersForPersonalEmotes.add(twitchUserId);
       return [];
     } finally {
@@ -166,17 +200,55 @@ export const notify7TVPresence = async (
       logger.stvWs.warn(
         `Could not get 7TV user ID for Twitch user: ${twitchUserId}`,
       );
+      recordInfo({
+        name: 'seven_tv_presence_info',
+        message: 'Skipped 7TV presence because user was not linked',
+        params: {
+          action: 'presence_user_not_linked',
+          channel_id: twitchChannelId,
+          provider: 'seven_tv',
+          resource_type: 'presence',
+          screen: 'chat',
+          twitch_user_id: twitchUserId,
+        },
+      });
       return;
     }
     await sevenTvService.sendPresence(twitchChannelId, sevenTvUserId);
     logger.stvWs.info(
       `Notified 7TV about presence in channel ${twitchChannelId} for user ${twitchUserId}`,
     );
+    recordInfo({
+      name: 'seven_tv_presence_info',
+      message: 'Notified 7TV presence',
+      params: {
+        action: 'presence_notified',
+        channel_id: twitchChannelId,
+        provider: 'seven_tv',
+        resource_type: 'presence',
+        screen: 'chat',
+        seven_tv_user_id: sevenTvUserId,
+        twitch_user_id: twitchUserId,
+      },
+    });
   } catch (error) {
     logger.stvWs.error(
       `Failed to notify 7TV about presence: ${String(error)}`,
       error,
     );
+    recordWarning({
+      name: 'seven_tv_presence_warning',
+      message: 'Failed to notify 7TV presence',
+      params: {
+        action: 'presence_notify_failed',
+        channel_id: twitchChannelId,
+        provider: 'seven_tv',
+        resource_type: 'presence',
+        screen: 'chat',
+        twitch_user_id: twitchUserId,
+      },
+      warningCause: error,
+    });
   }
 };
 
@@ -211,6 +283,21 @@ type BadgeResourceSets = Pick<
   | 'chatterinoBadges'
 >;
 
+type ProviderName = 'bttv' | 'chatterino' | 'ffz' | 'seven_tv' | 'twitch';
+type ProviderResourceScope = 'channel' | 'global' | 'local' | 'personal';
+type ProviderResourceType = 'badges' | 'emotes';
+
+interface ProviderResourceResult<
+  TItems extends readonly unknown[] = unknown[],
+> {
+  name: string;
+  provider: ProviderName;
+  resource_type: ProviderResourceType;
+  result: PromiseSettledResult<TItems>;
+  scope: ProviderResourceScope;
+  warning_name: MonitoringWarningName;
+}
+
 const deduplicateById = <T extends Identifiable>(items: readonly T[]): T[] =>
   Array.from(new Map(items.map(item => [item.id, item])).values());
 
@@ -225,6 +312,64 @@ const getDedupedSettledValue = <T extends Identifiable>(
 const combineUniqueById = <T extends Identifiable>(
   ...itemGroups: readonly T[][]
 ): T[] => deduplicateById(itemGroups.flat());
+
+const getSettledItemCount = <TItems extends readonly unknown[]>(
+  result: PromiseSettledResult<TItems>,
+): number => (result.status === 'fulfilled' ? result.value.length : 0);
+
+function reportProviderResourceResults({
+  channelId,
+  resources,
+  trigger,
+}: {
+  channelId: string;
+  resources: readonly ProviderResourceResult[];
+  trigger: string;
+}): void {
+  const counts: Record<string, number> = {};
+  let failedResources = 0;
+
+  resources.forEach(resource => {
+    counts[
+      `${resource.provider}_${resource.scope}_${resource.resource_type}_count`
+    ] = getSettledItemCount(resource.result);
+
+    if (resource.result.status !== 'rejected') {
+      return;
+    }
+
+    failedResources += 1;
+    recordWarning({
+      name: resource.warning_name,
+      message: `Failed to load ${resource.name}`,
+      params: {
+        action: 'provider_resource_failed',
+        channel_id: channelId,
+        provider: resource.provider,
+        resource_name: resource.name,
+        resource_type: resource.resource_type,
+        scope: resource.scope,
+        screen: 'chat',
+        trigger,
+      },
+      warningCause: resource.result.reason,
+    });
+  });
+
+  recordInfo({
+    name: 'chat_resources_info',
+    message: 'Provider resources settled',
+    params: {
+      action: 'provider_resources_settled',
+      channel_id: channelId,
+      failed_resources: failedResources,
+      screen: 'chat',
+      total_resources: resources.length,
+      trigger,
+      ...counts,
+    },
+  });
+}
 
 const loadChannelResourcesInternal = async (
   channelId: string,
@@ -293,6 +438,19 @@ const loadChannelResourcesInternal = async (
                 'Failed to get 7TV emote set ID for cached data:',
                 error,
               );
+              recordWarning({
+                name: 'seven_tv_emotes_warning',
+                message: 'Failed to resolve cached 7TV emote set ID',
+                params: {
+                  action: 'cached_emote_set_id_failed',
+                  channel_id: channelId,
+                  provider: 'seven_tv',
+                  resource_type: 'emotes',
+                  scope: 'channel',
+                  screen: 'chat',
+                },
+                warningCause: error,
+              });
             }
           }
 
@@ -309,7 +467,25 @@ const loadChannelResourcesInternal = async (
               return false;
             }
 
-            const subscriberEmotes = getSettledValue(twitchSubscriberEmotes[0]);
+            const subscriberResult = twitchSubscriberEmotes[0];
+            if (subscriberResult) {
+              reportProviderResourceResults({
+                channelId,
+                resources: [
+                  {
+                    name: 'twitch_subscriber_emotes',
+                    provider: 'twitch',
+                    resource_type: 'emotes',
+                    result: subscriberResult,
+                    scope: 'personal',
+                    warning_name: 'twitch_emotes_warning',
+                  },
+                ],
+                trigger: 'cached_subscriber_emotes_refresh',
+              });
+            }
+
+            const subscriberEmotes = getSettledValue(subscriberResult);
             const channelCache = chatStore$.persisted.channelCaches[channelId];
 
             if (channelCache) {
@@ -347,6 +523,53 @@ const loadChannelResourcesInternal = async (
               return false;
             }
 
+            reportProviderResourceResults({
+              channelId,
+              resources: [
+                {
+                  name: 'twitch_channel_badges',
+                  provider: 'twitch',
+                  resource_type: 'badges',
+                  result: twitchChannelBadges,
+                  scope: 'channel',
+                  warning_name: 'twitch_badges_warning',
+                },
+                {
+                  name: 'twitch_global_badges',
+                  provider: 'twitch',
+                  resource_type: 'badges',
+                  result: twitchGlobalBadges,
+                  scope: 'global',
+                  warning_name: 'twitch_badges_warning',
+                },
+                {
+                  name: 'ffz_global_badges',
+                  provider: 'ffz',
+                  resource_type: 'badges',
+                  result: ffzGlobalBadges,
+                  scope: 'global',
+                  warning_name: 'ffz_badges_warning',
+                },
+                {
+                  name: 'ffz_channel_badges',
+                  provider: 'ffz',
+                  resource_type: 'badges',
+                  result: ffzChannelBadges,
+                  scope: 'channel',
+                  warning_name: 'ffz_badges_warning',
+                },
+                {
+                  name: 'chatterino_badges',
+                  provider: 'chatterino',
+                  resource_type: 'badges',
+                  result: chatterinoBadges,
+                  scope: 'local',
+                  warning_name: 'chatterino_badges_warning',
+                },
+              ],
+              trigger: 'cached_badges_refresh',
+            });
+
             const badgeResourceSets = {
               twitchChannelBadges: getDedupedSettledValue(twitchChannelBadges),
               twitchGlobalBadges: getDedupedSettledValue(twitchGlobalBadges),
@@ -373,24 +596,26 @@ const loadChannelResourcesInternal = async (
               });
             }
             recordInfo({
-              name: 'DataLoadingInfo',
+              name: 'chat_resources_info',
               message: 'Refetched badges (1h TTL); using cached emotes',
               params: {
-                category: 'DataLoading',
                 action: 'badges_refetched_cached_emotes',
-                channelId,
-                badgeCacheAge,
+                badge_cache_age_ms: badgeCacheAge,
+                category: 'data_loading',
+                channel_id: channelId,
+                screen: 'chat',
               },
             });
           } else {
             recordInfo({
-              name: 'DataLoadingInfo',
+              name: 'chat_resources_info',
               message: 'Using cached channel resources',
               params: {
-                category: 'DataLoading',
                 action: 'cached_channel_resources_used',
-                channelId,
-                cacheAge,
+                cache_age_ms: cacheAge,
+                category: 'data_loading',
+                channel_id: channelId,
+                screen: 'chat',
               },
             });
           }
@@ -418,6 +643,19 @@ const loadChannelResourcesInternal = async (
       sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
     } catch (error) {
       logger.chat.warn('Failed to get 7TV emote set ID:', error);
+      recordWarning({
+        name: 'seven_tv_emotes_warning',
+        message: 'Failed to resolve 7TV emote set ID',
+        params: {
+          action: 'emote_set_id_failed',
+          channel_id: channelId,
+          provider: 'seven_tv',
+          resource_type: 'emotes',
+          scope: 'channel',
+          screen: 'chat',
+        },
+        warningCause: error,
+      });
     }
 
     if (exitIfAborted(signal, true)) {
@@ -461,12 +699,131 @@ const loadChannelResourcesInternal = async (
           ffzService.getSanitisedChannelBadges(channelId),
           Promise.resolve(chatterinoService.listSanitisedBadges()),
         ]),
-      { channelId, services: 14 },
+      { channel_id: channelId, service_count: 14 },
     );
 
     if (exitIfAborted(signal, true)) {
       return false;
     }
+
+    reportProviderResourceResults({
+      channelId,
+      resources: [
+        {
+          name: 'seven_tv_channel_emotes',
+          provider: 'seven_tv',
+          resource_type: 'emotes',
+          result: sevenTvChannelEmotes,
+          scope: 'channel',
+          warning_name: 'seven_tv_emotes_warning',
+        },
+        {
+          name: 'seven_tv_global_emotes',
+          provider: 'seven_tv',
+          resource_type: 'emotes',
+          result: sevenTvGlobalEmotes,
+          scope: 'global',
+          warning_name: 'seven_tv_emotes_warning',
+        },
+        {
+          name: 'twitch_channel_emotes',
+          provider: 'twitch',
+          resource_type: 'emotes',
+          result: twitchChannelEmotes,
+          scope: 'channel',
+          warning_name: 'twitch_emotes_warning',
+        },
+        {
+          name: 'twitch_global_emotes',
+          provider: 'twitch',
+          resource_type: 'emotes',
+          result: twitchGlobalEmotes,
+          scope: 'global',
+          warning_name: 'twitch_emotes_warning',
+        },
+        {
+          name: 'twitch_subscriber_emotes',
+          provider: 'twitch',
+          resource_type: 'emotes',
+          result: twitchSubscriberEmotes,
+          scope: 'personal',
+          warning_name: 'twitch_emotes_warning',
+        },
+        {
+          name: 'bttv_global_emotes',
+          provider: 'bttv',
+          resource_type: 'emotes',
+          result: bttvGlobalEmotes,
+          scope: 'global',
+          warning_name: 'bttv_emotes_warning',
+        },
+        {
+          name: 'bttv_channel_emotes',
+          provider: 'bttv',
+          resource_type: 'emotes',
+          result: bttvChannelEmotes,
+          scope: 'channel',
+          warning_name: 'bttv_emotes_warning',
+        },
+        {
+          name: 'ffz_channel_emotes',
+          provider: 'ffz',
+          resource_type: 'emotes',
+          result: ffzChannelEmotes,
+          scope: 'channel',
+          warning_name: 'ffz_emotes_warning',
+        },
+        {
+          name: 'ffz_global_emotes',
+          provider: 'ffz',
+          resource_type: 'emotes',
+          result: ffzGlobalEmotes,
+          scope: 'global',
+          warning_name: 'ffz_emotes_warning',
+        },
+        {
+          name: 'twitch_channel_badges',
+          provider: 'twitch',
+          resource_type: 'badges',
+          result: twitchChannelBadges,
+          scope: 'channel',
+          warning_name: 'twitch_badges_warning',
+        },
+        {
+          name: 'twitch_global_badges',
+          provider: 'twitch',
+          resource_type: 'badges',
+          result: twitchGlobalBadges,
+          scope: 'global',
+          warning_name: 'twitch_badges_warning',
+        },
+        {
+          name: 'ffz_global_badges',
+          provider: 'ffz',
+          resource_type: 'badges',
+          result: ffzGlobalBadges,
+          scope: 'global',
+          warning_name: 'ffz_badges_warning',
+        },
+        {
+          name: 'ffz_channel_badges',
+          provider: 'ffz',
+          resource_type: 'badges',
+          result: ffzChannelBadges,
+          scope: 'channel',
+          warning_name: 'ffz_badges_warning',
+        },
+        {
+          name: 'chatterino_badges',
+          provider: 'chatterino',
+          resource_type: 'badges',
+          result: chatterinoBadges,
+          scope: 'local',
+          warning_name: 'chatterino_badges_warning',
+        },
+      ],
+      trigger: 'full_channel_resource_load',
+    });
 
     const emoteResourceSets = {
       sevenTvChannelEmotes: getDedupedSettledValue(sevenTvChannelEmotes),
@@ -541,14 +898,15 @@ const loadChannelResourcesInternal = async (
     }
 
     recordInfo({
-      name: 'DataLoadingInfo',
+      name: 'chat_resources_info',
       message: 'Loaded channel resources',
       params: {
-        category: 'DataLoading',
         action: 'channel_resources_loaded',
-        channelId,
-        emoteCount: allEmotes.length,
-        badgeCount: allBadges.length,
+        badge_count: allBadges.length,
+        category: 'data_loading',
+        channel_id: channelId,
+        emote_count: allEmotes.length,
+        screen: 'chat',
       },
     });
 
@@ -558,6 +916,16 @@ const loadChannelResourcesInternal = async (
       return false;
     }
     logger.chat.error('Error loading channel resources:', error);
+    recordError({
+      name: 'chat_resources_error',
+      message: 'Failed to load channel resources',
+      params: {
+        action: 'channel_resources_failed',
+        channel_id: channelId,
+        screen: 'chat',
+      },
+      errorCause: error,
+    });
     chatStore$.loadingState.set('ERROR');
     return false;
   }
@@ -589,7 +957,7 @@ export const loadChannelResources = async (
         signal,
         twitchUserId,
       ),
-    { channelId, forceRefresh: shouldForceRefresh },
+    { channel_id: channelId, force_refresh: shouldForceRefresh },
   );
 };
 

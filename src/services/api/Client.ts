@@ -9,6 +9,7 @@ import Axios, {
 import omit from 'lodash/omit';
 import qs from 'qs';
 import { recordError } from '@app/lib/sentry';
+import { getApiMonitoringContext } from './monitoring';
 
 export type RequestConfig = Omit<AxiosRequestConfig, 'method' | 'url'> & {
   cookie?: { name: string; value: string };
@@ -120,14 +121,17 @@ export default class Client {
         }
 
         recordError({
-          name: 'APIError',
+          name: 'api_error',
           message: errorMessage,
           params: {
-            category: 'API',
             action: 'request_failed',
-            url: config.url,
-            method: config.method,
-            status,
+            category: 'api',
+            ...getApiMonitoringContext({
+              baseURL: config.baseURL ?? this.baseURL,
+              method: config.method,
+              status,
+              url: config.url,
+            }),
           },
           errorCause: error,
         });

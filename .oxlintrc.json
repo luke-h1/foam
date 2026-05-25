@@ -26,8 +26,38 @@
     "no-unused-expressions": "off",
     "no-unsafe-finally": "off",
     "no-misused-spread": "off",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@sentry/react-native",
+            "message": "Use src/lib/sentry helpers instead of importing Sentry directly."
+          },
+          {
+            "name": "@app/lib/sentry",
+            "importNames": ["sentryService"],
+            "message": "Use recordInfo, recordWarning, recordError, countMetric, startSpan, or showFeedbackWidget instead of sentryService."
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["@sentry/*"],
+            "message": "Use src/lib/sentry helpers instead of importing Sentry directly."
+          }
+        ]
+      }
+    ],
     "react-in-jsx-scope": "off"
   },
+  "overrides": [
+    {
+      "files": ["src/lib/sentry.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
   "env": {
     "builtin": true
   }

@@ -11,11 +11,7 @@ import {
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 import { theme } from '@app/styles/themes';
-import {
-  countMonitoringMetric,
-  recordError,
-  recordInfo,
-} from '@app/lib/sentry';
+import { countOtaMetric, recordError, recordInfo } from '@app/lib/sentry';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 const INITIAL_CHECK_DELAY = 3e3; // 3 seconds
@@ -65,7 +61,7 @@ export function useOTAUpdates() {
       await setExtraParams();
 
       recordInfo({
-        name: 'OTAUpdatesServiceInfo',
+        name: 'ota_updates_service_info',
         message: 'Checking for OTA update',
         params: {
           category: 'ota',
@@ -77,7 +73,7 @@ export function useOTAUpdates() {
         },
       });
 
-      countMonitoringMetric('ota.check.started', {
+      countOtaMetric('ota.check.started', {
         channel: Updates.channel || 'unknown',
         environment: isProduction ? 'production' : 'non-production',
         platform: Platform.OS,
@@ -87,7 +83,7 @@ export function useOTAUpdates() {
 
       if (res.isAvailable) {
         recordInfo({
-          name: 'OTAUpdatesServiceInfo',
+          name: 'ota_updates_service_info',
           message: 'OTA update available',
           params: {
             category: 'ota',
@@ -98,7 +94,7 @@ export function useOTAUpdates() {
           },
         });
 
-        countMonitoringMetric('ota.update.available', {
+        countOtaMetric('ota.update.available', {
           channel: Updates.channel || 'unknown',
           environment: isProduction ? 'production' : 'non-production',
           platform: Platform.OS,
@@ -107,7 +103,7 @@ export function useOTAUpdates() {
         await fetchUpdateAsync();
 
         recordInfo({
-          name: 'OTAUpdatesServiceInfo',
+          name: 'ota_updates_service_info',
           message: 'OTA update fetched successfully',
           params: {
             category: 'ota',
@@ -117,7 +113,7 @@ export function useOTAUpdates() {
           },
         });
 
-        countMonitoringMetric('ota.update.fetched', {
+        countOtaMetric('ota.update.fetched', {
           channel: Updates.channel || 'unknown',
           environment: isProduction ? 'production' : 'non-production',
           platform: Platform.OS,
@@ -128,7 +124,7 @@ export function useOTAUpdates() {
         error instanceof Error ? error : new Error(String(error));
 
       recordError({
-        name: 'OTAUpdatesServiceError',
+        name: 'ota_updates_service_error',
         message: 'OTA update check failed',
         params: {
           category: 'OTAUpdatesService',
@@ -152,7 +148,7 @@ export function useOTAUpdates() {
         error instanceof Error ? error : new Error(String(error));
 
       recordError({
-        name: 'OTAUpdatesServiceError',
+        name: 'ota_updates_service_error',
         message: 'OTA update reload failed',
         params: {
           category: 'OTAUpdatesService',
@@ -167,7 +163,7 @@ export function useOTAUpdates() {
   }, [isProduction]);
 
   const promptAndReload = useCallback(() => {
-    countMonitoringMetric('ota.update.alert_shown', {
+    countOtaMetric('ota.update.alert_shown', {
       category: 'ota',
       platform: Platform.OS,
       channel: Updates.channel || 'unknown',
@@ -182,7 +178,7 @@ export function useOTAUpdates() {
           text: 'Relaunch',
           style: 'default',
           onPress: () => {
-            countMonitoringMetric('ota.update.applied', {
+            countOtaMetric('ota.update.applied', {
               category: 'ota',
               platform: Platform.OS,
               channel: Updates.channel || 'unknown',
@@ -190,7 +186,7 @@ export function useOTAUpdates() {
               method: 'manual',
             });
             recordInfo({
-              name: 'OTAUpdatesServiceInfo',
+              name: 'ota_updates_service_info',
               message: 'App relaunch requested from OTA modal',
               params: {
                 category: 'ota',
@@ -232,7 +228,7 @@ export function useOTAUpdates() {
     }
 
     recordInfo({
-      name: 'OTAUpdatesServiceInfo',
+      name: 'ota_updates_service_info',
       message: 'OTA update pending - ready to apply',
       params: {
         category: 'ota',
@@ -243,7 +239,7 @@ export function useOTAUpdates() {
       },
     });
 
-    countMonitoringMetric('ota.update.pending', {
+    countOtaMetric('ota.update.pending', {
       channel: Updates.channel || 'unknown',
       environment: isProduction ? 'production' : 'non-production',
       platform: Platform.OS,
@@ -274,7 +270,7 @@ export function useOTAUpdates() {
             if (isUpdatePending) {
               if (isProduction) {
                 recordInfo({
-                  name: 'OTAUpdatesServiceInfo',
+                  name: 'ota_updates_service_info',
                   message: 'App foregrounded with pending update, reloading',
                   params: {
                     category: 'ota',
@@ -284,7 +280,7 @@ export function useOTAUpdates() {
                   },
                 });
 
-                countMonitoringMetric('ota.update.applied', {
+                countOtaMetric('ota.update.applied', {
                   category: 'ota',
                   environment: isProduction ? 'production' : 'non-production',
                   platform: Platform.OS,
@@ -298,7 +294,7 @@ export function useOTAUpdates() {
               }
             } else {
               recordInfo({
-                name: 'OTAUpdatesServiceInfo',
+                name: 'ota_updates_service_info',
                 message: 'App foregrounded, checking for updates',
                 params: {
                   category: 'ota',

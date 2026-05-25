@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
-import { sentryService } from '@app/lib/sentry';
+import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { type ErrorInfo, useState } from 'react';
@@ -29,7 +29,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   );
 
   const handleShowFeedback = () => {
-    sentryService.showFeedbackWidget();
+    showFeedbackWidget();
   };
 
   return (

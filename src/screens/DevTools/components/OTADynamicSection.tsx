@@ -83,7 +83,7 @@ export function OTADynamicSection() {
           void (async () => {
             if (updates.isUpdatePending) {
               recordInfo({
-                name: 'OTAUpdatesServiceInfo',
+                name: 'ota_updates_service_info',
                 message: 'OTA reload triggered from dev tools',
                 params: {
                   category: 'OTAUpdatesService',
@@ -95,7 +95,7 @@ export function OTADynamicSection() {
               await reloadWithScreen();
             } else if (updates.isUpdateAvailable) {
               recordInfo({
-                name: 'OTAUpdatesServiceInfo',
+                name: 'ota_updates_service_info',
                 message: 'OTA check and fetch triggered from dev tools',
                 params: {
                   category: 'OTAUpdatesService',
@@ -111,7 +111,7 @@ export function OTADynamicSection() {
               }
             } else {
               recordInfo({
-                name: 'OTAUpdatesServiceInfo',
+                name: 'ota_updates_service_info',
                 message: 'OTA check triggered from dev tools',
                 params: {
                   category: 'OTAUpdatesService',
