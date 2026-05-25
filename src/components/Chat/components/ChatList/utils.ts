@@ -8,7 +8,13 @@ export type ViewableMessageToken = {
 export function getViewableChatMessages(
   viewableItems: ViewableMessageToken[],
 ): AnyChatMessageType[] {
-  return viewableItems
-    .filter(item => item.isViewable && item.item)
-    .map(item => item.item as AnyChatMessageType);
+  const messages: AnyChatMessageType[] = [];
+
+  for (const token of viewableItems) {
+    if (token.isViewable && token.item) {
+      messages.push(token.item);
+    }
+  }
+
+  return messages;
 }

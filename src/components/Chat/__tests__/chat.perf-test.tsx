@@ -63,6 +63,7 @@ function createChatMessage(index: number): PerfChatMessage {
     sender,
     channel: 'xqc',
     badges: [],
+    cachedSenderColor: 'rgb(145, 70, 255)',
     message: createMessageParts(index),
     replyBody: '',
     replyDisplayName: '',

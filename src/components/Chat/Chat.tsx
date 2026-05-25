@@ -49,6 +49,7 @@ import { parseBadges } from '@app/utils/chat/parseBadges';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
+import { lightenColor } from '@app/utils/color/lightenColor';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { batch } from '@legendapp/state';
@@ -373,8 +374,8 @@ interface ChatOverlayControllerProps {
   handleReply: (message: ChatMessageType<'usernotice'>) => void;
   hiddenUsers: string[];
   highlightedUsers: string[];
-  hidePhraseFromView: (phrase: string | undefined) => void;
-  hideUserFromView: (username: string | undefined) => void;
+  hidePhraseFromView: (phrase?: string) => void;
+  hideUserFromView: (username?: string) => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
   onInsertEmote: (item: EmotePickerItem) => void;
@@ -397,7 +398,7 @@ interface ChatOverlayControllerProps {
   showUnreadJumpPill: boolean;
   chatDensity: 'comfortable' | 'compact';
   highlightOwnMentions: boolean;
-  toggleHighlightedUser: (username: string | undefined) => void;
+  toggleHighlightedUser: (username?: string) => void;
 }
 
 const ChatMessagePane = memo(
@@ -433,7 +434,7 @@ const ChatMessagePane = memo(
     pinnedMessageBusy,
   }: ChatMessagePaneProps) => {
     const storedMessages = useSelector(
-      () => chatStore$.messages.get() as (AnyChatMessageType | undefined)[],
+      () => chatStore$.messages.get(true) as (AnyChatMessageType | undefined)[],
     );
     const rawMessages = useMemo(
       () => storedMessages.filter(isRenderableChatMessage),
@@ -472,7 +473,7 @@ const ChatMessagePane = memo(
       showOnlyMentions,
     ]);
 
-    const listData = visibleMessages.filter(isRenderableChatMessage);
+    const listData = visibleMessages;
 
     useEffect(() => {
       if (hasMessages) {
@@ -2449,7 +2450,7 @@ export const Chat = memo(
       inputShellRef.current?.appendMention(username);
     }, []);
 
-    const hideUserFromView = useCallback((username: string | undefined) => {
+    const hideUserFromView = useCallback((username?: string) => {
       if (!username) {
         return;
       }
@@ -2460,23 +2461,20 @@ export const Chat = memo(
       );
     }, []);
 
-    const toggleHighlightedUser = useCallback(
-      (username: string | undefined) => {
-        if (!username) {
-          return;
-        }
+    const toggleHighlightedUser = useCallback((username?: string) => {
+      if (!username) {
+        return;
+      }
 
-        const normalised = username.trim().toLowerCase();
-        setHighlightedUsers(prev =>
-          prev.includes(normalised)
-            ? prev.filter(entry => entry !== normalised)
-            : [...prev, normalised].slice(-50),
-        );
-      },
-      [],
-    );
+      const normalised = username.trim().toLowerCase();
+      setHighlightedUsers(prev =>
+        prev.includes(normalised)
+          ? prev.filter(entry => entry !== normalised)
+          : [...prev, normalised].slice(-50),
+      );
+    }, []);
 
-    const hidePhraseFromView = useCallback((phrase: string | undefined) => {
+    const hidePhraseFromView = useCallback((phrase?: string) => {
       if (!phrase?.trim()) {
         return;
       }
@@ -2556,10 +2554,11 @@ export const Chat = memo(
       const color =
         getUserMessageColor(lowerUsername) ||
         generateRandomTwitchColor(username);
+      const displayColor = lightenColor(color);
 
-      mentionColorCache.current.set(lowerUsername, color);
+      mentionColorCache.current.set(lowerUsername, displayColor);
 
-      return color;
+      return displayColor;
     }, []);
 
     const parseTextForEmotes = useCallback(
@@ -2755,6 +2754,7 @@ export const Chat = memo(
             message={msg.message}
             userstate={msg.userstate}
             badges={msg.badges}
+            cachedSenderColor={msg.cachedSenderColor}
             message_id={msg.message_id}
             message_nonce={msg.message_nonce}
             sender={msg.sender}
@@ -2779,7 +2779,9 @@ export const Chat = memo(
             highlightedUserSet={highlightedUserSet}
             showInlineReplyContext={preferences.showInlineReplyContext}
             onReplyContextPress={handleReplyContextPress}
-            highlightedMessageId={highlightedReplyTargetMessageId}
+            isHighlightedMessageTarget={
+              msg.message_id === highlightedReplyTargetMessageId
+            }
             // @ts-expect-error - notice_tags union type not narrowing correctly
             notice_tags={
               'notice_tags' in msg && msg.notice_tags

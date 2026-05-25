@@ -11,9 +11,7 @@ const MAX_BUFFERED_MESSAGES = 600;
 const colorCache = new Map<string, string>();
 const MAX_COLOR_CACHE_SIZE = 200;
 
-function getCachedLightenedColor(
-  color: string | undefined,
-): string | undefined {
+function getCachedLightenedColor(color?: string): string | undefined {
   if (!color) {
     return undefined;
   }
@@ -49,7 +47,7 @@ function getBufferedMessageKey(message: AnyMessage): string {
   return `${message.message_id}_${message.message_nonce}`;
 }
 
-function normaliseLogin(value: string | undefined): string {
+function normaliseLogin(value?: string): string {
   return value?.trim().toLowerCase() ?? '';
 }
 
@@ -83,9 +81,22 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const { isAtBottomRef, isScrollingToBottomRef, onUnreadIncrement } = options;
 
   const messageBufferRef = useRef<AnyMessage[]>([]);
+  const messageBufferIndexRef = useRef<Map<string, number>>(new Map());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFlushingRef = useRef(false);
   const pendingUnreadCountRef = useRef(0);
+
+  const resetBuffer = useCallback(() => {
+    messageBufferRef.current = [];
+    messageBufferIndexRef.current.clear();
+  }, []);
+
+  const rebuildBufferIndex = useCallback((messages: AnyMessage[]) => {
+    messageBufferIndexRef.current.clear();
+    messages.forEach((message, index) => {
+      messageBufferIndexRef.current.set(getBufferedMessageKey(message), index);
+    });
+  }, []);
 
   const flushBuffer = useCallback(() => {
     flushTimerRef.current = null;
@@ -104,7 +115,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     isFlushingRef.current = true;
 
     const messagesToFlush = messageBufferRef.current;
-    messageBufferRef.current = [];
+    resetBuffer();
 
     if (messagesToFlush.length > 0) {
       addMessages(messagesToFlush as ChatMessageType<never>[]);
@@ -116,7 +127,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
 
     isFlushingRef.current = false;
-  }, [onUnreadIncrement]);
+  }, [onUnreadIncrement, resetBuffer]);
 
   const startFlushTimer = useCallback(
     (delayMs: number) => {
@@ -140,11 +151,9 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         cachedSenderColor: getCachedLightenedColor(newMessage.userstate?.color),
       };
 
-      const existingIndex = messageBufferRef.current.findIndex(
-        msg => getBufferedMessageKey(msg) === key,
-      );
+      const existingIndex = messageBufferIndexRef.current.get(key);
 
-      if (existingIndex >= 0) {
+      if (typeof existingIndex === 'number') {
         const existingMsg = messageBufferRef.current[existingIndex];
         messageBufferRef.current[existingIndex] = {
           ...messageWithCachedColor,
@@ -155,6 +164,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         return;
       }
 
+      messageBufferIndexRef.current.set(key, messageBufferRef.current.length);
       messageBufferRef.current.push(messageWithCachedColor);
       if (messageBufferRef.current.length > MAX_BUFFERED_MESSAGES) {
         const droppedCount =
@@ -162,6 +172,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         messageBufferRef.current = messageBufferRef.current.slice(
           -MAX_BUFFERED_MESSAGES,
         );
+        rebuildBufferIndex(messageBufferRef.current);
         pendingUnreadCountRef.current = Math.max(
           0,
           pendingUnreadCountRef.current - droppedCount,
@@ -183,7 +194,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
           : BACKLOG_BUFFER_FLUSH_INTERVAL_MS;
       startFlushTimer(flushDelay);
     },
-    [isAtBottomRef, isScrollingToBottomRef, startFlushTimer],
+    [
+      isAtBottomRef,
+      isScrollingToBottomRef,
+      rebuildBufferIndex,
+      startFlushTimer,
+    ],
   );
 
   const handleNewMessage = useCallback(
@@ -199,7 +215,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
 
     const bufferedMessages = messageBufferRef.current;
-    messageBufferRef.current = [];
+    resetBuffer();
 
     if (bufferedMessages.length > 0) {
       addMessages(bufferedMessages as ChatMessageType<never>[]);
@@ -209,22 +225,30 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       onUnreadIncrement(pendingUnreadCountRef.current);
       pendingUnreadCountRef.current = 0;
     }
-  }, [onUnreadIncrement]);
+  }, [onUnreadIncrement, resetBuffer]);
 
   const clearLocalMessages = useCallback(() => {
-    messageBufferRef.current = [];
+    resetBuffer();
     pendingUnreadCountRef.current = 0;
-  }, []);
+  }, [resetBuffer]);
 
-  const removeBufferedMessageById = useCallback((messageId: string) => {
-    if (!messageId.trim()) {
-      return;
-    }
+  const removeBufferedMessageById = useCallback(
+    (messageId: string) => {
+      if (!messageId.trim()) {
+        return;
+      }
 
-    messageBufferRef.current = messageBufferRef.current.filter(
-      message => message.message_id !== messageId,
-    );
-  }, []);
+      const nextBuffer = messageBufferRef.current.filter(
+        message => message.message_id !== messageId,
+      );
+      if (nextBuffer.length === messageBufferRef.current.length) {
+        return;
+      }
+      messageBufferRef.current = nextBuffer;
+      rebuildBufferIndex(nextBuffer);
+    },
+    [rebuildBufferIndex],
+  );
 
   const moderateBufferedMessageById = useCallback(
     (messageId: string, moderationNotice: string) => {
@@ -232,11 +256,23 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         return;
       }
 
-      messageBufferRef.current = messageBufferRef.current.map(message =>
-        message.message_id === messageId
-          ? createModeratedBufferMessage(message, moderationNotice)
-          : message,
-      );
+      let nextBuffer: AnyMessage[] | null = null;
+
+      messageBufferRef.current.forEach((message, index) => {
+        if (message.message_id !== messageId) {
+          return;
+        }
+
+        nextBuffer ??= messageBufferRef.current.slice();
+        nextBuffer[index] = createModeratedBufferMessage(
+          message,
+          moderationNotice,
+        );
+      });
+
+      if (nextBuffer) {
+        messageBufferRef.current = nextBuffer;
+      }
     },
     [],
   );
@@ -248,17 +284,29 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         return;
       }
 
-      messageBufferRef.current = messageBufferRef.current.map(message => {
+      let nextBuffer: AnyMessage[] | null = null;
+
+      messageBufferRef.current.forEach((message, index) => {
         const messageLogin = normaliseLogin(
           message.userstate?.login ||
             message.userstate?.username ||
             message.sender,
         );
 
-        return messageLogin === target
-          ? createModeratedBufferMessage(message, moderationNotice)
-          : message;
+        if (messageLogin !== target) {
+          return;
+        }
+
+        nextBuffer ??= messageBufferRef.current.slice();
+        nextBuffer[index] = createModeratedBufferMessage(
+          message,
+          moderationNotice,
+        );
       });
+
+      if (nextBuffer) {
+        messageBufferRef.current = nextBuffer;
+      }
     },
     [],
   );
@@ -268,9 +316,9 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       clearTimeout(flushTimerRef.current);
       flushTimerRef.current = null;
     }
-    messageBufferRef.current = [];
+    resetBuffer();
     pendingUnreadCountRef.current = 0;
-  }, []);
+  }, [resetBuffer]);
 
   return {
     handleNewMessage,

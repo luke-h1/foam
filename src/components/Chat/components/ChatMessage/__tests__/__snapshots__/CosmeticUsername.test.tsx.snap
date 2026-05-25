@@ -119,121 +119,37 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
 `;
 
 exports[`PaintedUsername Snapshots should match snapshot with fallback color only 1`] = `
-<RNCMaskedView>
-  <View
-    pointerEvents="none"
-    style={
+<Text
+  style={
+    [
       {
-        "bottom": 0,
-        "left": 0,
-        "position": "absolute",
-        "right": 0,
-        "top": 0,
-      }
-    }
-  >
-    <View
-      style={
+        "fontSize": 16,
+        "lineHeight": 24,
+      },
+      {
+        "color": "#fafafa",
+        "fontFamily": "Montserrat_400Regular",
+        "fontStyle": "normal",
+        "fontVariant": undefined,
+        "fontWeight": undefined,
+        "textAlign": "left",
+      },
+      [
         {
-          "backgroundColor": "transparent",
-        }
-      }
-    >
-      <Text
-        style={
-          [
-            {
-              "fontSize": 16,
-              "lineHeight": 24,
-            },
-            {
-              "color": "#fafafa",
-              "fontFamily": "Montserrat_400Regular",
-              "fontStyle": "normal",
-              "fontVariant": undefined,
-              "fontWeight": undefined,
-              "textAlign": "left",
-            },
-            [
-              {
-                "color": "black",
-                "fontSize": 14,
-                "fontWeight": "bold",
-              },
-              undefined,
-              {},
-            ],
-          ]
-        }
-        textBreakStrategy="simple"
-      >
-        FallbackUser: 
-      </Text>
-    </View>
-  </View>
-  <ViewManagerAdapter_ExpoLinearGradient
-    colors={
-      [
-        4288371126,
-        4288371126,
-      ]
-    }
-    endPoint={
-      [
-        1,
-        0,
-      ]
-    }
-    locations={
-      [
-        0,
-        1,
-      ]
-    }
-    startPoint={
-      [
-        0,
-        0,
-      ]
-    }
-    style={
-      {
-        "flexDirection": "row",
-      }
-    }
-  >
-    <Text
-      style={
-        [
-          {
-            "fontSize": 16,
-            "lineHeight": 24,
-          },
-          {
-            "color": "#fafafa",
-            "fontFamily": "Montserrat_400Regular",
-            "fontStyle": "normal",
-            "fontVariant": undefined,
-            "fontWeight": undefined,
-            "textAlign": "left",
-          },
-          [
-            {
-              "fontSize": 14,
-              "fontWeight": "bold",
-              "opacity": 0,
-            },
-            undefined,
-            {},
-          ],
-        ]
-      }
-      textBreakStrategy="simple"
-    >
-      FallbackUser: 
-    </Text>
-  </ViewManagerAdapter_ExpoLinearGradient>
-</RNCMaskedView>
+          "fontSize": 14,
+          "fontWeight": "bold",
+        },
+        {
+          "color": "#9B59B6",
+        },
+        undefined,
+      ],
+    ]
+  }
+  textBreakStrategy="simple"
+>
+  FallbackUser: 
+</Text>
 `;
 
 exports[`PaintedUsername Snapshots should match snapshot with linear gradient paint 1`] = `

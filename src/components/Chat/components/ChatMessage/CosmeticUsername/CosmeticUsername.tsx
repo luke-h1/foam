@@ -39,44 +39,26 @@ interface PaintedUsernameProps {
   usernameTextStyle?: StyleProp<TextStyle>;
 }
 
-function PaintedUsernameComponent({
-  username,
-  paint: paintProp,
-  userId,
-  fallbackColor = '#FFFFFF',
-  showColon = true,
+interface PaintedUsernameWithPaintProps {
+  displayUsername: string;
+  fallbackColor: string;
+  paint: PaintData;
+  usernameTextStyle?: StyleProp<TextStyle>;
+}
+
+function PaintedUsernameWithPaint({
+  displayUsername,
+  fallbackColor,
+  paint,
   usernameTextStyle,
-}: PaintedUsernameProps) {
-  const displayUsername = showColon ? `${username}: ` : username;
-  const paintId = useSelector(() =>
-    userId ? chatStore$.userPaintIds[userId]?.get() : null,
+}: PaintedUsernameWithPaintProps) {
+  const gradientConfig = useMemo(
+    (): GradientConfig => buildGradientConfig(paint, fallbackColor),
+    [paint, fallbackColor],
   );
-  const storePaint = useSelector(() =>
-    paintId ? chatStore$.paints[paintId]?.get() : null,
-  );
-
-  const paint = useMemo(() => {
-    if (paintProp) {
-      return paintProp;
-    }
-    return storePaint ?? null;
-  }, [paintProp, storePaint]);
-
-  const gradientConfig = useMemo((): GradientConfig => {
-    if (!paint) {
-      return {
-        colors: [fallbackColor, fallbackColor],
-        locations: [0, 1],
-        start: { x: 0, y: 0 },
-        end: { x: 1, y: 0 },
-      };
-    }
-
-    return buildGradientConfig(paint, fallbackColor);
-  }, [paint, fallbackColor]);
 
   const shadowStyle = useMemo(() => {
-    if (!paint || !paint.shadows || paint.shadows.length === 0) {
+    if (!paint.shadows || paint.shadows.length === 0) {
       return {};
     }
 
@@ -102,7 +84,7 @@ function PaintedUsernameComponent({
     };
   }, [paint]);
 
-  const isRadial = paint?.function === 'RADIAL_GRADIENT';
+  const isRadial = paint.function === 'RADIAL_GRADIENT';
 
   const renderGradient = () => {
     if (isRadial) {
@@ -176,6 +158,49 @@ function PaintedUsernameComponent({
   );
 }
 
+function PaintedUsernameComponent({
+  username,
+  paint: paintProp,
+  userId,
+  fallbackColor = '#FFFFFF',
+  showColon = true,
+  usernameTextStyle,
+}: PaintedUsernameProps) {
+  const displayUsername = showColon ? `${username}: ` : username;
+  const storePaint = useSelector(() => {
+    if (!userId) {
+      return null;
+    }
+
+    const paintId = chatStore$.userPaintIds[userId]?.get();
+    return paintId ? chatStore$.paints[paintId]?.get() : null;
+  });
+  const paint = paintProp ?? storePaint ?? null;
+
+  if (!paint) {
+    return (
+      <Text
+        style={[
+          styles.plainUsername,
+          { color: fallbackColor },
+          usernameTextStyle,
+        ]}
+      >
+        {displayUsername}
+      </Text>
+    );
+  }
+
+  return (
+    <PaintedUsernameWithPaint
+      displayUsername={displayUsername}
+      fallbackColor={fallbackColor}
+      paint={paint}
+      usernameTextStyle={usernameTextStyle}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   gradient: {
     flexDirection: 'row',
@@ -190,6 +215,10 @@ const styles = StyleSheet.create({
   },
   maskText: {
     color: 'black',
+    fontSize: theme.fontSize14,
+    fontWeight: 'bold',
+  },
+  plainUsername: {
     fontSize: theme.fontSize14,
     fontWeight: 'bold',
   },

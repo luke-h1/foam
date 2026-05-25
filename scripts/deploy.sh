@@ -50,6 +50,41 @@ run_with_variant_env() {
       -v "EXPO_PUBLIC_SENTRY_RELEASE=$sentry_release_value" \
       -v "EXPO_PUBLIC_SENTRY_DIST=$sentry_dist_value" \
       -- env \
+      -u SENTRY_AUTH_TOKEN \
+      "SENTRY_DISABLE_AUTO_UPLOAD=true" \
+      "SENTRY_LOAD_DOTENV=0" \
+      "SENTRY_RELEASE=$sentry_release_value" \
+      "SENTRY_DIST=$sentry_dist_value" \
+      "$@"
+    return
+  fi
+
+  env \
+    -u SENTRY_AUTH_TOKEN \
+    EXPO_PUBLIC_APP_VARIANT="$variant" \
+    EXPO_PUBLIC_SENTRY_RELEASE="$sentry_release_value" \
+    EXPO_PUBLIC_SENTRY_DIST="$sentry_dist_value" \
+    SENTRY_DISABLE_AUTO_UPLOAD=true \
+    SENTRY_LOAD_DOTENV=0 \
+    SENTRY_RELEASE="$sentry_release_value" \
+    SENTRY_DIST="$sentry_dist_value" \
+    "$@"
+}
+
+run_with_sentry_upload_env() {
+  local sentry_release_value
+  local sentry_dist_value
+  sentry_release_value="$(sentry_release)"
+  sentry_dist_value="$(sentry_dist)"
+
+  if [ -x "$dotenv_bin" ]; then
+    "$dotenv_bin" \
+      -c "$variant" \
+      -v "EXPO_PUBLIC_APP_VARIANT=$variant" \
+      -v "EXPO_PUBLIC_SENTRY_RELEASE=$sentry_release_value" \
+      -v "EXPO_PUBLIC_SENTRY_DIST=$sentry_dist_value" \
+      -- env \
+      "SENTRY_LOAD_DOTENV=0" \
       "SENTRY_RELEASE=$sentry_release_value" \
       "SENTRY_DIST=$sentry_dist_value" \
       "$@"
@@ -59,6 +94,7 @@ run_with_variant_env() {
   EXPO_PUBLIC_APP_VARIANT="$variant" \
     EXPO_PUBLIC_SENTRY_RELEASE="$sentry_release_value" \
     EXPO_PUBLIC_SENTRY_DIST="$sentry_dist_value" \
+    SENTRY_LOAD_DOTENV=0 \
     SENTRY_RELEASE="$sentry_release_value" \
     SENTRY_DIST="$sentry_dist_value" \
     "$@"
@@ -68,7 +104,7 @@ run_sentry_helper() {
   local function_name="$1"
   shift
 
-  run_with_variant_env bash -c 'source ./scripts/sentry-upload.sh; "$@"' _ "$function_name" "$@"
+  run_with_sentry_upload_env bash -c 'source ./scripts/sentry-upload.sh; "$@"' _ "$function_name" "$@"
 }
 
 submit_ios() {

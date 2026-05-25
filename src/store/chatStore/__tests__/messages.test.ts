@@ -4,6 +4,7 @@ import {
   addMessages,
   clearMessages,
   getMessageById,
+  getUserMessageColor,
   moderateMessageById,
   moderateMessagesByLogin,
   removeMessageById,
@@ -104,6 +105,20 @@ describe('chatStore messages', () => {
     expect(chatStore$.messages.peek()).toHaveLength(1);
   });
 
+  test('updateMessage publishes a new message array reference', () => {
+    addMessage(createMessage('msg-1', 'nonce-1', 'first'));
+    const before = chatStore$.messages.peek();
+
+    updateMessage('msg-1', 'nonce-1', {
+      message: [{ type: 'text', content: 'updated' }],
+    });
+
+    expect(chatStore$.messages.peek()).not.toBe(before);
+    expect(getMessageById('msg-1')?.message).toEqual([
+      { type: 'text', content: 'updated' },
+    ]);
+  });
+
   test('addMessages ignores duplicate message keys from historical replay', () => {
     addMessages([
       createMessage('msg-1', 'msg-1', 'historical'),
@@ -162,6 +177,16 @@ describe('chatStore messages', () => {
     expect(
       chatStore$.messages.peek().map(message => message.message_id),
     ).toEqual(['msg-1', 'msg-2']);
+  });
+
+  test('clearMessages clears sender color indexes', () => {
+    addMessage(createMessage('msg-1', 'nonce-1', 'first'));
+
+    expect(getUserMessageColor('tester')).toBe('#ff0000');
+
+    clearMessages();
+
+    expect(getUserMessageColor('tester')).toBeUndefined();
   });
 
   test('restoreRecentMessagesForChannel skips sparse persisted entries', () => {
