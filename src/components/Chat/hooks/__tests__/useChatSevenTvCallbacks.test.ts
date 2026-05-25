@@ -9,7 +9,10 @@ import {
   removeUserPaint,
   setUserBadge,
   setUserPaint,
+  updateBadge,
+  updatePaint,
 } from '@app/store/chatStore/cosmetics';
+import { countMetric } from '@app/lib/sentry';
 import type { SanitisedEmote } from '@app/types/emote';
 import { renderHook, act } from '@testing-library/react-native';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
@@ -32,6 +35,11 @@ jest.mock('@app/store/chatStore/cosmetics', () => ({
 
 jest.mock('@app/utils/logger', () => ({
   logger: { stvWs: { info: jest.fn(), debug: jest.fn() } },
+}));
+
+jest.mock('@app/lib/sentry', () => ({
+  countMetric: jest.fn(),
+  recordInfo: jest.fn(),
 }));
 
 jest.mock('@app/utils/emote/stv/generateSevenTvEmoteNotice', () => ({
@@ -205,13 +213,14 @@ describe('useChatSevenTvCallbacks', () => {
       });
 
       expect(getBadge).toHaveBeenCalled();
-      expect(addBadge).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'badge-id',
-          type: '7TV Badge',
-          provider: '7tv',
-        }),
-      );
+      expect((addBadge as jest.Mock).mock.calls[0]?.[0]).toEqual({
+        id: 'badge-id',
+        provider: '7tv',
+        set: 'badge-id',
+        title: 'Tip',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/4x',
+      });
     });
 
     test('does not add badge when getBadge already returns truthy', () => {
@@ -253,9 +262,139 @@ describe('useChatSevenTvCallbacks', () => {
       });
 
       expect(getPaint).toHaveBeenCalled();
-      expect(addPaint).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'paint-id', name: 'Paint' }),
+      expect((addPaint as jest.Mock).mock.calls[0]?.[0]).toEqual({
+        color: 0xff0000ff,
+        id: 'paint-id',
+        name: 'Paint',
+      });
+    });
+  });
+
+  describe('onCosmeticUpdate', () => {
+    test('records a Sentry count metric for paint updates', () => {
+      const { result } = renderHook(() =>
+        useChatSevenTvCallbacks(defaultProps),
       );
+
+      act(() => {
+        result.current.onCosmeticUpdate({
+          kind: 'PAINT',
+          changes: {
+            updated: [
+              {
+                value: {
+                  object: { data: { id: 'paint-1', name: 'Updated Paint' } },
+                },
+              },
+            ],
+            pushed: [
+              {
+                value: {
+                  object: { data: { id: 'paint-2', name: 'Added Paint' } },
+                },
+              },
+            ],
+          },
+        } as never);
+      });
+
+      expect(updatePaint).toHaveBeenCalledWith({
+        id: 'paint-1',
+        name: 'Updated Paint',
+      });
+      expect(addPaint).toHaveBeenCalledWith({
+        id: 'paint-2',
+        name: 'Added Paint',
+      });
+      expect((countMetric as jest.Mock).mock.calls[0]).toEqual([
+        'seven_tv.cosmetic_update.applied',
+        {
+          action: 'paint_update_applied',
+          channel_id: 'twitch-123',
+          channel_name: 'testchannel',
+          provider: 'seven_tv',
+          resource_type: 'paints',
+          screen: 'chat',
+          seven_tv_emote_set_id: 'emote-set-1',
+        },
+        2,
+      ]);
+    });
+
+    test('records a Sentry count metric for badge updates', () => {
+      const { result } = renderHook(() =>
+        useChatSevenTvCallbacks(defaultProps),
+      );
+
+      act(() => {
+        result.current.onCosmeticUpdate({
+          kind: 'BADGE',
+          changes: {
+            updated: [
+              {
+                value: {
+                  object: {
+                    data: {
+                      id: 'badge-1',
+                      name: 'Updated Badge',
+                      host: {
+                        url: 'https://cdn.7tv.app/badge-1',
+                        files: [{ name: '4x' }],
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+            pushed: [
+              {
+                value: {
+                  object: {
+                    data: {
+                      id: 'badge-2',
+                      name: 'Added Badge',
+                      host: {
+                        url: 'https://cdn.7tv.app/badge-2',
+                        files: [{ name: '4x' }],
+                      },
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        } as never);
+      });
+
+      expect((updateBadge as jest.Mock).mock.calls[0]?.[0]).toEqual({
+        id: 'badge-1',
+        provider: '7tv',
+        set: 'badge-1',
+        title: 'Updated Badge',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/badge-1/4x',
+      });
+      expect((addBadge as jest.Mock).mock.calls[0]?.[0]).toEqual({
+        id: 'badge-2',
+        provider: '7tv',
+        set: 'badge-2',
+        title: 'Added Badge',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/badge-2/4x',
+      });
+      expect((countMetric as jest.Mock).mock.calls[0]).toEqual([
+        'seven_tv.cosmetic_update.applied',
+        {
+          action: 'badge_update_applied',
+          channel_id: 'twitch-123',
+          channel_name: 'testchannel',
+          provider: 'seven_tv',
+          resource_type: 'badges',
+          screen: 'chat',
+          seven_tv_emote_set_id: 'emote-set-1',
+        },
+        2,
+      ]);
     });
   });
 

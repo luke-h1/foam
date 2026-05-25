@@ -5,6 +5,7 @@ import {
   EmptyLayoutContent,
   EmptyLayoutDescription,
   EmptyLayoutHeader,
+  EmptyLayoutMedia,
   EmptyLayoutTitle,
 } from '@app/components/EmptyLayout/EmptyLayout';
 import {
@@ -12,6 +13,7 @@ import {
   type ImageProps as AppImageProps,
 } from '@app/components/Image/Image';
 import { theme } from '@app/styles/themes';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type {
   ImageStyle,
   StyleProp,
@@ -50,9 +52,12 @@ interface EmptyStateProps {
   content?: TextProps['children'];
   contentStyle?: StyleProp<TextStyle>;
   contentTextProps?: TextProps;
-  button?: string;
+  button?: string | null;
   buttonStyle?: StyleProp<ViewStyle>;
   buttonOnPress?: () => void;
+  iconName?: SymbolViewProps['name'];
+  iconSize?: number;
+  iconTintColor?: string;
 }
 
 export function EmptyState({
@@ -70,17 +75,32 @@ export function EmptyState({
   button,
   buttonStyle,
   buttonOnPress,
+  iconName,
+  iconSize = 34,
+  iconTintColor = theme.color.textSecondary.dark,
 }: EmptyStateProps) {
   const presetConfig = EMPTY_STATE_PRESETS[preset];
-  const resolvedImageSource = imageSource ?? presetConfig.imageSource;
+  const resolvedImageSource = iconName
+    ? undefined
+    : (imageSource ?? presetConfig.imageSource);
   const resolvedHeading = heading ?? presetConfig.heading;
   const resolvedContent = content ?? presetConfig.content;
-  const resolvedButton = button ?? presetConfig.button;
+  const resolvedButton = button === undefined ? presetConfig.button : button;
 
   return (
     <SafeAreaView style={[styles.container, style]}>
       <EmptyLayout style={styles.emptyLayout} variant="outline">
         <EmptyLayoutHeader>
+          {iconName ? (
+            <EmptyLayoutMedia style={styles.iconWrap}>
+              <SymbolView
+                name={iconName}
+                size={iconSize}
+                tintColor={iconTintColor}
+              />
+            </EmptyLayoutMedia>
+          ) : null}
+
           {resolvedImageSource ? (
             <EmptyLayoutContent style={styles.mediaWrap}>
               <Image
@@ -170,6 +190,9 @@ const styles = {
   },
   headingWithImage: {
     marginTop: theme.space12,
+  },
+  iconWrap: {
+    marginBottom: theme.space20,
   },
   image: {
     borderRadius: theme.borderRadius20,

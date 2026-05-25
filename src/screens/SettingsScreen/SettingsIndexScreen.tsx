@@ -9,6 +9,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { router } from 'expo-router';
@@ -31,7 +32,7 @@ export function SettingsIndexScreen() {
 
   const { statusPageUrl, websiteUrl } = config;
   const handleSendFeedback = () => {
-    router.push('/tabs/settings/feedback');
+    showFeedbackWidget();
   };
 
   if (Platform.OS === 'ios') {

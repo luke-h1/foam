@@ -2,13 +2,19 @@ import * as Sentry from '@sentry/react-native';
 import type { ComponentType } from 'react';
 
 let didInitializeSentry = false;
-let sentrySendTimeout: ReturnType<typeof setTimeout> | null = null;
 
-const queuedSentryMessages: {
-  context?: Record<string, unknown>;
-  message: string;
-  tags?: Record<string, string>;
-}[] = [];
+const feedbackWidgetOptions = {
+  formTitle: 'Send Feedback',
+  messageLabel: 'Feedback',
+  messagePlaceholder: 'What could be better?',
+  submitButtonLabel: 'Send Feedback',
+  successMessageText: 'Thanks for the feedback.',
+  formError: 'Please add a message before sending feedback.',
+  genericError: 'Unable to send feedback right now.',
+  buttonOptions: {
+    triggerLabel: 'Send Feedback',
+  },
+};
 
 export function init(): void {
   if (didInitializeSentry) {
@@ -25,8 +31,10 @@ export function init(): void {
     release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
     dist: process.env.EXPO_PUBLIC_SENTRY_DIST,
     enableAutoSessionTracking: false,
+    enableLogs: true,
     enableMetrics: true,
     ignoreErrors: ['Network request failed'],
+    integrations: [Sentry.feedbackIntegration(feedbackWidgetOptions)],
     attachStacktrace: false,
     sampleRate: appVariant === 'production' ? 0.1 : 1,
   });
@@ -44,8 +52,6 @@ export function showFeedbackWidget(): void {
   init();
   Sentry.showFeedbackWidget();
 }
-
-export const FeedbackWidget = Sentry.FeedbackWidget;
 
 export function countMetric(
   name: string,
@@ -200,47 +206,6 @@ function buildRecordAttributes({
   };
 }
 
-function queueMessageForSentry({
-  context,
-  message,
-  tags,
-}: {
-  context?: Record<string, unknown>;
-  message: string;
-  tags?: Record<string, string>;
-}): void {
-  queuedSentryMessages.push({
-    context,
-    message,
-    tags,
-  });
-
-  if (sentrySendTimeout) {
-    return;
-  }
-
-  sentrySendTimeout = setTimeout(() => {
-    sentrySendTimeout = null;
-    sendQueuedMessages();
-  }, 7000);
-}
-
-function sendQueuedMessages(): void {
-  while (queuedSentryMessages.length > 0) {
-    const record = queuedSentryMessages.shift();
-
-    if (!record) {
-      continue;
-    }
-
-    Sentry.captureMessage(record.message, {
-      level: 'warning',
-      tags: record.tags,
-      extra: record.context,
-    });
-  }
-}
-
 export function recordError(error: {
   name: MonitoringErrorName;
   message: string;
@@ -287,13 +252,7 @@ export function recordWarning(warning: {
     data: context,
   });
 
-  queueMessageForSentry({
-    message,
-    tags: {
-      category: warning.name,
-    },
-    context,
-  });
+  Sentry.logger.warn(message, context);
 }
 
 export function recordInfo(info: {
@@ -302,15 +261,20 @@ export function recordInfo(info: {
   params?: Record<string, unknown>;
   infoCause?: unknown;
 }): void {
-  Sentry.addBreadcrumb({
-    message: `${info.name}: ${info.message}`,
-    level: 'info',
-    data: buildRecordAttributes({
-      name: info.name,
-      params: info.params,
-      cause: info.infoCause,
-    }),
+  const message = `${info.name}: ${info.message}`;
+  const context = buildRecordAttributes({
+    name: info.name,
+    params: info.params,
+    cause: info.infoCause,
   });
+
+  Sentry.addBreadcrumb({
+    message,
+    level: 'info',
+    data: context,
+  });
+
+  Sentry.logger.info(message, context);
 }
 
 export function countOtaMetric(

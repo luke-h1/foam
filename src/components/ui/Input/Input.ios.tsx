@@ -63,6 +63,7 @@ import {
   type ViewStyle,
   useColorScheme,
 } from 'react-native';
+import { scheduleOnRN } from 'react-native-worklets';
 
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
 export type InputRef = TextFieldRef;
@@ -383,7 +384,9 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
           numberOfLines,
           onSubmit: onSubmitEditing
             ? () => {
-                onSubmitEditing(latestText.current);
+                const submittedText = nativeText.value;
+                latestText.current = submittedText;
+                onSubmitEditing(submittedText);
                 if (
                   shouldBlurOnSubmit({
                     blurOnSubmit,
@@ -417,6 +420,7 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
         inputMode,
         keyboardType,
         multiline,
+        nativeText,
         numberOfLines,
         onSubmitEditing,
         resolvedCursorColor,
@@ -479,7 +483,7 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
       </SecureField.Placeholder>
     ) : null;
 
-    const handleTextChange = useCallback(
+    const commitTextChange = useCallback(
       (nextText: string) => {
         latestText.current = nextText;
         setHasText(nextText.length > 0);
@@ -489,6 +493,15 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
       [onChange, onChangeText],
     );
 
+    const handleTextChange = useCallback(
+      (nextText: string) => {
+        'worklet';
+
+        scheduleOnRN(commitTextChange, nextText);
+      },
+      [commitTextChange],
+    );
+
     const handleFocusChange = useCallback(
       (focused: boolean) => {
         if (focused) {
@@ -496,9 +509,11 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
           return;
         }
         onBlur?.();
-        onEndEditing?.(endEditingEvent(latestText.current));
+        const currentText = nativeText.value;
+        latestText.current = currentText;
+        onEndEditing?.(endEditingEvent(currentText));
       },
-      [onBlur, onEndEditing, onFocus],
+      [nativeText, onBlur, onEndEditing, onFocus],
     );
 
     useImperativeHandle(
@@ -513,14 +528,9 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
             })?.blur() ?? Promise.resolve(),
           clear: () => {
             latestText.current = '';
+            nativeText.value = '';
             setHasText(false);
-            return (
-              currentInputRef({
-                secureTextEntry,
-                secureFieldRef,
-                textFieldRef,
-              })?.clear() ?? Promise.resolve()
-            );
+            return Promise.resolve();
           },
           focus: () =>
             currentInputRef({
@@ -535,17 +545,12 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
                 Promise.resolve()),
           setText: (nextText: string) => {
             latestText.current = nextText;
+            nativeText.value = nextText;
             setHasText(nextText.length > 0);
-            return (
-              currentInputRef({
-                secureTextEntry,
-                secureFieldRef,
-                textFieldRef,
-              })?.setText(nextText) ?? Promise.resolve()
-            );
+            return Promise.resolve();
           },
         }) satisfies InputRef,
-      [secureTextEntry],
+      [nativeText, secureTextEntry],
     );
 
     useEffect(() => {
@@ -559,13 +564,9 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
       }
 
       latestText.current = nextText;
+      nativeText.value = nextText;
       setHasText(nextText.length > 0);
-      void currentInputRef({
-        secureTextEntry,
-        secureFieldRef,
-        textFieldRef,
-      })?.setText(nextText);
-    }, [secureTextEntry, value]);
+    }, [nativeText, value]);
 
     useEffect(() => {
       if (!selection || secureTextEntry) {

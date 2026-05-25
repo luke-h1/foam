@@ -86,8 +86,11 @@ const VERSION = '0.0.40';
 
 const appConfig = VARIANT_CONFIG[variant];
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
+// Local deploy/OTA scripts generate SENTRY_DIST from the current git commit
+// and expose it as EXPO_PUBLIC_SENTRY_DIST before evaluating this config.
 const sentryDist =
   process.env.EXPO_PUBLIC_SENTRY_DIST ??
+  process.env.SENTRY_DIST ??
   process.env.EAS_BUILD_GIT_COMMIT_HASH ??
   process.env.GITHUB_SHA ??
   'local';
@@ -294,6 +297,7 @@ const config: ExpoConfig = {
     './src/plugins/withIosStaticFrameworkHeaderFix.js',
     '@react-native-firebase/app',
     './src/plugins/withAndroidReleaseLintFix.js',
+    './plugins/with-fix-dev-launcher-cycle.js',
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
     // ['./src/plugins/withFastImageWebPSupportAndroid.js'],
