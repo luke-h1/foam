@@ -23,6 +23,7 @@ import {
 import type { SanitisedEmote } from '@app/types/emote';
 import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
+import { recordInfo } from '@app/lib/sentry';
 import { useCallback } from 'react';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 
@@ -182,53 +183,80 @@ export function useChatSevenTvCallbacks({
     [canFetchCosmetics, fetchAndCacheUserCosmetics],
   );
 
-  const onCosmeticUpdate = useCallback((data: CosmeticUpdateCallbackData) => {
-    if (data.kind === 'PAINT') {
-      const { changes } = data;
-      changes.updated?.forEach(update => {
-        const paintData = getDataFromChangeValue(update) as
-          | PaintData
-          | undefined;
-        if (paintData?.id) {
-          updatePaint(paintData);
-          logger.stvWs.info(`Updated paint in cache: ${paintData.name}`);
+  const onCosmeticUpdate = useCallback(
+    (data: CosmeticUpdateCallbackData) => {
+      if (data.kind === 'PAINT') {
+        const { changes } = data;
+        changes.updated?.forEach(update => {
+          const paintData = getDataFromChangeValue(update) as
+            | PaintData
+            | undefined;
+          if (paintData?.id) {
+            updatePaint(paintData);
+            logger.stvWs.info(`Updated paint in cache: ${paintData.name}`);
+          }
+        });
+        changes.pushed?.forEach(push => {
+          const paintData = getDataFromChangeValue(push) as
+            | PaintData
+            | undefined;
+          if (paintData?.id) {
+            addPaint(paintData);
+            logger.stvWs.info(`Added paint from update: ${paintData.name}`);
+          }
+        });
+      }
+      if (data.kind === 'BADGE') {
+        const { changes } = data;
+        let added_badges = 0;
+        let updated_badges = 0;
+        const toSanitised = (entry: unknown) => {
+          const badgeData = getDataFromChangeValue(
+            entry as { value?: { object?: { data?: BadgeData } } },
+          ) as (BadgeData & { ref_id?: string }) | undefined;
+          if (badgeData) {
+            return sanitise7TvBadge(badgeData);
+          }
+          return null;
+        };
+        changes.updated?.forEach(update => {
+          const sanitised = toSanitised(update);
+          if (sanitised) {
+            updateBadge(sanitised);
+            updated_badges += 1;
+            logger.stvWs.info(`Updated badge in cache: ${sanitised.title}`);
+          }
+        });
+        changes.pushed?.forEach(push => {
+          const sanitised = toSanitised(push);
+          if (sanitised) {
+            addBadge(sanitised);
+            added_badges += 1;
+            logger.stvWs.info(`Added badge from update: ${sanitised.title}`);
+          }
+        });
+
+        if (added_badges > 0 || updated_badges > 0) {
+          recordInfo({
+            name: 'seven_tv_badges_info',
+            message: 'Applied 7TV badge update',
+            params: {
+              action: 'badge_update_applied',
+              added_badges,
+              channel_id: channelId,
+              channel_name: channelName,
+              provider: 'seven_tv',
+              resource_type: 'badges',
+              screen: 'chat',
+              seven_tv_emote_set_id: sevenTvEmoteSetId,
+              updated_badges,
+            },
+          });
         }
-      });
-      changes.pushed?.forEach(push => {
-        const paintData = getDataFromChangeValue(push) as PaintData | undefined;
-        if (paintData?.id) {
-          addPaint(paintData);
-          logger.stvWs.info(`Added paint from update: ${paintData.name}`);
-        }
-      });
-    }
-    if (data.kind === 'BADGE') {
-      const { changes } = data;
-      const toSanitised = (entry: unknown) => {
-        const badgeData = getDataFromChangeValue(
-          entry as { value?: { object?: { data?: BadgeData } } },
-        ) as (BadgeData & { ref_id?: string }) | undefined;
-        if (badgeData) {
-          return sanitise7TvBadge(badgeData);
-        }
-        return null;
-      };
-      changes.updated?.forEach(update => {
-        const sanitised = toSanitised(update);
-        if (sanitised) {
-          updateBadge(sanitised);
-          logger.stvWs.info(`Updated badge in cache: ${sanitised.title}`);
-        }
-      });
-      changes.pushed?.forEach(push => {
-        const sanitised = toSanitised(push);
-        if (sanitised) {
-          addBadge(sanitised);
-          logger.stvWs.info(`Added badge from update: ${sanitised.title}`);
-        }
-      });
-    }
-  }, []);
+      }
+    },
+    [channelId, channelName, sevenTvEmoteSetId],
+  );
 
   const onCosmeticDelete = useCallback((data: CosmeticDeleteCallbackData) => {
     removeBadge(data.cosmeticId);

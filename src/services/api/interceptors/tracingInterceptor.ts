@@ -1,34 +1,37 @@
 import { recordError, recordInfo } from '@app/lib/sentry';
+import { isAxiosError } from 'axios';
 import { ResponseInterceptor, ResponseInterceptorFactory } from '../Client';
+import { getApiMonitoringContext } from '../monitoring';
 
 export const createTracingInterceptor: ResponseInterceptorFactory =
   (): ResponseInterceptor => ({
     onResponse: response => {
       const { config } = response;
-      const url = `${config.baseURL || ''}${config.url || ''}`;
+      const context = getApiMonitoringContext({
+        baseURL: config.baseURL,
+        method: config.method,
+        status: response.status,
+        url: config.url,
+      });
 
       if (response.status >= 400) {
         recordError({
-          name: 'APIError',
+          name: 'api_error',
           message: `HTTP request returned ${response.status}`,
           params: {
-            category: 'API',
             action: 'response_error_status',
-            method: config.method?.toUpperCase(),
-            url,
-            status: response.status,
+            category: 'api',
+            ...context,
           },
         });
       } else {
         recordInfo({
-          name: 'APIInfo',
-          message: `HTTP ${config.method?.toUpperCase()} ${url}`,
+          name: 'api_info',
+          message: `HTTP ${context.method} ${context.endpoint}`,
           params: {
-            category: 'API',
             action: 'response_ok',
-            method: config.method?.toUpperCase(),
-            url,
-            status: response.status,
+            category: 'api',
+            ...context,
           },
         });
       }
@@ -36,12 +39,22 @@ export const createTracingInterceptor: ResponseInterceptorFactory =
       return response;
     },
     onError: error => {
+      const context = isAxiosError(error)
+        ? getApiMonitoringContext({
+            baseURL: error.config?.baseURL,
+            method: error.config?.method,
+            status: error.response?.status,
+            url: error.config?.url,
+          })
+        : {};
+
       recordError({
-        name: 'NetworkError',
+        name: 'network_error',
         message: 'HTTP request failed',
         params: {
-          category: 'Network',
           action: 'http_request_failed',
+          category: 'network',
+          ...context,
         },
         errorCause: error,
       });

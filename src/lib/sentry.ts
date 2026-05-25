@@ -1,167 +1,36 @@
 import * as Sentry from '@sentry/react-native';
-import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import type { ComponentType } from 'react';
 
-const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
 let didInitializeSentry = false;
-let didLogMissingDsn = false;
+let sentrySendTimeout: ReturnType<typeof setTimeout> | null = null;
 
-type BreadcrumbLevel = 'info' | 'warning' | 'error';
-type MetricAttributes = Record<string, string | number | boolean>;
-type SdkBreadcrumb = {
-  category?: string;
-  level?: BreadcrumbLevel;
-  message?: string;
-  data?: Record<string, unknown>;
-};
-type SentryMetrics = {
-  count: (
-    name: string,
-    value: number,
-    options?: { attributes?: MetricAttributes },
-  ) => void;
-};
-type SentryLogger = {
-  warn: (...args: readonly unknown[]) => void;
-  info: (...args: readonly unknown[]) => void;
-  error: (...args: readonly unknown[]) => void;
-};
-type SentryScope = {
-  setTag: (key: string, value: string) => void;
-  setContext: (key: string, value: Record<string, unknown>) => void;
-};
+const queuedSentryMessages: {
+  context?: Record<string, unknown>;
+  message: string;
+  tags?: Record<string, string>;
+}[] = [];
 
-type SentryRecordLike = {
-  addBreadcrumb: (breadcrumb: SdkBreadcrumb) => void;
-  withScope: (cb: (scope: SentryScope) => void) => void;
-  captureException: (error: unknown, context?: Record<string, unknown>) => void;
-  captureMessage: (message: string, context?: Record<string, unknown>) => void;
-  showFeedbackWidget: () => void;
-  logger: SentryLogger;
-  startSpan: <T>(
-    options: { name: string; op: string; attributes?: Record<string, unknown> },
-    fn: () => T,
-  ) => T;
-  metrics?: SentryMetrics;
-};
-
-function stringifyForLog(value: unknown) {
-  if (value instanceof Error) {
-    return `${value.name}: ${value.message}`;
-  }
-
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return '[unserializable]';
-  }
-}
-
-function log(level: 'info' | 'warn' | 'error', message: string) {
-  if (level === 'warn') {
-    console.warn(`[metrics] ${message}`);
-  } else if (level === 'error') {
-    console.error(`[metrics] ${message}`);
-  } else {
-    console.log(`[metrics] ${message}`);
-  }
-}
-
-function withScopeLog(prefix: string, value: string) {
-  log('info', `${prefix}: ${value}`);
-}
-
-function createBreadcrumbMessage({
-  category,
-  message,
-  level,
-  data,
-}: SdkBreadcrumb) {
-  const scope = category ? `[${category}]` : '[app]';
-  const levelLabel = level ?? 'info';
-  const suffix = data ? ` ${stringifyForLog(data)}` : '';
-  return `${scope} ${levelLabel} ${message ?? ''}${suffix}`.trim();
-}
-
-function getSentryDsn() {
-  const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
-  return dsn && dsn.length > 0 ? dsn : undefined;
-}
-
-export const sentryService: SentryRecordLike = {
-  addBreadcrumb: breadcrumb => {
-    const mappedLevel =
-      breadcrumb.level === 'warning' ? 'warn' : breadcrumb.level;
-    log(mappedLevel ?? 'info', createBreadcrumbMessage(breadcrumb));
-  },
-  withScope: cb => {
-    const scope: SentryScope = {
-      setTag(key, value) {
-        withScopeLog('tag', `${key}=${value}`);
-      },
-      setContext(key, contextValue) {
-        withScopeLog('context', `${key}=${stringifyForLog(contextValue)}`);
-      },
-    };
-    cb(scope);
-  },
-  captureException: error => {
-    log('error', `captured-exception: ${stringifyForLog(error)}`);
-  },
-  captureMessage: (message, context) => {
-    const contextText = context ? ` ${stringifyForLog(context)}` : '';
-    log('info', `message: ${message}${contextText}`);
-  },
-  showFeedbackWidget: () => {
-    try {
-      init();
-      Sentry.showFeedbackWidget();
-    } catch (error) {
-      log('error', `feedback widget failed: ${stringifyForLog(error)}`);
-    }
-  },
-  logger: {
-    warn: (...args) => console.warn('[warn]', ...args),
-    info: (...args) => console.log('[info]', ...args),
-    error: (...args) => console.error('[error]', ...args),
-  },
-  startSpan: ({ name, op, attributes }, fn) => {
-    const attrs = attributes ? ` ${stringifyForLog(attributes)}` : '';
-    log('info', `span start: ${name} (${op})${attrs}`);
-    return fn();
-  },
-  metrics: {
-    count: (name, value, options) => {
-      const attrs = options?.attributes
-        ? stringifyForLog(options.attributes)
-        : '{}';
-      log('info', `metric: ${name}=${value} attrs=${attrs}`);
-    },
-  },
-};
-
-export function init() {
+export function init(): void {
   if (didInitializeSentry) {
     return;
   }
 
-  const dsn = getSentryDsn();
-  if (!dsn) {
-    if (!didLogMissingDsn) {
-      log('info', `sentry disabled in ${appVariant}; using generic logs`);
-      didLogMissingDsn = true;
-    }
-    return;
-  }
+  const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
 
   Sentry.init({
-    dsn,
+    enabled: appVariant !== 'development',
+    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    debug: false,
     environment: appVariant,
+    release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
+    dist: process.env.EXPO_PUBLIC_SENTRY_DIST,
+    enableAutoSessionTracking: false,
+    enableMetrics: true,
+    ignoreErrors: ['Network request failed'],
+    attachStacktrace: false,
+    sampleRate: appVariant === 'production' ? 0.1 : 1,
   });
+
   didInitializeSentry = true;
 }
 
@@ -171,12 +40,19 @@ export function wrapWithSentry<P extends Record<string, unknown>>(
   return Sentry.wrap(RootComponent);
 }
 
+export function showFeedbackWidget(): void {
+  init();
+  Sentry.showFeedbackWidget();
+}
+
+export const FeedbackWidget = Sentry.FeedbackWidget;
+
 export function countMetric(
   name: string,
-  attributes?: MetricAttributes,
+  attributes?: Record<string, string | number | boolean>,
   value = 1,
 ): void {
-  sentryService.metrics?.count(name, value, {
+  Sentry.metrics.count(name, value, {
     attributes,
   });
 }
@@ -187,7 +63,7 @@ export function startSpan<T>(
   fn: () => T,
   attributes?: Record<string, string | number | boolean>,
 ): T {
-  return sentryService.startSpan({ name, op, attributes }, fn);
+  return Sentry.startSpan({ name, op, attributes }, fn);
 }
 
 export async function startSpanAsync<T>(
@@ -196,7 +72,7 @@ export async function startSpanAsync<T>(
   fn: () => Promise<T>,
   attributes?: Record<string, string | number | boolean>,
 ): Promise<T> {
-  return sentryService.startSpan({ name, op, attributes }, fn);
+  return Sentry.startSpan({ name, op, attributes }, fn);
 }
 
 export function measurePerformance<T>(
@@ -215,55 +91,58 @@ export async function measurePerformanceAsync<T>(
   return startSpanAsync(operation, 'function', fn, attributes);
 }
 
-type MonitoringCategory =
-  | 'Auth'
-  | 'API'
-  | 'DataLoading'
-  | 'ErrorBoundary'
-  | 'OTAUpdatesService'
-  | 'Stream'
-  | 'Unknown';
+type MonitoringEventPrefix =
+  | 'api'
+  | 'auth'
+  | 'bttv_emotes'
+  | 'bttv_provider'
+  | 'bttv_ws'
+  | 'chat_resources'
+  | 'chatterino_badges'
+  | 'data_loading'
+  | 'error_boundary'
+  | 'fatal'
+  | 'ffz_badges'
+  | 'ffz_emotes'
+  | 'ffz_provider'
+  | 'handled'
+  | 'network'
+  | 'ota_updates_service'
+  | 'seven_tv_badges'
+  | 'seven_tv_cosmetics'
+  | 'seven_tv_emotes'
+  | 'seven_tv_presence'
+  | 'seven_tv_provider'
+  | 'seven_tv_ws'
+  | 'stream'
+  | 'twitch_badges'
+  | 'twitch_chat'
+  | 'twitch_emotes'
+  | 'twitch_player'
+  | 'twitch_polls'
+  | 'twitch_predictions'
+  | 'twitch_provider'
+  | 'twitch_ws'
+  | 'unknown';
 
-type MonitoringErrorCategory = OpenStringUnion<
-  MonitoringCategory | 'General' | 'Network'
->;
-type MonitoringWarningCategory = OpenStringUnion<
-  MonitoringCategory | 'General' | 'Network'
->;
-type MonitoringInfoCategory = OpenStringUnion<
-  MonitoringCategory | 'General' | 'Network'
->;
+export type MonitoringErrorName = `${MonitoringEventPrefix}_error`;
+export type MonitoringWarningName = `${MonitoringEventPrefix}_warning`;
+export type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
 
-export type MonitoringErrorName = `${MonitoringErrorCategory}Error`;
-export type MonitoringWarningName = `${MonitoringWarningCategory}Warning`;
-export type MonitoringInfoName = `${MonitoringInfoCategory}Info`;
-
-export type OtaMetrics = OpenStringUnion<
+export type OtaMetrics =
   | 'ota.check.started'
   | 'ota.update.available'
   | 'ota.update.fetched'
   | 'ota.update.pending'
   | 'ota.update.alert_shown'
-  | 'ota.update.applied'
->;
+  | 'ota.update.applied';
 
-function isErrorLike(value: unknown): value is Error {
-  return (
-    value instanceof Error ||
-    (typeof value === 'object' &&
-      value !== null &&
-      typeof (value as { name?: unknown; message?: unknown }).name ===
-        'string' &&
-      typeof (value as { message?: unknown }).message === 'string')
-  );
-}
-
-function serializeCause(cause: unknown) {
+function serializeCause(cause: unknown): Record<string, unknown> {
   if (!cause) {
     return {};
   }
 
-  if (isErrorLike(cause)) {
+  if (cause instanceof Error) {
     return {
       cause_name: cause.name,
       cause_message: cause.message,
@@ -273,8 +152,36 @@ function serializeCause(cause: unknown) {
 
   return {
     cause_raw: cause,
-    cause_stringified: stringifyForLog(cause),
+    cause_stringified: serializeUnknownCause(cause),
   };
+}
+
+function serializeUnknownCause(cause: unknown): string {
+  if (typeof cause === 'string') {
+    return cause;
+  }
+
+  if (typeof cause === 'number' || typeof cause === 'boolean') {
+    return `${cause}`;
+  }
+
+  if (typeof cause === 'bigint') {
+    return cause.toString();
+  }
+
+  if (typeof cause === 'symbol') {
+    return cause.description ?? 'symbol';
+  }
+
+  if (typeof cause === 'function') {
+    return cause.name || 'function';
+  }
+
+  try {
+    return JSON.stringify(cause) ?? '[unserializable]';
+  } catch {
+    return '[unserializable]';
+  }
 }
 
 function buildRecordAttributes({
@@ -285,7 +192,7 @@ function buildRecordAttributes({
   name: string;
   params?: Record<string, unknown>;
   cause?: unknown;
-}) {
+}): Record<string, unknown> {
   return {
     record_name: name,
     ...params,
@@ -293,37 +200,71 @@ function buildRecordAttributes({
   };
 }
 
+function queueMessageForSentry({
+  context,
+  message,
+  tags,
+}: {
+  context?: Record<string, unknown>;
+  message: string;
+  tags?: Record<string, string>;
+}): void {
+  queuedSentryMessages.push({
+    context,
+    message,
+    tags,
+  });
+
+  if (sentrySendTimeout) {
+    return;
+  }
+
+  sentrySendTimeout = setTimeout(() => {
+    sentrySendTimeout = null;
+    sendQueuedMessages();
+  }, 7000);
+}
+
+function sendQueuedMessages(): void {
+  while (queuedSentryMessages.length > 0) {
+    const record = queuedSentryMessages.shift();
+
+    if (!record) {
+      continue;
+    }
+
+    Sentry.captureMessage(record.message, {
+      level: 'warning',
+      tags: record.tags,
+      extra: record.context,
+    });
+  }
+}
+
 export function recordError(error: {
   name: MonitoringErrorName;
   message: string;
   params?: Record<string, unknown>;
   errorCause?: unknown;
-}) {
-  sentryService.addBreadcrumb({
+}): void {
+  Sentry.addBreadcrumb({
     message: `${error.name}: ${error.message}`,
     level: 'error',
   });
 
-  sentryService.withScope(scope => {
-    scope.setTag('errorType', error.name);
+  Sentry.withScope(scope => {
+    scope.setTag('error_type', error.name);
 
     if (error.params) {
-      scope.setContext('errorParams', error.params);
+      scope.setContext('error_params', error.params);
     }
 
-    const exceptionToCapture = new Error(error.message);
+    const exceptionToCapture = new Error(error.message, {
+      cause: error.errorCause,
+    });
     exceptionToCapture.name = error.name;
 
-    if (error.errorCause) {
-      if (isErrorLike(error.errorCause)) {
-        (exceptionToCapture as Error & { cause: unknown }).cause =
-          error.errorCause;
-      } else {
-        scope.setContext('errorCause', serializeCause(error.errorCause));
-      }
-    }
-
-    sentryService.captureException(exceptionToCapture);
+    Sentry.captureException(exceptionToCapture);
   });
 }
 
@@ -332,20 +273,27 @@ export function recordWarning(warning: {
   message: string;
   params?: Record<string, unknown>;
   warningCause?: unknown;
-}) {
-  sentryService.addBreadcrumb({
-    message: `${warning.name}: ${warning.message}`,
-    level: 'warning',
+}): void {
+  const message = `${warning.name}: ${warning.message}`;
+  const context = buildRecordAttributes({
+    name: warning.name,
+    params: warning.params,
+    cause: warning.warningCause,
   });
 
-  sentryService.logger.warn(
-    `${warning.name}: ${warning.message}`,
-    buildRecordAttributes({
-      name: warning.name,
-      params: warning.params,
-      cause: warning.warningCause,
-    }),
-  );
+  Sentry.addBreadcrumb({
+    message,
+    level: 'warning',
+    data: context,
+  });
+
+  queueMessageForSentry({
+    message,
+    tags: {
+      category: warning.name,
+    },
+    context,
+  });
 }
 
 export function recordInfo(info: {
@@ -353,33 +301,29 @@ export function recordInfo(info: {
   message: string;
   params?: Record<string, unknown>;
   infoCause?: unknown;
-}) {
-  sentryService.addBreadcrumb({
+}): void {
+  Sentry.addBreadcrumb({
     message: `${info.name}: ${info.message}`,
     level: 'info',
-  });
-
-  sentryService.logger.info(
-    `${info.name}: ${info.message}`,
-    buildRecordAttributes({
+    data: buildRecordAttributes({
       name: info.name,
       params: info.params,
       cause: info.infoCause,
     }),
-  );
+  });
 }
 
-export function countMonitoringMetric(
+export function countOtaMetric(
   name: OtaMetrics,
   attributes?: Record<string, string | number | boolean>,
   value = 1,
-) {
-  return countMetric(name, attributes, value);
+): void {
+  countMetric(name, attributes, value);
 }
 
 export const navigationIntegration = {
   id: 'navigation',
-  setupOnce() {
+  setupOnce(): void {
     return;
   },
 };

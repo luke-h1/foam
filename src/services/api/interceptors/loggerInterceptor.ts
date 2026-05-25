@@ -33,7 +33,7 @@ export const createLoggerInterceptor = (
   onError: error => {
     logger[prefix].error(`Request error: ${JSON.stringify(error, null, 2)}`);
     recordError({
-      name: 'NetworkError',
+      name: 'network_error',
       message: 'API request interceptor error',
       params: {
         category: 'Network',

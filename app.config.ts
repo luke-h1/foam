@@ -85,6 +85,12 @@ const variant =
 const VERSION = '0.0.40';
 
 const appConfig = VARIANT_CONFIG[variant];
+const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
+const sentryDist =
+  process.env.EXPO_PUBLIC_SENTRY_DIST ??
+  process.env.EAS_BUILD_GIT_COMMIT_HASH ??
+  process.env.GITHUB_SHA ??
+  'local';
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
 const enableICloudEntitlements =
   process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === 'true';
@@ -180,6 +186,8 @@ const config: ExpoConfig = {
     EXPO_PUBLIC_TWITCH_CLIENT_ID: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
     EXPO_PUBLIC_AUTH_PROXY_API_KEY: process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
     EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
+    EXPO_PUBLIC_SENTRY_RELEASE: sentryRelease,
+    EXPO_PUBLIC_SENTRY_DIST: sentryDist,
     EXPO_PUBLIC_TWITCH_PLAYER_WEBSITE_URL:
       process.env.EXPO_PUBLIC_TWITCH_PLAYER_WEBSITE_URL,
     MOCK_SERVER_URL: appConfig.mockServerUrl,

@@ -247,7 +247,7 @@ export const AuthContextProvider = ({
     });
 
     recordError({
-      name: 'AuthError',
+      name: 'auth_error',
       message: `Auth context did not initialize in time: ${reason}`,
       params: {
         category: 'Auth',

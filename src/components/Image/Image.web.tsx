@@ -1,6 +1,5 @@
-/* eslint-disable no-restricted-imports */
 import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
-import { sentryService } from '@app/lib/sentry';
+import { recordInfo } from '@app/lib/sentry';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
@@ -119,24 +118,19 @@ export const Image = function Image({
         }
       })();
 
-      sentryService.withScope(scope => {
-        scope.setTag('perf.image.renderer', 'Image');
-        scope.setTag('perf.image.context', trackLoadContext ?? 'chat-image');
-        scope.setContext('perf.image.load', {
+      recordInfo({
+        name: 'data_loading_info',
+        message: 'chat.image.load_time',
+        params: {
           urlHost: safeHost,
           url: sourceUri ?? 'unknown',
           durationFromMountMs: Math.round(totalLoadTimeMs),
           durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-          platform: 'web',
-        });
-        sentryService.captureMessage('chat.image.load_time', {
-          imageLoadTimeMs: Math.round(totalLoadTimeMs),
-          imageLoadStartTimeMs: Math.round(startToLoadTimeMs),
           imageRenderer: 'Image',
           imageContext: trackLoadContext ?? 'chat-image',
           host: safeHost,
           platform: 'web',
-        });
+        },
       });
     },
     [sourceUri, trackLoad, trackLoadContext],

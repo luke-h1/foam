@@ -1772,7 +1772,7 @@ export const StreamPlayer = memo(
         });
 
         recordError({
-          name: 'StreamError',
+          name: 'stream_error',
           message: `StreamPlayer WebView error: ${nativeEvent.description}`,
           params: {
             category: 'Stream',
@@ -1805,7 +1805,7 @@ export const StreamPlayer = memo(
         });
 
         recordError({
-          name: 'StreamError',
+          name: 'stream_error',
           message: `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
           params: {
             category: 'Stream',

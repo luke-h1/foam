@@ -1,5 +1,6 @@
 import { twitchService } from '@app/services/twitch-service';
 import { logger } from '@app/utils/logger';
+import { recordInfo, recordWarning } from '@app/lib/sentry';
 import { usePathname } from 'expo-router';
 import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { CHAT_SCREENS } from '../constants/chat';
@@ -272,9 +273,20 @@ export function useTwitchWs(): WebSocket {
         }
       } catch (e) {
         logger.twitchWs.error('🟣 Failed to parse EventSub message:', e);
+        recordWarning({
+          name: 'twitch_ws_warning',
+          message: 'Failed to parse Twitch EventSub message',
+          params: {
+            action: 'message_parse_failed',
+            provider: 'twitch',
+            screen: currentScreen,
+          },
+          warningCause: e,
+        });
       }
     },
     [
+      currentScreen,
       handleSessionWelcome,
       handleKeepAlive,
       handleNotification,
@@ -320,6 +332,16 @@ export function useTwitchWs(): WebSocket {
           `💜 Failed to cleanup subscription ${subscriptionId}:`,
           error,
         );
+        recordWarning({
+          name: 'twitch_ws_warning',
+          message: 'Failed to clean up Twitch EventSub subscription',
+          params: {
+            action: 'subscription_cleanup_failed',
+            provider: 'twitch',
+            subscription_id: subscriptionId,
+          },
+          warningCause: error,
+        });
       }
     });
 
@@ -332,6 +354,15 @@ export function useTwitchWs(): WebSocket {
       onOpen: () => {
         logger.twitchWs.info('💜 twitch event sub WS connected');
         isReconnectingRef.current = false;
+        recordInfo({
+          name: 'twitch_ws_info',
+          message: 'Twitch EventSub WebSocket connected',
+          params: {
+            action: 'connected',
+            provider: 'twitch',
+            screen: currentScreen,
+          },
+        });
       },
       onMessage: (event: MessageEvent) => {
         handleMessage(event);
@@ -340,6 +371,19 @@ export function useTwitchWs(): WebSocket {
         logger.twitchWs.warn(
           `🟣 Twitch EventSub WebSocket closed: ${event.code} - ${event.reason} - ${event.timeStamp}`,
         );
+        if (event.code !== 1000) {
+          recordWarning({
+            name: 'twitch_ws_warning',
+            message: 'Twitch EventSub WebSocket closed unexpectedly',
+            params: {
+              action: 'closed',
+              code: event.code,
+              provider: 'twitch',
+              reason: event.reason,
+              screen: currentScreen,
+            },
+          });
+        }
         clearKeepaliveTimer();
 
         // Handle 4003 (connection unused) - reset state since we're not reconnecting
@@ -366,6 +410,16 @@ export function useTwitchWs(): WebSocket {
       },
       onError: (error: Event) => {
         logger.twitchWs.error('🟣 Twitch EventSub WebSocket error:', error);
+        recordWarning({
+          name: 'twitch_ws_warning',
+          message: 'Twitch EventSub WebSocket error',
+          params: {
+            action: 'error',
+            provider: 'twitch',
+            screen: currentScreen,
+          },
+          warningCause: error,
+        });
       },
       shouldReconnect: (event: CloseEvent) => {
         // Don't reconnect on normal closure

@@ -137,7 +137,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
           'authentication' in nextResponse && !!nextResponse.authentication;
 
         recordInfo({
-          name: 'AuthInfo',
+          name: 'auth_info',
           message: 'Twitch sign in succeeded',
           params: {
             category: 'Auth',
@@ -162,7 +162,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         : false;
 
       recordWarning({
-        name: 'AuthWarning',
+        name: 'auth_warning',
         message: `Twitch sign in event: ${nextResponse?.type || 'unknownAuthEvent'}`,
         params: {
           category: 'Auth',

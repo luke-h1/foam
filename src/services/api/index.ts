@@ -41,7 +41,7 @@ export const bttvApi = new Client({
 
 export const bttvCachedApi = new Client({
   baseURL: 'https://api.betterttv.net/3/cached',
-  requestInterceptors: [createLoggerInterceptor('api')],
+  requestInterceptors: [createLoggerInterceptor('bttv')],
   responseInterceptors: [createTracingInterceptor],
 });
 

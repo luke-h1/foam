@@ -1,5 +1,4 @@
 import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
-import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import {
   AnimatedFlashList,
   ListRenderItem,
@@ -24,7 +23,14 @@ import {
 import { theme } from '@app/styles/themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Redirect } from 'expo-router';
-import { useMemo, useCallback, useRef, useEffect, type JSX } from 'react';
+import {
+  useMemo,
+  useCallback,
+  useRef,
+  useEffect,
+  type ComponentProps,
+  type JSX,
+} from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,6 +40,58 @@ export interface Section {
   key: string;
   render: () => JSX.Element;
   isTitle?: boolean;
+}
+
+type SymbolName = ComponentProps<typeof SymbolView>['name'];
+
+function FollowingStatePanel({
+  actionLabel,
+  content,
+  heading,
+  iconName,
+  onAction,
+}: {
+  actionLabel?: string;
+  content: string;
+  heading: string;
+  iconName: SymbolName;
+  onAction?: () => void;
+}) {
+  return (
+    <View style={styles.statePanel}>
+      <View style={styles.stateIconFrame}>
+        <SymbolView
+          name={iconName}
+          size={34}
+          tintColor={theme.color.textSecondary.dark}
+        />
+      </View>
+      <View style={styles.stateCopy}>
+        <Text type="lg" weight="semibold" style={styles.stateHeading}>
+          {heading}
+        </Text>
+        <Text type="xs" style={styles.stateContent}>
+          {content}
+        </Text>
+      </View>
+      {actionLabel && onAction ? (
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateAction}
+        >
+          <SymbolView
+            name="arrow.clockwise"
+            size={16}
+            tintColor={theme.color.background.dark}
+          />
+          <Text type="sm" weight="semibold" style={styles.stateActionText}>
+            {actionLabel}
+          </Text>
+        </Button>
+      ) : null}
+    </View>
+  );
 }
 
 export default function FollowingScreen() {
@@ -50,11 +108,20 @@ export default function FollowingScreen() {
     [user],
   );
 
-  const { scrollHandler, scrollY, isRefreshing, refreshControl } = useRefresh({
-    onRefresh: () =>
+  const refetchFollowingStreams = useCallback(
+    () =>
       queryClient.refetchQueries({
         queryKey: followingStreamsQuery.queryKey,
       }),
+    [followingStreamsQuery.queryKey, queryClient],
+  );
+
+  const handleRefreshFollowing = useCallback(() => {
+    void refetchFollowingStreams();
+  }, [refetchFollowingStreams]);
+
+  const { scrollHandler, scrollY, isRefreshing, refreshControl } = useRefresh({
+    onRefresh: refetchFollowingStreams,
   });
 
   const {
@@ -126,10 +193,13 @@ export default function FollowingScreen() {
 
   if (!user?.id) {
     return (
-      <EmptyState
-        content="Log in to see streams from channels you follow"
-        heading="Your followed streams"
-      />
+      <View style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}>
+        <FollowingStatePanel
+          content="Log in to see streams from channels you follow."
+          heading="Your followed streams"
+          iconName="person.2"
+        />
+      </View>
     );
   }
 
@@ -139,10 +209,15 @@ export default function FollowingScreen() {
       toast.error('Failed to fetch followed streams');
     }
     return (
-      <EmptyState
-        content="Failed to fetch followed streams"
-        heading="No followed streams"
-      />
+      <View style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}>
+        <FollowingStatePanel
+          actionLabel="Refresh"
+          content="Twitch did not return your followed streams."
+          heading="Couldn't load following"
+          iconName="exclamationmark.triangle"
+          onAction={handleRefreshFollowing}
+        />
+      </View>
     );
   }
 
@@ -159,10 +234,15 @@ export default function FollowingScreen() {
 
   if (streamsArray.length === 0) {
     return (
-      <EmptyState
-        content="None of your followed streamers are live"
-        heading="It's empty in here"
-      />
+      <View style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}>
+        <FollowingStatePanel
+          actionLabel="Refresh"
+          content="None of your followed streamers are live right now."
+          heading="No one is live"
+          iconName="antenna.radiowaves.left.and.right"
+          onAction={handleRefreshFollowing}
+        />
+      </View>
     );
   }
 
@@ -348,5 +428,63 @@ const styles = StyleSheet.create({
   },
   layoutToggleTextActive: {
     color: theme.color.text.dark,
+  },
+  stateAction: {
+    alignItems: 'center',
+    backgroundColor: theme.colorDarkGreen,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    flexDirection: 'row',
+    gap: theme.space8,
+    marginTop: theme.space8,
+    minHeight: 44,
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space12,
+  },
+  stateActionText: {
+    color: theme.color.background.dark,
+  },
+  stateContainer: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.space20,
+  },
+  stateContent: {
+    color: theme.color.textSecondary.dark,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  stateCopy: {
+    alignItems: 'center',
+    gap: theme.space8,
+  },
+  stateHeading: {
+    color: theme.color.text.dark,
+    textAlign: 'center',
+  },
+  stateIconFrame: {
+    alignItems: 'center',
+    backgroundColor: theme.colorSurfaceAlpha,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    height: 72,
+    justifyContent: 'center',
+    width: 72,
+  },
+  statePanel: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.darkAlt,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius28,
+    borderWidth: 1,
+    gap: theme.space16,
+    maxWidth: 380,
+    padding: theme.space28,
+    width: '100%',
   },
 });
