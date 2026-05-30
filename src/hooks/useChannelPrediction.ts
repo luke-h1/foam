@@ -23,18 +23,18 @@ export function useChannelPrediction(channelId?: string) {
     null,
   );
 
-  const canSubscribe = Boolean(channelId && authState?.isLoggedIn);
   const isOwnChannel = Boolean(channelId && user?.id === channelId);
-
-  useEffect(() => {
-    setPrediction(null);
-  }, [channelId]);
+  const canSubscribe = Boolean(
+    channelId && authState?.isLoggedIn && isOwnChannel,
+  );
 
   useEffect(() => {
     if (!isOwnChannel || !channelId) {
+      setPrediction(null);
       return;
     }
 
+    setPrediction(null);
     let cancelled = false;
 
     void twitchService

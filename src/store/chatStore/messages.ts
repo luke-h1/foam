@@ -1,7 +1,5 @@
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { batch } from '@legendapp/state';
-
 import type { Bit, ChatMessageType, ChatUser } from './constants';
 import { chatStore$ } from './state';
 
@@ -105,12 +103,12 @@ const prepareMessageUpdates = (
     : updates;
 
 const isValidChatMessage = <TNoticeType extends NoticeVariants>(
-  message: ChatMessageType<TNoticeType> | undefined,
+  message?: ChatMessageType<TNoticeType>,
 ): message is ChatMessageType<TNoticeType> => {
   return Boolean(message?.message_id && message.message_nonce);
 };
 
-const normaliseIndexKey = (value: string | undefined): string | null => {
+const normaliseIndexKey = (value?: string): string | null => {
   const normalised = value?.trim().toLowerCase();
   return normalised || null;
 };
@@ -145,13 +143,13 @@ const indexMessage = (message: ChatMessageType<never>, index: number) => {
   });
 };
 
-const rebuildMessageIndexes = () => {
+const rebuildMessageIndexes = (
+  messages: ChatMessageType<never>[] = chatStore$.messages.peek(),
+) => {
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
   messageColorIndex.clear();
   senderColorIndex.clear();
-
-  const messages = chatStore$.messages.peek();
 
   messages.forEach((message, index) => {
     if (isValidChatMessage(message)) {
@@ -203,8 +201,17 @@ const persistRecentMessagesForChannel = (
     return;
   }
 
-  const nextRecentMessages =
-    dedupeMessagesForStore(nextMessages).slice(-MAX_RECENT_MESSAGES);
+  const nextRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
+  if (
+    existingMessages &&
+    existingMessages.length === nextRecentMessages.length &&
+    existingMessages.every(
+      (message, index) => message === nextRecentMessages[index],
+    )
+  ) {
+    return;
+  }
+
   chatStore$.persisted.recentMessagesByChannel.set({
     ...recentMessagesByChannel,
     [channelId]: nextRecentMessages,
@@ -247,8 +254,7 @@ const syncRecentMessagesForCurrentChannel = (
   }
 
   pendingRecentMessagesChannelId = currentChannelId;
-  pendingRecentMessages =
-    dedupeMessagesForStore(nextMessages).slice(-MAX_RECENT_MESSAGES);
+  pendingRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
 
   if (recentMessagesSyncTimer) {
     return;
@@ -274,8 +280,44 @@ const trimMessageIndexes = (): boolean => {
   return didTrim;
 };
 
+const appendToMessageWindow = (
+  currentMessages: ChatMessageType<never>[],
+  storedMessages: ChatMessageType<never>[],
+): {
+  didTrimMessages: boolean;
+  nextMessages: ChatMessageType<never>[];
+} => {
+  const nextMessages = [...currentMessages, ...storedMessages];
+  const extraMessageCount = nextMessages.length - MAX_CHAT_MESSAGES;
+
+  if (extraMessageCount <= 0) {
+    return { didTrimMessages: false, nextMessages };
+  }
+
+  return {
+    didTrimMessages: true,
+    nextMessages: nextMessages.slice(extraMessageCount),
+  };
+};
+
+const publishMessageAtIndex = (
+  index: number,
+  message: ChatMessageType<never>,
+  mode: 'defer' | 'immediate' = 'defer',
+) => {
+  const currentMessages = chatStore$.messages.peek();
+  if (!currentMessages[index]) {
+    return;
+  }
+
+  const nextMessages = currentMessages.slice();
+  nextMessages[index] = message;
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages, mode);
+};
+
 export const addMessage = <TNoticeType extends NoticeVariants>(
-  message: ChatMessageType<TNoticeType> | undefined,
+  message?: ChatMessageType<TNoticeType>,
 ) => {
   if (!isValidChatMessage(message)) {
     return;
@@ -289,24 +331,22 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
   const storedMessage = prepareMessageForStore(message);
   messageKeySet.add(key);
   messageKeyOrder.push(key);
-  const currentMessages = dedupeMessagesForStore(chatStore$.messages.peek());
+  const currentMessages = chatStore$.messages.peek();
   const nextMessageIndex = currentMessages.length;
-  const nextMessages = [...currentMessages, storedMessage];
-  const messageCount = nextMessages.length;
-  let didTrimMessages = false;
-  if (messageCount > MAX_CHAT_MESSAGES) {
-    didTrimMessages = true;
-    chatStore$.messages.set(
-      nextMessages.slice(messageCount - MAX_CHAT_MESSAGES),
-    );
+  const { didTrimMessages, nextMessages } = appendToMessageWindow(
+    currentMessages,
+    [storedMessage],
+  );
+
+  const didTrimIndexes = trimMessageIndexes();
+  if (didTrimIndexes || didTrimMessages) {
+    rebuildMessageIndexes(nextMessages);
   } else {
-    chatStore$.messages.set(nextMessages);
     indexMessage(storedMessage, nextMessageIndex);
   }
-  syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
-  if (trimMessageIndexes() || didTrimMessages) {
-    rebuildMessageIndexes();
-  }
+
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages);
 };
 
 export const addMessages = (
@@ -334,30 +374,24 @@ export const addMessages = (
   }
 
   const storedMessages = newMessages.map(prepareMessageForStore);
+  const currentMessages = chatStore$.messages.peek();
+  const nextMessageStartIndex = currentMessages.length;
+  const { didTrimMessages, nextMessages } = appendToMessageWindow(
+    currentMessages,
+    storedMessages,
+  );
 
-  batch(() => {
-    const currentMessages = dedupeMessagesForStore(chatStore$.messages.peek());
-    const nextMessageStartIndex = currentMessages.length;
-    const nextMessages = [...currentMessages, ...storedMessages];
-    const messageCount = nextMessages.length;
-    let didTrimMessages = false;
-    if (messageCount > MAX_CHAT_MESSAGES) {
-      didTrimMessages = true;
-      chatStore$.messages.set(
-        nextMessages.slice(messageCount - MAX_CHAT_MESSAGES),
-      );
-    } else {
-      chatStore$.messages.set(nextMessages);
-      storedMessages.forEach((message, index) => {
-        indexMessage(message, nextMessageStartIndex + index);
-      });
-    }
+  const didTrimIndexes = trimMessageIndexes();
+  if (didTrimIndexes || didTrimMessages) {
+    rebuildMessageIndexes(nextMessages);
+  } else {
+    storedMessages.forEach((message, index) => {
+      indexMessage(message, nextMessageStartIndex + index);
+    });
+  }
 
-    syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), 'defer');
-    if (trimMessageIndexes() || didTrimMessages) {
-      rebuildMessageIndexes();
-    }
-  });
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 
 export const updateMessage = (
@@ -371,20 +405,22 @@ export const updateMessage = (
   const index = messageKeyToIndex.get(key);
 
   if (typeof index === 'number') {
-    const msg$ = chatStore$.messages[index];
-    if (msg$) {
+    const currentMessage = chatStore$.messages.peek()[index];
+    if (currentMessage) {
       const preparedUpdates = prepareMessageUpdates(
         messageId,
         messageNonce,
         updates,
       );
-      msg$.set(prev => ({ ...prev, ...preparedUpdates }));
-      syncRecentMessagesForCurrentChannel(chatStore$.messages.peek(), 'defer');
+      publishMessageAtIndex(index, {
+        ...currentMessage,
+        ...preparedUpdates,
+      });
     }
   }
 };
 
-function normaliseLogin(value: string | undefined): string {
+function normaliseLogin(value?: string): string {
   return value?.trim().toLowerCase() ?? '';
 }
 
@@ -412,24 +448,32 @@ export const moderateMessageById = (
     return;
   }
 
-  const msg$ = chatStore$.messages[index];
-  if (!msg$) {
+  const currentMessages = chatStore$.messages.peek();
+  const currentMessage = currentMessages[index];
+  if (!currentMessage) {
     return;
   }
 
-  msg$.set(prev => ({
-    ...prev,
-    ...prepareMessageUpdates(prev.message_id, prev.message_nonce, {
-      message: [
+  publishMessageAtIndex(
+    index,
+    {
+      ...currentMessage,
+      ...prepareMessageUpdates(
+        currentMessage.message_id,
+        currentMessage.message_nonce,
         {
-          type: 'text',
-          content: createModeratedText(prev, moderationNotice),
+          message: [
+            {
+              type: 'text',
+              content: createModeratedText(currentMessage, moderationNotice),
+            },
+          ],
         },
-      ],
-    }),
-    moderationNotice,
-  }));
-  syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
+      ),
+      moderationNotice,
+    },
+    'immediate',
+  );
 };
 
 export const moderateMessagesByLogin = (
@@ -442,10 +486,13 @@ export const moderateMessagesByLogin = (
   }
 
   const currentMessages = chatStore$.messages.peek();
+  let didModerateMessages = false;
+  const nextMessages = currentMessages.slice();
 
-  currentMessages.forEach((message, index) => {
+  for (let index = 0; index < currentMessages.length; index += 1) {
+    const message = currentMessages[index];
     if (!isValidChatMessage(message)) {
-      return;
+      continue;
     }
 
     const messageLogin = normaliseLogin(
@@ -453,29 +500,31 @@ export const moderateMessagesByLogin = (
     );
 
     if (messageLogin !== target) {
-      return;
+      continue;
     }
 
-    const msg$ = chatStore$.messages[index];
-    if (!msg$) {
-      return;
-    }
+    didModerateMessages = true;
 
-    msg$.set(prev => ({
-      ...prev,
-      ...prepareMessageUpdates(prev.message_id, prev.message_nonce, {
+    nextMessages[index] = {
+      ...message,
+      ...prepareMessageUpdates(message.message_id, message.message_nonce, {
         message: [
           {
             type: 'text',
-            content: createModeratedText(prev, moderationNotice),
+            content: createModeratedText(message, moderationNotice),
           },
         ],
       }),
       moderationNotice,
-    }));
-  });
+    };
+  }
 
-  syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
+  if (!didModerateMessages) {
+    return;
+  }
+
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages);
 };
 
 export const getMessageById = (
@@ -513,15 +562,13 @@ export const removeMessageById = (messageId: string) => {
     }
   });
 
-  chatStore$.messages.set(
-    currentMessages.filter(
-      message =>
-        !isValidChatMessage(message) || message.message_id !== messageId,
-    ),
+  const nextMessages = currentMessages.filter(
+    message => !isValidChatMessage(message) || message.message_id !== messageId,
   );
 
-  syncRecentMessagesForCurrentChannel(chatStore$.messages.peek());
-  rebuildMessageIndexes();
+  rebuildMessageIndexes(nextMessages);
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages);
 };
 
 export const clearMessages = () => {
@@ -531,6 +578,7 @@ export const clearMessages = () => {
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
   messageColorIndex.clear();
+  senderColorIndex.clear();
   chatStore$.messages.set([]);
 };
 
@@ -557,8 +605,9 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
     messageKeyOrder.push(key);
   });
 
-  chatStore$.messages.set(recentMessages.map(prepareMessageForStore));
-  rebuildMessageIndexes();
+  const storedMessages = recentMessages.map(prepareMessageForStore);
+  rebuildMessageIndexes(storedMessages);
+  chatStore$.messages.set(storedMessages);
 
   return recentMessages.length;
 };

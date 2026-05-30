@@ -1,16 +1,23 @@
-/* eslint-disable react-native/no-unused-styles, react-native/sort-styles */
+/* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { BottomSheet } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useCallback, useMemo } from 'react';
-import { Dimensions, Modal, View, StyleSheet } from 'react-native';
+import { useMemo, useCallback } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { toast } from 'sonner-native';
+import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 
 interface Props {
   disableAnimations?: boolean;
@@ -19,12 +26,31 @@ interface Props {
   selectedEmote: ParsedPart<'emote'>;
 }
 
-const { width: screenWidth } = Dimensions.get('window');
-const MAX_EMOTE_SIZE = Math.min(screenWidth * 0.4, 120); // 40% of screen width or 120px max
-const MIN_EMOTE_SIZE = 32;
+type MetadataRow = {
+  label: string;
+  value?: string | null;
+};
+
+type PreviewAction = {
+  icon: SymbolViewProps['name'];
+  label: string;
+  onPress: () => void;
+  subtitle: string;
+};
+
+const MIN_EMOTE_SIZE = 36;
+
+function getEmoteName(emote: ParsedPart<'emote'>): string {
+  return emote.name ?? emote.original_name ?? emote.content;
+}
 
 export function EmotePreviewSheet(props: Props) {
   const { visible, onClose, selectedEmote, disableAnimations = false } = props;
+  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
+  const sheetWidth = Math.max(
+    280,
+    Math.min(screenWidth - theme.space16 * 2, 520),
+  );
   const displayUrl = useMemo(
     () =>
       getDisplayEmoteUrl({
@@ -34,28 +60,41 @@ export function EmotePreviewSheet(props: Props) {
       }),
     [disableAnimations, selectedEmote.static_url, selectedEmote.url],
   );
+  const emoteName = getEmoteName(selectedEmote);
+  const emoteLink =
+    typeof selectedEmote.emote_link === 'string'
+      ? selectedEmote.emote_link
+      : undefined;
+  const maxEmoteSize = Math.min(Math.max(screenWidth * 0.36, 96), 156);
+  const scrollStyle = useMemo(
+    () => [styles.scroll, { maxHeight: Math.round(screenHeight * 0.58) }],
+    [screenHeight],
+  );
+  const containerStyle = useMemo(
+    () => [
+      styles.container,
+      {
+        maxHeight: Math.round(screenHeight * 0.82),
+        width: sheetWidth,
+      },
+    ],
+    [screenHeight, sheetWidth],
+  );
 
-  const getEmoteSize = useCallback(() => {
+  const emoteSize = useMemo(() => {
     const originalWidth = selectedEmote.width || 28;
     const originalHeight = selectedEmote.height || 28;
-
-    // Calculate aspect ratio
     const aspectRatio = originalWidth / originalHeight;
-
-    // Determine the best size that fits within our constraints
     let targetWidth = originalWidth;
     let targetHeight = originalHeight;
 
-    // If emote is too large, scale it down proportionally
-    if (targetWidth > MAX_EMOTE_SIZE || targetHeight > MAX_EMOTE_SIZE) {
+    if (targetWidth > maxEmoteSize || targetHeight > maxEmoteSize) {
       if (aspectRatio > 1) {
-        // Wide emote - constrain by width
-        targetWidth = MAX_EMOTE_SIZE;
-        targetHeight = MAX_EMOTE_SIZE / aspectRatio;
+        targetWidth = maxEmoteSize;
+        targetHeight = maxEmoteSize / aspectRatio;
       } else {
-        // Tall emote - constrain by height
-        targetHeight = MAX_EMOTE_SIZE;
-        targetWidth = MAX_EMOTE_SIZE * aspectRatio;
+        targetHeight = maxEmoteSize;
+        targetWidth = maxEmoteSize * aspectRatio;
       }
     }
 
@@ -70,214 +109,335 @@ export function EmotePreviewSheet(props: Props) {
     }
 
     return {
-      width: Math.round(targetWidth),
       height: Math.round(targetHeight),
+      width: Math.round(targetWidth),
     };
-  }, [selectedEmote.width, selectedEmote.height]);
+  }, [maxEmoteSize, selectedEmote.height, selectedEmote.width]);
 
-  const emoteSize = getEmoteSize();
   const handleCopy = useCallback(
     (field: 'name' | 'url') => {
       void Clipboard.setStringAsync(
-        field === 'name' ? selectedEmote.content : displayUrl,
+        field === 'name' ? emoteName : displayUrl,
       ).then(() =>
         toast.success(
-          `${field === 'name' ? 'Emote name' : 'Emote URL'} copied`,
+          field === 'name' ? 'Emote name copied' : 'Emote URL copied',
         ),
       );
     },
-    [displayUrl, selectedEmote.content],
+    [displayUrl, emoteName],
   );
 
-  const actions = useMemo<
-    {
-      icon: SymbolViewProps['name'];
-      label: string;
-      onPress: () => void;
-    }[]
-  >(
-    () => [
+  const metadataRows = useMemo<MetadataRow[]>(
+    () =>
+      [
+        { label: 'Provider', value: selectedEmote.site },
+        { label: 'Creator', value: selectedEmote.creator },
+        {
+          label: 'Original',
+          value:
+            selectedEmote.original_name &&
+            selectedEmote.original_name !== emoteName
+              ? selectedEmote.original_name
+              : undefined,
+        },
+      ].filter(row => Boolean(row.value)),
+    [
+      emoteName,
+      selectedEmote.creator,
+      selectedEmote.original_name,
+      selectedEmote.site,
+    ],
+  );
+
+  const actions = useMemo<PreviewAction[]>(() => {
+    const items: PreviewAction[] = [
       {
         icon: 'doc.on.doc',
         label: 'Copy emote name',
         onPress: () => handleCopy('name'),
+        subtitle: emoteName,
       },
       {
-        icon: 'doc.on.doc',
+        icon: 'link',
         label: 'Copy emote URL',
         onPress: () => handleCopy('url'),
+        subtitle: 'Rendered image source',
       },
-      {
+    ];
+
+    if (emoteLink) {
+      items.push({
         icon: 'arrow.up.right.square',
         label: 'Open in Browser',
-        onPress: () => openLinkInBrowser(selectedEmote.emote_link as string),
-      },
-    ],
-    [handleCopy, selectedEmote.emote_link],
-  );
+        onPress: () => openLinkInBrowser(emoteLink),
+        subtitle: 'Source page',
+      });
+    }
+
+    return items;
+  }, [emoteLink, emoteName, handleCopy]);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="formSheet"
-      onRequestClose={onClose}
+    <BottomSheet
+      isPresented={visible}
+      onDismiss={onClose}
+      showDragIndicator
+      testID="emote-preview-sheet"
     >
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.emoteContainer}>
-            <Image
-              useNitro
-              trackLoadTime
-              trackLoadContext="chat.emote-preview"
-              source={displayUrl}
-              cacheVariant="emote"
-              contentFit="contain"
-              transition={100}
-              style={[styles.emoteImage, emoteSize]}
-            />
-          </View>
-
-          <View style={styles.emoteInfo}>
-            <Text style={styles.emoteName} numberOfLines={2}>
-              {selectedEmote?.name}
+      <View style={containerStyle}>
+        <View style={styles.topBar}>
+          <View style={styles.heading}>
+            <Text style={styles.eyebrow} weight="semibold">
+              Emote preview
             </Text>
-
-            <View style={styles.metadataContainer}>
-              <Text style={styles.emoteMetadata}>{selectedEmote.site}</Text>
-              {selectedEmote.creator && (
-                <Text style={styles.emoteMetadata}>
-                  By {selectedEmote.creator}
-                </Text>
-              )}
-              {selectedEmote.original_name &&
-                selectedEmote.original_name !== selectedEmote.name && (
-                  <Text style={styles.emoteMetadata}>
-                    Original: {selectedEmote.original_name}
-                  </Text>
-                )}
-            </View>
+            <Text style={styles.title} weight="semibold" numberOfLines={2}>
+              {emoteName}
+            </Text>
           </View>
+          <Button label="Done" style={styles.doneButton} onPress={onClose}>
+            <SymbolView
+              name="checkmark"
+              size={18}
+              tintColor={theme.color.text.dark}
+            />
+          </Button>
         </View>
 
-        {/* Actions */}
-        <View style={styles.actionsContainer}>
-          {actions.map((action, index) => (
-            <Button
-              // eslint-disable-next-line react/no-array-index-key
-              key={index}
-              onPress={action.onPress}
-              style={styles.actionButton}
-            >
-              <View style={styles.actionContent}>
-                <SymbolView name={action.icon} tintColor="#fff" size={18} />
-                <Text style={styles.actionText}>{action.label}</Text>
+        <ScrollView
+          style={scrollStyle}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.previewPanel}>
+            <View style={styles.imageStage}>
+              <Image
+                useNitro
+                trackLoadTime
+                trackLoadContext="chat.emote-preview"
+                source={displayUrl}
+                cacheVariant="emote"
+                contentFit="contain"
+                transition={100}
+                style={[styles.emoteImage, emoteSize]}
+              />
+            </View>
+            {selectedEmote.site ? (
+              <View style={styles.previewPill}>
+                <Text style={styles.previewPillText} weight="semibold">
+                  {selectedEmote.site}
+                </Text>
               </View>
-            </Button>
-          ))}
-        </View>
+            ) : null}
+          </View>
+
+          {metadataRows.length > 0 ? (
+            <View style={styles.metadataCard}>
+              {metadataRows.map(row => (
+                <View key={row.label} style={styles.metadataRow}>
+                  <Text style={styles.metadataLabel} weight="semibold">
+                    {row.label}
+                  </Text>
+                  <Text style={styles.metadataValue} numberOfLines={2}>
+                    {row.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          <View style={styles.actionGroup}>
+            {actions.map((action, index) => (
+              <Button
+                key={action.label}
+                onPress={action.onPress}
+                style={[
+                  styles.actionButton,
+                  index < actions.length - 1 && styles.actionButtonBorder,
+                ]}
+              >
+                <View style={styles.actionIconFrame}>
+                  <SymbolView
+                    name={action.icon}
+                    tintColor={theme.colorGreen}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.actionCopy}>
+                  <Text style={styles.actionText} weight="semibold">
+                    {action.label}
+                  </Text>
+                  <Text style={styles.actionSubtitle} numberOfLines={1}>
+                    {action.subtitle}
+                  </Text>
+                </View>
+              </Button>
+            ))}
+          </View>
+        </ScrollView>
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
-export const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.color.background.darkAlt,
-    flex: 1,
-    paddingBottom: theme.space36,
-    paddingHorizontal: theme.space36,
-  },
-  header: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    marginBottom: theme.space44,
-    paddingTop: theme.space20,
-  },
-  emoteContainer: {
+const styles = StyleSheet.create({
+  actionButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.color.border.dark,
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    flexDirection: 'row',
+    gap: theme.space8,
+    minHeight: 52,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
+  },
+  actionButtonBorder: {
+    borderBottomColor: 'rgba(255,255,255,0.075)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  actionCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  actionGroup: {
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(255,255,255,0.085)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.borderRadius16,
     borderWidth: 1,
+    overflow: 'hidden',
+  },
+  actionIconFrame: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(74, 222, 128, 0.12)',
+    borderColor: 'rgba(74, 222, 128, 0.18)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius10,
+    borderWidth: 1,
+    height: 32,
     justifyContent: 'center',
-    marginRight: theme.space28,
-    minHeight: MAX_EMOTE_SIZE + theme.space20 * 2,
-    minWidth: MAX_EMOTE_SIZE + theme.space20 * 2,
-    padding: theme.space20,
+    width: 32,
+  },
+  actionSubtitle: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    lineHeight: theme.fontSize11 * 1.25,
+  },
+  actionText: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
+    lineHeight: theme.fontSize14 * 1.25,
+  },
+  container: {
+    ...chatSheetSurface,
+    backgroundColor: CHAT_SHEET_BACKGROUND,
+    borderColor: 'rgba(255,255,255,0.10)',
+    borderWidth: 1,
+    paddingBottom: theme.space16,
+    paddingHorizontal: theme.space12,
+    paddingTop: theme.space8,
+  },
+  doneButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.075)',
+    borderColor: 'rgba(255,255,255,0.085)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
   },
   emoteImage: {
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
   },
-  emoteInfo: {
-    flex: 1,
-    justifyContent: 'center',
-    minHeight: MAX_EMOTE_SIZE + theme.space20 * 2,
-  },
-  emoteName: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize18,
-    fontWeight: 'bold',
-    marginBottom: theme.space12,
-  },
-  metadataContainer: {
-    gap: theme.space8,
-  },
-  emoteMetadata: {
+  eyebrow: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize14,
-    lineHeight: theme.fontSize14 * 1.3,
+    fontSize: theme.fontSize11,
+    letterSpacing: 0,
+    marginBottom: 2,
+    textTransform: 'uppercase',
   },
-  actionsContainer: {
-    gap: theme.space12,
+  heading: {
+    flex: 1,
+    paddingRight: theme.space12,
   },
-  actionButton: {
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.color.border.dark,
+  imageStage: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderColor: 'rgba(255,255,255,0.075)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
-    paddingHorizontal: theme.space28,
-    paddingVertical: theme.space20,
+    height: 152,
+    justifyContent: 'center',
+    width: '100%',
   },
-  actionContent: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space16,
-    justifyContent: 'flex-start',
+  metadataCard: {
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(255,255,255,0.085)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    padding: theme.space12,
   },
-  actionText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize16,
-    fontWeight: 'normal',
+  metadataLabel: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    minWidth: 68,
+    textTransform: 'uppercase',
   },
-  // Legacy styles for compatibility with BadgePreviewSheet
-  meta: {
+  metadataRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
-    gap: theme.space16,
-    justifyContent: 'flex-start',
+    gap: theme.space12,
+    paddingVertical: theme.space8,
   },
-  actions: {
-    marginTop: theme.space28,
-  },
-  actionsList: {
+  metadataValue: {
+    color: theme.color.text.dark,
     flex: 1,
+    fontSize: 13,
+    lineHeight: theme.fontSize14 * 1.2,
   },
-  wrapper: {
-    paddingVertical: theme.space16,
+  previewPanel: {
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderColor: 'rgba(255,255,255,0.075)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius20,
+    borderWidth: 1,
+    gap: theme.space12,
+    padding: theme.space12,
   },
-  imageContainer: {
-    alignItems: 'center',
-    marginBottom: theme.space20,
+  previewPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.colorAccentSurface,
+    borderColor: 'rgba(74, 222, 128, 0.22)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    paddingHorizontal: theme.space12,
+    paddingVertical: 5,
   },
-  emoteDetail: {
-    marginBottom: theme.space8 / 2,
+  previewPillText: {
+    color: theme.colorGreen,
+    fontSize: theme.fontSize11,
   },
-  contentContainer: {
-    overflow: 'visible',
-    paddingHorizontal: theme.space28,
+  scroll: {
+    flexGrow: 0,
+  },
+  scrollContent: {
+    gap: theme.space12,
+    paddingBottom: theme.space16,
+  },
+  title: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize18,
+    lineHeight: theme.fontSize18 * 1.2,
+  },
+  topBar: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: theme.space12,
+    justifyContent: 'space-between',
+    paddingBottom: theme.space12,
   },
 });

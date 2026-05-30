@@ -1,5 +1,6 @@
 import { theme } from '@app/styles/themes';
-import { memo, useCallback, useEffect, useState } from 'react';
+import { useObservable, useSelector } from '@legendapp/state/react';
+import { memo, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   Switch as NativeSwitch,
@@ -15,18 +16,19 @@ export const Switch = memo(function Switch({
   value,
   ...props
 }: NativeSwitchProps) {
-  const [displayValue, setDisplayValue] = useState(Boolean(value));
+  const displayValue$ = useObservable(Boolean(value));
+  const displayValue = useSelector(displayValue$);
 
   useEffect(() => {
-    setDisplayValue(Boolean(value));
-  }, [value]);
+    displayValue$.set(Boolean(value));
+  }, [displayValue$, value]);
 
   const handleValueChange = useCallback(
     (nextValue: boolean) => {
-      setDisplayValue(nextValue);
+      displayValue$.set(nextValue);
       void onValueChange?.(nextValue);
     },
-    [onValueChange],
+    [displayValue$, onValueChange],
   );
 
   return (

@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { measureFunction, measureRenders } from 'reassure';
 import { ChatList } from '../components/ChatList';
 import { RichChatMessage } from '../components/ChatMessage/RichChatMessage';
+import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { getVisibleMessages } from '../util/visibleMessages';
 
@@ -63,6 +64,7 @@ function createChatMessage(index: number): PerfChatMessage {
     sender,
     channel: 'xqc',
     badges: [],
+    cachedSenderColor: 'rgb(145, 70, 255)',
     message: createMessageParts(index),
     replyBody: '',
     replyDisplayName: '',
@@ -114,7 +116,6 @@ function renderChatMessage(message: AnyChatMessageType) {
 
 function ChatListPerfFixture() {
   const listRef = { current: null };
-  const isAtBottomRef = { current: false };
 
   return (
     <ChatList
@@ -124,7 +125,7 @@ function ChatListPerfFixture() {
         showTimestamps: true,
       }}
       listRef={listRef}
-      isAtBottomRef={isAtBottomRef}
+      shouldMaintainScrollAtEnd={false}
       handleScroll={jest.fn()}
       handleScrollBeginDrag={jest.fn()}
       handleScrollEndDrag={jest.fn()}
@@ -173,6 +174,18 @@ describe('chat performance', () => {
         searchQuery: 'message',
         showOnlyMentions: false,
       });
+    }, MEASURE_OPTIONS);
+  });
+
+  test('estimates plain chat row heights with pretext', async () => {
+    await measureFunction(() => {
+      for (const message of visibleRows) {
+        estimateChatMessageHeightWithPretext(message, {
+          containerWidth: 390,
+          density: 'compact',
+          showTimestamp: true,
+        });
+      }
     }, MEASURE_OPTIONS);
   });
 });

@@ -13,6 +13,7 @@ import { Text, type TextType } from '@app/components/ui/Text/Text';
 import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
+import { useObservable, useSelector } from '@legendapp/state/react';
 import {
   EMOJI_STYLE_OPTIONS,
   getEmojiEmotes,
@@ -22,7 +23,7 @@ import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import type { SymbolViewProps } from 'expo-symbols';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 const DENSITY_OPTIONS = [
   { label: 'Comfortable', value: 'comfortable' as const },
@@ -230,27 +231,32 @@ export function ChatPreferenceScreen() {
     update,
   } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
-  const [previewDensity, setPreviewDensity] = useState(chatDensity);
-  const [previewEmojiStyle, setPreviewEmojiStyle] = useState(emojiStyle);
-  const [previewContext, setPreviewContext] = useState<ContextPreviewValue>({
+  const previewDensity$ = useObservable(chatDensity);
+  const previewEmojiStyle$ = useObservable(emojiStyle);
+  const previewContext$ = useObservable<ContextPreviewValue>({
     chatTimestamps,
     highlightOwnMentions,
     showInlineReplyContext,
     showUnreadJumpPill,
   });
-  const [previewDisableEmoteAnimations, setPreviewDisableEmoteAnimations] =
-    useState(disableEmoteAnimations);
-  const [previewProviders, setPreviewProviders] =
-    useState<ProviderPreviewValue>({
-      show7TvEmotes,
-      show7tvBadges,
-      showBttvEmotes,
-      showBttvBadges,
-      showFFzEmotes,
-      showFFzBadges,
-      showTwitchEmotes,
-      showTwitchBadges,
-    });
+  const previewDisableEmoteAnimations$ = useObservable(disableEmoteAnimations);
+  const previewProviders$ = useObservable<ProviderPreviewValue>({
+    show7TvEmotes,
+    show7tvBadges,
+    showBttvEmotes,
+    showBttvBadges,
+    showFFzEmotes,
+    showFFzBadges,
+    showTwitchEmotes,
+    showTwitchBadges,
+  });
+  const previewDensity = useSelector(previewDensity$);
+  const previewEmojiStyle = useSelector(previewEmojiStyle$);
+  const previewContext = useSelector(previewContext$);
+  const previewDisableEmoteAnimations = useSelector(
+    previewDisableEmoteAnimations$,
+  );
+  const previewProviders = useSelector(previewProviders$);
   const densityIndex = previewDensity === 'compact' ? 1 : 0;
   const emojiLabels = EMOJI_STYLE_OPTIONS.map(option => option.label);
   const emojiIndex = Math.max(
@@ -271,12 +277,12 @@ export function ChatPreferenceScreen() {
   }, [previewEmojiStyle]);
 
   useEffect(() => {
-    setPreviewDensity(chatDensity);
-  }, [chatDensity]);
+    previewDensity$.set(chatDensity);
+  }, [chatDensity, previewDensity$]);
 
   useEffect(() => {
-    setPreviewEmojiStyle(emojiStyle);
-  }, [emojiStyle]);
+    previewEmojiStyle$.set(emojiStyle);
+  }, [emojiStyle, previewEmojiStyle$]);
 
   useEffect(() => {
     const nextContext = {
@@ -285,7 +291,7 @@ export function ChatPreferenceScreen() {
       showInlineReplyContext,
       showUnreadJumpPill,
     };
-    setPreviewContext(previous =>
+    previewContext$.set(previous =>
       samePreviewValues(previous, nextContext, CONTEXT_PREVIEW_KEYS)
         ? previous
         : nextContext,
@@ -293,13 +299,14 @@ export function ChatPreferenceScreen() {
   }, [
     chatTimestamps,
     highlightOwnMentions,
+    previewContext$,
     showInlineReplyContext,
     showUnreadJumpPill,
   ]);
 
   useEffect(() => {
-    setPreviewDisableEmoteAnimations(disableEmoteAnimations);
-  }, [disableEmoteAnimations]);
+    previewDisableEmoteAnimations$.set(disableEmoteAnimations);
+  }, [disableEmoteAnimations, previewDisableEmoteAnimations$]);
 
   useEffect(() => {
     const nextProviders = {
@@ -312,7 +319,7 @@ export function ChatPreferenceScreen() {
       showTwitchEmotes,
       showTwitchBadges,
     };
-    setPreviewProviders(previous =>
+    previewProviders$.set(previous =>
       samePreviewValues(previous, nextProviders, PROVIDER_PREVIEW_KEYS)
         ? previous
         : nextProviders,
@@ -326,11 +333,12 @@ export function ChatPreferenceScreen() {
     showFFzBadges,
     showTwitchEmotes,
     showTwitchBadges,
+    previewProviders$,
   ]);
 
   const handleContextToggle = useCallback(
     (key: ContextPreviewKey, value: boolean) => {
-      setPreviewContext(previous =>
+      previewContext$.set(previous =>
         previous[key] === value
           ? previous
           : {
@@ -340,12 +348,12 @@ export function ChatPreferenceScreen() {
       );
       update({ [key]: value });
     },
-    [update],
+    [previewContext$, update],
   );
 
   const handleProviderToggle = useCallback(
     (key: ProviderPreviewKey, value: boolean) => {
-      setPreviewProviders(previous =>
+      previewProviders$.set(previous =>
         previous[key] === value
           ? previous
           : {
@@ -355,25 +363,25 @@ export function ChatPreferenceScreen() {
       );
       update({ [key]: value });
     },
-    [update],
+    [previewProviders$, update],
   );
 
   const handleDisableEmoteAnimationsToggle = useCallback(
     (value: boolean) => {
-      setPreviewDisableEmoteAnimations(value);
+      previewDisableEmoteAnimations$.set(value);
       update({ disableEmoteAnimations: value });
     },
-    [update],
+    [previewDisableEmoteAnimations$, update],
   );
 
   const handleDensitySelect = useCallback(
     (nextDensity: 'comfortable' | 'compact') => {
-      setPreviewDensity(nextDensity);
+      previewDensity$.set(nextDensity);
       update({
         chatDensity: nextDensity,
       });
     },
-    [update],
+    [previewDensity$, update],
   );
 
   const handleDensityChange = useCallback(
@@ -411,10 +419,10 @@ export function ChatPreferenceScreen() {
         return;
       }
 
-      setPreviewEmojiStyle(option.value as EmojiStyle);
+      previewEmojiStyle$.set(option.value as EmojiStyle);
       update({ emojiStyle: option.value as EmojiStyle });
     },
-    [update],
+    [previewEmojiStyle$, update],
   );
 
   const handleEmojiStyleChangeByIndex = useCallback(
@@ -426,10 +434,10 @@ export function ChatPreferenceScreen() {
         return;
       }
 
-      setPreviewEmojiStyle(option.value as EmojiStyle);
+      previewEmojiStyle$.set(option.value as EmojiStyle);
       update({ emojiStyle: option.value as EmojiStyle });
     },
-    [update],
+    [previewEmojiStyle$, update],
   );
 
   useScrollToTop(scrollRef);
@@ -437,13 +445,10 @@ export function ChatPreferenceScreen() {
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
-        <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <ScreenHeader
-            title="Chat"
-            subtitle="Message controls"
-            size="medium"
-          />
-
+        <BodyScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={styles.iosContent}
+        >
           <Form.Section title="Layout">
             <Form.FormItem style={styles.iosControlItem}>
               <View style={styles.iosControlBody}>

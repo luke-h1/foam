@@ -4,15 +4,13 @@ import { Chat } from '@app/components/Chat/Chat';
 import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
 import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
 import { SymbolView } from 'expo-symbols';
-import {
-  StreamPlayer,
-  StreamPlayerPrewarm,
-} from '@app/components/StreamPlayer/StreamPlayer';
+import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { Text } from '@app/components/ui/Text/Text';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { theme } from '@app/styles/themes';
+import { usePreference } from '@app/store/preferenceStore';
 import { useQuery } from '@tanstack/react-query';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -100,23 +98,31 @@ export function getNextChatCycleAction(
 export function getLiveStreamVideoDimensions({
   fullscreenChatMode,
   hasContentGate,
+  isChatEnabled,
   isChatVisible,
   isLandscape,
   landscapeChatWidth,
   layoutHeight,
+  isStreamEnabled,
   screenWidth,
 }: {
   fullscreenChatMode: FullscreenChatMode;
   hasContentGate: boolean;
+  isChatEnabled: boolean;
   isChatVisible: boolean;
   isLandscape: boolean;
   landscapeChatWidth: number | null;
   layoutHeight: number;
+  isStreamEnabled: boolean;
   screenWidth: number;
 }): { width: number; height: number } {
+  if (!isStreamEnabled) {
+    return { width: 0, height: 0 };
+  }
+
   if (isLandscape) {
     const visibleSidebarChatWidth =
-      isChatVisible && fullscreenChatMode === 'sidebar'
+      isChatEnabled && isChatVisible && fullscreenChatMode === 'sidebar'
         ? clampLandscapeChatWidth(
             landscapeChatWidth ??
               getDefaultLandscapeChatWidth('sidebar', screenWidth),
@@ -129,7 +135,7 @@ export function getLiveStreamVideoDimensions({
       height: Math.max(1, layoutHeight),
     };
   }
-  if (hasContentGate) {
+  if (hasContentGate || !isChatEnabled) {
     return {
       width: Math.max(1, screenWidth),
       height: Math.max(1, layoutHeight),
@@ -144,18 +150,33 @@ export function getLiveStreamVideoDimensions({
 export function getLiveStreamChatDimensions({
   fullscreenChatMode,
   hasContentGate,
+  isChatEnabled,
   isLandscape,
   landscapeChatWidth,
   layoutHeight,
+  isStreamEnabled,
   screenWidth,
 }: {
   fullscreenChatMode: FullscreenChatMode;
   hasContentGate: boolean;
+  isChatEnabled: boolean;
   isLandscape: boolean;
   landscapeChatWidth: number | null;
   layoutHeight: number;
+  isStreamEnabled: boolean;
   screenWidth: number;
 }): { width: number; height: number } {
+  if (!isChatEnabled) {
+    return { width: 0, height: 0 };
+  }
+
+  if (!isStreamEnabled) {
+    return {
+      width: Math.max(1, screenWidth),
+      height: Math.max(1, layoutHeight),
+    };
+  }
+
   if (isLandscape) {
     return {
       width: clampLandscapeChatWidth(
@@ -179,6 +200,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
   const normalizedLogin = useMemo(() => id.trim().toLowerCase(), [id]);
+  const disableChat = usePreference('disableChat');
+  const disableStream = usePreference('disableStream');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const safeFrame = useSafeAreaFrame();
   const insets = useSafeAreaInsets();
@@ -193,8 +216,12 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   );
   const portraitTopInset = isLandscape ? 0 : insets.top;
   const layoutHeight = Math.max(1, screenHeight - portraitTopInset);
+  const isChatEnabled = !disableChat;
+  const isStreamEnabled = !disableStream;
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
-  const shouldRenderChat = !isLandscape || isChatVisible;
+  const isChatVisibleForLayout = isChatVisible || !isStreamEnabled;
+  const shouldRenderChat =
+    isChatEnabled && (!isLandscape || isChatVisibleForLayout);
   const [fullscreenChatMode, setFullscreenChatMode] =
     useState<FullscreenChatMode>('sidebar');
   const [landscapeChatCycleAction, setLandscapeChatCycleAction] =
@@ -287,10 +314,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   useEffect(() => {
     setHasContentGate(false);
-    setChatConnectionReady(false);
+    setChatConnectionReady(!isStreamEnabled);
     setVideoLatencySeconds(null);
 
-    if (!normalizedLogin) {
+    if (!normalizedLogin || !isStreamEnabled) {
       return;
     }
 
@@ -301,7 +328,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     return () => {
       clearTimeout(fallbackTimer);
     };
-  }, [normalizedLogin]);
+  }, [isStreamEnabled, normalizedLogin]);
 
   const handlePlayerLoaded = useCallback(() => {
     setChatConnectionReady(true);
@@ -311,33 +338,41 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     setVideoLatencySeconds(latencySeconds);
   }, []);
 
+  const shouldResolveChannelIdentity = isChatEnabled || isStreamEnabled;
   const { data: stream } = useQuery({
     ...twitchQueries.getStream(normalizedLogin),
-    enabled: normalizedLogin.length > 0,
+    enabled: isStreamEnabled && normalizedLogin.length > 0,
   });
 
   const { data: user } = useQuery({
     ...twitchQueries.getUser(normalizedLogin),
-    enabled: normalizedLogin.length > 0 && !stream?.user_id,
+    enabled:
+      shouldResolveChannelIdentity &&
+      normalizedLogin.length > 0 &&
+      (!isStreamEnabled || !stream?.user_id),
   });
 
   const videoDimensions = useMemo(() => {
     return getLiveStreamVideoDimensions({
       fullscreenChatMode,
       hasContentGate,
+      isChatEnabled,
       isChatVisible,
       isLandscape,
       landscapeChatWidth,
       layoutHeight,
+      isStreamEnabled,
       screenWidth,
     });
   }, [
     fullscreenChatMode,
     hasContentGate,
+    isChatEnabled,
     isChatVisible,
     isLandscape,
     landscapeChatWidth,
     layoutHeight,
+    isStreamEnabled,
     screenWidth,
   ]);
 
@@ -345,17 +380,21 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     return getLiveStreamChatDimensions({
       fullscreenChatMode,
       hasContentGate,
+      isChatEnabled,
       isLandscape,
       landscapeChatWidth,
       layoutHeight,
+      isStreamEnabled,
       screenWidth,
     });
   }, [
     fullscreenChatMode,
     hasContentGate,
+    isChatEnabled,
     isLandscape,
     landscapeChatWidth,
     layoutHeight,
+    isStreamEnabled,
     screenWidth,
   ]);
 
@@ -384,7 +423,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   );
 
   useEffect(() => {
-    const chatHidden = !isChatVisible && isLandscape;
+    const chatHidden = !isChatVisibleForLayout && isLandscape;
     const effectiveChatWidth = chatHidden ? 0 : chatDimensions.width;
     const effectiveChatHeight = chatHidden ? 0 : chatDimensions.height;
 
@@ -410,6 +449,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   }, [
     isLandscape,
     isChatVisible,
+    isChatVisibleForLayout,
     videoDimensions,
     chatDimensions,
     layoutAnimationConfig,
@@ -458,7 +498,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           );
 
           chatWidth.value = nextWidth;
-          if (fullscreenChatMode === 'sidebar' && isChatVisible) {
+          if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
             videoWidth.value = Math.max(1, screenWidth - nextWidth);
           }
         })
@@ -470,7 +510,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       chatWidth,
       commitLandscapeChatWidth,
       fullscreenChatMode,
-      isChatVisible,
+      isChatVisibleForLayout,
       resizeHandleOpacity,
       resizeStartWidth,
       screenWidth,
@@ -490,8 +530,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const resolvedChannelLogin =
     stream?.user_login ?? user?.login ?? normalizedLogin;
   const resolvedChannelId = stream?.user_id ?? user?.id;
-  const { prediction } = useChannelPrediction(resolvedChannelId);
-  const { poll } = useChannelPoll(resolvedChannelId);
+  const predictionChannelId = isStreamEnabled ? resolvedChannelId : undefined;
+  const { prediction } = useChannelPrediction(predictionChannelId);
+  const { poll } = useChannelPoll(predictionChannelId);
   const hasResolvedChannelLogin = Boolean(resolvedChannelLogin);
   const hasResolvedChannelId = Boolean(resolvedChannelId);
   const shouldMountChat =
@@ -500,6 +541,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     hasResolvedChannelId &&
     isChatConnectionReady;
   const shouldShowChatConnectionNotice =
+    isStreamEnabled &&
     shouldRenderChat &&
     hasResolvedChannelLogin &&
     (!hasResolvedChannelId || !isChatConnectionReady);
@@ -538,7 +580,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const streamInfo = useMemo(
     () =>
-      resolvedChannelLogin
+      isStreamEnabled && resolvedChannelLogin
         ? {
             userName: stream?.user_name ?? user?.display_name,
             userLogin: resolvedChannelLogin,
@@ -548,6 +590,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           }
         : undefined,
     [
+      isStreamEnabled,
       resolvedChannelLogin,
       stream?.user_name,
       stream?.viewer_count,
@@ -558,11 +601,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   );
   return (
     <View style={contentContainerStyle}>
-      {resolvedChannelLogin ? (
-        <StreamPlayerPrewarm parent="www.twitch.tv" />
-      ) : null}
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-        {resolvedChannelLogin ? (
+        {isStreamEnabled && resolvedChannelLogin ? (
           <StreamPlayer
             channel={resolvedChannelLogin}
             height="100%"
@@ -582,86 +622,99 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         ) : null}
       </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.chatContainer,
-          animatedChatStyle,
-          landscapeChatContainerStyle,
-        ]}
-      >
-        {shouldMountChat || shouldShowChatConnectionNotice ? (
-          <View
-            style={[
-              styles.chatContent,
-              isLandscape &&
-                fullscreenChatMode === 'overlay' &&
-                styles.overlayChatContent,
-            ]}
-          >
-            {isLandscape && fullscreenChatMode === 'overlay' ? (
-              <BlurView
-                intensity={36}
-                style={styles.overlayChatBlur}
-                tint="dark"
-              />
-            ) : null}
-            <VideoDelayIndicator latencySeconds={videoLatencySeconds} />
-            {prediction && resolvedChannelLogin ? (
-              <ChannelPredictionCard
-                channelLogin={resolvedChannelLogin}
-                prediction={prediction}
-              />
-            ) : null}
-            {poll && resolvedChannelLogin ? (
-              <ChannelPollCard
-                channelLogin={resolvedChannelLogin}
-                poll={poll}
-              />
-            ) : null}
-            {shouldMountChat ? (
-              <Chat
-                key={resolvedChannelId}
-                applyTopInset={isLandscape}
-                channelId={resolvedChannelId!}
-                channelName={resolvedChannelLogin!}
-                transparent={isLandscape && fullscreenChatMode === 'overlay'}
-              />
-            ) : (
-              <View style={styles.chatConnectionNotice}>
-                <SymbolView
-                  tintColor={theme.colorGrey}
-                  name="message"
-                  size={24}
-                />
-                <Text
-                  align="center"
-                  color="gray.contrast"
-                  type="sm"
-                  weight="semibold"
-                >
-                  Chat will connect when the stream starts.
-                </Text>
-                <Text align="center" color="gray" type="xs">
-                  This can take up to 10 seconds so video playback stays first.
-                </Text>
-              </View>
-            )}
-          </View>
-        ) : null}
-        {isLandscape && (shouldMountChat || shouldShowChatConnectionNotice) ? (
-          <GestureDetector gesture={resizeChatGesture}>
-            <Animated.View
-              accessibilityLabel="Resize chat"
-              accessibilityRole="adjustable"
-              style={[styles.chatResizeHandle, animatedResizeHandleStyle]}
+      {isChatEnabled ? (
+        <Animated.View
+          style={[
+            styles.chatContainer,
+            animatedChatStyle,
+            landscapeChatContainerStyle,
+          ]}
+        >
+          {shouldMountChat || shouldShowChatConnectionNotice ? (
+            <View
+              style={[
+                styles.chatContent,
+                isLandscape &&
+                  fullscreenChatMode === 'overlay' &&
+                  styles.overlayChatContent,
+              ]}
             >
-              <View style={styles.chatResizeIndicator} />
-            </Animated.View>
-          </GestureDetector>
-        ) : null}
-      </Animated.View>
+              {isStreamEnabled &&
+              isLandscape &&
+              fullscreenChatMode === 'overlay' ? (
+                <BlurView
+                  intensity={36}
+                  style={styles.overlayChatBlur}
+                  tint="dark"
+                />
+              ) : null}
+              {isStreamEnabled ? (
+                <VideoDelayIndicator latencySeconds={videoLatencySeconds} />
+              ) : null}
+              {isStreamEnabled && prediction && resolvedChannelLogin ? (
+                <ChannelPredictionCard
+                  channelLogin={resolvedChannelLogin}
+                  prediction={prediction}
+                />
+              ) : null}
+              {isStreamEnabled && poll && resolvedChannelLogin ? (
+                <ChannelPollCard
+                  channelLogin={resolvedChannelLogin}
+                  poll={poll}
+                />
+              ) : null}
+              {shouldMountChat ? (
+                <Chat
+                  key={resolvedChannelId}
+                  applyTopInset={isLandscape && isStreamEnabled}
+                  channelId={resolvedChannelId!}
+                  channelName={resolvedChannelLogin!}
+                  transparent={
+                    isStreamEnabled &&
+                    isLandscape &&
+                    fullscreenChatMode === 'overlay'
+                  }
+                />
+              ) : (
+                <View style={styles.chatConnectionNotice}>
+                  <SymbolView
+                    tintColor={theme.colorGrey}
+                    name="message"
+                    size={24}
+                  />
+                  <Text
+                    align="center"
+                    color="gray.contrast"
+                    type="sm"
+                    weight="semibold"
+                  >
+                    Chat will connect when the stream starts.
+                  </Text>
+                  <Text align="center" color="gray" type="xs">
+                    This can take up to 10 seconds so video playback stays
+                    first.
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : null}
+          {isStreamEnabled &&
+          isLandscape &&
+          (shouldMountChat || shouldShowChatConnectionNotice) ? (
+            <GestureDetector gesture={resizeChatGesture}>
+              <Animated.View
+                accessibilityLabel="Resize chat"
+                accessibilityRole="adjustable"
+                style={[styles.chatResizeHandle, animatedResizeHandleStyle]}
+              >
+                <View style={styles.chatResizeIndicator} />
+              </Animated.View>
+            </GestureDetector>
+          ) : null}
+        </Animated.View>
+      ) : null}
 
-      {isLandscape ? (
+      {isStreamEnabled && isChatEnabled && isLandscape ? (
         <Animated.View
           pointerEvents="box-none"
           style={[

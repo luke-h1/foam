@@ -56,7 +56,10 @@ export function RemoteConfigScreen() {
   };
 
   return (
-    <BodyScrollView contentContainerStyle={styles.contentContainer}>
+    <BodyScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.contentContainer}
+    >
       <View style={styles.section}>
         <Button
           onPress={handleRefetch}

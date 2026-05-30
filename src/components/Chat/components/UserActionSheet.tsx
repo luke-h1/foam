@@ -1,8 +1,16 @@
 import { Button } from '@app/components/Button/Button';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { BottomSheet, type SnapPoint } from '@expo/ui';
+import { useMemo } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from './chatSheetSurface';
 
 interface UserActionSheetProps {
   isHidden: boolean;
@@ -21,6 +29,14 @@ interface UserActionSheetProps {
   canModerateUser?: boolean;
 }
 
+type UserActionItem = {
+  icon: SymbolViewProps['name'];
+  label: string;
+  onPress?: () => void;
+  subtitle: string;
+  tone?: 'accent' | 'danger' | 'default' | 'warning';
+};
+
 export function UserActionSheet({
   isHidden,
   isHighlighted,
@@ -37,202 +53,336 @@ export function UserActionSheet({
   canModerateChat,
   canModerateUser,
 }: UserActionSheetProps) {
+  const actionRows: UserActionItem[] = [
+    {
+      icon: 'at',
+      label: 'Mention',
+      onPress: onMentionUser,
+      subtitle: 'Add to composer',
+      tone: 'accent',
+    },
+    {
+      icon: 'doc.on.doc',
+      label: 'Copy Username',
+      onPress: onCopyUsername,
+      subtitle: 'Display name',
+    },
+    {
+      icon: 'person.crop.circle.badge.xmark',
+      label: isHidden ? 'Unhide User' : 'Hide User',
+      onPress: onHideUser,
+      subtitle: isHidden ? 'Show messages again' : 'Mute locally',
+    },
+    {
+      icon: 'star',
+      label: isHighlighted ? 'Unhighlight User' : 'Highlight User',
+      onPress: onHighlightUser,
+      subtitle: isHighlighted ? 'Remove marker' : 'Mark future messages',
+      tone: 'accent',
+    },
+    ...(canModerateChat && canModerateUser
+      ? [
+          {
+            icon: 'clock' as const,
+            label: 'Timeout for 10m',
+            onPress: onTimeoutUser,
+            subtitle: 'Temporary moderation',
+            tone: 'warning' as const,
+          },
+          {
+            icon: 'slash.circle' as const,
+            label: 'Ban User',
+            onPress: onBanUser,
+            subtitle: 'Permanent moderation',
+            tone: 'danger' as const,
+          },
+        ]
+      : []),
+  ];
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const sheetWidth = Math.max(
+    280,
+    Math.min(windowWidth - theme.space16 * 2, 520),
+  );
+  const maxScrollHeight = Math.min(
+    Math.round(windowHeight * 0.54),
+    actionRows.length * 52 + 2,
+  );
+  const sheetHeight = Math.min(
+    Math.round(windowHeight * 0.72),
+    144 + actionRows.length * 52 + (isHidden || isHighlighted ? 34 : 0),
+  );
+  const snapPoints = useMemo<SnapPoint[]>(
+    () => [{ height: sheetHeight }, 'full'],
+    [sheetHeight],
+  );
+  const wrapperStyle = useMemo(
+    () => [
+      styles.wrapper,
+      {
+        maxHeight: sheetHeight - theme.space16,
+        width: sheetWidth,
+      },
+    ],
+    [sheetHeight, sheetWidth],
+  );
+  const scrollStyle = useMemo(
+    () => [styles.scroll, { maxHeight: maxScrollHeight }],
+    [maxScrollHeight],
+  );
+
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="overFullScreen"
-      transparent
-      onRequestClose={onClose}
+    <BottomSheet
+      isPresented={visible}
+      onDismiss={onClose}
+      showDragIndicator
+      snapPoints={snapPoints}
+      testID="user-action-sheet"
     >
-      <View style={styles.backdrop}>
-        <View style={styles.wrapper}>
-          <View style={styles.header}>
-            <View>
-              <Text style={styles.username}>{username}</Text>
+      <View style={wrapperStyle}>
+        <View style={styles.header}>
+          <View style={styles.identity}>
+            <View style={styles.identityText}>
+              <Text style={styles.eyebrow} weight="semibold">
+                User actions
+              </Text>
+              <Text style={styles.username} weight="semibold" numberOfLines={1}>
+                {username}
+              </Text>
               {login && login !== username ? (
-                <Text style={styles.login}>@{login}</Text>
+                <Text style={styles.login} numberOfLines={1}>
+                  @{login}
+                </Text>
               ) : null}
             </View>
-            <Button style={styles.doneButton} onPress={onClose}>
-              <Text style={styles.doneText}>Done</Text>
-            </Button>
           </View>
-
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.actionGroup}>
-              <Button
-                style={[styles.actionButton, styles.actionButtonBorder]}
-                onPress={onMentionUser}
-              >
-                <SymbolView
-                  name="at"
-                  size={18}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-                <Text style={styles.actionText}>Mention</Text>
-              </Button>
-
-              <Button
-                style={[styles.actionButton, styles.actionButtonBorder]}
-                onPress={onCopyUsername}
-              >
-                <SymbolView
-                  name="doc.on.doc"
-                  size={18}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-                <Text style={styles.actionText}>Copy Username</Text>
-              </Button>
-
-              <Button
-                style={[styles.actionButton, styles.actionButtonBorder]}
-                onPress={onHideUser}
-              >
-                <SymbolView
-                  name="person.crop.circle.badge.xmark"
-                  size={18}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-                <Text style={styles.actionText}>
-                  {isHidden ? 'Unhide User' : 'Hide User'}
+          <Button label="Done" style={styles.doneButton} onPress={onClose}>
+            <SymbolView
+              name="checkmark"
+              size={18}
+              tintColor={theme.color.text.dark}
+            />
+          </Button>
+        </View>
+        {isHidden || isHighlighted ? (
+          <View style={styles.statePills}>
+            {isHidden ? (
+              <View style={styles.statePill}>
+                <Text style={styles.statePillText} weight="semibold">
+                  Hidden
                 </Text>
-              </Button>
+              </View>
+            ) : null}
+            {isHighlighted ? (
+              <View style={[styles.statePill, styles.statePillAccent]}>
+                <Text style={styles.statePillAccentText} weight="semibold">
+                  Highlighted
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
+        <ScrollView
+          style={scrollStyle}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.actionGroup}>
+            {actionRows.map((action, index) => (
               <Button
+                key={action.label}
                 style={[
                   styles.actionButton,
-                  !canModerateChat || !canModerateUser
-                    ? null
-                    : styles.actionButtonBorder,
+                  index < actionRows.length - 1 && styles.actionButtonBorder,
                 ]}
-                onPress={onHighlightUser}
+                onPress={action.onPress}
               >
-                <SymbolView
-                  name="star"
-                  size={18}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-                <Text style={styles.actionText}>
-                  {isHighlighted ? 'Unhighlight User' : 'Highlight User'}
-                </Text>
-              </Button>
-
-              {canModerateChat && canModerateUser ? (
-                <>
-                  <Button
-                    style={[styles.actionButton, styles.actionButtonBorder]}
-                    onPress={onTimeoutUser}
+                <View
+                  style={[
+                    styles.actionIconFrame,
+                    action.tone === 'accent' && styles.actionIconAccent,
+                    action.tone === 'warning' && styles.actionIconWarning,
+                    action.tone === 'danger' && styles.actionIconDanger,
+                  ]}
+                >
+                  <SymbolView
+                    name={action.icon}
+                    size={18}
+                    tintColor={
+                      action.tone === 'danger'
+                        ? theme.colorRed
+                        : action.tone === 'warning'
+                          ? theme.colorAmber
+                          : action.tone === 'accent'
+                            ? theme.colorGreen
+                            : '#b7bdc9'
+                    }
+                  />
+                </View>
+                <View style={styles.actionCopy}>
+                  <Text
+                    weight="semibold"
+                    style={[
+                      styles.actionText,
+                      action.tone === 'danger' && styles.actionTextDanger,
+                    ]}
                   >
-                    <SymbolView
-                      name="clock"
-                      size={18}
-                      tintColor={theme.colorGreyHoverAlpha}
-                    />
-                    <Text style={styles.actionText}>Timeout for 10m</Text>
-                  </Button>
-
-                  <Button style={styles.actionButton} onPress={onBanUser}>
-                    <SymbolView
-                      name="slash.circle"
-                      size={18}
-                      tintColor={theme.colorGreyHoverAlpha}
-                    />
-                    <Text style={styles.actionText}>Ban User</Text>
-                  </Button>
-                </>
-              ) : null}
-            </View>
-          </ScrollView>
-        </View>
+                    {action.label}
+                  </Text>
+                  <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+                </View>
+              </Button>
+            ))}
+          </View>
+        </ScrollView>
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
+    backgroundColor: 'rgba(255,255,255,0.055)',
     flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: 48,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    gap: theme.space8,
+    minHeight: 52,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   actionButtonBorder: {
-    borderBottomColor: theme.color.border.dark,
+    borderBottomColor: 'rgba(255,255,255,0.075)',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  actionCopy: {
+    flex: 1,
+    gap: 2,
+  },
   actionGroup: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(255,255,255,0.085)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: 1,
     overflow: 'hidden',
   },
+  actionIconAccent: {
+    backgroundColor: 'rgba(74, 222, 128, 0.12)',
+    borderColor: 'rgba(74, 222, 128, 0.18)',
+  },
+  actionIconDanger: {
+    backgroundColor: theme.colorRedSurface,
+    borderColor: theme.colorRedBorderUi,
+  },
+  actionIconFrame: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.075)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius10,
+    borderWidth: 1,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  actionIconWarning: {
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    borderColor: 'rgba(251, 191, 36, 0.26)',
+  },
+  actionSubtitle: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    lineHeight: theme.fontSize11 * 1.25,
+  },
   actionText: {
     color: theme.color.text.dark,
     fontSize: theme.fontSize14,
-    fontWeight: '500',
+    lineHeight: theme.fontSize14 * 1.25,
   },
-  backdrop: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.58)',
-    flex: 1,
-    justifyContent: 'center',
-    padding: theme.space20,
+  actionTextDanger: {
+    color: theme.colorRed,
   },
   doneButton: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.075)',
+    borderColor: 'rgba(255,255,255,0.085)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
   },
-  doneText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    fontWeight: '600',
+  eyebrow: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    letterSpacing: 0,
+    textTransform: 'uppercase',
   },
   header: {
-    alignItems: 'center',
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    alignItems: 'flex-start',
     flexDirection: 'row',
+    gap: theme.space12,
     justifyContent: 'space-between',
-    marginBottom: theme.space16,
-    paddingBottom: theme.space16,
+    paddingBottom: theme.space4,
+  },
+  identity: {
+    flex: 1,
+  },
+  identityText: {
+    flex: 1,
+    gap: 1,
   },
   login: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize14,
+    fontSize: 13,
+    lineHeight: theme.fontSize14 * 1.25,
   },
   username: {
     color: theme.color.text.dark,
     fontSize: theme.fontSize18,
-    fontWeight: '700',
+    lineHeight: theme.fontSize18 * 1.2,
   },
   wrapper: {
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: 24,
+    ...chatSheetSurface,
+    backgroundColor: CHAT_SHEET_BACKGROUND,
+    borderColor: 'rgba(255,255,255,0.10)',
     borderWidth: 1,
-    gap: theme.space16,
-    maxHeight: '82%',
-    overflow: 'hidden',
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space16,
-    width: '100%',
+    gap: 10,
+    paddingHorizontal: theme.space12,
+    paddingTop: theme.space8,
   },
   scroll: {
-    flex: 1,
+    flexGrow: 0,
   },
   scrollContent: {
-    paddingBottom: theme.space20,
+    paddingBottom: theme.space16,
+  },
+  statePill: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: theme.space4,
+  },
+  statePillAccent: {
+    backgroundColor: theme.colorAccentSurface,
+    borderColor: 'rgba(74, 222, 128, 0.24)',
+  },
+  statePillAccentText: {
+    color: theme.colorGreen,
+    fontSize: theme.fontSize11,
+  },
+  statePills: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.space8,
+  },
+  statePillText: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
   },
 });

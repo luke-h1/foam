@@ -1,5 +1,13 @@
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
+import type { SymbolViewProps } from 'expo-symbols';
 import type { ReactNode } from 'react';
+
+interface NativeTabBarOverlayItem {
+  iconName: SymbolViewProps['name'];
+  key: string;
+  label: string;
+  routeName: string;
+}
 
 interface MotionTabPalette {
   accent: string;
@@ -43,4 +51,5 @@ export type {
   MotionTabItem,
   MotionTabPalette,
   TabToolbarProps,
+  NativeTabBarOverlayItem,
 };

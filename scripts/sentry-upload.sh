@@ -136,6 +136,7 @@ sentry_upload_dsyms() {
 
   echo "Uploading Sentry dSYMs from ${dsym_paths[*]}"
   SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
+    SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
     SENTRY_RELEASE="$release" \
     SENTRY_DIST="$dist" \
     sentry_run_upload "$bin" debug-files upload \
@@ -184,6 +185,7 @@ sentry_upload_ota_sourcemaps() {
   SENTRY_ORG="${SENTRY_ORG:-luke-howsam}" \
     SENTRY_PROJECT="${SENTRY_PROJECT:-foam}" \
     SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
+    SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
     SENTRY_RELEASE="$release" \
     SENTRY_DIST="$dist" \
     sentry_run_upload "$bin" "$output_dir"

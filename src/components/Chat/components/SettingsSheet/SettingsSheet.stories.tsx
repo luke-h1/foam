@@ -1,9 +1,8 @@
-import { TrueSheet } from '@lodev09/react-native-true-sheet';
 import type { Meta, StoryObj } from '@storybook/react';
-import React, { useRef, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { SettingsSheet } from './SettingsSheet';
+import { SettingsSheet, type SettingsSheetProps } from './SettingsSheet';
 
 const meta = {
   title: 'components/Chat/SettingsSheet',
@@ -28,19 +27,24 @@ const meta = {
     onReconnect: { action: 'onReconnect' },
     onRefreshVideo: { action: 'onRefreshVideo' },
   },
+  args: {
+    isPresented: false,
+    onDismiss: () => {},
+  },
 } satisfies Meta<typeof SettingsSheet>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Helper component to control sheet visibility
-function SheetWrapper({ children }: { children: React.ReactNode }) {
-  const sheetRef = useRef<TrueSheet>(null);
+type SheetWrapperProps = Omit<SettingsSheetProps, 'isPresented' | 'onDismiss'>;
+
+function SheetWrapper(props: SheetWrapperProps) {
+  const [isPresented, setIsPresented] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      void sheetRef.current?.present();
+      setIsPresented(true);
     }, 100);
 
     return () => clearTimeout(timer);
@@ -48,12 +52,23 @@ function SheetWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <View style={{ flex: 1 }}>
-      {React.isValidElement(children)
-        ? // @ts-expect-error - ref is not a prop of the children
-          React.cloneElement(children as React.ReactElement, { ref: sheetRef })
-        : children}
+      <SettingsSheet
+        {...props}
+        isPresented={isPresented}
+        onDismiss={() => setIsPresented(false)}
+      />
     </View>
   );
+}
+
+function renderSheetStory(args: SettingsSheetProps) {
+  const {
+    isPresented: _isPresented,
+    onDismiss: _onDismiss,
+    ...sheetArgs
+  } = args;
+
+  return <SheetWrapper {...sheetArgs} />;
 }
 
 export const Default: Story = {
@@ -61,11 +76,7 @@ export const Default: Story = {
     latency: null,
     reconnectionAttempts: 0,
   },
-  render: args => (
-    <SheetWrapper>
-      <SettingsSheet {...args} />
-    </SheetWrapper>
-  ),
+  render: renderSheetStory,
 };
 
 export const WithLatency: Story = {
@@ -73,11 +84,7 @@ export const WithLatency: Story = {
     latency: 45,
     reconnectionAttempts: 0,
   },
-  render: args => (
-    <SheetWrapper>
-      <SettingsSheet {...args} />
-    </SheetWrapper>
-  ),
+  render: renderSheetStory,
 };
 
 export const WithReconnectionAttempts: Story = {
@@ -85,11 +92,7 @@ export const WithReconnectionAttempts: Story = {
     latency: 32,
     reconnectionAttempts: 3,
   },
-  render: args => (
-    <SheetWrapper>
-      <SettingsSheet {...args} />
-    </SheetWrapper>
-  ),
+  render: renderSheetStory,
 };
 
 export const AllData: Story = {
@@ -97,11 +100,7 @@ export const AllData: Story = {
     latency: 67,
     reconnectionAttempts: 5,
   },
-  render: args => (
-    <SheetWrapper>
-      <SettingsSheet {...args} />
-    </SheetWrapper>
-  ),
+  render: renderSheetStory,
 };
 
 export const NoLatency: Story = {
@@ -109,9 +108,5 @@ export const NoLatency: Story = {
     latency: null,
     reconnectionAttempts: 2,
   },
-  render: args => (
-    <SheetWrapper>
-      <SettingsSheet {...args} />
-    </SheetWrapper>
-  ),
+  render: renderSheetStory,
 };

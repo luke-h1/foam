@@ -2,11 +2,17 @@ import { Button } from '@app/components/Button/Button';
 import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { TrueSheet, TrueSheetProps } from '@lodev09/react-native-true-sheet';
+import { BottomSheet } from '@expo/ui';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { memo, useCallback, forwardRef } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { memo, useCallback, useMemo } from 'react';
+import {
+  ScrollView,
+  View,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 
 function ToggleMenuItem({
   icon,
@@ -36,14 +42,13 @@ function ToggleMenuItem({
   );
 }
 
-export interface SettingsSheetProps extends Omit<
-  TrueSheetProps,
-  'children' | 'sizes'
-> {
+export interface SettingsSheetProps {
   chatDensity?: 'comfortable' | 'compact';
   highlightOwnMentions?: boolean;
+  isPresented: boolean;
   onClearChatCache?: () => void;
   onClearImageCache?: () => void;
+  onDismiss: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
   onRefreshVideo?: () => void;
@@ -59,255 +64,245 @@ export interface SettingsSheetProps extends Omit<
   showUnreadJumpPill?: boolean;
 }
 
-const SettingsSheetComponent = forwardRef<TrueSheet, SettingsSheetProps>(
-  (
-    {
-      onRefetchEmotes,
-      onClearChatCache,
-      onClearImageCache,
-      onReconnect,
-      onRefreshVideo,
-      onToggleChatDensity,
-      onToggleHighlightOwnMentions,
-      onToggleInlineReplyContext,
-      onToggleShowTimestamps,
-      onToggleShowUnreadJumpPill,
-      latency,
-      reconnectionAttempts,
-      chatDensity = 'comfortable',
-      highlightOwnMentions = true,
-      showInlineReplyContext = true,
-      showTimestamps = true,
-      showUnreadJumpPill = true,
-      ...sheetProps
-    },
-    forwardedRef,
-  ) => {
-    const { bottom: bottomInset } = useSafeAreaInsets();
+const SettingsSheetComponent = ({
+  isPresented,
+  onDismiss,
+  onRefetchEmotes,
+  onClearChatCache,
+  onClearImageCache,
+  onReconnect,
+  onRefreshVideo,
+  onToggleChatDensity,
+  onToggleHighlightOwnMentions,
+  onToggleInlineReplyContext,
+  onToggleShowTimestamps,
+  onToggleShowUnreadJumpPill,
+  latency,
+  reconnectionAttempts,
+  chatDensity = 'comfortable',
+  highlightOwnMentions = true,
+  showInlineReplyContext = true,
+  showTimestamps = true,
+  showUnreadJumpPill = true,
+}: SettingsSheetProps) => {
+  const { bottom: bottomInset } = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const containerStyle = useMemo(
+    () => [
+      styles.container,
+      {
+        width: Math.max(280, windowWidth - theme.space16 * 2),
+      },
+    ],
+    [windowWidth],
+  );
 
-    const dismissSheet = useCallback(() => {
-      if (
-        forwardedRef &&
-        typeof forwardedRef !== 'function' &&
-        forwardedRef.current
-      ) {
-        void forwardedRef.current.dismiss();
-      }
-    }, [forwardedRef]);
+  const dismissSheet = useCallback(() => {
+    onDismiss();
+  }, [onDismiss]);
 
-    const handleRefetchEmotes = useCallback(() => {
-      onRefetchEmotes?.();
-      dismissSheet();
-    }, [onRefetchEmotes, dismissSheet]);
+  const handleRefetchEmotes = useCallback(() => {
+    onRefetchEmotes?.();
+    dismissSheet();
+  }, [onRefetchEmotes, dismissSheet]);
 
-    const handleClearChatCache = useCallback(() => {
-      onClearChatCache?.();
-      dismissSheet();
-    }, [onClearChatCache, dismissSheet]);
+  const handleClearChatCache = useCallback(() => {
+    onClearChatCache?.();
+    dismissSheet();
+  }, [onClearChatCache, dismissSheet]);
 
-    const handleClearImageCache = useCallback(() => {
-      onClearImageCache?.();
-      dismissSheet();
-    }, [onClearImageCache, dismissSheet]);
+  const handleClearImageCache = useCallback(() => {
+    onClearImageCache?.();
+    dismissSheet();
+  }, [onClearImageCache, dismissSheet]);
 
-    const handleReconnect = useCallback(() => {
-      onReconnect?.();
-      dismissSheet();
-    }, [onReconnect, dismissSheet]);
+  const handleReconnect = useCallback(() => {
+    onReconnect?.();
+    dismissSheet();
+  }, [onReconnect, dismissSheet]);
 
-    const handleRefreshVideo = useCallback(() => {
-      onRefreshVideo?.();
-      dismissSheet();
-    }, [onRefreshVideo, dismissSheet]);
+  const handleRefreshVideo = useCallback(() => {
+    onRefreshVideo?.();
+    dismissSheet();
+  }, [onRefreshVideo, dismissSheet]);
 
-    return (
-      <TrueSheet
-        ref={forwardedRef}
-        detents={[0.58]}
-        cornerRadius={24}
-        grabber={false}
-        blurTint="dark"
-        backgroundColor={theme.color.background.dark}
-        scrollable
-        {...sheetProps}
-      >
-        <View style={styles.container}>
-          <View style={styles.grabberContainer}>
-            <View style={styles.grabber} />
-          </View>
+  return (
+    <BottomSheet
+      isPresented={isPresented}
+      onDismiss={onDismiss}
+      showDragIndicator
+      snapPoints={[{ fraction: 0.58 }, 'full']}
+      testID="chat-settings-sheet"
+    >
+      <View style={containerStyle}>
+        <View style={styles.header}>
+          <Text style={styles.headerEyebrow} weight="semibold">
+            CHAT
+          </Text>
+          <Text style={styles.headerTitle} weight="semibold">
+            Settings
+          </Text>
+        </View>
 
-          <View style={styles.header}>
-            <Text style={styles.headerEyebrow} weight="semibold">
-              CHAT
-            </Text>
-            <Text style={styles.headerTitle} weight="semibold">
-              Settings
-            </Text>
-          </View>
-
-          <ScrollView
-            style={styles.menuScroll}
-            contentContainerStyle={[
-              styles.menuContainer,
-              { paddingBottom: bottomInset + theme.space20 },
-            ]}
-            showsVerticalScrollIndicator={false}
-          >
-            {onRefetchEmotes ? (
-              <Button
-                label="Refetch Emotes and Badges"
-                style={styles.menuItem}
-                onPress={handleRefetchEmotes}
-              >
-                <SymbolView
-                  name="arrow.clockwise"
-                  tintColor={theme.colorBorderHover}
-                />
-                <Text style={styles.menuItemText} weight="semibold">
-                  Refetch Emotes & Badges
-                </Text>
-              </Button>
-            ) : null}
-
+        <ScrollView
+          style={styles.menuScroll}
+          contentContainerStyle={[
+            styles.menuContainer,
+            { paddingBottom: bottomInset + theme.space20 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {onRefetchEmotes ? (
             <Button
-              label="Toggle Chat Density"
+              label="Refetch Emotes and Badges"
               style={styles.menuItem}
-              onPress={() => {
-                onToggleChatDensity?.();
-                dismissSheet();
-              }}
+              onPress={handleRefetchEmotes}
             >
               <SymbolView
-                name="text.alignleft"
+                name="arrow.clockwise"
                 tintColor={theme.colorBorderHover}
               />
-              <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText} weight="semibold">
-                  Density
-                </Text>
-                <Text style={styles.menuItemValue} weight="bold">
-                  {chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
-                </Text>
-              </View>
+              <Text style={styles.menuItemText} weight="semibold">
+                Refetch Emotes & Badges
+              </Text>
             </Button>
+          ) : null}
 
-            <ToggleMenuItem
-              icon="clock"
-              label="Show Timestamps"
-              value={showTimestamps}
-              onValueChange={onToggleShowTimestamps}
+          <Button
+            label="Toggle Chat Density"
+            style={styles.menuItem}
+            onPress={() => {
+              onToggleChatDensity?.();
+              dismissSheet();
+            }}
+          >
+            <SymbolView
+              name="text.alignleft"
+              tintColor={theme.colorBorderHover}
             />
-
-            <ToggleMenuItem
-              icon="at"
-              label="Highlight Own Mentions"
-              value={highlightOwnMentions}
-              onValueChange={onToggleHighlightOwnMentions}
-            />
-
-            <ToggleMenuItem
-              icon="arrowshape.turn.up.left"
-              label="Inline Reply Context"
-              value={showInlineReplyContext}
-              onValueChange={onToggleInlineReplyContext}
-            />
-
-            <ToggleMenuItem
-              icon="arrow.down.circle"
-              label="Show Jump Pill"
-              value={showUnreadJumpPill}
-              onValueChange={onToggleShowUnreadJumpPill}
-            />
-
-            {onReconnect ? (
-              <Button
-                label="Reconnect"
-                style={styles.menuItem}
-                onPress={handleReconnect}
-              >
-                <SymbolView name="wifi" tintColor={theme.colorBorderHover} />
-                <Text style={styles.menuItemText} weight="semibold">
-                  Reconnect
-                </Text>
-              </Button>
-            ) : null}
-
-            {onClearChatCache ? (
-              <Button
-                label="Clear Chat Cache"
-                style={styles.menuItem}
-                onPress={handleClearChatCache}
-              >
-                <SymbolView
-                  name="cylinder"
-                  tintColor={theme.colorBorderHover}
-                />
-                <Text style={styles.menuItemText} weight="semibold">
-                  Clear Chat Cache
-                </Text>
-              </Button>
-            ) : null}
-
-            {onClearImageCache ? (
-              <Button
-                label="Clear Image Cache"
-                style={styles.menuItem}
-                onPress={handleClearImageCache}
-              >
-                <SymbolView name="trash" tintColor={theme.colorBorderHover} />
-                <Text style={styles.menuItemText} weight="semibold">
-                  Clear Image Cache
-                </Text>
-              </Button>
-            ) : null}
-
-            <View style={styles.menuItem}>
-              <SymbolView
-                name="waveform.path.ecg"
-                tintColor={theme.colorBorderHover}
-              />
-              <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText} weight="semibold">
-                  Display Latency
-                </Text>
-                <Text style={styles.menuItemValue} weight="bold">
-                  {latency !== null && latency !== undefined
-                    ? `${latency}ms`
-                    : 'N/A'}
-                </Text>
-              </View>
+            <View style={styles.menuItemTextContainer}>
+              <Text style={styles.menuItemText} weight="semibold">
+                Density
+              </Text>
+              <Text style={styles.menuItemValue} weight="bold">
+                {chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
+              </Text>
             </View>
+          </Button>
 
-            {onRefreshVideo ? (
-              <Button
-                label="Refresh Video"
-                style={styles.menuItem}
-                onPress={handleRefreshVideo}
-              >
-                <SymbolView name="video" tintColor={theme.colorBorderHover} />
-                <Text style={styles.menuItemText} weight="semibold">
-                  Refresh Video
-                </Text>
-              </Button>
-            ) : null}
+          <ToggleMenuItem
+            icon="clock"
+            label="Show Timestamps"
+            value={showTimestamps}
+            onValueChange={onToggleShowTimestamps}
+          />
 
-            <View style={styles.menuItem}>
-              <SymbolView name="repeat" tintColor={theme.colorBorderHover} />
-              <View style={styles.menuItemTextContainer}>
-                <Text style={styles.menuItemText} weight="semibold">
-                  Reconnection Attempts
-                </Text>
-                <Text style={styles.menuItemValue} weight="bold">
-                  {reconnectionAttempts ?? 0}
-                </Text>
-              </View>
+          <ToggleMenuItem
+            icon="at"
+            label="Highlight Own Mentions"
+            value={highlightOwnMentions}
+            onValueChange={onToggleHighlightOwnMentions}
+          />
+
+          <ToggleMenuItem
+            icon="arrowshape.turn.up.left"
+            label="Inline Reply Context"
+            value={showInlineReplyContext}
+            onValueChange={onToggleInlineReplyContext}
+          />
+
+          <ToggleMenuItem
+            icon="arrow.down.circle"
+            label="Show Jump Pill"
+            value={showUnreadJumpPill}
+            onValueChange={onToggleShowUnreadJumpPill}
+          />
+
+          {onReconnect ? (
+            <Button
+              label="Reconnect"
+              style={styles.menuItem}
+              onPress={handleReconnect}
+            >
+              <SymbolView name="wifi" tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight="semibold">
+                Reconnect
+              </Text>
+            </Button>
+          ) : null}
+
+          {onClearChatCache ? (
+            <Button
+              label="Clear Chat Cache"
+              style={styles.menuItem}
+              onPress={handleClearChatCache}
+            >
+              <SymbolView name="cylinder" tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight="semibold">
+                Clear Chat Cache
+              </Text>
+            </Button>
+          ) : null}
+
+          {onClearImageCache ? (
+            <Button
+              label="Clear Image Cache"
+              style={styles.menuItem}
+              onPress={handleClearImageCache}
+            >
+              <SymbolView name="trash" tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight="semibold">
+                Clear Image Cache
+              </Text>
+            </Button>
+          ) : null}
+
+          <View style={styles.menuItem}>
+            <SymbolView
+              name="waveform.path.ecg"
+              tintColor={theme.colorBorderHover}
+            />
+            <View style={styles.menuItemTextContainer}>
+              <Text style={styles.menuItemText} weight="semibold">
+                Display Latency
+              </Text>
+              <Text style={styles.menuItemValue} weight="bold">
+                {latency !== null && latency !== undefined
+                  ? `${latency}ms`
+                  : 'N/A'}
+              </Text>
             </View>
-          </ScrollView>
-        </View>
-      </TrueSheet>
-    );
-  },
-);
+          </View>
+
+          {onRefreshVideo ? (
+            <Button
+              label="Refresh Video"
+              style={styles.menuItem}
+              onPress={handleRefreshVideo}
+            >
+              <SymbolView name="video" tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight="semibold">
+                Refresh Video
+              </Text>
+            </Button>
+          ) : null}
+
+          <View style={styles.menuItem}>
+            <SymbolView name="repeat" tintColor={theme.colorBorderHover} />
+            <View style={styles.menuItemTextContainer}>
+              <Text style={styles.menuItemText} weight="semibold">
+                Reconnection Attempts
+              </Text>
+              <Text style={styles.menuItemValue} weight="bold">
+                {reconnectionAttempts ?? 0}
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </BottomSheet>
+  );
+};
 
 SettingsSheetComponent.displayName = 'SettingsSheet';
 
@@ -315,19 +310,9 @@ export const SettingsSheet = memo(SettingsSheetComponent);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
+    ...chatSheetSurface,
+    backgroundColor: CHAT_SHEET_BACKGROUND,
     flex: 1,
-  },
-  grabber: {
-    backgroundColor: theme.colorBorderHover,
-    borderRadius: 999,
-    height: 4,
-    width: 44,
-  },
-  grabberContainer: {
-    alignItems: 'center',
-    paddingBottom: theme.space8,
-    paddingTop: theme.space12,
   },
   header: {
     borderBottomColor: theme.color.border.dark,

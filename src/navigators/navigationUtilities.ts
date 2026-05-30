@@ -76,10 +76,7 @@ const iosExit = () => false;
 
 export function useBackButtonHandler(canExit: (routeName: string) => boolean) {
   const canExitRef = useRef(Platform.OS !== 'android' ? iosExit : canExit);
-
-  useEffect(() => {
-    canExitRef.current = canExit;
-  }, [canExit]);
+  canExitRef.current = Platform.OS !== 'android' ? iosExit : canExit;
 
   useEffect(() => {
     const onBackPress = () => {

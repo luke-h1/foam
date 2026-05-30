@@ -1,4 +1,4 @@
-import { type ErrorBoundaryProps, useRouter, Stack } from 'expo-router';
+import { type ErrorBoundaryProps, Stack, router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useEffect, useMemo } from 'react';
 import { Button } from '@app/components/Button/Button';
@@ -10,8 +10,6 @@ import { recordError, showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
 export default function AppError({ error, retry }: ErrorBoundaryProps) {
-  const router = useRouter();
-
   const errorMessage = useMemo(() => {
     if (error.message && error.message.trim().length > 0) {
       return error.message;

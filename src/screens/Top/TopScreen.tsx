@@ -1,4 +1,3 @@
-import { ScrollAdaptiveHeader } from '@app/components/ScrollAdaptiveHeader/ScrollAdaptiveHeader';
 import { TopTabSwitcher } from '@app/components/TopTabSwitcher/TopTabSwitcher';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
@@ -86,12 +85,6 @@ export function TopScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollAdaptiveHeader
-        scrollY={scrollY}
-        subtitle="Discover"
-        topInset={insets.top}
-        title="Top"
-      />
       <View
         pointerEvents="box-none"
         style={[

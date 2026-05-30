@@ -21,18 +21,18 @@ export function useChannelPoll(channelId?: string) {
   const { authState, user } = useAuthContext();
   const [poll, setPoll] = useState<ChannelPollState | null>(null);
 
-  const canSubscribe = Boolean(channelId && authState?.isLoggedIn);
   const isOwnChannel = Boolean(channelId && user?.id === channelId);
-
-  useEffect(() => {
-    setPoll(null);
-  }, [channelId]);
+  const canSubscribe = Boolean(
+    channelId && authState?.isLoggedIn && isOwnChannel,
+  );
 
   useEffect(() => {
     if (!isOwnChannel || !channelId) {
+      setPoll(null);
       return;
     }
 
+    setPoll(null);
     let cancelled = false;
 
     void twitchService

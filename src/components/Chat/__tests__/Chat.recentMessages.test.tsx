@@ -1,4 +1,8 @@
-import { usePreferences } from '@app/store/preferenceStore';
+import {
+  useChatRenderPreferences,
+  usePreferences,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { render, waitFor } from '@testing-library/react-native';
 import { Chat } from '../Chat';
 import { recentMessagesService } from '@app/services/recent-messages-service';
@@ -136,7 +140,9 @@ jest.mock('@app/store/chatStore/messages', () => ({
 }));
 
 jest.mock('@app/store/preferenceStore', () => ({
+  useChatRenderPreferences: jest.fn(),
   usePreferences: jest.fn(),
+  useUpdatePreferences: jest.fn(),
 }));
 
 jest.mock('@app/utils/chat/emoteProcessor', () => ({
@@ -287,6 +293,8 @@ jest.mock('../hooks/useEmoteReprocessing', () => ({
 }));
 
 const mockedUsePreferences = jest.mocked(usePreferences);
+const mockedUseChatRenderPreferences = jest.mocked(useChatRenderPreferences);
+const mockedUseUpdatePreferences = jest.mocked(useUpdatePreferences);
 const mockedGetRecentMessages = jest.mocked(
   recentMessagesService.getRecentMessages,
 );
@@ -317,6 +325,8 @@ const setPreferences = (showRecentMessages = true) => {
     chatDensity: 'compact',
     chatTimestamps: true,
     disableEmoteAnimations: false,
+    disableChat: false,
+    disableStream: false,
     emojiStyle: 'twitter',
     highlightOwnMentions: true,
     show7TvEmotes: true,
@@ -335,6 +345,8 @@ const setPreferences = (showRecentMessages = true) => {
   } satisfies ReturnType<typeof usePreferences>;
 
   mockedUsePreferences.mockReturnValue(preferences);
+  mockedUseChatRenderPreferences.mockReturnValue(preferences);
+  mockedUseUpdatePreferences.mockReturnValue(preferences.update);
 };
 
 describe('Chat recent messages', () => {

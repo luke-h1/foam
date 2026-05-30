@@ -4,7 +4,8 @@ import { Text } from '@app/components/ui/Text/Text';
 import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { type ErrorInfo, useState } from 'react';
+import { useObservable, useSelector } from '@legendapp/state/react';
+import { type ErrorInfo } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 
 export interface ErrorDetailsProps {
@@ -15,7 +16,8 @@ export interface ErrorDetailsProps {
 
 export function ErrorDetails(props: ErrorDetailsProps) {
   const { error, errorInfo, onReset } = props;
-  const [showStackTrace, setShowStackTrace] = useState(false);
+  const showStackTrace$ = useObservable(false);
+  const showStackTrace = useSelector(showStackTrace$);
 
   const errorTitle = `${error}`.trim();
 
@@ -86,7 +88,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
       <Button
         style={styles.toggleButton}
-        onPress={() => setShowStackTrace(!showStackTrace)}
+        onPress={() => showStackTrace$.set(value => !value)}
       >
         <Text type="sm" color="blue" align="center" style={styles.toggleText}>
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}

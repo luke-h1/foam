@@ -49,6 +49,27 @@ run_with_variant_env() {
     -v "EXPO_PUBLIC_SENTRY_RELEASE=$sentry_release_value" \
     -v "EXPO_PUBLIC_SENTRY_DIST=$sentry_dist_value" \
     -- env \
+    -u SENTRY_AUTH_TOKEN \
+    "SENTRY_DISABLE_AUTO_UPLOAD=true" \
+    "SENTRY_LOAD_DOTENV=0" \
+    "SENTRY_RELEASE=$sentry_release_value" \
+    "SENTRY_DIST=$sentry_dist_value" \
+    "$@"
+}
+
+run_with_sentry_upload_env() {
+  local sentry_release_value
+  local sentry_dist_value
+  sentry_release_value="$(sentry_release)"
+  sentry_dist_value="$(sentry_dist)"
+
+  "$dotenv_bin" \
+    -c "$variant" \
+    -v "EXPO_PUBLIC_APP_VARIANT=$variant" \
+    -v "EXPO_PUBLIC_SENTRY_RELEASE=$sentry_release_value" \
+    -v "EXPO_PUBLIC_SENTRY_DIST=$sentry_dist_value" \
+    -- env \
+    "SENTRY_LOAD_DOTENV=0" \
     "SENTRY_RELEASE=$sentry_release_value" \
     "SENTRY_DIST=$sentry_dist_value" \
     "$@"
@@ -73,4 +94,4 @@ rm -rf "$ota_output_dir"
 echo "Publishing OTA to $variant ($platform) using local dotenv cascade"
 run_with_variant_env eas "${args[@]}"
 
-run_with_variant_env bash -c 'source ./scripts/sentry-upload.sh; sentry_upload_ota_sourcemaps "$1"' _ "$ota_output_dir"
+run_with_sentry_upload_env bash -c 'source ./scripts/sentry-upload.sh; sentry_upload_ota_sourcemaps "$1"' _ "$ota_output_dir"

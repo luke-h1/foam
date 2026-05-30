@@ -1,78 +1,31 @@
-import { AnimatedTabBar } from '@app/components/MotionTabs/animated-tab-bar';
-import { useAuthContext } from '@app/context/AuthContext';
 import { theme } from '@app/styles/themes';
-import { Tabs } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { Platform, StyleSheet, type ColorValue } from 'react-native';
-
-type TabBarIconProps = {
-  color: ColorValue;
-  size: number;
-};
-
-const renderTabIcon =
-  (name: SymbolViewProps['name']) =>
-  ({ color, size }: TabBarIconProps) => (
-    <SymbolView name={name} tintColor={String(color)} size={size} />
-  );
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
 export default function TabsLayout() {
-  const { authState, ready } = useAuthContext();
-  const showFollowingTab = !ready || Boolean(authState?.isLoggedIn);
-
   return (
-    <Tabs
-      detachInactiveScreens={Platform.OS !== 'ios'}
-      screenOptions={{
-        animation: 'shift',
-        freezeOnBlur: true,
-        headerShown: false,
-        tabBarActiveTintColor: theme.colorDarkGreen,
-        tabBarInactiveTintColor: theme.colorGreyAlpha,
-        tabBarStyle: styles.tabBar,
+    <NativeTabs
+      tintColor={theme.colorDarkGreen}
+      iconColor={{
+        default: theme.colorGreyAlpha,
+        selected: theme.colorDarkGreen,
       }}
-      tabBar={props => <AnimatedTabBar {...props} />}
     >
-      <Tabs.Protected guard={showFollowingTab}>
-        <Tabs.Screen
-          name="following"
-          options={{
-            title: 'Following',
-            tabBarIcon: renderTabIcon('person.2'),
-          }}
-        />
-      </Tabs.Protected>
-      <Tabs.Screen
-        name="top"
-        options={{
-          title: 'Top',
-          tabBarIcon: renderTabIcon('chart.bar.xaxis'),
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: renderTabIcon('magnifyingglass'),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: renderTabIcon('gearshape'),
-        }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="following">
+        <NativeTabs.Trigger.Label>Following</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="person.2" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="top">
+        <NativeTabs.Trigger.Label>Top</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="chart.bar.xaxis" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="search">
+        <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="magnifyingglass" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings">
+        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="gearshape" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
-    elevation: 0,
-    height: 104,
-    position: 'absolute',
-  },
-});

@@ -449,10 +449,7 @@ export function useTwitchWs(): WebSocket {
     shouldConnect,
   );
 
-  // Store getWebSocket in ref for use in callbacks
-  useEffect(() => {
-    getWebSocketRef.current = getWebSocket;
-  }, [getWebSocket]);
+  getWebSocketRef.current = getWebSocket;
 
   useEffect(() => {
     if (!currentScreen) {

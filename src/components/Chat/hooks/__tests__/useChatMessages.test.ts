@@ -92,7 +92,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(1);
 
       act(() => {
-        jest.advanceTimersByTime(15);
+        jest.advanceTimersByTime(31);
       });
 
       expect(mockAddMessages).not.toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(49);
+        jest.advanceTimersByTime(79);
       });
 
       expect(mockAddMessages).not.toHaveBeenCalled();
@@ -149,7 +149,7 @@ describe('useChatMessages', () => {
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
         result.current.handleNewMessage(createMockMessage('2'));
-        jest.advanceTimersByTime(50);
+        jest.advanceTimersByTime(80);
       });
 
       expect(mockAddMessages).toHaveBeenCalled();
@@ -234,7 +234,7 @@ describe('useChatMessages', () => {
       expect(onUnreadIncrement).not.toHaveBeenCalled();
 
       act(() => {
-        jest.advanceTimersByTime(50);
+        jest.advanceTimersByTime(80);
       });
 
       expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
@@ -347,7 +347,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(250);
 
       act(() => {
-        jest.advanceTimersByTime(50);
+        jest.advanceTimersByTime(80);
       });
 
       expect(mockAddMessages).toHaveBeenCalledWith(
@@ -401,7 +401,7 @@ describe('useChatMessages', () => {
         for (let i = 0; i < 700; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
-        jest.advanceTimersByTime(50);
+        jest.advanceTimersByTime(80);
       });
 
       expect(onUnreadIncrement).toHaveBeenCalledTimes(1);

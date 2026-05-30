@@ -1,7 +1,7 @@
 import { useSelector } from '@legendapp/state/react';
 import { useMemo } from 'react';
 
-import { usePreferences } from '../preferenceStore';
+import { useEmoteRenderPreferences } from '../preferenceStore';
 import {
   emptyEmoteData,
   type ChannelCacheType,
@@ -19,7 +19,7 @@ export const useEmojis = () => useSelector(chatStore$.emojis);
 
 function resolveEmoteData(
   cache: ChannelCacheType | undefined,
-  preferences: ReturnType<typeof usePreferences>,
+  preferences: ReturnType<typeof useEmoteRenderPreferences>,
 ) {
   if (!cache) {
     return emptyEmoteData;
@@ -78,7 +78,7 @@ export const useCurrentEmoteData = () => {
       ? chatStore$.persisted.channelCaches[channelId]?.get()
       : undefined;
   });
-  const preferences = usePreferences();
+  const preferences = useEmoteRenderPreferences();
   return resolveEmoteData(cache, preferences);
 };
 
@@ -88,7 +88,7 @@ export const useChannelEmoteData = (channelId: string | null) => {
       ? chatStore$.persisted.channelCaches[channelId]?.get()
       : undefined,
   );
-  const preferences = usePreferences();
+  const preferences = useEmoteRenderPreferences();
   return resolveEmoteData(cache, preferences);
 };
 

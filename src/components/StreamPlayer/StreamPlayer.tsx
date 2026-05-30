@@ -17,14 +17,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  AppState,
-  type AppStateStatus,
-  type DimensionValue,
-  Platform,
-  View,
-  StyleSheet,
-} from 'react-native';
+import { type DimensionValue, Platform, View, StyleSheet } from 'react-native';
 import {
   Directions,
   Gesture,
@@ -44,7 +37,6 @@ import type {
   WebViewHttpError,
 } from 'react-native-webview/lib/WebViewTypes';
 import { scheduleOnRN } from 'react-native-worklets';
-import { streamWebViewWarmupPool } from './WebViewWarmupPool';
 
 const TWITCH_PLAYER_WEBSITE_URL = (
   process.env.EXPO_PUBLIC_TWITCH_PLAYER_WEBSITE_URL ??
@@ -362,6 +354,11 @@ const TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES = [
 
 const TWITCH_AUTH_HELPER_SCRIPT = `
 (() => {
+  if (window.__foamTwitchAuthHelperInstalled) {
+    return true;
+  }
+  window.__foamTwitchAuthHelperInstalled = true;
+
   const post = type => {
     try {
       window.ReactNativeWebView?.postMessage(JSON.stringify({ type }));
@@ -481,7 +478,7 @@ function buildRawTwitchAutoplayScript(options: {
       clearInterval(retry);
       observer.disconnect();
     }
-  }, 250);
+  }, 500);
 })();
 true;
 `;
@@ -674,13 +671,18 @@ function buildTwitchEmbedHtml(options: {
           } catch (e) {}
         }
         var playbackStatsInterval = null;
+        var isPlayerVisible = !document.hidden;
+        var isPlayerPlaying = false;
         var lastBlockedEventAt = 0;
         function startPlaybackStats() {
+          if (!isPlayerVisible || !isPlayerPlaying) {
+            return;
+          }
           emitPlaybackStats();
           if (playbackStatsInterval) {
             return;
           }
-          playbackStatsInterval = setInterval(emitPlaybackStats, 1000);
+          playbackStatsInterval = setInterval(emitPlaybackStats, 2500);
         }
         function stopPlaybackStats() {
           if (!playbackStatsInterval) {
@@ -689,6 +691,17 @@ function buildTwitchEmbedHtml(options: {
           clearInterval(playbackStatsInterval);
           playbackStatsInterval = null;
         }
+        function updatePlaybackStatsLifecycle() {
+          if (isPlayerVisible && isPlayerPlaying) {
+            startPlaybackStats();
+            return;
+          }
+          stopPlaybackStats();
+        }
+        document.addEventListener('visibilitychange', function() {
+          isPlayerVisible = !document.hidden;
+          updatePlaybackStatsLifecycle();
+        });
         player.addEventListener(Twitch.Player.READY, function() {
           disableCaptions();
           post('ready');
@@ -745,10 +758,14 @@ function buildTwitchEmbedHtml(options: {
         }
         player.addEventListener(Twitch.Player.PLAY, function() {
           clearPendingPause();
+          isPlayerPlaying = true;
+          updatePlaybackStatsLifecycle();
           post('play');
         });
         player.addEventListener(Twitch.Player.PAUSE, function() {
           clearPendingPause();
+          isPlayerPlaying = false;
+          updatePlaybackStatsLifecycle();
           pendingPauseTimer = setTimeout(postPauseIfStillPaused, 750);
         });
         player.addEventListener(Twitch.Player.PLAYBACK_BLOCKED, function() {
@@ -760,6 +777,8 @@ function buildTwitchEmbedHtml(options: {
         player.addEventListener(Twitch.Player.PLAYING, function() {
           clearPendingPause();
           disableCaptions();
+          isPlayerPlaying = true;
+          updatePlaybackStatsLifecycle();
           post('playing');
           post('stateUpdate', {
             isBuffering: false,
@@ -768,9 +787,12 @@ function buildTwitchEmbedHtml(options: {
             muted: player.getMuted(),
             volume: player.getVolume()
           });
-          startPlaybackStats();
         });
-        player.addEventListener(Twitch.Player.ENDED, function() { stopPlaybackStats(); post('ended'); });
+        player.addEventListener(Twitch.Player.ENDED, function() {
+          isPlayerPlaying = false;
+          stopPlaybackStats();
+          post('ended');
+        });
         player.addEventListener(Twitch.Player.OFFLINE, function() { post('offline'); });
         player.addEventListener(Twitch.Player.ONLINE, function() { post('online'); });
         window.playerControls = {
@@ -1195,7 +1217,6 @@ export const StreamPlayer = memo(
     // For stuck-detection health check (injected JS)
     const lastVideoTimeRef = useRef<number>(-1);
     const stuckCountRef = useRef<number>(0);
-    const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
     // Avoid WebView.reload(): with source={{ html, baseUrl: https://www.twitch.tv/ }} it loads twitch.tv, not the embed HTML (issue #524).
     const remountEmbedWebView = useCallback(() => {
@@ -1221,33 +1242,13 @@ export const StreamPlayer = memo(
     }, [remountEmbedWebView]);
 
     useEffect(() => {
-      const handleAppStateChange = (nextAppState: AppStateStatus) => {
-        if (appStateRef.current === 'background' && nextAppState === 'active') {
-          remountEmbedWebView();
-        }
-
-        appStateRef.current = nextAppState;
-      };
-
-      const subscription = AppState.addEventListener(
-        'change',
-        handleAppStateChange,
-      );
-
       return () => {
-        subscription.remove();
         if (authCompletionReloadTimeoutRef.current) {
           clearTimeout(authCompletionReloadTimeoutRef.current);
           authCompletionReloadTimeoutRef.current = null;
         }
       };
-    }, [remountEmbedWebView]);
-
-    useEffect(() => {
-      if (!clip) {
-        streamWebViewWarmupPool.startWarmup(parent);
-      }
-    }, [clip, parent]);
+    }, []);
 
     // Reset stuck-detection refs when not ready or paused
     useEffect(() => {
@@ -2017,40 +2018,6 @@ export const StreamPlayer = memo(
 
 StreamPlayer.displayName = 'StreamPlayer';
 
-export function StreamPlayerPrewarm({
-  parent = 'www.twitch.tv',
-}: {
-  parent?: string;
-}) {
-  const warmupProps = streamWebViewWarmupPool.getWarmupRenderProps(parent);
-
-  if (!warmupProps) {
-    return null;
-  }
-
-  return (
-    <View style={styles.prewarmHidden}>
-      <WebView
-        key={warmupProps.key}
-        source={warmupProps.source}
-        onMessage={warmupProps.onMessage}
-        onLoadEnd={warmupProps.onLoadEnd}
-        javaScriptEnabled
-        domStorageEnabled
-        cacheEnabled
-        allowsInlineMediaPlayback
-        mediaPlaybackRequiresUserAction={false}
-        originWhitelist={['*']}
-        scrollEnabled
-        setSupportMultipleWindows={false}
-        sharedCookiesEnabled
-        thirdPartyCookiesEnabled
-        style={styles.prewarmWebView}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   bottomControls: {
     alignItems: 'center',
@@ -2213,18 +2180,6 @@ const styles = StyleSheet.create({
     height: 88,
     justifyContent: 'center',
     width: 88,
-  },
-  prewarmHidden: {
-    height: 0,
-    opacity: 0,
-    overflow: 'hidden',
-    position: 'absolute',
-    width: 0,
-    zIndex: -1,
-  },
-  prewarmWebView: {
-    height: 1,
-    width: 1,
   },
   spacer: {
     flex: 1,

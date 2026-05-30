@@ -26,7 +26,7 @@ import { BlurView } from 'expo-blur';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
 import { memo, RefObject, useCallback, useMemo, useState } from 'react';
-import { Keyboard, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -37,6 +37,7 @@ import {
   Gesture,
   GestureDetector,
 } from 'react-native-gesture-handler';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 import type { SFSymbol } from 'sf-symbols-typescript';
@@ -199,9 +200,8 @@ export const ChatInputSection = memo(
     }));
 
     const dismissComposer = useCallback(() => {
-      inputRef?.current?.blur();
-      Keyboard.dismiss();
-    }, [inputRef]);
+      void KeyboardController.dismiss();
+    }, []);
 
     const handleComposerLayout = useCallback((event: LayoutChangeEvent) => {
       setComposerWidth(event.nativeEvent.layout.width);
@@ -308,6 +308,7 @@ export const ChatInputSection = memo(
                   autoCapitalize="none"
                   autoComplete="off"
                   autoCorrect={false}
+                  blurOnSubmit
                   color="white"
                   editable={isAuthenticated}
                   onChangeText={onChangeText}
@@ -318,6 +319,7 @@ export const ChatInputSection = memo(
                   prioritizeChannelEmotes
                   radius="xl"
                   returnKeyType="send"
+                  submitBehavior="blurAndSubmit"
                   style={styles.nativeInput}
                   value={messageInput}
                   variant="soft"

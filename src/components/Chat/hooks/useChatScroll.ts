@@ -1,8 +1,5 @@
-import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { RefObject, useCallback, useRef, useState } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-
-import type { AnyChatMessageType } from '../util/messageHandlers';
 
 const RETURN_TO_BOTTOM_THRESHOLD = 80;
 const USER_SCROLL_AWAY_THRESHOLD = 40;
@@ -12,8 +9,17 @@ const SCROLL_TO_BOTTOM_RETRY_MS = 50;
 const SCROLL_TO_BOTTOM_SETTLE_MS = 300;
 const BOTTOM_CONTENT_CHANGE_ANCHOR_MS = 600;
 
+interface ChatScrollableListRef {
+  scrollToEnd?: (options?: { animated?: boolean }) => void;
+  scrollToIndex?: (params: {
+    animated?: boolean;
+    index: number;
+    viewPosition?: number;
+  }) => void | Promise<void>;
+}
+
 interface UseChatScrollOptions {
-  listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
+  listRef: RefObject<ChatScrollableListRef | null>;
   getMessagesLength: () => number;
 }
 
@@ -25,6 +31,8 @@ export const useChatScroll = ({
   const isScrollingToBottomRef = useRef(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isScrollingToBottom, setIsScrollingToBottom] = useState(false);
+  const [shouldMaintainScrollAtEnd, setShouldMaintainScrollAtEnd] =
+    useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollThrottleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -84,6 +92,7 @@ export const useChatScroll = ({
       isDraggingRef.current = true;
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
+      setShouldMaintainScrollAtEnd(false);
       lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
     },
     [clearBottomContentAnchor, clearScrollToBottomTimers],
@@ -91,16 +100,23 @@ export const useChatScroll = ({
 
   const handleScrollEndDrag = useCallback(() => {
     isDraggingRef.current = false;
+    if (isAtBottomRef.current) {
+      setShouldMaintainScrollAtEnd(true);
+    }
   }, []);
 
   const handleMomentumScrollEnd = useCallback(() => {
     isDraggingRef.current = false;
+    if (isAtBottomRef.current) {
+      setShouldMaintainScrollAtEnd(true);
+    }
   }, []);
 
   const markAtBottom = useCallback(() => {
     isAtBottomRef.current = true;
     lastAtBottomRef.current = true;
     hasUserScrollIntentRef.current = false;
+    setShouldMaintainScrollAtEnd(true);
 
     if (scrollThrottleRef.current) {
       clearTimeout(scrollThrottleRef.current);
@@ -181,6 +197,7 @@ export const useChatScroll = ({
           clearTimeout(scrollThrottleRef.current);
           scrollThrottleRef.current = null;
         }
+        setShouldMaintainScrollAtEnd(false);
         setIsAtBottom(false);
         return;
       }
@@ -296,6 +313,7 @@ export const useChatScroll = ({
     isAtBottomRef,
     isScrollingToBottom,
     isScrollingToBottomRef,
+    shouldMaintainScrollAtEnd,
     unreadCount,
     setUnreadCount,
     handleScroll,

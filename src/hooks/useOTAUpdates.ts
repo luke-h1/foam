@@ -1,12 +1,13 @@
 import { nativeBuildVersion } from 'expo-application';
 import * as Updates from 'expo-updates';
 import {
+  addUpdatesStateChangeListener,
   checkForUpdateAsync,
   fetchUpdateAsync,
   isEnabled,
+  latestContext,
   reloadAsync,
   setExtraParamAsync,
-  useUpdates,
 } from 'expo-updates';
 import { useCallback, useEffect, useRef } from 'react';
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
@@ -24,6 +25,8 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
     size: 'large' as const,
   },
 };
+
+const getIsUpdatePending = () => latestContext.isUpdatePending;
 
 export type OTAUpdateUrgency = 'normal' | 'critical';
 
@@ -49,8 +52,8 @@ export function useOTAUpdates() {
   const appState = useRef<AppStateStatus>('active');
   const lastMinimize = useRef(0);
   const ranInitialCheck = useRef(false);
+  const handledPendingUpdate = useRef(false);
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const { isUpdatePending } = useUpdates();
 
   const checkForUpdates = useCallback(async () => {
     if (!shouldReceiveUpdates) {
@@ -223,32 +226,51 @@ export function useOTAUpdates() {
   }, [checkForUpdates, isProduction, shouldReceiveUpdates]);
 
   useEffect(() => {
-    if (!isUpdatePending) {
-      return;
-    }
+    const handlePendingUpdate = () => {
+      if (!getIsUpdatePending()) {
+        handledPendingUpdate.current = false;
+        return;
+      }
 
-    recordInfo({
-      name: 'ota_updates_service_info',
-      message: 'OTA update pending - ready to apply',
-      params: {
-        category: 'ota',
-        action: 'update_pending',
-        isProduction,
-        buildVersion: nativeBuildVersion,
+      if (handledPendingUpdate.current) {
+        return;
+      }
+
+      handledPendingUpdate.current = true;
+
+      recordInfo({
+        name: 'ota_updates_service_info',
+        message: 'OTA update pending - ready to apply',
+        params: {
+          category: 'ota',
+          action: 'update_pending',
+          isProduction,
+          buildVersion: nativeBuildVersion,
+          platform: Platform.OS,
+        },
+      });
+
+      countOtaMetric('ota.update.pending', {
+        channel: Updates.channel || 'unknown',
+        environment: isProduction ? 'production' : 'non-production',
         platform: Platform.OS,
-      },
+      });
+
+      if (!isProduction) {
+        promptAndReload();
+      }
+    };
+
+    handlePendingUpdate();
+
+    const subscription = addUpdatesStateChangeListener(() => {
+      handlePendingUpdate();
     });
 
-    countOtaMetric('ota.update.pending', {
-      channel: Updates.channel || 'unknown',
-      environment: isProduction ? 'production' : 'non-production',
-      platform: Platform.OS,
-    });
-
-    if (!isProduction) {
-      promptAndReload();
-    }
-  }, [isProduction, isUpdatePending, promptAndReload]);
+    return () => {
+      subscription.remove();
+    };
+  }, [isProduction, promptAndReload]);
 
   useEffect(() => {
     if (!isEnabled) {
@@ -267,7 +289,7 @@ export function useOTAUpdates() {
             lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
 
           if (shouldUpdate) {
-            if (isUpdatePending) {
+            if (getIsUpdatePending()) {
               if (isProduction) {
                 recordInfo({
                   name: 'ota_updates_service_info',
@@ -320,11 +342,5 @@ export function useOTAUpdates() {
     return () => {
       subscription.remove();
     };
-  }, [
-    applyUpdate,
-    checkForUpdates,
-    isProduction,
-    isUpdatePending,
-    promptAndReload,
-  ]);
+  }, [applyUpdate, checkForUpdates, isProduction, promptAndReload]);
 }

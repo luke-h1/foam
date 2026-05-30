@@ -284,7 +284,7 @@ const config: ExpoConfig = {
         ios: {
           useFrameworks: 'static',
           forceStaticLinking: ['RNFBApp'],
-          deploymentTarget: '26.0',
+          deploymentTarget: '18.0',
         },
         android: {
           enableProguardInReleaseBuilds: true,

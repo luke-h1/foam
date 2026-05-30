@@ -6,13 +6,17 @@ import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
-import { usePreferences } from '@app/store/preferenceStore';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
 
 export function SettingsAppearanceScreen() {
-  const { theme: selectedTheme, update } = usePreferences();
+  const selectedTheme = usePreference('theme');
+  const update = useUpdatePreferences();
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -20,12 +24,10 @@ export function SettingsAppearanceScreen() {
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
-        <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <ScreenHeader
-            title="Appearance"
-            subtitle="Visual mode."
-            size="medium"
-          />
+        <BodyScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={styles.iosContent}
+        >
           <Form.Section title="Theme">
             <Form.Link
               systemImage="moon"

@@ -57,39 +57,8 @@ const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
 
 const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
 
-function messageHasPart(
-  message: ParsedPart[],
-  types: Set<ParsedPart['type']>,
-): boolean {
-  for (const part of message) {
-    if (types.has(part.type)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function normaliseUsername(value: string | undefined): string {
+function normaliseUsername(value?: string): string {
   return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
-}
-
-function messageMentionsUser(
-  message: ParsedPart[],
-  username: string | undefined,
-): boolean {
-  const target = normaliseUsername(username);
-  if (!target) {
-    return false;
-  }
-
-  for (const part of message) {
-    if (part.type === 'mention' && normaliseUsername(part.content) === target) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 function renderParts(
@@ -188,27 +157,85 @@ interface SpecialChatBodyProps {
   timestamp?: string;
 }
 
-function getChatBodyVariant(
-  isTwitchSystemNotice: boolean | undefined,
+interface ChatBodyInfo {
+  hasSubscriptionNotice: boolean;
+  mentionsCurrentUser: boolean;
+  variant: ChatBodyVariant;
+}
+
+function getChatBodyInfo(
   message: ParsedPart[],
-  sender: string | undefined,
-): ChatBodyVariant {
+  normalisedCurrentUsername?: string,
+  sender?: string,
+  isTwitchSystemNotice?: boolean,
+): ChatBodyInfo {
   if (isTwitchSystemNotice) {
-    return 'twitch_system_notice';
+    return {
+      hasSubscriptionNotice: false,
+      mentionsCurrentUser: false,
+      variant: 'twitch_system_notice',
+    };
   }
-  if (messageHasPart(message, SUBSCRIPTION_NOTICE_TYPES)) {
-    return 'subscription';
+
+  let hasSubscriptionNotice = false;
+  let hasStvEmoteEvent = false;
+  let hasViewerMilestone = false;
+  let mentionsCurrentUser = false;
+
+  for (const part of message) {
+    if (
+      !mentionsCurrentUser &&
+      normalisedCurrentUsername &&
+      part.type === 'mention' &&
+      normaliseUsername(part.content) === normalisedCurrentUsername
+    ) {
+      mentionsCurrentUser = true;
+    }
+
+    if (SUBSCRIPTION_NOTICE_TYPES.has(part.type)) {
+      hasSubscriptionNotice = true;
+      continue;
+    }
+
+    if (STV_EMOTE_EVENT_TYPES.has(part.type)) {
+      hasStvEmoteEvent = true;
+      continue;
+    }
+
+    if (VIEWER_MILESTONE_TYPES.has(part.type)) {
+      hasViewerMilestone = true;
+    }
   }
-  if (messageHasPart(message, STV_EMOTE_EVENT_TYPES)) {
-    return 'stv_emote_event';
+
+  if (hasSubscriptionNotice) {
+    return {
+      hasSubscriptionNotice,
+      mentionsCurrentUser,
+      variant: 'subscription',
+    };
   }
-  if (messageHasPart(message, VIEWER_MILESTONE_TYPES)) {
-    return 'viewer_milestone';
+  if (hasStvEmoteEvent) {
+    return {
+      hasSubscriptionNotice,
+      mentionsCurrentUser,
+      variant: 'stv_emote_event',
+    };
+  }
+  if (hasViewerMilestone) {
+    return {
+      hasSubscriptionNotice,
+      mentionsCurrentUser,
+      variant: 'viewer_milestone',
+    };
   }
   if (sender?.toLowerCase() === 'system') {
-    return 'app_system_sender';
+    return {
+      hasSubscriptionNotice,
+      mentionsCurrentUser,
+      variant: 'app_system_sender',
+    };
   }
-  return 'user_chat';
+  return { hasSubscriptionNotice, mentionsCurrentUser, variant: 'user_chat' };
 }
 
 const SpecialChatBody = memo(
@@ -311,6 +338,7 @@ function ChatMessageComponent<
   timestamp,
   sender,
   style,
+  cachedSenderColor,
   parentDisplayName,
   replyBody,
   replyDisplayName,
@@ -335,7 +363,7 @@ function ChatMessageComponent<
   showInlineReplyContext = true,
   moderationNotice,
   onReplyContextPress,
-  highlightedMessageId,
+  isHighlightedMessageTarget = false,
 }: ChatMessageType<TNoticeType, TVariant> & {
   onReply?: (args: ChatMessageType<TNoticeType>) => void;
   onBadgePress?: (data: BadgePressData) => void;
@@ -353,11 +381,12 @@ function ChatMessageComponent<
   highlightedUsers?: string[];
   showInlineReplyContext?: boolean;
   onReplyContextPress?: (replyParentMessageId: string) => void;
-  highlightedMessageId?: string;
+  isHighlightedMessageTarget?: boolean;
 }) {
   const { getMappingKey } = useMappingHelper();
   const compact = density === 'compact';
-  const mentionsCurrentUser = messageMentionsUser(message, currentUsername);
+  const normalisedCurrentUsername =
+    currentUsernameNormalized ?? normaliseUsername(currentUsername);
   const fallbackHighlightedUserSet = useMemo(() => {
     if (!highlightedUsers?.length) {
       return undefined;
@@ -416,7 +445,8 @@ function ChatMessageComponent<
         username={userstate.username}
         userId={userstate['user-id']}
         fallbackColor={
-          userstate.color ? lightenColor(userstate.color) : undefined
+          cachedSenderColor ??
+          (userstate.color ? lightenColor(userstate.color) : undefined)
         }
         usernameTextStyle={compact ? styles.usernameCompact : undefined}
       />
@@ -437,6 +467,7 @@ function ChatMessageComponent<
     );
   }, [
     compact,
+    cachedSenderColor,
     handleUsernamePress,
     isChannelPointRedemption,
     onUsernamePress,
@@ -501,14 +532,14 @@ function ChatMessageComponent<
 
         case 'mention': {
           const mentionedUsername = part.content.replace(/^@/, '').trim();
+          const normalisedMentionedUsername =
+            normaliseUsername(mentionedUsername);
           const mentionColor = getMentionColor
             ? getMentionColor(mentionedUsername)
             : generateRandomTwitchColor(mentionedUsername);
           const isHighlightedMention =
-            effectiveHighlightedUserSet?.has(
-              normaliseUsername(mentionedUsername),
-            ) ||
-            currentUsernameNormalized === normaliseUsername(mentionedUsername);
+            effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
+            normalisedCurrentUsername === normalisedMentionedUsername;
 
           return (
             <Text key={getPartKey(part, index)}>
@@ -518,7 +549,7 @@ function ChatMessageComponent<
                   styles.mentionDefaultColor,
                   compact && styles.mentionCompact,
                   isHighlightedMention && styles.mentionHighlighted,
-                  mentionColor && { color: lightenColor(mentionColor) },
+                  mentionColor && { color: mentionColor },
                 ]}
               >
                 {part.content}
@@ -602,7 +633,7 @@ function ChatMessageComponent<
       userstate.username,
       userstate.color,
       message_id,
-      currentUsernameNormalized,
+      normalisedCurrentUsername,
     ],
   );
 
@@ -657,7 +688,16 @@ function ChatMessageComponent<
     return renderedBadges;
   }, [badges, compact, getMappingKey, handleBadgePress, moderationNotice]);
 
-  const bodyVariant = getChatBodyVariant(isTwitchSystemNotice, message, sender);
+  const {
+    hasSubscriptionNotice,
+    mentionsCurrentUser,
+    variant: bodyVariant,
+  } = getChatBodyInfo(
+    message,
+    normalisedCurrentUsername,
+    sender,
+    isTwitchSystemNotice,
+  );
 
   const isAppSystemSender = bodyVariant === 'app_system_sender';
   const isUserChat = bodyVariant === 'user_chat';
@@ -686,7 +726,7 @@ function ChatMessageComponent<
   const canReply =
     onReply &&
     !moderationNotice &&
-    !messageHasPart(message, SUBSCRIPTION_NOTICE_TYPES) &&
+    !hasSubscriptionNotice &&
     bodyVariant !== 'stv_emote_event' &&
     bodyVariant !== 'viewer_milestone' &&
     userstate.username &&
@@ -739,8 +779,6 @@ function ChatMessageComponent<
   const isReply = Boolean(parentDisplayName);
   const replyParentMessageId = userstate['reply-parent-msg-id'];
   const isFirstMessage = userstate['first-msg'] === '1';
-  const isHighlightedMessageTarget =
-    Boolean(highlightedMessageId) && message_id === highlightedMessageId;
   const shouldRenderInlineReply =
     showInlineReplyContext &&
     isReply &&
@@ -902,7 +940,7 @@ export const RichChatMessage = MemoizedRichChatMessage as unknown as <
     highlightedUserSet?: ReadonlySet<string>;
     showInlineReplyContext?: boolean;
     onReplyContextPress?: (replyParentMessageId: string) => void;
-    highlightedMessageId?: string;
+    isHighlightedMessageTarget?: boolean;
   },
 ) => React.JSX.Element;
 const styles = StyleSheet.create({

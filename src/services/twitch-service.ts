@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
-import axios, { AxiosHeaders } from 'axios';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
 import Constants from 'expo-constants';
 import { twitchApi, mockServerUrl, isE2EMode, twitchClientId } from './api';
+import Client, { isFetchHttpError, type ClientHeaders } from './api/Client';
 
 const channelPointRewardTitleCache = new Map<string, string>();
 const authProxyBaseUrl =
@@ -15,6 +15,8 @@ const authProxyApiKey =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
     | string
     | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
+const authProxyApi = new Client({ baseURL: authProxyBaseUrl });
+const twitchAuthApi = new Client({ baseURL: 'https://id.twitch.tv/oauth2' });
 
 export interface PaginatedList<T> {
   data: T[];
@@ -372,25 +374,23 @@ export const twitchService = {
   getRefreshToken: async (
     refreshToken: string,
   ): Promise<RefreshTokenResponse> => {
-    const { data } = await axios.post<AuthProxyResponse<RefreshTokenResponse>>(
-      `${authProxyBaseUrl}/refresh-token`,
-      null,
-      {
-        params: {
-          token: refreshToken,
-          app: 'foam-app',
-        },
-        headers: {
-          'x-api-key': authProxyApiKey,
-        },
+    const response = await authProxyApi.post<
+      AuthProxyResponse<RefreshTokenResponse>
+    >('/refresh-token', undefined, {
+      params: {
+        token: refreshToken,
+        app: 'foam-app',
       },
-    );
+      headers: {
+        'x-api-key': authProxyApiKey,
+      },
+    });
 
-    if (!data.data) {
-      throw new Error(data.error ?? 'Failed to refresh Twitch token');
+    if (!response.data) {
+      throw new Error(response.error ?? 'Failed to refresh Twitch token');
     }
 
-    return data.data;
+    return response.data;
   },
 
   /**
@@ -522,19 +522,22 @@ export const twitchService = {
       ? `${mockServerUrl}/token`
       : `${authProxyBaseUrl}/token`;
 
-    const { data } = await axios.get<{ data: DefaultTokenResponse }>(tokenUrl, {
-      headers: isE2EMode
-        ? {}
-        : {
-            'x-api-key': authProxyApiKey,
-          },
-    });
+    const response = await authProxyApi.get<{ data: DefaultTokenResponse }>(
+      tokenUrl,
+      {
+        headers: isE2EMode
+          ? {}
+          : {
+              'x-api-key': authProxyApiKey,
+            },
+      },
+    );
 
-    if (!data.data.access_token) {
+    if (!response.data.access_token) {
       console.error('no token received from auth lambda');
     }
 
-    return data.data;
+    return response.data;
   },
 
   /**
@@ -543,20 +546,19 @@ export const twitchService = {
    * @see https://dev.twitch.tv/docs/authentication/validate-tokens#validating-tokens
    */
   validateToken: async (token: string): Promise<boolean> => {
-    const res = await axios.get<TwitchTokenValidationResponse>(
-      'https://id.twitch.tv/oauth2/validate',
-      {
+    try {
+      await twitchAuthApi.get<TwitchTokenValidationResponse>('/validate', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      },
-    );
-
-    if (res.status === 200) {
+      });
       return true;
+    } catch (error) {
+      if (isFetchHttpError(error) && error.response) {
+        return false;
+      }
+      throw error;
     }
-
-    return false;
   },
 
   /**
@@ -584,7 +586,7 @@ export const twitchService = {
 
   getStreamsUnderCategory: async (
     gameId: string,
-    headers: AxiosHeaders,
+    headers: ClientHeaders,
     cursor?: string,
   ): Promise<PaginatedList<TwitchStream>> => {
     const result = await twitchApi.get<PaginatedList<TwitchStream>>(

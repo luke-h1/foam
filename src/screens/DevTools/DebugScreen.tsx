@@ -9,9 +9,10 @@ import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { NAMESPACE, storageService } from '@app/lib/storage';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { useObservable, useSelector } from '@legendapp/state/react';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Alert, Platform, ScrollView, View, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
@@ -19,27 +20,26 @@ export function DebugScreen() {
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
 
-  const [reactQueryEnabled, setReactQueryEnabled] = useState(false);
-  const [username, setUsername] = useState('');
-  const [channelName, setChannelName] = useState('');
-  const [channelId, setChannelId] = useState('');
+  const username$ = useObservable('');
+  const channelName$ = useObservable('');
+  const channelId$ = useObservable('');
+  const reactQueryEnabled = debugOptions.ReactQueryDebug?.enabled ?? false;
+  const username = useSelector(username$);
+  const channelName = useSelector(channelName$);
+  const channelId = useSelector(channelId$);
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
-
-  useEffect(() => {
-    setReactQueryEnabled(debugOptions.ReactQueryDebug?.enabled ?? false);
-  }, [debugOptions]);
 
   useEffect(() => {
     if (!channelName.trim()) {
       return;
     }
     const t = setTimeout(() => {
-      void twitchService.getUser(channelName).then(r => setChannelId(r.id));
+      void twitchService.getUser(channelName).then(r => channelId$.set(r.id));
     }, 400);
     return () => clearTimeout(t);
-  }, [channelName]);
+  }, [channelId$, channelName]);
 
   const handleClearStorage = () => {
     Alert.alert('Clear storage?', `This will wipe ${NAMESPACE}`, [
@@ -53,9 +53,18 @@ export function DebugScreen() {
   };
 
   const handleToggleRQ = (val: boolean) => {
-    setReactQueryEnabled(val);
     storageService.set('ReactQueryDebug', val);
   };
+
+  const handleUsernameChange = useCallback(
+    (value: string) => username$.set(value),
+    [username$],
+  );
+
+  const handleChannelNameChange = useCallback(
+    (value: string) => channelName$.set(value),
+    [channelName$],
+  );
 
   const handleConvertUsername = async () => {
     if (!username.trim()) {
@@ -95,12 +104,15 @@ export function DebugScreen() {
       >
         <ScrollView
           ref={scrollRef}
+          contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <Text type="xl" weight="bold" style={styles.title}>
-            Debug
-          </Text>
+          {Platform.OS === 'ios' ? null : (
+            <Text type="xl" weight="bold" style={styles.title}>
+              Debug
+            </Text>
+          )}
 
           {/* Storage */}
           <View style={styles.row}>
@@ -138,7 +150,7 @@ export function DebugScreen() {
               style={styles.input}
               placeholder="username"
               value={username}
-              onChangeText={setUsername}
+              onChangeText={handleUsernameChange}
               autoCapitalize="none"
               autoCorrect={false}
               variant="outline"
@@ -191,7 +203,7 @@ export function DebugScreen() {
               style={styles.input}
               placeholder="channel"
               value={channelName}
-              onChangeText={setChannelName}
+              onChangeText={handleChannelNameChange}
               autoCapitalize="none"
               autoCorrect={false}
               variant="outline"

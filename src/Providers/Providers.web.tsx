@@ -14,6 +14,7 @@ import { PressablesConfig } from 'pressto';
 import { PropsWithChildren } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PortalProvider } from 'react-native-teleport';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -61,19 +62,21 @@ export function Providers({ children }: PropsWithChildren) {
                 onReset={() => setRecoveredFromError(true)}
               >
                 <GestureHandlerRootView style={styles.gestureContainer}>
-                  <QueryProviderWithAuth>
-                    <QueryDevTools>
-                      <PressablesConfig
-                        globalHandlers={{
-                          onPress: () => {
-                            void selection();
-                          },
-                        }}
-                      >
-                        {children}
-                      </PressablesConfig>
-                    </QueryDevTools>
-                  </QueryProviderWithAuth>
+                  <PortalProvider>
+                    <QueryProviderWithAuth>
+                      <QueryDevTools>
+                        <PressablesConfig
+                          globalHandlers={{
+                            onPress: () => {
+                              void selection();
+                            },
+                          }}
+                        >
+                          {children}
+                        </PressablesConfig>
+                      </QueryDevTools>
+                    </QueryProviderWithAuth>
+                  </PortalProvider>
                 </GestureHandlerRootView>
               </ErrorBoundary>
             </SafeAreaProvider>

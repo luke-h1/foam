@@ -68,6 +68,7 @@ describe('useChatScroll', () => {
       expect(result.current.isAtBottom).toBe(true);
       expect(result.current.isAtBottomRef.current).toBe(true);
       expect(result.current.isScrollingToBottom).toBe(false);
+      expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
       expect(result.current.unreadCount).toBe(0);
     });
 
@@ -119,6 +120,35 @@ describe('useChatScroll', () => {
 
       expect(result.current.isAtBottom).toBe(false);
       expect(result.current.isAtBottomRef.current).toBe(false);
+      expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
+    });
+
+    test('should disable bottom anchoring as soon as the user starts dragging', () => {
+      const { ref: listRef } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
+
+      act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+
+      expect(result.current.isAtBottomRef.current).toBe(true);
+      expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
+
+      act(() => {
+        result.current.handleScrollEndDrag();
+      });
+
+      expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
     });
 
     test('should detect when user scrolls back to bottom', () => {

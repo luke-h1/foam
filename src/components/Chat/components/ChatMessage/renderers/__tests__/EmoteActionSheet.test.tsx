@@ -2,8 +2,14 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
+import type { ReactNode } from 'react';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { EmoteActionSheet } from '../EmoteActionSheet';
+
+type BottomSheetMockProps = {
+  children?: ReactNode;
+  isPresented: boolean;
+};
 
 jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn().mockResolvedValue(undefined),
@@ -22,6 +28,16 @@ jest.mock('expo-symbols', () => ({
 jest.mock('@app/components/Image/Image', () => ({
   Image: () => null,
 }));
+
+jest.mock('@expo/ui', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  return {
+    BottomSheet: ({ children, isPresented }: BottomSheetMockProps) =>
+      isPresented ? React.createElement(View, null, children) : null,
+  };
+});
 
 const clipboardSetStringAsyncMock = jest.mocked(Clipboard.setStringAsync);
 const toastSuccessMock = jest.mocked(toast.success);

@@ -10,7 +10,10 @@ import { OTASection } from './OTASection';
 
 export function Diagnostics() {
   return (
-    <BodyScrollView contentContainerStyle={styles.contentContainer}>
+    <BodyScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.contentContainer}
+    >
       <AppStoreSection />
       <ExpoSection />
       <Form.Section title="Views">

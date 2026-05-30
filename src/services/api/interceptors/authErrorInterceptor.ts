@@ -1,15 +1,18 @@
 import { logger } from '@app/utils/logger';
-import { AxiosError, AxiosResponse } from 'axios';
-import { ResponseInterceptor } from '../Client';
+import {
+  isFetchHttpError,
+  type FetchClientResponse,
+  type ResponseInterceptor,
+} from '../Client';
 
 export type AuthRefreshCallback = () => Promise<void>;
 
 export const createAuthErrorInterceptor = (
   onAuthError: AuthRefreshCallback,
 ): ResponseInterceptor => ({
-  onResponse: (response: AxiosResponse) => response,
+  onResponse: (response: FetchClientResponse) => response,
   onError: async (error: unknown) => {
-    if (error instanceof AxiosError && error.response?.status === 401) {
+    if (isFetchHttpError(error) && error.response?.status === 401) {
       const url = error.config?.url || '';
       const baseURL = error.config?.baseURL || '';
 

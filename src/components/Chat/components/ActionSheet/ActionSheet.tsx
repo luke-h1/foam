@@ -1,16 +1,22 @@
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from 'expo-symbols';
-import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { BottomSheet, type SnapPoint } from '@expo/ui';
 import { useCallback, useMemo } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { PortalHost } from 'react-native-teleport';
+import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
+import { MESSAGE_ACTION_PREVIEW_PORTAL_NAME } from './MessageActionPreview';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  message: ParsedPart[];
   username?: string;
   handleReply: () => void;
   handleCopy: () => void;
@@ -47,13 +53,14 @@ type ActionItem = {
     | 'ban-user';
   label: string;
   onPress: () => void;
+  subtitle?: string;
+  tone?: 'accent' | 'danger' | 'default' | 'warning';
 };
 
 export function ActionSheet(props: Props) {
   const {
     visible,
     onClose,
-    message,
     username,
     handleReply,
     handleCopy,
@@ -80,6 +87,7 @@ export function ActionSheet(props: Props) {
       {
         id: 'copy',
         label: 'Copy Message',
+        subtitle: 'Text and emotes',
         onPress: () => {
           handleCopy();
           onClose();
@@ -88,6 +96,8 @@ export function ActionSheet(props: Props) {
       {
         id: 'reply',
         label: 'Reply',
+        subtitle: 'Quote in composer',
+        tone: 'accent',
         onPress: () => {
           handleReply();
           onClose();
@@ -96,6 +106,7 @@ export function ActionSheet(props: Props) {
       {
         id: 'hide-phrase',
         label: 'Hide Phrase',
+        subtitle: 'Filter this wording',
         onPress: () => {
           handleHidePhrase?.();
           onClose();
@@ -107,6 +118,7 @@ export function ActionSheet(props: Props) {
       items.splice(2, 0, {
         id: 'hide-user',
         label: 'Hide User',
+        subtitle: 'Mute locally',
         onPress: () => {
           handleHideUser?.();
           onClose();
@@ -116,6 +128,8 @@ export function ActionSheet(props: Props) {
       items.splice(3, 0, {
         id: 'highlight-user',
         label: isUserHighlighted ? 'Unhighlight User' : 'Highlight User',
+        subtitle: isUserHighlighted ? 'Remove marker' : 'Mark future messages',
+        tone: 'accent',
         onPress: () => {
           handleHighlightUser?.();
           onClose();
@@ -130,6 +144,8 @@ export function ActionSheet(props: Props) {
             {
               id: 'update-pin',
               label: 'Refresh Pin',
+              subtitle: 'Extend pinned message',
+              tone: 'accent',
               onPress: () => {
                 handleUpdatePinnedMessage?.();
                 onClose();
@@ -138,6 +154,7 @@ export function ActionSheet(props: Props) {
             {
               id: 'unpin-message',
               label: 'Unpin Message',
+              subtitle: 'Remove from header',
               onPress: () => {
                 handleUnpinMessage?.();
                 onClose();
@@ -148,6 +165,8 @@ export function ActionSheet(props: Props) {
           items.push({
             id: 'pin-message',
             label: 'Pin Message',
+            subtitle: 'Keep at top',
+            tone: 'accent',
             onPress: () => {
               handlePinMessage?.();
               onClose();
@@ -160,6 +179,8 @@ export function ActionSheet(props: Props) {
         items.push({
           id: 'delete-message',
           label: 'Delete Message',
+          subtitle: 'Remove from chat',
+          tone: 'danger',
           onPress: () => {
             handleDeleteMessage?.();
             onClose();
@@ -172,6 +193,8 @@ export function ActionSheet(props: Props) {
           {
             id: 'timeout-user',
             label: 'Timeout for 10m',
+            subtitle: 'Temporary moderation',
+            tone: 'warning',
             onPress: () => {
               handleTimeoutUser?.();
               onClose();
@@ -180,6 +203,8 @@ export function ActionSheet(props: Props) {
           {
             id: 'ban-user',
             label: 'Ban User',
+            subtitle: 'Permanent moderation',
+            tone: 'danger',
             onPress: () => {
               handleBanUser?.();
               onClose();
@@ -212,6 +237,37 @@ export function ActionSheet(props: Props) {
     handleHidePhrase,
     onClose,
   ]);
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const sheetWidth = Math.max(
+    280,
+    Math.min(windowWidth - theme.space16 * 2, 520),
+  );
+  const maxScrollHeight = Math.min(
+    Math.round(windowHeight * 0.62),
+    actions.length * 52 + 116,
+  );
+  const sheetHeight = Math.min(
+    Math.round(windowHeight * 0.82),
+    Math.max(360, actions.length * 52 + 224),
+  );
+  const snapPoints = useMemo<SnapPoint[]>(
+    () => [{ height: sheetHeight }],
+    [sheetHeight],
+  );
+  const wrapperStyle = useMemo(
+    () => [
+      styles.wrapper,
+      {
+        maxHeight: sheetHeight - theme.space16,
+        width: sheetWidth,
+      },
+    ],
+    [sheetHeight, sheetWidth],
+  );
+  const scrollStyle = useMemo(
+    () => [styles.scroll, { maxHeight: maxScrollHeight }],
+    [maxScrollHeight],
+  );
 
   const getSFSymbolName = useCallback(
     (
@@ -258,216 +314,212 @@ export function ActionSheet(props: Props) {
     [],
   );
 
-  const renderMessagePart = useCallback((part: ParsedPart, index: number) => {
-    switch (part.type) {
-      case 'emote':
-        if (!part.url) {
-          return null;
-        }
-        return (
-          <Image
-            key={`${part.type}-${part.id ?? index}-${index}`}
-            useNitro
-            trackLoadTime
-            trackLoadContext="chat.message-action-sheet"
-            source={part.url}
-            cacheVariant="emote"
-            style={styles.messageEmote}
-            contentFit="contain"
-            transition={0}
-          />
-        );
-      case 'mention':
-      case 'text':
-        return (
-          <Text key={`${part.type}-${index}`} style={styles.messageText}>
-            {part.content}
-          </Text>
-        );
-      default:
-        if ('content' in part && typeof part.content === 'string') {
-          return (
-            <Text key={`${part.type}-${index}`} style={styles.messageText}>
-              {part.content}
-            </Text>
-          );
-        }
-        return null;
-    }
-  }, []);
-
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="overFullScreen"
-      transparent
-      onRequestClose={onClose}
+    <BottomSheet
+      isPresented={visible}
+      onDismiss={onClose}
+      showDragIndicator
+      snapPoints={snapPoints}
+      testID="message-action-sheet"
     >
-      <View style={styles.backdrop}>
-        <View style={styles.wrapper}>
-          <View style={styles.header}>
+      <View style={wrapperStyle}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.eyebrow} weight="semibold">
+              Selected message
+            </Text>
             <Text style={styles.title} weight="semibold">
               Message Actions
             </Text>
-            <Button onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeText}>Done</Text>
-            </Button>
           </View>
+          <Button label="Done" onPress={onClose} style={styles.closeButton}>
+            <SymbolView
+              name="checkmark"
+              size={18}
+              tintColor={theme.color.text.dark}
+            />
+          </Button>
+        </View>
 
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.previewCard}>
-              <View style={styles.messageLine}>
-                {username ? (
-                  <Text style={styles.usernameText}>{username}: </Text>
-                ) : null}
-                {message.map(renderMessagePart)}
-              </View>
-            </View>
+        <ScrollView
+          style={scrollStyle}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <PortalHost name={MESSAGE_ACTION_PREVIEW_PORTAL_NAME} />
 
-            <View style={styles.actionGroup}>
-              {actions.map((action, index) => (
-                <Button
-                  key={action.label}
-                  onPress={action.onPress}
-                  style={[
-                    styles.actionButton,
-                    index < actions.length - 1 && styles.actionButtonBorder,
-                  ]}
-                >
-                  <View style={styles.actionContent}>
+          <View style={styles.actionGroup}>
+            {actions.map((action, index) => (
+              <Button
+                key={action.label}
+                onPress={action.onPress}
+                style={[
+                  styles.actionButton,
+                  index < actions.length - 1 && styles.actionButtonBorder,
+                ]}
+              >
+                <View style={styles.actionContent}>
+                  <View
+                    style={[
+                      styles.actionIconFrame,
+                      action.tone === 'accent' && styles.actionIconAccent,
+                      action.tone === 'warning' && styles.actionIconWarning,
+                      action.tone === 'danger' && styles.actionIconDanger,
+                    ]}
+                  >
                     <SymbolView
                       name={getSFSymbolName(action.id)}
                       size={18}
-                      tintColor="#b7bdc9"
+                      tintColor={
+                        action.tone === 'danger'
+                          ? theme.colorRed
+                          : action.tone === 'warning'
+                            ? theme.colorAmber
+                            : action.tone === 'accent'
+                              ? theme.colorGreen
+                              : '#b7bdc9'
+                      }
                       weight="regular"
                       style={styles.actionIcon}
                     />
-                    <Text style={styles.actionText}>{action.label}</Text>
                   </View>
-                </Button>
-              ))}
-            </View>
-          </ScrollView>
-        </View>
+                  <View style={styles.actionCopy}>
+                    <Text
+                      weight="semibold"
+                      style={[
+                        styles.actionText,
+                        action.tone === 'danger' && styles.actionTextDanger,
+                      ]}
+                    >
+                      {action.label}
+                    </Text>
+                    {action.subtitle ? (
+                      <Text style={styles.actionSubtitle}>
+                        {action.subtitle}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              </Button>
+            ))}
+          </View>
+        </ScrollView>
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
   actionButton: {
-    backgroundColor: theme.color.background.darkAlt,
-    minHeight: 48,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    minHeight: 52,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   actionButtonBorder: {
-    borderBottomColor: theme.color.border.dark,
+    borderBottomColor: 'rgba(255,255,255,0.075)',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionContent: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space12,
+    gap: theme.space8,
+  },
+  actionCopy: {
+    flex: 1,
+    gap: 2,
   },
   actionGroup: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(255,255,255,0.085)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: 1,
     overflow: 'hidden',
+  },
+  actionIconAccent: {
+    backgroundColor: 'rgba(74, 222, 128, 0.12)',
+    borderColor: 'rgba(74, 222, 128, 0.18)',
+  },
+  actionIconDanger: {
+    backgroundColor: theme.colorRedSurface,
+    borderColor: theme.colorRedBorderUi,
+  },
+  actionIconFrame: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.075)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius10,
+    borderWidth: 1,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  actionIconWarning: {
+    backgroundColor: 'rgba(251, 191, 36, 0.12)',
+    borderColor: 'rgba(251, 191, 36, 0.26)',
   },
   actionIcon: {
     opacity: 0.9,
   },
+  actionSubtitle: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    lineHeight: theme.fontSize11 * 1.25,
+  },
   actionText: {
     color: theme.color.text.dark,
     fontSize: theme.fontSize14,
-    fontWeight: Platform.select({ ios: '400', android: '400' }),
+    lineHeight: theme.fontSize14 * 1.25,
+  },
+  actionTextDanger: {
+    color: theme.colorRed,
   },
   closeButton: {
-    backgroundColor: 'transparent',
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
-  },
-  closeText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    fontWeight: '600',
-  },
-  backdrop: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.58)',
-    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.075)',
+    borderColor: 'rgba(255,255,255,0.085)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    height: 38,
     justifyContent: 'center',
-    padding: theme.space20,
+    width: 38,
+  },
+  eyebrow: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    letterSpacing: 0,
+    marginBottom: 2,
+    textTransform: 'uppercase',
   },
   header: {
-    alignItems: 'center',
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingBottom: theme.space16,
-  },
-  messageEmote: {
-    height: 24,
-    marginHorizontal: 2,
-    width: 24,
-  },
-  messageLine: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  messageText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize16,
-    lineHeight: theme.fontSize16 * 1.25,
-  },
-  previewCard: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    borderWidth: 1,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    paddingBottom: theme.space4,
   },
   title: {
     color: theme.color.text.dark,
     fontSize: theme.fontSize16,
-  },
-  usernameText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize16,
-    fontWeight: '600',
+    lineHeight: theme.fontSize16 * 1.25,
   },
   wrapper: {
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.color.border.dark,
-    borderCurve: 'continuous',
-    borderRadius: 24,
+    ...chatSheetSurface,
+    backgroundColor: CHAT_SHEET_BACKGROUND,
+    borderColor: 'rgba(255,255,255,0.10)',
     borderWidth: 1,
-    gap: theme.space16,
-    maxHeight: '82%',
-    overflow: 'hidden',
-    paddingHorizontal: theme.space20,
-    paddingTop: theme.space16,
-    width: '100%',
+    gap: theme.space12,
+    paddingHorizontal: theme.space12,
+    paddingTop: theme.space8,
   },
   scroll: {
-    flex: 1,
+    flexGrow: 0,
   },
   scrollContent: {
-    gap: theme.space16,
-    paddingBottom: theme.space20,
+    gap: theme.space12,
+    paddingBottom: theme.space16,
   },
 });
 
