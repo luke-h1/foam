@@ -352,138 +352,6 @@ const TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES = [
   'https://player.twitch.tv/',
 ];
 
-const TWITCH_AUTH_HELPER_SCRIPT = `
-(() => {
-  if (window.__foamTwitchAuthHelperInstalled) {
-    return true;
-  }
-  window.__foamTwitchAuthHelperInstalled = true;
-
-  const post = type => {
-    try {
-      window.ReactNativeWebView?.postMessage(JSON.stringify({ type }));
-    } catch {}
-  };
-
-  window.open = url => {
-    if (typeof url === 'string' && url.length > 0) {
-      window.location.assign(url);
-    }
-    return window;
-  };
-
-  let postedAuthComplete = false;
-  const detectAuthComplete = () => {
-    if (postedAuthComplete || !document.body) {
-      return;
-    }
-
-    const text = document.body.textContent?.toLowerCase() ?? '';
-    if (
-      (text.includes("you're logged in") || text.includes("you’re logged in")) &&
-      text.includes('refresh the page')
-    ) {
-      postedAuthComplete = true;
-      post('twitchAuthComplete');
-    }
-  };
-
-  detectAuthComplete();
-  new MutationObserver(detectAuthComplete).observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
-})();
-true;
-`;
-
-function buildRawTwitchAutoplayScript(options: {
-  autoplay: boolean;
-  muted: boolean;
-}): string {
-  return `
-(() => {
-  if (window.__foamRawTwitchPlaybackBridgeStarted) {
-    return true;
-  }
-  window.__foamRawTwitchPlaybackBridgeStarted = true;
-
-  const shouldAutoplay = ${options.autoplay ? 'true' : 'false'};
-  const targetMuted = ${options.muted ? 'true' : 'false'};
-  const post = (type, payload = {}) => {
-    try {
-      window.ReactNativeWebView?.postMessage(JSON.stringify({ type, payload }));
-    } catch {}
-  };
-  const syncVideo = video => {
-    if (!video) {
-      return false;
-    }
-
-    video.setAttribute('playsinline', 'true');
-    video.setAttribute('webkit-playsinline', 'true');
-    video.muted = targetMuted;
-    if (!targetMuted) {
-      video.volume = 1;
-    }
-
-    if (!video.__foamRawTwitchPlaybackBridgeBound) {
-      video.__foamRawTwitchPlaybackBridgeBound = true;
-      video.addEventListener('play', () => post('play'));
-      video.addEventListener('playing', () => {
-        video.muted = targetMuted;
-        if (!targetMuted) {
-          video.volume = 1;
-        }
-        post('playing');
-        post('muteState', { muted: video.muted, volume: video.volume });
-      });
-      video.addEventListener('pause', () => post('pause'));
-      video.addEventListener('ended', () => post('ended'));
-      post('ready');
-    }
-
-    post('muteState', { muted: video.muted, volume: video.volume });
-    window.playerControls = {
-      play: function() { video.play(); },
-      pause: function() { video.pause(); },
-      mute: function() { video.muted = true; post('muteState', { muted: video.muted, volume: video.volume }); },
-      setMuted: function(m) { video.muted = !!m; post('muteState', { muted: video.muted, volume: video.volume }); },
-      unmute: function() { video.muted = false; video.volume = 1; post('muteState', { muted: video.muted, volume: video.volume }); },
-      setVolume: function(v) { video.volume = v; if (v > 0) { video.muted = false; } post('muteState', { muted: video.muted, volume: video.volume }); },
-      getCurrentTime: function() { post('currentTime', { time: video.currentTime || 0 }); },
-      getDuration: function() { post('duration', { duration: video.duration || 0 }); },
-      seek: function(t) { video.currentTime = t; },
-      setChannel: function() {},
-      setVideo: function() {},
-      setQuality: function() {},
-      seekToLive: function() {}
-    };
-    if (shouldAutoplay) {
-      const result = video.play();
-      if (result && typeof result.catch === 'function') {
-        result.catch(() => post('playbackBlocked'));
-      }
-    }
-    return true;
-  };
-  const findAndSync = () => syncVideo(document.querySelector('video'));
-  findAndSync();
-  const observer = new MutationObserver(findAndSync);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
-  const startedAt = Date.now();
-  const retry = setInterval(() => {
-    const found = findAndSync();
-    if (found || Date.now() - startedAt > 10000) {
-      clearInterval(retry);
-      observer.disconnect();
-    }
-  }, 500);
-})();
-true;
-`;
-}
-
 export function isAllowedTwitchPlayerNavigation(
   url: string,
   parent: string,
@@ -1878,15 +1746,11 @@ export const StreamPlayer = memo(
           javaScriptEnabled
           javaScriptCanOpenWindowsAutomatically
           mediaPlaybackRequiresUserAction={false}
-          injectedJavaScript={TWITCH_AUTH_HELPER_SCRIPT}
-          injectedJavaScriptBeforeContentLoaded={TWITCH_AUTH_HELPER_SCRIPT}
-          injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
-          injectedJavaScriptForMainFrameOnly={false}
           scrollEnabled={allowsTwitchInteraction}
           keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
           setBuiltInZoomControls={false}
           setDisplayZoomControls={false}
-          setSupportMultipleWindows
+          setSupportMultipleWindows={false}
           sharedCookiesEnabled
           thirdPartyCookiesEnabled
           originWhitelist={['*']}
@@ -1900,15 +1764,6 @@ export const StreamPlayer = memo(
           }}
           onError={handleWebViewError}
           onHttpError={handleWebViewHttpError}
-          onOpenWindow={event => {
-            const targetUrl = event.nativeEvent.targetUrl;
-            if (!targetUrl || isAppUrl(targetUrl)) {
-              return;
-            }
-            webViewRef.current?.injectJavaScript(
-              `window.location.href = ${JSON.stringify(targetUrl)}; true;`,
-            );
-          }}
           onNavigationStateChange={event => {
             if (isTwitchPassportCallbackUrl(event.url)) {
               scheduleAuthCompletionReload();
@@ -1919,15 +1774,6 @@ export const StreamPlayer = memo(
             onWebViewLoaded?.();
             if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
               scheduleAuthCompletionReload();
-              return;
-            }
-            if (useRawTwitchPlayer || clip) {
-              webViewRef.current?.injectJavaScript(
-                buildRawTwitchAutoplayScript({
-                  autoplay,
-                  muted: initialMuted,
-                }),
-              );
               return;
             }
             if (needsInitRef.current) {
