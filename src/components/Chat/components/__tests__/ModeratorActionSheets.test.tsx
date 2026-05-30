@@ -1,6 +1,12 @@
 import { fireEvent, render } from '@testing-library/react-native';
+import type { ReactNode } from 'react';
 import { ActionSheet } from '../ActionSheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
+
+type BottomSheetMockProps = {
+  children?: ReactNode;
+  isPresented: boolean;
+};
 
 jest.mock('expo-symbols', () => ({
   SymbolView: () => null,
@@ -9,6 +15,29 @@ jest.mock('expo-symbols', () => ({
 jest.mock('@app/components/Image/Image', () => ({
   Image: () => null,
 }));
+
+jest.mock('@expo/ui', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  return {
+    BottomSheet: ({ children, isPresented }: BottomSheetMockProps) =>
+      isPresented ? React.createElement(View, null, children) : null,
+  };
+});
+
+jest.mock('react-native-teleport', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  type mockPortalProps = { children?: ReactNode };
+
+  return {
+    Portal: ({ children }: mockPortalProps) => children,
+    PortalHost: ({ children }: mockPortalProps) =>
+      React.createElement(View, null, children),
+    PortalProvider: ({ children }: mockPortalProps) => children,
+  };
+});
 
 describe('Moderator action sheets', () => {
   test('shows moderator message actions only when the viewer can moderate chat', () => {
@@ -21,7 +50,6 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={onClose}
-        message={[{ type: 'text', content: 'hello world' }]}
         username="viewer"
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
@@ -42,7 +70,6 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={onClose}
-        message={[{ type: 'text', content: 'hello world' }]}
         username="viewer"
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
@@ -70,7 +97,6 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={jest.fn()}
-        message={[{ type: 'text', content: 'hello world' }]}
         username="viewer"
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
@@ -97,7 +123,6 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={jest.fn()}
-        message={[{ type: 'text', content: 'pin this' }]}
         username="viewer"
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
@@ -118,7 +143,6 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={jest.fn()}
-        message={[{ type: 'text', content: 'pin this' }]}
         username="viewer"
         handleReply={jest.fn()}
         handleCopy={jest.fn()}

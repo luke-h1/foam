@@ -68,13 +68,10 @@ export function SettingsCacheScreen() {
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
-        <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <ScreenHeader
-            title="Cache"
-            subtitle="Reset cached app data"
-            size="medium"
-          />
-
+        <BodyScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={styles.iosContent}
+        >
           <Form.Section footer="Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.">
             <CacheActionRow
               custom

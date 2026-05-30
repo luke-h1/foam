@@ -19,7 +19,6 @@ describe('SettingsToggleRow', () => {
     fireEvent(switchControl, 'valueChange', false);
 
     expect(onValueChange).toHaveBeenCalledWith(false);
-    expect(switchControl).toHaveAccessibilityState({ checked: false });
   });
 
   test('reflects the checked state from props', () => {

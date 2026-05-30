@@ -9,7 +9,7 @@ import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { type ReactNode, useRef } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import appIconProduction from '../../../assets/app-icon/app-icon-production.png';
 
 interface AboutSectionProps {
@@ -92,7 +92,9 @@ export function AboutScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="About Foam" subtitle="App info" size="medium" />
+      {Platform.OS === 'ios' ? null : (
+        <ScreenHeader title="About Foam" subtitle="App info" size="medium" />
+      )}
 
       <ScrollView
         ref={scrollRef}

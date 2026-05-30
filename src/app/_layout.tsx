@@ -1,6 +1,7 @@
 import '../utils/performance/wdyr';
 
 import * as Font from 'expo-font';
+import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 import {
   DarkTheme,
   Stack,
@@ -33,10 +34,14 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import * as QuickActions from 'expo-quick-actions';
 import * as WebBrowser from 'expo-web-browser';
 import type { RouterAction } from 'expo-quick-actions/router';
-import { useQuickActionCallback } from 'expo-quick-actions/hooks';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { InteractionManager, Linking, LogBox } from 'react-native';
+import {
+  useObservable,
+  useObserveEffect,
+  useSelector,
+} from '@legendapp/state/react';
 import {
   configureReanimatedLogger,
   ReanimatedLogLevel,
@@ -54,7 +59,7 @@ import { useOnReconnect } from '../hooks/useOnReconnect';
 import { usePopulateAuth } from '../hooks/usePopulateAuth';
 import { useRecoveredFromError } from '../hooks/useRecoveredFromError';
 import { useIcloudPreferenceSync } from '../hooks/useIcloudPreferenceSync';
-import { usePreference } from '../store/preferenceStore';
+import { preferences$ } from '../store/preferenceStore';
 import { chatStore$ } from '../store/chatStore/state';
 import {
   completeAuthWithCallbackUrl,
@@ -79,6 +84,10 @@ enableFreeze(true);
 
 WebBrowser.maybeCompleteAuthSession();
 initSentry();
+Observe.configure({
+  environment: process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development',
+  dispatchingEnabled: true,
+});
 
 const criticalFontMap = {
   InstrumentSerif_400Regular,
@@ -187,14 +196,26 @@ function RouterEffects() {
     }
   }, [recoveredFromError, setRecoveredFromError]);
 
-  useQuickActionCallback(action => {
-    const href = action.params?.href;
-    if (typeof href !== 'string') {
-      return;
+  useEffect(() => {
+    let isMounted = true;
+
+    const handleQuickAction = (action: QuickActions.Action) => {
+      const href = action.params?.href;
+      if (isMounted && typeof href === 'string') {
+        router.replace(href);
+      }
+    };
+
+    if (QuickActions.initial) {
+      handleQuickAction(QuickActions.initial);
     }
 
-    router.replace(href);
-  });
+    const subscription = QuickActions.addListener(handleQuickAction);
+    return () => {
+      isMounted = false;
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     setNavigationReady(true);
@@ -347,21 +368,45 @@ function RootLayoutNav() {
 }
 
 function RootLayout() {
-  const [fontsLoaded] = Font.useFonts(criticalFontMap);
-  const [hasFontTimeoutElapsed, setHasFontTimeoutElapsed] = useState(false);
+  const fontsLoaded$ = useObservable(false);
+  const hasFontTimeoutElapsed$ = useObservable(false);
+  const fontsLoaded = useSelector(fontsLoaded$);
+  const hasFontTimeoutElapsed = useSelector(hasFontTimeoutElapsed$);
+  const { markInteractive } = useObserve();
   const didHideSplash = useRef(false);
+  const didMarkInteractive = useRef(false);
   const didScheduleExtraFontLoad = useRef(false);
-  const emojiStyle = usePreference('emojiStyle');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Font.loadAsync(criticalFontMap)
+      .then(() => {
+        if (!cancelled) {
+          fontsLoaded$.set(true);
+        }
+      })
+      .catch(error => {
+        logger.main.warn('Failed to load critical fonts', error);
+        if (!cancelled) {
+          fontsLoaded$.set(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fontsLoaded$]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setHasFontTimeoutElapsed(true);
+      hasFontTimeoutElapsed$.set(true);
     }, fontLoadTimeoutMs);
 
     return () => {
       clearTimeout(timeout);
     };
-  }, []);
+  }, [hasFontTimeoutElapsed$]);
 
   useEffect(() => {
     if (__DEV__) {
@@ -376,9 +421,18 @@ function RootLayout() {
       return;
     }
 
+    const markAppInteractive = () => {
+      if (!didMarkInteractive.current) {
+        didMarkInteractive.current = true;
+        markInteractive();
+      }
+    };
+
     if (!didHideSplash.current) {
       didHideSplash.current = true;
-      void BootSplash.hide({ fade: true });
+      void BootSplash.hide({ fade: true }).finally(markAppInteractive);
+    } else {
+      markAppInteractive();
     }
 
     if (
@@ -398,11 +452,16 @@ function RootLayout() {
     return () => {
       task.cancel();
     };
-  }, [fontsLoaded, hasFontTimeoutElapsed]);
+  }, [fontsLoaded, hasFontTimeoutElapsed, markInteractive]);
 
-  useEffect(() => {
-    chatStore$.emojis.set(getEmojiEmotes(emojiStyle));
-  }, [emojiStyle]);
+  useObserveEffect(
+    () => preferences$.emojiStyle.get(),
+    ({ value: emojiStyle }) => {
+      chatStore$.emojis.set(
+        getEmojiEmotes(emojiStyle ?? preferences$.emojiStyle.peek()),
+      );
+    },
+  );
 
   if (!fontsLoaded && !hasFontTimeoutElapsed) {
     return null;
@@ -411,4 +470,6 @@ function RootLayout() {
   return <RootLayoutNav />;
 }
 
-export default wrapWithSentry(RootLayout);
+const ObservedRootLayout = ObserveRoot.wrap(RootLayout);
+
+export default wrapWithSentry(ObservedRootLayout);

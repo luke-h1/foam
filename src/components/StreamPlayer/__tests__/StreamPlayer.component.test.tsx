@@ -38,13 +38,6 @@ jest.mock('react-native-safe-area-context', () => ({
   }),
 }));
 
-jest.mock('../WebViewWarmupPool', () => ({
-  streamWebViewWarmupPool: {
-    getWarmupRenderProps: jest.fn(() => null),
-    startWarmup: jest.fn(),
-  },
-}));
-
 import { StreamPlayer } from '../StreamPlayer';
 
 function latestWebViewProps() {

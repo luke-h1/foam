@@ -1,3 +1,4 @@
+import { CUSTOM_TAB_BAR_HEIGHT } from '@app/components/MotionTabs/constants';
 import { useBottomTabBarHeight } from 'expo-router/build/react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
 import { StyleSheet } from 'react-native';
@@ -23,5 +24,5 @@ export function useBottomTabOverflow() {
     /* empty */
   }
 
-  return tabHeight;
+  return tabHeight || CUSTOM_TAB_BAR_HEIGHT;
 }

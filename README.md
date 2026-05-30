@@ -392,7 +392,7 @@ After changing workflow action pins, run `zizmor` locally when available, or rel
 
 ## CD
 
-We use [EAS](https://docs.expo.dev/build-reference/eas/) to build, submit, and ship [EAS Update](https://docs.expo.dev/eas-update/introduction/) payloads.
+We use [EAS](https://docs.expo.dev/build-reference/eas/) to build, submit, ship [EAS Update](https://docs.expo.dev/eas-update/introduction/) payloads, and observe production startup performance with [EAS Observe](https://docs.expo.dev/eas/observe/introduction/).
 
 There are four installable [variants](https://docs.expo.dev/tutorial/eas/multiple-app-variants/) today (each has distinct iOS bundle id and Android application id so they can sit side by side on one device):
 
@@ -556,7 +556,7 @@ The public app is distributed via the stores and is not in wide release yet. Shi
 - `bun run build:internal:ios` / `build:internal:android` / `build:internal` — internal QA distribution builds
 - `bun run build:testflight:ios` / `build:testflight` — public TestFlight invite builds
 
-You can inspect build history on the [EAS Builds dashboard](https://expo.dev/accounts/lukehowsam123/projects/foam/builds), submissions on [EAS Submissions](https://expo.dev/accounts/lukehowsam123/projects/foam/submissions), and the queue on [EAS build status](https://expo.dev/eas-build-status).
+You can inspect build history on the [EAS Builds dashboard](https://expo.dev/accounts/lukehowsam123/projects/foam/builds), submissions on [EAS Submissions](https://expo.dev/accounts/lukehowsam123/projects/foam/submissions), production performance in [EAS Observe](https://docs.expo.dev/eas/observe/introduction/), and the queue on [EAS build status](https://expo.dev/eas-build-status).
 
 ## Versioning strategy
 

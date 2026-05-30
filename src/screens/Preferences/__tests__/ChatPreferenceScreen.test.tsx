@@ -15,6 +15,8 @@ const mockPreferences: Preferences = {
   showInlineReplyContext: true,
   showRecentMessages: true,
   showUnreadJumpPill: true,
+  disableChat: false,
+  disableStream: false,
   emojiStyle: 'twitter',
   show7TvEmotes: true,
   showBttvEmotes: true,

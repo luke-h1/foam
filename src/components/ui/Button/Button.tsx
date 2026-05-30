@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     // @ts-ignore
     willChange: 'transform',
   },
-  buttonText: { fontWeight: '600' },
+  buttonText: { fontWeight: '600', textAlign: 'center' },
   // eslint-disable-next-line react-native/no-unused-styles
   disabled: { opacity: 0.5 },
   // eslint-disable-next-line react-native/no-unused-styles

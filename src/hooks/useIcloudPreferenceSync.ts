@@ -1,4 +1,8 @@
-import { replacePreferences, usePreferences } from '@app/store/preferenceStore';
+import {
+  getPreferences,
+  preferences$,
+  replacePreferences,
+} from '@app/store/preferenceStore';
 import {
   isICloudPreferenceSyncAvailable,
   loadPreferencesFromICloud,
@@ -6,16 +10,14 @@ import {
   synchronizeICloudPreferences,
 } from '@app/lib/icloud-sync';
 import { logger } from '@app/utils/logger';
+import { useObserveEffect } from '@legendapp/state/react';
 import { useEffect, useRef } from 'react';
 import { AppState, InteractionManager } from 'react-native';
 
 export function useIcloudPreferenceSync() {
-  const preferences = usePreferences();
-  const latestLocalTimestampRef = useRef(preferences.updatedAt);
+  const latestLocalTimestampRef = useRef(getPreferences().updatedAt);
   const latestAppliedRemoteTimestampRef = useRef<number>(0);
   const hasAttemptedInitialLoadRef = useRef(false);
-
-  latestLocalTimestampRef.current = preferences.updatedAt;
 
   useEffect(() => {
     if (!isICloudPreferenceSyncAvailable()) {
@@ -71,20 +73,28 @@ export function useIcloudPreferenceSync() {
     };
   }, []);
 
-  useEffect(() => {
-    if (
-      !isICloudPreferenceSyncAvailable() ||
-      !hasAttemptedInitialLoadRef.current
-    ) {
-      return;
-    }
+  useObserveEffect(
+    () => preferences$.get(),
+    ({ value: preferences }) => {
+      const nextPreferences = preferences ?? getPreferences();
+      latestLocalTimestampRef.current = nextPreferences.updatedAt;
 
-    if (preferences.updatedAt <= latestAppliedRemoteTimestampRef.current) {
-      return;
-    }
+      if (
+        !isICloudPreferenceSyncAvailable() ||
+        !hasAttemptedInitialLoadRef.current
+      ) {
+        return;
+      }
 
-    void savePreferencesToICloud(preferences).catch(error => {
-      logger.main.warn('Failed to save iCloud preferences', error);
-    });
-  }, [preferences]);
+      if (
+        nextPreferences.updatedAt <= latestAppliedRemoteTimestampRef.current
+      ) {
+        return;
+      }
+
+      void savePreferencesToICloud(nextPreferences).catch(error => {
+        logger.main.warn('Failed to save iCloud preferences', error);
+      });
+    },
+  );
 }

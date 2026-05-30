@@ -7,6 +7,7 @@ import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { BottomSheet } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
 import {
   ReactNode,
@@ -18,13 +19,17 @@ import {
   ReactElement,
 } from 'react';
 import {
-  Modal,
   Platform,
   View,
   type GestureResponderEvent,
   StyleSheet,
+  useWindowDimensions,
 } from 'react-native';
 import { toast } from 'sonner-native';
+import {
+  CHAT_SHEET_BACKGROUND,
+  chatSheetSurface,
+} from '../../chatSheetSurface';
 
 type PartVariant = ParsedPart<'emote'>;
 type ActionId =
@@ -53,6 +58,21 @@ export function EmoteActionSheet({
   children,
 }: EmoteActionSheetProps) {
   const [visible, setVisible] = useState(false);
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const sheetWidth = Math.max(
+    280,
+    Math.min(windowWidth - theme.space16 * 2, 520),
+  );
+  const wrapperStyle = useMemo(
+    () => [
+      styles.wrapper,
+      {
+        maxHeight: Math.round(windowHeight * 0.72),
+        width: sheetWidth,
+      },
+    ],
+    [sheetWidth, windowHeight],
+  );
   const displayUrl = useMemo(
     () =>
       getDisplayEmoteUrl({
@@ -177,7 +197,7 @@ export function EmoteActionSheet({
     }
 
     if (meta.length > 0) {
-      return meta.join(' • ');
+      return meta.join(' / ');
     }
 
     return 'Emote actions';
@@ -212,64 +232,90 @@ export function EmoteActionSheet({
   return (
     <>
       {triggerChild}
-      <Modal
-        visible={visible}
-        animationType="slide"
-        presentationStyle="formSheet"
-        onRequestClose={closeSheet}
-      >
-        <View style={styles.wrapper}>
-          {(displayUrl || part.name || part.original_name) && (
-            <View style={styles.previewCard}>
-              <View style={styles.previewRow}>
-                {displayUrl ? (
-                  <View style={styles.previewImageContainer}>
-                    <Image
-                      useNitro
-                      trackLoadTime
-                      trackLoadContext="chat.emote-action-sheet"
-                      source={displayUrl}
-                      cacheVariant="emote"
-                      style={styles.previewImage}
-                      contentFit="contain"
-                      transition={50}
-                    />
-                  </View>
-                ) : null}
-                <View style={styles.previewMeta}>
-                  {part.name || part.original_name ? (
-                    <Text style={styles.previewName}>
-                      {part.name ?? part.original_name}
-                    </Text>
-                  ) : null}
-                  <Text style={styles.previewHint}>{previewSubtitle}</Text>
-                </View>
+      {visible ? (
+        <BottomSheet
+          isPresented={visible}
+          onDismiss={closeSheet}
+          showDragIndicator
+          testID="emote-action-sheet"
+        >
+          <View style={wrapperStyle}>
+            <View style={styles.topBar}>
+              <View style={styles.heading}>
+                <Text style={styles.eyebrow} weight="semibold">
+                  Emote actions
+                </Text>
               </View>
-            </View>
-          )}
-          <View style={styles.actionGroup}>
-            {actions.map((action, index) => (
               <Button
-                key={action.label}
-                onPress={action.onPress}
-                style={[
-                  styles.actionButton,
-                  index > 0 && styles.actionButtonWithDivider,
-                ]}
+                label="Done"
+                style={styles.doneButton}
+                onPress={closeSheet}
               >
                 <SymbolView
-                  name={getSFSymbolName(action.id)}
-                  size={19}
-                  tintColor="#b7bdc9"
-                  weight="regular"
-                  style={styles.actionIcon}
+                  name="checkmark"
+                  size={18}
+                  tintColor={theme.color.text.dark}
                 />
-                <Text style={styles.actionText}>{action.label}</Text>
               </Button>
-            ))}
+            </View>
+            {(displayUrl || part.name || part.original_name) && (
+              <View style={styles.previewCard}>
+                <View style={styles.previewRow}>
+                  {displayUrl ? (
+                    <View style={styles.previewImageContainer}>
+                      <Image
+                        useNitro
+                        trackLoadTime
+                        trackLoadContext="chat.emote-action-sheet"
+                        source={displayUrl}
+                        cacheVariant="emote"
+                        style={styles.previewImage}
+                        contentFit="contain"
+                        transition={50}
+                      />
+                    </View>
+                  ) : null}
+                  <View style={styles.previewMeta}>
+                    {part.name || part.original_name ? (
+                      <Text style={styles.previewName}>
+                        {part.name ?? part.original_name}
+                      </Text>
+                    ) : null}
+                    <Text style={styles.previewHint}>{previewSubtitle}</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+            <View style={styles.actionGroup}>
+              {actions.map((action, index) => (
+                <Button
+                  key={action.label}
+                  onPress={action.onPress}
+                  style={[
+                    styles.actionButton,
+                    index > 0 && styles.actionButtonWithDivider,
+                  ]}
+                >
+                  <View style={styles.actionIconFrame}>
+                    <SymbolView
+                      name={getSFSymbolName(action.id)}
+                      size={18}
+                      tintColor={theme.colorGreen}
+                      weight="regular"
+                      style={styles.actionIcon}
+                    />
+                  </View>
+                  <View style={styles.actionCopy}>
+                    <Text style={styles.actionText} weight="semibold">
+                      {action.label}
+                    </Text>
+                  </View>
+                </Button>
+              ))}
+            </View>
           </View>
-        </View>
-      </Modal>
+        </BottomSheet>
+      ) : null}
     </>
   );
 }
@@ -277,40 +323,79 @@ export function EmoteActionSheet({
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.055)',
     flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: Platform.select({ ios: 56, android: 56 }),
-    paddingHorizontal: theme.space16,
+    gap: theme.space8,
+    minHeight: Platform.select({ ios: 52, android: 52 }),
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   actionButtonWithDivider: {
-    borderTopWidth: 0,
+    borderTopColor: 'rgba(255,255,255,0.075)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  actionCopy: {
+    flex: 1,
   },
   actionGroup: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(255,255,255,0.085)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius28,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   actionIcon: {
     opacity: 0.9,
   },
+  actionIconFrame: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(74, 222, 128, 0.12)',
+    borderColor: 'rgba(74, 222, 128, 0.18)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius10,
+    borderWidth: 1,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
   actionText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize16,
-    fontWeight: Platform.select({ ios: '400', android: '400' }),
+    fontSize: theme.fontSize14,
+    lineHeight: theme.fontSize14 * 1.25,
+  },
+  doneButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.075)',
+    borderColor: 'rgba(255,255,255,0.085)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
+  },
+  eyebrow: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    letterSpacing: 0,
+    textTransform: 'uppercase',
+  },
+  heading: {
+    flex: 1,
   },
   previewCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderColor: 'rgba(255,255,255,0.075)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius28,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space16,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
+    padding: theme.space16,
   },
   previewHint: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize18,
-    lineHeight: theme.fontSize18 * 1.2,
+    fontSize: theme.fontSize12,
+    lineHeight: theme.fontSize12 * 1.3,
     marginTop: 4,
   },
   previewImage: {
@@ -319,33 +404,45 @@ const styles = StyleSheet.create({
   },
   previewImageContainer: {
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.045)',
+    borderColor: 'rgba(255,255,255,0.075)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    height: 56,
+    borderRadius: theme.borderRadius16,
+    borderWidth: 1,
+    height: 64,
     justifyContent: 'center',
     overflow: 'hidden',
-    width: 56,
+    width: 64,
   },
   previewMeta: {
     flex: 1,
   },
   previewName: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize24,
+    fontSize: theme.fontSize18,
     fontWeight: Platform.select({ ios: '700', android: '600' }),
-    lineHeight: theme.fontSize24 * 1.1,
+    lineHeight: theme.fontSize18 * 1.2,
   },
   previewRow: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space16,
   },
+  topBar: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: theme.space12,
+    justifyContent: 'space-between',
+    paddingBottom: theme.space4,
+  },
   wrapper: {
-    backgroundColor: '#171b23',
-    flex: 1,
-    gap: theme.space20,
-    paddingBottom: theme.space28,
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space16,
+    ...chatSheetSurface,
+    backgroundColor: CHAT_SHEET_BACKGROUND,
+    borderColor: 'rgba(255,255,255,0.10)',
+    borderWidth: 1,
+    gap: theme.space12,
+    paddingBottom: theme.space16,
+    paddingHorizontal: theme.space12,
+    paddingTop: theme.space8,
   },
 });

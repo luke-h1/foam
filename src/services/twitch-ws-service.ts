@@ -48,6 +48,25 @@ interface EventSubMessage {
 
 type EventCallback = (data: EventSubMessage) => void;
 
+type EventSubscriptionSummary = {
+  id: string;
+  type: string;
+  transport: {
+    session_id?: string;
+  };
+};
+
+function hasEventSubscriptionData(
+  response: unknown,
+): response is { data: EventSubscriptionSummary[] } {
+  return (
+    typeof response === 'object' &&
+    response !== null &&
+    'data' in response &&
+    Array.isArray(response.data)
+  );
+}
+
 /**
  * TODO: abstract methods to a interface using discriminated unions so that we can type it based on the provider we want to consume
  */
@@ -412,13 +431,23 @@ class TwitchWsService {
         },
       });
 
-      const subscription = response.data[0];
-      if (subscription) {
-        TwitchWsService.activeSubscriptions.set(eventType, subscription.id);
-        logger.twitchWs.info(
-          `💜 Successfully subscribed to ${eventType} with ID: ${subscription.id}`,
+      if (!hasEventSubscriptionData(response)) {
+        throw new Error(
+          `Twitch EventSub ${eventType} subscription returned no subscription data`,
         );
       }
+
+      const subscription = response.data[0];
+      if (!subscription) {
+        throw new Error(
+          `Twitch EventSub ${eventType} subscription response was empty`,
+        );
+      }
+
+      TwitchWsService.activeSubscriptions.set(eventType, subscription.id);
+      logger.twitchWs.info(
+        `💜 Successfully subscribed to ${eventType} with ID: ${subscription.id}`,
+      );
     } catch (error) {
       logger.twitchWs.error(`💜 Failed to subscribe to ${eventType}:`, error);
       recordWarning({
@@ -528,6 +557,12 @@ class TwitchWsService {
       const response = await twitchService.listEventSubscriptions({
         status: 'enabled',
       });
+
+      if (!hasEventSubscriptionData(response)) {
+        throw new Error(
+          'Twitch EventSub active subscriptions returned no subscription data',
+        );
+      }
 
       logger.twitchWs.info(
         `💜 Found ${response.data.length} active subscriptions`,

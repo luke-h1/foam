@@ -2,10 +2,10 @@ import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { addMessages } from '@app/store/chatStore/messages';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { lightenColor } from '@app/utils/color/lightenColor';
-import { MutableRefObject, useCallback, useRef } from 'react';
+import { MutableRefObject, startTransition, useCallback, useRef } from 'react';
 
-const LIVE_BUFFER_FLUSH_INTERVAL_MS = 16;
-const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 50;
+const LIVE_BUFFER_FLUSH_INTERVAL_MS = 32;
+const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 80;
 const MAX_BUFFERED_MESSAGES = 600;
 
 const colorCache = new Map<string, string>();
@@ -71,6 +71,16 @@ function createModeratedBufferMessage(
   };
 }
 
+function publishBufferedMessages(messages: AnyMessage[]) {
+  if (messages.length === 0) {
+    return;
+  }
+
+  startTransition(() => {
+    addMessages(messages as ChatMessageType<never>[]);
+  });
+}
+
 interface UseChatMessagesOptions {
   isAtBottomRef: MutableRefObject<boolean>;
   isScrollingToBottomRef?: MutableRefObject<boolean>;
@@ -117,9 +127,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     const messagesToFlush = messageBufferRef.current;
     resetBuffer();
 
-    if (messagesToFlush.length > 0) {
-      addMessages(messagesToFlush as ChatMessageType<never>[]);
-    }
+    publishBufferedMessages(messagesToFlush);
 
     if (pendingUnreadCountRef.current > 0) {
       onUnreadIncrement(pendingUnreadCountRef.current);
@@ -217,9 +225,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     const bufferedMessages = messageBufferRef.current;
     resetBuffer();
 
-    if (bufferedMessages.length > 0) {
-      addMessages(bufferedMessages as ChatMessageType<never>[]);
-    }
+    publishBufferedMessages(bufferedMessages);
 
     if (pendingUnreadCountRef.current > 0) {
       onUnreadIncrement(pendingUnreadCountRef.current);

@@ -47,7 +47,7 @@ export const limitChannelCaches = (
   if (entries.length <= MAX_CACHED_CHANNELS) {
     return channelCaches;
   }
-  const sorted = entries.toSorted((a, b) => {
+  const sorted = [...entries].sort((a, b) => {
     if (a[0] === currentChannelId) {
       return -1;
     }

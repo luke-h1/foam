@@ -20,6 +20,8 @@ export interface Preferences {
   showInlineReplyContext: boolean;
   showRecentMessages: boolean;
   showUnreadJumpPill: boolean;
+  disableChat: boolean;
+  disableStream: boolean;
   emojiStyle: 'twitter' | 'google';
   show7TvEmotes: boolean;
   showBttvEmotes: boolean;
@@ -44,6 +46,8 @@ const initialPreferences: Preferences = {
   showInlineReplyContext: true,
   showRecentMessages: true,
   showUnreadJumpPill: true,
+  disableChat: false,
+  disableStream: false,
   emojiStyle: 'twitter',
   show7TvEmotes: true,
   showBttvEmotes: true,
@@ -72,17 +76,81 @@ export function usePreferences(): Preferences & {
   update: (payload: Partial<Preferences>) => void;
 } {
   const preferences = useSelector(() => preferences$.get()) as Preferences;
-  const update = useCallback((payload: Partial<Preferences>) => {
-    preferences$.assign({
-      ...payload,
-      updatedAt: Date.now(),
-    });
-  }, []);
+  const update = useUpdatePreferences();
 
   return {
     ...preferences,
     update,
   };
+}
+
+export type EmoteRenderPreferences = Pick<
+  Preferences,
+  | 'emojiStyle'
+  | 'show7TvEmotes'
+  | 'showBttvEmotes'
+  | 'showFFzEmotes'
+  | 'showChatterinoEmotes'
+  | 'showTwitchEmotes'
+  | 'showTwitchBadges'
+  | 'show7tvBadges'
+  | 'showFFzBadges'
+  | 'showBttvBadges'
+>;
+
+export type ChatRenderPreferences = EmoteRenderPreferences &
+  Pick<
+    Preferences,
+    | 'chatDensity'
+    | 'chatTimestamps'
+    | 'disableEmoteAnimations'
+    | 'highlightOwnMentions'
+    | 'showInlineReplyContext'
+    | 'showRecentMessages'
+    | 'showUnreadJumpPill'
+  >;
+
+export function useEmoteRenderPreferences(): EmoteRenderPreferences {
+  return useSelector(
+    () =>
+      ({
+        emojiStyle: preferences$.emojiStyle.get(),
+        show7TvEmotes: preferences$.show7TvEmotes.get(),
+        showBttvEmotes: preferences$.showBttvEmotes.get(),
+        showFFzEmotes: preferences$.showFFzEmotes.get(),
+        showChatterinoEmotes: preferences$.showChatterinoEmotes.get(),
+        showTwitchEmotes: preferences$.showTwitchEmotes.get(),
+        showTwitchBadges: preferences$.showTwitchBadges.get(),
+        show7tvBadges: preferences$.show7tvBadges.get(),
+        showFFzBadges: preferences$.showFFzBadges.get(),
+        showBttvBadges: preferences$.showBttvBadges.get(),
+      }) satisfies EmoteRenderPreferences,
+  );
+}
+
+export function useChatRenderPreferences(): ChatRenderPreferences {
+  return useSelector(
+    () =>
+      ({
+        chatDensity: preferences$.chatDensity.get(),
+        chatTimestamps: preferences$.chatTimestamps.get(),
+        disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
+        emojiStyle: preferences$.emojiStyle.get(),
+        highlightOwnMentions: preferences$.highlightOwnMentions.get(),
+        show7TvEmotes: preferences$.show7TvEmotes.get(),
+        showBttvEmotes: preferences$.showBttvEmotes.get(),
+        showFFzEmotes: preferences$.showFFzEmotes.get(),
+        showChatterinoEmotes: preferences$.showChatterinoEmotes.get(),
+        showInlineReplyContext: preferences$.showInlineReplyContext.get(),
+        showRecentMessages: preferences$.showRecentMessages.get(),
+        showTwitchEmotes: preferences$.showTwitchEmotes.get(),
+        showTwitchBadges: preferences$.showTwitchBadges.get(),
+        show7tvBadges: preferences$.show7tvBadges.get(),
+        showFFzBadges: preferences$.showFFzBadges.get(),
+        showBttvBadges: preferences$.showBttvBadges.get(),
+        showUnreadJumpPill: preferences$.showUnreadJumpPill.get(),
+      }) satisfies ChatRenderPreferences,
+  );
 }
 
 export function usePreference<K extends keyof Preferences>(
@@ -94,12 +162,12 @@ export function usePreference<K extends keyof Preferences>(
 export function useUpdatePreferences(): (
   payload: Partial<Preferences>,
 ) => void {
-  return (payload: Partial<Preferences>) => {
+  return useCallback((payload: Partial<Preferences>) => {
     preferences$.assign({
       ...payload,
       updatedAt: Date.now(),
     });
-  };
+  }, []);
 }
 
 export function replacePreferences(preferences: Preferences): void {

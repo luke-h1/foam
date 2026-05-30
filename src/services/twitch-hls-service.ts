@@ -16,7 +16,7 @@
  * 2. Use token + signature to construct HLS m3u8 URL
  */
 
-import axios from 'axios';
+import Client from './api/Client';
 
 export interface TwitchAccessToken {
   token: string;
@@ -44,6 +44,7 @@ const DEFAULT_OPTIONS: HlsStreamOptions = {
 
 // Twitch's public client ID used by their web player
 const TWITCH_GQL_CLIENT_ID = 'kimne78kx3ncx6brgo4mv6wki5h1ko';
+const twitchGqlApi = new Client({ baseURL: 'https://gql.twitch.tv' });
 
 /**
  * Fetches the access token and signature required for HLS streaming
@@ -73,8 +74,8 @@ export async function getChannelAccessToken(
     },
   };
 
-  const response = await axios.post<GqlPlaybackAccessTokenResponse>(
-    'https://gql.twitch.tv/gql',
+  const response = await twitchGqlApi.post<GqlPlaybackAccessTokenResponse>(
+    '/gql',
     query,
     {
       headers: {
@@ -84,7 +85,7 @@ export async function getChannelAccessToken(
     },
   );
 
-  const tokenData = response.data.data.streamPlaybackAccessToken;
+  const tokenData = response.data.streamPlaybackAccessToken;
 
   if (!tokenData) {
     throw new Error('Stream is offline or unavailable');

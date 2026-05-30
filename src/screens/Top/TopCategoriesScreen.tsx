@@ -10,12 +10,14 @@ import {
 } from '@app/components/FlashList/FlashList';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { Category, twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
@@ -41,7 +43,8 @@ export function TopCategoriesScreen({
   contentTopInset = 0,
   scrollY,
 }: TopCategoriesScreenProps = {}) {
-  const [refreshing, setRefreshing] = useState(false);
+  const refreshing$ = useObservable(false);
+  const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
   const skeletonData = useMemo(
     () => Array.from({ length: SKELETON_COUNT }),
@@ -73,6 +76,11 @@ export function TopCategoriesScreen({
     staleTime: 60_000,
     getNextPageParam: lastPage => lastPage?.pagination?.cursor,
     getPreviousPageParam: () => undefined,
+    refetchOnWindowFocus: true,
+  });
+
+  useRefetchOnForeground({
+    refetch,
   });
 
   const handleLoadMore = useCallback(async () => {
@@ -126,10 +134,10 @@ export function TopCategoriesScreen({
   }
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
+    refreshing$.set(true);
     await refetch();
-    setRefreshing(false);
-  }, [refetch]);
+    refreshing$.set(false);
+  }, [refetch, refreshing$]);
 
   const allCategories = useMemo(
     () => categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [],

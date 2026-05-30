@@ -2,19 +2,24 @@ import { Button } from '@app/components/Button/Button';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { ReactNativeLegal } from 'react-native-legal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { OtherInfoCard } from './components/OtherInfoCard';
 
 export function LicensesScreen() {
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScreenHeader
-        title="Licenses"
-        subtitle="Open-source software used by Foam"
-        size="medium"
-      />
+    <SafeAreaView
+      style={styles.container}
+      edges={Platform.OS === 'ios' ? [] : ['top']}
+    >
+      {Platform.OS === 'ios' ? null : (
+        <ScreenHeader
+          title="Licenses"
+          subtitle="Open-source software used by Foam"
+          size="medium"
+        />
+      )}
       <OtherInfoCard
         title="Open-source acknowledgements"
         body="Launch the native license list to inspect bundled dependencies and attribution details."

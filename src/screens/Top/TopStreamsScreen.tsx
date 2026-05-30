@@ -11,6 +11,7 @@ import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
+import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
@@ -266,6 +267,11 @@ export function TopStreamsScreen({
     getNextPageParam,
     getPreviousPageParam,
     ...twitchQueries.getTopStreamsInfinite(),
+    refetchOnWindowFocus: true,
+  });
+
+  useRefetchOnForeground({
+    refetch,
   });
 
   const handleLoadMore = useCallback(async () => {

@@ -149,7 +149,7 @@ export function EmptyState({
         {resolvedButton ? (
           <EmptyLayoutButton
             onPress={buttonOnPress}
-            style={buttonStyle}
+            style={[styles.buttonWrap, buttonStyle]}
             variant="default"
           >
             {resolvedButton}
@@ -180,6 +180,10 @@ const styles = {
     maxWidth: 420,
     minHeight: 360,
     width: '100%',
+  },
+  buttonWrap: {
+    alignSelf: 'center',
+    minWidth: 160,
   },
   heading: {
     paddingHorizontal: theme.space20,

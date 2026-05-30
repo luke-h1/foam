@@ -27,7 +27,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Keyboard, ScrollView, View, StyleSheet } from 'react-native';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { StreamerCard } from './components/StreamerCard';
 
 interface SearchHistoryItem {
@@ -307,7 +308,7 @@ export function SearchScreen() {
   const handleFocus = useCallback(() => setIsFocused(true), []);
   const handleBlur = useCallback(() => setIsFocused(false), []);
   const handleCancel = useCallback(() => {
-    Keyboard.dismiss();
+    void KeyboardController.dismiss();
     setIsFocused(false);
     handleClearSearch();
   }, [handleClearSearch]);

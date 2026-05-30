@@ -1,9 +1,10 @@
+import type { ListRenderItem } from '@app/components/FlashList/FlashList';
 import {
-  FlashList,
-  FlashListRef,
-  ListRenderItem,
-} from '@app/components/FlashList/FlashList';
-import { memo, MutableRefObject, RefObject, useEffect, useRef } from 'react';
+  LegendList,
+  type LegendListRef,
+  type LegendListRenderItemProps,
+} from '@legendapp/list';
+import { memo, RefObject, useCallback, useEffect, useRef } from 'react';
 import {
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -19,14 +20,20 @@ import {
 
 const CHAT_DRAW_DISTANCE = 320;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
+const CHAT_ESTIMATED_ITEM_SIZE = 24;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
+};
+const CHAT_MAINTAIN_SCROLL_AT_END = {
+  onDataChange: true,
+  onItemLayout: true,
+  onLayout: true,
 };
 
 interface ChatListProps {
   data: AnyChatMessageType[];
-  listRef: RefObject<FlashListRef<AnyChatMessageType> | null>;
-  isAtBottomRef: MutableRefObject<boolean>;
+  listRef: RefObject<LegendListRef | null>;
+  shouldMaintainScrollAtEnd: boolean;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollEndDrag: () => void;
@@ -36,6 +43,11 @@ interface ChatListProps {
   renderItem: ListRenderItem<AnyChatMessageType | undefined>;
   keyExtractor: (item: AnyChatMessageType | undefined, index: number) => string;
   getItemType: (item: AnyChatMessageType | undefined) => string;
+  getEstimatedItemSize?: (
+    index: number,
+    item: AnyChatMessageType | undefined,
+    type: string | undefined,
+  ) => number;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
@@ -45,7 +57,7 @@ export const ChatList = memo(
   ({
     data,
     listRef,
-    isAtBottomRef,
+    shouldMaintainScrollAtEnd,
     handleScroll,
     handleScrollBeginDrag,
     handleScrollEndDrag,
@@ -55,11 +67,11 @@ export const ChatList = memo(
     renderItem,
     keyExtractor,
     getItemType,
+    getEstimatedItemSize,
     contentContainerStyle,
     extraData,
     onViewableMessagesChange,
   }: ChatListProps) => {
-    const prevMessageCountRef = useRef(0);
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
 
     useEffect(() => {
@@ -81,30 +93,39 @@ export const ChatList = memo(
       },
     );
 
-    useEffect(() => {
-      const count = Array.isArray(data) ? data.length : 0;
-      if (
-        count > prevMessageCountRef.current &&
-        isAtBottomRef.current &&
-        listRef.current
-      ) {
-        listRef.current.scrollToEnd({ animated: false });
-      }
-      prevMessageCountRef.current = count;
-    }, [data, isAtBottomRef, listRef]);
+    const renderLegendItem = useCallback(
+      ({
+        item,
+        index,
+        extraData: legendExtraData,
+      }: LegendListRenderItemProps<
+        AnyChatMessageType | undefined,
+        string | undefined
+      >) =>
+        renderItem({
+          item,
+          index,
+          target: 'Cell',
+          extraData: legendExtraData,
+        }),
+      [renderItem],
+    );
 
     return (
-      <FlashList
+      <LegendList
         data={data}
         ref={listRef}
+        recycleItems
+        estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
         drawDistance={CHAT_DRAW_DISTANCE}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        maintainVisibleContentPosition={{
-          animateAutoScrollToBottom: false,
-          autoscrollToBottomThreshold: 0.001,
-          startRenderingFromBottom: true,
-        }}
+        getEstimatedItemSize={getEstimatedItemSize}
+        maintainVisibleContentPosition
+        maintainScrollAtEnd={
+          shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
+        }
+        maintainScrollAtEndThreshold={0.001}
         onScroll={handleScroll}
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}
@@ -112,7 +133,7 @@ export const ChatList = memo(
         onEndReached={handleEndReached}
         onEndReachedThreshold={CHAT_END_REACHED_THRESHOLD}
         onContentSizeChange={handleContentSizeChange}
-        renderItem={renderItem}
+        renderItem={renderLegendItem}
         extraData={extraData}
         style={styles.list}
         contentContainerStyle={contentContainerStyle}

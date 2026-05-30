@@ -19,12 +19,10 @@ export function SettingsOtherScreen() {
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
-        <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <ScreenHeader
-            title="Other"
-            subtitle="Support, release notes, and legal information for Foam."
-            size="medium"
-          />
+        <BodyScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={styles.iosContent}
+        >
           <Form.Section title="Support & Feedback">
             <Form.Link
               systemImage="info.circle"

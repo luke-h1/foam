@@ -3,7 +3,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { useRef } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
+import { Platform, ScrollView, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // todo - in the future, read from github md
@@ -49,13 +49,22 @@ export function ChangelogScreen() {
   useScrollToTop(scrollRef);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScreenHeader
-        title="Changelog"
-        subtitle="Recent product updates"
-        size="medium"
-      />
-      <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
+    <SafeAreaView
+      style={styles.container}
+      edges={Platform.OS === 'ios' ? [] : ['top']}
+    >
+      {Platform.OS === 'ios' ? null : (
+        <ScreenHeader
+          title="Changelog"
+          subtitle="Recent product updates"
+          size="medium"
+        />
+      )}
+      <ScrollView
+        ref={scrollRef}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.card}>
           <Text variant="mono" type="xs" style={styles.changelogText}>
             {mockChangelog}

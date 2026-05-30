@@ -12,12 +12,13 @@ import {
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 import { memo, RefObject, useCallback, useMemo } from 'react';
-import { Keyboard, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
   Directions,
   Gesture,
   GestureDetector,
 } from 'react-native-gesture-handler';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -105,9 +106,8 @@ export const ChatInputSection = memo(
     }));
 
     const dismissComposer = useCallback(() => {
-      inputRef?.current?.blur();
-      Keyboard.dismiss();
-    }, [inputRef]);
+      void KeyboardController.dismiss();
+    }, []);
 
     const composerPanGesture = useMemo(
       () =>
@@ -218,9 +218,11 @@ export const ChatInputSection = memo(
                   autoComplete="off"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  blurOnSubmit
                   placeholderTextColor="#8E8E93"
                   onSubmitEditing={onSubmit}
                   returnKeyType="send"
+                  submitBehavior="blurAndSubmit"
                   prioritizeChannelEmotes
                 />
               </View>

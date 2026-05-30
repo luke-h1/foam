@@ -1,0 +1,3 @@
+const CUSTOM_TAB_BAR_HEIGHT = 104;
+
+export { CUSTOM_TAB_BAR_HEIGHT };

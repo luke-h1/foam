@@ -1,6 +1,7 @@
 import { impact, notification } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
-import { useCallback, useState } from 'react';
+import { useObservable, useSelector } from '@legendapp/state/react';
+import { useCallback } from 'react';
 import { Platform, RefreshControl as RNRefreshControl } from 'react-native';
 
 interface Props {
@@ -9,7 +10,8 @@ interface Props {
 }
 
 export function RefreshControl({ onRefresh, offset }: Props) {
-  const [refreshing, setRefreshing] = useState(false);
+  const refreshing$ = useObservable(false);
+  const refreshing = useSelector(refreshing$);
 
   const tintColor = theme.colorGrass;
 
@@ -18,15 +20,15 @@ export function RefreshControl({ onRefresh, offset }: Props) {
       void impact('medium');
     }
 
-    setRefreshing(true);
+    refreshing$.set(true);
     await onRefresh();
 
     if (Platform.OS !== 'web') {
       void notification('success');
     }
 
-    setRefreshing(false);
-  }, [onRefresh]);
+    refreshing$.set(false);
+  }, [onRefresh, refreshing$]);
 
   return (
     <RNRefreshControl

@@ -15,14 +15,8 @@ import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { BLURHASH } from '@app/utils/image/image-cache';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
+import { BottomSheet } from '@expo/ui';
 import {
-  type DidDismissEvent,
-  type DidPresentEvent,
-  TrueSheet,
-  type TrueSheetProps,
-} from '@lodev09/react-native-true-sheet';
-import {
-  forwardRef,
   memo,
   startTransition,
   useCallback,
@@ -42,6 +36,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 import {
   buildEmoteMenuProviders,
   type EmoteMenuIcon,
@@ -61,7 +56,6 @@ const RAIL_WIDTH = 52;
 const PROVIDER_BAR_HEIGHT = 54;
 const SEARCH_BAR_HEIGHT = 48;
 const SHEET_DETENT = 0.78;
-const MENU_BACKGROUND = '#0b0b0d';
 const MENU_HEADER_BACKGROUND = 'rgba(128, 128, 128, 0.06)';
 const MENU_ACTIVE_SURFACE = 'rgba(128, 128, 128, 0.32)';
 const MENU_BORDER = 'rgba(255, 255, 255, 0.10)';
@@ -86,7 +80,9 @@ interface SearchFilterBoxProps {
   value?: string;
 }
 
-interface EmoteSheetProps extends Omit<TrueSheetProps, 'children' | 'sizes'> {
+interface EmoteSheetProps {
+  isPresented: boolean;
+  onDismiss: () => void;
   onEmoteSelect?: (item: EmotePickerItem) => void;
 }
 
@@ -424,66 +420,57 @@ const SetHeader = memo(({ set }: SetHeaderProps) => {
 
 SetHeader.displayName = 'SetHeader';
 
-const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
-  ({ onEmoteSelect, onDidDismiss, onDidPresent, ...sheetProps }, ref) => {
-    const { bottom: bottomInset } = useSafeAreaInsets();
-    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-    const flashListRef = useRef<FlashListRef<EmoteMenuListItem>>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const deferredSearchQuery = useDeferredValue(searchQuery);
-    const [activeProviderId, setActiveProviderId] =
-      useState<EmoteMenuProviderId | null>(null);
-    const [activeSetId, setActiveSetId] = useState<string | null>(null);
-    const [isSheetPresented, setIsSheetPresented] = useState(false);
+const EmoteSheetComponent = ({
+  isPresented,
+  onDismiss,
+  onEmoteSelect,
+}: EmoteSheetProps) => {
+  const { bottom: bottomInset } = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const sheetWidth = Math.max(280, screenWidth - theme.space16 * 2);
+  const flashListRef = useRef<FlashListRef<EmoteMenuListItem>>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const [activeProviderId, setActiveProviderId] =
+    useState<EmoteMenuProviderId | null>(null);
+  const [activeSetId, setActiveSetId] = useState<string | null>(null);
 
-    const {
-      bttvChannelEmotes,
-      bttvGlobalEmotes,
-      ffzChannelEmotes,
-      ffzGlobalEmotes,
-      sevenTvChannelEmotes,
-      sevenTvGlobalEmotes,
-      twitchChannelEmotes,
-      twitchGlobalEmotes,
-      twitchSubscriberEmotes,
-    } = useCurrentEmoteData();
+  const {
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    sevenTvChannelEmotes,
+    sevenTvGlobalEmotes,
+    twitchChannelEmotes,
+    twitchGlobalEmotes,
+    twitchSubscriberEmotes,
+  } = useCurrentEmoteData();
 
-    const gridWidth = screenWidth - GRID_HORIZONTAL_PADDING * 2 - RAIL_WIDTH;
-    const columns = Math.max(
-      4,
-      Math.min(
-        7,
-        Math.floor((gridWidth + CELL_GAP) / (MIN_CELL_SIZE + CELL_GAP)),
-      ),
-    );
-    const cellSize = Math.min(
-      MAX_CELL_SIZE,
-      Math.max(MIN_CELL_SIZE, (gridWidth - CELL_GAP * (columns - 1)) / columns),
-    );
-    const bodyHeight = Math.max(
-      360,
-      screenHeight * SHEET_DETENT -
-        PROVIDER_BAR_HEIGHT -
-        SEARCH_BAR_HEIGHT -
-        56 -
-        bottomInset,
-    );
+  const gridWidth = sheetWidth - GRID_HORIZONTAL_PADDING * 2 - RAIL_WIDTH;
+  const columns = Math.max(
+    4,
+    Math.min(
+      7,
+      Math.floor((gridWidth + CELL_GAP) / (MIN_CELL_SIZE + CELL_GAP)),
+    ),
+  );
+  const cellSize = Math.min(
+    MAX_CELL_SIZE,
+    Math.max(MIN_CELL_SIZE, (gridWidth - CELL_GAP * (columns - 1)) / columns),
+  );
+  const bodyHeight = Math.max(
+    360,
+    screenHeight * SHEET_DETENT -
+      PROVIDER_BAR_HEIGHT -
+      SEARCH_BAR_HEIGHT -
+      56 -
+      bottomInset,
+  );
 
-    const providers = useMemo(
-      () =>
-        buildEmoteMenuProviders({
-          bttvChannelEmotes,
-          bttvGlobalEmotes,
-          ffzChannelEmotes,
-          ffzGlobalEmotes,
-          sevenTvChannelEmotes,
-          sevenTvGlobalEmotes,
-          twitchChannelEmotes,
-          twitchGlobalEmotes,
-          twitchSubscriberEmotes,
-          emojiSets: EMOJI_MENU_SECTIONS,
-        }),
-      [
+  const providers = useMemo(
+    () =>
+      buildEmoteMenuProviders({
         bttvChannelEmotes,
         bttvGlobalEmotes,
         ffzChannelEmotes,
@@ -493,327 +480,315 @@ const EmoteSheetComponent = forwardRef<TrueSheet, EmoteSheetProps>(
         twitchChannelEmotes,
         twitchGlobalEmotes,
         twitchSubscriberEmotes,
-      ],
-    );
+        emojiSets: EMOJI_MENU_SECTIONS,
+      }),
+    [
+      bttvChannelEmotes,
+      bttvGlobalEmotes,
+      ffzChannelEmotes,
+      ffzGlobalEmotes,
+      sevenTvChannelEmotes,
+      sevenTvGlobalEmotes,
+      twitchChannelEmotes,
+      twitchGlobalEmotes,
+      twitchSubscriberEmotes,
+    ],
+  );
 
-    useEffect(() => {
-      if (providers.length === 0) {
-        setActiveProviderId(null);
+  useEffect(() => {
+    if (providers.length === 0) {
+      setActiveProviderId(null);
+      return;
+    }
+
+    const firstProvider = providers[0];
+
+    if (
+      firstProvider &&
+      (!activeProviderId ||
+        !providers.some(provider => provider.id === activeProviderId))
+    ) {
+      setActiveProviderId(firstProvider.id);
+    }
+  }, [activeProviderId, providers]);
+
+  const activeProvider = useMemo(
+    () => providers.find(provider => provider.id === activeProviderId),
+    [activeProviderId, providers],
+  );
+
+  const filteredSets = useMemo(
+    () => filterProviderSets(activeProvider, deferredSearchQuery),
+    [activeProvider, deferredSearchQuery],
+  );
+
+  useEffect(() => {
+    const nextSetId = filteredSets[0]?.id ?? null;
+    setActiveSetId(currentSetId =>
+      currentSetId && filteredSets.some(set => set.id === currentSetId)
+        ? currentSetId
+        : nextSetId,
+    );
+  }, [filteredSets]);
+
+  useEffect(() => {
+    flashListRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [activeProviderId, deferredSearchQuery]);
+
+  const { items: listItems, setStartIndices } = useMemo(
+    () => flattenProviderSets(filteredSets, columns),
+    [columns, filteredSets],
+  );
+
+  const setIndexMap = useMemo(() => {
+    const indexMap = new Map<string, number>();
+    filteredSets.forEach((set, index) => {
+      const startIndex = setStartIndices[index];
+      if (typeof startIndex === 'number') {
+        indexMap.set(set.id, startIndex);
+      }
+    });
+    return indexMap;
+  }, [filteredSets, setStartIndices]);
+
+  const setMap = useMemo(
+    () => new Map(filteredSets.map(set => [set.id, set])),
+    [filteredSets],
+  );
+
+  const preloadVisibleEmotes = useMemo(() => {
+    const visibleSet =
+      (activeSetId ? setMap.get(activeSetId) : undefined) ?? filteredSets[0];
+
+    return (
+      visibleSet?.emotes
+        .filter((item): item is SanitisedEmote => typeof item === 'object')
+        .slice(0, columns) ?? []
+    );
+  }, [activeSetId, columns, filteredSets, setMap]);
+
+  useEffect(() => {
+    if (!isPresented || preloadVisibleEmotes.length === 0) {
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    void cacheEmoteImages(
+      preloadVisibleEmotes,
+      controller.signal,
+      'interactive',
+    );
+    return () => controller.abort();
+  }, [isPresented, preloadVisibleEmotes]);
+
+  const handleDismiss = useCallback(() => {
+    setSearchQuery('');
+    onDismiss();
+  }, [onDismiss]);
+
+  const handleEmotePress = useCallback(
+    (item: EmotePickerItem) => {
+      onEmoteSelect?.(item);
+    },
+    [onEmoteSelect],
+  );
+
+  const handleScrollToSet = useCallback(
+    (setId: string) => {
+      const index = setIndexMap.get(setId);
+      if (typeof index !== 'number') {
         return;
       }
 
-      const firstProvider = providers[0];
-
-      if (
-        firstProvider &&
-        (!activeProviderId ||
-          !providers.some(provider => provider.id === activeProviderId))
-      ) {
-        setActiveProviderId(firstProvider.id);
-      }
-    }, [activeProviderId, providers]);
-
-    const activeProvider = useMemo(
-      () => providers.find(provider => provider.id === activeProviderId),
-      [activeProviderId, providers],
-    );
-
-    const filteredSets = useMemo(
-      () => filterProviderSets(activeProvider, deferredSearchQuery),
-      [activeProvider, deferredSearchQuery],
-    );
-
-    useEffect(() => {
-      const nextSetId = filteredSets[0]?.id ?? null;
-      setActiveSetId(currentSetId =>
-        currentSetId && filteredSets.some(set => set.id === currentSetId)
-          ? currentSetId
-          : nextSetId,
-      );
-    }, [filteredSets]);
-
-    useEffect(() => {
-      flashListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    }, [activeProviderId, deferredSearchQuery]);
-
-    const { items: listItems, setStartIndices } = useMemo(
-      () => flattenProviderSets(filteredSets, columns),
-      [columns, filteredSets],
-    );
-
-    const setIndexMap = useMemo(() => {
-      const indexMap = new Map<string, number>();
-      filteredSets.forEach((set, index) => {
-        const startIndex = setStartIndices[index];
-        if (typeof startIndex === 'number') {
-          indexMap.set(set.id, startIndex);
-        }
+      setActiveSetId(setId);
+      void flashListRef.current?.scrollToIndex({
+        index,
+        animated: true,
       });
-      return indexMap;
-    }, [filteredSets, setStartIndices]);
+    },
+    [setIndexMap],
+  );
 
-    const setMap = useMemo(
-      () => new Map(filteredSets.map(set => [set.id, set])),
-      [filteredSets],
-    );
+  const handleProviderPress = useCallback((providerId: EmoteMenuProviderId) => {
+    startTransition(() => {
+      setActiveProviderId(providerId);
+    });
+  }, []);
 
-    const preloadVisibleEmotes = useMemo(() => {
-      const visibleSet =
-        (activeSetId ? setMap.get(activeSetId) : undefined) ?? filteredSets[0];
+  const handleSearchChange = useCallback((value?: string) => {
+    startTransition(() => {
+      setSearchQuery(value ?? '');
+    });
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
+  const onViewableItemsChanged = useCallback(
+    (info: {
+      viewableItems: { index: number | null; item: EmoteMenuListItem }[];
+    }) => {
+      const firstVisible = info.viewableItems
+        .filter(item => item.index != null)
+        .sort((left, right) => (left.index ?? 0) - (right.index ?? 0))[0];
+
+      if (!firstVisible?.item?.setId) {
+        return;
+      }
+
+      setActiveSetId(firstVisible.item.setId);
+    },
+    [],
+  );
+
+  const viewabilityConfig = useMemo(
+    () => ({
+      itemVisiblePercentThreshold: 10,
+      minimumViewTime: 50,
+    }),
+    [],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: EmoteMenuListItem }) => {
+      if (item.type === 'header') {
+        const set = setMap.get(item.setId);
+        if (!set) {
+          return null;
+        }
+
+        return <SetHeader set={set} />;
+      }
 
       return (
-        visibleSet?.emotes
-          .filter((item): item is SanitisedEmote => typeof item === 'object')
-          .slice(0, columns) ?? []
+        <EmoteRow
+          cellSize={cellSize}
+          items={item.items ?? []}
+          onPress={handleEmotePress}
+        />
       );
-    }, [activeSetId, columns, filteredSets, setMap]);
+    },
+    [cellSize, handleEmotePress, setMap],
+  );
 
-    useEffect(() => {
-      if (!isSheetPresented || preloadVisibleEmotes.length === 0) {
-        return undefined;
-      }
+  const showPlaceholder = providers.length === 0;
+  const showEmpty = providers.length > 0 && filteredSets.length === 0;
 
-      const controller = new AbortController();
-      void cacheEmoteImages(
-        preloadVisibleEmotes,
-        controller.signal,
-        'interactive',
-      );
-      return () => controller.abort();
-    }, [isSheetPresented, preloadVisibleEmotes]);
-
-    const handleDidPresent = useCallback(
-      (event: DidPresentEvent) => {
-        setIsSheetPresented(true);
-        onDidPresent?.(event);
-      },
-      [onDidPresent],
-    );
-
-    const handleDidDismiss = useCallback(
-      (event: DidDismissEvent) => {
-        setIsSheetPresented(false);
-        setSearchQuery('');
-        onDidDismiss?.(event);
-      },
-      [onDidDismiss],
-    );
-
-    const handleEmotePress = useCallback(
-      (item: EmotePickerItem) => {
-        onEmoteSelect?.(item);
-      },
-      [onEmoteSelect],
-    );
-
-    const handleScrollToSet = useCallback(
-      (setId: string) => {
-        const index = setIndexMap.get(setId);
-        if (typeof index !== 'number') {
-          return;
-        }
-
-        setActiveSetId(setId);
-        void flashListRef.current?.scrollToIndex({
-          index,
-          animated: true,
-        });
-      },
-      [setIndexMap],
-    );
-
-    const handleProviderPress = useCallback(
-      (providerId: EmoteMenuProviderId) => {
-        startTransition(() => {
-          setActiveProviderId(providerId);
-        });
-      },
-      [],
-    );
-
-    const handleSearchChange = useCallback((value?: string) => {
-      startTransition(() => {
-        setSearchQuery(value ?? '');
-      });
-    }, []);
-
-    const handleClearSearch = useCallback(() => {
-      setSearchQuery('');
-    }, []);
-
-    const onViewableItemsChanged = useCallback(
-      (info: {
-        viewableItems: { index: number | null; item: EmoteMenuListItem }[];
-      }) => {
-        const firstVisible = info.viewableItems
-          .filter(item => item.index != null)
-          .sort((left, right) => (left.index ?? 0) - (right.index ?? 0))[0];
-
-        if (!firstVisible?.item?.setId) {
-          return;
-        }
-
-        setActiveSetId(firstVisible.item.setId);
-      },
-      [],
-    );
-
-    const viewabilityConfig = useMemo(
-      () => ({
-        itemVisiblePercentThreshold: 10,
-        minimumViewTime: 50,
-      }),
-      [],
-    );
-
-    const renderItem = useCallback(
-      ({ item }: { item: EmoteMenuListItem }) => {
-        if (item.type === 'header') {
-          const set = setMap.get(item.setId);
-          if (!set) {
-            return null;
-          }
-
-          return <SetHeader set={set} />;
-        }
-
-        return (
-          <EmoteRow
-            cellSize={cellSize}
-            items={item.items ?? []}
-            onPress={handleEmotePress}
-          />
-        );
-      },
-      [cellSize, handleEmotePress, setMap],
-    );
-
-    const showPlaceholder = providers.length === 0;
-    const showEmpty = providers.length > 0 && filteredSets.length === 0;
-
-    return (
-      <TrueSheet
-        ref={ref}
-        detents={[SHEET_DETENT]}
-        cornerRadius={8}
-        grabber={false}
-        blurTint="dark"
-        backgroundColor={MENU_BACKGROUND}
-        {...sheetProps}
-        onDidDismiss={handleDidDismiss}
-        onDidPresent={handleDidPresent}
+  return (
+    <BottomSheet
+      isPresented={isPresented}
+      onDismiss={handleDismiss}
+      showDragIndicator
+      snapPoints={[{ fraction: SHEET_DETENT }, 'full']}
+      testID="chat-emote-sheet"
+    >
+      <View
+        style={[
+          styles.container,
+          { paddingBottom: bottomInset + theme.space20, width: sheetWidth },
+        ]}
       >
-        <View
-          style={[
-            styles.container,
-            { paddingBottom: bottomInset + theme.space20 },
-          ]}
-        >
-          <View style={styles.grabberContainer}>
-            <View style={styles.grabber} />
-          </View>
-
-          <View style={styles.header}>
-            {Platform.OS === 'ios' ? (
-              <BlurView
-                intensity={32}
-                style={StyleSheet.absoluteFill}
-                tint="dark"
+        <View style={styles.header}>
+          {Platform.OS === 'ios' ? (
+            <BlurView
+              intensity={32}
+              style={StyleSheet.absoluteFill}
+              tint="dark"
+            />
+          ) : null}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.providerBarContent}
+            style={styles.providerBar}
+            nestedScrollEnabled
+          >
+            {providers.map(provider => (
+              <ProviderChip
+                key={provider.id}
+                isActive={provider.id === activeProviderId}
+                onPress={() => handleProviderPress(provider.id)}
+                provider={provider}
               />
-            ) : null}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.providerBarContent}
-              style={styles.providerBar}
-              nestedScrollEnabled
-            >
-              {providers.map(provider => (
-                <ProviderChip
-                  key={provider.id}
-                  isActive={provider.id === activeProviderId}
-                  onPress={() => handleProviderPress(provider.id)}
-                  provider={provider}
-                />
-              ))}
-            </ScrollView>
+            ))}
+          </ScrollView>
 
-            <View style={styles.searchContainer}>
-              <View style={styles.searchRow}>
-                <EmoteSearchFilter
-                  placeholder="Search emotes"
-                  onChange={handleSearchChange}
-                  onSubmitEditing={() => handleSearchChange(searchQuery)}
-                  rightOnPress={handleClearSearch}
-                  value={searchQuery}
-                />
-              </View>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchRow}>
+              <EmoteSearchFilter
+                placeholder="Search emotes"
+                onChange={handleSearchChange}
+                onSubmitEditing={() => handleSearchChange(searchQuery)}
+                rightOnPress={handleClearSearch}
+                value={searchQuery}
+              />
             </View>
           </View>
-
-          {showPlaceholder ? (
-            <View style={styles.placeholderContent}>
-              <ActivityIndicator size="large" color={theme.color.text.dark} />
-            </View>
-          ) : (
-            <View style={[styles.body, { height: bodyHeight }]}>
-              <View style={[styles.contentPane, { height: bodyHeight }]}>
-                {showEmpty ? (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyStateTitle}>No emotes found</Text>
-                    <Text style={styles.emptyStateBody}>
-                      Try a shorter filter or switch providers.
-                    </Text>
-                  </View>
-                ) : (
-                  <FlashList<EmoteMenuListItem>
-                    ref={flashListRef}
-                    data={listItems}
-                    renderItem={renderItem}
-                    keyExtractor={item => item.key}
-                    getItemType={item => item.type}
-                    onViewableItemsChanged={onViewableItemsChanged}
-                    viewabilityConfig={viewabilityConfig}
-                    contentContainerStyle={styles.listContent}
-                    drawDistance={96}
-                    removeClippedSubviews
-                    showsVerticalScrollIndicator={false}
-                    nestedScrollEnabled
-                    style={styles.list}
-                  />
-                )}
-              </View>
-
-              <View style={[styles.rail, { height: bodyHeight }]}>
-                {Platform.OS === 'ios' ? (
-                  <BlurView
-                    intensity={28}
-                    style={StyleSheet.absoluteFill}
-                    tint="dark"
-                  />
-                ) : null}
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.railContent}
-                  nestedScrollEnabled
-                >
-                  {filteredSets.map(set => (
-                    <SetRailButton
-                      key={set.id}
-                      isActive={set.id === activeSetId}
-                      onPress={() => handleScrollToSet(set.id)}
-                      set={set}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
-            </View>
-          )}
         </View>
-      </TrueSheet>
-    );
-  },
-);
+
+        {showPlaceholder ? (
+          <View style={styles.placeholderContent}>
+            <ActivityIndicator size="large" color={theme.color.text.dark} />
+          </View>
+        ) : (
+          <View style={[styles.body, { height: bodyHeight }]}>
+            <View style={[styles.contentPane, { height: bodyHeight }]}>
+              {showEmpty ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateTitle}>No emotes found</Text>
+                  <Text style={styles.emptyStateBody}>
+                    Try a shorter filter or switch providers.
+                  </Text>
+                </View>
+              ) : (
+                <FlashList<EmoteMenuListItem>
+                  ref={flashListRef}
+                  data={listItems}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.key}
+                  getItemType={item => item.type}
+                  onViewableItemsChanged={onViewableItemsChanged}
+                  viewabilityConfig={viewabilityConfig}
+                  contentContainerStyle={styles.listContent}
+                  drawDistance={96}
+                  removeClippedSubviews
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled
+                  style={styles.list}
+                />
+              )}
+            </View>
+
+            <View style={[styles.rail, { height: bodyHeight }]}>
+              {Platform.OS === 'ios' ? (
+                <BlurView
+                  intensity={28}
+                  style={StyleSheet.absoluteFill}
+                  tint="dark"
+                />
+              ) : null}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.railContent}
+                nestedScrollEnabled
+              >
+                {filteredSets.map(set => (
+                  <SetRailButton
+                    key={set.id}
+                    isActive={set.id === activeSetId}
+                    onPress={() => handleScrollToSet(set.id)}
+                    set={set}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        )}
+      </View>
+    </BottomSheet>
+  );
+};
 
 EmoteSheetComponent.displayName = 'EmoteSheet';
 export const EmoteSheet = memo(EmoteSheetComponent);
@@ -826,7 +801,8 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   container: {
-    backgroundColor: MENU_BACKGROUND,
+    ...chatSheetSurface,
+    backgroundColor: CHAT_SHEET_BACKGROUND,
     flex: 1,
   },
   contentPane: {
@@ -887,18 +863,6 @@ const styles = StyleSheet.create({
   },
   ffzTextIconActive: {
     color: theme.color.text.dark,
-  },
-  grabber: {
-    backgroundColor:
-      Platform.OS === 'ios' ? 'rgba(255,255,255,0.18)' : theme.colorGrey,
-    borderRadius: 2,
-    height: 4,
-    width: 36,
-  },
-  grabberContainer: {
-    alignItems: 'center',
-    paddingBottom: 4,
-    paddingTop: theme.space8,
   },
   header: {
     backgroundColor: MENU_HEADER_BACKGROUND,

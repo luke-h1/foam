@@ -1,5 +1,6 @@
 import { impact, notification } from '@app/lib/haptics';
-import { ReactElement, useCallback, useState } from 'react';
+import { useObservable, useSelector } from '@legendapp/state/react';
+import { ReactElement, useCallback } from 'react';
 import { Platform, RefreshControl, RefreshControlProps } from 'react-native';
 import {
   SharedValue,
@@ -39,16 +40,17 @@ export function useRefresh({ onRefresh }: UseRefreshOptions): UseRefreshResult {
   const scrollY = useSharedValue(0);
   const isRefreshingShared = useSharedValue(false);
   const hasTriggeredHaptic = useSharedValue(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isRefreshing$ = useObservable(false);
+  const isRefreshing = useSelector(isRefreshing$);
 
   const handleRefresh = useCallback(async () => {
     isRefreshingShared.value = true;
-    setIsRefreshing(true);
+    isRefreshing$.set(true);
     await onRefresh();
     fireCompleteHaptic();
     isRefreshingShared.value = false;
-    setIsRefreshing(false);
-  }, [onRefresh, isRefreshingShared]);
+    isRefreshing$.set(false);
+  }, [isRefreshing$, onRefresh, isRefreshingShared]);
 
   const refreshCallback = useCallback(() => {
     void handleRefresh();

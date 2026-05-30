@@ -154,6 +154,7 @@ export function ProfileCard() {
         ref={scrollRef}
         style={styles.main}
         contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="automatic"
       >
         <ProfileSection>
           <View style={styles.signInPrompt}>

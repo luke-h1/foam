@@ -2,16 +2,53 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import * as Form from '@app/components/Form/Form';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { Switch } from '@app/components/Switch/Switch';
 import {
   SettingsLinkRow,
   SettingsSection,
+  SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
+import { Text } from '@app/components/ui/Text/Text';
+import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
 
+function IosToggleRow({
+  label,
+  subtitle,
+  value,
+  onValueChange,
+}: {
+  label: string;
+  subtitle?: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}) {
+  return (
+    <View style={styles.iosToggleRow}>
+      <View style={styles.iosToggleCopy}>
+        <Text color="gray" style={styles.iosToggleLabel} weight="semibold">
+          {label}
+        </Text>
+        {subtitle ? (
+          <Text color="gray.textLow" style={styles.iosToggleSubtitle} type="xs">
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+      <Switch
+        accessibilityLabel={label}
+        value={value}
+        onValueChange={onValueChange}
+      />
+    </View>
+  );
+}
+
 export function SettingsDevtoolsScreen() {
+  const { disableChat, disableStream, update } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -19,8 +56,10 @@ export function SettingsDevtoolsScreen() {
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
-        <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <ScreenHeader title="Dev Tools" size="medium" />
+        <BodyScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          contentContainerStyle={styles.iosContent}
+        >
           <Form.Section title="Diagnostics">
             <Form.Link
               systemImage="stethoscope"
@@ -34,6 +73,24 @@ export function SettingsDevtoolsScreen() {
             >
               Remote Config
             </Form.Link>
+          </Form.Section>
+          <Form.Section title="Stream Diagnostics">
+            <Form.FormItem style={styles.iosToggleItem}>
+              <IosToggleRow
+                label="Disable Stream"
+                subtitle="Remove the Twitch WebView to isolate chat performance"
+                value={disableStream}
+                onValueChange={value => update({ disableStream: value })}
+              />
+            </Form.FormItem>
+            <Form.FormItem style={styles.iosToggleItem}>
+              <IosToggleRow
+                label="Disable Chat"
+                subtitle="Remove chat rendering to isolate the player"
+                value={disableChat}
+                onValueChange={value => update({ disableChat: value })}
+              />
+            </Form.FormItem>
           </Form.Section>
           <Form.Section title="Developer Tools">
             <Form.Link
@@ -95,6 +152,23 @@ export function SettingsDevtoolsScreen() {
           />
         </SettingsSection>
 
+        <SettingsSection title="Stream Diagnostics">
+          <SettingsToggleRow
+            title="Disable Stream"
+            subtitle="Remove the Twitch WebView to isolate chat performance"
+            icon={{ icon: 'video.slash', color: theme.colorOrange }}
+            value={disableStream}
+            onValueChange={value => update({ disableStream: value })}
+          />
+          <SettingsToggleRow
+            title="Disable Chat"
+            subtitle="Remove chat rendering to isolate the player"
+            icon={{ icon: 'message', color: theme.colorPlum }}
+            value={disableChat}
+            onValueChange={value => update({ disableChat: value })}
+          />
+        </SettingsSection>
+
         <SettingsSection title="Developer Tools">
           <SettingsLinkRow
             title="Debug"
@@ -127,6 +201,27 @@ export function SettingsDevtoolsScreen() {
 }
 
 const styles = StyleSheet.create({
+  iosToggleCopy: {
+    flex: 1,
+    gap: theme.space4,
+    minWidth: 0,
+  },
+  iosToggleItem: {
+    paddingVertical: theme.space8,
+  },
+  iosToggleLabel: {
+    lineHeight: 20,
+  },
+  iosToggleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space16,
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  iosToggleSubtitle: {
+    lineHeight: 18,
+  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,

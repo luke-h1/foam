@@ -19,7 +19,7 @@ import {
 } from '@app/utils/image/image-cache';
 import { useSelector } from '@legendapp/state/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, View, StyleSheet } from 'react-native';
+import { Alert, Platform, View, StyleSheet } from 'react-native';
 
 type TabType = 'images' | 'badges' | 'paints';
 
@@ -464,11 +464,13 @@ export function CachedImagesScreen() {
   return (
     <View style={styles.screenContainer}>
       <View style={styles.container}>
-        <ScreenHeader
-          title="Cache Manager"
-          subtitle={getSubtitle()}
-          size="medium"
-        />
+        {Platform.OS === 'ios' ? null : (
+          <ScreenHeader
+            title="Cache Manager"
+            subtitle={getSubtitle()}
+            size="medium"
+          />
+        )}
 
         {/* Content List with Header */}
         {renderContent()}

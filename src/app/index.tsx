@@ -2,12 +2,11 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
-  const router = useRouter();
 
   if (!ready) {
     return null;

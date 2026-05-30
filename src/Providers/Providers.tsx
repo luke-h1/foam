@@ -22,6 +22,7 @@ import { PropsWithChildren } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { PortalProvider } from 'react-native-teleport';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
 import {
   initialWindowMetrics,
@@ -30,6 +31,7 @@ import {
 import { Toaster } from 'sonner-native';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 import { theme } from '@app/styles/themes';
+import { AnalyticsProvider } from './AnalyticsProvider';
 
 function QueryProviderWithAuth({ children }: PropsWithChildren) {
   const { user } = useAuthContext();
@@ -115,18 +117,22 @@ export function Providers({ children }: PropsWithChildren) {
                   onReset={() => setRecoveredFromError(true)}
                 >
                   <KeyboardProvider>
-                    {__DEV__ ? <DevTools /> : null}
-                    <QueryProviderWithAuth>
-                      <PressablesConfig
-                        globalHandlers={{
-                          onPress: () => {
-                            void selection();
-                          },
-                        }}
-                      >
-                        {children}
-                      </PressablesConfig>
-                    </QueryProviderWithAuth>
+                    <PortalProvider>
+                      {__DEV__ ? <DevTools /> : null}
+                      <AnalyticsProvider>
+                        <QueryProviderWithAuth>
+                          <PressablesConfig
+                            globalHandlers={{
+                              onPress: () => {
+                                void selection();
+                              },
+                            }}
+                          >
+                            {children}
+                          </PressablesConfig>
+                        </QueryProviderWithAuth>
+                      </AnalyticsProvider>
+                    </PortalProvider>
                   </KeyboardProvider>
                 </ErrorBoundary>
               </GestureHandlerRootView>

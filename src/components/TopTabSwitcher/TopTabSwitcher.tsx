@@ -1,5 +1,5 @@
 import { selection } from '@app/lib/haptics';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   LayoutChangeEvent,
   StyleSheet,
@@ -38,8 +38,7 @@ export function TopTabSwitcher({
   const currentIndexSV = useSharedValue(currentIndex);
   const dragStartIndex = useSharedValue(currentIndex);
   const isDragging = useSharedValue(false);
-  const [tabWidth, setTabWidth] = useState(0);
-  const widthRef = useRef(0);
+  const tabWidth = items.length > 0 ? width / items.length : 0;
 
   useEffect(() => {
     currentIndexSV.value = currentIndex;
@@ -50,20 +49,8 @@ export function TopTabSwitcher({
     });
   }, [currentIndex, currentIndexSV, tabWidth, translateX]);
 
-  useEffect(() => {
-    if (items.length === 0) {
-      setTabWidth(0);
-      return;
-    }
-
-    const nextWidth = widthRef.current / items.length;
-    setTabWidth(nextWidth);
-  }, [items.length, width]);
-
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    const nextWidth = event.nativeEvent.layout.width;
-    widthRef.current = nextWidth;
-    setWidth(nextWidth);
+    setWidth(event.nativeEvent.layout.width);
   }, []);
 
   const handleSelect = useCallback(

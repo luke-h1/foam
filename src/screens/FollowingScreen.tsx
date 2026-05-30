@@ -8,13 +8,13 @@ import { SymbolView } from 'expo-symbols';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
-import { ScrollAdaptiveHeader } from '@app/components/ScrollAdaptiveHeader/ScrollAdaptiveHeader';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/TabBarBackground';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { useRefresh } from '@app/hooks/useRefresh';
+import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
 import {
@@ -23,8 +23,8 @@ import {
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Redirect } from 'expo-router';
-import { useMemo, useCallback, useRef, useEffect, type JSX } from 'react';
+import { router } from 'expo-router';
+import { useMemo, useCallback, useRef, type JSX } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -81,17 +81,20 @@ export default function FollowingScreen() {
     refetchOnWindowFocus: true,
   });
 
+  useRefetchOnForeground({
+    enabled: Boolean(user?.id),
+    refetch: refetchFollowingStreams,
+  });
+
   const streamsArray = Array.isArray(streams) ? streams : [];
   const hasShownErrorToast = useRef(false);
   const listRef = useRef(null);
 
   useScrollToTop(listRef);
 
-  useEffect(() => {
-    if (!isError) {
-      hasShownErrorToast.current = false;
-    }
-  }, [isError]);
+  if (!isError) {
+    hasShownErrorToast.current = false;
+  }
 
   const renderItem: ListRenderItem<TwitchStream> = useCallback(
     ({ item }) => {
@@ -116,7 +119,16 @@ export default function FollowingScreen() {
   );
 
   if (!authState?.isLoggedIn) {
-    return <Redirect href="/tabs/top" />;
+    return (
+      <EmptyState
+        button="Sign In"
+        buttonOnPress={() => router.push('/auth-sheet')}
+        content="Connect your Twitch account to see streams from channels you follow."
+        heading="Your followed streams"
+        iconName="person.2"
+        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
+      />
+    );
   }
 
   if (isRefreshing || isLoading) {
@@ -188,11 +200,6 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollAdaptiveHeader
-        scrollY={scrollY}
-        topInset={insets.top}
-        title="Following"
-      />
       <RefreshIndicator
         scrollY={scrollY}
         isRefreshing={isRefreshing}
