@@ -3,8 +3,17 @@ import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { logger } from '@app/utils/logger';
 import { useSelector } from '@legendapp/state/react';
-import { memo, useEffect, useMemo, useRef, type RefObject } from 'react';
 import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
+import {
+  type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type StyleProp,
@@ -16,6 +25,7 @@ import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
 import { isRenderableChatMessage } from '../util/chatMessages';
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import { getVisibleMessages } from '../util/visibleMessages';
 import { ChatList, type ChatListRef } from './ChatList';
 import { ChatViewControls } from './ChatViewControls';
@@ -66,6 +76,8 @@ export const ChatMessagePane = memo(
     hiddenPhrases,
     highlightedUsers,
     showOnlyMentions,
+    chatDensity,
+    showTimestamps,
     listRef,
     shouldMaintainScrollAtEnd,
     handleScroll,
@@ -95,6 +107,7 @@ export const ChatMessagePane = memo(
       [storedMessages],
     );
     const hasMessages = rawMessages.length > 0;
+    const [messagePaneWidth, setMessagePaneWidth] = useState(0);
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);
 
@@ -128,6 +141,25 @@ export const ChatMessagePane = memo(
     ]);
 
     const listData = visibleMessages;
+    const handleMessagePaneLayout = useCallback((event: LayoutChangeEvent) => {
+      const nextWidth = Math.round(event.nativeEvent.layout.width);
+      setMessagePaneWidth(currentWidth =>
+        Math.abs(currentWidth - nextWidth) > 1 ? nextWidth : currentWidth,
+      );
+    }, []);
+    const getEstimatedItemSize = useCallback(
+      (
+        _index: number,
+        item: AnyChatMessageType | undefined,
+        _type: string | undefined,
+      ) =>
+        estimateChatMessageHeightWithPretext(item, {
+          containerWidth: messagePaneWidth,
+          density: chatDensity,
+          showTimestamp: showTimestamps,
+        }) ?? 24,
+      [chatDensity, messagePaneWidth, showTimestamps],
+    );
 
     useEffect(() => {
       if (hasMessages) {
@@ -156,7 +188,7 @@ export const ChatMessagePane = memo(
     }, [channelId, channelName, hasMessages]);
 
     return (
-      <View style={styles.messagePane}>
+      <View style={styles.messagePane} onLayout={handleMessagePaneLayout}>
         {!connected && !hasMessages && (
           <View style={styles.connectingContainer}>
             <Text style={styles.connectingText}>
@@ -204,6 +236,7 @@ export const ChatMessagePane = memo(
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           getItemType={getItemType}
+          getEstimatedItemSize={getEstimatedItemSize}
           extraData={messageListExtraData}
           contentContainerStyle={listContentStyle}
           onViewableMessagesChange={onViewableMessagesChange}

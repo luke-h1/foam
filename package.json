@@ -95,6 +95,7 @@
     "@expo-google-fonts/source-code-pro": "^0.4.0",
     "@expo/metro-runtime": "~56.0.11",
     "@expo/ui": "~56.0.12",
+    "@legendapp/list": "2.0.19",
     "@legendapp/state": "^2.1.15",
     "@paralleldrive/cuid2": "^2.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",

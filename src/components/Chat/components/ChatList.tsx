@@ -1,9 +1,10 @@
-import {
-  FlashList,
-  type FlashListRef,
-  type ListRenderItem,
-} from '@app/components/FlashList/FlashList';
+import { type ListRenderItem } from '@app/components/FlashList/FlashList';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import {
+  LegendList,
+  type LegendListRef,
+  type LegendListRenderItemProps,
+} from '@legendapp/list';
 import { memo, RefObject, useCallback, useEffect, useRef } from 'react';
 import {
   NativeSyntheticEvent,
@@ -24,13 +25,14 @@ import {
 const CHAT_DRAW_DISTANCE = 960;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_ESTIMATED_ITEM_SIZE = 18;
+const CHAT_INITIAL_CONTAINER_POOL_RATIO = 3;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 };
 const CHAT_MAINTAIN_SCROLL_AT_END = {
-  animateAutoScrollToBottom: false,
-  autoscrollToBottomThreshold: 0.001,
-  startRenderingFromBottom: true,
+  onDataChange: true,
+  onItemLayout: true,
+  onLayout: true,
 };
 
 function ChatListRowSkeleton({ index }: { index: number }) {
@@ -51,7 +53,7 @@ function ChatListRowSkeleton({ index }: { index: number }) {
   );
 }
 
-export type ChatListRef = FlashListRef<AnyChatMessageType | undefined>;
+export type ChatListRef = LegendListRef;
 
 interface ChatListProps {
   data: AnyChatMessageType[];
@@ -66,6 +68,11 @@ interface ChatListProps {
   renderItem: ListRenderItem<AnyChatMessageType | undefined>;
   keyExtractor: (item: AnyChatMessageType | undefined, index: number) => string;
   getItemType: (item: AnyChatMessageType | undefined) => string;
+  getEstimatedItemSize?: (
+    index: number,
+    item: AnyChatMessageType | undefined,
+    type: string | undefined,
+  ) => number;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
@@ -85,6 +92,7 @@ export const ChatList = memo(
     renderItem,
     keyExtractor,
     getItemType,
+    getEstimatedItemSize,
     contentContainerStyle,
     extraData,
     onViewableMessagesChange,
@@ -119,17 +127,20 @@ export const ChatList = memo(
       },
     );
 
-    const renderFlashListItem = useCallback(
+    const renderLegendItem = useCallback(
       ({
         item,
         index,
-        extraData: flashListExtraData,
-      }: Parameters<ListRenderItem<AnyChatMessageType | undefined>>[0]) => {
+        extraData: legendExtraData,
+      }: LegendListRenderItemProps<
+        AnyChatMessageType | undefined,
+        string | undefined
+      >) => {
         const row = renderItem({
           item,
           index,
           target: 'Cell',
-          extraData: flashListExtraData,
+          extraData: legendExtraData,
         });
 
         return row ?? <ChatListRowSkeleton index={index} />;
@@ -138,17 +149,21 @@ export const ChatList = memo(
     );
 
     return (
-      <FlashList
+      <LegendList
         data={data}
         ref={listRef}
+        recycleItems
+        estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
         drawDistance={CHAT_DRAW_DISTANCE}
+        initialContainerPoolRatio={CHAT_INITIAL_CONTAINER_POOL_RATIO}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        maintainVisibleContentPosition={
-          shouldMaintainScrollAtEnd
-            ? CHAT_MAINTAIN_SCROLL_AT_END
-            : { disabled: true }
+        getEstimatedItemSize={getEstimatedItemSize}
+        maintainVisibleContentPosition
+        maintainScrollAtEnd={
+          shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }
+        maintainScrollAtEndThreshold={0.001}
         onScroll={handleScroll}
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}
@@ -156,7 +171,7 @@ export const ChatList = memo(
         onEndReached={handleEndReached}
         onEndReachedThreshold={CHAT_END_REACHED_THRESHOLD}
         onContentSizeChange={handleContentSizeChange}
-        renderItem={renderFlashListItem}
+        renderItem={renderLegendItem}
         extraData={extraData}
         style={styles.list}
         contentContainerStyle={contentContainerStyle}
