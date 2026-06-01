@@ -558,6 +558,73 @@ describe('messageHandlers', () => {
       ]);
     });
 
+    test('should create modiversary as a twitch system notice', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'modiversary',
+        'display-name': 'ModUser',
+        login: 'moduser',
+        'msg-param-months': '24',
+        'system-msg':
+          'ModUser\\sis\\scelebrating\\s24\\smonths\\sas\\sa\\smoderator!',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('modiversary');
+      expect(result.isTwitchSystemNotice).toBe(true);
+      expect(result.message).toEqual([
+        {
+          type: 'text',
+          content: 'ModUser is celebrating 24 months as a moderator!',
+        },
+      ]);
+    });
+
+    test('should create modiversary text from tags when system message is missing', () => {
+      const tags: UserNoticeTags = {
+        'msg-id': 'modiversary',
+        'display-name': 'ModUser',
+        login: 'moduser',
+        'msg-param-months': '24',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('modiversary');
+      expect(result.isTwitchSystemNotice).toBe(true);
+      expect(result.message).toEqual([
+        {
+          type: 'text',
+          content:
+            'ModUser, thank you for protecting our community for 24 months!',
+        },
+      ]);
+    });
+
     test('should handle unknown msg-id with default case', () => {
       const tags = {
         'msg-id': 'unknown_type',

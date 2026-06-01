@@ -22,6 +22,7 @@ export interface Preferences {
   showUnreadJumpPill: boolean;
   disableChat: boolean;
   disableStream: boolean;
+  useUIKitForWebView: boolean;
   emojiStyle: 'twitter' | 'google';
   show7TvEmotes: boolean;
   showBttvEmotes: boolean;
@@ -48,6 +49,7 @@ const initialPreferences: Preferences = {
   showUnreadJumpPill: true,
   disableChat: false,
   disableStream: false,
+  useUIKitForWebView: false,
   emojiStyle: 'twitter',
   show7TvEmotes: true,
   showBttvEmotes: true,

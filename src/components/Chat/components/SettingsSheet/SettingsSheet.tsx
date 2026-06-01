@@ -1,8 +1,8 @@
 import { Button } from '@app/components/Button/Button';
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { BottomSheet } from '@expo/ui';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { memo, useCallback, useMemo } from 'react';
 import {

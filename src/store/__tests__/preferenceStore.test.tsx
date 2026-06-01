@@ -15,6 +15,7 @@ const basePreferences = {
   showUnreadJumpPill: true,
   disableChat: false,
   disableStream: false,
+  useUIKitForWebView: false,
   emojiStyle: 'twitter',
   show7TvEmotes: true,
   showBttvEmotes: true,

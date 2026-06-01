@@ -156,6 +156,11 @@ export interface SharedChatNoticeTags extends BaseUserNoticeTags {
   'msg-id': 'sharedchatnotice';
 }
 
+export interface ModiversaryTags extends BaseUserNoticeTags {
+  'msg-id': 'modiversary';
+  'msg-param-months'?: string;
+}
+
 /**
  * Type mapping from msg-id values to their corresponding tag types
  */
@@ -172,6 +177,7 @@ export type UserNoticeVariantMap = {
   unraid: UnraidTags;
   bitsbadgetier: BitsBadgeTierTags;
   sharedchatnotice: SharedChatNoticeTags;
+  modiversary: ModiversaryTags;
 };
 
 /**
@@ -191,4 +197,5 @@ export type UserNoticeTags =
   | RaidTags
   | UnraidTags
   | BitsBadgeTierTags
-  | SharedChatNoticeTags;
+  | SharedChatNoticeTags
+  | ModiversaryTags;

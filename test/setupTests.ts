@@ -12,6 +12,7 @@ import 'react-native-gesture-handler/jestSetup';
 import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
+import type { ReactNode } from 'react';
 import 'cross-fetch/polyfill';
 import { configure as configureReassure } from 'reassure';
 import { TextEncoder, TextDecoder } from 'util';
@@ -106,6 +107,28 @@ jest.mock('expo-updates');
 jest.mock('expo/fetch');
 
 jest.mock('pressto');
+
+jest.mock('@app/components/BottomSheet/BottomSheet', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  return {
+    BottomSheet: ({
+      children,
+      isPresented,
+      testID,
+    }: {
+      children?: ReactNode;
+      isPresented: boolean;
+      testID?: string;
+    }) =>
+      isPresented ? React.createElement(View, { testID }, children) : null,
+  };
+});
+
+jest.mock('@app/components/BottomSheet/BottomSheetProvider', () => ({
+  AppBottomSheetProvider: ({ children }: { children?: ReactNode }) => children,
+}));
 
 jest.mock('sonner-native', () => ({
   Toaster: () => null,

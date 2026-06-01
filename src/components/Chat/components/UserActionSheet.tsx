@@ -1,8 +1,11 @@
 import { Button } from '@app/components/Button/Button';
+import {
+  BottomSheet,
+  type SnapPoint,
+} from '@app/components/BottomSheet/BottomSheet';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { BottomSheet, type SnapPoint } from '@expo/ui';
 import { useMemo } from 'react';
 import {
   ScrollView,

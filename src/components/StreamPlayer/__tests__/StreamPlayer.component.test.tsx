@@ -188,7 +188,7 @@ describe('StreamPlayer component messaging', () => {
     expect(mockWebViewProps.length).toBeGreaterThan(3);
   });
 
-  test('uses the raw Twitch player URL and nudges playback after load', () => {
+  test('uses the raw Twitch player URL without post-load injection', () => {
     const onWebViewLoaded = jest.fn();
 
     render(
@@ -215,15 +215,13 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
-    expect(mockInjectJavaScript).toHaveBeenCalledWith(
-      expect.stringContaining('const shouldAutoplay = true'),
+    expect(latestWebViewProps()).toEqual(
+      expect.not.objectContaining({
+        injectedJavaScript: expect.anything(),
+        injectedJavaScriptBeforeContentLoaded: expect.anything(),
+      }),
     );
-    expect(mockInjectJavaScript).toHaveBeenCalledWith(
-      expect.stringContaining('const targetMuted = false'),
-    );
-    expect(mockInjectJavaScript).toHaveBeenCalledWith(
-      expect.stringContaining('video.play()'),
-    );
+    expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
   test('uses the Twitch clip embed URL for clips', () => {
@@ -253,12 +251,10 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
-    expect(mockInjectJavaScript).toHaveBeenCalledWith(
-      expect.stringContaining('const shouldAutoplay = true'),
-    );
+    expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
-  test('keeps external auth windows inside the current WebView', () => {
+  test('keeps external auth windows inside the current WebView without injection', () => {
     render(
       <StreamPlayer
         channel="cohhcarnage"
@@ -269,27 +265,17 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
-    const { onOpenWindow } = latestWebViewProps();
-    const openWindow = onOpenWindow as (event: {
-      nativeEvent: { targetUrl?: string };
-    }) => void;
-
-    act(() => {
-      openWindow({ nativeEvent: { targetUrl: '' } });
-      openWindow({ nativeEvent: { targetUrl: 'foam://stream/cohhcarnage' } });
-    });
-
-    expect(mockInjectJavaScript).not.toHaveBeenCalled();
-
-    act(() => {
-      openWindow({
-        nativeEvent: { targetUrl: 'https://www.twitch.tv/login' },
-      });
-    });
-
-    expect(mockInjectJavaScript).toHaveBeenCalledWith(
-      'window.location.href = "https://www.twitch.tv/login"; true;',
+    expect(latestWebViewProps()).toEqual(
+      expect.objectContaining({
+        setSupportMultipleWindows: false,
+      }),
     );
+    expect(latestWebViewProps()).toEqual(
+      expect.not.objectContaining({
+        onOpenWindow: expect.anything(),
+      }),
+    );
+    expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
   test('blocks app navigation while allowing iframe navigation', () => {

@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { ChatList } from '../ChatList';
 
@@ -41,10 +42,11 @@ describe('ChatList', () => {
 
     expect(mockLegendList).toHaveBeenCalledWith(
       expect.objectContaining({
-        drawDistance: 320,
-        estimatedItemSize: 24,
+        drawDistance: 960,
+        estimatedItemSize: 18,
         extraData: { showTimestamps: false },
         getEstimatedItemSize,
+        initialContainerPoolRatio: 3,
         maintainScrollAtEnd: {
           onDataChange: true,
           onItemLayout: true,
@@ -107,6 +109,42 @@ describe('ChatList', () => {
     });
 
     expect(onViewableMessagesChange).toHaveBeenCalledWith([visibleMessage]);
+  });
+
+  test('renders a skeleton row when LegendList asks for a not-yet-loaded cell', () => {
+    const listRef = { current: null };
+
+    render(
+      <ChatList
+        data={[]}
+        listRef={listRef}
+        shouldMaintainScrollAtEnd
+        handleScroll={jest.fn()}
+        handleScrollBeginDrag={jest.fn()}
+        handleScrollEndDrag={jest.fn()}
+        handleMomentumScrollEnd={jest.fn()}
+        handleEndReached={jest.fn()}
+        handleContentSizeChange={jest.fn()}
+        renderItem={jest.fn(() => null)}
+        keyExtractor={jest.fn()}
+        getItemType={jest.fn()}
+        contentContainerStyle={undefined}
+      />,
+    );
+
+    const props = mockLegendList.mock.calls[0]?.[0] as {
+      renderItem: (info: {
+        item: undefined;
+        index: number;
+        extraData: unknown;
+      }) => ReactElement;
+    };
+
+    const { getByTestId } = render(
+      props.renderItem({ item: undefined, index: 2, extraData: undefined }),
+    );
+
+    expect(getByTestId('chat-row-skeleton')).toBeTruthy();
   });
 
   test('lets LegendList maintain the end without imperative growth scrolling', () => {

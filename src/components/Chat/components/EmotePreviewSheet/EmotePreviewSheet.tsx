@@ -1,12 +1,12 @@
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { BottomSheet } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useMemo, useCallback } from 'react';

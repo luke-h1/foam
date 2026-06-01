@@ -29,6 +29,7 @@ export type AnyChatMessageType =
   | ChatMessageType<'usernotice', 'unraid'>
   | ChatMessageType<'usernotice', 'bitsbadgetier'>
   | ChatMessageType<'usernotice', 'sharedchatnotice'>
+  | ChatMessageType<'usernotice', 'modiversary'>
   | ChatMessageType<'usernotice'>;
 
 interface CreateBaseMessageParams {
@@ -96,6 +97,36 @@ export const hasEmoteData = (channelId: string): boolean => {
       emoteData.bttvGlobalEmotes.length > 0 ||
       emoteData.ffzGlobalEmotes.length > 0)
   );
+};
+
+const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
+  const rawSystem =
+    typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
+  const systemLine = unescapeIrcTag(rawSystem);
+  const userLine = text.trimEnd();
+
+  return [systemLine, userLine]
+    .filter(Boolean)
+    .join(systemLine && userLine ? ' ' : '');
+};
+
+const createModiversaryText = (tags: UserNoticeTags, text: string): string => {
+  const systemText = createSystemNoticeText(tags, text);
+  if (systemText) {
+    return systemText;
+  }
+
+  const displayName = tags['display-name'] || tags.login || '';
+  const months =
+    typeof tags['msg-param-months'] === 'string'
+      ? tags['msg-param-months']
+      : '';
+
+  if (!displayName || !months) {
+    return '';
+  }
+
+  return `${displayName}, thank you for protecting our community for ${months} months!`;
 };
 
 interface CreateUserNoticeParams {
@@ -291,13 +322,7 @@ export const createUserNoticeMessage = ({
     }
 
     case 'raid': {
-      const rawSystem =
-        typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
-      const systemLine = unescapeIrcTag(rawSystem);
-      const userLine = text.trimEnd();
-      const combined = [systemLine, userLine]
-        .filter(Boolean)
-        .join(systemLine && userLine ? ' ' : '');
+      const combined = createSystemNoticeText(tags, text);
 
       return {
         ...baseMessage,
@@ -311,16 +336,25 @@ export const createUserNoticeMessage = ({
       } as ChatMessageType<'usernotice', 'raid'>;
     }
 
+    case 'modiversary': {
+      const combined = createModiversaryText(tags, text);
+
+      return {
+        ...baseMessage,
+        userstate,
+        badges: [],
+        message: combined ? [{ type: 'text' as const, content: combined }] : [],
+        notice_tags: { ...tags, ...emptyFields },
+        isSpecialNotice: true,
+        isTwitchSystemNotice: true,
+        ...emptyFields,
+      } as ChatMessageType<'usernotice', 'modiversary'>;
+    }
+
     case 'unraid':
     case 'bitsbadgetier':
     case 'sharedchatnotice': {
-      const rawSystem =
-        typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
-      const systemLine = unescapeIrcTag(rawSystem);
-      const userLine = text.trimEnd();
-      const combined = [systemLine, userLine]
-        .filter(Boolean)
-        .join(systemLine && userLine ? ' ' : '');
+      const combined = createSystemNoticeText(tags, text);
 
       return {
         ...baseMessage,
@@ -338,13 +372,7 @@ export const createUserNoticeMessage = ({
     }
 
     default: {
-      const rawSystem =
-        typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
-      const systemLine = unescapeIrcTag(rawSystem);
-      const userLine = text.trimEnd();
-      const combined = [systemLine, userLine]
-        .filter(Boolean)
-        .join(systemLine && userLine ? ' ' : '');
+      const combined = createSystemNoticeText(tags, text);
 
       if (!combined) {
         return {

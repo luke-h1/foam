@@ -1,4 +1,5 @@
 import type { ListRenderItem } from '@app/components/FlashList/FlashList';
+import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import {
   LegendList,
   type LegendListRef,
@@ -8,7 +9,9 @@ import { memo, RefObject, useCallback, useEffect, useRef } from 'react';
 import {
   NativeSyntheticEvent,
   NativeScrollEvent,
+  StyleSheet,
   StyleProp,
+  View,
   ViewStyle,
 } from 'react-native';
 
@@ -18,9 +21,10 @@ import {
   type ViewableMessageToken,
 } from './ChatList/utils';
 
-const CHAT_DRAW_DISTANCE = 320;
+const CHAT_DRAW_DISTANCE = 960;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
-const CHAT_ESTIMATED_ITEM_SIZE = 24;
+const CHAT_ESTIMATED_ITEM_SIZE = 18;
+const CHAT_INITIAL_CONTAINER_POOL_RATIO = 3;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 };
@@ -29,6 +33,24 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
   onItemLayout: true,
   onLayout: true,
 };
+
+function ChatListRowSkeleton({ index }: { index: number }) {
+  return (
+    <View style={styles.skeletonRow} testID="chat-row-skeleton">
+      <Skeleton style={styles.skeletonBadge} />
+      <Skeleton style={styles.skeletonUsername} />
+      <Skeleton
+        style={
+          index % 3 === 0
+            ? styles.skeletonBodyShort
+            : index % 3 === 1
+              ? styles.skeletonBodyMedium
+              : styles.skeletonBodyLong
+        }
+      />
+    </View>
+  );
+}
 
 interface ChatListProps {
   data: AnyChatMessageType[];
@@ -101,13 +123,16 @@ export const ChatList = memo(
       }: LegendListRenderItemProps<
         AnyChatMessageType | undefined,
         string | undefined
-      >) =>
-        renderItem({
+      >) => {
+        const row = renderItem({
           item,
           index,
           target: 'Cell',
           extraData: legendExtraData,
-        }),
+        });
+
+        return row ?? <ChatListRowSkeleton index={index} />;
+      },
       [renderItem],
     );
 
@@ -118,6 +143,7 @@ export const ChatList = memo(
         recycleItems
         estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
         drawDistance={CHAT_DRAW_DISTANCE}
+        initialContainerPoolRatio={CHAT_INITIAL_CONTAINER_POOL_RATIO}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
         getEstimatedItemSize={getEstimatedItemSize}
@@ -147,8 +173,38 @@ export const ChatList = memo(
 
 ChatList.displayName = 'ChatList';
 
-const styles = {
+const styles = StyleSheet.create({
   list: {
     flex: 1,
   },
-} as const;
+  skeletonBadge: {
+    borderRadius: 999,
+    height: 12,
+    width: 12,
+  },
+  skeletonBodyLong: {
+    height: 10,
+    width: '54%',
+  },
+  skeletonBodyMedium: {
+    height: 10,
+    width: '42%',
+  },
+  skeletonBodyShort: {
+    height: 10,
+    width: '28%',
+  },
+  skeletonRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    minHeight: CHAT_ESTIMATED_ITEM_SIZE,
+    paddingHorizontal: 16,
+    paddingVertical: 3,
+    width: '100%',
+  },
+  skeletonUsername: {
+    height: 10,
+    width: 58,
+  },
+});

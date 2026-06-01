@@ -199,94 +199,92 @@ export function ProfileCard() {
   }
 
   return (
-    <>
-      <ScrollView
-        ref={scrollRef}
-        style={styles.main}
-        contentContainerStyle={styles.scrollContent}
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
+    <ScrollView
+      ref={scrollRef}
+      style={styles.main}
+      contentContainerStyle={styles.scrollContent}
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}
+    >
+      <ProfileSection
+        title="Account"
+        footer={
+          <Text type="xxs" color="gray.textLow" style={styles.footerText}>
+            User ID: {user.id}
+          </Text>
+        }
       >
-        <ProfileSection
-          title="Account"
-          footer={
-            <Text type="xxs" color="gray.textLow" style={styles.footerText}>
-              User ID: {user.id}
-            </Text>
-          }
+        <PressableArea
+          style={styles.pressableFill}
+          onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
         >
-          <PressableArea
-            style={styles.pressableFill}
-            onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
-          >
-            <View style={styles.identityRow}>
-              {user.profile_image_url ? (
-                <Image
-                  source={{ uri: user.profile_image_url }}
-                  style={styles.avatar}
-                />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <SymbolView
-                    name="person"
-                    size={26}
-                    tintColor={theme.colorGreyHoverAlpha}
-                  />
-                </View>
-              )}
-              <View style={styles.identityText}>
-                <Text type="lg" weight="bold" numberOfLines={1}>
-                  {user.display_name}
-                </Text>
-                <Text type="xs" color="gray.textLow" numberOfLines={1}>
-                  @{user.login}
-                </Text>
-              </View>
-              <SymbolView
-                name="chevron.right"
-                size={18}
-                tintColor={theme.colorGreyAlpha}
+          <View style={styles.identityRow}>
+            {user.profile_image_url ? (
+              <Image
+                source={{ uri: user.profile_image_url }}
+                style={styles.avatar}
               />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <SymbolView
+                  name="person"
+                  size={26}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
+              </View>
+            )}
+            <View style={styles.identityText}>
+              <Text type="lg" weight="bold" numberOfLines={1}>
+                {user.display_name}
+              </Text>
+              <Text type="xs" color="gray.textLow" numberOfLines={1}>
+                @{user.login}
+              </Text>
             </View>
-          </PressableArea>
+            <SymbolView
+              name="chevron.right"
+              size={18}
+              tintColor={theme.colorGreyAlpha}
+            />
+          </View>
+        </PressableArea>
 
-          <InfoRow label="Channel" value={user.broadcaster_type || 'Viewer'} />
-          <InfoRow label="Member Since" value={memberSince} />
-        </ProfileSection>
+        <InfoRow label="Channel" value={user.broadcaster_type || 'Viewer'} />
+        <InfoRow label="Member Since" value={memberSince} />
+      </ProfileSection>
 
-        <ProfileSection title="Twitch">
-          <ActionRow
-            title="My Channel"
-            icon="tv"
-            color={theme.colorWhite}
-            onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
-          />
-          <ActionRow
-            title="Blocked Users"
-            icon="person.crop.circle.badge.xmark"
-            color={theme.colorWhite}
-            onPress={() => router.push('/preferences/blocked-users')}
-          />
-        </ProfileSection>
+      <ProfileSection title="Twitch">
+        <ActionRow
+          title="My Channel"
+          icon="tv"
+          color={theme.colorWhite}
+          onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
+        />
+        <ActionRow
+          title="Blocked Users"
+          icon="person.crop.circle.badge.xmark"
+          color={theme.colorWhite}
+          onPress={() => router.push('/preferences/blocked-users')}
+        />
+      </ProfileSection>
 
-        <ProfileSection
-          title="Session"
-          footer={
-            <Text type="xxs" color="gray.textLow" style={styles.footerText}>
-              Signing out removes your saved Twitch token from this device.
-            </Text>
-          }
-        >
-          <ActionRow
-            title="Log out"
-            icon="arrow.left.square"
-            destructive
-            showChevron={false}
-            onPress={confirmLogout}
-          />
-        </ProfileSection>
-      </ScrollView>
-    </>
+      <ProfileSection
+        title="Session"
+        footer={
+          <Text type="xxs" color="gray.textLow" style={styles.footerText}>
+            Signing out removes your saved Twitch token from this device.
+          </Text>
+        }
+      >
+        <ActionRow
+          title="Log out"
+          icon="arrow.left.square"
+          destructive
+          showChevron={false}
+          onPress={confirmLogout}
+        />
+      </ProfileSection>
+    </ScrollView>
   );
 }
 
@@ -341,7 +339,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: 'center',
-    alignSelf: 'stretch',
+    alignSelf: 'center',
     backgroundColor: theme.colorDarkGreen,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,

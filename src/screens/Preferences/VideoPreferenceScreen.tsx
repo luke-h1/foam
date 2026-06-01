@@ -1,38 +1,38 @@
-import {
-  EmptyLayout,
-  EmptyLayoutContent,
-  EmptyLayoutDescription,
-  EmptyLayoutHeader,
-  EmptyLayoutTitle,
-} from '@app/components/EmptyLayout/EmptyLayout';
+import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Text } from '@app/components/ui/Text/Text';
+import {
+  SettingsSection,
+  SettingsToggleRow,
+} from '@app/components/SettingsSection/SettingsSection';
+import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
 
 export function VideoPreferenceScreen() {
+  const { update, useUIKitForWebView } = usePreferences();
+
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title="Video"
-        subtitle="Playback controls and stream quality"
-        size="medium"
-      />
-      <EmptyLayout variant="outline" style={styles.empty}>
-        <EmptyLayoutHeader>
-          <EmptyLayoutTitle>Video controls are next</EmptyLayoutTitle>
-          <EmptyLayoutDescription>
-            This screen is now on the new system, but stream-quality and player
-            preferences still need a dedicated implementation pass.
-          </EmptyLayoutDescription>
-        </EmptyLayoutHeader>
-        <EmptyLayoutContent>
-          <Text type="sm" color="gray.textLow">
-            The shell is in place so the remaining controls can be added without
-            dragging old UI forward.
-          </Text>
-        </EmptyLayoutContent>
-      </EmptyLayout>
+      <BodyScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.content}
+      >
+        <ScreenHeader
+          title="Video"
+          subtitle="Playback controls and stream quality"
+          size="medium"
+        />
+
+        <SettingsSection title="Experiments">
+          <SettingsToggleRow
+            title="Use UI Kit for WebView"
+            subtitle="Render stream playback through the native UIKit WebView experiment"
+            icon={{ icon: 'safari', color: theme.colorBlue }}
+            value={useUIKitForWebView}
+            onValueChange={value => update({ useUIKitForWebView: value })}
+          />
+        </SettingsSection>
+      </BodyScrollView>
     </View>
   );
 }
@@ -42,8 +42,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.dark,
     flex: 1,
   },
-  empty: {
-    marginHorizontal: theme.space20,
-    minHeight: 320,
+  content: {
+    paddingBottom: theme.space44,
   },
 });

@@ -97,3 +97,39 @@ declare module '@modules/changelog' {
   const module: ChangelogNativeModule;
   export default module;
 }
+
+declare module '@modules/ui-kit-webview' {
+  import type * as React from 'react';
+  import type { StyleProp, ViewStyle } from 'react-native';
+
+  export interface UIKitWebViewNavigationEvent {
+    canGoBack: boolean;
+    canGoForward: boolean;
+    loading: boolean;
+    title?: string | null;
+    url: string;
+  }
+
+  export interface UIKitWebViewErrorEvent {
+    code: number;
+    description: string;
+    domain: string;
+    url: string;
+  }
+
+  export interface UIKitWebViewProps {
+    allowsFullscreenVideo?: boolean;
+    keyboardDisplayRequiresUserAction?: boolean;
+    onError?: (event: { nativeEvent: UIKitWebViewErrorEvent }) => void;
+    onLoadEnd?: (event: { nativeEvent: UIKitWebViewNavigationEvent }) => void;
+    onLoadStart?: (event: { nativeEvent: UIKitWebViewNavigationEvent }) => void;
+    onNavigationStateChange?: (event: {
+      nativeEvent: UIKitWebViewNavigationEvent;
+    }) => void;
+    scrollEnabled?: boolean;
+    style?: StyleProp<ViewStyle>;
+    url: string;
+  }
+
+  export function UIKitWebView(props: UIKitWebViewProps): React.JSX.Element;
+}
