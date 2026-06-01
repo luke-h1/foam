@@ -10,10 +10,12 @@ import {
 } from '@app/components/FlashList/FlashList';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { Category, twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -68,6 +70,7 @@ export function TopCategoriesScreen({
     hasNextPage,
     isLoading,
     isError,
+    isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['TopCategories'],
     queryFn: ({ pageParam }: { pageParam?: string }) =>
@@ -83,13 +86,11 @@ export function TopCategoriesScreen({
     refetch,
   });
 
-  const handleLoadMore = useCallback(async () => {
-    if (!hasNextPage) {
-      return;
-    }
-
-    await fetchNextPage();
-  }, [fetchNextPage, hasNextPage]);
+  const handleLoadMore = useInfiniteQueryLoadMore({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   const renderItem: ListRenderItem<Category> = useCallback(({ item }) => {
     return (
@@ -110,7 +111,7 @@ export function TopCategoriesScreen({
   }, [refetch, refreshing$]);
 
   const allCategories = useMemo(
-    () => categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [],
+    () => flattenInfiniteQueryPages(categories?.pages),
     [categories],
   );
 

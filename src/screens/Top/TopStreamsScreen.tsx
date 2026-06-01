@@ -11,6 +11,7 @@ import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
+import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
@@ -25,6 +26,7 @@ import {
   getNextPageParam,
   getPreviousPageParam,
 } from '@app/utils/pagination/pagination';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import type { ListRenderItem } from '@shopify/flash-list';
@@ -274,11 +276,11 @@ export function TopStreamsScreen({
     refetch,
   });
 
-  const handleLoadMore = useCallback(async () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      await fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleLoadMore = useInfiniteQueryLoadMore({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [debouncedHandleLoadMore] = useDebouncedCallback(handleLoadMore, 150);
@@ -298,7 +300,7 @@ export function TopStreamsScreen({
   );
 
   const allStreams = useMemo(
-    () => streams?.pages.flatMap(page => (page?.data ? page.data : [])) ?? [],
+    () => flattenInfiniteQueryPages(streams?.pages),
     [streams],
   );
   const featuredStream = allStreams[0];

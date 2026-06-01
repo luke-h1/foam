@@ -7,8 +7,10 @@ import {
 } from '@app/components/FlashList/FlashList';
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { Image } from '@app/components/Image/Image';
+import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
+import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import {
@@ -17,17 +19,12 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useRef } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
@@ -234,7 +231,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   });
 
   const clips = useMemo(
-    () => clipPages?.pages.flatMap(page => page.data).filter(Boolean) ?? [],
+    () => flattenInfiniteQueryPages(clipPages?.pages),
     [clipPages],
   );
 
@@ -244,11 +241,11 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       : windowWidth - theme.space20 * 2;
   const columns = Platform.OS === 'web' && windowWidth >= 820 ? 2 : 1;
 
-  const handleLoadMore = useCallback(async () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      await fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleLoadMore = useInfiniteQueryLoadMore({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   const handleDownload = useCallback(
     (clip: TwitchClip) => {
@@ -284,11 +281,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   );
 
   if (isUserLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size='large' color={theme.color.text.dark} />
-      </View>
-    );
+    return <LoadingState />;
   }
 
   if (isUserError || !user) {
@@ -318,7 +311,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       <View style={styles.container}>
         {listHeader}
         <View style={styles.centeredBody}>
-          <ActivityIndicator color={theme.color.text.dark} />
+          <LoadingState indicatorSize='small' style={styles.inlineLoading} />
         </View>
       </View>
     );
@@ -371,12 +364,6 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: theme.color.text.dark,
-  },
-  centered: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
-    flex: 1,
-    justifyContent: 'center',
   },
   centeredBody: {
     alignItems: 'center',
@@ -438,6 +425,10 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: theme.space36,
+  },
+  inlineLoading: {
+    backgroundColor: 'transparent',
+    flex: 0,
   },
   navRow: {
     alignItems: 'center',
