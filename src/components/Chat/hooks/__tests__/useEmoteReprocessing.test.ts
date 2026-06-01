@@ -77,7 +77,7 @@ function createTextOnlyMessage(
     parentDisplayName: '',
     replyDisplayName: '',
     replyBody: '',
-  } as AnyChatMessageType;
+  };
 }
 
 describe('useEmoteReprocessing', () => {

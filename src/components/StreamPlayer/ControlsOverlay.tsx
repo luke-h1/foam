@@ -144,11 +144,11 @@ export function ControlsOverlay({
       </GestureDetector>
 
       <View
-        pointerEvents="none"
+        pointerEvents='none'
         style={[styles.latencyBadge, { top: insets.top + theme.space12 }]}
       >
         <SymbolView
-          name="clock"
+          name='clock'
           size={12}
           tintColor={theme.colorWhite}
           style={styles.latencyBadgeIcon}
@@ -162,12 +162,12 @@ export function ControlsOverlay({
         {onBackPress && (
           <View style={styles.headerButtonContainer}>
             <Button
-              label="Back"
+              label='Back'
               style={styles.headerButton}
               onPress={onBackPress}
             >
               <SymbolView
-                name="chevron.left"
+                name='chevron.left'
                 size={24}
                 tintColor={theme.colorWhite}
               />
@@ -195,7 +195,7 @@ export function ControlsOverlay({
       <LinearGradient
         colors={['transparent', 'rgba(0,0,0,0.85)']}
         style={styles.bottomGradient}
-        pointerEvents="none"
+        pointerEvents='none'
       />
 
       <View
@@ -211,7 +211,7 @@ export function ControlsOverlay({
           </Text>
           <View style={styles.viewerCountRow}>
             <SymbolView
-              name="person"
+              name='person'
               size={14}
               style={styles.userIcon}
               tintColor={theme.colorWhite}
@@ -226,12 +226,12 @@ export function ControlsOverlay({
         {onRefresh && (
           <View style={styles.controlButtonContainer}>
             <Button
-              label="Refresh"
+              label='Refresh'
               style={styles.controlButton}
               onPress={onRefresh}
             >
               <SymbolView
-                name="arrow.clockwise"
+                name='arrow.clockwise'
                 size={18}
                 tintColor={theme.colorWhite}
               />
@@ -242,11 +242,11 @@ export function ControlsOverlay({
         {showPip && onPipPress && (
           <View style={styles.controlButtonContainer}>
             <Button
-              label="Picture in Picture"
+              label='Picture in Picture'
               style={styles.controlButton}
               onPress={onPipPress}
             >
-              <SymbolView name="pip" size={20} tintColor={theme.colorWhite} />
+              <SymbolView name='pip' size={20} tintColor={theme.colorWhite} />
             </Button>
           </View>
         )}

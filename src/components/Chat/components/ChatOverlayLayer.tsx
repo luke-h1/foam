@@ -8,16 +8,17 @@ import {
   MessageActionPreview,
 } from './ActionSheet/MessageActionPreview';
 import { BadgePreviewSheet } from './BadgePreviewSheet/BadgePreviewSheet';
-import type {
-  BadgePressData,
-  EmotePressData,
-  MessageActionData,
-  UsernamePressData,
-} from './ChatMessage/RichChatMessage';
+
 import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
 import { EmoteSheet, type EmotePickerItem } from './EmoteSheet/EmoteSheet';
 import { SettingsSheet } from './SettingsSheet/SettingsSheet';
 import { UserActionSheet } from './UserActionSheet';
+import {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
+} from './ChatMessage/RichChatMessage.types';
 
 export interface ChatOverlayLayerProps {
   canDeleteSelectedMessage: boolean;
@@ -42,6 +43,7 @@ export interface ChatOverlayLayerProps {
   onActionSheetTimeoutUser: () => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
+  onClearSevenTvCosmeticsCache: () => void;
   onCloseSelectedBadge: () => void;
   onCloseSelectedEmote: () => void;
   onCloseSelectedMessage: () => void;
@@ -102,6 +104,7 @@ export const ChatOverlayLayer = memo(
     onBanSelectedUser,
     onClearChatCache,
     onClearImageCache,
+    onClearSevenTvCosmeticsCache,
     onCloseSelectedBadge,
     onCloseSelectedEmote,
     onCloseSelectedMessage,
@@ -152,6 +155,7 @@ export const ChatOverlayLayer = memo(
             isPresented={shouldRenderSettingsSheet}
             onClearChatCache={onClearChatCache}
             onClearImageCache={onClearImageCache}
+            onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
             onDismiss={onSettingsSheetDidDismiss}
             onRefetchEmotes={onSettingsRefetchEmotes}
             onReconnect={onSettingsReconnect}

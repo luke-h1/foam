@@ -77,7 +77,8 @@ function PressableButton({ label, onPress }) {
     <Pressable
       onPress={onPress}
       onPressIn={() => setPressed(true)}
-      onPressOut={() => setPressed(false)}>
+      onPressOut={() => setPressed(false)}
+    >
       <Animated.View
         style={{
           transform: pressed
@@ -88,7 +89,8 @@ function PressableButton({ label, onPress }) {
             : '0px 6px 10px rgba(0, 0, 0, 0.3)',
           transitionProperty: ['transform', 'boxShadow'],
           transitionDuration: '80ms',
-        }}>
+        }}
+      >
         <Text>{label}</Text>
       </Animated.View>
     </Pressable>
@@ -122,8 +124,8 @@ Use when the animation follows a predefined keyframe sequence independent of ext
 
 ```tsx
 const pulse = {
-  '0%':   { opacity: 1 },
-  '50%':  { opacity: 0.4 },
+  '0%': { opacity: 1 },
+  '50%': { opacity: 0.4 },
   '100%': { opacity: 1 },
 };
 
@@ -134,7 +136,7 @@ const pulse = {
     animationIterationCount: 'infinite',
     animationTimingFunction: 'ease-in-out',
   }}
-/>
+/>;
 ```
 
 Reanimated uses the current element state as the implicit `0%` keyframe, so you only need to define the frames that differ. At minimum, one keyframe is required.
@@ -151,7 +153,7 @@ const moveLeft = { '100%': { transform: [{ translateX: -100 }] } };
     animationDuration: ['2.5s', '5s'],
     animationIterationCount: ['infinite', 1],
   }}
-/>
+/>;
 ```
 
 If multiple animations target the same property, the later animation in the array wins.
@@ -170,6 +172,7 @@ If multiple animations target the same property, the later animation in the arra
 ## Shared Value Animations
 
 Use when:
+
 - The animation is driven by a gesture or continuous input (scroll position, drag offset)
 - It requires math, trigonometric functions, or interpolation between computed values
 - It needs to read layout measurements on each frame (`measure`, `useAnimatedRef`)
@@ -183,7 +186,7 @@ const animatedStyle = useAnimatedStyle(() => ({
 }));
 
 // Gesture-driven example
-const gesture = Gesture.Pan().onUpdate((e) => {
+const gesture = Gesture.Pan().onUpdate(e => {
   offset.value = e.translationX;
 });
 ```
@@ -249,6 +252,7 @@ Never start infinite animations outside the component lifecycle (module scope, g
 Animating layout properties (`top`, `left`, `width`, `height`, `margin`, `padding`) forces a layout pass on every frame, which is expensive and causes jank.
 
 Prefer:
+
 - `transform: [{ translateX }, { translateY }, { scale }, { rotate }]`
 - `opacity`
 - `backgroundColor`

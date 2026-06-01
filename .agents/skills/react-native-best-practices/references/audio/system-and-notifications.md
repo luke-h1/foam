@@ -33,41 +33,41 @@ AudioManager.setAudioSessionOptions({
 
 ### Session Categories
 
-| Category | Use case |
-|----------|----------|
-| `playback` | Audio/music playback. Silences other apps. |
-| `record` | Recording only. No playback output. |
+| Category        | Use case                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| `playback`      | Audio/music playback. Silences other apps.                                                                   |
+| `record`        | Recording only. No playback output.                                                                          |
 | `playAndRecord` | Simultaneous recording and playback. Use for voice chat, live monitoring, or graph processing with recorder. |
-| `ambient` | Non-essential audio (game sounds). Mixes with other apps, respects silent switch. |
-| `soloAmbient` | Like ambient but silences other apps. Default system category. |
-| `multiRoute` | Routes audio to multiple outputs simultaneously. |
+| `ambient`       | Non-essential audio (game sounds). Mixes with other apps, respects silent switch.                            |
+| `soloAmbient`   | Like ambient but silences other apps. Default system category.                                               |
+| `multiRoute`    | Routes audio to multiple outputs simultaneously.                                                             |
 
 ### Session Modes
 
-| Mode | Use case |
-|------|----------|
-| `default` | Standard mode for most use cases |
-| `voiceChat` | Optimized for voice communication |
-| `videoChat` | Optimized for video calls |
-| `gameChat` | Optimized for game voice chat |
-| `measurement` | Audio measurement and analysis |
-| `moviePlayback` | Movie/video playback |
-| `spokenAudio` | Podcasts, audiobooks |
-| `voicePrompt` | Short voice prompts |
-| `videoRecording` | Video recording |
+| Mode             | Use case                          |
+| ---------------- | --------------------------------- |
+| `default`        | Standard mode for most use cases  |
+| `voiceChat`      | Optimized for voice communication |
+| `videoChat`      | Optimized for video calls         |
+| `gameChat`       | Optimized for game voice chat     |
+| `measurement`    | Audio measurement and analysis    |
+| `moviePlayback`  | Movie/video playback              |
+| `spokenAudio`    | Podcasts, audiobooks              |
+| `voicePrompt`    | Short voice prompts               |
+| `videoRecording` | Video recording                   |
 
 ### Session Options
 
-| Option | Effect |
-|--------|--------|
-| `mixWithOthers` | Mix audio with other apps instead of silencing them |
-| `duckOthers` | Lower other apps' volume while yours plays |
-| `defaultToSpeaker` | Route playback to speaker instead of earpiece |
-| `allowBluetoothA2DP` | Enable high-quality Bluetooth audio output |
-| `allowBluetoothHFP` | Enable Bluetooth hands-free profile (for calls) |
-| `allowAirPlay` | Enable AirPlay streaming |
-| `interruptSpokenAudioAndMixWithOthers` | Interrupt spoken audio from other apps, then mix |
-| `overrideMutedMicrophoneInterruption` | Continue recording when another app mutes the mic |
+| Option                                 | Effect                                              |
+| -------------------------------------- | --------------------------------------------------- |
+| `mixWithOthers`                        | Mix audio with other apps instead of silencing them |
+| `duckOthers`                           | Lower other apps' volume while yours plays          |
+| `defaultToSpeaker`                     | Route playback to speaker instead of earpiece       |
+| `allowBluetoothA2DP`                   | Enable high-quality Bluetooth audio output          |
+| `allowBluetoothHFP`                    | Enable Bluetooth hands-free profile (for calls)     |
+| `allowAirPlay`                         | Enable AirPlay streaming                            |
+| `interruptSpokenAudioAndMixWithOthers` | Interrupt spoken audio from other apps, then mix    |
+| `overrideMutedMicrophoneInterruption`  | Continue recording when another app mutes the mic   |
 
 ### Session Activation
 
@@ -98,7 +98,7 @@ Other apps or system events (phone calls, alarms) can interrupt your audio sessi
 ```tsx
 AudioManager.observeAudioInterruptions(true);
 
-const sub = AudioManager.addSystemEventListener('interruption', (event) => {
+const sub = AudioManager.addSystemEventListener('interruption', event => {
   if (event.type === 'began') {
     // Another app took audio focus. Pause your playback.
   } else if (event.type === 'ended' && event.shouldResume) {
@@ -122,7 +122,7 @@ AudioManager.observeAudioInterruptions('gain'); // 'gain' | 'gainTransient' | 'g
 ```tsx
 AudioManager.observeVolumeChanges(true);
 
-const sub = AudioManager.addSystemEventListener('volumeChange', (event) => {
+const sub = AudioManager.addSystemEventListener('volumeChange', event => {
   console.log('New volume:', event.value);
 });
 ```
@@ -132,7 +132,7 @@ const sub = AudioManager.addSystemEventListener('volumeChange', (event) => {
 Detect headphone connects/disconnects and other routing changes:
 
 ```tsx
-const sub = AudioManager.addSystemEventListener('routeChange', (event) => {
+const sub = AudioManager.addSystemEventListener('routeChange', event => {
   console.log('Route changed:', event.reason);
   // Reasons: 'NewDeviceAvailable', 'OldDeviceUnavailable', 'CategoryChange', etc.
 });
@@ -191,7 +191,7 @@ const playSub = PlaybackNotificationManager.addEventListener(
   () => {
     audioContext.resume();
     PlaybackNotificationManager.show({ state: 'playing' });
-  }
+  },
 );
 
 const pauseSub = PlaybackNotificationManager.addEventListener(
@@ -199,15 +199,15 @@ const pauseSub = PlaybackNotificationManager.addEventListener(
   () => {
     audioContext.suspend();
     PlaybackNotificationManager.show({ state: 'paused' });
-  }
+  },
 );
 
 const seekSub = PlaybackNotificationManager.addEventListener(
   'playbackNotificationSeekTo',
-  (event) => {
+  event => {
     // event.value is the seek position in seconds
     PlaybackNotificationManager.show({ elapsedTime: event.value });
-  }
+  },
 );
 
 // Update progress
@@ -261,15 +261,18 @@ const pauseSub = RecordingNotificationManager.addEventListener(
   () => {
     recorder.pause();
     RecordingNotificationManager.show({ paused: true, contentText: 'Paused' });
-  }
+  },
 );
 
 const resumeSub = RecordingNotificationManager.addEventListener(
   'recordingNotificationResume',
   () => {
     recorder.resume();
-    RecordingNotificationManager.show({ paused: false, contentText: 'Recording...' });
-  }
+    RecordingNotificationManager.show({
+      paused: false,
+      contentText: 'Recording...',
+    });
+  },
 );
 
 // Cleanup
@@ -319,7 +322,7 @@ import { AudioContext, AudioRecorder } from 'react-native-audio-api/mock';
 
 // Option 2: Module mock
 jest.mock('react-native-audio-api', () =>
-  require('react-native-audio-api/mock')
+  require('react-native-audio-api/mock'),
 );
 ```
 

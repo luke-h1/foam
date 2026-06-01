@@ -10,15 +10,15 @@ For model loading strategies and resource fetcher setup, see **`setup.md`**.
 
 Choose based on device constraints and task complexity. All models ship as quantized variants.
 
-| Model Family | Sizes | Best for |
-|---|---|---|
-| SmolLM 2 | 135M, 360M, 1.7B | Low-end devices, simple tasks |
-| Qwen 2.5 / Qwen 3 | 0.5B-4B | General chat, reasoning (Qwen 3 supports `/no_think` to disable reasoning) |
-| LLaMA 3.2 | 1B, 3B | General chat |
-| Hammer 2.1 | 0.5B-3B | Tool calling |
-| Phi 4 Mini | 4B | Complex reasoning (high-end devices only) |
-| LFM2.5 | 1.2B | General chat, instruction following |
-| LFM2.5-VL | 1.6B | Vision-language (image + text understanding) |
+| Model Family      | Sizes            | Best for                                                                   |
+| ----------------- | ---------------- | -------------------------------------------------------------------------- |
+| SmolLM 2          | 135M, 360M, 1.7B | Low-end devices, simple tasks                                              |
+| Qwen 2.5 / Qwen 3 | 0.5B-4B          | General chat, reasoning (Qwen 3 supports `/no_think` to disable reasoning) |
+| LLaMA 3.2         | 1B, 3B           | General chat                                                               |
+| Hammer 2.1        | 0.5B-3B          | Tool calling                                                               |
+| Phi 4 Mini        | 4B               | Complex reasoning (high-end devices only)                                  |
+| LFM2.5            | 1.2B             | General chat, instruction following                                        |
+| LFM2.5-VL         | 1.6B             | Vision-language (image + text understanding)                               |
 
 **Device limits:** Low-end devices handle 135M-1.7B parameters. High-end devices (iPhone 15 Pro, Pixel 8 Pro) can run 3B-4B parameter models. Always test on the lowest-spec device you plan to support.
 
@@ -30,10 +30,10 @@ For full model list and download URLs, webfetch [LLM models](https://docs.swmans
 
 `useLLM` supports two usage modes:
 
-| Mode | Method | State management | Tool calling |
-|---|---|---|---|
-| **Functional** | `generate(messages)` | You manage conversation history | You parse tool calls from output |
-| **Managed** | `sendMessage(text)` | Hook tracks `messageHistory` | Automatic via `executeToolCallback` |
+| Mode           | Method               | State management                | Tool calling                        |
+| -------------- | -------------------- | ------------------------------- | ----------------------------------- |
+| **Functional** | `generate(messages)` | You manage conversation history | You parse tool calls from output    |
+| **Managed**    | `sendMessage(text)`  | Hook tracks `messageHistory`    | Automatic via `executeToolCallback` |
 
 Use **functional** for full control or custom conversation flows. Use **managed** for standard chat UIs where the hook should handle message history and tool execution.
 
@@ -63,7 +63,7 @@ function Chat() {
 
   return (
     <View>
-      <Button onPress={handleGenerate} title="Ask" disabled={!llm.isReady} />
+      <Button onPress={handleGenerate} title='Ask' disabled={!llm.isReady} />
       <Text>{llm.response}</Text>
     </View>
   );
@@ -93,7 +93,10 @@ const llm = useLLM({ model: HAMMER2_1_1_5B });
 
 const ask = () => {
   const chat: Message[] = [
-    { role: 'system', content: `You are a helpful assistant. Current date: ${new Date().toString()}` },
+    {
+      role: 'system',
+      content: `You are a helpful assistant. Current date: ${new Date().toString()}`,
+    },
     { role: 'user', content: "What's the weather in Cracow?" },
   ];
   llm.generate(chat, TOOLS);
@@ -182,7 +185,7 @@ useEffect(() => {
     },
     toolsConfig: {
       tools: TOOLS,
-      executeToolCallback: async (call) => {
+      executeToolCallback: async call => {
         if (call.toolName === 'get_weather') {
           const result = await fetchWeather(call.parameters.location);
           return JSON.stringify(result);
@@ -203,9 +206,13 @@ llm.sendMessage("What's the weather in Cracow?");
 Access the full conversation via `messageHistory`:
 
 ```tsx
-{llm.messageHistory.map((msg, i) => (
-  <Text key={i}>{msg.role}: {msg.content}</Text>
-))}
+{
+  llm.messageHistory.map((msg, i) => (
+    <Text key={i}>
+      {msg.role}: {msg.content}
+    </Text>
+  ));
+}
 ```
 
 Use `deleteMessage` to remove specific messages from history.
@@ -321,13 +328,18 @@ import * as z from 'zod/v4';
 
 const responseSchema = z.object({
   username: z.string().meta({ description: 'Name of user' }),
-  question: z.optional(z.string().meta({ description: 'Question that user asks' })),
+  question: z.optional(
+    z.string().meta({ description: 'Question that user asks' }),
+  ),
   bid: z.number().meta({ description: 'Amount of money offered' }),
 });
 
 const formatting = getStructuredOutputPrompt(responseSchema);
 // fixAndValidateStructuredOutput with Zod returns typed output
-const parsed = fixAndValidateStructuredOutput(lastMessage.content, responseSchema);
+const parsed = fixAndValidateStructuredOutput(
+  lastMessage.content,
+  responseSchema,
+);
 ```
 
 The `/no_think` suffix disables Qwen 3's reasoning mode, producing cleaner JSON output.
@@ -341,8 +353,8 @@ On fast devices, the LLM can generate 60+ tokens per second. Updating React stat
 ```tsx
 llm.configure({
   generationConfig: {
-    outputTokenBatchSize: 15,  // emit after 15 tokens
-    batchTimeInterval: 100,    // or after 100ms, whichever comes first
+    outputTokenBatchSize: 15, // emit after 15 tokens
+    batchTimeInterval: 100, // or after 100ms, whichever comes first
   },
 });
 ```
@@ -369,7 +381,7 @@ Call `interrupt()` to stop generation mid-stream. The `response` updates one fin
 
 ```tsx
 <Button
-  title="Stop"
+  title='Stop'
   onPress={() => llm.interrupt()}
   disabled={!llm.isGenerating}
 />

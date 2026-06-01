@@ -15,19 +15,19 @@ export function EditorialSectionHeader({
     <View style={styles.header}>
       {eyebrow ? (
         <Text
-          type="xs"
-          weight="semibold"
-          color="gray.textLow"
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
           style={styles.eyebrow}
         >
           {eyebrow}
         </Text>
       ) : null}
-      <Text type="xl" weight="bold">
+      <Text type='xl' weight='bold'>
         {title}
       </Text>
       {subtitle ? (
-        <Text type="sm" color="gray.textLow" style={styles.subtitle}>
+        <Text type='sm' color='gray.textLow' style={styles.subtitle}>
           {subtitle}
         </Text>
       ) : null}

@@ -38,11 +38,11 @@ export const MessageActionPreview = memo(function MessageActionPreview({
             key={`${part.type}-${part.id ?? index}-${index}`}
             useNitro
             trackLoadTime
-            trackLoadContext="chat.message-action-sheet"
+            trackLoadContext='chat.message-action-sheet'
             source={part.url}
-            cacheVariant="emote"
+            cacheVariant='emote'
             style={styles.messageEmote}
-            contentFit="contain"
+            contentFit='contain'
             transition={0}
           />
         );

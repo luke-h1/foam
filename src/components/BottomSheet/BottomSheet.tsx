@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react';
+import { memo, type PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
@@ -11,7 +11,7 @@ type BottomSheetProps = PropsWithChildren<{
   testID?: string;
 }>;
 
-export function BottomSheet({
+function BottomSheetComponent({
   children,
   isPresented,
   showDragIndicator,
@@ -43,3 +43,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+
+export const BottomSheet = memo(BottomSheetComponent);

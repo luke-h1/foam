@@ -26,9 +26,9 @@ export function SettingsSection({
     <View style={styles.section}>
       {title ? (
         <Text
-          type="xs"
-          weight="semibold"
-          color="gray.textLow"
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
           style={styles.sectionTitle}
         >
           {title}
@@ -82,11 +82,11 @@ export function SettingsRow({
       ) : null}
 
       <View style={styles.copy}>
-        <Text weight="semibold" color={danger ? 'red' : 'gray'}>
+        <Text weight='semibold' color={danger ? 'red' : 'gray'}>
           {title}
         </Text>
         {subtitle ? (
-          <Text type="xs" color="gray.textLow">
+          <Text type='xs' color='gray.textLow'>
             {subtitle}
           </Text>
         ) : null}
@@ -95,7 +95,7 @@ export function SettingsRow({
       {trailing ??
         (onPress ? (
           <SymbolView
-            name="chevron.right"
+            name='chevron.right'
             size={18}
             tintColor={theme.colorGreyHoverAlpha}
           />
@@ -161,13 +161,13 @@ export function SettingsLinkRow(props: {
       trailing={
         <View style={styles.linkTrailing}>
           {value ? (
-            <Text type="sm" color="gray.textLow" weight="semibold">
+            <Text type='sm' color='gray.textLow' weight='semibold'>
               {value}
             </Text>
           ) : null}
           {onPress ? (
             <SymbolView
-              name="chevron.right"
+              name='chevron.right'
               size={18}
               tintColor={theme.colorGreyHoverAlpha}
             />

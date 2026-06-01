@@ -38,7 +38,7 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           horizontal
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps='handled'
           showsHorizontalScrollIndicator={false}
         >
           {emotes.map(item => (
@@ -49,13 +49,13 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
             >
               <View style={styles.emoteTile}>
                 <Image
-                  contentFit="contain"
+                  contentFit='contain'
                   source={item.url}
-                  cacheVariant="emote"
+                  cacheVariant='emote'
                   style={styles.emoteImage}
                   useNitro
                   trackLoadTime
-                  trackLoadContext="chat.emote-suggestions"
+                  trackLoadContext='chat.emote-suggestions'
                 />
               </View>
             </Button>

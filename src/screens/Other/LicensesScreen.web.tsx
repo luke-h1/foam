@@ -8,13 +8,13 @@ export function LicensesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScreenHeader
-        title="Licenses"
-        subtitle="Open-source software used by Foam"
-        size="medium"
+        title='Licenses'
+        subtitle='Open-source software used by Foam'
+        size='medium'
       />
       <OtherInfoCard
-        title="Open-source acknowledgements"
-        body="The native license list is available in the iOS and Android apps."
+        title='Open-source acknowledgements'
+        body='The native license list is available in the iOS and Android apps.'
       />
     </SafeAreaView>
   );

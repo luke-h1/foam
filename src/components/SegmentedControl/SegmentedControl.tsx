@@ -35,7 +35,7 @@ export function SegmentedControl({
 
   return (
     <ExpoSegmentedControl
-      appearance="dark"
+      appearance='dark'
       onChange={handleChange}
       selectedIndex={currentIndex}
       style={styles.container}

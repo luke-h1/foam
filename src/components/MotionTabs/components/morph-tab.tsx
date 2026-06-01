@@ -32,7 +32,7 @@ const MorphTab = memo(function MorphTab({
   return (
     <Pressable
       accessibilityLabel={item.label}
-      accessibilityRole="button"
+      accessibilityRole='button'
       accessibilityState={{ selected: active }}
       onPress={handlePress}
       onPressIn={motion.hold}
@@ -48,7 +48,7 @@ const MorphTab = memo(function MorphTab({
 
       <Animated.View style={[styles.tabMorph, motion.containerStyle]}>
         <Animated.View
-          pointerEvents="none"
+          pointerEvents='none'
           style={[
             styles.holdCircle,
             { backgroundColor: colors.accent },
@@ -77,7 +77,7 @@ const MorphTab = memo(function MorphTab({
         </View>
         <Animated.View style={[styles.tabLabelWrap, motion.labelStyle]}>
           <Text
-            ellipsizeMode="clip"
+            ellipsizeMode='clip'
             numberOfLines={1}
             style={[
               styles.tabLabel,

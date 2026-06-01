@@ -359,7 +359,7 @@ describe('chatStore messages', () => {
     addMessages(
       Array.from({ length: 650 }, (_, index) =>
         createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
-      ) as ChatMessageType<never>[],
+      ),
     );
 
     const messages = chatStore$.messages.peek();

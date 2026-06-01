@@ -111,11 +111,11 @@ Use `MODEL_REGISTRY` to discover and enumerate all available models:
 import { MODEL_REGISTRY, LLAMA3_2_1B } from 'react-native-executorch';
 
 // Get all model names
-const names = Object.values(MODEL_REGISTRY.ALL_MODELS).map((m) => m.modelName);
+const names = Object.values(MODEL_REGISTRY.ALL_MODELS).map(m => m.modelName);
 
 // Find models by name
-const whisperModels = Object.values(MODEL_REGISTRY.ALL_MODELS).filter((m) =>
-  m.modelName.includes('whisper')
+const whisperModels = Object.values(MODEL_REGISTRY.ALL_MODELS).filter(m =>
+  m.modelName.includes('whisper'),
 );
 ```
 
@@ -137,7 +137,7 @@ Track download progress via the `downloadProgress` property (0 to 1):
 ```tsx
 const llm = useLLM({ model: LLAMA3_2_1B });
 
-<Text>Loading: {Math.round(llm.downloadProgress * 100)}%</Text>
+<Text>Loading: {Math.round(llm.downloadProgress * 100)}%</Text>;
 ```
 
 ---
@@ -152,9 +152,9 @@ For advanced download management (pause, resume, cancel, cleanup), use the resou
 import { ExpoResourceFetcher } from 'react-native-executorch-expo-resource-fetcher';
 
 const uris = await ExpoResourceFetcher.fetch(
-  (progress) => console.log(`${Math.round(progress * 100)}%`),
+  progress => console.log(`${Math.round(progress * 100)}%`),
   'https://huggingface.co/.../model.pte',
-  'https://huggingface.co/.../tokenizer.bin'
+  'https://huggingface.co/.../tokenizer.bin',
 );
 // uris: string[] of local file paths (without file:// prefix), or null if interrupted
 ```
@@ -182,7 +182,9 @@ const files = await ExpoResourceFetcher.listDownloadedFiles();
 const models = await ExpoResourceFetcher.listDownloadedModels();
 
 // Get total size of remote files before downloading
-const bytes = await ExpoResourceFetcher.getFilesTotalSize('https://...model.pte');
+const bytes = await ExpoResourceFetcher.getFilesTotalSize(
+  'https://...model.pte',
+);
 
 // Delete downloaded resources
 await ExpoResourceFetcher.deleteResources('https://...model.pte');
@@ -198,24 +200,27 @@ All errors inherit from `RnExecutorchError` with a `code` property from `RnExecu
 
 ### Common errors and recovery
 
-| Error Code | When | Recovery |
-|---|---|---|
-| `ResourceFetcherAdapterNotInitialized` | Using any API before calling `initExecutorch()` | Call `initExecutorch({ resourceFetcher: ... })` at app entry |
-| `ModuleNotLoaded` | Calling `forward`/`generate` before model is ready | Check `isReady` before calling inference methods |
-| `ModelGenerating` | Calling inference while another is running | Wait for completion or call `interrupt()` |
-| `InvalidConfig` | Invalid config values (e.g., `topp` > 1) | Validate config parameters |
-| `ResourceFetcherDownloadFailed` | Network error during model download | Retry with exponential backoff |
-| `MemoryAllocationFailed` | Model too large for device | Use a smaller or more aggressively quantized model variant |
-| `DownloadInterrupted` | Download did not complete | Retry the download |
-| `StreamingNotStarted` | Calling `streamInsert` before `stream()` is active | Start streaming first |
-| `StreamingInProgress` | Calling `stream()` while another stream is active | Wait for current stream to finish |
-| `InvalidUserInput` | Passing empty arrays, null values, or malformed data | Validate input before calling methods |
-| `FileReadFailed` | Invalid image URL, unsupported format, or missing file | Verify file path and format |
+| Error Code                             | When                                                   | Recovery                                                     |
+| -------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
+| `ResourceFetcherAdapterNotInitialized` | Using any API before calling `initExecutorch()`        | Call `initExecutorch({ resourceFetcher: ... })` at app entry |
+| `ModuleNotLoaded`                      | Calling `forward`/`generate` before model is ready     | Check `isReady` before calling inference methods             |
+| `ModelGenerating`                      | Calling inference while another is running             | Wait for completion or call `interrupt()`                    |
+| `InvalidConfig`                        | Invalid config values (e.g., `topp` > 1)               | Validate config parameters                                   |
+| `ResourceFetcherDownloadFailed`        | Network error during model download                    | Retry with exponential backoff                               |
+| `MemoryAllocationFailed`               | Model too large for device                             | Use a smaller or more aggressively quantized model variant   |
+| `DownloadInterrupted`                  | Download did not complete                              | Retry the download                                           |
+| `StreamingNotStarted`                  | Calling `streamInsert` before `stream()` is active     | Start streaming first                                        |
+| `StreamingInProgress`                  | Calling `stream()` while another stream is active      | Wait for current stream to finish                            |
+| `InvalidUserInput`                     | Passing empty arrays, null values, or malformed data   | Validate input before calling methods                        |
+| `FileReadFailed`                       | Invalid image URL, unsupported format, or missing file | Verify file path and format                                  |
 
 ### Error handling pattern
 
 ```tsx
-import { RnExecutorchError, RnExecutorchErrorCode } from 'react-native-executorch';
+import {
+  RnExecutorchError,
+  RnExecutorchErrorCode,
+} from 'react-native-executorch';
 
 try {
   const result = await model.forward(imageUri);
@@ -282,7 +287,10 @@ Input and output use the `TensorPtr` representation: `{ dataPtr: ArrayBuffer | T
 For non-hook usage (e.g., in services or outside React components), use module classes directly. Instantiate via the `fromModelName` factory method:
 
 ```tsx
-import { ClassificationModule, EFFICIENTNET_V2_S } from 'react-native-executorch';
+import {
+  ClassificationModule,
+  EFFICIENTNET_V2_S,
+} from 'react-native-executorch';
 
 const module = await ClassificationModule.fromModelName(EFFICIENTNET_V2_S);
 ```
@@ -295,11 +303,11 @@ For the full API, webfetch [ExecutorchModule](https://docs.swmansion.com/react-n
 
 ### Memory
 
-| Device tier | Parameter range | Examples |
-|---|---|---|
-| Low-end | 135M-500M | SmolLM 2 135M/360M |
-| Mid-range | 500M-1.7B | Qwen 3 0.6B, SmolLM 2 1.7B, LLaMA 3.2 1B |
-| High-end | 1.7B-4B | Qwen 3 4B, Phi 4 Mini, LLaMA 3.2 3B |
+| Device tier | Parameter range | Examples                                 |
+| ----------- | --------------- | ---------------------------------------- |
+| Low-end     | 135M-500M       | SmolLM 2 135M/360M                       |
+| Mid-range   | 500M-1.7B       | Qwen 3 0.6B, SmolLM 2 1.7B, LLaMA 3.2 1B |
+| High-end    | 1.7B-4B         | Qwen 3 4B, Phi 4 Mini, LLaMA 3.2 3B      |
 
 For detailed memory usage and inference time per model per device, webfetch [Benchmarks](https://docs.swmansion.com/react-native-executorch/docs/benchmarks/inference-time).
 

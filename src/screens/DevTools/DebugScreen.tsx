@@ -98,18 +98,18 @@ export function DebugScreen() {
   return (
     <View style={styles.screenContainer}>
       <KeyboardAvoidingView
-        behavior="padding"
+        behavior='padding'
         style={styles.flex}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView
           ref={scrollRef}
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps='handled'
         >
           {Platform.OS === 'ios' ? null : (
-            <Text type="xl" weight="bold" style={styles.title}>
+            <Text type='xl' weight='bold' style={styles.title}>
               Debug
             </Text>
           )}
@@ -117,13 +117,13 @@ export function DebugScreen() {
           {/* Storage */}
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Text weight="semibold">Clear storage</Text>
-              <Text type="xs" color="gray.textLow">
+              <Text weight='semibold'>Clear storage</Text>
+              <Text type='xs' color='gray.textLow'>
                 Wipe {NAMESPACE}
               </Text>
             </View>
             <Button onPress={handleClearStorage} style={styles.destructiveBtn}>
-              <Text type="sm" weight="semibold" color="red.accent">
+              <Text type='sm' weight='semibold' color='red.accent'>
                 Clear
               </Text>
             </Button>
@@ -131,8 +131,8 @@ export function DebugScreen() {
 
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Text weight="semibold">RQ DevTools</Text>
-              <Text type="xs" color="gray.textLow">
+              <Text weight='semibold'>RQ DevTools</Text>
+              <Text type='xs' color='gray.textLow'>
                 Shows React Query debugger
               </Text>
             </View>
@@ -142,26 +142,26 @@ export function DebugScreen() {
           <View style={styles.divider} />
 
           {/* Username converter */}
-          <Text weight="semibold" style={styles.label}>
+          <Text weight='semibold' style={styles.label}>
             Username → ID
           </Text>
           <View style={styles.inputRow}>
             <Input
               style={styles.input}
-              placeholder="username"
+              placeholder='username'
               value={username}
               onChangeText={handleUsernameChange}
-              autoCapitalize="none"
+              autoCapitalize='none'
               autoCorrect={false}
-              variant="outline"
-              radius="sm"
+              variant='outline'
+              radius='sm'
             />
             <Button
               onPress={() => void handleConvertUsername()}
               style={styles.goBtn}
             >
               <SymbolView
-                name="doc.on.doc"
+                name='doc.on.doc'
                 size={16}
                 tintColor={theme.color.text.dark}
               />
@@ -171,14 +171,14 @@ export function DebugScreen() {
           <View style={styles.divider} />
 
           {/* Token */}
-          <Text weight="semibold" style={styles.label}>
+          <Text weight='semibold' style={styles.label}>
             Token{' '}
-            <Text type="sm" color="gray.textLow">
+            <Text type='sm' color='gray.textLow'>
               ({authState?.isAnonAuth ? 'anon' : 'user'})
             </Text>
           </Text>
           <View style={styles.tokenBox}>
-            <Text type="xs" numberOfLines={1} style={styles.tokenText}>
+            <Text type='xs' numberOfLines={1} style={styles.tokenText}>
               {authState?.token?.accessToken ?? '—'}
             </Text>
             <Button
@@ -186,7 +186,7 @@ export function DebugScreen() {
               onPress={handleCopyToken}
               style={styles.copyBtn}
             >
-              <Text type="xs" weight="semibold">
+              <Text type='xs' weight='semibold'>
                 copy
               </Text>
             </Button>
@@ -195,29 +195,29 @@ export function DebugScreen() {
           <View style={styles.divider} />
 
           {/* Join channel */}
-          <Text weight="semibold" style={styles.label}>
+          <Text weight='semibold' style={styles.label}>
             Join channel
           </Text>
           <View style={styles.inputRow}>
             <Input
               style={styles.input}
-              placeholder="channel"
+              placeholder='channel'
               value={channelName}
               onChangeText={handleChannelNameChange}
-              autoCapitalize="none"
+              autoCapitalize='none'
               autoCorrect={false}
-              variant="outline"
-              radius="sm"
+              variant='outline'
+              radius='sm'
             />
             <Button onPress={handleJoinChannel} style={styles.joinBtn}>
-              <Text type="sm" weight="semibold" style={styles.joinBtnText}>
+              <Text type='sm' weight='semibold' style={styles.joinBtnText}>
                 Go
               </Text>
             </Button>
           </View>
 
           {user && (
-            <Text type="xs" color="gray.textLow" style={styles.hint}>
+            <Text type='xs' color='gray.textLow' style={styles.hint}>
               logged in as {user.display_name}
             </Text>
           )}
@@ -225,11 +225,11 @@ export function DebugScreen() {
           <View style={styles.divider} />
 
           {/* Storage state */}
-          <Text weight="semibold" style={styles.label}>
+          <Text weight='semibold' style={styles.label}>
             Storage state
           </Text>
           <View style={styles.codeBlock}>
-            <Text type="xs" style={styles.codeText}>
+            <Text type='xs' style={styles.codeText}>
               {JSON.stringify(debugOptions, null, 2)}
             </Text>
           </View>

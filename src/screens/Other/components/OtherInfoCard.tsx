@@ -12,8 +12,8 @@ interface OtherInfoCardProps {
 export function OtherInfoCard({ body, children, title }: OtherInfoCardProps) {
   return (
     <View style={styles.card}>
-      <Text weight="semibold">{title}</Text>
-      <Text type="sm" color="gray.textLow" style={styles.copy}>
+      <Text weight='semibold'>{title}</Text>
+      <Text type='sm' color='gray.textLow' style={styles.copy}>
         {body}
       </Text>
       {children}

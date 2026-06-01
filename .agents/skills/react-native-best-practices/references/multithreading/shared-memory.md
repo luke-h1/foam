@@ -90,8 +90,13 @@ For objects with custom prototypes that need to cross runtime boundaries, regist
 import { registerCustomSerializable } from 'react-native-worklets';
 
 class Vector2D {
-  constructor(public x: number, public y: number) {}
-  magnitude() { return Math.sqrt(this.x ** 2 + this.y ** 2); }
+  constructor(
+    public x: number,
+    public y: number,
+  ) {}
+  magnitude() {
+    return Math.sqrt(this.x ** 2 + this.y ** 2);
+  }
 }
 
 registerCustomSerializable({
@@ -138,20 +143,20 @@ sharedCounter.setBlocking(42);
 
 ### Methods
 
-| Method | Blocking | Description |
-|--------|----------|-------------|
-| `getBlocking()` | Yes | Exclusively obtains the value. Waits if another thread holds it. |
-| `getDirty()` | No | Returns the value without locking. May return stale data (dirty read). Good when eventual consistency is acceptable. |
-| `setBlocking(value)` | Yes | Exclusively sets the value. Accepts a direct value or an updater function. |
-| `lock()` | Yes | Manually locks the Synchronizable. Other threads block on `getBlocking`/`setBlocking`/`lock` until `unlock()`. |
-| `unlock()` | No | Releases the lock. Must be called from the same thread that locked it. Forgetting to unlock causes deadlocks. |
+| Method               | Blocking | Description                                                                                                          |
+| -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| `getBlocking()`      | Yes      | Exclusively obtains the value. Waits if another thread holds it.                                                     |
+| `getDirty()`         | No       | Returns the value without locking. May return stale data (dirty read). Good when eventual consistency is acceptable. |
+| `setBlocking(value)` | Yes      | Exclusively sets the value. Accepts a direct value or an updater function.                                           |
+| `lock()`             | Yes      | Manually locks the Synchronizable. Other threads block on `getBlocking`/`setBlocking`/`lock` until `unlock()`.       |
+| `unlock()`           | No       | Releases the lock. Must be called from the same thread that locked it. Forgetting to unlock causes deadlocks.        |
 
 ### Updater function pattern
 
 `setBlocking` accepts an updater function for atomic read-modify-write operations. The Synchronizable stays locked for the duration of the updater:
 
 ```tsx
-sharedCounter.setBlocking((prev) => prev + 1);
+sharedCounter.setBlocking(prev => prev + 1);
 ```
 
 ### Performance tips
@@ -166,7 +171,7 @@ sharedCounter.setBlocking((prev) => prev + 1);
 ```tsx
 import { isSerializableRef, isSynchronizable } from 'react-native-worklets';
 
-isSerializableRef(value);       // true if value is a SerializableRef
+isSerializableRef(value); // true if value is a SerializableRef
 isSynchronizable<number>(value); // true if value is a Synchronizable (with type narrowing)
 ```
 
@@ -174,9 +179,9 @@ isSynchronizable<number>(value); // true if value is a Synchronizable (with type
 
 ## Decision: Serializable vs Synchronizable
 
-| Need | Use |
-|------|-----|
-| Pass data from RN to UI/Worker once (read-only) | Serializable (automatic via closure/args) |
-| Share mutable state between runtimes | Synchronizable |
-| Poll shared state from UI thread (e.g., progress) | Synchronizable with `getDirty()` |
-| Atomic read-modify-write across threads | Synchronizable with updater function |
+| Need                                              | Use                                       |
+| ------------------------------------------------- | ----------------------------------------- |
+| Pass data from RN to UI/Worker once (read-only)   | Serializable (automatic via closure/args) |
+| Share mutable state between runtimes              | Synchronizable                            |
+| Poll shared state from UI thread (e.g., progress) | Synchronizable with `getDirty()`          |
+| Atomic read-modify-write across threads           | Synchronizable with updater function      |

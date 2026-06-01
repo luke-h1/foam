@@ -6,13 +6,13 @@ Patterns for tappable elements in React Native using Gesture Handler. For the fu
 
 ## Decision Matrix
 
-| What to use | When |
-|---|---|
-| [RectButton](https://docs.swmansion.com/react-native-gesture-handler/docs/components/buttons) | Inside ScrollView / FlatList -- native feel, no highlight on scroll start |
-| RectButton + GestureDetector(Tap) | Inside ScrollView / FlatList + need UI-thread animation on press |
-| Tap gesture (`useTapGesture` / `Gesture.Tap()`) | Custom animation, multi-tap, double-tap, or programmatic control |
-| [RNGH Pressable](https://docs.swmansion.com/react-native-gesture-handler/docs/components/pressable) | Outside scroll containers, drop-in replacement for RN Pressable |
-| RN Pressable / TouchableOpacity | Avoid -- conflicts with RNGH, causes double-tap bugs |
+| What to use                                                                                         | When                                                                      |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [RectButton](https://docs.swmansion.com/react-native-gesture-handler/docs/components/buttons)       | Inside ScrollView / FlatList -- native feel, no highlight on scroll start |
+| RectButton + GestureDetector(Tap)                                                                   | Inside ScrollView / FlatList + need UI-thread animation on press          |
+| Tap gesture (`useTapGesture` / `Gesture.Tap()`)                                                     | Custom animation, multi-tap, double-tap, or programmatic control          |
+| [RNGH Pressable](https://docs.swmansion.com/react-native-gesture-handler/docs/components/pressable) | Outside scroll containers, drop-in replacement for RN Pressable           |
+| RN Pressable / TouchableOpacity                                                                     | Avoid -- conflicts with RNGH, causes double-tap bugs                      |
 
 **RectButton vs RNGH Pressable in scroll containers**: Pressable highlights items immediately when scroll starts (poor native feel). RectButton delays highlight until the OS confirms a press, matching platform conventions. Always prefer RectButton inside lists.
 
@@ -25,14 +25,18 @@ Patterns for tappable elements in React Native using Gesture Handler. For the fu
 Import both `RectButton` and the scroll container from `react-native-gesture-handler`. Mixing RNGH buttons with React Native's `ScrollView`/`FlatList` causes gesture conflicts:
 
 ```tsx
-import { FlatList, RectButton, BorderlessButton } from 'react-native-gesture-handler';
+import {
+  FlatList,
+  RectButton,
+  BorderlessButton,
+} from 'react-native-gesture-handler';
 
 <RectButton onPress={handlePress} style={styles.row}>
   <Text>{item.title}</Text>
   <BorderlessButton onPress={handleDelete}>
     <DeleteIcon />
   </BorderlessButton>
-</RectButton>
+</RectButton>;
 ```
 
 In v3, the original buttons are renamed with a `Legacy` prefix (`LegacyRectButton`, `LegacyBorderlessButton`). The new `RectButton`/`BorderlessButton` use the hook API internally but keep the same props.
@@ -52,16 +56,26 @@ const opacity = useSharedValue(1);
 
 // v3
 const tap = useTapGesture({
-  onBegin: () => { opacity.value = withTiming(0.7); },
-  onFinalize: () => { opacity.value = withTiming(1); },
+  onBegin: () => {
+    opacity.value = withTiming(0.7);
+  },
+  onFinalize: () => {
+    opacity.value = withTiming(1);
+  },
 });
 
 // v2
-const tap = useMemo(() =>
-  Gesture.Tap()
-    .onBegin(() => { opacity.value = withTiming(0.7); })
-    .onFinalize(() => { opacity.value = withTiming(1); }),
-[]);
+const tap = useMemo(
+  () =>
+    Gesture.Tap()
+      .onBegin(() => {
+        opacity.value = withTiming(0.7);
+      })
+      .onFinalize(() => {
+        opacity.value = withTiming(1);
+      }),
+  [],
+);
 
 <GestureDetector gesture={tap}>
   <Animated.View style={{ opacity }}>
@@ -69,7 +83,7 @@ const tap = useMemo(() =>
       <Text>{item.title}</Text>
     </RectButton>
   </Animated.View>
-</GestureDetector>
+</GestureDetector>;
 ```
 
 ---
@@ -81,16 +95,26 @@ Scale animation on press:
 ```tsx
 // v3
 const tap = useTapGesture({
-  onBegin: () => { scale.value = withTiming(0.95); },
-  onFinalize: () => { scale.value = withTiming(1); },
+  onBegin: () => {
+    scale.value = withTiming(0.95);
+  },
+  onFinalize: () => {
+    scale.value = withTiming(1);
+  },
 });
 
 // v2
-const tap = useMemo(() =>
-  Gesture.Tap()
-    .onBegin(() => { scale.value = withTiming(0.95); })
-    .onFinalize(() => { scale.value = withTiming(1); }),
-[]);
+const tap = useMemo(
+  () =>
+    Gesture.Tap()
+      .onBegin(() => {
+        scale.value = withTiming(0.95);
+      })
+      .onFinalize(() => {
+        scale.value = withTiming(1);
+      }),
+  [],
+);
 ```
 
 Use `onBegin`/`onFinalize` for visual feedback -- `onBegin` fires on finger down (before activation), `onFinalize` fires on finger up regardless of success or failure. This gives immediate feedback that reverses even when the tap is cancelled.
@@ -105,21 +129,41 @@ Use exclusive composition to give double-tap priority. Single-tap fires only aft
 // v3
 const doubleTap = useTapGesture({
   numberOfTaps: 2,
-  onDeactivate: () => { scheduleOnRN(onDoubleTap); },
+  onDeactivate: () => {
+    scheduleOnRN(onDoubleTap);
+  },
 });
 const singleTap = useTapGesture({
   numberOfTaps: 1,
-  onDeactivate: () => { scheduleOnRN(onSingleTap); },
+  onDeactivate: () => {
+    scheduleOnRN(onSingleTap);
+  },
 });
 const composed = useExclusiveGestures(doubleTap, singleTap);
 
 // v2
-const doubleTap = useMemo(() =>
-  Gesture.Tap().numberOfTaps(2).onEnd(() => { scheduleOnRN(onDoubleTap); }), []);
-const singleTap = useMemo(() =>
-  Gesture.Tap().numberOfTaps(1).onEnd(() => { scheduleOnRN(onSingleTap); }), []);
-const composed = useMemo(() =>
-  Gesture.Exclusive(doubleTap, singleTap), [doubleTap, singleTap]);
+const doubleTap = useMemo(
+  () =>
+    Gesture.Tap()
+      .numberOfTaps(2)
+      .onEnd(() => {
+        scheduleOnRN(onDoubleTap);
+      }),
+  [],
+);
+const singleTap = useMemo(
+  () =>
+    Gesture.Tap()
+      .numberOfTaps(1)
+      .onEnd(() => {
+        scheduleOnRN(onSingleTap);
+      }),
+  [],
+);
+const composed = useMemo(
+  () => Gesture.Exclusive(doubleTap, singleTap),
+  [doubleTap, singleTap],
+);
 ```
 
 The first argument (doubleTap) has highest priority. Single-tap activates only after the double-tap's `maxDelay` timeout passes without a second tap.

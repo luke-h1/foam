@@ -98,9 +98,7 @@ const fileSystemMock = jest.requireMock('expo-file-system')
   exists: (uri: string) => boolean;
   reset: () => void;
 };
-const mmkvMock = jest.requireMock('react-native-mmkv') as {
-  __resetMMKV: () => void;
-};
+const mmkvMock = jest.requireMock('react-native-mmkv');
 
 describe('image-cache', () => {
   beforeEach(() => {

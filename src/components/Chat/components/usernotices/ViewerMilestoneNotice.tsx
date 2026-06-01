@@ -1,14 +1,14 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 
 interface ViewerMilestoneNoticeProps {
   part: ParsedPart<'viewermilestone'>;
 }
 
-export function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
+function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
   const unescapedSystemMsg = useMemo(() => {
     if (!part.systemMsg) {
       return '';
@@ -45,20 +45,22 @@ export function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
   }
 
   return (
-    <Text color="gray.text" style={styles.messageText}>
+    <Text color='gray.text' style={styles.messageText}>
       {displayName ? (
-        <Text color="gray.text" style={styles.displayNameText}>
+        <Text color='gray.text' style={styles.displayNameText}>
           {displayName}
         </Text>
       ) : null}
       {messageBody ? (
-        <Text color="gray.textLow" style={styles.eventBodyText}>
+        <Text color='gray.textLow' style={styles.eventBodyText}>
           {displayName ? ` ${messageBody}` : messageBody}
         </Text>
       ) : null}
     </Text>
   );
 }
+
+export const ViewerMileStoneNoticeComponent = memo(ViewerMileStoneNotice);
 
 const styles = StyleSheet.create({
   displayNameText: {

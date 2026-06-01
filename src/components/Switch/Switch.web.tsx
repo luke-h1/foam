@@ -34,7 +34,7 @@ export const Switch = memo(function Switch({
   return (
     <NativeSwitch
       {...props}
-      accessibilityRole="switch"
+      accessibilityRole='switch'
       accessibilityState={{
         ...accessibilityState,
         checked: displayValue,

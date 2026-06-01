@@ -45,6 +45,7 @@ This is where most interfaces fail. Study Vercel, Supabase, Linear — their sur
 **The test:** Squint at your interface. You should still perceive the hierarchy — what's above what, where regions begin and end. But no single border or surface should jump out at you. If borders are the first thing you notice, they're too strong. If you can't find where one region ends and another begins, they're too subtle.
 
 **Common AI mistakes to avoid:**
+
 - Borders that are too visible (1px solid gray instead of subtle rgba)
 - Surface jumps that are too dramatic (going from dark to light instead of dark to slightly-less-dark)
 - Using different hues for different surfaces (gray card on blue background)
@@ -108,6 +109,7 @@ Beyond shadows, use contrasting backgrounds to create depth. An "alternative" or
 Pick a base unit (4px and 8px are common) and use multiples throughout. The specific number matters less than consistency — every spacing value should be explainable as "X times the base unit."
 
 Build a scale for different contexts:
+
 - Micro spacing (icon gaps, tight element pairs)
 - Component spacing (within buttons, inputs, cards)
 - Section spacing (between related groups)
@@ -155,10 +157,8 @@ border: 0.5px solid var(--border);
 
 /* Layered shadow approach */
 --shadow-layered:
-  0 0 0 0.5px rgba(0, 0, 0, 0.05),
-  0 1px 2px rgba(0, 0, 0, 0.04),
-  0 2px 4px rgba(0, 0, 0, 0.03),
-  0 4px 8px rgba(0, 0, 0, 0.02);
+  0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04),
+  0 2px 4px rgba(0, 0, 0, 0.03), 0 4px 8px rgba(0, 0, 0, 0.02);
 ```
 
 ## Card Layouts

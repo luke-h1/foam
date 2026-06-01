@@ -20,7 +20,7 @@ function Feed({ bottomOffset }: { bottomOffset: number }) {
     <ScrollView contentContainerStyle={{ paddingBottom: bottomOffset }}>
       {children}
     </ScrollView>
-  )
+  );
 }
 // Changing bottomOffset triggers full layout recalculation
 ```
@@ -36,7 +36,7 @@ function Feed({ bottomOffset }: { bottomOffset: number }) {
     >
       {children}
     </ScrollView>
-  )
+  );
 }
 // Changing bottomOffset only adjusts scroll bounds
 ```

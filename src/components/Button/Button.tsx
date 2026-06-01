@@ -1,12 +1,13 @@
 import { createHitslop } from '@app/utils/string/createHitSlop';
 import { PressableScale, type CustomPressableProps } from 'pressto';
+import { memo } from 'react';
 
 export type ButtonProps = CustomPressableProps & {
   label?: string;
   disabled?: boolean;
 };
 
-export function Button({
+function ButtonComponent({
   children,
   onPress,
   style,
@@ -28,3 +29,4 @@ export function Button({
     </PressableScale>
   );
 }
+export const Button = memo(ButtonComponent);

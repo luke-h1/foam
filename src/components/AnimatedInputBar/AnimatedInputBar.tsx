@@ -262,7 +262,7 @@ export const AnimatedInputBar = memo(function AnimatedInputBar({
         ) : null}
 
         <Animated.View
-          pointerEvents="none"
+          pointerEvents='none'
           style={[StyleSheet.absoluteFill, styles.blurMask, blurOverlayStyle]}
         >
           <BlurView intensity={20} style={StyleSheet.absoluteFill} />
@@ -279,12 +279,12 @@ export const AnimatedInputBar = memo(function AnimatedInputBar({
             setIsFocused(true);
             onFocus?.();
           }}
-          placeholderTextColor="transparent"
-          radius="none"
-          size="sm"
+          placeholderTextColor='transparent'
+          radius='none'
+          size='sm'
           style={[styles.input, inputStyle]}
           value={inputValue}
-          variant="soft"
+          variant='soft'
         />
       </View>
     </View>

@@ -182,12 +182,12 @@ const Stack = createNativeStackNavigator();
 function MyStack() {
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName='Home'
       screenOptions={{ headerShown: false }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name='Home' component={HomeScreen} />
       <Stack.Screen
-        name="Profile"
+        name='Profile'
         component={ProfileScreen}
         options={{ title: 'My Profile' }}
       />
@@ -232,8 +232,8 @@ const Tab = createBottomTabNavigator();
 function HomeTabs() {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Groups" component={GroupsScreen} />
-      <Tab.Screen name="Chats" component={ChatsScreen} />
+      <Tab.Screen name='Groups' component={GroupsScreen} />
+      <Tab.Screen name='Chats' component={ChatsScreen} />
     </Tab.Navigator>
   );
 }
@@ -241,7 +241,7 @@ function HomeTabs() {
 function RootStack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeTabs} />
+      <Stack.Screen name='Home' component={HomeTabs} />
     </Stack.Navigator>
   );
 }
@@ -273,11 +273,11 @@ function RootStack() {
   return (
     <Stack.Navigator>
       <Stack.Group screenOptions={{ headerStyle: { backgroundColor: 'red' } }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name='Home' component={HomeScreen} />
+        <Stack.Screen name='Profile' component={ProfileScreen} />
       </Stack.Group>
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
-        <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name='Settings' component={SettingsScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );
@@ -344,18 +344,18 @@ function App() {
     <Stack.Navigator>
       {isSignedIn ? (
         <>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name='Home' component={HomeScreen} />
+          <Stack.Screen name='Profile' component={ProfileScreen} />
         </>
       ) : (
         <>
-          <Stack.Screen name="SignIn" component={SignInScreen} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen name='SignIn' component={SignInScreen} />
+          <Stack.Screen name='SignUp' component={SignUpScreen} />
         </>
       )}
       <Stack.Screen
         navigationKey={isSignedIn ? 'signed-in' : 'signed-out'}
-        name="Help"
+        name='Help'
         component={HelpScreen}
       />
     </Stack.Navigator>
@@ -405,7 +405,7 @@ function MyStack() {
   return (
     <SomeProvider>
       <Stack.Navigator screenOptions={{ title: someValue }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name='Home' component={HomeScreen} />
       </Stack.Navigator>
     </SomeProvider>
   );
@@ -440,7 +440,7 @@ Before:
 function MyStack({ route }) {
   return (
     <Stack.Navigator screenOptions={{ title: route.params.title }}>
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name='Home' component={HomeScreen} />
     </Stack.Navigator>
   );
 }
@@ -474,12 +474,12 @@ function MyStack() {
     <SomeProvider>
       <Stack.Navigator>
         <Stack.Screen
-          name="Home"
+          name='Home'
           component={HomeScreen}
           options={{ title: getSomething('First') }}
         />
         <Stack.Screen
-          name="Profile"
+          name='Profile'
           component={ProfileScreen}
           options={{ title: getSomething('Second') }}
         />
@@ -534,8 +534,8 @@ Passing additional props via context:
 Before:
 
 ```tsx
-<Stack.Screen name="Chat">
-  {(props) => <ChatScreen {...props} userToken={token} />}
+<Stack.Screen name='Chat'>
+  {props => <ChatScreen {...props} userToken={token} />}
 </Stack.Screen>
 ```
 
@@ -570,8 +570,8 @@ For wrappers around the screen component, move the wrapper to the screen's `layo
 Before:
 
 ```tsx
-<Stack.Screen name="Profile">
-  {(props) => (
+<Stack.Screen name='Profile'>
+  {props => (
     <SomeWrapper>
       <ProfileScreen {...props} />
     </SomeWrapper>
@@ -597,8 +597,8 @@ For refs passed to the screen component, use context and wrap the screen in an i
 Before:
 
 ```tsx
-<Stack.Screen name="Profile">
-  {(props) => <ProfileScreen {...props} ref={profileRef} />}
+<Stack.Screen name='Profile'>
+  {props => <ProfileScreen {...props} ref={profileRef} />}
 </Stack.Screen>
 ```
 
@@ -654,7 +654,7 @@ Before:
 
 ```tsx
 <Stack.Screen
-  name="Settings"
+  name='Settings'
   getComponent={() => require('./SettingsScreen').default}
 />
 ```
@@ -867,12 +867,12 @@ export function Example() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
-          name="Article"
+          name='Article'
           component={ArticleScreen}
           options={({ route }) => ({ title: route.params.author })}
           initialParams={{ author: 'Gandalf' }}
         />
-        <Stack.Screen name="Albums" component={AlbumsScreen} />
+        <Stack.Screen name='Albums' component={AlbumsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -1007,8 +1007,8 @@ type FeedScreenProps = StaticScreenProps<NavigatorScreenParams<FeedParamList>>;
 function FeedScreen(_: FeedScreenProps) {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Latest" component={LatestScreen} />
-      <Tab.Screen name="Popular" component={PopularScreen} />
+      <Tab.Screen name='Latest' component={LatestScreen} />
+      <Tab.Screen name='Popular' component={PopularScreen} />
     </Tab.Navigator>
   );
 }

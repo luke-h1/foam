@@ -66,7 +66,7 @@ function createMessage(): AnyChatMessageType {
       login: 'sender',
       username: 'Sender',
     },
-  } as AnyChatMessageType;
+  };
 }
 
 function createMessageForUser(userId: string): AnyChatMessageType {
@@ -83,7 +83,7 @@ function createMessageForUser(userId: string): AnyChatMessageType {
       login: `sender-${userId}`,
       username: `Sender${userId}`,
     },
-  } as AnyChatMessageType;
+  };
 }
 
 describe('hydrateVisibleSevenTvAssets', () => {

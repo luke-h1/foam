@@ -91,7 +91,7 @@ const ChevronIcon = ({ isOpen }: IconProps) => {
 
   return (
     <Animated.View style={animatedStyle}>
-      <SymbolView name="chevron.down" size={20} tintColor={theme.iconColor} />
+      <SymbolView name='chevron.down' size={20} tintColor={theme.iconColor} />
     </Animated.View>
   );
 };
@@ -407,7 +407,7 @@ const AccordionContent = ({ children }: AccordionContentProps) => {
                   ? 'dark'
                   : 'systemUltraThinMaterialDark'
               }
-              animatedProps={animatedBlurProps as never}
+              animatedProps={animatedBlurProps}
               // eslint-disable-next-line react-native/no-inline-styles
               style={{
                 overflow: 'hidden',

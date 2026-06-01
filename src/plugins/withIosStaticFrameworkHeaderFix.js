@@ -22,7 +22,9 @@ const withIosStaticFrameworkHeaderFix = config =>
     const contents = configWithPodfile.modResults.contents;
 
     if (
-      contents.includes('CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES') ||
+      contents.includes(
+        'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES',
+      ) ||
       !contents.includes(REACT_NATIVE_POST_INSTALL_BLOCK)
     ) {
       return configWithPodfile;

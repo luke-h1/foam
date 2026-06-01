@@ -1,9 +1,9 @@
-import { appendFileSync } from "node:fs";
+import { appendFileSync } from 'node:fs';
 
 export function getRequiredArg(
   args: string[],
   name: string,
-  fallback?: string
+  fallback?: string,
 ): string {
   const flag = `--${name}`;
   const index = args.indexOf(flag);
@@ -11,7 +11,7 @@ export function getRequiredArg(
   if (index !== -1) {
     const value = args[index + 1];
 
-    if (value == null || value.startsWith("--")) {
+    if (value == null || value.startsWith('--')) {
       throw new Error(`Missing value for ${flag}`);
     }
 
@@ -28,9 +28,9 @@ export function getRequiredArg(
 export function writeGithubOutput(name: string, value: string): void {
   const outputPath = process.env.GITHUB_OUTPUT;
 
-  if (outputPath == null || outputPath === "") {
-    throw new Error("GITHUB_OUTPUT is not set");
+  if (outputPath == null || outputPath === '') {
+    throw new Error('GITHUB_OUTPUT is not set');
   }
 
-  appendFileSync(outputPath, `${name}=${value}\n`, "utf8");
+  appendFileSync(outputPath, `${name}=${value}\n`, 'utf8');
 }

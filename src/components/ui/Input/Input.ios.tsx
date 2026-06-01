@@ -591,7 +591,7 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
         style={hostStyle}
       >
         <GlassEffectContainer>
-          <VStack alignment="leading" modifiers={containerModifiers}>
+          <VStack alignment='leading' modifiers={containerModifiers}>
             {secureTextEntry ? (
               <SecureField
                 {...autoFocusProps}

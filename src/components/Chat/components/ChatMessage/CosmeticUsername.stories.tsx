@@ -436,18 +436,18 @@ export const AllRealistic7tvPaints: Story = {
   },
   render: () => (
     <View style={{ gap: 12 }}>
-      <PaintedUsername username="RoseGold" paint={roseGold} />
-      <PaintedUsername username="Popsicle" paint={popsicle} />
-      <PaintedUsername username="Magma" paint={magma} />
-      <PaintedUsername username="Lobster" paint={lobster} />
-      <PaintedUsername username="Jawbreaker" paint={jawbreaker} />
-      <PaintedUsername username="Flowerchild" paint={flowerchildOa} />
-      <PaintedUsername username="Division" paint={divisionOa} />
-      <PaintedUsername username="Cirus" paint={cirusOa} />
-      <PaintedUsername username="Ripe" paint={ripeOa} />
-      <PaintedUsername username="Chestnut" paint={chestnutS} />
-      <PaintedUsername username="GingerTabby" paint={gingerTabbyS} />
-      <PaintedUsername username="Crocus" paint={crocus} />
+      <PaintedUsername username='RoseGold' paint={roseGold} />
+      <PaintedUsername username='Popsicle' paint={popsicle} />
+      <PaintedUsername username='Magma' paint={magma} />
+      <PaintedUsername username='Lobster' paint={lobster} />
+      <PaintedUsername username='Jawbreaker' paint={jawbreaker} />
+      <PaintedUsername username='Flowerchild' paint={flowerchildOa} />
+      <PaintedUsername username='Division' paint={divisionOa} />
+      <PaintedUsername username='Cirus' paint={cirusOa} />
+      <PaintedUsername username='Ripe' paint={ripeOa} />
+      <PaintedUsername username='Chestnut' paint={chestnutS} />
+      <PaintedUsername username='GingerTabby' paint={gingerTabbyS} />
+      <PaintedUsername username='Crocus' paint={crocus} />
     </View>
   ),
 };
@@ -458,9 +458,9 @@ export const PaintsWithMultipleShadows: Story = {
   },
   render: () => (
     <View style={{ gap: 16 }}>
-      <PaintedUsername username="RoseGold" paint={roseGold} />
-      <PaintedUsername username="Division" paint={divisionOa} />
-      <PaintedUsername username="Chestnut" paint={chestnutS} />
+      <PaintedUsername username='RoseGold' paint={roseGold} />
+      <PaintedUsername username='Division' paint={divisionOa} />
+      <PaintedUsername username='Chestnut' paint={chestnutS} />
     </View>
   ),
 };
@@ -471,14 +471,14 @@ export const LinearGradientPaints: Story = {
   },
   render: () => (
     <View style={{ gap: 12 }}>
-      <PaintedUsername username="Popsicle" paint={popsicle} />
-      <PaintedUsername username="Magma" paint={magma} />
-      <PaintedUsername username="Lobster" paint={lobster} />
-      <PaintedUsername username="Jawbreaker" paint={jawbreaker} />
-      <PaintedUsername username="Division" paint={divisionOa} />
-      <PaintedUsername username="Cirus" paint={cirusOa} />
-      <PaintedUsername username="Ripe" paint={ripeOa} />
-      <PaintedUsername username="GingerTabby" paint={gingerTabbyS} />
+      <PaintedUsername username='Popsicle' paint={popsicle} />
+      <PaintedUsername username='Magma' paint={magma} />
+      <PaintedUsername username='Lobster' paint={lobster} />
+      <PaintedUsername username='Jawbreaker' paint={jawbreaker} />
+      <PaintedUsername username='Division' paint={divisionOa} />
+      <PaintedUsername username='Cirus' paint={cirusOa} />
+      <PaintedUsername username='Ripe' paint={ripeOa} />
+      <PaintedUsername username='GingerTabby' paint={gingerTabbyS} />
     </View>
   ),
 };
@@ -525,9 +525,9 @@ export const WithGlowEffects: Story = {
   },
   render: () => (
     <View style={{ gap: 16 }}>
-      <PaintedUsername username="RoseGoldGlow" paint={roseGold} />
-      <PaintedUsername username="PopsicleGlow" paint={popsicle} />
-      <PaintedUsername username="RipeGoldGlow" paint={ripeOa} />
+      <PaintedUsername username='RoseGoldGlow' paint={roseGold} />
+      <PaintedUsername username='PopsicleGlow' paint={popsicle} />
+      <PaintedUsername username='RipeGoldGlow' paint={ripeOa} />
     </View>
   ),
 };
@@ -538,9 +538,9 @@ export const LongUsernames: Story = {
   },
   render: () => (
     <View style={{ gap: 8 }}>
-      <PaintedUsername username="ShortName" paint={roseGold} />
-      <PaintedUsername username="MediumLengthUsername" paint={popsicle} />
-      <PaintedUsername username="VeryLongUsernameForTesting" paint={magma} />
+      <PaintedUsername username='ShortName' paint={roseGold} />
+      <PaintedUsername username='MediumLengthUsername' paint={popsicle} />
+      <PaintedUsername username='VeryLongUsernameForTesting' paint={magma} />
     </View>
   ),
 };

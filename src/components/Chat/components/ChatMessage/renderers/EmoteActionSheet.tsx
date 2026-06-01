@@ -17,6 +17,7 @@ import {
   cloneElement,
   isValidElement,
   ReactElement,
+  memo,
 } from 'react';
 import {
   Platform,
@@ -51,7 +52,7 @@ interface EmoteActionSheetProps {
   children: ReactNode;
 }
 
-export function EmoteActionSheet({
+function EmoteActionSheetComponent({
   disableAnimations = false,
   part,
   onPress,
@@ -237,22 +238,22 @@ export function EmoteActionSheet({
           isPresented={visible}
           onDismiss={closeSheet}
           showDragIndicator
-          testID="emote-action-sheet"
+          testID='emote-action-sheet'
         >
           <View style={wrapperStyle}>
             <View style={styles.topBar}>
               <View style={styles.heading}>
-                <Text style={styles.eyebrow} weight="semibold">
+                <Text style={styles.eyebrow} weight='semibold'>
                   Emote actions
                 </Text>
               </View>
               <Button
-                label="Done"
+                label='Done'
                 style={styles.doneButton}
                 onPress={closeSheet}
               >
                 <SymbolView
-                  name="checkmark"
+                  name='checkmark'
                   size={18}
                   tintColor={theme.color.text.dark}
                 />
@@ -266,11 +267,11 @@ export function EmoteActionSheet({
                       <Image
                         useNitro
                         trackLoadTime
-                        trackLoadContext="chat.emote-action-sheet"
+                        trackLoadContext='chat.emote-action-sheet'
                         source={displayUrl}
-                        cacheVariant="emote"
+                        cacheVariant='emote'
                         style={styles.previewImage}
-                        contentFit="contain"
+                        contentFit='contain'
                         transition={50}
                       />
                     </View>
@@ -301,12 +302,12 @@ export function EmoteActionSheet({
                       name={getSFSymbolName(action.id)}
                       size={18}
                       tintColor={theme.colorGreen}
-                      weight="regular"
+                      weight='regular'
                       style={styles.actionIcon}
                     />
                   </View>
                   <View style={styles.actionCopy}>
-                    <Text style={styles.actionText} weight="semibold">
+                    <Text style={styles.actionText} weight='semibold'>
                       {action.label}
                     </Text>
                   </View>
@@ -319,6 +320,8 @@ export function EmoteActionSheet({
     </>
   );
 }
+
+export const EmoteActionSheet = memo(EmoteActionSheetComponent);
 
 const styles = StyleSheet.create({
   actionButton: {

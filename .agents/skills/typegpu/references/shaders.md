@@ -2,12 +2,12 @@
 
 ## `tgpu.fn` vs plain callback
 
-| | Plain callback | `tgpu.fn` |
-|---|---|---|
-| Types | Inferred at call sites | Declared explicitly |
-| Polymorphism | One function, many WGSL variants | One fixed signature |
-| Overloads | Yes (union types, branch pruning) | No |
-| Best for | Helper math, flexible utilities, user-facing APIs | Library code, explicit dependencies, functions used in bind group layouts |
+|              | Plain callback                                    | `tgpu.fn`                                                                 |
+| ------------ | ------------------------------------------------- | ------------------------------------------------------------------------- |
+| Types        | Inferred at call sites                            | Declared explicitly                                                       |
+| Polymorphism | One function, many WGSL variants                  | One fixed signature                                                       |
+| Overloads    | Yes (union types, branch pruning)                 | No                                                                        |
+| Best for     | Helper math, flexible utilities, user-facing APIs | Library code, explicit dependencies, functions used in bind group layouts |
 
 ```ts
 // Plain callback - one function, separate WGSL overloads per call-site type combination:
@@ -17,7 +17,10 @@ const scale = (v: d.v2f | d.v3f, factor: number) => {
 };
 
 // tgpu.fn - always one WGSL function:
-const scale2D = tgpu.fn([d.vec2f, d.f32], d.vec2f)((v, factor) => {
+const scale2D = tgpu.fn(
+  [d.vec2f, d.f32],
+  d.vec2f,
+)((v, factor) => {
   'use gpu';
   return v * factor;
 });
@@ -34,13 +37,13 @@ const area = (shape: d.v2f | d.v3f): number => {
   'use gpu';
   const base = shape.x * shape.y; // .x and .y are on both
   if (shape.kind === 'vec2f') {
-    return base;                  // only in the vec2f overload
+    return base; // only in the vec2f overload
   } else {
-    return base * shape.z;        // only in the vec3f overload
+    return base * shape.z; // only in the vec3f overload
   }
 };
 
-area(d.vec2f(3, 4));    // fn area_vec2f(shape: vec2f) -> f32 { return shape.x * shape.y; }
+area(d.vec2f(3, 4)); // fn area_vec2f(shape: vec2f) -> f32 { return shape.x * shape.y; }
 area(d.vec3f(3, 4, 5)); // fn area_vec3f(shape: vec3f) -> f32 { return shape.x * shape.y * shape.z; }
 ```
 
@@ -52,16 +55,16 @@ Branch pruning also applies to compile-time-known captured values - `if` conditi
 
 ## Syntax limitations inside `'use gpu'`
 
-| Unsupported | Alternative |
-|---|---|
-| `a ? b : c` (runtime ternary) | `std.select(falseVal, trueVal, condition)` |
-| Object/array spreading (`{...obj}`) | Build the result manually |
-| Inline functions / arrow fns | Define outside and capture |
-| Most Web APIs | Compile-time constants only (`Math.PI` is fine) |
-| `console.log` in vertex shaders | Fragment/compute only; has significant cost |
-| `async`/`await`, `Promise` | Not supported |
-| `try`/`catch` | Not supported |
-| `let x;` without initializer | `let x = d.f32(0)` - type must be inferrable |
+| Unsupported                         | Alternative                                     |
+| ----------------------------------- | ----------------------------------------------- |
+| `a ? b : c` (runtime ternary)       | `std.select(falseVal, trueVal, condition)`      |
+| Object/array spreading (`{...obj}`) | Build the result manually                       |
+| Inline functions / arrow fns        | Define outside and capture                      |
+| Most Web APIs                       | Compile-time constants only (`Math.PI` is fine) |
+| `console.log` in vertex shaders     | Fragment/compute only; has significant cost     |
+| `async`/`await`, `Promise`          | Not supported                                   |
+| `try`/`catch`                       | Not supported                                   |
+| `let x;` without initializer        | `let x = d.f32(0)` - type must be inferrable    |
 
 ---
 
@@ -82,9 +85,9 @@ With `tsover`, `+ - * / %` work on scalars, vectors, and matrices. Infix methods
 ```ts
 const a = d.vec3f(1, 2, 3);
 const b = d.vec3f(4, 5, 6);
-const sum  = a + b;         // vec3f(5, 7, 9)
-const prod = a * 2;         // vec3f(2, 4, 6) - scalar broadcast
-const dot  = std.dot(a, b); // 32
+const sum = a + b; // vec3f(5, 7, 9)
+const prod = a * 2; // vec3f(2, 4, 6) - scalar broadcast
+const dot = std.dot(a, b); // 32
 ```
 
 Division on primitives defaults to `f32`. Integer division: `d.i32(10 / 3)`.
@@ -96,9 +99,9 @@ Division on primitives defaults to `f32`. Integer division: `d.i32(10 / 3)`.
 `.0` suffixes may be stripped by bundlers before transpilation:
 
 ```ts
-let x = 1.0;       // BAD: "1.0" may become "1" -> abstract integer / i32
-let x = d.f32(1);  // OK
-let y = 1.1;       // OK - fractional part prevents integer interpretation
+let x = 1.0; // BAD: "1.0" may become "1" -> abstract integer / i32
+let x = d.f32(1); // OK
+let y = 1.1; // OK - fractional part prevents integer interpretation
 ```
 
 ---
@@ -133,9 +136,9 @@ for (const item of items.$) {
 Generates a sequence of integers. Three forms:
 
 ```ts
-std.range(end)                // [0, 1, ..., end-1]
-std.range(start, end)         // [start, start+1, ..., end-1]
-std.range(start, end, step)   // [start, start+step, ...] while < end
+std.range(end); // [0, 1, ..., end-1]
+std.range(start, end); // [start, start+1, ..., end-1]
+std.range(start, end, step); // [start, start+step, ...] while < end
 ```
 
 Used directly in `for...of`, compiles to a WGSL `for` loop:
@@ -181,15 +184,15 @@ for (const i of tgpu.unroll(std.range(FBM_OCTAVES))) {
 
 #### Supported iterables
 
-| Form | Example | Notes |
-|---|---|---|
-| Inline primitive array | `tgpu.unroll([1, 2, 3])` | Each element inlined as a literal |
-| `std.range(n)` | `tgpu.unroll(std.range(N))` | Same category as primitive array |
-| Inline array of complex values | `tgpu.unroll([b1, b2])` | Elements **must be stored in variables first** - fresh constructors inside the literal throw |
-| Vector | `tgpu.unroll(d.vec3f(v))` | Iterates components: `v[0u]`, `v[1u]`, ... |
-| Array of struct keys | `tgpu.unroll(Object.keys(obj) as ...)` | Iterate `obj[key]`; each access folded at compile time |
-| Iterable in a variable | `const arr = [1,2,3]; tgpu.unroll(arr)` | Indexed access into WGSL `array<...>` - still unrolled |
-| Buffers / accessors / `const` / `comptime` | `tgpu.unroll(acc.$)` | Works whenever length is known at compile time |
+| Form                                       | Example                                 | Notes                                                                                        |
+| ------------------------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Inline primitive array                     | `tgpu.unroll([1, 2, 3])`                | Each element inlined as a literal                                                            |
+| `std.range(n)`                             | `tgpu.unroll(std.range(N))`             | Same category as primitive array                                                             |
+| Inline array of complex values             | `tgpu.unroll([b1, b2])`                 | Elements **must be stored in variables first** - fresh constructors inside the literal throw |
+| Vector                                     | `tgpu.unroll(d.vec3f(v))`               | Iterates components: `v[0u]`, `v[1u]`, ...                                                   |
+| Array of struct keys                       | `tgpu.unroll(Object.keys(obj) as ...)`  | Iterate `obj[key]`; each access folded at compile time                                       |
+| Iterable in a variable                     | `const arr = [1,2,3]; tgpu.unroll(arr)` | Indexed access into WGSL `array<...>` - still unrolled                                       |
+| Buffers / accessors / `const` / `comptime` | `tgpu.unroll(acc.$)`                    | Works whenever length is known at compile time                                               |
 
 #### Conditional unrolling
 
@@ -210,9 +213,15 @@ for (const x of shouldUnroll ? tgpu.unroll(arr) : arr) {
 Declare mutable fixed-size local arrays with `d.arrayOf(dtype, count)(initialData)`:
 
 ```ts
-const accum = d.arrayOf(d.f32, N)();     // zero-initialized
-const vecs  = d.arrayOf(d.vec2f, 3)([    // with initial values
-  d.vec2f(1, 2), d.vec2f(3, 4), d.vec2f(5, 6)
+const accum = d.arrayOf(d.f32, N)(); // zero-initialized
+const vecs = d.arrayOf(
+  d.vec2f,
+  3,
+)([
+  // with initial values
+  d.vec2f(1, 2),
+  d.vec2f(3, 4),
+  d.vec2f(5, 6),
 ]);
 ```
 
@@ -232,7 +241,10 @@ const color = tgpu.comptime((hex: number) => {
   return d.vec3f(r / 255, g / 255, b / 255);
 });
 
-const material = tgpu.fn([d.vec3f], d.vec3f)((diffuse) => {
+const material = tgpu.fn(
+  [d.vec3f],
+  d.vec3f,
+)(diffuse => {
   'use gpu';
   const albedo = color(0xff00ff); // evaluated at compile time -> const vec3f(1, 0, 1)
   return albedo * diffuse;
@@ -251,13 +263,15 @@ The function passed to `tgpu.comptime` runs in JS - any JS APIs are fair game, b
 tgpu.computeFn({
   workgroupSize: [64],
   in: {
-    gid:  d.builtin.globalInvocationId,   // vec3u
-    lid:  d.builtin.localInvocationId,    // vec3u
-    wgid: d.builtin.workgroupId,          // vec3u
+    gid: d.builtin.globalInvocationId, // vec3u
+    lid: d.builtin.localInvocationId, // vec3u
+    wgid: d.builtin.workgroupId, // vec3u
     lidx: d.builtin.localInvocationIndex, // u32
-    nwg:  d.builtin.numWorkgroups,        // vec3u
+    nwg: d.builtin.numWorkgroups, // vec3u
   },
-})((input) => { 'use gpu'; });
+})(input => {
+  'use gpu';
+});
 ```
 
 ### `tgpu.vertexFn`
@@ -298,7 +312,10 @@ Values from JS scope are inlined as WGSL constants at first compilation - featur
 
 ```ts
 let threshold = 0.5;
-const check = (x: number) => { 'use gpu'; return x > threshold; };
+const check = (x: number) => {
+  'use gpu';
+  return x > threshold;
+};
 // threshold compiled as `const threshold: f32 = 0.5;`
 // Later: threshold = 0.8; - has NO effect on the shader
 ```
@@ -316,6 +333,7 @@ import { std } from 'typegpu';
 ```
 
 **Math**
+
 ```ts
 std.abs   std.sign   std.floor   std.ceil   std.round   std.fract   std.trunc
 std.sqrt  std.inverseSqrt
@@ -328,12 +346,14 @@ std.select(falseVal, trueVal, cond)
 ```
 
 **Trig**
+
 ```ts
 std.sin  std.cos  std.tan  std.asin  std.acos  std.atan  std.atan2
 std.sinh std.cosh std.tanh  std.degrees  std.radians
 ```
 
 **Vector / matrix**
+
 ```ts
 std.dot(a, b)         std.cross(a, b)      std.length(v)
 std.normalize(v)      std.distance(a, b)
@@ -343,16 +363,18 @@ std.mul(mat, vec)     // matrix-vector multiply
 ```
 
 **Texture** (see sampling rules below)
+
 ```ts
-std.textureSample(view.$, sampler.$, uv)
-std.textureSampleLevel(view.$, sampler.$, uv, mipLevel)
-std.textureSampleGrad(view.$, sampler.$, uv, ddx, ddy)
-std.textureLoad(view.$, coords, mipLevel)
-std.textureStore(storageView.$, coords, value)
-std.textureDimensions(view.$)
+std.textureSample(view.$, sampler.$, uv);
+std.textureSampleLevel(view.$, sampler.$, uv, mipLevel);
+std.textureSampleGrad(view.$, sampler.$, uv, ddx, ddy);
+std.textureLoad(view.$, coords, mipLevel);
+std.textureStore(storageView.$, coords, value);
+std.textureDimensions(view.$);
 ```
 
 **Atomic**
+
 ```ts
 std.atomicLoad(ptr)         std.atomicStore(ptr, val)
 std.atomicAdd(ptr, val)     std.atomicSub(ptr, val)
@@ -363,6 +385,7 @@ std.atomicCompareExchangeWeak(ptr, cmp, val)
 ```
 
 **Packing**
+
 ```ts
 std.pack4x8snorm(v)   std.unpack4x8snorm(x)
 std.pack4x8unorm(v)   std.unpack4x8unorm(x)
@@ -426,24 +449,24 @@ Access via `sharedAccum.$`, `threadState.$`, `PI_OVER_2.$`. Workgroup vars requi
 ```ts
 const startPoint = d.vec2f(1, 2);
 
-let endPoint = startPoint;           // BAD: "references cannot be assigned"
-let endPoint = d.vec2f(startPoint);  // OK: copy - fresh, independent, reassignable
-const endPoint = startPoint;         // OK: alias - same memory, not reassignable
+let endPoint = startPoint; // BAD: "references cannot be assigned"
+let endPoint = d.vec2f(startPoint); // OK: copy - fresh, independent, reassignable
+const endPoint = startPoint; // OK: alias - same memory, not reassignable
 ```
 
 Same rule for reassignment and returning a parameter directly:
 
 ```ts
-outColor = d.vec3f(spriteRgb);   // OK - not: outColor = spriteRgb
-return d.vec3f(baseColor);       // OK when baseColor is a parameter
+outColor = d.vec3f(spriteRgb); // OK - not: outColor = spriteRgb
+return d.vec3f(baseColor); // OK when baseColor is a parameter
 ```
 
 **Expression results are ephemeral and safe.** Constructor calls, arithmetic, function returns, and literals aren't named storage, so `let`/`const`/assignment/arguments/returns all work:
 
 ```ts
-let p = d.vec2f(0);                 // constructor result
-p = input.uv * 2 + d.vec2f(1, 0);  // expression result
-let q = computeOffset();            // function return
+let p = d.vec2f(0); // constructor result
+p = input.uv * 2 + d.vec2f(1, 0); // expression result
+let q = computeOffset(); // function return
 ```
 
 The "must copy" rule only kicks in when the right-hand side is itself a named reference (local variable, struct field, array element, function parameter). **Fix:** wrap in the schema constructor (`d.vec2f(v)`, `d.mat4x4f(m)`, `MyStruct(other)`), or swap `let` for `const` if you don't need to reassign.

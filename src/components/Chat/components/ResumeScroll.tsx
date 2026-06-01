@@ -3,13 +3,14 @@ import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
+import { memo } from 'react';
 
 export interface ResumeScrollProps {
   unreadCount: number;
   onScrollToBottom: () => void;
 }
 
-export function ResumeScroll({
+function ResumeScrollComponent({
   onScrollToBottom,
   unreadCount,
 }: ResumeScrollProps) {
@@ -17,7 +18,7 @@ export function ResumeScroll({
     <View style={styles.resumeButtonContainer}>
       <Button style={styles.resumeButton} onPress={onScrollToBottom}>
         <SymbolView
-          name="arrow.down"
+          name='arrow.down'
           size={16}
           tintColor={theme.colorAmberAlpha}
         />
@@ -29,6 +30,8 @@ export function ResumeScroll({
     </View>
   );
 }
+
+export const ResumeScroll = memo(ResumeScrollComponent);
 
 const styles = StyleSheet.create({
   resumeButton: {

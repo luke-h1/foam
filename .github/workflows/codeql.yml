@@ -15,23 +15,23 @@ jobs:
       fail-fast: false
       matrix:
         language: ['javascript', 'typescript']
-  
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      with:
-        fetch-depth: 0
-        ref: ${{ github.head_ref }}
-        persist-credentials: false
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          persist-credentials: false
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@52485aec7be33610227643b0fe83936b8b5f061a
-      with:
-        languages: ${{ matrix.language }}
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@52485aec7be33610227643b0fe83936b8b5f061a
+        with:
+          languages: ${{ matrix.language }}
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@52485aec7be33610227643b0fe83936b8b5f061a
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@52485aec7be33610227643b0fe83936b8b5f061a
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@52485aec7be33610227643b0fe83936b8b5f061a
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@52485aec7be33610227643b0fe83936b8b5f061a

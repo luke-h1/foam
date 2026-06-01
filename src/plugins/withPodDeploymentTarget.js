@@ -4,7 +4,7 @@ const { createRunOncePlugin, withPodfile } = require('@expo/config-plugins');
 const MARKER = '# >>> with-pod-deployment-target';
 const END_MARKER = '# <<< with-pod-deployment-target';
 const LEGACY_SNIPPET_PATTERN =
-  /\n    expo_modules_deployment_target = Gem::Version\.new\('[^']+'\)\n    installer\.pods_project\.targets\.each do \|target\|\n      target\.build_configurations\.each do \|build_configuration\|\n        deployment_target = build_configuration\.build_settings\['IPHONEOS_DEPLOYMENT_TARGET'\]\n        next unless deployment_target\n\n        if Gem::Version\.new\(deployment_target\) < expo_modules_deployment_target\n          build_configuration\.build_settings\['IPHONEOS_DEPLOYMENT_TARGET'\] = expo_modules_deployment_target\.to_s\n\s*        end\n      end\n    end\n/g;
+  /\n {4}expo_modules_deployment_target = Gem::Version\.new\('[^']+'\)\n {4}installer\.pods_project\.targets\.each do \|target\|\n {6}target\.build_configurations\.each do \|build_configuration\|\n {8}deployment_target = build_configuration\.build_settings\['IPHONEOS_DEPLOYMENT_TARGET'\]\n {8}next unless deployment_target\n\n {8}if Gem::Version\.new\(deployment_target\) < expo_modules_deployment_target\n {10}build_configuration\.build_settings\['IPHONEOS_DEPLOYMENT_TARGET'\] = expo_modules_deployment_target\.to_s\n\s* {8}end\n {6}end\n {4}end\n/g;
 const REACT_NATIVE_POST_INSTALL_BLOCK = `    react_native_post_install(
       installer,
       config[:reactNativePath],

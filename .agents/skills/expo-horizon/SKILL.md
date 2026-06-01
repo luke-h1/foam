@@ -112,14 +112,14 @@ Follow these steps **in order** when the user asks to add Meta Quest support. Do
 
 Always webfetch the raw markdown (`raw.githubusercontent.com/...`) if the HTML view does not render the source; the raw URL is the source of truth.
 
-| Topic | Official source |
-|-------|-----------------|
-| Repo overview and package list | [expo-horizon README](https://github.com/software-mansion-labs/expo-horizon/blob/main/README.md) |
-| Install, config plugin options, runtime API, native module access | [expo-horizon-core README](https://github.com/software-mansion-labs/expo-horizon/blob/main/expo-horizon-core/README.md) |
-| Location migration, limitations, feature support matrix | [expo-horizon-location README](https://github.com/software-mansion-labs/expo-horizon/blob/main/expo-horizon-location/README.md) |
+| Topic                                                             | Official source                                                                                                                           |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Repo overview and package list                                    | [expo-horizon README](https://github.com/software-mansion-labs/expo-horizon/blob/main/README.md)                                          |
+| Install, config plugin options, runtime API, native module access | [expo-horizon-core README](https://github.com/software-mansion-labs/expo-horizon/blob/main/expo-horizon-core/README.md)                   |
+| Location migration, limitations, feature support matrix           | [expo-horizon-location README](https://github.com/software-mansion-labs/expo-horizon/blob/main/expo-horizon-location/README.md)           |
 | Push notifications migration, token types, feature support matrix | [expo-horizon-notifications README](https://github.com/software-mansion-labs/expo-horizon/blob/main/expo-horizon-notifications/README.md) |
-| Example app wiring for all three packages | [expo-horizon example README](https://github.com/software-mansion-labs/expo-horizon/blob/main/example/README.md) |
-| Panel sizing guidelines (dp values, orientation, letterboxing) | [Meta Panel Sizing](https://developers.meta.com/horizon/documentation/android-apps/panel-sizing) |
-| Meta Horizon Store manifest checklist for publishing | [Publish Mobile Manifest](https://developers.meta.com/horizon/resources/publish-mobile-manifest/) |
-| Device management, casting, sideloading, ADB | [Meta Quest Developer Hub](https://developers.meta.com/horizon/documentation/android-apps/meta-quest-developer-hub) |
-| Server-side push delivery via Meta's push service | [Horizon OS push notifications](https://developers.meta.com/horizon/documentation/android-apps/ps-user-notifications/) |
+| Example app wiring for all three packages                         | [expo-horizon example README](https://github.com/software-mansion-labs/expo-horizon/blob/main/example/README.md)                          |
+| Panel sizing guidelines (dp values, orientation, letterboxing)    | [Meta Panel Sizing](https://developers.meta.com/horizon/documentation/android-apps/panel-sizing)                                          |
+| Meta Horizon Store manifest checklist for publishing              | [Publish Mobile Manifest](https://developers.meta.com/horizon/resources/publish-mobile-manifest/)                                         |
+| Device management, casting, sideloading, ADB                      | [Meta Quest Developer Hub](https://developers.meta.com/horizon/documentation/android-apps/meta-quest-developer-hub)                       |
+| Server-side push delivery via Meta's push service                 | [Horizon OS push notifications](https://developers.meta.com/horizon/documentation/android-apps/ps-user-notifications/)                    |

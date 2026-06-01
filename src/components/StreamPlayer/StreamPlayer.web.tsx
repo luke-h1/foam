@@ -174,8 +174,8 @@ export const StreamPlayer = memo(
         style={[styles.container, { width: playerWidth, height: playerHeight }]}
       >
         <iframe
-          title="Twitch video player"
-          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+          title='Twitch video player'
+          allow='autoplay; encrypted-media; fullscreen; picture-in-picture'
           allowFullScreen
           onLoad={() => {
             onReady?.();
@@ -186,7 +186,7 @@ export const StreamPlayer = memo(
         />
         {!clip && (
           <View style={styles.footer}>
-            <Text color="gray.contrast" type="xs" numberOfLines={1}>
+            <Text color='gray.contrast' type='xs' numberOfLines={1}>
               {channel ?? 'Twitch'} on Twitch
             </Text>
             <Button
@@ -199,7 +199,7 @@ export const StreamPlayer = memo(
               }}
               style={styles.openButton}
             >
-              <Text color="gray.contrast" type="xs" weight="semibold">
+              <Text color='gray.contrast' type='xs' weight='semibold'>
                 Open
               </Text>
             </Button>

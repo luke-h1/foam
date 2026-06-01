@@ -27,7 +27,7 @@ export const UserSuggestions = memo(function UserSuggestions({
         <ScrollView
           contentContainerStyle={styles.userSuggestionScroll}
           horizontal
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps='handled'
           showsHorizontalScrollIndicator={false}
         >
           {users.map(user => (

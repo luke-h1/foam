@@ -10,10 +10,12 @@ import {
 } from '@app/components/FlashList/FlashList';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { Category, twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -68,6 +70,7 @@ export function TopCategoriesScreen({
     hasNextPage,
     isLoading,
     isError,
+    isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['TopCategories'],
     queryFn: ({ pageParam }: { pageParam?: string }) =>
@@ -83,13 +86,11 @@ export function TopCategoriesScreen({
     refetch,
   });
 
-  const handleLoadMore = useCallback(async () => {
-    if (!hasNextPage) {
-      return;
-    }
-
-    await fetchNextPage();
-  }, [fetchNextPage, hasNextPage]);
+  const handleLoadMore = useInfiniteQueryLoadMore({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   const renderItem: ListRenderItem<Category> = useCallback(({ item }) => {
     return (
@@ -103,12 +104,23 @@ export function TopCategoriesScreen({
     return <CategoryCardSkeleton />;
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    refreshing$.set(true);
+    await refetch();
+    refreshing$.set(false);
+  }, [refetch, refreshing$]);
+
+  const allCategories = useMemo(
+    () => flattenInfiniteQueryPages(categories?.pages),
+    [categories],
+  );
+
   if (isLoading || refreshing) {
     return (
       <View style={styles.wrapper}>
         <FlashList
           getItemType={() => 'category-skeleton'}
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           data={skeletonData}
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
@@ -126,29 +138,18 @@ export function TopCategoriesScreen({
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          heading="Failed to fetch categories"
-          content="Failed to fetch top categories"
+          heading='Failed to fetch categories'
+          content='Failed to fetch top categories'
         />
       </View>
     );
   }
 
-  const onRefresh = useCallback(async () => {
-    refreshing$.set(true);
-    await refetch();
-    refreshing$.set(false);
-  }, [refetch, refreshing$]);
-
-  const allCategories = useMemo(
-    () => categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [],
-    [categories],
-  );
-
   if (allCategories.length === 0) {
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          content="No categories found"
+          content='No categories found'
           buttonOnPress={() => void onRefresh()}
         />
       </View>
@@ -166,7 +167,7 @@ export function TopCategoriesScreen({
         ref={listRef}
         data={allCategories}
         numColumns={3}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         getItemType={() => 'category-card'}
         contentContainerStyle={[
           styles.listContent,

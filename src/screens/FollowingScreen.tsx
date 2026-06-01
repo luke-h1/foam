@@ -121,11 +121,11 @@ export default function FollowingScreen() {
   if (!authState?.isLoggedIn) {
     return (
       <EmptyState
-        button="Sign In"
+        button='Sign In'
         buttonOnPress={() => router.push('/auth-sheet')}
-        content="Connect your Twitch account to see streams from channels you follow."
-        heading="Your followed streams"
-        iconName="person.2"
+        content='Connect your Twitch account to see streams from channels you follow.'
+        heading='Your followed streams'
+        iconName='person.2'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
     );
@@ -149,9 +149,9 @@ export default function FollowingScreen() {
     return (
       <EmptyState
         button={null}
-        content="Log in to see streams from channels you follow."
-        heading="Your followed streams"
-        iconName="person.2"
+        content='Log in to see streams from channels you follow.'
+        heading='Your followed streams'
+        iconName='person.2'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
     );
@@ -164,11 +164,11 @@ export default function FollowingScreen() {
     }
     return (
       <EmptyState
-        button="Refresh"
+        button='Refresh'
         buttonOnPress={handleRefreshFollowing}
-        content="Twitch did not return your followed streams."
+        content='Twitch did not return your followed streams.'
         heading="Couldn't load following"
-        iconName="exclamationmark.triangle"
+        iconName='exclamationmark.triangle'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
     );
@@ -188,11 +188,11 @@ export default function FollowingScreen() {
   if (streamsArray.length === 0) {
     return (
       <EmptyState
-        button="Refresh"
+        button='Refresh'
         buttonOnPress={handleRefreshFollowing}
-        content="None of your followed streamers are live right now."
-        heading="No one is live"
-        iconName="antenna.radiowaves.left.and.right"
+        content='None of your followed streamers are live right now.'
+        heading='No one is live'
+        iconName='antenna.radiowaves.left.and.right'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
     );
@@ -209,12 +209,12 @@ export default function FollowingScreen() {
         ref={listRef}
         data={streamsArray}
         keyExtractor={item => item.id}
-        contentInsetAdjustmentBehavior="never"
+        contentInsetAdjustmentBehavior='never'
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
         getItemType={() => 'stream-card'}
         ListHeaderComponent={
           <View>
-            <EditorialSectionHeader eyebrow="For you" title="Following" />
+            <EditorialSectionHeader eyebrow='For you' title='Following' />
             <View style={styles.layoutToggleRow}>
               <Button
                 onPress={handleSetCompactLayout}
@@ -225,7 +225,7 @@ export default function FollowingScreen() {
                 ]}
               >
                 <SymbolView
-                  name="square"
+                  name='square'
                   size={14}
                   tintColor={
                     streamListLayout === 'compact'
@@ -234,8 +234,8 @@ export default function FollowingScreen() {
                   }
                 />
                 <Text
-                  type="xxs"
-                  weight="semibold"
+                  type='xxs'
+                  weight='semibold'
                   style={[
                     styles.layoutToggleText,
                     streamListLayout === 'compact' &&
@@ -254,7 +254,7 @@ export default function FollowingScreen() {
                 ]}
               >
                 <SymbolView
-                  name="photo"
+                  name='photo'
                   size={14}
                   tintColor={
                     streamListLayout === 'media'
@@ -263,8 +263,8 @@ export default function FollowingScreen() {
                   }
                 />
                 <Text
-                  type="xxs"
-                  weight="semibold"
+                  type='xxs'
+                  weight='semibold'
                   style={[
                     styles.layoutToggleText,
                     streamListLayout === 'media' &&
@@ -283,7 +283,7 @@ export default function FollowingScreen() {
                 ]}
               >
                 <SymbolView
-                  name="text.alignleft"
+                  name='text.alignleft'
                   size={14}
                   tintColor={
                     streamListLayout === 'text'
@@ -292,8 +292,8 @@ export default function FollowingScreen() {
                   }
                 />
                 <Text
-                  type="xxs"
-                  weight="semibold"
+                  type='xxs'
+                  weight='semibold'
                   style={[
                     styles.layoutToggleText,
                     streamListLayout === 'text' &&

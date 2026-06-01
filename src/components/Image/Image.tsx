@@ -193,7 +193,7 @@ export const Image = function Image({
       >
         <NitroImage
           image={{ url: resolvedUrl }}
-          style={style as StyleProp<ViewStyle>}
+          style={style}
           resizeMode={resizeMode}
           recyclingKey={resolvedUrl}
           testID={props.testID}
@@ -211,7 +211,7 @@ export const Image = function Image({
         contentFit={contentFit}
         cachePolicy={cachePolicy}
         transition={transition}
-        decodeFormat="rgb"
+        decodeFormat='rgb'
         recyclingKey={recyclingKey ?? resolvedUrl ?? undefined}
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}

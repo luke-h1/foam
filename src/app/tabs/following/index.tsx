@@ -14,7 +14,7 @@ export default function FollowingRoute() {
       <View style={styles.container}>
         {ready ? (
           <>
-            <Text type="sm" color="gray.textLow" align="center">
+            <Text type='sm' color='gray.textLow' align='center'>
               Authentication state is not ready.
             </Text>
             <Button
@@ -23,18 +23,18 @@ export default function FollowingRoute() {
                 router.replace('/tabs/top');
               }}
             >
-              <Text type="sm" color="accent" contrast align="center">
+              <Text type='sm' color='accent' contrast align='center'>
                 Continue
               </Text>
             </Button>
           </>
         ) : (
           <>
-            <ActivityIndicator size="large" color={theme.colorGreen} />
+            <ActivityIndicator size='large' color={theme.colorGreen} />
             <Text
-              type="sm"
-              color="gray.textLow"
-              align="center"
+              type='sm'
+              color='gray.textLow'
+              align='center'
               style={styles.message}
             >
               Starting Foam...

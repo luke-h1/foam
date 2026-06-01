@@ -6,7 +6,7 @@ import {
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -60,7 +60,7 @@ type ActionItem = {
   tone?: 'accent' | 'danger' | 'default' | 'warning';
 };
 
-export function ActionSheet(props: Props) {
+function ActionSheetComponent(props: Props) {
   const {
     visible,
     onClose,
@@ -323,21 +323,21 @@ export function ActionSheet(props: Props) {
       onDismiss={onClose}
       showDragIndicator
       snapPoints={snapPoints}
-      testID="message-action-sheet"
+      testID='message-action-sheet'
     >
       <View style={wrapperStyle}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.eyebrow} weight="semibold">
+            <Text style={styles.eyebrow} weight='semibold'>
               Selected message
             </Text>
-            <Text style={styles.title} weight="semibold">
+            <Text style={styles.title} weight='semibold'>
               Message Actions
             </Text>
           </View>
-          <Button label="Done" onPress={onClose} style={styles.closeButton}>
+          <Button label='Done' onPress={onClose} style={styles.closeButton}>
             <SymbolView
-              name="checkmark"
+              name='checkmark'
               size={18}
               tintColor={theme.color.text.dark}
             />
@@ -382,13 +382,13 @@ export function ActionSheet(props: Props) {
                               ? theme.colorGreen
                               : '#b7bdc9'
                       }
-                      weight="regular"
+                      weight='regular'
                       style={styles.actionIcon}
                     />
                   </View>
                   <View style={styles.actionCopy}>
                     <Text
-                      weight="semibold"
+                      weight='semibold'
                       style={[
                         styles.actionText,
                         action.tone === 'danger' && styles.actionTextDanger,
@@ -411,6 +411,8 @@ export function ActionSheet(props: Props) {
     </BottomSheet>
   );
 }
+
+export const ActionSheet = memo(ActionSheetComponent);
 
 const styles = StyleSheet.create({
   actionButton: {

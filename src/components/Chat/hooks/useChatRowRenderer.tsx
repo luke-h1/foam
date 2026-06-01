@@ -5,7 +5,6 @@ import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
-import type { LegendListRef } from '@legendapp/list';
 import {
   useCallback,
   useMemo,
@@ -15,6 +14,7 @@ import {
   type SetStateAction,
 } from 'react';
 
+import type { ChatListRef } from '../components/ChatList';
 import {
   RichChatMessage,
   type BadgePressData,
@@ -42,7 +42,7 @@ interface UseChatRowRendererOptions {
     typeof setTimeout
   > | null>;
   highlightedUsers: string[];
-  listRef: RefObject<LegendListRef | null>;
+  listRef: RefObject<ChatListRef | null>;
   messages$: { peek: () => unknown[] };
   onBadgePress: (badge: BadgePressData) => void;
   onEmotePress: (emote: EmotePressData) => void;

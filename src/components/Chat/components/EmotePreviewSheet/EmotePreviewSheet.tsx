@@ -9,7 +9,7 @@ import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -44,7 +44,7 @@ function getEmoteName(emote: ParsedPart<'emote'>): string {
   return emote.name ?? emote.original_name ?? emote.content;
 }
 
-export function EmotePreviewSheet(props: Props) {
+function EmotePreviewSheetComponent(props: Props) {
   const { visible, onClose, selectedEmote, disableAnimations = false } = props;
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
@@ -182,21 +182,21 @@ export function EmotePreviewSheet(props: Props) {
       isPresented={visible}
       onDismiss={onClose}
       showDragIndicator
-      testID="emote-preview-sheet"
+      testID='emote-preview-sheet'
     >
       <View style={containerStyle}>
         <View style={styles.topBar}>
           <View style={styles.heading}>
-            <Text style={styles.eyebrow} weight="semibold">
+            <Text style={styles.eyebrow} weight='semibold'>
               Emote preview
             </Text>
-            <Text style={styles.title} weight="semibold" numberOfLines={2}>
+            <Text style={styles.title} weight='semibold' numberOfLines={2}>
               {emoteName}
             </Text>
           </View>
-          <Button label="Done" style={styles.doneButton} onPress={onClose}>
+          <Button label='Done' style={styles.doneButton} onPress={onClose}>
             <SymbolView
-              name="checkmark"
+              name='checkmark'
               size={18}
               tintColor={theme.color.text.dark}
             />
@@ -213,17 +213,17 @@ export function EmotePreviewSheet(props: Props) {
               <Image
                 useNitro
                 trackLoadTime
-                trackLoadContext="chat.emote-preview"
+                trackLoadContext='chat.emote-preview'
                 source={displayUrl}
-                cacheVariant="emote"
-                contentFit="contain"
+                cacheVariant='emote'
+                contentFit='contain'
                 transition={100}
                 style={[styles.emoteImage, emoteSize]}
               />
             </View>
             {selectedEmote.site ? (
               <View style={styles.previewPill}>
-                <Text style={styles.previewPillText} weight="semibold">
+                <Text style={styles.previewPillText} weight='semibold'>
                   {selectedEmote.site}
                 </Text>
               </View>
@@ -234,7 +234,7 @@ export function EmotePreviewSheet(props: Props) {
             <View style={styles.metadataCard}>
               {metadataRows.map(row => (
                 <View key={row.label} style={styles.metadataRow}>
-                  <Text style={styles.metadataLabel} weight="semibold">
+                  <Text style={styles.metadataLabel} weight='semibold'>
                     {row.label}
                   </Text>
                   <Text style={styles.metadataValue} numberOfLines={2}>
@@ -263,7 +263,7 @@ export function EmotePreviewSheet(props: Props) {
                   />
                 </View>
                 <View style={styles.actionCopy}>
-                  <Text style={styles.actionText} weight="semibold">
+                  <Text style={styles.actionText} weight='semibold'>
                     {action.label}
                   </Text>
                   <Text style={styles.actionSubtitle} numberOfLines={1}>
@@ -278,6 +278,8 @@ export function EmotePreviewSheet(props: Props) {
     </BottomSheet>
   );
 }
+
+export const EmotePreviewSheet = memo(EmotePreviewSheetComponent);
 
 const styles = StyleSheet.create({
   actionButton: {

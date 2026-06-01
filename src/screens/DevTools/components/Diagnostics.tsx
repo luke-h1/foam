@@ -11,17 +11,17 @@ import { OTASection } from './OTASection';
 export function Diagnostics() {
   return (
     <BodyScrollView
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior='automatic'
       contentContainerStyle={styles.contentContainer}
     >
       <AppStoreSection />
       <ExpoSection />
-      <Form.Section title="Views">
+      <Form.Section title='Views'>
         {process.env.EXPO_OS !== 'web' && (
           <Form.Text
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onPress={() => Linking.openSettings()}
-            hint={<SymbolView name="gear" tintColor={AC.secondaryLabel} />}
+            hint={<SymbolView name='gear' tintColor={AC.secondaryLabel} />}
           >
             Open System Settings
           </Form.Text>

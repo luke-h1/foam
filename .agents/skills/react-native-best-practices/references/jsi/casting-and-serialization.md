@@ -6,10 +6,10 @@
 
 This convention applies **everywhere** in the JSI API — on `Value`, `Object`, `Array`, `Function`, and `BigInt`. It is not per-type sugar; it's a system-wide contract.
 
-| Prefix | Behavior on type mismatch | When to use |
-|--------|--------------------------|-------------|
-| `getXxx()` | `assert()` — crashes in debug, undefined in release | When a wrong type is a programming error you'll catch in testing |
-| `asXxx()` | Throws `jsi::JSIException` | When a wrong type can come from untrusted input (JS calling your binding) |
+| Prefix     | Behavior on type mismatch                           | When to use                                                               |
+| ---------- | --------------------------------------------------- | ------------------------------------------------------------------------- |
+| `getXxx()` | `assert()` — crashes in debug, undefined in release | When a wrong type is a programming error you'll catch in testing          |
+| `asXxx()`  | Throws `jsi::JSIException`                          | When a wrong type can come from untrusted input (JS calling your binding) |
 
 ```cpp
 // Value extractors
@@ -99,6 +99,7 @@ str.getStringData(rt, [](bool ascii, const void* data, size_t num) {
 **Critical constraint:** do not call any JSI or runtime function inside the callback. The data pointer is only valid for the duration of the callback, and any runtime operation may invalidate it.
 
 The same API exists for `PropNameID`:
+
 ```cpp
 nameProp.getPropNameIdData(rt, [](bool ascii, const void* data, size_t num) {
   // ...
@@ -109,19 +110,19 @@ nameProp.getPropNameIdData(rt, [](bool ascii, const void* data, size_t num) {
 
 ## C++ ↔ JS Type Mapping
 
-| JS type | JSI C++ type | Create | Extract (assert / throw) |
-|---------|-------------|--------|--------------------------|
-| `undefined` | `Value` kind UndefinedKind | `Value()` or `Value::undefined()` | `v.isUndefined()` |
-| `null` | `Value` kind NullKind | `Value(nullptr)` or `Value::null()` | `v.isNull()` |
-| `boolean` | `Value` kind BooleanKind | `Value(true)` | `v.getBool()` / `v.asBool()` |
-| `number` | `Value` kind NumberKind | `Value(42.0)`, `Value(42)` | `v.getNumber()` / `v.asNumber()` |
-| `string` | `jsi::String` | `String::createFromAscii(rt, "x")` | `v.getString(rt)` / `v.asString(rt)` |
-| `bigint` | `jsi::BigInt` | `BigInt::fromInt64(rt, n)` | `v.getBigInt(rt)` / `v.asBigInt(rt)` |
-| `symbol` | `jsi::Symbol` | engine-created | `v.getSymbol(rt)` / `v.asSymbol(rt)` |
-| `object` | `jsi::Object` | `Object(rt)` | `v.getObject(rt)` / `v.asObject(rt)` |
-| array | `jsi::Array` | `Array(rt, len)` | `obj.getArray(rt)` / `obj.asArray(rt)` |
-| function | `jsi::Function` | `Function::createFromHostFunction(...)` | `obj.getFunction(rt)` / `obj.asFunction(rt)` |
-| `ArrayBuffer` | `jsi::ArrayBuffer` | `ArrayBuffer(rt, buffer)` | `obj.getArrayBuffer(rt)` |
+| JS type       | JSI C++ type               | Create                                  | Extract (assert / throw)                     |
+| ------------- | -------------------------- | --------------------------------------- | -------------------------------------------- |
+| `undefined`   | `Value` kind UndefinedKind | `Value()` or `Value::undefined()`       | `v.isUndefined()`                            |
+| `null`        | `Value` kind NullKind      | `Value(nullptr)` or `Value::null()`     | `v.isNull()`                                 |
+| `boolean`     | `Value` kind BooleanKind   | `Value(true)`                           | `v.getBool()` / `v.asBool()`                 |
+| `number`      | `Value` kind NumberKind    | `Value(42.0)`, `Value(42)`              | `v.getNumber()` / `v.asNumber()`             |
+| `string`      | `jsi::String`              | `String::createFromAscii(rt, "x")`      | `v.getString(rt)` / `v.asString(rt)`         |
+| `bigint`      | `jsi::BigInt`              | `BigInt::fromInt64(rt, n)`              | `v.getBigInt(rt)` / `v.asBigInt(rt)`         |
+| `symbol`      | `jsi::Symbol`              | engine-created                          | `v.getSymbol(rt)` / `v.asSymbol(rt)`         |
+| `object`      | `jsi::Object`              | `Object(rt)`                            | `v.getObject(rt)` / `v.asObject(rt)`         |
+| array         | `jsi::Array`               | `Array(rt, len)`                        | `obj.getArray(rt)` / `obj.asArray(rt)`       |
+| function      | `jsi::Function`            | `Function::createFromHostFunction(...)` | `obj.getFunction(rt)` / `obj.asFunction(rt)` |
+| `ArrayBuffer` | `jsi::ArrayBuffer`         | `ArrayBuffer(rt, buffer)`               | `obj.getArrayBuffer(rt)`                     |
 
 ---
 

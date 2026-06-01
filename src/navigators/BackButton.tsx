@@ -7,9 +7,9 @@ import { router } from 'expo-router';
 export function BackButton() {
   if (router.canGoBack()) {
     return (
-      <Button label="Back" onPress={() => router.back()}>
+      <Button label='Back' onPress={() => router.back()}>
         <SymbolView
-          name="arrow.left"
+          name='arrow.left'
           size={18}
           tintColor={theme.colorGreyHoverAlpha}
         />

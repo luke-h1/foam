@@ -53,37 +53,42 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
       </Text>
     </View>
   </View>
-  <ViewManagerAdapter_ExpoLinearGradient
-    colors={
-      [
-        4294944000,
-        4294944000,
-      ]
-    }
-    endPoint={
-      [
-        1,
-        0,
-      ]
-    }
-    locations={
-      [
-        0,
-        1,
-      ]
-    }
-    startPoint={
-      [
-        0,
-        0,
-      ]
-    }
+  <View
     style={
       {
         "flexDirection": "row",
       }
     }
   >
+    <View
+      style={
+        {
+          "bottom": 0,
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        }
+      }
+    >
+      <View
+        resizeMode="cover"
+        source={
+          {
+            "uri": "https://example.com/paint.png",
+          }
+        }
+        style={
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          }
+        }
+      />
+    </View>
     <Text
       style={
         [
@@ -114,7 +119,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
     >
       UrlPaintUser: 
     </Text>
-  </ViewManagerAdapter_ExpoLinearGradient>
+  </View>
 </RNCMaskedView>
 `;
 

@@ -4,7 +4,7 @@ import { theme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { SymbolView } from 'expo-symbols';
-import { ReactNode } from 'react';
+import { memo, ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 interface SubscriptionNoticeProps {
@@ -20,7 +20,7 @@ interface SubscriptionNoticeProps {
   parsedMessage?: ParsedPart[];
 }
 
-export function SubscriptionNotice({
+function SubscriptionNoticeComponent({
   part,
   notice_tags: _,
   parsedMessage,
@@ -42,9 +42,9 @@ export function SubscriptionNotice({
             key={index}
             useNitro
             trackLoadTime
-            trackLoadContext="chat.subscription-notice-emote"
+            trackLoadContext='chat.subscription-notice-emote'
             source={messagePart.url}
-            cacheVariant="emote"
+            cacheVariant='emote'
             style={styles.emote}
             transition={0}
           />
@@ -128,7 +128,7 @@ export function SubscriptionNotice({
     switch (msgId) {
       case 'sub': {
         parts.push(
-          <Text key="action" style={styles.descriptionText}>
+          <Text key='action' style={styles.descriptionText}>
             Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
           </Text>,
         );
@@ -139,20 +139,20 @@ export function SubscriptionNotice({
           cumulativeMonths !== undefined && cumulativeMonths > 0;
 
         parts.push(
-          <Text key="action" style={styles.descriptionText}>
+          <Text key='action' style={styles.descriptionText}>
             Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
           </Text>,
         );
 
         if (hasMonths) {
           parts.push(
-            <Text key="months" style={styles.descriptionText}>
+            <Text key='months' style={styles.descriptionText}>
               {' '}
               They&apos;ve subscribed for{' '}
             </Text>,
           );
           parts.push(
-            <Text key="monthsCount" style={styles.monthsHighlight}>
+            <Text key='monthsCount' style={styles.monthsHighlight}>
               {cumulativeMonths} month{cumulativeMonths > 1 ? 's' : ''}
             </Text>,
           );
@@ -163,14 +163,14 @@ export function SubscriptionNotice({
             shouldShareStreak
           ) {
             parts.push(
-              <Text key="streak" style={styles.descriptionText}>
+              <Text key='streak' style={styles.descriptionText}>
                 , {streakMonths} month{streakMonths > 1 ? 's' : ''} in a row
               </Text>,
             );
           }
 
           parts.push(
-            <Text key="period" style={styles.descriptionText}>
+            <Text key='period' style={styles.descriptionText}>
               .
             </Text>,
           );
@@ -180,32 +180,32 @@ export function SubscriptionNotice({
       case 'subgift': {
         if (recipientDisplayName) {
           parts.push(
-            <Text key="action" style={styles.descriptionText}>
+            <Text key='action' style={styles.descriptionText}>
               Gifted a {tierDisplay} subscription to{' '}
             </Text>,
           );
           parts.push(
-            <Text key="recipient" style={styles.recipientName}>
+            <Text key='recipient' style={styles.recipientName}>
               {recipientDisplayName}
             </Text>,
           );
         } else {
           parts.push(
-            <Text key="action" style={styles.descriptionText}>
+            <Text key='action' style={styles.descriptionText}>
               Gifted a {tierDisplay} subscription
             </Text>,
           );
         }
         if (giftMonths !== undefined && giftMonths > 1) {
           parts.push(
-            <Text key="giftMonths" style={styles.descriptionText}>
+            <Text key='giftMonths' style={styles.descriptionText}>
               {' '}
               ({giftMonths} months)
             </Text>,
           );
         }
         parts.push(
-          <Text key="period" style={styles.descriptionText}>
+          <Text key='period' style={styles.descriptionText}>
             .
           </Text>,
         );
@@ -213,13 +213,13 @@ export function SubscriptionNotice({
       }
       case 'anongiftpaidupgrade': {
         parts.push(
-          <Text key="action" style={styles.descriptionText}>
+          <Text key='action' style={styles.descriptionText}>
             Continuing their gift subscription
           </Text>,
         );
         if (promoName) {
           parts.push(
-            <Text key="promo" style={styles.descriptionText}>
+            <Text key='promo' style={styles.descriptionText}>
               {' '}
               ({promoName}
               {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
@@ -227,7 +227,7 @@ export function SubscriptionNotice({
           );
         }
         parts.push(
-          <Text key="period" style={styles.descriptionText}>
+          <Text key='period' style={styles.descriptionText}>
             .
           </Text>,
         );
@@ -235,17 +235,17 @@ export function SubscriptionNotice({
       }
       case 'submysterygift': {
         parts.push(
-          <Text key="action" style={styles.descriptionText}>
+          <Text key='action' style={styles.descriptionText}>
             Gifted{' '}
           </Text>,
         );
         parts.push(
-          <Text key="count" style={styles.monthsHighlight}>
+          <Text key='count' style={styles.monthsHighlight}>
             {massGiftCount ?? 0}
           </Text>,
         );
         parts.push(
-          <Text key="tail" style={styles.descriptionText}>
+          <Text key='tail' style={styles.descriptionText}>
             {' '}
             {tierDisplay} subscription{massGiftCount === 1 ? '' : 's'} to the
             community
@@ -253,13 +253,13 @@ export function SubscriptionNotice({
         );
         if (senderCount !== undefined && senderCount > 0) {
           parts.push(
-            <Text key="senderCount" style={styles.descriptionText}>
+            <Text key='senderCount' style={styles.descriptionText}>
               . They&apos;ve gifted {senderCount} in the channel
             </Text>,
           );
         }
         parts.push(
-          <Text key="period" style={styles.descriptionText}>
+          <Text key='period' style={styles.descriptionText}>
             .
           </Text>,
         );
@@ -267,26 +267,26 @@ export function SubscriptionNotice({
       }
       case 'giftpaidupgrade': {
         parts.push(
-          <Text key="action" style={styles.descriptionText}>
+          <Text key='action' style={styles.descriptionText}>
             Continuing the gift sub
           </Text>,
         );
         if (senderName) {
           parts.push(
-            <Text key="from" style={styles.descriptionText}>
+            <Text key='from' style={styles.descriptionText}>
               {' '}
               from{' '}
             </Text>,
           );
           parts.push(
-            <Text key="sender" style={styles.recipientName}>
+            <Text key='sender' style={styles.recipientName}>
               {senderName}
             </Text>,
           );
         }
         if (promoName) {
           parts.push(
-            <Text key="promo" style={styles.descriptionText}>
+            <Text key='promo' style={styles.descriptionText}>
               {' '}
               ({promoName}
               {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
@@ -294,7 +294,7 @@ export function SubscriptionNotice({
           );
         }
         parts.push(
-          <Text key="period" style={styles.descriptionText}>
+          <Text key='period' style={styles.descriptionText}>
             .
           </Text>,
         );
@@ -302,7 +302,7 @@ export function SubscriptionNotice({
       }
       default:
         parts.push(
-          <Text key="action" style={styles.descriptionText}>
+          <Text key='action' style={styles.descriptionText}>
             Subscription event.
           </Text>,
         );
@@ -316,9 +316,9 @@ export function SubscriptionNotice({
       <View style={styles.noticeRow}>
         <View style={styles.starColumn}>
           <SymbolView
-            name="star.fill"
+            name='star.fill'
             size={14}
-            tintColor="#FFD700"
+            tintColor='#FFD700'
             style={styles.starIcon}
           />
         </View>
@@ -343,6 +343,8 @@ export function SubscriptionNotice({
     </View>
   );
 }
+
+export const SubscriptionNotice = memo(SubscriptionNoticeComponent);
 
 const styles = StyleSheet.create({
   bodyColumn: {

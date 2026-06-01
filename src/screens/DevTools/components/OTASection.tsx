@@ -3,7 +3,7 @@ import * as Updates from 'expo-updates';
 
 export function OTASection() {
   return (
-    <Form.Section title="Current Update">
+    <Form.Section title='Current Update'>
       <Form.Text hint={Updates.runtimeVersion}>Runtime version</Form.Text>
       <Form.Text hint={`${Updates.channel || 'unknown'}`}>Channel</Form.Text>
       <Form.Text

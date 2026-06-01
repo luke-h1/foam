@@ -50,7 +50,7 @@ export function useChatTransientState(channelId: string) {
   > | null>(null);
   const state = useSelector(
     () => chatTransientState$[channelId]!.get() ?? defaultTransientState,
-  ) as ChatTransientChannelState;
+  );
 
   useEffect(() => {
     return () => {

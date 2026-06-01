@@ -1045,7 +1045,6 @@ export function useSeventvWs(
     unsubscribeFromChannel,
     isConnected,
     readyState,
-    getConnectionState:
-      getConnectionState as unknown as UseSeventvWsReturn['getConnectionState'],
+    getConnectionState: getConnectionState,
   };
 }

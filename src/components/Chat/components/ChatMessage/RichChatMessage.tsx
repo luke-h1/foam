@@ -1,326 +1,142 @@
 /* eslint-disable camelcase */
 import { useChannelPointRewardTitle } from '@app/hooks/useChannelPointRewardTitle';
-import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ChatMessageType } from '@app/store/chatStore/constants';
-import { theme } from '@app/styles/themes';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import {
+  type UserNoticeTags,
   UserNoticeVariantMap,
-  UserNoticeTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPointsRewardTitle';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { useMappingHelper } from '@shopify/flash-list';
 import React, { useCallback, memo, useMemo, type ReactNode } from 'react';
-import { View, StyleSheet } from 'react-native';
 import { Button } from '../../../Button/Button';
-import { Image } from '../../../Image/Image';
-import { Text } from '@app/components/ui/Text/Text';
-import { MediaLinkCard } from '../MediaLinkCard';
-import { StvEmoteEvent } from '../StvEmoteEvent';
-import { SubscriptionNotice } from '../usernotices/SubscriptionNotice';
-import { ViewerMileStoneNotice } from '../usernotices/ViewerMilestoneNotice';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
-import { EmoteRenderer } from './renderers/EmoteRenderer';
+import { ChatMessageBadges } from './renderers/ChatMessageBadges';
+import { SpecialChatBody } from './renderers/SpecialChatBody';
+import { UserChatBody } from './renderers/UserChatBody';
+import { useChatMessagePartRenderer } from './renderers/useChatMessagePartRenderer';
+import { styles } from './RichChatMessage.styles';
+import type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  RichChatMessageProps,
+  UsernamePressData,
+} from './RichChatMessage.types';
+import {
+  getChatBodyInfo,
+  getPartIdentity,
+  normaliseUsername,
+} from './richChatMessageUtils';
 
-export type EmotePressData = ParsedPart<'emote'>;
-export type BadgePressData = SanitisedBadgeSet;
-export type MessageActionData<TNoticeType extends NoticeVariants> = {
-  message: ParsedPart[];
-  username?: string;
-  login?: string;
-  userId?: string;
-  messageData: ChatMessageType<TNoticeType>;
-};
-export interface UsernamePressData {
-  color?: string;
-  login?: string;
-  userId?: string;
-  username: string;
-}
+export type {
+  BadgePressData,
+  EmotePressData,
+  MessageActionData,
+  UsernamePressData,
+} from './RichChatMessage.types';
 
-const SUBSCRIPTION_NOTICE_TYPES = new Set<ParsedPart['type']>([
-  'sub',
-  'resub',
-  'anongiftpaidupgrade',
-  'anongift',
-  'submysterygift',
-  'giftpaidupgrade',
-]);
+type ChatMessageComponentProps = Parameters<
+  typeof ChatMessageComponent<NoticeVariants>
+>[0];
 
-const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
-  'stv_emote_added',
-  'stv_emote_removed',
-]);
+function hasHighlightedUserMembershipChange(
+  previous: Readonly<ChatMessageComponentProps>,
+  next: Readonly<ChatMessageComponentProps>,
+): boolean {
+  if (
+    previous.highlightedUserSet === next.highlightedUserSet &&
+    previous.highlightedUsers === next.highlightedUsers
+  ) {
+    return false;
+  }
 
-const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
+  const previousHighlightedUsers = previous.highlightedUsers;
+  const nextHighlightedUsers = next.highlightedUsers;
+  const previousHasUsername = (username: string) =>
+    Boolean(previous.highlightedUserSet?.has(username)) ||
+    Boolean(
+      previousHighlightedUsers?.some(
+        highlightedUser => normaliseUsername(highlightedUser) === username,
+      ),
+    );
+  const nextHasUsername = (username: string) =>
+    Boolean(next.highlightedUserSet?.has(username)) ||
+    Boolean(
+      nextHighlightedUsers?.some(
+        highlightedUser => normaliseUsername(highlightedUser) === username,
+      ),
+    );
+  const usernameKeys = new Set<string>();
+  const senderKey = normaliseUsername(
+    next.userstate.username || next.userstate.login || next.sender,
+  );
 
-function normaliseUsername(value?: string): string {
-  return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
-}
+  if (senderKey) {
+    usernameKeys.add(senderKey);
+  }
 
-function renderParts(
-  message: ParsedPart[],
-  renderer: (part: ParsedPart, index: number) => ReactNode,
-): ReactNode[] {
-  const renderedParts: ReactNode[] = [];
-  let currentTextPart: ParsedPart<'text'> | null = null;
-  let currentTextIndex = 0;
-
-  const pushCurrentTextPart = () => {
-    if (!currentTextPart) {
-      return;
-    }
-
-    renderedParts.push(renderer(currentTextPart, currentTextIndex));
-    currentTextPart = null;
-  };
-
-  for (let index = 0; index < message.length; index += 1) {
-    const part = message[index];
-    if (!part) {
-      continue;
-    }
-
-    if (part.type === 'text') {
-      if (currentTextPart) {
-        currentTextPart = {
-          type: 'text',
-          content: currentTextPart.content + part.content,
-        };
-      } else {
-        currentTextPart = part;
-        currentTextIndex = index;
+  for (const part of next.message) {
+    if (part.type === 'mention') {
+      const mentionKey = normaliseUsername(part.content);
+      if (mentionKey) {
+        usernameKeys.add(mentionKey);
       }
-      continue;
     }
-
-    pushCurrentTextPart();
-    renderedParts.push(renderer(part, index));
   }
 
-  pushCurrentTextPart();
+  for (const usernameKey of usernameKeys) {
+    if (previousHasUsername(usernameKey) !== nextHasUsername(usernameKey)) {
+      return true;
+    }
+  }
 
-  return renderedParts;
+  return false;
 }
 
-function getPartIdentity(part: ParsedPart, index: number): string {
-  switch (part.type) {
-    case 'emote':
-    case 'mention':
-    case 'stvEmote':
-    case 'twitchClip':
-    case 'text':
-      return `${part.type}-${part.id ?? part.content ?? index}`;
-
-    case 'stv_emote_added':
-    case 'stv_emote_removed':
-      return `${part.type}-${part.stvEvents.data.id}-${index}`;
-
-    case 'viewermilestone':
-      return `${part.type}-${part.login}-${part.value}-${index}`;
-
-    case 'sub':
-    case 'resub':
-    case 'anongiftpaidupgrade':
-    case 'anongift':
-    case 'submysterygift':
-    case 'giftpaidupgrade':
-      return `${part.type}-${part.subscriptionEvent.displayName}-${index}`;
-
-    default:
-      return `${part.type}-${index}`;
-  }
+function areChatMessagePropsEqual(
+  previous: Readonly<ChatMessageComponentProps>,
+  next: Readonly<ChatMessageComponentProps>,
+): boolean {
+  return (
+    previous.id === next.id &&
+    previous.userstate === next.userstate &&
+    previous.message === next.message &&
+    previous.badges === next.badges &&
+    previous.channel === next.channel &&
+    previous.message_id === next.message_id &&
+    previous.message_nonce === next.message_nonce &&
+    previous.timestamp === next.timestamp &&
+    previous.sender === next.sender &&
+    previous.style === next.style &&
+    previous.cachedSenderColor === next.cachedSenderColor &&
+    previous.parentDisplayName === next.parentDisplayName &&
+    previous.replyBody === next.replyBody &&
+    previous.replyDisplayName === next.replyDisplayName &&
+    previous.notice_tags === next.notice_tags &&
+    previous.isChannelPointRedemption === next.isChannelPointRedemption &&
+    previous.isTwitchSystemNotice === next.isTwitchSystemNotice &&
+    previous.onReply === next.onReply &&
+    previous.onBadgePress === next.onBadgePress &&
+    previous.onMessageLongPress === next.onMessageLongPress &&
+    previous.onEmotePress === next.onEmotePress &&
+    previous.getMentionColor === next.getMentionColor &&
+    previous.parseTextForEmotes === next.parseTextForEmotes &&
+    previous.onUsernamePress === next.onUsernamePress &&
+    previous.currentUsername === next.currentUsername &&
+    previous.currentUsernameNormalized === next.currentUsernameNormalized &&
+    previous.density === next.density &&
+    previous.disableEmoteAnimations === next.disableEmoteAnimations &&
+    previous.showTimestamp === next.showTimestamp &&
+    previous.showInlineReplyContext === next.showInlineReplyContext &&
+    previous.moderationNotice === next.moderationNotice &&
+    previous.onReplyContextPress === next.onReplyContextPress &&
+    previous.isHighlightedMessageTarget === next.isHighlightedMessageTarget &&
+    !hasHighlightedUserMembershipChange(previous, next)
+  );
 }
-
-/**
- * Distinguishes how the message body should be laid out. Order of checks matters
- * (e.g. Twitch system notices before subscription Usernotice parts).
- */
-type ChatBodyVariant =
-  | 'twitch_system_notice'
-  | 'subscription'
-  | 'stv_emote_event'
-  | 'viewer_milestone'
-  | 'app_system_sender'
-  | 'user_chat';
-
-interface SpecialChatBodyProps {
-  bodyVariant: Exclude<ChatBodyVariant, 'user_chat'>;
-  compact: boolean;
-  message: ParsedPart[];
-  renderMessagePart: (part: ParsedPart, index: number) => ReactNode;
-  renderSystemMessagePart: (part: ParsedPart, index: number) => ReactNode;
-  showTimestamp: boolean;
-  timestamp?: string;
-}
-
-interface ChatBodyInfo {
-  hasSubscriptionNotice: boolean;
-  mentionsCurrentUser: boolean;
-  variant: ChatBodyVariant;
-}
-
-function getChatBodyInfo(
-  message: ParsedPart[],
-  normalisedCurrentUsername?: string,
-  sender?: string,
-  isTwitchSystemNotice?: boolean,
-): ChatBodyInfo {
-  if (isTwitchSystemNotice) {
-    return {
-      hasSubscriptionNotice: false,
-      mentionsCurrentUser: false,
-      variant: 'twitch_system_notice',
-    };
-  }
-
-  let hasSubscriptionNotice = false;
-  let hasStvEmoteEvent = false;
-  let hasViewerMilestone = false;
-  let mentionsCurrentUser = false;
-
-  for (const part of message) {
-    if (
-      !mentionsCurrentUser &&
-      normalisedCurrentUsername &&
-      part.type === 'mention' &&
-      normaliseUsername(part.content) === normalisedCurrentUsername
-    ) {
-      mentionsCurrentUser = true;
-    }
-
-    if (SUBSCRIPTION_NOTICE_TYPES.has(part.type)) {
-      hasSubscriptionNotice = true;
-      continue;
-    }
-
-    if (STV_EMOTE_EVENT_TYPES.has(part.type)) {
-      hasStvEmoteEvent = true;
-      continue;
-    }
-
-    if (VIEWER_MILESTONE_TYPES.has(part.type)) {
-      hasViewerMilestone = true;
-    }
-  }
-
-  if (hasSubscriptionNotice) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'subscription',
-    };
-  }
-  if (hasStvEmoteEvent) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'stv_emote_event',
-    };
-  }
-  if (hasViewerMilestone) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'viewer_milestone',
-    };
-  }
-  if (sender?.toLowerCase() === 'system') {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'app_system_sender',
-    };
-  }
-  return { hasSubscriptionNotice, mentionsCurrentUser, variant: 'user_chat' };
-}
-
-const SpecialChatBody = memo(
-  ({
-    bodyVariant,
-    compact,
-    message,
-    renderMessagePart,
-    renderSystemMessagePart,
-    showTimestamp,
-    timestamp,
-  }: SpecialChatBodyProps) => {
-    switch (bodyVariant) {
-      case 'twitch_system_notice':
-        return (
-          <View style={styles.systemMessageRow}>
-            {showTimestamp && timestamp ? (
-              <Text
-                style={[styles.timestamp, compact && styles.timestampCompact]}
-              >
-                {timestamp}:
-              </Text>
-            ) : null}
-            {renderParts(message, renderSystemMessagePart)}
-          </View>
-        );
-
-      case 'subscription':
-        return (
-          <View style={styles.subscriptionNoticeContainer}>
-            {renderParts(message, renderMessagePart)}
-          </View>
-        );
-
-      case 'stv_emote_event':
-        return (
-          <View
-            style={[styles.systemMessageRow, styles.stvSystemRowAlignStart]}
-          >
-            {showTimestamp && timestamp ? (
-              <Text
-                style={[styles.timestamp, compact && styles.timestampCompact]}
-              >
-                {timestamp}:
-              </Text>
-            ) : null}
-            {renderParts(message, renderMessagePart)}
-          </View>
-        );
-
-      case 'viewer_milestone':
-        return (
-          <View style={styles.viewerMilestoneRow}>
-            {showTimestamp && timestamp ? (
-              <Text
-                style={[styles.timestamp, compact && styles.timestampCompact]}
-              >
-                {timestamp}:
-              </Text>
-            ) : null}
-            {renderParts(message, renderMessagePart)}
-          </View>
-        );
-
-      case 'app_system_sender':
-        return (
-          <View style={styles.systemMessageRow}>
-            {showTimestamp && timestamp ? (
-              <Text
-                style={[styles.timestamp, compact && styles.timestampCompact]}
-              >
-                {timestamp}:
-              </Text>
-            ) : null}
-            {renderParts(message, renderSystemMessagePart)}
-          </View>
-        );
-
-      default:
-        return null;
-    }
-  },
-);
-
-SpecialChatBody.displayName = 'SpecialChatBody';
 
 function ChatMessageComponent<
   TNoticeType extends NoticeVariants,
@@ -364,25 +180,7 @@ function ChatMessageComponent<
   moderationNotice,
   onReplyContextPress,
   isHighlightedMessageTarget = false,
-}: ChatMessageType<TNoticeType, TVariant> & {
-  onReply?: (args: ChatMessageType<TNoticeType>) => void;
-  onBadgePress?: (data: BadgePressData) => void;
-  onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
-  onEmotePress?: (data: EmotePressData) => void;
-  getMentionColor?: (username: string) => string;
-  parseTextForEmotes?: (text: string) => ParsedPart[];
-  onUsernamePress?: (data: UsernamePressData) => void;
-  currentUsername?: string;
-  currentUsernameNormalized?: string;
-  density?: 'comfortable' | 'compact';
-  disableEmoteAnimations?: boolean;
-  showTimestamp?: boolean;
-  highlightedUserSet?: ReadonlySet<string>;
-  highlightedUsers?: string[];
-  showInlineReplyContext?: boolean;
-  onReplyContextPress?: (replyParentMessageId: string) => void;
-  isHighlightedMessageTarget?: boolean;
-}) {
+}: RichChatMessageProps<TNoticeType, TVariant>) {
   const { getMappingKey } = useMappingHelper();
   const compact = density === 'compact';
   const normalisedCurrentUsername =
@@ -416,7 +214,7 @@ function ChatMessageComponent<
   );
 
   const handleBadgePress = useCallback(
-    (badge: SanitisedBadgeSet) => {
+    (badge: BadgePressData) => {
       onBadgePress?.(badge);
     },
     [onBadgePress],
@@ -460,7 +258,7 @@ function ChatMessageComponent<
       <Button
         onPress={handleUsernamePress}
         style={styles.usernameButton}
-        testID="chat-username-button"
+        testID='chat-username-button'
       >
         {username}
       </Button>
@@ -474,219 +272,33 @@ function ChatMessageComponent<
     userstate,
   ]);
 
-  const renderMessagePart = useCallback(
-    (part: ParsedPart, index: number) => {
-      switch (part.type) {
-        case 'text': {
-          return (
-            <Text
-              key={getPartKey(part, index)}
-              color="gray.text"
-              style={[
-                styles.messageText,
-                compact && styles.messageTextCompact,
-                moderationNotice && styles.moderatedMessageText,
-              ]}
-            >
-              {part.content}
-            </Text>
-          );
-        }
-
-        case 'stvEmote': {
-          return (
-            <MediaLinkCard
-              key={getPartKey(part, index)}
-              type="stvEmote"
-              url={part.content}
-            />
-          );
-        }
-
-        case 'twitchClip': {
-          return (
-            <MediaLinkCard
-              key={getPartKey(part, index)}
-              type="twitchClip"
-              url={part.content}
-            />
-          );
-        }
-
-        case 'emote': {
-          const previousPart = message[index - 1];
-          const shouldOverlayPrevious =
-            Boolean(part.zero_width) && previousPart?.type === 'emote';
-
-          return (
-            <EmoteRenderer
-              disableAnimations={disableEmoteAnimations}
-              key={getPartKey(part, index)}
-              part={part}
-              handleEmotePress={handleEmotePress}
-              shouldOverlayPrevious={shouldOverlayPrevious}
-              targetSize={compact ? 22 : 26}
-            />
-          );
-        }
-
-        case 'mention': {
-          const mentionedUsername = part.content.replace(/^@/, '').trim();
-          const normalisedMentionedUsername =
-            normaliseUsername(mentionedUsername);
-          const mentionColor = getMentionColor
-            ? getMentionColor(mentionedUsername)
-            : generateRandomTwitchColor(mentionedUsername);
-          const isHighlightedMention =
-            effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
-            normalisedCurrentUsername === normalisedMentionedUsername;
-
-          return (
-            <Text key={getPartKey(part, index)}>
-              <Text
-                style={[
-                  styles.mention,
-                  styles.mentionDefaultColor,
-                  compact && styles.mentionCompact,
-                  isHighlightedMention && styles.mentionHighlighted,
-                  mentionColor && { color: mentionColor },
-                ]}
-              >
-                {part.content}
-              </Text>
-            </Text>
-          );
-        }
-
-        case 'stv_emote_added': {
-          return (
-            <StvEmoteEvent
-              key={getPartKey(part, index)}
-              disableAnimations={disableEmoteAnimations}
-              part={part}
-            />
-          );
-        }
-
-        case 'stv_emote_removed': {
-          return (
-            <StvEmoteEvent
-              key={getPartKey(part, index)}
-              disableAnimations={disableEmoteAnimations}
-              part={part}
-            />
-          );
-        }
-
-        case 'sub':
-        case 'resub':
-        case 'submysterygift':
-        case 'giftpaidupgrade':
-        case 'anongiftpaidupgrade':
-        case 'anongift': {
-          const subMessage = part.subscriptionEvent?.message;
-          const parsedSubMessage =
-            subMessage && parseTextForEmotes
-              ? parseTextForEmotes(subMessage)
-              : undefined;
-
-          if (notice_tags) {
-            return (
-              <SubscriptionNotice
-                key={getPartKey(part, index)}
-                part={part}
-                notice_tags={notice_tags as UserNoticeTags}
-                parsedMessage={parsedSubMessage}
-              />
-            );
-          }
-          return (
-            <SubscriptionNotice
-              key={getPartKey(part, index)}
-              part={part}
-              parsedMessage={parsedSubMessage}
-            />
-          );
-        }
-
-        case 'viewermilestone': {
-          return (
-            <ViewerMileStoneNotice key={getPartKey(part, index)} part={part} />
-          );
-        }
-
-        default:
-          return null;
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      handleEmotePress,
+  const { renderMessagePart, renderSystemMessagePart } =
+    useChatMessagePartRenderer({
       compact,
       disableEmoteAnimations,
+      effectiveHighlightedUserSet,
       getMentionColor,
       getPartKey,
-      highlightedUserSet,
-      effectiveHighlightedUserSet,
-      parseTextForEmotes,
-      notice_tags,
-      userstate.username,
-      userstate.color,
-      message_id,
+      handleEmotePress,
+      message,
+      moderationNotice,
       normalisedCurrentUsername,
-    ],
+      noticeTags: notice_tags as UserNoticeTags | undefined,
+      parseTextForEmotes,
+    });
+
+  const renderBadges = useCallback(
+    () => (
+      <ChatMessageBadges
+        badges={badges}
+        compact={compact}
+        getMappingKey={getMappingKey}
+        moderationNotice={moderationNotice}
+        onBadgePress={handleBadgePress}
+      />
+    ),
+    [badges, compact, getMappingKey, handleBadgePress, moderationNotice],
   );
-
-  const renderSystemMessagePart = useCallback(
-    (part: ParsedPart, index: number) => {
-      if (part.type === 'text') {
-        return (
-          <Text key={getPartKey(part, index)} style={styles.systemMessageText}>
-            {part.content}
-          </Text>
-        );
-      }
-
-      return renderMessagePart(part, index);
-    },
-    [getPartKey, renderMessagePart],
-  );
-
-  const renderBadges = useCallback(() => {
-    if (!badges?.length) {
-      return null;
-    }
-
-    const renderedBadges: ReactNode[] = new Array(badges.length);
-    let index = 0;
-    for (const badge of badges) {
-      renderedBadges[index] = (
-        <Button
-          key={getMappingKey(
-            `${badge.set}-${badge.id}-${badge.type}-${badge.url}`,
-            index,
-          )}
-          onPress={() => handleBadgePress(badge)}
-        >
-          <Image
-            useNitro
-            source={badge.url}
-            cachePriority="visible"
-            cacheVariant="badge"
-            style={[
-              styles.badge,
-              compact && styles.badgeCompact,
-              moderationNotice && styles.moderatedBadge,
-            ]}
-            transition={0}
-          />
-        </Button>
-      );
-      index += 1;
-    }
-
-    return renderedBadges;
-  }, [badges, compact, getMappingKey, handleBadgePress, moderationNotice]);
 
   const {
     hasSubscriptionNotice,
@@ -701,8 +313,9 @@ function ChatMessageComponent<
 
   const isAppSystemSender = bodyVariant === 'app_system_sender';
   const isUserChat = bodyVariant === 'user_chat';
-  const showChannelPointsRewardChrome =
-    isUserChat && isChannelPointRedemption && Boolean(userstate.username);
+  const showChannelPointsRewardChrome = Boolean(
+    isUserChat && isChannelPointRedemption && userstate.username,
+  );
 
   const rewardTitleIrc = showChannelPointsRewardChrome
     ? channelPointsRewardTitleFromUserstate(userstate)
@@ -787,112 +400,47 @@ function ChatMessageComponent<
     Boolean(onReplyContextPress) && Boolean(replyParentMessageId);
 
   const renderChatBody = (): ReactNode => {
-    switch (bodyVariant) {
-      case 'user_chat': {
-        return (
-          <View style={styles.messageColumn}>
-            {shouldRenderInlineReply ? (
-              <Button
-                disabled={!canJumpToReplyTarget}
-                hitSlop={undefined}
-                onPress={
-                  canJumpToReplyTarget && replyParentMessageId
-                    ? () => onReplyContextPress?.(replyParentMessageId)
-                    : undefined
-                }
-                style={[
-                  styles.replyContextRow,
-                  canJumpToReplyTarget && styles.replyContextRowInteractive,
-                ]}
-                testID="chat-reply-context-button"
-              >
-                <Text
-                  style={[
-                    styles.replyContextLabel,
-                    compact && styles.replyContextLabelCompact,
-                  ]}
-                >
-                  Replying to {parentDisplayName}
-                </Text>
-                {replyBody ? (
-                  <Text
-                    numberOfLines={1}
-                    style={[
-                      styles.replyContextBody,
-                      compact && styles.replyContextBodyCompact,
-                    ]}
-                  >
-                    {replyBody}
-                  </Text>
-                ) : null}
-              </Button>
-            ) : null}
-            {showChannelPointsRewardChrome ? (
-              <View style={styles.rewardSummaryRow}>
-                <Text style={styles.rewardSummaryText}>
-                  <Text style={styles.rewardSummaryName}>
-                    {userstate.username}
-                  </Text>
-                  <Text style={styles.rewardSummaryMuted}> redeemed </Text>
-                  <Text style={styles.rewardSummaryRewardTitle}>
-                    {rewardSummaryTitle}
-                  </Text>
-                </Text>
-              </View>
-            ) : null}
-            <View style={styles.messageLine}>
-              {showTimestamp && timestamp ? (
-                <Text
-                  style={[styles.timestamp, compact && styles.timestampCompact]}
-                >
-                  {timestamp}:
-                </Text>
-              ) : null}
-              {renderBadges()}
-              {usernameElement ? (
-                <View
-                  style={
-                    moderationNotice ? styles.moderatedUsernameContainer : null
-                  }
-                >
-                  {usernameElement}
-                </View>
-              ) : null}
-              {isFirstMessage ? (
-                <Text
-                  style={[
-                    styles.inlineIndicatorText,
-                    compact && styles.inlineIndicatorTextCompact,
-                  ]}
-                >
-                  first-msg
-                </Text>
-              ) : null}
-              {renderParts(message, renderMessagePart)}
-            </View>
-          </View>
-        );
-      }
-
-      default: {
-        return (
-          <SpecialChatBody
-            bodyVariant={bodyVariant}
-            compact={compact}
-            message={message}
-            renderMessagePart={renderMessagePart}
-            renderSystemMessagePart={renderSystemMessagePart}
-            showTimestamp={showTimestamp}
-            timestamp={timestamp}
-          />
-        );
-      }
+    if (bodyVariant === 'user_chat') {
+      return (
+        <UserChatBody
+          canJumpToReplyTarget={canJumpToReplyTarget}
+          compact={compact}
+          isFirstMessage={isFirstMessage}
+          message={message}
+          moderationNotice={moderationNotice}
+          onReplyContextPress={onReplyContextPress}
+          parentDisplayName={parentDisplayName}
+          renderBadges={renderBadges}
+          renderMessagePart={renderMessagePart}
+          replyBody={replyBody}
+          replyParentMessageId={replyParentMessageId}
+          rewardSummaryTitle={rewardSummaryTitle}
+          shouldRenderInlineReply={shouldRenderInlineReply}
+          showChannelPointsRewardChrome={showChannelPointsRewardChrome}
+          showTimestamp={showTimestamp}
+          timestamp={timestamp}
+          username={userstate.username}
+          usernameElement={usernameElement}
+        />
+      );
     }
+
+    return (
+      <SpecialChatBody
+        bodyVariant={bodyVariant}
+        compact={compact}
+        message={message}
+        renderMessagePart={renderMessagePart}
+        renderSystemMessagePart={renderSystemMessagePart}
+        showTimestamp={showTimestamp}
+        timestamp={timestamp}
+      />
+    );
   };
 
   return (
     <Button
-      testID="chat-message"
+      testID='chat-message'
       onLongPress={handleLongPress}
       style={[
         styles.chatContainer,
@@ -914,7 +462,10 @@ function ChatMessageComponent<
   );
 }
 
-const MemoizedRichChatMessage = memo(ChatMessageComponent);
+const MemoizedRichChatMessage = memo(
+  ChatMessageComponent,
+  areChatMessagePropsEqual,
+);
 MemoizedRichChatMessage.displayName = 'RichChatMessage';
 
 export const RichChatMessage = MemoizedRichChatMessage as unknown as <
@@ -943,205 +494,3 @@ export const RichChatMessage = MemoizedRichChatMessage as unknown as <
     isHighlightedMessageTarget?: boolean;
   },
 ) => React.JSX.Element;
-const styles = StyleSheet.create({
-  badge: {
-    height: 20,
-    marginRight: 2,
-    width: 20,
-  },
-  badgeCompact: {
-    height: 16,
-    width: 16,
-  },
-  chatContainer: {
-    minHeight: 0,
-    paddingVertical: 0,
-  },
-  chatContainerCompact: {
-    minHeight: 0,
-    paddingVertical: 0,
-  },
-  moderatedBadge: {
-    opacity: 0.72,
-  },
-  moderatedUsernameContainer: {
-    opacity: 0.72,
-  },
-  highlightedSenderContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.025)',
-    borderLeftColor: 'rgba(255, 255, 255, 0.18)',
-    borderLeftWidth: 2,
-    paddingLeft: theme.space8,
-  },
-  highlightedReplyTargetContainer: {
-    backgroundColor: 'rgba(145, 71, 255, 0.08)',
-    borderLeftColor: 'rgba(145, 71, 255, 0.42)',
-    borderLeftWidth: 2,
-    paddingLeft: theme.space8,
-  },
-  inlineIndicatorText: {
-    color: 'rgba(145, 71, 255, 0.72)',
-    fontSize: theme.fontSize11,
-    fontWeight: '600',
-    marginRight: 4,
-    textTransform: 'lowercase',
-  },
-  inlineIndicatorTextCompact: {
-    marginRight: 2,
-  },
-  mention: {
-    fontSize: theme.fontSize14,
-    lineHeight: 17,
-    marginHorizontal: 2,
-  },
-  mentionCompact: {
-    fontSize: theme.fontSize11,
-    lineHeight: 14,
-    marginHorizontal: 1,
-  },
-  mentionDefaultColor: {
-    color: '#FFFFFF',
-  },
-  mentionHighlighted: {
-    fontWeight: '700',
-  },
-  messageColumn: {
-    flexDirection: 'column',
-    width: '100%',
-  },
-  messageLine: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    flex: 1,
-  },
-  messageText: {
-    fontSize: theme.fontSize14,
-    lineHeight: 17,
-  },
-  messageTextCompact: {
-    fontSize: theme.fontSize11,
-    lineHeight: 14,
-  },
-  moderatedMessageText: {
-    color: 'rgba(214, 214, 217, 0.72)',
-    fontStyle: 'italic',
-  },
-  ownMentionContainer: {
-    backgroundColor: 'rgba(145, 71, 255, 0.06)',
-    borderLeftColor: theme.colorViolet,
-    borderLeftWidth: 2,
-    paddingLeft: theme.space8,
-  },
-  replyContainer: {
-    borderLeftColor: 'rgba(145, 71, 255, 0.28)',
-    borderLeftWidth: 2,
-    marginBottom: theme.space12,
-    marginLeft: theme.space8,
-    paddingLeft: theme.space8,
-  },
-  replyContextBody: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    maxWidth: '75%',
-  },
-  replyContextBodyCompact: {
-    fontSize: theme.fontSize11,
-  },
-  replyContextLabel: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
-    fontWeight: '600',
-  },
-  replyContextLabelCompact: {
-    fontSize: theme.fontSize11,
-  },
-  replyContextRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space8,
-    marginBottom: 2,
-  },
-  replyContextRowInteractive: {
-    alignSelf: 'flex-start',
-  },
-  rewardMessageContainer: {
-    backgroundColor: 'rgba(127, 127, 127, 0.04)',
-    borderLeftColor: theme.colorViolet,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingLeft: theme.space8,
-    paddingRight: theme.space8,
-    paddingVertical: 2,
-  },
-  rewardSummaryMuted: {
-    color: theme.color.textSecondary.dark,
-    fontWeight: '400',
-  },
-  rewardSummaryName: {
-    color: theme.color.text.dark,
-    fontWeight: '700',
-  },
-  rewardSummaryRewardTitle: {
-    color: theme.color.text.dark,
-    fontWeight: '700',
-  },
-  rewardSummaryRow: {
-    marginBottom: theme.space8,
-    width: '100%',
-  },
-  rewardSummaryText: {
-    flexWrap: 'wrap',
-    fontSize: theme.fontSize14,
-    lineHeight: 17,
-  },
-  stvSystemRowAlignStart: {
-    alignItems: 'flex-start',
-  },
-  subscriptionNoticeContainer: {
-    width: '100%',
-  },
-  systemMessageContainer: {
-    justifyContent: 'flex-start',
-  },
-  systemMessageRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
-  },
-  systemMessageText: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize14,
-    lineHeight: 17,
-    textAlign: 'left',
-  },
-  timestamp: {
-    color: theme.colorGreyAlpha,
-    fontSize: theme.fontSize11,
-  },
-  timestampCompact: {
-    fontSize: 10,
-    marginRight: 2,
-  },
-  usernameButton: {
-    alignSelf: 'center',
-  },
-  usernameCompact: {
-    fontSize: theme.fontSize11,
-  },
-  viewerMilestoneContainer: {
-    backgroundColor: 'rgba(145, 71, 255, 0.05)',
-    borderLeftColor: theme.colorViolet,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: 2,
-  },
-  viewerMilestoneRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
-  },
-});

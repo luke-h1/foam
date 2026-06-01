@@ -10,18 +10,18 @@ For model loading and resource fetcher setup, see **`setup.md`**.
 
 All vision hooks share a common interface pattern:
 
-| Hook | Task | Input | Output |
-|---|---|---|---|
-| [useClassification](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useClassification) | Label an image | Image source | `{ label: probability }` object |
-| [useObjectDetection](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useObjectDetection) | Locate objects | Image source | `Detection[]` with bbox, label, score |
-| [useOCR](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useOCR) | Read horizontal text | Image source | `OCRDetection[]` with bbox, text, score |
-| [useVerticalOCR](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useVerticalOCR) | Read vertical text | Image source | `OCRDetection[]` with bbox, text, score |
-| [useSemanticSegmentation](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useSemanticSegmentation) | Pixel-level class labels | Image source | Segmentation mask dictionary |
-| [useInstanceSegmentation](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useInstanceSegmentation) | Per-instance masks | Image source | `SegmentedInstance[]` with bbox, label, score, mask |
-| [useStyleTransfer](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useStyleTransfer) | Apply art style | Image source | `PixelData` or file URI |
-| [useTextToImage](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useTextToImage) | Generate image from text | Text prompt | Base64 PNG |
-| [useImageEmbeddings](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useImageEmbeddings) | Image to vector | Image source | `Float32Array` embedding |
-| [useTextEmbeddings](https://docs.swmansion.com/react-native-executorch/docs/hooks/natural-language-processing/useTextEmbeddings) | Text to vector | String | `Float32Array` embedding |
+| Hook                                                                                                                             | Task                     | Input        | Output                                              |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------ | --------------------------------------------------- |
+| [useClassification](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useClassification)             | Label an image           | Image source | `{ label: probability }` object                     |
+| [useObjectDetection](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useObjectDetection)           | Locate objects           | Image source | `Detection[]` with bbox, label, score               |
+| [useOCR](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useOCR)                                   | Read horizontal text     | Image source | `OCRDetection[]` with bbox, text, score             |
+| [useVerticalOCR](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useVerticalOCR)                   | Read vertical text       | Image source | `OCRDetection[]` with bbox, text, score             |
+| [useSemanticSegmentation](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useSemanticSegmentation) | Pixel-level class labels | Image source | Segmentation mask dictionary                        |
+| [useInstanceSegmentation](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useInstanceSegmentation) | Per-instance masks       | Image source | `SegmentedInstance[]` with bbox, label, score, mask |
+| [useStyleTransfer](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useStyleTransfer)               | Apply art style          | Image source | `PixelData` or file URI                             |
+| [useTextToImage](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useTextToImage)                   | Generate image from text | Text prompt  | Base64 PNG                                          |
+| [useImageEmbeddings](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useImageEmbeddings)           | Image to vector          | Image source | `Float32Array` embedding                            |
+| [useTextEmbeddings](https://docs.swmansion.com/react-native-executorch/docs/hooks/natural-language-processing/useTextEmbeddings) | Text to vector           | String       | `Float32Array` embedding                            |
 
 ### Common interface
 
@@ -68,7 +68,10 @@ If multiple classes have similar probabilities, the model is not confident in it
 Returns a list of detected objects with bounding boxes, labels, and confidence scores:
 
 ```tsx
-import { useObjectDetection, SSDLITE_320_MOBILENET_V3_LARGE } from 'react-native-executorch';
+import {
+  useObjectDetection,
+  SSDLITE_320_MOBILENET_V3_LARGE,
+} from 'react-native-executorch';
 
 const model = useObjectDetection({ model: SSDLITE_320_MOBILENET_V3_LARGE });
 
@@ -89,9 +92,9 @@ Bounding box coordinates are top-left (`x1`, `y1`) and bottom-right (`x2`, `y2`)
 
 ```tsx
 const detections = await model.forward(imageUri, {
-  detectionThreshold: 0.5,   // minimum confidence score (default: ~0.7)
-  iouThreshold: 0.55,        // IoU threshold for non-maximum suppression
-  inputSize: 640,             // for YOLO multi-size models: 384, 512, or 640
+  detectionThreshold: 0.5, // minimum confidence score (default: ~0.7)
+  iouThreshold: 0.55, // IoU threshold for non-maximum suppression
+  inputSize: 640, // for YOLO multi-size models: 384, 512, or 640
   classesOfInterest: ['CAR', 'PERSON'], // filter to specific classes
 });
 ```
@@ -109,11 +112,11 @@ Smaller sizes are faster but less accurate. Larger sizes are more accurate but s
 
 ### Supported models
 
-| Model | Classes | Multi-size |
-|---|---|---|
-| SSDLite320 MobileNetV3 Large | 91 (COCO) | No |
-| RF-DETR Nano | 80 (COCO) | No |
-| YOLO26N/S/M/L/X | 80 (COCO) | Yes (384/512/640) |
+| Model                        | Classes   | Multi-size        |
+| ---------------------------- | --------- | ----------------- |
+| SSDLite320 MobileNetV3 Large | 91 (COCO) | No                |
+| RF-DETR Nano                 | 80 (COCO) | No                |
+| YOLO26N/S/M/L/X              | 80 (COCO) | Yes (384/512/640) |
 
 ---
 
@@ -141,6 +144,7 @@ const readText = async (imageUri: string) => {
 Each supported alphabet requires its own recognizer model. The simplified language constants (e.g., `OCR_ENGLISH`, `OCR_RUSSIAN`, `OCR_JAPANESE`) bundle the correct detector and recognizer automatically. For the full list of 84 supported languages, webfetch [OCR Supported Alphabets](https://docs.swmansion.com/react-native-executorch/docs/api-reference#ocr-supported-alphabets).
 
 When using custom recognizers, ensure the recognizer alphabet matches the language:
+
 - `RECOGNIZER_LATIN_CRNN` for Latin-alphabet languages (Polish, German, etc.)
 - `RECOGNIZER_CYRILLIC_CRNN` for Cyrillic-alphabet languages (Russian, Ukrainian, etc.)
 
@@ -153,7 +157,10 @@ The detector model is CRAFT (text detection); recognizers are CRNN (text recogni
 Assigns a class label to every pixel in an image. Useful for background removal, scene understanding, and portrait effects. For the full API, webfetch [useSemanticSegmentation](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useSemanticSegmentation).
 
 ```tsx
-import { useSemanticSegmentation, DEEPLAB_V3_RESNET50 } from 'react-native-executorch';
+import {
+  useSemanticSegmentation,
+  DEEPLAB_V3_RESNET50,
+} from 'react-native-executorch';
 
 const model = useSemanticSegmentation({ model: DEEPLAB_V3_RESNET50 });
 
@@ -171,15 +178,15 @@ const segment = async (imageUri: string) => {
 
 ### Supported models
 
-| Model | Classes |
-|---|---|
-| deeplab-v3-resnet50 | 21 (DeeplabLabel) |
-| deeplab-v3-resnet101 | 21 (DeeplabLabel) |
-| deeplab-v3-mobilenet-v3-large | 21 (DeeplabLabel) |
-| lraspp-mobilenet-v3-large | 21 (DeeplabLabel) |
-| fcn-resnet50 | 21 (DeeplabLabel) |
-| fcn-resnet101 | 21 (DeeplabLabel) |
-| selfie-segmentation | 2 (SelfieSegmentationLabel) |
+| Model                         | Classes                     |
+| ----------------------------- | --------------------------- |
+| deeplab-v3-resnet50           | 21 (DeeplabLabel)           |
+| deeplab-v3-resnet101          | 21 (DeeplabLabel)           |
+| deeplab-v3-mobilenet-v3-large | 21 (DeeplabLabel)           |
+| lraspp-mobilenet-v3-large     | 21 (DeeplabLabel)           |
+| fcn-resnet50                  | 21 (DeeplabLabel)           |
+| fcn-resnet101                 | 21 (DeeplabLabel)           |
+| selfie-segmentation           | 2 (SelfieSegmentationLabel) |
 
 ---
 
@@ -217,10 +224,10 @@ const segment = async (imageUri: string) => {
 
 ### Supported models
 
-| Model | Classes | Input sizes |
-|---|---|---|
+| Model                                                               | Classes   | Input sizes   |
+| ------------------------------------------------------------------- | --------- | ------------- |
 | yolo26n-seg / yolo26s-seg / yolo26m-seg / yolo26l-seg / yolo26x-seg | 80 (COCO) | 384, 512, 640 |
-| rfdetr-nano-seg | 91 (COCO) | N/A |
+| rfdetr-nano-seg                                                     | 91 (COCO) | N/A           |
 
 ---
 
@@ -229,7 +236,10 @@ const segment = async (imageUri: string) => {
 Applies an artistic style to an image. For the full API, webfetch [useStyleTransfer](https://docs.swmansion.com/react-native-executorch/docs/hooks/computer-vision/useStyleTransfer).
 
 ```tsx
-import { useStyleTransfer, STYLE_TRANSFER_CANDY } from 'react-native-executorch';
+import {
+  useStyleTransfer,
+  STYLE_TRANSFER_CANDY,
+} from 'react-native-executorch';
 
 const model = useStyleTransfer({ model: STYLE_TRANSFER_CANDY });
 
@@ -254,7 +264,7 @@ import { useTextToImage, BK_SDM_TINY_VPRED_512 } from 'react-native-executorch';
 
 const model = useTextToImage({
   ...BK_SDM_TINY_VPRED_512,
-  inferenceCallback: (progress) => console.log(`Step: ${progress}`),
+  inferenceCallback: progress => console.log(`Step: ${progress}`),
 });
 
 const generate = async () => {
@@ -276,7 +286,10 @@ Available models: `BK_SDM_TINY_VPRED_256`, `BK_SDM_TINY_VPRED_512`.
 Convert images or text into vector representations for similarity search, retrieval-augmented generation (RAG), or clustering.
 
 ```tsx
-import { useImageEmbeddings, CLIP_VIT_BASE_PATCH32_IMAGE } from 'react-native-executorch';
+import {
+  useImageEmbeddings,
+  CLIP_VIT_BASE_PATCH32_IMAGE,
+} from 'react-native-executorch';
 
 const model = useImageEmbeddings({ model: CLIP_VIT_BASE_PATCH32_IMAGE });
 
@@ -286,13 +299,13 @@ const embedding = await model.forward(imageUri);
 
 Text embeddings follow the same pattern with `useTextEmbeddings`. Available text embedding models:
 
-| Model | Dimensions | Max tokens | Best for |
-|---|---|---|---|
-| `ALL_MINILM_L6_V2` | 384 | 254 | General purpose |
-| `ALL_MPNET_BASE_V2` | 768 | 382 | General purpose (higher quality) |
-| `MULTI_QA_MINILM_L6_COS_V1` | 384 | 509 | Search / QA |
-| `MULTI_QA_MPNET_BASE_DOT_V1` | 768 | 510 | Search / QA (higher quality) |
-| `CLIP_VIT_BASE_PATCH32_TEXT` | 512 | 74 | Cross-modal search with CLIP images |
+| Model                        | Dimensions | Max tokens | Best for                            |
+| ---------------------------- | ---------- | ---------- | ----------------------------------- |
+| `ALL_MINILM_L6_V2`           | 384        | 254        | General purpose                     |
+| `ALL_MPNET_BASE_V2`          | 768        | 382        | General purpose (higher quality)    |
+| `MULTI_QA_MINILM_L6_COS_V1`  | 384        | 509        | Search / QA                         |
+| `MULTI_QA_MPNET_BASE_DOT_V1` | 768        | 510        | Search / QA (higher quality)        |
+| `CLIP_VIT_BASE_PATCH32_TEXT` | 512        | 74         | Cross-modal search with CLIP images |
 
 Combine image and text embeddings from the same model family (CLIP) for cross-modal search. Embeddings are normalized, so cosine similarity equals dot product.
 
@@ -310,11 +323,11 @@ Vision hooks that support `runOnFrame` can process camera frames in real time us
 
 ### runOnFrame vs forward
 
-| | `runOnFrame` | `forward` |
-|---|---|---|
-| Thread | JS worklet thread (synchronous) | Background thread (async) |
-| Input | VisionCamera `Frame` | Image source (URI, base64, PixelData) |
-| Use case | Real-time camera | Single image |
+|          | `runOnFrame`                    | `forward`                             |
+| -------- | ------------------------------- | ------------------------------------- |
+| Thread   | JS worklet thread (synchronous) | Background thread (async)             |
+| Input    | VisionCamera `Frame`            | Image source (URI, base64, PixelData) |
+| Use case | Real-time camera                | Single image                          |
 
 ### Setup
 
@@ -336,15 +349,15 @@ import { useClassification, EFFICIENTNET_V2_S } from 'react-native-executorch';
 function LiveClassifier() {
   const { hasPermission, requestPermission } = useCameraPermission();
   const devices = useCameraDevices();
-  const device = devices.find((d) => d.position === 'back');
+  const device = devices.find(d => d.position === 'back');
   const model = useClassification({ model: EFFICIENTNET_V2_S });
   const [topLabel, setTopLabel] = useState('');
 
   const runOnFrame = model.runOnFrame;
 
   const frameOutput = useFrameOutput({
-    pixelFormat: 'rgb',           // Required: must be 'rgb'
-    dropFramesWhileBusy: true,    // Skip frames during slow inference
+    pixelFormat: 'rgb', // Required: must be 'rgb'
+    dropFramesWhileBusy: true, // Skip frames during slow inference
     onFrame: useCallback(
       (frame: Frame) => {
         'worklet';
@@ -367,7 +380,7 @@ function LiveClassifier() {
           frame.dispose(); // Always dispose to avoid memory leaks
         }
       },
-      [runOnFrame]
+      [runOnFrame],
     ),
   });
 
@@ -384,7 +397,7 @@ function LiveClassifier() {
         device={device}
         outputs={[frameOutput]}
         isActive
-        orientationSource="device"
+        orientationSource='device'
       />
       <Text style={styles.label}>{topLabel}</Text>
     </>
@@ -429,10 +442,12 @@ const result = runOnFrame(frame, isFrontCamera);
 When using the TypeScript Module API (e.g., `ClassificationModule`) instead of hooks, instantiate via `fromModelName` and wrap `runOnFrame` in a functional updater to prevent React from calling it as a state initializer:
 
 ```tsx
-const [runOnFrame, setRunOnFrame] = useState<typeof module.runOnFrame | null>(null);
+const [runOnFrame, setRunOnFrame] = useState<typeof module.runOnFrame | null>(
+  null,
+);
 
 useEffect(() => {
-  ClassificationModule.fromModelName(EFFICIENTNET_V2_S).then((module) => {
+  ClassificationModule.fromModelName(EFFICIENTNET_V2_S).then(module => {
     // () => module.runOnFrame prevents React from calling it as initializer
     setRunOnFrame(() => module.runOnFrame);
   });

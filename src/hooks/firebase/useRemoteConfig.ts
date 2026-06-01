@@ -121,7 +121,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
         {
           raw,
           value: parseValue(key, raw),
-          source: 'default' as ConfigSource,
+          source: 'default',
         },
       ];
     }),

@@ -34,7 +34,7 @@ function ProfileSection({ title, footer, children }: ProfileSectionProps) {
   return (
     <View style={styles.section}>
       {title ? (
-        <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
+        <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
           {title}
         </Text>
       ) : null}
@@ -47,13 +47,13 @@ function ProfileSection({ title, footer, children }: ProfileSectionProps) {
 function InfoRow({ label, value, valueColor }: InfoRowProps) {
   return (
     <View style={styles.row}>
-      <Text type="sm" weight="medium" style={styles.rowLabel}>
+      <Text type='sm' weight='medium' style={styles.rowLabel}>
         {label}
       </Text>
       {typeof value === 'string' || typeof value === 'number' ? (
         <Text
-          type="xs"
-          color="gray.textLow"
+          type='xs'
+          color='gray.textLow'
           numberOfLines={1}
           style={[styles.rowValue, valueColor ? { color: valueColor } : null]}
         >
@@ -81,15 +81,15 @@ function ActionRow({
       <View style={styles.actionRow}>
         <SymbolView name={icon} size={20} tintColor={iconColor} />
         <Text
-          type="sm"
-          weight="medium"
+          type='sm'
+          weight='medium'
           style={[styles.actionLabel, { color: iconColor }]}
         >
           {title}
         </Text>
         {showChevron ? (
           <SymbolView
-            name="chevron.right"
+            name='chevron.right'
             size={18}
             tintColor={theme.colorGreyAlpha}
           />
@@ -154,24 +154,24 @@ export function ProfileCard() {
         ref={scrollRef}
         style={styles.main}
         contentContainerStyle={styles.scrollContent}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
       >
         <ProfileSection>
           <View style={styles.signInPrompt}>
             <View style={styles.signInIcon}>
               <SymbolView
-                name="person"
+                name='person'
                 size={30}
                 tintColor={theme.colorGreyHoverAlpha}
               />
             </View>
-            <Text type="lg" weight="bold" align="center">
+            <Text type='lg' weight='bold' align='center'>
               Not signed in
             </Text>
             <Text
-              type="xs"
-              color="gray.textLow"
-              align="center"
+              type='xs'
+              color='gray.textLow'
+              align='center'
               style={styles.signInDescription}
             >
               Sign in with Twitch to use chat, follows, channel shortcuts, and
@@ -183,11 +183,11 @@ export function ProfileCard() {
             >
               <View style={styles.primaryButton}>
                 <SymbolView
-                  name="arrow.right.square"
+                  name='arrow.right.square'
                   size={18}
                   tintColor={theme.colorBlack}
                 />
-                <Text type="xs" weight="bold" color="accent" contrast>
+                <Text type='xs' weight='bold' color='accent' contrast>
                   Sign in
                 </Text>
               </View>
@@ -203,13 +203,13 @@ export function ProfileCard() {
       ref={scrollRef}
       style={styles.main}
       contentContainerStyle={styles.scrollContent}
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior='automatic'
       showsVerticalScrollIndicator={false}
     >
       <ProfileSection
-        title="Account"
+        title='Account'
         footer={
-          <Text type="xxs" color="gray.textLow" style={styles.footerText}>
+          <Text type='xxs' color='gray.textLow' style={styles.footerText}>
             User ID: {user.id}
           </Text>
         }
@@ -227,58 +227,58 @@ export function ProfileCard() {
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <SymbolView
-                  name="person"
+                  name='person'
                   size={26}
                   tintColor={theme.colorGreyHoverAlpha}
                 />
               </View>
             )}
             <View style={styles.identityText}>
-              <Text type="lg" weight="bold" numberOfLines={1}>
+              <Text type='lg' weight='bold' numberOfLines={1}>
                 {user.display_name}
               </Text>
-              <Text type="xs" color="gray.textLow" numberOfLines={1}>
+              <Text type='xs' color='gray.textLow' numberOfLines={1}>
                 @{user.login}
               </Text>
             </View>
             <SymbolView
-              name="chevron.right"
+              name='chevron.right'
               size={18}
               tintColor={theme.colorGreyAlpha}
             />
           </View>
         </PressableArea>
 
-        <InfoRow label="Channel" value={user.broadcaster_type || 'Viewer'} />
-        <InfoRow label="Member Since" value={memberSince} />
+        <InfoRow label='Channel' value={user.broadcaster_type || 'Viewer'} />
+        <InfoRow label='Member Since' value={memberSince} />
       </ProfileSection>
 
-      <ProfileSection title="Twitch">
+      <ProfileSection title='Twitch'>
         <ActionRow
-          title="My Channel"
-          icon="tv"
+          title='My Channel'
+          icon='tv'
           color={theme.colorWhite}
           onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
         />
         <ActionRow
-          title="Blocked Users"
-          icon="person.crop.circle.badge.xmark"
+          title='Blocked Users'
+          icon='person.crop.circle.badge.xmark'
           color={theme.colorWhite}
           onPress={() => router.push('/preferences/blocked-users')}
         />
       </ProfileSection>
 
       <ProfileSection
-        title="Session"
+        title='Session'
         footer={
-          <Text type="xxs" color="gray.textLow" style={styles.footerText}>
+          <Text type='xxs' color='gray.textLow' style={styles.footerText}>
             Signing out removes your saved Twitch token from this device.
           </Text>
         }
       >
         <ActionRow
-          title="Log out"
-          icon="arrow.left.square"
+          title='Log out'
+          icon='arrow.left.square'
           destructive
           showChevron={false}
           onPress={confirmLogout}

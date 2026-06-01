@@ -9,7 +9,21 @@ import {
   type SymbolViewProps,
   type SymbolWeight,
 } from 'expo-symbols';
-import React, { Children, isValidElement, ReactNode } from 'react';
+import {
+  Children,
+  cloneElement,
+  ComponentProps,
+  createContext,
+  FC,
+  Fragment,
+  isValidElement,
+  ReactNode,
+  Ref,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Button,
   OpaqueColorValue,
@@ -29,11 +43,11 @@ import { BodyScrollView } from '../BodyScrollView/BodyScrollView';
 
 type ListStyle = 'grouped' | 'auto';
 
-const ListStyleContext = React.createContext<ListStyle>('auto');
+const ListStyleContext = createContext<ListStyle>('auto');
 
 type RefreshCallback = () => Promise<void>;
 
-const RefreshContext = React.createContext<{
+const RefreshContext = createContext<{
   subscribe: (cb: RefreshCallback) => () => void;
   hasSubscribers: boolean;
   refresh: () => Promise<void>;
@@ -45,12 +59,12 @@ const RefreshContext = React.createContext<{
   refreshing: false,
 });
 
-const RefreshContextProvider: React.FC<{
-  children: React.ReactNode;
+const RefreshContextProvider: FC<{
+  children: ReactNode;
 }> = ({ children }) => {
-  const subscribersRef = React.useRef<Set<RefreshCallback>>(new Set());
-  const [subscriberCount, setSubscriberCount] = React.useState(0);
-  const [refreshing, setRefreshing] = React.useState(false);
+  const subscribersRef = useRef<Set<RefreshCallback>>(new Set());
+  const [subscriberCount, setSubscriberCount] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   const subscribe = (cb: RefreshCallback) => {
     subscribersRef.current.add(cb);
@@ -98,10 +112,10 @@ const RefreshContextProvider: React.FC<{
  * @returns A function that can be called to trigger a list-wide refresh.
  */
 export function useListRefresh(callback?: () => Promise<void>) {
-  const { subscribe, refresh } = React.useContext(RefreshContext);
+  const { subscribe, refresh } = useContext(RefreshContext);
 
   // @ts-expect-error - not all code paths return a value
-  React.useEffect(() => {
+  useEffect(() => {
     if (callback) {
       const unsubscribe = subscribe(callback);
       return unsubscribe;
@@ -133,12 +147,11 @@ function InnerList({
   navigationTitle,
   ...props
 }: ListProps) {
-  const { hasSubscribers, refreshing, refresh } =
-    React.useContext(RefreshContext);
+  const { hasSubscribers, refreshing, refresh } = useContext(RefreshContext);
   const navigation = useNavigation();
 
   // Set navigation title using React Navigation
-  React.useEffect(() => {
+  useEffect(() => {
     if (navigationTitle) {
       navigation.setOptions({ title: navigationTitle });
     }
@@ -202,7 +215,7 @@ const styles = StyleSheet.create({
   },
 });
 
-type FormPressableProps = React.ComponentProps<typeof Pressable>;
+type FormPressableProps = ComponentProps<typeof Pressable>;
 
 export function FormItem({
   children,
@@ -214,7 +227,7 @@ export function FormItem({
   onPress?: FormPressableProps['onPress'];
   onLongPress?: FormPressableProps['onLongPress'];
   style?: ViewStyle;
-  ref?: React.Ref<View>;
+  ref?: Ref<View>;
 }) {
   const itemStyle: StyleProp<ViewStyle> = [
     styles.itemPadding,
@@ -269,9 +282,9 @@ export function Text({
   ...props
 }: TextProps & {
   /** Value displayed on the right side of the form item. */
-  hint?: React.ReactNode;
+  hint?: ReactNode;
   /** A true/false value for the hint. */
-  hintBoolean?: React.ReactNode;
+  hintBoolean?: ReactNode;
   /** Adds a prefix SF Symbol image to the left of the text */
   systemImage?: SystemImageProps;
 
@@ -285,7 +298,7 @@ export function Text({
 
   return (
     <RNText
-      dynamicTypeRamp="body"
+      dynamicTypeRamp='body'
       {...props}
       style={mergedStyleProp(font, props.style)}
     />
@@ -306,17 +319,17 @@ export function Link({
   ...props
 }: {
   /** Value displayed on the right side of the form item. */
-  hint?: React.ReactNode;
+  hint?: ReactNode;
   /** Adds a prefix SF Symbol image to the left of the text. */
-  systemImage?: SystemImageProps | React.ReactNode;
+  systemImage?: SystemImageProps | ReactNode;
   /** Changes the right icon. */
-  hintImage?: SystemImageProps | React.ReactNode;
+  hintImage?: SystemImageProps | ReactNode;
   /** Is the link inside a header. */
   headerRight?: boolean;
   bold?: boolean;
   onPress?: () => void;
   style?: StyleProp<TextStyle>;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const font: TextStyle = {
     ...FormFont.default,
@@ -330,7 +343,7 @@ export function Link({
           <div style={{ paddingRight: 16, width: '100%' }}>{children}</div>
         );
       }
-      const wrappedTextChildren = React.Children.map(children, child => {
+      const wrappedTextChildren = Children.map(children, child => {
         // Filter out empty children
         if (!child) {
           return null;
@@ -419,25 +432,25 @@ export function Section({
   footer,
   ...props
 }: ViewProps & {
-  title?: string | React.ReactNode;
-  titleHint?: string | React.ReactNode;
-  footer?: string | React.ReactNode;
+  title?: string | ReactNode;
+  titleHint?: string | ReactNode;
+  footer?: string | ReactNode;
 }) {
-  const listStyle = React.useContext(ListStyleContext) ?? 'auto';
+  const listStyle = useContext(ListStyleContext) ?? 'auto';
 
-  const allChildren: React.ReactNode[] = [];
+  const allChildren: ReactNode[] = [];
 
   // @ts-expect-error react 19 types not caught up
 
   Children.map(children, child => {
-    if (!React.isValidElement(child)) {
+    if (!isValidElement(child)) {
       return child;
     }
 
     // If the child is a fragment, unwrap it and add the children to the list
-    if (child.type === React.Fragment && child.key == null) {
-      React.Children.forEach(child, child => {
-        if (!React.isValidElement(child)) {
+    if (child.type === Fragment && child.key == null) {
+      Children.forEach(child, child => {
+        if (!isValidElement(child)) {
           return child;
         }
         allChildren.push(child);
@@ -449,7 +462,7 @@ export function Section({
   });
 
   const childrenWithSeparator = allChildren.map((child, index) => {
-    if (!React.isValidElement(child)) {
+    if (!isValidElement(child)) {
       return child;
     }
     const isLastChild = index === allChildren.length - 1;
@@ -463,11 +476,11 @@ export function Section({
     if (resolvedProps.hintBoolean != null) {
       resolvedProps.hint ??= resolvedProps.hintBoolean ? (
         <SymbolView
-          name="checkmark.circle.fill"
+          name='checkmark.circle.fill'
           tintColor={AppleColors.systemGreen}
         />
       ) : (
-        <SymbolView name="slash.circle" tintColor={AppleColors.systemGray} />
+        <SymbolView name='slash.circle' tintColor={AppleColors.systemGray} />
       );
     }
 
@@ -491,7 +504,7 @@ export function Section({
       child.type === RNText ||
       child.type === Text
     ) {
-      child = React.cloneElement(child, {
+      child = cloneElement(child, {
         dynamicTypeRamp: 'body',
         numberOfLines: 1,
         adjustsFontSizeToFit: true,
@@ -506,7 +519,7 @@ export function Section({
           return null;
         }
 
-        return React.Children.map(resolvedProps.hint, child => {
+        return Children.map(resolvedProps.hint, child => {
           // Filter out empty children
           if (!child) {
             return null;
@@ -515,7 +528,7 @@ export function Section({
             return (
               <RNText
                 selectable
-                dynamicTypeRamp="body"
+                dynamicTypeRamp='body'
                 style={{
                   ...FormFont.secondary,
                   textAlign: 'right',
@@ -546,7 +559,7 @@ export function Section({
     } else if (child.type === Link) {
       wrapsFormItem = true;
 
-      const wrappedTextChildren = React.Children.map(
+      const wrappedTextChildren = Children.map(
         resolvedProps.children,
         linkChild => {
           // Filter out empty children
@@ -556,7 +569,7 @@ export function Section({
           if (typeof linkChild === 'string') {
             return (
               <RNText
-                dynamicTypeRamp="body"
+                dynamicTypeRamp='body'
                 style={mergedStyles(FormFont.default, resolvedProps)}
               >
                 {linkChild}
@@ -572,7 +585,7 @@ export function Section({
           return null;
         }
 
-        return React.Children.map(resolvedProps.hint, child => {
+        return Children.map(resolvedProps.hint, child => {
           // Filter out empty children
           if (!child) {
             return null;
@@ -589,7 +602,7 @@ export function Section({
         });
       })();
 
-      child = React.cloneElement(child, {
+      child = cloneElement(child, {
         // @ts-expect-error react 19 types not caught up
         style: [
           FormFont.default,
@@ -632,10 +645,10 @@ export function Section({
     }
 
     return (
-      <React.Fragment key={child.key ?? `section-item-${index}`}>
+      <Fragment key={child.key ?? `section-item-${index}`}>
         {child}
         {!isLastChild && <Separator />}
-      </React.Fragment>
+      </Fragment>
     );
   });
 
@@ -685,7 +698,7 @@ export function Section({
     if (isStringishNode(titleHint)) {
       return (
         <RNText
-          dynamicTypeRamp="footnote"
+          dynamicTypeRamp='footnote'
           style={{
             color: AppleColors.secondaryLabel,
             paddingVertical: 8,
@@ -716,7 +729,7 @@ export function Section({
       >
         {title && (
           <RNText
-            dynamicTypeRamp="footnote"
+            dynamicTypeRamp='footnote'
             style={{
               textTransform: 'uppercase',
               color: AppleColors.secondaryLabel,
@@ -735,7 +748,7 @@ export function Section({
       {contents}
       {footer && (
         <RNText
-          dynamicTypeRamp="footnote"
+          dynamicTypeRamp='footnote'
           style={{
             color: AppleColors.secondaryLabel,
             paddingHorizontal: 20,
@@ -750,7 +763,7 @@ export function Section({
   );
 }
 
-function isStringishNode(node: React.ReactNode): boolean {
+function isStringishNode(node: ReactNode): boolean {
   if (typeof node === 'string') {
     return true;
   }
@@ -761,7 +774,7 @@ function isStringishNode(node: React.ReactNode): boolean {
 
   let containsStringChildren = false;
 
-  React.Children.forEach(node, child => {
+  Children.forEach(node, child => {
     if (containsStringChildren) {
       return; // Early return if we already found a string
     }
@@ -769,7 +782,7 @@ function isStringishNode(node: React.ReactNode): boolean {
     if (typeof child === 'string' || typeof child === 'number') {
       containsStringChildren = true;
     } else if (
-      React.isValidElement(child) &&
+      isValidElement(child) &&
       'props' in child &&
       typeof child.props === 'object' &&
       child.props !== null &&
@@ -778,7 +791,7 @@ function isStringishNode(node: React.ReactNode): boolean {
       // Recurse on children prop, not the entire child element
       // This prevents infinite recursion
       containsStringChildren = isStringishNode(
-        child.props.children as React.ReactNode,
+        child.props.children as ReactNode,
       );
     }
   });
@@ -822,13 +835,13 @@ function SystemImageView({
 function LinkChevronIcon({
   systemImage,
 }: {
-  systemImage?: SystemImageProps | React.ReactNode;
+  systemImage?: SystemImageProps | ReactNode;
 }) {
   const size = process.env.EXPO_OS === 'ios' ? 14 : 24;
 
   if (systemImage) {
     if (typeof systemImage !== 'string') {
-      if (React.isValidElement(systemImage)) {
+      if (isValidElement(systemImage)) {
         return systemImage;
       }
       const symbolProps: SystemImageCustomProps =
@@ -853,7 +866,7 @@ function LinkChevronIcon({
     <SymbolView
       name={resolvedName as SymbolViewProps['name']}
       size={size}
-      weight="bold"
+      weight='bold'
       // from xcode, not sure which color is the exact match
       // #BFBFBF
       // #9D9DA0

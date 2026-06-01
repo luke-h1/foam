@@ -6,7 +6,7 @@ export const NitroImage = ({
 }: {
   style?: object;
   [key: string]: unknown;
-}) => <View style={style} testID="nitro-image" {...props} />;
+}) => <View style={style} testID='nitro-image' {...props} />;
 
 export const useImage = () => ({ image: null, error: null });
 export const useImageLoader = () => null;

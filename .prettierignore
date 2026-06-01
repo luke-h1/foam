@@ -1,0 +1,17 @@
+node_modules
+.agent-device
+.agents
+.next
+public
+build
+build-artifacts
+coverage
+.expo
+android
+ios
+dist
+generated
+bun.lock
+player-website/.astro
+player-website/dist
+src/graphql/generated

@@ -4,7 +4,7 @@ import { Badge } from '@app/components/ui/Badge/Badge';
 import { theme } from '@app/styles/themes';
 import type { ChannelPredictionState } from '@app/types/twitch/prediction';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 interface ChannelPredictionCardProps {
@@ -48,7 +48,7 @@ function getOutcomeColor(
   }
 }
 
-export function ChannelPredictionCard({
+function ChannelPredictionCardComponent({
   channelLogin,
   prediction,
 }: ChannelPredictionCardProps) {
@@ -67,17 +67,17 @@ export function ChannelPredictionCard({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Badge color="amber" variant="soft">
+        <Badge color='amber' variant='soft'>
           {statusLabel}
         </Badge>
         {timeRemaining ? (
-          <Text color="gray.textLow" tabular type="xxs" weight="medium">
+          <Text color='gray.textLow' tabular type='xxs' weight='medium'>
             {timeRemaining}
           </Text>
         ) : null}
       </View>
 
-      <Text color="gray.text" style={styles.title} type="sm" weight="semibold">
+      <Text color='gray.text' style={styles.title} type='sm' weight='semibold'>
         {prediction.title}
       </Text>
 
@@ -99,20 +99,20 @@ export function ChannelPredictionCard({
             <View style={styles.outcomeContent}>
               <View style={styles.outcomeLabelRow}>
                 <Text
-                  color="gray.text"
+                  color='gray.text'
                   numberOfLines={1}
-                  type="xs"
-                  weight="medium"
+                  type='xs'
+                  weight='medium'
                 >
                   {outcome.title}
                 </Text>
                 {outcome.isWinner ? (
-                  <Badge color="green" size="sm" variant="soft">
+                  <Badge color='green' size='sm' variant='soft'>
                     Won
                   </Badge>
                 ) : null}
               </View>
-              <Text color="gray.textLow" tabular type="xxs" weight="semibold">
+              <Text color='gray.textLow' tabular type='xxs' weight='semibold'>
                 {outcome.percentage}% · {outcome.channelPoints} pts ·{' '}
                 {outcome.users} users
               </Text>
@@ -122,17 +122,17 @@ export function ChannelPredictionCard({
       </View>
 
       <View style={styles.footer}>
-        <Text color="gray.textLow" tabular type="xxs">
+        <Text color='gray.textLow' tabular type='xxs'>
           {prediction.totalChannelPoints} total points
         </Text>
         {(prediction.isActive || prediction.isLocked) && (
           <PressableArea
-            accessibilityRole="button"
+            accessibilityRole='button'
             onPress={() =>
               openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
             }
           >
-            <Text color="amber.accent" type="xxs" weight="semibold">
+            <Text color='amber.accent' type='xxs' weight='semibold'>
               Predict on Twitch
             </Text>
           </PressableArea>
@@ -141,6 +141,8 @@ export function ChannelPredictionCard({
     </View>
   );
 }
+
+export const ChannelPredictionCard = memo(ChannelPredictionCardComponent);
 
 const styles = StyleSheet.create({
   container: {

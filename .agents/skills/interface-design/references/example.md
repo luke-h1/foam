@@ -65,6 +65,7 @@ Focus needs to be visible, but you don't need a glowing ring or dramatic color. 
 ## Adapt to Context
 
 Your product might need:
+
 - Warmer hues (slight yellow/orange tint)
 - Cooler hues (blue-gray base)
 - Different lightness progression

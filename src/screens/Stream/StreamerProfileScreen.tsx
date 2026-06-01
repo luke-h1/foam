@@ -7,8 +7,10 @@ import {
 } from '@app/components/FlashList/FlashList';
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { Image } from '@app/components/Image/Image';
+import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
+import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import {
@@ -17,17 +19,12 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useRef } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 
@@ -89,9 +86,9 @@ function StreamerProfileHeader({
       <View style={styles.navRow}>
         <IconButton
           icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label="Close streamer profile"
+          label='Close streamer profile'
           onPress={() => router.back()}
-          size="2xl"
+          size='2xl'
           style={styles.closeButton}
         />
       </View>
@@ -100,13 +97,13 @@ function StreamerProfileHeader({
         <Image
           source={user.profile_image_url}
           style={styles.avatar}
-          contentFit="cover"
+          contentFit='cover'
         />
         <View style={styles.profileCopy}>
-          <Text type="xl" weight="bold" numberOfLines={1}>
+          <Text type='xl' weight='bold' numberOfLines={1}>
             {user.display_name}
           </Text>
-          <Text type="xs" color="gray.textLow" numberOfLines={1}>
+          <Text type='xs' color='gray.textLow' numberOfLines={1}>
             @{user.login}
           </Text>
         </View>
@@ -114,8 +111,8 @@ function StreamerProfileHeader({
 
       {user.description ? (
         <Text
-          type="xs"
-          color="gray.textLow"
+          type='xs'
+          color='gray.textLow'
           numberOfLines={2}
           style={styles.description}
         >
@@ -124,10 +121,10 @@ function StreamerProfileHeader({
       ) : null}
 
       <View style={styles.sectionRow}>
-        <Text type="lg" weight="bold">
+        <Text type='lg' weight='bold'>
           Clips
         </Text>
-        <Text type="xs" color="gray.textLow">
+        <Text type='xs' color='gray.textLow'>
           {clipCount > 0 ? `${clipCount} loaded` : 'Top clips'}
         </Text>
       </View>
@@ -156,11 +153,11 @@ function ClipCard({
         <Image
           source={getClipThumbnailUrl(clip)}
           style={styles.thumbnail}
-          contentFit="cover"
+          contentFit='cover'
           transition={150}
         />
         <View style={styles.durationBadge}>
-          <Text type="xxs" weight="bold" style={styles.badgeText}>
+          <Text type='xxs' weight='bold' style={styles.badgeText}>
             {formatDuration(clip.duration)}
           </Text>
         </View>
@@ -168,14 +165,14 @@ function ClipCard({
 
       <View style={styles.clipBody}>
         <Button onPress={handleView} style={styles.clipTextButton}>
-          <Text type="sm" weight="bold" numberOfLines={2} style={styles.title}>
+          <Text type='sm' weight='bold' numberOfLines={2} style={styles.title}>
             {clip.title || 'Untitled clip'}
           </Text>
-          <Text type="xs" color="gray.textLow" numberOfLines={1}>
+          <Text type='xs' color='gray.textLow' numberOfLines={1}>
             {formatViewCount(clip.view_count)} views -{' '}
             {formatRelativeAge(clip.created_at)}
           </Text>
-          <Text type="xs" color="gray.textLow" numberOfLines={1}>
+          <Text type='xs' color='gray.textLow' numberOfLines={1}>
             Clipped by {clip.creator_name}
           </Text>
         </Button>
@@ -190,7 +187,7 @@ function ClipCard({
           label={`Download ${clip.title}`}
           loading={downloading}
           onPress={() => onDownload(clip)}
-          size="2xl"
+          size='2xl'
           style={styles.downloadButton}
         />
       </View>
@@ -234,7 +231,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   });
 
   const clips = useMemo(
-    () => clipPages?.pages.flatMap(page => page.data).filter(Boolean) ?? [],
+    () => flattenInfiniteQueryPages(clipPages?.pages),
     [clipPages],
   );
 
@@ -244,11 +241,11 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       : windowWidth - theme.space20 * 2;
   const columns = Platform.OS === 'web' && windowWidth >= 820 ? 2 : 1;
 
-  const handleLoadMore = useCallback(async () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      await fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleLoadMore = useInfiniteQueryLoadMore({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   const handleDownload = useCallback(
     (clip: TwitchClip) => {
@@ -284,18 +281,14 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   );
 
   if (isUserLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.color.text.dark} />
-      </View>
-    );
+    return <LoadingState />;
   }
 
   if (isUserError || !user) {
     return (
       <EmptyState
-        heading="Streamer not found"
-        content="Could not load this channel."
+        heading='Streamer not found'
+        content='Could not load this channel.'
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetchUser()}
       />
@@ -305,8 +298,8 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   if (isClipsError) {
     return (
       <EmptyState
-        heading="Clips unavailable"
-        content="Could not load clips for this channel."
+        heading='Clips unavailable'
+        content='Could not load clips for this channel.'
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetchClips()}
       />
@@ -318,7 +311,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       <View style={styles.container}>
         {listHeader}
         <View style={styles.centeredBody}>
-          <ActivityIndicator color={theme.color.text.dark} />
+          <LoadingState indicatorSize='small' style={styles.inlineLoading} />
         </View>
       </View>
     );
@@ -329,7 +322,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       <View style={styles.container}>
         {listHeader}
         <View style={styles.centeredBody}>
-          <Text type="sm" color="gray.textLow">
+          <Text type='sm' color='gray.textLow'>
             No clips found.
           </Text>
         </View>
@@ -345,7 +338,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         extraData={downloadingClipId}
         key={columns}
         numColumns={columns}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={listHeader}
@@ -371,12 +364,6 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: theme.color.text.dark,
-  },
-  centered: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
-    flex: 1,
-    justifyContent: 'center',
   },
   centeredBody: {
     alignItems: 'center',
@@ -438,6 +425,10 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: theme.space36,
+  },
+  inlineLoading: {
+    backgroundColor: 'transparent',
+    flex: 0,
   },
   navRow: {
     alignItems: 'center',

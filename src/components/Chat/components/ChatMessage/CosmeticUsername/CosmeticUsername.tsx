@@ -7,7 +7,13 @@ import { useSelector } from '@legendapp/state/react';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { memo, useMemo } from 'react';
-import { type StyleProp, TextStyle, View, StyleSheet } from 'react-native';
+import {
+  Image,
+  type StyleProp,
+  TextStyle,
+  View,
+  StyleSheet,
+} from 'react-native';
 import Svg, {
   Defs,
   RadialGradient as SvgRadialGradient,
@@ -85,22 +91,23 @@ function PaintedUsernameWithPaint({
   }, [paint]);
 
   const isRadial = paint.function === 'RADIAL_GRADIENT';
+  const isAssetPaint = paint.function === 'URL' && Boolean(paint.image_url);
 
   const renderGradient = () => {
     if (isRadial) {
       return (
         <View style={styles.gradient}>
           <View style={styles.svgContainer}>
-            <Svg width="100%" height="100%" style={styles.svgGradient}>
+            <Svg width='100%' height='100%' style={styles.svgGradient}>
               <Defs>
                 <SvgRadialGradient
-                  id="radialPaint"
-                  cx="50%"
-                  cy="50%"
-                  rx="50%"
-                  ry="50%"
-                  fx="50%"
-                  fy="50%"
+                  id='radialPaint'
+                  cx='50%'
+                  cy='50%'
+                  rx='50%'
+                  ry='50%'
+                  fx='50%'
+                  fy='50%'
                 >
                   {gradientConfig.colors.map((color, index) => (
                     <Stop
@@ -112,15 +119,32 @@ function PaintedUsernameWithPaint({
                 </SvgRadialGradient>
               </Defs>
               <Rect
-                x="0"
-                y="0"
-                width="100%"
-                height="100%"
-                fill="url(#radialPaint)"
+                x='0'
+                y='0'
+                width='100%'
+                height='100%'
+                fill='url(#radialPaint)'
               />
             </Svg>
           </View>
           {/* Invisible text to size the gradient correctly */}
+          <Text style={[styles.hiddenText, usernameTextStyle, shadowStyle]}>
+            {displayUsername}
+          </Text>
+        </View>
+      );
+    }
+
+    if (isAssetPaint) {
+      return (
+        <View style={styles.gradient}>
+          <View style={styles.svgContainer}>
+            <Image
+              resizeMode={paint.repeat ? 'repeat' : 'cover'}
+              source={{ uri: paint.image_url }}
+              style={styles.assetPaintImage}
+            />
+          </View>
           <Text style={[styles.hiddenText, usernameTextStyle, shadowStyle]}>
             {displayUsername}
           </Text>
@@ -231,6 +255,13 @@ const styles = StyleSheet.create({
   },
   svgGradient: {
     position: 'absolute',
+  },
+  assetPaintImage: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
 });
 

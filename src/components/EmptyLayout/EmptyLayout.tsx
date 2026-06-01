@@ -77,7 +77,7 @@ export function EmptyLayoutTitle({
   style?: StyleProp<TextStyle>;
 }) {
   return (
-    <Text style={[styles.title, style]} type="2xl" weight="semibold">
+    <Text style={[styles.title, style]} type='2xl' weight='semibold'>
       {children}
     </Text>
   );
@@ -91,7 +91,7 @@ export function EmptyLayoutDescription({
   style?: StyleProp<TextStyle>;
 }) {
   return (
-    <Text style={[styles.description, style]} type="default">
+    <Text style={[styles.description, style]} type='default'>
       {children}
     </Text>
   );

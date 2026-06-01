@@ -25,14 +25,14 @@ export function ExpoSection() {
   const hermes = getHermesVersion();
   return (
     <>
-      <Form.Section title="Expo" titleHint={`SDK ${sdkVersion}`}>
+      <Form.Section title='Expo' titleHint={`SDK ${sdkVersion}`}>
         <Form.Text hint={envName || 'Unknown'}>Environment</Form.Text>
         {hermes && <Form.Text hint={hermes}>Hermes</Form.Text>}
         <Form.Text hint={__DEV__ ? 'development' : 'production'}>
           Mode
         </Form.Text>
       </Form.Section>
-      <Form.Section footer="Embedded origin URL that Expo Router uses to invoke React Server Functions. This should be hosted and available to the client.">
+      <Form.Section footer='Embedded origin URL that Expo Router uses to invoke React Server Functions. This should be hosted and available to the client.'>
         <Form.Text hint={window.location?.href || 'unknown'}>Host</Form.Text>
       </Form.Section>
     </>

@@ -2,7 +2,6 @@ import type { ListRenderItem } from '@app/components/FlashList/FlashList';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { logger } from '@app/utils/logger';
-import type { LegendListRef } from '@legendapp/list';
 import { useSelector } from '@legendapp/state/react';
 import {
   memo,
@@ -28,7 +27,7 @@ import { isRenderableChatMessage } from '../util/chatMessages';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import { getVisibleMessages } from '../util/visibleMessages';
-import { ChatList } from './ChatList';
+import { ChatList, type ChatListRef } from './ChatList';
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
 
@@ -44,7 +43,7 @@ export interface ChatMessagePaneProps {
   showOnlyMentions: boolean;
   chatDensity: 'comfortable' | 'compact';
   showTimestamps: boolean;
-  listRef: RefObject<LegendListRef | null>;
+  listRef: RefObject<ChatListRef | null>;
   shouldMaintainScrollAtEnd: boolean;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;

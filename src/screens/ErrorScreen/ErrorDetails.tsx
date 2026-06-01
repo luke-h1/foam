@@ -43,15 +43,15 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       <View style={styles.topSection}>
         <View style={styles.iconContainer}>
           <SymbolView
-            name="exclamationmark.circle"
+            name='exclamationmark.circle'
             size={48}
             tintColor={theme.colorGreyHoverAlpha}
           />
         </View>
-        <Text type="xl" weight="semibold" style={styles.heading} align="center">
+        <Text type='xl' weight='semibold' style={styles.heading} align='center'>
           Something went wrong
         </Text>
-        <Text type="md" color="gray" align="center" style={styles.description}>
+        <Text type='md' color='gray' align='center' style={styles.description}>
           Try resetting or restarting the app & see if that helps. If not, feel
           free to click the 'send feedback' button to report the issue to the
           developers.
@@ -64,22 +64,22 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           onPress={() => openLinkInBrowser(githubURL)}
         >
           <Text
-            type="md"
-            weight="semibold"
-            color="blue"
+            type='md'
+            weight='semibold'
+            color='blue'
             contrast
-            align="center"
+            align='center'
           >
             GitHub
           </Text>
         </Button>
         <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
           <Text
-            type="md"
-            weight="semibold"
-            color="gray"
+            type='md'
+            weight='semibold'
+            color='gray'
             contrast
-            align="center"
+            align='center'
           >
             Send Feedback
           </Text>
@@ -90,7 +90,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         style={styles.toggleButton}
         onPress={() => showStackTrace$.set(value => !value)}
       >
-        <Text type="sm" color="blue" align="center" style={styles.toggleText}>
+        <Text type='sm' color='blue' align='center' style={styles.toggleText}>
           {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
         </Text>
       </Button>
@@ -104,9 +104,9 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           >
             {error?.message && (
               <Text
-                type="sm"
-                weight="semibold"
-                color="red"
+                type='sm'
+                weight='semibold'
+                color='red'
                 style={styles.errorMessage}
               >
                 {error.message.trim()}
@@ -115,8 +115,8 @@ export function ErrorDetails(props: ErrorDetailsProps) {
             {errorInfo?.componentStack && (
               <Text
                 selectable
-                type="xs"
-                color="gray"
+                type='xs'
+                color='gray'
                 style={styles.errorBackTrace}
               >
                 {errorInfo.componentStack.trim()}
@@ -127,7 +127,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       )}
 
       <Button style={styles.resetButton} onPress={onReset}>
-        <Text type="md" weight="semibold" color="red" contrast align="center">
+        <Text type='md' weight='semibold' color='red' contrast align='center'>
           Reset App
         </Text>
       </Button>

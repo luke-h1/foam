@@ -86,14 +86,14 @@ export function TopScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View
-        pointerEvents="box-none"
+        pointerEvents='box-none'
         style={[
           styles.headerOverlay,
           { height: contentTopInset, top: insets.top },
         ]}
       >
         <Animated.View style={[styles.hero, heroStyle]}>
-          <Text type="4xl" weight="bold" style={styles.title}>
+          <Text type='4xl' weight='bold' style={styles.title}>
             Top
           </Text>
         </Animated.View>

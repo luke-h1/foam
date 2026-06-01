@@ -85,7 +85,7 @@ interface ActionIconButtonProps {
   prominent?: boolean;
 }
 
-function ActionIconButton({
+function ActionIconButtonComponent({
   active,
   disabled,
   icon,
@@ -154,6 +154,8 @@ function ActionIconButton({
     </Host>
   );
 }
+
+const ActionIconButton = memo(ActionIconButtonComponent);
 
 export const ChatInputSection = memo(
   ({
@@ -262,7 +264,7 @@ export const ChatInputSection = memo(
             <BlurView
               intensity={32}
               style={StyleSheet.absoluteFill}
-              tint="dark"
+              tint='dark'
             />
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
@@ -288,7 +290,7 @@ export const ChatInputSection = memo(
               onPress={onClearReply}
               style={styles.replyDismissButton}
             >
-              <SymbolView tintColor="#ffffff" name="xmark" size={16} />
+              <SymbolView tintColor='#ffffff' name='xmark' size={16} />
             </PressableButton>
           </View>
         ) : null}
@@ -297,39 +299,39 @@ export const ChatInputSection = memo(
           <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
             <View onLayout={handleComposerLayout} style={styles.inputRow}>
               <ActionIconButton
-                icon="face.smiling"
-                label="Open emote picker"
+                icon='face.smiling'
+                label='Open emote picker'
                 onPress={onOpenEmoteSheet}
               />
 
               <View style={styles.inputContainer}>
                 <ChatComposer
                   ref={inputRef}
-                  autoCapitalize="none"
-                  autoComplete="off"
+                  autoCapitalize='none'
+                  autoComplete='off'
                   autoCorrect={false}
                   blurOnSubmit
-                  color="white"
+                  color='white'
                   editable={isAuthenticated}
                   onChangeText={onChangeText}
                   onEmoteSelect={handleEmoteSelect}
                   onSubmitEditing={onSubmit}
                   placeholder={inputPlaceholder}
-                  placeholderTextColor="rgba(255,255,255,0.46)"
+                  placeholderTextColor='rgba(255,255,255,0.46)'
                   prioritizeChannelEmotes
-                  radius="xl"
-                  returnKeyType="send"
-                  submitBehavior="blurAndSubmit"
+                  radius='xl'
+                  returnKeyType='send'
+                  submitBehavior='blurAndSubmit'
                   style={styles.nativeInput}
                   value={messageInput}
-                  variant="soft"
+                  variant='soft'
                 />
               </View>
 
               {showSettingsButton ? (
                 <ActionIconButton
-                  icon="gearshape"
-                  label="Open chat settings"
+                  icon='gearshape'
+                  label='Open chat settings'
                   onPress={onOpenSettingsSheet}
                 />
               ) : null}
@@ -345,8 +347,8 @@ export const ChatInputSection = memo(
               ) : null}
               <ActionIconButton
                 disabled={!canSend}
-                icon="arrow.up"
-                label="Send message"
+                icon='arrow.up'
+                label='Send message'
                 onPress={onSubmit}
                 prominent={canSend}
               />

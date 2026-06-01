@@ -56,7 +56,7 @@ export function ForceUpdateModal() {
 
   return (
     <RNModal
-      animationType="fade"
+      animationType='fade'
       transparent
       visible={updateRequired}
       statusBarTranslucent
@@ -64,17 +64,17 @@ export function ForceUpdateModal() {
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
         <View style={styles.card}>
           <View style={styles.iconContainer}>
-            <SymbolView name="arrow.up" />
+            <SymbolView name='arrow.up' />
           </View>
 
-          <Text color="gray" type="xl" weight="bold" align="center">
+          <Text color='gray' type='xl' weight='bold' align='center'>
             Update Required
           </Text>
 
           <Text
-            color="gray.textLow"
-            type="sm"
-            align="left"
+            color='gray.textLow'
+            type='sm'
+            align='left'
             style={styles.subtitle}
           >
             A new version of Foam is available. Please update to continue using
@@ -83,18 +83,18 @@ export function ForceUpdateModal() {
 
           <View style={styles.versionInfo}>
             <View style={styles.versionRow}>
-              <Text color="gray.textLow" type="xs">
+              <Text color='gray.textLow' type='xs'>
                 Current version
               </Text>
-              <Text color="gray" type="xs" weight="semibold">
+              <Text color='gray' type='xs' weight='semibold'>
                 {currentVersion}
               </Text>
             </View>
             <View style={styles.versionRow}>
-              <Text color="gray.textLow" type="xs">
+              <Text color='gray.textLow' type='xs'>
                 Minimum required
               </Text>
-              <Text color="gray" type="xs" weight="semibold">
+              <Text color='gray' type='xs' weight='semibold'>
                 {minimumVersion}
               </Text>
             </View>
@@ -105,7 +105,7 @@ export function ForceUpdateModal() {
             onPress={handleUpdatePress}
             style={styles.updateButton}
           >
-            <Text color="accent" contrast type="md" weight="semibold">
+            <Text color='accent' contrast type='md' weight='semibold'>
               Update Now
             </Text>
           </Button>

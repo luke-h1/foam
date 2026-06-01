@@ -69,11 +69,11 @@ export const EmoteRenderer = memo(
               uri: displayUrl,
             }}
             containerStyle={getEmoteContainerStyle(width, height)}
-            contentFit="contain"
-            cachePolicy="memory-disk"
-            cachePriority="visible"
-            cacheVariant="emote"
-            decodeFormat="argb"
+            contentFit='contain'
+            cachePolicy='memory-disk'
+            cachePriority='visible'
+            cacheVariant='emote'
+            decodeFormat='argb'
             useAppleWebpCodec
             transition={0}
             style={{

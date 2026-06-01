@@ -9,4 +9,3 @@ export const fetch = jest.fn(() =>
     headers: new Headers(),
   }),
 );
-

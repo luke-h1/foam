@@ -39,8 +39,8 @@ test('Pan gesture tracks translation', () => {
   const panGesture = renderHook(() =>
     usePanGesture({
       disableReanimated: true,
-      onActivate: (e) => onActivate(e),
-    })
+      onActivate: e => onActivate(e),
+    }),
   ).result.current;
 
   fireGestureHandler(panGesture, [
@@ -96,6 +96,7 @@ Without this, callbacks run as worklets and may not execute during synchronous t
 Dependencies have installed their own copy of RNGH instead of using the app's version.
 
 **Fix with npm:**
+
 ```bash
 npm ls react-native-gesture-handler
 # Add to package.json:
@@ -104,6 +105,7 @@ npm install
 ```
 
 **Fix with yarn:**
+
 ```bash
 yarn why react-native-gesture-handler
 # Add to package.json:

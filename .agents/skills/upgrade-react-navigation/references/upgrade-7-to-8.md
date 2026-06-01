@@ -91,7 +91,7 @@ const navigation = useNavigation('Profile');
 const route = useRoute('Profile');
 const focusedRouteName = useNavigationState(
   'Profile',
-  (state) => state.routes[state.index].name,
+  state => state.routes[state.index].name,
 );
 ```
 
@@ -108,7 +108,7 @@ const navigation = useNavigation() as StackNavigationProp<
 const route = useRoute() as RouteProp<RootStackParamList, 'Profile'>;
 
 const focusedRouteName = useNavigationState(
-  (state) => state.routes[state.index].name as keyof RootStackParamList,
+  state => state.routes[state.index].name as keyof RootStackParamList,
 );
 ```
 
@@ -291,7 +291,7 @@ const parent = navigation.getParent('RootTabs');
 After:
 
 ```tsx
-<RootStack.Screen name="HomeTabs" component={HomeTabsScreen} />
+<RootStack.Screen name='HomeTabs' component={HomeTabsScreen} />
 ```
 
 ```tsx

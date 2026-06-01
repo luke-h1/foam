@@ -14,7 +14,7 @@ export function SliderHandle({ size }: SliderHandleProps) {
 
   return (
     <View style={[styles.handle, handleSizeStyle]}>
-      <SymbolView name="arrow.up.arrow.down" size={24} tintColor="white" />
+      <SymbolView name='arrow.up.arrow.down' size={24} tintColor='white' />
     </View>
   );
 }

@@ -70,8 +70,8 @@ function computeOnUI() {
 
 Load at most one reference file per question.
 
-| File | Load when question is about |
-|------|------------------------------|
-| `threading-api.md` | Scheduling work across runtimes, creating Worker Runtimes, sync vs async execution, migrating from deprecated APIs |
-| `shared-memory.md` | Passing data between runtimes, closures in worklets, Serializable, Synchronizable, shared mutable state |
-| `setup-and-advanced.md` | Installing worklets, Babel plugin config, Bundle Mode, testing with Jest, feature flags, troubleshooting |
+| File                    | Load when question is about                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `threading-api.md`      | Scheduling work across runtimes, creating Worker Runtimes, sync vs async execution, migrating from deprecated APIs |
+| `shared-memory.md`      | Passing data between runtimes, closures in worklets, Serializable, Synchronizable, shared mutable state            |
+| `setup-and-advanced.md` | Installing worklets, Babel plugin config, Bundle Mode, testing with Jest, feature flags, troubleshooting           |

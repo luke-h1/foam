@@ -32,13 +32,13 @@ export const PinnedMessageBanner = memo(
     return (
       <View style={styles.pinnedMessageBanner}>
         <View style={styles.pinnedIconShell}>
-          <SymbolView name="mappin" tintColor="#ffffff" size={16} />
+          <SymbolView name='mappin' tintColor='#ffffff' size={16} />
         </View>
         <View style={styles.pinnedMessageContent}>
           <Text
             numberOfLines={1}
             style={styles.pinnedMessageTitle}
-            weight="semibold"
+            weight='semibold'
           >
             {title}
           </Text>
@@ -50,25 +50,25 @@ export const PinnedMessageBanner = memo(
           <View style={styles.pinnedMessageActions}>
             <Button
               disabled={pinnedMessageBusy}
-              label="Refresh pin"
+              label='Refresh pin'
               onPress={onRefresh}
               style={styles.pinnedMessageActionButton}
             >
               <SymbolView
-                name="arrow.clockwise"
-                tintColor="rgba(255,255,255,0.78)"
+                name='arrow.clockwise'
+                tintColor='rgba(255,255,255,0.78)'
                 size={14}
               />
             </Button>
             <Button
               disabled={pinnedMessageBusy}
-              label="Unpin message"
+              label='Unpin message'
               onPress={onUnpin}
               style={styles.pinnedMessageActionButton}
             >
               <SymbolView
-                name="xmark"
-                tintColor="rgba(255,255,255,0.78)"
+                name='xmark'
+                tintColor='rgba(255,255,255,0.78)'
                 size={15}
               />
             </Button>

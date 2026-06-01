@@ -79,9 +79,9 @@ export function useRefresh({ onRefresh }: UseRefreshOptions): UseRefreshResult {
     <RefreshControl
       refreshing={isRefreshing}
       onRefresh={refreshCallback}
-      tintColor="transparent"
+      tintColor='transparent'
       colors={['transparent']}
-      progressBackgroundColor="transparent"
+      progressBackgroundColor='transparent'
       progressViewOffset={-10000}
     />
   );

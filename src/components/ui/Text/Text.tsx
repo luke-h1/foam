@@ -138,10 +138,7 @@ export const Text = forwardRef<RNText, TextProps>(
     }: TextProps,
     ref: LegacyRef<RNText>,
   ) => {
-    // Resolve color
-    let resolvedColor: string;
-
-    resolvedColor = resolveThemeColor(color, { contrast, highContrast });
+    const resolvedColor = resolveThemeColor(color, { contrast, highContrast });
 
     const sizeStyle = sizeStyles[type];
 
@@ -160,7 +157,7 @@ export const Text = forwardRef<RNText, TextProps>(
     return (
       <RNText
         ref={ref}
-        textBreakStrategy="simple"
+        textBreakStrategy='simple'
         {...props}
         style={[sizeStyle, textStyle, style]}
       >

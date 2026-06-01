@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: "Channel to roll back"
+        description: 'Channel to roll back'
         required: true
         type: choice
-        default: "production"
+        default: 'production'
         options:
           - production
           - testflight
@@ -17,10 +17,10 @@ on:
         required: true
         type: string
       platform:
-        description: "Platform to roll back"
+        description: 'Platform to roll back'
         required: false
         type: choice
-        default: "all"
+        default: 'all'
         options:
           - all
           - ios
@@ -51,7 +51,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: '.bun-version'
 
       - name: ⚙️ Install dependencies
         run: bun install --frozen-lockfile

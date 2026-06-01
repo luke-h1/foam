@@ -35,7 +35,7 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={onClose}
-        username="viewer"
+        username='viewer'
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
         canModerateChat={false}
@@ -55,7 +55,7 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={onClose}
-        username="viewer"
+        username='viewer'
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
         canModerateChat
@@ -82,7 +82,7 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={jest.fn()}
-        username="viewer"
+        username='viewer'
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
         canModerateChat
@@ -108,7 +108,7 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={jest.fn()}
-        username="viewer"
+        username='viewer'
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
         canModerateChat
@@ -128,7 +128,7 @@ describe('Moderator action sheets', () => {
       <ActionSheet
         visible
         onClose={jest.fn()}
-        username="viewer"
+        username='viewer'
         handleReply={jest.fn()}
         handleCopy={jest.fn()}
         canModerateChat
@@ -155,8 +155,8 @@ describe('Moderator action sheets', () => {
       <UserActionSheet
         visible
         onClose={jest.fn()}
-        username="viewer"
-        login="viewer"
+        username='viewer'
+        login='viewer'
         onMentionUser={jest.fn()}
         onCopyUsername={jest.fn()}
         onHideUser={jest.fn()}
@@ -177,8 +177,8 @@ describe('Moderator action sheets', () => {
       <UserActionSheet
         visible
         onClose={jest.fn()}
-        username="viewer"
-        login="viewer"
+        username='viewer'
+        login='viewer'
         onMentionUser={jest.fn()}
         onCopyUsername={jest.fn()}
         onHideUser={jest.fn()}
@@ -204,8 +204,8 @@ describe('Moderator action sheets', () => {
       <UserActionSheet
         visible
         onClose={jest.fn()}
-        username="viewer"
-        login="viewer"
+        username='viewer'
+        login='viewer'
         onMentionUser={jest.fn()}
         onCopyUsername={jest.fn()}
         onHideUser={jest.fn()}

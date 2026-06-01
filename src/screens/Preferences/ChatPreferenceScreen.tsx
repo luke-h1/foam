@@ -17,7 +17,6 @@ import { useObservable, useSelector } from '@legendapp/state/react';
 import {
   EMOJI_STYLE_OPTIONS,
   getEmojiEmotes,
-  type EmojiStyle,
 } from '@app/utils/emoji/emojiEmotes';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
@@ -184,11 +183,11 @@ function IosToggleRow({
   return (
     <View style={styles.iosToggleRow}>
       <View style={styles.iosToggleCopy}>
-        <Text color="gray" style={styles.iosToggleLabel} weight="semibold">
+        <Text color='gray' style={styles.iosToggleLabel} weight='semibold'>
           {label}
         </Text>
         {subtitle ? (
-          <Text color="gray.textLow" style={styles.iosToggleSubtitle} type="xs">
+          <Text color='gray.textLow' style={styles.iosToggleSubtitle} type='xs'>
             {subtitle}
           </Text>
         ) : null}
@@ -419,8 +418,8 @@ export function ChatPreferenceScreen() {
         return;
       }
 
-      previewEmojiStyle$.set(option.value as EmojiStyle);
-      update({ emojiStyle: option.value as EmojiStyle });
+      previewEmojiStyle$.set(option.value);
+      update({ emojiStyle: option.value });
     },
     [previewEmojiStyle$, update],
   );
@@ -434,8 +433,8 @@ export function ChatPreferenceScreen() {
         return;
       }
 
-      previewEmojiStyle$.set(option.value as EmojiStyle);
-      update({ emojiStyle: option.value as EmojiStyle });
+      previewEmojiStyle$.set(option.value);
+      update({ emojiStyle: option.value });
     },
     [previewEmojiStyle$, update],
   );
@@ -446,24 +445,24 @@ export function ChatPreferenceScreen() {
     return (
       <View style={styles.container}>
         <BodyScrollView
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           contentContainerStyle={styles.iosContent}
         >
-          <Form.Section title="Layout">
+          <Form.Section title='Layout'>
             <Form.FormItem style={styles.iosControlItem}>
               <View style={styles.iosControlBody}>
                 <View style={styles.controlCopy}>
-                  <Text color="gray" weight="semibold">
+                  <Text color='gray' weight='semibold'>
                     Message Density
                   </Text>
-                  <Text color="gray.textLow" type="xs">
+                  <Text color='gray.textLow' type='xs'>
                     {previewDensity === 'compact'
                       ? 'Tighter rows for faster scanning'
                       : 'Comfy rows with more breathing space'}
                   </Text>
                 </View>
                 <SegmentedControl
-                  appearance="dark"
+                  appearance='dark'
                   onChange={handleDensityChange}
                   onValueChange={handleDensityValueChange}
                   selectedIndex={densityIndex}
@@ -476,19 +475,19 @@ export function ChatPreferenceScreen() {
             </Form.FormItem>
           </Form.Section>
 
-          <Form.Section title="Emoji Style">
+          <Form.Section title='Emoji Style'>
             <Form.FormItem style={styles.iosControlItem}>
               <View style={styles.iosControlBody}>
                 <View style={styles.controlCopy}>
-                  <Text color="gray" weight="semibold">
+                  <Text color='gray' weight='semibold'>
                     Emoji Set
                   </Text>
-                  <Text color="gray.textLow" type="xs">
+                  <Text color='gray.textLow' type='xs'>
                     Changes emoji images in existing chat messages
                   </Text>
                 </View>
                 <SegmentedControl
-                  appearance="dark"
+                  appearance='dark'
                   onChange={handleEmojiStyleChangeByIndex}
                   onValueChange={handleEmojiStyleChange}
                   selectedIndex={emojiIndex}
@@ -501,10 +500,10 @@ export function ChatPreferenceScreen() {
             </Form.FormItem>
           </Form.Section>
 
-          <Form.Section title="Context">
+          <Form.Section title='Context'>
             <IosToggleRow
               custom
-              label="Historical Recent Messages"
+              label='Historical Recent Messages'
               subtitle={HISTORICAL_RECENT_MESSAGES_EXPLAINER}
               value={showRecentMessages !== false}
               onValueChange={value => update({ showRecentMessages: value })}
@@ -520,7 +519,7 @@ export function ChatPreferenceScreen() {
             ))}
             <View style={styles.iosPreviewItem}>
               <PreviewLabel />
-              <ChatPreferencePreview variant="context" value={previewContext} />
+              <ChatPreferencePreview variant='context' value={previewContext} />
             </View>
           </Form.Section>
 
@@ -529,36 +528,36 @@ export function ChatPreferenceScreen() {
               <ProviderTogglePreviewItem
                 custom
                 enabled={previewProviders[section.emotes.key]}
-                label="Emotes"
+                label='Emotes'
                 onValueChange={value =>
                   handleProviderToggle(section.emotes.key, value)
                 }
                 provider={section.provider}
-                variant="emotes"
+                variant='emotes'
               />
               <ProviderTogglePreviewItem
                 custom
                 enabled={previewProviders[section.badges.key]}
-                label="Badges"
+                label='Badges'
                 onValueChange={value =>
                   handleProviderToggle(section.badges.key, value)
                 }
                 provider={section.provider}
-                variant="badges"
+                variant='badges'
               />
             </Form.Section>
           ))}
 
-          <Form.Section title="Media">
+          <Form.Section title='Media'>
             <IosToggleRow
               custom
-              label="Disable Emote Animations"
+              label='Disable Emote Animations'
               value={previewDisableEmoteAnimations}
               onValueChange={handleDisableEmoteAnimationsToggle}
             />
             <View style={styles.iosPreviewItem}>
               <ChatPreferencePreview
-                variant="emoteAnimations"
+                variant='emoteAnimations'
                 value={previewDisableEmoteAnimations}
               />
             </View>
@@ -572,15 +571,15 @@ export function ChatPreferenceScreen() {
     <View style={styles.container}>
       <ScrollView
         ref={scrollRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <ScreenHeader title="Chat" subtitle="Message controls" size="medium" />
+        <ScreenHeader title='Chat' subtitle='Message controls' size='medium' />
 
-        <SettingsSection title="Layout">
+        <SettingsSection title='Layout'>
           <SettingsRow
-            title="Message Density"
+            title='Message Density'
             subtitle={
               previewDensity === 'compact'
                 ? 'Tighter rows for faster scanning'
@@ -589,7 +588,7 @@ export function ChatPreferenceScreen() {
             icon={{ icon: 'list.bullet', color: theme.colorGrey }}
             trailing={
               <SegmentedControl
-                appearance="dark"
+                appearance='dark'
                 onChange={handleDensityChange}
                 onValueChange={handleDensityValueChange}
                 selectedIndex={densityIndex}
@@ -604,14 +603,14 @@ export function ChatPreferenceScreen() {
           </View>
         </SettingsSection>
 
-        <SettingsSection title="Emoji Style">
+        <SettingsSection title='Emoji Style'>
           <SettingsRow
-            title="Emoji Set"
-            subtitle="Changes emoji images in existing chat messages"
+            title='Emoji Set'
+            subtitle='Changes emoji images in existing chat messages'
             icon={{ icon: 'face.smiling', color: theme.colorAmber }}
             trailing={
               <SegmentedControl
-                appearance="dark"
+                appearance='dark'
                 onChange={handleEmojiStyleChangeByIndex}
                 onValueChange={handleEmojiStyleChange}
                 selectedIndex={emojiIndex}
@@ -626,9 +625,9 @@ export function ChatPreferenceScreen() {
           </View>
         </SettingsSection>
 
-        <SettingsSection title="Context">
+        <SettingsSection title='Context'>
           <SettingsToggleRow
-            title="Historical Recent Messages"
+            title='Historical Recent Messages'
             subtitle={HISTORICAL_RECENT_MESSAGES_EXPLAINER}
             icon={{
               icon: 'clock.arrow.circlepath',
@@ -650,7 +649,7 @@ export function ChatPreferenceScreen() {
           <View style={styles.settingsPreviewItem}>
             <PreviewLabel />
             <View style={styles.previewSpacer}>
-              <ChatPreferencePreview variant="context" value={previewContext} />
+              <ChatPreferencePreview variant='context' value={previewContext} />
             </View>
           </View>
         </SettingsSection>
@@ -658,7 +657,7 @@ export function ChatPreferenceScreen() {
         {PROVIDER_PREFERENCE_SECTIONS.map(section => (
           <SettingsSection key={section.title} title={section.title}>
             <SettingsToggleRow
-              title="Emotes"
+              title='Emotes'
               subtitle={section.emotes.subtitle}
               value={previewProviders[section.emotes.key]}
               onValueChange={value =>
@@ -668,10 +667,10 @@ export function ChatPreferenceScreen() {
             <ProviderPreviewItem
               enabled={previewProviders[section.emotes.key]}
               provider={section.provider}
-              variant="emotes"
+              variant='emotes'
             />
             <SettingsToggleRow
-              title="Badges"
+              title='Badges'
               subtitle={section.badges.subtitle}
               value={previewProviders[section.badges.key]}
               onValueChange={value =>
@@ -681,30 +680,30 @@ export function ChatPreferenceScreen() {
             <ProviderPreviewItem
               enabled={previewProviders[section.badges.key]}
               provider={section.provider}
-              variant="badges"
+              variant='badges'
             />
           </SettingsSection>
         ))}
 
         <SettingsSection
-          title="Media"
+          title='Media'
           footer={
-            <Text color="gray.textLow" type="xs">
+            <Text color='gray.textLow' type='xs'>
               Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still
               images when this is enabled.
             </Text>
           }
         >
           <SettingsToggleRow
-            title="Disable Emote Animations"
-            subtitle="Prefer static emote rendering"
+            title='Disable Emote Animations'
+            subtitle='Prefer static emote rendering'
             icon={{ icon: 'slash.circle', color: theme.colorRed }}
             value={previewDisableEmoteAnimations}
             onValueChange={handleDisableEmoteAnimationsToggle}
           />
           <View style={styles.settingsPreviewItem}>
             <ChatPreferencePreview
-              variant="emoteAnimations"
+              variant='emoteAnimations'
               value={previewDisableEmoteAnimations}
             />
           </View>
@@ -725,15 +724,15 @@ const DensityPreview = memo(function DensityPreview({
     <View style={[styles.previewPanel, compact && styles.previewPanelCompact]}>
       <PreviewMessage
         compact={compact}
-        time="12:42"
-        username="needlework"
-        message="linework healed clean"
+        time='12:42'
+        username='needlework'
+        message='linework healed clean'
       />
       <PreviewMessage
         compact={compact}
-        time="12:43"
-        username="inkmod"
-        message="shading pass is ready"
+        time='12:43'
+        username='inkmod'
+        message='shading pass is ready'
       />
     </View>
   );
@@ -758,18 +757,18 @@ const PreviewMessage = memo(function PreviewMessage({
     <View
       style={[styles.previewMessage, compact && styles.previewMessageCompact]}
     >
-      <Text color="gray.textLow" style={styles.previewTime} type="xxs">
+      <Text color='gray.textLow' style={styles.previewTime} type='xxs'>
         {time}
       </Text>
       <Text
-        color="accent.accentHover"
+        color='accent.accentHover'
         type={messageType}
-        weight="bold"
+        weight='bold'
         style={styles.previewUsername}
       >
         {username}
       </Text>
-      <Text color="gray" type={messageType} style={styles.previewText}>
+      <Text color='gray' type={messageType} style={styles.previewText}>
         {message}
       </Text>
     </View>
@@ -789,8 +788,8 @@ const EmojiStylePreview = memo(function EmojiStylePreview({
         {emotes.map(emote => (
           <View key={`${emote.site}-${emote.name}`} style={styles.emojiTile}>
             <Image
-              cachePolicy="memory-disk"
-              contentFit="contain"
+              cachePolicy='memory-disk'
+              contentFit='contain'
               source={{ uri: emote.url }}
               style={styles.emojiImage}
               transition={0}
@@ -806,7 +805,7 @@ EmojiStylePreview.displayName = 'EmojiStylePreview';
 
 function PreviewLabel() {
   return (
-    <Text color="gray.textLow" type="xxs" weight="semibold">
+    <Text color='gray.textLow' type='xxs' weight='semibold'>
       Preview
     </Text>
   );
@@ -831,9 +830,9 @@ function ProviderTogglePreviewItem({
     <View style={styles.providerTogglePreviewItem}>
       <View style={styles.providerToggleHeader}>
         <Text
-          color="gray"
+          color='gray'
           style={[styles.iosToggleLabel, styles.providerToggleLabel]}
-          weight="semibold"
+          weight='semibold'
         >
           {label}
         </Text>

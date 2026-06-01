@@ -26,7 +26,7 @@ const [status, setStatus] = useState({});
   resizeMode={ResizeMode.CONTAIN}
   isLooping
   onPlaybackStatusUpdate={setStatus}
-/>
+/>;
 
 // Control
 videoRef.current?.playAsync();
@@ -40,13 +40,15 @@ const player = useVideoPlayer('https://example.com/video.mp4', player => {
   player.loop = true;
 });
 
-const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+const { isPlaying } = useEvent(player, 'playingChange', {
+  isPlaying: player.playing,
+});
 
 <VideoView
   player={player}
   style={{ width: 350, height: 200 }}
-  contentFit="contain"
-/>
+  contentFit='contain'
+/>;
 
 // Control
 player.play();
@@ -61,7 +63,11 @@ player.pause();
 <Video
   onPlaybackStatusUpdate={status => {
     if (status.isLoaded) {
-      console.log(status.positionMillis, status.durationMillis, status.isPlaying);
+      console.log(
+        status.positionMillis,
+        status.durationMillis,
+        status.isPlaying,
+      );
       if (status.didJustFinish) console.log('finished');
     }
   }}
@@ -72,7 +78,9 @@ player.pause();
 
 ```tsx
 // Reactive state
-const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+const { isPlaying } = useEvent(player, 'playingChange', {
+  isPlaying: player.playing,
+});
 
 // Side effects
 useEventListener(player, 'playToEnd', () => console.log('finished'));
@@ -113,7 +121,10 @@ For PiP and background playback, add to app.json:
 {
   "expo": {
     "plugins": [
-      ["expo-video", { "supportsBackgroundPlayback": true, "supportsPictureInPicture": true }]
+      [
+        "expo-video",
+        { "supportsBackgroundPlayback": true, "supportsPictureInPicture": true }
+      ]
     ]
   }
 }
@@ -121,24 +132,24 @@ For PiP and background playback, add to app.json:
 
 ## API Mapping
 
-| expo-av | expo-video |
-|---------|------------|
-| `<Video>` | `<VideoView>` |
-| `ref={videoRef}` | `player={useVideoPlayer()}` |
-| `source={{ uri }}` | Pass to `useVideoPlayer(uri)` |
-| `resizeMode={ResizeMode.CONTAIN}` | `contentFit="contain"` |
-| `isLooping` | `player.loop = true` |
-| `shouldPlay` | `player.play()` in setup |
-| `isMuted` | `player.muted = true` |
-| `useNativeControls` | `nativeControls={true}` |
-| `onPlaybackStatusUpdate` | `useEvent` / `useEventListener` |
-| `videoRef.current.playAsync()` | `player.play()` |
-| `videoRef.current.pauseAsync()` | `player.pause()` |
-| `videoRef.current.replayAsync()` | `player.replay()` |
-| `videoRef.current.setPositionAsync(ms)` | `player.currentTime = seconds` |
-| `status.positionMillis` | `player.currentTime` (seconds) |
-| `status.durationMillis` | `player.duration` (seconds) |
-| `status.didJustFinish` | `useEventListener(player, 'playToEnd')` |
+| expo-av                                 | expo-video                              |
+| --------------------------------------- | --------------------------------------- |
+| `<Video>`                               | `<VideoView>`                           |
+| `ref={videoRef}`                        | `player={useVideoPlayer()}`             |
+| `source={{ uri }}`                      | Pass to `useVideoPlayer(uri)`           |
+| `resizeMode={ResizeMode.CONTAIN}`       | `contentFit="contain"`                  |
+| `isLooping`                             | `player.loop = true`                    |
+| `shouldPlay`                            | `player.play()` in setup                |
+| `isMuted`                               | `player.muted = true`                   |
+| `useNativeControls`                     | `nativeControls={true}`                 |
+| `onPlaybackStatusUpdate`                | `useEvent` / `useEventListener`         |
+| `videoRef.current.playAsync()`          | `player.play()`                         |
+| `videoRef.current.pauseAsync()`         | `player.pause()`                        |
+| `videoRef.current.replayAsync()`        | `player.replay()`                       |
+| `videoRef.current.setPositionAsync(ms)` | `player.currentTime = seconds`          |
+| `status.positionMillis`                 | `player.currentTime` (seconds)          |
+| `status.durationMillis`                 | `player.duration` (seconds)             |
+| `status.didJustFinish`                  | `useEventListener(player, 'playToEnd')` |
 
 ## Key Differences
 

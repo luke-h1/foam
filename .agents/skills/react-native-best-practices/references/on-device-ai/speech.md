@@ -104,9 +104,9 @@ const startStreaming = async () => {
   // Feed audio chunks to the model
   recorder.onAudioReady(
     { sampleRate, bufferLength: 0.1 * sampleRate, channelCount: 1 },
-    (chunk) => {
+    chunk => {
       model.streamInsert(chunk.buffer.getChannelData(0));
-    }
+    },
   );
 
   await recorder.start();
@@ -138,14 +138,14 @@ The streaming API uses the [whisper-streaming](https://aclanthology.org/2023.ijc
 
 ### Supported models
 
-| Model | Language |
-|---|---|
-| whisper-tiny.en | English |
-| whisper-tiny | Multilingual |
-| whisper-base.en | English |
-| whisper-base | Multilingual |
-| whisper-small.en | English |
-| whisper-small | Multilingual |
+| Model            | Language     |
+| ---------------- | ------------ |
+| whisper-tiny.en  | English      |
+| whisper-tiny     | Multilingual |
+| whisper-base.en  | English      |
+| whisper-base     | Multilingual |
+| whisper-small.en | English      |
+| whisper-small    | Multilingual |
 
 ### Gotchas
 
@@ -206,8 +206,8 @@ const ctx = new AudioContext({ sampleRate: 24000 });
 
 await tts.stream({
   text: 'This is a longer text that streams chunk by chunk.',
-  onNext: async (chunk) => {
-    return new Promise((resolve) => {
+  onNext: async chunk => {
+    return new Promise(resolve => {
       const buffer = ctx.createBuffer(1, chunk.length, 24000);
       buffer.getChannelData(0).set(chunk);
 
@@ -236,7 +236,9 @@ const audioData = await tts.forwardFromPhonemes({
 // Streaming from phonemes
 await tts.streamFromPhonemes({
   phonemes: 'hˈɛloʊ wˈɜːld',
-  onNext: async (chunk) => { /* play chunk */ },
+  onNext: async chunk => {
+    /* play chunk */
+  },
 });
 ```
 
@@ -255,16 +257,16 @@ const tts = useTextToSpeech({
 
 Available voices:
 
-| Voice | Gender | Accent |
-|---|---|---|
-| `KOKORO_VOICE_AF_HEART` | Female | American |
-| `KOKORO_VOICE_AF_RIVER` | Female | American |
-| `KOKORO_VOICE_AF_SARAH` | Female | American |
-| `KOKORO_VOICE_AM_ADAM` | Male | American |
-| `KOKORO_VOICE_AM_MICHAEL` | Male | American |
-| `KOKORO_VOICE_AM_SANTA` | Male | American |
-| `KOKORO_VOICE_BF_EMMA` | Female | British |
-| `KOKORO_VOICE_BM_DANIEL` | Male | British |
+| Voice                     | Gender | Accent   |
+| ------------------------- | ------ | -------- |
+| `KOKORO_VOICE_AF_HEART`   | Female | American |
+| `KOKORO_VOICE_AF_RIVER`   | Female | American |
+| `KOKORO_VOICE_AF_SARAH`   | Female | American |
+| `KOKORO_VOICE_AM_ADAM`    | Male   | American |
+| `KOKORO_VOICE_AM_MICHAEL` | Male   | American |
+| `KOKORO_VOICE_AM_SANTA`   | Male   | American |
+| `KOKORO_VOICE_BF_EMMA`    | Female | British  |
+| `KOKORO_VOICE_BM_DANIEL`  | Male   | British  |
 
 Available models: `KOKORO_SMALL`, `KOKORO_MEDIUM`.
 
@@ -297,11 +299,18 @@ const detectSpeech = async (audioBuffer: Float32Array) => {
 Combine STT + LLM + TTS for a complete voice assistant pipeline:
 
 ```tsx
-import { useSpeechToText, useLLM, useTextToSpeech } from 'react-native-executorch';
+import {
+  useSpeechToText,
+  useLLM,
+  useTextToSpeech,
+} from 'react-native-executorch';
 
 const stt = useSpeechToText({ model: WHISPER_TINY_EN });
 const llm = useLLM({ model: LLAMA3_2_1B });
-const tts = useTextToSpeech({ model: KOKORO_MEDIUM, voice: KOKORO_VOICE_AF_HEART });
+const tts = useTextToSpeech({
+  model: KOKORO_MEDIUM,
+  voice: KOKORO_VOICE_AF_HEART,
+});
 
 const handleVoiceQuery = async (audioWaveform: Float32Array) => {
   // 1. Transcribe speech
@@ -309,7 +318,10 @@ const handleVoiceQuery = async (audioWaveform: Float32Array) => {
 
   // 2. Generate LLM response
   const response = await llm.generate([
-    { role: 'system', content: 'You are a helpful voice assistant. Keep responses brief.' },
+    {
+      role: 'system',
+      content: 'You are a helpful voice assistant. Keep responses brief.',
+    },
     { role: 'user', content: transcription.text },
   ]);
 

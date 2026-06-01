@@ -79,13 +79,13 @@ For touch-level events (tracking individual fingers), use `onTouchesDown`, `onTo
 
 ### v2 Builder API callback names
 
-| Lifecycle | v2 name | v3 name |
-|-----------|---------|---------|
-| Begin | `.onBegin()` | `onBegin` |
-| Activate | `.onStart()` | `onActivate` |
-| Update | `.onUpdate()` / `.onChange()` | `onUpdate` (includes `change*` properties) |
-| Deactivate | `.onEnd()` | `onDeactivate` |
-| Finalize | `.onFinalize()` | `onFinalize` |
+| Lifecycle  | v2 name                       | v3 name                                    |
+| ---------- | ----------------------------- | ------------------------------------------ |
+| Begin      | `.onBegin()`                  | `onBegin`                                  |
+| Activate   | `.onStart()`                  | `onActivate`                               |
+| Update     | `.onUpdate()` / `.onChange()` | `onUpdate` (includes `change*` properties) |
+| Deactivate | `.onEnd()`                    | `onDeactivate`                             |
+| Finalize   | `.onFinalize()`               | `onFinalize`                               |
 
 ---
 
@@ -98,7 +98,9 @@ When `react-native-reanimated` is installed, gesture callbacks run on the UI thr
 ```tsx
 // Auto-workletized (inline)
 const gesture = usePanGesture({
-  onUpdate: (e) => { offset.value = e.translationX; },
+  onUpdate: e => {
+    offset.value = e.translationX;
+  },
 });
 
 // Needs explicit 'worklet' (variable reference)
@@ -116,28 +118,36 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 // v3
 const pan = usePanGesture({
-  onDeactivate: () => { scheduleOnRN(setPosition, offset.value); },
+  onDeactivate: () => {
+    scheduleOnRN(setPosition, offset.value);
+  },
 });
 
 // v2
-const pan = useMemo(() =>
-  Gesture.Pan().onEnd(() => { scheduleOnRN(setPosition, offset.value); }),
-[]);
+const pan = useMemo(
+  () =>
+    Gesture.Pan().onEnd(() => {
+      scheduleOnRN(setPosition, offset.value);
+    }),
+  [],
+);
 
 // v2 touch callbacks -- same rule applies
-const manual = useMemo(() =>
-  Gesture.Manual()
-    .onTouchesDown((e) => {
-      for (const touch of e.changedTouches) {
-        scheduleOnRN(handleTouch, touch.id, touch.absoluteX, touch.absoluteY);
-      }
-    })
-    .onTouchesUp((e) => {
-      for (const touch of e.changedTouches) {
-        scheduleOnRN(handleTouchEnd, touch.id);
-      }
-    }),
-[]);
+const manual = useMemo(
+  () =>
+    Gesture.Manual()
+      .onTouchesDown(e => {
+        for (const touch of e.changedTouches) {
+          scheduleOnRN(handleTouch, touch.id, touch.absoluteX, touch.absoluteY);
+        }
+      })
+      .onTouchesUp(e => {
+        for (const touch of e.changedTouches) {
+          scheduleOnRN(handleTouchEnd, touch.id);
+        }
+      }),
+  [],
+);
 ```
 
 The **only** code safe to call directly inside gesture callbacks is: shared value mutations (`offset.value = ...`), other worklet functions (with `'worklet'` directive), and `scheduleOnRN` itself.
@@ -203,31 +213,31 @@ For up-to-date API signatures, configuration options, and event data, webfetch t
 
 **Gestures (v3 hook API):**
 
-| Gesture | Documentation |
-|---------|--------------|
-| Pan | [usePanGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-pan-gesture) |
-| Tap | [useTapGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-tap-gesture) |
-| Pinch | [usePinchGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-pinch-gesture) |
-| Rotation | [useRotationGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-rotation-gesture) |
-| Fling | [useFlingGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-fling-gesture) |
+| Gesture    | Documentation                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| Pan        | [usePanGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-pan-gesture)              |
+| Tap        | [useTapGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-tap-gesture)              |
+| Pinch      | [usePinchGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-pinch-gesture)          |
+| Rotation   | [useRotationGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-rotation-gesture)    |
+| Fling      | [useFlingGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-fling-gesture)          |
 | Long Press | [useLongPressGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-long-press-gesture) |
-| Hover | [useHoverGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-hover-gesture) |
-| Native | [useNativeGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-native-gesture) |
-| Manual | [useManualGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-manual-gesture) |
+| Hover      | [useHoverGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-hover-gesture)          |
+| Native     | [useNativeGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-native-gesture)        |
+| Manual     | [useManualGesture](https://docs.swmansion.com/react-native-gesture-handler/docs/gestures/use-manual-gesture)        |
 
 **Gestures (v2 builder API):**
 
-| Gesture | Documentation |
-|---------|--------------|
-| Pan | [Gesture.Pan](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/pan-gesture) |
-| Tap | [Gesture.Tap](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/tap-gesture) |
-| Pinch | [Gesture.Pinch](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/pinch-gesture) |
-| Rotation | [Gesture.Rotation](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/rotation-gesture) |
-| Fling | [Gesture.Fling](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/fling-gesture) |
+| Gesture    | Documentation                                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| Pan        | [Gesture.Pan](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/pan-gesture)              |
+| Tap        | [Gesture.Tap](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/tap-gesture)              |
+| Pinch      | [Gesture.Pinch](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/pinch-gesture)          |
+| Rotation   | [Gesture.Rotation](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/rotation-gesture)    |
+| Fling      | [Gesture.Fling](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/fling-gesture)          |
 | Long Press | [Gesture.LongPress](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/long-press-gesture) |
-| Hover | [Gesture.Hover](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/hover-gesture) |
-| Native | [Gesture.Native](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/native-gesture) |
-| Manual | [Gesture.Manual](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/manual-gesture) |
+| Hover      | [Gesture.Hover](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/hover-gesture)          |
+| Native     | [Gesture.Native](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/native-gesture)        |
+| Manual     | [Gesture.Manual](https://docs.swmansion.com/react-native-gesture-handler/docs/legacy-gestures/manual-gesture)        |
 
 **Fundamentals:**
 

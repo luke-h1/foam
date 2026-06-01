@@ -14,26 +14,26 @@ export const StreamerCard = memo(function StreamerCard({ stream }: Props) {
 
   return (
     <View style={styles.container}>
-      <LiveStreamImage thumbnail={stream.thumbnail_url} animated size="sm" />
+      <LiveStreamImage thumbnail={stream.thumbnail_url} animated size='sm' />
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text type="sm" weight="semibold" numberOfLines={1}>
+          <Text type='sm' weight='semibold' numberOfLines={1}>
             {stream.display_name}
           </Text>
           {isLive && (
             <View style={styles.liveBadge}>
-              <Text type="xxs" style={styles.liveText}>
+              <Text type='xxs' style={styles.liveText}>
                 LIVE
               </Text>
             </View>
           )}
         </View>
         {stream.game_name ? (
-          <Text type="xs" color="gray.textLow" numberOfLines={1}>
+          <Text type='xs' color='gray.textLow' numberOfLines={1}>
             {stream.game_name}
           </Text>
         ) : (
-          <Text type="xs" color="gray.textLow" numberOfLines={1}>
+          <Text type='xs' color='gray.textLow' numberOfLines={1}>
             {isLive ? 'Streaming' : 'Offline'}
           </Text>
         )}

@@ -8,7 +8,7 @@ export function SettingsProfileScreen() {
   return (
     <View style={styles.container}>
       {Platform.OS === 'ios' ? null : (
-        <ScreenHeader title="Profile" subtitle="Account" size="medium" />
+        <ScreenHeader title='Profile' subtitle='Account' size='medium' />
       )}
       <ProfileCard />
     </View>

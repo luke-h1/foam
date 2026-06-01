@@ -16,8 +16,13 @@ main,
 
 body {
   color: #f7f7fb;
-  font: 15px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  font:
+    15px ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 
 iframe {

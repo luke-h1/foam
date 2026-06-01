@@ -384,7 +384,7 @@ describe('Chat recent messages', () => {
       '@emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE #foam',
     ]);
 
-    render(<Chat channelId="channel-1" channelName="foam" />);
+    render(<Chat channelId='channel-1' channelName='foam' />);
 
     await waitFor(() => {
       expect(forceFlush).toHaveBeenCalled();
@@ -437,7 +437,7 @@ describe('Chat recent messages', () => {
     setPreferences(false);
     mockedRestoreRecentMessagesForChannel.mockReturnValueOnce(12);
 
-    render(<Chat channelId="channel-1" channelName="foam" />);
+    render(<Chat channelId='channel-1' channelName='foam' />);
 
     expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
   });
@@ -445,7 +445,7 @@ describe('Chat recent messages', () => {
   test('does not load recent messages when the preference is disabled', () => {
     setPreferences(false);
 
-    render(<Chat channelId="channel-1" channelName="foam" />);
+    render(<Chat channelId='channel-1' channelName='foam' />);
 
     expect(mockedGetRecentMessages).not.toHaveBeenCalled();
   });

@@ -15,7 +15,7 @@ export default function IndexRoute() {
   if (!authState) {
     return (
       <View style={styles.container}>
-        <Text type="lg" align="center" style={styles.message}>
+        <Text type='lg' align='center' style={styles.message}>
           Authentication state is not ready.
         </Text>
         <Button
@@ -23,7 +23,7 @@ export default function IndexRoute() {
             router.replace('/tabs/top');
           }}
         >
-          <Text type="md" color="accent" contrast align="center">
+          <Text type='md' color='accent' contrast align='center'>
             Continue
           </Text>
         </Button>

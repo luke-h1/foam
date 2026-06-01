@@ -41,8 +41,8 @@ export function MediaTile({
   return (
     <PressableArea onPress={onPress} style={styles.container}>
       <Image
-        cachePolicy="memory-disk"
-        contentFit="cover"
+        cachePolicy='memory-disk'
+        contentFit='cover'
         placeholder={DEFAULT_BLURHASH}
         source={source}
         style={flattenedImageStyle}
@@ -51,12 +51,12 @@ export function MediaTile({
       {showOverlay ? (
         <View style={styles.overlay}>
           {title ? (
-            <Text numberOfLines={1} type="sm" weight="bold">
+            <Text numberOfLines={1} type='sm' weight='bold'>
               {title}
             </Text>
           ) : null}
           {subtitle ? (
-            <Text numberOfLines={1} style={styles.subtitle} type="xs">
+            <Text numberOfLines={1} style={styles.subtitle} type='xs'>
               {subtitle}
             </Text>
           ) : null}

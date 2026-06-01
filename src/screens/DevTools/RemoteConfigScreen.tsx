@@ -57,7 +57,7 @@ export function RemoteConfigScreen() {
 
   return (
     <BodyScrollView
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior='automatic'
       contentContainerStyle={styles.contentContainer}
     >
       <View style={styles.section}>
@@ -67,11 +67,11 @@ export function RemoteConfigScreen() {
           style={styles.fetchButton}
         >
           {isRefetching ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size='small' color='#fff' />
           ) : (
-            <SymbolView name="arrow.clockwise" size={16} tintColor="#fff" />
+            <SymbolView name='arrow.clockwise' size={16} tintColor='#fff' />
           )}
-          <Text type="sm" weight="semibold" style={styles.buttonText}>
+          <Text type='sm' weight='semibold' style={styles.buttonText}>
             {isRefetching ? 'Fetching...' : 'Fetch from server'}
           </Text>
         </Button>
@@ -79,14 +79,14 @@ export function RemoteConfigScreen() {
 
       <View style={styles.section}>
         <Text
-          type="xs"
-          weight="semibold"
-          color="gray.textLow"
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
           style={styles.sectionTitle}
         >
           CONFIG VALUES
         </Text>
-        <Text type="xs" color="gray.textLow" style={styles.appVariant}>
+        <Text type='xs' color='gray.textLow' style={styles.appVariant}>
           App variant: {process.env.EXPO_PUBLIC_APP_VARIANT}
         </Text>
         <View style={styles.card}>
@@ -112,14 +112,14 @@ export function RemoteConfigScreen() {
                           : AC.systemOrange
                       }
                     />
-                    <Text type="sm" weight="semibold">
+                    <Text type='sm' weight='semibold'>
                       {key}
                     </Text>
                   </View>
                   <View
                     style={[styles.sourceTag, getSourceTagStyle(entry.source)]}
                   >
-                    <Text type="xs" weight="semibold" color="gray.bg">
+                    <Text type='xs' weight='semibold' color='gray.bg'>
                       {entry.source}
                     </Text>
                   </View>
@@ -128,8 +128,8 @@ export function RemoteConfigScreen() {
                 <View style={styles.valuesContainer}>
                   <View style={styles.valueRow}>
                     <Text
-                      type="xs"
-                      color="gray.textLow"
+                      type='xs'
+                      color='gray.textLow'
                       style={styles.valueLabel}
                     >
                       Server
@@ -143,8 +143,8 @@ export function RemoteConfigScreen() {
 
                   <View style={styles.valueRow}>
                     <Text
-                      type="xs"
-                      color="gray.textLow"
+                      type='xs'
+                      color='gray.textLow'
                       style={styles.valueLabel}
                     >
                       Default
@@ -164,9 +164,9 @@ export function RemoteConfigScreen() {
 
       <View style={styles.section}>
         <Text
-          type="xs"
-          weight="semibold"
-          color="gray.textLow"
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
           style={styles.sectionTitle}
         >
           LEGEND
@@ -174,21 +174,21 @@ export function RemoteConfigScreen() {
         <View style={styles.card}>
           <View style={[styles.legendItem, styles.configItemBorder]}>
             <SymbolView
-              name="cloud.fill"
+              name='cloud.fill'
               size={16}
               tintColor={AC.systemGreen}
             />
-            <Text type="sm" color="gray.text">
+            <Text type='sm' color='gray.text'>
               Remote - fetched from Firebase
             </Text>
           </View>
           <View style={styles.legendItem}>
             <SymbolView
-              name="arrow.down.circle.fill"
+              name='arrow.down.circle.fill'
               size={16}
               tintColor={AC.systemOrange}
             />
-            <Text type="sm" color="gray.text">
+            <Text type='sm' color='gray.text'>
               Default - using local fallback
             </Text>
           </View>

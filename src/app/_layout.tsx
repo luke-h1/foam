@@ -347,7 +347,7 @@ function RootLayoutNav() {
             <Stack.Screen key={screenName} name={screenName} />
           ))}
           <Stack.Screen
-            name="auth-sheet"
+            name='auth-sheet'
             options={{
               presentation: 'formSheet',
               sheetGrabberVisible: true,

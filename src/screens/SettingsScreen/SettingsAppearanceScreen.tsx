@@ -25,13 +25,13 @@ export function SettingsAppearanceScreen() {
     return (
       <View style={styles.container}>
         <BodyScrollView
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           contentContainerStyle={styles.iosContent}
         >
-          <Form.Section title="Theme">
+          <Form.Section title='Theme'>
             <Form.Link
-              systemImage="moon"
-              hint="Foam Dark"
+              systemImage='moon'
+              hint='Foam Dark'
               onPress={() => update({ theme: 'foam-dark' })}
             >
               Theme
@@ -46,20 +46,20 @@ export function SettingsAppearanceScreen() {
     <View style={styles.container}>
       <ScrollView
         ref={scrollRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         <ScreenHeader
-          title="Appearance"
-          subtitle="Visual mode."
-          size="medium"
+          title='Appearance'
+          subtitle='Visual mode.'
+          size='medium'
         />
 
-        <SettingsSection title="Theme">
+        <SettingsSection title='Theme'>
           <SettingsLinkRow
-            title="Theme"
-            subtitle="The redesigned app currently ships with one canonical visual mode"
+            title='Theme'
+            subtitle='The redesigned app currently ships with one canonical visual mode'
             icon={{ icon: 'moon', color: theme.colorAmber }}
             value={selectedTheme === 'foam-dark' ? 'Foam Dark' : selectedTheme}
             onPress={() => {

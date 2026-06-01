@@ -11,6 +11,7 @@ import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
+import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { twitchQueries } from '@app/queries/twitchQueries';
@@ -25,6 +26,7 @@ import {
   getNextPageParam,
   getPreviousPageParam,
 } from '@app/utils/pagination/pagination';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import type { ListRenderItem } from '@shopify/flash-list';
@@ -79,25 +81,25 @@ const FeaturedStreamHero = memo(function FeaturedStreamHero({
         <View style={styles.heroTopRow}>
           <View style={styles.heroLivePill}>
             <View style={styles.heroLiveDot} />
-            <Text type="xxs" weight="bold" style={styles.heroLiveText}>
+            <Text type='xxs' weight='bold' style={styles.heroLiveText}>
               LIVE
             </Text>
           </View>
 
           <View style={styles.heroMetricPill}>
-            <Text type="xxs" weight="semibold" style={styles.heroMetricText}>
+            <Text type='xxs' weight='semibold' style={styles.heroMetricText}>
               {formatViewCount(stream.viewer_count)} viewers
             </Text>
           </View>
         </View>
 
         <View style={styles.heroContent}>
-          <Text type="xs" weight="semibold" style={styles.heroEyebrow}>
+          <Text type='xs' weight='semibold' style={styles.heroEyebrow}>
             Featured stream
           </Text>
           <Text
-            type="2xl"
-            weight="bold"
+            type='2xl'
+            weight='bold'
             numberOfLines={2}
             style={styles.heroTitle}
           >
@@ -110,14 +112,14 @@ const FeaturedStreamHero = memo(function FeaturedStreamHero({
               onPressIn={handleStreamerPressIn}
               hitSlop={8}
             >
-              <Text type="sm" weight="semibold" style={styles.heroMetaText}>
+              <Text type='sm' weight='semibold' style={styles.heroMetaText}>
                 {stream.user_name}
               </Text>
             </PressableArea>
-            <Text type="sm" style={styles.heroMetaDivider}>
+            <Text type='sm' style={styles.heroMetaDivider}>
               •
             </Text>
-            <Text type="sm" style={styles.heroMetaText}>
+            <Text type='sm' style={styles.heroMetaText}>
               {elapsedStreamTime(stream.started_at)}
             </Text>
           </View>
@@ -129,8 +131,8 @@ const FeaturedStreamHero = memo(function FeaturedStreamHero({
               style={styles.heroCategoryBadge}
             >
               <Text
-                type="xxs"
-                weight="semibold"
+                type='xxs'
+                weight='semibold'
                 style={styles.heroCategoryText}
               >
                 {stream.game_name}
@@ -138,7 +140,7 @@ const FeaturedStreamHero = memo(function FeaturedStreamHero({
             </PressableArea>
 
             <View style={styles.heroCta}>
-              <Text type="xxs" weight="bold" style={styles.heroCtaText}>
+              <Text type='xxs' weight='bold' style={styles.heroCtaText}>
                 Watch now
               </Text>
             </View>
@@ -192,8 +194,8 @@ const StreamLayoutToggle = memo(function StreamLayoutToggle({
               }
             />
             <Text
-              type="xxs"
-              weight="semibold"
+              type='xxs'
+              weight='semibold'
               style={[
                 styles.layoutToggleText,
                 active && styles.layoutToggleTextActive,
@@ -274,11 +276,11 @@ export function TopStreamsScreen({
     refetch,
   });
 
-  const handleLoadMore = useCallback(async () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      await fetchNextPage();
-    }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  const handleLoadMore = useInfiniteQueryLoadMore({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [debouncedHandleLoadMore] = useDebouncedCallback(handleLoadMore, 150);
@@ -298,7 +300,7 @@ export function TopStreamsScreen({
   );
 
   const allStreams = useMemo(
-    () => streams?.pages.flatMap(page => (page?.data ? page.data : [])) ?? [],
+    () => flattenInfiniteQueryPages(streams?.pages),
     [streams],
   );
   const featuredStream = allStreams[0];
@@ -337,7 +339,7 @@ export function TopStreamsScreen({
     return (
       <View style={styles.container}>
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+        <EmptyState content='No Top Streams found' buttonOnPress={onRefresh} />
       </View>
     );
   }
@@ -346,7 +348,7 @@ export function TopStreamsScreen({
     return (
       <View style={styles.container}>
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState content="No Top Streams found" buttonOnPress={onRefresh} />
+        <EmptyState content='No Top Streams found' buttonOnPress={onRefresh} />
       </View>
     );
   }
@@ -360,7 +362,7 @@ export function TopStreamsScreen({
     <View style={styles.container}>
       <AnimatedFlashList
         ref={listRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         data={remainingStreams}
         renderItem={renderItem}
         keyExtractor={item => item.id}

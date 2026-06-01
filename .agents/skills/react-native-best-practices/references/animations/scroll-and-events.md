@@ -27,9 +27,7 @@ const scrollHandler = useAnimatedScrollHandler({
   },
 });
 
-<Animated.ScrollView onScroll={scrollHandler}>
-  {children}
-</Animated.ScrollView>
+<Animated.ScrollView onScroll={scrollHandler}>{children}</Animated.ScrollView>;
 ```
 
 Available handlers: `onScroll`, `onBeginDrag`, `onEndDrag`, `onMomentumBegin`, `onMomentumEnd`.
@@ -39,6 +37,7 @@ The `context` object is shared between all handlers for the same component, lett
 Passing a single function instead of an object is treated as `onScroll`.
 
 **Gotchas:**
+
 - Must use `Animated.ScrollView`, not plain `ScrollView`.
 - On Web, only `onScroll` fires. Other events are iOS/Android only.
 
@@ -89,7 +88,12 @@ Input values must be in increasing order.
 Maps a numeric value to a color, producing smooth color transitions:
 
 ```tsx
-const color = interpolateColor(progress.value, [0, 1], ['#ff0000', '#0000ff'], 'RGB');
+const color = interpolateColor(
+  progress.value,
+  [0, 1],
+  ['#ff0000', '#0000ff'],
+  'RGB',
+);
 ```
 
 Color spaces: `'RGB'` (default), `'HSV'`, `'LAB'` (Oklab, perceptually uniform).
@@ -109,7 +113,7 @@ useAnimatedReaction(
     if (previousPage !== null && currentPage !== previousPage) {
       scheduleOnRN(onPageChanged, currentPage);
     }
-  }
+  },
 );
 ```
 
@@ -128,7 +132,7 @@ Use `prepare` to reduce callback frequency (e.g., `Math.floor()` to react only o
 Run logic on every frame (60Hz or 120Hz depending on the device):
 
 ```tsx
-const frameCallback = useFrameCallback((frameInfo) => {
+const frameCallback = useFrameCallback(frameInfo => {
   progress.value += (frameInfo.timeSincePreviousFrame ?? 0) * speed;
 });
 
@@ -167,6 +171,7 @@ const animatedStyle = useAnimatedStyle(() => {
 Returns `{ x, y, width, height, pageX, pageY }` or `null` if the component is unmounted or off-screen (e.g., recycled FlatList items).
 
 **Rules:**
+
 - Always check for `null` before using measurements.
 - In `useAnimatedStyle`, guard with `if (!_WORKLET) return {}` because the first evaluation runs on the JS thread where `measure` is unavailable.
 - Wrap with `scheduleOnUI()` when calling from RN-thread event handlers.

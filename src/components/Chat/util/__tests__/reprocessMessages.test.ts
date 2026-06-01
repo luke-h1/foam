@@ -40,21 +40,20 @@ const createMockUserstate = (
 
 const createMockMessage = (
   overrides: Partial<AnyChatMessageType> = {},
-): AnyChatMessageType =>
-  ({
-    id: 'msg-123_nonce-123',
-    message_id: 'msg-123',
-    message_nonce: 'nonce-123',
-    message: [{ type: 'text', content: 'Hello world' }] as ParsedPart[],
-    channel: 'testchannel',
-    sender: 'TestUser',
-    badges: [],
-    userstate: createMockUserstate(),
-    parentDisplayName: '',
-    replyDisplayName: '',
-    replyBody: '',
-    ...overrides,
-  }) as AnyChatMessageType;
+): AnyChatMessageType => ({
+  id: 'msg-123_nonce-123',
+  message_id: 'msg-123',
+  message_nonce: 'nonce-123',
+  message: [{ type: 'text', content: 'Hello world' }] as ParsedPart[],
+  channel: 'testchannel',
+  sender: 'TestUser',
+  badges: [],
+  userstate: createMockUserstate(),
+  parentDisplayName: '',
+  replyDisplayName: '',
+  replyBody: '',
+  ...overrides,
+});
 
 const createSystemMessage = (): AnyChatMessageType =>
   createMockMessage({
@@ -66,19 +65,18 @@ const createSystemMessage = (): AnyChatMessageType =>
     },
   });
 
-const createNoticeMessage = (): AnyChatMessageType =>
-  ({
-    ...createMockMessage(),
-    notice_tags: {
-      'msg-id': 'sub',
-      'msg-param-sub-plan': '1000',
-      'msg-param-cumulative-months': '1',
-      'msg-param-should-share-streak': '0',
-      'msg-param-streak-months': '1',
-      'msg-param-sub-plan-name': 'Tier 1',
-    },
-    sender: 'SubUser',
-  }) as AnyChatMessageType;
+const createNoticeMessage = (): AnyChatMessageType => ({
+  ...createMockMessage(),
+  notice_tags: {
+    'msg-id': 'sub',
+    'msg-param-sub-plan': '1000',
+    'msg-param-cumulative-months': '1',
+    'msg-param-should-share-streak': '0',
+    'msg-param-streak-months': '1',
+    'msg-param-sub-plan-name': 'Tier 1',
+  },
+  sender: 'SubUser',
+});
 
 const createMessageWithEmotes = (): AnyChatMessageType =>
   createMockMessage({

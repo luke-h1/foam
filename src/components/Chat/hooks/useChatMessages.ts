@@ -25,7 +25,7 @@ function getCachedLightenedColor(color?: string): string | undefined {
   colorCache.set(color, lightened);
 
   if (colorCache.size > MAX_COLOR_CACHE_SIZE) {
-    const firstKey = colorCache.keys().next().value as string | undefined;
+    const firstKey = colorCache.keys().next().value;
     if (firstKey) {
       colorCache.delete(firstKey);
     }

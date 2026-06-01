@@ -104,11 +104,11 @@ const ContentItem: React.FC<ContentItemProps> = ({
       ) : (
         <Text style={styles.contentText}>{item.content}</Text>
       )}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <View style={StyleSheet.absoluteFill} pointerEvents='none'>
         {Platform.OS === 'ios' && (
           <AnimatedBlurView
-            animatedProps={animatedBlurViewProps as never}
-            tint="systemChromeMaterial"
+            animatedProps={animatedBlurViewProps}
+            tint='systemChromeMaterial'
             style={StyleSheet.absoluteFill}
           />
         )}

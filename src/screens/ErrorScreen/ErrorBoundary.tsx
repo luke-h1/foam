@@ -22,9 +22,12 @@ interface State {
  * - [React Error Boundaries](https://reactjs.org/docs/error-boundaries.html)
  */
 export class ErrorBoundary extends Component<Props, State> {
-  state: Omit<ErrorDetailsProps, 'onReset'> = { error: null, errorInfo: null };
+  override state: Omit<ErrorDetailsProps, 'onReset'> = {
+    error: null,
+    errorInfo: null,
+  };
 
-  shouldComponentUpdate(
+  override shouldComponentUpdate(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     nextProps: Readonly<any>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   // if an error in a child is encountered, this will run
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // catch any errors in any components and re-render with error-message
     this.setState({
       error,
@@ -69,7 +72,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   // render an error UI if there's an error; otherwise, render children
-  render(): ReactNode {
+  override render(): ReactNode {
     return this.isEnabled() && this.state.error ? (
       <ErrorDetails
         onReset={this.resetError}

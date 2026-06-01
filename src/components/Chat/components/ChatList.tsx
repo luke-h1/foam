@@ -1,4 +1,4 @@
-import type { ListRenderItem } from '@app/components/FlashList/FlashList';
+import { type ListRenderItem } from '@app/components/FlashList/FlashList';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import {
   LegendList,
@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import { getChatMessageListKey } from '../util/chatMessages';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
@@ -36,7 +37,7 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
-    <View style={styles.skeletonRow} testID="chat-row-skeleton">
+    <View style={styles.skeletonRow} testID='chat-row-skeleton'>
       <Skeleton style={styles.skeletonBadge} />
       <Skeleton style={styles.skeletonUsername} />
       <Skeleton
@@ -52,9 +53,11 @@ function ChatListRowSkeleton({ index }: { index: number }) {
   );
 }
 
+export type ChatListRef = LegendListRef;
+
 interface ChatListProps {
   data: AnyChatMessageType[];
-  listRef: RefObject<LegendListRef | null>;
+  listRef: RefObject<ChatListRef | null>;
   shouldMaintainScrollAtEnd: boolean;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -95,9 +98,11 @@ export const ChatList = memo(
     onViewableMessagesChange,
   }: ChatListProps) => {
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
+    const lastViewableMessageKeysRef = useRef('');
 
     useEffect(() => {
       onViewableMessagesChangeRef.current = onViewableMessagesChange;
+      lastViewableMessageKeysRef.current = '';
     }, [onViewableMessagesChange]);
 
     const onViewableItemsChangedRef = useRef(
@@ -108,6 +113,13 @@ export const ChatList = memo(
         }
 
         const messages = getViewableChatMessages(viewableItems);
+        const viewableMessageKeys = messages
+          .map(getChatMessageListKey)
+          .join('\u001f');
+        if (viewableMessageKeys === lastViewableMessageKeysRef.current) {
+          return;
+        }
+        lastViewableMessageKeysRef.current = viewableMessageKeys;
 
         if (messages.length > 0) {
           callback(messages);

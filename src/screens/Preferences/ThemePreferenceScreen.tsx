@@ -14,11 +14,11 @@ export function ThemePreferenceScreen() {
   return (
     <View style={styles.container}>
       <ScreenHeader
-        title="Theme"
-        subtitle="Current visual mode"
-        size="medium"
+        title='Theme'
+        subtitle='Current visual mode'
+        size='medium'
       />
-      <EmptyLayout variant="outline" style={styles.empty}>
+      <EmptyLayout variant='outline' style={styles.empty}>
         <EmptyLayoutHeader>
           <EmptyLayoutTitle>Foam Dark</EmptyLayoutTitle>
           <EmptyLayoutDescription>
@@ -27,7 +27,7 @@ export function ThemePreferenceScreen() {
           </EmptyLayoutDescription>
         </EmptyLayoutHeader>
         <EmptyLayoutContent>
-          <Text type="sm" color="gray.textLow">
+          <Text type='sm' color='gray.textLow'>
             Additional themes can be added later on top of the new token system.
           </Text>
         </EmptyLayoutContent>

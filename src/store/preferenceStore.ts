@@ -77,7 +77,7 @@ export function getPreferences(): Preferences {
 export function usePreferences(): Preferences & {
   update: (payload: Partial<Preferences>) => void;
 } {
-  const preferences = useSelector(() => preferences$.get()) as Preferences;
+  const preferences = useSelector(() => preferences$.get());
   const update = useUpdatePreferences();
 
   return {

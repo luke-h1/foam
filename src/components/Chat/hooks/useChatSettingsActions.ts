@@ -1,4 +1,5 @@
 import { clearCache } from '@app/store/chatStore/channelLoad';
+import { clearUserCosmeticsCache } from '@app/store/chatStore/cosmetics';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { useCallback, useRef } from 'react';
@@ -67,6 +68,15 @@ export function useChatSettingsActions({
     }
   }, [channelId]);
 
+  const handleClearSevenTvCosmeticsCache = useCallback(() => {
+    try {
+      clearUserCosmeticsCache();
+      logger.chat.info('7TV cosmetic cache cleared successfully');
+    } catch (error) {
+      logger.chat.error('Failed to clear 7TV cosmetic cache:', error);
+    }
+  }, []);
+
   const handleDebugClearImageCache = useCallback(() => {
     void handleClearImageCache();
   }, [handleClearImageCache]);
@@ -115,6 +125,7 @@ export function useChatSettingsActions({
   return {
     handleClearChatCache,
     handleDebugClearImageCache,
+    handleClearSevenTvCosmeticsCache,
     handleResumeScrollToBottom,
     handleSettingsReconnect,
     handleSettingsRefetchEmotes,

@@ -1,7 +1,10 @@
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
+import { storageService } from '@app/lib/storage';
 import {
   V4Badge,
   V4Paint,
+  clearSevenTvUserIdCache,
+  pickBestImage,
   sevenTvService,
 } from '@app/services/seventv-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
@@ -19,6 +22,26 @@ import type { UserPaint } from './constants';
 import { MAX_COSMETIC_ENTRIES } from './constants';
 import { chatStore$ } from './state';
 
+const USER_COSMETICS_CACHE_PREFIX = 'user-cosmetics:';
+// Keep persisted 7TV user cosmetics for at most 12 hours before refetching.
+const USER_COSMETICS_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
+const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
+
+type CachedUserCosmetics = {
+  badge?: SanitisedBadgeSet;
+  badgeId: string | null;
+  expiresAt: number;
+  paint?: PaintData;
+  paintId: string | null;
+  ttvUserId: string | null;
+};
+
+const userCosmeticsRequests = new Map<string, Promise<string | null>>();
+
+const getUserCosmeticsStorageKey = (sevenTvUserId: string) =>
+  `sevenTvUserCosmetics_${USER_COSMETICS_CACHE_PREFIX}${sevenTvUserId}` as const;
+
 const packRgba = (color: {
   r: number;
   g: number;
@@ -26,7 +49,7 @@ const packRgba = (color: {
   a: number;
 }): number =>
   // eslint-disable-next-line no-bitwise
-  Math.trunc((color.r << 24) | (color.g << 16) | (color.b << 8) | color.a);
+  ((color.r << 24) | (color.g << 16) | (color.b << 8) | color.a) >>> 0;
 
 const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
   const firstLayer = paint.data.layers[0];
@@ -69,7 +92,7 @@ const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
 
     case 'PaintLayerTypeImage':
       paintFunction = 'URL';
-      imageUrl = ty.images[0]?.url ?? '';
+      imageUrl = pickBestImage(ty.images)?.url ?? '';
       break;
 
     default:
@@ -120,46 +143,119 @@ const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
   };
 };
 
-export const fetchAndCacheUserCosmetics = async (
-  sevenTvUserId: string,
-): Promise<string | null> => {
-  try {
-    const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
-    if (!cosmetics) {
-      return null;
-    }
-
+function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
+  batch(() => {
     if (cosmetics.paint) {
-      addPaint(convertV4PaintToPaintData(cosmetics.paint));
+      addPaint(cosmetics.paint);
     }
 
     if (cosmetics.badge) {
-      addBadge(convertV4BadgeToSanitised(cosmetics.badge));
+      addBadge(cosmetics.badge);
     }
 
     if (cosmetics.ttvUserId) {
       if (cosmetics.paintId) {
-        const cell = chatStore$.userPaintIds[cosmetics.ttvUserId];
-        if (cell) {
-          cell.set(cosmetics.paintId);
-        }
+        chatStore$.userPaintIds[cosmetics.ttvUserId]?.set(cosmetics.paintId);
       }
 
       if (cosmetics.badgeId) {
-        const badgeCell = chatStore$.userBadgeIds[cosmetics.ttvUserId];
-        if (badgeCell) {
-          badgeCell.set(cosmetics.badgeId);
-        }
+        chatStore$.userBadgeIds[cosmetics.ttvUserId]?.set(cosmetics.badgeId);
       }
     }
-    return cosmetics.ttvUserId;
-  } catch (error) {
-    logger.stvWs.error(
-      `Error fetching cosmetics for user ${sevenTvUserId}:`,
-      error,
-    );
-    return null;
+  });
+}
+
+function getCachedUserCosmetics(
+  sevenTvUserId: string,
+): CachedUserCosmetics | undefined {
+  return (
+    storageService.getString<CachedUserCosmetics>(
+      getUserCosmeticsStorageKey(sevenTvUserId),
+      SEVEN_TV_CACHE_NAMESPACE,
+    ) ?? undefined
+  );
+}
+
+function setCachedUserCosmetics(
+  sevenTvUserId: string,
+  cosmetics: CachedUserCosmetics,
+) {
+  storageService.set(
+    getUserCosmeticsStorageKey(sevenTvUserId),
+    cosmetics,
+    SEVEN_TV_CACHE_NAMESPACE,
+    { expiry: new Date(cosmetics.expiresAt) },
+  );
+}
+
+export const fetchAndCacheUserCosmetics = async (
+  sevenTvUserId: string,
+): Promise<string | null> => {
+  const cached = getCachedUserCosmetics(sevenTvUserId);
+  if (cached) {
+    applyCachedUserCosmetics(cached);
+    return cached.ttvUserId;
   }
+
+  const pending = userCosmeticsRequests.get(sevenTvUserId);
+  if (pending) {
+    return pending;
+  }
+
+  const request = (async () => {
+    try {
+      const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
+      if (!cosmetics) {
+        return null;
+      }
+
+      const paint = cosmetics.paint
+        ? convertV4PaintToPaintData(cosmetics.paint)
+        : undefined;
+      const badge = cosmetics.badge
+        ? convertV4BadgeToSanitised(cosmetics.badge)
+        : undefined;
+      const cachedCosmetics: CachedUserCosmetics = {
+        badge,
+        badgeId: cosmetics.badgeId,
+        expiresAt:
+          Date.now() +
+          (paint || badge
+            ? USER_COSMETICS_CACHE_TTL_MS
+            : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS),
+        paint,
+        paintId: cosmetics.paintId,
+        ttvUserId: cosmetics.ttvUserId,
+      };
+
+      setCachedUserCosmetics(sevenTvUserId, cachedCosmetics);
+      applyCachedUserCosmetics(cachedCosmetics);
+      return cosmetics.ttvUserId;
+    } catch (error) {
+      logger.stvWs.error(
+        `Error fetching cosmetics for user ${sevenTvUserId}:`,
+        error,
+      );
+      return null;
+    }
+  })();
+
+  userCosmeticsRequests.set(sevenTvUserId, request);
+  try {
+    return await request;
+  } finally {
+    userCosmeticsRequests.delete(sevenTvUserId);
+  }
+};
+
+export const clearUserCosmeticsCache = () => {
+  userCosmeticsRequests.clear();
+  clearSevenTvUserIdCache();
+  storageService.clearNamespace(
+    SEVEN_TV_CACHE_NAMESPACE,
+    'sevenTvUserCosmetics_',
+  );
+  clearPaintsAndBadges();
 };
 
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {

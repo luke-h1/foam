@@ -99,10 +99,10 @@ After:
 
 ```tsx
 <Stack.Screen
-  name="Profile"
+  name='Profile'
   component={ProfileScreen}
   getId={({ params }) => params.id}
-/>
+/>;
 
 navigation.navigate('Profile', { id: '123' });
 ```
@@ -116,7 +116,10 @@ navigation.navigate('Profile', { id: '123' });
 When replacing `independent`, move the isolation boundary outside the container:
 
 ```tsx
-import { DefaultTheme, NavigationIndependentTree } from '@react-navigation/native';
+import {
+  DefaultTheme,
+  NavigationIndependentTree,
+} from '@react-navigation/native';
 
 const MyTheme = {
   ...DefaultTheme,
@@ -128,7 +131,7 @@ const MyTheme = {
 
 <NavigationIndependentTree>
   <NavigationContainer theme={MyTheme}>{/* ... */}</NavigationContainer>
-</NavigationIndependentTree>
+</NavigationIndependentTree>;
 ```
 
 ### 4. Update linking APIs
@@ -140,14 +143,16 @@ The `to` prop is removed. Rewrite `to` to `screen` and `params`, deriving them f
 Before:
 
 ```tsx
-<Link to="/details?foo=42">Go to Details</Link>
+<Link to='/details?foo=42'>Go to Details</Link>;
 const props = useLinkProps({ to: '/details?foo=42' });
 ```
 
 After:
 
 ```tsx
-<Link screen="Details" params={{ foo: 42 }}>Go to Details</Link>
+<Link screen='Details' params={{ foo: 42 }}>
+  Go to Details
+</Link>;
 const props = useLinkProps({ screen: 'Details', params: { foo: 42 } });
 ```
 

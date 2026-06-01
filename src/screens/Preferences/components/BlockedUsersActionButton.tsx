@@ -29,8 +29,8 @@ export function BlockedUsersActionButton({
       ]}
     >
       <Text
-        type="xs"
-        weight="bold"
+        type='xs'
+        weight='bold'
         style={isDestructive ? styles.destructiveLabel : styles.primaryLabel}
       >
         {label}

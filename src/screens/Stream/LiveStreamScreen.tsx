@@ -606,8 +606,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         {isStreamEnabled && resolvedChannelLogin ? (
           <StreamPlayer
             channel={resolvedChannelLogin}
-            height="100%"
-            width="100%"
+            height='100%'
+            width='100%'
             autoplay
             muted={false}
             onContentGateChange={handleContentGateChange}
@@ -647,7 +647,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
                 <BlurView
                   intensity={36}
                   style={styles.overlayChatBlur}
-                  tint="dark"
+                  tint='dark'
                 />
               ) : null}
               {isStreamEnabled ? (
@@ -670,7 +670,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
                   key={resolvedChannelId}
                   applyTopInset={isLandscape && isStreamEnabled}
                   channelId={resolvedChannelId!}
-                  channelName={resolvedChannelLogin!}
+                  channelName={resolvedChannelLogin}
                   transparent={
                     isStreamEnabled &&
                     isLandscape &&
@@ -681,18 +681,18 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
                 <View style={styles.chatConnectionNotice}>
                   <SymbolView
                     tintColor={theme.colorGrey}
-                    name="message"
+                    name='message'
                     size={24}
                   />
                   <Text
-                    align="center"
-                    color="gray.contrast"
-                    type="sm"
-                    weight="semibold"
+                    align='center'
+                    color='gray.contrast'
+                    type='sm'
+                    weight='semibold'
                   >
                     Chat will connect when the stream starts.
                   </Text>
-                  <Text align="center" color="gray" type="xs">
+                  <Text align='center' color='gray' type='xs'>
                     This can take up to 10 seconds so video playback stays
                     first.
                   </Text>
@@ -705,8 +705,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           (shouldMountChat || shouldShowChatConnectionNotice) ? (
             <GestureDetector gesture={resizeChatGesture}>
               <Animated.View
-                accessibilityLabel="Resize chat"
-                accessibilityRole="adjustable"
+                accessibilityLabel='Resize chat'
+                accessibilityRole='adjustable'
                 style={[styles.chatResizeHandle, animatedResizeHandleStyle]}
               >
                 <View style={styles.chatResizeIndicator} />
@@ -718,7 +718,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
       {isStreamEnabled && isChatEnabled && isLandscape ? (
         <Animated.View
-          pointerEvents="box-none"
+          pointerEvents='box-none'
           style={[
             styles.fullscreenChatControls,
             { top: insets.top + theme.space12 },

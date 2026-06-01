@@ -40,9 +40,9 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
       <Stack.Screen options={{ title: 'Something went wrong' }} />
       <View style={styles.container}>
         <ScreenHeader
-          title="Something went wrong"
-          subtitle="Recovery"
-          size="medium"
+          title='Something went wrong'
+          subtitle='Recovery'
+          size='medium'
           back={false}
         />
 
@@ -53,17 +53,17 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
           <View style={styles.panel}>
             <View style={styles.iconWrap}>
               <SymbolView
-                name="exclamationmark.triangle"
+                name='exclamationmark.triangle'
                 size={22}
                 tintColor={theme.colorAmber}
               />
             </View>
 
             <View style={styles.copy}>
-              <Text type="lg" weight="semibold" color="gray">
+              <Text type='lg' weight='semibold' color='gray'>
                 This screen crashed
               </Text>
-              <Text type="sm" color="gray.textLow" style={styles.body}>
+              <Text type='sm' color='gray.textLow' style={styles.body}>
                 Try loading it again. If it keeps failing, report a bug
               </Text>
             </View>
@@ -71,14 +71,14 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
 
           <View style={styles.errorCard}>
             <Text
-              type="xs"
-              weight="semibold"
-              color="gray.textLow"
+              type='xs'
+              weight='semibold'
+              color='gray.textLow'
               style={styles.sectionLabel}
             >
               MESSAGE
             </Text>
-            <Text type="sm" color="gray" selectable style={styles.errorText}>
+            <Text type='sm' color='gray' selectable style={styles.errorText}>
               {errorMessage}
             </Text>
           </View>
@@ -86,18 +86,18 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
           <View style={styles.actions}>
             <Button style={styles.primaryButton} onPress={() => void retry()}>
               <Text
-                type="sm"
-                color="accent"
+                type='sm'
+                color='accent'
                 contrast
-                weight="semibold"
-                align="center"
+                weight='semibold'
+                align='center'
               >
                 Try again
               </Text>
             </Button>
 
             <Button style={styles.reportButton} onPress={handleReportBug}>
-              <Text type="sm" color="gray" weight="semibold" align="center">
+              <Text type='sm' color='gray' weight='semibold' align='center'>
                 Report bug
               </Text>
             </Button>
@@ -108,7 +108,7 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
                 router.replace('/');
               }}
             >
-              <Text type="sm" color="gray" weight="semibold" align="center">
+              <Text type='sm' color='gray' weight='semibold' align='center'>
                 Go home
               </Text>
             </Button>

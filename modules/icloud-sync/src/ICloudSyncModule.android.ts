@@ -1,4 +1,4 @@
-import type { ICloudSyncNativeModule } from "./ICloudSync.types";
+import type { ICloudSyncNativeModule } from './ICloudSync.types';
 
 const unavailableModule: ICloudSyncNativeModule = {
   async getString() {
