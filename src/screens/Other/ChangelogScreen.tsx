@@ -55,18 +55,18 @@ export function ChangelogScreen() {
     >
       {Platform.OS === 'ios' ? null : (
         <ScreenHeader
-          title="Changelog"
-          subtitle="Recent product updates"
-          size="medium"
+          title='Changelog'
+          subtitle='Recent product updates'
+          size='medium'
         />
       )}
       <ScrollView
         ref={scrollRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         contentContainerStyle={styles.content}
       >
         <View style={styles.card}>
-          <Text variant="mono" type="xs" style={styles.changelogText}>
+          <Text variant='mono' type='xs' style={styles.changelogText}>
             {mockChangelog}
           </Text>
         </View>

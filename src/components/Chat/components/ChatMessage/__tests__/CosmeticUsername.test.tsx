@@ -1,6 +1,21 @@
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { render } from '@testing-library/react-native';
+import { Image } from 'react-native';
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
+
+jest.mock('react-native', () => {
+  const React = jest.requireActual('react');
+  const actual = jest.requireActual('react-native');
+  const NativeImage = (props: object) =>
+    React.createElement(actual.View, props);
+
+  return Object.setPrototypeOf(
+    {
+      Image: NativeImage,
+    },
+    actual,
+  );
+});
 
 jest.mock('@app/store/chatStore/state', () => ({
   chatStore$: {
@@ -46,7 +61,7 @@ describe('PaintedUsername', () => {
   describe('Rendering', () => {
     test('should render username with fallback color when no paint provided', () => {
       const { getAllByText } = render(
-        <PaintedUsername username="TestUser" fallbackColor="#FF0000" />,
+        <PaintedUsername username='TestUser' fallbackColor='#FF0000' />,
       );
 
       // Username appears in both mask and content
@@ -54,7 +69,7 @@ describe('PaintedUsername', () => {
     });
 
     test('should render username with default white fallback color', () => {
-      const { getAllByText } = render(<PaintedUsername username="TestUser" />);
+      const { getAllByText } = render(<PaintedUsername username='TestUser' />);
 
       expect(getAllByText('TestUser:').length).toBeGreaterThanOrEqual(1);
     });
@@ -71,7 +86,7 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="GradientUser" paint={linearPaint} />,
+        <PaintedUsername username='GradientUser' paint={linearPaint} />,
       );
 
       expect(getAllByText('GradientUser:').length).toBeGreaterThanOrEqual(1);
@@ -88,14 +103,14 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="RadialUser" paint={radialPaint} />,
+        <PaintedUsername username='RadialUser' paint={radialPaint} />,
       );
 
       expect(getAllByText('RadialUser:').length).toBeGreaterThanOrEqual(1);
     });
 
     test('should append colon to username', () => {
-      const { getAllByText } = render(<PaintedUsername username="UserName" />);
+      const { getAllByText } = render(<PaintedUsername username='UserName' />);
 
       expect(getAllByText('UserName:').length).toBeGreaterThanOrEqual(1);
     });
@@ -109,16 +124,16 @@ describe('PaintedUsername', () => {
 
       const { getAllByText } = render(
         <PaintedUsername
-          username="EmptyStops"
+          username='EmptyStops'
           paint={emptyStopsPaint}
-          fallbackColor="#00FF00"
+          fallbackColor='#00FF00'
         />,
       );
 
       expect(getAllByText('EmptyStops:').length).toBeGreaterThanOrEqual(1);
     });
 
-    test('should handle URL paint function by using solid color', () => {
+    test('should handle URL paint function', () => {
       const urlPaint = createPaintData({
         function: 'URL',
         color: rgbaToSevenTvColor(255, 128, 0, 255),
@@ -126,10 +141,43 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="UrlPaint" paint={urlPaint} />,
+        <PaintedUsername username='UrlPaint' paint={urlPaint} />,
       );
 
       expect(getAllByText('UrlPaint:').length).toBeGreaterThanOrEqual(1);
+    });
+
+    test('should render URL paint as a repeated asset image', () => {
+      const urlPaint = createPaintData({
+        function: 'URL',
+        image_url: 'https://cdn.7tv.app/paint/test/2x.webp',
+        repeat: true,
+      });
+
+      const { UNSAFE_getByType } = render(
+        <PaintedUsername username='AssetRepeat' paint={urlPaint} />,
+      );
+
+      const paintImage = UNSAFE_getByType(Image);
+      expect(paintImage.props.source).toEqual({
+        uri: 'https://cdn.7tv.app/paint/test/2x.webp',
+      });
+      expect(paintImage.props.resizeMode).toBe('repeat');
+    });
+
+    test('should render URL paint as a covered asset image', () => {
+      const urlPaint = createPaintData({
+        function: 'URL',
+        image_url: 'https://cdn.7tv.app/paint/test/4x.webp',
+        repeat: false,
+      });
+
+      const { UNSAFE_getByType } = render(
+        <PaintedUsername username='AssetCover' paint={urlPaint} />,
+      );
+
+      const paintImage = UNSAFE_getByType(Image);
+      expect(paintImage.props.resizeMode).toBe('cover');
     });
 
     test('should handle single stop gradient by duplicating color', () => {
@@ -141,7 +189,7 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="SingleStop" paint={singleStopPaint} />,
+        <PaintedUsername username='SingleStop' paint={singleStopPaint} />,
       );
 
       expect(getAllByText('SingleStop:').length).toBeGreaterThanOrEqual(1);
@@ -161,7 +209,7 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="Rainbow" paint={multiStopPaint} />,
+        <PaintedUsername username='Rainbow' paint={multiStopPaint} />,
       );
 
       expect(getAllByText('Rainbow:').length).toBeGreaterThanOrEqual(1);
@@ -188,7 +236,7 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="ShadowUser" paint={paintWithShadow} />,
+        <PaintedUsername username='ShadowUser' paint={paintWithShadow} />,
       );
 
       expect(getAllByText('ShadowUser:').length).toBeGreaterThanOrEqual(1);
@@ -220,7 +268,7 @@ describe('PaintedUsername', () => {
 
       const { getAllByText } = render(
         <PaintedUsername
-          username="MultipleShadows"
+          username='MultipleShadows'
           paint={paintWithMultipleShadows}
         />,
       );
@@ -239,7 +287,7 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="NoShadow" paint={paintWithoutShadow} />,
+        <PaintedUsername username='NoShadow' paint={paintWithoutShadow} />,
       );
 
       expect(getAllByText('NoShadow:').length).toBeGreaterThanOrEqual(1);
@@ -278,7 +326,7 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="NoAngle" paint={noAnglePaint} />,
+        <PaintedUsername username='NoAngle' paint={noAnglePaint} />,
       );
 
       expect(getAllByText('NoAngle:').length).toBeGreaterThanOrEqual(1);
@@ -289,9 +337,9 @@ describe('PaintedUsername', () => {
     test('should return null paint when userId not in store', () => {
       const { getAllByText } = render(
         <PaintedUsername
-          username="UnknownUser"
-          userId="unknown-user-id"
-          fallbackColor="#CCCCCC"
+          username='UnknownUser'
+          userId='unknown-user-id'
+          fallbackColor='#CCCCCC'
         />,
       );
 
@@ -311,9 +359,9 @@ describe('PaintedUsername', () => {
 
       const { getAllByText } = render(
         <PaintedUsername
-          username="DirectPaint"
+          username='DirectPaint'
           paint={directPaint}
-          userId="some-user-id"
+          userId='some-user-id'
         />,
       );
 
@@ -324,7 +372,7 @@ describe('PaintedUsername', () => {
   describe('Snapshots', () => {
     test('should match snapshot with fallback color only', () => {
       const { toJSON } = render(
-        <PaintedUsername username="FallbackUser" fallbackColor="#9B59B6" />,
+        <PaintedUsername username='FallbackUser' fallbackColor='#9B59B6' />,
       );
 
       expect(toJSON()).toMatchSnapshot();
@@ -353,7 +401,7 @@ describe('PaintedUsername', () => {
       });
 
       const { toJSON } = render(
-        <PaintedUsername username="RoseGoldUser" paint={roseGold} />,
+        <PaintedUsername username='RoseGoldUser' paint={roseGold} />,
       );
 
       expect(toJSON()).toMatchSnapshot();
@@ -382,7 +430,7 @@ describe('PaintedUsername', () => {
       });
 
       const { toJSON } = render(
-        <PaintedUsername username="FlowerchildUser" paint={flowerchild} />,
+        <PaintedUsername username='FlowerchildUser' paint={flowerchild} />,
       );
 
       expect(toJSON()).toMatchSnapshot();
@@ -398,7 +446,7 @@ describe('PaintedUsername', () => {
       });
 
       const { toJSON } = render(
-        <PaintedUsername username="UrlPaintUser" paint={urlPaint} />,
+        <PaintedUsername username='UrlPaintUser' paint={urlPaint} />,
       );
 
       expect(toJSON()).toMatchSnapshot();
@@ -433,7 +481,7 @@ describe('PaintedUsername', () => {
       });
 
       const { toJSON } = render(
-        <PaintedUsername username="DivisionUser" paint={divisionPaint} />,
+        <PaintedUsername username='DivisionUser' paint={divisionPaint} />,
       );
 
       expect(toJSON()).toMatchSnapshot();
@@ -454,7 +502,7 @@ describe('PaintedUsername', () => {
 
       const { toJSON } = render(
         <PaintedUsername
-          username="VeryLongUsernameForTestingPurposes"
+          username='VeryLongUsernameForTestingPurposes'
           paint={magma}
         />,
       );
@@ -465,21 +513,21 @@ describe('PaintedUsername', () => {
 
   describe('Edge Cases', () => {
     test('should handle empty username', () => {
-      const { getAllByText } = render(<PaintedUsername username="" />);
+      const { getAllByText } = render(<PaintedUsername username='' />);
 
       expect(getAllByText(':').length).toBeGreaterThanOrEqual(1);
     });
 
     test('should handle special characters in username', () => {
       const { getAllByText } = render(
-        <PaintedUsername username="User_Name-123" />,
+        <PaintedUsername username='User_Name-123' />,
       );
 
       expect(getAllByText('User_Name-123:').length).toBeGreaterThanOrEqual(1);
     });
 
     test('should handle unicode characters in username', () => {
-      const { getAllByText } = render(<PaintedUsername username="用户名" />);
+      const { getAllByText } = render(<PaintedUsername username='用户名' />);
 
       expect(getAllByText('用户名:').length).toBeGreaterThanOrEqual(1);
     });
@@ -495,7 +543,7 @@ describe('PaintedUsername', () => {
       });
 
       const { getAllByText } = render(
-        <PaintedUsername username="NullColor" paint={paintWithNullColor} />,
+        <PaintedUsername username='NullColor' paint={paintWithNullColor} />,
       );
 
       expect(getAllByText('NullColor:').length).toBeGreaterThanOrEqual(1);

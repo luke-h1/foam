@@ -6,7 +6,6 @@ import {
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { parseBadges } from '@app/utils/chat/parseBadges';
-import type { LegendListRef } from '@legendapp/list';
 import { useNavigation } from 'expo-router';
 import { memo, useCallback, useMemo, useRef } from 'react';
 import { View } from 'react-native';
@@ -20,6 +19,7 @@ import {
   type ChatInputShellHandle,
 } from './components/ChatInputShell';
 import { ChatMessagePane } from './components/ChatMessagePane';
+import type { ChatListRef } from './components/ChatList';
 import {
   ChatOverlayController,
   type ChatOverlayControllerHandle,
@@ -85,7 +85,7 @@ export const ChatView = memo(
       visibleCosmeticUsersRef,
       visiblePersonalEmoteUsersRef,
     } = useChatTransientState(channelId);
-    const listRef = useRef<LegendListRef | null>(null);
+    const listRef = useRef<ChatListRef | null>(null);
     const inputShellRef = useRef<ChatInputShellHandle>(null);
     const overlayControllerRef = useRef<ChatOverlayControllerHandle>(null);
 
@@ -322,6 +322,7 @@ export const ChatView = memo(
     const {
       handleClearChatCache,
       handleDebugClearImageCache,
+      handleClearSevenTvCosmeticsCache,
       handleResumeScrollToBottom,
       handleSettingsReconnect,
       handleSettingsRefetchEmotes,
@@ -459,6 +460,7 @@ export const ChatView = memo(
             appendMentionToComposer={appendMentionToComposer}
             onClearChatCache={handleClearChatCache}
             onClearImageCache={handleDebugClearImageCache}
+            onClearSevenTvCosmeticsCache={handleClearSevenTvCosmeticsCache}
             onInsertEmote={handleEmoteSelect}
             onPinMessage={handlePinMessage}
             onRefreshPinnedMessage={handleRefreshPinnedMessage}

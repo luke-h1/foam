@@ -247,7 +247,7 @@ const OrbitArm = memo<OrbitArmProps>(
         <Animated.Image
           source={{ uri: item.src }}
           style={[styles.image, imageStyle]}
-          resizeMode="cover"
+          resizeMode='cover'
         />
         <AnimatedBlurView
           style={[
@@ -255,7 +255,7 @@ const OrbitArm = memo<OrbitArmProps>(
             styles.blurOverlay,
             blurOverlayStyle,
           ]}
-          tint="prominent"
+          tint='prominent'
           animatedProps={animatedBlurProps}
         />
       </View>

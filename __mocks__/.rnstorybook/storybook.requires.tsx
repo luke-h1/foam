@@ -4,6 +4,6 @@
 export const view = {
   getStorybookUI: () => {
     const { View } = require('react-native');
-    return () => <View testID="storybook-ui-mock" />;
+    return () => <View testID='storybook-ui-mock' />;
   },
 };

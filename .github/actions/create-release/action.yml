@@ -1,81 +1,81 @@
-name: "Create GitHub Release"
-description: "Create git tag and GitHub release."
+name: 'Create GitHub Release'
+description: 'Create git tag and GitHub release.'
 
 inputs:
   github_token:
-    description: "The Github token to use"
+    description: 'The Github token to use'
     required: true
   dry:
-    description: "Whether to run the action in a dry mode (not creating release, just printing logs)"
+    description: 'Whether to run the action in a dry mode (not creating release, just printing logs)'
     required: false
-    default: "false"
+    default: 'false'
   variant:
-    description: "The variant to use (production, internal, testflight, or preview)"
+    description: 'The variant to use (production, internal, testflight, or preview)'
     required: true
-    default: "production"
+    default: 'production'
   version:
-    description: "The app version"
+    description: 'The app version'
     required: true
   tag:
-    description: "The git tag"
+    description: 'The git tag'
     required: true
   previous_tag:
-    description: "The previous git tag"
+    description: 'The previous git tag'
     required: false
-    default: ""
+    default: ''
   deployment_type:
-    description: "The deployment type (native or ota)"
+    description: 'The deployment type (native or ota)'
     required: false
-    default: "native"
+    default: 'native'
   create_tag:
-    description: "Whether to create a git tag"
+    description: 'Whether to create a git tag'
     required: false
-    default: "true"
+    default: 'true'
   create_release:
-    description: "Whether to create a GitHub release"
+    description: 'Whether to create a GitHub release'
     required: false
-    default: "true"
+    default: 'true'
   ios_fingerprint:
-    description: "iOS fingerprint (for OTA releases)"
+    description: 'iOS fingerprint (for OTA releases)'
     required: false
-    default: ""
+    default: ''
   android_fingerprint:
-    description: "Android fingerprint (for OTA releases)"
+    description: 'Android fingerprint (for OTA releases)'
     required: false
-    default: ""
+    default: ''
   ios_update_id:
-    description: "iOS OTA update ID (for OTA releases)"
+    description: 'iOS OTA update ID (for OTA releases)'
     required: false
-    default: ""
+    default: ''
   android_update_id:
-    description: "Android OTA update ID (for OTA releases)"
+    description: 'Android OTA update ID (for OTA releases)'
     required: false
-    default: ""
+    default: ''
   update_group_id:
-    description: "OTA update group ID (for OTA releases)"
+    description: 'OTA update group ID (for OTA releases)'
     required: false
-    default: ""
+    default: ''
   runtime_version:
-    description: "Target runtime version for OTA updates (x.x.x format)"
+    description: 'Target runtime version for OTA updates (x.x.x format)'
     required: false
-    default: ""
+    default: ''
 
 outputs:
   tag:
-    description: "The created git tag"
+    description: 'The created git tag'
     value: ${{ inputs.tag }}
   previous_tag:
-    description: "The previous git tag"
+    description: 'The previous git tag'
     value: ${{ steps.get_previous_tag.outputs.previous_tag }}
   release_notes:
-    description: "The generated release notes"
+    description: 'The generated release notes'
     value: ${{ steps.generate_release_notes.outputs.release_notes }}
   changelog_updated:
-    description: "Whether the CHANGELOG.md was updated"
+    description: 'Whether the CHANGELOG.md was updated'
     value: ${{ steps.update_changelog.outputs.changed }}
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Fixup git config
       shell: bash

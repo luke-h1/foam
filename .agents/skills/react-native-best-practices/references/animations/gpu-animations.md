@@ -16,6 +16,7 @@ npm install react-native-wgpu
 ## When to Use GPU Shaders
 
 GPU shaders are the right choice when:
+
 - The effect requires per-pixel computation (noise fields, distortion, blur, glow)
 - Physics simulations drive the animation (fluid, cloth, boids flocking, gravity)
 - You need signed distance function (SDF) rendering for procedural shapes
@@ -39,6 +40,7 @@ npm install react-native-wgpu
 ```
 
 With Expo:
+
 ```sh
 npx create-expo-app@latest -e with-webgpu
 ```
@@ -62,7 +64,7 @@ Add the Babel plugin for `'use gpu'` function syntax:
 
 ```js
 // babel.config.js
-module.exports = (api) => {
+module.exports = api => {
   api.cache(true);
   return {
     presets: ['babel-preset-expo'],
@@ -131,12 +133,14 @@ const renderFrame = (device: GPUDevice, context: GPUCanvasContext) => {
   const textureView = context.getCurrentTexture().createView();
 
   const pass = commandEncoder.beginRenderPass({
-    colorAttachments: [{
-      view: textureView,
-      clearValue: [0, 0, 0, 1],
-      loadOp: 'clear',
-      storeOp: 'store',
-    }],
+    colorAttachments: [
+      {
+        view: textureView,
+        clearValue: [0, 0, 0, 1],
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
   });
   pass.setPipeline(pipeline);
   pass.draw(3);
@@ -204,9 +208,7 @@ const pipeline = root.createRenderPipeline({
   targets: { format: navigator.gpu.getPreferredCanvasFormat() },
 });
 
-pipeline
-  .withColorAttachment({ view: context })
-  .draw(3);
+pipeline.withColorAttachment({ view: context }).draw(3);
 
 context.present();
 ```
@@ -234,8 +236,7 @@ const updateParticles = tgpu.computeFn({
   particleBuffer.$[idx] = particleBuffer.$[idx].add(d.vec2f(0.001, 0));
 });
 
-root.createComputePipeline({ compute: updateParticles })
-  .dispatchWorkgroups(16); // 16 workgroups * 64 threads = 1024 particles
+root.createComputePipeline({ compute: updateParticles }).dispatchWorkgroups(16); // 16 workgroups * 64 threads = 1024 particles
 ```
 
 ### Guarded compute pipeline (simplified)
@@ -245,10 +246,12 @@ For simple parallel loops without manual workgroup sizing:
 ```tsx
 const data = root.createMutable(d.arrayOf(d.f32, 512));
 
-root.createGuardedComputePipeline((x) => {
-  'use gpu';
-  data.$[x] = data.$[x] * 2;
-}).dispatchThreads(512);
+root
+  .createGuardedComputePipeline(x => {
+    'use gpu';
+    data.$[x] = data.$[x] * 2;
+  })
+  .dispatchThreads(512);
 ```
 
 Think of `dispatchThreads(n)` as a parallelized `for (let i = 0; i < n; i++)` that runs on the GPU.
@@ -268,10 +271,7 @@ const Particle = d.struct({
   life: d.f32,
 });
 
-const particles = root.createMutable(
-  d.arrayOf(Particle, 10000),
-  initialData,
-);
+const particles = root.createMutable(d.arrayOf(Particle, 10000), initialData);
 
 const time = root.createUniform(d.f32);
 
@@ -317,14 +317,15 @@ For better performance on large textures, precompute gradients with a static or 
 ```tsx
 const cache = perlin3d.staticCache({ root, size: d.vec3u(64, 64, 1) });
 
-const pipeline = root
-  .pipe(cache.inject())
-  .createRenderPipeline({ /* ... */ });
+const pipeline = root.pipe(cache.inject()).createRenderPipeline({
+  /* ... */
+});
 ```
 
 Caching provides up to 10x performance improvement over on-demand gradient computation.
 
 Available from `@typegpu/noise`:
+
 - **PRNG**: `randf.sample()`, `randf.seed2()` for per-thread seeding
 - **Distributions**: `exponential`, `normal`, `cauchy`, `bernoulli`
 - **Geometric**: `inUnitCircle`, `onUnitSphere`, `inHemisphere`, and more

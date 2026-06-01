@@ -4,6 +4,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { memo } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 interface StvEmoteEventProps {
@@ -11,7 +12,7 @@ interface StvEmoteEventProps {
   part: ParsedPart<'stv_emote_added' | 'stv_emote_removed'>;
 }
 
-export function StvEmoteEvent({
+function StvEmoteEventComponent({
   part,
   disableAnimations = false,
 }: StvEmoteEventProps) {
@@ -41,7 +42,7 @@ export function StvEmoteEvent({
     >
       <View style={styles.notice}>
         <View style={styles.noticeHeader}>
-          <BrandIcon name="stv" size="lg" />
+          <BrandIcon name='stv' size='lg' />
           <Text style={styles.status}>
             <Text color={removed ? 'red' : 'green'}>{status}</Text>
             <Text> Emote</Text>
@@ -53,17 +54,17 @@ export function StvEmoteEvent({
         <Image
           useNitro
           trackLoadTime
-          trackLoadContext="chat.stv-emote-event"
+          trackLoadContext='chat.stv-emote-event'
           source={displayUrl}
-          cacheVariant="emote"
+          cacheVariant='emote'
           style={styles.emoteImage}
           transition={0}
-          contentFit="contain"
+          contentFit='contain'
         />
         <View style={styles.textContainer}>
           <Text style={styles.emoteName}>{content.name}</Text>
           {content.creator && (
-            <Text type="xs" color="gray.accentHover">
+            <Text type='xs' color='gray.accentHover'>
               By {content.creator}
             </Text>
           )}
@@ -72,6 +73,8 @@ export function StvEmoteEvent({
     </View>
   );
 }
+
+export const StvEmoteEvent = memo(StvEmoteEventComponent);
 
 const styles = StyleSheet.create({
   addedContainer: {

@@ -14,7 +14,7 @@ import {
 import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 type MediaLinkCardProps = {
@@ -22,7 +22,7 @@ type MediaLinkCardProps = {
   url: string;
 };
 
-export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
+function MediaLinkCardComponent({ type, url }: MediaLinkCardProps) {
   const twitchClipId = useMemo(() => getTwitchClipIdFromUrl(url), [url]);
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
@@ -57,9 +57,9 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
   const getBrandIcon = () => {
     switch (type) {
       case 'stvEmote':
-        return <BrandIcon name="stv" size="md" />;
+        return <BrandIcon name='stv' size='md' />;
       case 'twitchClip':
-        return <BrandIcon name="twitch" size="sm" />;
+        return <BrandIcon name='twitch' size='sm' />;
       default:
         return null;
     }
@@ -108,10 +108,10 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
           <Image
             useNitro
             trackLoadTime
-            trackLoadContext="chat.media-link-card"
+            trackLoadContext='chat.media-link-card'
             source={thumbnail}
             style={styles.thumbnail}
-            contentFit="contain"
+            contentFit='contain'
           />
         )}
         <View style={styles.info}>
@@ -129,6 +129,8 @@ export function MediaLinkCard({ type, url }: MediaLinkCardProps) {
     </Button>
   );
 }
+
+export const MediaLinkCard = memo(MediaLinkCardComponent);
 
 const styles = StyleSheet.create({
   brandIconSkeleton: {

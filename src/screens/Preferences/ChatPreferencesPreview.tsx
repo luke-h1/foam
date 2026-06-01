@@ -134,7 +134,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.reply]}
           settings={{ chatDensity: value }}
-          testID="chat-preference-preview-density"
+          testID='chat-preference-preview-density'
         />
       );
     }
@@ -148,7 +148,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
             previewMessages.mention,
           ]}
           settings={value}
-          testID="chat-preference-preview-context"
+          testID='chat-preference-preview-context'
         />
       );
     }
@@ -158,7 +158,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
         <ChatPreviewSurface
           messages={[previewMessages.plain]}
           settings={{ chatTimestamps: value }}
-          testID="chat-preference-preview-timestamps"
+          testID='chat-preference-preview-timestamps'
         />
       );
     }
@@ -168,7 +168,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
         <ChatPreviewSurface
           messages={[previewMessages.mention]}
           settings={{ highlightOwnMentions: value }}
-          testID="chat-preference-preview-mentions"
+          testID='chat-preference-preview-mentions'
         />
       );
     }
@@ -178,7 +178,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
         <ChatPreviewSurface
           messages={[previewMessages.reply]}
           settings={{ showInlineReplyContext: value }}
-          testID="chat-preference-preview-inline-reply"
+          testID='chat-preference-preview-inline-reply'
         />
       );
     }
@@ -188,7 +188,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
         <ChatPreviewSurface
           messages={[previewMessages.plain, previewMessages.mention]}
           settings={{ showUnreadJumpPill: value }}
-          testID="chat-preference-preview-jump-pill"
+          testID='chat-preference-preview-jump-pill'
         />
       );
     }
@@ -198,7 +198,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
         <ChatPreviewSurface
           messages={[previewMessages.emoteAnimations]}
           settings={{ disableEmoteAnimations: value }}
-          testID="chat-preference-preview-emote-animations"
+          testID='chat-preference-preview-emote-animations'
         />
       );
     }
@@ -210,7 +210,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
           enabled={value}
           provider={provider}
           testID={`chat-preference-preview-${provider}-emotes`}
-          variant="emotes"
+          variant='emotes'
         />
       );
     }
@@ -222,7 +222,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
           enabled={value}
           provider={provider}
           testID={`chat-preference-preview-${provider}-badges`}
-          variant="badges"
+          variant='badges'
         />
       );
     }
@@ -261,7 +261,7 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
             ? styles.chatSurfaceWithJumpPill
             : null,
         ]}
-        pointerEvents="none"
+        pointerEvents='none'
       >
         {messages.map(message => (
           <RichChatMessage
@@ -287,13 +287,13 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
             <View style={styles.jumpPill}>
               <SymbolView
                 tintColor={theme.colorAmberAlpha}
-                name="arrow.down"
+                name='arrow.down'
                 size={16}
               />
-              <Text style={styles.jumpPillText} weight="semibold">
+              <Text style={styles.jumpPillText} weight='semibold'>
                 Jump to latest
               </Text>
-              <Text style={styles.jumpPillCount} weight="bold">
+              <Text style={styles.jumpPillCount} weight='bold'>
                 {' '}
                 3
               </Text>
@@ -302,7 +302,7 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
         ) : null}
         {label ? (
           <View style={styles.previewStatePill}>
-            <Text style={styles.previewStatePillText} weight="semibold">
+            <Text style={styles.previewStatePillText} weight='semibold'>
               {label}
             </Text>
           </View>
@@ -358,10 +358,10 @@ const ProviderAssetPreview = memo(function ProviderAssetPreview({
 
   return (
     <PreviewCard testID={testID}>
-      <View style={styles.providerPreviewSurface} pointerEvents="none">
+      <View style={styles.providerPreviewSurface} pointerEvents='none'>
         <RichChatMessage
           {...message}
-          density="comfortable"
+          density='comfortable'
           getMentionColor={getMentionColor}
           parseTextForEmotes={parseTextForEmotes}
           showInlineReplyContext={false}

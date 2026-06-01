@@ -15,14 +15,14 @@ export function LicensesScreen() {
     >
       {Platform.OS === 'ios' ? null : (
         <ScreenHeader
-          title="Licenses"
-          subtitle="Open-source software used by Foam"
-          size="medium"
+          title='Licenses'
+          subtitle='Open-source software used by Foam'
+          size='medium'
         />
       )}
       <OtherInfoCard
-        title="Open-source acknowledgements"
-        body="Launch the native license list to inspect bundled dependencies and attribution details."
+        title='Open-source acknowledgements'
+        body='Launch the native license list to inspect bundled dependencies and attribution details.'
       >
         <Button
           onPress={() =>
@@ -30,7 +30,7 @@ export function LicensesScreen() {
           }
           style={styles.cta}
         >
-          <Text weight="semibold">Open license list</Text>
+          <Text weight='semibold'>Open license list</Text>
         </Button>
       </OtherInfoCard>
     </SafeAreaView>

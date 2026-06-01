@@ -153,9 +153,7 @@ export const ChatInputShell = memo(
           : messageInput;
         const shouldPinMessage = isPinNextMessageSelected;
         const currentUserState = getUserState();
-        const badgeData = parseBadges(
-          (currentUserState.badges as unknown as string) || '',
-        );
+        const badgeData = parseBadges(currentUserState.badges || '');
 
         const optimisticUserstate = {
           ...currentUserState,

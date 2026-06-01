@@ -14,7 +14,7 @@ jest.mock('../ChatComposer/ChatComposer', () => {
       return (
         <MockTextInput
           ref={ref}
-          testID="chat-composer"
+          testID='chat-composer'
           {...(props as object)}
         />
       );
@@ -36,7 +36,7 @@ describe('ChatInputSection', () => {
         }}
       >
         <ChatInputSection
-          messageInput="hello"
+          messageInput='hello'
           onChangeText={jest.fn()}
           onEmoteSelect={jest.fn()}
           onSubmit={jest.fn()}

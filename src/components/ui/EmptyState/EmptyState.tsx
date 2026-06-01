@@ -89,7 +89,7 @@ export function EmptyState({
 
   return (
     <SafeAreaView style={[styles.container, style]}>
-      <EmptyLayout style={styles.emptyLayout} variant="outline">
+      <EmptyLayout style={styles.emptyLayout} variant='outline'>
         <EmptyLayoutHeader>
           {iconName ? (
             <EmptyLayoutMedia style={styles.iconWrap}>
@@ -150,7 +150,7 @@ export function EmptyState({
           <EmptyLayoutButton
             onPress={buttonOnPress}
             style={[styles.buttonWrap, buttonStyle]}
-            variant="default"
+            variant='default'
           >
             {resolvedButton}
           </EmptyLayoutButton>

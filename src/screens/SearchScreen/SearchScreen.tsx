@@ -292,10 +292,10 @@ export function SearchScreen() {
         >
           <Image source={imageUrl} style={styles.categoryResultImage} />
           <View style={styles.categoryResultInfo}>
-            <Text type="sm" weight="semibold" numberOfLines={1}>
+            <Text type='sm' weight='semibold' numberOfLines={1}>
               {item.name}
             </Text>
-            <Text type="xs" color="gray.textLow" numberOfLines={1}>
+            <Text type='xs' color='gray.textLow' numberOfLines={1}>
               Open category
             </Text>
           </View>
@@ -316,16 +316,16 @@ export function SearchScreen() {
   const ListHeaderComponent = useMemo(
     () => (
       <View style={styles.header}>
-        <Text type="4xl" weight="bold" style={styles.title}>
+        <Text type='4xl' weight='bold' style={styles.title}>
           Search
         </Text>
-        <Text type="sm" color="gray.textLow" style={styles.subtitle}>
+        <Text type='sm' color='gray.textLow' style={styles.subtitle}>
           Discover channels, categories, and live rooms.
         </Text>
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
             <SymbolView
-              name="magnifyingglass"
+              name='magnifyingglass'
               size={16}
               tintColor={theme.colorGreyHoverAlpha}
               style={styles.searchIcon}
@@ -336,14 +336,14 @@ export function SearchScreen() {
               inputWrapperStyle={styles.searchInputWrapper}
               placeholderStyle={styles.searchPlaceholder}
               placeholders={['Search channels, games, or categories']}
-              testID="search-input"
+              testID='search-input'
               value={query}
               onChangeText={handleTextChange}
               onFocus={handleFocus}
               onBlur={handleBlur}
-              autoCapitalize="none"
+              autoCapitalize='none'
               autoCorrect={false}
-              returnKeyType="search"
+              returnKeyType='search'
             />
             {query.length > 0 && (
               <PressableArea
@@ -352,7 +352,7 @@ export function SearchScreen() {
               >
                 <View style={styles.clearIcon}>
                   <SymbolView
-                    name="xmark"
+                    name='xmark'
                     size={10}
                     tintColor={theme.colorGreyHoverAlpha}
                   />
@@ -362,7 +362,7 @@ export function SearchScreen() {
           </View>
           {isFocused && (
             <PressableArea onPress={handleCancel} style={styles.cancelButton}>
-              <Text color="accent.accent" weight="semibold">
+              <Text color='accent.accent' weight='semibold'>
                 Cancel
               </Text>
             </PressableArea>
@@ -381,14 +381,14 @@ export function SearchScreen() {
           <View style={styles.quickActionsSection}>
             <View style={styles.sectionHeader}>
               <Text
-                type="xs"
-                weight="semibold"
-                color="gray.textLow"
+                type='xs'
+                weight='semibold'
+                color='gray.textLow'
                 style={styles.sectionTitle}
               >
                 START WITH
               </Text>
-              <Text type="2xl" weight="bold" style={styles.sectionHeadline}>
+              <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
                 Quick routes
               </Text>
             </View>
@@ -404,15 +404,15 @@ export function SearchScreen() {
                   onPress={() => handleQuickActionPress(item.query)}
                 >
                   <Text
-                    type="sm"
-                    weight="semibold"
+                    type='sm'
+                    weight='semibold'
                     style={styles.quickActionTitle}
                   >
                     {item.title}
                   </Text>
                   <Text
-                    type="xs"
-                    color="gray.textLow"
+                    type='xs'
+                    color='gray.textLow'
                     style={styles.quickActionSubtitle}
                   >
                     {item.subtitle}
@@ -426,14 +426,14 @@ export function SearchScreen() {
         {query.length > 1 && activeResults.length > 0 && (
           <View style={styles.sectionHeader}>
             <Text
-              type="xs"
-              weight="semibold"
-              color="gray.textLow"
+              type='xs'
+              weight='semibold'
+              color='gray.textLow'
               style={styles.sectionTitle}
             >
               {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
             </Text>
-            <Text type="2xl" weight="bold" style={styles.sectionHeadline}>
+            <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
               {selectedFilter === 'channels'
                 ? 'Matching channels'
                 : 'Matching categories'}
@@ -467,10 +467,10 @@ export function SearchScreen() {
         }
         removeClippedSubviews
         showsVerticalScrollIndicator={false}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         data={activeResults}
-        keyboardDismissMode="on-drag"
-        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode='on-drag'
+        keyboardShouldPersistTaps='handled'
         ListFooterComponent={ListFooterComponent}
         ListHeaderComponent={ListHeaderComponent}
         renderItem={

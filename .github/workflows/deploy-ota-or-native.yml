@@ -4,39 +4,39 @@ on:
   workflow_dispatch:
     inputs:
       variant:
-        description: "Release variant"
+        description: 'Release variant'
         required: false
         type: choice
-        default: "production"
+        default: 'production'
         options:
           - production
           - internal
           - testflight
       deploy_type:
-        description: "Deployment type"
+        description: 'Deployment type'
         required: true
         type: choice
-        default: "auto"
+        default: 'auto'
         options:
           - auto # Detect using fingerprint
           - ota # Force OTA update
           - build # Force native build
       platform:
-        description: "Platform to deploy"
+        description: 'Platform to deploy'
         required: false
         type: choice
-        default: "ios"
+        default: 'ios'
         options:
           - all
           - ios
           - android
       dry_run:
-        description: "Dry run mode (skip release creation)"
+        description: 'Dry run mode (skip release creation)'
         required: false
         type: boolean
         default: false
       critical_update:
-        description: "Mark this OTA as critical"
+        description: 'Mark this OTA as critical'
         required: false
         type: boolean
         default: false
@@ -83,7 +83,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: '.bun-version'
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
@@ -117,7 +117,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: '.bun-version'
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
@@ -206,7 +206,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: '.bun-version'
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
@@ -227,7 +227,7 @@ jobs:
           GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
           GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
           SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
-          OP_ENV_FILE: ".env"
+          OP_ENV_FILE: '.env'
 
       - name: 📄 Decode and write Google service files
         run: |
@@ -363,7 +363,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: '.bun-version'
 
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
@@ -424,7 +424,7 @@ jobs:
           --message "$DEPLOY_MESSAGE"
         env:
           EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
-          DEPLOY_MESSAGE: "Deploy: ${{ github.event.head_commit.message || github.sha }}"
+          DEPLOY_MESSAGE: 'Deploy: ${{ github.event.head_commit.message || github.sha }}'
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 
       - name: 💾 Save fingerprints for next run
@@ -519,7 +519,7 @@ jobs:
           android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
           update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
           create_release: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'false' || 'true' }}
-          commit_changelog: "true"
+          commit_changelog: 'true'
 
       - name: Check for release notes file
         id: check_release_notes

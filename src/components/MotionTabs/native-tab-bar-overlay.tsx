@@ -45,11 +45,11 @@ const NativeTabBarOverlay = memo(function NativeTabBarOverlay({
 
   return (
     <View
-      pointerEvents="box-none"
+      pointerEvents='box-none'
       style={[StyleSheet.absoluteFill, styles.root]}
     >
       <View
-        pointerEvents="box-none"
+        pointerEvents='box-none'
         style={[
           styles.dock,
           {
@@ -60,7 +60,7 @@ const NativeTabBarOverlay = memo(function NativeTabBarOverlay({
       >
         <View style={styles.cardShadow}>
           <GlassView
-            glassEffectStyle="regular"
+            glassEffectStyle='regular'
             style={[
               styles.card,
               {

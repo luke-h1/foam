@@ -32,7 +32,12 @@ export default function PulsingCircle() {
 
   return (
     <Svg width={120} height={120}>
-      <AnimatedCircle cx={60} cy={60} animatedProps={animatedProps} fill="tomato" />
+      <AnimatedCircle
+        cx={60}
+        cy={60}
+        animatedProps={animatedProps}
+        fill='tomato'
+      />
     </Svg>
   );
 }
@@ -68,7 +73,12 @@ export default function ProgressArc({ progress }: { progress: number }) {
 
   return (
     <Svg width={120} height={120}>
-      <AnimatedPath animatedProps={animatedProps} stroke="tomato" strokeWidth={4} fill="none" />
+      <AnimatedPath
+        animatedProps={animatedProps}
+        stroke='tomato'
+        strokeWidth={4}
+        fill='none'
+      />
     </Svg>
   );
 }

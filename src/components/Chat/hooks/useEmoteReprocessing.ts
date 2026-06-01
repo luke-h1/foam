@@ -77,7 +77,7 @@ export function useEmoteReprocessing({
         return;
       }
 
-      const textContent = getReprocessableText(msg.message as ParsedPart[]);
+      const textContent = getReprocessableText(msg.message);
 
       if (textContent == null) {
         return;

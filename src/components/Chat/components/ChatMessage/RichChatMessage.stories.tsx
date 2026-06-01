@@ -258,12 +258,12 @@ export const WithMentions: Story = {
         username: 'streamer',
         'display-name': 'Streamer',
         color: '#0000FF',
-      }) as ChatMessageType<never>,
+      }),
       createBaseMessage([{ type: 'text', content: 'Another message' }], {
         username: 'viewer',
         'display-name': 'Viewer',
         color: '#FF00FF',
-      }) as ChatMessageType<never>,
+      }),
     ];
     return (
       // @ts-expect-error - allMessages is a valid prop but not in Storybook's type definition
@@ -881,9 +881,9 @@ export const ChatterinoSplit: Story = {
           <RichChatMessage
             key={message.id}
             {...message}
-            currentUsername="testuser"
-            currentUsernameNormalized="testuser"
-            density="compact"
+            currentUsername='testuser'
+            currentUsernameNormalized='testuser'
+            density='compact'
             showTimestamp
             onReply={() => {}}
           />

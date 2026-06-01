@@ -23,20 +23,20 @@ describe('FormattedDate', () => {
 
   describe('using custom format', () => {
     test('renders correctly with string date', () => {
-      render(<FormattedDate format="yy MM eee">2019-03-12</FormattedDate>);
+      render(<FormattedDate format='yy MM eee'>2019-03-12</FormattedDate>);
 
       expect(screen.getByText('19 03 Tue')).toBeOnTheScreen();
     });
 
     test('renders correctly with number date', () => {
-      render(<FormattedDate format="yy MM eee">{1552395197000}</FormattedDate>);
+      render(<FormattedDate format='yy MM eee'>{1552395197000}</FormattedDate>);
 
       expect(screen.getByText('19 03 Tue')).toBeOnTheScreen();
     });
 
     test('renders correctly with Date', () => {
       render(
-        <FormattedDate format="yy MM eee">
+        <FormattedDate format='yy MM eee'>
           {new Date('2019-03-12')}
         </FormattedDate>,
       );

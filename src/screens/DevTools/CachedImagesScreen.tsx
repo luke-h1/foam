@@ -156,7 +156,7 @@ export function CachedImagesScreen() {
             <Image
               source={{ uri: item.uri }}
               style={styles.thumbnail}
-              contentFit="contain"
+              contentFit='contain'
             />
           </View>
           <View style={styles.itemInfo}>
@@ -187,7 +187,7 @@ export function CachedImagesScreen() {
           <Image
             source={{ uri: item.url }}
             style={styles.thumbnail}
-            contentFit="contain"
+            contentFit='contain'
           />
         </View>
         <View style={styles.itemInfo}>
@@ -407,7 +407,7 @@ export function CachedImagesScreen() {
           <FlashList
             ref={listRef}
             data={images}
-            contentInsetAdjustmentBehavior="automatic"
+            contentInsetAdjustmentBehavior='automatic'
             renderItem={renderImageItem}
             keyExtractor={item => item.uri}
             contentContainerStyle={styles.listContent}
@@ -425,7 +425,7 @@ export function CachedImagesScreen() {
           <FlashList
             ref={listRef}
             data={badgeList}
-            contentInsetAdjustmentBehavior="automatic"
+            contentInsetAdjustmentBehavior='automatic'
             renderItem={renderBadgeItem}
             keyExtractor={item => item.id}
             contentContainerStyle={styles.listContent}
@@ -443,7 +443,7 @@ export function CachedImagesScreen() {
           <FlashList
             ref={listRef}
             data={paintList}
-            contentInsetAdjustmentBehavior="automatic"
+            contentInsetAdjustmentBehavior='automatic'
             renderItem={renderPaintItem}
             keyExtractor={item => item.id}
             contentContainerStyle={styles.listContent}
@@ -466,9 +466,9 @@ export function CachedImagesScreen() {
       <View style={styles.container}>
         {Platform.OS === 'ios' ? null : (
           <ScreenHeader
-            title="Cache Manager"
+            title='Cache Manager'
             subtitle={getSubtitle()}
-            size="medium"
+            size='medium'
           />
         )}
 

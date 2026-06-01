@@ -16,7 +16,7 @@ async function getWebImages(): Promise<WebImagesType> {
     const module = require('react-native-nitro-web-image') as {
       WebImages: WebImagesType;
     };
-    WebImages = module.WebImages as WebImagesType;
+    WebImages = module.WebImages;
   }
   return WebImages;
 }

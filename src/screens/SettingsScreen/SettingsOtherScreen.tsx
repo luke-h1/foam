@@ -20,32 +20,32 @@ export function SettingsOtherScreen() {
     return (
       <View style={styles.container}>
         <BodyScrollView
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           contentContainerStyle={styles.iosContent}
         >
-          <Form.Section title="Support & Feedback">
+          <Form.Section title='Support & Feedback'>
             <Form.Link
-              systemImage="info.circle"
+              systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
             >
               About Foam
             </Form.Link>
             <Form.Link
-              systemImage="questionmark.circle"
+              systemImage='questionmark.circle'
               onPress={() => router.push('/tabs/settings/faq')}
             >
               FAQ
             </Form.Link>
             <Form.Link
-              systemImage="clock"
+              systemImage='clock'
               onPress={() => router.push('/tabs/settings/changelog')}
             >
               Changelog
             </Form.Link>
           </Form.Section>
-          <Form.Section title="Legal">
+          <Form.Section title='Legal'>
             <Form.Link
-              systemImage="doc.text"
+              systemImage='doc.text'
               onPress={() => router.push('/tabs/settings/licenses')}
             >
               OSS Licenses
@@ -60,41 +60,41 @@ export function SettingsOtherScreen() {
     <View style={styles.container}>
       <ScrollView
         ref={scrollRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         <ScreenHeader
-          title="Other"
-          subtitle="Support, release notes, and legal information for Foam."
-          size="medium"
+          title='Other'
+          subtitle='Support, release notes, and legal information for Foam.'
+          size='medium'
         />
 
-        <SettingsSection title="Support & Feedback">
+        <SettingsSection title='Support & Feedback'>
           <SettingsLinkRow
-            title="About Foam"
-            subtitle="What the app is built for"
+            title='About Foam'
+            subtitle='What the app is built for'
             icon={{ icon: 'info.circle', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
-            title="FAQ"
-            subtitle="Common questions and product guidance"
+            title='FAQ'
+            subtitle='Common questions and product guidance'
             icon={{ icon: 'questionmark.circle', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/faq')}
           />
           <SettingsLinkRow
-            title="Changelog"
-            subtitle="Recent release notes and product updates"
+            title='Changelog'
+            subtitle='Recent release notes and product updates'
             icon={{ icon: 'clock', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/changelog')}
           />
         </SettingsSection>
 
-        <SettingsSection title="Legal">
+        <SettingsSection title='Legal'>
           <SettingsLinkRow
-            title="OSS Licenses"
-            subtitle="Open-source software used by the app"
+            title='OSS Licenses'
+            subtitle='Open-source software used by the app'
             icon={{ icon: 'doc.text', color: theme.colorViolet }}
             onPress={() => router.push('/tabs/settings/licenses')}
           />

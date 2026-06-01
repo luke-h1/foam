@@ -13,11 +13,13 @@ Animate elements when they are added to or removed from the view hierarchy:
 ```tsx
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
-{visible && (
-  <Animated.View entering={FadeIn} exiting={FadeOut}>
-    <Text>Hello</Text>
-  </Animated.View>
-)}
+{
+  visible && (
+    <Animated.View entering={FadeIn} exiting={FadeOut}>
+      <Text>Hello</Text>
+    </Animated.View>
+  );
+}
 ```
 
 Predefined animation families include Fade, Slide, Zoom, Bounce, Flip, Stretch, Roll, Rotate, LightSpeed, and Pinwheel. Each has directional variants (e.g., `FadeInRight`, `FadeInLeft`, `FadeInUp`, `FadeInDown`).
@@ -47,10 +49,10 @@ Smooth animations when a component's position or size changes due to state updat
 import Animated, { LinearTransition } from 'react-native-reanimated';
 
 <Animated.View layout={LinearTransition}>
-  {items.map((item) => (
+  {items.map(item => (
     <Item key={item.id} {...item} />
   ))}
-</Animated.View>
+</Animated.View>;
 ```
 
 Predefined transitions: `LinearTransition`, `SequencedTransition`, `FadingTransition`, `JumpingTransition`, `CurvedTransition`, `EntryExitTransition`.
@@ -78,7 +80,7 @@ const enteringAnimation = new Keyframe({
   100: { transform: [{ scale: 1 }, { rotate: '0deg' }] },
 });
 
-<Animated.View entering={enteringAnimation.duration(600)} />
+<Animated.View entering={enteringAnimation.duration(600)} />;
 ```
 
 ### Rules
@@ -122,7 +124,7 @@ import { LayoutAnimationConfig } from 'react-native-reanimated';
 
 <LayoutAnimationConfig skipEntering skipExiting>
   {children}
-</LayoutAnimationConfig>
+</LayoutAnimationConfig>;
 ```
 
 Can be nested. For FlatLists, use the `.skipEnteringExitingAnimations` modifier on `itemLayoutAnimation` instead.
@@ -137,7 +139,7 @@ Animates a view between two screens during navigation:
 
 ```tsx
 <Animated.Image
-  sharedTransitionTag="hero-image"
+  sharedTransitionTag='hero-image'
   sharedTransitionStyle={SharedTransition.duration(550).springify()}
 />
 ```

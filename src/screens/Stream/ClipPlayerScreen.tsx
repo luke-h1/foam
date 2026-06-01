@@ -16,9 +16,9 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
   if (!id) {
     return (
       <EmptyState
-        heading="Clip not found"
-        content="Could not open this clip."
-        button="Close"
+        heading='Clip not found'
+        content='Could not open this clip.'
+        button='Close'
         buttonOnPress={() => router.back()}
       />
     );
@@ -28,11 +28,11 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
     <View style={styles.container}>
       <StreamPlayer
         clip={id}
-        parent="www.twitch.tv"
+        parent='www.twitch.tv'
         autoplay
         muted={false}
-        height="100%"
-        width="100%"
+        height='100%'
+        width='100%'
       />
 
       <View
@@ -40,9 +40,9 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
       >
         <IconButton
           icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label="Close clip"
+          label='Close clip'
           onPress={() => router.back()}
-          size="2xl"
+          size='2xl'
           style={styles.closeButton}
         />
       </View>

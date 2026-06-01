@@ -1,4 +1,3 @@
-import type { LegendListRef } from '@legendapp/list';
 import { batch } from '@legendapp/state';
 import { useCallback, useRef, type RefObject } from 'react';
 
@@ -25,6 +24,7 @@ import {
   createUserStateFromTags,
   type AnyChatMessageType,
 } from '../util/messageHandlers';
+import type { ChatListRef } from '../components/ChatList';
 import {
   describeInitialRoomState,
   describeRoomStateChanges,
@@ -41,7 +41,7 @@ interface UseChatIrcHandlersOptions {
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
   ) => void;
-  listRef: RefObject<LegendListRef | null>;
+  listRef: RefObject<ChatListRef | null>;
   messages$: { peek: () => unknown[] };
   moderateBufferedMessageById: (messageId: string, notice: string) => void;
   moderateBufferedMessagesByLogin: (login: string, notice: string) => void;

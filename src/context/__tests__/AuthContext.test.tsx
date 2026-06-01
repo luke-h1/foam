@@ -139,7 +139,7 @@ describe('AuthContext', () => {
         expiresIn: 3600,
         tokenType: 'bearer',
       }),
-    } as AuthSessionResult;
+    };
     twitchService.getUserInfo.mockResolvedValue(user);
 
     const { result } = renderHook(() => useAuthContext(), {

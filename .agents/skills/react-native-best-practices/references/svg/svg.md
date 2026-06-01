@@ -30,9 +30,24 @@ import Svg, { Circle, Rect } from 'react-native-svg';
 
 export default function InlineSvg() {
   return (
-    <Svg height="100" width="100" viewBox="0 0 100 100">
-      <Circle cx="50" cy="50" r="45" stroke="blue" strokeWidth="2.5" fill="green" />
-      <Rect x="15" y="15" width="70" height="70" stroke="red" strokeWidth="2" fill="yellow" />
+    <Svg height='100' width='100' viewBox='0 0 100 100'>
+      <Circle
+        cx='50'
+        cy='50'
+        r='45'
+        stroke='blue'
+        strokeWidth='2.5'
+        fill='green'
+      />
+      <Rect
+        x='15'
+        y='15'
+        width='70'
+        height='70'
+        stroke='red'
+        strokeWidth='2'
+        fill='yellow'
+      />
     </Svg>
   );
 }
@@ -44,7 +59,9 @@ export default function InlineSvg() {
 import { SvgUri } from 'react-native-svg';
 
 export default function RemoteSvg() {
-  return <SvgUri width="100%" height="100%" uri="https://example.com/image.svg" />;
+  return (
+    <SvgUri width='100%' height='100%' uri='https://example.com/image.svg' />
+  );
 }
 ```
 
@@ -55,8 +72,8 @@ If the remote SVG contains CSS in a `<style>` element, use `SvgCssUri` from `rea
 ```tsx
 <SvgUri
   uri={uri}
-  width="100%"
-  height="100%"
+  width='100%'
+  height='100%'
   onError={() => setUri(fallbackUri)}
   fallback={<FallbackComponent />}
 />
@@ -70,7 +87,7 @@ import { SvgXml } from 'react-native-svg';
 const xml = `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="red" /></svg>`;
 
 export default function XmlSvg() {
-  return <SvgXml xml={xml} width="100%" height="100%" />;
+  return <SvgXml xml={xml} width='100%' height='100%' />;
 }
 ```
 
@@ -93,7 +110,7 @@ const config = {
     babelTransformerPath: require.resolve('react-native-svg-transformer'),
   },
   resolver: {
-    assetExts: assetExts.filter((ext) => ext !== 'svg'),
+    assetExts: assetExts.filter(ext => ext !== 'svg'),
     sourceExts: [...sourceExts, 'svg'],
   },
 };
@@ -106,7 +123,7 @@ Then import and use SVG files as components:
 ```tsx
 import Logo from './logo.svg';
 
-<Logo width={120} height={40} />
+<Logo width={120} height={40} />;
 ```
 
 ---
@@ -117,10 +134,10 @@ SVG elements support `onPress`, `onPressIn`, `onPressOut`, `onLongPress`, `delay
 
 ```tsx
 <Circle
-  cx="50%"
-  cy="50%"
-  r="38%"
-  fill="red"
+  cx='50%'
+  cy='50%'
+  r='38%'
+  fill='red'
   onPress={() => alert('Pressed circle')}
 />
 ```
@@ -138,11 +155,18 @@ import { FeColorMatrix, Filter, Rect, Svg } from 'react-native-svg';
 
 export default function FilteredRect() {
   return (
-    <Svg height="300" width="300">
-      <Filter id="desaturate">
-        <FeColorMatrix type="saturate" values="0.2" />
+    <Svg height='300' width='300'>
+      <Filter id='desaturate'>
+        <FeColorMatrix type='saturate' values='0.2' />
       </Filter>
-      <Rect x="0" y="0" width="300" height="300" fill="red" filter="url(#desaturate)" />
+      <Rect
+        x='0'
+        y='0'
+        width='300'
+        height='300'
+        fill='red'
+        filter='url(#desaturate)'
+      />
     </Svg>
   );
 }
@@ -158,7 +182,7 @@ import { FilterImage } from 'react-native-svg/filter-image';
 <FilterImage
   style={{ width: 200, height: 200, filter: 'saturate(3) grayscale(100%)' }}
   source={require('./photo.jpg')}
-/>
+/>;
 ```
 
 ---

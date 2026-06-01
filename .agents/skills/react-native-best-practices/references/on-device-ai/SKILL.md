@@ -1,6 +1,6 @@
 ---
 name: on-device-ai
-description: "Best practices for building on-device AI features in React Native using React Native ExecuTorch. Use when the user wants to add AI to a mobile app without cloud dependencies: chatbots and assistants, image classification, object detection, OCR and document parsing, style transfer, image generation, speech-to-text, text-to-speech, voice activity detection, semantic search with embeddings, real-time camera AI with VisionCamera, or vision-language image understanding. Also use when the user mentions offline AI, on-device ML, privacy-preserving AI, reducing cloud API costs or latency, running models locally on mobile, or downloading and managing ML models. Covers react-native-executorch hooks (useLLM, useClassification, useObjectDetection, useOCR, useSemanticSegmentation, useInstanceSegmentation, useStyleTransfer, useTextToImage, useImageEmbeddings, useSpeechToText, useTextToSpeech, useVAD, useTextEmbeddings, useExecutorchModule), tool calling, structured output, VLMs, model loading, and resource management."
+description: 'Best practices for building on-device AI features in React Native using React Native ExecuTorch. Use when the user wants to add AI to a mobile app without cloud dependencies: chatbots and assistants, image classification, object detection, OCR and document parsing, style transfer, image generation, speech-to-text, text-to-speech, voice activity detection, semantic search with embeddings, real-time camera AI with VisionCamera, or vision-language image understanding. Also use when the user mentions offline AI, on-device ML, privacy-preserving AI, reducing cloud API costs or latency, running models locally on mobile, or downloading and managing ML models. Covers react-native-executorch hooks (useLLM, useClassification, useObjectDetection, useOCR, useSemanticSegmentation, useInstanceSegmentation, useStyleTransfer, useTextToImage, useImageEmbeddings, useSpeechToText, useTextToSpeech, useVAD, useTextEmbeddings, useExecutorchModule), tool calling, structured output, VLMs, model loading, and resource management.'
 ---
 
 # On-Device AI
@@ -67,9 +67,9 @@ What AI task does the feature need?
 
 ## References
 
-| File | When to read |
-|------|-------------|
-| `llm.md` | LLM chat (functional and managed), tool calling, structured output, token batching, context strategy, vision-language models (VLM), model selection, generation config |
-| `vision.md` | Image classification, object detection, OCR, semantic segmentation, instance segmentation, style transfer, text-to-image, image/text embeddings, VisionCamera real-time frame processing with `runOnFrame` |
-| `speech.md` | Speech-to-text (batch and streaming transcription with timestamps), text-to-speech (batch and streaming synthesis, phoneme input), voice activity detection, audio format requirements |
-| `setup.md` | Installation with `initExecutorch`, resource fetcher adapters, model loading strategies (bundled, remote, local), download management, error handling with `RnExecutorchError`, custom models with `useExecutorchModule`, Metro config for `.pte` files |
+| File        | When to read                                                                                                                                                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `llm.md`    | LLM chat (functional and managed), tool calling, structured output, token batching, context strategy, vision-language models (VLM), model selection, generation config                                                                                  |
+| `vision.md` | Image classification, object detection, OCR, semantic segmentation, instance segmentation, style transfer, text-to-image, image/text embeddings, VisionCamera real-time frame processing with `runOnFrame`                                              |
+| `speech.md` | Speech-to-text (batch and streaming transcription with timestamps), text-to-speech (batch and streaming synthesis, phoneme input), voice activity detection, audio format requirements                                                                  |
+| `setup.md`  | Installation with `initExecutorch`, resource fetcher adapters, model loading strategies (bundled, remote, local), download management, error handling with `RnExecutorchError`, custom models with `useExecutorchModule`, Metro config for `.pte` files |

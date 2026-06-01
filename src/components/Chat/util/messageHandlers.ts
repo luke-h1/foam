@@ -45,7 +45,7 @@ function createChatTimestamp(date: Date | number = Date.now()): string {
 export const createUserStateFromTags = (
   tags: Record<string, string>,
 ): UserStateTags => {
-  const badgeData = parseBadges(tags.badges as unknown as string);
+  const badgeData = parseBadges(tags.badges);
 
   return {
     ...tags,
@@ -230,7 +230,7 @@ export const createUserNoticeMessage = ({
           ...emptyFields,
         } satisfies UserNoticeTagsByVariant<'viewermilestone'>,
         isSpecialNotice: true,
-      } as ChatMessageType<'usernotice', 'viewermilestone'>;
+      };
     }
 
     case 'resub': {
@@ -242,7 +242,7 @@ export const createUserNoticeMessage = ({
         notice_tags: { ...tags, ...emptyFields },
         isSpecialNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'resub'>;
+      };
     }
 
     case 'sub': {
@@ -255,7 +255,7 @@ export const createUserNoticeMessage = ({
         userstate,
         isSpecialNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'sub'>;
+      };
     }
 
     case 'subgift': {
@@ -267,7 +267,7 @@ export const createUserNoticeMessage = ({
         notice_tags: { ...tags, ...emptyFields },
         isSpecialNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'subgift'>;
+      };
     }
 
     case 'submysterygift': {
@@ -279,7 +279,7 @@ export const createUserNoticeMessage = ({
         notice_tags: { ...tags, ...emptyFields },
         isSpecialNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'submysterygift'>;
+      };
     }
 
     case 'giftpaidupgrade': {
@@ -291,7 +291,7 @@ export const createUserNoticeMessage = ({
         notice_tags: { ...tags, ...emptyFields },
         isSpecialNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'giftpaidupgrade'>;
+      };
     }
 
     case 'anongiftpaidupgrade': {
@@ -303,7 +303,7 @@ export const createUserNoticeMessage = ({
         notice_tags: { ...tags, ...emptyFields },
         isSpecialNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'anongiftpaidupgrade'>;
+      };
     }
 
     case 'rewardgift': {
@@ -333,7 +333,7 @@ export const createUserNoticeMessage = ({
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'raid'>;
+      };
     }
 
     case 'modiversary': {
@@ -348,7 +348,7 @@ export const createUserNoticeMessage = ({
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice', 'modiversary'>;
+      };
     }
 
     case 'unraid':
@@ -365,10 +365,7 @@ export const createUserNoticeMessage = ({
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
         ...emptyFields,
-      } as ChatMessageType<
-        'usernotice',
-        'unraid' | 'bitsbadgetier' | 'sharedchatnotice'
-      >;
+      };
     }
 
     default: {
@@ -382,7 +379,7 @@ export const createUserNoticeMessage = ({
           message: [],
           isSpecialNotice: true,
           ...emptyFields,
-        } as ChatMessageType<'usernotice'>;
+        };
       }
 
       return {
@@ -393,7 +390,7 @@ export const createUserNoticeMessage = ({
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
         ...emptyFields,
-      } as ChatMessageType<'usernotice'>;
+      };
     }
   }
 };

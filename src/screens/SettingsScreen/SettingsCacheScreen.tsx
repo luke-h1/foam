@@ -9,6 +9,7 @@ import {
 } from '@app/components/SettingsSection/SettingsSection';
 import { storageService } from '@app/lib/storage';
 import { clearChatCosmeticsCache } from '@app/store/chatStore/channelLoad';
+import { clearUserCosmeticsCache } from '@app/store/chatStore/cosmetics';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
@@ -65,27 +66,52 @@ export function SettingsCacheScreen() {
     );
   };
 
+  const handleClearSevenTvCosmeticsCache = () => {
+    Alert.alert(
+      'Clear 7TV Cosmetic Cache',
+      'This removes cached 7TV user paints and badges. They will be fetched again as users appear in chat.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => {
+            clearUserCosmeticsCache();
+            toast.success('7TV cosmetic cache cleared');
+          },
+        },
+      ],
+    );
+  };
+
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
         <BodyScrollView
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           contentContainerStyle={styles.iosContent}
         >
-          <Form.Section footer="Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.">
+          <Form.Section footer='Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.'>
             <CacheActionRow
               custom
-              icon="externaldrive"
-              title="Clear Local Data"
-              subtitle="Signs you out, clears stored app data, and forces fresh stream fetches next time."
+              icon='externaldrive'
+              title='Clear Local Data'
+              subtitle='Signs you out, clears stored app data, and forces fresh stream fetches next time.'
               onPress={handleClearData}
             />
             <CacheActionRow
               custom
-              icon="trash"
-              title="Clear Chat Media Cache"
-              subtitle="Removes downloaded emotes, badges, cosmetics, and image cache entries from this device."
+              icon='trash'
+              title='Clear Chat Media Cache'
+              subtitle='Removes downloaded emotes, badges, cosmetics, and image cache entries from this device.'
               onPress={handleClearChatCache}
+            />
+            <CacheActionRow
+              custom
+              icon='sparkles'
+              title='Clear 7TV Cosmetic Cache'
+              subtitle='Removes cached 7TV paints and badges for chat users.'
+              onPress={handleClearSevenTvCosmeticsCache}
             />
           </Form.Section>
         </BodyScrollView>
@@ -97,37 +123,44 @@ export function SettingsCacheScreen() {
     <View style={styles.container}>
       <ScrollView
         ref={scrollRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         <ScreenHeader
-          title="Cache"
-          subtitle="Reset cached app data when streams, badges, or emotes need a clean refresh."
-          size="medium"
+          title='Cache'
+          subtitle='Reset cached app data when streams, badges, or emotes need a clean refresh.'
+          size='medium'
         />
 
         <SettingsSection
-          title="Danger Zone"
+          title='Danger Zone'
           footer={
-            <Text type="xs" color="gray.textLow">
+            <Text type='xs' color='gray.textLow'>
               These actions should be used for troubleshooting and hard
               refreshes, not routine cleanup.
             </Text>
           }
         >
           <SettingsLinkRow
-            title="Clear Data"
-            subtitle="Sign out and refetch stream, category, emote, and badge state"
+            title='Clear Data'
+            subtitle='Sign out and refetch stream, category, emote, and badge state'
             icon={{ icon: 'externaldrive', color: theme.colorRed }}
             onPress={handleClearData}
             danger
           />
           <SettingsLinkRow
-            title="Clear Image Cache"
-            subtitle="Remove downloaded emote, badge, cosmetic, and image cache entries"
+            title='Clear Image Cache'
+            subtitle='Remove downloaded emote, badge, cosmetic, and image cache entries'
             icon={{ icon: 'trash', color: theme.colorRed }}
             onPress={handleClearChatCache}
+            danger
+          />
+          <SettingsLinkRow
+            title='Clear 7TV Cosmetic Cache'
+            subtitle='Remove cached 7TV paints and badges for chat users'
+            icon={{ icon: 'sparkles', color: theme.colorRed }}
+            onPress={handleClearSevenTvCosmeticsCache}
             danger
           />
         </SettingsSection>
@@ -152,7 +185,7 @@ function CacheActionRow({
   return (
     <PressableArea
       accessibilityLabel={title}
-      accessibilityRole="button"
+      accessibilityRole='button'
       onPress={onPress}
     >
       <View style={styles.iosActionRow}>
@@ -160,10 +193,10 @@ function CacheActionRow({
           <SymbolView name={icon} tintColor={theme.colorRed} size={18} />
         </View>
         <View style={styles.iosActionCopy}>
-          <Text color="gray" weight="semibold">
+          <Text color='gray' weight='semibold'>
             {title}
           </Text>
-          <Text color="gray.textLow" type="xs">
+          <Text color='gray.textLow' type='xs'>
             {subtitle}
           </Text>
         </View>

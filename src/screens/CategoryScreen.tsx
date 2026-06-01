@@ -74,7 +74,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   const renderHeader = useMemo(
     () => (
       <ScreenHeader
-        size="hero"
+        size='hero'
         title={category?.name ?? ''}
         subtitle={`${formatViewCount(totalViewers)} viewers`}
         backgroundImage={
@@ -91,7 +91,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         safeArea={false}
       >
         <View style={styles.sectionHeader}>
-          <Text type="sm" weight="semibold" color="gray.textLow">
+          <Text type='sm' weight='semibold' color='gray.textLow'>
             Live Channels
           </Text>
         </View>
@@ -103,7 +103,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   if (isCategoryLoading || isLoadingStreams) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.color.text.dark} />
+        <ActivityIndicator size='large' color={theme.color.text.dark} />
       </View>
     );
   }
@@ -111,8 +111,8 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   if (isCategoryError || isErrorStreams) {
     return (
       <EmptyState
-        content="Failed to fetch categories"
-        heading="No Categories"
+        content='Failed to fetch categories'
+        heading='No Categories'
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetch()}
       />
@@ -122,13 +122,13 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   if (!streams || !streams.pages) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.color.text.dark} />
+        <ActivityIndicator size='large' color={theme.color.text.dark} />
       </View>
     );
   }
 
   if (allStreams.length === 0) {
-    return <EmptyState content="No Top Streams found" />;
+    return <EmptyState content='No Top Streams found' />;
   }
 
   return (
@@ -136,7 +136,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
       <FlashList<TwitchStream>
         ref={flashListRef}
         data={allStreams}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         keyExtractor={item => item.id}
         renderItem={renderItem}
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}

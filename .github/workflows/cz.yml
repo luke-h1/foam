@@ -1,6 +1,6 @@
 name: Commitlint
 on:
-  pull_request: 
+  pull_request:
 permissions:
   contents: read
 jobs:
@@ -30,4 +30,4 @@ jobs:
 
       - name: 🧑‍🔬 Check commit message
         run: |
-            bun run commitlint --from=HEAD^1
+          bun run commitlint --from=HEAD^1

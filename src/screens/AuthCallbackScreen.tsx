@@ -9,7 +9,7 @@ import { View, StyleSheet } from 'react-native';
 export function AuthCallbackScreen() {
   return (
     <View style={styles.container}>
-      <Text type="lg" color="gray">
+      <Text type='lg' color='gray'>
         Completing sign in…
       </Text>
     </View>

@@ -32,10 +32,10 @@ export function AboutCard() {
     <View style={styles.main}>
       <View style={styles.wrapper}>
         <View style={styles.info}>
-          <Text type="xl" weight="bold">
+          <Text type='xl' weight='bold'>
             Foam
           </Text>
-          <Text type="sm" color="gray.textLow" style={styles.infoText}>
+          <Text type='sm' color='gray.textLow' style={styles.infoText}>
             Live streams, faster discovery, and chat tuned for mobile.
           </Text>
         </View>
@@ -50,13 +50,13 @@ export function AboutCard() {
                   name: link.icon,
                 }}
                 label={link.label}
-                size="2xl"
+                size='2xl'
                 onPress={() => {
                   openLinkInBrowser(link.href);
                 }}
                 style={styles.link}
               />
-              <Text color="gray" type="sm" style={styles.linkLabel}>
+              <Text color='gray' type='sm' style={styles.linkLabel}>
                 {link.label}
               </Text>
             </View>

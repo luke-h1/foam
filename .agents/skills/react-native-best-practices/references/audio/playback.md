@@ -42,7 +42,7 @@ Time values use the same coordinate system as `audioContext.currentTime`.
 ```tsx
 source.loop = true;
 source.loopStart = 0.5; // seconds
-source.loopEnd = 3.0;   // seconds
+source.loopEnd = 3.0; // seconds
 source.start();
 ```
 
@@ -147,8 +147,8 @@ queue.start(audioContext.currentTime);
 ### Queue Management
 
 ```tsx
-queue.dequeueBuffer(id1);  // remove a specific buffer
-queue.clearBuffers();       // remove all queued buffers
+queue.dequeueBuffer(id1); // remove a specific buffer
+queue.clearBuffers(); // remove all queued buffers
 ```
 
 ### Pause and Resume
@@ -156,14 +156,14 @@ queue.clearBuffers();       // remove all queued buffers
 Unlike `AudioBufferSourceNode`, `AudioBufferQueueSourceNode` supports true pause/resume:
 
 ```tsx
-queue.pause();  // halts playback, keeps position
-queue.start();  // resumes from where it paused
+queue.pause(); // halts playback, keeps position
+queue.start(); // resumes from where it paused
 ```
 
 ### Buffer End Events
 
 ```tsx
-queue.onBufferEnded = (event) => {
+queue.onBufferEnded = event => {
   console.log(`Buffer ${event.bufferId} ended`);
   if (event.isLastBufferInQueue) {
     console.log('Queue exhausted');
@@ -181,15 +181,15 @@ For AudioBufferQueueSourceNode API details, webfetch the [AudioBufferQueueSource
 
 ### Available Methods
 
-| Method | Use case |
-|--------|----------|
-| `setValueAtTime(value, time)` | Instant change at a specific time |
-| `linearRampToValueAtTime(value, endTime)` | Linear fade between previous event and target |
-| `exponentialRampToValueAtTime(value, endTime)` | Exponential fade (perceptually even for volume) |
-| `setTargetAtTime(target, startTime, timeConstant)` | Asymptotic approach (good for decay/release) |
-| `setValueCurveAtTime(values, startTime, duration)` | Follow an arbitrary curve |
-| `cancelScheduledValues(cancelTime)` | Cancel all scheduled changes after a time |
-| `cancelAndHoldAtTime(cancelTime)` | Cancel and freeze at the current value |
+| Method                                             | Use case                                        |
+| -------------------------------------------------- | ----------------------------------------------- |
+| `setValueAtTime(value, time)`                      | Instant change at a specific time               |
+| `linearRampToValueAtTime(value, endTime)`          | Linear fade between previous event and target   |
+| `exponentialRampToValueAtTime(value, endTime)`     | Exponential fade (perceptually even for volume) |
+| `setTargetAtTime(target, startTime, timeConstant)` | Asymptotic approach (good for decay/release)    |
+| `setValueCurveAtTime(values, startTime, duration)` | Follow an arbitrary curve                       |
+| `cancelScheduledValues(cancelTime)`                | Cancel all scheduled changes after a time       |
+| `cancelAndHoldAtTime(cancelTime)`                  | Cancel and freeze at the current value          |
 
 ### Volume Fade Example
 
@@ -237,7 +237,11 @@ function createWhiteNoise(audioContext: AudioContext): AudioBuffer {
     output[i] = Math.random() * 2 - 1;
   }
 
-  const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+  const buffer = audioContext.createBuffer(
+    1,
+    bufferSize,
+    audioContext.sampleRate,
+  );
   buffer.copyToChannel(output, 0, 0);
   return buffer;
 }
@@ -258,7 +262,13 @@ Uses the Paul Kellet refined method for a -3dB/octave roll-off:
 function createPinkNoise(audioContext: AudioContext): AudioBuffer {
   const bufferSize = 2 * audioContext.sampleRate;
   const output = new Float32Array(bufferSize);
-  let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+  let b0 = 0,
+    b1 = 0,
+    b2 = 0,
+    b3 = 0,
+    b4 = 0,
+    b5 = 0,
+    b6 = 0;
 
   for (let i = 0; i < bufferSize; i++) {
     const white = Math.random() * 2 - 1;
@@ -272,7 +282,11 @@ function createPinkNoise(audioContext: AudioContext): AudioBuffer {
     b6 = white * 0.115926;
   }
 
-  const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+  const buffer = audioContext.createBuffer(
+    1,
+    bufferSize,
+    audioContext.sampleRate,
+  );
   buffer.copyToChannel(output, 0, 0);
   return buffer;
 }
@@ -295,7 +309,11 @@ function createBrownianNoise(audioContext: AudioContext): AudioBuffer {
     output[i] *= 3.5;
   }
 
-  const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+  const buffer = audioContext.createBuffer(
+    1,
+    bufferSize,
+    audioContext.sampleRate,
+  );
   buffer.copyToChannel(output, 0, 0);
   return buffer;
 }

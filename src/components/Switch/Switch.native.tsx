@@ -34,7 +34,7 @@ export const Switch = memo(function Switch({
   return (
     <View
       accessibilityLabel={accessibilityLabel}
-      accessibilityRole="switch"
+      accessibilityRole='switch'
       accessibilityState={{
         ...accessibilityState,
         checked: displayValue,
@@ -43,7 +43,7 @@ export const Switch = memo(function Switch({
       style={style}
       testID={testID}
     >
-      <Host colorScheme="dark" style={styles.host}>
+      <Host colorScheme='dark' style={styles.host}>
         <ExpoSwitch
           disabled={disabled}
           onValueChange={handleValueChange}

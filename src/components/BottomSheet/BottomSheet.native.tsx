@@ -76,7 +76,7 @@ export function BottomSheet({
           onDismiss();
         }
       }}
-      scrimColor="rgba(0, 0, 0, 0.42)"
+      scrimColor='rgba(0, 0, 0, 0.42)'
       surface={<View style={[StyleSheet.absoluteFill, styles.surface]} />}
     >
       <View testID={testID} style={styles.content}>

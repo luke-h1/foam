@@ -6,7 +6,7 @@ import {
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -40,7 +40,7 @@ type UserActionItem = {
   tone?: 'accent' | 'danger' | 'default' | 'warning';
 };
 
-export function UserActionSheet({
+function UserActionSheetComponent({
   isHidden,
   isHighlighted,
   login,
@@ -140,16 +140,16 @@ export function UserActionSheet({
       onDismiss={onClose}
       showDragIndicator
       snapPoints={snapPoints}
-      testID="user-action-sheet"
+      testID='user-action-sheet'
     >
       <View style={wrapperStyle}>
         <View style={styles.header}>
           <View style={styles.identity}>
             <View style={styles.identityText}>
-              <Text style={styles.eyebrow} weight="semibold">
+              <Text style={styles.eyebrow} weight='semibold'>
                 User actions
               </Text>
-              <Text style={styles.username} weight="semibold" numberOfLines={1}>
+              <Text style={styles.username} weight='semibold' numberOfLines={1}>
                 {username}
               </Text>
               {login && login !== username ? (
@@ -159,9 +159,9 @@ export function UserActionSheet({
               ) : null}
             </View>
           </View>
-          <Button label="Done" style={styles.doneButton} onPress={onClose}>
+          <Button label='Done' style={styles.doneButton} onPress={onClose}>
             <SymbolView
-              name="checkmark"
+              name='checkmark'
               size={18}
               tintColor={theme.color.text.dark}
             />
@@ -171,14 +171,14 @@ export function UserActionSheet({
           <View style={styles.statePills}>
             {isHidden ? (
               <View style={styles.statePill}>
-                <Text style={styles.statePillText} weight="semibold">
+                <Text style={styles.statePillText} weight='semibold'>
                   Hidden
                 </Text>
               </View>
             ) : null}
             {isHighlighted ? (
               <View style={[styles.statePill, styles.statePillAccent]}>
-                <Text style={styles.statePillAccentText} weight="semibold">
+                <Text style={styles.statePillAccentText} weight='semibold'>
                   Highlighted
                 </Text>
               </View>
@@ -225,7 +225,7 @@ export function UserActionSheet({
                 </View>
                 <View style={styles.actionCopy}>
                   <Text
-                    weight="semibold"
+                    weight='semibold'
                     style={[
                       styles.actionText,
                       action.tone === 'danger' && styles.actionTextDanger,
@@ -243,6 +243,8 @@ export function UserActionSheet({
     </BottomSheet>
   );
 }
+
+export const UserActionSheet = memo(UserActionSheetComponent);
 
 const styles = StyleSheet.create({
   actionButton: {

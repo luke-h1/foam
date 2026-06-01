@@ -1,6 +1,3 @@
-/* eslint-disable import/order */
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable no-console */
 const fs = require('fs');
 const semver = require('semver');
 const childProcess = require('child_process');

@@ -67,8 +67,8 @@ export default function ImageBackdrop({
       {showImage && imageUrl ? (
         <View style={[styles.imageContainer, { height: imageHeight }]}>
           <Image
-            contentFit="cover"
-            contentPosition="top"
+            contentFit='cover'
+            contentPosition='top'
             source={imageUrl}
             style={styles.image}
           />

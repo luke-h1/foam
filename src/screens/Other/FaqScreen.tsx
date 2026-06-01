@@ -11,11 +11,11 @@ export function FaqScreen() {
       edges={Platform.OS === 'ios' ? [] : ['top']}
     >
       {Platform.OS === 'ios' ? null : (
-        <ScreenHeader title="FAQ" subtitle="Common questions" size="medium" />
+        <ScreenHeader title='FAQ' subtitle='Common questions' size='medium' />
       )}
       <OtherInfoCard
-        title="The support FAQ is still being rewritten."
-        body="This screen now uses the redesigned shell, but the actual help content still needs a proper authored pass."
+        title='The support FAQ is still being rewritten.'
+        body='This screen now uses the redesigned shell, but the actual help content still needs a proper authored pass.'
       />
     </SafeAreaView>
   );

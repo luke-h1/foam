@@ -137,17 +137,17 @@ export function ChangelogDemoScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader title="Changelog Demo" size="medium" />
+        <ScreenHeader title='Changelog Demo' size='medium' />
 
         <View style={styles.section}>
-          <Text weight="semibold">Module state</Text>
+          <Text weight='semibold'>Module state</Text>
           <View style={styles.stateCard}>
             {stateRows.map(([label, value]) => (
               <View key={label} style={styles.stateRow}>
-                <Text type="xs" color="gray.textLow">
+                <Text type='xs' color='gray.textLow'>
                   {label}
                 </Text>
-                <Text type="xs" variant="mono" style={styles.stateValue}>
+                <Text type='xs' variant='mono' style={styles.stateValue}>
                   {value}
                 </Text>
               </View>
@@ -156,30 +156,30 @@ export function ChangelogDemoScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text weight="semibold">Actions</Text>
+          <Text weight='semibold'>Actions</Text>
           <View style={styles.actions}>
             <Button
-              label="Present app changelog"
+              label='Present app changelog'
               onPress={() => void handlePresentCurrent()}
               style={styles.primaryButton}
             >
-              <Text weight="semibold" style={styles.primaryButtonText}>
+              <Text weight='semibold' style={styles.primaryButtonText}>
                 Present app changelog
               </Text>
             </Button>
             <Button
-              label="Present OTA changelog"
+              label='Present OTA changelog'
               onPress={() => void handlePresentOTA()}
               style={styles.secondaryButton}
             >
-              <Text weight="semibold">Present OTA changelog</Text>
+              <Text weight='semibold'>Present OTA changelog</Text>
             </Button>
             <Button
-              label="Reset seen versions"
+              label='Reset seen versions'
               onPress={handleReset}
               style={styles.secondaryButton}
             >
-              <Text weight="semibold">Reset seen versions</Text>
+              <Text weight='semibold'>Reset seen versions</Text>
             </Button>
           </View>
         </View>

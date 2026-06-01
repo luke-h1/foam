@@ -107,8 +107,8 @@ function renderChatMessage(message: AnyChatMessageType) {
   return (
     <RichChatMessage<'usernotice'>
       {...message}
-      density="compact"
-      currentUsername="luke"
+      density='compact'
+      currentUsername='luke'
       disableEmoteAnimations
     />
   );
@@ -147,8 +147,8 @@ function RichMessageRowsPerfFixture() {
         <RichChatMessage
           key={message.id}
           {...message}
-          density="compact"
-          currentUsername="luke"
+          density='compact'
+          currentUsername='luke'
           disableEmoteAnimations
         />
       ))}

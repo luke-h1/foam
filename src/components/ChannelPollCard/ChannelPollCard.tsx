@@ -4,7 +4,7 @@ import { Badge } from '@app/components/ui/Badge/Badge';
 import { theme } from '@app/styles/themes';
 import type { ChannelPollState } from '@app/types/twitch/poll';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 interface ChannelPollCardProps {
@@ -33,7 +33,10 @@ function formatTimeRemaining(poll: ChannelPollState): string | null {
   return `${remainingSeconds}s left`;
 }
 
-export function ChannelPollCard({ channelLogin, poll }: ChannelPollCardProps) {
+function ChannelPollCardComponent({
+  channelLogin,
+  poll,
+}: ChannelPollCardProps) {
   const timeRemaining = useMemo(() => formatTimeRemaining(poll), [poll]);
   const statusLabel = poll.isActive ? 'Live poll' : 'Poll result';
 
@@ -41,23 +44,23 @@ export function ChannelPollCard({ channelLogin, poll }: ChannelPollCardProps) {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerMeta}>
-          <Badge color="purple" variant="soft">
+          <Badge color='purple' variant='soft'>
             {statusLabel}
           </Badge>
           {poll.channelPointsVotingEnabled ? (
-            <Badge color="amber" variant="soft">
+            <Badge color='amber' variant='soft'>
               +{poll.channelPointsPerVote} pts / extra vote
             </Badge>
           ) : null}
         </View>
         {timeRemaining ? (
-          <Text color="gray.textLow" tabular type="xxs" weight="medium">
+          <Text color='gray.textLow' tabular type='xxs' weight='medium'>
             {timeRemaining}
           </Text>
         ) : null}
       </View>
 
-      <Text color="gray.text" style={styles.title} type="sm" weight="semibold">
+      <Text color='gray.text' style={styles.title} type='sm' weight='semibold'>
         {poll.title}
       </Text>
 
@@ -77,14 +80,14 @@ export function ChannelPollCard({ channelLogin, poll }: ChannelPollCardProps) {
             />
             <View style={styles.choiceContent}>
               <Text
-                color="gray.text"
+                color='gray.text'
                 numberOfLines={1}
-                type="xs"
-                weight="medium"
+                type='xs'
+                weight='medium'
               >
                 {choice.title}
               </Text>
-              <Text color="gray.textLow" tabular type="xxs" weight="semibold">
+              <Text color='gray.textLow' tabular type='xxs' weight='semibold'>
                 {choice.percentage}% · {choice.votes}
               </Text>
             </View>
@@ -93,17 +96,17 @@ export function ChannelPollCard({ channelLogin, poll }: ChannelPollCardProps) {
       </View>
 
       <View style={styles.footer}>
-        <Text color="gray.textLow" tabular type="xxs">
+        <Text color='gray.textLow' tabular type='xxs'>
           {poll.totalVotes} total votes
         </Text>
         {poll.isActive ? (
           <PressableArea
-            accessibilityRole="button"
+            accessibilityRole='button'
             onPress={() =>
               openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
             }
           >
-            <Text color="violet.accent" type="xxs" weight="semibold">
+            <Text color='violet.accent' type='xxs' weight='semibold'>
               Vote on Twitch
             </Text>
           </PressableArea>
@@ -112,6 +115,8 @@ export function ChannelPollCard({ channelLogin, poll }: ChannelPollCardProps) {
     </View>
   );
 }
+
+export const ChannelPollCard = memo(ChannelPollCardComponent);
 
 const styles = StyleSheet.create({
   choiceContent: {

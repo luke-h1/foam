@@ -169,7 +169,7 @@ export const useWebsocket = (
         removeListeners = createOrJoinSocket(
           websocketRef as RefObject<WebSocket>,
           convertedUrl.current,
-          protectedSetReadyState as (readyState: ReadyState) => void,
+          protectedSetReadyState,
           optionsCache,
           protectedSetLastMessage,
           startRef,

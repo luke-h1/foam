@@ -15,10 +15,10 @@ for low-level primitives.
 **Incorrect (JS-based bottom sheet):**
 
 ```tsx
-import BottomSheet from 'custom-js-bottom-sheet'
+import BottomSheet from 'custom-js-bottom-sheet';
 
 function MyScreen() {
-  const sheetRef = useRef<BottomSheet>(null)
+  const sheetRef = useRef<BottomSheet>(null);
 
   return (
     <View style={{ flex: 1 }}>
@@ -29,17 +29,17 @@ function MyScreen() {
         </View>
       </BottomSheet>
     </View>
-  )
+  );
 }
 ```
 
 **Correct (native Modal with formSheet):**
 
 ```tsx
-import { Modal, View, Text, Button } from 'react-native'
+import { Modal, View, Text, Button } from 'react-native';
 
 function MyScreen() {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(false);
 
   return (
     <View style={{ flex: 1 }}>
@@ -55,7 +55,7 @@ function MyScreen() {
         </View>
       </Modal>
     </View>
-  )
+  );
 }
 ```
 

@@ -132,7 +132,7 @@ export function OTADynamicSection() {
           isLoading ? (
             <ActivityIndicator animating />
           ) : (
-            <SymbolView name="arrow.clockwise" tintColor={AC.secondaryLabel} />
+            <SymbolView name='arrow.clockwise' tintColor={AC.secondaryLabel} />
           )
         }
       >

@@ -61,6 +61,7 @@ export const BrandIcon = memo(
     );
   },
 );
+
 BrandIcon.displayName = 'BrandIcon';
 
 function getIconImageStyle({

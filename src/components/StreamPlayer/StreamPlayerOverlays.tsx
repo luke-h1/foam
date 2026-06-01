@@ -21,14 +21,14 @@ export function DebugErrorOverlay({
 
   return (
     <View style={[styles.debugErrorOverlay, { bottom: insets.bottom + 24 }]}>
-      <Text color="red" weight="semibold">
+      <Text color='red' weight='semibold'>
         HTTP {error.statusCode}
       </Text>
-      <Text color="gray.contrast" type="xs" numberOfLines={3}>
+      <Text color='gray.contrast' type='xs' numberOfLines={3}>
         {error.url}
       </Text>
       <Button onPress={onDismiss} style={styles.debugDismissButton}>
-        <Text color="gray.contrast" type="xs">
+        <Text color='gray.contrast' type='xs'>
           Dismiss
         </Text>
       </Button>
@@ -46,10 +46,10 @@ export function ControlsTriggerButton({ onPress }: { onPress: () => void }) {
         styles.controlsTriggerButton,
         { top: insets.top + theme.space12 },
       ]}
-      accessibilityLabel="Show player controls"
-      accessibilityRole="button"
+      accessibilityLabel='Show player controls'
+      accessibilityRole='button'
     >
-      <SymbolView name="ellipsis" size={24} tintColor={theme.colorWhite} />
+      <SymbolView name='ellipsis' size={24} tintColor={theme.colorWhite} />
     </PressableArea>
   );
 }
@@ -63,8 +63,8 @@ export function TouchBlockOverlay({
     <GestureDetector gesture={gesture}>
       <View
         style={styles.touchBlockOverlay}
-        accessibilityLabel="Show player controls"
-        accessibilityRole="button"
+        accessibilityLabel='Show player controls'
+        accessibilityRole='button'
       />
     </GestureDetector>
   );

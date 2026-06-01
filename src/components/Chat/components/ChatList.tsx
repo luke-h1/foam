@@ -1,10 +1,9 @@
-import type { ListRenderItem } from '@app/components/FlashList/FlashList';
-import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import {
-  LegendList,
-  type LegendListRef,
-  type LegendListRenderItemProps,
-} from '@legendapp/list';
+  FlashList,
+  type FlashListRef,
+  type ListRenderItem,
+} from '@app/components/FlashList/FlashList';
+import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { memo, RefObject, useCallback, useEffect, useRef } from 'react';
 import {
   NativeSyntheticEvent,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import { getChatMessageListKey } from '../util/chatMessages';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
@@ -24,19 +24,18 @@ import {
 const CHAT_DRAW_DISTANCE = 960;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_ESTIMATED_ITEM_SIZE = 18;
-const CHAT_INITIAL_CONTAINER_POOL_RATIO = 3;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 };
 const CHAT_MAINTAIN_SCROLL_AT_END = {
-  onDataChange: true,
-  onItemLayout: true,
-  onLayout: true,
+  animateAutoScrollToBottom: false,
+  autoscrollToBottomThreshold: 0.001,
+  startRenderingFromBottom: true,
 };
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
-    <View style={styles.skeletonRow} testID="chat-row-skeleton">
+    <View style={styles.skeletonRow} testID='chat-row-skeleton'>
       <Skeleton style={styles.skeletonBadge} />
       <Skeleton style={styles.skeletonUsername} />
       <Skeleton
@@ -52,9 +51,11 @@ function ChatListRowSkeleton({ index }: { index: number }) {
   );
 }
 
+export type ChatListRef = FlashListRef<AnyChatMessageType | undefined>;
+
 interface ChatListProps {
   data: AnyChatMessageType[];
-  listRef: RefObject<LegendListRef | null>;
+  listRef: RefObject<ChatListRef | null>;
   shouldMaintainScrollAtEnd: boolean;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -65,11 +66,6 @@ interface ChatListProps {
   renderItem: ListRenderItem<AnyChatMessageType | undefined>;
   keyExtractor: (item: AnyChatMessageType | undefined, index: number) => string;
   getItemType: (item: AnyChatMessageType | undefined) => string;
-  getEstimatedItemSize?: (
-    index: number,
-    item: AnyChatMessageType | undefined,
-    type: string | undefined,
-  ) => number;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
@@ -89,15 +85,16 @@ export const ChatList = memo(
     renderItem,
     keyExtractor,
     getItemType,
-    getEstimatedItemSize,
     contentContainerStyle,
     extraData,
     onViewableMessagesChange,
   }: ChatListProps) => {
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
+    const lastViewableMessageKeysRef = useRef('');
 
     useEffect(() => {
       onViewableMessagesChangeRef.current = onViewableMessagesChange;
+      lastViewableMessageKeysRef.current = '';
     }, [onViewableMessagesChange]);
 
     const onViewableItemsChangedRef = useRef(
@@ -108,6 +105,13 @@ export const ChatList = memo(
         }
 
         const messages = getViewableChatMessages(viewableItems);
+        const viewableMessageKeys = messages
+          .map(getChatMessageListKey)
+          .join('\u001f');
+        if (viewableMessageKeys === lastViewableMessageKeysRef.current) {
+          return;
+        }
+        lastViewableMessageKeysRef.current = viewableMessageKeys;
 
         if (messages.length > 0) {
           callback(messages);
@@ -115,20 +119,17 @@ export const ChatList = memo(
       },
     );
 
-    const renderLegendItem = useCallback(
+    const renderFlashListItem = useCallback(
       ({
         item,
         index,
-        extraData: legendExtraData,
-      }: LegendListRenderItemProps<
-        AnyChatMessageType | undefined,
-        string | undefined
-      >) => {
+        extraData: flashListExtraData,
+      }: Parameters<ListRenderItem<AnyChatMessageType | undefined>>[0]) => {
         const row = renderItem({
           item,
           index,
           target: 'Cell',
-          extraData: legendExtraData,
+          extraData: flashListExtraData,
         });
 
         return row ?? <ChatListRowSkeleton index={index} />;
@@ -137,21 +138,17 @@ export const ChatList = memo(
     );
 
     return (
-      <LegendList
+      <FlashList
         data={data}
         ref={listRef}
-        recycleItems
-        estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
         drawDistance={CHAT_DRAW_DISTANCE}
-        initialContainerPoolRatio={CHAT_INITIAL_CONTAINER_POOL_RATIO}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        getEstimatedItemSize={getEstimatedItemSize}
-        maintainVisibleContentPosition
-        maintainScrollAtEnd={
-          shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
+        maintainVisibleContentPosition={
+          shouldMaintainScrollAtEnd
+            ? CHAT_MAINTAIN_SCROLL_AT_END
+            : { disabled: true }
         }
-        maintainScrollAtEndThreshold={0.001}
         onScroll={handleScroll}
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}
@@ -159,7 +156,7 @@ export const ChatList = memo(
         onEndReached={handleEndReached}
         onEndReachedThreshold={CHAT_END_REACHED_THRESHOLD}
         onContentSizeChange={handleContentSizeChange}
-        renderItem={renderLegendItem}
+        renderItem={renderFlashListItem}
         extraData={extraData}
         style={styles.list}
         contentContainerStyle={contentContainerStyle}

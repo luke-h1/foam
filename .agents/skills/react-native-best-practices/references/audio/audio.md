@@ -120,7 +120,9 @@ Use `decodeAudioData` to load audio from files, URLs, ArrayBuffers, or bundled a
 
 ```tsx
 // From a URL or local file path
-const buffer = await audioContext.decodeAudioData('https://example.com/audio.mp3');
+const buffer = await audioContext.decodeAudioData(
+  'https://example.com/audio.mp3',
+);
 
 // From an ArrayBuffer
 const buffer = await audioContext.decodeAudioData(arrayBuffer);
@@ -134,7 +136,12 @@ The audio is automatically resampled to match the context's `sampleRate`. Pass a
 For base64-encoded PCM data, use `decodePCMInBase64`:
 
 ```tsx
-const buffer = await audioContext.decodePCMInBase64(base64String, 44100, 2, true);
+const buffer = await audioContext.decodePCMInBase64(
+  base64String,
+  44100,
+  2,
+  true,
+);
 ```
 
 For full format support details, webfetch the [decoding docs](https://docs.swmansion.com/react-native-audio-api/docs/utils/decoding).

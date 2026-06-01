@@ -53,6 +53,7 @@ Create the app in App Store Connect first. Bundle ID must match.
 Use `autoIncrement: true` in `eas.json`. Problem solved.
 
 **Credentials issues**
+
 ```bash
 eas credentials -p ios
 ```

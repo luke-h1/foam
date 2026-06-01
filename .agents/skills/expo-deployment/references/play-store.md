@@ -74,12 +74,12 @@ Then reference in `eas.json`:
 
 Google Play uses tracks for staged rollouts:
 
-| Track | Purpose |
-|-------|---------|
-| `internal` | Internal testing (up to 100 testers) |
-| `alpha` | Closed testing |
-| `beta` | Open testing |
-| `production` | Public release |
+| Track        | Purpose                              |
+| ------------ | ------------------------------------ |
+| `internal`   | Internal testing (up to 100 testers) |
+| `alpha`      | Closed testing                       |
+| `beta`       | Open testing                         |
+| `production` | Public release                       |
 
 ### Track Configuration
 

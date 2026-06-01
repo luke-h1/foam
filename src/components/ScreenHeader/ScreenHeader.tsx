@@ -151,7 +151,7 @@ export function ScreenHeader({
             <Image
               source={backgroundImage}
               style={styles.heroBackgroundImage}
-              contentFit="cover"
+              contentFit='cover'
             />
             <LinearGradient
               colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.85)', 'rgba(0,0,0,1)']}
@@ -171,9 +171,9 @@ export function ScreenHeader({
             {back && (
               <IconButton
                 icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
-                label="goBack"
+                label='goBack'
                 onPress={handleBack}
-                size="2xl"
+                size='2xl'
                 hitSlop={12}
               />
             )}
@@ -232,9 +232,9 @@ export function ScreenHeader({
           {back && (
             <IconButton
               icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
-              label="goBack"
+              label='goBack'
               onPress={handleBack}
-              size="2xl"
+              size='2xl'
               hitSlop={12}
               style={styles.backButton}
             />
@@ -274,7 +274,7 @@ export function ScreenHeader({
           {subtitle && (
             <Text
               type={subtitleTypeValue}
-              weight="semibold"
+              weight='semibold'
               color={subtitleColor}
               style={styles.standardEyebrow}
               numberOfLines={1}

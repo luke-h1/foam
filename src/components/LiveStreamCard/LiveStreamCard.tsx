@@ -92,12 +92,12 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               transition={150}
             />
             <View style={styles.liveBadge}>
-              <Text type="xxs" weight="bold" style={styles.liveBadgeText}>
+              <Text type='xxs' weight='bold' style={styles.liveBadgeText}>
                 LIVE
               </Text>
             </View>
             <View style={styles.viewerBadge}>
-              <Text type="sm" weight="bold" style={styles.viewerBadgeText}>
+              <Text type='sm' weight='bold' style={styles.viewerBadgeText}>
                 {formatViewCount(stream.viewer_count)} watching
               </Text>
             </View>
@@ -119,7 +119,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 />
               ) : (
                 <View style={styles.avatarFallback}>
-                  <Text type="md" weight="bold" style={styles.avatarInitial}>
+                  <Text type='md' weight='bold' style={styles.avatarInitial}>
                     {avatarInitial}
                   </Text>
                 </View>
@@ -128,18 +128,18 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
             <View style={styles.mediaTextColumn}>
               <Text
-                type="md"
-                weight="bold"
+                type='md'
+                weight='bold'
                 numberOfLines={1}
-                variant="mono"
+                variant='mono'
                 style={styles.title}
               >
                 {stream.title}
               </Text>
               <PressableArea onPress={handleCategoryPress} hitSlop={6}>
                 <Text
-                  type="sm"
-                  weight="medium"
+                  type='sm'
+                  weight='medium'
                   style={styles.mediaCategory}
                   numberOfLines={1}
                 >
@@ -151,13 +151,13 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 onPressIn={handleStreamerPressIn}
                 hitSlop={6}
               >
-                <Text type="sm" style={styles.mediaUsername} numberOfLines={1}>
+                <Text type='sm' style={styles.mediaUsername} numberOfLines={1}>
                   {stream.user_name}
                 </Text>
               </PressableArea>
               {languageLabel ? (
                 <View style={styles.mediaTag}>
-                  <Text type="xs" weight="medium" style={styles.mediaTagText}>
+                  <Text type='xs' weight='medium' style={styles.mediaTagText}>
                     {languageLabel}
                   </Text>
                 </View>
@@ -202,7 +202,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 style={[styles.categoryBadge, styles.categoryBadgeText]}
                 hitSlop={4}
               >
-                <Text type="xxs" style={styles.categoryText}>
+                <Text type='xxs' style={styles.categoryText}>
                   {stream.game_name}
                 </Text>
               </PressableArea>
@@ -227,14 +227,14 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
           >
             <View style={styles.liveMeta}>
               <View style={styles.redDot} />
-              <Text type="xxs" style={styles.liveText}>
+              <Text type='xxs' style={styles.liveText}>
                 {elapsedStreamTime(stream.started_at)}
               </Text>
             </View>
-            <Text type="xxs" style={styles.metaDivider}>
+            <Text type='xxs' style={styles.metaDivider}>
               •
             </Text>
-            <Text type="xxs" style={styles.viewersText}>
+            <Text type='xxs' style={styles.viewersText}>
               {formatViewCount(stream.viewer_count)} watching
             </Text>
           </View>
@@ -248,7 +248,7 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               ]}
               hitSlop={4}
             >
-              <Text type="xxs" style={styles.categoryText}>
+              <Text type='xxs' style={styles.categoryText}>
                 {stream.game_name}
               </Text>
             </PressableArea>

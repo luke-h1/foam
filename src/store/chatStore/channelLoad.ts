@@ -19,7 +19,7 @@ import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { batch } from '@legendapp/state';
 
 import { getPreferences } from '../preferenceStore';
-import { clearPaintsAndBadges } from './cosmetics';
+import { clearUserCosmeticsCache } from './cosmetics';
 import type { ChannelCacheType } from './constants';
 import {
   BADGE_CACHE_DURATION,
@@ -1050,8 +1050,8 @@ export const clearChatCosmeticsCache = (): void => {
     chatStore$.bits.set([]);
     chatStore$.ttvUsers.set([]);
     chatStore$.messages.set([]);
-    clearPaintsAndBadges();
   });
+  clearUserCosmeticsCache();
   clearPersonalEmotesCache();
   clearEmoteImageCache();
   void clearChatStorePersistence();

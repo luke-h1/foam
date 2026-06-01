@@ -15,7 +15,6 @@ const unavailableModule: ICloudSyncNativeModule = {
   },
 };
 
-export default (
-  requireOptionalNativeModule<ICloudSyncNativeModule>('ICloudSync') ??
-  unavailableModule
-);
+export default requireOptionalNativeModule<ICloudSyncNativeModule>(
+  'ICloudSync',
+) ?? unavailableModule;

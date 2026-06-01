@@ -13,6 +13,7 @@ import {
   UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
 import { recordWarning } from '@app/lib/sentry';
+import { storageService } from '@app/lib/storage';
 import type {
   EmoteImageVariantSet,
   EmoteImageVariants,
@@ -208,6 +209,56 @@ export interface UserCosmeticsInfo {
   badge: V4Badge | null;
 }
 
+const SEVEN_TV_USER_ID_CACHE_PREFIX = 'user-id:';
+// Keep persisted 7TV user ID lookups for at most 12 hours before resolving again.
+const SEVEN_TV_USER_ID_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+const SEVEN_TV_USER_ID_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
+const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
+
+type CachedSevenTvUserId = {
+  expiresAt: number;
+  userId: string;
+};
+
+const sevenTvUserIdRequests = new Map<string, Promise<string>>();
+
+const getSevenTvUserIdStorageKey = (twitchUserId: string) =>
+  `sevenTvUserId_${SEVEN_TV_USER_ID_CACHE_PREFIX}${twitchUserId}` as const;
+
+function getCachedSevenTvUserId(twitchUserId: string): string | undefined {
+  const cached = storageService.getString<CachedSevenTvUserId>(
+    getSevenTvUserIdStorageKey(twitchUserId),
+    SEVEN_TV_CACHE_NAMESPACE,
+  );
+  if (!cached) {
+    return undefined;
+  }
+  return cached.userId;
+}
+
+function cacheSevenTvUserId(twitchUserId: string, userId: string) {
+  const cached: CachedSevenTvUserId = {
+    expiresAt:
+      Date.now() +
+      (userId
+        ? SEVEN_TV_USER_ID_CACHE_TTL_MS
+        : SEVEN_TV_USER_ID_NEGATIVE_CACHE_TTL_MS),
+    userId,
+  };
+
+  storageService.set(
+    getSevenTvUserIdStorageKey(twitchUserId),
+    cached,
+    SEVEN_TV_CACHE_NAMESPACE,
+    { expiry: new Date(cached.expiresAt) },
+  );
+}
+
+export const clearSevenTvUserIdCache = () => {
+  sevenTvUserIdRequests.clear();
+  storageService.clearNamespace(SEVEN_TV_CACHE_NAMESPACE, 'sevenTvUserId_');
+};
+
 /**
  * Pick the best file from a v3 REST host.files array.
  * Prefers 4x AVIF > 3x AVIF > 2x AVIF > 1x AVIF, then any available.
@@ -309,34 +360,55 @@ function pickBestStaticImage(images: readonly Image[]): Image | undefined {
 
 export const sevenTvService = {
   get7tvUserId: async (twitchUserId: string): Promise<string> => {
-    const { data, error } = await sevenTvV4Client.query<
-      UserByConnectionQuery,
-      UserByConnectionQueryVariables
-    >({
-      query: UserByConnectionDocument,
-      variables: { platformId: twitchUserId },
-    });
-
-    if (error) {
-      logger.stv.warn(
-        `Failed to resolve 7TV user for Twitch user ${twitchUserId}:`,
-        error.message,
-      );
-      recordWarning({
-        name: 'seven_tv_provider_warning',
-        message: 'Failed to resolve 7TV user',
-        params: {
-          action: 'user_by_connection_failed',
-          provider: 'seven_tv',
-          resource_type: 'user',
-          twitch_user_id: twitchUserId,
-        },
-        warningCause: error,
-      });
-      return '';
+    const cached = getCachedSevenTvUserId(twitchUserId);
+    if (cached !== undefined) {
+      return cached;
     }
 
-    return data?.users?.userByConnection?.id ?? '';
+    const pending = sevenTvUserIdRequests.get(twitchUserId);
+    if (pending) {
+      return pending;
+    }
+
+    const request = (async () => {
+      const { data, error } = await sevenTvV4Client.query<
+        UserByConnectionQuery,
+        UserByConnectionQueryVariables
+      >({
+        query: UserByConnectionDocument,
+        variables: { platformId: twitchUserId },
+      });
+
+      if (error) {
+        logger.stv.warn(
+          `Failed to resolve 7TV user for Twitch user ${twitchUserId}:`,
+          error.message,
+        );
+        recordWarning({
+          name: 'seven_tv_provider_warning',
+          message: 'Failed to resolve 7TV user',
+          params: {
+            action: 'user_by_connection_failed',
+            provider: 'seven_tv',
+            resource_type: 'user',
+            twitch_user_id: twitchUserId,
+          },
+          warningCause: error,
+        });
+        return '';
+      }
+
+      const userId = data?.users?.userByConnection?.id ?? '';
+      cacheSevenTvUserId(twitchUserId, userId);
+      return userId;
+    })();
+
+    sevenTvUserIdRequests.set(twitchUserId, request);
+    try {
+      return await request;
+    } finally {
+      sevenTvUserIdRequests.delete(twitchUserId);
+    }
   },
 
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {

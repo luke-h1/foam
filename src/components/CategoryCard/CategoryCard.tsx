@@ -40,7 +40,7 @@ export function CategoryCard({ category }: Props) {
             ?.replace('{width}', String(IMAGE_SOURCE_WIDTH))
             ?.replace('{height}', String(IMAGE_SOURCE_HEIGHT))}
           style={styles.image}
-          contentFit="cover"
+          contentFit='cover'
         />
         <Text numberOfLines={TITLE_MAX_LINES} style={styles.title}>
           {category.name}

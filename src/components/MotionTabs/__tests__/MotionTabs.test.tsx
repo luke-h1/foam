@@ -144,7 +144,7 @@ describe('MotionTabs', () => {
 
     const { getByLabelText } = render(
       <TabToolbar
-        activeKey="settings"
+        activeKey='settings'
         colors={colors}
         items={items}
         onPress={onPress}

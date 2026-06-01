@@ -5,14 +5,14 @@ import * as Clipboard from 'expo-clipboard';
 import { forwardRef, memo, useCallback, useImperativeHandle } from 'react';
 import { toast } from 'sonner-native';
 
-import type {
+import type { EmotePickerItem } from './EmoteSheet/EmoteSheet';
+import { ChatOverlayLayer } from './ChatOverlayLayer';
+import {
   BadgePressData,
   EmotePressData,
   MessageActionData,
   UsernamePressData,
-} from './ChatMessage/RichChatMessage';
-import type { EmotePickerItem } from './EmoteSheet/EmoteSheet';
-import { ChatOverlayLayer } from './ChatOverlayLayer';
+} from './ChatMessage/RichChatMessage.types';
 
 export interface ChatOverlayControllerHandle {
   openBadge: (badge: BadgePressData) => void;
@@ -37,6 +37,7 @@ interface ChatOverlayControllerProps {
   hideUserFromView: (username?: string) => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
+  onClearSevenTvCosmeticsCache: () => void;
   onInsertEmote: (item: EmotePickerItem) => void;
   onPinMessage: (message: MessageActionData<'usernotice'>) => void;
   onRefreshPinnedMessage: (messageId: string) => void;
@@ -98,6 +99,7 @@ export const ChatOverlayController = memo(
         hideUserFromView,
         onClearChatCache,
         onClearImageCache,
+        onClearSevenTvCosmeticsCache,
         onInsertEmote,
         onPinMessage,
         onRefreshPinnedMessage,
@@ -122,7 +124,7 @@ export const ChatOverlayController = memo(
       ref,
     ) => {
       const overlay$ = useObservable(createEmptyOverlayState(channelId));
-      const overlay = useSelector(overlay$) as ChatOverlayState;
+      const overlay = useSelector(overlay$);
       const {
         isEmoteSheetMounted,
         isSettingsSheetMounted,
@@ -459,6 +461,7 @@ export const ChatOverlayController = memo(
           onBanSelectedUser={handleBanSelectedUser}
           onClearChatCache={onClearChatCache}
           onClearImageCache={onClearImageCache}
+          onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
           onCloseSelectedBadge={handleCloseSelectedBadge}
           onCloseSelectedEmote={handleCloseSelectedEmote}
           onCloseSelectedMessage={handleCloseSelectedMessage}

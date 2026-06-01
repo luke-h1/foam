@@ -8,7 +8,7 @@ describe('SettingsToggleRow', () => {
 
     const { getByLabelText } = render(
       <SettingsToggleRow
-        title="Show Timestamps"
+        title='Show Timestamps'
         value
         onValueChange={onValueChange}
       />,
@@ -26,7 +26,7 @@ describe('SettingsToggleRow', () => {
 
     const { getByLabelText, rerender } = render(
       <SettingsToggleRow
-        title="Show Jump Pill"
+        title='Show Jump Pill'
         value
         onValueChange={onValueChange}
       />,
@@ -38,7 +38,7 @@ describe('SettingsToggleRow', () => {
 
     rerender(
       <SettingsToggleRow
-        title="Show Jump Pill"
+        title='Show Jump Pill'
         value={false}
         onValueChange={onValueChange}
       />,

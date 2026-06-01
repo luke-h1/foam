@@ -2,21 +2,24 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "allowJs": true,
-    "lib": [
-      "dom",
-      "esnext"
-    ],
+    "lib": ["dom", "esnext"],
+    "strict": true,
     "alwaysStrict": true,
     "noUncheckedIndexedAccess": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "noImplicitAny": true,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
     "strictNullChecks": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "useUnknownInCatchVariables": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "noUncheckedSideEffectImports": true,
     "resolveJsonModule": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
@@ -24,24 +27,10 @@
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "paths": {
-      "@app/*": [
-        "./src/*"
-      ],
-      "@e2e/*": [
-        "./e2e/*"
-      ]
+      "@app/*": ["./src/*"],
+      "@e2e/*": ["./e2e/*"]
     }
   },
-  "include": [
-    "assets",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "app.config.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "node_modules/expo-file-system/**/*",
-    "modules"
-  ]
+  "include": ["assets", "**/*.ts", "**/*.tsx", "**/*.js", "app.config.ts"],
+  "exclude": ["node_modules", "node_modules/expo-file-system/**/*", "modules"]
 }

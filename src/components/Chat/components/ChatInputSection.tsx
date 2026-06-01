@@ -183,7 +183,7 @@ export const ChatInputSection = memo(
               hitSlop={createHitslop(20)}
             >
               <SymbolView
-                name="xmark"
+                name='xmark'
                 size={18}
                 tintColor={theme.colorGreyHoverAlpha}
               />
@@ -201,7 +201,7 @@ export const ChatInputSection = memo(
                 hitSlop={createHorizontalHitslop(44)}
               >
                 <SymbolView
-                  name="face.smiling"
+                  name='face.smiling'
                   size={22}
                   tintColor={theme.colorGreyHoverAlpha}
                 />
@@ -215,14 +215,14 @@ export const ChatInputSection = memo(
                   onEmoteSelect={handleEmoteSelect}
                   placeholder={inputPlaceholder}
                   editable={isAuthenticated}
-                  autoComplete="off"
-                  autoCapitalize="none"
+                  autoComplete='off'
+                  autoCapitalize='none'
                   autoCorrect={false}
                   blurOnSubmit
-                  placeholderTextColor="#8E8E93"
+                  placeholderTextColor='#8E8E93'
                   onSubmitEditing={onSubmit}
-                  returnKeyType="send"
-                  submitBehavior="blurAndSubmit"
+                  returnKeyType='send'
+                  submitBehavior='blurAndSubmit'
                   prioritizeChannelEmotes
                 />
               </View>
@@ -240,7 +240,7 @@ export const ChatInputSection = memo(
                   hitSlop={createHorizontalHitslop(44)}
                 >
                   <SymbolView
-                    name="mappin"
+                    name='mappin'
                     size={20}
                     tintColor={
                       pinNextMessage ? '#fff' : theme.colorGreyHoverAlpha
@@ -255,7 +255,7 @@ export const ChatInputSection = memo(
                 hitSlop={createHorizontalHitslop(44)}
               >
                 <SymbolView
-                  name="gearshape"
+                  name='gearshape'
                   size={22}
                   tintColor={theme.colorGreyHoverAlpha}
                 />
@@ -271,7 +271,7 @@ export const ChatInputSection = memo(
                 hitSlop={createHitslop(20)}
               >
                 <SymbolView
-                  name="arrow.up"
+                  name='arrow.up'
                   size={20}
                   tintColor={canSend ? '#fff' : theme.colorGreyHoverAlpha}
                 />

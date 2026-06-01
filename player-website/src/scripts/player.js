@@ -393,7 +393,6 @@ function createPlayer() {
       emitMuteState();
     },
   };
-
 }
 
 if (window.Twitch?.Player) {

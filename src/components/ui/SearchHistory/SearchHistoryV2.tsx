@@ -115,7 +115,7 @@ function SwipeableHistoryItem({
             style={styles.deleteActionButton}
             hitSlop={8}
           >
-            <SymbolView name="trash" size={20} tintColor="#fff" />
+            <SymbolView name='trash' size={20} tintColor='#fff' />
           </PressableArea>
         </Animated.View>
 
@@ -123,7 +123,7 @@ function SwipeableHistoryItem({
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.historyItem, animatedRowStyle]}>
             <SymbolView
-              name="clock"
+              name='clock'
               tintColor={theme.color.textSecondary.dark}
               size={16}
             />
@@ -131,7 +131,7 @@ function SwipeableHistoryItem({
               {query}
             </Text>
             <SymbolView
-              name="arrow.up.left"
+              name='arrow.up.left'
               tintColor={theme.color.textSecondary.dark}
               size={16}
             />
@@ -181,15 +181,15 @@ export function SearchHistoryV2({
     <View style={styles.wrapper}>
       <View style={styles.headerRow}>
         <Text
-          type="xs"
-          weight="semibold"
-          color="gray.textLow"
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
           style={styles.sectionTitle}
         >
           RECENT SEARCHES
         </Text>
         <PressableArea onPress={handleClearAll} hitSlop={8}>
-          <Text type="xs" color="red.accent">
+          <Text type='xs' color='red.accent'>
             Clear All
           </Text>
         </PressableArea>
@@ -206,7 +206,7 @@ export function SearchHistoryV2({
         ))}
       </View>
 
-      <Text type="xxs" color="gray.textLow" style={styles.hint}>
+      <Text type='xxs' color='gray.textLow' style={styles.hint}>
         Swipe left to delete
       </Text>
     </View>

@@ -18,7 +18,6 @@ const fallbackModule: NativeCoreHapticsModule = {
   },
 };
 
-export default (
-  requireOptionalNativeModule<NativeCoreHapticsModule>('NativeCoreHaptics') ??
-  fallbackModule
-);
+export default requireOptionalNativeModule<NativeCoreHapticsModule>(
+  'NativeCoreHaptics',
+) ?? fallbackModule;

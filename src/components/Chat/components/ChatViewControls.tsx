@@ -35,7 +35,7 @@ export const ChatViewControls = memo(
               onPress={onToggleShowOnlyMentions}
             >
               <SymbolView
-                name="at"
+                name='at'
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />
@@ -44,7 +44,7 @@ export const ChatViewControls = memo(
 
             <Button style={styles.clearChip} onPress={onClearFilters}>
               <SymbolView
-                name="xmark"
+                name='xmark'
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />

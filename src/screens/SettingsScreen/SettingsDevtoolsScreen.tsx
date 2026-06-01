@@ -29,11 +29,11 @@ function IosToggleRow({
   return (
     <View style={styles.iosToggleRow}>
       <View style={styles.iosToggleCopy}>
-        <Text color="gray" style={styles.iosToggleLabel} weight="semibold">
+        <Text color='gray' style={styles.iosToggleLabel} weight='semibold'>
           {label}
         </Text>
         {subtitle ? (
-          <Text color="gray.textLow" style={styles.iosToggleSubtitle} type="xs">
+          <Text color='gray.textLow' style={styles.iosToggleSubtitle} type='xs'>
             {subtitle}
           </Text>
         ) : null}
@@ -57,62 +57,62 @@ export function SettingsDevtoolsScreen() {
     return (
       <View style={styles.container}>
         <BodyScrollView
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           contentContainerStyle={styles.iosContent}
         >
-          <Form.Section title="Diagnostics">
+          <Form.Section title='Diagnostics'>
             <Form.Link
-              systemImage="stethoscope"
+              systemImage='stethoscope'
               onPress={() => router.push('/tabs/settings/diagnostics')}
             >
               App Diagnostics
             </Form.Link>
             <Form.Link
-              systemImage="cloud"
+              systemImage='cloud'
               onPress={() => router.push('/tabs/settings/remote-config')}
             >
               Remote Config
             </Form.Link>
           </Form.Section>
-          <Form.Section title="Stream Diagnostics">
+          <Form.Section title='Stream Diagnostics'>
             <Form.FormItem style={styles.iosToggleItem}>
               <IosToggleRow
-                label="Disable Stream"
-                subtitle="Remove the Twitch WebView to isolate chat performance"
+                label='Disable Stream'
+                subtitle='Remove the Twitch WebView to isolate chat performance'
                 value={disableStream}
                 onValueChange={value => update({ disableStream: value })}
               />
             </Form.FormItem>
             <Form.FormItem style={styles.iosToggleItem}>
               <IosToggleRow
-                label="Disable Chat"
-                subtitle="Remove chat rendering to isolate the player"
+                label='Disable Chat'
+                subtitle='Remove chat rendering to isolate the player'
                 value={disableChat}
                 onValueChange={value => update({ disableChat: value })}
               />
             </Form.FormItem>
           </Form.Section>
-          <Form.Section title="Developer Tools">
+          <Form.Section title='Developer Tools'>
             <Form.Link
-              systemImage="ladybug"
+              systemImage='ladybug'
               onPress={() => router.push('/tabs/settings/debug')}
             >
               Debug
             </Form.Link>
             <Form.Link
-              systemImage="photo.stack"
+              systemImage='photo.stack'
               onPress={() => router.push('/tabs/settings/cached-images')}
             >
               Cached Images
             </Form.Link>
             <Form.Link
-              systemImage="list.bullet.rectangle"
+              systemImage='list.bullet.rectangle'
               onPress={() => router.push('/dev-tools/changelog')}
             >
               Changelog Demo
             </Form.Link>
             <Form.Link
-              systemImage="book.closed"
+              systemImage='book.closed'
               onPress={() => router.push('/tabs/settings/storybook')}
             >
               Storybook
@@ -127,70 +127,70 @@ export function SettingsDevtoolsScreen() {
     <View style={styles.container}>
       <ScrollView
         ref={scrollRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         <ScreenHeader
-          title="Dev Tools"
-          subtitle="Diagnostics and internal tools for inspecting app state and behavior."
-          size="medium"
+          title='Dev Tools'
+          subtitle='Diagnostics and internal tools for inspecting app state and behavior.'
+          size='medium'
         />
 
-        <SettingsSection title="Diagnostics">
+        <SettingsSection title='Diagnostics'>
           <SettingsLinkRow
-            title="App Diagnostics"
-            subtitle="Version, environment, and runtime details"
+            title='App Diagnostics'
+            subtitle='Version, environment, and runtime details'
             icon={{ icon: 'stethoscope', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/diagnostics')}
           />
           <SettingsLinkRow
-            title="Remote Config"
-            subtitle="Inspect fetched config and local overrides"
+            title='Remote Config'
+            subtitle='Inspect fetched config and local overrides'
             icon={{ icon: 'cloud', color: theme.colorPlum }}
             onPress={() => router.push('/tabs/settings/remote-config')}
           />
         </SettingsSection>
 
-        <SettingsSection title="Stream Diagnostics">
+        <SettingsSection title='Stream Diagnostics'>
           <SettingsToggleRow
-            title="Disable Stream"
-            subtitle="Remove the Twitch WebView to isolate chat performance"
+            title='Disable Stream'
+            subtitle='Remove the Twitch WebView to isolate chat performance'
             icon={{ icon: 'video.slash', color: theme.colorOrange }}
             value={disableStream}
             onValueChange={value => update({ disableStream: value })}
           />
           <SettingsToggleRow
-            title="Disable Chat"
-            subtitle="Remove chat rendering to isolate the player"
+            title='Disable Chat'
+            subtitle='Remove chat rendering to isolate the player'
             icon={{ icon: 'message', color: theme.colorPlum }}
             value={disableChat}
             onValueChange={value => update({ disableChat: value })}
           />
         </SettingsSection>
 
-        <SettingsSection title="Developer Tools">
+        <SettingsSection title='Developer Tools'>
           <SettingsLinkRow
-            title="Debug"
-            subtitle="Manual debug helpers and experiments"
+            title='Debug'
+            subtitle='Manual debug helpers and experiments'
             icon={{ icon: 'ladybug', color: theme.colorOrange }}
             onPress={() => router.push('/tabs/settings/debug')}
           />
           <SettingsLinkRow
-            title="Cached Images"
-            subtitle="Inspect and manage emote and badge media cache"
+            title='Cached Images'
+            subtitle='Inspect and manage emote and badge media cache'
             icon={{ icon: 'photo.stack', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/cached-images')}
           />
           <SettingsLinkRow
-            title="Changelog Demo"
-            subtitle="Present sample native changelog payloads"
+            title='Changelog Demo'
+            subtitle='Present sample native changelog payloads'
             icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
             onPress={() => router.push('/dev-tools/changelog')}
           />
           <SettingsLinkRow
-            title="Storybook"
-            subtitle="Component previews and design-system inspection"
+            title='Storybook'
+            subtitle='Component previews and design-system inspection'
             icon={{ icon: 'book.closed', color: theme.colorTeal }}
             onPress={() => router.push('/tabs/settings/storybook')}
           />

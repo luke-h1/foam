@@ -6,7 +6,7 @@ describe('LiveStreamImage', () => {
   const thumbnail = 'https://example.com/thumbnail.jpg';
 
   test('renders correctly ', () => {
-    render(<LiveStreamImage thumbnail={thumbnail} size="lg" />);
+    render(<LiveStreamImage thumbnail={thumbnail} size='lg' />);
 
     expect(screen.getByTestId('LiveStreamImage-image')).toBeOnTheScreen();
   });

@@ -191,7 +191,7 @@ export function ComparisonSlider({
     <View style={[styles.container, style]}>
       <Animated.View style={[styles.fullScreen, layerBStyle]}>
         <Image
-          contentFit="cover"
+          contentFit='cover'
           source={layerBPair.before}
           style={styles.image}
           transition={0}
@@ -200,7 +200,7 @@ export function ComparisonSlider({
 
       <Animated.View style={[styles.fullScreen, layerAStyle]}>
         <Image
-          contentFit="cover"
+          contentFit='cover'
           source={layerAPair.before}
           style={styles.image}
           transition={0}
@@ -210,7 +210,7 @@ export function ComparisonSlider({
       <Animated.View style={[styles.afterContainer, afterClipStyle]}>
         <Animated.View style={[styles.afterInner, layerBStyle]}>
           <Image
-            contentFit="cover"
+            contentFit='cover'
             source={layerBPair.after}
             style={[styles.image, { width: SCREEN_WIDTH }]}
             transition={0}
@@ -219,7 +219,7 @@ export function ComparisonSlider({
 
         <Animated.View style={[styles.afterInner, layerAStyle]}>
           <Image
-            contentFit="cover"
+            contentFit='cover'
             source={layerAPair.after}
             style={[styles.image, { width: SCREEN_WIDTH }]}
             transition={0}
@@ -227,7 +227,7 @@ export function ComparisonSlider({
         </Animated.View>
       </Animated.View>
 
-      <Animated.View pointerEvents="none" style={[styles.line, lineStyle]} />
+      <Animated.View pointerEvents='none' style={[styles.line, lineStyle]} />
 
       <GestureDetector gesture={panGesture}>
         <Animated.View style={[styles.handleWrapper, handleStyle]}>

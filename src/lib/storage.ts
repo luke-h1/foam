@@ -12,7 +12,11 @@ export type StorageItem<T = unknown> = {
 };
 
 export type AllowedKey = OpenStringUnion<
-  'ReactQueryDebug' | 'previous_searches' | `appStoreLink_${string}`
+  | 'ReactQueryDebug'
+  | 'previous_searches'
+  | `appStoreLink_${string}`
+  | `sevenTvUserCosmetics_${string}`
+  | `sevenTvUserId_${string}`
 >;
 
 export const NAMESPACE = 'FOAM_V1';
@@ -32,7 +36,7 @@ export const storage = createMMKV({
   mode: 'multi-process',
 });
 
-type NamespacePrefixes = 'image_cache';
+type NamespacePrefixes = 'image_cache' | 'seven_tv_cache';
 
 export const storageService = {
   events: storageEvents,
@@ -119,5 +123,14 @@ export const storageService = {
       .filter(key => key.startsWith(`${NAMESPACE}_image_cache`));
     keys.forEach(key => storage.remove(key));
     storageEvents.emit('storageChange', 'image_cache');
+  },
+  clearNamespace(namespacePrefix: NamespacePrefixes, keyPrefix = '') {
+    const keys = storage
+      .getAllKeys()
+      .filter(key =>
+        key.startsWith(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`),
+      );
+    keys.forEach(key => storage.remove(key));
+    storageEvents.emit('storageChange', namespacePrefix);
   },
 } as const;

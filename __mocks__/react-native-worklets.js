@@ -14,13 +14,17 @@ globalThis.__RUNTIME_KIND = RuntimeKind.ReactNative;
 globalThis._log = console.log;
 globalThis._getAnimationTimestamp = () => performance.now();
 
-const runOnJS = fun => (...args) => {
-  queueMicrotask(args.length ? () => fun(...args) : fun);
-};
+const runOnJS =
+  fun =>
+  (...args) => {
+    queueMicrotask(args.length ? () => fun(...args) : fun);
+  };
 
-const runOnUI = worklet => (...args) => {
-  requestAnimationFrame(() => worklet(...args));
-};
+const runOnUI =
+  worklet =>
+  (...args) => {
+    requestAnimationFrame(() => worklet(...args));
+  };
 
 const workletsMock = {
   WorkletsModule: {},
@@ -36,7 +40,8 @@ const workletsMock = {
   isSerializableRef: () => false,
   isShareableRef: () => false,
   isSynchronizable: () => false,
-  isWorkletFunction: value => typeof value === 'function' && value.__workletHash != null,
+  isWorkletFunction: value =>
+    typeof value === 'function' && value.__workletHash != null,
   makeShareable: ID,
   makeShareableCloneOnUIRecursive: ID,
   makeShareableCloneRecursive: ID,
@@ -44,10 +49,12 @@ const workletsMock = {
   runOnJS,
   runOnRuntime: ID,
   runOnUI,
-  runOnUIAsync: worklet => (...args) =>
-    new Promise(resolve => {
-      requestAnimationFrame(() => resolve(worklet(...args)));
-    }),
+  runOnUIAsync:
+    worklet =>
+    (...args) =>
+      new Promise(resolve => {
+        requestAnimationFrame(() => resolve(worklet(...args)));
+      }),
   runOnUISync: immediate,
   scheduleOnRN: (fun, ...args) => runOnJS(fun)(...args),
   scheduleOnRuntime: immediate,

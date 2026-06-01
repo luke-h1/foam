@@ -84,7 +84,7 @@ describe('StreamPlayer component messaging', () => {
 
     render(
       <StreamPlayer
-        channel="cohhcarnage"
+        channel='cohhcarnage'
         height={200}
         muted
         onContentGateChange={onContentGateChange}
@@ -134,7 +134,7 @@ describe('StreamPlayer component messaging', () => {
 
     render(
       <StreamPlayer
-        channel="cohhcarnage"
+        channel='cohhcarnage'
         height={200}
         muted
         onWebViewLoaded={onWebViewLoaded}
@@ -193,7 +193,7 @@ describe('StreamPlayer component messaging', () => {
 
     render(
       <StreamPlayer
-        channel="cohhcarnage"
+        channel='cohhcarnage'
         height={200}
         muted={false}
         onWebViewLoaded={onWebViewLoaded}
@@ -229,7 +229,7 @@ describe('StreamPlayer component messaging', () => {
 
     render(
       <StreamPlayer
-        clip="AnimatedOptimisticWasabiVoteNay"
+        clip='AnimatedOptimisticWasabiVoteNay'
         height={200}
         muted={false}
         onWebViewLoaded={onWebViewLoaded}
@@ -257,7 +257,7 @@ describe('StreamPlayer component messaging', () => {
   test('keeps external auth windows inside the current WebView without injection', () => {
     render(
       <StreamPlayer
-        channel="cohhcarnage"
+        channel='cohhcarnage'
         height={200}
         muted
         showOverlayControls={false}
@@ -281,7 +281,7 @@ describe('StreamPlayer component messaging', () => {
   test('blocks app navigation while allowing iframe navigation', () => {
     render(
       <StreamPlayer
-        channel="cohhcarnage"
+        channel='cohhcarnage'
         height={200}
         muted
         restrictWebViewNavigationToTwitchPlayer

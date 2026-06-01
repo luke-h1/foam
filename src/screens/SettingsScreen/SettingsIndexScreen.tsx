@@ -40,35 +40,35 @@ export function SettingsIndexScreen() {
       <View style={styles.container}>
         <BodyScrollView contentContainerStyle={styles.iosContent}>
           <ScreenHeader
-            title="Settings"
-            subtitle="Streaming controls"
-            size="medium"
+            title='Settings'
+            subtitle='Streaming controls'
+            size='medium'
           />
 
-          <Form.Section title="Stream Experience">
+          <Form.Section title='Stream Experience'>
             <Form.Link
-              systemImage="bubble.left.and.bubble.right"
+              systemImage='bubble.left.and.bubble.right'
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             >
               Chat
             </Form.Link>
             <Form.Link
-              systemImage="externaldrive"
+              systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
             >
               Cache
             </Form.Link>
             <Form.Link
-              systemImage="paintpalette"
+              systemImage='paintpalette'
               onPress={() => router.push('/tabs/settings/appearance')}
             >
               Appearance
             </Form.Link>
           </Form.Section>
 
-          <Form.Section title="Account">
+          <Form.Section title='Account'>
             <Form.Link
-              systemImage="person.circle"
+              systemImage='person.circle'
               onPress={() => {
                 if (user) {
                   router.push('/tabs/settings/profile');
@@ -82,30 +82,30 @@ export function SettingsIndexScreen() {
             </Form.Link>
           </Form.Section>
 
-          <Form.Section title="Support & Feedback">
+          <Form.Section title='Support & Feedback'>
             <Form.Link
-              systemImage="info.circle"
+              systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
             >
               About Foam
             </Form.Link>
             <Form.Link
-              systemImage="questionmark.circle"
+              systemImage='questionmark.circle'
               onPress={() => router.push('/tabs/settings/faq')}
             >
               FAQ
             </Form.Link>
-            <Form.Link systemImage="paperplane" onPress={handleSendFeedback}>
+            <Form.Link systemImage='paperplane' onPress={handleSendFeedback}>
               Send Feedback
             </Form.Link>
             <Form.Link
-              systemImage="checkmark.shield"
+              systemImage='checkmark.shield'
               onPress={() => openLinkInBrowser(statusPageUrl.value)}
             >
               Status
             </Form.Link>
             <Form.Link
-              systemImage="globe"
+              systemImage='globe'
               onPress={() => openLinkInBrowser(websiteUrl.value)}
             >
               Website
@@ -115,14 +115,14 @@ export function SettingsIndexScreen() {
           <Form.Section title={shouldShowDevTools ? 'Developer' : 'More'}>
             {shouldShowDevTools ? (
               <Form.Link
-                systemImage="hammer"
+                systemImage='hammer'
                 onPress={() => router.push('/tabs/settings/dev-tools')}
               >
                 Dev Tools
               </Form.Link>
             ) : null}
             <Form.Link
-              systemImage="ellipsis.circle"
+              systemImage='ellipsis.circle'
               onPress={() => router.push('/tabs/settings/other')}
             >
               Other
@@ -137,7 +137,7 @@ export function SettingsIndexScreen() {
     <View style={styles.container}>
       <ScrollView
         ref={scrollRef}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,
@@ -145,15 +145,15 @@ export function SettingsIndexScreen() {
         ]}
       >
         <ScreenHeader
-          title="Settings"
-          subtitle="Streaming controls, account tools, support, and diagnostics."
-          size="medium"
+          title='Settings'
+          subtitle='Streaming controls, account tools, support, and diagnostics.'
+          size='medium'
         />
 
-        <SettingsSection title="Stream Experience">
+        <SettingsSection title='Stream Experience'>
           <SettingsLinkRow
-            title="Chat"
-            subtitle="Density, timestamps, mentions, emotes, and badges"
+            title='Chat'
+            subtitle='Density, timestamps, mentions, emotes, and badges'
             icon={{
               icon: 'bubble.left.and.bubble.right',
               color: theme.colorPlum,
@@ -161,20 +161,20 @@ export function SettingsIndexScreen() {
             onPress={() => router.push('/tabs/settings/chat-preferences')}
           />
           <SettingsLinkRow
-            title="Cache"
-            subtitle="Clear local app data, emotes, badges, and media"
+            title='Cache'
+            subtitle='Clear local app data, emotes, badges, and media'
             icon={{ icon: 'externaldrive', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/cache')}
           />
           <SettingsLinkRow
-            title="Appearance"
-            subtitle="Theme and visual mode"
+            title='Appearance'
+            subtitle='Theme and visual mode'
             icon={{ icon: 'paintpalette', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/appearance')}
           />
         </SettingsSection>
 
-        <SettingsSection title="Account">
+        <SettingsSection title='Account'>
           <SettingsLinkRow
             title={user ? 'Profile' : 'Sign In'}
             subtitle={
@@ -194,34 +194,34 @@ export function SettingsIndexScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title="Support & Feedback">
+        <SettingsSection title='Support & Feedback'>
           <SettingsLinkRow
-            title="About Foam"
-            subtitle="What the app is built for and where to reach us"
+            title='About Foam'
+            subtitle='What the app is built for and where to reach us'
             icon={{ icon: 'info.circle', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
-            title="FAQ"
-            subtitle="Common questions and help information"
+            title='FAQ'
+            subtitle='Common questions and help information'
             icon={{ icon: 'questionmark.circle', color: theme.colorGreen }}
             onPress={() => router.push('/tabs/settings/faq')}
           />
           <SettingsLinkRow
-            title="Send Feedback"
-            subtitle="Share feedback, ideas, or what could be better"
+            title='Send Feedback'
+            subtitle='Share feedback, ideas, or what could be better'
             icon={{ icon: 'paperplane', color: theme.colorTeal }}
             onPress={handleSendFeedback}
           />
           <SettingsLinkRow
-            title="Status"
-            subtitle="Check service availability and operational updates"
+            title='Status'
+            subtitle='Check service availability and operational updates'
             icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
             onPress={() => openLinkInBrowser(statusPageUrl.value)}
           />
           <SettingsLinkRow
-            title="Website"
-            subtitle="Product site and public links"
+            title='Website'
+            subtitle='Product site and public links'
             icon={{ icon: 'globe', color: theme.colorViolet }}
             onPress={() => openLinkInBrowser(websiteUrl.value)}
           />
@@ -230,15 +230,15 @@ export function SettingsIndexScreen() {
         <SettingsSection title={shouldShowDevTools ? 'Developer' : 'More'}>
           {shouldShowDevTools ? (
             <SettingsLinkRow
-              title="Dev Tools"
-              subtitle="Diagnostics, cache tools, remote config, and Storybook"
+              title='Dev Tools'
+              subtitle='Diagnostics, cache tools, remote config, and Storybook'
               icon={{ icon: 'hammer', color: theme.colorOrange }}
               onPress={() => router.push('/tabs/settings/dev-tools')}
             />
           ) : null}
           <SettingsLinkRow
-            title="Other"
-            subtitle="Licenses, changelog, and supporting reference screens"
+            title='Other'
+            subtitle='Licenses, changelog, and supporting reference screens'
             icon={{ icon: 'ellipsis.circle', color: theme.colorGrey }}
             onPress={() => router.push('/tabs/settings/other')}
           />
@@ -246,7 +246,7 @@ export function SettingsIndexScreen() {
 
         <View style={styles.buildWrap}>
           <BuildStatus />
-          <Text type="xs" color="gray.textLow" style={styles.buildNote}>
+          <Text type='xs' color='gray.textLow' style={styles.buildNote}>
             Build details and release state for this install of Foam.
           </Text>
         </View>

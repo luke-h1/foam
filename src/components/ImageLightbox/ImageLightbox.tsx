@@ -21,7 +21,7 @@ export function ImageLightbox({
   if (!uri) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText} type="lg" weight="bold">
+        <Text style={styles.errorText} type='lg' weight='bold'>
           {emptyLabel}
         </Text>
       </View>
@@ -40,7 +40,7 @@ export function ImageLightbox({
             disabled={isPrimaryActionLoading}
             title={isPrimaryActionLoading ? 'Loading...' : primaryActionLabel}
             onPress={onPrimaryAction}
-            variant="solid"
+            variant='solid'
           />
         </View>
       ) : null}

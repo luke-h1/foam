@@ -20,22 +20,22 @@ Check package.json - "react-native-gesture-handler" version
 
 ### Key API Differences (v2 vs v3)
 
-| Concept | v2 Builder API | v3 Hook API |
-|---------|---------------|-------------|
-| Create gesture | `Gesture.Pan().onUpdate(...)` | `usePanGesture({ onUpdate: ... })` |
-| Compose (simultaneous) | `Gesture.Simultaneous(a, b)` | `useSimultaneousGestures(a, b)` |
-| Compose (race/competing) | `Gesture.Race(a, b)` | `useCompetingGestures(a, b)` |
-| Compose (exclusive) | `Gesture.Exclusive(a, b)` | `useExclusiveGestures(a, b)` |
-| Activation callback | `.onStart(...)` | `onActivate: ...` |
-| Deactivation callback | `.onEnd(...)` | `onDeactivate: ...` |
-| Change data | `.onChange(...)` | merged into `onUpdate` (use `changeX`, `changeY`) |
-| Cross-component | `.simultaneousWithExternalGesture()` | `.simultaneousWith()` |
-| Cross-component | `.requireExternalGestureToFail()` | `.requireToFail()` |
-| Cross-component | `.blocksExternalGesture()` | `.block()` |
-| Memoization | wrap in `useMemo` (mandatory) | built into hooks (automatic) |
-| SVG / broken hierarchy | `GestureDetector` (may break hierarchy) | `InterceptingGestureDetector` + `VirtualGestureDetector` |
-| State manager | callback param `stateManager` | global `GestureStateManager` |
-| Buttons | `RectButton`, `BorderlessButton` | `LegacyRectButton`, `LegacyBorderlessButton` (originals renamed) |
+| Concept                  | v2 Builder API                          | v3 Hook API                                                      |
+| ------------------------ | --------------------------------------- | ---------------------------------------------------------------- |
+| Create gesture           | `Gesture.Pan().onUpdate(...)`           | `usePanGesture({ onUpdate: ... })`                               |
+| Compose (simultaneous)   | `Gesture.Simultaneous(a, b)`            | `useSimultaneousGestures(a, b)`                                  |
+| Compose (race/competing) | `Gesture.Race(a, b)`                    | `useCompetingGestures(a, b)`                                     |
+| Compose (exclusive)      | `Gesture.Exclusive(a, b)`               | `useExclusiveGestures(a, b)`                                     |
+| Activation callback      | `.onStart(...)`                         | `onActivate: ...`                                                |
+| Deactivation callback    | `.onEnd(...)`                           | `onDeactivate: ...`                                              |
+| Change data              | `.onChange(...)`                        | merged into `onUpdate` (use `changeX`, `changeY`)                |
+| Cross-component          | `.simultaneousWithExternalGesture()`    | `.simultaneousWith()`                                            |
+| Cross-component          | `.requireExternalGestureToFail()`       | `.requireToFail()`                                               |
+| Cross-component          | `.blocksExternalGesture()`              | `.block()`                                                       |
+| Memoization              | wrap in `useMemo` (mandatory)           | built into hooks (automatic)                                     |
+| SVG / broken hierarchy   | `GestureDetector` (may break hierarchy) | `InterceptingGestureDetector` + `VirtualGestureDetector`         |
+| State manager            | callback param `stateManager`           | global `GestureStateManager`                                     |
+| Buttons                  | `RectButton`, `BorderlessButton`        | `LegacyRectButton`, `LegacyBorderlessButton` (originals renamed) |
 
 ## Critical Rules
 
@@ -71,18 +71,22 @@ v3 hook API handles memoization internally.
 import { scheduleOnRN } from 'react-native-worklets';
 
 // WRONG -- crashes: calling JS function directly from UI thread
-const gesture = useMemo(() =>
-  Gesture.Pan().onUpdate((e) => {
-    handleTouch(e.absoluteX, e.absoluteY); // non-worklet function
-  }),
-[]);
+const gesture = useMemo(
+  () =>
+    Gesture.Pan().onUpdate(e => {
+      handleTouch(e.absoluteX, e.absoluteY); // non-worklet function
+    }),
+  [],
+);
 
 // CORRECT -- schedules JS function on RN thread
-const gesture = useMemo(() =>
-  Gesture.Pan().onUpdate((e) => {
-    scheduleOnRN(handleTouch, e.absoluteX, e.absoluteY);
-  }),
-[]);
+const gesture = useMemo(
+  () =>
+    Gesture.Pan().onUpdate(e => {
+      scheduleOnRN(handleTouch, e.absoluteX, e.absoluteY);
+    }),
+  [],
+);
 ```
 
 This applies to all gesture callback types including `onTouchesDown`, `onTouchesMove`, `onTouchesUp`, `onStart`, `onUpdate`, `onEnd`, etc. The only code safe to run directly is worklet-compatible code (shared value mutations, other worklet functions).
@@ -101,11 +105,11 @@ import { ScrollView, FlatList, RectButton } from 'react-native-gesture-handler';
 
 Load at most one reference file per question. For API signatures and config options, webfetch the documentation pages linked in each reference file.
 
-| File | When to read |
-|------|-------------|
-| `gestures.md` | Choosing which gesture type or component to use; callback lifecycle; threading model; `GestureStateManager` for manual activation; SharedValue in gesture config |
-| `tap-handling.md` | `RectButton`, `Pressable`, tappable items in scroll containers, tap gestures, double-tap, hit slop |
-| `continuous-gestures.md` | Pan (drag), Pinch (zoom), Rotation, Long press, Fling (swipe), Hover; Reanimated integration patterns; offset accumulation; velocity and decay |
-| `gesture-composition.md` | Combining gestures on one component (`Simultaneous`/`Race`/`Exclusive`); cross-component relations; `VirtualGestureDetector` for SVG and Text; Pan inside ScrollView |
-| `swipeable-and-drawer.md` | `ReanimatedSwipeable` for list item actions; `ReanimatedDrawerLayout` for side menus; custom swipeable with Pan gesture; web scroll compatibility |
-| `testing.md` | Jest setup and mocking; `fireGestureHandler` for testing gestures; common troubleshooting (multiple instances, gesture conflicts, `enabled` timing) |
+| File                      | When to read                                                                                                                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gestures.md`             | Choosing which gesture type or component to use; callback lifecycle; threading model; `GestureStateManager` for manual activation; SharedValue in gesture config     |
+| `tap-handling.md`         | `RectButton`, `Pressable`, tappable items in scroll containers, tap gestures, double-tap, hit slop                                                                   |
+| `continuous-gestures.md`  | Pan (drag), Pinch (zoom), Rotation, Long press, Fling (swipe), Hover; Reanimated integration patterns; offset accumulation; velocity and decay                       |
+| `gesture-composition.md`  | Combining gestures on one component (`Simultaneous`/`Race`/`Exclusive`); cross-component relations; `VirtualGestureDetector` for SVG and Text; Pan inside ScrollView |
+| `swipeable-and-drawer.md` | `ReanimatedSwipeable` for list item actions; `ReanimatedDrawerLayout` for side menus; custom swipeable with Pan gesture; web scroll compatibility                    |
+| `testing.md`              | Jest setup and mocking; `fireGestureHandler` for testing gestures; common troubleshooting (multiple instances, gesture conflicts, `enabled` timing)                  |

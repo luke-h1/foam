@@ -12,20 +12,20 @@ Use `expo-image` instead of React Native's `Image`. It provides memory-efficient
 **Incorrect (React Native Image):**
 
 ```tsx
-import { Image } from 'react-native'
+import { Image } from 'react-native';
 
 function Avatar({ url }: { url: string }) {
-  return <Image source={{ uri: url }} style={styles.avatar} />
+  return <Image source={{ uri: url }} style={styles.avatar} />;
 }
 ```
 
 **Correct (expo-image):**
 
 ```tsx
-import { Image } from 'expo-image'
+import { Image } from 'expo-image';
 
 function Avatar({ url }: { url: string }) {
-  return <Image source={{ uri: url }} style={styles.avatar} />
+  return <Image source={{ uri: url }} style={styles.avatar} />;
 }
 ```
 
@@ -35,7 +35,7 @@ function Avatar({ url }: { url: string }) {
 <Image
   source={{ uri: url }}
   placeholder={{ blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.' }}
-  contentFit="cover"
+  contentFit='cover'
   transition={200}
   style={styles.image}
 />
@@ -46,8 +46,8 @@ function Avatar({ url }: { url: string }) {
 ```tsx
 <Image
   source={{ uri: url }}
-  priority="high"
-  cachePolicy="memory-disk"
+  priority='high'
+  cachePolicy='memory-disk'
   style={styles.hero}
 />
 ```

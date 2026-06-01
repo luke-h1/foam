@@ -1,5 +1,5 @@
 import { useChannelEmoteData } from '@app/store/chatStore/hooks';
-import { memo, type MutableRefObject } from 'react';
+import { memo, RefObject } from 'react';
 
 import { useEmoteReprocessing } from '../hooks/useEmoteReprocessing';
 
@@ -14,7 +14,7 @@ export const ChatEmoteRuntime = memo(
     channelId: string;
     emoteLoadStatus: string;
     messages$: { peek: () => unknown[] };
-    processedMessageIdsRef: MutableRefObject<Set<string>>;
+    processedMessageIdsRef: RefObject<Set<string>>;
     reprocessKey: string;
   }) => {
     const channelEmoteData = useChannelEmoteData(channelId);

@@ -8,7 +8,7 @@ import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -36,7 +36,7 @@ type PreviewAction = {
   subtitle: string;
 };
 
-export function BadgePreviewSheet(props: Props) {
+function BadgePreviewSheetComponent(props: Props) {
   const { visible, onClose, selectedBadge } = props;
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
@@ -122,21 +122,21 @@ export function BadgePreviewSheet(props: Props) {
       isPresented={visible}
       onDismiss={onClose}
       showDragIndicator
-      testID="badge-preview-sheet"
+      testID='badge-preview-sheet'
     >
       <View style={containerStyle}>
         <View style={styles.topBar}>
           <View style={styles.heading}>
-            <Text style={styles.eyebrow} weight="semibold">
+            <Text style={styles.eyebrow} weight='semibold'>
               Badge preview
             </Text>
-            <Text style={styles.title} weight="semibold" numberOfLines={2}>
+            <Text style={styles.title} weight='semibold' numberOfLines={2}>
               {selectedBadge.title}
             </Text>
           </View>
-          <Button label="Done" style={styles.doneButton} onPress={onClose}>
+          <Button label='Done' style={styles.doneButton} onPress={onClose}>
             <SymbolView
-              name="checkmark"
+              name='checkmark'
               size={18}
               tintColor={theme.color.text.dark}
             />
@@ -153,16 +153,16 @@ export function BadgePreviewSheet(props: Props) {
               <Image
                 useNitro
                 trackLoadTime
-                trackLoadContext="chat.badge-preview"
+                trackLoadContext='chat.badge-preview'
                 source={selectedBadge.url}
-                cacheVariant="badge"
+                cacheVariant='badge'
                 transition={50}
                 style={styles.badgeImage}
-                contentFit="contain"
+                contentFit='contain'
               />
             </View>
             <View style={styles.previewPill}>
-              <Text style={styles.previewPillText} weight="semibold">
+              <Text style={styles.previewPillText} weight='semibold'>
                 {selectedBadge.type}
               </Text>
             </View>
@@ -171,7 +171,7 @@ export function BadgePreviewSheet(props: Props) {
           <View style={styles.metadataCard}>
             {metadataRows.map(row => (
               <View key={row.label} style={styles.metadataRow}>
-                <Text style={styles.metadataLabel} weight="semibold">
+                <Text style={styles.metadataLabel} weight='semibold'>
                   {row.label}
                 </Text>
                 <Text style={styles.metadataValue} numberOfLines={2}>
@@ -199,7 +199,7 @@ export function BadgePreviewSheet(props: Props) {
                   />
                 </View>
                 <View style={styles.actionCopy}>
-                  <Text style={styles.actionText} weight="semibold">
+                  <Text style={styles.actionText} weight='semibold'>
                     {action.label}
                   </Text>
                   <Text style={styles.actionSubtitle} numberOfLines={1}>
@@ -214,6 +214,8 @@ export function BadgePreviewSheet(props: Props) {
     </BottomSheet>
   );
 }
+
+export const BadgePreviewSheet = memo(BadgePreviewSheetComponent);
 
 const styles = StyleSheet.create({
   actionButton: {

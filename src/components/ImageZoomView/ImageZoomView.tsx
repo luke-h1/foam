@@ -227,8 +227,8 @@ export function ImageZoomView({
       >
         <Animated.View style={[styles.imageContainer, animatedStyle]}>
           <Image
-            cachePolicy="memory-disk"
-            contentFit="contain"
+            cachePolicy='memory-disk'
+            contentFit='contain'
             placeholder={placeholder}
             source={uri}
             style={styles.image}

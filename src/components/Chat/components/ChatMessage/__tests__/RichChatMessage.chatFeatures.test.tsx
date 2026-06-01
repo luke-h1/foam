@@ -82,7 +82,7 @@ describe('RichChatMessage chat features', () => {
     ]);
 
     const { getByTestId } = render(
-      <RichChatMessage {...message} currentUsername="testuser" />,
+      <RichChatMessage {...message} currentUsername='testuser' />,
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({
@@ -111,7 +111,7 @@ describe('RichChatMessage chat features', () => {
     ]);
 
     const { getByText } = render(
-      <RichChatMessage {...message} density="compact" />,
+      <RichChatMessage {...message} density='compact' />,
     );
 
     expect(getByText('hello world')).toHaveStyle({

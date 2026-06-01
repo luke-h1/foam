@@ -5,10 +5,10 @@ import { StyleSheet, View } from 'react-native';
 export function StorybookScreen() {
   return (
     <View style={styles.container}>
-      <Text type="lg" weight="semibold" align="center">
+      <Text type='lg' weight='semibold' align='center'>
         Storybook is available in the native development app.
       </Text>
-      <Text type="sm" color="gray" align="center" style={styles.description}>
+      <Text type='sm' color='gray' align='center' style={styles.description}>
         The web app uses the normal Expo Router screens so the root route can
         load without bundling the native Storybook runtime.
       </Text>

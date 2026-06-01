@@ -17,7 +17,7 @@ export function BuildStatus() {
         strokeWidth={3}
         trackColor={theme.darkActiveContent}
       />
-      <Text type="xs" color="gray.border">
+      <Text type='xs' color='gray.border'>
         v:{Application.nativeApplicationVersion ?? ''} (
         {Application.nativeBuildVersion ?? ''}) • OTA:{' '}
         {Updates.updateId ?? 'Embedded'}
@@ -64,7 +64,7 @@ function ProgressRing({
       <Circle
         cx={size / 2}
         cy={size / 2}
-        fill="none"
+        fill='none'
         r={radius}
         stroke={trackColor}
         strokeWidth={strokeWidth}
@@ -72,13 +72,13 @@ function ProgressRing({
       <Circle
         cx={size / 2}
         cy={size / 2}
-        fill="none"
+        fill='none'
         r={radius}
         stroke={progressColor}
         strokeWidth={strokeWidth}
         strokeDasharray={`${circumference} ${circumference}`}
         strokeDashoffset={strokeDashoffset}
-        strokeLinecap="round"
+        strokeLinecap='round'
         rotation={-90}
         origin={`${size / 2}, ${size / 2}`}
       />

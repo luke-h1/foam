@@ -24,7 +24,7 @@ export const createOrJoinSocket = (
       sharedWebSockets[url] = new WebSocket(url, optionsRef.current?.protocols);
       attachSharedListeners(sharedWebSockets[url], url);
     } else {
-      setReadyState(sharedWebSockets[url].readyState as ReadyState);
+      setReadyState(sharedWebSockets[url].readyState);
     }
 
     const subscriber = {

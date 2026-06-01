@@ -44,18 +44,18 @@ const BlockedUserItem = memo(function BlockedUserItem({
       ]}
     >
       <View style={styles.userInfo}>
-        <Text type="md" weight="bold" numberOfLines={1}>
+        <Text type='md' weight='bold' numberOfLines={1}>
           {user.display_name}
         </Text>
-        <Text type="sm" color="gray.textLow" numberOfLines={1}>
+        <Text type='sm' color='gray.textLow' numberOfLines={1}>
           @{user.user_login}
         </Text>
       </View>
       <BlockedUsersActionButton
-        label="Unblock"
+        label='Unblock'
         onPress={handlePress}
         style={styles.unblockButton}
-        variant="destructive"
+        variant='destructive'
       />
     </View>
   );
@@ -112,14 +112,14 @@ function ListStatePanel({
     <ScrollView
       style={styles.stateScroll}
       contentContainerStyle={styles.stateContent}
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior='automatic'
       showsVerticalScrollIndicator={false}
       refreshControl={
         onRefresh ? <RefreshControl onRefresh={onRefresh} /> : undefined
       }
     >
       <View style={styles.stateSection}>
-        <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
+        <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
           Blocked Accounts
         </Text>
         <View style={styles.statePanel}>
@@ -130,13 +130,13 @@ function ListStatePanel({
               tintColor={theme.colorGreyHoverAlpha}
             />
           </View>
-          <Text type="lg" weight="bold" align="center">
+          <Text type='lg' weight='bold' align='center'>
             {title}
           </Text>
           <Text
-            type="xs"
-            color="gray.textLow"
-            align="center"
+            type='xs'
+            color='gray.textLow'
+            align='center'
             style={styles.stateDescription}
           >
             {description}
@@ -161,11 +161,11 @@ interface BlockedUsersSectionHeaderProps {
 function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
   return (
     <View style={styles.sectionHeader}>
-      <Text type="xxs" weight="semibold" style={styles.sectionTitle}>
+      <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
         Blocked Accounts
       </Text>
       {typeof count === 'number' ? (
-        <Text type="xxs" color="gray.textLow" style={styles.sectionCountText}>
+        <Text type='xxs' color='gray.textLow' style={styles.sectionCountText}>
           {count}
         </Text>
       ) : null}
@@ -219,7 +219,7 @@ function BlockedUsersList({
           data={Array.from({ length: SKELETON_COUNT })}
           renderItem={renderSkeletonItem}
           keyExtractor={(_, idx) => `skeleton-${idx}`}
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           style={styles.list}
           ListHeaderComponent={<BlockedUsersSectionHeader />}
           maintainVisibleContentPosition={{ disabled: true }}
@@ -232,10 +232,10 @@ function BlockedUsersList({
   if (isError) {
     return (
       <ListStatePanel
-        icon="exclamationmark.circle"
-        title="Could not load blocked users"
-        description="Twitch did not return your blocked users list. Refresh and try again."
-        actionLabel="Retry"
+        icon='exclamationmark.circle'
+        title='Could not load blocked users'
+        description='Twitch did not return your blocked users list. Refresh and try again.'
+        actionLabel='Retry'
         onAction={() => void onRefresh()}
         onRefresh={onRefresh}
       />
@@ -245,9 +245,9 @@ function BlockedUsersList({
   if (!data || data.length === 0) {
     return (
       <ListStatePanel
-        icon="shield"
-        title="No blocked users"
-        description="Accounts you block on Twitch will appear here for quick review."
+        icon='shield'
+        title='No blocked users'
+        description='Accounts you block on Twitch will appear here for quick review.'
         onRefresh={onRefresh}
       />
     );
@@ -260,14 +260,14 @@ function BlockedUsersList({
         data={data}
         renderItem={renderItem}
         keyExtractor={item => item.user_id}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         refreshControl={<RefreshControl onRefresh={onRefresh} />}
         contentContainerStyle={styles.listContent}
         style={styles.list}
         ListHeaderComponent={<BlockedUsersSectionHeader count={data.length} />}
         maintainVisibleContentPosition={{ disabled: true }}
         ListFooterComponent={
-          <Text type="xxs" color="gray.textLow" style={styles.sectionFooter}>
+          <Text type='xxs' color='gray.textLow' style={styles.sectionFooter}>
             Unblocking restores normal Twitch interactions for that account.
           </Text>
         }
@@ -368,9 +368,9 @@ export function BlockedUsersScreen() {
   return (
     <View style={styles.container}>
       <ScreenHeader
-        title="Blocked Users"
-        subtitle="Moderation"
-        size="compact"
+        title='Blocked Users'
+        subtitle='Moderation'
+        size='compact'
       />
       <BlockedUsersList
         data={data?.data}

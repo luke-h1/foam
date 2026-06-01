@@ -36,9 +36,9 @@ function AboutSection({ title, footer, children }: AboutSectionProps) {
     <View style={styles.section}>
       {title ? (
         <Text
-          type="xs"
-          weight="semibold"
-          color="gray.textLow"
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
           style={styles.sectionTitle}
         >
           {title}
@@ -53,11 +53,11 @@ function AboutSection({ title, footer, children }: AboutSectionProps) {
 function InfoRow({ label, value }: InfoRowProps) {
   return (
     <View style={styles.row}>
-      <Text weight="semibold" color="gray" style={styles.rowLabel}>
+      <Text weight='semibold' color='gray' style={styles.rowLabel}>
         {label}
       </Text>
       {typeof value === 'string' || typeof value === 'number' ? (
-        <Text type="xs" color="gray.textLow" selectable>
+        <Text type='xs' color='gray.textLow' selectable>
           {value}
         </Text>
       ) : (
@@ -72,11 +72,11 @@ function ActionRow({ title, icon, onPress }: ActionRowProps) {
     <PressableArea style={styles.pressableFill} onPress={onPress}>
       <View style={styles.actionRow}>
         <SymbolView name={icon} size={20} tintColor={theme.colorWhite} />
-        <Text weight="semibold" color="gray" style={styles.actionLabel}>
+        <Text weight='semibold' color='gray' style={styles.actionLabel}>
           {title}
         </Text>
         <SymbolView
-          name="chevron.right"
+          name='chevron.right'
           size={18}
           tintColor={theme.colorGreyAlpha}
         />
@@ -93,68 +93,68 @@ export function AboutScreen() {
   return (
     <View style={styles.container}>
       {Platform.OS === 'ios' ? null : (
-        <ScreenHeader title="About Foam" subtitle="App info" size="medium" />
+        <ScreenHeader title='About Foam' subtitle='App info' size='medium' />
       )}
 
       <ScrollView
         ref={scrollRef}
         style={styles.main}
         contentContainerStyle={styles.scrollContent}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
       >
         <AboutSection>
           <View style={styles.identityRow}>
             <Image source={appIconProduction} style={styles.appIcon} />
             <View style={styles.identityText}>
-              <Text type="lg" weight="bold" numberOfLines={1}>
+              <Text type='lg' weight='bold' numberOfLines={1}>
                 Foam
               </Text>
-              <Text type="xs" color="gray.textLow" numberOfLines={2}>
+              <Text type='xs' color='gray.textLow' numberOfLines={2}>
                 Streams, discovery, and chat controls in one mobile-first shell.
               </Text>
             </View>
           </View>
         </AboutSection>
 
-        <AboutSection title="Built For">
+        <AboutSection title='Built For'>
           <InfoRow
-            label="Chat"
-            value="Native feeling chat with 7TV, BTTV and FFZ support. Inspired by projects such as Chatterino and the 7TV Chrome extension"
+            label='Chat'
+            value='Native feeling chat with 7TV, BTTV and FFZ support. Inspired by projects such as Chatterino and the 7TV Chrome extension'
           />
           <InfoRow
-            label="Discovery"
-            value="Find and discover new streamers without the clutter"
+            label='Discovery'
+            value='Find and discover new streamers without the clutter'
           />
           <InfoRow
-            label="Viewing"
-            value="A viewing experience to rival desktop"
+            label='Viewing'
+            value='A viewing experience to rival desktop'
           />
         </AboutSection>
 
-        <AboutSection title="Resources">
+        <AboutSection title='Resources'>
           <ActionRow
-            title="Website"
-            icon="globe"
+            title='Website'
+            icon='globe'
             onPress={() => openLinkInBrowser('https://foam-app.com')}
           />
           <ActionRow
-            title="Status"
-            icon="shield"
+            title='Status'
+            icon='shield'
             onPress={() => openLinkInBrowser('https://status.foam-app.com')}
           />
         </AboutSection>
 
-        <AboutSection title="Build">
+        <AboutSection title='Build'>
           <InfoRow
-            label="Version"
+            label='Version'
             value={Application.nativeApplicationVersion ?? 'Unknown'}
           />
           <InfoRow
-            label="Build"
+            label='Build'
             value={Application.nativeBuildVersion ?? 'Unknown'}
           />
-          <InfoRow label="OTA" value={OTA_LABEL} />
+          <InfoRow label='OTA' value={OTA_LABEL} />
         </AboutSection>
       </ScrollView>
     </View>

@@ -93,7 +93,7 @@ export function RefreshIndicator({
           <SymbolView name={ICON_NAME} size={18} tintColor={accentColor} />
         </Animated.View>
         <Animated.View style={[styles.centered, spinnerStyle]}>
-          <ActivityIndicator size="small" color={accentColor} />
+          <ActivityIndicator size='small' color={accentColor} />
         </Animated.View>
       </View>
     </Animated.View>

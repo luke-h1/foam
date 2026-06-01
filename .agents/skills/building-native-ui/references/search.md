@@ -6,11 +6,11 @@ Add a search bar to the stack header with `headerSearchBarOptions`:
 
 ```tsx
 <Stack.Screen
-  name="index"
+  name='index'
   options={{
     headerSearchBarOptions: {
-      placeholder: "Search",
-      onChangeText: (event) => console.log(event.nativeEvent.text),
+      placeholder: 'Search',
+      onChangeText: event => console.log(event.nativeEvent.text),
     },
   }}
 />
@@ -58,11 +58,11 @@ headerSearchBarOptions: {
 Reusable hook for search state management:
 
 ```tsx
-import { useEffect, useState } from "react";
-import { useNavigation } from "expo-router";
+import { useEffect, useState } from 'react';
+import { useNavigation } from 'expo-router';
 
 export function useSearch(options: any = {}) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export function useSearch(options: any = {}) {
           options.onSearchButtonPress?.(e);
         },
         onCancelButtonPress(e: any) {
-          setSearch("");
+          setSearch('');
           options.onCancelButtonPress?.(e);
         },
       },
@@ -94,10 +94,10 @@ export function useSearch(options: any = {}) {
 
 ```tsx
 function SearchScreen() {
-  const search = useSearch({ placeholder: "Search items..." });
+  const search = useSearch({ placeholder: 'Search items...' });
 
   const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(search.toLowerCase())
+    item.name.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -115,7 +115,7 @@ function SearchScreen() {
 
 ```tsx
 const filtered = items.filter(item =>
-  item.name.toLowerCase().includes(search.toLowerCase())
+  item.name.toLowerCase().includes(search.toLowerCase()),
 );
 ```
 
@@ -137,7 +137,7 @@ const filtered = items.filter(item => {
 For expensive filtering or API calls:
 
 ```tsx
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from 'react';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -154,11 +154,12 @@ function SearchScreen() {
   const search = useSearch();
   const debouncedSearch = useDebounce(search, 300);
 
-  const filteredItems = useMemo(() =>
-    items.filter(item =>
-      item.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-    ),
-    [debouncedSearch]
+  const filteredItems = useMemo(
+    () =>
+      items.filter(item =>
+        item.name.toLowerCase().includes(debouncedSearch.toLowerCase()),
+      ),
+    [debouncedSearch],
   );
 
   return <FlatList data={filteredItems} />;
@@ -172,11 +173,11 @@ When using NativeTabs with a search role, the search bar integrates with the tab
 ```tsx
 // app/_layout.tsx
 <NativeTabs>
-  <NativeTabs.Trigger name="(home)">
+  <NativeTabs.Trigger name='(home)'>
     <Label>Home</Label>
-    <Icon sf="house.fill" />
+    <Icon sf='house.fill' />
   </NativeTabs.Trigger>
-  <NativeTabs.Trigger name="(search)" role="search">
+  <NativeTabs.Trigger name='(search)' role='search'>
     <Label>Search</Label>
   </NativeTabs.Trigger>
 </NativeTabs>
@@ -186,11 +187,11 @@ When using NativeTabs with a search role, the search bar integrates with the tab
 // app/(search)/_layout.tsx
 <Stack>
   <Stack.Screen
-    name="index"
+    name='index'
     options={{
       headerSearchBarOptions: {
-        placeholder: "Search...",
-        onChangeText: (e) => setSearch(e.nativeEvent.text),
+        placeholder: 'Search...',
+        onChangeText: e => setSearch(e.nativeEvent.text),
       },
     }}
   />
@@ -207,8 +208,8 @@ function SearchResults({ search, items }) {
 
   if (search && filtered.length === 0) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: PlatformColor("secondaryLabel") }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: PlatformColor('secondaryLabel') }}>
           No results for "{search}"
         </Text>
       </View>

@@ -407,7 +407,7 @@ describe('useChatSevenTvCallbacks', () => {
       act(() => {
         result.current.onCosmeticDelete({
           cosmeticId: 'cosmetic-123',
-        } as never);
+        });
       });
 
       expect(removeBadge).toHaveBeenCalledWith('cosmetic-123');

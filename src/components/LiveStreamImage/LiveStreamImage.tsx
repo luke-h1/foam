@@ -20,8 +20,8 @@ export const LiveStreamImage = memo(function LiveStreamImage({
     <View style={[styles.imageContainer, style]}>
       {thumbnail ? (
         <Image
-          testID="LiveStreamImage-image"
-          contentFit="contain"
+          testID='LiveStreamImage-image'
+          contentFit='contain'
           source={thumbnail
             .replace('{width}', '2560')
             .replace('{height}', '1080')}

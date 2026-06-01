@@ -36,22 +36,22 @@ export function AuthSheetScreen() {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
               source={require('../../assets/app-icon/app-icon-production.png')}
               style={styles.appIcon}
-              contentFit="cover"
+              contentFit='cover'
             />
           </View>
           <View style={styles.headerCopy}>
-            <Text type="xxs" weight="bold" style={styles.eyebrow}>
+            <Text type='xxs' weight='bold' style={styles.eyebrow}>
               FOAM FOR TWITCH
             </Text>
             <Text
-              type="3xl"
-              weight="bold"
-              color="gray.text"
+              type='3xl'
+              weight='bold'
+              color='gray.text'
               style={styles.title}
             >
               Sign in with Twitch
             </Text>
-            <Text type="sm" color="gray.textLow" style={styles.subtitle}>
+            <Text type='sm' color='gray.textLow' style={styles.subtitle}>
               Open your followed channels, chat access, and third-party emotes
               in one place.
             </Text>
@@ -59,8 +59,8 @@ export function AuthSheetScreen() {
         </View>
 
         <Button
-          accessibilityRole="button"
-          label="Continue with Twitch"
+          accessibilityRole='button'
+          label='Continue with Twitch'
           onPress={() => {
             void impact('light');
             void startSignIn();
@@ -82,18 +82,18 @@ export function AuthSheetScreen() {
             style={styles.buttonGradient}
           >
             <View style={styles.buttonIcon}>
-              <BrandIcon name="twitch" size="md" color={theme.colorWhite} />
+              <BrandIcon name='twitch' size='md' color={theme.colorWhite} />
             </View>
-            <Text type="sm" color="gray.text" weight="bold">
+            <Text type='sm' color='gray.text' weight='bold'>
               {isPromptingAuth ? 'Opening Twitch...' : 'Continue with Twitch'}
             </Text>
           </LinearGradient>
         </Button>
 
         <View style={styles.featureList}>
-          <FeatureItem icon="message" label="Twitch chat" />
-          <FeatureItem icon="star" label="BTTV, FFZ, and 7TV emotes" />
-          <FeatureItem icon="person.2" label="Minimal UI" />
+          <FeatureItem icon='message' label='Twitch chat' />
+          <FeatureItem icon='star' label='BTTV, FFZ, and 7TV emotes' />
+          <FeatureItem icon='person.2' label='Minimal UI' />
         </View>
       </View>
     </SafeAreaView>
@@ -113,9 +113,9 @@ function FeatureItem({
         <SymbolView name={icon} size={15} tintColor={theme.colorGreyHover} />
       </View>
       <Text
-        type="xs"
-        color="gray.textLow"
-        weight="medium"
+        type='xs'
+        color='gray.textLow'
+        weight='medium'
         style={styles.featureText}
       >
         {label}

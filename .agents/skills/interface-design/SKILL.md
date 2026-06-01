@@ -114,6 +114,7 @@ The difference: time in the product's world before any visual or structural thin
 ## Proposal Requirements
 
 Your direction must explicitly reference:
+
 - Domain concepts you explored
 - Colors from your color world exploration
 - Your signature element
@@ -162,6 +163,7 @@ Surfaces stack. A dropdown sits above a card which sits above the page. Build a 
 Each jump should be only a few percentage points of lightness. You can barely see the difference in isolation. But when surfaces stack, the hierarchy emerges. Whisper-quiet shifts that you feel rather than see.
 
 **Key decisions:**
+
 - **Sidebars:** Same background as canvas, not different. Different colors fragment the visual space into "sidebar world" and "content world." A subtle border is enough separation.
 - **Dropdowns:** One level above their parent surface. If both share the same level, the dropdown blends into the card and layering is lost.
 - **Inputs:** Slightly darker than their surroundings, not lighter. Inputs are "inset" — they receive content. A darker background signals "type here" without heavy borders.
@@ -183,6 +185,7 @@ Every pattern has infinite expressions. **No interface should look the same.**
 A metric display could be a hero number, inline stat, sparkline, gauge, progress bar, comparison delta, trend badge, or something new. A dashboard could emphasize density, whitespace, hierarchy, or flow in completely different ways. Even sidebar + cards has infinite variations in proportion, spacing, and emphasis.
 
 **Before building, ask:**
+
 - What's the ONE thing users do most here?
 - What products solve similar problems brilliantly? Study them.
 - Why would this interface feel designed for its purpose, not templated?
@@ -253,6 +256,7 @@ Keep it symmetrical. If one side has a value, others should match unless content
 ## Depth
 
 Choose ONE approach and commit:
+
 - **Borders-only** — Clean, technical. For dense tools.
 - **Subtle shadows** — Soft lift. For approachable products.
 - **Layered shadows** — Premium, dimensional. For cards that need presence.
@@ -318,6 +322,7 @@ Dark interfaces have different needs. Shadows are less visible on dark backgroun
 # Workflow
 
 ## Communication
+
 Be invisible. Don't announce modes or narrate process.
 
 **Never say:** "I'm in ESTABLISH MODE", "Let me check system.md..."
@@ -325,7 +330,9 @@ Be invisible. Don't announce modes or narrate process.
 **Instead:** Jump into work. State suggestions with reasoning.
 
 ## Suggest + Ask
+
 Lead with your exploration and recommendation, then confirm:
+
 ```
 "Domain: [5+ concepts from the product's world]
 Color world: [5+ colors that exist in this domain]
@@ -338,9 +345,11 @@ Direction: [approach that connects to the above]"
 ```
 
 ## If Project Has system.md
+
 Read `.interface-design/system.md` and apply. Decisions are made.
 
 ## If No system.md
+
 1. Explore domain — Produce all four required outputs
 2. Propose — Direction must reference all four
 3. Confirm — Get user buy-in
@@ -359,6 +368,7 @@ When you finish building something, **always offer to save**:
 ```
 
 If yes, write to `.interface-design/system.md`:
+
 - Direction and feel
 - Depth strategy (borders/shadows/layered)
 - Spacing base unit
@@ -379,6 +389,7 @@ This compounds — each save makes future work faster and more consistent.
 # Deep Dives
 
 For more detail on specific topics:
+
 - `references/principles.md` — Code examples, specific values, dark mode
 - `references/validation.md` — Memory management, when to update system.md
 - `references/critique.md` — Post-build craft critique protocol

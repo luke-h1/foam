@@ -11,7 +11,11 @@ export type StorageItem<T = unknown> = {
 };
 
 export type AllowedKey = OpenStringUnion<
-  'ReactQueryDebug' | 'previous_searches' | `appStoreLink_${string}`
+  | 'ReactQueryDebug'
+  | 'previous_searches'
+  | `appStoreLink_${string}`
+  | `sevenTvUserCosmetics_${string}`
+  | `sevenTvUserId_${string}`
 >;
 
 export const NAMESPACE = 'FOAM_V1';
@@ -25,7 +29,7 @@ const namespaceKey = (key: AllowedKey, namespacePrefix?: NamespacePrefixes) => {
 
 const storageEvents = new EventEmitter();
 
-type NamespacePrefixes = 'image_cache';
+type NamespacePrefixes = 'image_cache' | 'seven_tv_cache';
 
 const safeLocalStorage = {
   getItem(key: string): string | null {
@@ -160,5 +164,14 @@ export const storageService = {
       .filter(key => key.startsWith(`${NAMESPACE}_image_cache`));
     keys.forEach(key => storage.remove(key));
     storageEvents.emit('storageChange', 'image_cache');
+  },
+  clearNamespace(namespacePrefix: NamespacePrefixes, keyPrefix = '') {
+    const keys = storage
+      .getAllKeys()
+      .filter(key =>
+        key.startsWith(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`),
+      );
+    keys.forEach(key => storage.remove(key));
+    storageEvents.emit('storageChange', namespacePrefix);
   },
 } as const;

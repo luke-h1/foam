@@ -103,12 +103,23 @@ export function TopCategoriesScreen({
     return <CategoryCardSkeleton />;
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    refreshing$.set(true);
+    await refetch();
+    refreshing$.set(false);
+  }, [refetch, refreshing$]);
+
+  const allCategories = useMemo(
+    () => categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [],
+    [categories],
+  );
+
   if (isLoading || refreshing) {
     return (
       <View style={styles.wrapper}>
         <FlashList
           getItemType={() => 'category-skeleton'}
-          contentInsetAdjustmentBehavior="automatic"
+          contentInsetAdjustmentBehavior='automatic'
           data={skeletonData}
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
@@ -126,29 +137,18 @@ export function TopCategoriesScreen({
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          heading="Failed to fetch categories"
-          content="Failed to fetch top categories"
+          heading='Failed to fetch categories'
+          content='Failed to fetch top categories'
         />
       </View>
     );
   }
 
-  const onRefresh = useCallback(async () => {
-    refreshing$.set(true);
-    await refetch();
-    refreshing$.set(false);
-  }, [refetch, refreshing$]);
-
-  const allCategories = useMemo(
-    () => categories?.pages.flatMap(page => page.data).filter(Boolean) ?? [],
-    [categories],
-  );
-
   if (allCategories.length === 0) {
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          content="No categories found"
+          content='No categories found'
           buttonOnPress={() => void onRefresh()}
         />
       </View>
@@ -166,7 +166,7 @@ export function TopCategoriesScreen({
         ref={listRef}
         data={allCategories}
         numColumns={3}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior='automatic'
         getItemType={() => 'category-card'}
         contentContainerStyle={[
           styles.listContent,

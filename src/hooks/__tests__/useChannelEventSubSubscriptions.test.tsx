@@ -59,12 +59,8 @@ describe('channel poll and prediction EventSub subscriptions', () => {
     jest.clearAllMocks();
     mockTwitchWsService.getInstance.mockReturnValue({} as WebSocket);
     mockTwitchWsService.subscribeToEvent.mockResolvedValue(undefined);
-    mockGetPolls.mockResolvedValue({ data: [] } as Awaited<
-      ReturnType<typeof twitchService.getPolls>
-    >);
-    mockGetPredictions.mockResolvedValue({ data: [] } as Awaited<
-      ReturnType<typeof twitchService.getPredictions>
-    >);
+    mockGetPolls.mockResolvedValue({ data: [] });
+    mockGetPredictions.mockResolvedValue({ data: [] });
   });
 
   test('skips poll and prediction subscriptions for channels the viewer does not own', () => {

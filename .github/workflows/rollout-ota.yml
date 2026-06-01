@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       ota_id:
-        description: "OTA update group ID to progress rollout for"
+        description: 'OTA update group ID to progress rollout for'
         required: true
         type: string
       target_percentage:
-        description: "Target percentage to roll out to (1-100)"
+        description: 'Target percentage to roll out to (1-100)'
         required: true
         type: string
 
@@ -37,7 +37,7 @@ jobs:
       - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
-          bun-version-file: ".bun-version"
+          bun-version-file: '.bun-version'
 
       - name: ⚙️ Install dependencies
         run: bun install --frozen-lockfile

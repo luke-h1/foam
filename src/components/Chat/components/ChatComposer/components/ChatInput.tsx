@@ -55,7 +55,7 @@ export const ChatInput = forwardRef<InputRef, ChatInputProps>(
           multiline
           scrollEnabled
           selectionColor={theme.color.text.dark}
-          textAlignVertical="top"
+          textAlignVertical='top'
           style={[styles.input, textFieldProps.style]}
         />
       </View>

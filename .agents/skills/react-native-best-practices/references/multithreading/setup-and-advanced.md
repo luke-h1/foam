@@ -25,9 +25,7 @@ npm install react-native-worklets
 // babel.config.js
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
-  plugins: [
-    'react-native-worklets/plugin',
-  ],
+  plugins: ['react-native-worklets/plugin'],
 };
 ```
 
@@ -110,15 +108,15 @@ const workletsPluginOptions = {
 plugins: [['react-native-worklets/plugin', workletsPluginOptions]];
 ```
 
-| Option | Default | Purpose |
-|--------|---------|---------|
-| `bundleMode` | `false` | Enable Bundle Mode (full bundle on all runtimes) |
-| `strictGlobal` | `false` | Prevent implicit capture of globals. Recommended. |
-| `globals` | `[]` | Identifiers that should not be copied to worklet runtimes |
-| `disableWorkletClasses` | `false` | Disable Worklet Classes (needed for Custom Serializables with `new`) |
-| `workletizableModules` | `[]` | Allow-list of third-party modules usable on Worklet Runtimes in Bundle Mode |
-| `omitNativeOnlyData` | `false` | Smaller bundles for Web builds |
-| `substituteWebPlatformChecks` | `false` | Helps tree-shaking for Web builds |
+| Option                        | Default | Purpose                                                                     |
+| ----------------------------- | ------- | --------------------------------------------------------------------------- |
+| `bundleMode`                  | `false` | Enable Bundle Mode (full bundle on all runtimes)                            |
+| `strictGlobal`                | `false` | Prevent implicit capture of globals. Recommended.                           |
+| `globals`                     | `[]`    | Identifiers that should not be copied to worklet runtimes                   |
+| `disableWorkletClasses`       | `false` | Disable Worklet Classes (needed for Custom Serializables with `new`)        |
+| `workletizableModules`        | `[]`    | Allow-list of third-party modules usable on Worklet Runtimes in Bundle Mode |
+| `omitNativeOnlyData`          | `false` | Smaller bundles for Web builds                                              |
+| `substituteWebPlatformChecks` | `false` | Helps tree-shaking for Web builds                                           |
 
 ### Pitfalls
 
@@ -140,7 +138,9 @@ Bundle Mode gives worklets access to the full JavaScript bundle, allowing third-
 
 ```js
 // metro.config.js (Expo)
-const { getBundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+const {
+  getBundleModeMetroConfig,
+} = require('react-native-worklets/bundleMode');
 let config = getDefaultConfig(__dirname);
 config = getBundleModeMetroConfig(config);
 module.exports = config;
@@ -180,11 +180,11 @@ Enable `fetch` on Worklet Runtimes by adding the `FETCH_PREVIEW_ENABLED` feature
 
 Static feature flags go in `package.json` under `worklets.staticFeatureFlags`. They require a native rebuild.
 
-| Flag | Default | Purpose |
-|------|---------|---------|
-| `BUNDLE_MODE_ENABLED` | `false` | Enable Bundle Mode |
-| `FETCH_PREVIEW_ENABLED` | `false` | Enable `fetch` on Worklet Runtimes (requires Bundle Mode) |
-| `IOS_DYNAMIC_FRAMERATE_ENABLED` | `true` | Auto-adjust frame rate for expensive animations (falls back from 120fps to 60fps) |
+| Flag                            | Default | Purpose                                                                           |
+| ------------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `BUNDLE_MODE_ENABLED`           | `false` | Enable Bundle Mode                                                                |
+| `FETCH_PREVIEW_ENABLED`         | `false` | Enable `fetch` on Worklet Runtimes (requires Bundle Mode)                         |
+| `IOS_DYNAMIC_FRAMERATE_ENABLED` | `true`  | Auto-adjust frame rate for expensive animations (falls back from 120fps to 60fps) |
 
 Static flags are unavailable in Expo Go. Use Expo Prebuild instead.
 
@@ -198,10 +198,14 @@ Dynamic flags can be toggled at runtime via `setDynamicFeatureFlag('FLAG_NAME', 
 
 ```js
 // TypeScript
-jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/src/mock'),
+);
 
 // JavaScript
-jest.mock('react-native-worklets', () => require('react-native-worklets/lib/module/mock'));
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/lib/module/mock'),
+);
 ```
 
 ### Web implementation (v0.8+)
@@ -234,6 +238,7 @@ Clear the Metro cache: `npm start -- --reset-cache`. If the issue persists, a de
 ### "Tried to modify key of an object which has been converted to a serializable"
 
 The object was captured in a worklet's closure and later mutated. In dev builds, captured objects are frozen to surface this mistake. Solutions:
+
 - Use `useSharedValue` for values that change over time.
 - Destructure only the needed properties into local variables before the worklet captures them.
 

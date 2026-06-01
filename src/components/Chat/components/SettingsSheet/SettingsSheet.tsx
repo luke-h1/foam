@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 
-function ToggleMenuItem({
+function ToggleMenuItemComponent({
   icon,
   label,
   onValueChange,
@@ -29,7 +29,7 @@ function ToggleMenuItem({
     <View style={styles.menuItem}>
       <SymbolView name={icon} tintColor={theme.colorBorderHover} />
       <View style={styles.menuItemTextContainer}>
-        <Text style={styles.menuItemText} weight="semibold">
+        <Text style={styles.menuItemText} weight='semibold'>
           {label}
         </Text>
         <Switch
@@ -42,12 +42,15 @@ function ToggleMenuItem({
   );
 }
 
+const ToggleMenuItem = memo(ToggleMenuItemComponent);
+
 export interface SettingsSheetProps {
   chatDensity?: 'comfortable' | 'compact';
   highlightOwnMentions?: boolean;
   isPresented: boolean;
   onClearChatCache?: () => void;
   onClearImageCache?: () => void;
+  onClearSevenTvCosmeticsCache?: () => void;
   onDismiss: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
@@ -70,6 +73,7 @@ const SettingsSheetComponent = ({
   onRefetchEmotes,
   onClearChatCache,
   onClearImageCache,
+  onClearSevenTvCosmeticsCache,
   onReconnect,
   onRefreshVideo,
   onToggleChatDensity,
@@ -116,6 +120,11 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onClearImageCache, dismissSheet]);
 
+  const handleClearSevenTvCosmeticsCache = useCallback(() => {
+    onClearSevenTvCosmeticsCache?.();
+    dismissSheet();
+  }, [onClearSevenTvCosmeticsCache, dismissSheet]);
+
   const handleReconnect = useCallback(() => {
     onReconnect?.();
     dismissSheet();
@@ -132,14 +141,14 @@ const SettingsSheetComponent = ({
       onDismiss={onDismiss}
       showDragIndicator
       snapPoints={[{ fraction: 0.58 }, 'full']}
-      testID="chat-settings-sheet"
+      testID='chat-settings-sheet'
     >
       <View style={containerStyle}>
         <View style={styles.header}>
-          <Text style={styles.headerEyebrow} weight="semibold">
+          <Text style={styles.headerEyebrow} weight='semibold'>
             CHAT
           </Text>
-          <Text style={styles.headerTitle} weight="semibold">
+          <Text style={styles.headerTitle} weight='semibold'>
             Settings
           </Text>
         </View>
@@ -154,22 +163,22 @@ const SettingsSheetComponent = ({
         >
           {onRefetchEmotes ? (
             <Button
-              label="Refetch Emotes and Badges"
+              label='Refetch Emotes and Badges'
               style={styles.menuItem}
               onPress={handleRefetchEmotes}
             >
               <SymbolView
-                name="arrow.clockwise"
+                name='arrow.clockwise'
                 tintColor={theme.colorBorderHover}
               />
-              <Text style={styles.menuItemText} weight="semibold">
+              <Text style={styles.menuItemText} weight='semibold'>
                 Refetch Emotes & Badges
               </Text>
             </Button>
           ) : null}
 
           <Button
-            label="Toggle Chat Density"
+            label='Toggle Chat Density'
             style={styles.menuItem}
             onPress={() => {
               onToggleChatDensity?.();
@@ -177,55 +186,55 @@ const SettingsSheetComponent = ({
             }}
           >
             <SymbolView
-              name="text.alignleft"
+              name='text.alignleft'
               tintColor={theme.colorBorderHover}
             />
             <View style={styles.menuItemTextContainer}>
-              <Text style={styles.menuItemText} weight="semibold">
+              <Text style={styles.menuItemText} weight='semibold'>
                 Density
               </Text>
-              <Text style={styles.menuItemValue} weight="bold">
+              <Text style={styles.menuItemValue} weight='bold'>
                 {chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
               </Text>
             </View>
           </Button>
 
           <ToggleMenuItem
-            icon="clock"
-            label="Show Timestamps"
+            icon='clock'
+            label='Show Timestamps'
             value={showTimestamps}
             onValueChange={onToggleShowTimestamps}
           />
 
           <ToggleMenuItem
-            icon="at"
-            label="Highlight Own Mentions"
+            icon='at'
+            label='Highlight Own Mentions'
             value={highlightOwnMentions}
             onValueChange={onToggleHighlightOwnMentions}
           />
 
           <ToggleMenuItem
-            icon="arrowshape.turn.up.left"
-            label="Inline Reply Context"
+            icon='arrowshape.turn.up.left'
+            label='Inline Reply Context'
             value={showInlineReplyContext}
             onValueChange={onToggleInlineReplyContext}
           />
 
           <ToggleMenuItem
-            icon="arrow.down.circle"
-            label="Show Jump Pill"
+            icon='arrow.down.circle'
+            label='Show Jump Pill'
             value={showUnreadJumpPill}
             onValueChange={onToggleShowUnreadJumpPill}
           />
 
           {onReconnect ? (
             <Button
-              label="Reconnect"
+              label='Reconnect'
               style={styles.menuItem}
               onPress={handleReconnect}
             >
-              <SymbolView name="wifi" tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
+              <SymbolView name='wifi' tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight='semibold'>
                 Reconnect
               </Text>
             </Button>
@@ -233,12 +242,12 @@ const SettingsSheetComponent = ({
 
           {onClearChatCache ? (
             <Button
-              label="Clear Chat Cache"
+              label='Clear Chat Cache'
               style={styles.menuItem}
               onPress={handleClearChatCache}
             >
-              <SymbolView name="cylinder" tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
+              <SymbolView name='cylinder' tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight='semibold'>
                 Clear Chat Cache
               </Text>
             </Button>
@@ -246,27 +255,40 @@ const SettingsSheetComponent = ({
 
           {onClearImageCache ? (
             <Button
-              label="Clear Image Cache"
+              label='Clear Image Cache'
               style={styles.menuItem}
               onPress={handleClearImageCache}
             >
-              <SymbolView name="trash" tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
+              <SymbolView name='trash' tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight='semibold'>
                 Clear Image Cache
+              </Text>
+            </Button>
+          ) : null}
+
+          {onClearSevenTvCosmeticsCache ? (
+            <Button
+              label='Clear 7TV Cosmetic Cache'
+              style={styles.menuItem}
+              onPress={handleClearSevenTvCosmeticsCache}
+            >
+              <SymbolView name='sparkles' tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight='semibold'>
+                Clear 7TV Cosmetic Cache
               </Text>
             </Button>
           ) : null}
 
           <View style={styles.menuItem}>
             <SymbolView
-              name="waveform.path.ecg"
+              name='waveform.path.ecg'
               tintColor={theme.colorBorderHover}
             />
             <View style={styles.menuItemTextContainer}>
-              <Text style={styles.menuItemText} weight="semibold">
+              <Text style={styles.menuItemText} weight='semibold'>
                 Display Latency
               </Text>
-              <Text style={styles.menuItemValue} weight="bold">
+              <Text style={styles.menuItemValue} weight='bold'>
                 {latency !== null && latency !== undefined
                   ? `${latency}ms`
                   : 'N/A'}
@@ -276,24 +298,24 @@ const SettingsSheetComponent = ({
 
           {onRefreshVideo ? (
             <Button
-              label="Refresh Video"
+              label='Refresh Video'
               style={styles.menuItem}
               onPress={handleRefreshVideo}
             >
-              <SymbolView name="video" tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight="semibold">
+              <SymbolView name='video' tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight='semibold'>
                 Refresh Video
               </Text>
             </Button>
           ) : null}
 
           <View style={styles.menuItem}>
-            <SymbolView name="repeat" tintColor={theme.colorBorderHover} />
+            <SymbolView name='repeat' tintColor={theme.colorBorderHover} />
             <View style={styles.menuItemTextContainer}>
-              <Text style={styles.menuItemText} weight="semibold">
+              <Text style={styles.menuItemText} weight='semibold'>
                 Reconnection Attempts
               </Text>
-              <Text style={styles.menuItemValue} weight="bold">
+              <Text style={styles.menuItemValue} weight='bold'>
                 {reconnectionAttempts ?? 0}
               </Text>
             </View>

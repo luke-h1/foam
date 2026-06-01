@@ -98,9 +98,6 @@ export function TopTabSwitcher({
             stiffness: 200,
             damping: 20,
           });
-
-          if (currentIndexSV.value !== dragStartIndex.value) {
-          }
         })
         .onFinalize(() => {
           isDragging.value = false;
@@ -138,7 +135,7 @@ export function TopTabSwitcher({
     <GestureDetector gesture={panGesture}>
       <View onLayout={handleLayout} style={styles.shell}>
         <Animated.View
-          pointerEvents="none"
+          pointerEvents='none'
           style={[
             styles.activeSegment,
             {
@@ -161,9 +158,9 @@ export function TopTabSwitcher({
                   style={styles.pressable}
                 >
                   <Text
-                    type="sm"
-                    weight="semibold"
-                    align="center"
+                    type='sm'
+                    weight='semibold'
+                    align='center'
                     color={active ? 'gray.text' : 'gray.textLow'}
                   >
                     {item}

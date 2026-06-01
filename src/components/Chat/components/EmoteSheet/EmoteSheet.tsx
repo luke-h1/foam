@@ -66,12 +66,6 @@ export type EmotePickerItem = string | SanitisedEmote;
 
 type EmoteSectionIcon = `emoji:${string}`;
 
-interface EmoteSection {
-  title: string;
-  icon: EmoteSectionIcon;
-  data: string[];
-}
-
 interface SearchFilterBoxProps {
   onChange?: (value: string) => void;
   onSubmitEditing?: () => void;
@@ -86,7 +80,7 @@ interface EmoteSheetProps {
   onEmoteSelect?: (item: EmotePickerItem) => void;
 }
 
-function EmoteSearchFilter({
+function EmoteSearchFilterComponent({
   onChange,
   onSubmitEditing,
   placeholder,
@@ -96,125 +90,82 @@ function EmoteSearchFilter({
   const hasValue = Boolean(value && value.length > 0);
 
   return (
-    <View style={[styles.searchInputWrap]}>
+    <View style={styles.searchInputWrap}>
       <SymbolView
-        name="magnifyingglass"
+        name='magnifyingglass'
         style={styles.searchIcon}
         tintColor={theme.color.textSecondary.dark}
       />
       <Input
-        autoCapitalize="none"
-        autoComplete="off"
+        autoCapitalize='none'
+        autoComplete='off'
         autoCorrect={false}
-        color="white"
+        color='white'
         onChangeText={onChange}
-        onSubmitEditing={onSubmitEditing ? () => onSubmitEditing() : undefined}
+        onSubmitEditing={onSubmitEditing}
         placeholder={placeholder}
-        placeholderTextColor="rgba(255,255,255,0.42)"
-        radius="none"
-        returnKeyType="search"
-        size="sm"
+        placeholderTextColor='rgba(255,255,255,0.42)'
+        radius='none'
+        returnKeyType='search'
+        size='sm'
         style={styles.searchInput}
         value={value}
-        variant="soft"
+        variant='soft'
       />
       <Button
-        onPress={() => hasValue && rightOnPress?.()}
+        onPress={rightOnPress}
         style={[
           styles.searchClearButton,
           !hasValue && styles.searchClearButtonHidden,
         ]}
         disabled={!hasValue}
       >
-        <SymbolView name="xmark" tintColor={theme.color.text.dark} />
+        <SymbolView name='xmark' tintColor={theme.color.text.dark} />
       </Button>
     </View>
   );
 }
 
-const EMOJI_SECTIONS: EmoteSection[] = [
-  {
-    title: 'Smileys',
-    icon: 'emoji:😀',
-    data: [
-      '😀',
-      '😂',
-      '😍',
-      '🥰',
-      '😎',
-      '😊',
-      '😉',
-      '😁',
-      '😭',
-      '😅',
-      '😆',
-      '😋',
-      '😜',
-      '😝',
-      '😏',
-      '😒',
-      '🤔',
-      '🤗',
-      '🤩',
-      '😬',
-      '😴',
-      '🥳',
-      '🥺',
-      '😈',
-    ],
-  },
-  {
-    title: 'Gestures',
-    icon: 'emoji:👍',
-    data: [
-      '👍',
-      '👎',
-      '👏',
-      '🙌',
-      '🤝',
-      '🙏',
-      '✌️',
-      '🤞',
-      '👋',
-      '✋',
-      '🖐️',
-      '🖖',
-      '👌',
-      '🤏',
-      '🤙',
-      '💪',
-    ],
-  },
-  {
-    title: 'Hearts',
-    icon: 'emoji:❤️',
-    data: [
-      '❤️',
-      '🧡',
-      '💛',
-      '💚',
-      '💙',
-      '💜',
-      '🖤',
-      '🤍',
-      '💔',
-      '❣️',
-      '💕',
-      '💞',
-      '💓',
-      '💗',
-      '💖',
-      '💘',
-    ],
-  },
+const EmoteSearchFilter = memo(EmoteSearchFilterComponent);
+EmoteSearchFilter.displayName = 'EmoteSearchFilter';
+
+const emojiSection = (title: string, icon: EmoteSectionIcon, data: string) => ({
+  id: `emoji-${title.toLowerCase()}`,
+  title,
+  icon,
+  data: data.split(' '),
+});
+
+const EMOJI_MENU_SECTIONS = [
+  emojiSection(
+    'Smileys',
+    'emoji:😀',
+    '😀 😂 😍 🥰 😎 😊 😉 😁 😭 😅 😆 😋 😜 😝 😏 😒 🤔 🤗 🤩 😬 😴 🥳 🥺 😈',
+  ),
+  emojiSection(
+    'Gestures',
+    'emoji:👍',
+    '👍 👎 👏 🙌 🤝 🙏 ✌️ 🤞 👋 ✋ 🖐️ 🖖 👌 🤏 🤙 💪',
+  ),
+  emojiSection(
+    'Hearts',
+    'emoji:❤️',
+    '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💔 ❣️ 💕 💞 💓 💗 💖 💘',
+  ),
 ];
 
-const EMOJI_MENU_SECTIONS = EMOJI_SECTIONS.map(section => ({
-  id: `emoji-${section.title.toLowerCase()}`,
-  title: section.title,
-  icon: section.icon,
-  data: section.data,
-}));
+function IosBlurComponent({ intensity }: { intensity: number }) {
+  return Platform.OS === 'ios' ? (
+    <BlurView
+      intensity={intensity}
+      style={StyleSheet.absoluteFill}
+      tint='dark'
+    />
+  ) : null;
+}
+
+const IosBlur = memo(IosBlurComponent);
+IosBlur.displayName = 'IosBlur';
 
 interface EmoteCellProps {
   cellSize: number;
@@ -222,18 +173,13 @@ interface EmoteCellProps {
   onPress: (item: EmotePickerItem) => void;
 }
 
-const EmoteCell = memo(({ cellSize, item, onPress }: EmoteCellProps) => {
+function EmoteCellComponent({ cellSize, item, onPress }: EmoteCellProps) {
   const handlePress = useCallback(() => {
     onPress(item);
   }, [item, onPress]);
 
-  const imageSource = useMemo(() => {
-    if (typeof item === 'string') {
-      return null;
-    }
-
-    return getCachedEmoteUri(item.url);
-  }, [item]);
+  const imageSource =
+    typeof item === 'string' ? null : getCachedEmoteUri(item.url);
 
   const innerSize = Math.round(cellSize * 0.78);
 
@@ -254,11 +200,11 @@ const EmoteCell = memo(({ cellSize, item, onPress }: EmoteCellProps) => {
             source={imageSource || item.url}
             useNitro
             trackLoadTime
-            trackLoadContext="chat.emote-sheet"
+            trackLoadContext='chat.emote-sheet'
             style={[styles.emoteImage, { height: innerSize, width: innerSize }]}
-            contentFit="contain"
-            cachePolicy="memory-disk"
-            cacheVariant="emote"
+            contentFit='contain'
+            cachePolicy='memory-disk'
+            cacheVariant='emote'
             transition={0}
             placeholder={BLURHASH}
             recyclingKey={item.id}
@@ -267,8 +213,9 @@ const EmoteCell = memo(({ cellSize, item, onPress }: EmoteCellProps) => {
       </View>
     </Button>
   );
-});
+}
 
+const EmoteCell = memo(EmoteCellComponent);
 EmoteCell.displayName = 'EmoteCell';
 
 interface EmoteRowProps {
@@ -277,7 +224,7 @@ interface EmoteRowProps {
   onPress: (item: EmotePickerItem) => void;
 }
 
-const EmoteRow = memo(({ cellSize, items, onPress }: EmoteRowProps) => {
+function EmoteRowComponent({ cellSize, items, onPress }: EmoteRowProps) {
   return (
     <View style={styles.emoteRow}>
       {items.map((item, index) => (
@@ -290,25 +237,20 @@ const EmoteRow = memo(({ cellSize, items, onPress }: EmoteRowProps) => {
       ))}
     </View>
   );
-});
+}
 
+const EmoteRow = memo(EmoteRowComponent);
 EmoteRow.displayName = 'EmoteRow';
 
-function getProviderAccentColor(icon: EmoteMenuIcon): string {
-  if (icon === 'twitch') {
-    return theme.colorPlum;
-  }
-  if (icon === 'stv') {
-    return '#ffffff';
-  }
-  if (icon === 'ffz') {
-    return theme.colorGreen;
-  }
-  if (icon === 'bttv') {
-    return theme.colorOrange;
-  }
-  return theme.color.text.dark;
-}
+const PROVIDER_ACCENT_COLORS: Partial<Record<EmoteMenuIcon, string>> = {
+  twitch: theme.colorPlum,
+  stv: '#ffffff',
+  ffz: theme.colorGreen,
+  bttv: theme.colorOrange,
+};
+
+const getProviderAccentColor = (icon: EmoteMenuIcon) =>
+  PROVIDER_ACCENT_COLORS[icon] ?? theme.color.text.dark;
 
 function renderMenuIcon(
   icon: EmoteMenuIcon,
@@ -337,7 +279,7 @@ function renderMenuIcon(
     return (
       <BrandIcon
         name={icon}
-        size="sm"
+        size='sm'
         color={isActive ? theme.color.text.dark : getProviderAccentColor(icon)}
       />
     );
@@ -354,24 +296,27 @@ interface ProviderChipProps {
   provider: EmoteMenuProvider;
 }
 
-const ProviderChip = memo(
-  ({ isActive, onPress, provider }: ProviderChipProps) => {
-    return (
-      <Button
-        style={[styles.providerChip, isActive && styles.providerChipActive]}
-        onPress={onPress}
-      >
-        <View style={styles.providerChipIcon}>
-          {renderMenuIcon(provider.icon, isActive, provider.title.slice(0, 2))}
-        </View>
-        {isActive ? (
-          <Text style={styles.providerChipTitle}>{provider.title}</Text>
-        ) : null}
-      </Button>
-    );
-  },
-);
+function ProviderChipComponent({
+  isActive,
+  onPress,
+  provider,
+}: ProviderChipProps) {
+  return (
+    <Button
+      style={[styles.providerChip, isActive && styles.providerChipActive]}
+      onPress={onPress}
+    >
+      <View style={styles.providerChipIcon}>
+        {renderMenuIcon(provider.icon, isActive, provider.title.slice(0, 2))}
+      </View>
+      {isActive ? (
+        <Text style={styles.providerChipTitle}>{provider.title}</Text>
+      ) : null}
+    </Button>
+  );
+}
 
+const ProviderChip = memo(ProviderChipComponent);
 ProviderChip.displayName = 'ProviderChip';
 
 interface SetRailButtonProps {
@@ -380,7 +325,11 @@ interface SetRailButtonProps {
   set: EmoteMenuSet;
 }
 
-const SetRailButton = memo(({ isActive, onPress, set }: SetRailButtonProps) => {
+function SetRailButtonComponent({
+  isActive,
+  onPress,
+  set,
+}: SetRailButtonProps) {
   return (
     <Button
       style={[styles.setRailButton, isActive && styles.setRailButtonActive]}
@@ -397,15 +346,16 @@ const SetRailButton = memo(({ isActive, onPress, set }: SetRailButtonProps) => {
       )}
     </Button>
   );
-});
+}
 
+const SetRailButton = memo(SetRailButtonComponent);
 SetRailButton.displayName = 'SetRailButton';
 
 interface SetHeaderProps {
   set: EmoteMenuSet;
 }
 
-const SetHeader = memo(({ set }: SetHeaderProps) => {
+function SetHeaderComponent({ set }: SetHeaderProps) {
   return (
     <View style={styles.setHeader}>
       <View style={styles.setHeaderIcon}>
@@ -416,8 +366,9 @@ const SetHeader = memo(({ set }: SetHeaderProps) => {
       </Text>
     </View>
   );
-});
+}
 
+const SetHeader = memo(SetHeaderComponent);
 SetHeader.displayName = 'SetHeader';
 
 const EmoteSheetComponent = ({
@@ -540,32 +491,16 @@ const EmoteSheetComponent = ({
     [columns, filteredSets],
   );
 
-  const setIndexMap = useMemo(() => {
-    const indexMap = new Map<string, number>();
-    filteredSets.forEach((set, index) => {
-      const startIndex = setStartIndices[index];
-      if (typeof startIndex === 'number') {
-        indexMap.set(set.id, startIndex);
-      }
-    });
-    return indexMap;
-  }, [filteredSets, setStartIndices]);
-
-  const setMap = useMemo(
-    () => new Map(filteredSets.map(set => [set.id, set])),
-    [filteredSets],
-  );
-
   const preloadVisibleEmotes = useMemo(() => {
     const visibleSet =
-      (activeSetId ? setMap.get(activeSetId) : undefined) ?? filteredSets[0];
+      filteredSets.find(set => set.id === activeSetId) ?? filteredSets[0];
 
     return (
       visibleSet?.emotes
         .filter((item): item is SanitisedEmote => typeof item === 'object')
         .slice(0, columns) ?? []
     );
-  }, [activeSetId, columns, filteredSets, setMap]);
+  }, [activeSetId, columns, filteredSets]);
 
   useEffect(() => {
     if (!isPresented || preloadVisibleEmotes.length === 0) {
@@ -595,7 +530,8 @@ const EmoteSheetComponent = ({
 
   const handleScrollToSet = useCallback(
     (setId: string) => {
-      const index = setIndexMap.get(setId);
+      const index =
+        setStartIndices[filteredSets.findIndex(set => set.id === setId)];
       if (typeof index !== 'number') {
         return;
       }
@@ -606,7 +542,7 @@ const EmoteSheetComponent = ({
         animated: true,
       });
     },
-    [setIndexMap],
+    [filteredSets, setStartIndices],
   );
 
   const handleProviderPress = useCallback((providerId: EmoteMenuProviderId) => {
@@ -653,7 +589,7 @@ const EmoteSheetComponent = ({
   const renderItem = useCallback(
     ({ item }: { item: EmoteMenuListItem }) => {
       if (item.type === 'header') {
-        const set = setMap.get(item.setId);
+        const set = filteredSets.find(set => set.id === item.setId);
         if (!set) {
           return null;
         }
@@ -669,7 +605,7 @@ const EmoteSheetComponent = ({
         />
       );
     },
-    [cellSize, handleEmotePress, setMap],
+    [cellSize, filteredSets, handleEmotePress],
   );
 
   const showPlaceholder = providers.length === 0;
@@ -681,7 +617,7 @@ const EmoteSheetComponent = ({
       onDismiss={handleDismiss}
       showDragIndicator
       snapPoints={[{ fraction: SHEET_DETENT }, 'full']}
-      testID="chat-emote-sheet"
+      testID='chat-emote-sheet'
     >
       <View
         style={[
@@ -690,13 +626,7 @@ const EmoteSheetComponent = ({
         ]}
       >
         <View style={styles.header}>
-          {Platform.OS === 'ios' ? (
-            <BlurView
-              intensity={32}
-              style={StyleSheet.absoluteFill}
-              tint="dark"
-            />
-          ) : null}
+          <IosBlur intensity={32} />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -717,7 +647,7 @@ const EmoteSheetComponent = ({
           <View style={styles.searchContainer}>
             <View style={styles.searchRow}>
               <EmoteSearchFilter
-                placeholder="Search emotes"
+                placeholder='Search emotes'
                 onChange={handleSearchChange}
                 onSubmitEditing={() => handleSearchChange(searchQuery)}
                 rightOnPress={handleClearSearch}
@@ -729,7 +659,7 @@ const EmoteSheetComponent = ({
 
         {showPlaceholder ? (
           <View style={styles.placeholderContent}>
-            <ActivityIndicator size="large" color={theme.color.text.dark} />
+            <ActivityIndicator size='large' color={theme.color.text.dark} />
           </View>
         ) : (
           <View style={[styles.body, { height: bodyHeight }]}>
@@ -761,13 +691,7 @@ const EmoteSheetComponent = ({
             </View>
 
             <View style={[styles.rail, { height: bodyHeight }]}>
-              {Platform.OS === 'ios' ? (
-                <BlurView
-                  intensity={28}
-                  style={StyleSheet.absoluteFill}
-                  tint="dark"
-                />
-              ) : null}
+              <IosBlur intensity={28} />
               <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.railContent}

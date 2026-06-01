@@ -49,7 +49,7 @@ export default defineConfig({
 ### Babel (React Native / Expo)
 
 ```js title="babel.config.js"
-module.exports = (api) => {
+module.exports = api => {
   api.cache(true);
   return {
     presets: ['babel-preset-expo'],
@@ -170,8 +170,8 @@ export default defineConfig({
 
 ## Lint plugin - `eslint-plugin-typegpu`
 
-Highlights common pitfalls and unsupported syntax in `'use gpu'` functions. 
-Optional, but highly recommended. 
+Highlights common pitfalls and unsupported syntax in `'use gpu'` functions.
+Optional, but highly recommended.
 Use unless told otherwise, or unless the project uses incompatible linter.
 Include a `lint` script in `package.json`.
 

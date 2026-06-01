@@ -29,7 +29,7 @@ function ListItem({ onDelete }: { onDelete: () => void }) {
       renderRightActions={renderRightActions}
       rightThreshold={80}
       overshootFriction={8}
-      onSwipeableOpen={(direction) => {
+      onSwipeableOpen={direction => {
         if (direction === 'right') onDelete();
       }}
     >
@@ -71,8 +71,8 @@ function App() {
     <ReanimatedDrawerLayout
       ref={drawerRef}
       drawerWidth={280}
-      drawerType="slide"
-      renderNavigationView={(progressAnimatedValue) => (
+      drawerType='slide'
+      renderNavigationView={progressAnimatedValue => (
         <Animated.View style={{ opacity: progressAnimatedValue }}>
           <Text>Menu content</Text>
         </Animated.View>
@@ -112,9 +112,13 @@ const startX = useSharedValue(0);
 const pan = usePanGesture({
   activeOffsetX: [-10, 10],
   failOffsetY: [-5, 5],
-  onBegin: () => { startX.value = translateX.value; },
-  onUpdate: (e) => { translateX.value = startX.value + e.translationX; },
-  onDeactivate: (e) => {
+  onBegin: () => {
+    startX.value = translateX.value;
+  },
+  onUpdate: e => {
+    translateX.value = startX.value + e.translationX;
+  },
+  onDeactivate: e => {
     if (e.translationX < -80) {
       translateX.value = withTiming(-ACTIONS_WIDTH);
     } else {
@@ -124,20 +128,26 @@ const pan = usePanGesture({
 });
 
 // v2
-const pan = useMemo(() =>
-  Gesture.Pan()
-    .activeOffsetX([-10, 10])
-    .failOffsetY([-5, 5])
-    .onBegin(() => { startX.value = translateX.value; })
-    .onUpdate((e) => { translateX.value = startX.value + e.translationX; })
-    .onEnd((e) => {
-      if (e.translationX < -80) {
-        translateX.value = withTiming(-ACTIONS_WIDTH);
-      } else {
-        translateX.value = withSpring(0);
-      }
-    }),
-[]);
+const pan = useMemo(
+  () =>
+    Gesture.Pan()
+      .activeOffsetX([-10, 10])
+      .failOffsetY([-5, 5])
+      .onBegin(() => {
+        startX.value = translateX.value;
+      })
+      .onUpdate(e => {
+        translateX.value = startX.value + e.translationX;
+      })
+      .onEnd(e => {
+        if (e.translationX < -80) {
+          translateX.value = withTiming(-ACTIONS_WIDTH);
+        } else {
+          translateX.value = withSpring(0);
+        }
+      }),
+  [],
+);
 ```
 
 Use `activeOffsetX`/`failOffsetY` to distinguish horizontal swipe from vertical scroll.
@@ -147,9 +157,7 @@ Use `activeOffsetX`/`failOffsetY` to distinguish horizontal swipe from vertical 
 On web, add `touchAction="pan-y"` to `GestureDetector` so browser vertical scrolling works alongside horizontal swipe:
 
 ```tsx
-<GestureDetector gesture={pan} touchAction="pan-y">
-  <Animated.View style={[styles.row, animatedStyle]}>
-    {children}
-  </Animated.View>
+<GestureDetector gesture={pan} touchAction='pan-y'>
+  <Animated.View style={[styles.row, animatedStyle]}>{children}</Animated.View>
 </GestureDetector>
 ```

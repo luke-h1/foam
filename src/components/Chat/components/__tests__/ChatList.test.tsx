@@ -3,22 +3,21 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { ChatList } from '../ChatList';
 
-const mockLegendList = jest.fn((_props: unknown) => (
-  <View testID="flash-list" />
+const mockFlashList = jest.fn((_props: unknown) => (
+  <View testID='flash-list' />
 ));
 
-jest.mock('@legendapp/list', () => ({
-  LegendList: (props: unknown) => mockLegendList(props),
+jest.mock('@app/components/FlashList/FlashList', () => ({
+  FlashList: (props: unknown) => mockFlashList(props),
 }));
 
 describe('ChatList', () => {
   beforeEach(() => {
-    mockLegendList.mockClear();
+    mockFlashList.mockClear();
   });
 
-  test('passes streaming chat tuning props to LegendList', () => {
+  test('passes streaming chat tuning props to FlashList', () => {
     const listRef = { current: null };
-    const getEstimatedItemSize = jest.fn();
 
     render(
       <ChatList
@@ -35,26 +34,19 @@ describe('ChatList', () => {
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
-        getEstimatedItemSize={getEstimatedItemSize}
         contentContainerStyle={undefined}
       />,
     );
 
-    expect(mockLegendList).toHaveBeenCalledWith(
+    expect(mockFlashList).toHaveBeenCalledWith(
       expect.objectContaining({
         drawDistance: 960,
-        estimatedItemSize: 18,
         extraData: { showTimestamps: false },
-        getEstimatedItemSize,
-        initialContainerPoolRatio: 3,
-        maintainScrollAtEnd: {
-          onDataChange: true,
-          onItemLayout: true,
-          onLayout: true,
+        maintainVisibleContentPosition: {
+          animateAutoScrollToBottom: false,
+          autoscrollToBottomThreshold: 0.001,
+          startRenderingFromBottom: true,
         },
-        maintainScrollAtEndThreshold: 0.001,
-        maintainVisibleContentPosition: true,
-        recycleItems: true,
         viewabilityConfig: {
           itemVisiblePercentThreshold: 1,
         },
@@ -97,7 +89,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
+    const props = mockFlashList.mock.calls[0]?.[0] as {
       onViewableItemsChanged: (info: { viewableItems: unknown[] }) => void;
     };
 
@@ -111,7 +103,54 @@ describe('ChatList', () => {
     expect(onViewableMessagesChange).toHaveBeenCalledWith([visibleMessage]);
   });
 
-  test('renders a skeleton row when LegendList asks for a not-yet-loaded cell', () => {
+  test('does not refire visible-message hydration for the same visible rows', () => {
+    const listRef = { current: null };
+    const onViewableMessagesChange = jest.fn();
+    const visibleMessage = {
+      id: '1',
+      message_id: '1',
+      message_nonce: 'nonce',
+      message: [{ type: 'text', content: 'hello' }],
+      badges: [],
+      channel: 'channel',
+      sender: 'sender',
+      timestamp: '00:00',
+      userstate: {},
+    };
+
+    render(
+      <ChatList
+        data={[visibleMessage] as never}
+        listRef={listRef}
+        shouldMaintainScrollAtEnd
+        handleScroll={jest.fn()}
+        handleScrollBeginDrag={jest.fn()}
+        handleScrollEndDrag={jest.fn()}
+        handleMomentumScrollEnd={jest.fn()}
+        handleEndReached={jest.fn()}
+        handleContentSizeChange={jest.fn()}
+        renderItem={jest.fn()}
+        keyExtractor={jest.fn()}
+        getItemType={jest.fn()}
+        contentContainerStyle={undefined}
+        onViewableMessagesChange={onViewableMessagesChange}
+      />,
+    );
+
+    const props = mockFlashList.mock.calls[0]?.[0] as {
+      onViewableItemsChanged: (info: { viewableItems: unknown[] }) => void;
+    };
+    const viewabilityPayload = {
+      viewableItems: [{ item: visibleMessage, isViewable: true }],
+    };
+
+    props.onViewableItemsChanged(viewabilityPayload);
+    props.onViewableItemsChanged(viewabilityPayload);
+
+    expect(onViewableMessagesChange).toHaveBeenCalledTimes(1);
+  });
+
+  test('renders a skeleton row when FlashList asks for a not-yet-loaded cell', () => {
     const listRef = { current: null };
 
     render(
@@ -132,7 +171,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
+    const props = mockFlashList.mock.calls[0]?.[0] as {
       renderItem: (info: {
         item: undefined;
         index: number;
@@ -147,7 +186,7 @@ describe('ChatList', () => {
     expect(getByTestId('chat-row-skeleton')).toBeTruthy();
   });
 
-  test('lets LegendList maintain the end without imperative growth scrolling', () => {
+  test('lets FlashList maintain the end without imperative growth scrolling', () => {
     const scrollToEnd = jest.fn();
     const listRef = { current: { scrollToEnd } };
     const message = {
@@ -203,9 +242,9 @@ describe('ChatList', () => {
       />,
     );
 
-    expect(mockLegendList).toHaveBeenCalledWith(
+    expect(mockFlashList).toHaveBeenCalledWith(
       expect.objectContaining({
-        maintainScrollAtEnd: false,
+        maintainVisibleContentPosition: { disabled: true },
       }),
     );
   });
@@ -249,14 +288,14 @@ describe('ChatList', () => {
       />,
     );
 
-    expect(mockLegendList).toHaveBeenLastCalledWith(
+    expect(mockFlashList).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        maintainScrollAtEnd: false,
+        maintainVisibleContentPosition: { disabled: true },
       }),
     );
   });
 
-  test('passes bounded content-size anchoring through to LegendList', () => {
+  test('passes bounded content-size anchoring through to FlashList', () => {
     const scrollToEnd = jest.fn();
     const listRef = { current: { scrollToEnd } };
     const handleContentSizeChange = jest.fn();
@@ -279,7 +318,7 @@ describe('ChatList', () => {
       />,
     );
 
-    const props = mockLegendList.mock.calls[0]?.[0] as {
+    const props = mockFlashList.mock.calls[0]?.[0] as {
       onContentSizeChange?: () => void;
     };
 
