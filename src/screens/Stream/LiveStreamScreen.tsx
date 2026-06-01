@@ -202,6 +202,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const normalizedLogin = useMemo(() => id.trim().toLowerCase(), [id]);
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
+  const useUIKitForWebView = usePreference('useUIKitForWebView');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const safeFrame = useSafeAreaFrame();
   const insets = useSafeAreaInsets();
@@ -618,6 +619,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onWebViewLoaded={handlePlayerLoaded}
             showOverlayControls={false}
             streamInfo={streamInfo}
+            useUIKitForWebView={useUIKitForWebView}
           />
         ) : null}
       </Animated.View>

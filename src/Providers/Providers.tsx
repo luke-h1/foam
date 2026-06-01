@@ -1,4 +1,5 @@
 import { ApolloProvider } from '@apollo/client/react';
+import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
@@ -128,7 +129,9 @@ export function Providers({ children }: PropsWithChildren) {
                               },
                             }}
                           >
-                            {children}
+                            <AppBottomSheetProvider>
+                              {children}
+                            </AppBottomSheetProvider>
                           </PressablesConfig>
                         </QueryProviderWithAuth>
                       </AnalyticsProvider>

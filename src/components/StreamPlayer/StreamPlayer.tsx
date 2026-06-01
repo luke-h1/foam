@@ -5,6 +5,7 @@ import { impact } from '@app/lib/haptics';
 import { countMetric } from '@app/lib/sentry';
 import { recordError } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
+import { UIKitWebView } from '@modules/ui-kit-webview';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import {
@@ -252,6 +253,11 @@ export interface StreamPlayerProps {
    * @default true
    */
   useRawTwitchPlayer?: boolean;
+  /**
+   * Experiment: render URI-based player loads through the local UIKit WKWebView.
+   * iOS only; other platforms keep react-native-webview.
+   */
+  useUIKitForWebView?: boolean;
   /**
    * Show custom overlay controls
    * @default false
@@ -1028,6 +1034,7 @@ export const StreamPlayer = memo(
       showOverlayControls = false,
       streamInfo,
       useRawTwitchPlayer = true,
+      useUIKitForWebView = false,
       video,
       width,
     },
@@ -1692,6 +1699,43 @@ export const StreamPlayer = memo(
       [channel, onError],
     );
 
+    const handleUIKitWebViewError = useCallback(
+      (event: {
+        nativeEvent: {
+          code: number;
+          description: string;
+          domain: string;
+          url: string;
+        };
+      }) => {
+        const { nativeEvent } = event;
+        console.warn('[StreamPlayer:UIKitWebView ERROR]', {
+          code: nativeEvent.code,
+          description: nativeEvent.description,
+          domain: nativeEvent.domain,
+          url: nativeEvent.url,
+        });
+
+        recordError({
+          name: 'stream_error',
+          message: `StreamPlayer UIKit WebView error: ${nativeEvent.description}`,
+          params: {
+            category: 'Stream',
+            action: 'uikit_webview_error',
+            code: nativeEvent.code,
+            description: nativeEvent.description,
+            domain: nativeEvent.domain,
+            url: nativeEvent.url,
+            channel,
+          },
+          errorCause: nativeEvent,
+        });
+
+        onError?.(nativeEvent.description);
+      },
+      [channel, onError],
+    );
+
     const handleShouldStartLoadWithRequest =
       useCallback<OnShouldStartLoadWithRequest>(
         request => {
@@ -1720,6 +1764,9 @@ export const StreamPlayer = memo(
     const playerHeight: DimensionValue = height ?? '100%';
     const allowsTwitchInteraction =
       Boolean(clip) || usesHostedPlayer || useRawTwitchPlayer || hasContentGate;
+    const webViewUrl = 'uri' in webViewSource ? webViewSource.uri : undefined;
+    const shouldUseUIKitWebView =
+      useUIKitForWebView && Platform.OS === 'ios' && Boolean(webViewUrl);
     const shouldShowNativeControls =
       showOverlayControls &&
       !clip &&
@@ -1736,64 +1783,103 @@ export const StreamPlayer = memo(
           hasContentGate && styles.containerScrollable,
         ]}
       >
-        <WebView
-          key={webViewKey}
-          ref={webViewRef}
-          allowsFullscreenVideo={false}
-          allowsInlineMediaPlayback
-          cacheEnabled
-          domStorageEnabled
-          javaScriptEnabled
-          javaScriptCanOpenWindowsAutomatically
-          mediaPlaybackRequiresUserAction={false}
-          scrollEnabled={allowsTwitchInteraction}
-          keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
-          setBuiltInZoomControls={false}
-          setDisplayZoomControls={false}
-          setSupportMultipleWindows={false}
-          sharedCookiesEnabled
-          thirdPartyCookiesEnabled
-          originWhitelist={['*']}
-          source={webViewSource}
-          style={[
-            styles.webView,
-            allowsTwitchInteraction && styles.webViewScrollable,
-          ]}
-          onContentProcessDidTerminate={() => {
-            remountEmbedWebView();
-          }}
-          onError={handleWebViewError}
-          onHttpError={handleWebViewHttpError}
-          onNavigationStateChange={event => {
-            if (isTwitchPassportCallbackUrl(event.url)) {
-              scheduleAuthCompletionReload();
-            }
-          }}
-          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-          onLoadEnd={event => {
-            onWebViewLoaded?.();
-            if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
-              scheduleAuthCompletionReload();
-              return;
-            }
-            if (needsInitRef.current) {
-              needsInitRef.current = false;
-            }
-          }}
-          onLoadStart={() => {
-            if (__DEV__) {
-              console.warn('[StreamPlayer:WebView] onLoadStart', {
-                channel,
-                hasClip: !!clip,
-                hasVideo: !!video,
-              });
-            }
-          }}
-          onMessage={handleMessage}
-          onRenderProcessGone={() => {
-            remountEmbedWebView();
-          }}
-        />
+        {shouldUseUIKitWebView && webViewUrl ? (
+          <UIKitWebView
+            key={webViewKey}
+            allowsFullscreenVideo={false}
+            scrollEnabled={allowsTwitchInteraction}
+            keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
+            url={webViewUrl}
+            style={[
+              styles.webView,
+              allowsTwitchInteraction && styles.webViewScrollable,
+            ]}
+            onError={handleUIKitWebViewError}
+            onNavigationStateChange={event => {
+              if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
+                scheduleAuthCompletionReload();
+              }
+            }}
+            onLoadEnd={event => {
+              onWebViewLoaded?.();
+              if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
+                scheduleAuthCompletionReload();
+                return;
+              }
+              if (needsInitRef.current) {
+                needsInitRef.current = false;
+              }
+            }}
+            onLoadStart={() => {
+              if (__DEV__) {
+                console.warn('[StreamPlayer:UIKitWebView] onLoadStart', {
+                  channel,
+                  hasClip: !!clip,
+                  hasVideo: !!video,
+                });
+              }
+            }}
+          />
+        ) : (
+          <WebView
+            key={webViewKey}
+            ref={webViewRef}
+            allowsFullscreenVideo={false}
+            allowsInlineMediaPlayback
+            cacheEnabled
+            domStorageEnabled
+            javaScriptEnabled
+            javaScriptCanOpenWindowsAutomatically
+            mediaPlaybackRequiresUserAction={false}
+            scrollEnabled={allowsTwitchInteraction}
+            keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
+            setBuiltInZoomControls={false}
+            setDisplayZoomControls={false}
+            setSupportMultipleWindows={false}
+            sharedCookiesEnabled
+            thirdPartyCookiesEnabled
+            originWhitelist={['*']}
+            source={webViewSource}
+            style={[
+              styles.webView,
+              allowsTwitchInteraction && styles.webViewScrollable,
+            ]}
+            onContentProcessDidTerminate={() => {
+              remountEmbedWebView();
+            }}
+            onError={handleWebViewError}
+            onHttpError={handleWebViewHttpError}
+            onNavigationStateChange={event => {
+              if (isTwitchPassportCallbackUrl(event.url)) {
+                scheduleAuthCompletionReload();
+              }
+            }}
+            onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+            onLoadEnd={event => {
+              onWebViewLoaded?.();
+              if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
+                scheduleAuthCompletionReload();
+                return;
+              }
+              if (needsInitRef.current) {
+                needsInitRef.current = false;
+              }
+            }}
+            onLoadStart={() => {
+              if (__DEV__) {
+                console.warn('[StreamPlayer:WebView] onLoadStart', {
+                  channel,
+                  hasClip: !!clip,
+                  hasVideo: !!video,
+                });
+              }
+            }}
+            onMessage={handleMessage}
+            onRenderProcessGone={() => {
+              remountEmbedWebView();
+            }}
+          />
+        )}
 
         {shouldShowNativeControls && (
           <GestureDetector gesture={overlayTapGesture}>

@@ -1,4 +1,5 @@
 import { Button } from '@app/components/Button/Button';
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { SymbolView } from 'expo-symbols';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
@@ -7,7 +8,6 @@ import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { BottomSheet } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
 import {
   ReactNode,

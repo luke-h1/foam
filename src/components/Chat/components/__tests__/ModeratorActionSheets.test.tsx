@@ -3,11 +3,6 @@ import type { ReactNode } from 'react';
 import { ActionSheet } from '../ActionSheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
 
-type BottomSheetMockProps = {
-  children?: ReactNode;
-  isPresented: boolean;
-};
-
 jest.mock('expo-symbols', () => ({
   SymbolView: () => null,
 }));
@@ -15,16 +10,6 @@ jest.mock('expo-symbols', () => ({
 jest.mock('@app/components/Image/Image', () => ({
   Image: () => null,
 }));
-
-jest.mock('@expo/ui', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-
-  return {
-    BottomSheet: ({ children, isPresented }: BottomSheetMockProps) =>
-      isPresented ? React.createElement(View, null, children) : null,
-  };
-});
 
 jest.mock('react-native-teleport', () => {
   const React = require('react');

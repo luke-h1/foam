@@ -146,9 +146,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabsFrame: {
-    left: theme.space20,
+    backgroundColor: theme.color.background.dark,
+    left: 0,
+    paddingBottom: theme.space8,
+    paddingHorizontal: theme.space20,
     position: 'absolute',
-    right: theme.space20,
+    right: 0,
   },
   title: {
     lineHeight: 44,

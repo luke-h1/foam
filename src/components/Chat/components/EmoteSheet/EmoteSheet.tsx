@@ -1,4 +1,5 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
@@ -15,7 +16,6 @@ import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { BLURHASH } from '@app/utils/image/image-cache';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
-import { BottomSheet } from '@expo/ui';
 import {
   memo,
   startTransition,

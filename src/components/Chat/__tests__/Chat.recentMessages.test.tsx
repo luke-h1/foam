@@ -327,6 +327,7 @@ const setPreferences = (showRecentMessages = true) => {
     disableEmoteAnimations: false,
     disableChat: false,
     disableStream: false,
+    useUIKitForWebView: false,
     emojiStyle: 'twitter',
     highlightOwnMentions: true,
     show7TvEmotes: true,
