@@ -222,6 +222,7 @@
     "danger": "^13.0.5",
     "detox": "20.46.0",
     "dotenv-cli": "^11.0.0",
+    "eslint": "^10.4.1",
     "expo-atlas": "^0.4.3",
     "globals": "^16.3.0",
     "husky": "9.1.7",
