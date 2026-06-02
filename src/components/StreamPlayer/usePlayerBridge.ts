@@ -6,9 +6,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { Ref, RefObject } from 'react';
+import type { Ref } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
-import type { WebView } from 'react-native-webview';
 
 import type {
   PlayerMessage,
@@ -33,11 +32,11 @@ interface UsePlayerBridgeOptions {
   onPlay?: () => void;
   onReady?: () => void;
   ref: Ref<StreamPlayerRef>;
+  runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;
   sourceKey: string;
   usesHostedPlayer: boolean;
   webViewKey: number;
-  webViewRef: RefObject<WebView | null>;
 }
 
 export function usePlayerBridge({
@@ -56,11 +55,11 @@ export function usePlayerBridge({
   onPlay,
   onReady,
   ref,
+  runJavaScript,
   scheduleAuthCompletionReload,
   sourceKey,
   usesHostedPlayer,
   webViewKey,
-  webViewRef,
 }: UsePlayerBridgeOptions) {
   const [playerState, setPlayerState] = useState<PlayerState>({
     channel,
@@ -108,11 +107,9 @@ export function usePlayerBridge({
 
   const injectJS = useCallback(
     (script: string) => {
-      webViewRef.current?.injectJavaScript(
-        `try { ${script} } catch(e) {}; true;`,
-      );
+      runJavaScript(`try { ${script} } catch(e) {}; true;`);
     },
-    [webViewRef],
+    [runJavaScript],
   );
 
   const play = useCallback(() => {

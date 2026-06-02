@@ -23,12 +23,15 @@ interface StreamPlayerWebViewProps {
   allowsTwitchInteraction: boolean;
   channel?: string;
   clip?: string;
+  injectedJavaScript?: string;
+  javaScriptCommand?: string;
   needsInitRef: RefObject<boolean>;
   onError?: (error: string) => void;
   onHttpError: (error: { statusCode: number; url: string }) => void;
   onMessage: ComponentProps<typeof WebView>['onMessage'];
   onWebViewLoaded?: () => void;
   parent: string;
+  rawTwitchPlayerAutoplay: boolean;
   remountWebView: () => void;
   restrictWebViewNavigationToTwitchPlayer: boolean;
   scheduleAuthCompletionReload: () => void;
@@ -43,12 +46,15 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   allowsTwitchInteraction,
   channel,
   clip,
+  injectedJavaScript,
+  javaScriptCommand,
   needsInitRef,
   onError,
   onHttpError,
   onMessage,
   onWebViewLoaded,
   parent,
+  rawTwitchPlayerAutoplay,
   remountWebView,
   restrictWebViewNavigationToTwitchPlayer,
   scheduleAuthCompletionReload,
@@ -216,10 +222,14 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       <UIKitWebView
         key={webViewKey}
         allowsFullscreenVideo={false}
+        debugRawTwitchPlayerBridge={__DEV__}
         scrollEnabled={allowsTwitchInteraction}
         keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
+        javaScriptCommand={javaScriptCommand}
         parent={parent}
         playerWebsiteUrl={TWITCH_PLAYER_WEBSITE_URL}
+        rawTwitchPlayerAutoplay={rawTwitchPlayerAutoplay}
+        rawTwitchPlayerBridgeEnabled={Boolean(injectedJavaScript)}
         restrictNavigationToTwitchPlayer={
           restrictWebViewNavigationToTwitchPlayer
         }
@@ -230,6 +240,13 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
         ]}
         onContentProcessDidTerminate={remountWebView}
         onError={handleUIKitWebViewError}
+        onMessage={event => {
+          onMessage?.({
+            nativeEvent: {
+              data: event.nativeEvent.data,
+            },
+          } as Parameters<NonNullable<typeof onMessage>>[0]);
+        }}
         onNavigationStateChange={event => {
           if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
             scheduleAuthCompletionReload();
@@ -261,6 +278,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       thirdPartyCookiesEnabled
       originWhitelist={['*']}
       source={source}
+      injectedJavaScript={injectedJavaScript}
       style={[
         styles.webView,
         allowsTwitchInteraction && styles.webViewScrollable,

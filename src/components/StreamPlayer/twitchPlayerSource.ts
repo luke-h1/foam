@@ -385,6 +385,332 @@ export function buildRawTwitchPlayerUrl(options: {
   return `https://player.twitch.tv/?${params.toString()}`;
 }
 
+export function buildRawTwitchPlayerBootstrapScript(options: {
+  autoplay: boolean;
+  debug: boolean;
+}): string {
+  return `
+(function() {
+  if (window.__foamRawTwitchPlayerBootstrapped) {
+    return true;
+  }
+  window.__foamRawTwitchPlayerBootstrapped = true;
+  var shouldAutoplay = ${options.autoplay ? 'true' : 'false'};
+  var enableTrace = ${options.debug ? 'true' : 'false'};
+  var hideAttempts = 0;
+  var playbackStatsInterval = null;
+  var pendingPauseTimer = null;
+  var lastBlockedEventAt = 0;
+
+  function post(type, payload) {
+    if (type === 'trace' && !enableTrace) {
+      return;
+    }
+
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: type,
+        payload: payload || {}
+      }));
+    } catch (e) {}
+  }
+
+  function asyncQuerySelector(selector, timeout) {
+    return new Promise(function(resolve) {
+      var element = document.querySelector(selector);
+      if (element) {
+        resolve(element);
+        return;
+      }
+
+      var observer = new MutationObserver(function() {
+        element = document.querySelector(selector);
+        if (!element) {
+          return;
+        }
+        observer.disconnect();
+        resolve(element);
+      });
+
+      observer.observe(document.body || document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+
+      if (timeout) {
+        setTimeout(function() {
+          observer.disconnect();
+          resolve(undefined);
+        }, timeout);
+      }
+    });
+  }
+
+  function hideElements() {
+    var selectors = [
+      '.top-bar',
+      '.player-controls',
+      '#channel-player-disclosures',
+      '[data-a-target="player-overlay-video-stats"]',
+      '[data-a-target="player-overlay-play-button"]',
+      '[data-a-target="player-overlay-click-handler"]',
+      '[data-a-target="player-overlay-preview-background"]',
+      '.player-overlay-background'
+    ];
+
+    selectors.forEach(function(selector) {
+      document.querySelectorAll(selector).forEach(function(element) {
+        element.style.setProperty('display', 'none', 'important');
+        element.style.setProperty('visibility', 'hidden', 'important');
+        element.style.setProperty('pointer-events', 'none', 'important');
+      });
+    });
+  }
+
+  function installOverlayHider() {
+    hideElements();
+
+    var observer = new MutationObserver(hideElements);
+    observer.observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+
+    var interval = setInterval(function() {
+      hideAttempts += 1;
+      hideElements();
+      if (hideAttempts >= 80) {
+        clearInterval(interval);
+      }
+    }, 250);
+  }
+
+  function acceptContentWarning() {
+    asyncQuerySelector('button[data-a-target*="content-classification-gate"]', 10000)
+      .then(function(button) {
+        if (!button) {
+          return;
+        }
+        button.click();
+      })
+      .catch(function() {});
+  }
+
+  function emitMuteState(video) {
+    post('muteState', {
+      muted: video ? video.muted : false,
+      volume: video ? video.volume : 1
+    });
+  }
+
+  function prepareInlineVideo(video) {
+    if (!video) {
+      return;
+    }
+
+    try {
+      video.playsInline = true;
+      video.controls = false;
+      video.disablePictureInPicture = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.setAttribute('x-webkit-airplay', 'deny');
+      video.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
+      video.removeAttribute('controls');
+    } catch (e) {}
+  }
+
+  function emitPlaybackStats() {
+    var statsText = document.querySelector('[aria-label="Latency To Broadcaster"]')?.textContent || '';
+    var latency = Number.parseFloat(statsText);
+    post('playbackStats', {
+      bufferSize: null,
+      displayResolution: null,
+      fps: null,
+      hlsLatencyBroadcaster: Number.isFinite(latency) ? latency : null,
+      playbackRate: null,
+      skippedFrames: null,
+      videoResolution: null
+    });
+  }
+
+  function startPlaybackStats() {
+    emitPlaybackStats();
+    if (playbackStatsInterval) {
+      return;
+    }
+    playbackStatsInterval = setInterval(emitPlaybackStats, 2500);
+  }
+
+  function stopPlaybackStats() {
+    if (!playbackStatsInterval) {
+      return;
+    }
+    clearInterval(playbackStatsInterval);
+    playbackStatsInterval = null;
+  }
+
+  function clearPendingPause() {
+    if (!pendingPauseTimer) {
+      return;
+    }
+    clearTimeout(pendingPauseTimer);
+    pendingPauseTimer = null;
+  }
+
+  function postPauseIfStillPaused(video) {
+    pendingPauseTimer = null;
+    if (video && !video.paused) {
+      return;
+    }
+    post('pause');
+  }
+
+  function postPlaybackBlocked() {
+    var now = Date.now();
+    if (now - lastBlockedEventAt < 2000) {
+      return;
+    }
+    lastBlockedEventAt = now;
+    post('playbackBlocked');
+  }
+
+  function installVideoBridge(video) {
+    if (!video || video.__foamBridgeInstalled) {
+      return;
+    }
+
+    video.__foamBridgeInstalled = true;
+    prepareInlineVideo(video);
+    video.muted = false;
+    video.volume = 1;
+    post('ready');
+    emitMuteState(video);
+
+    video.addEventListener('playing', function() {
+      clearPendingPause();
+      video.muted = false;
+      video.volume = 1;
+      post('contentGateDetected', { hasContentGate: false });
+      post('play');
+      post('playing');
+      post('stateUpdate', {
+        isBuffering: false,
+        isPaused: false,
+        isReady: true,
+        muted: video.muted,
+        volume: video.volume
+      });
+      startPlaybackStats();
+    });
+
+    video.addEventListener('pause', function() {
+      clearPendingPause();
+      stopPlaybackStats();
+      pendingPauseTimer = setTimeout(function() {
+        postPauseIfStillPaused(video);
+      }, 750);
+    });
+
+    video.addEventListener('ended', function() {
+      stopPlaybackStats();
+      post('ended');
+    });
+
+    video.addEventListener('volumechange', function() {
+      emitMuteState(video);
+    });
+
+    if (shouldAutoplay) {
+      var playResult = video.play();
+      if (playResult && typeof playResult.catch === 'function') {
+        playResult.catch(postPlaybackBlocked);
+      }
+    }
+  }
+
+  function installPlayerControls() {
+    window.playerControls = {
+      getCurrentTime: function() {
+        var video = document.querySelector('video');
+        post('currentTime', { time: video ? video.currentTime : 0 });
+      },
+      getDuration: function() {
+        var video = document.querySelector('video');
+        post('duration', { duration: video ? video.duration : 0 });
+      },
+      mute: function() {
+        var video = document.querySelector('video');
+        if (!video) { return; }
+        video.muted = true;
+        emitMuteState(video);
+      },
+      pause: function() {
+        var video = document.querySelector('video');
+        if (video) { video.pause(); }
+      },
+      play: function() {
+        var video = document.querySelector('video');
+        if (!video) { return; }
+        prepareInlineVideo(video);
+        video.muted = false;
+        video.volume = 1;
+        var result = video.play();
+        if (result && typeof result.catch === 'function') {
+          result.catch(postPlaybackBlocked);
+        }
+      },
+      seek: function(timestamp) {
+        var video = document.querySelector('video');
+        if (video && Number.isFinite(timestamp)) {
+          video.currentTime = timestamp;
+        }
+      },
+      seekToLive: function() {},
+      setChannel: function() {},
+      setMuted: function(nextMuted) {
+        var video = document.querySelector('video');
+        if (!video) { return; }
+        prepareInlineVideo(video);
+        video.muted = nextMuted;
+        if (!nextMuted) {
+          video.volume = 1;
+        }
+        emitMuteState(video);
+      },
+      setQuality: function() {},
+      setVideo: function() {},
+      setVolume: function(volume) {
+        var video = document.querySelector('video');
+        if (!video) { return; }
+        prepareInlineVideo(video);
+        video.volume = volume;
+        if (volume > 0) {
+          video.muted = false;
+        }
+        emitMuteState(video);
+      },
+      unmute: function() {
+        var video = document.querySelector('video');
+        if (!video) { return; }
+        prepareInlineVideo(video);
+        video.muted = false;
+        video.volume = 1;
+        emitMuteState(video);
+      }
+    };
+  }
+
+  installOverlayHider();
+  installPlayerControls();
+  acceptContentWarning();
+  asyncQuerySelector('video', 10000).then(installVideoBridge).catch(function() {});
+  post('trace', { step: 'raw_player_bootstrap_installed' });
+  return true;
+})();
+true;`;
+}
+
 export function buildTwitchClipPlayerUrl(options: {
   autoplay: boolean;
   clip: string;

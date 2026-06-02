@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { type DimensionValue, StyleSheet, View } from 'react-native';
+import { Platform, type DimensionValue, StyleSheet, View } from 'react-native';
 import type { WebView } from 'react-native-webview';
 
 import { ControlsOverlay, formatDuration } from './ControlsOverlay';
@@ -20,6 +20,7 @@ import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   buildHostedTwitchPlayerUrl,
   buildRawTwitchPlayerUrl,
+  buildRawTwitchPlayerBootstrapScript,
   buildTwitchClipPlayerUrl,
   buildTwitchEmbedHtml,
   isAllowedTwitchPlayerNavigation,
@@ -69,7 +70,7 @@ export const StreamPlayer = memo(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       streamProxyBaseUrl: _streamProxyBaseUrl,
       restrictWebViewNavigationToTwitchPlayer = false,
-      showOverlayControls = false,
+      showOverlayControls = true,
       streamInfo,
       useRawTwitchPlayer = true,
       useUIKitForWebView = false,
@@ -88,6 +89,8 @@ export const StreamPlayer = memo(
       statusCode: number;
       url: string;
     } | null>(null);
+    const [javaScriptCommand, setJavaScriptCommand] = useState<string>();
+    const javaScriptCommandIdRef = useRef(0);
     const usesHostedPlayer =
       !useRawTwitchPlayer && Boolean(TWITCH_PLAYER_WEBSITE_URL);
     const sourceKey = `${channel ?? ''}:${clip ?? ''}:${video ?? ''}`;
@@ -108,6 +111,21 @@ export const StreamPlayer = memo(
       }, 750);
     }, [remountWebView]);
 
+    const runJavaScript = useCallback(
+      (script: string) => {
+        if (useUIKitForWebView && Platform.OS === 'ios') {
+          javaScriptCommandIdRef.current += 1;
+          setJavaScriptCommand(
+            `/* foam-command:${javaScriptCommandIdRef.current} */\n${script}`,
+          );
+          return;
+        }
+
+        webViewRef.current?.injectJavaScript(script);
+      },
+      [useUIKitForWebView],
+    );
+
     const bridge = usePlayerBridge({
       autoplay,
       channel,
@@ -124,11 +142,11 @@ export const StreamPlayer = memo(
       onPlay,
       onReady,
       ref,
+      runJavaScript,
       scheduleAuthCompletionReload,
       sourceKey,
       usesHostedPlayer,
       webViewKey,
-      webViewRef,
     });
 
     useEffect(() => {
@@ -164,7 +182,7 @@ export const StreamPlayer = memo(
             channel: channelName,
             video,
             parent,
-            autoplay,
+            autoplay: false,
             muted: initialMuted,
           }),
         };
@@ -205,6 +223,17 @@ export const StreamPlayer = memo(
       useRawTwitchPlayer,
     ]);
 
+    const injectedJavaScript = useMemo(() => {
+      if (!useRawTwitchPlayer || clip) {
+        return undefined;
+      }
+
+      return buildRawTwitchPlayerBootstrapScript({
+        autoplay,
+        debug: __DEV__,
+      });
+    }, [autoplay, clip, useRawTwitchPlayer]);
+
     const controls = useStreamPlayerControls({
       onVideoAreaPress,
       onVideoAreaSwipeDown,
@@ -215,11 +244,7 @@ export const StreamPlayer = memo(
 
     const playerWidth: DimensionValue = width ?? '100%';
     const playerHeight: DimensionValue = height ?? '100%';
-    const allowsTwitchInteraction =
-      Boolean(clip) ||
-      usesHostedPlayer ||
-      useRawTwitchPlayer ||
-      bridge.hasContentGate;
+    const allowsTwitchInteraction = Boolean(clip) || bridge.hasContentGate;
     const shouldShowNativeControls =
       showOverlayControls &&
       !clip &&
@@ -244,6 +269,8 @@ export const StreamPlayer = memo(
           onError={onError}
           onHttpError={setLastHttpError}
           onMessage={bridge.handleMessage}
+          injectedJavaScript={injectedJavaScript}
+          javaScriptCommand={javaScriptCommand}
           onWebViewLoaded={onWebViewLoaded}
           parent={parent}
           remountWebView={remountWebView}
@@ -252,6 +279,7 @@ export const StreamPlayer = memo(
           }
           scheduleAuthCompletionReload={scheduleAuthCompletionReload}
           source={webViewSource}
+          rawTwitchPlayerAutoplay={autoplay}
           useUIKitForWebView={useUIKitForWebView}
           video={video}
           webViewKey={webViewKey}

@@ -121,8 +121,15 @@ declare module '@modules/ui-kit-webview' {
     url: string;
   }
 
+  export interface UIKitWebViewMessageEvent {
+    data: string;
+  }
+
   export interface UIKitWebViewProps {
     allowsFullscreenVideo?: boolean;
+    debugRawTwitchPlayerBridge?: boolean;
+    injectedJavaScript?: string;
+    javaScriptCommand?: string;
     keyboardDisplayRequiresUserAction?: boolean;
     onContentProcessDidTerminate?: (event: {
       nativeEvent: UIKitWebViewContentProcessTerminatedEvent;
@@ -130,11 +137,14 @@ declare module '@modules/ui-kit-webview' {
     onError?: (event: { nativeEvent: UIKitWebViewErrorEvent }) => void;
     onLoadEnd?: (event: { nativeEvent: UIKitWebViewNavigationEvent }) => void;
     onLoadStart?: (event: { nativeEvent: UIKitWebViewNavigationEvent }) => void;
+    onMessage?: (event: { nativeEvent: UIKitWebViewMessageEvent }) => void;
     onNavigationStateChange?: (event: {
       nativeEvent: UIKitWebViewNavigationEvent;
     }) => void;
     parent?: string;
     playerWebsiteUrl?: string;
+    rawTwitchPlayerAutoplay?: boolean;
+    rawTwitchPlayerBridgeEnabled?: boolean;
     restrictNavigationToTwitchPlayer?: boolean;
     scrollEnabled?: boolean;
     style?: StyleProp<ViewStyle>;

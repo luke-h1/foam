@@ -3,13 +3,7 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
 export default function TabsLayout() {
   return (
-    <NativeTabs
-      tintColor={theme.colorDarkGreen}
-      iconColor={{
-        default: theme.colorGreyAlpha,
-        selected: theme.colorDarkGreen,
-      }}
-    >
+    <NativeTabs tintColor={theme.colorWhite}>
       <NativeTabs.Trigger name='following'>
         <NativeTabs.Trigger.Label>Following</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf='person.2' />

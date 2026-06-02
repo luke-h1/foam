@@ -10,11 +10,24 @@ public class UIKitWebViewModule: Module {
         "onError",
         "onLoadEnd",
         "onLoadStart",
+        "onMessage",
         "onNavigationStateChange"
       )
 
       Prop("allowsFullscreenVideo") { (view: UIKitWebView, allowsFullscreenVideo: Bool) in
         view.allowsFullscreenVideo = allowsFullscreenVideo
+      }
+
+      Prop("debugRawTwitchPlayerBridge") { (view: UIKitWebView, debugRawTwitchPlayerBridge: Bool) in
+        view.debugRawTwitchPlayerBridge = debugRawTwitchPlayerBridge
+      }
+
+      Prop("injectedJavaScript") { (view: UIKitWebView, injectedJavaScript: String?) in
+        view.injectedJavaScript = injectedJavaScript
+      }
+
+      Prop("javaScriptCommand") { (view: UIKitWebView, javaScriptCommand: String?) in
+        view.javaScriptCommand = javaScriptCommand
       }
 
       Prop("keyboardDisplayRequiresUserAction") { (_: UIKitWebView, _: Bool) in
@@ -26,6 +39,14 @@ public class UIKitWebViewModule: Module {
 
       Prop("playerWebsiteUrl") { (view: UIKitWebView, playerWebsiteUrl: String?) in
         view.playerWebsiteUrl = playerWebsiteUrl
+      }
+
+      Prop("rawTwitchPlayerAutoplay") { (view: UIKitWebView, rawTwitchPlayerAutoplay: Bool) in
+        view.rawTwitchPlayerAutoplay = rawTwitchPlayerAutoplay
+      }
+
+      Prop("rawTwitchPlayerBridgeEnabled") { (view: UIKitWebView, rawTwitchPlayerBridgeEnabled: Bool) in
+        view.rawTwitchPlayerBridgeEnabled = rawTwitchPlayerBridgeEnabled
       }
 
       Prop("restrictNavigationToTwitchPlayer") { (view: UIKitWebView, restrictNavigationToTwitchPlayer: Bool) in

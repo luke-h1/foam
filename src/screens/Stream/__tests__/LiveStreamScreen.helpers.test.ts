@@ -74,7 +74,6 @@ describe('LiveStreamScreen layout helpers', () => {
     expect(
       getLiveStreamVideoDimensions({
         fullscreenChatMode: 'sidebar',
-        hasContentGate: false,
         isChatEnabled: true,
         isChatVisible: true,
         isLandscape: true,
@@ -90,7 +89,6 @@ describe('LiveStreamScreen layout helpers', () => {
     expect(
       getLiveStreamVideoDimensions({
         fullscreenChatMode: 'overlay',
-        hasContentGate: false,
         isChatEnabled: true,
         isChatVisible: true,
         isLandscape: true,
@@ -102,11 +100,10 @@ describe('LiveStreamScreen layout helpers', () => {
     ).toEqual({ width: 1000, height: 500 });
   });
 
-  test('expands portrait video when a content gate is visible', () => {
+  test('keeps portrait video 16:9 when a content gate is visible', () => {
     expect(
       getLiveStreamVideoDimensions({
         fullscreenChatMode: 'sidebar',
-        hasContentGate: true,
         isChatEnabled: true,
         isChatVisible: true,
         isLandscape: false,
@@ -115,14 +112,13 @@ describe('LiveStreamScreen layout helpers', () => {
         isStreamEnabled: true,
         screenWidth: 400,
       }),
-    ).toEqual({ width: 400, height: 700 });
+    ).toEqual({ width: 400, height: 225 });
   });
 
   test('sizes portrait chat below the 16:9 video', () => {
     expect(
       getLiveStreamChatDimensions({
         fullscreenChatMode: 'sidebar',
-        hasContentGate: false,
         isChatEnabled: true,
         isLandscape: false,
         landscapeChatWidth: null,
@@ -137,7 +133,6 @@ describe('LiveStreamScreen layout helpers', () => {
     expect(
       getLiveStreamChatDimensions({
         fullscreenChatMode: 'overlay',
-        hasContentGate: false,
         isChatEnabled: true,
         isLandscape: true,
         landscapeChatWidth: 900,
@@ -152,7 +147,6 @@ describe('LiveStreamScreen layout helpers', () => {
     expect(
       getLiveStreamVideoDimensions({
         fullscreenChatMode: 'sidebar',
-        hasContentGate: false,
         isChatEnabled: true,
         isChatVisible: true,
         isLandscape: false,
@@ -166,7 +160,6 @@ describe('LiveStreamScreen layout helpers', () => {
     expect(
       getLiveStreamChatDimensions({
         fullscreenChatMode: 'sidebar',
-        hasContentGate: false,
         isChatEnabled: true,
         isLandscape: false,
         landscapeChatWidth: null,
@@ -177,11 +170,10 @@ describe('LiveStreamScreen layout helpers', () => {
     ).toEqual({ width: 400, height: 700 });
   });
 
-  test('keeps video full-screen and collapses chat when chat is disabled', () => {
+  test('keeps landscape video full-screen and collapses chat when chat is disabled', () => {
     expect(
       getLiveStreamVideoDimensions({
         fullscreenChatMode: 'sidebar',
-        hasContentGate: false,
         isChatEnabled: false,
         isChatVisible: true,
         isLandscape: true,
@@ -195,7 +187,6 @@ describe('LiveStreamScreen layout helpers', () => {
     expect(
       getLiveStreamChatDimensions({
         fullscreenChatMode: 'sidebar',
-        hasContentGate: false,
         isChatEnabled: false,
         isLandscape: true,
         landscapeChatWidth: 320,
@@ -204,5 +195,20 @@ describe('LiveStreamScreen layout helpers', () => {
         screenWidth: 1000,
       }),
     ).toEqual({ width: 0, height: 0 });
+  });
+
+  test('keeps portrait video 16:9 when chat is disabled', () => {
+    expect(
+      getLiveStreamVideoDimensions({
+        fullscreenChatMode: 'sidebar',
+        isChatEnabled: false,
+        isChatVisible: true,
+        isLandscape: false,
+        landscapeChatWidth: null,
+        layoutHeight: 700,
+        isStreamEnabled: true,
+        screenWidth: 400,
+      }),
+    ).toEqual({ width: 400, height: 225 });
   });
 });

@@ -188,7 +188,7 @@ describe('StreamPlayer component messaging', () => {
     expect(mockWebViewProps.length).toBeGreaterThan(3);
   });
 
-  test('uses the raw Twitch player URL without post-load injection', () => {
+  test('uses the raw Twitch player URL with a Frosty-style control bootstrap', () => {
     const onWebViewLoaded = jest.fn();
 
     render(
@@ -202,14 +202,38 @@ describe('StreamPlayer component messaging', () => {
     );
 
     expect(latestWebViewProps().source).toEqual({
-      uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
+      uri: 'https://player.twitch.tv/?channel=cohhcarnage&autoplay=false&muted=false&parent=www.twitch.tv',
     });
+    expect(latestWebViewProps()).toEqual(
+      expect.objectContaining({
+        injectedJavaScript: expect.stringContaining('.player-controls'),
+      }),
+    );
+    expect(latestWebViewProps()).toEqual(
+      expect.objectContaining({
+        injectedJavaScript: expect.stringContaining('window.playerControls'),
+      }),
+    );
+    expect(latestWebViewProps()).toEqual(
+      expect.objectContaining({
+        injectedJavaScript: expect.stringContaining(
+          "video.setAttribute('playsinline', '')",
+        ),
+      }),
+    );
+    expect(latestWebViewProps()).toEqual(
+      expect.objectContaining({
+        injectedJavaScript: expect.stringContaining(
+          'var shouldAutoplay = true',
+        ),
+      }),
+    );
 
     const { onLoadEnd } = latestWebViewProps();
     act(() => {
       (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
         nativeEvent: {
-          url: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
+          url: 'https://player.twitch.tv/?channel=cohhcarnage&autoplay=false&muted=false&parent=www.twitch.tv',
         },
       });
     });
@@ -217,7 +241,6 @@ describe('StreamPlayer component messaging', () => {
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
     expect(latestWebViewProps()).toEqual(
       expect.not.objectContaining({
-        injectedJavaScript: expect.anything(),
         injectedJavaScriptBeforeContentLoaded: expect.anything(),
       }),
     );
@@ -254,7 +277,7 @@ describe('StreamPlayer component messaging', () => {
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
-  test('keeps external auth windows inside the current WebView without injection', () => {
+  test('keeps external auth windows inside the current WebView', () => {
     render(
       <StreamPlayer
         channel='cohhcarnage'
@@ -275,7 +298,6 @@ describe('StreamPlayer component messaging', () => {
         onOpenWindow: expect.anything(),
       }),
     );
-    expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
   test('blocks app navigation while allowing iframe navigation', () => {

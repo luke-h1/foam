@@ -52,7 +52,6 @@ import { Providers } from '../Providers/Providers';
 import { ForceUpdateModal } from '../components/ForceUpdateModal/ForceUpdateModal';
 import { OTAUpdates } from '../components/OTAUpdates/OTAUpdates';
 import { useAuthContext } from '../context/AuthContext';
-import { useChangeScreenOrientation } from '../hooks/useChangeScreenOrientation';
 import { useClearExpiredStorageItems } from '../hooks/useClearExpiredStorageItems';
 import { useOnAppStateChange } from '../hooks/useOnAppStateChange';
 import { useOnReconnect } from '../hooks/useOnReconnect';
@@ -185,7 +184,6 @@ function RouterEffects() {
 
   useOnAppStateChange();
   useOnReconnect();
-  useChangeScreenOrientation();
   useClearExpiredStorageItems();
   useIcloudPreferenceSync();
   usePopulateAuth();

@@ -4,7 +4,7 @@ import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -72,6 +72,10 @@ export function ControlsOverlay({
   streamInfo,
 }: ControlsOverlayProps) {
   const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isPortrait = windowHeight >= windowWidth;
+  const headerTopOffset = isPortrait ? theme.space12 : insets.top + 8;
+  const bottomOffset = isPortrait ? theme.space8 : insets.bottom + 12;
   const opacity = useSharedValue(0);
   const [metrics, setMetrics] = useState<OverlayMetricsState>(() => ({
     duration: formatDuration(streamInfo?.startedAt),
@@ -143,22 +147,19 @@ export function ControlsOverlay({
         <View style={styles.overlayTapTarget} />
       </GestureDetector>
 
-      <View
+      <LinearGradient
+        colors={['rgba(0,0,0,0.86)', 'rgba(0,0,0,0.42)', 'transparent']}
+        style={styles.topGradient}
         pointerEvents='none'
-        style={[styles.latencyBadge, { top: insets.top + theme.space12 }]}
-      >
-        <SymbolView
-          name='clock'
-          size={12}
-          tintColor={theme.colorWhite}
-          style={styles.latencyBadgeIcon}
-        />
-        <Text style={styles.latencyBadgeText}>
-          {latencySeconds == null ? '--' : `${latencySeconds.toFixed(1)}s`}
-        </Text>
-      </View>
+      />
 
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+      <View
+        style={[
+          styles.header,
+          isPortrait && styles.headerPortrait,
+          { paddingTop: headerTopOffset },
+        ]}
+      >
         {onBackPress && (
           <View style={styles.headerButtonContainer}>
             <Button
@@ -175,51 +176,109 @@ export function ControlsOverlay({
           </View>
         )}
 
+        <View
+          pointerEvents='none'
+          style={[
+            styles.headerMetadata,
+            isPortrait && styles.headerMetadataPortrait,
+          ]}
+        >
+          <Text numberOfLines={1} style={styles.streamerNameTop}>
+            {streamInfo?.userName || streamInfo?.userLogin || ''}
+          </Text>
+          {streamInfo?.title && !isPortrait && (
+            <Text numberOfLines={1} style={styles.streamTitleTop}>
+              {streamInfo.title}
+            </Text>
+          )}
+        </View>
+
         <View style={styles.spacer} />
+
+        <View
+          pointerEvents='none'
+          style={[styles.latencyBadge, isPortrait && styles.hidden]}
+        >
+          <SymbolView
+            name='clock'
+            size={12}
+            tintColor={theme.colorWhite}
+            style={styles.latencyBadgeIcon}
+          />
+          <Text style={styles.latencyBadgeText}>
+            {latencySeconds == null ? '--' : `${latencySeconds.toFixed(1)}s`}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.centerControls}>
         <Button
           label={paused ? 'Play' : 'Pause'}
-          style={styles.playPauseButton}
+          style={[
+            styles.playPauseButton,
+            isPortrait && styles.playPauseButtonPortrait,
+          ]}
           onPress={onPlayPausePress}
         >
           <SymbolView
             name={paused ? 'play.fill' : 'pause.fill'}
-            size={40}
+            size={44}
             tintColor={theme.colorWhite}
           />
         </Button>
       </View>
 
       <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.85)']}
+        colors={['transparent', 'rgba(0,0,0,0.48)', 'rgba(0,0,0,0.92)']}
         style={styles.bottomGradient}
         pointerEvents='none'
       />
 
       <View
-        style={[styles.bottomControls, { paddingBottom: insets.bottom + 12 }]}
+        style={[
+          styles.bottomControls,
+          isPortrait && styles.bottomControlsPortrait,
+          { paddingBottom: bottomOffset },
+        ]}
       >
-        <View style={styles.streamMetadataRow}>
-          <View style={styles.liveIndicator}>
-            <View style={styles.liveDot} />
-            <Text style={styles.durationText}>{metrics.duration}</Text>
-          </View>
-          <Text numberOfLines={1} style={styles.streamerNameBottom}>
-            {streamInfo?.userName || streamInfo?.userLogin || ''}
-          </Text>
-          <View style={styles.viewerCountRow}>
-            <SymbolView
-              name='person'
-              size={14}
-              style={styles.userIcon}
-              tintColor={theme.colorWhite}
-            />
-            <Text style={styles.viewerCountText}>
-              {formatViewerCount(streamInfo?.viewerCount)}
+        <View style={styles.streamMetadataColumn}>
+          <View
+            style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}
+          >
+            <View style={styles.liveIndicator}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
+            <Text
+              style={[
+                styles.durationText,
+                isPortrait && styles.durationTextPortrait,
+              ]}
+            >
+              {metrics.duration}
             </Text>
+            <View
+              style={[
+                styles.viewerCountRow,
+                isPortrait && styles.viewerCountRowPortrait,
+              ]}
+            >
+              <SymbolView
+                name='person'
+                size={13}
+                style={styles.userIcon}
+                tintColor={theme.colorWhite}
+              />
+              <Text style={styles.viewerCountText}>
+                {formatViewerCount(streamInfo?.viewerCount)}
+              </Text>
+            </View>
           </View>
+          {streamInfo?.gameName && !isPortrait && (
+            <Text numberOfLines={1} style={styles.categoryText}>
+              {streamInfo.gameName}
+            </Text>
+          )}
         </View>
 
         <View style={styles.spacer} />
@@ -257,20 +316,26 @@ export function ControlsOverlay({
 
 const styles = StyleSheet.create({
   bottomControls: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     bottom: 0,
     flexDirection: 'row',
-    gap: theme.space12,
+    gap: theme.space8,
     left: 0,
-    paddingHorizontal: theme.space16,
-    paddingTop: 32,
+    paddingHorizontal: theme.space20,
+    paddingTop: 48,
     position: 'absolute',
     right: 0,
     zIndex: 1,
   },
+  bottomControlsPortrait: {
+    alignItems: 'center',
+    bottom: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingTop: 0,
+  },
   bottomGradient: {
     bottom: 0,
-    height: 120,
+    height: 156,
     left: 0,
     position: 'absolute',
     right: 0,
@@ -294,18 +359,24 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     alignItems: 'center',
-    height: 40,
+    height: 44,
     justifyContent: 'center',
-    width: 40,
+    width: 44,
   },
   controlButtonContainer: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlackActiveContent,
+    backgroundColor: 'rgba(22,22,22,0.58)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    height: 40,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    height: 44,
     justifyContent: 'center',
-    width: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    width: 44,
   },
   controlsOverlay: {
     bottom: 0,
@@ -314,83 +385,111 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
   },
-  controlsTriggerButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colorBlackActiveContent,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 40,
-    justifyContent: 'center',
-    padding: theme.space12,
-    position: 'absolute',
-    right: theme.space12,
-    width: 40,
-  },
   durationText: {
     color: theme.colorWhite,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
+    opacity: 0.88,
+  },
+  durationTextPortrait: {
     fontSize: theme.fontSize11,
-    fontWeight: '500',
   },
   header: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexDirection: 'row',
+    gap: theme.space12,
     left: 0,
-    paddingHorizontal: theme.space12,
+    paddingHorizontal: theme.space20,
     position: 'absolute',
     right: 0,
     top: 0,
     zIndex: 1,
   },
+  headerPortrait: {
+    alignItems: 'center',
+    paddingHorizontal: theme.space12,
+  },
   headerButton: {
     alignItems: 'center',
-    height: 40,
+    height: 44,
     justifyContent: 'center',
-    width: 40,
+    width: 44,
   },
   headerButtonContainer: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlackActiveContent,
+    backgroundColor: 'rgba(22,22,22,0.58)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    height: 40,
+    borderColor: 'rgba(255,255,255,0.16)',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    height: 44,
     justifyContent: 'center',
-    width: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    width: 44,
   },
   latencyBadge: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlackActiveContent,
-    borderColor: theme.colorBlackBorderHover,
+    backgroundColor: 'rgba(22,22,22,0.52)',
+    borderColor: 'rgba(255,255,255,0.16)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space8,
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
-    position: 'absolute',
-    right: theme.space12 + 48,
-    zIndex: 2,
+    minHeight: 32,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
   },
   latencyBadgeIcon: {
     opacity: 0.9,
   },
   latencyBadgeText: {
     color: theme.colorWhite,
-    fontSize: theme.fontSize12,
+    fontSize: theme.fontSize11,
     fontWeight: '600',
-    letterSpacing: 0.2,
+  },
+  hidden: {
+    display: 'none',
+  },
+  liveRail: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space8,
+    minWidth: 0,
+  },
+  liveRailPortrait: {
+    backgroundColor: 'rgba(0,0,0,0.36)',
+    borderColor: 'rgba(255,255,255,0.10)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
   },
   liveDot: {
     backgroundColor: theme.colorRed,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    height: 8,
-    marginRight: theme.space12,
-    width: 8,
+    height: 7,
+    width: 7,
   },
   liveIndicator: {
     alignItems: 'center',
+    backgroundColor: 'rgba(229,9,20,0.92)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius4,
     flexDirection: 'row',
+    gap: theme.space8,
+    paddingHorizontal: theme.space8,
+    paddingVertical: 4,
+  },
+  liveText: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize11,
+    fontWeight: '800',
   },
   overlayTapTarget: {
     bottom: 0,
@@ -401,39 +500,85 @@ const styles = StyleSheet.create({
   },
   playPauseButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlackActiveContent,
-    borderRadius: 44,
-    height: 88,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.24)',
+    borderRadius: 48,
+    borderWidth: 1,
+    height: 96,
     justifyContent: 'center',
-    width: 88,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.42,
+    shadowRadius: 30,
+    width: 96,
+  },
+  playPauseButtonPortrait: {
+    borderRadius: 34,
+    height: 68,
+    width: 68,
   },
   spacer: {
     flex: 1,
   },
-  streamMetadataRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
+  streamMetadataColumn: {
+    alignItems: 'flex-start',
     flex: 1,
-    gap: theme.space12,
+    gap: theme.space8,
+    minWidth: 0,
   },
-  streamerNameBottom: {
+  streamerNameTop: {
     color: theme.colorWhite,
     flex: 1,
-    fontSize: theme.fontSize12,
-    fontWeight: '600',
+    fontSize: theme.fontSize16,
+    fontWeight: '800',
     opacity: 0.95,
   },
+  headerMetadata: {
+    flex: 1,
+    gap: 2,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 0,
+  },
+  headerMetadataPortrait: {
+    flex: 0,
+    maxWidth: '52%',
+  },
+  streamTitleTop: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
+    fontWeight: '500',
+    opacity: 0.74,
+  },
+  categoryText: {
+    color: theme.colorWhite,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
+    maxWidth: '85%',
+    opacity: 0.72,
+  },
+  topGradient: {
+    height: 132,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
   userIcon: {
-    backgroundColor: theme.colorAccentAlpha,
+    opacity: 0.86,
   },
   viewerCountRow: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space8,
   },
+  viewerCountRowPortrait: {
+    display: 'none',
+  },
   viewerCountText: {
     color: theme.colorWhite,
-    fontSize: theme.fontSize11,
-    fontWeight: '500',
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
+    opacity: 0.88,
   },
 });
