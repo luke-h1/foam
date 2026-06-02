@@ -1,7 +1,7 @@
 import type { ExpoConfig } from '@expo/config';
 import type { AppIconBadgeConfig } from 'app-icon-badge/types';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 interface AppVariantConfig {
   name: string;
@@ -82,7 +82,7 @@ const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
-const VERSION = '0.0.40';
+const VERSION = '0.0.41';
 
 const appConfig = VARIANT_CONFIG[variant];
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
