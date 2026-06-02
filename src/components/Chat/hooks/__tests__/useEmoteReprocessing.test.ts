@@ -24,6 +24,14 @@ jest.mock('@app/utils/chat/emoteProcessor', () => ({
   processEmotesWorklet: jest.fn((x: { inputString: string }) => [
     { type: 'emote' as const, content: x.inputString, id: 'e1', url: '' },
   ]),
+  processEmotesOnChatRuntime: jest.fn((x: { inputString: string }) =>
+    Promise.resolve([
+      { type: 'emote' as const, content: x.inputString, id: 'e1', url: '' },
+    ]),
+  ),
+  processEmotesOnChatRuntimeSync: jest.fn((x: { inputString: string }) => [
+    { type: 'emote' as const, content: x.inputString, id: 'e1', url: '' },
+  ]),
 }));
 
 jest.mock('@app/utils/chat/findBadges', () => ({

@@ -1,6 +1,10 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
-import { processEmotesWorklet } from '../emoteProcessor';
+import {
+  processEmotesOnChatRuntime,
+  processEmotesOnChatRuntimeSync,
+  processEmotesWorklet,
+} from '../emoteProcessor';
 
 const curtisEmote: SanitisedEmote = {
   id: 'curtis-id',
@@ -144,5 +148,26 @@ describe('processEmotesWorklet', () => {
     const secondResult = processEmotesWorklet(params);
 
     expect(secondResult).toBe(firstResult);
+  });
+
+  test('processes through chat runtime wrappers', async () => {
+    const params = {
+      ...emptyParams,
+      inputString: 'Curtis',
+      sevenTvChannelEmotes: [curtisEmote],
+    };
+
+    await expect(processEmotesOnChatRuntime(params)).resolves.toEqual([
+      expect.objectContaining({
+        type: 'emote',
+        name: 'Curtis',
+      }),
+    ]);
+    expect(processEmotesOnChatRuntimeSync(params)).toEqual([
+      expect.objectContaining({
+        type: 'emote',
+        name: 'Curtis',
+      }),
+    ]);
   });
 });

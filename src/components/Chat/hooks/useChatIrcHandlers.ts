@@ -51,7 +51,7 @@ interface UseChatIrcHandlersOptions {
     baseMessage: AnyChatMessageType,
     userId?: string,
     countUnread?: boolean,
-  ) => void;
+  ) => void | Promise<void>;
   removeBufferedMessageById: (messageId: string) => void;
 }
 
@@ -100,7 +100,7 @@ export function useChatIrcHandlers({
       const baseMessage = createBaseMessage({ tags, channelName, text });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
-      processMessageEmotes(
+      void processMessageEmotes(
         text,
         userstate,
         messageWithParentColor,

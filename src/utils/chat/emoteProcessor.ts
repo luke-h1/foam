@@ -1,8 +1,14 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
+import {
+  createWorkletRuntime,
+  runOnRuntimeAsync,
+  runOnRuntimeSync,
+  type WorkletRuntime,
+} from 'react-native-worklets';
 import { ParsedPart } from './replaceTextWithEmotes';
 
-interface EmoteProcessorParams {
+export interface EmoteProcessorParams {
   inputString: string;
   userstate: UserStateTags | null;
   emojiEmotes?: SanitisedEmote[];
@@ -31,6 +37,21 @@ type EmoteCollection = {
 };
 
 let nextEmoteArrayId = 0;
+let chatParsingRuntime: WorkletRuntime | null | undefined;
+
+function getChatParsingRuntime(): WorkletRuntime | null {
+  if (chatParsingRuntime !== undefined) {
+    return chatParsingRuntime;
+  }
+
+  try {
+    chatParsingRuntime = createWorkletRuntime({ name: 'chat-parsing' });
+  } catch {
+    chatParsingRuntime = null;
+  }
+
+  return chatParsingRuntime;
+}
 
 function getEmoteArrayId(emotes: SanitisedEmote[]): number {
   let id = emoteArrayIds.get(emotes);
@@ -201,6 +222,8 @@ function createScopedEmoteLookup(
 export const processEmotesWorklet = (
   params: EmoteProcessorParams,
 ): ParsedPart[] => {
+  'worklet';
+
   const {
     inputString,
     emojiEmotes = [],
@@ -319,3 +342,43 @@ export const processEmotesWorklet = (
 
   return result;
 };
+
+export function processEmotesOnChatRuntime(
+  params: EmoteProcessorParams,
+): Promise<ParsedPart[]> {
+  const runtime = getChatParsingRuntime();
+  if (!runtime || typeof runOnRuntimeAsync !== 'function') {
+    return Promise.resolve(processEmotesWorklet(params));
+  }
+
+  return runOnRuntimeAsync(
+    runtime,
+    (workletParams: EmoteProcessorParams) => {
+      'worklet';
+      return processEmotesWorklet(workletParams);
+    },
+    params,
+  ).catch(() => processEmotesWorklet(params));
+}
+
+export function processEmotesOnChatRuntimeSync(
+  params: EmoteProcessorParams,
+): ParsedPart[] {
+  const runtime = getChatParsingRuntime();
+  if (!runtime || typeof runOnRuntimeSync !== 'function') {
+    return processEmotesWorklet(params);
+  }
+
+  try {
+    return runOnRuntimeSync(
+      runtime,
+      (workletParams: EmoteProcessorParams) => {
+        'worklet';
+        return processEmotesWorklet(workletParams);
+      },
+      params,
+    );
+  } catch {
+    return processEmotesWorklet(params);
+  }
+}

@@ -1,6 +1,6 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import { processEmotesOnChatRuntime } from '@app/utils/chat/emoteProcessor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useCallback } from 'react';
 
@@ -19,7 +19,7 @@ interface UseEmoteProcessorParams {
 
 export const useEmoteProcessor = (params: UseEmoteProcessorParams) => {
   const processEmotes = useCallback(
-    (
+    async (
       inputString: string,
       userstate: UserStateTags | null,
       onComplete: (result: ParsedPart[]) => void,
@@ -32,7 +32,7 @@ export const useEmoteProcessor = (params: UseEmoteProcessorParams) => {
         sevenTvPersonalEmotes: sevenTvPersonalEmotes || [],
       };
 
-      const result = processEmotesWorklet(processParams);
+      const result = await processEmotesOnChatRuntime(processParams);
 
       onComplete(result);
     },

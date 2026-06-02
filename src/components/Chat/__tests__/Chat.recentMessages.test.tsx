@@ -147,6 +147,8 @@ jest.mock('@app/store/preferenceStore', () => ({
 
 jest.mock('@app/utils/chat/emoteProcessor', () => ({
   processEmotesWorklet: jest.fn(() => []),
+  processEmotesOnChatRuntime: jest.fn(() => Promise.resolve([])),
+  processEmotesOnChatRuntimeSync: jest.fn(() => []),
 }));
 
 jest.mock('@app/utils/image/clearImageCache', () => ({

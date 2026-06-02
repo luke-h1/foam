@@ -1,7 +1,7 @@
 import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
 import { updateMessage } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import { processEmotesOnChatRuntimeSync } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { type MutableRefObject, useEffect, useRef } from 'react';
@@ -89,7 +89,7 @@ export function useEmoteReprocessing({
         return;
       }
 
-      const replacedMessage = processEmotesWorklet({
+      const replacedMessage = processEmotesOnChatRuntimeSync({
         inputString: textContent.trimEnd(),
         userstate: msg.userstate,
         emojiEmotes: chatStore$.emojis.peek(),
@@ -136,7 +136,9 @@ export function useEmoteReprocessing({
       }
 
       if (index < currentMessages.length) {
-        timer = setTimeout(processBatch, 0);
+        timer = setTimeout(() => {
+          processBatch();
+        }, 0);
       }
     };
 

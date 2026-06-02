@@ -1,7 +1,7 @@
 import { chatStore$ } from '@app/store/chatStore/state';
 import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
 import { getUserMessageColor } from '@app/store/chatStore/messages';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import { processEmotesOnChatRuntimeSync } from '@app/utils/chat/emoteProcessor';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
@@ -113,7 +113,7 @@ export function useChatRowRenderer({
         return [{ type: 'text', content: text }];
       }
 
-      return processEmotesWorklet({
+      return processEmotesOnChatRuntimeSync({
         inputString: text.trimEnd(),
         userstate: null,
         emojiEmotes: chatStore$.emojis.peek(),

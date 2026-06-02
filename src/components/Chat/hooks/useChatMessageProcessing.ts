@@ -7,7 +7,7 @@ import { getUserBadge } from '@app/store/chatStore/cosmetics';
 import { updateMessage } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { prefetchImage } from '@app/components/Image/Image';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import { processEmotesOnChatRuntime } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { cacheImageFromUrl } from '@app/utils/image/image-cache';
@@ -76,7 +76,7 @@ export function useChatMessageProcessing({
   visiblePersonalEmoteUsersRef,
 }: UseChatMessageProcessingOptions) {
   const processMessageEmotes = useCallback(
-    (
+    async (
       text: string,
       userstate: ReturnType<typeof createUserStateFromTags>,
       baseMessage: AnyChatMessageType,
@@ -118,7 +118,7 @@ export function useChatMessageProcessing({
           : [];
 
       try {
-        const replacedMessage = processEmotesWorklet({
+        const replacedMessage = await processEmotesOnChatRuntime({
           inputString: text.trimEnd(),
           userstate,
           emojiEmotes: chatStore$.emojis.peek(),
@@ -212,7 +212,7 @@ export function useChatMessageProcessing({
           : [];
 
       try {
-        const replacedMessage = processEmotesWorklet({
+        const replacedMessage = await processEmotesOnChatRuntime({
           inputString: text,
           userstate: message.userstate,
           emojiEmotes: chatStore$.emojis.peek(),
