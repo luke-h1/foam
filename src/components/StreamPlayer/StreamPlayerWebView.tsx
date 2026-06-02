@@ -218,11 +218,17 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
         allowsFullscreenVideo={false}
         scrollEnabled={allowsTwitchInteraction}
         keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
+        parent={parent}
+        playerWebsiteUrl={TWITCH_PLAYER_WEBSITE_URL}
+        restrictNavigationToTwitchPlayer={
+          restrictWebViewNavigationToTwitchPlayer
+        }
         url={webViewUrl}
         style={[
           styles.webView,
           allowsTwitchInteraction && styles.webViewScrollable,
         ]}
+        onContentProcessDidTerminate={remountWebView}
         onError={handleUIKitWebViewError}
         onNavigationStateChange={event => {
           if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {

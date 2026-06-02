@@ -4,14 +4,26 @@ import WebKit
 
 final class UIKitWebView: ExpoView, WKNavigationDelegate, WKUIDelegate {
   let onError = EventDispatcher()
+  let onContentProcessDidTerminate = EventDispatcher()
   let onLoadEnd = EventDispatcher()
   let onLoadStart = EventDispatcher()
   let onNavigationStateChange = EventDispatcher()
 
   private let webView: WKWebView
   private var pendingURL: URL?
+  private weak var configuredInteractivePopGestureRecognizer: UIGestureRecognizer?
+  private let allowedNavigationPrefixes = [
+    "about:blank",
+    "https://id.twitch.tv/",
+    "https://www.twitch.tv/passport-callback",
+    "https://clips.twitch.tv/",
+    "https://player.twitch.tv/"
+  ]
 
   var allowsFullscreenVideo = false
+  var parent = "www.twitch.tv"
+  var playerWebsiteUrl: String?
+  var restrictNavigationToTwitchPlayer = false
 
   var scrollEnabled = false {
     didSet {
@@ -42,8 +54,10 @@ final class UIKitWebView: ExpoView, WKNavigationDelegate, WKUIDelegate {
     super.init(appContext: appContext)
 
     webView.backgroundColor = .black
-    webView.isOpaque = false
+    webView.isOpaque = true
+    webView.allowsLinkPreview = false
     webView.navigationDelegate = self
+    webView.scrollView.automaticallyAdjustsScrollIndicatorInsets = false
     webView.scrollView.bounces = false
     webView.scrollView.contentInsetAdjustmentBehavior = .never
     webView.scrollView.isScrollEnabled = false
@@ -58,6 +72,16 @@ final class UIKitWebView: ExpoView, WKNavigationDelegate, WKUIDelegate {
       webView.leadingAnchor.constraint(equalTo: leadingAnchor),
       webView.trailingAnchor.constraint(equalTo: trailingAnchor)
     ])
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    normalizeScrollInsets()
+  }
+
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    configureInteractivePopGesturePriority()
   }
 
   func loadIfNeeded() {
@@ -78,11 +102,8 @@ final class UIKitWebView: ExpoView, WKNavigationDelegate, WKUIDelegate {
     sendNavigationEvent(onLoadStart)
   }
 
-  func webView(_ webView: WKWebView, didCommit navigation: WKNavigation?) {
-    sendNavigationEvent(onNavigationStateChange)
-  }
-
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
+    normalizeScrollInsets()
     sendNavigationEvent(onNavigationStateChange)
     sendNavigationEvent(onLoadEnd)
   }
@@ -105,6 +126,12 @@ final class UIKitWebView: ExpoView, WKNavigationDelegate, WKUIDelegate {
     sendNavigationEvent(onLoadEnd)
   }
 
+  func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+    onContentProcessDidTerminate([
+      "url": webView.url?.absoluteString ?? ""
+    ])
+  }
+
   func webView(
     _ webView: WKWebView,
     decidePolicyFor navigationAction: WKNavigationAction,
@@ -120,6 +147,13 @@ final class UIKitWebView: ExpoView, WKNavigationDelegate, WKUIDelegate {
       return
     }
 
+    if restrictNavigationToTwitchPlayer,
+      navigationAction.targetFrame?.isMainFrame != false,
+      !isAllowedTwitchNavigation(url.absoluteString) {
+      decisionHandler(.cancel)
+      return
+    }
+
     decisionHandler(.allow)
   }
 
@@ -131,6 +165,87 @@ final class UIKitWebView: ExpoView, WKNavigationDelegate, WKUIDelegate {
   ) -> WKWebView? {
     if navigationAction.targetFrame == nil {
       webView.load(navigationAction.request)
+    }
+
+    return nil
+  }
+
+  private func isAllowedTwitchNavigation(_ url: String) -> Bool {
+    if allowedNavigationPrefixes.contains(where: { url.hasPrefix($0) }) {
+      return true
+    }
+
+    if let parentBaseUrl = baseUrlForParent(parent),
+      url.hasPrefix(parentBaseUrl) {
+      return true
+    }
+
+    if let playerWebsiteBaseUrl = baseUrl(playerWebsiteUrl),
+      url.hasPrefix(playerWebsiteBaseUrl) {
+      return true
+    }
+
+    return false
+  }
+
+  private func baseUrlForParent(_ parent: String) -> String? {
+    let trimmedParent = parent.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    guard !trimmedParent.isEmpty else {
+      return nil
+    }
+
+    return "https://\(trimmedParent)/"
+  }
+
+  private func baseUrl(_ url: String?) -> String? {
+    guard let url,
+      let parsedURL = URL(string: url),
+      let scheme = parsedURL.scheme,
+      let host = parsedURL.host else {
+      return nil
+    }
+
+    if let port = parsedURL.port {
+      return "\(scheme)://\(host):\(port)/"
+    }
+
+    return "\(scheme)://\(host)/"
+  }
+
+  private func normalizeScrollInsets() {
+    webView.scrollView.contentInset = .zero
+
+    let adjustedContentInset = webView.scrollView.adjustedContentInset
+    if adjustedContentInset != .zero {
+      webView.scrollView.contentInset = UIEdgeInsets(
+        top: -adjustedContentInset.top,
+        left: -adjustedContentInset.left,
+        bottom: -adjustedContentInset.bottom,
+        right: -adjustedContentInset.right
+      )
+    }
+  }
+
+  private func configureInteractivePopGesturePriority() {
+    guard let interactivePopGestureRecognizer = nearestViewController()?
+      .navigationController?
+      .interactivePopGestureRecognizer,
+      interactivePopGestureRecognizer !== configuredInteractivePopGestureRecognizer else {
+      return
+    }
+
+    webView.scrollView.panGestureRecognizer.require(toFail: interactivePopGestureRecognizer)
+    configuredInteractivePopGestureRecognizer = interactivePopGestureRecognizer
+  }
+
+  private func nearestViewController() -> UIViewController? {
+    var responder: UIResponder? = self
+    while let currentResponder = responder {
+      if let viewController = currentResponder as? UIViewController {
+        return viewController
+      }
+
+      responder = currentResponder.next
     }
 
     return nil

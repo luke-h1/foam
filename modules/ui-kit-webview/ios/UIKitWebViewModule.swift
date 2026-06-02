@@ -6,6 +6,7 @@ public class UIKitWebViewModule: Module {
 
     View(UIKitWebView.self) {
       Events(
+        "onContentProcessDidTerminate",
         "onError",
         "onLoadEnd",
         "onLoadStart",
@@ -17,6 +18,18 @@ public class UIKitWebViewModule: Module {
       }
 
       Prop("keyboardDisplayRequiresUserAction") { (_: UIKitWebView, _: Bool) in
+      }
+
+      Prop("parent") { (view: UIKitWebView, parent: String?) in
+        view.parent = parent ?? "www.twitch.tv"
+      }
+
+      Prop("playerWebsiteUrl") { (view: UIKitWebView, playerWebsiteUrl: String?) in
+        view.playerWebsiteUrl = playerWebsiteUrl
+      }
+
+      Prop("restrictNavigationToTwitchPlayer") { (view: UIKitWebView, restrictNavigationToTwitchPlayer: Bool) in
+        view.restrictNavigationToTwitchPlayer = restrictNavigationToTwitchPlayer
       }
 
       Prop("scrollEnabled") { (view: UIKitWebView, isScrollEnabled: Bool) in
