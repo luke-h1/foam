@@ -7,41 +7,78 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Platform, type DimensionValue, StyleSheet, View } from 'react-native';
-import type { WebView } from 'react-native-webview';
+import { StyleSheet, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
-import { ControlsOverlay, formatDuration } from './ControlsOverlay';
+import { ControlsOverlay } from './ControlsOverlay';
+import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   ControlsTriggerButton,
   DebugErrorOverlay,
   TouchBlockOverlay,
 } from './StreamPlayerOverlays';
-import { StreamPlayerWebView } from './StreamPlayerWebView';
+import { streamWebViewWarmupPool } from './WebViewWarmupPool';
 import {
-  buildHostedTwitchPlayerUrl,
-  buildRawTwitchPlayerUrl,
   buildRawTwitchPlayerBootstrapScript,
+  buildRawTwitchPlayerUrl,
   buildTwitchClipPlayerUrl,
-  buildTwitchEmbedHtml,
   isAllowedTwitchPlayerNavigation,
   isAppUrl,
   isTwitchPassportCallbackUrl,
-  TWITCH_PLAYER_WEBSITE_URL,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps, StreamPlayerRef } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
 import { useStreamPlayerControls } from './useStreamPlayerControls';
 
 export {
-  buildHostedTwitchPlayerUrl,
   buildRawTwitchPlayerUrl,
   buildTwitchClipPlayerUrl,
-  formatDuration,
   isAllowedTwitchPlayerNavigation,
   isAppUrl,
   isTwitchPassportCallbackUrl,
 };
+export { formatDuration } from './ControlsOverlay';
 export type { StreamInfo, StreamPlayerProps, StreamPlayerRef } from './types';
+
+const TWITCH_AUTH_HELPER_SCRIPT = `
+(() => {
+  const post = type => {
+    try {
+      window.ReactNativeWebView?.postMessage(JSON.stringify({ type }));
+    } catch {}
+  };
+
+  window.open = url => {
+    if (typeof url === 'string' && url.length > 0) {
+      window.location.assign(url);
+    }
+    return window;
+  };
+
+  let postedAuthComplete = false;
+  const detectAuthComplete = () => {
+    if (postedAuthComplete || !document.body) {
+      return;
+    }
+
+    const text = document.body.textContent?.toLowerCase() ?? '';
+    if (
+      (text.includes("you're logged in") || text.includes("you’re logged in")) &&
+      text.includes('refresh the page')
+    ) {
+      postedAuthComplete = true;
+      post('twitchAuthComplete');
+    }
+  };
+
+  detectAuthComplete();
+  new MutationObserver(detectAuthComplete).observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+})();
+true;
+`;
 
 export const StreamPlayer = memo(
   forwardRef<StreamPlayerRef, StreamPlayerProps>(function StreamPlayer(
@@ -67,13 +104,9 @@ export const StreamPlayer = memo(
       onVideoAreaSwipeDown,
       onWebViewLoaded,
       parent = 'www.twitch.tv',
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      streamProxyBaseUrl: _streamProxyBaseUrl,
       restrictWebViewNavigationToTwitchPlayer = false,
-      showOverlayControls = true,
+      showOverlayControls = false,
       streamInfo,
-      useRawTwitchPlayer = true,
-      useUIKitForWebView = false,
       video,
       width,
     },
@@ -86,18 +119,19 @@ export const StreamPlayer = memo(
     > | null>(null);
     const [webViewKey, setWebViewKey] = useState(0);
     const [lastHttpError, setLastHttpError] = useState<{
-      statusCode: number;
       url: string;
+      statusCode: number;
     } | null>(null);
-    const [javaScriptCommand, setJavaScriptCommand] = useState<string>();
-    const javaScriptCommandIdRef = useRef(0);
-    const usesHostedPlayer =
-      !useRawTwitchPlayer && Boolean(TWITCH_PLAYER_WEBSITE_URL);
-    const sourceKey = `${channel ?? ''}:${clip ?? ''}:${video ?? ''}`;
 
-    const remountWebView = useCallback(() => {
+    const sourceKey = `${channel ?? ''}|${clip ?? ''}|${video ?? ''}|${parent}|${autoplay}|${initialMuted}|${deferOverlayUntilUserUnmute}`;
+
+    useEffect(() => {
       needsInitRef.current = true;
-      setWebViewKey(k => k + 1);
+    }, [sourceKey]);
+
+    const remountEmbedWebView = useCallback(() => {
+      needsInitRef.current = true;
+      setWebViewKey(key => key + 1);
     }, []);
 
     const scheduleAuthCompletionReload = useCallback(() => {
@@ -107,30 +141,44 @@ export const StreamPlayer = memo(
 
       authCompletionReloadTimeoutRef.current = setTimeout(() => {
         authCompletionReloadTimeoutRef.current = null;
-        remountWebView();
+        remountEmbedWebView();
       }, 750);
-    }, [remountWebView]);
+    }, [remountEmbedWebView]);
 
-    const runJavaScript = useCallback(
-      (script: string) => {
-        if (useUIKitForWebView && Platform.OS === 'ios') {
-          javaScriptCommandIdRef.current += 1;
-          setJavaScriptCommand(
-            `/* foam-command:${javaScriptCommandIdRef.current} */\n${script}`,
-          );
-          return;
+    useEffect(() => {
+      return () => {
+        if (authCompletionReloadTimeoutRef.current) {
+          clearTimeout(authCompletionReloadTimeoutRef.current);
+          authCompletionReloadTimeoutRef.current = null;
         }
+      };
+    }, []);
 
-        webViewRef.current?.injectJavaScript(script);
-      },
-      [useUIKitForWebView],
-    );
+    useEffect(() => {
+      if (!clip) {
+        streamWebViewWarmupPool.startWarmup(parent);
+      }
+    }, [clip, parent]);
 
-    const bridge = usePlayerBridge({
+    const runJavaScript = useCallback((script: string) => {
+      webViewRef.current?.injectJavaScript(script);
+    }, []);
+
+    const {
+      handleMessage,
+      hasContentGate,
+      overlayUnlocked,
+      pause,
+      play,
+      playbackLatencySeconds,
+      playerState,
+      playerStatus,
+      resetPlayerStatus,
+    } = usePlayerBridge({
       autoplay,
       channel,
       deferOverlayUntilUserUnmute,
-      forceRefresh: remountWebView,
+      forceRefresh: remountEmbedWebView,
       initialMuted,
       onContentGateChange,
       onEnded,
@@ -145,26 +193,11 @@ export const StreamPlayer = memo(
       runJavaScript,
       scheduleAuthCompletionReload,
       sourceKey,
-      usesHostedPlayer,
       webViewKey,
     });
 
-    useEffect(() => {
-      return () => {
-        if (authCompletionReloadTimeoutRef.current) {
-          clearTimeout(authCompletionReloadTimeoutRef.current);
-          authCompletionReloadTimeoutRef.current = null;
-        }
-      };
-    }, []);
-
-    useEffect(() => {
-      needsInitRef.current = true;
-    }, [sourceKey]);
-
     const webViewSource = useMemo(() => {
       const channelName = channel || 'twitch';
-      const sourceMuted = deferOverlayUntilUserUnmute ? true : initialMuted;
       if (clip) {
         return {
           uri: buildTwitchClipPlayerUrl({
@@ -176,81 +209,69 @@ export const StreamPlayer = memo(
         };
       }
 
-      if (useRawTwitchPlayer) {
-        return {
-          uri: buildRawTwitchPlayerUrl({
-            channel: channelName,
-            video,
-            parent,
-            autoplay: false,
-            muted: initialMuted,
-          }),
-        };
-      }
-
-      const hostedPlayerUrl = buildHostedTwitchPlayerUrl({
-        channel: channelName,
-        video,
-        autoplay: true,
-        muted: sourceMuted,
-        debug: __DEV__,
-        playerWebsiteUrl: TWITCH_PLAYER_WEBSITE_URL,
-      });
-
-      return hostedPlayerUrl
-        ? { uri: hostedPlayerUrl }
-        : {
-            html: buildTwitchEmbedHtml({
-              channel: channelName,
-              video,
-              parent,
-              autoplay: true,
-              muted: sourceMuted,
-              debug: __DEV__,
-              width: '100%',
-              height: '100%',
-            }),
-            baseUrl: `https://${parent}/`,
-          };
-    }, [
-      channel,
-      clip,
-      video,
-      parent,
-      autoplay,
-      initialMuted,
-      deferOverlayUntilUserUnmute,
-      useRawTwitchPlayer,
-    ]);
+      return {
+        uri: buildRawTwitchPlayerUrl({
+          channel: channelName,
+          video,
+          parent,
+          autoplay,
+          muted: initialMuted,
+        }),
+      };
+    }, [autoplay, channel, clip, initialMuted, parent, video]);
 
     const injectedJavaScript = useMemo(() => {
-      if (!useRawTwitchPlayer || clip) {
-        return undefined;
+      if (!clip) {
+        return `${TWITCH_AUTH_HELPER_SCRIPT}
+${buildRawTwitchPlayerBootstrapScript({
+  autoplay,
+  debug: __DEV__,
+  muted: initialMuted,
+})}`;
       }
 
-      return buildRawTwitchPlayerBootstrapScript({
-        autoplay,
-        debug: __DEV__,
-      });
-    }, [autoplay, clip, useRawTwitchPlayer]);
+      return TWITCH_AUTH_HELPER_SCRIPT;
+    }, [autoplay, clip, initialMuted]);
 
-    const controls = useStreamPlayerControls({
+    const injectedJavaScriptBeforeContentLoaded = clip
+      ? TWITCH_AUTH_HELPER_SCRIPT
+      : undefined;
+
+    const handleWebViewHttpError = useCallback(
+      (error: { statusCode: number; url: string }) => {
+        setLastHttpError(error);
+      },
+      [],
+    );
+
+    const {
+      controlsVisible,
+      handlePlayPause,
+      toggleControls,
+      videoTapGesture,
+    } = useStreamPlayerControls({
       onVideoAreaPress,
       onVideoAreaSwipeDown,
-      pause: bridge.pause,
-      play: bridge.play,
-      playerIsPaused: bridge.playerState.isPaused,
+      pause,
+      play,
+      playerIsPaused: playerState.isPaused,
     });
 
-    const playerWidth: DimensionValue = width ?? '100%';
-    const playerHeight: DimensionValue = height ?? '100%';
-    const allowsTwitchInteraction = Boolean(clip) || bridge.hasContentGate;
+    const handleRefresh = useCallback(() => {
+      resetPlayerStatus();
+      onRefresh?.();
+    }, [onRefresh, resetPlayerStatus]);
+
+    const playerWidth = width ?? '100%';
+    const playerHeight = height ?? '100%';
+    const allowsTwitchInteraction =
+      Boolean(clip) || !showOverlayControls || hasContentGate;
     const shouldShowNativeControls =
       showOverlayControls &&
       !clip &&
       !allowsTwitchInteraction &&
-      bridge.playerStatus.isReady &&
-      (!deferOverlayUntilUserUnmute || bridge.overlayUnlocked);
+      playerStatus.isReady &&
+      (!deferOverlayUntilUserUnmute || overlayUnlocked);
 
     return (
       <View
@@ -258,36 +279,36 @@ export const StreamPlayer = memo(
         style={[
           styles.container,
           { width: playerWidth, height: playerHeight },
-          bridge.hasContentGate && styles.containerScrollable,
+          hasContentGate && styles.containerScrollable,
         ]}
       >
         <StreamPlayerWebView
           allowsTwitchInteraction={allowsTwitchInteraction}
           channel={channel}
           clip={clip}
+          injectedJavaScript={injectedJavaScript}
+          injectedJavaScriptBeforeContentLoaded={
+            injectedJavaScriptBeforeContentLoaded
+          }
           needsInitRef={needsInitRef}
           onError={onError}
-          onHttpError={setLastHttpError}
-          onMessage={bridge.handleMessage}
-          injectedJavaScript={injectedJavaScript}
-          javaScriptCommand={javaScriptCommand}
+          onHttpError={handleWebViewHttpError}
+          onMessage={handleMessage}
           onWebViewLoaded={onWebViewLoaded}
           parent={parent}
-          remountWebView={remountWebView}
+          remountWebView={remountEmbedWebView}
           restrictWebViewNavigationToTwitchPlayer={
             restrictWebViewNavigationToTwitchPlayer
           }
           scheduleAuthCompletionReload={scheduleAuthCompletionReload}
           source={webViewSource}
-          rawTwitchPlayerAutoplay={autoplay}
-          useUIKitForWebView={useUIKitForWebView}
           video={video}
           webViewKey={webViewKey}
           webViewRef={webViewRef}
         />
 
         {shouldShowNativeControls && (
-          <TouchBlockOverlay gesture={controls.videoTapGesture} />
+          <TouchBlockOverlay gesture={videoTapGesture} />
         )}
 
         {__DEV__ && lastHttpError && (
@@ -298,18 +319,19 @@ export const StreamPlayer = memo(
         )}
 
         {shouldShowNativeControls && (
-          <ControlsTriggerButton onPress={controls.toggleControls} />
+          <ControlsTriggerButton onPress={toggleControls} />
         )}
 
         {shouldShowNativeControls && (
           <ControlsOverlay
-            isVisible={controls.controlsVisible}
-            latencySeconds={bridge.playbackLatencySeconds}
+            isVisible={controlsVisible}
+            latencySeconds={playbackLatencySeconds}
             onBackPress={onBackPress}
-            onPlayPausePress={controls.handlePlayPause}
-            onRefresh={onRefresh}
-            onToggleControls={controls.toggleControls}
-            paused={bridge.playerState.isPaused}
+            onPipPress={() => {}}
+            onPlayPausePress={handlePlayPause}
+            onRefresh={onRefresh ? handleRefresh : undefined}
+            onToggleControls={toggleControls}
+            paused={playerState.isPaused}
             streamInfo={streamInfo}
           />
         )}
@@ -320,6 +342,40 @@ export const StreamPlayer = memo(
 
 StreamPlayer.displayName = 'StreamPlayer';
 
+export function StreamPlayerPrewarm({
+  parent = 'www.twitch.tv',
+}: {
+  parent?: string;
+}) {
+  const warmupProps = streamWebViewWarmupPool.getWarmupRenderProps(parent);
+
+  if (!warmupProps) {
+    return null;
+  }
+
+  return (
+    <View style={styles.prewarmHidden}>
+      <WebView
+        key={warmupProps.key}
+        source={warmupProps.source}
+        onMessage={warmupProps.onMessage}
+        onLoadEnd={warmupProps.onLoadEnd}
+        javaScriptEnabled
+        domStorageEnabled
+        cacheEnabled
+        allowsInlineMediaPlayback
+        mediaPlaybackRequiresUserAction={false}
+        originWhitelist={['*']}
+        scrollEnabled
+        setSupportMultipleWindows={false}
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
+        style={styles.prewarmWebView}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#000',
@@ -328,5 +384,19 @@ const styles = StyleSheet.create({
   },
   containerScrollable: {
     overflow: 'visible',
+  },
+  prewarmHidden: {
+    height: 1,
+    left: -10000,
+    opacity: 0,
+    overflow: 'hidden',
+    position: 'absolute',
+    top: -10000,
+    width: 1,
+  },
+  prewarmWebView: {
+    backgroundColor: '#000',
+    height: 1,
+    width: 1,
   },
 });

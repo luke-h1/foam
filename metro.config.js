@@ -3,9 +3,22 @@ const {
   withStorybook,
 } = require('@storybook/react-native/metro/withStorybook');
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
+const path = require('path');
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getSentryExpoConfig(__dirname);
+
+const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const excludedRootDirs = ['player-website', 'build-artifacts'].map(
+  dir => new RegExp(`${escapeRegExp(path.resolve(__dirname, dir))}[/\\\\].*`),
+);
+
+config.resolver.blockList = [
+  ...(Array.isArray(config.resolver.blockList)
+    ? config.resolver.blockList
+    : [config.resolver.blockList].filter(Boolean)),
+  ...excludedRootDirs,
+];
 
 // This helps support certain popular third-party libraries
 // such as Firebase that use the extension cjs.

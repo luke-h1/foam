@@ -1,1 +1,9 @@
 **/.rnrepo-cache
+player-website/
+build-artifacts/
+artifacts/
+docs/
+coverage/
+.jest-cache/
+dist/
+web-build/
