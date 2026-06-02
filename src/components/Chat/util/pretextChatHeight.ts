@@ -1,4 +1,5 @@
 import { theme } from '@app/styles/themes';
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import {
   measureInlineFlow,
@@ -11,8 +12,10 @@ import type { AnyChatMessageType } from './messageHandlers';
 
 const COMPACT_LINE_HEIGHT = 14;
 const COMPACT_FONT_SIZE = theme.fontSize11;
+const COMPACT_EMOTE_SIZE = 22;
 const COMFORTABLE_LINE_HEIGHT = 17;
 const COMFORTABLE_FONT_SIZE = theme.fontSize14;
+const COMFORTABLE_EMOTE_SIZE = 26;
 const ROW_VERTICAL_PADDING = 2;
 const MIN_MEASURE_WIDTH = 80;
 const NON_BREAKING_SPACE = '\u00A0';
@@ -68,6 +71,7 @@ function measureChatMessageHeight(
   const compact = density === 'compact';
   const fontSize = compact ? COMPACT_FONT_SIZE : COMFORTABLE_FONT_SIZE;
   const lineHeight = compact ? COMPACT_LINE_HEIGHT : COMFORTABLE_LINE_HEIGHT;
+  const emoteSize = compact ? COMPACT_EMOTE_SIZE : COMFORTABLE_EMOTE_SIZE;
   const textStyle: TextStyle = {
     fontFamily: 'System',
     fontSize,
@@ -119,6 +123,7 @@ function measureChatMessageHeight(
     });
   }
 
+  let maxAtomicHeight = message.badges?.length ? badgeSize : 0;
   for (const part of message.message) {
     if (part.type === 'text') {
       items.push({ text: part.content, style: textStyle });
@@ -131,6 +136,20 @@ function measureChatMessageHeight(
         style: strongStyle,
         extraWidth: compact ? 2 : 4,
       });
+      continue;
+    }
+
+    if (part.type === 'emote') {
+      const emoteWidth = estimateEmoteWidth(part, emoteSize);
+      if (!part.zero_width) {
+        items.push({
+          text: NON_BREAKING_SPACE,
+          style: textStyle,
+          atomic: true,
+          extraWidth: emoteWidth,
+        });
+      }
+      maxAtomicHeight = Math.max(maxAtomicHeight, emoteSize);
       continue;
     }
 
@@ -147,10 +166,7 @@ function measureChatMessageHeight(
   );
   const prepared = prepareInlineFlow(items);
   const measured = measureInlineFlow(prepared, maxWidth, lineHeight);
-  const minimumHeight = Math.max(
-    lineHeight,
-    message.badges?.length ? badgeSize : 0,
-  );
+  const minimumHeight = Math.max(lineHeight, maxAtomicHeight);
 
   return Math.max(minimumHeight, measured.height) + ROW_VERTICAL_PADDING;
 }
@@ -172,7 +188,24 @@ function isPlainEstimableChatMessage(message: AnyChatMessageType): boolean {
 }
 
 function isEstimablePart(part: ParsedPart): boolean {
-  return part.type === 'text' || part.type === 'mention';
+  return (
+    part.type === 'text' || part.type === 'mention' || part.type === 'emote'
+  );
+}
+
+function estimateEmoteWidth(
+  part: ParsedPart<'emote'>,
+  targetSize: number,
+): number {
+  if (part.width && part.height && part.height > 0) {
+    return Math.max(1, Math.round((part.width / part.height) * targetSize));
+  }
+
+  if (part.aspect_ratio && part.aspect_ratio > 0) {
+    return Math.max(1, Math.round(part.aspect_ratio * targetSize));
+  }
+
+  return targetSize;
 }
 
 function getCacheKey(
@@ -185,6 +218,43 @@ function getCacheKey(
     widthBucket,
     options.density,
     options.showTimestamp ? 'ts' : 'no-ts',
-    message.message.length,
+    getBadgeSignature(message.badges),
+    getMessagePartSignature(message.message),
   ].join('|');
+}
+
+function getBadgeSignature(badges?: SanitisedBadgeSet[]): string {
+  if (!badges?.length) {
+    return 'badges:0';
+  }
+
+  return `badges:${badges
+    .map(badge => `${badge.set}/${badge.id}/${badge.type}/${badge.url}`)
+    .join(',')}`;
+}
+
+function getMessagePartSignature(parts: ParsedPart[]): string {
+  return parts
+    .map(part => {
+      if (part.type === 'text' || part.type === 'mention') {
+        return `${part.type}:${part.content}`;
+      }
+
+      if (part.type === 'emote') {
+        return [
+          part.type,
+          part.content,
+          part.name ?? '',
+          part.width ?? '',
+          part.height ?? '',
+          part.aspect_ratio ?? '',
+          part.zero_width ? 'zw' : '',
+          part.url ?? '',
+          part.static_url ?? '',
+        ].join(':');
+      }
+
+      return part.type;
+    })
+    .join('|');
 }

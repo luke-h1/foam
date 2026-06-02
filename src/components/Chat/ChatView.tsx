@@ -5,10 +5,11 @@ import {
   useChatRenderPreferences,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
+import { theme } from '@app/styles/themes';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { useNavigation } from 'expo-router';
-import { memo, useCallback, useMemo, useRef } from 'react';
-import { View } from 'react-native';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { type LayoutChangeEvent, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReadyState } from '@app/hooks/ws/constants';
@@ -88,6 +89,7 @@ export const ChatView = memo(
     const listRef = useRef<ChatListRef | null>(null);
     const inputShellRef = useRef<ChatInputShellHandle>(null);
     const overlayControllerRef = useRef<ChatOverlayControllerHandle>(null);
+    const [composerHeight, setComposerHeight] = useState(0);
 
     const { canFetchCosmetics, fetchedCosmeticsUsersRef, fetchUserCosmetics } =
       useChatCosmetics({
@@ -347,7 +349,7 @@ export const ChatView = memo(
     const {
       getItemType,
       keyExtractor,
-      listContentStyle,
+      listContentStyle: baseListContentStyle,
       messageListExtraData,
       renderItem,
     } = useChatRowRenderer({
@@ -365,6 +367,26 @@ export const ChatView = memo(
       setHighlightedReplyTargetMessageId,
       user,
     });
+    const listContentStyle = useMemo(
+      () => [
+        baseListContentStyle,
+        { paddingBottom: composerHeight + theme.space8 },
+      ],
+      [baseListContentStyle, composerHeight],
+    );
+    const chatMessageListExtraData = useMemo(
+      () => ({
+        ...messageListExtraData,
+        composerHeight,
+      }),
+      [composerHeight, messageListExtraData],
+    );
+    const handleComposerLayout = useCallback((event: LayoutChangeEvent) => {
+      const nextHeight = Math.ceil(event.nativeEvent.layout.height);
+      setComposerHeight(currentHeight =>
+        Math.abs(currentHeight - nextHeight) > 1 ? nextHeight : currentHeight,
+      );
+    }, []);
 
     return (
       <View
@@ -407,7 +429,7 @@ export const ChatView = memo(
               keyExtractor={keyExtractor}
               getItemType={getItemType}
               listContentStyle={listContentStyle}
-              messageListExtraData={messageListExtraData}
+              messageListExtraData={chatMessageListExtraData}
               onClearFilters={handleClearFilters}
               onRefreshPinnedMessage={handleRefreshPinnedMessage}
               onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
@@ -428,21 +450,23 @@ export const ChatView = memo(
           </View>
 
           <KeyboardStickyView style={styles.inputStickyView}>
-            <ChatInputShell
-              ref={inputShellRef}
-              canPinNextMessage={canModerateChat}
-              channelId={channelId}
-              channelName={channelName}
-              connected={connected}
-              getUserState={getUserState}
-              isChatConnected={isChatConnected}
-              onOpenEmoteSheet={handleOpenEmoteSheet}
-              onOpenSettingsSheet={handleOpenSettingsSheet}
-              onPinnedMessageChanged={handlePinnedMessageChanged}
-              processMessageEmotes={processMessageEmotes}
-              sendMessage={sendMessage}
-              user={user}
-            />
+            <View onLayout={handleComposerLayout}>
+              <ChatInputShell
+                ref={inputShellRef}
+                canPinNextMessage={canModerateChat}
+                channelId={channelId}
+                channelName={channelName}
+                connected={connected}
+                getUserState={getUserState}
+                isChatConnected={isChatConnected}
+                onOpenEmoteSheet={handleOpenEmoteSheet}
+                onOpenSettingsSheet={handleOpenSettingsSheet}
+                onPinnedMessageChanged={handlePinnedMessageChanged}
+                processMessageEmotes={processMessageEmotes}
+                sendMessage={sendMessage}
+                user={user}
+              />
+            </View>
           </KeyboardStickyView>
 
           <ChatOverlayController
