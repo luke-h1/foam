@@ -13,7 +13,12 @@ module.exports = api => {
         },
       },
     ],
-    'react-native-worklets/plugin',
+    [
+      'react-native-worklets/plugin',
+      {
+        strictGlobal: true,
+      },
+    ],
   ].filter(Boolean);
 
   return {
