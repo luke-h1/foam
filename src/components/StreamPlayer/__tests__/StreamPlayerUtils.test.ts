@@ -1,5 +1,4 @@
 import {
-  buildHostedTwitchPlayerUrl,
   buildRawTwitchPlayerUrl,
   buildTwitchClipPlayerUrl,
   formatDuration,
@@ -7,25 +6,19 @@ import {
   isAppUrl,
   isTwitchPassportCallbackUrl,
 } from '../StreamPlayer';
+import { buildRawTwitchPlayerBootstrapScript } from '../twitchPlayerSource';
 
 describe('StreamPlayer helpers', () => {
   afterEach(() => {
     jest.useRealTimers();
   });
 
-  test('allows only Twitch, parent, and hosted player navigation targets', () => {
+  test('allows only Twitch and parent navigation targets', () => {
     expect(isAllowedTwitchPlayerNavigation('', 'www.twitch.tv')).toBe(false);
     expect(
       isAllowedTwitchPlayerNavigation(
         'https://id.twitch.tv/oauth2/authorize',
         'www.twitch.tv',
-      ),
-    ).toBe(true);
-    expect(
-      isAllowedTwitchPlayerNavigation(
-        'https://foo.example/player',
-        'www.twitch.tv',
-        'https://foo.example/embed/index.html',
       ),
     ).toBe(true);
     expect(
@@ -36,53 +29,10 @@ describe('StreamPlayer helpers', () => {
     ).toBe(false);
     expect(
       isAllowedTwitchPlayerNavigation(
-        'https://foo.example/player',
+        'https://www.twitch.tv/login',
         'www.twitch.tv',
-        'not a url',
       ),
-    ).toBe(false);
-  });
-
-  test('builds hosted Twitch player URLs for live channels and VODs', () => {
-    const channelUrl = buildHostedTwitchPlayerUrl({
-      autoplay: true,
-      channel: 'cohhcarnage',
-      debug: false,
-      muted: true,
-      playerWebsiteUrl: 'https://player.example/index.html?old=1',
-    });
-    const vodUrl = buildHostedTwitchPlayerUrl({
-      autoplay: false,
-      channel: 'cohhcarnage',
-      debug: true,
-      muted: false,
-      playerWebsiteUrl: 'https://player.example/index.html',
-      video: '123',
-    });
-
-    expect(channelUrl).toBe(
-      'https://player.example/index.html?old=1&autoplay=true&muted=true&debug=false&channel=cohhcarnage',
-    );
-    expect(vodUrl).toBe(
-      'https://player.example/index.html?autoplay=false&muted=false&debug=true&video=123',
-    );
-    expect(
-      buildHostedTwitchPlayerUrl({
-        autoplay: true,
-        channel: 'cohhcarnage',
-        debug: false,
-        muted: true,
-        playerWebsiteUrl: 'not a url',
-      }),
-    ).toBeNull();
-    expect(
-      buildHostedTwitchPlayerUrl({
-        autoplay: true,
-        channel: 'cohhcarnage',
-        debug: false,
-        muted: true,
-      }),
-    ).toBeNull();
+    ).toBe(true);
   });
 
   test('builds raw Twitch player URLs without mixing channel and video params', () => {
@@ -106,6 +56,22 @@ describe('StreamPlayer helpers', () => {
       }),
     ).toBe(
       'https://player.twitch.tv/?video=123&autoplay=false&muted=true&parent=www.twitch.tv',
+    );
+  });
+
+  test('starts raw Twitch autoplay in the requested audio state and recovers after layout changes', () => {
+    const script = buildRawTwitchPlayerBootstrapScript({
+      autoplay: true,
+      debug: false,
+      muted: false,
+    });
+
+    expect(script).toContain('var targetMuted = false');
+    expect(script).toContain('var userPaused = !shouldAutoplay');
+    expect(script).toContain('video.muted = targetMuted');
+    expect(script).toContain("video.addEventListener('playing', function()");
+    expect(script).toContain(
+      "window.addEventListener('orientationchange', schedulePlaybackRecovery)",
     );
   });
 

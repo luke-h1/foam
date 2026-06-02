@@ -81,32 +81,7 @@ export function renderParts(
 }
 
 export function getPartIdentity(part: ParsedPart, index: number): string {
-  switch (part.type) {
-    case 'emote':
-    case 'mention':
-    case 'stvEmote':
-    case 'twitchClip':
-    case 'text':
-      return `${part.type}-${part.id ?? part.content ?? index}`;
-
-    case 'stv_emote_added':
-    case 'stv_emote_removed':
-      return `${part.type}-${part.stvEvents.data.id}-${index}`;
-
-    case 'viewermilestone':
-      return `${part.type}-${part.login}-${part.value}-${index}`;
-
-    case 'sub':
-    case 'resub':
-    case 'anongiftpaidupgrade':
-    case 'anongift':
-    case 'submysterygift':
-    case 'giftpaidupgrade':
-      return `${part.type}-${part.subscriptionEvent.displayName}-${index}`;
-
-    default:
-      return `${part.type}-${index}`;
-  }
+  return `${part.type}-${index}`;
 }
 
 export function getChatBodyInfo(

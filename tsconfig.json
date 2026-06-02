@@ -28,6 +28,7 @@
     "jsx": "react-jsx",
     "paths": {
       "@app/*": ["./src/*"],
+      "@modules/*": ["./modules/*"],
       "@e2e/*": ["./e2e/*"]
     }
   },

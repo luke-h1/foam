@@ -25,6 +25,7 @@ import {
 import { useWindowDimensions, View, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -48,6 +49,7 @@ const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
+const ORIENTATION_CHAT_SLIDE_DISTANCE = 28;
 
 export type FullscreenChatMode = 'sidebar' | 'overlay';
 export type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
@@ -200,7 +202,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const normalizedLogin = useMemo(() => id.trim().toLowerCase(), [id]);
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
-  const useUIKitForWebView = usePreference('useUIKitForWebView');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const safeFrame = useSafeAreaFrame();
   const insets = useSafeAreaInsets();
@@ -240,11 +241,15 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   );
   const lastChatToggleTimeRef = useRef<number>(0);
   const previousIsLandscapeRef = useRef(isLandscape);
+  const chatOrientationRevealFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.DEFAULT);
-
+    void ScreenOrientation.unlockAsync();
     return () => {
+      if (chatOrientationRevealFrameRef.current !== null) {
+        cancelAnimationFrame(chatOrientationRevealFrameRef.current);
+        chatOrientationRevealFrameRef.current = null;
+      }
       void ScreenOrientation.lockAsync(
         ScreenOrientation.OrientationLock.PORTRAIT_UP,
       );
@@ -399,49 +404,34 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const effectiveChatWidth = isLandscapeChatHidden ? 0 : chatDimensions.width;
   const effectiveChatHeight = isLandscapeChatHidden ? 0 : chatDimensions.height;
 
-  const videoContainerLayoutStyle = useMemo(
-    () => ({
-      height: videoDimensions.height,
-      width: videoDimensions.width,
-    }),
-    [videoDimensions.height, videoDimensions.width],
-  );
-
-  const chatContainerLayoutStyle = useMemo(
-    () => ({
-      height: effectiveChatHeight,
-      width: effectiveChatWidth,
-    }),
-    [effectiveChatHeight, effectiveChatWidth],
-  );
-
+  const videoWidth = useSharedValue(videoDimensions.width);
+  const videoHeight = useSharedValue(videoDimensions.height);
   const chatWidth = useSharedValue(effectiveChatWidth);
+  const chatHeight = useSharedValue(effectiveChatHeight);
   const chatOpacity = useSharedValue(1);
   const chatTranslateX = useSharedValue(0);
-  const resizeActive = useSharedValue(false);
   const resizeStartWidth = useSharedValue(0);
   const resizeHandleOpacity = useSharedValue(0.42);
 
-  const animatedChatStyle = useAnimatedStyle(() => {
-    const baseStyle = {
-      opacity: chatOpacity.value,
-      transform: [{ translateX: chatTranslateX.value }],
-    };
+  const animatedChatStyle = useAnimatedStyle(() => ({
+    height: chatHeight.value,
+    opacity: chatOpacity.value,
+    transform: [{ translateX: chatTranslateX.value }],
+    width: chatWidth.value,
+  }));
 
-    if (!resizeActive.value) {
-      return baseStyle;
-    }
-
-    return {
-      ...baseStyle,
-      width: chatWidth.value,
-    };
-  });
-
-  const layoutAnimationConfig = useMemo(
+  const resizeAnimationConfig = useMemo(
     () => ({
-      duration: 320,
-      easing: Easing.inOut(Easing.ease),
+      duration: 150,
+      easing: Easing.out(Easing.cubic),
+    }),
+    [],
+  );
+
+  const chatRevealAnimationConfig = useMemo(
+    () => ({
+      duration: 110,
+      easing: Easing.out(Easing.cubic),
     }),
     [],
   );
@@ -451,56 +441,85 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
     previousIsLandscapeRef.current = isLandscape;
 
-    chatWidth.value = effectiveChatWidth;
-    resizeActive.value = false;
+    if (orientationChanged) {
+      if (chatOrientationRevealFrameRef.current !== null) {
+        cancelAnimationFrame(chatOrientationRevealFrameRef.current);
+        chatOrientationRevealFrameRef.current = null;
+      }
 
-    if (isChatVisible) {
-      chatOpacity.value = orientationChanged
-        ? 1
-        : withTiming(1, layoutAnimationConfig);
-      chatTranslateX.value = orientationChanged
-        ? 0
-        : withTiming(0, layoutAnimationConfig);
+      cancelAnimation(videoWidth);
+      cancelAnimation(videoHeight);
+      cancelAnimation(chatWidth);
+      cancelAnimation(chatHeight);
+      cancelAnimation(chatOpacity);
+      cancelAnimation(chatTranslateX);
+
+      videoWidth.value = videoDimensions.width;
+      videoHeight.value = videoDimensions.height;
+      chatWidth.value = effectiveChatWidth;
+      chatHeight.value = effectiveChatHeight;
+
+      if (isChatVisible) {
+        chatOpacity.value = 0;
+        chatTranslateX.value = isLandscape
+          ? Math.min(ORIENTATION_CHAT_SLIDE_DISTANCE, chatDimensions.width)
+          : 0;
+        chatOrientationRevealFrameRef.current = requestAnimationFrame(() => {
+          chatOrientationRevealFrameRef.current = null;
+          chatOpacity.value = withTiming(1, chatRevealAnimationConfig);
+          chatTranslateX.value = isLandscape
+            ? withTiming(0, chatRevealAnimationConfig)
+            : 0;
+        });
+        return;
+      }
+
+      chatOpacity.value = 0;
+      chatTranslateX.value = isLandscape ? chatDimensions.width : 0;
       return;
     }
 
-    chatOpacity.value = orientationChanged
-      ? 0
-      : withTiming(0, layoutAnimationConfig);
-    chatTranslateX.value = orientationChanged
-      ? isLandscape
-        ? chatDimensions.width
-        : 0
-      : withTiming(
-          isLandscape ? chatDimensions.width : 0,
-          layoutAnimationConfig,
-        );
+    videoWidth.value = withTiming(videoDimensions.width, resizeAnimationConfig);
+    videoHeight.value = withTiming(
+      videoDimensions.height,
+      resizeAnimationConfig,
+    );
+    chatWidth.value = withTiming(effectiveChatWidth, resizeAnimationConfig);
+    chatHeight.value = withTiming(effectiveChatHeight, resizeAnimationConfig);
+
+    if (isChatVisible) {
+      chatOpacity.value = withTiming(1, chatRevealAnimationConfig);
+      chatTranslateX.value = withTiming(0, chatRevealAnimationConfig);
+      return;
+    }
+
+    chatOpacity.value = withTiming(0, chatRevealAnimationConfig);
+    chatTranslateX.value = withTiming(
+      isLandscape ? chatDimensions.width : 0,
+      chatRevealAnimationConfig,
+    );
   }, [
     isLandscape,
     isChatVisible,
     isChatVisibleForLayout,
+    videoDimensions,
     chatDimensions,
     effectiveChatWidth,
-    layoutAnimationConfig,
+    effectiveChatHeight,
+    resizeAnimationConfig,
+    chatRevealAnimationConfig,
+    videoWidth,
+    videoHeight,
     chatWidth,
+    chatHeight,
     chatOpacity,
     chatTranslateX,
-    resizeActive,
   ]);
 
-  const animatedVideoStyle = useAnimatedStyle(() => {
-    if (
-      !resizeActive.value ||
-      fullscreenChatMode !== 'sidebar' ||
-      !isChatVisibleForLayout
-    ) {
-      return {};
-    }
-
-    return {
-      width: Math.max(1, screenWidth - chatWidth.value),
-    };
-  });
+  const animatedVideoStyle = useAnimatedStyle(() => ({
+    height: videoHeight.value,
+    width: videoWidth.value,
+  }));
 
   const animatedFullscreenControlsStyle = useAnimatedStyle(() => ({
     right: theme.space16 + chatWidth.value,
@@ -515,7 +534,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       Gesture.Pan()
         .activateAfterLongPress(LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS)
         .onBegin(() => {
-          resizeActive.value = true;
           resizeStartWidth.value = chatWidth.value;
           resizeHandleOpacity.value = 0.9;
         })
@@ -535,6 +553,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           );
 
           chatWidth.value = nextWidth;
+          if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
+            videoWidth.value = Math.max(1, screenWidth - nextWidth);
+          }
         })
         .onFinalize(() => {
           resizeHandleOpacity.value = 0.42;
@@ -544,10 +565,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       chatWidth,
       commitLandscapeChatWidth,
       fullscreenChatMode,
-      resizeActive,
+      isChatVisibleForLayout,
       resizeHandleOpacity,
       resizeStartWidth,
       screenWidth,
+      videoWidth,
     ],
   );
 
@@ -634,13 +656,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   );
   return (
     <View style={contentContainerStyle}>
-      <Animated.View
-        style={[
-          styles.videoContainer,
-          videoContainerLayoutStyle,
-          animatedVideoStyle,
-        ]}
-      >
+      <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
         {isStreamEnabled && resolvedChannelLogin ? (
           <StreamPlayer
             channel={resolvedChannelLogin}
@@ -655,7 +671,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             onWebViewLoaded={handlePlayerLoaded}
             streamInfo={streamInfo}
-            useUIKitForWebView={useUIKitForWebView}
           />
         ) : null}
       </Animated.View>
@@ -664,7 +679,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         <Animated.View
           style={[
             styles.chatContainer,
-            chatContainerLayoutStyle,
             animatedChatStyle,
             landscapeChatContainerStyle,
           ]}
@@ -800,6 +814,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
 const styles = StyleSheet.create({
   chatContainer: {
+    backgroundColor: '#000',
     overflow: 'hidden',
   },
   chatContent: {

@@ -35,7 +35,6 @@ interface UsePlayerBridgeOptions {
   runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;
   sourceKey: string;
-  usesHostedPlayer: boolean;
   webViewKey: number;
 }
 
@@ -58,7 +57,6 @@ export function usePlayerBridge({
   runJavaScript,
   scheduleAuthCompletionReload,
   sourceKey,
-  usesHostedPlayer,
   webViewKey,
 }: UsePlayerBridgeOptions) {
   const [playerState, setPlayerState] = useState<PlayerState>({
@@ -81,11 +79,27 @@ export function usePlayerBridge({
   >(null);
   const currentTimeResolverRef = useRef<((value: number) => void) | null>(null);
   const durationResolverRef = useRef<((value: number) => void) | null>(null);
+  const userPausedRef = useRef(!autoplay);
+  const transientPauseResumeTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+  const lastPlaybackLatencySecondsRef = useRef<number | null>(null);
 
   useEffect(() => {
     setPlaybackLatencySeconds(null);
+    lastPlaybackLatencySecondsRef.current = null;
     setOverlayUnlocked(false);
-  }, [sourceKey]);
+    userPausedRef.current = !autoplay;
+  }, [autoplay, sourceKey]);
+
+  useEffect(() => {
+    return () => {
+      if (transientPauseResumeTimeoutRef.current) {
+        clearTimeout(transientPauseResumeTimeoutRef.current);
+        transientPauseResumeTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     setPlayerStatus({
@@ -112,11 +126,28 @@ export function usePlayerBridge({
     [runJavaScript],
   );
 
+  const resumeAfterTransientPause = useCallback(() => {
+    if (!autoplay || userPausedRef.current) {
+      return false;
+    }
+
+    if (!transientPauseResumeTimeoutRef.current) {
+      transientPauseResumeTimeoutRef.current = setTimeout(() => {
+        transientPauseResumeTimeoutRef.current = null;
+        injectJS('window.playerControls.play()');
+      }, 250);
+    }
+
+    return true;
+  }, [autoplay, injectJS]);
+
   const play = useCallback(() => {
+    userPausedRef.current = false;
     injectJS('window.playerControls.play()');
   }, [injectJS]);
 
   const pause = useCallback(() => {
+    userPausedRef.current = true;
     injectJS('window.playerControls.pause()');
   }, [injectJS]);
 
@@ -259,24 +290,26 @@ export function usePlayerBridge({
               isBuffering: false,
             });
             onReady?.();
-            if (!initialMuted && !deferOverlayUntilUserUnmute) {
-              const unmuteDeadline = Date.now() + 5000;
-              const unmuteInterval = setInterval(() => {
-                unmute();
-                if (Date.now() > unmuteDeadline) {
-                  clearInterval(unmuteInterval);
-                }
-              }, 100);
-            }
             break;
           case 'play':
+            if (transientPauseResumeTimeoutRef.current) {
+              clearTimeout(transientPauseResumeTimeoutRef.current);
+              transientPauseResumeTimeoutRef.current = null;
+            }
             setPlayerState(prev => ({ ...prev, isPaused: false }));
             break;
           case 'playing':
+            if (transientPauseResumeTimeoutRef.current) {
+              clearTimeout(transientPauseResumeTimeoutRef.current);
+              transientPauseResumeTimeoutRef.current = null;
+            }
             setPlayerState(prev => ({ ...prev, isPaused: false }));
             onPlay?.();
             break;
           case 'pause':
+            if (resumeAfterTransientPause()) {
+              break;
+            }
             setPlayerState(prev => ({ ...prev, isPaused: true }));
             onPause?.();
             break;
@@ -305,8 +338,11 @@ export function usePlayerBridge({
             });
             setPlayerState(prev => {
               const { payload } = message;
+              const isTransientAutoplayPause =
+                payload.isPaused && resumeAfterTransientPause();
               if (
-                prev.isPaused === payload.isPaused &&
+                prev.isPaused ===
+                  (isTransientAutoplayPause ? false : payload.isPaused) &&
                 prev.muted === payload.muted &&
                 prev.volume === payload.volume
               ) {
@@ -314,7 +350,7 @@ export function usePlayerBridge({
               }
               return {
                 ...prev,
-                isPaused: payload.isPaused,
+                isPaused: isTransientAutoplayPause ? false : payload.isPaused,
                 muted: payload.muted,
                 volume: payload.volume,
               };
@@ -364,18 +400,16 @@ export function usePlayerBridge({
               latency > 0.25 &&
               latency < 600;
 
-            if (usesHostedPlayer) {
-              const nextHasContentGate = !hasUsableLiveLatency;
-              setHasContentGate(nextHasContentGate);
-              onContentGateChange?.(nextHasContentGate);
-            }
-
             if (hasUsableLiveLatency) {
-              setPlaybackLatencySeconds(latency);
-              onPlaybackLatencyChange?.(latency);
-            } else if (usesHostedPlayer) {
-              setPlaybackLatencySeconds(null);
-              onPlaybackLatencyChange?.(0);
+              const previousLatency = lastPlaybackLatencySecondsRef.current;
+              if (
+                previousLatency == null ||
+                Math.abs(previousLatency - latency) >= 0.25
+              ) {
+                lastPlaybackLatencySecondsRef.current = latency;
+                setPlaybackLatencySeconds(latency);
+                onPlaybackLatencyChange?.(latency);
+              }
             }
             break;
           }
@@ -401,7 +435,6 @@ export function usePlayerBridge({
     [
       autoplay,
       deferOverlayUntilUserUnmute,
-      initialMuted,
       onEnded,
       onError,
       onOffline,
@@ -411,9 +444,8 @@ export function usePlayerBridge({
       onPlaybackLatencyChange,
       onPlay,
       onReady,
+      resumeAfterTransientPause,
       scheduleAuthCompletionReload,
-      unmute,
-      usesHostedPlayer,
     ],
   );
 

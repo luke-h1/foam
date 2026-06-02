@@ -1,3 +1,4 @@
+import { createRef } from 'react';
 import { act, render } from '@testing-library/react-native';
 
 const mockInjectJavaScript = jest.fn();
@@ -39,6 +40,7 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 import { StreamPlayer } from '../StreamPlayer';
+import type { StreamPlayerRef } from '../types';
 
 function latestWebViewProps() {
   const props = mockWebViewProps.at(-1);
@@ -84,6 +86,7 @@ describe('StreamPlayer component messaging', () => {
 
     render(
       <StreamPlayer
+        autoplay={false}
         channel='cohhcarnage'
         height={200}
         muted
@@ -126,6 +129,66 @@ describe('StreamPlayer component messaging', () => {
       '[StreamPlayer:embed ERROR]',
       'embed failed',
     );
+  });
+
+  test('resumes autoplay after a transient player pause', () => {
+    jest.useFakeTimers();
+    const onPause = jest.fn();
+
+    render(
+      <StreamPlayer
+        channel='cohhcarnage'
+        height={200}
+        muted
+        onPause={onPause}
+        showOverlayControls={false}
+        width={300}
+      />,
+    );
+
+    sendPlayerMessage('pause');
+
+    expect(onPause).not.toHaveBeenCalled();
+    expect(mockInjectJavaScript).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.advanceTimersByTime(250);
+    });
+
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('window.playerControls.play()'),
+    );
+  });
+
+  test('does not resume after an explicit native pause', () => {
+    jest.useFakeTimers();
+    const onPause = jest.fn();
+    const playerRef = createRef<StreamPlayerRef>();
+
+    render(
+      <StreamPlayer
+        ref={playerRef}
+        channel='cohhcarnage'
+        height={200}
+        muted
+        onPause={onPause}
+        showOverlayControls={false}
+        width={300}
+      />,
+    );
+
+    act(() => {
+      playerRef.current?.pause();
+    });
+    mockInjectJavaScript.mockClear();
+
+    sendPlayerMessage('pause');
+    act(() => {
+      jest.advanceTimersByTime(250);
+    });
+
+    expect(onPause).toHaveBeenCalledTimes(1);
+    expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 
   test('remounts the WebView after Twitch auth completes', () => {
@@ -202,7 +265,7 @@ describe('StreamPlayer component messaging', () => {
     );
 
     expect(latestWebViewProps().source).toEqual({
-      uri: 'https://player.twitch.tv/?channel=cohhcarnage&autoplay=false&muted=false&parent=www.twitch.tv',
+      uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
     });
     expect(latestWebViewProps()).toEqual(
       expect.objectContaining({
@@ -228,12 +291,26 @@ describe('StreamPlayer component messaging', () => {
         ),
       }),
     );
+    expect(latestWebViewProps()).toEqual(
+      expect.objectContaining({
+        injectedJavaScript: expect.stringContaining(
+          "window.addEventListener('orientationchange', schedulePlaybackRecovery)",
+        ),
+      }),
+    );
+    expect(latestWebViewProps()).toEqual(
+      expect.objectContaining({
+        injectedJavaScript: expect.stringContaining(
+          "style.id = 'foam-twitch-control-hide-style'",
+        ),
+      }),
+    );
 
     const { onLoadEnd } = latestWebViewProps();
     act(() => {
       (onLoadEnd as (event: { nativeEvent: { url: string } }) => void)({
         nativeEvent: {
-          url: 'https://player.twitch.tv/?channel=cohhcarnage&autoplay=false&muted=false&parent=www.twitch.tv',
+          url: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
         },
       });
     });

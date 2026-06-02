@@ -1,8 +1,7 @@
 import { recordError } from '@app/lib/sentry';
-import { UIKitWebView } from '@modules/ui-kit-webview';
 import { memo, useCallback } from 'react';
 import type { ComponentProps, RefObject } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type {
   OnShouldStartLoadWithRequest,
@@ -14,7 +13,6 @@ import {
   isAllowedTwitchPlayerNavigation,
   isAppUrl,
   isTwitchPassportCallbackUrl,
-  TWITCH_PLAYER_WEBSITE_URL,
 } from './twitchPlayerSource';
 
 type WebViewSource = ComponentProps<typeof WebView>['source'];
@@ -24,19 +22,19 @@ interface StreamPlayerWebViewProps {
   channel?: string;
   clip?: string;
   injectedJavaScript?: string;
-  javaScriptCommand?: string;
+  injectedJavaScriptBeforeContentLoaded?: string;
   needsInitRef: RefObject<boolean>;
   onError?: (error: string) => void;
   onHttpError: (error: { statusCode: number; url: string }) => void;
+  onLoadEnd?: (url: string) => void;
   onMessage: ComponentProps<typeof WebView>['onMessage'];
+  onOpenWindow?: ComponentProps<typeof WebView>['onOpenWindow'];
   onWebViewLoaded?: () => void;
   parent: string;
-  rawTwitchPlayerAutoplay: boolean;
   remountWebView: () => void;
   restrictWebViewNavigationToTwitchPlayer: boolean;
   scheduleAuthCompletionReload: () => void;
   source: WebViewSource;
-  useUIKitForWebView: boolean;
   video?: string;
   webViewKey: number;
   webViewRef: RefObject<WebView | null>;
@@ -47,27 +45,23 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   channel,
   clip,
   injectedJavaScript,
-  javaScriptCommand,
+  injectedJavaScriptBeforeContentLoaded,
   needsInitRef,
   onError,
   onHttpError,
+  onLoadEnd,
   onMessage,
+  onOpenWindow,
   onWebViewLoaded,
   parent,
-  rawTwitchPlayerAutoplay,
   remountWebView,
   restrictWebViewNavigationToTwitchPlayer,
   scheduleAuthCompletionReload,
   source,
-  useUIKitForWebView,
   video,
   webViewKey,
   webViewRef,
 }: StreamPlayerWebViewProps) {
-  const webViewUrl = source && 'uri' in source ? source.uri : undefined;
-  const shouldUseUIKitWebView =
-    useUIKitForWebView && Platform.OS === 'ios' && Boolean(webViewUrl);
-
   const handleLoadEnd = useCallback(
     (url: string) => {
       onWebViewLoaded?.();
@@ -75,11 +69,12 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
         scheduleAuthCompletionReload();
         return;
       }
+      onLoadEnd?.(url);
       if (needsInitRef.current) {
         needsInitRef.current = false;
       }
     },
-    [needsInitRef, onWebViewLoaded, scheduleAuthCompletionReload],
+    [needsInitRef, onLoadEnd, onWebViewLoaded, scheduleAuthCompletionReload],
   );
 
   const handleShouldStartLoadWithRequest =
@@ -97,11 +92,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
           return true;
         }
 
-        return isAllowedTwitchPlayerNavigation(
-          request.url,
-          parent,
-          TWITCH_PLAYER_WEBSITE_URL,
-        );
+        return isAllowedTwitchPlayerNavigation(request.url, parent);
       },
       [parent, restrictWebViewNavigationToTwitchPlayer],
     );
@@ -167,45 +158,8 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     [channel, onError, onHttpError],
   );
 
-  const handleUIKitWebViewError = useCallback(
-    (event: {
-      nativeEvent: {
-        code: number;
-        description: string;
-        domain: string;
-        url: string;
-      };
-    }) => {
-      const { nativeEvent } = event;
-      console.warn('[StreamPlayer:UIKitWebView ERROR]', {
-        code: nativeEvent.code,
-        description: nativeEvent.description,
-        domain: nativeEvent.domain,
-        url: nativeEvent.url,
-      });
-
-      recordError({
-        name: 'stream_error',
-        message: `StreamPlayer UIKit WebView error: ${nativeEvent.description}`,
-        params: {
-          category: 'Stream',
-          action: 'uikit_webview_error',
-          code: nativeEvent.code,
-          description: nativeEvent.description,
-          domain: nativeEvent.domain,
-          url: nativeEvent.url,
-          channel,
-        },
-        errorCause: nativeEvent,
-      });
-
-      onError?.(nativeEvent.description);
-    },
-    [channel, onError],
-  );
-
   const handleLoadStart = useCallback(
-    (renderer: 'UIKitWebView' | 'WebView') => {
+    (renderer: 'WebView') => {
       if (__DEV__) {
         console.warn(`[StreamPlayer:${renderer}] onLoadStart`, {
           channel,
@@ -217,58 +171,24 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     [channel, clip, video],
   );
 
-  if (shouldUseUIKitWebView && webViewUrl) {
-    return (
-      <UIKitWebView
-        key={webViewKey}
-        allowsFullscreenVideo={false}
-        debugRawTwitchPlayerBridge={__DEV__}
-        scrollEnabled={allowsTwitchInteraction}
-        keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
-        javaScriptCommand={javaScriptCommand}
-        parent={parent}
-        playerWebsiteUrl={TWITCH_PLAYER_WEBSITE_URL}
-        rawTwitchPlayerAutoplay={rawTwitchPlayerAutoplay}
-        rawTwitchPlayerBridgeEnabled={Boolean(injectedJavaScript)}
-        restrictNavigationToTwitchPlayer={
-          restrictWebViewNavigationToTwitchPlayer
-        }
-        url={webViewUrl}
-        style={[
-          styles.webView,
-          allowsTwitchInteraction && styles.webViewScrollable,
-        ]}
-        onContentProcessDidTerminate={remountWebView}
-        onError={handleUIKitWebViewError}
-        onMessage={event => {
-          onMessage?.({
-            nativeEvent: {
-              data: event.nativeEvent.data,
-            },
-          } as Parameters<NonNullable<typeof onMessage>>[0]);
-        }}
-        onNavigationStateChange={event => {
-          if (isTwitchPassportCallbackUrl(event.nativeEvent.url)) {
-            scheduleAuthCompletionReload();
-          }
-        }}
-        onLoadEnd={event => handleLoadEnd(event.nativeEvent.url)}
-        onLoadStart={() => handleLoadStart('UIKitWebView')}
-      />
-    );
-  }
-
   return (
     <WebView
       key={webViewKey}
       ref={webViewRef}
       allowsFullscreenVideo={false}
       allowsInlineMediaPlayback
+      allowsAirPlayForMediaPlayback={false}
+      allowsPictureInPictureMediaPlayback={false}
+      androidLayerType='hardware'
       cacheEnabled
+      cacheMode='LOAD_CACHE_ELSE_NETWORK'
       domStorageEnabled
       javaScriptEnabled
       javaScriptCanOpenWindowsAutomatically
       mediaPlaybackRequiresUserAction={false}
+      mixedContentMode='never'
+      nestedScrollEnabled={false}
+      overScrollMode='never'
       scrollEnabled={allowsTwitchInteraction}
       keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
       setBuiltInZoomControls={false}
@@ -276,9 +196,15 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       setSupportMultipleWindows={false}
       sharedCookiesEnabled
       thirdPartyCookiesEnabled
+      textInteractionEnabled={false}
       originWhitelist={['*']}
       source={source}
       injectedJavaScript={injectedJavaScript}
+      injectedJavaScriptBeforeContentLoaded={
+        injectedJavaScriptBeforeContentLoaded
+      }
+      injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
+      injectedJavaScriptForMainFrameOnly={false}
       style={[
         styles.webView,
         allowsTwitchInteraction && styles.webViewScrollable,
@@ -291,6 +217,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
           scheduleAuthCompletionReload();
         }
       }}
+      onOpenWindow={onOpenWindow}
       onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
       onLoadEnd={event => handleLoadEnd(event.nativeEvent.url)}
       onLoadStart={() => handleLoadStart('WebView')}

@@ -2,12 +2,18 @@
 
 # dependencies
 node_modules/
+.git/
+.agents/
 
 # Expo
 .expo/
 dist/
 web-build/
 action-build
+player-website/
+build-artifacts/
+artifacts/
+docs/
 # Native
 *.orig.*
 *.jks
@@ -69,6 +75,7 @@ xcuserdata
 
 # test
 coverage
+.jest-cache/
 
 # Bun
 bun.lockb

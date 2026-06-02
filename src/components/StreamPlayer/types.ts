@@ -203,18 +203,6 @@ export interface StreamPlayerProps {
    */
   restrictWebViewNavigationToTwitchPlayer?: boolean;
   /**
-   * Load player.twitch.tv directly instead of generated embed HTML.
-   * This disables the JS player bridge but allows Twitch's own login/cookie UI
-   * to handle scrolling and interaction.
-   * @default true
-   */
-  useRawTwitchPlayer?: boolean;
-  /**
-   * Experiment: render URI-based player loads through the local UIKit WKWebView.
-   * iOS only; other platforms keep react-native-webview.
-   */
-  useUIKitForWebView?: boolean;
-  /**
    * Show custom overlay controls
    * @default false
    */

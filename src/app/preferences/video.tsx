@@ -1,3 +1,5 @@
-import { VideoPreferenceScreen } from '@app/screens/Preferences/VideoPreferenceScreen';
+import { Redirect } from 'expo-router';
 
-export default VideoPreferenceScreen;
+export default function VideoPreferenceRoute() {
+  return <Redirect href='/preferences/chat' />;
+}

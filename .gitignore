@@ -29,12 +29,12 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
 
-!.env.example
 /ios
 /android
 
@@ -117,3 +117,4 @@ docs/plans
 
 docs/
 build-artifacts/
+

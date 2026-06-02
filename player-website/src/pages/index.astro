@@ -3,41 +3,41 @@ import '../styles/player.css';
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang='en'>
   <head>
-    <meta charset="utf-8" />
+    <meta charset='utf-8' />
     <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      name='viewport'
+      content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
     />
     <title>Foam Twitch Player</title>
-    <link rel="preconnect" href="https://player.twitch.tv" />
-    <link rel="preconnect" href="https://static.twitchcdn.net" crossorigin />
+    <link rel='preconnect' href='https://player.twitch.tv' />
+    <link rel='preconnect' href='https://static.twitchcdn.net' crossorigin />
   </head>
   <body>
     <main>
-      <div id="player"></div>
-      <section id="stats" aria-label="Playback stats" hidden>
+      <div id='player'></div>
+      <section id='stats' aria-label='Playback stats' hidden>
         <div>
-          <span class="label">Broadcaster latency</span>
-          <span class="value" id="latency">pending</span>
+          <span class='label'>Broadcaster latency</span>
+          <span class='value' id='latency'>pending</span>
         </div>
         <div>
-          <span class="label">Buffer</span>
-          <span class="value" id="buffer">pending</span>
+          <span class='label'>Buffer</span>
+          <span class='value' id='buffer'>pending</span>
         </div>
         <div>
-          <span class="label">Resolution</span>
-          <span class="value" id="resolution">pending</span>
+          <span class='label'>Resolution</span>
+          <span class='value' id='resolution'>pending</span>
         </div>
         <div>
-          <span class="label">Events</span>
-          <span class="value events" id="events">pending</span>
+          <span class='label'>Events</span>
+          <span class='value events' id='events'>pending</span>
         </div>
       </section>
     </main>
 
-    <script is:inline src="https://player.twitch.tv/js/embed/v1.js"></script>
-    <script src="../scripts/player.js"></script>
+    <script is:inline src='https://player.twitch.tv/js/embed/v1.js'></script>
+    <script src='../scripts/player.js'></script>
   </body>
 </html>
