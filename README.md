@@ -39,21 +39,7 @@ This is a [React Native app](https://reactnative.dev). This repository powers th
 
 Each variant uses different iOS bundle identifiers and Android application ids so multiple builds can be installed on one device.
 
-Core dependencies:
-
-| Library                                          | Category                       | Version                                | Description                                             |
-| ------------------------------------------------ | ------------------------------ | -------------------------------------- | ------------------------------------------------------- |
-| [bun](https://bun.sh/)                           | Package manager & node runtime | 1.3.5 ([`.bun-version`](.bun-version)) | Fast package manager and Node-compatible runtime        |
-| [React Native](https://reactnative.dev/)         | Mobile framework               | 0.81.5                                 | Cross-platform mobile framework                         |
-| [React](https://react.dev/)                      | UI framework                   | 19.1.0                                 | Most popular UI framework worldwide                     |
-| [TypeScript](https://www.typescriptlang.org/)    | Language                       | 5.9.2                                  | Static typechecking                                     |
-| [Expo](https://expo.dev/)                        | SDK                            | ~54.0.33                               | React Native framework / Expo modules                   |
-| [React Navigation](https://reactnavigation.org/) | Navigation                     | 7.x                                    | Routing and navigation library                          |
-| [Detox](https://wix.github.io/Detox/)            | E2E testing                    | 20.46.0                                | Gray-box simulator testing                              |
-| [EAS](https://expo.dev/eas)                      | CI/CD                          | N/A                                    | Build the app binaries and submit the app to the stores |
-| [Storybook](https://storybook.js.org/)           | UI preview                     | 8.4.4                                  | UI development & preview tool for React Native          |
-
-Additional inspiration on how this project is structured is coming from: [Obytess React Native Starter](https://starter.obytes.com/), [Aetherspace Green Stack Starter](https://github.com/Aetherspace/green-stack-starter-demo#readme), [online docs as Storybook website](https://main--62c9a236ee16e6611d719e94.chromatic.com/?path=/story/aetherspace-quickstart--page), [Infinite Red cookbook for React Native](https://ignitecookbook.com/).
+Inspiration on how this project is structured is coming from: [Obytess React Native Starter](https://starter.obytes.com/), [Aetherspace Green Stack Starter](https://github.com/Aetherspace/green-stack-starter-demo#readme), [online docs as Storybook website](https://main--62c9a236ee16e6611d719e94.chromatic.com/?path=/story/aetherspace-quickstart--page), [Infinite Red cookbook for React Native](https://ignitecookbook.com/).
 
 ## Store links
 

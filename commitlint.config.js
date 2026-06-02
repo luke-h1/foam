@@ -1,28 +1,4 @@
-const scopes = [
-  'app',
-  'ci',
-  'test',
-  'docs',
-  'infrastructure',
-  'chat',
-  'twitch',
-  'seventv',
-  'bttv',
-  'chat',
-  'ffz',
-  'stream',
-  'auth',
-  'tooling',
-  'documentation',
-  'security',
-  'sentry',
-  'monitoring',
-  'perf',
-  'firebase',
-  'remote-config',
-  'release',
-  'storybook',
-];
+const scopes = require('./commit-scopes');
 
 module.exports = {
   extends: ['@commitlint/config-conventional'],
@@ -46,9 +22,6 @@ module.exports = {
         'release',
       ],
     ],
-  },
-  scopeOverrides: {
-    chore: [...scopes, { name: 'release' }],
   },
   allowCustomScopes: true,
   allowBreakingChanges: ['feat', 'fix', 'perf', 'refactor', 'hotfix'],

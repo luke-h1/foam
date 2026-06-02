@@ -1,12 +1,4 @@
-const scopes = [
-  'app',
-  'infrastructure',
-  'ui',
-  'ci',
-  'docs',
-  'test',
-  'documentation',
-].map(name => ({
+const scopes = require('./commit-scopes').map(name => ({
   name,
 }));
 
@@ -42,9 +34,6 @@ module.exports = {
     },
   ],
   scopes,
-  scopeOverrides: {
-    chore: [...scopes, { name: 'release' }],
-  },
   allowCustomScopes: true,
   allowBreakingChanges: ['feat', 'fix', 'perf', 'refactor'],
   subjectLimit: 100,
