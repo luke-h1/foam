@@ -323,16 +323,12 @@ export function buildTextFieldModifiers({
     padding(paddingForStyle(style)),
     ...fontModifiersForStyle(style),
   ];
-  const heightFrame = frameForStyle(style, multiline ? 'topLeading' : 'center');
   const keyboard = keyboardTypeForInput(inputMode, keyboardType);
   const submit = submitLabelForInput(enterKeyHint, returnKeyType);
   const autocapitalization = autocapitalizationForInput(autoCapitalize);
   const contentType = contentTypeForInput(textContentType, autoComplete);
   const textAlignment = textAlignmentForInput(textAlign ?? style.textAlign);
 
-  if (heightFrame) {
-    modifiers.push(frame(heightFrame));
-  }
   if (multiline) {
     modifiers.push(lineLimit(numberOfLines ?? 5));
   }

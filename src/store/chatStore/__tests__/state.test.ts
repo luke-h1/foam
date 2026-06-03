@@ -46,15 +46,25 @@ describe('limitChannelCaches', () => {
           'channel-8': makeCache(8),
           'channel-9': makeCache(9),
           'channel-10': makeCache(10),
+          'channel-11': makeCache(11),
+          'channel-12': makeCache(12),
+          'channel-13': makeCache(13),
+          'channel-14': makeCache(14),
+          'channel-15': makeCache(15),
+          'channel-16': makeCache(16),
+          'channel-17': makeCache(17),
+          'channel-18': makeCache(18),
+          'channel-19': makeCache(19),
+          'channel-20': makeCache(20),
           current: makeCache(-1),
         },
         'current',
       );
 
-      expect(Object.keys(result)).toHaveLength(10);
+      expect(Object.keys(result)).toHaveLength(20);
       expect(result.current).toBeDefined();
       expect(result['channel-0']).toBeUndefined();
-      expect(result['channel-10']).toBeDefined();
+      expect(result['channel-20']).toBeDefined();
     } finally {
       if (nativeToSorted) {
         arrayPrototype.toSorted = nativeToSorted;
