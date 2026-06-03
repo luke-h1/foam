@@ -1,6 +1,8 @@
 import type { ChatMessageType } from '@app/store/chatStore/constants';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { render } from '@testing-library/react-native';
+import { Profiler, useEffect, type ProfilerOnRenderCallback } from 'react';
 import { View } from 'react-native';
 import { measureFunction, measureRenders } from 'reassure';
 import { ChatList } from '../components/ChatList';
@@ -8,6 +10,42 @@ import { RichChatMessage } from '../components/ChatMessage/RichChatMessage';
 import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { getVisibleMessages } from '../util/visibleMessages';
+
+jest.mock('@legendapp/list', () => {
+  const React = require('react');
+  const { View: MockView } = require('react-native');
+
+  type MockLegendListProps = {
+    data?: unknown;
+    extraData?: unknown;
+    keyExtractor?: unknown;
+    renderItem?: unknown;
+  };
+
+  return {
+    LegendList: React.forwardRef((props: unknown, ref: unknown) => {
+      const { data, extraData, keyExtractor, renderItem } =
+        props as MockLegendListProps;
+      const items = Array.isArray(data) ? data : [];
+      const renderRow = typeof renderItem === 'function' ? renderItem : null;
+      const getKey = typeof keyExtractor === 'function' ? keyExtractor : null;
+
+      return React.createElement(
+        MockView,
+        { ref },
+        items.map((item, index) =>
+          React.createElement(
+            React.Fragment,
+            { key: getKey ? getKey(item, index) : String(index) },
+            renderRow
+              ? renderRow({ extraData, index, item, target: 'Cell' })
+              : null,
+          ),
+        ),
+      );
+    }),
+  };
+});
 
 type PerfChatMessage = ChatMessageType<'usernotice'>;
 
@@ -156,6 +194,45 @@ function RichMessageRowsPerfFixture() {
   );
 }
 
+function RichMessageRowsMountFixture({
+  onRowMount,
+}: {
+  onRowMount: (messageId: string) => void;
+}) {
+  return (
+    <View>
+      {visibleRows.map(message => (
+        <TrackedRichChatMessage
+          key={message.id}
+          message={message}
+          onRowMount={onRowMount}
+        />
+      ))}
+    </View>
+  );
+}
+
+function TrackedRichChatMessage({
+  message,
+  onRowMount,
+}: {
+  message: PerfChatMessage;
+  onRowMount: (messageId: string) => void;
+}) {
+  useEffect(() => {
+    onRowMount(message.id);
+  }, [message.id, onRowMount]);
+
+  return (
+    <RichChatMessage
+      {...message}
+      density='compact'
+      currentUsername='luke'
+      disableEmoteAnimations
+    />
+  );
+}
+
 describe('chat performance', () => {
   test('renders the chat list window', async () => {
     await measureRenders(<ChatListPerfFixture />, MEASURE_OPTIONS);
@@ -187,5 +264,34 @@ describe('chat performance', () => {
         });
       }
     }, MEASURE_OPTIONS);
+  });
+
+  test('keeps visible row mounts stable across unchanged rerenders', () => {
+    const onRowMount = jest.fn();
+    const onRender = jest.fn<
+      ReturnType<ProfilerOnRenderCallback>,
+      Parameters<ProfilerOnRenderCallback>
+    >();
+
+    const { rerender } = render(
+      <Profiler id='rich-message-rows' onRender={onRender}>
+        <RichMessageRowsMountFixture onRowMount={onRowMount} />
+      </Profiler>,
+    );
+
+    expect(onRowMount).toHaveBeenCalledTimes(visibleRows.length);
+    expect(onRender.mock.calls.map(([, phase]) => phase)).toEqual(['mount']);
+
+    rerender(
+      <Profiler id='rich-message-rows' onRender={onRender}>
+        <RichMessageRowsMountFixture onRowMount={onRowMount} />
+      </Profiler>,
+    );
+
+    expect(onRowMount).toHaveBeenCalledTimes(visibleRows.length);
+    expect(onRender.mock.calls.map(([, phase]) => phase)).toEqual([
+      'mount',
+      'update',
+    ]);
   });
 });
