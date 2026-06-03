@@ -1,7 +1,6 @@
 const jestConfig = {
   preset: 'jest-expo',
   setupFilesAfterEnv: ['./test/setupTests.ts'],
-  setupFiles: ['./node_modules/react-native-gesture-handler/jestSetup.js'],
   transform: {
     '^.+\\.(t|j)sx?$': 'babel-jest',
   },

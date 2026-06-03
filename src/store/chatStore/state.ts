@@ -84,6 +84,7 @@ const initialChatStoreState: ChatStoreState = {
 ensureObservablePersistenceConfig();
 
 export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
+
 persistObservable(chatStore$.persisted, {
   local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),
 });

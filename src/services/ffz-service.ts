@@ -163,7 +163,7 @@ export const ffzService = {
         },
         warningCause: error,
       });
-      return [];
+      throw error;
     }
   },
 
@@ -249,7 +249,7 @@ export const ffzService = {
         },
         warningCause: error,
       });
-      return [];
+      throw error;
     }
   },
 
@@ -292,7 +292,7 @@ export const ffzService = {
         },
         warningCause: error,
       });
-      return [];
+      throw error;
     }
   },
 
@@ -335,7 +335,7 @@ export const ffzService = {
         },
         warningCause: error,
       });
-      return [];
+      throw error;
     }
   },
 } as const;

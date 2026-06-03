@@ -8,7 +8,6 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 import '@testing-library/jest-native/extend-expect';
-import 'react-native-gesture-handler/jestSetup';
 import 'react-native-url-polyfill/auto';
 import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import * as ReactNative from 'react-native';
@@ -50,11 +49,173 @@ jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => {
 
 jest.mock('react-native-worklets');
 
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
+const createReactNativeHostMock = (hostName: string) => {
+  const React = require('react');
 
-  Reanimated.default.call = () => {};
-  return Reanimated;
+  return React.forwardRef(
+    (
+      {
+        children,
+        ...props
+      }: {
+        children?: React.ReactNode;
+      },
+      ref: React.Ref<unknown>,
+    ) =>
+      React.createElement(
+        hostName,
+        ref == null ? props : { ...props, ref },
+        children,
+      ),
+  );
+};
+
+jest.mock('react-native/Libraries/Text/Text', () => ({
+  __esModule: true,
+  default: createReactNativeHostMock('Text'),
+}));
+
+jest.mock('react-native/Libraries/Components/Button', () => ({
+  __esModule: true,
+  default: createReactNativeHostMock('Button'),
+}));
+
+jest.mock('react-native/Libraries/Components/TextInput/TextInput', () => ({
+  __esModule: true,
+  default: createReactNativeHostMock('TextInput'),
+}));
+
+jest.mock('react-native-gesture-handler', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const passthroughComponent = ({
+    children,
+    ...props
+  }: {
+    children?: React.ReactNode;
+  }) => React.createElement(View, props, children);
+  const createGesture = () => {
+    const gesture: Record<string, unknown> = {};
+    const chainable = () => gesture;
+    [
+      'activeOffsetX',
+      'activeOffsetY',
+      'direction',
+      'enabled',
+      'failOffsetX',
+      'failOffsetY',
+      'maxDuration',
+      'maxPointers',
+      'minPointers',
+      'numberOfTaps',
+      'onBegin',
+      'onEnd',
+      'onFinalize',
+      'onStart',
+      'onTouchesDown',
+      'onTouchesUp',
+      'onUpdate',
+      'requireExternalGestureToFail',
+      'runOnJS',
+      'simultaneousWithExternalGesture',
+    ].forEach(method => {
+      gesture[method] = chainable;
+    });
+    return gesture;
+  };
+
+  return {
+    __esModule: true,
+    Directions: {
+      DOWN: 4,
+      LEFT: 2,
+      RIGHT: 1,
+      UP: 8,
+    },
+    Gesture: {
+      Exclusive: (...gestures: unknown[]) => gestures,
+      Fling: createGesture,
+      Pan: createGesture,
+      Pinch: createGesture,
+      Race: (...gestures: unknown[]) => gestures,
+      Simultaneous: (...gestures: unknown[]) => gestures,
+      Tap: createGesture,
+    },
+    GestureDetector: passthroughComponent,
+    GestureHandlerRootView: passthroughComponent,
+    Pressable: passthroughComponent,
+    RectButton: passthroughComponent,
+    ScrollView: passthroughComponent,
+  };
+});
+
+jest.mock('react-native-reanimated', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const animatedComponent = React.forwardRef(
+    (
+      {
+        children,
+        ...props
+      }: {
+        children?: React.ReactNode;
+      },
+      ref: React.Ref<unknown>,
+    ) => React.createElement(View, { ...props, ref }, children),
+  );
+  const identityAnimation = (
+    value: unknown,
+    _config?: unknown,
+    callback?: (finished?: boolean) => void,
+  ) => {
+    callback?.(true);
+    return value;
+  };
+
+  return {
+    __esModule: true,
+    default: {
+      call: () => {},
+      createAnimatedComponent: (component: unknown) => component,
+      FlatList: animatedComponent,
+      Image: animatedComponent,
+      ScrollView: animatedComponent,
+      Text: animatedComponent,
+      View: animatedComponent,
+    },
+    cancelAnimation: jest.fn(),
+    createAnimatedComponent: (component: unknown) => component,
+    Easing: {
+      bezier: jest.fn(() => jest.fn()),
+      cubic: jest.fn(),
+      in: jest.fn(easing => easing),
+      inOut: jest.fn(easing => easing),
+      linear: jest.fn(),
+      out: jest.fn(easing => easing),
+    },
+    Extrapolation: {
+      CLAMP: 'clamp',
+      EXTEND: 'extend',
+      IDENTITY: 'identity',
+    },
+    interpolate: jest.fn((value: unknown) => value),
+    interpolateColor: jest.fn((value: unknown) => value),
+    runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
+    runOnUI: (fn: (...args: unknown[]) => unknown) => fn,
+    useAnimatedReaction: jest.fn(),
+    useAnimatedRef: () => ({ current: null }),
+    useAnimatedScrollHandler: (handler: unknown) => handler,
+    useAnimatedStyle: (updater: () => unknown) => updater(),
+    useDerivedValue: (updater: () => unknown) => ({ value: updater() }),
+    useSharedValue: (value: unknown) => ({ value }),
+    withDelay: (_delay: number, value: unknown) => value,
+    withRepeat: (value: unknown) => value,
+    withSequence: (...values: unknown[]) => values.at(-1),
+    withSpring: identityAnimation,
+    withTiming: identityAnimation,
+  };
 });
 
 jest.mock('react-native-webview', () => {
@@ -68,14 +229,38 @@ jest.mock('react-native-webview', () => {
 });
 
 jest.doMock('react-native', () => {
+  const React = require('react');
+  const createHostComponent = (hostName: string) =>
+    React.forwardRef(
+      (
+        {
+          children,
+          ...props
+        }: {
+          children?: React.ReactNode;
+        },
+        ref: React.Ref<unknown>,
+      ) =>
+        React.createElement(
+          hostName,
+          ref == null ? props : { ...props, ref },
+          children,
+        ),
+    );
+  const MockNativeView = createHostComponent('View');
+  const MockNativeText = createHostComponent('Text');
+  const MockNativeTextInput = createHostComponent('TextInput');
+
   return Object.setPrototypeOf(
     {
+      FlatList: MockNativeView,
       Share: {
-        ...ReactNative.Share,
         share: jest.fn(),
       },
+      ScrollView: MockNativeView,
+      Text: MockNativeText,
+      TextInput: MockNativeTextInput,
       Image: {
-        ...ReactNative.Image,
         resolveAssetSource: jest.fn(_source => mockFile),
         getSize: jest.fn(
           (
@@ -89,6 +274,102 @@ jest.doMock('react-native', () => {
     ReactNative,
   );
 });
+
+jest.mock('@shopify/flash-list', () => {
+  const React = require('react');
+
+  const FlashList = React.forwardRef(
+    (
+      {
+        data = [],
+        renderItem,
+        ListEmptyComponent,
+        ...props
+      }: {
+        data?: unknown[];
+        renderItem?: (args: {
+          item: unknown;
+          index: number;
+        }) => React.ReactNode;
+        ListEmptyComponent?: React.ComponentType | React.ReactNode;
+      },
+      ref: React.Ref<unknown>,
+    ) =>
+      React.createElement(
+        'View',
+        { ...props, ref },
+        data.length > 0
+          ? data.map((item, index) =>
+              React.createElement(
+                React.Fragment,
+                { key: String(index) },
+                renderItem?.({ item, index }),
+              ),
+            )
+          : typeof ListEmptyComponent === 'function'
+            ? React.createElement(ListEmptyComponent)
+            : ListEmptyComponent,
+      ),
+  );
+
+  return {
+    __esModule: true,
+    FlashList,
+    MasonryFlashList: FlashList,
+    useMappingHelper: () => ({
+      getMappingKey: (key: string, index: number) => `${key}-${index}`,
+    }),
+  };
+});
+
+jest.mock('react-native-screens', () => {
+  const React = require('react');
+
+  const ScreenComponent = ({
+    children,
+    ...props
+  }: {
+    children?: React.ReactNode;
+  }) => React.createElement('View', props, children);
+
+  return {
+    __esModule: true,
+    enableFreeze: jest.fn(),
+    enableScreens: jest.fn(),
+    Screen: ScreenComponent,
+    ScreenContainer: ScreenComponent,
+    ScreenStack: ScreenComponent,
+    ScreenStackItem: ScreenComponent,
+  };
+});
+
+jest.mock('expo-router', () => ({
+  __esModule: true,
+  router: {
+    back: jest.fn(),
+    navigate: jest.fn(),
+    push: jest.fn(),
+    replace: jest.fn(),
+    setParams: jest.fn(),
+  },
+  Stack: {
+    Screen: () => null,
+  },
+  useLocalSearchParams: jest.fn(() => ({})),
+  useNavigation: jest.fn(() => ({
+    addListener: jest.fn(() => jest.fn()),
+    goBack: jest.fn(),
+    setOptions: jest.fn(),
+  })),
+  usePathname: jest.fn(() => '/'),
+  useRouter: jest.fn(() => ({
+    back: jest.fn(),
+    navigate: jest.fn(),
+    push: jest.fn(),
+    replace: jest.fn(),
+    setParams: jest.fn(),
+  })),
+}));
 
 jest.mock('@react-native-async-storage/async-storage', () => mockAsyncStorage);
 
