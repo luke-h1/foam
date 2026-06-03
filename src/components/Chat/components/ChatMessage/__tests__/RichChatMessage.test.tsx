@@ -447,7 +447,7 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(getByText('first-msg')).toBeTruthy();
+      expect(getByText('First message')).toBeTruthy();
     });
 
     test('should NOT render first message indicator for regular messages', () => {
@@ -459,7 +459,7 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(queryByText('first-msg')).toBeNull();
+      expect(queryByText('First message')).toBeNull();
     });
   });
 

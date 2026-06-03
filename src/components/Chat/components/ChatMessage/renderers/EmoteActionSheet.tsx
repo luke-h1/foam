@@ -27,10 +27,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { toast } from 'sonner-native';
-import {
-  CHAT_SHEET_BACKGROUND,
-  chatSheetSurface,
-} from '../../chatSheetSurface';
 
 type PartVariant = ParsedPart<'emote'>;
 type ActionId =
@@ -301,7 +297,7 @@ function EmoteActionSheetComponent({
                     <SymbolView
                       name={getSFSymbolName(action.id)}
                       size={18}
-                      tintColor={theme.colorGreen}
+                      tintColor={theme.color.textSecondary.dark}
                       weight='regular'
                       style={styles.actionIcon}
                     />
@@ -326,51 +322,55 @@ export const EmoteActionSheet = memo(EmoteActionSheetComponent);
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.055)',
+    backgroundColor: 'transparent',
     flexDirection: 'row',
-    gap: theme.space8,
-    minHeight: Platform.select({ ios: 52, android: 52 }),
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
+    gap: theme.space12,
+    minHeight: Platform.select({ ios: 56, android: 56 }),
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
   actionButtonWithDivider: {
-    borderTopColor: 'rgba(255,255,255,0.075)',
+    borderTopColor: 'rgba(255,255,255,0.055)',
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   actionCopy: {
     flex: 1,
   },
   actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: '#18191d',
+    borderColor: 'rgba(255,255,255,0.10)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: 1,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { height: 10, width: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
   },
   actionIcon: {
     opacity: 0.9,
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(74, 222, 128, 0.12)',
-    borderColor: 'rgba(74, 222, 128, 0.18)',
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(255,255,255,0.08)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
+    borderRadius: theme.borderRadius12,
     borderWidth: 1,
-    height: 32,
+    height: 36,
     justifyContent: 'center',
-    width: 32,
+    width: 36,
   },
   actionText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    lineHeight: theme.fontSize14 * 1.25,
+    fontSize: theme.fontSize16,
+    lineHeight: theme.fontSize16 * 1.18,
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.075)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: '#1f2024',
+    borderColor: 'rgba(255,255,255,0.08)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
@@ -388,12 +388,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   previewCard: {
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    borderColor: 'rgba(255,255,255,0.075)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    borderWidth: 1,
-    padding: theme.space16,
+    paddingHorizontal: 2,
+    paddingVertical: theme.space4,
   },
   previewHint: {
     color: theme.color.textSecondary.dark,
@@ -407,8 +403,8 @@ const styles = StyleSheet.create({
   },
   previewImageContainer: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    borderColor: 'rgba(255,255,255,0.075)',
+    backgroundColor: '#19191c',
+    borderColor: 'rgba(255,255,255,0.065)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: 1,
@@ -432,20 +428,16 @@ const styles = StyleSheet.create({
     gap: theme.space16,
   },
   topBar: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space12,
     justifyContent: 'space-between',
-    paddingBottom: theme.space4,
+    paddingBottom: theme.space8,
   },
   wrapper: {
-    ...chatSheetSurface,
-    backgroundColor: CHAT_SHEET_BACKGROUND,
-    borderColor: 'rgba(255,255,255,0.10)',
-    borderWidth: 1,
     gap: theme.space12,
-    paddingBottom: theme.space16,
-    paddingHorizontal: theme.space12,
-    paddingTop: theme.space8,
+    paddingBottom: theme.space24,
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space4,
   },
 });

@@ -26,7 +26,6 @@ export interface ChatOverlayLayerProps {
   canModerateSelectedMessageUser: boolean;
   canModerateSelectedUser: boolean;
   canPinSelectedMessage: boolean;
-  connected: boolean;
   disableEmoteAnimations: boolean;
   highlightedUsers: string[];
   hiddenUsers: string[];
@@ -86,7 +85,6 @@ export const ChatOverlayLayer = memo(
     canModerateSelectedMessageUser,
     canModerateSelectedUser,
     canPinSelectedMessage,
-    connected,
     disableEmoteAnimations,
     highlightedUsers,
     hiddenUsers,
@@ -140,7 +138,7 @@ export const ChatOverlayLayer = memo(
   }: ChatOverlayLayerProps) => {
     return (
       <>
-        {connected && shouldRenderEmoteSheet ? (
+        {shouldRenderEmoteSheet ? (
           <EmoteSheet
             isPresented={shouldRenderEmoteSheet}
             onDismiss={onEmoteSheetDidDismiss}

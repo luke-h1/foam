@@ -131,6 +131,7 @@ function areChatMessagePropsEqual(
     previous.disableEmoteAnimations === next.disableEmoteAnimations &&
     previous.showTimestamp === next.showTimestamp &&
     previous.showInlineReplyContext === next.showInlineReplyContext &&
+    previous.isAlternatingRow === next.isAlternatingRow &&
     previous.moderationNotice === next.moderationNotice &&
     previous.onReplyContextPress === next.onReplyContextPress &&
     previous.isHighlightedMessageTarget === next.isHighlightedMessageTarget &&
@@ -177,6 +178,7 @@ function ChatMessageComponent<
   highlightedUserSet,
   highlightedUsers,
   showInlineReplyContext = true,
+  isAlternatingRow = false,
   moderationNotice,
   onReplyContextPress,
   isHighlightedMessageTarget = false,
@@ -446,12 +448,12 @@ function ChatMessageComponent<
         styles.chatContainer,
         compact && styles.chatContainerCompact,
         style,
+        isAlternatingRow && styles.alternatingRowContainer,
         isAppSystemSender && styles.systemMessageContainer,
         isUserChat &&
           isHighlightedMessageTarget &&
           styles.highlightedReplyTargetContainer,
         isUserChat && isHighlightedSender && styles.highlightedSenderContainer,
-        isUserChat && isReply && styles.replyContainer,
         isUserChat && mentionsCurrentUser && styles.ownMentionContainer,
         bodyVariant === 'viewer_milestone' && styles.viewerMilestoneContainer,
         isChannelPointRedemption && isUserChat && styles.rewardMessageContainer,
@@ -490,6 +492,7 @@ export const RichChatMessage = MemoizedRichChatMessage as unknown as <
     highlightedUsers?: string[];
     highlightedUserSet?: ReadonlySet<string>;
     showInlineReplyContext?: boolean;
+    isAlternatingRow?: boolean;
     onReplyContextPress?: (replyParentMessageId: string) => void;
     isHighlightedMessageTarget?: boolean;
   },

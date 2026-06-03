@@ -32,6 +32,7 @@ interface ChatRowPreferences {
   chatTimestamps: boolean;
   disableEmoteAnimations: boolean;
   highlightOwnMentions?: boolean;
+  showAlternatingChatRows: boolean;
   showInlineReplyContext: boolean;
 }
 
@@ -160,6 +161,7 @@ export function useChatRowRenderer({
       disableEmoteAnimations: preferences.disableEmoteAnimations,
       highlightedReplyTargetMessageId,
       highlightedUsersKey: highlightedUsers.join('\u001f'),
+      showAlternatingChatRows: preferences.showAlternatingChatRows,
       showInlineReplyContext: preferences.showInlineReplyContext,
       showTimestamps: preferences.chatTimestamps,
     }),
@@ -169,6 +171,7 @@ export function useChatRowRenderer({
       highlightedUsers,
       preferences.chatDensity,
       preferences.disableEmoteAnimations,
+      preferences.showAlternatingChatRows,
       preferences.showInlineReplyContext,
       preferences.chatTimestamps,
     ],
@@ -212,7 +215,13 @@ export function useChatRowRenderer({
   );
 
   const renderItem = useCallback(
-    ({ item: msg }: { item: AnyChatMessageType | undefined }) => {
+    ({
+      item: msg,
+      index,
+    }: {
+      item: AnyChatMessageType | undefined;
+      index: number;
+    }) => {
       if (!isRenderableChatMessage(msg)) {
         return null;
       }
@@ -248,6 +257,9 @@ export function useChatRowRenderer({
           showTimestamp={preferences.chatTimestamps}
           highlightedUserSet={highlightedUserSet}
           showInlineReplyContext={preferences.showInlineReplyContext}
+          isAlternatingRow={
+            preferences.showAlternatingChatRows && index % 2 === 1
+          }
           onReplyContextPress={handleReplyContextPress}
           isHighlightedMessageTarget={
             msg.message_id === highlightedReplyTargetMessageId
@@ -276,6 +288,7 @@ export function useChatRowRenderer({
       preferences.chatDensity,
       preferences.chatTimestamps,
       preferences.disableEmoteAnimations,
+      preferences.showAlternatingChatRows,
       preferences.showInlineReplyContext,
     ],
   );

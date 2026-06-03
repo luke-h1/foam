@@ -8,6 +8,7 @@ const basePreferences = {
   hapticFeedback: true,
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
+  showAlternatingChatRows: false,
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,

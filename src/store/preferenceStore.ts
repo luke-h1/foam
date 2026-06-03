@@ -15,6 +15,7 @@ export interface Preferences {
   hapticFeedback: boolean;
   streamListLayout: 'compact' | 'media' | 'text';
   chatDensity: 'comfortable' | 'compact';
+  showAlternatingChatRows: boolean;
   chatTimestamps: boolean;
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
@@ -42,6 +43,7 @@ const initialPreferences: Preferences = {
   hapticFeedback: true,
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
+  showAlternatingChatRows: false,
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
@@ -107,6 +109,7 @@ export type ChatRenderPreferences = EmoteRenderPreferences &
     | 'chatTimestamps'
     | 'disableEmoteAnimations'
     | 'highlightOwnMentions'
+    | 'showAlternatingChatRows'
     | 'showInlineReplyContext'
     | 'showRecentMessages'
     | 'showUnreadJumpPill'
@@ -139,6 +142,7 @@ export function useChatRenderPreferences(): ChatRenderPreferences {
         disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
         emojiStyle: preferences$.emojiStyle.get(),
         highlightOwnMentions: preferences$.highlightOwnMentions.get(),
+        showAlternatingChatRows: preferences$.showAlternatingChatRows.get(),
         show7TvEmotes: preferences$.show7TvEmotes.get(),
         showBttvEmotes: preferences$.showBttvEmotes.get(),
         showFFzEmotes: preferences$.showFFzEmotes.get(),

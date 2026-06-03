@@ -323,6 +323,7 @@ const setPreferences = (showRecentMessages = true) => {
     hapticFeedback: true,
     streamListLayout: 'compact',
     chatDensity: 'compact',
+    showAlternatingChatRows: false,
     chatTimestamps: true,
     disableEmoteAnimations: false,
     disableChat: false,

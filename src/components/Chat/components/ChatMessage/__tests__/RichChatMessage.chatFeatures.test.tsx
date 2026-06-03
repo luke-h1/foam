@@ -72,7 +72,7 @@ describe('RichChatMessage chat features', () => {
       <RichChatMessage {...message} showTimestamp={false} />,
     );
 
-    expect(queryByText('12:00:')).toBeNull();
+    expect(queryByText('12:00')).toBeNull();
   });
 
   test('highlights rows that mention the current user', () => {

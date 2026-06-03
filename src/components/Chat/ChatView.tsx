@@ -450,7 +450,6 @@ export const ChatView = memo(
             canModerateChat={canModerateChat}
             channelId={channelId}
             channelName={channelName}
-            connected={connected}
             disableEmoteAnimations={preferences.disableEmoteAnimations}
             handleReply={handleReply}
             highlightedUsers={highlightedUsers}

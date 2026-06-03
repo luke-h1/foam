@@ -28,7 +28,6 @@ interface ChatOverlayControllerProps {
   canModerateChat: boolean;
   channelId: string;
   channelName: string;
-  connected: boolean;
   disableEmoteAnimations: boolean;
   handleReply: (message: ChatMessageType<'usernotice'>) => void;
   hiddenUsers: string[];
@@ -90,7 +89,6 @@ export const ChatOverlayController = memo(
         canModerateChat,
         channelId,
         channelName,
-        connected,
         disableEmoteAnimations,
         handleReply,
         hiddenUsers,
@@ -441,7 +439,6 @@ export const ChatOverlayController = memo(
           canModerateSelectedMessageUser={canModerateSelectedMessageUser}
           canModerateSelectedUser={canModerateSelectedUser}
           canPinSelectedMessage={canPinSelectedMessage}
-          connected={connected}
           disableEmoteAnimations={disableEmoteAnimations}
           highlightedUsers={highlightedUsers}
           hiddenUsers={hiddenUsers}

@@ -363,13 +363,17 @@ export function flattenProviderSets(
   columns: number,
 ): {
   items: EmoteMenuListItem[];
+  setStartIndexById: Map<string, number>;
   setStartIndices: number[];
 } {
   const items: EmoteMenuListItem[] = [];
+  const setStartIndexById = new Map<string, number>();
   const setStartIndices: number[] = [];
 
   sets.forEach(set => {
-    setStartIndices.push(items.length);
+    const startIndex = items.length;
+    setStartIndices.push(startIndex);
+    setStartIndexById.set(set.id, startIndex);
     items.push({
       key: `${set.id}-header`,
       setId: set.id,
@@ -387,5 +391,5 @@ export function flattenProviderSets(
     });
   });
 
-  return { items, setStartIndices };
+  return { items, setStartIndexById, setStartIndices };
 }

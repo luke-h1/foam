@@ -61,6 +61,9 @@ export const Image = function Image({
   useNitro = false,
   trackLoadTime = false,
   trackLoadContext,
+  onError,
+  onLoadEnd: onLoadEndProp,
+  onLoadStart: onLoadStartProp,
   style,
   ...props
 }: ImageProps) {
@@ -172,6 +175,31 @@ export const Image = function Image({
     onLoadEnd();
   }, [onLoadEnd, resolvedUrl, trackLoad, useNitro]);
 
+  const handleLoadStart = useCallback(() => {
+    if (trackLoad) {
+      onLoadStart();
+    }
+    onLoadStartProp?.();
+  }, [onLoadStart, onLoadStartProp, trackLoad]);
+
+  const handleLoadEnd = useCallback(() => {
+    if (trackLoad) {
+      onLoadEnd();
+    }
+    onLoadEndProp?.();
+  }, [onLoadEnd, onLoadEndProp, trackLoad]);
+
+  const handleError = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (error: any) => {
+      if (__DEV__) {
+        console.warn('Image loading error:', error);
+      }
+      onError?.(error);
+    },
+    [onError],
+  );
+
   if (useNitro && resolvedUrl) {
     const resizeMode = ((): 'cover' | 'contain' | 'stretch' => {
       if (contentFit === 'cover') {
@@ -215,13 +243,9 @@ export const Image = function Image({
         recyclingKey={recyclingKey ?? resolvedUrl ?? undefined}
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
-        onError={error => {
-          if (__DEV__) {
-            console.warn('Image loading error:', error);
-          }
-        }}
-        onLoadStart={trackLoad ? onLoadStart : undefined}
-        onLoadEnd={trackLoad ? onLoadEnd : undefined}
+        onError={handleError}
+        onLoadStart={handleLoadStart}
+        onLoadEnd={handleLoadEnd}
       />
     </View>
   );

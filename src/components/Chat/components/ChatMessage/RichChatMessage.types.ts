@@ -27,6 +27,7 @@ export type RichChatMessageProps<
     ? keyof UserNoticeVariantMap
     : never = never,
 > = ChatMessageType<TNoticeType, TVariant> & {
+  style?: unknown;
   onReply?: (args: ChatMessageType<TNoticeType>) => void;
   onBadgePress?: (data: BadgePressData) => void;
   onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
@@ -42,6 +43,7 @@ export type RichChatMessageProps<
   highlightedUserSet?: ReadonlySet<string>;
   highlightedUsers?: string[];
   showInlineReplyContext?: boolean;
+  isAlternatingRow?: boolean;
   onReplyContextPress?: (replyParentMessageId: string) => void;
   isHighlightedMessageTarget?: boolean;
 };
