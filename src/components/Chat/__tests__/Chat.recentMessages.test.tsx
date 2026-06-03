@@ -107,6 +107,7 @@ jest.mock('@app/store/chatStore/cosmetics', () => ({
 
 jest.mock('@app/store/chatStore/hooks', () => ({
   useChannelEmoteData: jest.fn(() => null),
+  useMessages: jest.fn(() => []),
 }));
 
 jest.mock('@app/store/chatStore/state', () => ({
@@ -323,6 +324,7 @@ const setPreferences = (showRecentMessages = true) => {
     hapticFeedback: true,
     streamListLayout: 'compact',
     chatDensity: 'compact',
+    showAlternatingChatRows: false,
     chatTimestamps: true,
     disableEmoteAnimations: false,
     disableChat: false,
@@ -394,22 +396,30 @@ describe('Chat recent messages', () => {
       'foam',
       expect.any(AbortSignal),
     );
-    expect(handleNewMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
+    expect(
+      handleNewMessage.mock.calls.map(([message, options]) => ({
+        channel: message.channel,
+        id: 'id' in message ? message.id : undefined,
+        message_id: message.message_id,
+        options,
+        sender: message.sender,
+      })),
+    ).toEqual([
+      {
         channel: 'foam',
+        id: 'msg-1_msg-1',
         message_id: 'msg-1',
+        options: { countUnread: false },
         sender: 'RecentUser',
-      }),
-      { countUnread: false },
-    );
-    expect(handleNewMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
+      },
+      {
+        channel: '',
         id: 'notice-1',
-        'msg-id': 'resub',
         message_id: 'resub',
-      }),
-      { countUnread: false },
-    );
+        options: { countUnread: false },
+        sender: '',
+      },
+    ]);
     expect(moderateBufferedMessagesByLogin).toHaveBeenCalledWith(
       'baduser',
       'Timed out (600s)',
@@ -438,6 +448,21 @@ describe('Chat recent messages', () => {
     mockedRestoreRecentMessagesForChannel.mockReturnValueOnce(12);
 
     render(<Chat channelId='channel-1' channelName='foam' />);
+
+    expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
+  });
+
+  test('defers cached-history bottom settle until remote history replay finishes', async () => {
+    mockedRestoreRecentMessagesForChannel.mockReturnValueOnce(12);
+    mockedGetRecentMessages.mockResolvedValueOnce([]);
+
+    render(<Chat channelId='channel-1' channelName='foam' />);
+
+    expect(mockScrollToBottom).not.toHaveBeenCalled();
+
+    await waitFor(() => {
+      expect(forceFlush).toHaveBeenCalled();
+    });
 
     expect(mockScrollToBottom).toHaveBeenCalledTimes(1);
   });

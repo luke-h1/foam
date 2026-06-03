@@ -57,8 +57,8 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     minHeight: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     width: '100%',
   },
   pinnedIconShell: {

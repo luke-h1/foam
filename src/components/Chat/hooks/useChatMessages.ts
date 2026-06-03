@@ -11,7 +11,7 @@ const MAX_BUFFERED_MESSAGES = 600;
 const colorCache = new Map<string, string>();
 const MAX_COLOR_CACHE_SIZE = 200;
 
-function getCachedLightenedColor(color?: string): string | undefined {
+function getCachedLightenedColor(color?: string) {
   if (!color) {
     return undefined;
   }
@@ -81,14 +81,26 @@ function publishBufferedMessages(messages: AnyMessage[]) {
   });
 }
 
+function shouldArmBottomContentAnchor(
+  isScrollingToBottomRef?: MutableRefObject<boolean>,
+) {
+  return isScrollingToBottomRef?.current ?? false;
+}
+
 interface UseChatMessagesOptions {
   isAtBottomRef: MutableRefObject<boolean>;
   isScrollingToBottomRef?: MutableRefObject<boolean>;
+  onBottomContentChange?: () => void;
   onUnreadIncrement: (count: number) => void;
 }
 
 export const useChatMessages = (options: UseChatMessagesOptions) => {
-  const { isAtBottomRef, isScrollingToBottomRef, onUnreadIncrement } = options;
+  const {
+    isAtBottomRef,
+    isScrollingToBottomRef,
+    onBottomContentChange,
+    onUnreadIncrement,
+  } = options;
 
   const messageBufferRef = useRef<AnyMessage[]>([]);
   const messageBufferIndexRef = useRef<Map<string, number>>(new Map());
@@ -126,8 +138,15 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     const messagesToFlush = messageBufferRef.current;
     resetBuffer();
+    const shouldMaintainBottom = shouldArmBottomContentAnchor(
+      isScrollingToBottomRef,
+    );
 
     publishBufferedMessages(messagesToFlush);
+
+    if (shouldMaintainBottom) {
+      onBottomContentChange?.();
+    }
 
     if (pendingUnreadCountRef.current > 0) {
       onUnreadIncrement(pendingUnreadCountRef.current);
@@ -135,7 +154,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
 
     isFlushingRef.current = false;
-  }, [onUnreadIncrement, resetBuffer]);
+  }, [
+    isScrollingToBottomRef,
+    onBottomContentChange,
+    onUnreadIncrement,
+    resetBuffer,
+  ]);
 
   const startFlushTimer = useCallback(
     (delayMs: number) => {
@@ -224,14 +248,26 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     const bufferedMessages = messageBufferRef.current;
     resetBuffer();
+    const shouldMaintainBottom = shouldArmBottomContentAnchor(
+      isScrollingToBottomRef,
+    );
 
     publishBufferedMessages(bufferedMessages);
+
+    if (shouldMaintainBottom) {
+      onBottomContentChange?.();
+    }
 
     if (pendingUnreadCountRef.current > 0) {
       onUnreadIncrement(pendingUnreadCountRef.current);
       pendingUnreadCountRef.current = 0;
     }
-  }, [onUnreadIncrement, resetBuffer]);
+  }, [
+    isScrollingToBottomRef,
+    onBottomContentChange,
+    onUnreadIncrement,
+    resetBuffer,
+  ]);
 
   const clearLocalMessages = useCallback(() => {
     resetBuffer();

@@ -30,6 +30,7 @@ type PreviewState = {
   chatTimestamps: boolean;
   disableEmoteAnimations: boolean;
   highlightOwnMentions: boolean;
+  showAlternatingChatRows: boolean;
   showInlineReplyContext: boolean;
   showUnreadJumpPill: boolean;
 };
@@ -47,6 +48,10 @@ export type ChatPreferencePreviewProps =
   | {
       variant: 'context';
       value: Partial<PreviewState>;
+    }
+  | {
+      variant: 'alternatingRows';
+      value: boolean;
     }
   | {
       variant: 'timestamps' | 'mentions' | 'inlineReply' | 'jumpPill';
@@ -67,6 +72,7 @@ const PREVIEW_DEFAULTS: PreviewState = {
   chatTimestamps: true,
   disableEmoteAnimations: false,
   highlightOwnMentions: true,
+  showAlternatingChatRows: false,
   showInlineReplyContext: true,
   showUnreadJumpPill: false,
 };
@@ -159,6 +165,20 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
           messages={[previewMessages.plain]}
           settings={{ chatTimestamps: value }}
           testID='chat-preference-preview-timestamps'
+        />
+      );
+    }
+
+    case 'alternatingRows': {
+      return (
+        <ChatPreviewSurface
+          messages={[
+            previewMessages.plain,
+            previewMessages.reply,
+            previewMessages.mention,
+          ]}
+          settings={{ showAlternatingChatRows: value }}
+          testID='chat-preference-preview-alternating-rows'
         />
       );
     }
@@ -263,7 +283,7 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
         ]}
         pointerEvents='none'
       >
-        {messages.map(message => (
+        {messages.map((message, index) => (
           <RichChatMessage
             key={message.id}
             {...message}
@@ -275,6 +295,9 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
             density={previewState.chatDensity}
             disableEmoteAnimations={previewState.disableEmoteAnimations}
             getMentionColor={getMentionColor}
+            isAlternatingRow={
+              previewState.showAlternatingChatRows && index % 2 === 1
+            }
             parseTextForEmotes={parseTextForEmotes}
             showInlineReplyContext={previewState.showInlineReplyContext}
             showTimestamp={previewState.chatTimestamps}
@@ -325,12 +348,7 @@ const ProviderAssetPreview = memo(function ProviderAssetPreview({
   testID: string;
   variant: 'badges' | 'emotes';
 }) {
-  const channelCaches = useSelector(chatStore$.persisted.channelCaches);
-  const cachedBadges = useSelector(chatStore$.badges);
-  const sample = useMemo(
-    () => getProviderPreviewSample(provider, channelCaches, cachedBadges),
-    [provider, channelCaches, cachedBadges],
-  );
+  const sample = useSelector(() => getProviderPreviewSample(provider, variant));
   const message = useMemo(
     () =>
       variant === 'emotes'
@@ -469,24 +487,30 @@ function mentionPart(content: string): ParsedPart<'mention'> {
 
 function getProviderPreviewSample(
   provider: PreviewProvider,
-  channelCaches: Record<string, ChannelCacheType>,
-  cachedBadges: Record<string, SanitisedBadgeSet>,
+  variant: 'badges' | 'emotes',
 ): ProviderPreviewSample {
   const fallback = chatPreferencePreviewFixtures[provider];
 
+  if (variant === 'emotes') {
+    return {
+      badges: fallback.badges.slice(0, provider === 'twitch' ? 2 : 1),
+      emotes: fillPreviewItems(
+        getLiveProviderEmotes(provider),
+        fallback.emotes,
+        2,
+        item => item.id,
+      ),
+    };
+  }
+
   return {
-    emotes: fillPreviewItems(
-      getLiveProviderEmotes(provider, channelCaches),
-      fallback.emotes,
-      2,
-      item => item.id,
-    ),
     badges: fillPreviewItems(
-      getLiveProviderBadges(provider, channelCaches, cachedBadges),
+      getLiveProviderBadges(provider),
       fallback.badges,
       provider === 'twitch' ? 2 : 1,
       badge => `${badge.set}:${badge.id}`,
     ),
+    emotes: fallback.emotes.slice(0, 2),
   };
 }
 
@@ -521,10 +545,8 @@ function sortCachesByFreshness(
   );
 }
 
-function getLiveProviderEmotes(
-  provider: PreviewProvider,
-  channelCaches: Record<string, ChannelCacheType>,
-): SanitisedEmote[] {
+function getLiveProviderEmotes(provider: PreviewProvider): SanitisedEmote[] {
+  const channelCaches = chatStore$.persisted.channelCaches.get();
   const caches = sortCachesByFreshness(channelCaches);
   const emotes: SanitisedEmote[] = [];
 
@@ -564,23 +586,22 @@ function getLiveProviderEmotes(
   return emotes;
 }
 
-function getLiveProviderBadges(
-  provider: PreviewProvider,
-  channelCaches: Record<string, ChannelCacheType>,
-  cachedBadges: Record<string, SanitisedBadgeSet>,
-): SanitisedBadgeSet[] {
+function getLiveProviderBadges(provider: PreviewProvider): SanitisedBadgeSet[] {
   if (provider === '7tv') {
+    const cachedBadges = chatStore$.badges.get();
     return Object.values(cachedBadges).filter(
       badge => badge.provider === '7tv' || badge.type === '7TV Badge',
     );
   }
 
   if (provider === 'bttv') {
+    const cachedBadges = chatStore$.badges.get();
     return Object.values(cachedBadges).filter(
       badge => badge.provider === 'bttv' || badge.type === 'BTTV Badge',
     );
   }
 
+  const channelCaches = chatStore$.persisted.channelCaches.get();
   const caches = sortCachesByFreshness(channelCaches);
   const badges: SanitisedBadgeSet[] = [];
 

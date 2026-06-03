@@ -216,6 +216,7 @@ export function ChatPreferenceScreen() {
     disableEmoteAnimations,
     emojiStyle,
     highlightOwnMentions,
+    showAlternatingChatRows,
     showInlineReplyContext,
     showRecentMessages,
     showUnreadJumpPill,
@@ -231,6 +232,7 @@ export function ChatPreferenceScreen() {
   } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
   const previewDensity$ = useObservable(chatDensity);
+  const previewAlternatingRows$ = useObservable(showAlternatingChatRows);
   const previewEmojiStyle$ = useObservable(emojiStyle);
   const previewContext$ = useObservable<ContextPreviewValue>({
     chatTimestamps,
@@ -250,6 +252,7 @@ export function ChatPreferenceScreen() {
     showTwitchBadges,
   });
   const previewDensity = useSelector(previewDensity$);
+  const previewAlternatingRows = useSelector(previewAlternatingRows$);
   const previewEmojiStyle = useSelector(previewEmojiStyle$);
   const previewContext = useSelector(previewContext$);
   const previewDisableEmoteAnimations = useSelector(
@@ -278,6 +281,10 @@ export function ChatPreferenceScreen() {
   useEffect(() => {
     previewDensity$.set(chatDensity);
   }, [chatDensity, previewDensity$]);
+
+  useEffect(() => {
+    previewAlternatingRows$.set(showAlternatingChatRows);
+  }, [previewAlternatingRows$, showAlternatingChatRows]);
 
   useEffect(() => {
     previewEmojiStyle$.set(emojiStyle);
@@ -410,6 +417,14 @@ export function ChatPreferenceScreen() {
     [handleDensitySelect],
   );
 
+  const handleAlternatingRowsToggle = useCallback(
+    (value: boolean) => {
+      previewAlternatingRows$.set(value);
+      update({ showAlternatingChatRows: value });
+    },
+    [previewAlternatingRows$, update],
+  );
+
   const handleEmojiStyleChange = useCallback(
     (value: string) => {
       const option = EMOJI_STYLE_OPTIONS.find(option => option.label === value);
@@ -473,6 +488,20 @@ export function ChatPreferenceScreen() {
                 <DensityPreview density={previewDensity} />
               </View>
             </Form.FormItem>
+            <IosToggleRow
+              custom
+              label='Alternating Rows'
+              subtitle='Add subtle striping between chat lines'
+              value={previewAlternatingRows}
+              onValueChange={handleAlternatingRowsToggle}
+            />
+            <View style={styles.iosPreviewItem}>
+              <PreviewLabel />
+              <ChatPreferencePreview
+                variant='alternatingRows'
+                value={previewAlternatingRows}
+              />
+            </View>
           </Form.Section>
 
           <Form.Section title='Emoji Style'>
@@ -600,6 +629,19 @@ export function ChatPreferenceScreen() {
           />
           <View style={styles.settingsPreviewItem}>
             <DensityPreview density={previewDensity} />
+          </View>
+          <SettingsToggleRow
+            title='Alternating Rows'
+            subtitle='Add subtle striping between chat lines'
+            icon={{ icon: 'line.3.horizontal', color: theme.colorBlue }}
+            value={previewAlternatingRows}
+            onValueChange={handleAlternatingRowsToggle}
+          />
+          <View style={styles.settingsPreviewItem}>
+            <ChatPreferencePreview
+              variant='alternatingRows'
+              value={previewAlternatingRows}
+            />
           </View>
         </SettingsSection>
 

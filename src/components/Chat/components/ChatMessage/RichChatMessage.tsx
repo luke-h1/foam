@@ -10,10 +10,20 @@ import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPo
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { useMappingHelper } from '@shopify/flash-list';
-import React, { useCallback, memo, useMemo, type ReactNode } from 'react';
-import { Button } from '../../../Button/Button';
+import React, {
+  useCallback,
+  useEffect,
+  memo,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { View } from 'react-native';
+import { ChatMessagePressable } from './ChatMessagePressable';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { ChatMessageBadges } from './renderers/ChatMessageBadges';
+import { EmoteActionSheet } from './renderers/EmoteActionSheet';
 import { SpecialChatBody } from './renderers/SpecialChatBody';
 import { UserChatBody } from './renderers/UserChatBody';
 import { useChatMessagePartRenderer } from './renderers/useChatMessagePartRenderer';
@@ -41,6 +51,8 @@ export type {
 type ChatMessageComponentProps = Parameters<
   typeof ChatMessageComponent<NoticeVariants>
 >[0];
+
+const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 function hasHighlightedUserMembershipChange(
   previous: Readonly<ChatMessageComponentProps>,
@@ -131,6 +143,7 @@ function areChatMessagePropsEqual(
     previous.disableEmoteAnimations === next.disableEmoteAnimations &&
     previous.showTimestamp === next.showTimestamp &&
     previous.showInlineReplyContext === next.showInlineReplyContext &&
+    previous.isAlternatingRow === next.isAlternatingRow &&
     previous.moderationNotice === next.moderationNotice &&
     previous.onReplyContextPress === next.onReplyContextPress &&
     previous.isHighlightedMessageTarget === next.isHighlightedMessageTarget &&
@@ -177,11 +190,17 @@ function ChatMessageComponent<
   highlightedUserSet,
   highlightedUsers,
   showInlineReplyContext = true,
+  isAlternatingRow = false,
   moderationNotice,
   onReplyContextPress,
   isHighlightedMessageTarget = false,
 }: RichChatMessageProps<TNoticeType, TVariant>) {
   const { getMappingKey } = useMappingHelper();
+  const [selectedEmoteAction, setSelectedEmoteAction] =
+    useState<EmotePressData | null>(null);
+  const rowLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const compact = density === 'compact';
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseUsername(currentUsername);
@@ -212,6 +231,29 @@ function ChatMessageComponent<
     },
     [onEmotePress],
   );
+
+  const clearRowLongPressTimer = useCallback(() => {
+    if (!rowLongPressTimerRef.current) {
+      return;
+    }
+
+    clearTimeout(rowLongPressTimerRef.current);
+    rowLongPressTimerRef.current = null;
+  }, []);
+
+  useEffect(() => clearRowLongPressTimer, [clearRowLongPressTimer]);
+
+  const handleEmoteLongPress = useCallback(
+    (part: EmotePressData) => {
+      clearRowLongPressTimer();
+      setSelectedEmoteAction(part);
+    },
+    [clearRowLongPressTimer],
+  );
+
+  const closeEmoteActionSheet = useCallback(() => {
+    setSelectedEmoteAction(null);
+  }, []);
 
   const handleBadgePress = useCallback(
     (badge: BadgePressData) => {
@@ -255,13 +297,13 @@ function ChatMessageComponent<
     }
 
     return (
-      <Button
+      <ChatMessagePressable
         onPress={handleUsernamePress}
         style={styles.usernameButton}
         testID='chat-username-button'
       >
         {username}
-      </Button>
+      </ChatMessagePressable>
     );
   }, [
     compact,
@@ -279,11 +321,11 @@ function ChatMessageComponent<
       effectiveHighlightedUserSet,
       getMentionColor,
       getPartKey,
-      handleEmotePress,
+      handleEmoteLongPress,
       message,
       moderationNotice,
       normalisedCurrentUsername,
-      noticeTags: notice_tags as UserNoticeTags | undefined,
+      noticeTags: notice_tags as UserNoticeTags,
       parseTextForEmotes,
     });
 
@@ -389,6 +431,18 @@ function ChatMessageComponent<
     replyDisplayName,
   ]);
 
+  const startRowLongPressTimer = useCallback(() => {
+    if (!canReply && !onMessageLongPress) {
+      return;
+    }
+
+    clearRowLongPressTimer();
+    rowLongPressTimerRef.current = setTimeout(() => {
+      rowLongPressTimerRef.current = null;
+      handleLongPress();
+    }, MESSAGE_LONG_PRESS_DELAY_MS);
+  }, [canReply, clearRowLongPressTimer, handleLongPress, onMessageLongPress]);
+
   const isReply = Boolean(parentDisplayName);
   const replyParentMessageId = userstate['reply-parent-msg-id'];
   const isFirstMessage = userstate['first-msg'] === '1';
@@ -439,26 +493,44 @@ function ChatMessageComponent<
   };
 
   return (
-    <Button
-      testID='chat-message'
-      onLongPress={handleLongPress}
-      style={[
-        styles.chatContainer,
-        compact && styles.chatContainerCompact,
-        style,
-        isAppSystemSender && styles.systemMessageContainer,
-        isUserChat &&
-          isHighlightedMessageTarget &&
-          styles.highlightedReplyTargetContainer,
-        isUserChat && isHighlightedSender && styles.highlightedSenderContainer,
-        isUserChat && isReply && styles.replyContainer,
-        isUserChat && mentionsCurrentUser && styles.ownMentionContainer,
-        bodyVariant === 'viewer_milestone' && styles.viewerMilestoneContainer,
-        isChannelPointRedemption && isUserChat && styles.rewardMessageContainer,
-      ]}
-    >
-      {renderChatBody()}
-    </Button>
+    <>
+      <View
+        testID='chat-message'
+        onTouchCancel={clearRowLongPressTimer}
+        onTouchEnd={clearRowLongPressTimer}
+        onTouchMove={clearRowLongPressTimer}
+        onTouchStart={startRowLongPressTimer}
+        style={[
+          styles.chatContainer,
+          compact && styles.chatContainerCompact,
+          style,
+          isAlternatingRow && styles.alternatingRowContainer,
+          isAppSystemSender && styles.systemMessageContainer,
+          isUserChat &&
+            isHighlightedMessageTarget &&
+            styles.highlightedReplyTargetContainer,
+          isUserChat &&
+            isHighlightedSender &&
+            styles.highlightedSenderContainer,
+          isUserChat && mentionsCurrentUser && styles.ownMentionContainer,
+          bodyVariant === 'viewer_milestone' && styles.viewerMilestoneContainer,
+          isChannelPointRedemption &&
+            isUserChat &&
+            styles.rewardMessageContainer,
+        ]}
+      >
+        {renderChatBody()}
+      </View>
+      {selectedEmoteAction ? (
+        <EmoteActionSheet
+          disableAnimations={disableEmoteAnimations}
+          isPresented
+          onDismiss={closeEmoteActionSheet}
+          onPress={handleEmotePress}
+          part={selectedEmoteAction}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -490,6 +562,7 @@ export const RichChatMessage = MemoizedRichChatMessage as unknown as <
     highlightedUsers?: string[];
     highlightedUserSet?: ReadonlySet<string>;
     showInlineReplyContext?: boolean;
+    isAlternatingRow?: boolean;
     onReplyContextPress?: (replyParentMessageId: string) => void;
     isHighlightedMessageTarget?: boolean;
   },

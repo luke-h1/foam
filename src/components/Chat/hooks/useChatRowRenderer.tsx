@@ -5,16 +5,10 @@ import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { lightenColor } from '@app/utils/color/lightenColor';
-import {
-  useCallback,
-  useMemo,
-  useRef,
-  type Dispatch,
-  type RefObject,
-  type SetStateAction,
-} from 'react';
+import { memo, useCallback, useMemo, useRef, type RefObject } from 'react';
 
 import type { ChatListRef } from '../components/ChatList';
+import type { ChatListRenderItemInfo } from '../components/ChatList';
 import {
   RichChatMessage,
   type BadgePressData,
@@ -26,18 +20,19 @@ import { styles } from '../styles';
 import { isRenderableChatMessage } from '../util/chatMessages';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import { useIsHighlightedReplyTargetMessage } from './useChatTransientState';
 
 interface ChatRowPreferences {
   chatDensity: 'comfortable' | 'compact';
   chatTimestamps: boolean;
   disableEmoteAnimations: boolean;
   highlightOwnMentions?: boolean;
+  showAlternatingChatRows: boolean;
   showInlineReplyContext: boolean;
 }
 
 interface UseChatRowRendererOptions {
   channelId: string;
-  highlightedReplyTargetMessageId?: string;
   highlightedReplyTargetTimeoutRef: RefObject<ReturnType<
     typeof setTimeout
   > | null>;
@@ -49,18 +44,105 @@ interface UseChatRowRendererOptions {
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
   onUsernamePress: (data: UsernamePressData) => void;
   preferences: ChatRowPreferences;
-  setHighlightedReplyTargetMessageId: Dispatch<
-    SetStateAction<string | undefined>
-  >;
+  setHighlightedReplyTargetMessageId: (
+    value: string | null | ((current: string | null) => string | null),
+  ) => void;
   user?: {
     display_name?: string | null;
     login?: string | null;
   } | null;
 }
 
+interface ChatMessageRowProps {
+  chatDensity: 'comfortable' | 'compact';
+  channelId: string;
+  currentUsername?: string;
+  currentUsernameNormalized: string;
+  disableEmoteAnimations: boolean;
+  getMentionColor: (username: string) => string;
+  highlightedUserSet: ReadonlySet<string>;
+  index: number;
+  message: AnyChatMessageType;
+  onBadgePress: (badge: BadgePressData) => void;
+  onEmotePress: (emote: EmotePressData) => void;
+  onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
+  onReplyContextPress: (replyParentMessageId: string) => void;
+  onUsernamePress: (data: UsernamePressData) => void;
+  parseTextForEmotes: (text: string) => ParsedPart[];
+  showAlternatingChatRows: boolean;
+  showInlineReplyContext: boolean;
+  showTimestamps: boolean;
+}
+
+const ChatMessageRow = memo(function ChatMessageRow({
+  chatDensity,
+  channelId,
+  currentUsername,
+  currentUsernameNormalized,
+  disableEmoteAnimations,
+  getMentionColor,
+  highlightedUserSet,
+  index,
+  message: msg,
+  onBadgePress,
+  onEmotePress,
+  onMessageLongPress,
+  onReplyContextPress,
+  onUsernamePress,
+  parseTextForEmotes,
+  showAlternatingChatRows,
+  showInlineReplyContext,
+  showTimestamps,
+}: ChatMessageRowProps) {
+  const isHighlightedMessageTarget = useIsHighlightedReplyTargetMessage(
+    channelId,
+    msg.message_id,
+  );
+
+  return (
+    <RichChatMessage
+      id={msg.id}
+      channel={msg.channel}
+      message={msg.message}
+      userstate={msg.userstate}
+      badges={msg.badges}
+      cachedSenderColor={msg.cachedSenderColor}
+      message_id={msg.message_id}
+      message_nonce={msg.message_nonce}
+      sender={msg.sender}
+      style={styles.messageContainer}
+      parentDisplayName={msg.parentDisplayName}
+      parentColor={msg.parentColor}
+      replyDisplayName={msg.replyDisplayName}
+      replyBody={msg.replyBody}
+      onBadgePress={onBadgePress}
+      onMessageLongPress={onMessageLongPress}
+      onEmotePress={onEmotePress}
+      onUsernamePress={onUsernamePress}
+      getMentionColor={getMentionColor}
+      parseTextForEmotes={parseTextForEmotes}
+      isChannelPointRedemption={msg.isChannelPointRedemption}
+      isTwitchSystemNotice={msg.isTwitchSystemNotice}
+      currentUsername={currentUsername}
+      currentUsernameNormalized={currentUsernameNormalized}
+      density={chatDensity}
+      disableEmoteAnimations={disableEmoteAnimations}
+      showTimestamp={showTimestamps}
+      highlightedUserSet={highlightedUserSet}
+      showInlineReplyContext={showInlineReplyContext}
+      isAlternatingRow={showAlternatingChatRows && index % 2 === 1}
+      onReplyContextPress={onReplyContextPress}
+      isHighlightedMessageTarget={isHighlightedMessageTarget}
+      // @ts-expect-error - notice_tags union type not narrowing correctly
+      notice_tags={
+        'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
+      }
+    />
+  );
+});
+
 export function useChatRowRenderer({
   channelId,
-  highlightedReplyTargetMessageId,
   highlightedReplyTargetTimeoutRef,
   highlightedUsers,
   listRef,
@@ -158,17 +240,17 @@ export function useChatRowRenderer({
       chatDensity: preferences.chatDensity,
       currentUsernameNormalized,
       disableEmoteAnimations: preferences.disableEmoteAnimations,
-      highlightedReplyTargetMessageId,
       highlightedUsersKey: highlightedUsers.join('\u001f'),
+      showAlternatingChatRows: preferences.showAlternatingChatRows,
       showInlineReplyContext: preferences.showInlineReplyContext,
       showTimestamps: preferences.chatTimestamps,
     }),
     [
       currentUsernameNormalized,
-      highlightedReplyTargetMessageId,
       highlightedUsers,
       preferences.chatDensity,
       preferences.disableEmoteAnimations,
+      preferences.showAlternatingChatRows,
       preferences.showInlineReplyContext,
       preferences.chatTimestamps,
     ],
@@ -198,7 +280,7 @@ export function useChatRowRenderer({
       }
       highlightedReplyTargetTimeoutRef.current = setTimeout(() => {
         setHighlightedReplyTargetMessageId(current =>
-          current === replyParentMessageId ? undefined : current,
+          current === replyParentMessageId ? null : current,
         );
         highlightedReplyTargetTimeoutRef.current = null;
       }, 2200);
@@ -212,60 +294,39 @@ export function useChatRowRenderer({
   );
 
   const renderItem = useCallback(
-    ({ item: msg }: { item: AnyChatMessageType | undefined }) => {
+    ({ item: msg, index }: ChatListRenderItemInfo) => {
       if (!isRenderableChatMessage(msg)) {
         return null;
       }
 
       return (
-        <RichChatMessage
-          id={msg.id}
-          channel={msg.channel}
-          message={msg.message}
-          userstate={msg.userstate}
-          badges={msg.badges}
-          cachedSenderColor={msg.cachedSenderColor}
-          message_id={msg.message_id}
-          message_nonce={msg.message_nonce}
-          sender={msg.sender}
-          style={styles.messageContainer}
-          parentDisplayName={msg.parentDisplayName}
-          parentColor={msg.parentColor}
-          replyDisplayName={msg.replyDisplayName}
-          replyBody={msg.replyBody}
-          onBadgePress={onBadgePressRef.current}
-          onMessageLongPress={onMessageLongPressRef.current}
-          onEmotePress={onEmotePressRef.current}
-          onUsernamePress={onUsernamePress}
-          getMentionColor={getMentionColorRef.current}
-          parseTextForEmotes={parseTextForEmotesRef.current}
-          isChannelPointRedemption={msg.isChannelPointRedemption}
-          isTwitchSystemNotice={msg.isTwitchSystemNotice}
+        <ChatMessageRow
+          chatDensity={preferences.chatDensity}
+          channelId={channelId}
           currentUsername={currentUsernameForMentions}
           currentUsernameNormalized={currentUsernameNormalized}
-          density={preferences.chatDensity}
           disableEmoteAnimations={preferences.disableEmoteAnimations}
-          showTimestamp={preferences.chatTimestamps}
+          getMentionColor={getMentionColorRef.current}
           highlightedUserSet={highlightedUserSet}
-          showInlineReplyContext={preferences.showInlineReplyContext}
+          index={index}
+          message={msg}
+          onBadgePress={onBadgePressRef.current}
+          onEmotePress={onEmotePressRef.current}
+          onMessageLongPress={onMessageLongPressRef.current}
           onReplyContextPress={handleReplyContextPress}
-          isHighlightedMessageTarget={
-            msg.message_id === highlightedReplyTargetMessageId
-          }
-          // @ts-expect-error - notice_tags union type not narrowing correctly
-          notice_tags={
-            'notice_tags' in msg && msg.notice_tags
-              ? msg.notice_tags
-              : undefined
-          }
+          onUsernamePress={onUsernamePress}
+          parseTextForEmotes={parseTextForEmotesRef.current}
+          showAlternatingChatRows={preferences.showAlternatingChatRows}
+          showInlineReplyContext={preferences.showInlineReplyContext}
+          showTimestamps={preferences.chatTimestamps}
         />
       );
     },
     [
+      channelId,
       currentUsernameForMentions,
       currentUsernameNormalized,
       handleReplyContextPress,
-      highlightedReplyTargetMessageId,
       highlightedUserSet,
       getMentionColorRef,
       onBadgePressRef,
@@ -276,19 +337,20 @@ export function useChatRowRenderer({
       preferences.chatDensity,
       preferences.chatTimestamps,
       preferences.disableEmoteAnimations,
+      preferences.showAlternatingChatRows,
       preferences.showInlineReplyContext,
     ],
   );
 
   const keyExtractor = useCallback(
-    (item: AnyChatMessageType | undefined, index: number) =>
+    (item: AnyChatMessageType, index: number) =>
       isRenderableChatMessage(item)
         ? `${item.message_id}_${item.message_nonce}`
         : `invalid-message-${index}`,
     [],
   );
 
-  const getItemType = useCallback((item: AnyChatMessageType | undefined) => {
+  const getItemType = useCallback((item: AnyChatMessageType) => {
     if (!isRenderableChatMessage(item)) {
       return 'invalid';
     }

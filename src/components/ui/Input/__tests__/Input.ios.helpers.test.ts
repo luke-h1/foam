@@ -15,14 +15,16 @@ describe('Input iOS helpers', () => {
       tintColor: '#ffffff',
     });
 
-    expect(modifiers).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ $type: 'padding' }),
-        expect.objectContaining({ $type: 'lineLimit', limit: 5 }),
-      ]),
-    );
-    expect(modifiers).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ $type: 'frame' })]),
-    );
+    expect(modifiers.map(modifier => modifier.$type)).toEqual([
+      'textFieldStyle',
+      'foregroundStyle',
+      'tint',
+      'padding',
+      'lineLimit',
+    ]);
+    expect(modifiers.find(modifier => modifier.$type === 'lineLimit')).toEqual({
+      $type: 'lineLimit',
+      limit: 5,
+    });
   });
 });

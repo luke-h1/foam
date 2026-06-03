@@ -90,15 +90,18 @@ const SettingsSheetComponent = ({
   showUnreadJumpPill = true,
 }: SettingsSheetProps) => {
   const { bottom: bottomInset } = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const sheetHeight = Math.round(windowHeight * 0.58);
   const containerStyle = useMemo(
     () => [
       styles.container,
       {
+        flex: 0,
+        height: sheetHeight,
         width: Math.max(280, windowWidth - theme.space16 * 2),
       },
     ],
-    [windowWidth],
+    [sheetHeight, windowWidth],
   );
 
   const dismissSheet = useCallback(() => {
@@ -140,7 +143,6 @@ const SettingsSheetComponent = ({
       isPresented={isPresented}
       onDismiss={onDismiss}
       showDragIndicator
-      snapPoints={[{ fraction: 0.58 }, 'full']}
       testID='chat-settings-sheet'
     >
       <View style={containerStyle}>
@@ -334,7 +336,6 @@ const styles = StyleSheet.create({
   container: {
     ...chatSheetSurface,
     backgroundColor: CHAT_SHEET_BACKGROUND,
-    flex: 1,
   },
   header: {
     borderBottomColor: theme.color.border.dark,

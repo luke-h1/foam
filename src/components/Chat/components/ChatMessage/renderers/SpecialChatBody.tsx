@@ -32,9 +32,12 @@ export const SpecialChatBody = memo(
           <View style={styles.systemMessageRow}>
             {showTimestamp && timestamp ? (
               <Text
+                tabular
+                variant='mono'
+                weight='bold'
                 style={[styles.timestamp, compact && styles.timestampCompact]}
               >
-                {timestamp}:
+                {timestamp}
               </Text>
             ) : null}
             {renderParts(message, renderSystemMessagePart)}
@@ -55,9 +58,12 @@ export const SpecialChatBody = memo(
           >
             {showTimestamp && timestamp ? (
               <Text
+                tabular
+                variant='mono'
+                weight='bold'
                 style={[styles.timestamp, compact && styles.timestampCompact]}
               >
-                {timestamp}:
+                {timestamp}
               </Text>
             ) : null}
             {renderParts(message, renderMessagePart)}
@@ -69,9 +75,12 @@ export const SpecialChatBody = memo(
           <View style={styles.viewerMilestoneRow}>
             {showTimestamp && timestamp ? (
               <Text
+                tabular
+                variant='mono'
+                weight='bold'
                 style={[styles.timestamp, compact && styles.timestampCompact]}
               >
-                {timestamp}:
+                {timestamp}
               </Text>
             ) : null}
             {renderParts(message, renderMessagePart)}
@@ -83,9 +92,12 @@ export const SpecialChatBody = memo(
           <View style={styles.systemMessageRow}>
             {showTimestamp && timestamp ? (
               <Text
+                tabular
+                variant='mono'
+                weight='bold'
                 style={[styles.timestamp, compact && styles.timestampCompact]}
               >
-                {timestamp}:
+                {timestamp}
               </Text>
             ) : null}
             {renderParts(message, renderSystemMessagePart)}

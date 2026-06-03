@@ -17,7 +17,6 @@ import {
   View,
 } from 'react-native';
 import { toast } from 'sonner-native';
-import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 
 interface Props {
   disableAnimations?: boolean;
@@ -300,8 +299,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: '#19191c',
+    borderColor: 'rgba(255,255,255,0.065)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: 1,
@@ -329,18 +328,14 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize14 * 1.25,
   },
   container: {
-    ...chatSheetSurface,
-    backgroundColor: CHAT_SHEET_BACKGROUND,
-    borderColor: 'rgba(255,255,255,0.10)',
-    borderWidth: 1,
-    paddingBottom: theme.space16,
-    paddingHorizontal: theme.space12,
-    paddingTop: theme.space8,
+    paddingBottom: theme.space24,
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space4,
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.075)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: '#1f2024',
+    borderColor: 'rgba(255,255,255,0.08)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
@@ -365,8 +360,8 @@ const styles = StyleSheet.create({
   },
   imageStage: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    borderColor: 'rgba(255,255,255,0.075)',
+    backgroundColor: '#19191c',
+    borderColor: 'rgba(255,255,255,0.065)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -375,8 +370,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   metadataCard: {
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: '#19191c',
+    borderColor: 'rgba(255,255,255,0.065)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -401,13 +396,8 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize14 * 1.2,
   },
   previewPanel: {
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    borderColor: 'rgba(255,255,255,0.075)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
     gap: theme.space12,
-    padding: theme.space12,
+    paddingVertical: theme.space4,
   },
   previewPill: {
     alignSelf: 'flex-start',

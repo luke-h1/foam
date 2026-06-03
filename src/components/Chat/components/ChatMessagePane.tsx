@@ -1,8 +1,6 @@
-import type { ListRenderItem } from '@app/components/FlashList/FlashList';
 import { Text } from '@app/components/ui/Text/Text';
-import { chatStore$ } from '@app/store/chatStore/state';
+import { useMessages } from '@app/store/chatStore/hooks';
 import { logger } from '@app/utils/logger';
-import { useSelector } from '@legendapp/state/react';
 import {
   memo,
   useCallback,
@@ -23,13 +21,19 @@ import {
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
-import { isRenderableChatMessage } from '../util/chatMessages';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import { getVisibleMessages } from '../util/visibleMessages';
-import { ChatList, type ChatListRef } from './ChatList';
+import {
+  ChatList,
+  type ChatListRef,
+  type ChatListRenderItem,
+} from './ChatList';
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
+
+const CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT = 34;
+const CHAT_ESTIMATED_COMPACT_ROW_HEIGHT = 24;
 
 export interface ChatMessagePaneProps {
   canModerateChat: boolean;
@@ -51,9 +55,9 @@ export interface ChatMessagePaneProps {
   handleMomentumScrollEnd: () => void;
   handleEndReached: () => void;
   handleContentSizeChange: () => void;
-  renderItem: ListRenderItem<AnyChatMessageType | undefined>;
-  keyExtractor: (item: AnyChatMessageType | undefined, index: number) => string;
-  getItemType: (item: AnyChatMessageType | undefined) => string;
+  renderItem: ChatListRenderItem;
+  keyExtractor: (item: AnyChatMessageType, index: number) => string;
+  getItemType: (item: AnyChatMessageType) => string;
   listContentStyle: StyleProp<ViewStyle>;
   messageListExtraData?: unknown;
   onClearFilters: () => void;
@@ -99,13 +103,8 @@ export const ChatMessagePane = memo(
     pinnedMessage,
     pinnedMessageBusy,
   }: ChatMessagePaneProps) => {
-    const storedMessages = useSelector(
-      () => chatStore$.messages.get(true) as (AnyChatMessageType | undefined)[],
-    );
-    const rawMessages = useMemo(
-      () => storedMessages.filter(isRenderableChatMessage),
-      [storedMessages],
-    );
+    const storedMessages = useMessages() as AnyChatMessageType[];
+    const rawMessages = storedMessages;
     const hasMessages = rawMessages.length > 0;
     const [messagePaneWidth, setMessagePaneWidth] = useState(0);
     const hasEverHadMessagesRef = useRef(false);
@@ -148,16 +147,15 @@ export const ChatMessagePane = memo(
       );
     }, []);
     const getEstimatedItemSize = useCallback(
-      (
-        _index: number,
-        item: AnyChatMessageType | undefined,
-        _type: string | undefined,
-      ) =>
+      (_index: number, item?: AnyChatMessageType, _type?: string) =>
         estimateChatMessageHeightWithPretext(item, {
           containerWidth: messagePaneWidth,
           density: chatDensity,
           showTimestamp: showTimestamps,
-        }) ?? 24,
+        }) ??
+        (chatDensity === 'compact'
+          ? CHAT_ESTIMATED_COMPACT_ROW_HEIGHT
+          : CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT),
       [chatDensity, messagePaneWidth, showTimestamps],
     );
 

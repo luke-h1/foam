@@ -42,6 +42,7 @@ interface UseChatIrcHandlersOptions {
     options?: { countUnread?: boolean },
   ) => void;
   listRef: RefObject<ChatListRef | null>;
+  isLoadingRecentMessagesRef?: RefObject<boolean>;
   messages$: { peek: () => unknown[] };
   moderateBufferedMessageById: (messageId: string, notice: string) => void;
   moderateBufferedMessagesByLogin: (login: string, notice: string) => void;
@@ -60,6 +61,7 @@ export function useChatIrcHandlers({
   channelName,
   clearLocalMessages,
   handleNewMessage,
+  isLoadingRecentMessagesRef,
   listRef,
   messages$,
   moderateBufferedMessageById,
@@ -211,8 +213,12 @@ export function useChatIrcHandlers({
 
   const onJoin = useCallback(() => {
     logger.chat.info('Joined channel:', channelName);
+    if (isLoadingRecentMessagesRef?.current || messages$.peek().length > 0) {
+      return;
+    }
+
     appendSystemMessage(`Connected to ${channelName}'s room`);
-  }, [appendSystemMessage, channelName]);
+  }, [appendSystemMessage, channelName, isLoadingRecentMessagesRef, messages$]);
 
   const onPart = useCallback(() => {
     logger.chat.info('Parted from channel:', channelName);

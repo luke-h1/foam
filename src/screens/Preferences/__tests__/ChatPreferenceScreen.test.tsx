@@ -10,6 +10,7 @@ const mockPreferences: Preferences = {
   hapticFeedback: true,
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
+  showAlternatingChatRows: false,
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
@@ -119,6 +120,21 @@ describe('ChatPreferenceScreen', () => {
       getByTestId('chat-preference-preview-context').props.children,
     ).toContain('"showUnreadJumpPill":false');
     expect(mockUpdate).toHaveBeenCalledWith({ showUnreadJumpPill: false });
+  });
+
+  test('updates alternating rows immediately when toggled', () => {
+    const { getByLabelText, getByTestId } = render(<ChatPreferenceScreen />);
+
+    expect(
+      getByTestId('chat-preference-preview-alternatingRows').props.children,
+    ).toContain('"value":false');
+
+    fireEvent(getByLabelText('Alternating Rows'), 'valueChange', true);
+
+    expect(
+      getByTestId('chat-preference-preview-alternatingRows').props.children,
+    ).toContain('"value":true');
+    expect(mockUpdate).toHaveBeenCalledWith({ showAlternatingChatRows: true });
   });
 
   test('updates provider previews immediately when toggling provider media', () => {

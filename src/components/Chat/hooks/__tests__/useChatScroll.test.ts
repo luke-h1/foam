@@ -668,6 +668,33 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
     });
 
+    test('should coalesce repeated bottom anchoring calls while active', () => {
+      const { ref: listRef, mocks } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.maintainBottomAfterContentChange();
+        result.current.maintainBottomAfterContentChange();
+        jest.advanceTimersByTime(0);
+      });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        jest.advanceTimersByTime(600);
+        result.current.maintainBottomAfterContentChange();
+        jest.advanceTimersByTime(0);
+      });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
+    });
+
     test('should cancel hydrated content anchoring when the user drags away', () => {
       const { ref: listRef, mocks } = createMockListRef();
 

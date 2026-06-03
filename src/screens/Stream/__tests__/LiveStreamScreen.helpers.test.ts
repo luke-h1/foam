@@ -41,12 +41,66 @@ jest.mock('expo-screen-orientation', () => ({
 import {
   clampLandscapeChatWidth,
   getDefaultLandscapeChatWidth,
+  getLiveStreamChatLeft,
+  getLiveStreamLayoutMetrics,
   getLiveStreamChatDimensions,
   getLiveStreamVideoDimensions,
   getNextChatCycleAction,
 } from '../LiveStreamScreen';
 
 describe('LiveStreamScreen layout helpers', () => {
+  test('uses actual window dimensions for landscape absolute layout', () => {
+    expect(
+      getLiveStreamLayoutMetrics({
+        insetTop: 44,
+        windowHeight: 430,
+        windowWidth: 932,
+      }),
+    ).toEqual({
+      isLandscape: true,
+      layoutHeight: 430,
+      portraitTopInset: 0,
+      screenHeight: 430,
+      screenWidth: 932,
+    });
+  });
+
+  test('subtracts the top safe inset only in portrait', () => {
+    expect(
+      getLiveStreamLayoutMetrics({
+        insetTop: 44,
+        windowHeight: 932,
+        windowWidth: 430,
+      }),
+    ).toEqual({
+      isLandscape: false,
+      layoutHeight: 888,
+      portraitTopInset: 44,
+      screenHeight: 932,
+      screenWidth: 430,
+    });
+  });
+
+  test('positions landscape chat against the right edge', () => {
+    expect(
+      getLiveStreamChatLeft({
+        chatWidth: 320,
+        isLandscape: true,
+        screenWidth: 932,
+      }),
+    ).toBe(612);
+  });
+
+  test('keeps portrait chat aligned to the left edge', () => {
+    expect(
+      getLiveStreamChatLeft({
+        chatWidth: 430,
+        isLandscape: false,
+        screenWidth: 430,
+      }),
+    ).toBe(0);
+  });
+
   test('clamps sidebar chat width to the landscape bounds', () => {
     expect(clampLandscapeChatWidth(120, 1000, 'sidebar')).toBe(280);
     expect(clampLandscapeChatWidth(900, 1000, 'sidebar')).toBe(550);
@@ -116,20 +170,52 @@ describe('LiveStreamScreen layout helpers', () => {
   });
 
   test('sizes portrait chat below the 16:9 video', () => {
-    expect(
-      getLiveStreamChatDimensions({
-        fullscreenChatMode: 'sidebar',
-        isChatEnabled: true,
-        isLandscape: false,
-        landscapeChatWidth: null,
-        layoutHeight: 700,
-        isStreamEnabled: true,
-        screenWidth: 400,
-      }),
-    ).toEqual({ width: 400, height: 475 });
+    const video = getLiveStreamVideoDimensions({
+      fullscreenChatMode: 'sidebar',
+      isChatEnabled: true,
+      isChatVisible: true,
+      isLandscape: false,
+      landscapeChatWidth: null,
+      layoutHeight: 700,
+      isStreamEnabled: true,
+      screenWidth: 400,
+    });
+    const chat = getLiveStreamChatDimensions({
+      fullscreenChatMode: 'sidebar',
+      isChatEnabled: true,
+      isLandscape: false,
+      landscapeChatWidth: null,
+      layoutHeight: 700,
+      isStreamEnabled: true,
+      screenWidth: 400,
+    });
+
+    expect(video.height + chat.height).toBe(700);
+    expect(chat).toEqual({ width: 400, height: 475 });
   });
 
   test('clamps landscape chat dimensions by mode', () => {
+    const video = getLiveStreamVideoDimensions({
+      fullscreenChatMode: 'sidebar',
+      isChatEnabled: true,
+      isChatVisible: true,
+      isLandscape: true,
+      landscapeChatWidth: 320,
+      layoutHeight: 500,
+      isStreamEnabled: true,
+      screenWidth: 1000,
+    });
+    const chat = getLiveStreamChatDimensions({
+      fullscreenChatMode: 'sidebar',
+      isChatEnabled: true,
+      isLandscape: true,
+      landscapeChatWidth: 320,
+      layoutHeight: 500,
+      isStreamEnabled: true,
+      screenWidth: 1000,
+    });
+
+    expect(video.width + chat.width).toBe(1000);
     expect(
       getLiveStreamChatDimensions({
         fullscreenChatMode: 'overlay',

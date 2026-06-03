@@ -316,6 +316,72 @@ const publishMessageAtIndex = (
   syncRecentMessagesForCurrentChannel(nextMessages, mode);
 };
 
+type MessageUpdateInput = {
+  messageId: string;
+  messageNonce: string;
+  updates: Partial<
+    Pick<ChatMessageType<never>, 'message' | 'badges' | 'moderationNotice'>
+  >;
+};
+
+const getMessageUpdatesFromInputs = (
+  currentMessages: ChatMessageType<never>[],
+  updates: MessageUpdateInput[],
+): ChatMessageType<never>[] | null => {
+  let nextMessages = currentMessages;
+  let didUpdate = false;
+
+  for (const { messageId, messageNonce, updates: messageUpdates } of updates) {
+    const key = getMessageKey(messageId, messageNonce);
+    const index = messageKeyToIndex.get(key);
+
+    if (typeof index !== 'number') {
+      continue;
+    }
+
+    const currentMessage = nextMessages[index];
+    if (!currentMessage) {
+      continue;
+    }
+
+    const preparedUpdates = prepareMessageUpdates(
+      messageId,
+      messageNonce,
+      messageUpdates,
+    );
+
+    if (nextMessages === currentMessages) {
+      nextMessages = currentMessages.slice();
+    }
+
+    nextMessages[index] = {
+      ...currentMessage,
+      ...preparedUpdates,
+    };
+    didUpdate = true;
+  }
+
+  return didUpdate ? nextMessages : null;
+};
+
+export const updateMessages = (
+  updates: MessageUpdateInput[],
+  mode: 'defer' | 'immediate' = 'defer',
+) => {
+  if (updates.length === 0) {
+    return;
+  }
+
+  const currentMessages = chatStore$.messages.peek();
+  const nextMessages = getMessageUpdatesFromInputs(currentMessages, updates);
+  if (!nextMessages) {
+    return;
+  }
+
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages, mode);
+};
+
 export const addMessage = <TNoticeType extends NoticeVariants>(
   message?: ChatMessageType<TNoticeType>,
 ) => {
@@ -401,23 +467,7 @@ export const updateMessage = (
     Pick<ChatMessageType<never>, 'message' | 'badges' | 'moderationNotice'>
   >,
 ) => {
-  const key = getMessageKey(messageId, messageNonce);
-  const index = messageKeyToIndex.get(key);
-
-  if (typeof index === 'number') {
-    const currentMessage = chatStore$.messages.peek()[index];
-    if (currentMessage) {
-      const preparedUpdates = prepareMessageUpdates(
-        messageId,
-        messageNonce,
-        updates,
-      );
-      publishMessageAtIndex(index, {
-        ...currentMessage,
-        ...preparedUpdates,
-      });
-    }
-  }
+  updateMessages([{ messageId, messageNonce, updates }]);
 };
 
 function normaliseLogin(value?: string): string {

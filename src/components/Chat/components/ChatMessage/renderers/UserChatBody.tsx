@@ -1,8 +1,9 @@
 import { Text } from '@app/components/ui/Text/Text';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Button } from '../../../../Button/Button';
+import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../RichChatMessage.styles';
 import { renderParts } from '../richChatMessageUtils';
 
@@ -47,43 +48,75 @@ export function UserChatBody({
   username,
   usernameElement,
 }: UserChatBodyProps): ReactNode {
+  const replyPreviewText = parentDisplayName
+    ? `Replying to @${parentDisplayName}${replyBody ? `: ${replyBody}` : ''}`
+    : undefined;
+
   return (
     <View style={styles.messageColumn}>
-      {shouldRenderInlineReply ? (
-        <Button
-          disabled={!canJumpToReplyTarget}
-          hitSlop={undefined}
-          onPress={
-            canJumpToReplyTarget && replyParentMessageId
-              ? () => onReplyContextPress?.(replyParentMessageId)
-              : undefined
-          }
-          style={[
-            styles.replyContextRow,
-            canJumpToReplyTarget && styles.replyContextRowInteractive,
-          ]}
-          testID='chat-reply-context-button'
-        >
-          <Text
-            style={[
-              styles.replyContextLabel,
-              compact && styles.replyContextLabelCompact,
-            ]}
+      {shouldRenderInlineReply && replyPreviewText ? (
+        canJumpToReplyTarget && replyParentMessageId ? (
+          <ChatMessagePressable
+            hitSlop={undefined}
+            onPress={() => onReplyContextPress?.(replyParentMessageId)}
+            style={[styles.replyContextRow, styles.replyContextRowInteractive]}
+            testID='chat-reply-context-button'
           >
-            Replying to {parentDisplayName}
-          </Text>
-          {replyBody ? (
+            <SymbolView
+              name='bubble.left.fill'
+              size={12}
+              tintColor='rgba(255,255,255,0.5)'
+              style={styles.replyContextIcon}
+            />
             <Text
+              ellipsizeMode='tail'
               numberOfLines={1}
               style={[
-                styles.replyContextBody,
-                compact && styles.replyContextBodyCompact,
+                styles.replyContextText,
+                compact && styles.replyContextTextCompact,
               ]}
             >
-              {replyBody}
+              {replyPreviewText}
             </Text>
-          ) : null}
-        </Button>
+          </ChatMessagePressable>
+        ) : (
+          <View style={styles.replyContextRow}>
+            <SymbolView
+              name='bubble.left.fill'
+              size={12}
+              tintColor='rgba(255,255,255,0.5)'
+              style={styles.replyContextIcon}
+            />
+            <Text
+              ellipsizeMode='tail'
+              numberOfLines={1}
+              style={[
+                styles.replyContextText,
+                compact && styles.replyContextTextCompact,
+              ]}
+            >
+              {replyPreviewText}
+            </Text>
+          </View>
+        )
+      ) : isFirstMessage ? (
+        <View style={styles.messageMetaRow}>
+          <SymbolView
+            name='sparkles'
+            size={12}
+            tintColor='rgba(255,255,255,0.5)'
+            style={styles.replyContextIcon}
+          />
+          <Text
+            style={[
+              styles.messageMetaText,
+              styles.messageMetaTextStrong,
+              compact && styles.messageMetaTextCompact,
+            ]}
+          >
+            First message
+          </Text>
+        </View>
       ) : null}
       {showChannelPointsRewardChrome ? (
         <View style={styles.rewardSummaryRow}>
@@ -98,8 +131,13 @@ export function UserChatBody({
       ) : null}
       <View style={styles.messageLine}>
         {showTimestamp && timestamp ? (
-          <Text style={[styles.timestamp, compact && styles.timestampCompact]}>
-            {timestamp}:
+          <Text
+            tabular
+            variant='mono'
+            weight='bold'
+            style={[styles.timestamp, compact && styles.timestampCompact]}
+          >
+            {timestamp}
           </Text>
         ) : null}
         {renderBadges()}
@@ -109,16 +147,6 @@ export function UserChatBody({
           >
             {usernameElement}
           </View>
-        ) : null}
-        {isFirstMessage ? (
-          <Text
-            style={[
-              styles.inlineIndicatorText,
-              compact && styles.inlineIndicatorTextCompact,
-            ]}
-          >
-            first-msg
-          </Text>
         ) : null}
         {renderParts(message, renderMessagePart)}
       </View>

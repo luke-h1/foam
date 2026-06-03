@@ -2,6 +2,7 @@ import {
   ModalBottomSheet,
   type Detent,
 } from '@swmansion/react-native-bottom-sheet';
+import { theme } from '@app/styles/themes';
 import {
   useEffect,
   useMemo,
@@ -14,6 +15,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
+  enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;
   showDragIndicator?: boolean;
@@ -33,8 +35,24 @@ function resolveSnapPoint(snapPoint: SnapPoint, windowHeight: number): Detent {
   return Math.round(windowHeight * snapPoint.fraction);
 }
 
+function resolveDetents(
+  enableFixedSnapPoints: boolean | undefined,
+  snapPoints: SnapPoint[] | undefined,
+  windowHeight: number,
+): Detent[] {
+  if (!enableFixedSnapPoints || !snapPoints?.length) {
+    return [0, 'content'];
+  }
+
+  return [
+    0,
+    ...snapPoints.map(snapPoint => resolveSnapPoint(snapPoint, windowHeight)),
+  ];
+}
+
 export function BottomSheet({
   children,
+  enableFixedSnapPoints,
   isPresented,
   onDismiss,
   showDragIndicator,
@@ -43,13 +61,8 @@ export function BottomSheet({
 }: BottomSheetProps) {
   const { height: windowHeight } = useWindowDimensions();
   const detents = useMemo<Detent[]>(
-    () => [
-      0,
-      ...(snapPoints?.map(snapPoint =>
-        resolveSnapPoint(snapPoint, windowHeight),
-      ) ?? ['content' as const]),
-    ],
-    [snapPoints, windowHeight],
+    () => resolveDetents(enableFixedSnapPoints, snapPoints, windowHeight),
+    [enableFixedSnapPoints, snapPoints, windowHeight],
   );
   const initialOpenIndex = detents.length > 1 ? 1 : 0;
   const [index, setIndex] = useState(isPresented ? initialOpenIndex : 0);
@@ -101,6 +114,10 @@ const styles = StyleSheet.create({
     width: 36,
   },
   surface: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#0b0b0d',
+    borderCurve: 'continuous',
+    borderTopLeftRadius: theme.borderRadius28,
+    borderTopRightRadius: theme.borderRadius28,
+    overflow: 'hidden',
   },
 });

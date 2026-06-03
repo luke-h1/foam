@@ -42,11 +42,11 @@ describe('useRemoteConfig', () => {
       'fetchAndActivate failed',
       expect.anything(),
     );
-    expect(remoteConfigLogger.info).toHaveBeenCalledWith(
+    expect(remoteConfigLogger.info.mock.calls[0]).toEqual([
       'fetchAndActivate cancelled',
-      expect.objectContaining({
+      {
         error: '[remoteConfig/unknown] cancelled',
-      }),
-    );
+      },
+    ]);
   });
 });

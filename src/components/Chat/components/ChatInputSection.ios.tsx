@@ -25,8 +25,8 @@ import {
 import { BlurView } from 'expo-blur';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
-import { memo, RefObject, useCallback, useMemo, useState } from 'react';
-import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { memo, RefObject, useCallback, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -43,7 +43,6 @@ import { scheduleOnRN } from 'react-native-worklets';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 
-const SHOW_SETTINGS_MIN_WIDTH = 260;
 const COMPOSER_DISMISS_DRAG_DISTANCE = 34;
 const COMPOSER_DISMISS_VELOCITY = 520;
 const COMPOSER_DRAG_LIMIT = 64;
@@ -177,7 +176,6 @@ export const ChatInputSection = memo(
   }: ChatInputSectionProps) => {
     const insets = useSafeAreaInsets();
     const composerDragOffset = useSharedValue(0);
-    const [composerWidth, setComposerWidth] = useState(0);
 
     const handleEmoteSelect = useCallback(
       (emote: SanitisedEmote) => {
@@ -203,10 +201,6 @@ export const ChatInputSection = memo(
 
     const dismissComposer = useCallback(() => {
       void KeyboardController.dismiss();
-    }, []);
-
-    const handleComposerLayout = useCallback((event: LayoutChangeEvent) => {
-      setComposerWidth(event.nativeEvent.layout.width);
     }, []);
 
     const composerPanGesture = useMemo(
@@ -253,8 +247,6 @@ export const ChatInputSection = memo(
       [composerFlingGesture, composerPanGesture],
     );
 
-    const showSettingsButton = composerWidth >= SHOW_SETTINGS_MIN_WIDTH;
-
     return (
       <View
         style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 8) }]}
@@ -297,7 +289,7 @@ export const ChatInputSection = memo(
 
         <GestureDetector gesture={composerGesture}>
           <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
-            <View onLayout={handleComposerLayout} style={styles.inputRow}>
+            <View style={styles.inputRow}>
               <ActionIconButton
                 icon='face.smiling'
                 label='Open emote picker'
@@ -328,13 +320,11 @@ export const ChatInputSection = memo(
                 />
               </View>
 
-              {showSettingsButton ? (
-                <ActionIconButton
-                  icon='gearshape'
-                  label='Open chat settings'
-                  onPress={onOpenSettingsSheet}
-                />
-              ) : null}
+              <ActionIconButton
+                icon='gearshape'
+                label='Open chat settings'
+                onPress={onOpenSettingsSheet}
+              />
               {canPinNextMessage ? (
                 <ActionIconButton
                   active={pinNextMessage}

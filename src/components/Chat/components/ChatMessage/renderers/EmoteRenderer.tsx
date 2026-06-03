@@ -1,19 +1,18 @@
-import { Button } from '@app/components/Button/Button';
-import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { memo, useMemo } from 'react';
 
-import { EmoteActionSheet } from './EmoteActionSheet';
+import { ChatMessagePressable } from '../ChatMessagePressable';
+import { ChatInlineImage } from './ChatInlineImage';
 
 type PartVariant = ParsedPart<'emote'>;
 
 interface EmoteRendererProps {
   disableAnimations?: boolean;
   part: PartVariant;
-  handleEmotePress: (part: PartVariant) => void;
+  handleEmoteLongPress?: (part: PartVariant) => void;
   shouldOverlayPrevious?: boolean;
   targetSize?: number;
 }
@@ -21,7 +20,7 @@ interface EmoteRendererProps {
 export const EmoteRenderer = memo(
   ({
     part,
-    handleEmotePress,
+    handleEmoteLongPress,
     disableAnimations = false,
     shouldOverlayPrevious = false,
     targetSize = 30,
@@ -44,45 +43,30 @@ export const EmoteRenderer = memo(
 
     if (!displayUrl) {
       return (
-        <EmoteActionSheet
-          disableAnimations={disableAnimations}
-          part={part}
-          onPress={handleEmotePress}
+        <ChatMessagePressable
+          onLongPress={() => handleEmoteLongPress?.(part)}
+          style={getButtonStyle(width, shouldOverlayPrevious)}
         >
-          <Button style={getButtonStyle(width, shouldOverlayPrevious)}>
-            <Text style={getNameStyle(width, height)}>{part.name || '?'}</Text>
-          </Button>
-        </EmoteActionSheet>
+          <Text style={getNameStyle(width, height)}>{part.name || '?'}</Text>
+        </ChatMessagePressable>
       );
     }
 
     return (
-      <EmoteActionSheet
-        disableAnimations={disableAnimations}
-        part={part}
-        onPress={handleEmotePress}
+      <ChatMessagePressable
+        onLongPress={() => handleEmoteLongPress?.(part)}
+        style={getButtonStyle(width, shouldOverlayPrevious)}
       >
-        <Button style={getButtonStyle(width, shouldOverlayPrevious)}>
-          <Image
-            useNitro
-            source={{
-              uri: displayUrl,
-            }}
-            containerStyle={getEmoteContainerStyle(width, height)}
-            contentFit='contain'
-            cachePolicy='memory-disk'
-            cachePriority='visible'
-            cacheVariant='emote'
-            decodeFormat='argb'
-            useAppleWebpCodec
-            transition={0}
-            style={{
-              width,
-              height,
-            }}
-          />
-        </Button>
-      </EmoteActionSheet>
+        <ChatInlineImage
+          cacheVariant='emote'
+          containerStyle={getEmoteContainerStyle(width, height)}
+          sourceUrl={displayUrl}
+          style={{
+            width,
+            height,
+          }}
+        />
+      </ChatMessagePressable>
     );
   },
 );

@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
+  enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;
   showDragIndicator?: boolean;

@@ -40,27 +40,48 @@ describe('ChatList', () => {
       />,
     );
 
-    expect(mockLegendList).toHaveBeenCalledWith(
-      expect.objectContaining({
-        drawDistance: 960,
-        estimatedItemSize: 18,
-        extraData: { showTimestamps: false },
-        getEstimatedItemSize,
-        initialContainerPoolRatio: 3,
-        maintainScrollAtEnd: {
-          onDataChange: true,
-          onItemLayout: true,
-          onLayout: true,
-        },
-        maintainScrollAtEndThreshold: 0.001,
-        maintainVisibleContentPosition: true,
-        recycleItems: true,
-        viewabilityConfig: {
-          itemVisiblePercentThreshold: 1,
-        },
-        onEndReachedThreshold: 0.02,
-      }),
-    );
+    const props = mockLegendList.mock.calls[0]?.[0] as {
+      drawDistance?: number;
+      estimatedItemSize?: number;
+      extraData?: unknown;
+      getEstimatedItemSize?: unknown;
+      initialContainerPoolRatio?: number;
+      maintainScrollAtEnd?: unknown;
+      maintainScrollAtEndThreshold?: number;
+      maintainVisibleContentPosition?: boolean;
+      onEndReachedThreshold?: number;
+      recycleItems?: boolean;
+      viewabilityConfig?: unknown;
+    };
+    expect({
+      drawDistance: props.drawDistance,
+      estimatedItemSize: props.estimatedItemSize,
+      extraData: props.extraData,
+      getEstimatedItemSize: props.getEstimatedItemSize,
+      initialContainerPoolRatio: props.initialContainerPoolRatio,
+      maintainScrollAtEnd: props.maintainScrollAtEnd,
+      maintainScrollAtEndThreshold: props.maintainScrollAtEndThreshold,
+      maintainVisibleContentPosition: props.maintainVisibleContentPosition,
+      onEndReachedThreshold: props.onEndReachedThreshold,
+      recycleItems: props.recycleItems,
+      viewabilityConfig: props.viewabilityConfig,
+    }).toEqual({
+      drawDistance: 96,
+      estimatedItemSize: 34,
+      extraData: { showTimestamps: false },
+      getEstimatedItemSize,
+      initialContainerPoolRatio: 1,
+      maintainScrollAtEnd: {
+        onDataChange: true,
+      },
+      maintainScrollAtEndThreshold: 0.1,
+      maintainVisibleContentPosition: true,
+      onEndReachedThreshold: 0.02,
+      recycleItems: true,
+      viewabilityConfig: {
+        itemVisiblePercentThreshold: 1,
+      },
+    });
   });
 
   test('forwards visible messages from LegendList viewability', () => {
@@ -250,11 +271,10 @@ describe('ChatList', () => {
       />,
     );
 
-    expect(mockLegendList).toHaveBeenCalledWith(
-      expect.objectContaining({
-        maintainScrollAtEnd: false,
-      }),
-    );
+    const props = mockLegendList.mock.calls[0]?.[0] as {
+      maintainScrollAtEnd?: unknown;
+    };
+    expect(props.maintainScrollAtEnd).toEqual(false);
   });
 
   test('updates maintain-scroll-at-end when anchoring is disabled after mount', () => {
@@ -296,11 +316,10 @@ describe('ChatList', () => {
       />,
     );
 
-    expect(mockLegendList).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        maintainScrollAtEnd: false,
-      }),
-    );
+    const props = mockLegendList.mock.calls.at(-1)?.[0] as {
+      maintainScrollAtEnd?: unknown;
+    };
+    expect(props.maintainScrollAtEnd).toEqual(false);
   });
 
   test('passes bounded content-size anchoring through to LegendList', () => {

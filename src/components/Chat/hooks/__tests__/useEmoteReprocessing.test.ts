@@ -1,5 +1,5 @@
 import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
-import { updateMessage } from '@app/store/chatStore/messages';
+import { updateMessages } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { act, renderHook } from '@testing-library/react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
@@ -9,7 +9,7 @@ jest.mock('@app/store/chatStore/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
 }));
 jest.mock('@app/store/chatStore/messages', () => ({
-  updateMessage: jest.fn(),
+  updateMessages: jest.fn(),
 }));
 
 jest.mock('@app/store/chatStore/state', () => ({
@@ -33,8 +33,8 @@ jest.mock('@app/utils/chat/findBadges', () => ({
 const mockGetCurrentEmoteData = getCurrentEmoteData as jest.MockedFunction<
   typeof getCurrentEmoteData
 >;
-const mockUpdateMessage = updateMessage as jest.MockedFunction<
-  typeof updateMessage
+const mockUpdateMessages = updateMessages as jest.MockedFunction<
+  typeof updateMessages
 >;
 const mockChatStore = chatStore$ as unknown as {
   emojis: {
@@ -80,6 +80,16 @@ function createTextOnlyMessage(
   };
 }
 
+const expectMessageUpdate = (id: string, nonce: string) => ({
+  messageId: id,
+  messageNonce: nonce,
+  updates: {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    message: expect.any(Array),
+    badges: [],
+  },
+});
+
 describe('useEmoteReprocessing', () => {
   const channelId = 'channel-1';
   const processedMessageIdsRef = { current: new Set<string>() };
@@ -122,7 +132,7 @@ describe('useEmoteReprocessing', () => {
     );
 
     expect(mockGetCurrentEmoteData).not.toHaveBeenCalled();
-    expect(mockUpdateMessage).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
   test('does nothing when getCurrentEmoteData returns null', () => {
@@ -141,7 +151,7 @@ describe('useEmoteReprocessing', () => {
     );
 
     expect(mockGetCurrentEmoteData).toHaveBeenCalledWith(channelId);
-    expect(mockUpdateMessage).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
   test('does nothing when emote data has no emotes', () => {
@@ -169,10 +179,10 @@ describe('useEmoteReprocessing', () => {
       }),
     );
 
-    expect(mockUpdateMessage).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
-  test('reprocesses text-only unprocessed messages and calls updateMessage', () => {
+  test('reprocesses text-only unprocessed messages and calls updateMessages', () => {
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
     const msg1 = createTextOnlyMessage('msg-1', 'nonce-1', 'hello world');
     const peek = jest.fn().mockReturnValue([msg1]);
@@ -188,11 +198,9 @@ describe('useEmoteReprocessing', () => {
     );
 
     expect(mockGetCurrentEmoteData).toHaveBeenCalledWith(channelId);
-    expect(mockUpdateMessage).toHaveBeenCalledWith('msg-1', 'nonce-1', {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      message: expect.any(Array),
-      badges: [],
-    });
+    expect(mockUpdateMessages).toHaveBeenCalledWith([
+      expectMessageUpdate('msg-1', 'nonce-1'),
+    ]);
     expect(processedMessageIdsRef.current.has('msg-1')).toBe(true);
   });
 
@@ -214,14 +222,44 @@ describe('useEmoteReprocessing', () => {
       }),
     );
 
-    expect(mockUpdateMessage).toHaveBeenCalledTimes(24);
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMessages.mock.calls[0]?.[0]).toHaveLength(6);
 
     act(() => {
       jest.runOnlyPendingTimers();
     });
 
-    expect(mockUpdateMessage).toHaveBeenCalledTimes(30);
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(2);
+    expect(mockUpdateMessages.mock.calls[1]?.[0]).toHaveLength(6);
     jest.useRealTimers();
+  });
+
+  test('skips equivalent reprocessed message parts and badges', () => {
+    const existingParts = [
+      { type: 'emote' as const, content: 'Kappa', id: 'e1', url: '' },
+    ];
+    jest
+      .requireMock('@app/utils/chat/emoteProcessor')
+      .processEmotesWorklet.mockReturnValueOnce(existingParts);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    const msg1 = {
+      ...createTextOnlyMessage('msg-1', 'nonce-1', 'Kappa'),
+      message: existingParts,
+    };
+    const peek = jest.fn().mockReturnValue([msg1]);
+
+    renderHook(() =>
+      useEmoteReprocessing({
+        channelId,
+        channelEmoteData: emoteDataWithEmotes,
+        messages$: { peek },
+        emoteLoadStatus: 'success',
+        processedMessageIdsRef,
+      }),
+    );
+
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
+    expect(processedMessageIdsRef.current.has('msg-1')).toBe(true);
   });
 
   test('skips sparse or incomplete message entries', () => {
@@ -246,12 +284,10 @@ describe('useEmoteReprocessing', () => {
       }),
     );
 
-    expect(mockUpdateMessage).toHaveBeenCalledTimes(1);
-    expect(mockUpdateMessage).toHaveBeenCalledWith('msg-1', 'nonce-1', {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      message: expect.any(Array),
-      badges: [],
-    });
+    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMessages).toHaveBeenCalledWith([
+      expectMessageUpdate('msg-1', 'nonce-1'),
+    ]);
   });
 
   test('skips messages already in processedMessageIdsRef', () => {
@@ -270,7 +306,7 @@ describe('useEmoteReprocessing', () => {
       }),
     );
 
-    expect(mockUpdateMessage).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
   test('skips system messages and usernotice', () => {
@@ -295,7 +331,7 @@ describe('useEmoteReprocessing', () => {
       }),
     );
 
-    expect(mockUpdateMessage).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
   test('reprocesses existing emote parts when reprocessKey changes', () => {
@@ -333,15 +369,13 @@ describe('useEmoteReprocessing', () => {
       },
     );
 
-    expect(mockUpdateMessage).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
 
     rerender({ reprocessKey: 'google' });
 
-    expect(mockUpdateMessage).toHaveBeenCalledWith('1', 'n1', {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      message: expect.any(Array),
-      badges: [],
-    });
+    expect(mockUpdateMessages).toHaveBeenCalledWith([
+      expectMessageUpdate('1', 'n1'),
+    ]);
   });
 
   test('skips messages with non-chat content parts', () => {
@@ -362,6 +396,6 @@ describe('useEmoteReprocessing', () => {
       }),
     );
 
-    expect(mockUpdateMessage).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 });

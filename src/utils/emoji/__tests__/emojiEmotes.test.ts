@@ -26,19 +26,24 @@ describe('getEmojiEmotes', () => {
     const ids = emotes.map(emote => emote.id);
 
     expect(new Set(ids).size).toBe(ids.length);
-    expect(emotes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: '1F602:joy',
-          emoji_hexcode: '1F602',
-          name: ':joy:',
-        }),
-        expect.objectContaining({
-          id: '1F602:haha',
-          emoji_hexcode: '1F602',
-          name: ':haha:',
-        }),
-      ]),
-    );
+    const aliasedJoyEmotes = emotes
+      .filter(emote => emote.name === ':joy:' || emote.name === ':haha:')
+      .map(emote => ({
+        emoji_hexcode: emote.emoji_hexcode,
+        id: emote.id,
+        name: emote.name,
+      }));
+    expect(aliasedJoyEmotes).toEqual([
+      {
+        emoji_hexcode: '1F602',
+        id: '1F602:joy',
+        name: ':joy:',
+      },
+      {
+        emoji_hexcode: '1F602',
+        id: '1F602:haha',
+        name: ':haha:',
+      },
+    ]);
   });
 });

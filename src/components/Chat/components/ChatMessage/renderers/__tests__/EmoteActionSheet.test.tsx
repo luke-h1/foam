@@ -106,10 +106,8 @@ describe('EmoteActionSheet', () => {
     });
     fireEvent.press(getByText('Preview'));
 
-    expect(onPreview).toHaveBeenCalledWith(
-      expect.objectContaining({
-        url: 'https://example.com/static-4x.webp',
-      }),
+    expect(onPreview.mock.calls[0]?.[0]?.url).toEqual(
+      'https://example.com/static-4x.webp',
     );
   });
 });

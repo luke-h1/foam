@@ -31,10 +31,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import {
-  useSafeAreaFrame,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 interface LiveStreamScreenProps {
@@ -53,6 +50,49 @@ const ORIENTATION_CHAT_SLIDE_DISTANCE = 28;
 
 export type FullscreenChatMode = 'sidebar' | 'overlay';
 export type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
+
+export function getLiveStreamLayoutMetrics({
+  insetTop,
+  windowHeight,
+  windowWidth,
+}: {
+  insetTop: number;
+  windowHeight: number;
+  windowWidth: number;
+}): {
+  isLandscape: boolean;
+  layoutHeight: number;
+  portraitTopInset: number;
+  screenHeight: number;
+  screenWidth: number;
+} {
+  const resolvedWidth = Math.max(1, windowWidth);
+  const resolvedHeight = Math.max(1, windowHeight);
+  const isLandscape = resolvedWidth > resolvedHeight;
+  const portraitTopInset = isLandscape ? 0 : insetTop;
+  const screenHeight = resolvedHeight;
+  const screenWidth = resolvedWidth;
+
+  return {
+    isLandscape,
+    layoutHeight: Math.max(1, screenHeight - portraitTopInset),
+    portraitTopInset,
+    screenHeight,
+    screenWidth,
+  };
+}
+
+export function getLiveStreamChatLeft({
+  chatWidth,
+  isLandscape,
+  screenWidth,
+}: {
+  chatWidth: number;
+  isLandscape: boolean;
+  screenWidth: number;
+}): number {
+  return isLandscape ? Math.max(0, screenWidth - chatWidth) : 0;
+}
 
 function VideoDelayIndicator({
   latencySeconds,
@@ -203,25 +243,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const safeFrame = useSafeAreaFrame();
   const insets = useSafeAreaInsets();
-  const isLandscape = windowWidth > windowHeight;
-  const measuredWidth = Math.max(
-    1,
-    safeFrame.width > 0 ? safeFrame.width : windowWidth,
-  );
-  const measuredHeight = Math.max(
-    1,
-    safeFrame.height > 0 ? safeFrame.height : windowHeight,
-  );
-  const screenWidth = isLandscape
-    ? Math.max(measuredWidth, measuredHeight)
-    : Math.min(measuredWidth, measuredHeight);
-  const screenHeight = isLandscape
-    ? Math.min(measuredWidth, measuredHeight)
-    : Math.max(measuredWidth, measuredHeight);
-  const portraitTopInset = isLandscape ? 0 : insets.top;
-  const layoutHeight = Math.max(1, screenHeight - portraitTopInset);
+  const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
+    getLiveStreamLayoutMetrics({
+      insetTop: insets.top,
+      windowHeight,
+      windowWidth,
+    });
   const isChatEnabled = !disableChat;
   const isStreamEnabled = !disableStream;
   const [isChatVisible, setChatVisible] = useState<boolean>(true);
@@ -415,7 +443,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const animatedChatStyle = useAnimatedStyle(() => ({
     height: chatHeight.value,
+    left: isLandscape ? Math.max(0, screenWidth - chatWidth.value) : 0,
     opacity: chatOpacity.value,
+    top: isLandscape ? 0 : videoHeight.value,
     transform: [{ translateX: chatTranslateX.value }],
     width: chatWidth.value,
   }));
@@ -518,6 +548,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const animatedVideoStyle = useAnimatedStyle(() => ({
     height: videoHeight.value,
+    left: 0,
+    top: 0,
     width: videoWidth.value,
   }));
 
@@ -577,7 +609,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     () => [
       styles.contentContainer,
       !isLandscape && { paddingTop: portraitTopInset },
-      isLandscape && styles.row,
     ],
     [isLandscape, portraitTopInset],
   );
@@ -625,12 +656,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       return undefined;
     }
 
-    return {
-      position: 'absolute' as const,
-      right: 0,
-      top: 0,
-      zIndex: 3,
-    };
+    return styles.overlayChatContainer;
   }, [fullscreenChatMode, isLandscape]);
 
   const streamInfo = useMemo(
@@ -816,6 +842,8 @@ const styles = StyleSheet.create({
   chatContainer: {
     backgroundColor: '#000',
     overflow: 'hidden',
+    position: 'absolute',
+    zIndex: 1,
   },
   chatContent: {
     flex: 1,
@@ -853,6 +881,9 @@ const styles = StyleSheet.create({
     borderLeftColor: theme.colorBorderSecondary,
     borderLeftWidth: StyleSheet.hairlineWidth,
   },
+  overlayChatContainer: {
+    zIndex: 3,
+  },
   container: {
     alignItems: 'center',
     flex: 1,
@@ -861,6 +892,8 @@ const styles = StyleSheet.create({
   contentContainer: {
     backgroundColor: '#000',
     flex: 1,
+    overflow: 'hidden',
+    position: 'relative',
   },
   delayIndicator: {
     alignItems: 'center',
@@ -899,13 +932,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 12,
   },
-  row: {
-    flexDirection: 'row',
-  },
   videoContainer: {
     alignItems: 'center',
     backgroundColor: '#000',
     justifyContent: 'center',
+    position: 'absolute',
+    zIndex: 2,
   },
   videoUser: {
     color: '#fff',

@@ -5,6 +5,8 @@ import { useEmoteRenderPreferences } from '../preferenceStore';
 import {
   emptyEmoteData,
   type ChannelCacheType,
+  type SanitisedBadgeSet,
+  type SanitisedEmote,
   type UserPaint,
 } from './constants';
 import { chatStore$ } from './state';
@@ -17,8 +19,29 @@ export const useTtvUsers = () => useSelector(chatStore$.ttvUsers);
 export const useBits = () => useSelector(chatStore$.bits);
 export const useEmojis = () => useSelector(chatStore$.emojis);
 
+type ChannelEmoteData = Pick<
+  ChannelCacheType,
+  | 'twitchChannelEmotes'
+  | 'twitchGlobalEmotes'
+  | 'twitchSubscriberEmotes'
+  | 'sevenTvChannelEmotes'
+  | 'sevenTvGlobalEmotes'
+  | 'ffzChannelEmotes'
+  | 'ffzGlobalEmotes'
+  | 'bttvGlobalEmotes'
+  | 'bttvChannelEmotes'
+  | 'twitchChannelBadges'
+  | 'twitchGlobalBadges'
+  | 'ffzChannelBadges'
+  | 'ffzGlobalBadges'
+  | 'chatterinoBadges'
+>;
+
+const EMPTY_EMOTES: SanitisedEmote[] = [];
+const EMPTY_BADGES: SanitisedBadgeSet[] = [];
+
 function resolveEmoteData(
-  cache: ChannelCacheType | undefined,
+  cache: ChannelEmoteData | undefined,
   preferences: ReturnType<typeof useEmoteRenderPreferences>,
 ) {
   if (!cache) {
@@ -71,45 +94,69 @@ function resolveEmoteData(
   };
 }
 
+function getChannelEmoteData(channelId: string | null): ChannelEmoteData {
+  if (!channelId) {
+    return emptyEmoteData;
+  }
+
+  const cache$ = chatStore$.persisted.channelCaches[channelId];
+
+  return {
+    twitchChannelEmotes: cache$?.twitchChannelEmotes.get() ?? EMPTY_EMOTES,
+    twitchGlobalEmotes: cache$?.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
+    twitchSubscriberEmotes:
+      cache$?.twitchSubscriberEmotes.get() ?? EMPTY_EMOTES,
+    sevenTvChannelEmotes: cache$?.sevenTvChannelEmotes.get() ?? EMPTY_EMOTES,
+    sevenTvGlobalEmotes: cache$?.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
+    ffzChannelEmotes: cache$?.ffzChannelEmotes.get() ?? EMPTY_EMOTES,
+    ffzGlobalEmotes: cache$?.ffzGlobalEmotes.get() ?? EMPTY_EMOTES,
+    bttvGlobalEmotes: cache$?.bttvGlobalEmotes.get() ?? EMPTY_EMOTES,
+    bttvChannelEmotes: cache$?.bttvChannelEmotes.get() ?? EMPTY_EMOTES,
+    twitchChannelBadges: cache$?.twitchChannelBadges.get() ?? EMPTY_BADGES,
+    twitchGlobalBadges: cache$?.twitchGlobalBadges.get() ?? EMPTY_BADGES,
+    ffzChannelBadges: cache$?.ffzChannelBadges.get() ?? EMPTY_BADGES,
+    ffzGlobalBadges: cache$?.ffzGlobalBadges.get() ?? EMPTY_BADGES,
+    chatterinoBadges: cache$?.chatterinoBadges.get() ?? EMPTY_BADGES,
+  };
+}
+
 export const useCurrentEmoteData = () => {
   const cache = useSelector(() => {
     const channelId = chatStore$.currentChannelId.get();
-    return channelId
-      ? chatStore$.persisted.channelCaches[channelId]?.get()
-      : undefined;
+    return getChannelEmoteData(channelId);
   });
   const preferences = useEmoteRenderPreferences();
-  return resolveEmoteData(cache, preferences);
+  return useMemo(
+    () => resolveEmoteData(cache, preferences),
+    [cache, preferences],
+  );
 };
 
 export const useChannelEmoteData = (channelId: string | null) => {
-  const cache = useSelector(() =>
-    channelId
-      ? chatStore$.persisted.channelCaches[channelId]?.get()
-      : undefined,
-  );
+  const cache = useSelector(() => getChannelEmoteData(channelId));
   const preferences = useEmoteRenderPreferences();
-  return resolveEmoteData(cache, preferences);
+  return useMemo(
+    () => resolveEmoteData(cache, preferences),
+    [cache, preferences],
+  );
 };
 
 export const usePaints = () => useSelector(chatStore$.paints);
 export const useUserPaintIds = () => useSelector(chatStore$.userPaintIds);
 
 export const useUserPaints = (): Record<string, UserPaint> => {
-  const paints = useSelector(chatStore$.paints);
-  const userPaintIds = useSelector(chatStore$.userPaintIds);
-  return useMemo(
-    () =>
-      Object.entries(userPaintIds).reduce<Record<string, UserPaint>>(
-        (resolved, [userId, paintId]) => {
-          const paint = paints[paintId];
-          if (paint) {
-            resolved[userId] = { ...paint, ttv_user_id: userId };
-          }
-          return resolved;
-        },
-        {},
-      ),
-    [paints, userPaintIds],
-  );
+  return useSelector(() => {
+    const userPaintIds = chatStore$.userPaintIds.get();
+
+    return Object.entries(userPaintIds).reduce<Record<string, UserPaint>>(
+      (resolved, [userId, paintId]) => {
+        const paint = chatStore$.paints[paintId]?.get();
+        if (paint) {
+          resolved[userId] = { ...paint, ttv_user_id: userId };
+        }
+        return resolved;
+      },
+      {},
+    );
+  });
 };

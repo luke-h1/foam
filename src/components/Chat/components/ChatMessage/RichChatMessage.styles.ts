@@ -3,21 +3,23 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   badge: {
-    height: 20,
-    marginRight: 2,
-    width: 20,
+    height: 18,
+    marginRight: 4,
+    marginTop: 1,
+    width: 18,
   },
   badgeCompact: {
-    height: 16,
-    width: 16,
+    height: 14,
+    width: 14,
+  },
+  alternatingRowContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
   },
   chatContainer: {
     minHeight: 0,
-    paddingVertical: 0,
   },
   chatContainerCompact: {
     minHeight: 0,
-    paddingVertical: 0,
   },
   moderatedBadge: {
     opacity: 0.72,
@@ -26,26 +28,16 @@ export const styles = StyleSheet.create({
     opacity: 0.72,
   },
   highlightedSenderContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.025)',
-    borderLeftColor: 'rgba(255, 255, 255, 0.18)',
+    backgroundColor: 'rgba(145, 71, 255, 0.08)',
+    borderLeftColor: 'rgba(145, 71, 255, 0.38)',
     borderLeftWidth: 2,
-    paddingLeft: theme.space8,
+    paddingLeft: 4,
   },
   highlightedReplyTargetContainer: {
-    backgroundColor: 'rgba(145, 71, 255, 0.08)',
-    borderLeftColor: 'rgba(145, 71, 255, 0.42)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderLeftColor: 'rgba(255, 255, 255, 0.18)',
     borderLeftWidth: 2,
-    paddingLeft: theme.space8,
-  },
-  inlineIndicatorText: {
-    color: 'rgba(145, 71, 255, 0.72)',
-    fontSize: theme.fontSize11,
-    fontWeight: '600',
-    marginRight: 4,
-    textTransform: 'lowercase',
-  },
-  inlineIndicatorTextCompact: {
-    marginRight: 2,
+    paddingLeft: 4,
   },
   mention: {
     fontSize: theme.fontSize14,
@@ -65,13 +57,16 @@ export const styles = StyleSheet.create({
   },
   messageColumn: {
     flexDirection: 'column',
+    minWidth: 0,
     width: '100%',
   },
   messageLine: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    flex: 1,
+    minWidth: 0,
+    width: '100%',
   },
   messageText: {
     fontSize: theme.fontSize14,
@@ -86,42 +81,58 @@ export const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   ownMentionContainer: {
-    backgroundColor: 'rgba(145, 71, 255, 0.06)',
+    backgroundColor: 'rgba(96, 72, 150, 0.2)',
     borderLeftColor: theme.colorViolet,
     borderLeftWidth: 2,
-    paddingLeft: theme.space8,
+    paddingLeft: 6,
   },
-  replyContainer: {
-    borderLeftColor: 'rgba(145, 71, 255, 0.28)',
-    borderLeftWidth: 2,
-    marginBottom: theme.space12,
-    marginLeft: theme.space8,
-    paddingLeft: theme.space8,
+  messageMetaRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: 4,
+    minWidth: 0,
+    width: '100%',
   },
-  replyContextBody: {
-    color: theme.color.textSecondary.dark,
+  messageMetaText: {
+    color: 'rgba(255,255,255,0.5)',
+    flex: 1,
+    flexShrink: 1,
     fontSize: theme.fontSize12,
-    maxWidth: '75%',
+    lineHeight: 15,
+    minWidth: 0,
   },
-  replyContextBodyCompact: {
+  messageMetaTextCompact: {
     fontSize: theme.fontSize11,
+    lineHeight: 14,
   },
-  replyContextLabel: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
+  messageMetaTextStrong: {
     fontWeight: '600',
-  },
-  replyContextLabelCompact: {
-    fontSize: theme.fontSize11,
   },
   replyContextRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space8,
-    marginBottom: 2,
+    minWidth: 0,
+    marginBottom: 4,
+    width: '100%',
   },
   replyContextRowInteractive: {
-    alignSelf: 'flex-start',
+    alignSelf: 'stretch',
+  },
+  replyContextIcon: {
+    marginRight: 4,
+    opacity: 0.8,
+  },
+  replyContextText: {
+    color: 'rgba(255,255,255,0.5)',
+    flex: 1,
+    flexShrink: 1,
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+    minWidth: 0,
+  },
+  replyContextTextCompact: {
+    fontSize: theme.fontSize11,
+    lineHeight: 14,
   },
   rewardMessageContainer: {
     backgroundColor: 'rgba(127, 127, 127, 0.04)',
@@ -175,15 +186,18 @@ export const styles = StyleSheet.create({
     textAlign: 'left',
   },
   timestamp: {
-    color: theme.colorGreyAlpha,
+    color: 'rgba(255,255,255,0.5)',
     fontSize: theme.fontSize11,
+    lineHeight: 15,
+    marginRight: 4,
   },
   timestampCompact: {
     fontSize: 10,
-    marginRight: 2,
+    lineHeight: 14,
+    marginRight: 4,
   },
   usernameButton: {
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
   },
   usernameCompact: {
     fontSize: theme.fontSize11,

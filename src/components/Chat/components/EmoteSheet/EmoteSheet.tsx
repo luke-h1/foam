@@ -1,16 +1,18 @@
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
-import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
 import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
-import { BlurView } from 'expo-blur';
-import { SymbolView } from 'expo-symbols';
 import {
-  cacheEmoteImages,
-  getCachedEmoteUri,
-} from '@app/store/chatStore/emoteImages';
+  LegendList,
+  type LegendListRef,
+  type LegendListRenderItemProps,
+} from '@legendapp/list';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SymbolView } from 'expo-symbols';
+import { cacheEmoteImages } from '@app/store/chatStore/emoteImages';
 import { useCurrentEmoteData } from '@app/store/chatStore/hooks';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -34,6 +36,14 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
@@ -56,11 +66,14 @@ const RAIL_WIDTH = 52;
 const PROVIDER_BAR_HEIGHT = 54;
 const SEARCH_BAR_HEIGHT = 48;
 const SHEET_DETENT = 0.78;
-const MENU_HEADER_BACKGROUND = 'rgba(128, 128, 128, 0.06)';
-const MENU_ACTIVE_SURFACE = 'rgba(128, 128, 128, 0.32)';
-const MENU_BORDER = 'rgba(255, 255, 255, 0.10)';
+const EMOTE_WARMUP_DELAY_MS = 250;
+const MAX_WARMUP_EMOTES = 3;
+const SHIMMER_DURATION_MS = 1200;
+const MENU_HEADER_BACKGROUND = '#111215';
+const MENU_ACTIVE_SURFACE = '#2b2d33';
+const MENU_BORDER = 'rgba(255, 255, 255, 0.075)';
 const MENU_MUTED_TEXT = 'rgba(255, 255, 255, 0.62)';
-const MENU_SURFACE = 'rgba(128, 128, 128, 0.10)';
+const MENU_SURFACE = '#1f2025';
 
 export type EmotePickerItem = string | SanitisedEmote;
 
@@ -167,6 +180,68 @@ function IosBlurComponent({ intensity }: { intensity: number }) {
 const IosBlur = memo(IosBlurComponent);
 IosBlur.displayName = 'IosBlur';
 
+interface EmoteImageShimmerProps {
+  size: number;
+}
+
+function EmoteImageShimmerComponent({ size }: EmoteImageShimmerProps) {
+  const progress = useSharedValue(0);
+  const shimmerWidth = Math.max(18, Math.round(size * 0.72));
+
+  useEffect(() => {
+    progress.value = withRepeat(
+      withTiming(1, {
+        duration: SHIMMER_DURATION_MS,
+        easing: Easing.linear,
+      }),
+      -1,
+      false,
+    );
+
+    return () => {
+      cancelAnimation(progress);
+    };
+  }, [progress]);
+
+  const shimmerStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: -shimmerWidth + progress.value * (size + shimmerWidth * 2),
+      },
+    ],
+  }));
+
+  return (
+    <View
+      pointerEvents='none'
+      style={[styles.emoteImagePlaceholder, { height: size, width: size }]}
+    >
+      <Animated.View
+        style={[
+          styles.emoteImageShimmer,
+          { height: size, width: shimmerWidth },
+          shimmerStyle,
+        ]}
+      >
+        <LinearGradient
+          colors={[
+            'rgba(255,255,255,0)',
+            'rgba(255,255,255,0.11)',
+            'rgba(255,255,255,0)',
+          ]}
+          locations={[0, 0.5, 1]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
+const EmoteImageShimmer = memo(EmoteImageShimmerComponent);
+EmoteImageShimmer.displayName = 'EmoteImageShimmer';
+
 interface EmoteCellProps {
   cellSize: number;
   item: EmotePickerItem;
@@ -174,14 +249,21 @@ interface EmoteCellProps {
 }
 
 function EmoteCellComponent({ cellSize, item, onPress }: EmoteCellProps) {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const handlePress = useCallback(() => {
     onPress(item);
   }, [item, onPress]);
 
-  const imageSource =
-    typeof item === 'string' ? null : getCachedEmoteUri(item.url);
-
   const innerSize = Math.round(cellSize * 0.78);
+  const imageUrl = typeof item === 'string' ? null : item.url;
+
+  useEffect(() => {
+    setIsImageLoaded(false);
+  }, [imageUrl]);
+
+  const handleImageSettled = useCallback(() => {
+    setIsImageLoaded(true);
+  }, []);
 
   return (
     <Button
@@ -196,19 +278,27 @@ function EmoteCellComponent({ cellSize, item, onPress }: EmoteCellProps) {
             {item}
           </Text>
         ) : (
-          <Image
-            source={imageSource || item.url}
-            useNitro
-            trackLoadTime
-            trackLoadContext='chat.emote-sheet'
-            style={[styles.emoteImage, { height: innerSize, width: innerSize }]}
-            contentFit='contain'
-            cachePolicy='memory-disk'
-            cacheVariant='emote'
-            transition={0}
-            placeholder={BLURHASH}
-            recyclingKey={item.id}
-          />
+          <>
+            {!isImageLoaded ? <EmoteImageShimmer size={innerSize} /> : null}
+            <Image
+              source={item.url}
+              style={[
+                styles.emoteImage,
+                !isImageLoaded && styles.emoteImageLoading,
+                { height: innerSize, width: innerSize },
+              ]}
+              containerStyle={styles.emoteImageContainer}
+              contentFit='contain'
+              cacheToFile={false}
+              cachePolicy='memory-disk'
+              cacheVariant='emote'
+              transition={0}
+              placeholder={BLURHASH}
+              recyclingKey={item.id}
+              onError={handleImageSettled}
+              onLoadEnd={handleImageSettled}
+            />
+          </>
         )}
       </View>
     </Button>
@@ -379,7 +469,8 @@ const EmoteSheetComponent = ({
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const sheetWidth = Math.max(280, screenWidth - theme.space16 * 2);
-  const flashListRef = useRef<FlashListRef<EmoteMenuListItem>>(null);
+  const sheetHeight = Math.round(screenHeight * SHEET_DETENT);
+  const emoteListRef = useRef<LegendListRef>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [activeProviderId, setActiveProviderId] =
@@ -412,11 +503,7 @@ const EmoteSheetComponent = ({
   );
   const bodyHeight = Math.max(
     360,
-    screenHeight * SHEET_DETENT -
-      PROVIDER_BAR_HEIGHT -
-      SEARCH_BAR_HEIGHT -
-      56 -
-      bottomInset,
+    sheetHeight - PROVIDER_BAR_HEIGHT - SEARCH_BAR_HEIGHT - 56 - bottomInset,
   );
 
   const providers = useMemo(
@@ -483,7 +570,7 @@ const EmoteSheetComponent = ({
   }, [filteredSets]);
 
   useEffect(() => {
-    flashListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    emoteListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [activeProviderId, deferredSearchQuery]);
 
   const { items: listItems, setStartIndices } = useMemo(
@@ -498,7 +585,7 @@ const EmoteSheetComponent = ({
     return (
       visibleSet?.emotes
         .filter((item): item is SanitisedEmote => typeof item === 'object')
-        .slice(0, columns) ?? []
+        .slice(0, Math.min(columns, MAX_WARMUP_EMOTES)) ?? []
     );
   }, [activeSetId, columns, filteredSets]);
 
@@ -508,12 +595,18 @@ const EmoteSheetComponent = ({
     }
 
     const controller = new AbortController();
-    void cacheEmoteImages(
-      preloadVisibleEmotes,
-      controller.signal,
-      'interactive',
-    );
-    return () => controller.abort();
+    const warmupTimer = setTimeout(() => {
+      void cacheEmoteImages(
+        preloadVisibleEmotes,
+        controller.signal,
+        'background',
+      );
+    }, EMOTE_WARMUP_DELAY_MS);
+
+    return () => {
+      clearTimeout(warmupTimer);
+      controller.abort();
+    };
   }, [isPresented, preloadVisibleEmotes]);
 
   const handleDismiss = useCallback(() => {
@@ -537,7 +630,7 @@ const EmoteSheetComponent = ({
       }
 
       setActiveSetId(setId);
-      void flashListRef.current?.scrollToIndex({
+      emoteListRef.current?.scrollToIndex({
         index,
         animated: true,
       });
@@ -546,9 +639,7 @@ const EmoteSheetComponent = ({
   );
 
   const handleProviderPress = useCallback((providerId: EmoteMenuProviderId) => {
-    startTransition(() => {
-      setActiveProviderId(providerId);
-    });
+    setActiveProviderId(providerId);
   }, []);
 
   const handleSearchChange = useCallback((value?: string) => {
@@ -587,7 +678,7 @@ const EmoteSheetComponent = ({
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: EmoteMenuListItem }) => {
+    ({ item }: LegendListRenderItemProps<EmoteMenuListItem>) => {
       if (item.type === 'header') {
         const set = filteredSets.find(set => set.id === item.setId);
         if (!set) {
@@ -616,13 +707,17 @@ const EmoteSheetComponent = ({
       isPresented={isPresented}
       onDismiss={handleDismiss}
       showDragIndicator
-      snapPoints={[{ fraction: SHEET_DETENT }, 'full']}
       testID='chat-emote-sheet'
     >
       <View
         style={[
           styles.container,
-          { paddingBottom: bottomInset + theme.space20, width: sheetWidth },
+          {
+            flex: 0,
+            height: sheetHeight,
+            paddingBottom: bottomInset + theme.space20,
+            width: sheetWidth,
+          },
         ]}
       >
         <View style={styles.header}>
@@ -672,17 +767,21 @@ const EmoteSheetComponent = ({
                   </Text>
                 </View>
               ) : (
-                <FlashList<EmoteMenuListItem>
-                  ref={flashListRef}
+                <LegendList<EmoteMenuListItem>
+                  ref={emoteListRef}
                   data={listItems}
                   renderItem={renderItem}
                   keyExtractor={item => item.key}
                   getItemType={item => item.type}
+                  estimatedItemSize={cellSize + CELL_GAP}
+                  getEstimatedItemSize={(_index, _item, type) =>
+                    type === 'header' ? 44 : cellSize + CELL_GAP
+                  }
                   onViewableItemsChanged={onViewableItemsChanged}
                   viewabilityConfig={viewabilityConfig}
                   contentContainerStyle={styles.listContent}
                   drawDistance={96}
-                  removeClippedSubviews
+                  recycleItems
                   showsVerticalScrollIndicator={false}
                   nestedScrollEnabled
                   style={styles.list}
@@ -727,7 +826,6 @@ const styles = StyleSheet.create({
   container: {
     ...chatSheetSurface,
     backgroundColor: CHAT_SHEET_BACKGROUND,
-    flex: 1,
   },
   contentPane: {
     flex: 1,
@@ -742,8 +840,11 @@ const styles = StyleSheet.create({
   },
   emoteCell: {
     alignItems: 'center',
-    backgroundColor: MENU_HEADER_BACKGROUND,
-    borderRadius: 4,
+    backgroundColor: '#15161a',
+    borderColor: 'rgba(255,255,255,0.035)',
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'center',
     padding: 3,
   },
@@ -752,7 +853,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  emoteImage: {},
+  emoteImage: {
+    alignSelf: 'center',
+  },
+  emoteImageContainer: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emoteImageLoading: {
+    opacity: 0,
+  },
+  emoteImagePlaceholder: {
+    backgroundColor: '#202127',
+    borderColor: 'rgba(255,255,255,0.055)',
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  emoteImageShimmer: {
+    opacity: 0.9,
+  },
   emoteRow: {
     flexDirection: 'row',
     gap: CELL_GAP,
@@ -818,13 +940,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space8,
-    paddingHorizontal: theme.space12,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   providerChip: {
     alignItems: 'center',
-    backgroundColor: MENU_HEADER_BACKGROUND,
-    borderRadius: 4,
+    backgroundColor: '#191a1f',
+    borderColor: 'rgba(255,255,255,0.055)',
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space8,
     height: 38,
@@ -835,6 +960,7 @@ const styles = StyleSheet.create({
   },
   providerChipActive: {
     backgroundColor: MENU_ACTIVE_SURFACE,
+    borderColor: 'rgba(255,255,255,0.14)',
     minWidth: 96,
   },
   providerChipIcon: {
@@ -864,7 +990,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     height: SEARCH_BAR_HEIGHT,
     justifyContent: 'center',
-    paddingHorizontal: theme.space12,
+    paddingHorizontal: theme.space16,
   },
   searchRow: {
     alignItems: 'center',
@@ -873,7 +999,10 @@ const styles = StyleSheet.create({
   searchInputWrap: {
     alignItems: 'center',
     backgroundColor: MENU_SURFACE,
-    borderRadius: 4,
+    borderColor: 'rgba(255,255,255,0.065)',
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
     flex: 1,
     flexDirection: 'row',
     gap: theme.space8,
@@ -910,9 +1039,11 @@ const styles = StyleSheet.create({
   },
   setHeader: {
     alignItems: 'center',
-    backgroundColor: MENU_HEADER_BACKGROUND,
-    borderBottomColor: MENU_BORDER,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    backgroundColor: '#15161a',
+    borderColor: 'rgba(255,255,255,0.045)',
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space8,
     marginBottom: theme.space4,
@@ -937,14 +1068,19 @@ const styles = StyleSheet.create({
   },
   setRailButton: {
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    borderRadius: 0,
-    height: 46,
+    backgroundColor: '#191a1f',
+    borderColor: 'rgba(255,255,255,0.045)',
+    borderCurve: 'continuous',
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 36,
     justifyContent: 'center',
-    width: RAIL_WIDTH,
+    marginBottom: theme.space8,
+    width: 38,
   },
   setRailButtonActive: {
     backgroundColor: MENU_ACTIVE_SURFACE,
+    borderColor: 'rgba(255,255,255,0.14)',
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,
