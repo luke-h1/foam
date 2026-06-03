@@ -24,7 +24,7 @@ type HydrateVisibleSevenTvAssetsParams = {
     twitchUserId: string,
     channelId: string,
   ) => Promise<SanitisedEmote[]>;
-  getUserBadge: (twitchUserId: string) => SanitisedBadgeSet | undefined;
+  getUserBadge: (twitchUserId: string) => SanitisedBadgeSet | null;
   fetchUserCosmetics: (
     twitchUserId: string,
     options?: FetchUserCosmeticsOptions,
@@ -63,7 +63,7 @@ function getHydrationKey({
   message,
   personalEmotes,
 }: {
-  badge: SanitisedBadgeSet | undefined;
+  badge?: SanitisedBadgeSet;
   message: AnyChatMessageType;
   personalEmotes: SanitisedEmote[];
 }): string {
@@ -76,11 +76,7 @@ function getHydrationKey({
   ].join('|');
 }
 
-function addBoundedUrl(
-  target: Set<string>,
-  url: string | undefined,
-  max: number,
-) {
+function addBoundedUrl(target: Set<string>, max: number, url?: string) {
   if (!url || target.size >= max) {
     return;
   }
@@ -103,12 +99,13 @@ export async function hydrateVisibleSevenTvAssets({
   hydrateCosmetics = true,
   warmVisibleImages,
   reprocessMessage,
-}: HydrateVisibleSevenTvAssetsParams): Promise<void> {
+}: HydrateVisibleSevenTvAssetsParams): Promise<boolean> {
   const pending: Promise<void>[] = [];
   const emoteWarmupUrls = new Set<string>();
   const badgeWarmupUrls = new Set<string>();
   let personalEmoteFetchesStarted = 0;
   let cosmeticFetchesStarted = 0;
+  let didScheduleReprocess = false;
 
   const reprocessIfChanged = (message: AnyChatMessageType) => {
     const userId = message.userstate['user-id'];
@@ -117,7 +114,7 @@ export async function hydrateVisibleSevenTvAssets({
     }
 
     const hydrationKey = getHydrationKey({
-      badge: hydrateCosmetics ? getUserBadge(userId) : undefined,
+      badge: hydrateCosmetics ? (getUserBadge(userId) ?? undefined) : undefined,
       message,
       personalEmotes: hydratePersonalEmotes
         ? getUserPersonalEmotes(userId, channelId)
@@ -128,6 +125,7 @@ export async function hydrateVisibleSevenTvAssets({
     }
 
     hydratedMessageKeys.add(hydrationKey);
+    didScheduleReprocess = true;
     return reprocessMessage(message);
   };
 
@@ -138,7 +136,7 @@ export async function hydrateVisibleSevenTvAssets({
     }
 
     message.badges.forEach(badge => {
-      addBoundedUrl(badgeWarmupUrls, badge.url, MAX_BADGE_WARMUPS_PER_PASS);
+      addBoundedUrl(badgeWarmupUrls, MAX_BADGE_WARMUPS_PER_PASS, badge.url);
     });
     message.message.forEach(part => {
       if (part.type !== 'emote') {
@@ -147,19 +145,19 @@ export async function hydrateVisibleSevenTvAssets({
 
       addBoundedUrl(
         emoteWarmupUrls,
+        MAX_EMOTE_WARMUPS_PER_PASS,
         getDisplayEmoteUrl({
           url: part.url,
           static_url: part.static_url,
           disableAnimations: disableEmoteAnimations,
         }),
-        MAX_EMOTE_WARMUPS_PER_PASS,
       );
     });
 
     const cachedPersonalEmotes = hydratePersonalEmotes
       ? getUserPersonalEmotes(userId, channelId)
       : [];
-    const cachedBadge = hydrateCosmetics ? getUserBadge(userId) : undefined;
+    const cachedBadge = hydrateCosmetics ? getUserBadge(userId) : null;
 
     if (
       cachedPersonalEmotes.length > 0 ||
@@ -215,4 +213,6 @@ export async function hydrateVisibleSevenTvAssets({
   }
 
   await Promise.all(pending);
+
+  return didScheduleReprocess;
 }

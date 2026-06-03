@@ -75,13 +75,13 @@ describe('TwitchWsService EventSub response handling', () => {
       twitchWsState.eventCallbacks.get('channel.prediction.begin'),
     ).toEqual([]);
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
-    expect(recordWarning).toHaveBeenCalledWith(
-      expect.objectContaining({
-        params: expect.objectContaining({
-          action: 'subscription_create_failed',
-          event_type: 'channel.prediction.begin',
-        }),
-      }),
-    );
+    const warningPayload = jest.mocked(recordWarning).mock.calls[0]?.[0];
+    expect({
+      action: warningPayload?.params?.action,
+      event_type: warningPayload?.params?.event_type,
+    }).toEqual({
+      action: 'subscription_create_failed',
+      event_type: 'channel.prediction.begin',
+    });
   });
 });

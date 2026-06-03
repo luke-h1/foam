@@ -42,19 +42,25 @@ const COPY_IMAGE_VARIANT_ACTIONS = [
 ] as const;
 
 interface EmoteActionSheetProps {
+  children?: ReactNode;
   disableAnimations?: boolean;
-  part: PartVariant;
+  isPresented?: boolean;
+  onDismiss?: () => void;
   onPress?: (part: PartVariant) => void;
-  children: ReactNode;
+  part: PartVariant;
 }
 
 function EmoteActionSheetComponent({
+  children,
   disableAnimations = false,
+  isPresented,
+  onDismiss,
   part,
   onPress,
-  children,
 }: EmoteActionSheetProps) {
-  const [visible, setVisible] = useState(false);
+  const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
+  const isControlled = typeof isPresented === 'boolean';
+  const visible = isControlled ? isPresented : uncontrolledVisible;
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
     280,
@@ -91,14 +97,24 @@ function EmoteActionSheetComponent({
     [displayUrl, part],
   );
 
-  const openSheet = useCallback((e: GestureResponderEvent) => {
-    e?.preventDefault?.();
-    setVisible(true);
-  }, []);
+  const openSheet = useCallback(
+    (e: GestureResponderEvent) => {
+      e?.preventDefault?.();
+      if (!isControlled) {
+        setUncontrolledVisible(true);
+      }
+    },
+    [isControlled],
+  );
 
   const closeSheet = useCallback(() => {
-    setVisible(false);
-  }, []);
+    if (isControlled) {
+      onDismiss?.();
+      return;
+    }
+
+    setUncontrolledVisible(false);
+  }, [isControlled, onDismiss]);
 
   const copyName = useCallback(() => {
     closeSheet();
@@ -215,16 +231,17 @@ function EmoteActionSheetComponent({
     }
   }, []);
 
-  const triggerChild = isValidElement(children)
-    ? cloneElement(
-        children as ReactElement<{
-          onLongPress?: (e: GestureResponderEvent) => void;
-        }>,
-        {
-          onLongPress: openSheet,
-        },
-      )
-    : children;
+  const triggerChild =
+    children && isValidElement(children)
+      ? cloneElement(
+          children as ReactElement<{
+            onLongPress?: (e: GestureResponderEvent) => void;
+          }>,
+          {
+            onLongPress: openSheet,
+          },
+        )
+      : children;
 
   return (
     <>

@@ -97,14 +97,18 @@ describe('AuthContext', () => {
       expect(result.current.authState).toEqual({
         isAnonAuth: true,
         isLoggedIn: false,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        token: expect.objectContaining({
-          accessToken: 'anon',
-          expiresIn: 3600,
-          tokenType: 'bearer',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          expiresAt: expect.any(Number),
-        }),
+        token: result.current.authState?.token,
+      });
+      expect({
+        accessToken: result.current.authState?.token?.accessToken,
+        expiresAt: result.current.authState?.token?.expiresAt,
+        expiresIn: result.current.authState?.token?.expiresIn,
+        tokenType: result.current.authState?.token?.tokenType,
+      }).toEqual({
+        accessToken: 'anon',
+        expiresAt: expect.any(Number),
+        expiresIn: 3600,
+        tokenType: 'bearer',
       });
 
       expect(result.current.ready).toBe(true);
@@ -166,14 +170,18 @@ describe('AuthContext', () => {
       expect(result.current.authState).toEqual({
         isAnonAuth: false,
         isLoggedIn: true,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        token: expect.objectContaining({
-          accessToken: 'user-token',
-          expiresIn: 3600,
-          tokenType: 'bearer',
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          expiresAt: expect.any(Number),
-        }),
+        token: result.current.authState?.token,
+      });
+      expect({
+        accessToken: result.current.authState?.token?.accessToken,
+        expiresAt: result.current.authState?.token?.expiresAt,
+        expiresIn: result.current.authState?.token?.expiresIn,
+        tokenType: result.current.authState?.token?.tokenType,
+      }).toEqual({
+        accessToken: 'user-token',
+        expiresAt: expect.any(Number),
+        expiresIn: 3600,
+        tokenType: 'bearer',
       });
 
       // 1 for inital anon auth when app boots and the 2nd is for when the user logs in

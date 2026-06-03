@@ -13,10 +13,13 @@ const COMPACT_LINE_HEIGHT = 14;
 const COMPACT_FONT_SIZE = theme.fontSize11;
 const COMFORTABLE_LINE_HEIGHT = 17;
 const COMFORTABLE_FONT_SIZE = theme.fontSize14;
-const ROW_VERTICAL_PADDING = 2;
+const ROW_VERTICAL_PADDING = 6;
 const MIN_MEASURE_WIDTH = 80;
 const NON_BREAKING_SPACE = '\u00A0';
 const HEIGHT_CACHE_LIMIT = 2000;
+const COMPACT_EMOTE_SIZE = 26;
+const COMFORTABLE_EMOTE_SIZE = 30;
+const REPLY_CONTEXT_GAP = 2;
 
 const heightCache = new Map<string, number>();
 
@@ -60,7 +63,7 @@ function measureChatMessageHeight(
   message: AnyChatMessageType,
   options: PretextChatHeightOptions,
 ): number | undefined {
-  if (!isPlainEstimableChatMessage(message)) {
+  if (!isEstimableChatMessage(message)) {
     return undefined;
   }
 
@@ -68,6 +71,7 @@ function measureChatMessageHeight(
   const compact = density === 'compact';
   const fontSize = compact ? COMPACT_FONT_SIZE : COMFORTABLE_FONT_SIZE;
   const lineHeight = compact ? COMPACT_LINE_HEIGHT : COMFORTABLE_LINE_HEIGHT;
+  const emoteSize = compact ? COMPACT_EMOTE_SIZE : COMFORTABLE_EMOTE_SIZE;
   const textStyle: TextStyle = {
     fontFamily: 'System',
     fontSize,
@@ -83,6 +87,20 @@ function measureChatMessageHeight(
     fontSize: compact ? 10 : theme.fontSize11,
   };
   const items: InlineFlowItem[] = [];
+  let minimumInlineHeight = lineHeight;
+  let prelineHeight = 0;
+
+  if (message.parentDisplayName || message.replyBody) {
+    prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
+  }
+
+  if (message.userstate['first-msg'] === '1') {
+    prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
+  }
+
+  if (message.isChannelPointRedemption) {
+    prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
+  }
 
   if (showTimestamp && message.timestamp) {
     items.push({
@@ -111,14 +129,6 @@ function measureChatMessageHeight(
     });
   }
 
-  if (message.userstate['first-msg'] === '1') {
-    items.push({
-      text: 'first-msg ',
-      style: strongStyle,
-      atomic: true,
-    });
-  }
-
   for (const part of message.message) {
     if (part.type === 'text') {
       items.push({ text: part.content, style: textStyle });
@@ -134,7 +144,33 @@ function measureChatMessageHeight(
       continue;
     }
 
-    return undefined;
+    if (part.type === 'emote' || part.type === 'stvEmote') {
+      const { width, height } = getEstimatedEmoteSize(part, emoteSize);
+      minimumInlineHeight = Math.max(minimumInlineHeight, height);
+      items.push({
+        text: NON_BREAKING_SPACE,
+        style: textStyle,
+        atomic: true,
+        extraWidth: part.zero_width ? 0 : width,
+      });
+      continue;
+    }
+
+    if (part.type === 'twitchClip') {
+      minimumInlineHeight = Math.max(minimumInlineHeight, emoteSize);
+      items.push({
+        text: part.content || part.name || 'clip',
+        style: textStyle,
+        atomic: true,
+        extraWidth: emoteSize * 2,
+      });
+      continue;
+    }
+
+    if ('content' in part && part.content) {
+      items.push({ text: part.content, style: textStyle });
+      continue;
+    }
   }
 
   if (items.length === 0) {
@@ -148,21 +184,22 @@ function measureChatMessageHeight(
   const prepared = prepareInlineFlow(items);
   const measured = measureInlineFlow(prepared, maxWidth, lineHeight);
   const minimumHeight = Math.max(
-    lineHeight,
+    minimumInlineHeight,
     message.badges?.length ? badgeSize : 0,
   );
 
-  return Math.max(minimumHeight, measured.height) + ROW_VERTICAL_PADDING;
+  return (
+    prelineHeight +
+    Math.max(minimumHeight, measured.height) +
+    ROW_VERTICAL_PADDING
+  );
 }
 
-function isPlainEstimableChatMessage(message: AnyChatMessageType): boolean {
+function isEstimableChatMessage(message: AnyChatMessageType): boolean {
   if (
     message.isTwitchSystemNotice ||
     message.isSpecialNotice ||
-    message.isChannelPointRedemption ||
     message.sender?.toLowerCase() === 'system' ||
-    message.parentDisplayName ||
-    message.replyBody ||
     ('notice_tags' in message && message.notice_tags)
   ) {
     return false;
@@ -172,7 +209,33 @@ function isPlainEstimableChatMessage(message: AnyChatMessageType): boolean {
 }
 
 function isEstimablePart(part: ParsedPart): boolean {
-  return part.type === 'text' || part.type === 'mention';
+  return (
+    part.type === 'text' ||
+    part.type === 'mention' ||
+    part.type === 'emote' ||
+    part.type === 'stvEmote' ||
+    part.type === 'twitchClip' ||
+    ('content' in part && typeof part.content === 'string')
+  );
+}
+
+function getEstimatedEmoteSize(
+  part: ParsedPart<'emote'> | ParsedPart<'stvEmote'>,
+  targetSize: number,
+): { height: number; width: number } {
+  const sourceWidth = part.width || 20;
+  const sourceHeight = part.height || 20;
+  const aspectRatio =
+    part.aspect_ratio || (sourceHeight > 0 ? sourceWidth / sourceHeight : 1);
+
+  if (!Number.isFinite(aspectRatio) || aspectRatio <= 0) {
+    return { height: targetSize, width: targetSize };
+  }
+
+  return {
+    height: targetSize,
+    width: Math.max(1, Math.round(targetSize * aspectRatio)),
+  };
 }
 
 function getCacheKey(

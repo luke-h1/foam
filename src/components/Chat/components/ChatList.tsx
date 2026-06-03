@@ -1,11 +1,17 @@
-import { type ListRenderItem } from '@app/components/FlashList/FlashList';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import {
   LegendList,
   type LegendListRef,
   type LegendListRenderItemProps,
 } from '@legendapp/list';
-import { memo, RefObject, useCallback, useEffect, useRef } from 'react';
+import {
+  memo,
+  RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  type ReactElement,
+} from 'react';
 import {
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -22,17 +28,16 @@ import {
   type ViewableMessageToken,
 } from './ChatList/utils';
 
-const CHAT_DRAW_DISTANCE = 960;
+const CHAT_DRAW_DISTANCE = 96;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
-const CHAT_ESTIMATED_ITEM_SIZE = 18;
-const CHAT_INITIAL_CONTAINER_POOL_RATIO = 3;
+const CHAT_ESTIMATED_ITEM_SIZE = 34;
+const CHAT_INITIAL_CONTAINER_POOL_RATIO = 1;
+const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 };
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   onDataChange: true,
-  onItemLayout: true,
-  onLayout: true,
 };
 
 function ChatListRowSkeleton({ index }: { index: number }) {
@@ -55,6 +60,17 @@ function ChatListRowSkeleton({ index }: { index: number }) {
 
 export type ChatListRef = LegendListRef;
 
+export interface ChatListRenderItemInfo {
+  item?: AnyChatMessageType;
+  index: number;
+  target: 'Cell';
+  extraData?: unknown;
+}
+
+export type ChatListRenderItem = (
+  info: ChatListRenderItemInfo,
+) => ReactElement | null;
+
 interface ChatListProps {
   data: AnyChatMessageType[];
   listRef: RefObject<ChatListRef | null>;
@@ -65,13 +81,13 @@ interface ChatListProps {
   handleMomentumScrollEnd: () => void;
   handleEndReached: () => void;
   handleContentSizeChange: () => void;
-  renderItem: ListRenderItem<AnyChatMessageType | undefined>;
-  keyExtractor: (item: AnyChatMessageType | undefined, index: number) => string;
-  getItemType: (item: AnyChatMessageType | undefined) => string;
+  renderItem: ChatListRenderItem;
+  keyExtractor: (item: AnyChatMessageType, index: number) => string;
+  getItemType: (item: AnyChatMessageType) => string;
   getEstimatedItemSize?: (
     index: number,
-    item: AnyChatMessageType | undefined,
-    type: string | undefined,
+    item?: AnyChatMessageType,
+    type?: string,
   ) => number;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
@@ -132,10 +148,7 @@ export const ChatList = memo(
         item,
         index,
         extraData: legendExtraData,
-      }: LegendListRenderItemProps<
-        AnyChatMessageType | undefined,
-        string | undefined
-      >) => {
+      }: LegendListRenderItemProps<AnyChatMessageType>) => {
         const row = renderItem({
           item,
           index,
@@ -163,7 +176,7 @@ export const ChatList = memo(
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }
-        maintainScrollAtEndThreshold={0.001}
+        maintainScrollAtEndThreshold={CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD}
         onScroll={handleScroll}
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}

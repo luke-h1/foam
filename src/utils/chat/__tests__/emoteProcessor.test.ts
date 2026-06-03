@@ -94,16 +94,16 @@ describe('processEmotesWorklet', () => {
       twitchSubscriberEmotes: [subscriberEmote],
     });
 
-    expect(result).toEqual([
-      expect.objectContaining({
-        type: 'emote',
-        id: 'personal-wave',
-      }),
-      { type: 'text', content: ' ' },
-      expect.objectContaining({
-        type: 'emote',
-        id: 'personal-wave',
-      }),
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        id: part.type === 'emote' ? part.id : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      { content: 'Wave', id: 'personal-wave', type: 'emote' },
+      { content: ' ', id: undefined, type: 'text' },
+      { content: 'Wave', id: 'personal-wave', type: 'emote' },
     ]);
   });
 
@@ -122,14 +122,16 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [],
     });
 
-    expect(result).toEqual([
-      { type: 'text', content: 'hi' },
-      { type: 'text', content: ' ' },
-      expect.objectContaining({
-        type: 'emote',
-        content: '👋',
-        original_name: '👋',
-      }),
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        original_name: part.type === 'emote' ? part.original_name : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      { content: 'hi', original_name: undefined, type: 'text' },
+      { content: ' ', original_name: undefined, type: 'text' },
+      { content: '👋', original_name: '👋', type: 'emote' },
     ]);
   });
 

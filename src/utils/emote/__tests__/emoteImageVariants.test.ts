@@ -169,43 +169,45 @@ describe('emote image variants', () => {
 
     const resolved = withResolvedEmoteImageVariants(emote);
 
-    expect(resolved).toEqual(
-      expect.objectContaining({
-        image_variants: {
-          animated: {
-            '4x': 'https://cdn.frankerfacez.com/emote/1234/animated/4',
-            '2x': 'https://cdn.frankerfacez.com/emote/1234/animated/2',
-          },
-          static: {
-            '4x': 'https://cdn.frankerfacez.com/emote/1234/4',
-            '2x': 'https://cdn.frankerfacez.com/emote/1234/2',
-          },
+    expect({
+      image_variants: resolved.image_variants,
+      static_url: resolved.static_url,
+    }).toEqual({
+      image_variants: {
+        animated: {
+          '4x': 'https://cdn.frankerfacez.com/emote/1234/animated/4',
+          '2x': 'https://cdn.frankerfacez.com/emote/1234/animated/2',
         },
-        static_url: 'https://cdn.frankerfacez.com/emote/1234/4',
-      }),
-    );
+        static: {
+          '4x': 'https://cdn.frankerfacez.com/emote/1234/4',
+          '2x': 'https://cdn.frankerfacez.com/emote/1234/2',
+        },
+      },
+      static_url: 'https://cdn.frankerfacez.com/emote/1234/4',
+    });
     expect(withResolvedEmoteImageVariants(emote)).toBe(resolved);
   });
 
   test('derives 7TV image variants while preserving the CDN extension', () => {
-    expect(
-      withResolvedEmoteImageVariants(
-        createSevenTvEmote('https://cdn.7tv.app/emote/abc/4x.webp'),
-      ),
-    ).toEqual(
-      expect.objectContaining({
-        image_variants: {
-          animated: {
-            '4x': 'https://cdn.7tv.app/emote/abc/4x.webp',
-            '2x': 'https://cdn.7tv.app/emote/abc/2x.webp',
-          },
-          static: {
-            '4x': 'https://cdn.7tv.app/emote/abc/4x_static.webp',
-            '2x': 'https://cdn.7tv.app/emote/abc/2x_static.webp',
-          },
-        },
-        static_url: 'https://cdn.7tv.app/emote/abc/4x_static.webp',
-      }),
+    const resolved = withResolvedEmoteImageVariants(
+      createSevenTvEmote('https://cdn.7tv.app/emote/abc/4x.webp'),
     );
+
+    expect({
+      image_variants: resolved.image_variants,
+      static_url: resolved.static_url,
+    }).toEqual({
+      image_variants: {
+        animated: {
+          '4x': 'https://cdn.7tv.app/emote/abc/4x.webp',
+          '2x': 'https://cdn.7tv.app/emote/abc/2x.webp',
+        },
+        static: {
+          '4x': 'https://cdn.7tv.app/emote/abc/4x_static.webp',
+          '2x': 'https://cdn.7tv.app/emote/abc/2x_static.webp',
+        },
+      },
+      static_url: 'https://cdn.7tv.app/emote/abc/4x_static.webp',
+    });
   });
 });

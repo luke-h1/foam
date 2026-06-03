@@ -4,7 +4,7 @@ import {
   getUserPersonalEmotes,
 } from '@app/store/chatStore/channelLoad';
 import { getUserBadge } from '@app/store/chatStore/cosmetics';
-import { updateMessage } from '@app/store/chatStore/messages';
+import { updateMessages } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
 import { prefetchImage } from '@app/components/Image/Image';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
@@ -158,14 +158,20 @@ export function useChatMessageProcessing({
         if (cachedSharedBadgeContext?.isComplete === false) {
           void getSharedChatBadgeContext(userstate)
             .then(({ sourceBadge, sourceChannelBadges }) => {
-              updateMessage(baseMessage.message_id, baseMessage.message_nonce, {
-                badges: getMessageBadges({
-                  userstate,
-                  emoteData,
-                  sourceBadge,
-                  sourceChannelBadges,
-                }),
-              });
+              updateMessages([
+                {
+                  messageId: baseMessage.message_id,
+                  messageNonce: baseMessage.message_nonce,
+                  updates: {
+                    badges: getMessageBadges({
+                      userstate,
+                      emoteData,
+                      sourceBadge,
+                      sourceChannelBadges,
+                    }),
+                  },
+                },
+              ]);
             })
             .catch(error => {
               logger.chat.debug('Failed to update shared chat badges:', error);
@@ -240,10 +246,16 @@ export function useChatMessageProcessing({
           sourceChannelBadges,
         });
 
-        updateMessage(message.message_id, message.message_nonce, {
-          message: replacedMessage,
-          badges,
-        });
+        updateMessages([
+          {
+            messageId: message.message_id,
+            messageNonce: message.message_nonce,
+            updates: {
+              message: replacedMessage,
+              badges,
+            },
+          },
+        ]);
       } catch (error) {
         logger.chat.debug('Failed to reprocess visible chat message:', error);
       }
@@ -298,14 +310,18 @@ export function useChatMessageProcessing({
           disableEmoteAnimations,
           getUserPersonalEmotes,
           fetchUserPersonalEmotes,
-          getUserBadge,
+          getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
           fetchUserCosmetics,
           hydratePersonalEmotes: show7TvEmotes,
           hydrateCosmetics: show7tvBadges,
           warmVisibleImages,
           reprocessMessage: reprocessVisibleMessageFromCache,
-        }).then(() => {
-          if (shouldMaintainBottom && isAtBottomRef.current) {
+        }).then(didReprocessMessages => {
+          if (
+            didReprocessMessages &&
+            shouldMaintainBottom &&
+            isAtBottomRef.current
+          ) {
             maintainBottomAfterContentChange();
           }
         });

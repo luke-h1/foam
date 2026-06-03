@@ -1,7 +1,7 @@
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { Key, ReactNode } from 'react';
-import { Button } from '../../../../Button/Button';
-import { Image } from '../../../../Image/Image';
+import { ChatMessagePressable } from '../ChatMessagePressable';
+import { ChatInlineImage } from './ChatInlineImage';
 import { styles } from '../RichChatMessage.styles';
 
 interface ChatMessageBadgesProps {
@@ -27,26 +27,23 @@ export function ChatMessageBadges({
   let index = 0;
   for (const badge of badges) {
     renderedBadges[index] = (
-      <Button
+      <ChatMessagePressable
         key={getMappingKey(
           `${badge.set}-${badge.id}-${badge.type}-${badge.url}`,
           index,
         )}
         onPress={() => onBadgePress(badge)}
       >
-        <Image
-          useNitro
-          source={badge.url}
-          cachePriority='visible'
+        <ChatInlineImage
           cacheVariant='badge'
+          sourceUrl={badge.url}
           style={[
             styles.badge,
             compact && styles.badgeCompact,
             Boolean(moderationNotice) && styles.moderatedBadge,
           ]}
-          transition={0}
         />
-      </Button>
+      </ChatMessagePressable>
     );
     index += 1;
   }

@@ -9,9 +9,9 @@ import {
   forwardRef,
   memo,
   useCallback,
-  useDeferredValue,
   useMemo,
   useState,
+  useDeferredValue,
 } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ChatInput } from './components/ChatInput';
@@ -30,6 +30,86 @@ interface ChatComposerProps extends ThemedInputProps {
   prioritizeChannelEmotes?: boolean;
   placeholder?: string;
 }
+
+interface EmoteSuggestionRailProps {
+  handleEmotePress: (emote: SanitisedEmote) => void;
+  maxSuggestions: number;
+  prioritizeChannelEmotes: boolean;
+  searchTerm: string;
+}
+
+const EmoteSuggestionRail = memo(function EmoteSuggestionRail({
+  handleEmotePress,
+  maxSuggestions,
+  prioritizeChannelEmotes,
+  searchTerm,
+}: EmoteSuggestionRailProps) {
+  const deferredEmoteSearchTerm = useDeferredValue(searchTerm);
+  const { filteredEmotes } = useEmoteSuggestions({
+    searchTerm: deferredEmoteSearchTerm,
+    maxSuggestions,
+    prioritizeChannelEmotes,
+  });
+
+  const { opacity, scale, translateY } = useSuggestionAnimations({
+    shouldShow: filteredEmotes.length > 0,
+  });
+
+  if (filteredEmotes.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.suggestionRail}>
+      <EmoteSuggestions
+        emotes={filteredEmotes}
+        handleEmotePress={handleEmotePress}
+        suggestionOpacity={opacity}
+        suggestionScale={scale}
+        suggestionTranslateY={translateY}
+      />
+    </View>
+  );
+});
+
+interface UserSuggestionRailProps {
+  handleUserSelect: (user: ChatUser) => void;
+  maxSuggestions: number;
+  searchTerm: string;
+}
+
+const UserSuggestionRail = memo(function UserSuggestionRail({
+  handleUserSelect,
+  maxSuggestions,
+  searchTerm,
+}: UserSuggestionRailProps) {
+  const deferredMentionWord = useDeferredValue(searchTerm);
+  const { filteredUsers } = useUserSuggestions({
+    searchTerm: deferredMentionWord,
+    enabled: true,
+    maxSuggestions,
+  });
+
+  const validUsers = useMemo(
+    () =>
+      filteredUsers.filter((user): user is typeof user => user !== undefined),
+    [filteredUsers],
+  );
+
+  if (validUsers.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.suggestionRail}>
+      <UserSuggestions
+        users={validUsers}
+        showUserSuggestions
+        handleUserSelect={handleUserSelect}
+      />
+    </View>
+  );
+});
 
 const ChatComposerComponent = forwardRef<InputRef, ChatComposerProps>(
   (
@@ -51,39 +131,11 @@ const ChatComposerComponent = forwardRef<InputRef, ChatComposerProps>(
       text: value,
       cursorPosition,
     });
-    const deferredEmoteSearchTerm = useDeferredValue(wordInfo.searchTerm);
-    const deferredMentionWord = useDeferredValue(wordInfo.word);
-
-    const { filteredEmotes } = useEmoteSuggestions({
-      searchTerm: deferredEmoteSearchTerm,
-      maxSuggestions,
-      prioritizeChannelEmotes,
-    });
-
-    const { filteredUsers } = useUserSuggestions({
-      searchTerm: deferredMentionWord,
-      enabled: isUserMention,
-      maxSuggestions,
-    });
-
-    const showEmoteSuggestions =
-      isFocused &&
-      isEmoteSearch &&
-      filteredEmotes.length > 0 &&
-      wordInfo.word.length > 0;
-
-    const { opacity, scale, translateY, hide } = useSuggestionAnimations({
-      shouldShow: showEmoteSuggestions,
-    });
 
     const shouldShowUserSuggestions =
-      isFocused && isUserMention && filteredUsers.length > 0;
-
-    const validUsers = useMemo(
-      () =>
-        filteredUsers.filter((user): user is typeof user => user !== undefined),
-      [filteredUsers],
-    );
+      isFocused && isUserMention && wordInfo.word.length > 1;
+    const shouldSearchEmoteSuggestions =
+      isFocused && isEmoteSearch && wordInfo.word.length > 0;
 
     const handleTextChange = useCallback(
       (text: string) => {
@@ -114,13 +166,11 @@ const ChatComposerComponent = forwardRef<InputRef, ChatComposerProps>(
         onEmoteSelect?.(emote);
         onChangeText?.(newText);
 
-        hide();
-
         setTimeout(() => {
           setCursorPosition(newCursorPosition);
         }, 10);
       },
-      [value, wordInfo, onEmoteSelect, onChangeText, hide],
+      [value, wordInfo, onEmoteSelect, onChangeText],
     );
 
     const handleUserSelect = useCallback(
@@ -139,26 +189,22 @@ const ChatComposerComponent = forwardRef<InputRef, ChatComposerProps>(
       [value, wordInfo, onChangeText],
     );
 
-    const showSuggestionRail =
-      showEmoteSuggestions || shouldShowUserSuggestions;
-
     return (
       <View style={styles.mainContainer}>
-        {showSuggestionRail ? (
-          <View style={styles.suggestionRail}>
-            <EmoteSuggestions
-              emotes={filteredEmotes}
-              handleEmotePress={handleEmotePress}
-              suggestionOpacity={opacity}
-              suggestionScale={scale}
-              suggestionTranslateY={translateY}
-            />
-            <UserSuggestions
-              users={validUsers}
-              showUserSuggestions={shouldShowUserSuggestions}
-              handleUserSelect={handleUserSelect}
-            />
-          </View>
+        {shouldSearchEmoteSuggestions ? (
+          <EmoteSuggestionRail
+            handleEmotePress={handleEmotePress}
+            maxSuggestions={maxSuggestions}
+            prioritizeChannelEmotes={prioritizeChannelEmotes}
+            searchTerm={wordInfo.searchTerm}
+          />
+        ) : null}
+        {shouldShowUserSuggestions ? (
+          <UserSuggestionRail
+            handleUserSelect={handleUserSelect}
+            maxSuggestions={maxSuggestions}
+            searchTerm={wordInfo.word}
+          />
         ) : null}
         <View style={styles.inputWrapper}>
           <ChatInput

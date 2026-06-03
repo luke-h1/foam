@@ -3,7 +3,7 @@ import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Button } from '../../../../Button/Button';
+import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../RichChatMessage.styles';
 import { renderParts } from '../richChatMessageUtils';
 
@@ -56,7 +56,7 @@ export function UserChatBody({
     <View style={styles.messageColumn}>
       {shouldRenderInlineReply && replyPreviewText ? (
         canJumpToReplyTarget && replyParentMessageId ? (
-          <Button
+          <ChatMessagePressable
             hitSlop={undefined}
             onPress={() => onReplyContextPress?.(replyParentMessageId)}
             style={[styles.replyContextRow, styles.replyContextRowInteractive]}
@@ -78,7 +78,7 @@ export function UserChatBody({
             >
               {replyPreviewText}
             </Text>
-          </Button>
+          </ChatMessagePressable>
         ) : (
           <View style={styles.replyContextRow}>
             <SymbolView

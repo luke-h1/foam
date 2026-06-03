@@ -267,44 +267,26 @@ describe('StreamPlayer component messaging', () => {
     expect(latestWebViewProps().source).toEqual({
       uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
     });
-    expect(latestWebViewProps()).toEqual(
-      expect.objectContaining({
-        injectedJavaScript: expect.stringContaining('.player-controls'),
-      }),
+    const injectedJavaScript = latestWebViewProps()
+      .injectedJavaScript as string;
+    expect(injectedJavaScript.includes('.player-controls')).toEqual(true);
+    expect(injectedJavaScript.includes('window.playerControls')).toEqual(true);
+    expect(
+      injectedJavaScript.includes("video.setAttribute('playsinline', '')"),
+    ).toEqual(true);
+    expect(injectedJavaScript.includes('var shouldAutoplay = true')).toEqual(
+      true,
     );
-    expect(latestWebViewProps()).toEqual(
-      expect.objectContaining({
-        injectedJavaScript: expect.stringContaining('window.playerControls'),
-      }),
-    );
-    expect(latestWebViewProps()).toEqual(
-      expect.objectContaining({
-        injectedJavaScript: expect.stringContaining(
-          "video.setAttribute('playsinline', '')",
-        ),
-      }),
-    );
-    expect(latestWebViewProps()).toEqual(
-      expect.objectContaining({
-        injectedJavaScript: expect.stringContaining(
-          'var shouldAutoplay = true',
-        ),
-      }),
-    );
-    expect(latestWebViewProps()).toEqual(
-      expect.objectContaining({
-        injectedJavaScript: expect.stringContaining(
-          "window.addEventListener('orientationchange', schedulePlaybackRecovery)",
-        ),
-      }),
-    );
-    expect(latestWebViewProps()).toEqual(
-      expect.objectContaining({
-        injectedJavaScript: expect.stringContaining(
-          "style.id = 'foam-twitch-control-hide-style'",
-        ),
-      }),
-    );
+    expect(
+      injectedJavaScript.includes(
+        "window.addEventListener('orientationchange', schedulePlaybackRecovery)",
+      ),
+    ).toEqual(true);
+    expect(
+      injectedJavaScript.includes(
+        "style.id = 'foam-twitch-control-hide-style'",
+      ),
+    ).toEqual(true);
 
     const { onLoadEnd } = latestWebViewProps();
     act(() => {
@@ -316,10 +298,8 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
-    expect(latestWebViewProps()).toEqual(
-      expect.not.objectContaining({
-        injectedJavaScriptBeforeContentLoaded: expect.anything(),
-      }),
+    expect(latestWebViewProps().injectedJavaScriptBeforeContentLoaded).toEqual(
+      undefined,
     );
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
@@ -365,16 +345,8 @@ describe('StreamPlayer component messaging', () => {
       />,
     );
 
-    expect(latestWebViewProps()).toEqual(
-      expect.objectContaining({
-        setSupportMultipleWindows: false,
-      }),
-    );
-    expect(latestWebViewProps()).toEqual(
-      expect.not.objectContaining({
-        onOpenWindow: expect.anything(),
-      }),
-    );
+    expect(latestWebViewProps().setSupportMultipleWindows).toEqual(false);
+    expect(latestWebViewProps().onOpenWindow).toEqual(undefined);
   });
 
   test('blocks app navigation while allowing iframe navigation', () => {

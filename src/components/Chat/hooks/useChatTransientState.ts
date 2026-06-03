@@ -7,7 +7,7 @@ import type { AnyChatMessageType } from '../util/messageHandlers';
 interface ChatTransientChannelState {
   hiddenPhrases: string[];
   hiddenUsers: string[];
-  highlightedReplyTargetMessageId?: string;
+  highlightedReplyTargetMessageId: string | null;
   highlightedUsers: string[];
   showOnlyMentions: boolean;
 }
@@ -15,12 +15,13 @@ interface ChatTransientChannelState {
 const defaultTransientState: ChatTransientChannelState = {
   hiddenPhrases: [],
   hiddenUsers: [],
+  highlightedReplyTargetMessageId: null,
   highlightedUsers: [],
   showOnlyMentions: false,
 };
 
 const chatTransientState$ = observable<
-  Record<string, ChatTransientChannelState | undefined>
+  Partial<Record<string, ChatTransientChannelState>>
 >({});
 
 function getTransientState(channelId: string): ChatTransientChannelState {
@@ -37,6 +38,17 @@ function assignTransientState(
   });
 }
 
+export function useIsHighlightedReplyTargetMessage(
+  channelId: string,
+  messageId: string,
+) {
+  return useSelector(
+    () =>
+      (chatTransientState$[channelId]!.highlightedReplyTargetMessageId.get() ??
+        null) === messageId,
+  );
+}
+
 export function useChatTransientState(channelId: string) {
   const visiblePersonalEmoteUsersRef = useRef<Set<string>>(new Set());
   const visibleCosmeticUsersRef = useRef<Set<string>>(new Set());
@@ -48,8 +60,25 @@ export function useChatTransientState(channelId: string) {
   const highlightedReplyTargetTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
-  const state = useSelector(
-    () => chatTransientState$[channelId]!.get() ?? defaultTransientState,
+  const hiddenPhrases = useSelector(
+    () =>
+      chatTransientState$[channelId]!.hiddenPhrases.get() ??
+      defaultTransientState.hiddenPhrases,
+  );
+  const hiddenUsers = useSelector(
+    () =>
+      chatTransientState$[channelId]!.hiddenUsers.get() ??
+      defaultTransientState.hiddenUsers,
+  );
+  const highlightedUsers = useSelector(
+    () =>
+      chatTransientState$[channelId]!.highlightedUsers.get() ??
+      defaultTransientState.highlightedUsers,
+  );
+  const showOnlyMentions = useSelector(
+    () =>
+      chatTransientState$[channelId]!.showOnlyMentions.get() ??
+      defaultTransientState.showOnlyMentions,
   );
 
   useEffect(() => {
@@ -129,12 +158,7 @@ export function useChatTransientState(channelId: string) {
   }, [channelId]);
 
   const setHighlightedReplyTargetMessageId = useCallback(
-    (
-      value:
-        | string
-        | undefined
-        | ((current: string | undefined) => string | undefined),
-    ) => {
+    (value: string | null | ((current: string | null) => string | null)) => {
       const current =
         getTransientState(channelId).highlightedReplyTargetMessageId;
       assignTransientState(channelId, {
@@ -148,17 +172,16 @@ export function useChatTransientState(channelId: string) {
   return {
     handleClearFilters,
     handleToggleShowOnlyMentions,
-    hiddenPhrases: state.hiddenPhrases,
-    hiddenUsers: state.hiddenUsers,
+    hiddenPhrases,
+    hiddenUsers,
     hidePhraseFromView,
     hideUserFromView,
-    highlightedReplyTargetMessageId: state.highlightedReplyTargetMessageId,
     highlightedReplyTargetTimeoutRef,
-    highlightedUsers: state.highlightedUsers,
+    highlightedUsers,
     hydratedVisibleAssetKeysRef,
     pendingVisibleMessagesRef,
     setHighlightedReplyTargetMessageId,
-    showOnlyMentions: state.showOnlyMentions,
+    showOnlyMentions,
     toggleHighlightedUser,
     visibleAssetHydrationTimerRef,
     visibleCosmeticUsersRef,

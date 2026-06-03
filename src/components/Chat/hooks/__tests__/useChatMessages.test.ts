@@ -9,6 +9,11 @@ jest.mock('@app/store/chatStore/messages', () => ({
 
 const mockAddMessages = addMessages as jest.MockedFunction<typeof addMessages>;
 
+function getLastFlushedMessages(): ChatMessageType<never>[] {
+  const lastCall = mockAddMessages.mock.calls.at(-1);
+  return (lastCall?.[0] ?? []) as ChatMessageType<never>[];
+}
+
 describe('useChatMessages', () => {
   const createMockMessage = (
     id: string,
@@ -100,12 +105,9 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(1);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledWith([
-        expect.objectContaining({
-          message_id: '1',
-          message_nonce: 'nonce-1',
-        }),
-      ]);
+      const [flushedMessage] = getLastFlushedMessages();
+      expect(flushedMessage?.message_id).toBe('1');
+      expect(flushedMessage?.message_nonce).toBe('nonce-1');
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -128,12 +130,9 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(1);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledWith([
-        expect.objectContaining({
-          message_id: '1',
-          message_nonce: 'nonce-1',
-        }),
-      ]);
+      const [flushedMessage] = getLastFlushedMessages();
+      expect(flushedMessage?.message_id).toBe('1');
+      expect(flushedMessage?.message_nonce).toBe('nonce-1');
       expect(result.current.getBufferSize()).toBe(0);
     });
 
@@ -153,6 +152,68 @@ describe('useChatMessages', () => {
 
       expect(mockAddMessages).toHaveBeenCalled();
       expect(result.current.getBufferSize()).toBe(0);
+    });
+
+    test('lets LegendList maintain the bottom after live messages flush at bottom', () => {
+      const onBottomContentChange = jest.fn();
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: true },
+          onBottomContentChange,
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        jest.advanceTimersByTime(32);
+      });
+
+      const [flushedMessage] = getLastFlushedMessages();
+      expect(flushedMessage?.message_id).toBe('1');
+      expect(flushedMessage?.message_nonce).toBe('nonce-1');
+      expect(onBottomContentChange).not.toHaveBeenCalled();
+    });
+
+    test('arms bottom anchoring while an explicit scroll-to-bottom is settling', () => {
+      const onBottomContentChange = jest.fn();
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+          isScrollingToBottomRef: { current: true },
+          onBottomContentChange,
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        jest.advanceTimersByTime(32);
+      });
+
+      const [flushedMessage] = getLastFlushedMessages();
+      expect(flushedMessage?.message_id).toBe('1');
+      expect(flushedMessage?.message_nonce).toBe('nonce-1');
+      expect(onBottomContentChange).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not arm bottom anchoring when the user is reading backlog', () => {
+      const onBottomContentChange = jest.fn();
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+          onBottomContentChange,
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        jest.advanceTimersByTime(80);
+      });
+
+      expect(mockAddMessages).toHaveBeenCalled();
+      expect(onBottomContentChange).not.toHaveBeenCalled();
     });
 
     test('should deduplicate messages in buffer', () => {
@@ -203,13 +264,9 @@ describe('useChatMessages', () => {
         result.current.forceFlush();
       });
 
-      expect(mockAddMessages).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ message_id: '1' }),
-          expect.objectContaining({ message_id: '2' }),
-          expect.objectContaining({ message_id: '3' }),
-        ]),
-      );
+      expect(
+        getLastFlushedMessages().map(message => message.message_id),
+      ).toEqual(['1', '2', '3']);
       expect(result.current.getBufferSize()).toBe(0);
     });
   });
@@ -349,16 +406,11 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(80);
       });
 
-      expect(mockAddMessages).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ message_id: '0' }),
-          expect.objectContaining({ message_id: '249' }),
-        ]),
-      );
       expect(mockAddMessages).toHaveBeenCalledTimes(1);
-      const firstCall = (mockAddMessages as jest.Mock).mock
-        .calls[0] as unknown[];
-      expect(firstCall[0]).toHaveLength(250);
+      const flushedMessages = getLastFlushedMessages();
+      expect(flushedMessages).toHaveLength(250);
+      expect(flushedMessages[0]?.message_id).toBe('0');
+      expect(flushedMessages.at(-1)?.message_id).toBe('249');
       expect(result.current.getBufferSize()).toBe(0);
     });
 

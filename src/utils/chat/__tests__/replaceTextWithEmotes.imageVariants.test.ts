@@ -45,12 +45,18 @@ describe('replaceTextWithEmotes image variants', () => {
       bttvChannelEmotes: [emote],
     });
 
-    expect(result).toEqual([
-      expect.objectContaining({
-        type: 'emote',
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        image_variants: part.type === 'emote' ? part.image_variants : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      {
         content: 'VariantDance',
         image_variants: emote.image_variants,
-      }),
+        type: 'emote',
+      },
     ]);
   });
 
@@ -71,18 +77,24 @@ describe('replaceTextWithEmotes image variants', () => {
       ],
     });
 
-    expect(result).toEqual([
-      expect.objectContaining({
-        type: 'emote',
-        content: 'catJAM',
-        static_url:
-          'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
-        image_variants: expect.objectContaining({
-          static: expect.objectContaining({
-            '3x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
-          }),
-        }),
-      }),
-    ]);
+    const [emotePart] = result;
+    expect({
+      content:
+        emotePart && 'content' in emotePart ? emotePart.content : undefined,
+      static3x:
+        emotePart?.type === 'emote'
+          ? emotePart.image_variants?.static?.['3x']
+          : undefined,
+      static_url:
+        emotePart?.type === 'emote' ? emotePart.static_url : undefined,
+      type: emotePart?.type,
+    }).toEqual({
+      content: 'catJAM',
+      static3x:
+        'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
+      static_url:
+        'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
+      type: 'emote',
+    });
   });
 });

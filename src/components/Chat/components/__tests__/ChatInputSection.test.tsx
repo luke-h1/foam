@@ -50,12 +50,19 @@ describe('ChatInputSection', () => {
       </SafeAreaProvider>,
     );
 
-    expect(mockChatComposer).toHaveBeenCalledWith(
-      expect.objectContaining({
-        blurOnSubmit: true,
-        returnKeyType: 'send',
-        submitBehavior: 'blurAndSubmit',
-      }),
-    );
+    const props = mockChatComposer.mock.calls[0]?.[0] as {
+      blurOnSubmit?: boolean;
+      returnKeyType?: string;
+      submitBehavior?: string;
+    };
+    expect({
+      blurOnSubmit: props.blurOnSubmit,
+      returnKeyType: props.returnKeyType,
+      submitBehavior: props.submitBehavior,
+    }).toEqual({
+      blurOnSubmit: true,
+      returnKeyType: 'send',
+      submitBehavior: 'blurAndSubmit',
+    });
   });
 });

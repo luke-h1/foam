@@ -4,7 +4,8 @@ import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { render, fireEvent } from '@testing-library/react-native';
+import { act, render, fireEvent } from '@testing-library/react-native';
+import type { ReactTestInstance } from 'react-test-renderer';
 import { RichChatMessage } from '../RichChatMessage';
 
 jest.mock('@app/utils/date-time/date', () => ({
@@ -67,6 +68,18 @@ const createMockMessage = (
   };
 };
 
+const MESSAGE_LONG_PRESS_DELAY_MS = 650;
+
+function fireMessageLongPress(element: ReactTestInstance) {
+  jest.useFakeTimers();
+  fireEvent(element, 'touchStart');
+  act(() => {
+    jest.advanceTimersByTime(MESSAGE_LONG_PRESS_DELAY_MS);
+  });
+  fireEvent(element, 'touchEnd');
+  jest.useRealTimers();
+}
+
 describe('RichChatMessage', () => {
   const mockOnReply = jest.fn();
   const mockOnMessageLongPress = jest.fn();
@@ -97,23 +110,25 @@ describe('RichChatMessage', () => {
         { type: 'text', content: 'Hello world!' },
       ]);
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByText('Hello world!'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).toHaveBeenCalledTimes(1);
-      expect(mockOnReply).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message_id: 'msg-123',
-          sender: 'testuser',
-          userstate: expect.objectContaining({
-            username: 'testuser',
-            color: '#FF0000',
-          }),
-        }),
-      );
+      const replyMessage = mockOnReply.mock.calls[0]?.[0];
+      expect({
+        color: replyMessage?.userstate.color,
+        message_id: replyMessage?.message_id,
+        sender: replyMessage?.sender,
+        username: replyMessage?.userstate.username,
+      }).toEqual({
+        color: '#FF0000',
+        message_id: 'msg-123',
+        sender: 'testuser',
+        username: 'testuser',
+      });
     });
 
     test('should NOT call onReply when system messages (STV emote added) are long pressed', () => {
@@ -155,7 +170,7 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByTestId('chat-message'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).not.toHaveBeenCalled();
     });
@@ -199,7 +214,7 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByTestId('chat-message'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).not.toHaveBeenCalled();
     });
@@ -219,11 +234,11 @@ describe('RichChatMessage', () => {
         },
       ]);
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByText('Thanks for subscribing!'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).not.toHaveBeenCalled();
     });
@@ -243,11 +258,11 @@ describe('RichChatMessage', () => {
         },
       ]);
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByText('Keep up the great content!'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).not.toHaveBeenCalled();
     });
@@ -258,11 +273,11 @@ describe('RichChatMessage', () => {
         { username: undefined },
       );
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByText('Anonymous message'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).not.toHaveBeenCalled();
     });
@@ -274,11 +289,11 @@ describe('RichChatMessage', () => {
         { sender: 'System' },
       );
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByText('Connected to channel'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).not.toHaveBeenCalled();
     });
@@ -290,11 +305,11 @@ describe('RichChatMessage', () => {
         { sender: 'system' },
       );
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByText('Connection established'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).not.toHaveBeenCalled();
     });
@@ -387,7 +402,7 @@ describe('RichChatMessage', () => {
         { type: 'text', content: 'Hello world!' },
       ]);
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage
           {...message}
           onReply={mockOnReply}
@@ -395,20 +410,21 @@ describe('RichChatMessage', () => {
         />,
       );
 
-      const textElement = getByText('Hello world!');
-      fireEvent(textElement, 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnMessageLongPress).toHaveBeenCalledTimes(1);
-      expect(mockOnMessageLongPress).toHaveBeenCalledWith(
-        expect.objectContaining({
-          username: 'testuser',
-          login: 'testuser',
-          userId: '123456',
-          messageData: expect.objectContaining({
-            message_id: 'msg-123',
-          }),
-        }),
-      );
+      const longPressData = mockOnMessageLongPress.mock.calls[0]?.[0];
+      expect({
+        login: longPressData?.login,
+        message_id: longPressData?.messageData.message_id,
+        userId: longPressData?.userId,
+        username: longPressData?.username,
+      }).toEqual({
+        login: 'testuser',
+        message_id: 'msg-123',
+        userId: '123456',
+        username: 'testuser',
+      });
     });
 
     test('should render emotes in messages', () => {
@@ -504,25 +520,30 @@ describe('RichChatMessage', () => {
         },
       );
 
-      const { getByText } = render(
+      const { getByTestId } = render(
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      fireEvent(getByText('Test message'), 'longPress');
+      fireMessageLongPress(getByTestId('chat-message'));
 
-      expect(mockOnReply).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: expect.any(String),
-          message_id: 'unique-msg-id',
-          channel: 'test-channel',
-          sender: 'TestUser',
-          message: [{ type: 'text', content: 'Test message' }],
-          userstate: expect.objectContaining({
-            username: 'TestUser',
-            color: '#00FF00',
-          }),
-        }),
-      );
+      const replyMessage = mockOnReply.mock.calls[0]?.[0];
+      expect({
+        channel: replyMessage?.channel,
+        color: replyMessage?.userstate.color,
+        id: typeof replyMessage?.id,
+        message: replyMessage?.message,
+        message_id: replyMessage?.message_id,
+        sender: replyMessage?.sender,
+        username: replyMessage?.userstate.username,
+      }).toEqual({
+        channel: 'test-channel',
+        color: '#00FF00',
+        id: 'string',
+        message: [{ type: 'text', content: 'Test message' }],
+        message_id: 'unique-msg-id',
+        sender: 'TestUser',
+        username: 'TestUser',
+      });
     });
   });
 });

@@ -77,13 +77,27 @@ export const useChatScroll = ({
     }
   }, []);
 
-  const scrollToEndOnce = useCallback(() => {
+  const scrollToLatestOnce = useCallback(() => {
     if (!isAtBottomRef.current || isDraggingRef.current) {
       return;
     }
 
-    listRef.current?.scrollToEnd?.({ animated: false });
-  }, [listRef]);
+    const list = listRef.current;
+    if (!list) {
+      return;
+    }
+
+    list.scrollToEnd?.({ animated: false });
+    const newestIndex = getMessagesLength() - 1;
+    if (newestIndex < 0) {
+      return;
+    }
+    void list.scrollToIndex?.({
+      animated: false,
+      index: newestIndex,
+      viewPosition: 1,
+    });
+  }, [getMessagesLength, listRef]);
 
   const handleScrollBeginDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -266,6 +280,9 @@ export const useChatScroll = ({
     if (getMessagesLength() === 0 || !isAtBottomRef.current) {
       return;
     }
+    if (shouldAnchorBottomOnContentChangeRef.current) {
+      return;
+    }
 
     markAtBottom();
     shouldAnchorBottomOnContentChangeRef.current = true;
@@ -283,17 +300,17 @@ export const useChatScroll = ({
     }
     bottomContentAnchorTickRef.current = setTimeout(() => {
       bottomContentAnchorTickRef.current = null;
-      scrollToEndOnce();
+      scrollToLatestOnce();
     }, 0);
-  }, [getMessagesLength, markAtBottom, scrollToEndOnce]);
+  }, [getMessagesLength, markAtBottom, scrollToLatestOnce]);
 
   const handleContentSizeChange = useCallback(() => {
     if (!shouldAnchorBottomOnContentChangeRef.current) {
       return;
     }
 
-    scrollToEndOnce();
-  }, [scrollToEndOnce]);
+    scrollToLatestOnce();
+  }, [scrollToLatestOnce]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);

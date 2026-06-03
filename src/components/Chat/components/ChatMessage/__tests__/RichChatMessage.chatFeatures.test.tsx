@@ -54,13 +54,16 @@ describe('RichChatMessage chat features', () => {
 
     fireEvent.press(getByTestId('chat-username-button'));
 
-    expect(onUsernamePress).toHaveBeenCalledWith(
-      expect.objectContaining({
-        username: 'testuser',
-        login: 'testuser',
-        userId: '123456',
-      }),
-    );
+    const pressData = onUsernamePress.mock.calls[0]?.[0];
+    expect({
+      login: pressData?.login,
+      userId: pressData?.userId,
+      username: pressData?.username,
+    }).toEqual({
+      login: 'testuser',
+      userId: '123456',
+      username: 'testuser',
+    });
   });
 
   test('can hide timestamps when disabled', () => {

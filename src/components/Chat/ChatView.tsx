@@ -73,7 +73,6 @@ export const ChatView = memo(
       hiddenUsers,
       hidePhraseFromView,
       hideUserFromView,
-      highlightedReplyTargetMessageId,
       highlightedReplyTargetTimeoutRef,
       highlightedUsers,
       hydratedVisibleAssetKeysRef,
@@ -88,6 +87,7 @@ export const ChatView = memo(
     const listRef = useRef<ChatListRef | null>(null);
     const inputShellRef = useRef<ChatInputShellHandle>(null);
     const overlayControllerRef = useRef<ChatOverlayControllerHandle>(null);
+    const isLoadingRecentMessagesRef = useRef(false);
 
     const { canFetchCosmetics, fetchedCosmeticsUsersRef, fetchUserCosmetics } =
       useChatCosmetics({
@@ -170,6 +170,7 @@ export const ChatView = memo(
     } = useChatMessages({
       isAtBottomRef,
       isScrollingToBottomRef,
+      onBottomContentChange: maintainBottomAfterContentChange,
       onUnreadIncrement: useCallback(
         (count: number) => setUnreadCount(prev => prev + count),
         [setUnreadCount],
@@ -214,6 +215,7 @@ export const ChatView = memo(
       channelName,
       clearLocalMessages,
       handleNewMessage,
+      isLoadingRecentMessagesRef,
       listRef,
       messages$,
       moderateBufferedMessageById,
@@ -261,6 +263,7 @@ export const ChatView = memo(
       channelName,
       forceFlush,
       handleRecentIrcMessage,
+      isLoadingRecentMessagesRef,
       scrollToBottom,
       showRecentMessages,
     });
@@ -352,7 +355,6 @@ export const ChatView = memo(
       renderItem,
     } = useChatRowRenderer({
       channelId,
-      highlightedReplyTargetMessageId,
       highlightedReplyTargetTimeoutRef,
       highlightedUsers,
       listRef,

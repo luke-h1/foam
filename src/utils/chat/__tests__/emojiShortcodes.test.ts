@@ -53,20 +53,34 @@ describe('emoji shortcode parsing', () => {
       inputString: 'hello :joy: :haha:',
     });
 
-    expect(result).toEqual([
-      { type: 'text', content: 'hello' },
-      { type: 'text', content: ' ' },
-      expect.objectContaining({
-        type: 'emote',
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        name: part.type === 'emote' ? part.name : undefined,
+        original_name: part.type === 'emote' ? part.original_name : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      {
+        content: 'hello',
+        name: undefined,
+        original_name: undefined,
+        type: 'text',
+      },
+      { content: ' ', name: undefined, original_name: undefined, type: 'text' },
+      {
+        content: ':joy:',
         name: ':joy:',
         original_name: ':joy:',
-      }),
-      { type: 'text', content: ' ' },
-      expect.objectContaining({
         type: 'emote',
+      },
+      { content: ' ', name: undefined, original_name: undefined, type: 'text' },
+      {
+        content: ':haha:',
         name: ':haha:',
         original_name: ':haha:',
-      }),
+        type: 'emote',
+      },
     ]);
   });
 
@@ -76,13 +90,20 @@ describe('emoji shortcode parsing', () => {
       inputString: '😂',
     });
 
-    expect(result).toEqual([
-      expect.objectContaining({
-        type: 'emote',
-        name: ':joy:',
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        name: part.type === 'emote' ? part.name : undefined,
+        original_name: part.type === 'emote' ? part.original_name : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      {
         content: '😂',
+        name: ':joy:',
         original_name: '😂',
-      }),
+        type: 'emote',
+      },
     ]);
   });
 
@@ -106,13 +127,20 @@ describe('emoji shortcode parsing', () => {
       ],
     });
 
-    expect(result).toEqual([
-      expect.objectContaining({
-        type: 'emote',
+    expect(
+      result.map(part => ({
+        content: 'content' in part ? part.content : undefined,
+        id: part.type === 'emote' ? part.id : undefined,
+        site: part.type === 'emote' ? part.site : undefined,
+        type: part.type,
+      })),
+    ).toEqual([
+      {
         content: 'SubHype',
         id: 'emotesv2_sub',
         site: 'Twitch Subscriber',
-      }),
+        type: 'emote',
+      },
     ]);
   });
 });
