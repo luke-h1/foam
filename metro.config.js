@@ -1,5 +1,8 @@
 const { withRozenite } = require('@rozenite/metro');
 const {
+  withRozeniteRequireProfiler,
+} = require('@rozenite/require-profiler-plugin/metro');
+const {
   withStorybook,
 } = require('@storybook/react-native/metro/withStorybook');
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
@@ -37,4 +40,5 @@ const configWithStorybook = withStorybook(config, {
 
 module.exports = withRozenite(configWithStorybook, {
   enabled: process.env.EXPO_PUBLIC_WITH_ROZENITE === 'true',
+  enhanceMetroConfig: config => withRozeniteRequireProfiler(config),
 });

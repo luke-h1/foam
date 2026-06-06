@@ -11,9 +11,13 @@ import { sevenTvV4Client } from '@app/services/gql/client';
 import { storage } from '@app/lib/storage';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';
-import { useMMKVDevTools } from '@rozenite/mmkv-plugin';
 import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
 import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
+import { useRequireProfilerDevTools } from '@rozenite/require-profiler-plugin';
+import {
+  createMMKVStorageAdapter,
+  useRozeniteStoragePlugin,
+} from '@rozenite/storage-plugin';
 import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
@@ -88,10 +92,15 @@ function QueryDevTools({ children }: PropsWithChildren) {
 function DevTools() {
   useNetworkActivityDevTools();
   usePerformanceMonitorDevTools();
-  useMMKVDevTools({
-    storages: {
-      storageService: storage,
-    },
+  useRequireProfilerDevTools();
+  useRozeniteStoragePlugin({
+    storages: [
+      createMMKVStorageAdapter({
+        storages: {
+          storageService: storage,
+        },
+      }),
+    ],
   });
 
   return null;
