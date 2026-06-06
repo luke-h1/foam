@@ -1,11 +1,7 @@
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
+import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
-
-export const TOP_TAB_ROUTES = [
-  { key: 'streams', title: 'Streams' },
-  { key: 'categories', title: 'Categories' },
-] as const;
 
 type TopSegmentControlProps = {
   index: number;

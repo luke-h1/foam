@@ -24,6 +24,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type RefObject,
 } from 'react';
 import {
   View,
@@ -319,16 +320,6 @@ export function SearchScreen() {
   const activeResults =
     selectedFilter === 'channels' ? searchResults : categoryResults;
 
-  const historySection =
-    searchResults.length === 0 && searchHistoryQueries.length > 0 ? (
-      <SearchHistoryV2
-        history={searchHistoryQueries}
-        onClearAll={handleSearchHistoryClearAll}
-        onSelectItem={handleSearchHistorySelect}
-        onClearItem={handleSearchHistoryClearItem}
-      />
-    ) : null;
-
   const renderItem: ListRenderItem<SearchChannelResponse> = useCallback(
     ({ item }) => {
       return (
@@ -395,72 +386,8 @@ export function SearchScreen() {
     [handleQuickActionPress],
   );
 
-  const headerContent = useMemo(
-    () => (
-      <View style={styles.header}>
-        <View style={styles.filterBar}>
-          <SegmentedControl
-            currentIndex={selectedFilter === 'channels' ? 0 : 1}
-            onChange={handleFilterChange}
-            items={[{ label: 'Channels' }, { label: 'Categories' }]}
-          />
-        </View>
-
-        {query.length === 0 && searchResults.length === 0 && (
-          <View style={styles.quickActionsSection}>
-            <View style={styles.sectionHeader}>
-              <Text
-                type='xs'
-                weight='semibold'
-                color='gray.textLow'
-                style={styles.sectionTitle}
-              >
-                START WITH
-              </Text>
-              <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
-                Quick routes
-              </Text>
-            </View>
-            <FlashList
-              horizontal
-              data={SEARCH_QUICK_ACTIONS}
-              keyExtractor={getQuickActionKey}
-              renderItem={renderQuickActionItem}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.quickActionsRail}
-              style={styles.quickActionsList}
-            />
-          </View>
-        )}
-
-        {query.length > 1 && activeResults.length > 0 && (
-          <View style={styles.sectionHeader}>
-            <Text
-              type='xs'
-              weight='semibold'
-              color='gray.textLow'
-              style={styles.sectionTitle}
-            >
-              {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
-            </Text>
-            <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
-              {selectedFilter === 'channels'
-                ? 'Matching channels'
-                : 'Matching categories'}
-            </Text>
-          </View>
-        )}
-      </View>
-    ),
-    [
-      query,
-      selectedFilter,
-      activeResults.length,
-      searchResults.length,
-      handleFilterChange,
-      renderQuickActionItem,
-    ],
-  );
+  const showSearchHistory =
+    searchResults.length === 0 && searchHistoryQueries.length > 0;
 
   return (
     <View style={styles.container}>
@@ -475,32 +402,147 @@ export function SearchScreen() {
         placeholder='Search channels, games, or categories'
         placement='automatic'
       />
-      {headerContent}
-      {historySection ? (
-        <View style={styles.historyContainer}>{historySection}</View>
+      <SearchHeader
+        activeResults={activeResults}
+        handleFilterChange={handleFilterChange}
+        query={query}
+        renderQuickActionItem={renderQuickActionItem}
+        searchResultsLength={searchResults.length}
+        selectedFilter={selectedFilter}
+      />
+      {showSearchHistory ? (
+        <View style={styles.historyContainer}>
+          <SearchHistoryV2
+            history={searchHistoryQueries}
+            onClearAll={handleSearchHistoryClearAll}
+            onSelectItem={handleSearchHistorySelect}
+            onClearItem={handleSearchHistoryClearItem}
+          />
+        </View>
       ) : null}
-      <FlashList
-        ref={listRef}
-        getItemType={item =>
-          isSearchChannelItem(item) ? 'search-channel' : 'search-category'
-        }
-        removeClippedSubviews
-        showsVerticalScrollIndicator={false}
-        contentInsetAdjustmentBehavior='automatic'
-        data={activeResults}
-        keyboardDismissMode='on-drag'
-        keyboardShouldPersistTaps='handled'
-        renderItem={
-          selectedFilter === 'channels'
-            ? (renderItem as ListRenderItem<SearchChannelResponse | Category>)
-            : (renderCategoryItem as ListRenderItem<
-                SearchChannelResponse | Category
-              >)
-        }
-        keyExtractor={getSearchResultKey}
-        style={styles.resultsList}
+      <SearchResultsList
+        activeResults={activeResults}
+        listRef={listRef}
+        renderCategoryItem={renderCategoryItem}
+        renderItem={renderItem}
+        selectedFilter={selectedFilter}
       />
     </View>
+  );
+}
+
+type SearchHeaderProps = {
+  activeResults: SearchItem[];
+  handleFilterChange: (index: number) => void;
+  query: string;
+  renderQuickActionItem: ListRenderItem<SearchQuickAction>;
+  searchResultsLength: number;
+  selectedFilter: SearchFilter;
+};
+
+function SearchHeader({
+  activeResults,
+  handleFilterChange,
+  query,
+  renderQuickActionItem,
+  searchResultsLength,
+  selectedFilter,
+}: SearchHeaderProps) {
+  return (
+    <View style={styles.header}>
+      <View style={styles.filterBar}>
+        <SegmentedControl
+          currentIndex={selectedFilter === 'channels' ? 0 : 1}
+          onChange={handleFilterChange}
+          items={[{ label: 'Channels' }, { label: 'Categories' }]}
+        />
+      </View>
+
+      {query.length === 0 && searchResultsLength === 0 && (
+        <View style={styles.quickActionsSection}>
+          <View style={styles.sectionHeader}>
+            <Text
+              type='xs'
+              weight='semibold'
+              color='gray.textLow'
+              style={styles.sectionTitle}
+            >
+              START WITH
+            </Text>
+            <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
+              Quick routes
+            </Text>
+          </View>
+          <FlashList
+            horizontal
+            data={SEARCH_QUICK_ACTIONS}
+            keyExtractor={getQuickActionKey}
+            renderItem={renderQuickActionItem}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.quickActionsRail}
+            style={styles.quickActionsList}
+          />
+        </View>
+      )}
+
+      {query.length > 1 && activeResults.length > 0 && (
+        <View style={styles.sectionHeader}>
+          <Text
+            type='xs'
+            weight='semibold'
+            color='gray.textLow'
+            style={styles.sectionTitle}
+          >
+            {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
+          </Text>
+          <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
+            {selectedFilter === 'channels'
+              ? 'Matching channels'
+              : 'Matching categories'}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+type SearchResultsListProps = {
+  activeResults: SearchItem[];
+  listRef: RefObject<FlashListRef<SearchItem> | null>;
+  renderCategoryItem: ListRenderItem<Category>;
+  renderItem: ListRenderItem<SearchChannelResponse>;
+  selectedFilter: SearchFilter;
+};
+
+function SearchResultsList({
+  activeResults,
+  listRef,
+  renderCategoryItem,
+  renderItem,
+  selectedFilter,
+}: SearchResultsListProps) {
+  return (
+    <FlashList
+      ref={listRef}
+      getItemType={item =>
+        isSearchChannelItem(item) ? 'search-channel' : 'search-category'
+      }
+      removeClippedSubviews
+      showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior='automatic'
+      data={activeResults}
+      keyboardDismissMode='on-drag'
+      keyboardShouldPersistTaps='handled'
+      renderItem={
+        selectedFilter === 'channels'
+          ? (renderItem as ListRenderItem<SearchChannelResponse | Category>)
+          : (renderCategoryItem as ListRenderItem<
+              SearchChannelResponse | Category
+            >)
+      }
+      keyExtractor={getSearchResultKey}
+      style={styles.resultsList}
+    />
   );
 }
 

@@ -7,7 +7,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { TabView, type SceneRendererProps } from 'react-native-tab-view';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
-import { TOP_TAB_ROUTES, TopSegmentControl } from './TopSegmentControl';
+import { TopSegmentControl } from './TopSegmentControl';
+import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
 type Route = { key: string; title: string };
