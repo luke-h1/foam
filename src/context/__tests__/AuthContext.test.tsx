@@ -486,6 +486,86 @@ describe('AuthContext', () => {
       });
     });
 
+    test('keeps stored user token when startup validation has a transient error', async () => {
+      const storedUserToken = {
+        accessToken: 'stored_user_token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        refreshToken: 'stored_refresh_token',
+        expiresAt: Date.now() + 60 * 60 * 1000,
+      };
+
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      SecureStore.getItemAsync.mockResolvedValueOnce(
+        JSON.stringify(storedUserToken),
+      );
+      twitchService.validateToken.mockRejectedValueOnce(
+        new Error('network unavailable during update restart'),
+      );
+      twitchService.getRefreshToken.mockRejectedValueOnce(
+        new Error('refresh endpoint unavailable during update restart'),
+      );
+
+      const { result } = renderHook(() => useAuthContext(), {
+        wrapper,
+      });
+
+      await waitFor(() => {
+        expect(result.current.ready).toBe(true);
+        expect(result.current.authState).toEqual({
+          isAnonAuth: false,
+          isLoggedIn: true,
+          token: storedUserToken,
+        });
+        expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+          storedUserToken.accessToken,
+        );
+        expect(SecureStore.deleteItemAsync).not.toHaveBeenCalledWith(
+          'V1_foam-user',
+        );
+        expect(twitchService.getDefaultToken).not.toHaveBeenCalled();
+      });
+    });
+
+    test('keeps stored user token when profile fetch has a transient error', async () => {
+      const storedUserToken = {
+        accessToken: 'stored_user_token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        refreshToken: 'stored_refresh_token',
+        expiresAt: Date.now() + 60 * 60 * 1000,
+      };
+
+      SecureStore.getItemAsync.mockResolvedValueOnce(null);
+      SecureStore.getItemAsync.mockResolvedValueOnce(
+        JSON.stringify(storedUserToken),
+      );
+      twitchService.validateToken.mockResolvedValueOnce(true);
+      twitchService.getUserInfo.mockRejectedValueOnce(
+        new Error('profile endpoint unavailable during update restart'),
+      );
+
+      const { result } = renderHook(() => useAuthContext(), {
+        wrapper,
+      });
+
+      await waitFor(() => {
+        expect(result.current.ready).toBe(true);
+        expect(result.current.authState).toEqual({
+          isAnonAuth: false,
+          isLoggedIn: true,
+          token: storedUserToken,
+        });
+        expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
+          storedUserToken.accessToken,
+        );
+        expect(SecureStore.deleteItemAsync).not.toHaveBeenCalledWith(
+          'V1_foam-user',
+        );
+        expect(twitchService.getDefaultToken).not.toHaveBeenCalled();
+      });
+    });
+
     test('removes invalid auth token, fetches a new one, and sets state + twitchApi.setAuthToken', async () => {
       SecureStore.getItemAsync.mockResolvedValueOnce(null);
       SecureStore.getItemAsync.mockResolvedValueOnce(
