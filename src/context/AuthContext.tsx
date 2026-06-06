@@ -207,6 +207,17 @@ function applyRefreshedUserToken(
   };
 }
 
+function getUserAuthState(token: TwitchToken): State {
+  return {
+    ready: true,
+    authState: {
+      isAnonAuth: false,
+      isLoggedIn: true,
+      token,
+    },
+  };
+}
+
 async function refreshStoredUserToken(
   token: TwitchToken,
   reason: string,
@@ -436,6 +447,26 @@ export const AuthContextProvider = ({
       }
     }
 
+    const keepStoredUserToken = async (reason: string, error?: unknown) => {
+      if (!twitchToken) {
+        await doAnonAuth();
+        return false;
+      }
+
+      logger.auth.warn('Keeping stored user token after transient auth error', {
+        reason,
+        error,
+      });
+      twitchApi.setAuthToken(twitchToken.accessToken);
+      await SecureStore.setItemAsync(
+        storageKeys.user,
+        JSON.stringify(twitchToken),
+      );
+      setState(getUserAuthState(twitchToken));
+      queueInitialDataPrefetch();
+      return false;
+    };
+
     const refreshOrFallBackToAnon = async (reason: string, error?: unknown) => {
       if (!twitchToken) {
         await doAnonAuth();
@@ -447,6 +478,10 @@ export const AuthContextProvider = ({
       if (refreshedToken) {
         twitchToken = refreshedToken;
         return true;
+      }
+
+      if (reason === 'validation_error') {
+        return keepStoredUserToken(reason, error);
       }
 
       logger.auth.warn('User token refresh unavailable, falling back to anon', {
@@ -495,12 +530,8 @@ export const AuthContextProvider = ({
         },
       });
     } catch (error) {
-      logger.auth.error(
-        'Failed to get user info, falling back to anon auth',
-        error,
-      );
-      await SecureStore.deleteItemAsync(storageKeys.user);
-      await doAnonAuth();
+      logger.auth.warn('Failed to get user info during auth bootstrap', error);
+      await keepStoredUserToken('user_info_error', error);
     }
   };
 
