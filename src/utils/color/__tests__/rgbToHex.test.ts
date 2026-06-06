@@ -3,19 +3,18 @@ import { rgbToHex } from '../rgbToHex';
 describe('rgbToHex', () => {
   test('should convert valid RGB string to hex', () => {
     expect(rgbToHex('rgb(255, 0, 0)')).toBe('#ff0000');
-    expect(rgbToHex('rgb(0, 255, 0)')).toBe('#00ff00');
+    expect(rgbToHex('rgb(26, 201, 162)')).toBe('#1ac9a2');
     expect(rgbToHex('rgb(0, 0, 255)')).toBe('#0000ff');
     expect(rgbToHex('rgb(128, 128, 128)')).toBe('#808080');
   });
 
   test('should handle RGB values with spaces', () => {
     expect(rgbToHex('rgb( 255 , 0 , 0 )')).toBe('#ff0000');
-    expect(rgbToHex('rgb(0, 255, 0 )')).toBe('#00ff00');
+    expect(rgbToHex('rgb(26, 201, 162 )')).toBe('#1ac9a2');
   });
 
   test('should handle invalid RGB values by defaulting to 255', () => {
     expect(rgbToHex('rgb(invalid, 0, 0)')).toBe('#ff0000');
-    expect(rgbToHex('rgb(0, invalid, 0)')).toBe('#00ff00');
     expect(rgbToHex('rgb(0, 0, invalid)')).toBe('#0000ff');
   });
 
@@ -28,6 +27,6 @@ describe('rgbToHex', () => {
 
   test('should handle RGB values with decimal points', () => {
     expect(rgbToHex('rgb(255.5, 0, 0)')).toBe('#ff0000');
-    expect(rgbToHex('rgb(0, 255.9, 0)')).toBe('#00ff00');
+    expect(rgbToHex('rgb(26, 201.9, 162)')).toBe('#1ac9a2');
   });
 });

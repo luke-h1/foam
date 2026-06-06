@@ -208,8 +208,26 @@ jest.mock('react-native-reanimated', () => {
     useAnimatedRef: () => ({ current: null }),
     useAnimatedScrollHandler: (handler: unknown) => handler,
     useAnimatedStyle: (updater: () => unknown) => updater(),
-    useDerivedValue: (updater: () => unknown) => ({ value: updater() }),
-    useSharedValue: (value: unknown) => ({ value }),
+    useDerivedValue: (updater: () => unknown) => {
+      const sv = {
+        value: updater(),
+        get: () => sv.value,
+        set: (v: unknown) => {
+          sv.value = v;
+        },
+      };
+      return sv;
+    },
+    useSharedValue: (value: unknown) => {
+      const sv = {
+        value,
+        get: () => sv.value,
+        set: (v: unknown) => {
+          sv.value = v;
+        },
+      };
+      return sv;
+    },
     withDelay: (_delay: number, value: unknown) => value,
     withRepeat: (value: unknown) => value,
     withSequence: (...values: unknown[]) => values.at(-1),

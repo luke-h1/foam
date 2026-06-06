@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { forwardRef, memo, useImperativeHandle, useMemo } from 'react';
+import { useImperativeHandle, type Ref } from 'react';
 import { Linking, StyleSheet, View, type DimensionValue } from 'react-native';
 
 export interface StreamPlayerRef {
@@ -51,6 +51,7 @@ export interface StreamPlayerProps {
   onPlay?: () => void;
   onReady?: () => void;
   onRefresh?: () => void;
+  onSharePress?: () => void;
   onVideoAreaPress?: () => void;
   onVideoAreaSwipeDown?: () => void;
   onWebViewLoaded?: () => void;
@@ -59,6 +60,7 @@ export interface StreamPlayerProps {
   streamInfo?: StreamInfo;
   video?: string;
   width?: DimensionValue;
+  ref?: Ref<StreamPlayerRef>;
 }
 
 function getEmbedParent(parent?: string): string {
@@ -111,106 +113,97 @@ function buildTwitchPlayerUrl({
   return `https://player.twitch.tv/?${params.toString()}`;
 }
 
-export const StreamPlayer = memo(
-  forwardRef<StreamPlayerRef, StreamPlayerProps>(function StreamPlayer(
-    {
-      autoplay = true,
-      channel,
-      clip,
-      height,
-      muted = false,
-      onReady,
-      onRefresh,
-      onWebViewLoaded,
-      parent,
-      video,
-      width,
-    },
+export function StreamPlayer({
+  autoplay = true,
+  channel,
+  clip,
+  height,
+  muted = false,
+  onReady,
+  onRefresh,
+  onWebViewLoaded,
+  parent,
+  video,
+  width,
+  ref,
+}: StreamPlayerProps) {
+  const embedParent = getEmbedParent(parent);
+  const playerUrl = buildTwitchPlayerUrl({
+    autoplay,
+    channel,
+    clip,
+    muted,
+    parent: embedParent,
+    video,
+  });
+
+  useImperativeHandle(
     ref,
-  ) {
-    const embedParent = getEmbedParent(parent);
-    const playerUrl = useMemo(
-      () =>
-        buildTwitchPlayerUrl({
-          autoplay,
-          channel,
-          clip,
-          muted,
-          parent: embedParent,
-          video,
-        }),
-      [autoplay, channel, clip, embedParent, muted, video],
-    );
+    () => ({
+      forceRefresh: () => onRefresh?.(),
+      getChannel: () => channel,
+      getCurrentTime: async () => 0,
+      getDuration: async () => 0,
+      getMuted: () => muted,
+      getPaused: () => false,
+      getVolume: () => (muted ? 0 : 1),
+      mute: () => undefined,
+      pause: () => undefined,
+      play: () => undefined,
+      seek: () => undefined,
+      setChannel: () => undefined,
+      setMuted: () => undefined,
+      setQuality: () => undefined,
+      setVideo: () => undefined,
+      setVolume: () => undefined,
+      unmute: () => undefined,
+    }),
+    [channel, muted, onRefresh],
+  );
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        forceRefresh: () => onRefresh?.(),
-        getChannel: () => channel,
-        getCurrentTime: async () => 0,
-        getDuration: async () => 0,
-        getMuted: () => muted,
-        getPaused: () => false,
-        getVolume: () => (muted ? 0 : 1),
-        mute: () => undefined,
-        pause: () => undefined,
-        play: () => undefined,
-        seek: () => undefined,
-        setChannel: () => undefined,
-        setMuted: () => undefined,
-        setQuality: () => undefined,
-        setVideo: () => undefined,
-        setVolume: () => undefined,
-        unmute: () => undefined,
-      }),
-      [channel, muted, onRefresh],
-    );
+  const playerWidth = width ?? '100%';
+  const playerHeight = height ?? '100%';
 
-    const playerWidth = width ?? '100%';
-    const playerHeight = height ?? '100%';
-
-    return (
-      <View
-        style={[styles.container, { width: playerWidth, height: playerHeight }]}
-      >
-        <iframe
-          title='Twitch video player'
-          allow='autoplay; encrypted-media; fullscreen; picture-in-picture'
-          allowFullScreen
-          onLoad={() => {
-            onReady?.();
-            onWebViewLoaded?.();
-          }}
-          src={playerUrl}
-          style={styles.iframe}
-        />
-        {!clip && (
-          <View style={styles.footer}>
-            <Text color='gray.contrast' type='xs' numberOfLines={1}>
-              {channel ?? 'Twitch'} on Twitch
+  return (
+    <View
+      style={[styles.container, { width: playerWidth, height: playerHeight }]}
+    >
+      <iframe
+        title='Twitch video player'
+        sandbox='allow-scripts allow-popups allow-popups-to-escape-sandbox allow-presentation'
+        allow='autoplay; encrypted-media; fullscreen; picture-in-picture'
+        allowFullScreen
+        onLoad={() => {
+          onReady?.();
+          onWebViewLoaded?.();
+        }}
+        src={playerUrl}
+        style={styles.iframe}
+      />
+      {!clip && (
+        <View style={styles.footer}>
+          <Text color='gray.contrast' type='xs' numberOfLines={1}>
+            {channel ?? 'Twitch'} on Twitch
+          </Text>
+          <Button
+            onPress={() => {
+              void Linking.openURL(
+                video
+                  ? `https://www.twitch.tv/videos/${video}`
+                  : `https://www.twitch.tv/${channel ?? ''}`,
+              );
+            }}
+            style={styles.openButton}
+          >
+            <Text color='gray.contrast' type='xs' weight='semibold'>
+              Open
             </Text>
-            <Button
-              onPress={() => {
-                void Linking.openURL(
-                  video
-                    ? `https://www.twitch.tv/videos/${video}`
-                    : `https://www.twitch.tv/${channel ?? ''}`,
-                );
-              }}
-              style={styles.openButton}
-            >
-              <Text color='gray.contrast' type='xs' weight='semibold'>
-                Open
-              </Text>
-            </Button>
-          </View>
-        )}
-      </View>
-    );
-  }),
-);
-
-StreamPlayer.displayName = 'StreamPlayer';
+          </Button>
+        </View>
+      )}
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {

@@ -153,7 +153,6 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
-    "react-native-bootsplash": "^6.3.10",
     "react-native-compressor": "1.18.2",
     "react-native-device-info": "10.14.0",
     "react-native-ease": "0.7.2",
@@ -185,6 +184,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "eas-build-cache-provider": "20.0.0",
     "@babel/preset-react": "^7.27.1",
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
@@ -229,6 +229,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-promise": "^7.3.0",
     "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-doctor": "0.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-native": "^5.0.0",
     "expo-atlas": "^0.4.3",
@@ -283,9 +284,6 @@
   "expo": {
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": [
-          "core-haptics"
-        ],
         "listUnknownPackages": false
       }
     }

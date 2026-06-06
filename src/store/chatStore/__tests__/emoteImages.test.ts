@@ -1,17 +1,10 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import { cacheEmoteImages, clearEmoteImageCache } from '../emoteImages';
 import {
-  cacheEmoteImage,
-  cacheEmoteImages,
-  clearEmoteImageCache,
-  getCachedEmoteUri,
-} from '../emoteImages';
-import {
-  cacheImageFromUrl,
   clearSessionCache,
   getCachedImageUri,
   warmImageCache,
 } from '@app/utils/image/image-cache';
-import { logger } from '@app/utils/logger';
 
 jest.mock('@app/utils/image/image-cache', () => ({
   cacheImageFromUrl: jest.fn(),
@@ -20,19 +13,9 @@ jest.mock('@app/utils/image/image-cache', () => ({
   warmImageCache: jest.fn(),
 }));
 
-jest.mock('@app/utils/logger', () => ({
-  logger: {
-    chat: {
-      warn: jest.fn(),
-    },
-  },
-}));
-
-const cacheImageFromUrlMock = jest.mocked(cacheImageFromUrl);
 const clearSessionCacheMock = jest.mocked(clearSessionCache);
 const getCachedImageUriMock = jest.mocked(getCachedImageUri);
 const warmImageCacheMock = jest.mocked(warmImageCache);
-const loggerWarnMock = jest.mocked(logger.chat.warn);
 
 function emote(name: string, url = `https://example.com/${name}.webp`) {
   return {
@@ -51,55 +34,6 @@ describe('emote image cache helpers', () => {
   beforeEach(() => {
     clearEmoteImageCache();
     jest.clearAllMocks();
-  });
-
-  test('returns passthrough URLs without cache work for local or inline emotes', async () => {
-    await expect(cacheEmoteImage('data:image/png;base64,abc')).resolves.toBe(
-      'data:image/png;base64,abc',
-    );
-    expect(getCachedEmoteUri('file:///cache/emote.png')).toBe(
-      'file:///cache/emote.png',
-    );
-
-    expect(cacheImageFromUrlMock).not.toHaveBeenCalled();
-    expect(getCachedImageUriMock).not.toHaveBeenCalled();
-  });
-
-  test('reuses existing cached emote images', async () => {
-    getCachedImageUriMock.mockReturnValueOnce('file:///cache/emote.webp');
-
-    await expect(
-      cacheEmoteImage('https://example.com/emote.webp'),
-    ).resolves.toBe('file:///cache/emote.webp');
-
-    expect(cacheImageFromUrlMock).not.toHaveBeenCalled();
-  });
-
-  test('dedupes concurrent cache requests for the same emote URL', async () => {
-    cacheImageFromUrlMock.mockResolvedValue('file:///cache/emote.webp');
-
-    const first = cacheEmoteImage('https://example.com/emote.webp');
-    const second = cacheEmoteImage('https://example.com/emote.webp');
-
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      'file:///cache/emote.webp',
-      'file:///cache/emote.webp',
-    ]);
-    expect(cacheImageFromUrlMock).toHaveBeenCalledTimes(1);
-  });
-
-  test('falls back to the original URL when caching fails', async () => {
-    const error = new Error('download failed');
-    cacheImageFromUrlMock.mockRejectedValue(error);
-
-    await expect(
-      cacheEmoteImage('https://example.com/emote.webp'),
-    ).resolves.toBe('https://example.com/emote.webp');
-
-    expect(loggerWarnMock).toHaveBeenCalledWith(
-      'Failed to cache emote image https://example.com/emote.webp...:',
-      error,
-    );
   });
 
   test('warms uncached emote URLs once', async () => {
@@ -133,7 +67,7 @@ describe('emote image cache helpers', () => {
     expect(warmImageCacheMock).not.toHaveBeenCalled();
   });
 
-  test('clears session cache with in-flight emote cache state', () => {
+  test('clears session cache', () => {
     clearEmoteImageCache();
 
     expect(clearSessionCacheMock).toHaveBeenCalled();

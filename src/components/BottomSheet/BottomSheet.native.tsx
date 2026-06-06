@@ -3,14 +3,12 @@ import {
   type Detent,
 } from '@swmansion/react-native-bottom-sheet';
 import { theme } from '@app/styles/themes';
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PropsWithChildren,
-} from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import type { PropsWithChildren } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { BottomSheetSurface } from './BottomSheetSurface';
+
+const bottomSheetSurfaceElement = <BottomSheetSurface />;
 
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
@@ -60,18 +58,24 @@ export function BottomSheet({
   testID,
 }: BottomSheetProps) {
   const { height: windowHeight } = useWindowDimensions();
-  const detents = useMemo<Detent[]>(
-    () => resolveDetents(enableFixedSnapPoints, snapPoints, windowHeight),
-    [enableFixedSnapPoints, snapPoints, windowHeight],
+  const detents = resolveDetents(
+    enableFixedSnapPoints,
+    snapPoints,
+    windowHeight,
   );
   const initialOpenIndex = detents.length > 1 ? 1 : 0;
   const [index, setIndex] = useState(isPresented ? initialOpenIndex : 0);
   const didDismissRef = useRef(false);
+  const presentationKey = `${isPresented}:${initialOpenIndex}`;
+  const lastPresentationKeyRef = useRef(presentationKey);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (lastPresentationKeyRef.current !== presentationKey) {
+      lastPresentationKeyRef.current = presentationKey;
+      setIndex(isPresented ? initialOpenIndex : 0);
+    }
     didDismissRef.current = false;
-    setIndex(isPresented ? initialOpenIndex : 0);
-  }, [initialOpenIndex, isPresented]);
+  }, [initialOpenIndex, isPresented, presentationKey]);
 
   if (!isPresented) {
     return null;
@@ -90,10 +94,14 @@ export function BottomSheet({
         }
       }}
       scrimColor='rgba(0, 0, 0, 0.42)'
-      surface={<View style={[StyleSheet.absoluteFill, styles.surface]} />}
+      surface={bottomSheetSurfaceElement}
     >
       <View testID={testID} style={styles.content}>
-        {showDragIndicator ? <View style={styles.dragIndicator} /> : null}
+        {showDragIndicator ? (
+          <View style={styles.dragHandleRow}>
+            <View style={styles.dragIndicator} />
+          </View>
+        ) : null}
         {children}
       </View>
     </ModalBottomSheet>
@@ -102,15 +110,23 @@ export function BottomSheet({
 
 const styles = StyleSheet.create({
   content: {
+    alignItems: 'stretch',
+    alignSelf: 'stretch',
+    flex: 1,
+    minHeight: 0,
+    width: '100%',
+  },
+  dragHandleRow: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 6,
+    paddingTop: 10,
+    width: '100%',
   },
   dragIndicator: {
-    alignSelf: 'center',
     backgroundColor: 'rgba(255,255,255,0.38)',
     borderRadius: 999,
     height: 4,
-    marginBottom: 8,
-    marginTop: 8,
     width: 36,
   },
   surface: {

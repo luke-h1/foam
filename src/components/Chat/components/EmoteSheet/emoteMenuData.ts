@@ -1,4 +1,4 @@
-import { BrandIconName } from '@app/components/BrandIcon/BrandIcon';
+import { BrandIconName } from '@app/components/BrandIcon/brandIconRegistry';
 import { emptyEmoteData } from '@app/store/chatStore/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 
@@ -54,10 +54,10 @@ function chunk<TItem>(items: TItem[], size: number): TItem[][] {
 }
 
 function makeShortLabel(title: string): string {
-  const words = title
-    .split(/[\s·-]+/)
-    .map(word => word.trim())
-    .filter(Boolean);
+  const words = title.split(/[\s·-]+/).flatMap(word => {
+    const trimmed = word.trim();
+    return trimmed ? [trimmed] : [];
+  });
 
   if (words.length === 0) {
     return '?';
@@ -188,7 +188,9 @@ function createEmojiSetsFromInput(
 }
 
 function sortSets(sets: EmoteMenuSet[]): EmoteMenuSet[] {
-  return [...sets].sort((left, right) => left.title.localeCompare(right.title));
+  return sets
+    .slice()
+    .sort((left, right) => left.title.localeCompare(right.title));
 }
 
 function filterSet(set: EmoteMenuSet, query: string): EmoteMenuSet | null {

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
@@ -8,7 +9,6 @@ import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { memo, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -22,11 +22,6 @@ interface Props {
   onClose: () => void;
   selectedBadge: SanitisedBadgeSet;
 }
-
-type MetadataRow = {
-  label: string;
-  value?: string;
-};
 
 type PreviewAction = {
   icon: SymbolViewProps['name'];
@@ -42,53 +37,37 @@ function BadgePreviewSheetComponent(props: Props) {
     280,
     Math.min(screenWidth - theme.space16 * 2, 520),
   );
-  const scrollStyle = useMemo(
-    () => [styles.scroll, { maxHeight: Math.round(screenHeight * 0.58) }],
-    [screenHeight],
-  );
-  const containerStyle = useMemo(
-    () => [
-      styles.container,
-      {
-        maxHeight: Math.round(screenHeight * 0.82),
-        width: sheetWidth,
-      },
-    ],
-    [screenHeight, sheetWidth],
-  );
-
-  const handleCopy = useCallback(
-    (field: 'name' | 'url') => {
-      void Clipboard.setStringAsync(
-        field === 'name' ? selectedBadge.title : selectedBadge.url,
-      ).then(() =>
-        toast.success(
-          field === 'name' ? 'Badge name copied' : 'Badge URL copied',
-        ),
-      );
+  const scrollStyle = [
+    styles.scroll,
+    { maxHeight: Math.round(screenHeight * 0.58) },
+  ];
+  const containerStyle = [
+    styles.container,
+    {
+      maxHeight: Math.round(screenHeight * 0.82),
+      width: sheetWidth,
     },
-    [selectedBadge.title, selectedBadge.url],
-  );
+  ];
 
-  const metadataRows = useMemo<MetadataRow[]>(
-    () =>
-      [
-        { label: 'Type', value: selectedBadge.type },
-        { label: 'Provider', value: selectedBadge.provider?.toUpperCase() },
-        { label: 'Owner', value: selectedBadge.owner_username },
-        { label: 'Set', value: selectedBadge.set },
-        { label: 'ID', value: selectedBadge.id },
-      ].filter(row => Boolean(row.value)),
-    [
-      selectedBadge.id,
-      selectedBadge.owner_username,
-      selectedBadge.provider,
-      selectedBadge.set,
-      selectedBadge.type,
-    ],
-  );
+  const handleCopy = (field: 'name' | 'url') => {
+    void Clipboard.setStringAsync(
+      field === 'name' ? selectedBadge.title : selectedBadge.url,
+    ).then(() =>
+      toast.success(
+        field === 'name' ? 'Badge name copied' : 'Badge URL copied',
+      ),
+    );
+  };
 
-  const actions = useMemo<PreviewAction[]>(() => {
+  const metadataRows = [
+    { label: 'Type', value: selectedBadge.type },
+    { label: 'Provider', value: selectedBadge.provider?.toUpperCase() },
+    { label: 'Owner', value: selectedBadge.owner_username },
+    { label: 'Set', value: selectedBadge.set },
+    { label: 'ID', value: selectedBadge.id },
+  ].filter(row => Boolean(row.value));
+
+  const actions: PreviewAction[] = (() => {
     const items: PreviewAction[] = [
       {
         icon: 'doc.on.doc',
@@ -114,7 +93,7 @@ function BadgePreviewSheetComponent(props: Props) {
     }
 
     return items;
-  }, [handleCopy, selectedBadge.title, selectedBadge.url]);
+  })();
 
   return (
     <BottomSheet
@@ -193,7 +172,7 @@ function BadgePreviewSheetComponent(props: Props) {
                 <View style={styles.actionIconFrame}>
                   <SymbolView
                     name={action.icon}
-                    tintColor={theme.colorGreen}
+                    tintColor={theme.colorPrimary}
                     size={18}
                   />
                 </View>
@@ -244,8 +223,8 @@ const styles = StyleSheet.create({
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(74, 222, 128, 0.12)',
-    borderColor: 'rgba(74, 222, 128, 0.18)',
+    backgroundColor: 'rgba(26, 201, 162, 0.12)',
+    borderColor: 'rgba(26, 201, 162, 0.18)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,
     borderWidth: 1,
@@ -338,7 +317,7 @@ const styles = StyleSheet.create({
   previewPill: {
     alignSelf: 'flex-start',
     backgroundColor: theme.colorAccentSurface,
-    borderColor: 'rgba(74, 222, 128, 0.22)',
+    borderColor: 'rgba(26, 201, 162, 0.22)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
@@ -346,7 +325,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   previewPillText: {
-    color: theme.colorGreen,
+    color: theme.colorPrimary,
     fontSize: theme.fontSize11,
   },
   scroll: {

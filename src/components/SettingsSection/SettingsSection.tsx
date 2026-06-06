@@ -3,15 +3,28 @@ import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import type { AndroidSymbol } from 'expo-symbols';
+import type { SFSymbol } from 'sf-symbols-typescript';
 import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 type RowIcon =
   | {
       color?: string;
-      icon: SymbolViewProps['name'];
+      icon: SFSymbol;
+      androidIcon?: AndroidSymbol;
     }
   | undefined;
+
+function resolveIconName(
+  icon: SFSymbol,
+  androidIcon: AndroidSymbol | undefined,
+): SymbolViewProps['name'] {
+  if (!androidIcon) {
+    return icon;
+  }
+  return { ios: icon, android: androidIcon, web: androidIcon };
+}
 
 export function SettingsSection({
   title,
@@ -74,9 +87,9 @@ export function SettingsRow({
           ]}
         >
           <SymbolView
-            name={icon.icon}
+            name={resolveIconName(icon.icon, icon.androidIcon)}
             size={20}
-            tintColor={icon.color || theme.colorDarkGreen}
+            tintColor={icon.color || theme.colorPrimary}
           />
         </View>
       ) : null}

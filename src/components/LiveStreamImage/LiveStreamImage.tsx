@@ -1,5 +1,5 @@
-import { theme } from '@app/styles/themes';
 import { memo } from 'react';
+import { theme } from '@app/styles/themes';
 import { View, ViewStyle, StyleSheet } from 'react-native';
 import { Image } from '../Image/Image';
 
@@ -32,8 +32,6 @@ export const LiveStreamImage = memo(function LiveStreamImage({
     </View>
   );
 });
-
-LiveStreamImage.displayName = 'LiveStreamImage';
 
 const styles = StyleSheet.create({
   image: {},

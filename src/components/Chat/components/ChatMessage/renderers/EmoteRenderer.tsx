@@ -1,9 +1,9 @@
+import { memo } from 'react';
 import { Text } from '@app/components/ui/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { memo, useMemo } from 'react';
-
+import { View } from 'react-native';
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { ChatInlineImage } from './ChatInlineImage';
 
@@ -25,29 +25,41 @@ export const EmoteRenderer = memo(
     shouldOverlayPrevious = false,
     targetSize = 30,
   }: EmoteRendererProps) => {
-    const { height, width } = useMemo(
-      () =>
-        calculateAspectRatio(part.width || 20, part.height || 20, targetSize),
-      [part.width, part.height, targetSize],
+    const { height, width } = calculateAspectRatio(
+      part.width || 20,
+      part.height || 20,
+      targetSize,
     );
-    const displayUrl = useMemo(
-      () =>
-        getDisplayEmoteUrl({
-          image_variants: part.image_variants,
-          url: part.url,
-          static_url: part.static_url,
-          disableAnimations,
-        }),
-      [disableAnimations, part.image_variants, part.static_url, part.url],
-    );
+    const displayUrl = getDisplayEmoteUrl({
+      image_variants: part.image_variants,
+      url: part.url,
+      static_url: part.static_url,
+      disableAnimations,
+    });
 
     if (!displayUrl) {
+      const fallbackLabel = part.content || part.name;
+
+      if (!fallbackLabel) {
+        return (
+          <ChatMessagePressable
+            onLongPress={() => handleEmoteLongPress?.(part)}
+            style={getButtonStyle(width, shouldOverlayPrevious)}
+          >
+            <View
+              style={getEmoteContainerStyle(width, height)}
+              testID='chat-emote-placeholder'
+            />
+          </ChatMessagePressable>
+        );
+      }
+
       return (
         <ChatMessagePressable
           onLongPress={() => handleEmoteLongPress?.(part)}
           style={getButtonStyle(width, shouldOverlayPrevious)}
         >
-          <Text style={getNameStyle(width, height)}>{part.name || '?'}</Text>
+          <Text style={getNameStyle(width, height)}>{fallbackLabel}</Text>
         </ChatMessagePressable>
       );
     }
@@ -70,8 +82,6 @@ export const EmoteRenderer = memo(
     );
   },
 );
-
-EmoteRenderer.displayName = 'EmoteRenderer';
 
 function getEmoteContainerStyle(width: number, height: number) {
   return {

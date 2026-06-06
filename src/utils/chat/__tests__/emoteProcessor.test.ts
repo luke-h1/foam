@@ -1,5 +1,9 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
+import {
+  clearMentionLoginIndex,
+  registerMentionLogin,
+} from '../resolveMentionLogin';
 import { processEmotesWorklet } from '../emoteProcessor';
 
 const curtisEmote: SanitisedEmote = {
@@ -42,6 +46,7 @@ const emptyParams = {
   userstate: null,
   emojiEmotes: [],
   sevenTvGlobalEmotes: [],
+  sevenTvChannelEmotes: [],
   sevenTvPersonalEmotes: [],
   twitchGlobalEmotes: [],
   twitchChannelEmotes: [],
@@ -53,6 +58,100 @@ const emptyParams = {
 };
 
 describe('processEmotesWorklet', () => {
+  beforeEach(() => {
+    clearMentionLoginIndex();
+  });
+
+  test('parses @mentions as mention parts', () => {
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'hey @BungleXO look',
+    });
+
+    expect(
+      result.map(part => ({
+        type: part.type,
+        content: 'content' in part ? part.content : undefined,
+      })),
+    ).toEqual([
+      { type: 'text', content: 'hey' },
+      { type: 'text', content: ' ' },
+      { type: 'mention', content: '@BungleXO' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'look' },
+    ]);
+  });
+
+  test('rewrites mention casing when canonical login is known', () => {
+    registerMentionLogin('BungleXO');
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: '@bunglexo high hopes',
+    });
+
+    expect(result[0]).toMatchObject({
+      type: 'mention',
+      content: '@BungleXO',
+    });
+  });
+
+  test('does not treat emote names as substrings of @mentions', () => {
+    const singleLetterEmote = createEmote({ id: 'letter-o', name: 'o' });
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: '@BungleXO high hopes',
+      sevenTvChannelEmotes: [singleLetterEmote],
+    });
+
+    expect(
+      result.map(part => ({
+        type: part.type,
+        content: 'content' in part ? part.content : undefined,
+      })),
+    ).toEqual([
+      { type: 'mention', content: '@BungleXO' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'high' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'hopes' },
+    ]);
+  });
+
+  test('renders @EmoteName as emote when the mention matches the emote name', () => {
+    const waveEmote = createEmote({ id: 'wave-emote', name: 'Wave' });
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: '@Wave hello',
+      sevenTvChannelEmotes: [waveEmote],
+    });
+
+    expect(result[0]).toMatchObject({
+      type: 'emote',
+      name: 'Wave',
+      content: 'Wave',
+    });
+    expect(result[1]).toMatchObject({
+      type: 'mention',
+      content: '@Wave',
+    });
+  });
+
+  test('parses https URLs as purple link parts', () => {
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'https://tetr.io/#WLBR',
+    });
+
+    expect(result).toEqual([
+      {
+        type: 'link',
+        content: 'https://tetr.io/#WLBR',
+        url: 'https://tetr.io/#WLBR',
+      },
+    ]);
+  });
+
   test('matches emotes case-sensitively', () => {
     const lowerCaseResult = processEmotesWorklet({
       ...emptyParams,
@@ -146,5 +245,53 @@ describe('processEmotesWorklet', () => {
     const secondResult = processEmotesWorklet(params);
 
     expect(secondResult).toBe(firstResult);
+  });
+
+  test('keeps scoped emote cache entries distinct when middle emotes change', () => {
+    const firstPersonalEmote = createEmote({
+      id: 'personal-first',
+      name: 'First',
+      site: '7TV Personal',
+    });
+    const firstMiddleEmote = createEmote({
+      id: 'personal-middle-a',
+      name: 'MiddleA',
+      site: '7TV Personal',
+    });
+    const secondMiddleEmote = createEmote({
+      id: 'personal-middle-b',
+      name: 'MiddleB',
+      site: '7TV Personal',
+    });
+    const lastPersonalEmote = createEmote({
+      id: 'personal-last',
+      name: 'Last',
+      site: '7TV Personal',
+    });
+
+    const firstResult = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'MiddleA',
+      sevenTvPersonalEmotes: [
+        firstPersonalEmote,
+        firstMiddleEmote,
+        lastPersonalEmote,
+      ],
+    });
+    const secondResult = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'MiddleA',
+      sevenTvPersonalEmotes: [
+        firstPersonalEmote,
+        secondMiddleEmote,
+        lastPersonalEmote,
+      ],
+    });
+
+    expect(firstResult[0]).toMatchObject({
+      id: 'personal-middle-a',
+      type: 'emote',
+    });
+    expect(secondResult).toEqual([{ type: 'text', content: 'MiddleA' }]);
   });
 });

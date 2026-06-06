@@ -1,9 +1,9 @@
+import { useCallback, memo } from 'react';
 import { TwitchStream } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
-import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
@@ -28,7 +28,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 const CARD_SURFACE = 'rgba(255,255,255,0.035)';
 const CARD_BORDER = 'rgba(255,255,255,0.13)';
 
-export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
+function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const isMediaLayout = layout === 'media';
   const isTextLayout = layout === 'text';
   const thumbnailUrl = stream.thumbnail_url
@@ -271,8 +271,6 @@ export function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 }
 
 export const MemoizedLiveStreamCard = memo(LiveStreamCard);
-MemoizedLiveStreamCard.displayName = 'MemoizedLiveStreamCard';
-
 const styles = StyleSheet.create({
   cardWrapper: {
     width: '100%',
@@ -416,7 +414,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   liveBadge: {
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
     left: theme.space12,

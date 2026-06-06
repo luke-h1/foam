@@ -1,6 +1,4 @@
 import { FlashList } from '@app/components/FlashList/FlashList';
-import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
@@ -11,12 +9,17 @@ import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { memo, useCallback, useMemo, useRef } from 'react';
+import { useRef, type RefObject, useCallback } from 'react';
+import type { FlashListRef } from '@app/components/FlashList/FlashList';
 import { Alert, ScrollView, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 import { BlockedUsersActionButton } from './components/BlockedUsersActionButton';
 
 const SKELETON_COUNT = 5;
+const SKELETON_DATA = Array.from(
+  { length: SKELETON_COUNT },
+  (_, index) => index,
+);
 
 interface BlockedUserItemProps {
   user: UserBlockList;
@@ -25,7 +28,7 @@ interface BlockedUserItemProps {
   onUnblock: (userId: string, userName: string) => void;
 }
 
-const BlockedUserItem = memo(function BlockedUserItem({
+const BlockedUserItem = function BlockedUserItem({
   user,
   index,
   count,
@@ -59,16 +62,14 @@ const BlockedUserItem = memo(function BlockedUserItem({
       />
     </View>
   );
-});
-
-BlockedUserItem.displayName = 'BlockedUserItem';
+};
 
 interface BlockedUserItemSkeletonProps {
   index: number;
   count: number;
 }
 
-const BlockedUserItemSkeleton = memo(function BlockedUserItemSkeleton({
+const BlockedUserItemSkeleton = function BlockedUserItemSkeleton({
   index,
   count,
 }: BlockedUserItemSkeletonProps) {
@@ -87,9 +88,7 @@ const BlockedUserItemSkeleton = memo(function BlockedUserItemSkeleton({
       <Skeleton style={styles.iconSkeleton} />
     </View>
   );
-});
-
-BlockedUserItemSkeleton.displayName = 'BlockedUserItemSkeleton';
+};
 
 interface ListStatePanelProps {
   icon: SymbolViewProps['name'];
@@ -106,7 +105,7 @@ function ListStatePanel({
   description,
   actionLabel,
   onAction,
-  onRefresh,
+  onRefresh: _onRefresh,
 }: ListStatePanelProps) {
   return (
     <ScrollView
@@ -114,9 +113,6 @@ function ListStatePanel({
       contentContainerStyle={styles.stateContent}
       contentInsetAdjustmentBehavior='automatic'
       showsVerticalScrollIndicator={false}
-      refreshControl={
-        onRefresh ? <RefreshControl onRefresh={onRefresh} /> : undefined
-      }
     >
       <View style={styles.stateSection}>
         <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
@@ -192,23 +188,13 @@ function BlockedUsersList({
 
   useScrollToTop(listRef);
 
-  const renderItem = useCallback<ListRenderItem<UserBlockList>>(
-    ({ item, index }) => (
-      <BlockedUserItem
-        user={item}
-        index={index}
-        count={data?.length ?? 0}
-        onUnblock={onUnblock}
-      />
-    ),
-    [data?.length, onUnblock],
-  );
-
-  const renderSkeletonItem = useCallback<ListRenderItem<unknown>>(
-    ({ index }) => (
-      <BlockedUserItemSkeleton index={index} count={SKELETON_COUNT} />
-    ),
-    [],
+  const renderItem: ListRenderItem<UserBlockList> = ({ item, index }) => (
+    <BlockedUserItem
+      user={item}
+      index={index}
+      count={data?.length ?? 0}
+      onUnblock={onUnblock}
+    />
   );
 
   if (isLoading && !data) {
@@ -216,8 +202,8 @@ function BlockedUsersList({
       <View style={styles.content}>
         <FlashList
           ref={listRef}
-          data={Array.from({ length: SKELETON_COUNT })}
-          renderItem={renderSkeletonItem}
+          data={SKELETON_DATA}
+          renderItem={renderBlockedUserSkeletonItem}
           keyExtractor={(_, idx) => `skeleton-${idx}`}
           contentInsetAdjustmentBehavior='automatic'
           style={styles.list}
@@ -254,6 +240,27 @@ function BlockedUsersList({
   }
 
   return (
+    <BlockedUsersDataList
+      data={data}
+      listRef={listRef}
+      onRefresh={onRefresh}
+      renderItem={renderItem}
+    />
+  );
+}
+
+function BlockedUsersDataList({
+  data,
+  listRef,
+  onRefresh,
+  renderItem,
+}: {
+  data: UserBlockList[];
+  listRef: RefObject<FlashListRef<UserBlockList> | null>;
+  onRefresh: () => Promise<unknown>;
+  renderItem: ListRenderItem<UserBlockList>;
+}) {
+  return (
     <View style={styles.content}>
       <FlashList
         ref={listRef}
@@ -261,7 +268,7 @@ function BlockedUsersList({
         renderItem={renderItem}
         keyExtractor={item => item.user_id}
         contentInsetAdjustmentBehavior='automatic'
-        refreshControl={<RefreshControl onRefresh={onRefresh} />}
+        onRefresh={onRefresh}
         contentContainerStyle={styles.listContent}
         style={styles.list}
         ListHeaderComponent={<BlockedUsersSectionHeader count={data.length} />}
@@ -280,13 +287,9 @@ export function BlockedUsersScreen() {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
 
-  const userBlockListQuery = useMemo(
-    () =>
-      twitchQueries.getUserBlockList({
-        broadcasterId: user?.id as string,
-      }),
-    [user],
-  );
+  const userBlockListQuery = twitchQueries.getUserBlockList({
+    broadcasterId: user?.id as string,
+  });
 
   const { data, isLoading, isError } = useQuery({
     ...userBlockListQuery,
@@ -347,31 +350,23 @@ export function BlockedUsersScreen() {
     });
   }, [queryClient, userBlockListQuery.queryKey]);
 
-  const handleUnblockRequest = useCallback(
-    (userId: string, userName: string) => {
-      Alert.alert(
-        'Unblock User',
-        `Are you sure you want to unblock ${userName}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Unblock',
-            onPress: () => unblockUser(userId),
-            style: 'destructive',
-          },
-        ],
-      );
-    },
-    [unblockUser],
-  );
+  const handleUnblockRequest = (userId: string, userName: string) => {
+    Alert.alert(
+      'Unblock User',
+      `Are you sure you want to unblock ${userName}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unblock',
+          onPress: () => unblockUser(userId),
+          style: 'destructive',
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title='Blocked Users'
-        subtitle='Moderation'
-        size='compact'
-      />
       <BlockedUsersList
         data={data?.data}
         isLoading={isLoading}
@@ -497,3 +492,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
 });
+
+const renderBlockedUserSkeletonItem: ListRenderItem<number> = ({ index }) => (
+  <BlockedUserItemSkeleton index={index} count={SKELETON_COUNT} />
+);

@@ -72,10 +72,9 @@ export async function preloadEmotes(
   for (let i = 0; i < toPreload.length; i += BATCH_SIZE) {
     batches.push(toPreload.slice(i, i + BATCH_SIZE));
   }
-  // eslint-disable-next-line no-restricted-syntax
   for (const batch of batches) {
     // Sequential batches to avoid overwhelming the network
-    // eslint-disable-next-line no-await-in-loop
+    // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
     await Promise.allSettled(
       batch.map(url => {
         try {

@@ -1,9 +1,11 @@
+import { memo, useMemo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import type { SanitisedEmote } from '@app/types/emote';
-import { memo } from 'react';
+import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
 import { StyleSheet, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+
+const EMOTE_SUGGESTION_ITEM_SIZE = 44;
 
 interface EmoteSuggestionsProps {
   emotes: SanitisedEmote[];
@@ -13,6 +15,40 @@ interface EmoteSuggestionsProps {
   suggestionTranslateY: number;
 }
 
+function createRenderEmoteSuggestionItem(
+  onPress: (emote: SanitisedEmote) => void,
+) {
+  return function RenderEmoteSuggestionItem({
+    item,
+  }: LegendListRenderItemProps<SanitisedEmote>) {
+    return <EmoteSuggestionTile item={item} onPress={onPress} />;
+  };
+}
+
+function EmoteSuggestionTile({
+  item,
+  onPress,
+}: {
+  item: SanitisedEmote;
+  onPress: (emote: SanitisedEmote) => void;
+}) {
+  return (
+    <Button onPress={() => onPress(item)} style={styles.suggestionItem}>
+      <View style={styles.emoteTile}>
+        <Image
+          contentFit='contain'
+          source={item.url}
+          cacheVariant='emote'
+          style={styles.emoteImage}
+          useNitro
+          trackLoadTime
+          trackLoadContext='chat.emote-suggestions'
+        />
+      </View>
+    </Button>
+  );
+}
+
 export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
@@ -20,6 +56,10 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   suggestionScale,
   suggestionTranslateY,
 }: EmoteSuggestionsProps) {
+  const renderItem = useMemo(
+    () => createRenderEmoteSuggestionItem(handleEmotePress),
+    [handleEmotePress],
+  );
   const suggestionStyle = {
     opacity: suggestionOpacity,
     transform: [
@@ -35,38 +75,20 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   return (
     <View style={[styles.suggestionsWrapper, suggestionStyle]}>
       <View style={styles.suggestionsContainer}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
+        <LegendList
+          data={emotes}
           horizontal
+          estimatedItemSize={EMOTE_SUGGESTION_ITEM_SIZE}
+          keyExtractor={item => item.id}
           keyboardShouldPersistTaps='handled'
+          renderItem={renderItem}
           showsHorizontalScrollIndicator={false}
-        >
-          {emotes.map(item => (
-            <Button
-              key={item.id}
-              onPress={() => handleEmotePress(item)}
-              style={styles.suggestionItem}
-            >
-              <View style={styles.emoteTile}>
-                <Image
-                  contentFit='contain'
-                  source={item.url}
-                  cacheVariant='emote'
-                  style={styles.emoteImage}
-                  useNitro
-                  trackLoadTime
-                  trackLoadContext='chat.emote-suggestions'
-                />
-              </View>
-            </Button>
-          ))}
-        </ScrollView>
+          contentContainerStyle={styles.scrollContent}
+        />
       </View>
     </View>
   );
 });
-
-EmoteSuggestions.displayName = 'EmoteSuggestions';
 
 const styles = StyleSheet.create({
   emoteImage: {
@@ -98,10 +120,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     paddingHorizontal: 4,
     paddingTop: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.16,
-    shadowRadius: 12,
+    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.16)',
     alignSelf: 'flex-start',
     maxWidth: '100%',
   },

@@ -30,17 +30,9 @@ jest.mock('@app/utils/chat/findBadges', () => ({
   findBadges: jest.fn(() => []),
 }));
 
-const mockGetCurrentEmoteData = getCurrentEmoteData as jest.MockedFunction<
-  typeof getCurrentEmoteData
->;
-const mockUpdateMessages = updateMessages as jest.MockedFunction<
-  typeof updateMessages
->;
-const mockChatStore = chatStore$ as unknown as {
-  emojis: {
-    peek: jest.MockedFunction<() => unknown[]>;
-  };
-};
+const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
+const mockUpdateMessages = jest.mocked(updateMessages);
+const mockEmojisPeek = jest.mocked(chatStore$.emojis.peek);
 
 function createTextOnlyMessage(
   messageId: string,
@@ -112,7 +104,7 @@ describe('useEmoteReprocessing', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockChatStore.emojis.peek.mockReturnValue([]);
+    mockEmojisPeek.mockReturnValue([]);
     processedMessageIdsRef.current.clear();
   });
 

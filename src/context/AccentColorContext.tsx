@@ -1,6 +1,7 @@
 import { colors } from '@app/styles/colors';
 import { getColorValue, UIColor } from '@app/styles/ui';
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, use, useState } from 'react';
+
 import { useColorScheme } from 'react-native';
 
 interface AccentColorContextValue {
@@ -23,9 +24,6 @@ const colorFamilies: UIColor[] = [
   'orange',
   'amber',
   'yellow',
-  'lime',
-  'green',
-  'emerald',
   'teal',
   'cyan',
   'sky',
@@ -49,31 +47,28 @@ export function AccentColorProvider({
   const [selectedHex, setSelectedHex] = useState<string | null>(initialHex);
   const scheme = colorScheme === 'dark' ? 'dark' : 'light';
 
-  const accentHex = useMemo(() => {
-    return selectedHex ?? colors[scheme].tint;
-  }, [scheme, selectedHex]);
+  const accentHex = selectedHex ?? colors[scheme].tint;
 
-  const getBackgroundColor = useMemo(() => {
-    return () => {
-      if (!selectedHex) {
-        return colors[scheme].background;
-      }
-      const targetShade = scheme === 'dark' ? 950 : 50;
-      const matchedFamily = colorFamilies.find(
-        family =>
-          selectedHex === getColorValue(family, scheme === 'dark' ? 400 : 500),
-      );
+  const getBackgroundColor = () => {
+    if (!selectedHex) {
+      return colors[scheme].background;
+    }
+    const targetShade = scheme === 'dark' ? 950 : 50;
+    const matchedFamily = colorFamilies.find(
+      family =>
+        selectedHex === getColorValue(family, scheme === 'dark' ? 400 : 500),
+    );
 
-      return matchedFamily
-        ? getColorValue(matchedFamily, targetShade)
-        : colors[scheme].background;
-    };
-  }, [scheme, selectedHex]);
+    return matchedFamily
+      ? getColorValue(matchedFamily, targetShade)
+      : colors[scheme].background;
+  };
 
-  const contextValue = useMemo(
-    () => ({ accentHex, setAccentHex: setSelectedHex, getBackgroundColor }),
-    [accentHex, getBackgroundColor],
-  );
+  const contextValue = {
+    accentHex,
+    setAccentHex: setSelectedHex,
+    getBackgroundColor,
+  };
 
   return (
     <AccentColorContext.Provider value={contextValue}>
@@ -83,7 +78,7 @@ export function AccentColorProvider({
 }
 
 export function useAccentColor() {
-  const ctx = useContext(AccentColorContext);
+  const ctx = use(AccentColorContext);
   const colorScheme = useColorScheme();
 
   if (ctx) {

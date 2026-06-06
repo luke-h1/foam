@@ -2,6 +2,7 @@ import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { theme } from '@app/styles/themes';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,6 +40,15 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
         style={[styles.closeButtonWrap, { top: insets.top + theme.space12 }]}
       >
         <IconButton
+          icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
+          label='Share clip'
+          onPress={() => {
+            void shareDeepLink({ kind: 'clip', id });
+          }}
+          size='2xl'
+          style={styles.closeButton}
+        />
+        <IconButton
           icon={{ type: 'symbol', name: 'xmark', size: 18 }}
           label='Close clip'
           onPress={() => router.back()}
@@ -61,6 +71,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   closeButtonWrap: {
+    flexDirection: 'row',
+    gap: theme.space12,
     position: 'absolute',
     right: theme.space16,
     zIndex: 2,

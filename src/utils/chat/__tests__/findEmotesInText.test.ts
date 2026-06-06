@@ -1,8 +1,8 @@
 import type { SanitisedEmote } from '@app/types/emote';
 import {
   findEmotesInText,
-  FindEmotesInTextReturn,
-} from '../replaceTextWithEmotes';
+  type FindEmotesInTextReturn,
+} from '../findEmotesInText';
 
 describe('FindEmotesInText', () => {
   const createMockEmote = (name: string): SanitisedEmote => ({

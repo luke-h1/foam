@@ -5,7 +5,11 @@ import Constants from 'expo-constants';
 import { twitchApi, mockServerUrl, isE2EMode, twitchClientId } from './api';
 import Client, { isFetchHttpError, type ClientHeaders } from './api/Client';
 
-const channelPointRewardTitleCache = new Map<string, string>();
+import {
+  cacheChannelPointRewardTitle,
+  getCachedChannelPointRewardTitle,
+} from '@app/utils/chat/channelPointRewardTitleStore';
+
 const authProxyBaseUrl =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
     | string
@@ -957,8 +961,7 @@ export const twitchService = {
     broadcasterId: string,
     rewardId: string,
   ): Promise<string | undefined> => {
-    const cacheKey = `${broadcasterId}:${rewardId}`;
-    const cached = channelPointRewardTitleCache.get(cacheKey);
+    const cached = getCachedChannelPointRewardTitle(broadcasterId, rewardId);
     if (cached) {
       return cached;
     }
@@ -974,7 +977,7 @@ export const twitchService = {
       });
       const title = data[0]?.title?.trim();
       if (title) {
-        channelPointRewardTitleCache.set(cacheKey, title);
+        cacheChannelPointRewardTitle(broadcasterId, rewardId, title);
         return title;
       }
     } catch {

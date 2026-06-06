@@ -1,6 +1,8 @@
 import { observable } from '@legendapp/state';
 import { useSelector } from '@legendapp/state/react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
+import { useLazyRef } from '@app/hooks/useLazyRef';
+import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
@@ -50,9 +52,9 @@ export function useIsHighlightedReplyTargetMessage(
 }
 
 export function useChatTransientState(channelId: string) {
-  const visiblePersonalEmoteUsersRef = useRef<Set<string>>(new Set());
-  const visibleCosmeticUsersRef = useRef<Set<string>>(new Set());
-  const hydratedVisibleAssetKeysRef = useRef<Set<string>>(new Set());
+  const visiblePersonalEmoteUsersRef = useLazyRef(() => new Set<string>());
+  const visibleCosmeticUsersRef = useLazyRef(() => new Set<string>());
+  const hydratedVisibleAssetKeysRef = useLazyRef(() => new Set<string>());
   const pendingVisibleMessagesRef = useRef<AnyChatMessageType[]>([]);
   const visibleAssetHydrationTimerRef = useRef<ReturnType<
     typeof setTimeout
@@ -81,71 +83,63 @@ export function useChatTransientState(channelId: string) {
       defaultTransientState.showOnlyMentions,
   );
 
-  useEffect(() => {
-    return () => {
-      if (highlightedReplyTargetTimeoutRef.current) {
-        clearTimeout(highlightedReplyTargetTimeoutRef.current);
-        highlightedReplyTargetTimeoutRef.current = null;
-      }
-      if (visibleAssetHydrationTimerRef.current) {
-        clearTimeout(visibleAssetHydrationTimerRef.current);
-        visibleAssetHydrationTimerRef.current = null;
-      }
-    };
-  }, []);
+  useUnmountCallback(() => {
+    const highlightedReplyTimeout = highlightedReplyTargetTimeoutRef.current;
+    const visibleAssetTimer = visibleAssetHydrationTimerRef.current;
 
-  const hideUserFromView = useCallback(
-    (username?: string) => {
-      if (!username) {
-        return;
-      }
+    if (highlightedReplyTimeout) {
+      clearTimeout(highlightedReplyTimeout);
+      highlightedReplyTargetTimeoutRef.current = null;
+    }
+    if (visibleAssetTimer) {
+      clearTimeout(visibleAssetTimer);
+      visibleAssetHydrationTimerRef.current = null;
+    }
+  });
 
-      const normalised = username.trim().toLowerCase();
-      const hiddenUsers = getTransientState(channelId).hiddenUsers;
-      if (hiddenUsers.includes(normalised)) {
-        return;
-      }
-      assignTransientState(channelId, {
-        hiddenUsers: [...hiddenUsers, normalised].slice(-50),
-      });
-    },
-    [channelId],
-  );
+  const hideUserFromView = (username?: string) => {
+    if (!username) {
+      return;
+    }
 
-  const toggleHighlightedUser = useCallback(
-    (username?: string) => {
-      if (!username) {
-        return;
-      }
+    const normalised = username.trim().toLowerCase();
+    const hiddenUsers = getTransientState(channelId).hiddenUsers;
+    if (hiddenUsers.includes(normalised)) {
+      return;
+    }
+    assignTransientState(channelId, {
+      hiddenUsers: [...hiddenUsers, normalised].slice(-50),
+    });
+  };
 
-      const normalised = username.trim().toLowerCase();
-      const highlightedUsers = getTransientState(channelId).highlightedUsers;
-      assignTransientState(channelId, {
-        highlightedUsers: highlightedUsers.includes(normalised)
-          ? highlightedUsers.filter(entry => entry !== normalised)
-          : [...highlightedUsers, normalised].slice(-50),
-      });
-    },
-    [channelId],
-  );
+  const toggleHighlightedUser = (username?: string) => {
+    if (!username) {
+      return;
+    }
 
-  const hidePhraseFromView = useCallback(
-    (phrase?: string) => {
-      if (!phrase?.trim()) {
-        return;
-      }
+    const normalised = username.trim().toLowerCase();
+    const highlightedUsers = getTransientState(channelId).highlightedUsers;
+    assignTransientState(channelId, {
+      highlightedUsers: highlightedUsers.includes(normalised)
+        ? highlightedUsers.filter(entry => entry !== normalised)
+        : [...highlightedUsers, normalised].slice(-50),
+    });
+  };
 
-      const normalised = phrase.trim().toLowerCase();
-      const hiddenPhrases = getTransientState(channelId).hiddenPhrases;
-      if (hiddenPhrases.includes(normalised)) {
-        return;
-      }
-      assignTransientState(channelId, {
-        hiddenPhrases: [...hiddenPhrases, normalised].slice(-50),
-      });
-    },
-    [channelId],
-  );
+  const hidePhraseFromView = (phrase?: string) => {
+    if (!phrase?.trim()) {
+      return;
+    }
+
+    const normalised = phrase.trim().toLowerCase();
+    const hiddenPhrases = getTransientState(channelId).hiddenPhrases;
+    if (hiddenPhrases.includes(normalised)) {
+      return;
+    }
+    assignTransientState(channelId, {
+      hiddenPhrases: [...hiddenPhrases, normalised].slice(-50),
+    });
+  };
 
   const handleClearFilters = useCallback(() => {
     assignTransientState(channelId, defaultTransientState);
@@ -157,17 +151,16 @@ export function useChatTransientState(channelId: string) {
     });
   }, [channelId]);
 
-  const setHighlightedReplyTargetMessageId = useCallback(
-    (value: string | null | ((current: string | null) => string | null)) => {
-      const current =
-        getTransientState(channelId).highlightedReplyTargetMessageId;
-      assignTransientState(channelId, {
-        highlightedReplyTargetMessageId:
-          typeof value === 'function' ? value(current) : value,
-      });
-    },
-    [channelId],
-  );
+  const setHighlightedReplyTargetMessageId = (
+    value: string | null | ((current: string | null) => string | null),
+  ) => {
+    const current =
+      getTransientState(channelId).highlightedReplyTargetMessageId;
+    assignTransientState(channelId, {
+      highlightedReplyTargetMessageId:
+        typeof value === 'function' ? value(current) : value,
+    });
+  };
 
   return {
     handleClearFilters,

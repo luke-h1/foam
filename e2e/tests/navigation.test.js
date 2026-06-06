@@ -2,10 +2,10 @@
 
 describe('navigation', () => {
   test('browses top streams and opens a stream', async () => {
-    await waitFor(element(by.id('top-tab-streams')))
+    await waitFor(element(by.text('Streams')))
       .toBeVisible()
       .withTimeout(20000);
-    await waitFor(element(by.id('top-tab-streams')))
+    await waitFor(element(by.text('Streams')))
       .toBeVisible()
       .withTimeout(10000);
 
@@ -20,13 +20,13 @@ describe('navigation', () => {
   });
 
   test('browses top categories', async () => {
-    await waitFor(element(by.id('top-tab-categories')))
+    await waitFor(element(by.text('Categories')))
       .toBeVisible()
       .withTimeout(20000);
-    await waitFor(element(by.id('top-tab-categories')))
+    await waitFor(element(by.text('Categories')))
       .toBeVisible()
       .withTimeout(10000);
-    await element(by.id('top-tab-categories')).tap();
+    await element(by.text('Categories')).tap();
 
     await waitFor(element(by.text('Just Chatting')))
       .toBeVisible()

@@ -1,10 +1,10 @@
+import { memo } from 'react';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
 import { Badge } from '@app/components/ui/Badge/Badge';
 import { theme } from '@app/styles/themes';
 import type { ChannelPollState } from '@app/types/twitch/poll';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 interface ChannelPollCardProps {
@@ -37,7 +37,7 @@ function ChannelPollCardComponent({
   channelLogin,
   poll,
 }: ChannelPollCardProps) {
-  const timeRemaining = useMemo(() => formatTimeRemaining(poll), [poll]);
+  const timeRemaining = formatTimeRemaining(poll);
   const statusLabel = poll.isActive ? 'Live poll' : 'Poll result';
 
   return (
@@ -49,7 +49,9 @@ function ChannelPollCardComponent({
           </Badge>
           {poll.channelPointsVotingEnabled ? (
             <Badge color='amber' variant='soft'>
-              +{poll.channelPointsPerVote} pts / extra vote
+              <Text type='xs' weight='semibold'>
+                {`+${poll.channelPointsPerVote} pts / extra vote`}
+              </Text>
             </Badge>
           ) : null}
         </View>

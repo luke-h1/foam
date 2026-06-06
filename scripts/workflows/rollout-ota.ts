@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import {
   parseCurrentRolloutPercentage,
   validateTargetPercentage,
-} from './rollout-ota-utils';
+} from './otaRolloutPercentage';
 import { getRequiredArg, writeGithubOutput } from './github-actions';
 
 function getCommandErrorMessage(error: unknown): string {

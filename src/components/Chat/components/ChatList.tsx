@@ -5,13 +5,14 @@ import {
   type LegendListRenderItemProps,
 } from '@legendapp/list';
 import {
-  memo,
   RefObject,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
-  type ReactElement,
+  memo,
 } from 'react';
+import type { ReactElement } from 'react';
 import {
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -26,7 +27,7 @@ import { getChatMessageListKey } from '../util/chatMessages';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
-} from './ChatList/utils';
+} from './ChatList/getViewableChatMessages';
 
 const CHAT_DRAW_DISTANCE = 96;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
@@ -43,9 +44,10 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
     <View style={styles.skeletonRow} testID='chat-row-skeleton'>
-      <Skeleton style={styles.skeletonBadge} />
-      <Skeleton style={styles.skeletonUsername} />
+      <Skeleton shimmer={false} style={styles.skeletonBadge} />
+      <Skeleton shimmer={false} style={styles.skeletonUsername} />
       <Skeleton
+        shimmer={false}
         style={
           index % 3 === 0
             ? styles.skeletonBodyShort
@@ -116,12 +118,17 @@ export const ChatList = memo(
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
     const lastViewableMessageKeysRef = useRef('');
 
-    useEffect(() => {
+    useLayoutEffect(() => {
       onViewableMessagesChangeRef.current = onViewableMessagesChange;
+    });
+
+    useEffect(() => {
       lastViewableMessageKeysRef.current = '';
     }, [onViewableMessagesChange]);
 
-    const onViewableItemsChangedRef = useRef(
+    // Stable identity required: LegendList re-runs setupViewability whenever
+    // onViewableItemsChanged identity changes, tearing down viewability state.
+    const onViewableItemsChanged = useCallback(
       ({ viewableItems }: { viewableItems: ViewableMessageToken[] }) => {
         const callback = onViewableMessagesChangeRef.current;
         if (!callback) {
@@ -137,10 +144,9 @@ export const ChatList = memo(
         }
         lastViewableMessageKeysRef.current = viewableMessageKeys;
 
-        if (messages.length > 0) {
-          callback(messages);
-        }
+        callback(messages);
       },
+      [],
     );
 
     const renderLegendItem = useCallback(
@@ -172,7 +178,7 @@ export const ChatList = memo(
         keyExtractor={keyExtractor}
         getItemType={getItemType}
         getEstimatedItemSize={getEstimatedItemSize}
-        maintainVisibleContentPosition
+        maintainVisibleContentPosition={!shouldMaintainScrollAtEnd}
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }
@@ -190,7 +196,7 @@ export const ChatList = memo(
         contentContainerStyle={contentContainerStyle}
         scrollEventThrottle={16}
         viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
-        onViewableItemsChanged={onViewableItemsChangedRef.current}
+        onViewableItemsChanged={onViewableItemsChanged}
       />
     );
   },

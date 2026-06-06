@@ -27,18 +27,6 @@ export const twitchApi = new Client({
   responseInterceptors: [createTracingInterceptor],
 });
 
-export const twitchBadgeApi = new Client({
-  baseURL: 'https://badges.twitch.tv/v1/badges',
-  requestInterceptors: [createLoggerInterceptor('twitch')],
-  responseInterceptors: [createTracingInterceptor],
-});
-
-export const bttvApi = new Client({
-  baseURL: 'https://api.betterttv.net',
-  requestInterceptors: [createLoggerInterceptor('bttv')],
-  responseInterceptors: [createTracingInterceptor],
-});
-
 export const bttvCachedApi = new Client({
   baseURL: 'https://api.betterttv.net/3/cached',
   requestInterceptors: [createLoggerInterceptor('bttv')],
@@ -53,12 +41,6 @@ export const sevenTvApi = new Client({
 
 export const ffzApi = new Client({
   baseURL: 'https://api.frankerfacez.com/v1',
-  requestInterceptors: [createLoggerInterceptor('ffz')],
-  responseInterceptors: [createTracingInterceptor],
-});
-
-export const ffzEmoteApi = new Client({
-  baseURL: 'https://api.betterttv.net/3/cached/frankerfacez',
   requestInterceptors: [createLoggerInterceptor('ffz')],
   responseInterceptors: [createTracingInterceptor],
 });

@@ -1,6 +1,5 @@
 import { Image } from '@app/components/Image/Image';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
@@ -8,9 +7,12 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { type ReactNode, useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import appIconProduction from '../../../assets/app-icon/app-icon-production.png';
+import { useRef } from 'react';
+import type { ReactNode } from 'react';
+
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+const appIconProduction = require('../../../assets/app-icon/app-icon-production.png');
 
 interface AboutSectionProps {
   title?: string;
@@ -92,10 +94,6 @@ export function AboutScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS === 'ios' ? null : (
-        <ScreenHeader title='About Foam' subtitle='App info' size='medium' />
-      )}
-
       <ScrollView
         ref={scrollRef}
         style={styles.main}

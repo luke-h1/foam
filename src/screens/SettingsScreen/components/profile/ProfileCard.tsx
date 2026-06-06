@@ -6,7 +6,9 @@ import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { type ReactNode, useMemo, useRef } from 'react';
+import { useRef } from 'react';
+import type { ReactNode } from 'react';
+
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 interface ProfileSectionProps {
@@ -121,10 +123,7 @@ export function ProfileCard() {
 
   useScrollToTop(scrollRef);
 
-  const memberSince = useMemo(
-    () => formatMemberSince(user?.created_at),
-    [user?.created_at],
-  );
+  const memberSince = formatMemberSince(user?.created_at);
 
   const confirmLogout = () => {
     Alert.alert(
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,
     flexDirection: 'row',

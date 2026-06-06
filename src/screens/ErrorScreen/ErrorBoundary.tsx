@@ -1,6 +1,8 @@
 /* eslint-disable react/destructuring-assignment */
 import { recordError } from '@app/lib/sentry';
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component } from 'react';
+import type { ReactNode, ErrorInfo } from 'react';
+
 import { ErrorDetails, type ErrorDetailsProps } from './ErrorDetails';
 
 interface Props {

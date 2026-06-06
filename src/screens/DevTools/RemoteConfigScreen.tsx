@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   valueText: {
-    color: theme.colorGrass,
+    color: theme.colorPrimary,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
@@ -305,7 +305,7 @@ function getSourceTagStyle(source: string) {
   return {
     backgroundColor:
       source === 'remote'
-        ? theme.colorGreen
+        ? theme.colorPrimary
         : source === 'default'
           ? theme.colorOrange
           : theme.color.text.dark,

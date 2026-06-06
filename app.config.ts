@@ -160,6 +160,11 @@ const config: ExpoConfig = {
   owner: 'lukehowsam123',
   platforms: ['android', 'ios', 'web'],
   icon: './assets/app-icon/app-icon-production.png',
+  splash: {
+    image: appConfig.splashImage,
+    resizeMode: 'contain',
+    backgroundColor: appConfig.splashBackgroundColor,
+  },
   userInterfaceStyle: 'dark',
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
@@ -174,6 +179,7 @@ const config: ExpoConfig = {
     // Updates are checked manually after the app has fully loaded
     checkAutomatically: 'NEVER',
     fallbackToCacheTimeout: 30000,
+    disableAntiBrickingMeasures: variant !== 'production',
   },
   runtimeVersion: {
     policy: 'appVersion',
@@ -205,7 +211,6 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-image',
     '@rnrepo/expo-config-plugin',
-    ['react-native-bootsplash', { assetsDir: 'assets/bootsplash' }],
     'react-native-compressor',
     [
       '@sentry/react-native/expo',
@@ -303,6 +308,7 @@ const config: ExpoConfig = {
   experiments: {
     reactCompiler: true,
     tsconfigPaths: true,
+    buildCacheProvider: 'eas',
   },
   web: {},
   ios: {

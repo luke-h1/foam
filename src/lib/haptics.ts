@@ -1,10 +1,8 @@
 import {
-  AndroidHaptics,
   ImpactFeedbackStyle,
   NotificationFeedbackType,
   impactAsync as expoImpactAsync,
   notificationAsync as expoNotificationAsync,
-  performAndroidHapticsAsync,
   selectionAsync as expoSelectionAsync,
 } from 'expo-haptics';
 
@@ -39,20 +37,4 @@ export async function notification(
         : NotificationFeedbackType.Success;
 
   return expoNotificationAsync(expoType);
-}
-
-export async function androidToggle() {
-  if (process.env.EXPO_OS === 'android') {
-    return performAndroidHapticsAsync(AndroidHaptics.Toggle_On);
-  }
-
-  return selection();
-}
-
-export async function androidTick() {
-  if (process.env.EXPO_OS === 'android') {
-    return performAndroidHapticsAsync(AndroidHaptics.Clock_Tick);
-  }
-
-  return selection();
 }

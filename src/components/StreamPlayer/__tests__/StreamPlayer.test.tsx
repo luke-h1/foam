@@ -214,7 +214,7 @@ describe('StreamPlayer component messaging', () => {
       jest.advanceTimersByTime(750);
     });
 
-    expect(latestWebViewProps().source).toBe(initialSource);
+    expect(latestWebViewProps().source).toStrictEqual(initialSource);
     expect(mockWebViewProps.length).toBeGreaterThan(1);
 
     const propsAfterBridgeAuth = latestWebViewProps();

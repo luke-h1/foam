@@ -6,26 +6,28 @@ const FONT_SCALE = 1.2;
 
 const isIpad = Device.osName === 'iPadOS';
 
-export const spaceScale = (value: number) =>
+const spaceScale = (value: number) =>
   isIpad ? Math.round(value * SPACE_SCALE) : value;
 
 const fontScale = (value: number) =>
   isIpad ? Math.round(value * FONT_SCALE) : value;
 
 const alpha = (hex: string, opacityHex: string) => `${hex}${opacityHex}`;
+const primaryAccent = '#1AC9A2';
+const primaryAccentHover = '#9BDFB1';
 
 export type Theme = 'foam-dark';
 
 export const semanticColorGroups = {
   accent: {
-    accent: Color.green[500],
-    accentAlpha: alpha(Color.green[500], 'CC'),
-    accentHover: Color.green[400],
-    accentHoverAlpha: alpha(Color.green[400], 'CC'),
-    bgAltAlpha: alpha(Color.green[500], '1A'),
+    accent: primaryAccent,
+    accentAlpha: alpha(primaryAccent, 'CC'),
+    accentHover: primaryAccentHover,
+    accentHoverAlpha: alpha(primaryAccentHover, 'CC'),
+    bgAltAlpha: alpha(primaryAccent, '1A'),
     contrast: Color.zinc[950],
-    ui: Color.green[500],
-    uiAlpha: alpha(Color.green[500], '24'),
+    ui: primaryAccent,
+    uiAlpha: alpha(primaryAccent, '24'),
   },
   amber: {
     accent: Color.amber[400],
@@ -40,10 +42,6 @@ export const semanticColorGroups = {
   },
   blue: {
     accent: Color.sky[400],
-  },
-  grass: {
-    accent: Color.emerald[400],
-    accentAlpha: alpha(Color.emerald[400], 'CC'),
   },
   gray: {
     accent: Color.zinc[300],
@@ -63,10 +61,6 @@ export const semanticColorGroups = {
     ui: Color.zinc[900],
     uiActive: Color.zinc[800],
     uiAlpha: alpha(Color.zinc[50], '0F'),
-  },
-  green: {
-    accent: Color.green[400],
-    uiAlpha: alpha(Color.green[500], '29'),
   },
   orange: {
     accent: Color.orange[400],
@@ -95,17 +89,15 @@ export const theme = {
   colorRed: semanticColorGroups.red.accent,
   colorWhite: semanticColorGroups.gray.text,
   colorBlack: semanticColorGroups.gray.bg,
-  colorLightGreen: semanticColorGroups.accent.accentHover,
-  colorDarkGreen: semanticColorGroups.accent.accent,
+  colorPrimary: semanticColorGroups.accent.accent,
+  colorPrimaryAlpha: semanticColorGroups.accent.accentAlpha,
+  colorPrimaryHover: semanticColorGroups.accent.accentHover,
+  colorPrimarySurface: semanticColorGroups.accent.bgAltAlpha,
   colorGrey: semanticColorGroups.gray.accent,
   colorGreyAlpha: semanticColorGroups.gray.accentAlpha,
   colorGreyHover: semanticColorGroups.gray.accentHover,
   colorGreyHoverAlpha: semanticColorGroups.gray.accentHoverAlpha,
   colorBlue: semanticColorGroups.blue.accent,
-  colorGrass: semanticColorGroups.grass.accent,
-  colorGrassAlpha: semanticColorGroups.grass.accentAlpha,
-  colorGreen: semanticColorGroups.green.accent,
-  colorGreenSurface: semanticColorGroups.green.uiAlpha,
   colorOrange: semanticColorGroups.orange.accent,
   colorPlum: semanticColorGroups.plum.accent,
   colorPlumBorder: semanticColorGroups.plum.border,

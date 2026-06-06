@@ -3,7 +3,6 @@ import {
   SegmentedControl as ExpoSegmentedControl,
   type NativeSegmentedControlChangeEvent,
 } from '@expo/ui/community/segmented-control';
-import { useCallback, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
@@ -23,15 +22,12 @@ export function SegmentedControl({
   currentIndex,
   onChange,
 }: SegmentedControlProps) {
-  const values = useMemo(() => items.map(item => item.label), [items]);
+  const values = items.map(item => item.label);
 
-  const handleChange = useCallback(
-    (event: NativeSegmentedControlChangeEvent) => {
-      onChange(event.nativeEvent.selectedSegmentIndex);
-      void selection();
-    },
-    [onChange],
-  );
+  const handleChange = (event: NativeSegmentedControlChangeEvent) => {
+    onChange(event.nativeEvent.selectedSegmentIndex);
+    void selection();
+  };
 
   return (
     <ExpoSegmentedControl
@@ -39,7 +35,7 @@ export function SegmentedControl({
       onChange={handleChange}
       selectedIndex={currentIndex}
       style={styles.container}
-      tintColor={theme.colorDarkGreen}
+      tintColor={theme.colorPrimary}
       values={values}
     />
   );

@@ -1,15 +1,59 @@
+import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import type { ChatUser } from '@app/store/chatStore/constants';
 import { theme } from '@app/styles/themes';
-import { memo } from 'react';
+import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
 import { StyleSheet, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+
+const USER_SUGGESTION_ITEM_SIZE = 40;
 
 interface UserSuggestionsProps {
   users: ChatUser[];
   showUserSuggestions: boolean;
   handleUserSelect: (user: ChatUser) => void;
+}
+
+type UserSuggestionListExtra = {
+  onPress: (user: ChatUser) => void;
+};
+
+/**
+ * Module-level `renderItem` for the suggestions LegendList.
+ *
+ * Defined outside the parent component so the reference is stable across
+ * re-renders (avoids LegendList tearing down rows when the parent re-renders).
+ * The press handler is threaded through `extraData` rather than captured in a
+ * closure for the same reason — keeps this function pure and reusable.
+ */
+function renderUserSuggestionItem({
+  item,
+  extraData,
+}: LegendListRenderItemProps<ChatUser>) {
+  const { onPress }: UserSuggestionListExtra = extraData;
+  return <UserSuggestionItem user={item} onPress={onPress} />;
+}
+
+function UserSuggestionItem({
+  user,
+  onPress,
+}: {
+  user: ChatUser;
+  onPress: (selected: ChatUser) => void;
+}) {
+  return (
+    <Button style={styles.userSuggestionItem} onPress={() => onPress(user)}>
+      <View
+        style={[
+          styles.userColorDot,
+          {
+            backgroundColor: user.color || theme.color.textSecondary.dark,
+          },
+        ]}
+      />
+      <Text style={styles.userSuggestionText}>{user.name}</Text>
+    </Button>
+  );
 }
 
 export const UserSuggestions = memo(function UserSuggestions({
@@ -25,37 +69,21 @@ export const UserSuggestions = memo(function UserSuggestions({
     <View style={styles.userSuggestionsWrapper}>
       <View style={styles.userSuggestionsContainer}>
         <Text style={styles.headerLabel}>Mention</Text>
-        <ScrollView
-          contentContainerStyle={styles.userSuggestionScroll}
+        <LegendList
+          data={users}
           horizontal
+          estimatedItemSize={USER_SUGGESTION_ITEM_SIZE}
+          keyExtractor={user => user.userId}
           keyboardShouldPersistTaps='handled'
+          extraData={{ onPress: handleUserSelect }}
+          renderItem={renderUserSuggestionItem}
           showsHorizontalScrollIndicator={false}
-        >
-          {users.map(user => (
-            <Button
-              key={user?.userId}
-              style={styles.userSuggestionItem}
-              onPress={() => handleUserSelect(user)}
-            >
-              <View
-                style={[
-                  styles.userColorDot,
-                  {
-                    backgroundColor:
-                      user?.color || theme.color.textSecondary.dark,
-                  },
-                ]}
-              />
-              <Text style={styles.userSuggestionText}>{user?.name}</Text>
-            </Button>
-          ))}
-        </ScrollView>
+          contentContainerStyle={styles.userSuggestionScroll}
+        />
       </View>
     </View>
   );
 });
-
-UserSuggestions.displayName = 'UserSuggestions';
 
 const styles = StyleSheet.create({
   headerLabel: {
@@ -84,7 +112,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space8,
   },
   userSuggestionScroll: {
-    flexDirection: 'row',
     gap: theme.space8,
     paddingRight: theme.space8,
   },
@@ -102,10 +129,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space12,
     paddingBottom: theme.space12,
     paddingTop: theme.space12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
+    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.18)',
   },
   userSuggestionsWrapper: {
     marginBottom: theme.space8,

@@ -1,108 +1,58 @@
-import { TopTabSwitcher } from '@app/components/TopTabSwitcher/TopTabSwitcher';
-import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useWindowDimensions, View, StyleSheet } from 'react-native';
 import Animated, {
-  Extrapolation,
-  interpolate,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
 import { TabView, type SceneRendererProps } from 'react-native-tab-view';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
+import { TopSegmentControl } from './TopSegmentControl';
+import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
 type Route = { key: string; title: string };
 
-const TOP_COPY_HEIGHT = 96;
-const TOP_TAB_HEIGHT = 58;
+const ROUTES: Route[] = [...TOP_TAB_ROUTES];
 
-const ROUTES: Route[] = [
-  { key: 'streams', title: 'Streams' },
-  { key: 'categories', title: 'Categories' },
-];
+const TOP_SEGMENT_HEIGHT = 44;
+const contentTopInset = TOP_SEGMENT_HEIGHT + theme.space12 + theme.space8;
 
 export function TopScreen() {
   const layout = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const [index, setIndex] = useState<number>(0);
   const scrollY = useSharedValue(0);
-  const contentTopInset =
-    TOP_COPY_HEIGHT + TOP_TAB_HEIGHT + theme.space12 + theme.space8;
 
-  const heroStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, 72], [1, 0], Extrapolation.CLAMP),
-    transform: [
-      {
-        translateY: interpolate(
-          scrollY.value,
-          [0, 96],
-          [0, -36],
-          Extrapolation.CLAMP,
-        ),
-      },
-    ],
+  const segmentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -scrollY.get() }],
   }));
 
-  const tabsStyle = useAnimatedStyle(() => ({
-    top: interpolate(
-      scrollY.value,
-      [0, 96],
-      [TOP_COPY_HEIGHT + theme.space8, theme.space8],
-      Extrapolation.CLAMP,
-    ),
-  }));
-
-  const renderScene = useCallback(
-    // eslint-disable-next-line react/no-unused-prop-types
-    ({ route }: SceneRendererProps & { route: Route }) => {
-      switch (route.key) {
-        case 'streams':
-          return (
-            <TopStreamsScreen
-              contentTopInset={contentTopInset}
-              scrollY={scrollY}
-            />
-          );
-        case 'categories':
-          return (
-            <TopCategoriesScreen
-              contentTopInset={contentTopInset}
-              scrollY={scrollY}
-            />
-          );
-        default:
-          return null;
-      }
-    },
-    [contentTopInset, scrollY],
-  );
+  const renderScene = ({ route }: SceneRendererProps & { route: Route }) => {
+    switch (route.key) {
+      case 'streams':
+        return (
+          <TopStreamsScreen
+            contentTopInset={contentTopInset}
+            scrollY={scrollY}
+          />
+        );
+      case 'categories':
+        return (
+          <TopCategoriesScreen
+            contentTopInset={contentTopInset}
+            scrollY={scrollY}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View
-        pointerEvents='box-none'
-        style={[
-          styles.headerOverlay,
-          { height: contentTopInset, top: insets.top },
-        ]}
-      >
-        <Animated.View style={[styles.hero, heroStyle]}>
-          <Text type='4xl' weight='bold' style={styles.title}>
-            Top
-          </Text>
-        </Animated.View>
-        <Animated.View style={[styles.tabsFrame, tabsStyle]}>
-          <TopTabSwitcher
-            currentIndex={index}
-            items={ROUTES.map(route => route.title)}
-            onChange={setIndex}
-          />
+    <View style={styles.container}>
+      <View pointerEvents='box-none' style={styles.headerOverlay}>
+        <Animated.View style={[styles.segmentFrame, segmentStyle]}>
+          <TopSegmentControl index={index} onIndexChange={setIndex} />
         </Animated.View>
       </View>
       <TabView
@@ -116,7 +66,7 @@ export function TopScreen() {
         initialLayout={{ width: layout.width }}
         renderTabBar={() => null}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -124,10 +74,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
-  },
-  eyebrow: {
-    letterSpacing: 1,
-    marginBottom: theme.space8,
   },
   headerOverlay: {
     left: 0,
@@ -137,23 +83,12 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 10,
   },
-  hero: {
-    gap: theme.space8,
-    minHeight: TOP_COPY_HEIGHT,
+  segmentFrame: {
+    backgroundColor: theme.color.background.dark,
+    paddingBottom: theme.space8,
     paddingTop: theme.space12,
   },
   tabViewWrapper: {
     flex: 1,
-  },
-  tabsFrame: {
-    backgroundColor: theme.color.background.dark,
-    left: 0,
-    paddingBottom: theme.space8,
-    paddingHorizontal: theme.space20,
-    position: 'absolute',
-    right: 0,
-  },
-  title: {
-    lineHeight: 44,
   },
 });

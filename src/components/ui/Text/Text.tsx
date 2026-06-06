@@ -5,7 +5,7 @@ import {
   type ThemeColor,
   type ThemeColorToken,
 } from '@app/styles/themes';
-import { forwardRef, LegacyRef, ReactNode } from 'react';
+import { ReactNode, type Ref } from 'react';
 
 import {
   // eslint-disable-next-line no-restricted-imports
@@ -58,6 +58,7 @@ export type TextVariant = 'default' | 'mono';
 type AppFontVariant = TextVariant | 'display';
 
 export interface TextProps extends RNTextProps, MarginProps {
+  ref?: Ref<RNText>;
   children?: ReactNode;
   type?: TextType;
   weight?: TextWeight;
@@ -112,62 +113,61 @@ const sizeStyles = StyleSheet.create({
   xxxs: { fontSize: 10, lineHeight: 14 },
 });
 
-export const Text = forwardRef<RNText, TextProps>(
-  (
-    {
-      type = 'default',
-      weight = 'normal',
-      variant = 'default',
-      color = 'gray',
-      contrast = color === 'gray',
-      highContrast,
-      italic,
-      tabular,
-      align = 'left',
-      children,
-      style,
-      // Margin props
-      m,
-      mb,
-      ml,
-      mr,
-      mt,
-      mx,
-      my,
-      ...props
-    }: TextProps,
-    ref: LegacyRef<RNText>,
-  ) => {
-    const resolvedColor = resolveThemeColor(color, { contrast, highContrast });
+export function Text({
+  type = 'default',
+  weight = 'normal',
+  variant = 'default',
+  color = 'gray',
+  contrast,
+  highContrast,
+  italic,
+  tabular,
+  align = 'left',
+  children,
+  style,
+  ref,
+  // Margin props
+  m,
+  mb,
+  ml,
+  mr,
+  mt,
+  mx,
+  my,
+  ...props
+}: TextProps) {
+  const effectiveContrast =
+    contrast === undefined ? color === 'gray' : contrast;
+  const resolvedColor = resolveThemeColor(color, {
+    contrast: effectiveContrast,
+    highContrast,
+  });
 
-    const sizeStyle = sizeStyles[type];
+  const sizeStyle = sizeStyles[type];
 
-    const resolvedFontFamily = getFontFamily(variant, weight, italic);
+  const resolvedFontFamily = getFontFamily(variant, weight, italic);
 
-    const textStyle: TextStyle = {
-      ...getMargin(theme)({ m, mb, ml, mr, mt, mx, my }),
-      color: resolvedColor,
-      fontFamily: resolvedFontFamily,
-      fontStyle: variant === 'mono' ? (italic ? 'italic' : 'normal') : 'normal',
-      fontVariant: tabular ? ['tabular-nums'] : undefined,
-      fontWeight: variant === 'mono' ? weightMap[weight] : undefined,
-      textAlign: align,
-    };
+  const textStyle: TextStyle = {
+    ...getMargin(theme)({ m, mb, ml, mr, mt, mx, my }),
+    color: resolvedColor,
+    fontFamily: resolvedFontFamily,
+    fontStyle: variant === 'mono' ? (italic ? 'italic' : 'normal') : 'normal',
+    fontVariant: tabular ? ['tabular-nums'] : undefined,
+    fontWeight: variant === 'mono' ? weightMap[weight] : undefined,
+    textAlign: align,
+  };
 
-    return (
-      <RNText
-        ref={ref}
-        textBreakStrategy='simple'
-        {...props}
-        style={[sizeStyle, textStyle, style]}
-      >
-        {children}
-      </RNText>
-    );
-  },
-);
-
-Text.displayName = 'Text';
+  return (
+    <RNText
+      ref={ref}
+      textBreakStrategy='simple'
+      {...props}
+      style={[sizeStyle, textStyle, style]}
+    >
+      {children}
+    </RNText>
+  );
+}
 
 function getFontFamily(
   variant: AppFontVariant,
@@ -209,58 +209,4 @@ function getFontFamily(
       };
 
   return fontMap[weight];
-}
-
-// Helper function to increment/decrement text size
-export function addTextSize(type: TextType, by: number): TextType {
-  const sizeOrder: TextType[] = [
-    'xxxs',
-    'xxs',
-    'xs',
-    'sm',
-    'md',
-    'lg',
-    'xl',
-    '2xl',
-    '3xl',
-    '4xl',
-    '5xl',
-    '6xl',
-    '7xl',
-    '8xl',
-    '9xl',
-    '10xl',
-    '11xl',
-    '12xl',
-  ];
-
-  // Handle semantic types by mapping to their closest size
-  const semanticMapping: Record<string, TextType> = {
-    base: 'sm',
-    body: 'xs',
-    caption: 'xxs',
-    default: 'sm',
-    link: 'sm',
-    subtitle: 'lg',
-    title: '4xl',
-  };
-
-  const normalizedType = semanticMapping[type] || type;
-  const currentIndex = sizeOrder.indexOf(normalizedType);
-
-  if (currentIndex === -1) {
-    return type;
-  }
-
-  const nextIndex = currentIndex + by;
-
-  if (nextIndex < 0) {
-    return 'xxxs';
-  }
-
-  if (nextIndex >= sizeOrder.length) {
-    return '12xl';
-  }
-
-  return sizeOrder[nextIndex] ?? 'default';
 }

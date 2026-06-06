@@ -70,12 +70,6 @@ function rememberObjectUrl(url: string, objectUrl: string, size: number) {
   return objectUrl;
 }
 
-export function cacheBase64Image(base64: string): string {
-  return base64.startsWith('data:')
-    ? base64
-    : `data:image/png;base64,${base64}`;
-}
-
 export async function cacheImageFromUrl(
   url: string,
   options: CacheImageOptions = {},
@@ -127,50 +121,6 @@ export function getCachedImageUri(
   return url ? (objectUrlCache.get(url)?.uri ?? null) : null;
 }
 
-export function getCachedImageAsBase64(fileUri: string): string {
-  return fileUri;
-}
-
-export function deleteCachedImageByUrl(
-  url?: string,
-  _options: Pick<CacheImageOptions, 'variant'> = {},
-): void {
-  if (!url) {
-    return;
-  }
-
-  const cached = objectUrlCache.get(url);
-  if (cached?.uri.startsWith('blob:')) {
-    globalThis.URL.revokeObjectURL(cached.uri);
-  }
-  objectUrlCache.delete(url);
-
-  if (canUseWebImageCache()) {
-    void globalThis.caches
-      .open(WEB_IMAGE_CACHE_NAME)
-      .then(cache => cache.delete(url))
-      .catch(() => undefined);
-  }
-}
-
-export function deleteCachedImage(fileUri?: string): void {
-  if (!fileUri) {
-    return;
-  }
-
-  for (const [url, cached] of objectUrlCache) {
-    if (cached.uri !== fileUri) {
-      continue;
-    }
-
-    if (cached.uri.startsWith('blob:')) {
-      globalThis.URL.revokeObjectURL(cached.uri);
-    }
-    objectUrlCache.delete(url);
-    break;
-  }
-}
-
 export function clearSessionCache(): void {
   objectUrlCache.forEach(entry => {
     if (entry.uri.startsWith('blob:')) {
@@ -196,10 +146,13 @@ export function warmImageCache(
   urls: string[],
   options: CacheImageOptions = {},
 ): void {
-  urls
-    .filter(isCacheableWebUri)
-    .filter(url => !getCachedImageUri(url))
-    .forEach(url => {
-      void cacheImageFromUrl(url, options);
-    });
+  for (const url of urls) {
+    if (!isCacheableWebUri(url)) {
+      continue;
+    }
+    if (getCachedImageUri(url)) {
+      continue;
+    }
+    void cacheImageFromUrl(url, options);
+  }
 }

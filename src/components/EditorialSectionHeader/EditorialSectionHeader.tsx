@@ -8,7 +8,7 @@ export function EditorialSectionHeader({
   subtitle,
 }: {
   eyebrow?: string;
-  title: string;
+  title?: string;
   subtitle?: string;
 }) {
   return (
@@ -23,9 +23,11 @@ export function EditorialSectionHeader({
           {eyebrow}
         </Text>
       ) : null}
-      <Text type='xl' weight='bold'>
-        {title}
-      </Text>
+      {title ? (
+        <Text type='xl' weight='bold'>
+          {title}
+        </Text>
+      ) : null}
       {subtitle ? (
         <Text type='sm' color='gray.textLow' style={styles.subtitle}>
           {subtitle}

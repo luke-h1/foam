@@ -1,13 +1,13 @@
-import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
+import { Image as ExpoImage } from 'expo-image';
 import { recordInfo } from '@app/lib/sentry';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import {
   cacheImageFromUrl,
   getCachedImageUri,
-  type ImageCachePriority,
 } from '@app/utils/image/image-cache';
+import type { ImageProps } from './Image.types';
 
 const getSourceUri = (source: ImageProps['source']) => {
   if (typeof source === 'string') {
@@ -29,43 +29,6 @@ const getSourceUri = (source: ImageProps['source']) => {
 const isCacheableWebUri = (uri: string | undefined): uri is string =>
   typeof uri === 'string' && /^https?:\/\//i.test(uri);
 
-export const prefetchImage = async (source: string | string[]) => {
-  const sources = Array.isArray(source) ? source : [source];
-
-  const results = await Promise.all(
-    sources.map(async uri => {
-      try {
-        await cacheImageFromUrl(uri, { priority: 'background' });
-        return true;
-      } catch {
-        return ExpoImage.prefetch(uri);
-      }
-    }),
-  );
-
-  return results.every(Boolean);
-};
-
-export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
-  containerStyle?: StyleProp<ViewStyle>;
-  /**
-   * Native-only NitroImage fast path. Ignored on web.
-   */
-  useNitro?: boolean;
-  /**
-   * Track load timings and report to Sentry for observability
-   */
-  trackLoadTime?: boolean;
-  /**
-   * Label used for Sentry context when reporting image load timing
-   */
-  trackLoadContext?: string;
-  cachePriority?: ImageCachePriority;
-  cacheToFile?: boolean;
-  cacheVariant?: string;
-  source?: string | { uri: string } | number;
-}
-
 export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
@@ -83,58 +46,69 @@ export const Image = function Image({
   style,
   ...props
 }: ImageProps) {
-  const sourceUri = useMemo(() => getSourceUri(source), [source]);
+  const sourceUri = getSourceUri(source);
   const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
   const trackLoad = Boolean(trackLoadTime && sourceUri);
-  const [cachedSource, setCachedSource] = useState<ImageProps['source']>(() => {
-    if (!sourceUri || !shouldUseFileCache) {
-      return undefined;
+  const diskCachedSource =
+    sourceUri &&
+    shouldUseFileCache &&
+    isCacheableWebUri(sourceUri) &&
+    cachePolicy !== 'none'
+      ? (() => {
+          const cachedUri = getCachedImageUri(sourceUri, {
+            variant: cacheVariant,
+          });
+          return cachedUri ? { uri: cachedUri } : undefined;
+        })()
+      : undefined;
+  const [downloadedCache, setDownloadedCache] = useState<{
+    sourceUri: string | undefined;
+    source: ImageProps['source'];
+  }>({ sourceUri: undefined, source: undefined });
+  const downloadedCachedSource =
+    downloadedCache.sourceUri === sourceUri
+      ? downloadedCache.source
+      : undefined;
+
+  const cachedSource = diskCachedSource ?? downloadedCachedSource;
+  const reportImageLoadTime = (timing: {
+    mountTimestamp: number;
+    loadStartTimestamp: number;
+    loadEndTimestamp: number;
+  }) => {
+    if (!trackLoad) {
+      return;
     }
 
-    const cachedUri = getCachedImageUri(sourceUri, { variant: cacheVariant });
-    return cachedUri ? { uri: cachedUri } : undefined;
-  });
-  const reportImageLoadTime = useCallback(
-    (timing: {
-      mountTimestamp: number;
-      loadStartTimestamp: number;
-      loadEndTimestamp: number;
-    }) => {
-      if (!trackLoad) {
-        return;
+    const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
+    const startToLoadTimeMs =
+      timing.loadEndTimestamp - timing.loadStartTimestamp;
+    const safeHost = (() => {
+      if (!sourceUri) {
+        return 'unknown';
       }
+      try {
+        return new URL(sourceUri).hostname;
+      } catch {
+        return 'unknown';
+      }
+    })();
 
-      const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
-      const startToLoadTimeMs =
-        timing.loadEndTimestamp - timing.loadStartTimestamp;
-      const safeHost = (() => {
-        if (!sourceUri) {
-          return 'unknown';
-        }
-        try {
-          return new URL(sourceUri).hostname;
-        } catch {
-          return 'unknown';
-        }
-      })();
-
-      recordInfo({
-        name: 'data_loading_info',
-        message: 'chat.image.load_time',
-        params: {
-          urlHost: safeHost,
-          url: sourceUri ?? 'unknown',
-          durationFromMountMs: Math.round(totalLoadTimeMs),
-          durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-          imageRenderer: 'Image',
-          imageContext: trackLoadContext ?? 'chat-image',
-          host: safeHost,
-          platform: 'web',
-        },
-      });
-    },
-    [sourceUri, trackLoad, trackLoadContext],
-  );
+    recordInfo({
+      name: 'data_loading_info',
+      message: 'chat.image.load_time',
+      params: {
+        urlHost: safeHost,
+        url: sourceUri ?? 'unknown',
+        durationFromMountMs: Math.round(totalLoadTimeMs),
+        durationFromLoadStartMs: Math.round(startToLoadTimeMs),
+        imageRenderer: 'Image',
+        imageContext: trackLoadContext ?? 'chat-image',
+        host: safeHost,
+        platform: 'web',
+      },
+    });
+  };
   const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
     'Image',
     reportImageLoadTime,
@@ -143,12 +117,12 @@ export const Image = function Image({
 
   useEffect(() => {
     let isMounted = true;
-    setCachedSource(undefined);
 
     if (
       cachePolicy === 'none' ||
       !shouldUseFileCache ||
-      !isCacheableWebUri(sourceUri)
+      !isCacheableWebUri(sourceUri) ||
+      diskCachedSource
     ) {
       return () => {
         isMounted = false;
@@ -156,16 +130,6 @@ export const Image = function Image({
     }
 
     const cacheableSourceUri = sourceUri;
-    const existingCachedUri = getCachedImageUri(cacheableSourceUri, {
-      variant: cacheVariant,
-    });
-    if (existingCachedUri) {
-      setCachedSource({ uri: existingCachedUri });
-      return () => {
-        isMounted = false;
-      };
-    }
-
     const controller = new AbortController();
     cacheImageFromUrl(cacheableSourceUri, {
       priority: cachePriority,
@@ -182,11 +146,17 @@ export const Image = function Image({
           return;
         }
 
-        setCachedSource({ uri: objectUrl });
+        setDownloadedCache({
+          sourceUri: cacheableSourceUri,
+          source: { uri: objectUrl },
+        });
       })
       .catch(() => {
         if (isMounted) {
-          setCachedSource(undefined);
+          setDownloadedCache({
+            sourceUri: cacheableSourceUri,
+            source: undefined,
+          });
         }
       });
 
@@ -194,7 +164,14 @@ export const Image = function Image({
       isMounted = false;
       controller.abort();
     };
-  }, [cachePolicy, cachePriority, cacheVariant, shouldUseFileCache, sourceUri]);
+  }, [
+    cachePolicy,
+    cachePriority,
+    cacheVariant,
+    diskCachedSource,
+    shouldUseFileCache,
+    sourceUri,
+  ]);
 
   return (
     <View style={[styles.container, containerStyle]}>

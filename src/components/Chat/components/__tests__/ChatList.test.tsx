@@ -75,7 +75,7 @@ describe('ChatList', () => {
         onDataChange: true,
       },
       maintainScrollAtEndThreshold: 0.1,
-      maintainVisibleContentPosition: true,
+      maintainVisibleContentPosition: false,
       onEndReachedThreshold: 0.02,
       recycleItems: true,
       viewabilityConfig: {
@@ -212,7 +212,7 @@ describe('ChatList', () => {
       props.renderItem({ item: undefined, index: 2, extraData: undefined }),
     );
 
-    expect(getByTestId('chat-row-skeleton')).toBeTruthy();
+    expect(getByTestId('chat-row-skeleton')).toBeOnTheScreen();
   });
 
   test('lets LegendList maintain the end without imperative growth scrolling', () => {
@@ -251,7 +251,7 @@ describe('ChatList', () => {
     expect(scrollToEnd).not.toHaveBeenCalled();
   });
 
-  test('disables maintain-scroll-at-end when the user has left the bottom', () => {
+  test('enables visible-content anchoring when the user has left the bottom', () => {
     const listRef = { current: null };
     render(
       <ChatList
@@ -273,8 +273,10 @@ describe('ChatList', () => {
 
     const props = mockLegendList.mock.calls[0]?.[0] as {
       maintainScrollAtEnd?: unknown;
+      maintainVisibleContentPosition?: boolean;
     };
     expect(props.maintainScrollAtEnd).toEqual(false);
+    expect(props.maintainVisibleContentPosition).toBe(true);
   });
 
   test('updates maintain-scroll-at-end when anchoring is disabled after mount', () => {
@@ -318,8 +320,10 @@ describe('ChatList', () => {
 
     const props = mockLegendList.mock.calls.at(-1)?.[0] as {
       maintainScrollAtEnd?: unknown;
+      maintainVisibleContentPosition?: boolean;
     };
     expect(props.maintainScrollAtEnd).toEqual(false);
+    expect(props.maintainVisibleContentPosition).toBe(true);
   });
 
   test('passes bounded content-size anchoring through to LegendList', () => {

@@ -1,11 +1,13 @@
+import { memo, useMemo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
-import { memo } from 'react';
+import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
 import { StyleSheet, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+
+const EMOTE_SUGGESTION_ITEM_SIZE = 48;
 
 interface EmoteSuggestionsProps {
   emotes: SanitisedEmote[];
@@ -15,6 +17,45 @@ interface EmoteSuggestionsProps {
   suggestionTranslateY: number;
 }
 
+function createRenderEmoteSuggestionItem(
+  onPress: (emote: SanitisedEmote) => void,
+) {
+  return function RenderEmoteSuggestionItem({
+    item,
+  }: LegendListRenderItemProps<SanitisedEmote>) {
+    return <EmoteSuggestionItem item={item} onPress={onPress} />;
+  };
+}
+
+function EmoteSuggestionItem({
+  item,
+  onPress,
+}: {
+  item: SanitisedEmote;
+  onPress: (emote: SanitisedEmote) => void;
+}) {
+  return (
+    <Button style={styles.suggestionItem} onPress={() => onPress(item)}>
+      <Image
+        source={item.url}
+        cacheVariant='emote'
+        style={styles.emoteImage}
+        useNitro
+        trackLoadTime
+        trackLoadContext='chat.emote-suggestions'
+      />
+      <View style={styles.emoteTextContainer}>
+        <Text style={styles.emoteName} numberOfLines={1} ellipsizeMode='tail'>
+          {item.name}
+        </Text>
+        <Text style={styles.emoteSite} numberOfLines={1} ellipsizeMode='tail'>
+          {item.site}
+        </Text>
+      </View>
+    </Button>
+  );
+}
+
 export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
@@ -22,6 +63,10 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   suggestionScale,
   suggestionTranslateY,
 }: EmoteSuggestionsProps) {
+  const renderItem = useMemo(
+    () => createRenderEmoteSuggestionItem(handleEmotePress),
+    [handleEmotePress],
+  );
   const suggestionStyle = {
     opacity: suggestionOpacity,
     transform: [
@@ -38,51 +83,20 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
     <View style={[styles.suggestionsWrapper, suggestionStyle]}>
       <View style={styles.suggestionsContainer}>
         <Text style={styles.headerLabel}>Emotes</Text>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
+        <LegendList
+          data={emotes}
           horizontal
+          estimatedItemSize={EMOTE_SUGGESTION_ITEM_SIZE}
+          keyExtractor={item => item.id}
           keyboardShouldPersistTaps='handled'
+          renderItem={renderItem}
           showsHorizontalScrollIndicator={false}
-        >
-          {emotes.map(item => (
-            <Button
-              key={item.id}
-              style={styles.suggestionItem}
-              onPress={() => handleEmotePress(item)}
-            >
-              <Image
-                source={item.url}
-                cacheVariant='emote'
-                style={styles.emoteImage}
-                useNitro
-                trackLoadTime
-                trackLoadContext='chat.emote-suggestions'
-              />
-              <View style={styles.emoteTextContainer}>
-                <Text
-                  style={styles.emoteName}
-                  numberOfLines={1}
-                  ellipsizeMode='tail'
-                >
-                  {item.name}
-                </Text>
-                <Text
-                  style={styles.emoteSite}
-                  numberOfLines={1}
-                  ellipsizeMode='tail'
-                >
-                  {item.site}
-                </Text>
-              </View>
-            </Button>
-          ))}
-        </ScrollView>
+          contentContainerStyle={styles.scrollContent}
+        />
       </View>
     </View>
   );
 });
-
-EmoteSuggestions.displayName = 'EmoteSuggestions';
 
 const styles = StyleSheet.create({
   emoteImage: {
@@ -138,10 +152,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space12,
     paddingTop: theme.space12,
     paddingBottom: theme.space12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
+    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.18)',
   },
   suggestionsWrapper: {
     marginBottom: theme.space8,

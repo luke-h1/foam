@@ -2,31 +2,34 @@ import {
   FlashList as ShopifyFlashList,
   FlashListProps as ShopifyFlashListProps,
   FlashListRef,
-  ListRenderItem as FlashListRenderItem,
+  type ListRenderItem,
 } from '@shopify/flash-list';
-import { ReactNode, Ref, forwardRef } from 'react';
-import Animated from 'react-native-reanimated';
+import type { Ref } from 'react';
+import { Platform } from 'react-native';
+import { FlashListWithRefresh } from './FlashListWithRefresh';
 
-export type { FlashListRef };
+export type { FlashListRef, ListRenderItem };
 
 export type FlashListProps<TItem = unknown> = ShopifyFlashListProps<TItem> & {
   inverted?: boolean;
+  onRefresh?: () => void | Promise<unknown>;
 };
 
-// eslint-disable-next-line react/display-name
-export const FlashList = forwardRef(
-  <TItem,>(props: FlashListProps<TItem>, ref: Ref<FlashListRef<TItem>>) => {
-    return <ShopifyFlashList ref={ref} {...props} />;
-  },
-) as <TItem = unknown>(
-  props: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> },
-) => ReactNode;
+export function FlashList<TItem>({
+  onRefresh,
+  ref,
+  refreshControl,
+  ...props
+}: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> }) {
+  if (refreshControl) {
+    return (
+      <ShopifyFlashList ref={ref} refreshControl={refreshControl} {...props} />
+    );
+  }
 
-export const AnimatedFlashList = Animated.createAnimatedComponent(
-  FlashList,
-) as <TItem = unknown>(
-  props: ShopifyFlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> },
-) => ReactNode;
+  if (onRefresh && Platform.OS !== 'android') {
+    return <FlashListWithRefresh onRefresh={onRefresh} ref={ref} {...props} />;
+  }
 
-// Export ListRenderItem type
-export type ListRenderItem<TItem = unknown> = FlashListRenderItem<TItem>;
+  return <ShopifyFlashList ref={ref} {...props} />;
+}

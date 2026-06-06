@@ -17,6 +17,7 @@ import { Text } from '@app/components/ui/Text/Text';
 
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;
+const HISTORY_ROW_HEIGHT = 56;
 
 interface SwipeableHistoryItemProps {
   query: string;
@@ -30,7 +31,7 @@ function SwipeableHistoryItem({
   onDelete,
 }: SwipeableHistoryItemProps) {
   const translateX = useSharedValue(0);
-  const itemHeight = useSharedValue(52);
+  const itemHeight = useSharedValue(HISTORY_ROW_HEIGHT);
   const opacity = useSharedValue(1);
 
   const panGesture = Gesture.Pan()
@@ -38,44 +39,52 @@ function SwipeableHistoryItem({
     .onUpdate(event => {
       // Only allow left swipe
       if (event.translationX < 0) {
-        translateX.value = event.translationX;
+        translateX.set(event.translationX);
       }
     })
     .onEnd(event => {
       if (event.translationX < DELETE_THRESHOLD) {
         // Full swipe - delete
-        translateX.value = withTiming(-400, { duration: 200 });
-        itemHeight.value = withTiming(0, { duration: 200 });
-        opacity.value = withTiming(0, { duration: 200 }, finished => {
-          if (finished) {
-            scheduleOnRN(onDelete);
-          }
-        });
+        translateX.set(withTiming(-400, { duration: 200 }));
+        itemHeight.set(withTiming(0, { duration: 200 }));
+        opacity.set(
+          withTiming(0, { duration: 200 }, finished => {
+            if (finished) {
+              scheduleOnRN(onDelete);
+            }
+          }),
+        );
       } else if (event.translationX < SWIPE_THRESHOLD) {
         // Partial swipe - show delete button
-        translateX.value = withSpring(-80, {
-          damping: 20,
-          stiffness: 200,
-          mass: 4,
-        });
+        translateX.set(
+          withSpring(-80, {
+            damping: 20,
+            stiffness: 200,
+            mass: 4,
+          }),
+        );
       } else {
         // Snap back
-        translateX.value = withSpring(0, {
-          damping: 20,
-          stiffness: 200,
-          mass: 4,
-        });
+        translateX.set(
+          withSpring(0, {
+            damping: 20,
+            stiffness: 200,
+            mass: 4,
+          }),
+        );
       }
     });
 
   const tapGesture = Gesture.Tap().onEnd(() => {
-    if (translateX.value < -40) {
+    if (translateX.get() < -40) {
       // If swiped, tap snaps back
-      translateX.value = withSpring(0, {
-        damping: 20,
-        stiffness: 200,
-        mass: 4,
-      });
+      translateX.set(
+        withSpring(0, {
+          damping: 20,
+          stiffness: 200,
+          mass: 4,
+        }),
+      );
     } else {
       scheduleOnRN(onSelect);
     }
@@ -84,18 +93,18 @@ function SwipeableHistoryItem({
   const composedGesture = Gesture.Race(panGesture, tapGesture);
 
   const animatedRowStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
+    transform: [{ translateX: translateX.get() }],
   }));
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
-    height: itemHeight.value,
-    opacity: opacity.value,
+    height: itemHeight.get(),
+    opacity: opacity.get(),
     overflow: 'hidden',
   }));
 
   const animatedDeleteStyle = useAnimatedStyle(() => {
     const deleteOpacity = interpolate(
-      translateX.value,
+      translateX.get(),
       [0, -40, -80],
       [0, 0.5, 1],
       Extrapolation.CLAMP,
@@ -247,8 +256,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.dark,
     flexDirection: 'row',
     gap: theme.space16,
+    minHeight: HISTORY_ROW_HEIGHT,
     paddingHorizontal: theme.space16,
-    paddingVertical: theme.space16,
+    paddingVertical: theme.space8,
   },
   historyList: {
     gap: 1,
@@ -260,6 +270,7 @@ const styles = StyleSheet.create({
   query: {
     color: theme.color.text.dark,
     flex: 1,
+    minWidth: 0,
   },
   sectionTitle: {
     letterSpacing: 0.5,

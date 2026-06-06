@@ -7,6 +7,8 @@ import {
 } from '@testing-library/react-native';
 import { ReactElement, ReactNode } from 'react';
 
+const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
+
 export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -27,7 +29,7 @@ export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
             accessToken: 'test-token',
             expiresIn: 3600,
             tokenType: 'bearer',
-            expiresAt: Date.now() + 3600000,
+            expiresAt: TEST_TOKEN_EXPIRES_AT,
           },
         }}
         user={undefined}

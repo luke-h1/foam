@@ -1,7 +1,10 @@
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import {
   EmoteSetKind,
   type Image,
   Platform,
+  PaintsQueryDocument,
+  type PaintsQueryQuery,
   UserCosmeticsDocument,
   UserCosmeticsQuery,
   UserCosmeticsQueryVariables,
@@ -20,44 +23,17 @@ import type {
   SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
 } from '@app/types/emote';
+import {
+  convertV4PaintToPaintData,
+  pickBestFormat,
+  pickBestImage,
+  type V4Badge,
+  type V4Paint,
+} from '@app/utils/color/sevenTvPaintData';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
 import { sevenTvApi } from './api';
 import { sevenTvV4Client } from './gql/client';
-
-/**
- * Pick the best format from a set of images at the same scale.
- * Prefers AVIF > WebP > first available.
- */
-function pickBestFormat(imgs: Image[]): Image | undefined {
-  return (
-    imgs.find(img => img.mime === 'image/avif') ??
-    imgs.find(img => img.mime === 'image/webp') ??
-    imgs[0]
-  );
-}
-
-export function pickBestImage(images: readonly Image[]): Image | undefined {
-  const scales = [4, 3, 2, 1];
-
-  const result = scales.reduce<Image | undefined>((found, targetScale) => {
-    if (found) {
-      return found;
-    }
-
-    const atScale = images.filter(img => img.scale === targetScale);
-    if (atScale.length === 0) {
-      return undefined;
-    }
-
-    const animated = atScale.filter(img => img.frameCount > 1);
-    return animated.length > 0
-      ? pickBestFormat(animated)
-      : pickBestFormat(atScale);
-  }, undefined);
-
-  return result;
-}
 
 interface SevenTvFile {
   name: string;
@@ -193,12 +169,6 @@ export interface StvEmote {
   createdAt: number;
   owner: StvUser;
 }
-
-type V4User = NonNullable<UserCosmeticsQuery['users']['user']>;
-
-export type V4Paint = NonNullable<V4User['style']['activePaint']>;
-
-export type V4Badge = NonNullable<V4User['style']['activeBadge']>;
 
 export interface UserCosmeticsInfo {
   userId: string;
@@ -660,5 +630,22 @@ export const sevenTvService = {
       });
       return null;
     }
+  },
+
+  fetchAllPaints: async (): Promise<PaintData[]> => {
+    const { data, error } = await sevenTvV4Client.query<PaintsQueryQuery>({
+      query: PaintsQueryDocument,
+      fetchPolicy: 'network-only',
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const paints = data?.paints?.paints ?? [];
+
+    return paints
+      .map(convertV4PaintToPaintData)
+      .sort((a, b) => a.name.localeCompare(b.name));
   },
 } as const;

@@ -39,13 +39,10 @@ yarn-error.*
 /android
 
 # expo modules
-modules/core-haptics/build
 !modules/**/android/
 !modules/**/android/**
 !modules/**/ios/
 !modules/**/ios/**
-!modules/core-haptics/android/
-!modules/core-haptics/ios/
 
 # Turborepo
 .turbo

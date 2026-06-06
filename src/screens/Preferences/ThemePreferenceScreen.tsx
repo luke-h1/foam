@@ -5,7 +5,6 @@ import {
   EmptyLayoutHeader,
   EmptyLayoutTitle,
 } from '@app/components/EmptyLayout/EmptyLayout';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
@@ -13,11 +12,6 @@ import { View, StyleSheet } from 'react-native';
 export function ThemePreferenceScreen() {
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title='Theme'
-        subtitle='Current visual mode'
-        size='medium'
-      />
       <EmptyLayout variant='outline' style={styles.empty}>
         <EmptyLayoutHeader>
           <EmptyLayoutTitle>Foam Dark</EmptyLayoutTitle>

@@ -165,7 +165,7 @@ const loggingConfig = {
   },
   stv: {
     enabled: true,
-    color: 'green',
+    color: 'cyan',
   },
   bttv: {
     enabled: true,
@@ -193,11 +193,11 @@ const loggingConfig = {
   },
   cache: {
     enabled: true,
-    color: 'green',
+    color: 'cyan',
   },
   cachedPhotos: {
     enabled: true,
-    color: 'green',
+    color: 'cyan',
   },
   filesystem: {
     enabled: true,
@@ -209,7 +209,7 @@ const loggingConfig = {
    */
   twitchWs: {
     enabled: true,
-    color: 'green',
+    color: 'blueBright',
   },
   stvWs: {
     enabled: true,
@@ -227,7 +227,6 @@ const loggingConfig = {
       | 'default'
       | 'black'
       | 'red'
-      | 'green'
       | 'yellow'
       | 'blue'
       | 'magenta'
@@ -235,7 +234,6 @@ const loggingConfig = {
       | 'white'
       | 'grey'
       | 'redBright'
-      | 'greenBright'
       | 'yellowBright'
       | 'blueBright'
       | 'magentaBright'
@@ -247,7 +245,6 @@ const loggingConfig = {
 type LoggingMethods = Record<defLvlType, (...args: unknown[]) => void>;
 
 export type AllowedPrefix = keyof typeof loggingConfig;
-export const allowedPrefixes = Object.keys(loggingConfig) as AllowedPrefix[];
 
 const baseLogger = rnlogger.createLogger({
   transport: [consoleTransport, genericTransport],
@@ -265,9 +262,9 @@ const baseLogger = rnlogger.createLogger({
       ),
     },
   },
-  enabledExtensions: Object.entries(loggingConfig)
-    .filter(([, s]) => s.enabled)
-    .map(([k]) => k),
+  enabledExtensions: Object.entries(loggingConfig).flatMap(([k, s]) =>
+    s.enabled ? [k] : [],
+  ),
 });
 
 const createExtendedLogger = (prefix: AllowedPrefix): LoggingMethods =>

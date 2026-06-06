@@ -2,7 +2,9 @@
 /* eslint-disable camelcase */
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chatStore/constants';
+import { theme } from '@app/styles/themes';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { act, render, fireEvent } from '@testing-library/react-native';
 import type { ReactTestInstance } from 'react-test-renderer';
@@ -99,9 +101,36 @@ describe('RichChatMessage', () => {
 
     const { getByText, queryByText } = render(<RichChatMessage {...message} />);
 
-    expect(getByText('Hello world')).toBeTruthy();
+    expect(getByText('Hello world')).toBeOnTheScreen();
+
     expect(queryByText('Hello')).toBeNull();
     expect(queryByText('world')).toBeNull();
+  });
+
+  test('reserves blank badge slots without rendering blank text bars', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: '' }],
+      {},
+      {
+        badges: [
+          {
+            id: 'cold-badge',
+            owner_username: 'testuser',
+            set: 'cold',
+            title: 'Cold Badge',
+            type: 'badge',
+            url: '',
+          },
+        ],
+      },
+    );
+
+    const { getByTestId, queryByTestId } = render(
+      <RichChatMessage {...message} />,
+    );
+
+    expect(getByTestId('chat-badge-placeholder')).toBeOnTheScreen();
+    expect(queryByTestId('chat-text-placeholder')).toBeNull();
   });
 
   describe('Long Press Reply', () => {
@@ -117,7 +146,9 @@ describe('RichChatMessage', () => {
       fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnReply).toHaveBeenCalledTimes(1);
+
       const replyMessage = mockOnReply.mock.calls[0]?.[0];
+
       expect({
         color: replyMessage?.userstate.color,
         message_id: replyMessage?.message_id,
@@ -362,9 +393,11 @@ describe('RichChatMessage', () => {
 
       const { getByText } = render(<RichChatMessage {...message} />);
 
-      expect(getByText('Base')).toBeTruthy();
-      expect(getByText('Overlay:overlay')).toBeTruthy();
-      expect(getByText('Detached')).toBeTruthy();
+      expect(getByText('Base')).toBeOnTheScreen();
+
+      expect(getByText('Overlay:overlay')).toBeOnTheScreen();
+
+      expect(getByText('Detached')).toBeOnTheScreen();
     });
   });
 
@@ -392,7 +425,49 @@ describe('RichChatMessage', () => {
       fireEvent.press(getByTestId('chat-reply-context-button'));
 
       expect(mockOnReplyContextPress).toHaveBeenCalledTimes(1);
+
       expect(mockOnReplyContextPress).toHaveBeenCalledWith('parent-msg-456');
+    });
+
+    test('should render reply-target @mentions as plain text but keep other mention colors', () => {
+      const message = createMockMessage(
+        [
+          { type: 'mention', content: '@OriginalUser' },
+          { type: 'text', content: ' ping ' },
+          { type: 'mention', content: '@OtherUser' },
+        ],
+        undefined,
+        {
+          parentDisplayName: 'OriginalUser',
+          replyBody: 'The original message',
+          replyDisplayName: 'OriginalUser',
+        },
+      );
+
+      const { getAllByText } = render(
+        <RichChatMessage {...message} showInlineReplyContext />,
+      );
+
+      const replyTargetMentions = getAllByText('@OriginalUser');
+
+      expect(replyTargetMentions[0]).toHaveStyle({
+        fontSize: 14,
+        lineHeight: 17,
+      });
+
+      expect(replyTargetMentions[0]).not.toHaveStyle({
+        fontWeight: '700',
+      });
+
+      const otherMention = getAllByText('@OtherUser')[0];
+
+      expect(otherMention).toBeOnTheScreen();
+      expect(otherMention).toHaveStyle({
+        color: generateRandomTwitchColor('OtherUser'),
+      });
+      expect(otherMention).not.toHaveStyle({
+        color: 'rgba(255, 255, 255, 0.5)',
+      });
     });
   });
 
@@ -413,7 +488,9 @@ describe('RichChatMessage', () => {
       fireMessageLongPress(getByTestId('chat-message'));
 
       expect(mockOnMessageLongPress).toHaveBeenCalledTimes(1);
+
       const longPressData = mockOnMessageLongPress.mock.calls[0]?.[0];
+
       expect({
         login: longPressData?.login,
         message_id: longPressData?.messageData.message_id,
@@ -448,7 +525,7 @@ describe('RichChatMessage', () => {
         />,
       );
 
-      expect(getByTestId('emote-renderer')).toBeTruthy();
+      expect(getByTestId('emote-renderer')).toBeOnTheScreen();
     });
   });
 
@@ -463,7 +540,7 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(getByText('First message')).toBeTruthy();
+      expect(getByText('First message')).toBeOnTheScreen();
     });
 
     test('should NOT render first message indicator for regular messages', () => {
@@ -512,7 +589,7 @@ describe('RichChatMessage', () => {
     test('should pass correct data to onReply callback when long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Test message' }],
-        { username: 'TestUser', color: '#00FF00' },
+        { username: 'TestUser', color: '#1AC9A2' },
         {
           message_id: 'unique-msg-id',
           channel: 'test-channel',
@@ -537,13 +614,200 @@ describe('RichChatMessage', () => {
         username: replyMessage?.userstate.username,
       }).toEqual({
         channel: 'test-channel',
-        color: '#00FF00',
+        color: '#1AC9A2',
         id: 'string',
         message: [{ type: 'text', content: 'Test message' }],
         message_id: 'unique-msg-id',
         sender: 'TestUser',
         username: 'TestUser',
       });
+    });
+  });
+
+  test('calls onUsernamePress when the username is tapped', () => {
+    const onUsernamePress = jest.fn();
+    const message = createMockMessage([
+      { type: 'text', content: 'hello world' },
+    ]);
+
+    const { getByTestId } = render(
+      <RichChatMessage {...message} onUsernamePress={onUsernamePress} />,
+    );
+
+    fireEvent.press(getByTestId('chat-username-button'));
+
+    const pressData = onUsernamePress.mock.calls[0]?.[0];
+    expect({
+      login: pressData?.login,
+      userId: pressData?.userId,
+      username: pressData?.username,
+    }).toEqual({
+      login: 'testuser',
+      userId: '123456',
+      username: 'testuser',
+    });
+  });
+
+  test('can hide timestamps when disabled', () => {
+    const message = createMockMessage([
+      { type: 'text', content: 'hello world' },
+    ]);
+
+    const { queryByText } = render(
+      <RichChatMessage {...message} showTimestamp={false} />,
+    );
+
+    expect(queryByText('12:00')).toBeNull();
+  });
+
+  test('highlights rows that mention the current user', () => {
+    const message = createMockMessage([
+      { type: 'mention', content: '@testuser' },
+      { type: 'text', content: ' hello' },
+    ]);
+
+    const { getByTestId } = render(
+      <RichChatMessage {...message} currentUsername='testuser' />,
+    );
+
+    expect(getByTestId('chat-message')).toHaveStyle({
+      borderLeftColor: theme.colorViolet,
+      borderLeftWidth: 2,
+    });
+  });
+
+  test('highlights rows sent by highlighted users', () => {
+    const message = createMockMessage([
+      { type: 'text', content: 'hello from the highlighted sender' },
+    ]);
+
+    const { getByTestId } = render(
+      <RichChatMessage {...message} highlightedUsers={['testuser']} />,
+    );
+
+    expect(getByTestId('chat-message')).toHaveStyle({
+      borderLeftWidth: 2,
+    });
+  });
+
+  test('renders denser text in compact mode', () => {
+    const message = createMockMessage([
+      { type: 'text', content: 'hello world' },
+    ]);
+
+    const { getByText } = render(
+      <RichChatMessage {...message} density='compact' />,
+    );
+
+    expect(getByText('hello world')).toHaveStyle({
+      fontSize: 11,
+      lineHeight: 14,
+    });
+  });
+
+  test('renders viewer milestone events inline without repeating the sender name in the event body', () => {
+    const message = createMockMessage([
+      {
+        type: 'viewermilestone',
+        category: 'watch-streak',
+        reward: '450',
+        value: '5',
+        content: '',
+        systemMsg:
+          'TestUser\\swatched\\s5\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!',
+        login: 'testuser',
+        displayName: 'TestUser',
+      },
+    ]);
+
+    const { getByText, queryByTestId } = render(
+      <RichChatMessage {...message} />,
+    );
+
+    expect(
+      getByText(
+        'TestUser watched 5 consecutive streams and sparked a watch streak!',
+      ),
+    ).toBeOnTheScreen();
+    expect(queryByTestId('chat-message')).not.toHaveTextContent(
+      /TestUser\s+TestUser/,
+    );
+    expect(queryByTestId('chat-username-button')).toBeNull();
+  });
+
+  test('renders a standalone channel point redemption as a system notice', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: 'RewardUser redeemed Hydrate' }],
+      {
+        username: 'twitch',
+        login: 'twitch',
+      },
+      {
+        isTwitchSystemNotice: true,
+        isChannelPointRedemption: false,
+      },
+    );
+
+    const { getByText, queryByTestId, queryByText } = render(
+      <RichChatMessage {...message} />,
+    );
+
+    expect(getByText('RewardUser redeemed Hydrate')).toBeOnTheScreen();
+    expect(queryByText('Channel Points reward')).toBeNull();
+    expect(queryByTestId('chat-username-button')).toBeNull();
+  });
+
+  test('renders channel point reward chrome when the user shares a message', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: '你好' }],
+      {
+        'display-name': 'testUser',
+        username: 'testUser',
+        login: 'testuser',
+        'room-id': '67890',
+        'custom-reward-id': 'reward-tts',
+        'msg-param-custom-reward-title': 'Chinese TTS',
+      },
+      {
+        isChannelPointRedemption: true,
+      },
+    );
+
+    const { getByText, queryByText } = render(<RichChatMessage {...message} />);
+
+    expect(getByText('redeemed')).toBeOnTheScreen();
+    expect(getByText('Chinese TTS')).toBeOnTheScreen();
+    expect(getByText('testUser')).toBeOnTheScreen();
+    expect(getByText('testUser:')).toBeOnTheScreen();
+    expect(getByText('你好')).toBeOnTheScreen();
+    expect(queryByText('Channel Points reward')).toBeNull();
+  });
+
+  test('renders Highlight My Message with compact meta and violet accent', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: 'hello world' }],
+      {
+        'display-name': 'Rexdain',
+        username: 'Rexdain',
+        login: 'rexdain',
+        'msg-id': 'highlighted-message',
+        'custom-reward-id': 'reward-highlight',
+      },
+      {
+        isChannelPointRedemption: true,
+        isHighlightedMessage: true,
+      },
+    );
+
+    const { getByTestId, getByText, queryByText } = render(
+      <RichChatMessage {...message} />,
+    );
+
+    expect(getByText('Highlight My Message')).toBeOnTheScreen();
+    expect(getByText('Rexdain:')).toBeOnTheScreen();
+    expect(queryByText('redeemed')).toBeNull();
+    expect(getByTestId('chat-message')).toHaveStyle({
+      borderLeftWidth: 2,
     });
   });
 });

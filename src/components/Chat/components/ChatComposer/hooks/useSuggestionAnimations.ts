@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-
 interface UseSuggestionAnimationsProps {
   shouldShow: boolean;
   onHideComplete?: () => void;

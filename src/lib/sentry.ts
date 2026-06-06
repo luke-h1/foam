@@ -63,15 +63,6 @@ export function countMetric(
   });
 }
 
-export function startSpan<T>(
-  name: string,
-  op: string,
-  fn: () => T,
-  attributes?: Record<string, string | number | boolean>,
-): T {
-  return Sentry.startSpan({ name, op, attributes }, fn);
-}
-
 export async function startSpanAsync<T>(
   name: string,
   op: string,
@@ -79,22 +70,6 @@ export async function startSpanAsync<T>(
   attributes?: Record<string, string | number | boolean>,
 ): Promise<T> {
   return Sentry.startSpan({ name, op, attributes }, fn);
-}
-
-export function measurePerformance<T>(
-  operation: string,
-  fn: () => T,
-  attributes?: Record<string, string | number | boolean>,
-): T {
-  return startSpan(operation, 'function', fn, attributes);
-}
-
-export async function measurePerformanceAsync<T>(
-  operation: string,
-  fn: () => Promise<T>,
-  attributes?: Record<string, string | number | boolean>,
-): Promise<T> {
-  return startSpanAsync(operation, 'function', fn, attributes);
 }
 
 type MonitoringEventPrefix =
@@ -128,6 +103,7 @@ type MonitoringEventPrefix =
   | 'twitch_polls'
   | 'twitch_predictions'
   | 'twitch_provider'
+  | 'twitch_sign_in'
   | 'twitch_ws'
   | 'unknown';
 
@@ -284,10 +260,3 @@ export function countOtaMetric(
 ): void {
   countMetric(name, attributes, value);
 }
-
-export const navigationIntegration = {
-  id: 'navigation',
-  setupOnce(): void {
-    return;
-  },
-};

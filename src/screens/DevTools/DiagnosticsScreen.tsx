@@ -1,18 +1,5 @@
-import { theme } from '@app/styles/themes';
-import { View, StyleSheet } from 'react-native';
 import { Diagnostics } from './components/Diagnostics';
 
 export function DiagnosticsScreen() {
-  return (
-    <View style={styles.container}>
-      <Diagnostics />
-    </View>
-  );
+  return <Diagnostics />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.color.background.dark,
-    flex: 1,
-  },
-});

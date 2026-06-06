@@ -1,0 +1,28 @@
+name: React Doctor
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  react-doctor:
+    name: React Doctor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          persist-credentials: false
+
+      - name: Run React Doctor
+        uses: millionco/react-doctor@b612664043a9be414166e3c6a69b355e39a8dcf4 # v1.1.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          diff: ${{ github.base_ref }}
+          fail-on: error
+          annotations: true

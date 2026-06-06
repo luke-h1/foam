@@ -16,7 +16,10 @@ import {
   SevenTvEmote,
   SevenTvHost,
 } from '../../services/seventv-service';
-import { IndexedCollection } from '../../services/ws/util/indexedCollection';
+import {
+  IndexedCollection,
+  indexedCollectionToArray,
+} from '../../services/ws/util/indexedCollection';
 
 interface EventObject {
   id: string;
@@ -40,6 +43,42 @@ export interface ChangeMap<TValue, TNested = false> {
   contextual?: boolean;
 }
 
+function getTwitchConnectionId(
+  connections:
+    | IndexedCollection<{ platform?: string; id?: string }>
+    | Record<string, unknown>
+    | undefined,
+): string | null {
+  if (!connections) {
+    return null;
+  }
+
+  const values =
+    'length' in connections
+      ? indexedCollectionToArray(
+          connections as IndexedCollection<{
+            platform?: string;
+            id?: string;
+          }>,
+        )
+      : Object.values(connections as Record<string, unknown>);
+
+  for (const connection of values) {
+    if (
+      connection &&
+      typeof connection === 'object' &&
+      'platform' in connection &&
+      connection.platform === 'TWITCH' &&
+      'id' in connection &&
+      typeof connection.id === 'string'
+    ) {
+      return connection.id;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Represents a color value from 7TV stored as a signed 32-bit integer in RGBA format.
  *
@@ -51,7 +90,7 @@ export interface ChangeMap<TValue, TNested = false> {
  *
  * @example
  * // Fully opaque red: 0xFF0000FF
- * // Fully opaque green: 0x00FF00FF
+ * // Fully opaque teal: 0x00FF00FF
  * // Semi-transparent blue: 0x0000FF80
  */
 export type SevenTvColor = number;
@@ -115,7 +154,7 @@ export interface PaintStop {
  * bitwise operations convert to 32-bit signed integers.
  *
  * @param color - The packed RGBA color as a 32-bit signed integer.
- * @returns An object containing the red, green, blue, and alpha channel values (0-255).
+ * @returns An object containing the red, middle, blue, and alpha channel values (0-255).
  *
  * @example
  * ```typescript
@@ -141,14 +180,47 @@ export type PaintFunction = 'LINEAR_GRADIENT' | 'RADIAL_GRADIENT' | 'URL';
  */
 export type PaintShape = 'circle' | 'ellipse';
 
+export type PaintCanvasRepeat =
+  | ''
+  | 'no-repeat'
+  | 'repeat'
+  | 'repeat-x'
+  | 'repeat-y'
+  | 'round'
+  | 'space'
+  | 'revert'
+  | 'unset';
+
+export interface PaintLayerData {
+  function: PaintFunction;
+  stops: IndexedCollection<PaintStop>;
+  angle: number;
+  shape: PaintShape;
+  repeat: boolean;
+  image_url: string;
+  canvas_repeat: PaintCanvasRepeat;
+  at: [number, number] | null;
+  size: [number, number] | null;
+}
+
+export interface PaintTextStroke {
+  color: SevenTvColor;
+  width: number;
+}
+
+export interface PaintTextStyle {
+  weight?: number;
+  transform?: 'uppercase' | 'lowercase';
+  stroke?: PaintTextStroke;
+  shadows?: IndexedCollection<PaintShadow>;
+}
+
 /**
  * Represents a 7TV badge cosmetic with its visual and metadata.
  */
 export interface BadgeData extends EventObject {
-  /** The CDN host information for badge image URLs. */
   host: SevenTvHost;
 
-  /** The tooltip text displayed when hovering over the badge. */
   tooltip: string;
 }
 
@@ -193,25 +265,11 @@ export interface PaintData {
    */
   color: SevenTvColor | null;
 
-  /**
-   * Legacy gradient layers container.
-   * Currently unused in favor of the `stops` property, kept for API compatibility.
-   */
-  gradients: {
-    length: number;
-  };
+  layers: IndexedCollection<PaintLayerData>;
 
-  /**
-   * Drop shadow effects applied behind the painted text.
-   * Multiple shadows can be combined for glow, outline, or depth effects.
-   */
   shadows: IndexedCollection<PaintShadow>;
 
-  /**
-   * Optional text content associated with the paint.
-   * Rarely used in practice.
-   */
-  text: string | null;
+  textStyle: PaintTextStyle | null;
 
   /**
    * The type of gradient or fill function used to render this paint.
@@ -861,8 +919,11 @@ export default class SevenTvWsService {
               (file: { name: string }) => file.name === '1x.avif',
             );
 
+          const channelEmoteName =
+            emote.value.name?.trim() || emote.value.data.name;
+
           addedEmotes.push({
-            name: emote.value.data.name,
+            name: channelEmoteName,
             id: emote.value.id,
             url: `https://cdn.7tv.app/emote/${emote.value.id}/${emote4x?.name ?? '1x.avif'}`,
             static_url: emote4x?.static_name
@@ -1124,26 +1185,7 @@ export default class SevenTvWsService {
               const entitlement = update.value.object;
 
               // Extract Twitch user ID from connections
-              if (entitlement.user?.connections) {
-                const twitchConnection = Object.values(
-                  entitlement.user.connections,
-                ).find(
-                  conn =>
-                    conn &&
-                    typeof conn === 'object' &&
-                    'platform' in conn &&
-                    conn.platform === 'TWITCH',
-                );
-
-                if (
-                  twitchConnection &&
-                  typeof twitchConnection === 'object' &&
-                  'id' in twitchConnection &&
-                  typeof twitchConnection.id === 'string'
-                ) {
-                  ttvUserId = twitchConnection.id;
-                }
-              }
+              ttvUserId = getTwitchConnectionId(entitlement.user?.connections);
 
               if (entitlement.user?.style) {
                 if (entitlement.user.style.paint_id) {
@@ -1165,26 +1207,7 @@ export default class SevenTvWsService {
             if ('object' in push.value && push.value.object) {
               const entitlement = push.value.object;
 
-              if (entitlement.user?.connections) {
-                const twitchConnection = Object.values(
-                  entitlement.user.connections,
-                ).find(
-                  conn =>
-                    conn &&
-                    typeof conn === 'object' &&
-                    'platform' in conn &&
-                    conn.platform === 'TWITCH',
-                );
-
-                if (
-                  twitchConnection &&
-                  typeof twitchConnection === 'object' &&
-                  'id' in twitchConnection &&
-                  typeof twitchConnection.id === 'string'
-                ) {
-                  ttvUserId = twitchConnection.id;
-                }
-              }
+              ttvUserId = getTwitchConnectionId(entitlement.user?.connections);
 
               if (entitlement.user?.style) {
                 if (entitlement.user.style.paint_id) {
@@ -1278,6 +1301,7 @@ export default class SevenTvWsService {
       Date.now() - waitStartTime < SevenTvWsService.ID_WAIT_TIMEOUT
     ) {
       logger.stvWs.debug('💚 Waiting for twitchChannelId to be set...');
+      // eslint-disable-next-line react-doctor/async-await-in-loop -- poll until channel id is available
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
@@ -1353,6 +1377,7 @@ export default class SevenTvWsService {
       Date.now() - waitStartTime < SevenTvWsService.ID_WAIT_TIMEOUT
     ) {
       logger.stvWs.debug('💚 Waiting for sevenTVemoteSetId to be set...');
+      // eslint-disable-next-line react-doctor/async-await-in-loop -- poll until emote set id is available
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 

@@ -1,38 +1,14 @@
-import { Image as ExpoImage, ImageProps as ExpoImageProps } from 'expo-image';
+import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 import { recordInfo } from '@app/lib/sentry';
-import { View, ViewStyle, StyleProp, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NitroImage } from 'react-native-nitro-image';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import {
   cacheImageFromUrl,
   getCachedImageUri,
-  type ImageCachePriority,
 } from '@app/utils/image/image-cache';
-import { useCallback, useRef, useEffect, useState } from 'react';
-
-export const prefetchImage = (source: string | string[]) =>
-  ExpoImage.prefetch(source);
-
-export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
-  containerStyle?: StyleProp<ViewStyle>;
-  /**
-   * Use NitroImage for faster rendering (direct native bindings)
-   * Best for chat emotes and high-volume image lists
-   */
-  useNitro?: boolean;
-  /**
-   * Track load timings and report to Sentry for observability
-   */
-  trackLoadTime?: boolean;
-  /**
-   * Label used for Sentry context when reporting image load timing
-   */
-  trackLoadContext?: string;
-  cachePriority?: ImageCachePriority;
-  cacheToFile?: boolean;
-  cacheVariant?: string;
-  source?: string | { uri: string } | number;
-}
+import { useRef, useEffect, useState, useCallback } from 'react';
+import type { ImageProps } from './Image.types';
 
 /**
  * Extract URL from various source formats
@@ -69,11 +45,18 @@ export const Image = function Image({
 }: ImageProps) {
   const url = getSourceUrl(source);
   const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
-  const [fileCachedUrl, setFileCachedUrl] = useState<string | null>(() =>
+  const diskCachedUrl =
     url && shouldUseFileCache
       ? getCachedImageUri(url, { variant: cacheVariant })
-      : null,
-  );
+      : null;
+  const [downloadedCache, setDownloadedCache] = useState<{
+    sourceUrl: string | null;
+    cachedUrl: string | null;
+  }>({ sourceUrl: null, cachedUrl: null });
+  const downloadedCachedUrl =
+    downloadedCache.sourceUrl === url ? downloadedCache.cachedUrl : null;
+
+  const fileCachedUrl = diskCachedUrl ?? downloadedCachedUrl;
   const resolvedUrl = fileCachedUrl ?? url;
   const resolvedSource =
     fileCachedUrl && typeof source === 'object' && 'uri' in source
@@ -84,46 +67,43 @@ export const Image = function Image({
   const imageRenderer = useNitro ? 'NitroImage' : 'Image';
   const trackLoad = Boolean(trackLoadTime && resolvedUrl);
 
-  const reportImageLoadTime = useCallback(
-    (timing: {
-      mountTimestamp: number;
-      loadStartTimestamp: number;
-      loadEndTimestamp: number;
-    }) => {
-      if (!trackLoad) {
-        return;
+  const reportImageLoadTime = (timing: {
+    mountTimestamp: number;
+    loadStartTimestamp: number;
+    loadEndTimestamp: number;
+  }) => {
+    if (!trackLoad) {
+      return;
+    }
+
+    const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
+    const startToLoadTimeMs =
+      timing.loadEndTimestamp - timing.loadStartTimestamp;
+    const safeHost = (() => {
+      if (!resolvedUrl) {
+        return undefined;
       }
+      try {
+        return new URL(resolvedUrl).hostname;
+      } catch {
+        return undefined;
+      }
+    })();
 
-      const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
-      const startToLoadTimeMs =
-        timing.loadEndTimestamp - timing.loadStartTimestamp;
-      const safeHost = (() => {
-        if (!resolvedUrl) {
-          return undefined;
-        }
-        try {
-          return new URL(resolvedUrl).hostname;
-        } catch {
-          return undefined;
-        }
-      })();
-
-      recordInfo({
-        name: 'data_loading_info',
-        message: 'chat.image.load_time',
-        params: {
-          urlHost: safeHost ?? 'unknown',
-          url: typeof source === 'string' ? source : 'uri-object',
-          durationFromMountMs: Math.round(totalLoadTimeMs),
-          durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-          imageRenderer,
-          imageContext: trackLoadContext ?? 'chat-image',
-          host: safeHost,
-        },
-      });
-    },
-    [imageRenderer, trackLoad, trackLoadContext, resolvedUrl, source],
-  );
+    recordInfo({
+      name: 'data_loading_info',
+      message: 'chat.image.load_time',
+      params: {
+        urlHost: safeHost ?? 'unknown',
+        url: typeof source === 'string' ? source : 'uri-object',
+        durationFromMountMs: Math.round(totalLoadTimeMs),
+        durationFromLoadStartMs: Math.round(startToLoadTimeMs),
+        imageRenderer,
+        imageContext: trackLoadContext ?? 'chat-image',
+        host: safeHost,
+      },
+    });
+  };
 
   const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
     imageRenderer,
@@ -137,15 +117,7 @@ export const Image = function Image({
   }, [resolvedUrl]);
 
   useEffect(() => {
-    if (!url || !shouldUseFileCache) {
-      setFileCachedUrl(null);
-      return;
-    }
-
-    const cached = getCachedImageUri(url, { variant: cacheVariant });
-    setFileCachedUrl(cached);
-
-    if (cached) {
+    if (!url || !shouldUseFileCache || diskCachedUrl) {
       return;
     }
 
@@ -157,7 +129,7 @@ export const Image = function Image({
       variant: cacheVariant,
     }).then(cachedUrl => {
       if (!cancelled && cachedUrl !== url) {
-        setFileCachedUrl(cachedUrl);
+        setDownloadedCache({ sourceUrl: url, cachedUrl });
       }
     });
 
@@ -165,7 +137,7 @@ export const Image = function Image({
       cancelled = true;
       controller.abort();
     };
-  }, [cachePriority, cacheVariant, shouldUseFileCache, url]);
+  }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
   const handleNitroLoadEnd = useCallback(() => {
     if (!useNitro || !trackLoad || didReportNitroLoad.current || !resolvedUrl) {
@@ -189,16 +161,12 @@ export const Image = function Image({
     onLoadEndProp?.();
   }, [onLoadEnd, onLoadEndProp, trackLoad]);
 
-  const handleError = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (error: any) => {
-      if (__DEV__) {
-        console.warn('Image loading error:', error);
-      }
-      onError?.(error);
-    },
-    [onError],
-  );
+  const handleError = (error: unknown) => {
+    if (__DEV__) {
+      console.warn('Image loading error:', error);
+    }
+    onError?.(error as ImageErrorEventData);
+  };
 
   if (useNitro && resolvedUrl) {
     const resizeMode = ((): 'cover' | 'contain' | 'stretch' => {

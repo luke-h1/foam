@@ -1,11 +1,7 @@
 import { countMetric } from '@app/lib/sentry';
-import {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
+import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
+import { useImperativeHandle, useRef, useState, useCallback } from 'react';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import type { Ref } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
@@ -31,7 +27,7 @@ interface UsePlayerBridgeOptions {
   onPlaybackLatencyChange?: (latencySeconds: number) => void;
   onPlay?: () => void;
   onReady?: () => void;
-  ref: Ref<StreamPlayerRef>;
+  ref?: Ref<StreamPlayerRef>;
   runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;
   sourceKey: string;
@@ -84,33 +80,40 @@ export function usePlayerBridge({
     typeof setTimeout
   > | null>(null);
   const lastPlaybackLatencySecondsRef = useRef<number | null>(null);
+  const [prevPlayerSource, setPrevPlayerSource] = useState({
+    autoplay,
+    sourceKey,
+    webViewKey,
+  });
 
-  useEffect(() => {
+  if (
+    prevPlayerSource.autoplay !== autoplay ||
+    prevPlayerSource.sourceKey !== sourceKey ||
+    prevPlayerSource.webViewKey !== webViewKey
+  ) {
+    setPrevPlayerSource({ autoplay, sourceKey, webViewKey });
     setPlaybackLatencySeconds(null);
     lastPlaybackLatencySecondsRef.current = null;
     setOverlayUnlocked(false);
     userPausedRef.current = !autoplay;
-  }, [autoplay, sourceKey]);
-
-  useEffect(() => {
-    return () => {
-      if (transientPauseResumeTimeoutRef.current) {
-        clearTimeout(transientPauseResumeTimeoutRef.current);
-        transientPauseResumeTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     setPlayerStatus({
       isReady: false,
       isBuffering: true,
     });
-  }, [sourceKey, webViewKey]);
+  }
 
-  useEffect(() => {
-    onContentGateChange?.(hasContentGate);
-  }, [hasContentGate, onContentGateChange]);
+  useUnmountCallback(() => {
+    if (transientPauseResumeTimeoutRef.current) {
+      clearTimeout(transientPauseResumeTimeoutRef.current);
+      transientPauseResumeTimeoutRef.current = null;
+    }
+  });
+
+  const onContentGateChangeRef = useSyncRef(onContentGateChange);
+  const notifyContentGateChange = (nextHasContentGate: boolean) => {
+    setHasContentGate(nextHasContentGate);
+    onContentGateChangeRef.current?.(nextHasContentGate);
+  };
 
   const resetPlayerStatus = useCallback(() => {
     setPlayerStatus({
@@ -159,49 +162,29 @@ export function usePlayerBridge({
     injectJS('window.playerControls.unmute()');
   }, [injectJS]);
 
-  const setMuted = useCallback(
-    (muted: boolean) => {
-      injectJS(`window.playerControls.setMuted(${muted})`);
-    },
-    [injectJS],
-  );
+  const setMuted = (muted: boolean) => {
+    injectJS(`window.playerControls.setMuted(${muted})`);
+  };
 
-  const setVolume = useCallback(
-    (volume: number) => {
-      injectJS(`window.playerControls.setVolume(${volume})`);
-    },
-    [injectJS],
-  );
+  const setVolume = (volume: number) => {
+    injectJS(`window.playerControls.setVolume(${volume})`);
+  };
 
-  const setChannel = useCallback(
-    (newChannel: string) => {
-      injectJS(`window.playerControls.setChannel('${newChannel}')`);
-    },
-    [injectJS],
-  );
+  const setChannel = (newChannel: string) => {
+    injectJS(`window.playerControls.setChannel('${newChannel}')`);
+  };
 
-  const setVideo = useCallback(
-    (videoId: string, timestamp?: number) => {
-      injectJS(
-        `window.playerControls.setVideo('${videoId}', ${timestamp ?? 0})`,
-      );
-    },
-    [injectJS],
-  );
+  const setVideo = (videoId: string, timestamp?: number) => {
+    injectJS(`window.playerControls.setVideo('${videoId}', ${timestamp ?? 0})`);
+  };
 
-  const setQuality = useCallback(
-    (quality: string) => {
-      injectJS(`window.playerControls.setQuality('${quality}')`);
-    },
-    [injectJS],
-  );
+  const setQuality = (quality: string) => {
+    injectJS(`window.playerControls.setQuality('${quality}')`);
+  };
 
-  const seek = useCallback(
-    (timestamp: number) => {
-      injectJS(`window.playerControls.seek(${timestamp})`);
-    },
-    [injectJS],
-  );
+  const seek = (timestamp: number) => {
+    injectJS(`window.playerControls.seek(${timestamp})`);
+  };
 
   const getCurrentTime = useCallback((): Promise<number> => {
     return new Promise(resolve => {
@@ -231,223 +214,223 @@ export function usePlayerBridge({
     });
   }, [injectJS, playerState.duration]);
 
+  const playerBridgeRef = useRef({
+    forceRefresh,
+    getCurrentTime,
+    getDuration,
+    mute,
+    pause,
+    play,
+    seek,
+    setChannel,
+    setMuted,
+    setQuality,
+    setVideo,
+    setVolume,
+    unmute,
+  });
+  playerBridgeRef.current = {
+    forceRefresh,
+    getCurrentTime,
+    getDuration,
+    mute,
+    pause,
+    play,
+    seek,
+    setChannel,
+    setMuted,
+    setQuality,
+    setVideo,
+    setVolume,
+    unmute,
+  };
+  const playerStateRef = useRef(playerState);
+  playerStateRef.current = playerState;
+
   useImperativeHandle(
     ref,
     () => ({
-      forceRefresh,
-      getChannel: () => playerState.channel,
-      getCurrentTime,
-      getDuration,
-      getMuted: () => playerState.muted,
-      getPaused: () => playerState.isPaused,
-      getVolume: () => playerState.volume,
-      mute,
-      pause,
-      play,
-      seek,
-      setChannel,
-      setMuted,
-      setQuality,
-      setVideo,
-      setVolume,
-      unmute,
+      forceRefresh: () => playerBridgeRef.current.forceRefresh(),
+      getChannel: () => playerStateRef.current.channel,
+      getCurrentTime: () => playerBridgeRef.current.getCurrentTime(),
+      getDuration: () => playerBridgeRef.current.getDuration(),
+      getMuted: () => playerStateRef.current.muted,
+      getPaused: () => playerStateRef.current.isPaused,
+      getVolume: () => playerStateRef.current.volume,
+      mute: () => playerBridgeRef.current.mute(),
+      pause: () => playerBridgeRef.current.pause(),
+      play: () => playerBridgeRef.current.play(),
+      seek: timestamp => playerBridgeRef.current.seek(timestamp),
+      setChannel: channelName =>
+        playerBridgeRef.current.setChannel(channelName),
+      setMuted: muted => playerBridgeRef.current.setMuted(muted),
+      setQuality: quality => playerBridgeRef.current.setQuality(quality),
+      setVideo: (videoId, timestamp) =>
+        playerBridgeRef.current.setVideo(videoId, timestamp),
+      setVolume: volume => playerBridgeRef.current.setVolume(volume),
+      unmute: () => playerBridgeRef.current.unmute(),
     }),
-    [
-      forceRefresh,
-      getCurrentTime,
-      getDuration,
-      mute,
-      pause,
-      play,
-      playerState.channel,
-      playerState.isPaused,
-      playerState.muted,
-      playerState.volume,
-      seek,
-      setChannel,
-      setMuted,
-      setQuality,
-      setVideo,
-      setVolume,
-      unmute,
-    ],
+    [],
   );
 
-  const handleMessage = useCallback(
-    (event: WebViewMessageEvent) => {
-      try {
-        const message = JSON.parse(event.nativeEvent.data) as PlayerMessage;
+  const handleMessage = (event: WebViewMessageEvent) => {
+    try {
+      const message = JSON.parse(event.nativeEvent.data) as PlayerMessage;
 
-        switch (message.type) {
-          case 'ready':
-            countMetric('stream.ready', {
-              autoplay,
-              component: 'StreamPlayer',
-              defer_overlay_until_user_unmute: deferOverlayUntilUserUnmute,
-            });
-            setPlayerStatus({
-              isReady: true,
-              isBuffering: false,
-            });
-            onReady?.();
+      switch (message.type) {
+        case 'ready':
+          countMetric('stream.ready', {
+            autoplay,
+            component: 'StreamPlayer',
+            defer_overlay_until_user_unmute: deferOverlayUntilUserUnmute,
+          });
+          setPlayerStatus({
+            isReady: true,
+            isBuffering: false,
+          });
+          onReady?.();
+          break;
+        case 'play':
+          if (transientPauseResumeTimeoutRef.current) {
+            clearTimeout(transientPauseResumeTimeoutRef.current);
+            transientPauseResumeTimeoutRef.current = null;
+          }
+          setPlayerState(prev => ({ ...prev, isPaused: false }));
+          break;
+        case 'playing':
+          if (transientPauseResumeTimeoutRef.current) {
+            clearTimeout(transientPauseResumeTimeoutRef.current);
+            transientPauseResumeTimeoutRef.current = null;
+          }
+          setPlayerState(prev => ({ ...prev, isPaused: false }));
+          onPlay?.();
+          break;
+        case 'pause':
+          if (resumeAfterTransientPause()) {
             break;
-          case 'play':
-            if (transientPauseResumeTimeoutRef.current) {
-              clearTimeout(transientPauseResumeTimeoutRef.current);
-              transientPauseResumeTimeoutRef.current = null;
+          }
+          setPlayerState(prev => ({ ...prev, isPaused: true }));
+          onPause?.();
+          break;
+        case 'ended':
+          onEnded?.();
+          break;
+        case 'online':
+          onOnline?.();
+          break;
+        case 'offline':
+          onOffline?.();
+          break;
+        case 'stateUpdate':
+          setPlayerStatus(prev => {
+            const { payload } = message;
+            if (
+              prev.isReady === payload.isReady &&
+              prev.isBuffering === payload.isBuffering
+            ) {
+              return prev;
             }
-            setPlayerState(prev => ({ ...prev, isPaused: false }));
-            break;
-          case 'playing':
-            if (transientPauseResumeTimeoutRef.current) {
-              clearTimeout(transientPauseResumeTimeoutRef.current);
-              transientPauseResumeTimeoutRef.current = null;
+            return {
+              isReady: payload.isReady,
+              isBuffering: payload.isBuffering,
+            };
+          });
+          setPlayerState(prev => {
+            const { payload } = message;
+            const isTransientAutoplayPause =
+              payload.isPaused && resumeAfterTransientPause();
+            if (
+              prev.isPaused ===
+                (isTransientAutoplayPause ? false : payload.isPaused) &&
+              prev.muted === payload.muted &&
+              prev.volume === payload.volume
+            ) {
+              return prev;
             }
-            setPlayerState(prev => ({ ...prev, isPaused: false }));
-            onPlay?.();
-            break;
-          case 'pause':
-            if (resumeAfterTransientPause()) {
-              break;
-            }
-            setPlayerState(prev => ({ ...prev, isPaused: true }));
-            onPause?.();
-            break;
-          case 'ended':
-            onEnded?.();
-            break;
-          case 'online':
-            onOnline?.();
-            break;
-          case 'offline':
-            onOffline?.();
-            break;
-          case 'stateUpdate':
-            setPlayerStatus(prev => {
-              const { payload } = message;
-              if (
-                prev.isReady === payload.isReady &&
-                prev.isBuffering === payload.isBuffering
-              ) {
-                return prev;
-              }
-              return {
-                isReady: payload.isReady,
-                isBuffering: payload.isBuffering,
-              };
-            });
-            setPlayerState(prev => {
-              const { payload } = message;
-              const isTransientAutoplayPause =
-                payload.isPaused && resumeAfterTransientPause();
-              if (
-                prev.isPaused ===
-                  (isTransientAutoplayPause ? false : payload.isPaused) &&
-                prev.muted === payload.muted &&
-                prev.volume === payload.volume
-              ) {
-                return prev;
-              }
-              return {
-                ...prev,
-                isPaused: isTransientAutoplayPause ? false : payload.isPaused,
-                muted: payload.muted,
-                volume: payload.volume,
-              };
-            });
-            break;
-          case 'currentTime':
-            if (currentTimeResolverRef.current) {
-              currentTimeResolverRef.current(message.payload.time);
-              currentTimeResolverRef.current = null;
-            }
-            break;
-          case 'duration':
-            if (durationResolverRef.current) {
-              durationResolverRef.current(message.payload.duration);
-              durationResolverRef.current = null;
-            }
-            break;
-          case 'trace':
-            if (__DEV__) {
-              console.warn(
-                '[StreamPlayer:embed]',
-                message.payload?.step ?? '?',
-                message.payload?.detail ?? '',
-              );
-            }
-            break;
-          case 'error':
+            return {
+              ...prev,
+              isPaused: isTransientAutoplayPause ? false : payload.isPaused,
+              muted: payload.muted,
+              volume: payload.volume,
+            };
+          });
+          break;
+        case 'currentTime':
+          if (currentTimeResolverRef.current) {
+            currentTimeResolverRef.current(message.payload.time);
+            currentTimeResolverRef.current = null;
+          }
+          break;
+        case 'duration':
+          if (durationResolverRef.current) {
+            durationResolverRef.current(message.payload.duration);
+            durationResolverRef.current = null;
+          }
+          break;
+        case 'trace':
+          if (__DEV__) {
             console.warn(
-              '[StreamPlayer:embed ERROR]',
-              message.payload?.message ?? message.payload,
+              '[StreamPlayer:embed]',
+              message.payload?.step ?? '?',
+              message.payload?.detail ?? '',
             );
-            onError?.(message.payload?.message ?? 'Unknown embed error');
-            break;
-          case 'contentGateDetected':
-            setHasContentGate(message.payload?.hasContentGate ?? false);
-            break;
-          case 'playbackBlocked':
-            break;
-          case 'twitchAuthComplete':
-            scheduleAuthCompletionReload();
-            break;
-          case 'playbackStats': {
-            const latency = message.payload.hlsLatencyBroadcaster;
-            const hasUsableLiveLatency =
-              typeof latency === 'number' &&
-              Number.isFinite(latency) &&
-              latency > 0.25 &&
-              latency < 600;
+          }
+          break;
+        case 'error':
+          console.warn(
+            '[StreamPlayer:embed ERROR]',
+            message.payload?.message ?? message.payload,
+          );
+          onError?.(message.payload?.message ?? 'Unknown embed error');
+          break;
+        case 'contentGateDetected':
+          notifyContentGateChange(message.payload?.hasContentGate ?? false);
+          break;
+        case 'playbackBlocked':
+          break;
+        case 'twitchAuthComplete':
+          scheduleAuthCompletionReload();
+          break;
+        case 'playbackStats': {
+          const latency = message.payload.hlsLatencyBroadcaster;
+          const hasUsableLiveLatency =
+            typeof latency === 'number' &&
+            Number.isFinite(latency) &&
+            latency > 0.25 &&
+            latency < 600;
 
-            if (hasUsableLiveLatency) {
-              const previousLatency = lastPlaybackLatencySecondsRef.current;
-              if (
-                previousLatency == null ||
-                Math.abs(previousLatency - latency) >= 0.25
-              ) {
-                lastPlaybackLatencySecondsRef.current = latency;
-                setPlaybackLatencySeconds(latency);
-                onPlaybackLatencyChange?.(latency);
-              }
+          if (hasUsableLiveLatency) {
+            const previousLatency = lastPlaybackLatencySecondsRef.current;
+            if (
+              previousLatency == null ||
+              Math.abs(previousLatency - latency) >= 0.25
+            ) {
+              lastPlaybackLatencySecondsRef.current = latency;
+              setPlaybackLatencySeconds(latency);
+              onPlaybackLatencyChange?.(latency);
             }
-            break;
           }
-          case 'muteState': {
-            const { muted: m, volume: v } = message.payload;
-            setPlayerState(prev =>
-              prev.muted === m && prev.volume === v
-                ? prev
-                : { ...prev, muted: m, volume: v },
-            );
-            if (deferOverlayUntilUserUnmute && m === false) {
-              setOverlayUnlocked(true);
-            }
-            break;
-          }
-          default:
-            break;
+          break;
         }
-      } catch {
-        // Ignore malformed WebView messages.
+        case 'muteState': {
+          const { muted: m, volume: v } = message.payload;
+          setPlayerState(prev =>
+            prev.muted === m && prev.volume === v
+              ? prev
+              : { ...prev, muted: m, volume: v },
+          );
+          if (deferOverlayUntilUserUnmute && m === false) {
+            setOverlayUnlocked(true);
+          }
+          break;
+        }
+        default:
+          break;
       }
-    },
-    [
-      autoplay,
-      deferOverlayUntilUserUnmute,
-      onEnded,
-      onError,
-      onOffline,
-      onOnline,
-      onContentGateChange,
-      onPause,
-      onPlaybackLatencyChange,
-      onPlay,
-      onReady,
-      resumeAfterTransientPause,
-      scheduleAuthCompletionReload,
-    ],
-  );
+    } catch {
+      // Ignore malformed WebView messages.
+    }
+  };
 
   return {
     handleMessage,

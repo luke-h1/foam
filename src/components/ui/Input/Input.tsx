@@ -8,7 +8,7 @@ import {
   UIRadius,
   UISize,
 } from '@app/styles/ui';
-import { forwardRef, useMemo } from 'react';
+import type { Ref } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -197,50 +197,43 @@ export type ThemedInputProps = Omit<
   onSubmitEditing?: (text: string) => void;
   radius?: UIRadius;
   style?: StyleProp<TextStyle & ViewStyle>;
+  ref?: Ref<InputRef>;
 };
 
-export const Input = forwardRef<InputRef, ThemedInputProps>(
-  (
-    {
-      onBlur,
-      onContentSizeChange,
-      onFocus,
-      onSelectionChange,
-      onSubmitEditing,
-      style,
-      placeholderTextColor,
-      size = 'md',
-      variant = 'outline',
-      color,
-      radius = 'default',
-      ...rest
-    },
-    ref,
-  ) => {
-    const colorScheme = useColorScheme();
-    const { accentHex } = useAccentColor();
-    const scheme = colorScheme === 'light' ? 'light' : 'dark';
+export function Input({
+  onBlur,
+  onContentSizeChange,
+  onFocus,
+  onSelectionChange,
+  onSubmitEditing,
+  style,
+  placeholderTextColor,
+  size = 'md',
+  variant = 'outline',
+  color,
+  radius = 'default',
+  ref,
+  ...rest
+}: ThemedInputProps) {
+  const colorScheme = useColorScheme();
+  const { accentHex } = useAccentColor();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
-    const variantConfig = useMemo(() => {
-      if (color) {
-        const variants = generateVariantConfig(color, scheme);
-        return variants[variant];
-      }
-      const baseHex = accentHex || colors[scheme].tint;
-      const variants = generateVariantConfigFromBase(baseHex, scheme);
-      return variants[variant];
-    }, [color, scheme, variant, accentHex]);
+  const variants = color
+    ? generateVariantConfig(color, scheme)
+    : generateVariantConfigFromBase(accentHex || colors[scheme].tint, scheme);
+  const variantConfig = variants[variant];
 
-    const inputStyles = useMemo(() => {
-      const baseStyles = {
-        backgroundColor: variantConfig.backgroundColor,
-        color: variantConfig.textColor,
-        borderColor: variantConfig.borderColor,
-        fontSize: FONT_SIZE_STYLES[size].fontSize,
-      };
+  const baseStyles = {
+    backgroundColor: variantConfig.backgroundColor,
+    color: variantConfig.textColor,
+    borderColor: variantConfig.borderColor,
+    fontSize: FONT_SIZE_STYLES[size].fontSize,
+  };
 
-      if (variant === 'underline') {
-        return [
+  const inputStyles =
+    variant === 'underline'
+      ? [
           styles.input,
           SIZE_STYLES[size],
           {
@@ -252,52 +245,46 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
             borderRadius: 0,
           },
           style,
+        ]
+      : [
+          styles.input,
+          SIZE_STYLES[size],
+          {
+            ...baseStyles,
+            borderWidth: variantConfig.borderWidth,
+            borderRadius: RADIUS_VALUES[radius],
+          },
+          style,
         ];
+
+  return (
+    <TextInput
+      ref={ref}
+      onBlur={onBlur ? () => onBlur() : undefined}
+      onContentSizeChange={
+        onContentSizeChange
+          ? event => onContentSizeChange(event.nativeEvent.contentSize)
+          : undefined
       }
-
-      return [
-        styles.input,
-        SIZE_STYLES[size],
-        {
-          ...baseStyles,
-          borderWidth: variantConfig.borderWidth,
-          borderRadius: RADIUS_VALUES[radius],
-        },
-        style,
-      ];
-    }, [size, variantConfig, radius, variant, style]);
-
-    return (
-      <TextInput
-        ref={ref}
-        onBlur={onBlur ? () => onBlur() : undefined}
-        onContentSizeChange={
-          onContentSizeChange
-            ? event => onContentSizeChange(event.nativeEvent.contentSize)
-            : undefined
-        }
-        onFocus={onFocus ? () => onFocus() : undefined}
-        onSelectionChange={
-          onSelectionChange
-            ? event => onSelectionChange(event.nativeEvent.selection)
-            : undefined
-        }
-        onSubmitEditing={
-          onSubmitEditing
-            ? event => onSubmitEditing(event.nativeEvent.text)
-            : undefined
-        }
-        placeholderTextColor={
-          placeholderTextColor || variantConfig.placeholderColor
-        }
-        style={inputStyles}
-        {...rest}
-      />
-    );
-  },
-);
-
-Input.displayName = 'Input';
+      onFocus={onFocus ? () => onFocus() : undefined}
+      onSelectionChange={
+        onSelectionChange
+          ? event => onSelectionChange(event.nativeEvent.selection)
+          : undefined
+      }
+      onSubmitEditing={
+        onSubmitEditing
+          ? event => onSubmitEditing(event.nativeEvent.text)
+          : undefined
+      }
+      placeholderTextColor={
+        placeholderTextColor || variantConfig.placeholderColor
+      }
+      style={inputStyles}
+      {...rest}
+    />
+  );
+}
 
 const styles = StyleSheet.create({
   input: { paddingHorizontal: 16, width: '100%' },

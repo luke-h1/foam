@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import type { DimensionValue } from 'react-native';
 
 export interface StreamPlayerRef {
@@ -176,6 +177,10 @@ export interface StreamPlayerProps {
    */
   onRefresh?: () => void;
   /**
+   * Callback when the share button is pressed in the overlay controls.
+   */
+  onSharePress?: () => void;
+  /**
    * Optional callback when the user taps the video area (e.g. to toggle chat in landscape).
    */
   onVideoAreaPress?: () => void;
@@ -219,6 +224,7 @@ export interface StreamPlayerProps {
    * Width of the player
    */
   width?: DimensionValue;
+  ref?: Ref<StreamPlayerRef>;
 }
 
 export interface PlayerState {

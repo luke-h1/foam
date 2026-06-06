@@ -1,7 +1,7 @@
+import type { ReactNode } from 'react';
 import { Button } from '@app/components/ui/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { type ReactNode } from 'react';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import {
   // eslint-disable-next-line no-restricted-imports
@@ -108,27 +108,33 @@ export function EmptyLayoutContent({
 }
 
 export function EmptyLayoutButton({
+  title,
   children,
   variant = 'default',
   onPress,
   style,
 }: {
-  children: ReactNode;
+  title?: string;
+  children?: ReactNode;
   variant?: EmptyLayoutVariant;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  if (typeof children === 'string') {
+  if (title) {
     return (
       <View style={style}>
         <Button
-          title={children}
+          title={title}
           disabled={!onPress}
           onPress={onPress ?? (() => {})}
           variant={variant === 'outline' ? 'outline' : 'solid'}
         />
       </View>
     );
+  }
+
+  if (!children) {
+    return null;
   }
 
   if (!onPress) {

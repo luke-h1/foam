@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+import type { MutableRefObject } from 'react';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -6,14 +8,12 @@ import {
 import { getUserBadge } from '@app/store/chatStore/cosmetics';
 import { updateMessages } from '@app/store/chatStore/messages';
 import { chatStore$ } from '@app/store/chatStore/state';
-import { prefetchImage } from '@app/components/Image/Image';
+import { prefetchImage } from '@app/components/Image/imagePrefetch';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { cacheImageFromUrl } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
-import { useCallback, type MutableRefObject } from 'react';
-
 import { normaliseChatUsername } from '../util/chatUsernames';
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets';
 import {
@@ -29,13 +29,35 @@ import {
 
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
+function warmVisibleImages({
+  badgeUrls,
+  emoteUrls,
+}: {
+  badgeUrls: string[];
+  emoteUrls: string[];
+}) {
+  const warm = (url: string, variant: 'badge' | 'emote') => {
+    void cacheImageFromUrl(url, {
+      priority: 'visible',
+      variant,
+    }).then(cachedUri => {
+      if (cachedUri !== url) {
+        void prefetchImage(cachedUri);
+      }
+    });
+  };
+
+  badgeUrls.forEach(url => warm(url, 'badge'));
+  emoteUrls.forEach(url => warm(url, 'emote'));
+}
+
 interface UseChatMessageProcessingOptions {
   channelId: string;
   handleNewMessage: (
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
   ) => void;
-  messages$: { peek: () => unknown[] };
+  messages$: { peek: () => AnyChatMessageType[] };
   show7TvEmotes: boolean;
   show7tvBadges: boolean;
   disableEmoteAnimations: boolean;
@@ -116,6 +138,10 @@ export function useChatMessageProcessing({
         senderLogin && senderLogin === currentUserLogin
           ? emoteData.twitchSubscriberEmotes
           : [];
+      const scopedTwitchSubscriberEmotes =
+        twitchTaggedSubscriberEmotes.length > 0
+          ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
+          : twitchSubscriberEmotes;
 
       try {
         const replacedMessage = processEmotesWorklet({
@@ -127,10 +153,7 @@ export function useChatMessageProcessing({
           sevenTvPersonalEmotes: personalEmotes,
           twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
           twitchChannelEmotes: emoteData.twitchChannelEmotes,
-          twitchSubscriberEmotes: [
-            ...twitchTaggedSubscriberEmotes,
-            ...twitchSubscriberEmotes,
-          ],
+          twitchSubscriberEmotes: scopedTwitchSubscriberEmotes,
           ffzChannelEmotes: emoteData.ffzChannelEmotes,
           ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
           bttvChannelEmotes: emoteData.bttvChannelEmotes,
@@ -187,7 +210,13 @@ export function useChatMessageProcessing({
 
   const reprocessVisibleMessageFromCache = useCallback(
     async (message: AnyChatMessageType) => {
-      if (message.sender === 'System' || 'notice_tags' in message) {
+      if (
+        message.sender === 'System' ||
+        ('notice_tags' in message &&
+          message.notice_tags &&
+          !message.isAnnouncement &&
+          !message.isHighlightedMessage)
+      ) {
         return;
       }
 
@@ -216,6 +245,10 @@ export function useChatMessageProcessing({
         senderLogin && senderLogin === currentUserLogin
           ? emoteData.twitchSubscriberEmotes
           : [];
+      const scopedTwitchSubscriberEmotes =
+        twitchTaggedSubscriberEmotes.length > 0
+          ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
+          : twitchSubscriberEmotes;
 
       try {
         const replacedMessage = processEmotesWorklet({
@@ -227,10 +260,7 @@ export function useChatMessageProcessing({
           sevenTvPersonalEmotes: personalEmotes,
           twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
           twitchChannelEmotes: emoteData.twitchChannelEmotes,
-          twitchSubscriberEmotes: [
-            ...twitchTaggedSubscriberEmotes,
-            ...twitchSubscriberEmotes,
-          ],
+          twitchSubscriberEmotes: scopedTwitchSubscriberEmotes,
           ffzChannelEmotes: emoteData.ffzChannelEmotes,
           ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
           bttvChannelEmotes: emoteData.bttvChannelEmotes,
@@ -261,31 +291,6 @@ export function useChatMessageProcessing({
       }
     },
     [channelId, show7TvEmotes, userLogin],
-  );
-
-  const warmVisibleImages = useCallback(
-    ({
-      badgeUrls,
-      emoteUrls,
-    }: {
-      badgeUrls: string[];
-      emoteUrls: string[];
-    }) => {
-      const warm = (url: string, variant: 'badge' | 'emote') => {
-        void cacheImageFromUrl(url, {
-          priority: 'visible',
-          variant,
-        }).then(cachedUri => {
-          if (cachedUri !== url) {
-            void prefetchImage(cachedUri);
-          }
-        });
-      };
-
-      badgeUrls.forEach(url => warm(url, 'badge'));
-      emoteUrls.forEach(url => warm(url, 'emote'));
-    },
-    [],
   );
 
   const handleViewableMessagesChange = useCallback(
@@ -329,27 +334,23 @@ export function useChatMessageProcessing({
     },
     [
       channelId,
+      disableEmoteAnimations,
       fetchUserCosmetics,
       hydratedVisibleAssetKeysRef,
       isAtBottomRef,
       maintainBottomAfterContentChange,
       pendingVisibleMessagesRef,
-      disableEmoteAnimations,
+      reprocessVisibleMessageFromCache,
       show7TvEmotes,
       show7tvBadges,
-      reprocessVisibleMessageFromCache,
       visibleAssetHydrationTimerRef,
       visibleCosmeticUsersRef,
       visiblePersonalEmoteUsersRef,
-      warmVisibleImages,
     ],
   );
 
   const reprocessAllMessages = useCallback(() => {
-    reprocessMessages(
-      messages$.peek() as AnyChatMessageType[],
-      processMessageEmotes,
-    );
+    reprocessMessages(messages$.peek(), processMessageEmotes);
   }, [messages$, processMessageEmotes]);
 
   return {

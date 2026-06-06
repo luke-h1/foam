@@ -1,6 +1,12 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import { ParsedPart } from './replaceTextWithEmotes';
+import { applyMentionLoginCasing } from './resolveMentionLogin';
+import { queueMentionLoginsFromParts } from './mentionLoginResolver';
+import {
+  findEmoteMatchingMention,
+  parseWordLinkParts,
+  ParsedPart,
+} from './replaceTextWithEmotes';
 
 interface EmoteProcessorParams {
   inputString: string;
@@ -23,6 +29,11 @@ const MAX_CACHE_SIZE = 1000;
 const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
 const MAX_BASE_COLLECTION_CACHE_SIZE = 64;
+const scopedLookupCache = new Map<
+  string,
+  (name: string) => SanitisedEmote | undefined
+>();
+const MAX_SCOPED_LOOKUP_CACHE_SIZE = 256;
 
 type EmoteCollection = {
   cacheKey: string;
@@ -45,22 +56,9 @@ function getEmoteArrayId(emotes: SanitisedEmote[]): number {
 const createCacheKey = (
   inputString: string,
   baseCollectionKey: string,
-  sevenTvPersonalEmotes: SanitisedEmote[],
-  twitchSubscriberEmotes: SanitisedEmote[],
+  scopedEmoteKey: string,
 ): string => {
-  const scopedEmoteHash = [
-    sevenTvPersonalEmotes.length,
-    twitchSubscriberEmotes.length,
-  ].join('|');
-
-  const firstLastIds = [
-    sevenTvPersonalEmotes[0]?.id || '',
-    sevenTvPersonalEmotes[sevenTvPersonalEmotes.length - 1]?.id || '',
-    twitchSubscriberEmotes[0]?.id || '',
-    twitchSubscriberEmotes[twitchSubscriberEmotes.length - 1]?.id || '',
-  ].join('|');
-
-  return `${baseCollectionKey}:${scopedEmoteHash}:${firstLastIds}:${inputString}`;
+  return `${baseCollectionKey}:${scopedEmoteKey}:${inputString}`;
 };
 
 function getBaseCollectionKey(
@@ -90,10 +88,22 @@ function getBaseCollectionKey(
 function setIfMissing(
   emoteMap: Map<string, SanitisedEmote>,
   emotes: SanitisedEmote[],
+  includeOriginalNameAlias = false,
 ): void {
   emotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
+    }
+    if (!includeOriginalNameAlias) {
+      return;
+    }
+    const alternateName = emote.original_name?.trim();
+    if (
+      alternateName &&
+      alternateName !== emote.name &&
+      !emoteMap.has(alternateName)
+    ) {
+      emoteMap.set(alternateName, emote);
     }
   });
 }
@@ -139,10 +149,10 @@ function getBaseCollection({
   const emoteMap = new Map<string, SanitisedEmote>();
   const emojiMap = new Map<string, SanitisedEmote>();
 
-  setIfMissing(emoteMap, sevenTvChannelEmotes);
-  setIfMissing(emoteMap, twitchChannelEmotes);
-  setIfMissing(emoteMap, ffzChannelEmotes);
-  setIfMissing(emoteMap, bttvChannelEmotes);
+  setIfMissing(emoteMap, sevenTvChannelEmotes, true);
+  setIfMissing(emoteMap, twitchChannelEmotes, true);
+  setIfMissing(emoteMap, ffzChannelEmotes, true);
+  setIfMissing(emoteMap, bttvChannelEmotes, true);
   setIfMissing(emoteMap, emojiEmotes);
   setIfMissing(emoteMap, sevenTvGlobalEmotes);
   setIfMissing(emoteMap, twitchGlobalEmotes);
@@ -171,31 +181,61 @@ function getBaseCollection({
   return collection;
 }
 
-function createScopedEmoteLookup(
-  baseEmoteMap: ReadonlyMap<string, SanitisedEmote>,
+function getEmoteIdsKey(emotes: SanitisedEmote[]): string {
+  if (emotes.length === 0) {
+    return '0';
+  }
+
+  return emotes.map(emote => emote.id).join(',');
+}
+
+function getScopedEmoteKey(
   sevenTvPersonalEmotes: SanitisedEmote[],
   twitchSubscriberEmotes: SanitisedEmote[],
+): string {
+  return `${getEmoteIdsKey(sevenTvPersonalEmotes)}|${getEmoteIdsKey(
+    twitchSubscriberEmotes,
+  )}`;
+}
+
+function createScopedEmoteLookup(
+  baseCollection: EmoteCollection,
+  sevenTvPersonalEmotes: SanitisedEmote[],
+  twitchSubscriberEmotes: SanitisedEmote[],
+  scopedEmoteKey: string,
 ): (name: string) => SanitisedEmote | undefined {
   if (
     sevenTvPersonalEmotes.length === 0 &&
     twitchSubscriberEmotes.length === 0
   ) {
-    return name => baseEmoteMap.get(name);
+    return name => baseCollection.emoteMap.get(name);
+  }
+
+  const cacheKey = `${baseCollection.cacheKey}:${scopedEmoteKey}`;
+  const cached = scopedLookupCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   const personalEmoteMap = new Map<string, SanitisedEmote>();
   const subscriberEmoteMap = new Map<string, SanitisedEmote>();
-  sevenTvPersonalEmotes.forEach(emote => {
-    personalEmoteMap.set(emote.name, emote);
-  });
-  twitchSubscriberEmotes.forEach(emote => {
-    subscriberEmoteMap.set(emote.name, emote);
-  });
+  setIfMissing(personalEmoteMap, sevenTvPersonalEmotes, true);
+  setIfMissing(subscriberEmoteMap, twitchSubscriberEmotes, true);
 
-  return name =>
+  const lookup = (name: string) =>
     personalEmoteMap.get(name) ??
     subscriberEmoteMap.get(name) ??
-    baseEmoteMap.get(name);
+    baseCollection.emoteMap.get(name);
+
+  if (scopedLookupCache.size >= MAX_SCOPED_LOOKUP_CACHE_SIZE) {
+    const firstKey = scopedLookupCache.keys().next().value;
+    if (firstKey) {
+      scopedLookupCache.delete(firstKey);
+    }
+  }
+  scopedLookupCache.set(cacheKey, lookup);
+
+  return lookup;
 }
 
 export const processEmotesWorklet = (
@@ -231,21 +271,25 @@ export const processEmotesWorklet = (
     twitchChannelEmotes,
     twitchGlobalEmotes,
   });
+  const scopedEmoteKey = getScopedEmoteKey(
+    sevenTvPersonalEmotes,
+    twitchSubscriberEmotes,
+  );
   const cacheKey = createCacheKey(
     inputString,
     baseCollection.cacheKey,
-    sevenTvPersonalEmotes,
-    twitchSubscriberEmotes,
+    scopedEmoteKey,
   );
 
   const cached = cache.get(cacheKey);
   if (cached) {
-    return cached;
+    return applyMentionLoginCasing(cached);
   }
   const getEmote = createScopedEmoteLookup(
-    baseCollection.emoteMap,
+    baseCollection,
     sevenTvPersonalEmotes,
     twitchSubscriberEmotes,
+    scopedEmoteKey,
   );
   const emojiMap = baseCollection.emojiMap;
 
@@ -269,6 +313,50 @@ export const processEmotesWorklet = (
       continue;
     }
 
+    if (word.startsWith('@')) {
+      const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
+      const emoteInMention = findEmoteMatchingMention(
+        mentionText,
+        baseCollection.emoteMap.values(),
+      );
+
+      if (emoteInMention) {
+        result.push({
+          id: emoteInMention.id,
+          name: emoteInMention.name,
+          type: 'emote',
+          content: emoteInMention.name,
+          creator: emoteInMention.creator || '',
+          emote_link: emoteInMention.emote_link || '',
+          original_name: emoteInMention.original_name || '',
+          site: emoteInMention.site || '',
+          static_url: emoteInMention.static_url,
+          thumbnail: emoteInMention.url,
+          url: emoteInMention.url,
+          width: emoteInMention.width,
+          height: emoteInMention.height,
+          aspect_ratio: emoteInMention.aspect_ratio,
+          zero_width: emoteInMention.zero_width,
+        });
+      }
+
+      result.push({
+        type: 'mention',
+        content: mentionText,
+      });
+      i += 1;
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    const linkParts = parseWordLinkParts(word);
+    if (linkParts) {
+      result.push(...linkParts);
+      i += 1;
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
     let emote = getEmote(word);
 
     if (!emote && word.length <= 8) {
@@ -283,8 +371,7 @@ export const processEmotesWorklet = (
         id: emote.id,
         name: emote.name,
         type: 'emote',
-        content:
-          emote.site === 'Emoji' && !word.startsWith(':') ? word : emote.name,
+        content: word,
         creator: emote.creator || '',
         emote_link: emote.emote_link || '',
         original_name:
@@ -315,7 +402,10 @@ export const processEmotesWorklet = (
     }
   }
 
-  cache.set(cacheKey, result);
+  const resolvedResult = applyMentionLoginCasing(result);
+  queueMentionLoginsFromParts(resolvedResult);
 
-  return result;
+  cache.set(cacheKey, resolvedResult);
+
+  return resolvedResult;
 };

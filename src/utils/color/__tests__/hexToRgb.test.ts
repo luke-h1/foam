@@ -3,7 +3,7 @@ import { hexToRgb } from '../hexToRgb';
 describe('hexToRgb', () => {
   test('should convert valid 6-digit hex code to RGB', () => {
     expect(hexToRgb('#FF0000')).toEqual({ r: 255, g: 0, b: 0 });
-    expect(hexToRgb('#00FF00')).toEqual({ r: 0, g: 255, b: 0 });
+    expect(hexToRgb('#1AC9A2')).toEqual({ r: 26, g: 201, b: 162 });
     expect(hexToRgb('#0000FF')).toEqual({ r: 0, g: 0, b: 255 });
     expect(hexToRgb('#FFFFFF')).toEqual({ r: 255, g: 255, b: 255 });
     expect(hexToRgb('#000000')).toEqual({ r: 0, g: 0, b: 0 });
@@ -11,7 +11,7 @@ describe('hexToRgb', () => {
 
   test('should convert valid 3-digit hex code to RGB', () => {
     expect(hexToRgb('#F00')).toEqual({ r: 255, g: 0, b: 0 });
-    expect(hexToRgb('#0F0')).toEqual({ r: 0, g: 255, b: 0 });
+    expect(hexToRgb('#0AF')).toEqual({ r: 0, g: 170, b: 255 });
     expect(hexToRgb('#00F')).toEqual({ r: 0, g: 0, b: 255 });
     expect(hexToRgb('#FFF')).toEqual({ r: 255, g: 255, b: 255 });
     expect(hexToRgb('#000')).toEqual({ r: 0, g: 0, b: 0 });

@@ -1,14 +1,12 @@
 import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import {
-  AnimatedFlashList,
-  ListRenderItem,
-} from '@app/components/FlashList/FlashList';
+import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
+import { ListRenderItem } from '@app/components/FlashList/FlashList';
 import { SymbolView } from 'expo-symbols';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
-import { useBottomTabOverflow } from '@app/components/TabBarBackground/TabBarBackground';
+import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
@@ -24,7 +22,8 @@ import {
 import { theme } from '@app/styles/themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useMemo, useCallback, useRef, type JSX } from 'react';
+import { useEffect, useRef, type ReactElement, useCallback } from 'react';
+
 import { Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -32,7 +31,7 @@ import { toast } from 'sonner-native';
 
 export interface Section {
   key: string;
-  render: () => JSX.Element;
+  render: () => ReactElement;
   isTitle?: boolean;
 }
 
@@ -44,10 +43,8 @@ export default function FollowingScreen() {
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
-  const followingStreamsQuery = useMemo(
-    () => twitchQueries.getFollowedStreams(user?.id as string),
-
-    [user],
+  const followingStreamsQuery = twitchQueries.getFollowedStreams(
+    user?.id as string,
   );
 
   const refetchFollowingStreams = useCallback(
@@ -69,6 +66,7 @@ export default function FollowingScreen() {
   const {
     data: streams,
     isLoading,
+    isFetching,
     isError,
     isFetched,
   } = useQuery({
@@ -92,31 +90,30 @@ export default function FollowingScreen() {
 
   useScrollToTop(listRef);
 
-  if (!isError) {
-    hasShownErrorToast.current = false;
-  }
+  useEffect(() => {
+    if (!isError) {
+      hasShownErrorToast.current = false;
+      return;
+    }
 
-  const renderItem: ListRenderItem<TwitchStream> = useCallback(
-    ({ item }) => {
-      return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
-    },
-    [streamListLayout],
-  );
+    if (isFetched && !hasShownErrorToast.current) {
+      hasShownErrorToast.current = true;
+      toast.error('Failed to fetch followed streams');
+    }
+  }, [isError, isFetched]);
 
-  const handleSetCompactLayout = useCallback(
-    () => updatePreferences({ streamListLayout: 'compact' }),
-    [updatePreferences],
-  );
+  const renderItem: ListRenderItem<TwitchStream> = ({ item }) => {
+    return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
+  };
 
-  const handleSetMediaLayout = useCallback(
-    () => updatePreferences({ streamListLayout: 'media' }),
-    [updatePreferences],
-  );
+  const handleSetCompactLayout = () =>
+    updatePreferences({ streamListLayout: 'compact' });
 
-  const handleSetTextLayout = useCallback(
-    () => updatePreferences({ streamListLayout: 'text' }),
-    [updatePreferences],
-  );
+  const handleSetMediaLayout = () =>
+    updatePreferences({ streamListLayout: 'media' });
+
+  const handleSetTextLayout = () =>
+    updatePreferences({ streamListLayout: 'text' });
 
   if (!authState?.isLoggedIn) {
     return (
@@ -131,9 +128,12 @@ export default function FollowingScreen() {
     );
   }
 
-  if (isRefreshing || isLoading) {
+  const showLoadingSkeleton =
+    isRefreshing || isLoading || (isFetching && streamsArray.length === 0);
+
+  if (showLoadingSkeleton) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerEyebrow} />
         </View>
@@ -158,10 +158,6 @@ export default function FollowingScreen() {
   }
 
   if (isFetched && isError) {
-    if (!hasShownErrorToast.current) {
-      hasShownErrorToast.current = true;
-      toast.error('Failed to fetch followed streams');
-    }
     return (
       <EmptyState
         button='Refresh'
@@ -176,7 +172,7 @@ export default function FollowingScreen() {
 
   if (!streams) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         {Array.from({ length: 5 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
@@ -209,12 +205,12 @@ export default function FollowingScreen() {
         ref={listRef}
         data={streamsArray}
         keyExtractor={item => item.id}
-        contentInsetAdjustmentBehavior='never'
+        contentInsetAdjustmentBehavior='automatic'
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
         getItemType={() => 'stream-card'}
         ListHeaderComponent={
           <View>
-            <EditorialSectionHeader eyebrow='For you' title='Following' />
+            <EditorialSectionHeader eyebrow='For you' />
             <View style={styles.layoutToggleRow}>
               <Button
                 onPress={handleSetCompactLayout}
@@ -311,7 +307,6 @@ export default function FollowingScreen() {
           styles.listContent,
           {
             paddingBottom: tabBarOverflow + theme.space20,
-            paddingTop: insets.top + theme.space20,
           },
         ]}
         renderItem={renderItem}
@@ -336,7 +331,7 @@ const styles = StyleSheet.create({
     minHeight: theme.space12,
   },
   headerEyebrow: {
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 6,

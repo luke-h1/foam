@@ -1,51 +1,22 @@
-import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import * as Form from '@app/components/Form/Form';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { Switch } from '@app/components/Switch/Switch';
 import {
   SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
-import { Text } from '@app/components/ui/Text/Text';
-import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
+import { usePreferences } from '@app/store/preferenceStore';
+import {
+  Button,
+  Form,
+  Host,
+  Section,
+  Text as NativeText,
+  Toggle,
+} from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
-
-function IosToggleRow({
-  label,
-  subtitle,
-  value,
-  onValueChange,
-}: {
-  label: string;
-  subtitle?: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}) {
-  return (
-    <View style={styles.iosToggleRow}>
-      <View style={styles.iosToggleCopy}>
-        <Text color='gray' style={styles.iosToggleLabel} weight='semibold'>
-          {label}
-        </Text>
-        {subtitle ? (
-          <Text color='gray.textLow' style={styles.iosToggleSubtitle} type='xs'>
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
-      <Switch
-        accessibilityLabel={label}
-        value={value}
-        onValueChange={onValueChange}
-      />
-    </View>
-  );
-}
 
 export function SettingsDevtoolsScreen() {
   const { disableChat, disableStream, update } = usePreferences();
@@ -55,71 +26,71 @@ export function SettingsDevtoolsScreen() {
 
   if (Platform.OS === 'ios') {
     return (
-      <View style={styles.container}>
-        <BodyScrollView
-          contentInsetAdjustmentBehavior='automatic'
-          contentContainerStyle={styles.iosContent}
-        >
-          <Form.Section title='Diagnostics'>
-            <Form.Link
+      <Host style={styles.iosHost}>
+        <Form>
+          <Section title='Diagnostics'>
+            <Button
+              label='App Diagnostics'
               systemImage='stethoscope'
               onPress={() => router.push('/tabs/settings/diagnostics')}
-            >
-              App Diagnostics
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='Remote Config'
               systemImage='cloud'
               onPress={() => router.push('/tabs/settings/remote-config')}
+            />
+          </Section>
+
+          <Section title='Stream Diagnostics'>
+            <Toggle
+              isOn={disableStream}
+              onIsOnChange={value => update({ disableStream: value })}
             >
-              Remote Config
-            </Form.Link>
-          </Form.Section>
-          <Form.Section title='Stream Diagnostics'>
-            <Form.FormItem style={styles.iosToggleItem}>
-              <IosToggleRow
-                label='Disable Stream'
-                subtitle='Remove the Twitch WebView to isolate chat performance'
-                value={disableStream}
-                onValueChange={value => update({ disableStream: value })}
-              />
-            </Form.FormItem>
-            <Form.FormItem style={styles.iosToggleItem}>
-              <IosToggleRow
-                label='Disable Chat'
-                subtitle='Remove chat rendering to isolate the player'
-                value={disableChat}
-                onValueChange={value => update({ disableChat: value })}
-              />
-            </Form.FormItem>
-          </Form.Section>
-          <Form.Section title='Developer Tools'>
-            <Form.Link
+              <NativeText>Disable Stream</NativeText>
+              <NativeText>
+                Remove the Twitch WebView to isolate chat performance
+              </NativeText>
+            </Toggle>
+            <Toggle
+              isOn={disableChat}
+              onIsOnChange={value => update({ disableChat: value })}
+            >
+              <NativeText>Disable Chat</NativeText>
+              <NativeText>
+                Remove chat rendering to isolate the player
+              </NativeText>
+            </Toggle>
+          </Section>
+
+          <Section title='Developer Tools'>
+            <Button
+              label='Debug'
               systemImage='ladybug'
               onPress={() => router.push('/tabs/settings/debug')}
-            >
-              Debug
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='Cached Images'
               systemImage='photo.stack'
               onPress={() => router.push('/tabs/settings/cached-images')}
-            >
-              Cached Images
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='Changelog Demo'
               systemImage='list.bullet.rectangle'
               onPress={() => router.push('/dev-tools/changelog')}
-            >
-              Changelog Demo
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='Channel Surfing'
+              systemImage='antenna.radiowaves.left.and.right'
+              onPress={() => router.push('/tabs/settings/channel-surfing')}
+            />
+            <Button
+              label='Storybook'
               systemImage='book.closed'
               onPress={() => router.push('/tabs/settings/storybook')}
-            >
-              Storybook
-            </Form.Link>
-          </Form.Section>
-        </BodyScrollView>
-      </View>
+            />
+          </Section>
+        </Form>
+      </Host>
     );
   }
 
@@ -131,12 +102,6 @@ export function SettingsDevtoolsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <ScreenHeader
-          title='Dev Tools'
-          subtitle='Diagnostics and internal tools for inspecting app state and behavior.'
-          size='medium'
-        />
-
         <SettingsSection title='Diagnostics'>
           <SettingsLinkRow
             title='App Diagnostics'
@@ -179,7 +144,7 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title='Cached Images'
             subtitle='Inspect and manage emote and badge media cache'
-            icon={{ icon: 'photo.stack', color: theme.colorGreen }}
+            icon={{ icon: 'photo.stack', color: theme.colorPrimary }}
             onPress={() => router.push('/tabs/settings/cached-images')}
           />
           <SettingsLinkRow
@@ -187,6 +152,15 @@ export function SettingsDevtoolsScreen() {
             subtitle='Present sample native changelog payloads'
             icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
             onPress={() => router.push('/dev-tools/changelog')}
+          />
+          <SettingsLinkRow
+            title='Channel Surfing'
+            subtitle='Load an EAS Update from a different channel or PR branch'
+            icon={{
+              icon: 'antenna.radiowaves.left.and.right',
+              color: theme.colorPlum,
+            }}
+            onPress={() => router.push('/tabs/settings/channel-surfing')}
           />
           <SettingsLinkRow
             title='Storybook'
@@ -201,27 +175,6 @@ export function SettingsDevtoolsScreen() {
 }
 
 const styles = StyleSheet.create({
-  iosToggleCopy: {
-    flex: 1,
-    gap: theme.space4,
-    minWidth: 0,
-  },
-  iosToggleItem: {
-    paddingVertical: theme.space8,
-  },
-  iosToggleLabel: {
-    lineHeight: 20,
-  },
-  iosToggleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space16,
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  iosToggleSubtitle: {
-    lineHeight: 18,
-  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
@@ -231,7 +184,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingTop: theme.space16,
   },
-  iosContent: {
-    paddingBottom: theme.space56,
+  iosHost: {
+    flex: 1,
   },
 });

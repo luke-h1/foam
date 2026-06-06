@@ -8,6 +8,10 @@ import { ExpoSection } from './ExpoSection';
 import { OTADynamicSection } from './OTADynamicSection';
 import { OTASection } from './OTASection';
 
+const settingsHintIcon = (
+  <SymbolView name='gear' tintColor={AC.secondaryLabel} />
+);
+
 export function Diagnostics() {
   return (
     <BodyScrollView
@@ -21,7 +25,7 @@ export function Diagnostics() {
           <Form.Text
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onPress={() => Linking.openSettings()}
-            hint={<SymbolView name='gear' tintColor={AC.secondaryLabel} />}
+            hint={settingsHintIcon}
           >
             Open System Settings
           </Form.Text>

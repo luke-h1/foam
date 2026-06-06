@@ -7,6 +7,7 @@ export default function ChangelogView(props: ChangelogViewProps) {
     <div>
       <iframe
         title='Changelog'
+        sandbox=''
         style={{ flex: 1 }}
         src={props.url}
         onLoad={() => props.onLoad({ nativeEvent: { url: props.url } })}

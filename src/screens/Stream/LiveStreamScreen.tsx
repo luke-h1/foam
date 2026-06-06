@@ -9,20 +9,23 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { twitchQueries } from '@app/queries/twitchQueries';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { theme } from '@app/styles/themes';
 import { usePreference } from '@app/store/preferenceStore';
 import { useQuery } from '@tanstack/react-query';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import {
-  memo,
-  useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
+  useReducer,
   useRef,
-  useState,
+  useCallback,
+  memo,
+  useMemo,
 } from 'react';
-import { useWindowDimensions, View, StyleSheet } from 'react-native';
+import { useFocusEffect, useIsFocused } from 'expo-router';
+import { AppState, useWindowDimensions, View, StyleSheet } from 'react-native';
+import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -33,66 +36,38 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
+import {
+  clampLandscapeChatWidth,
+  getLiveStreamChatDimensions,
+  getLiveStreamLayoutMetrics,
+  getLiveStreamVideoDimensions,
+  getNextChatCycleAction,
+  LANDSCAPE_CHAT_MIN_WIDTH,
+  type LandscapeChatCycleAction,
+} from './liveStreamLayout';
+import {
+  initialLiveStreamScreenState,
+  liveStreamScreenReducer,
+} from './liveStreamScreenReducer';
 
 interface LiveStreamScreenProps {
   id: string;
 }
 
-const DEFAULT_OVERLAY_CHAT_WIDTH = 380;
-const DEFAULT_SIDEBAR_CHAT_FRACTION = 0.35;
-const LANDSCAPE_CHAT_MIN_WIDTH = 280;
 const LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS = 220;
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 const ORIENTATION_CHAT_SLIDE_DISTANCE = 28;
-
-export type FullscreenChatMode = 'sidebar' | 'overlay';
-export type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
-
-export function getLiveStreamLayoutMetrics({
-  insetTop,
-  windowHeight,
-  windowWidth,
-}: {
-  insetTop: number;
-  windowHeight: number;
-  windowWidth: number;
-}): {
-  isLandscape: boolean;
-  layoutHeight: number;
-  portraitTopInset: number;
-  screenHeight: number;
-  screenWidth: number;
-} {
-  const resolvedWidth = Math.max(1, windowWidth);
-  const resolvedHeight = Math.max(1, windowHeight);
-  const isLandscape = resolvedWidth > resolvedHeight;
-  const portraitTopInset = isLandscape ? 0 : insetTop;
-  const screenHeight = resolvedHeight;
-  const screenWidth = resolvedWidth;
-
-  return {
-    isLandscape,
-    layoutHeight: Math.max(1, screenHeight - portraitTopInset),
-    portraitTopInset,
-    screenHeight,
-    screenWidth,
-  };
-}
-
-export function getLiveStreamChatLeft({
-  chatWidth,
-  isLandscape,
-  screenWidth,
-}: {
-  chatWidth: number;
-  isLandscape: boolean;
-  screenWidth: number;
-}): number {
-  return isLandscape ? Math.max(0, screenWidth - chatWidth) : 0;
-}
+const RESIZE_ANIMATION_CONFIG = {
+  duration: 150,
+  easing: Easing.out(Easing.cubic),
+};
+const CHAT_REVEAL_ANIMATION_CONFIG = {
+  duration: 110,
+  easing: Easing.out(Easing.cubic),
+};
 
 function VideoDelayIndicator({
   latencySeconds,
@@ -110,136 +85,12 @@ function VideoDelayIndicator({
   );
 }
 
-export function clampLandscapeChatWidth(
-  width: number,
-  screenWidth: number,
-  mode: FullscreenChatMode,
-): number {
-  const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, screenWidth * 0.42);
-  const maxFraction =
-    mode === 'overlay' ? MAX_OVERLAY_CHAT_FRACTION : MAX_SIDEBAR_CHAT_FRACTION;
-  const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
-
-  return Math.min(maxWidth, Math.max(minWidth, width));
-}
-
-export function getDefaultLandscapeChatWidth(
-  mode: FullscreenChatMode,
-  screenWidth: number,
-): number {
-  if (mode === 'overlay') {
-    return Math.min(DEFAULT_OVERLAY_CHAT_WIDTH, screenWidth * 0.46);
-  }
-
-  return screenWidth * DEFAULT_SIDEBAR_CHAT_FRACTION;
-}
-
-export function getNextChatCycleAction(
-  nextChatVisible: boolean,
-  fullscreenChatMode: FullscreenChatMode,
-): LandscapeChatCycleAction {
-  if (!nextChatVisible) {
-    return 'show';
-  }
-
-  return fullscreenChatMode === 'overlay' ? 'hide' : 'overlay';
-}
-
-export function getLiveStreamVideoDimensions({
-  fullscreenChatMode,
-  isChatEnabled,
-  isChatVisible,
-  isLandscape,
-  landscapeChatWidth,
-  layoutHeight,
-  isStreamEnabled,
-  screenWidth,
-}: {
-  fullscreenChatMode: FullscreenChatMode;
-  isChatEnabled: boolean;
-  isChatVisible: boolean;
-  isLandscape: boolean;
-  landscapeChatWidth: number | null;
-  layoutHeight: number;
-  isStreamEnabled: boolean;
-  screenWidth: number;
-}): { width: number; height: number } {
-  if (!isStreamEnabled) {
-    return { width: 0, height: 0 };
-  }
-
-  if (isLandscape) {
-    const visibleSidebarChatWidth =
-      isChatEnabled && isChatVisible && fullscreenChatMode === 'sidebar'
-        ? clampLandscapeChatWidth(
-            landscapeChatWidth ??
-              getDefaultLandscapeChatWidth('sidebar', screenWidth),
-            screenWidth,
-            'sidebar',
-          )
-        : 0;
-    return {
-      width: Math.max(1, screenWidth - visibleSidebarChatWidth),
-      height: Math.max(1, layoutHeight),
-    };
-  }
-  return {
-    width: Math.max(1, screenWidth),
-    height: Math.max(1, screenWidth * (9 / 16)),
-  };
-}
-
-export function getLiveStreamChatDimensions({
-  fullscreenChatMode,
-  isChatEnabled,
-  isLandscape,
-  landscapeChatWidth,
-  layoutHeight,
-  isStreamEnabled,
-  screenWidth,
-}: {
-  fullscreenChatMode: FullscreenChatMode;
-  isChatEnabled: boolean;
-  isLandscape: boolean;
-  landscapeChatWidth: number | null;
-  layoutHeight: number;
-  isStreamEnabled: boolean;
-  screenWidth: number;
-}): { width: number; height: number } {
-  if (!isChatEnabled) {
-    return { width: 0, height: 0 };
-  }
-
-  if (!isStreamEnabled) {
-    return {
-      width: Math.max(1, screenWidth),
-      height: Math.max(1, layoutHeight),
-    };
-  }
-
-  if (isLandscape) {
-    return {
-      width: clampLandscapeChatWidth(
-        landscapeChatWidth ??
-          getDefaultLandscapeChatWidth(fullscreenChatMode, screenWidth),
-        screenWidth,
-        fullscreenChatMode,
-      ),
-      height: Math.max(1, layoutHeight),
-    };
-  }
-
-  const videoHeight = screenWidth * (9 / 16);
-  return {
-    width: Math.max(1, screenWidth),
-    height: Math.max(1, layoutHeight - videoHeight),
-  };
-}
-
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
-  const normalizedLogin = useMemo(() => id.trim().toLowerCase(), [id]);
+  const isFocused = useIsFocused();
+  const streamPlayerRef = useRef<StreamPlayerRef>(null);
+  const normalizedLogin = id.trim().toLowerCase();
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -252,31 +103,33 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     });
   const isChatEnabled = !disableChat;
   const isStreamEnabled = !disableStream;
-  const [isChatVisible, setChatVisible] = useState<boolean>(true);
+  const [uiState, dispatchUi] = useReducer(
+    liveStreamScreenReducer,
+    initialLiveStreamScreenState,
+  );
+  const {
+    fullscreenChatMode,
+    isChatConnectionReady,
+    isChatVisible,
+    landscapeChatCycleAction,
+    landscapeChatWidth,
+    videoLatencySeconds,
+  } = uiState;
   const isChatVisibleForLayout = isChatVisible || !isStreamEnabled;
   const shouldRenderChat =
     isChatEnabled && (!isLandscape || isChatVisibleForLayout);
-  const [fullscreenChatMode, setFullscreenChatMode] =
-    useState<FullscreenChatMode>('sidebar');
-  const [landscapeChatCycleAction, setLandscapeChatCycleAction] =
-    useState<LandscapeChatCycleAction>('hide');
-  const [landscapeChatWidth, setLandscapeChatWidth] = useState<number | null>(
-    null,
-  );
-  const [isChatConnectionReady, setChatConnectionReady] = useState(false);
-  const [videoLatencySeconds, setVideoLatencySeconds] = useState<number | null>(
-    null,
-  );
   const lastChatToggleTimeRef = useRef<number>(0);
   const previousIsLandscapeRef = useRef(isLandscape);
   const chatOrientationRevealFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     void ScreenOrientation.unlockAsync();
+    const frameRef = chatOrientationRevealFrameRef;
     return () => {
-      if (chatOrientationRevealFrameRef.current !== null) {
-        cancelAnimationFrame(chatOrientationRevealFrameRef.current);
-        chatOrientationRevealFrameRef.current = null;
+      const frameId = frameRef.current;
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+        frameRef.current = null;
       }
       void ScreenOrientation.lockAsync(
         ScreenOrientation.OrientationLock.PORTRAIT_UP,
@@ -284,35 +137,79 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     };
   }, []);
 
-  const commitLandscapeChatWidth = useCallback(
-    (width: number) => {
-      setLandscapeChatWidth(
-        clampLandscapeChatWidth(width, screenWidth, fullscreenChatMode),
-      );
-    },
-    [fullscreenChatMode, screenWidth],
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        streamPlayerRef.current?.pause();
+        if (isStreamEnabled) {
+          dispatchUi({
+            type: 'patch',
+            patch: {
+              isChatConnectionReady: false,
+              videoLatencySeconds: null,
+            },
+          });
+        }
+      };
+    }, [dispatchUi, isStreamEnabled]),
   );
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        streamPlayerRef.current?.pause();
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  const commitLandscapeChatWidth = (width: number) => {
+    dispatchUi({
+      type: 'setLandscapeChatWidth',
+      landscapeChatWidth: clampLandscapeChatWidth(
+        width,
+        screenWidth,
+        fullscreenChatMode,
+      ),
+    });
+  };
 
   const applyLandscapeChatCycleAction = useCallback(
     (action: LandscapeChatCycleAction) => {
       switch (action) {
         case 'hide':
-          setChatVisible(false);
-          setLandscapeChatCycleAction('show');
+          dispatchUi({
+            type: 'patch',
+            patch: {
+              isChatVisible: false,
+              landscapeChatCycleAction: 'show',
+            },
+          });
           return;
         case 'show':
-          setFullscreenChatMode('sidebar');
-          setChatVisible(true);
-          setLandscapeChatCycleAction('overlay');
+          dispatchUi({
+            type: 'patch',
+            patch: {
+              fullscreenChatMode: 'sidebar',
+              isChatVisible: true,
+              landscapeChatCycleAction: 'overlay',
+            },
+          });
           return;
         case 'overlay':
-          setFullscreenChatMode('overlay');
-          setChatVisible(true);
-          setLandscapeChatCycleAction('hide');
+          dispatchUi({
+            type: 'patch',
+            patch: {
+              fullscreenChatMode: 'overlay',
+              isChatVisible: true,
+              landscapeChatCycleAction: 'hide',
+            },
+          });
           return;
       }
     },
-    [],
+    [dispatchUi],
   );
 
   const canToggleChat = useCallback(() => {
@@ -325,19 +222,23 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     return true;
   }, []);
 
-  const toggleChat = useCallback(() => {
+  const toggleChat = () => {
     if (!canToggleChat()) {
       return;
     }
 
-    setChatVisible(current => {
-      const nextVisible = !current;
-      setLandscapeChatCycleAction(
-        getNextChatCycleAction(nextVisible, fullscreenChatMode),
-      );
-      return nextVisible;
+    const nextVisible = !isChatVisible;
+    dispatchUi({
+      type: 'patch',
+      patch: {
+        isChatVisible: nextVisible,
+        landscapeChatCycleAction: getNextChatCycleAction(
+          nextVisible,
+          fullscreenChatMode,
+        ),
+      },
     });
-  }, [canToggleChat, fullscreenChatMode]);
+  };
 
   const cycleLandscapeChatMode = useCallback(() => {
     if (!canToggleChat()) {
@@ -347,16 +248,32 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     applyLandscapeChatCycleAction(landscapeChatCycleAction);
   }, [applyLandscapeChatCycleAction, canToggleChat, landscapeChatCycleAction]);
 
-  useEffect(() => {
-    setChatConnectionReady(!isStreamEnabled);
-    setVideoLatencySeconds(null);
+  const streamSessionKey = `${isStreamEnabled}:${normalizedLogin ?? ''}`;
+  const lastStreamSessionKeyRef = useRef(streamSessionKey);
 
+  useLayoutEffect(() => {
+    if (lastStreamSessionKeyRef.current !== streamSessionKey) {
+      lastStreamSessionKeyRef.current = streamSessionKey;
+      dispatchUi({
+        type: 'patch',
+        patch: {
+          isChatConnectionReady: !isStreamEnabled,
+          videoLatencySeconds: null,
+        },
+      });
+    }
+  }, [isStreamEnabled, streamSessionKey]);
+
+  useEffect(() => {
     if (!normalizedLogin || !isStreamEnabled) {
       return;
     }
 
     const fallbackTimer = setTimeout(() => {
-      setChatConnectionReady(true);
+      dispatchUi({
+        type: 'setChatConnectionReady',
+        isChatConnectionReady: true,
+      });
     }, CHAT_CONNECTION_FALLBACK_MS);
 
     return () => {
@@ -364,40 +281,33 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     };
   }, [isStreamEnabled, normalizedLogin]);
 
-  const handlePlayerLoaded = useCallback(() => {
-    setChatConnectionReady(true);
-  }, []);
+  const handlePlayerLoaded = () => {
+    dispatchUi({ type: 'setChatConnectionReady', isChatConnectionReady: true });
+  };
 
-  const handlePlaybackLatencyChange = useCallback((latencySeconds: number) => {
-    setVideoLatencySeconds(latencySeconds);
-  }, []);
+  const handlePlaybackLatencyChange = (latencySeconds: number) => {
+    dispatchUi({
+      type: 'setVideoLatencySeconds',
+      videoLatencySeconds: latencySeconds,
+    });
+  };
 
   const shouldResolveChannelIdentity = isChatEnabled || isStreamEnabled;
+  const shouldFetchChannelMetadata = isFocused && normalizedLogin.length > 0;
   const { data: stream } = useQuery({
     ...twitchQueries.getStream(normalizedLogin),
-    enabled: isStreamEnabled && normalizedLogin.length > 0,
+    enabled: isStreamEnabled && shouldFetchChannelMetadata,
   });
 
   const { data: user } = useQuery({
     ...twitchQueries.getUser(normalizedLogin),
     enabled:
       shouldResolveChannelIdentity &&
-      normalizedLogin.length > 0 &&
+      shouldFetchChannelMetadata &&
       (!isStreamEnabled || !stream?.user_id),
   });
 
-  const videoDimensions = useMemo(() => {
-    return getLiveStreamVideoDimensions({
-      fullscreenChatMode,
-      isChatEnabled,
-      isChatVisible,
-      isLandscape,
-      landscapeChatWidth,
-      layoutHeight,
-      isStreamEnabled,
-      screenWidth,
-    });
-  }, [
+  const videoDimensions = getLiveStreamVideoDimensions({
     fullscreenChatMode,
     isChatEnabled,
     isChatVisible,
@@ -406,19 +316,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     layoutHeight,
     isStreamEnabled,
     screenWidth,
-  ]);
+  });
 
-  const chatDimensions = useMemo(() => {
-    return getLiveStreamChatDimensions({
-      fullscreenChatMode,
-      isChatEnabled,
-      isLandscape,
-      landscapeChatWidth,
-      layoutHeight,
-      isStreamEnabled,
-      screenWidth,
-    });
-  }, [
+  const chatDimensions = getLiveStreamChatDimensions({
     fullscreenChatMode,
     isChatEnabled,
     isLandscape,
@@ -426,7 +326,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     layoutHeight,
     isStreamEnabled,
     screenWidth,
-  ]);
+  });
 
   const isLandscapeChatHidden = !isChatVisibleForLayout && isLandscape;
   const effectiveChatWidth = isLandscapeChatHidden ? 0 : chatDimensions.width;
@@ -442,29 +342,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const resizeHandleOpacity = useSharedValue(0.42);
 
   const animatedChatStyle = useAnimatedStyle(() => ({
-    height: chatHeight.value,
-    left: isLandscape ? Math.max(0, screenWidth - chatWidth.value) : 0,
-    opacity: chatOpacity.value,
-    top: isLandscape ? 0 : videoHeight.value,
-    transform: [{ translateX: chatTranslateX.value }],
-    width: chatWidth.value,
+    height: chatHeight.get(),
+    left: isLandscape ? Math.max(0, screenWidth - chatWidth.get()) : 0,
+    opacity: chatOpacity.get(),
+    top: isLandscape ? 0 : videoHeight.get(),
+    transform: [{ translateX: chatTranslateX.get() }],
+    width: chatWidth.get(),
   }));
-
-  const resizeAnimationConfig = useMemo(
-    () => ({
-      duration: 150,
-      easing: Easing.out(Easing.cubic),
-    }),
-    [],
-  );
-
-  const chatRevealAnimationConfig = useMemo(
-    () => ({
-      duration: 110,
-      easing: Easing.out(Easing.cubic),
-    }),
-    [],
-  );
 
   useLayoutEffect(() => {
     const orientationChanged = previousIsLandscapeRef.current !== isLandscape;
@@ -484,49 +368,52 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       cancelAnimation(chatOpacity);
       cancelAnimation(chatTranslateX);
 
-      videoWidth.value = videoDimensions.width;
-      videoHeight.value = videoDimensions.height;
-      chatWidth.value = effectiveChatWidth;
-      chatHeight.value = effectiveChatHeight;
+      videoWidth.set(videoDimensions.width);
+      videoHeight.set(videoDimensions.height);
+      chatWidth.set(effectiveChatWidth);
+      chatHeight.set(effectiveChatHeight);
 
       if (isChatVisible) {
-        chatOpacity.value = 0;
-        chatTranslateX.value = isLandscape
-          ? Math.min(ORIENTATION_CHAT_SLIDE_DISTANCE, chatDimensions.width)
-          : 0;
+        chatOpacity.set(0);
+        chatTranslateX.set(
+          isLandscape
+            ? Math.min(ORIENTATION_CHAT_SLIDE_DISTANCE, chatDimensions.width)
+            : 0,
+        );
         chatOrientationRevealFrameRef.current = requestAnimationFrame(() => {
           chatOrientationRevealFrameRef.current = null;
-          chatOpacity.value = withTiming(1, chatRevealAnimationConfig);
-          chatTranslateX.value = isLandscape
-            ? withTiming(0, chatRevealAnimationConfig)
-            : 0;
+          chatOpacity.set(withTiming(1, CHAT_REVEAL_ANIMATION_CONFIG));
+          chatTranslateX.set(
+            isLandscape ? withTiming(0, CHAT_REVEAL_ANIMATION_CONFIG) : 0,
+          );
         });
         return;
       }
 
-      chatOpacity.value = 0;
-      chatTranslateX.value = isLandscape ? chatDimensions.width : 0;
+      chatOpacity.set(0);
+      chatTranslateX.set(isLandscape ? chatDimensions.width : 0);
       return;
     }
 
-    videoWidth.value = withTiming(videoDimensions.width, resizeAnimationConfig);
-    videoHeight.value = withTiming(
-      videoDimensions.height,
-      resizeAnimationConfig,
+    videoWidth.set(withTiming(videoDimensions.width, RESIZE_ANIMATION_CONFIG));
+    videoHeight.set(
+      withTiming(videoDimensions.height, RESIZE_ANIMATION_CONFIG),
     );
-    chatWidth.value = withTiming(effectiveChatWidth, resizeAnimationConfig);
-    chatHeight.value = withTiming(effectiveChatHeight, resizeAnimationConfig);
+    chatWidth.set(withTiming(effectiveChatWidth, RESIZE_ANIMATION_CONFIG));
+    chatHeight.set(withTiming(effectiveChatHeight, RESIZE_ANIMATION_CONFIG));
 
     if (isChatVisible) {
-      chatOpacity.value = withTiming(1, chatRevealAnimationConfig);
-      chatTranslateX.value = withTiming(0, chatRevealAnimationConfig);
+      chatOpacity.set(withTiming(1, CHAT_REVEAL_ANIMATION_CONFIG));
+      chatTranslateX.set(withTiming(0, CHAT_REVEAL_ANIMATION_CONFIG));
       return;
     }
 
-    chatOpacity.value = withTiming(0, chatRevealAnimationConfig);
-    chatTranslateX.value = withTiming(
-      isLandscape ? chatDimensions.width : 0,
-      chatRevealAnimationConfig,
+    chatOpacity.set(withTiming(0, CHAT_REVEAL_ANIMATION_CONFIG));
+    chatTranslateX.set(
+      withTiming(
+        isLandscape ? chatDimensions.width : 0,
+        CHAT_REVEAL_ANIMATION_CONFIG,
+      ),
     );
   }, [
     isLandscape,
@@ -536,8 +423,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     chatDimensions,
     effectiveChatWidth,
     effectiveChatHeight,
-    resizeAnimationConfig,
-    chatRevealAnimationConfig,
     videoWidth,
     videoHeight,
     chatWidth,
@@ -547,117 +432,108 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   ]);
 
   const animatedVideoStyle = useAnimatedStyle(() => ({
-    height: videoHeight.value,
+    height: videoHeight.get(),
     left: 0,
     top: 0,
-    width: videoWidth.value,
+    width: videoWidth.get(),
   }));
 
   const animatedFullscreenControlsStyle = useAnimatedStyle(() => ({
-    right: theme.space16 + chatWidth.value,
+    right: theme.space16 + chatWidth.get(),
   }));
 
   const animatedResizeHandleStyle = useAnimatedStyle(() => ({
-    opacity: resizeHandleOpacity.value,
+    opacity: resizeHandleOpacity.get(),
   }));
 
-  const resizeChatGesture = useMemo(
-    () =>
-      Gesture.Pan()
-        .activateAfterLongPress(LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS)
-        .onBegin(() => {
-          resizeStartWidth.value = chatWidth.value;
-          resizeHandleOpacity.value = 0.9;
-        })
-        .onUpdate(event => {
-          const maxFraction =
-            fullscreenChatMode === 'overlay'
-              ? MAX_OVERLAY_CHAT_FRACTION
-              : MAX_SIDEBAR_CHAT_FRACTION;
-          const minWidth = Math.min(
-            LANDSCAPE_CHAT_MIN_WIDTH,
-            screenWidth * 0.42,
-          );
-          const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
-          const nextWidth = Math.min(
-            maxWidth,
-            Math.max(minWidth, resizeStartWidth.value - event.translationX),
-          );
+  const resizeChatGesture = Gesture.Pan()
+    .activateAfterLongPress(LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS)
+    .onBegin(() => {
+      resizeStartWidth.set(chatWidth.get());
+      resizeHandleOpacity.set(0.9);
+    })
+    .onUpdate(event => {
+      const maxFraction =
+        fullscreenChatMode === 'overlay'
+          ? MAX_OVERLAY_CHAT_FRACTION
+          : MAX_SIDEBAR_CHAT_FRACTION;
+      const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, screenWidth * 0.42);
+      const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
+      const nextWidth = Math.min(
+        maxWidth,
+        Math.max(minWidth, resizeStartWidth.get() - event.translationX),
+      );
 
-          chatWidth.value = nextWidth;
-          if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
-            videoWidth.value = Math.max(1, screenWidth - nextWidth);
-          }
-        })
-        .onFinalize(() => {
-          resizeHandleOpacity.value = 0.42;
-          scheduleOnRN(commitLandscapeChatWidth, chatWidth.value);
-        }),
-    [
-      chatWidth,
-      commitLandscapeChatWidth,
-      fullscreenChatMode,
-      isChatVisibleForLayout,
-      resizeHandleOpacity,
-      resizeStartWidth,
-      screenWidth,
-      videoWidth,
-    ],
-  );
+      chatWidth.set(nextWidth);
+      if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
+        videoWidth.set(Math.max(1, screenWidth - nextWidth));
+      }
+    })
+    .onFinalize(() => {
+      resizeHandleOpacity.set(0.42);
+      scheduleOnRN(commitLandscapeChatWidth, chatWidth.get());
+    });
 
-  const contentContainerStyle = useMemo(
-    () => [
-      styles.contentContainer,
-      !isLandscape && { paddingTop: portraitTopInset },
-    ],
-    [isLandscape, portraitTopInset],
-  );
+  const contentContainerStyle = [
+    styles.contentContainer,
+    !isLandscape && { paddingTop: portraitTopInset },
+  ];
 
   const resolvedChannelLogin =
     stream?.user_login ?? user?.login ?? normalizedLogin;
   const resolvedChannelId = stream?.user_id ?? user?.id;
-  const predictionChannelId = isStreamEnabled ? resolvedChannelId : undefined;
-  const { prediction } = useChannelPrediction(predictionChannelId);
-  const { poll } = useChannelPoll(predictionChannelId);
   const hasResolvedChannelLogin = Boolean(resolvedChannelLogin);
   const hasResolvedChannelId = Boolean(resolvedChannelId);
-  const shouldMountChat =
-    shouldRenderChat &&
-    hasResolvedChannelLogin &&
-    hasResolvedChannelId &&
-    isChatConnectionReady;
   const shouldShowChatConnectionNotice =
+    isFocused &&
     isStreamEnabled &&
     shouldRenderChat &&
     hasResolvedChannelLogin &&
     (!hasResolvedChannelId || !isChatConnectionReady);
+  const shouldRenderChatPanel =
+    isChatEnabled && (shouldRenderChat || shouldShowChatConnectionNotice);
+  const shouldMountChat =
+    isFocused &&
+    shouldRenderChat &&
+    hasResolvedChannelLogin &&
+    hasResolvedChannelId &&
+    isChatConnectionReady;
+  const shouldRenderStreamPlayer =
+    isFocused && isStreamEnabled && hasResolvedChannelLogin;
+  const shouldLoadChannelEngagement =
+    isFocused && isStreamEnabled && hasResolvedChannelId;
+  const predictionChannelId = shouldLoadChannelEngagement
+    ? resolvedChannelId
+    : undefined;
+  const { prediction } = useChannelPrediction(predictionChannelId);
+  const { poll } = useChannelPoll(predictionChannelId);
 
-  const handleExitLandscape = useCallback(() => {
+  const handleExitLandscape = () => {
     if (!isLandscape) {
       return;
     }
-    setChatVisible(true);
+    dispatchUi({ type: 'setChatVisible', isChatVisible: true });
     void ScreenOrientation.lockAsync(
       ScreenOrientation.OrientationLock.PORTRAIT_UP,
     );
-  }, [isLandscape]);
+  };
 
-  const toggleFullscreenChatMode = useCallback(() => {
-    setChatVisible(true);
-    setFullscreenChatMode(current => {
-      const nextMode = current === 'sidebar' ? 'overlay' : 'sidebar';
-      setLandscapeChatCycleAction(nextMode === 'overlay' ? 'hide' : 'overlay');
-      return nextMode;
+  const toggleFullscreenChatMode = () => {
+    const nextMode = fullscreenChatMode === 'sidebar' ? 'overlay' : 'sidebar';
+    dispatchUi({
+      type: 'patch',
+      patch: {
+        isChatVisible: true,
+        fullscreenChatMode: nextMode,
+        landscapeChatCycleAction: nextMode === 'overlay' ? 'hide' : 'overlay',
+      },
     });
-  }, []);
+  };
 
-  const landscapeChatContainerStyle = useMemo(() => {
-    if (!isLandscape || fullscreenChatMode !== 'overlay') {
-      return undefined;
-    }
-
-    return styles.overlayChatContainer;
-  }, [fullscreenChatMode, isLandscape]);
+  const landscapeChatContainerStyle =
+    isLandscape && fullscreenChatMode === 'overlay'
+      ? styles.overlayChatContainer
+      : undefined;
 
   const streamInfo = useMemo(
     () =>
@@ -674,17 +550,31 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       isStreamEnabled,
       resolvedChannelLogin,
       stream?.user_name,
+      user?.display_name,
       stream?.viewer_count,
       stream?.started_at,
       stream?.game_name,
-      user?.display_name,
     ],
   );
+
+  const handleSharePress = useCallback(() => {
+    if (!resolvedChannelLogin) {
+      return;
+    }
+
+    void shareDeepLink({
+      kind: 'liveStream',
+      login: resolvedChannelLogin,
+      displayName: stream?.user_name ?? user?.display_name ?? undefined,
+    });
+  }, [resolvedChannelLogin, stream?.user_name, user?.display_name]);
+
   return (
     <View style={contentContainerStyle}>
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
-        {isStreamEnabled && resolvedChannelLogin ? (
+        {shouldRenderStreamPlayer ? (
           <StreamPlayer
+            ref={streamPlayerRef}
             channel={resolvedChannelLogin}
             height='100%'
             width='100%'
@@ -693,6 +583,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPlay={handlePlayerLoaded}
             onPlaybackLatencyChange={handlePlaybackLatencyChange}
             onReady={handlePlayerLoaded}
+            onSharePress={resolvedChannelLogin ? handleSharePress : undefined}
             onVideoAreaPress={isLandscape ? cycleLandscapeChatMode : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             onWebViewLoaded={handlePlayerLoaded}
@@ -701,7 +592,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         ) : null}
       </Animated.View>
 
-      {isChatEnabled ? (
+      {shouldRenderChatPanel ? (
         <Animated.View
           style={[
             styles.chatContainer,
@@ -718,7 +609,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
                   styles.overlayChatContent,
               ]}
             >
-              {isStreamEnabled &&
+              {shouldMountChat &&
+              isStreamEnabled &&
               isLandscape &&
               fullscreenChatMode === 'overlay' ? (
                 <BlurView

@@ -1,5 +1,5 @@
 import { logger } from '@app/utils/logger';
-import { useCallback, useReducer, useRef } from 'react';
+import { useRef, useCallback } from 'react';
 
 export type ImageLoadLabel = 'Image' | 'ExpoImage' | 'NitroImage';
 
@@ -29,7 +29,8 @@ export function useMeasureImageLoadTime(
   onLoadEndCallback?: ImageLoadTimingCallback,
   options: ImageLoadTimingOptions = {},
 ) {
-  const imageMountTimestamp = useRef(performance.now());
+  const imageMountTimestamp = useRef<number | null>(null);
+  imageMountTimestamp.current ??= performance.now();
   const imageLoadStartTimestamp = useRef<number | undefined>(undefined);
 
   const onLoadEnd = useCallback(() => {
@@ -45,7 +46,7 @@ export function useMeasureImageLoadTime(
     }
 
     const timing = {
-      mountTimestamp: imageMountTimestamp.current,
+      mountTimestamp: imageMountTimestamp.current ?? loadStartTimestamp,
       loadStartTimestamp,
       loadEndTimestamp: performance.now(),
     };
@@ -59,61 +60,4 @@ export function useMeasureImageLoadTime(
   }, []);
 
   return { onLoadEnd, onLoadStart };
-}
-
-export function resetImageComponentsLoadingTimes() {
-  Object.keys(imageComponentsLoadingTimes).forEach(key => {
-    imageComponentsLoadingTimes[key as ImageLoadLabel] = [];
-  });
-}
-
-function getTimersData(): Record<
-  ImageLoadLabel,
-  {
-    averageLoadTimeFromMount: number;
-    averageLoadTimeFromStartLoading: number;
-  }
-> {
-  return Object.fromEntries(
-    Object.entries(imageComponentsLoadingTimes).map(([key, value]) => {
-      return [
-        key,
-        {
-          averageLoadTimeFromMount:
-            value.reduce(
-              (acc, curr) =>
-                acc + (curr.loadEndTimestamp - curr.mountTimestamp),
-              0,
-            ) / value.length,
-          averageLoadTimeFromStartLoading:
-            value.reduce(
-              (acc, curr) =>
-                acc + (curr.loadEndTimestamp - curr.loadStartTimestamp),
-              0,
-            ) / value.length,
-        },
-      ];
-    }),
-  ) as Record<
-    ImageLoadLabel,
-    {
-      averageLoadTimeFromMount: number;
-      averageLoadTimeFromStartLoading: number;
-    }
-  >;
-}
-
-export function useTimersData() {
-  const [, forceUpdate] = useReducer(x => x + 1, 0);
-
-  const resetTimers = useCallback(() => {
-    Object.keys(imageComponentsLoadingTimes).forEach(key => {
-      imageComponentsLoadingTimes[key as ImageLoadLabel] = [];
-    });
-
-    // Force rerender this component
-    forceUpdate();
-  }, [forceUpdate]);
-
-  return { resetTimers, timersData: getTimersData() };
 }

@@ -12,10 +12,9 @@ import {
 } from '@app/styles/ui';
 import { SFSymbol, SymbolView } from 'expo-symbols';
 import { PressableScale } from 'pressto';
-import { useEffect, useMemo, useRef } from 'react';
 import {
+  ActivityIndicator,
   Alert,
-  Animated,
   StyleSheet,
   useColorScheme,
   ViewStyle,
@@ -314,64 +313,31 @@ export function Button({
   confirmationAlert,
 }: ButtonProps) {
   const colorScheme = useColorScheme();
-  const spinValue = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (loading) {
-      const spin = () => {
-        spinValue.setValue(0);
-        Animated.timing(spinValue, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }).start(() => spin());
-      };
-      spin();
-    } else {
-      spinValue.stopAnimation();
-    }
-  }, [loading, spinValue]);
-
-  const spinInterpolate = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
   const { accentHex } = useAccentColor();
 
-  const variantConfig = useMemo(() => {
-    const scheme = (colorScheme ?? 'light') as 'light' | 'dark';
-    if (color) {
-      const variants = generateVariantConfig(color, scheme);
-      return variants[variant];
-    }
-    const baseHex = accentHex || colors[scheme].tint;
-    const variants = generateVariantConfigFromBase(baseHex, scheme);
-    return variants[variant];
-  }, [color, colorScheme, variant, accentHex]);
+  const scheme = (colorScheme ?? 'light') as 'light' | 'dark';
+  const variants = color
+    ? generateVariantConfig(color, scheme)
+    : generateVariantConfigFromBase(accentHex || colors[scheme].tint, scheme);
+  const variantConfig = variants[variant];
 
   const isDisabled = disabled || loading;
 
-  const buttonStyles = useMemo(() => {
-    const baseStyles: ViewStyle = {
-      ...styles.button,
-      ...SIZE_STYLES[size],
-      backgroundColor: variantConfig.backgroundColor,
-      borderColor: variantConfig.borderColor,
-      borderWidth: variantConfig.borderWidth,
-      borderRadius: RADIUS_VALUES[radius],
-    };
+  const baseStyles: ViewStyle = {
+    ...styles.button,
+    ...SIZE_STYLES[size],
+    backgroundColor: variantConfig.backgroundColor,
+    borderColor: variantConfig.borderColor,
+    borderWidth: variantConfig.borderWidth,
+    borderRadius: RADIUS_VALUES[radius],
+  };
+  const buttonStyles = [baseStyles, style];
 
-    return [baseStyles, style];
-  }, [size, variantConfig, style, radius]);
-
-  const textStyles = useMemo(() => {
-    return [
-      styles.buttonText,
-      TEXT_SIZE_STYLES[size],
-      { color: variantConfig.textColor },
-    ];
-  }, [size, variantConfig]);
+  const textStyles = [
+    styles.buttonText,
+    TEXT_SIZE_STYLES[size],
+    { color: variantConfig.textColor },
+  ];
 
   const iconColor = variantConfig.textColor;
   const displayIcon: SFSymbol = loading
@@ -408,22 +374,15 @@ export function Button({
       style={buttonStyles}
       onPress={isDisabled ? undefined : handlePress}
     >
-      {displayIcon &&
-        (loading ? (
-          <Animated.View style={{ transform: [{ rotate: spinInterpolate }] }}>
-            <SymbolView
-              name={displayIcon}
-              size={SYMBOL_SIZE[size]}
-              tintColor={iconColor}
-            />
-          </Animated.View>
-        ) : (
-          <SymbolView
-            name={displayIcon}
-            size={SYMBOL_SIZE[size]}
-            tintColor={iconColor}
-          />
-        ))}
+      {loading ? (
+        <ActivityIndicator color={iconColor} />
+      ) : displayIcon ? (
+        <SymbolView
+          name={displayIcon}
+          size={SYMBOL_SIZE[size]}
+          tintColor={iconColor}
+        />
+      ) : null}
       {title && <Text style={textStyles}>{title}</Text>}
     </PressableScale>
   );

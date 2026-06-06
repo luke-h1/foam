@@ -7,6 +7,7 @@ import {
   type TextStyle,
 } from './expoPretext';
 
+import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import type { AnyChatMessageType } from './messageHandlers';
 
 const COMPACT_LINE_HEIGHT = 14;
@@ -20,6 +21,7 @@ const HEIGHT_CACHE_LIMIT = 2000;
 const COMPACT_EMOTE_SIZE = 26;
 const COMFORTABLE_EMOTE_SIZE = 30;
 const REPLY_CONTEXT_GAP = 2;
+const ZERO_WIDTH_EMOTE_REMAINING_WIDTH_RATIO = 0.28;
 
 const heightCache = new Map<string, number>();
 
@@ -98,7 +100,15 @@ function measureChatMessageHeight(
     prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
   }
 
-  if (message.isChannelPointRedemption) {
+  if (message.isAnnouncement) {
+    prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
+  } else if (message.isHighlightedMessage) {
+    prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
+  } else if (
+    message.isHighlightedMessage ||
+    (message.isChannelPointRedemption &&
+      hasSharedChannelPointsMessage(message.message))
+  ) {
     prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
   }
 
@@ -144,14 +154,27 @@ function measureChatMessageHeight(
       continue;
     }
 
-    if (part.type === 'emote' || part.type === 'stvEmote') {
+    if (part.type === 'stvEmote') {
+      minimumInlineHeight = Math.max(minimumInlineHeight, 28);
+      items.push({
+        text: NON_BREAKING_SPACE,
+        style: textStyle,
+        atomic: true,
+        extraWidth: 120,
+      });
+      continue;
+    }
+
+    if (part.type === 'emote') {
       const { width, height } = getEstimatedEmoteSize(part, emoteSize);
       minimumInlineHeight = Math.max(minimumInlineHeight, height);
       items.push({
         text: NON_BREAKING_SPACE,
         style: textStyle,
         atomic: true,
-        extraWidth: part.zero_width ? 0 : width,
+        extraWidth: part.zero_width
+          ? Math.round(width * ZERO_WIDTH_EMOTE_REMAINING_WIDTH_RATIO)
+          : width,
       });
       continue;
     }
@@ -196,6 +219,10 @@ function measureChatMessageHeight(
 }
 
 function isEstimableChatMessage(message: AnyChatMessageType): boolean {
+  if (message.isAnnouncement || message.isHighlightedMessage) {
+    return message.message.every(isEstimablePart);
+  }
+
   if (
     message.isTwitchSystemNotice ||
     message.isSpecialNotice ||
@@ -238,6 +265,29 @@ function getEstimatedEmoteSize(
   };
 }
 
+function getMessagePartsFingerprint(
+  message: AnyChatMessageType['message'],
+): string {
+  return message
+    .map(part => {
+      switch (part.type) {
+        case 'text':
+          return `t${part.content.length}`;
+        case 'mention':
+          return `m${part.content.length}`;
+        case 'emote':
+          return `e${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
+        case 'stvEmote':
+          return `s${part.zero_width ? 'z' : 'n'}`;
+        case 'twitchClip':
+          return 'c';
+        default:
+          return part.type.slice(0, 1);
+      }
+    })
+    .join(',');
+}
+
 function getCacheKey(
   message: AnyChatMessageType,
   options: PretextChatHeightOptions,
@@ -248,6 +298,11 @@ function getCacheKey(
     widthBucket,
     options.density,
     options.showTimestamp ? 'ts' : 'no-ts',
-    message.message.length,
+    getMessagePartsFingerprint(message.message),
+    message.parentDisplayName ? 'reply' : '',
+    message.moderationNotice ? 'mod' : '',
+    message.isAnnouncement ? 'ann' : '',
+    message.isHighlightedMessage ? 'hl' : '',
+    message.isChannelPointRedemption ? 'cp' : '',
   ].join('|');
 }

@@ -9,10 +9,10 @@ import { observable } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 
 import type {
+  AnyChatMessageType,
   Bit,
   ChannelCacheType,
   ChatLoadingState,
-  ChatMessageType,
   ChatUser,
   PaintData,
   SanitisedBadgeSet,
@@ -25,18 +25,23 @@ export interface ChatStoreState {
   persisted: {
     channelCaches: Record<string, ChannelCacheType>;
     lastGlobalUpdate: number;
-    recentMessagesByChannel: Record<string, ChatMessageType<never>[]>;
+    recentMessagesByChannel: Record<string, AnyChatMessageType[]>;
   };
   loadingState: ChatLoadingState;
   currentChannelId: string | null;
   emojis: SanitisedEmote[];
   bits: Bit[];
   ttvUsers: ChatUser[];
-  messages: ChatMessageType<never>[];
+  messages: AnyChatMessageType[];
+  mentionLoginRevision: number;
   paints: Record<string, PaintData>;
   userPaintIds: Record<string, string>;
   badges: Record<string, SanitisedBadgeSet>;
   userBadgeIds: Record<string, string>;
+  sessionCaches: {
+    mentionColors: Record<string, { value: string; expiresAt: number }>;
+    lightenedColors: Record<string, { value: string; expiresAt: number }>;
+  };
 }
 
 export const limitChannelCaches = (
@@ -47,7 +52,7 @@ export const limitChannelCaches = (
   if (entries.length <= MAX_CACHED_CHANNELS) {
     return channelCaches;
   }
-  const sorted = [...entries].sort((a, b) => {
+  const sorted = entries.slice().sort((a, b) => {
     if (a[0] === currentChannelId) {
       return -1;
     }
@@ -75,10 +80,15 @@ const initialChatStoreState: ChatStoreState = {
   bits: [],
   ttvUsers: [],
   messages: [],
+  mentionLoginRevision: 0,
   paints: {},
   userPaintIds: {},
   badges: {},
   userBadgeIds: {},
+  sessionCaches: {
+    mentionColors: {},
+    lightenedColors: {},
+  },
 };
 
 ensureObservablePersistenceConfig();

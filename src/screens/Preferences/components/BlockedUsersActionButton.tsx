@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     color: theme.colorRed,
   },
   primaryButton: {
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
   },
   primaryLabel: {
     color: theme.colorBlack,

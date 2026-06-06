@@ -39,9 +39,7 @@ export function BlockedUsersActionButton({
             variant === 'destructive' ? 'bordered' : 'borderedProminent',
           ),
           controlSize('small'),
-          tint(
-            variant === 'destructive' ? theme.colorRed : theme.colorDarkGreen,
-          ),
+          tint(variant === 'destructive' ? theme.colorRed : theme.colorPrimary),
           frame({ width, height: 36 }),
         ]}
       />

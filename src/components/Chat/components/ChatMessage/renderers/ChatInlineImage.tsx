@@ -1,5 +1,8 @@
-import { getCachedImageUri } from '@app/utils/image/image-cache';
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useState } from 'react';
+import {
+  cacheImageFromUrl,
+  getCachedImageUri,
+} from '@app/utils/image/image-cache';
 import {
   type ImageStyle,
   type StyleProp,
@@ -25,11 +28,40 @@ function ChatInlineImageComponent({
   style,
   testID,
 }: ChatInlineImageProps) {
-  const resolvedUrl = useMemo(
-    () => getCachedImageUri(sourceUrl, { variant: cacheVariant }) ?? sourceUrl,
-    [cacheVariant, sourceUrl],
-  );
-  const image = useMemo(() => ({ url: resolvedUrl }), [resolvedUrl]);
+  const diskCachedUrl =
+    getCachedImageUri(sourceUrl, { variant: cacheVariant }) ?? null;
+  const [downloadedCache, setDownloadedCache] = useState<{
+    cachedUrl: string | null;
+    sourceUrl: string | null;
+  }>({ cachedUrl: null, sourceUrl: null });
+  const downloadedCachedUrl =
+    downloadedCache.sourceUrl === sourceUrl ? downloadedCache.cachedUrl : null;
+  const resolvedUrl = diskCachedUrl ?? downloadedCachedUrl ?? sourceUrl;
+  const image = { url: resolvedUrl };
+
+  useEffect(() => {
+    if (!sourceUrl || diskCachedUrl || process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    const controller = new AbortController();
+    let cancelled = false;
+
+    void cacheImageFromUrl(sourceUrl, {
+      priority: 'visible',
+      signal: controller.signal,
+      variant: cacheVariant,
+    }).then(cachedUrl => {
+      if (!cancelled && cachedUrl !== sourceUrl) {
+        setDownloadedCache({ sourceUrl, cachedUrl });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [cacheVariant, diskCachedUrl, sourceUrl]);
 
   const imageElement = (
     <NitroImage

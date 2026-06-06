@@ -29,13 +29,13 @@ export function RefreshIndicator({
   const refreshProgress = useSharedValue(0);
 
   useEffect(() => {
-    refreshProgress.value = withTiming(isRefreshing ? 1 : 0, { duration: 200 });
+    refreshProgress.set(withTiming(isRefreshing ? 1 : 0, { duration: 200 }));
   }, [isRefreshing, refreshProgress]);
 
   const containerStyle = useAnimatedStyle(() => {
     const rawPull = Math.abs(Math.min(scrollY.value, 0));
     const pullAmount = Math.max(0, rawPull - contentInsetTop);
-    const rp = refreshProgress.value;
+    const rp = refreshProgress.get();
 
     const pullTranslateY = interpolate(
       pullAmount,
@@ -70,16 +70,16 @@ export function RefreshIndicator({
     );
 
     return {
-      opacity: interpolate(refreshProgress.value, [0, 1], [1, 0]),
+      opacity: interpolate(refreshProgress.get(), [0, 1], [1, 0]),
       transform: [{ rotate: `${rotation}deg` }],
     };
   });
 
   const spinnerStyle = useAnimatedStyle(() => ({
-    opacity: refreshProgress.value,
+    opacity: refreshProgress.get(),
   }));
 
-  const accentColor = theme.colorGrass;
+  const accentColor = theme.colorPrimary;
 
   return (
     <Animated.View style={[styles.container, containerStyle]}>

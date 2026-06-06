@@ -1,10 +1,10 @@
+import { memo } from 'react';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
 import { Badge } from '@app/components/ui/Badge/Badge';
 import { theme } from '@app/styles/themes';
 import type { ChannelPredictionState } from '@app/types/twitch/prediction';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 interface ChannelPredictionCardProps {
@@ -52,10 +52,7 @@ function ChannelPredictionCardComponent({
   channelLogin,
   prediction,
 }: ChannelPredictionCardProps) {
-  const timeRemaining = useMemo(
-    () => formatTimeRemaining(prediction),
-    [prediction],
-  );
+  const timeRemaining = formatTimeRemaining(prediction);
   const statusLabel = prediction.isActive
     ? 'Live prediction'
     : prediction.isLocked
@@ -107,8 +104,10 @@ function ChannelPredictionCardComponent({
                   {outcome.title}
                 </Text>
                 {outcome.isWinner ? (
-                  <Badge color='green' size='sm' variant='soft'>
-                    Won
+                  <Badge color='teal' size='sm' variant='soft'>
+                    <Text type='xs' weight='semibold'>
+                      Won
+                    </Text>
                   </Badge>
                 ) : null}
               </View>

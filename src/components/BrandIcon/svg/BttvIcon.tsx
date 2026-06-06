@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import Svg, { Path, SvgProps } from 'react-native-svg';
 
 interface BttvIconProps extends SvgProps {

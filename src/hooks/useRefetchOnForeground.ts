@@ -22,6 +22,11 @@ export function useRefetchOnForeground({
         return undefined;
       }
 
+      // If the screen regains focus while the app is active (e.g. returning
+      // from background while still on this tab, or switching back to this
+      // tab after a long pause) ensure data is refreshed.
+      void refetchRef.current();
+
       const subscription = AppState.addEventListener('change', nextState => {
         const previousState = previousStateRef.current;
         previousStateRef.current = nextState;

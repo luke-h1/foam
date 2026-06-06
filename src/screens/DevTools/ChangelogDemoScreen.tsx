@@ -1,5 +1,4 @@
 import { Button } from '@app/components/Button/Button';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import {
@@ -10,7 +9,7 @@ import {
   resetSeenChangelogVersions,
   type ChangelogPresentOptions,
 } from '@modules/changelog';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 type ChangelogState = {
@@ -21,7 +20,7 @@ type ChangelogState = {
 
 const demoOptions: ChangelogPresentOptions = {
   configuration: {
-    accentColorHex: '#37D67A',
+    accentColorHex: '#1AC9A2',
     doneButtonLabel: 'Done',
     nextButtonLabel: 'Next',
   },
@@ -91,14 +90,11 @@ export function ChangelogDemoScreen() {
     readChangelogState(),
   );
 
-  const stateRows = useMemo(
-    () => [
-      ['Current app version', state.currentVersion],
-      ['Latest seen app version', state.latestSeenAppVersion ?? 'none'],
-      ['Latest seen OTA version', state.latestSeenOTAVersion ?? 'none'],
-    ],
-    [state],
-  );
+  const stateRows = [
+    ['Current app version', state.currentVersion],
+    ['Latest seen app version', state.latestSeenAppVersion ?? 'none'],
+    ['Latest seen OTA version', state.latestSeenOTAVersion ?? 'none'],
+  ];
 
   const refreshState = () => {
     setState(readChangelogState());
@@ -137,8 +133,6 @@ export function ChangelogDemoScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader title='Changelog Demo' size='medium' />
-
         <View style={styles.section}>
           <Text weight='semibold'>Module state</Text>
           <View style={styles.stateCard}>
@@ -236,6 +230,6 @@ const styles = StyleSheet.create({
     gap: theme.space4,
   },
   stateValue: {
-    color: theme.colorGrass,
+    color: theme.colorPrimary,
   },
 });

@@ -43,34 +43,30 @@ export function useRefresh({ onRefresh }: UseRefreshOptions): UseRefreshResult {
   const isRefreshing$ = useObservable(false);
   const isRefreshing = useSelector(isRefreshing$);
 
-  const handleRefresh = useCallback(async () => {
-    isRefreshingShared.value = true;
+  const refreshCallback = useCallback(async () => {
+    isRefreshingShared.set(true);
     isRefreshing$.set(true);
     await onRefresh();
     fireCompleteHaptic();
-    isRefreshingShared.value = false;
+    isRefreshingShared.set(false);
     isRefreshing$.set(false);
-  }, [isRefreshing$, onRefresh, isRefreshingShared]);
-
-  const refreshCallback = useCallback(() => {
-    void handleRefresh();
-  }, [handleRefresh]);
+  }, [isRefreshing$, isRefreshingShared, onRefresh]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
-      scrollY.value = event.contentOffset.y;
+      scrollY.set(event.contentOffset.y);
 
       if (
         event.contentOffset.y < -REFRESH_THRESHOLD &&
-        !hasTriggeredHaptic.value &&
-        !isRefreshingShared.value
+        !hasTriggeredHaptic.get() &&
+        !isRefreshingShared.get()
       ) {
-        hasTriggeredHaptic.value = true;
+        hasTriggeredHaptic.set(true);
         scheduleOnRN(fireThresholdHaptic);
       }
 
       if (event.contentOffset.y > -REFRESH_THRESHOLD * 0.5) {
-        hasTriggeredHaptic.value = false;
+        hasTriggeredHaptic.set(false);
       }
     },
   });

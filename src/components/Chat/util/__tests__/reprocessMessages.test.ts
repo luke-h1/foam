@@ -4,8 +4,8 @@ import {
   shouldReprocessMessage,
   extractTextFromMessage,
   filterMessagesForReprocessing,
-  reprocessMessages,
-} from '../reprocessMessages';
+} from '../prepareMessagesForReprocessing';
+import { reprocessMessages } from '../reprocessMessages';
 
 jest.mock('@app/utils/logger', () => ({
   logger: {

@@ -8,10 +8,10 @@ import {
   setConfigSettings,
   setDefaults,
 } from '@react-native-firebase/remote-config';
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
 const remoteConfig = getRemoteConfig(getApp());
-let autoFetchStarted = false;
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
 void setConfigSettings(remoteConfig, {
@@ -172,54 +172,59 @@ async function fetchRemoteConfig(): Promise<boolean> {
   return remoteConfigFetchPromise;
 }
 
+function readRemoteConfig(): RemoteConfigType {
+  const allConfig = getAll(remoteConfig);
+  return Object.fromEntries(
+    Object.entries(allConfig).flatMap(([key, entry]) => {
+      if (!(key in defaultRemoteConfig)) {
+        return [];
+      }
+
+      const raw = entry.asString();
+      return [
+        [
+          key,
+          {
+            raw,
+            value: parseValue(key as RemoteConfigKey, raw),
+            source: entry.getSource(),
+          },
+        ],
+      ];
+    }),
+  ) as RemoteConfigType;
+}
+
 export function useRemoteConfig(): UseRemoteConfigResult {
-  const [config, setConfig] = useState<RemoteConfigType>(
-    buildConfigFromDefaults,
-  );
-  const [isRefetching, setIsRefetching] = useState(false);
+  const [isManualRefetching, setIsManualRefetching] = useState(false);
 
-  const updateConfig = useCallback(() => {
-    const allConfig = getAll(remoteConfig);
-    const newConfig = Object.fromEntries(
-      Object.entries(allConfig)
-        .filter(([key]) => key in defaultRemoteConfig)
-        .map(([key, entry]) => {
-          const raw = entry.asString();
-          return [
-            key,
-            {
-              raw,
-              value: parseValue(key as RemoteConfigKey, raw),
-              source: entry.getSource(),
-            },
-          ];
-        }),
-    ) as RemoteConfigType;
+  const {
+    data: config = buildConfigFromDefaults(),
+    refetch: refetchQuery,
+    isFetching,
+  } = useQuery({
+    queryKey: ['remoteConfig'],
+    queryFn: async () => {
+      await fetchRemoteConfig();
+      return readRemoteConfig();
+    },
+    staleTime: 5 * 60 * 1000,
+    initialData: buildConfigFromDefaults,
+  });
 
-    setConfig(newConfig);
-  }, []);
-
-  const refetch = useCallback(async (): Promise<boolean> => {
-    setIsRefetching(true);
+  const refetch = async (): Promise<boolean> => {
+    setIsManualRefetching(true);
     try {
-      const activated = await fetchRemoteConfig();
-      updateConfig();
-      return activated;
+      const result = await refetchQuery();
+      return result.data !== undefined;
     } finally {
-      setIsRefetching(false);
+      setIsManualRefetching(false);
     }
-  }, [updateConfig]);
+  };
 
-  useEffect(() => {
-    if (autoFetchStarted && !remoteConfigFetchPromise) {
-      updateConfig();
-      return;
-    }
-
-    autoFetchStarted = true;
-    void refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return { config, refetch, isRefetching };
+  return {
+    config,
+    refetch,
+    isRefetching: isFetching || isManualRefetching,
+  };
 }

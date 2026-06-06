@@ -1,24 +1,21 @@
-import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
+import {
+  buildSevenTvBadgeImageUrl,
+  normalizeSevenTvBadge,
+} from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { storageService } from '@app/lib/storage';
 import {
-  V4Badge,
-  V4Paint,
   clearSevenTvUserIdCache,
-  pickBestImage,
   sevenTvService,
 } from '@app/services/seventv-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import {
-  type PaintData,
-  type PaintFunction,
-  type PaintShape,
-  type PaintShadow,
-} from '@app/utils/color/seventv-ws-service';
+  convertV4PaintToPaintData,
+  type V4Badge,
+} from '@app/utils/color/sevenTvPaintData';
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
 import { batch } from '@legendapp/state';
 
-import type { UserPaint } from './constants';
 import { MAX_COSMETIC_ENTRIES } from './constants';
 import { chatStore$ } from './state';
 
@@ -42,105 +39,20 @@ const userCosmeticsRequests = new Map<string, Promise<string | null>>();
 const getUserCosmeticsStorageKey = (sevenTvUserId: string) =>
   `sevenTvUserCosmetics_${USER_COSMETICS_CACHE_PREFIX}${sevenTvUserId}` as const;
 
-const packRgba = (color: {
-  r: number;
-  g: number;
-  b: number;
-  a: number;
-}): number =>
-  // eslint-disable-next-line no-bitwise
-  ((color.r << 24) | (color.g << 16) | (color.b << 8) | color.a) >>> 0;
-
-const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
-  const firstLayer = paint.data.layers[0];
-  const ty = firstLayer?.ty;
-  let paintFunction: PaintFunction = 'LINEAR_GRADIENT';
-  let angle = 0;
-  let shape: PaintShape = 'circle';
-  let repeat = false;
-  let color: number | null = null;
-  let imageUrl = '';
-
-  const stopsIndexed: IndexedCollection<{ at: number; color: number }> = {
-    length: 0,
-  };
-  // eslint-disable-next-line no-underscore-dangle
-  switch (ty?.__typename) {
-    case 'PaintLayerTypeLinearGradient':
-      angle = ty.angle;
-      repeat = ty.repeating;
-      ty.stops.forEach((stop, index) => {
-        stopsIndexed[index] = { at: stop.at, color: packRgba(stop.color) };
-      });
-      stopsIndexed.length = ty.stops.length;
-      break;
-
-    case 'PaintLayerTypeRadialGradient':
-      paintFunction = 'RADIAL_GRADIENT';
-      repeat = ty.repeating;
-      shape =
-        ty.shape === PaintRadialGradientShape.Ellipse ? 'ellipse' : 'circle';
-      ty.stops.forEach((stop, index) => {
-        stopsIndexed[index] = { at: stop.at, color: packRgba(stop.color) };
-      });
-      stopsIndexed.length = ty.stops.length;
-      break;
-
-    case 'PaintLayerTypeSingleColor':
-      color = packRgba(ty.color);
-      break;
-
-    case 'PaintLayerTypeImage':
-      paintFunction = 'URL';
-      imageUrl = pickBestImage(ty.images)?.url ?? '';
-      break;
-
-    default:
-      break;
-  }
-  const shadowsIndexed: IndexedCollection<PaintShadow> = {
-    length: paint.data.shadows.length,
-  };
-
-  paint.data.shadows.forEach((shadow, index) => {
-    shadowsIndexed[index] = {
-      color: packRgba(shadow.color),
-      radius: shadow.blur,
-      x_offset: shadow.offsetX,
-      y_offset: shadow.offsetY,
-    };
-  });
-
-  return {
-    id: paint.id,
-    name: paint.name,
-    color,
-    function: paintFunction,
-    repeat,
-    angle,
-    shape,
-    image_url: imageUrl,
-    stops: stopsIndexed,
-    shadows: shadowsIndexed,
-    gradients: { length: 0 },
-    text: null,
-  };
-};
-
 const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
   const bestImage =
     badge.images.find(img => img.scale === 4) ??
     badge.images.find(img => img.scale === 3) ??
     badge.images[0];
 
-  return {
+  return normalizeSevenTvBadge({
     id: badge.id,
-    url: bestImage?.url ?? `https://cdn.7tv.app/badge/${badge.id}/4x.webp`,
+    url: bestImage?.url ?? buildSevenTvBadgeImageUrl(badge.id),
     type: '7TV Badge',
     title: badge.description || badge.name,
     set: badge.id,
     provider: '7tv',
-  };
+  });
 };
 
 function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
@@ -155,11 +67,11 @@ function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
 
     if (cosmetics.ttvUserId) {
       if (cosmetics.paintId) {
-        chatStore$.userPaintIds[cosmetics.ttvUserId]?.set(cosmetics.paintId);
+        setUserPaint(cosmetics.ttvUserId, cosmetics.paintId);
       }
 
       if (cosmetics.badgeId) {
-        chatStore$.userBadgeIds[cosmetics.ttvUserId]?.set(cosmetics.badgeId);
+        setUserBadge(cosmetics.ttvUserId, cosmetics.badgeId);
       }
     }
   });
@@ -274,18 +186,6 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   }
 };
 
-export const getUserPaint = (ttvUserId: string): UserPaint | undefined => {
-  const paintId = chatStore$.userPaintIds[ttvUserId]?.peek();
-  if (!paintId) {
-    return undefined;
-  }
-  const paint = chatStore$.paints[paintId]?.peek();
-  if (!paint) {
-    return undefined;
-  }
-  return { ...paint, ttv_user_id: ttvUserId };
-};
-
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
     const cell = chatStore$.paints[paint.id];
@@ -303,8 +203,13 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
   }
 };
 
-export const getBadge = (badgeId: string): SanitisedBadgeSet | undefined =>
-  chatStore$.badges[badgeId]?.peek();
+export const getBadge = (badgeId: string): SanitisedBadgeSet | undefined => {
+  const badge = chatStore$.badges[badgeId]?.peek();
+  if (!badge) {
+    return undefined;
+  }
+  return normalizeSevenTvBadge(badge);
+};
 
 export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
   const current = chatStore$.userBadgeIds.peek();
@@ -329,7 +234,7 @@ export const getUserBadge = (
   if (!badgeId) {
     return undefined;
   }
-  return chatStore$.badges[badgeId]?.peek();
+  return getBadge(badgeId);
 };
 
 export const updateBadge = (badge: SanitisedBadgeSet) => {
@@ -400,7 +305,7 @@ export const clearSevenTvBadges = () => {
   });
 };
 
-export const clearPaintsAndBadges = () => {
+const clearPaintsAndBadges = () => {
   batch(() => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});

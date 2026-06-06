@@ -42,7 +42,10 @@ describe('useChatLifecycle', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (defaultNavigation.addListener as jest.Mock).mockImplementation(
+    defaultProps.isMountedRef.current = true;
+    delete (defaultNavigation as { beforeRemoveCb?: () => void })
+      .beforeRemoveCb;
+    defaultNavigation.addListener.mockImplementation(
       (_event: string, cb: () => void) => {
         (defaultNavigation as { beforeRemoveCb?: () => void }).beforeRemoveCb =
           cb;
@@ -61,6 +64,7 @@ describe('useChatLifecycle', () => {
     cleanupMessages,
     cancelEmoteLoad,
     fetchedCosmeticsUsersRef: { current: new Set<string>() },
+    isMountedRef: { current: true },
     processedMessageIdsRef: { current: new Set<string>() },
   };
 
@@ -88,7 +92,7 @@ describe('useChatLifecycle', () => {
       );
     });
 
-    test('beforeRemove calls abortCurrentLoad, cancelEmoteLoad, clearChannelResources, partChannel, clearMessages, clearLocalMessages', () => {
+    test('beforeRemove stops active work and parts without clearing rendered messages', () => {
       renderHook(() => useChatLifecycle(defaultProps));
       const cb = getBeforeRemoveCb();
       expect(cb).toBeDefined();
@@ -98,8 +102,9 @@ describe('useChatLifecycle', () => {
       expect(cancelEmoteLoad).toHaveBeenCalled();
       expect(clearChannelResources).toHaveBeenCalled();
       expect(partChannel).toHaveBeenCalledWith('testchannel');
-      expect(clearMessages).toHaveBeenCalled();
+      expect(clearMessages).not.toHaveBeenCalled();
       expect(clearLocalMessages).toHaveBeenCalled();
+      expect(defaultProps.isMountedRef.current).toBe(false);
     });
 
     test('beforeRemove only calls partChannel once (hasPartedRef guard)', () => {
@@ -125,7 +130,7 @@ describe('useChatLifecycle', () => {
       expect(clearTtvUsers).toHaveBeenCalled();
       expect(clearPaints).toHaveBeenCalled();
       expect(clearPersonalEmotesCache).toHaveBeenCalled();
-      expect(clearMessages).toHaveBeenCalled();
+      expect(clearMessages).not.toHaveBeenCalled();
       expect(clearLocalMessages).toHaveBeenCalled();
       expect(cleanupScroll).toHaveBeenCalled();
       expect(cleanupMessages).toHaveBeenCalled();

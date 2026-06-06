@@ -9,7 +9,7 @@ function toTwitchTaggedEmoteUrl(
   return `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/${format}/dark/${scale}`;
 }
 
-export const extractEmotes = (
+const extractEmotes = (
   emotes: Record<string, string[]> | undefined,
   message: string,
 ): TwitchSanitisedEmote[] => {
@@ -64,10 +64,10 @@ export const parseTwitchEmotesTag = (
     return undefined;
   }
 
-  const entries = emotesTag
-    .split('/')
-    .map(entry => entry.trim())
-    .filter(Boolean);
+  const entries = emotesTag.split('/').flatMap(entry => {
+    const trimmed = entry.trim();
+    return trimmed ? [trimmed] : [];
+  });
 
   if (entries.length === 0) {
     return undefined;
@@ -79,10 +79,10 @@ export const parseTwitchEmotesTag = (
       return resolved;
     }
 
-    const positions = positionsRaw
-      .split(',')
-      .map(position => position.trim())
-      .filter(Boolean);
+    const positions = positionsRaw.split(',').flatMap(position => {
+      const trimmed = position.trim();
+      return trimmed ? [trimmed] : [];
+    });
 
     if (positions.length > 0) {
       resolved[emoteId] = positions;

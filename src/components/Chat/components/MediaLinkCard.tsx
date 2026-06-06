@@ -1,3 +1,4 @@
+import { useCallback, memo } from 'react';
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
@@ -13,17 +14,20 @@ import {
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
-import { memo, useCallback, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet } from 'react-native';
 
 type MediaLinkCardProps = {
+  layout?: 'card' | 'inline';
   type: TwitchAnd7TVVariant;
   url: string;
 };
 
-function MediaLinkCardComponent({ type, url }: MediaLinkCardProps) {
-  const twitchClipId = useMemo(() => getTwitchClipIdFromUrl(url), [url]);
+function MediaLinkCardComponent({
+  layout = 'card',
+  type,
+  url,
+}: MediaLinkCardProps) {
+  const twitchClipId = getTwitchClipIdFromUrl(url);
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
       {
@@ -54,36 +58,9 @@ function MediaLinkCardComponent({ type, url }: MediaLinkCardProps) {
     }
   }, [twitchClipId, type]);
 
-  const getBrandIcon = () => {
-    switch (type) {
-      case 'stvEmote':
-        return <BrandIcon name='stv' size='md' />;
-      case 'twitchClip':
-        return <BrandIcon name='twitch' size='sm' />;
-      default:
-        return null;
-    }
-  };
-
-  if (
+  const isPending =
     (type === 'stvEmote' && sevenTvEmote.isPending) ||
-    (type === 'twitchClip' && twitchClip.isPending)
-  ) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <Skeleton style={styles.thumbnail} />
-          <View style={styles.info}>
-            <View style={styles.titleRow}>
-              <Skeleton style={styles.brandIconSkeleton} />
-              <Skeleton style={styles.titleSkeleton} />
-            </View>
-            <Skeleton style={styles.createdBySkeleton} />
-          </View>
-        </View>
-      </View>
-    );
-  }
+    (type === 'twitchClip' && twitchClip.isPending);
 
   const thumbnail =
     type === 'stvEmote'
@@ -101,10 +78,72 @@ function MediaLinkCardComponent({ type, url }: MediaLinkCardProps) {
         sevenTvEmote.data?.owner?.username
       : twitchClip.data?.creator_name;
 
+  if (layout === 'inline' && type === 'stvEmote') {
+    if (isPending) {
+      return (
+        <View style={styles.inlineChip}>
+          <Skeleton shimmer={false} style={styles.inlineThumbnail} />
+          <Skeleton shimmer={false} style={styles.inlineTitleSkeleton} />
+        </View>
+      );
+    }
+
+    return (
+      <Pressable
+        accessibilityRole='button'
+        onPress={handlePress}
+        style={styles.inlineChip}
+      >
+        {thumbnail ? (
+          <Image
+            useNitro
+            trackLoadTime
+            trackLoadContext='chat.media-link-inline'
+            source={thumbnail}
+            style={styles.inlineThumbnail}
+            contentFit='contain'
+          />
+        ) : null}
+        <Text ellipsizeMode='tail' numberOfLines={1} style={styles.inlineTitle}>
+          {title}
+        </Text>
+        <BrandIcon name='stv' size='xs' />
+      </Pressable>
+    );
+  }
+
+  const getBrandIcon = () => {
+    switch (type) {
+      case 'stvEmote':
+        return <BrandIcon name='stv' size='md' />;
+      case 'twitchClip':
+        return <BrandIcon name='twitch' size='sm' />;
+      default:
+        return null;
+    }
+  };
+
+  if (isPending) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.card}>
+          <Skeleton shimmer={false} style={styles.thumbnail} />
+          <View style={styles.info}>
+            <View style={styles.titleRow}>
+              <Skeleton shimmer={false} style={styles.brandIconSkeleton} />
+              <Skeleton shimmer={false} style={styles.titleSkeleton} />
+            </View>
+            <Skeleton shimmer={false} style={styles.createdBySkeleton} />
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <Button style={styles.container} onPress={handlePress}>
       <View style={styles.card}>
-        {thumbnail && (
+        {thumbnail ? (
           <Image
             useNitro
             trackLoadTime
@@ -113,7 +152,7 @@ function MediaLinkCardComponent({ type, url }: MediaLinkCardProps) {
             style={styles.thumbnail}
             contentFit='contain'
           />
-        )}
+        ) : null}
         <View style={styles.info}>
           <View style={styles.titleRow}>
             {getBrandIcon()}
@@ -121,10 +160,6 @@ function MediaLinkCardComponent({ type, url }: MediaLinkCardProps) {
           </View>
           {createdBy ? <Text>By {createdBy}</Text> : null}
         </View>
-        <SymbolView
-          name={type === 'twitchClip' ? 'play.rectangle.fill' : 'sparkles'}
-          tintColor={theme.colorWhite}
-        />
       </View>
     </Button>
   );
@@ -164,6 +199,37 @@ const styles = StyleSheet.create({
   },
   info: {
     flex: 1,
+  },
+  inlineChip: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderCurve: 'continuous',
+    borderRadius: 6,
+    flexDirection: 'row',
+    gap: 4,
+    maxWidth: '100%',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  inlineThumbnail: {
+    borderCurve: 'continuous',
+    borderRadius: 4,
+    height: 28,
+    width: 28,
+  },
+  inlineTitle: {
+    color: theme.color.text.dark,
+    flexShrink: 1,
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+    maxWidth: 140,
+  },
+  inlineTitleSkeleton: {
+    borderCurve: 'continuous',
+    borderRadius: 4,
+    height: 12,
+    width: 72,
   },
   thumbnail: {
     height: 50,

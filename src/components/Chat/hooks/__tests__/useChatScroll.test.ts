@@ -643,10 +643,13 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
+        result.current.scrollToBottom();
+        result.current.cleanup();
+        mocks.scrollToEnd.mockClear();
         result.current.maintainBottomAfterContentChange();
       });
 
-      expect(result.current.isScrollingToBottom).toBe(false);
+      expect(result.current.isScrollingToBottom).toBe(true);
 
       act(() => {
         jest.advanceTimersByTime(0);
@@ -679,6 +682,9 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
+        result.current.scrollToBottom();
+        result.current.cleanup();
+        mocks.scrollToEnd.mockClear();
         result.current.maintainBottomAfterContentChange();
         result.current.maintainBottomAfterContentChange();
         jest.advanceTimersByTime(0);
@@ -695,7 +701,7 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
     });
 
-    test('should cancel hydrated content anchoring when the user drags away', () => {
+    test('should defer to LegendList maintain-scroll-at-end while pinned to bottom', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -707,8 +713,30 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.maintainBottomAfterContentChange();
+        result.current.handleContentSizeChange();
+        jest.advanceTimersByTime(0);
+      });
+
+      expect(mocks.scrollToEnd).not.toHaveBeenCalled();
+    });
+
+    test('should cancel hydrated content anchoring when the user drags away', () => {
+      const { ref: listRef, mocks } = createMockListRef();
+
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
         result.current.handleScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.maintainBottomAfterContentChange();
+        result.current.handleScroll(
+          createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
         result.current.handleContentSizeChange();
         jest.advanceTimersByTime(0);

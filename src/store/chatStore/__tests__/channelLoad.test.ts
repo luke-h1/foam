@@ -110,6 +110,41 @@ jest.mock('@app/services/twitch-emote-service', () => ({
   },
 }));
 
+const mockGetEmoteSetId = jest.mocked(sevenTvService.getEmoteSetId);
+const mockGetSanitisedEmoteSet = jest.mocked(
+  sevenTvService.getSanitisedEmoteSet,
+);
+const mockGet7tvUserId = jest.mocked(sevenTvService.get7tvUserId);
+const mockSendPresence = jest.mocked(sevenTvService.sendPresence);
+const mockGetChannelEmotes = jest.mocked(twitchEmoteService.getChannelEmotes);
+const mockGetGlobalEmotes = jest.mocked(twitchEmoteService.getGlobalEmotes);
+const mockGetSubscriberEmotes = jest.mocked(
+  twitchEmoteService.getSubscriberEmotes,
+);
+const mockGetBttvGlobalEmotes = jest.mocked(
+  bttvEmoteService.getSanitisedGlobalEmotes,
+);
+const mockGetBttvChannelEmotes = jest.mocked(
+  bttvEmoteService.getSanitisedChannelEmotes,
+);
+const mockGetFfzChannelEmotes = jest.mocked(
+  ffzService.getSanitisedChannelEmotes,
+);
+const mockGetFfzGlobalEmotes = jest.mocked(ffzService.getSanitisedGlobalEmotes);
+const mockListTwitchChannelBadges = jest.mocked(
+  twitchBadgeService.listSanitisedChannelBadges,
+);
+const mockListTwitchGlobalBadges = jest.mocked(
+  twitchBadgeService.listSanitisedGlobalBadges,
+);
+const mockGetFfzChannelBadges = jest.mocked(
+  ffzService.getSanitisedChannelBadges,
+);
+const mockGetFfzGlobalBadges = jest.mocked(ffzService.getSanitisedGlobalBadges);
+const mockListChatterinoBadges = jest.mocked(
+  chatterinoService.listSanitisedBadges,
+);
+
 const channelId = 'channel-1';
 const twitchUserId = 'user-1';
 
@@ -152,74 +187,52 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
 
-    jest.mocked(sevenTvService.getEmoteSetId).mockResolvedValue('seven-set');
-    jest
-      .mocked(sevenTvService.getSanitisedEmoteSet)
-      .mockImplementation(id =>
-        Promise.resolve(
-          asProviderEmotes<typeof sevenTvService.getSanitisedEmoteSet>([
-            emote(`seven-${id}`),
-          ]),
-        ),
-      );
-    jest.mocked(sevenTvService.get7tvUserId).mockResolvedValue('');
-    jest.mocked(sevenTvService.sendPresence).mockResolvedValue(undefined);
-    jest
-      .mocked(twitchEmoteService.getChannelEmotes)
-      .mockResolvedValue(
-        asProviderEmotes<typeof twitchEmoteService.getChannelEmotes>([
-          emote('twitch-channel-new'),
+    mockGetEmoteSetId.mockResolvedValue('seven-set');
+    mockGetSanitisedEmoteSet.mockImplementation(id =>
+      Promise.resolve(
+        asProviderEmotes<typeof sevenTvService.getSanitisedEmoteSet>([
+          emote(`seven-${id}`),
         ]),
-      );
-    jest
-      .mocked(twitchEmoteService.getGlobalEmotes)
-      .mockResolvedValue(
-        asProviderEmotes<typeof twitchEmoteService.getGlobalEmotes>([
-          emote('twitch-global-new'),
-        ]),
-      );
-    jest.mocked(twitchEmoteService.getSubscriberEmotes).mockResolvedValue([]);
-    jest
-      .mocked(bttvEmoteService.getSanitisedGlobalEmotes)
-      .mockResolvedValue(
-        asProviderEmotes<typeof bttvEmoteService.getSanitisedGlobalEmotes>([
-          emote('bttv-global-new'),
-        ]),
-      );
-    jest
-      .mocked(bttvEmoteService.getSanitisedChannelEmotes)
-      .mockResolvedValue(
-        asProviderEmotes<typeof bttvEmoteService.getSanitisedChannelEmotes>([
-          emote('bttv-channel-new'),
-        ]),
-      );
-    jest
-      .mocked(ffzService.getSanitisedChannelEmotes)
-      .mockResolvedValue(
-        asProviderEmotes<typeof ffzService.getSanitisedChannelEmotes>([
-          emote('ffz-channel-new'),
-        ]),
-      );
-    jest
-      .mocked(ffzService.getSanitisedGlobalEmotes)
-      .mockResolvedValue(
-        asProviderEmotes<typeof ffzService.getSanitisedGlobalEmotes>([
-          emote('ffz-global-new'),
-        ]),
-      );
-    jest
-      .mocked(twitchBadgeService.listSanitisedChannelBadges)
-      .mockResolvedValue([]);
-    jest
-      .mocked(twitchBadgeService.listSanitisedGlobalBadges)
-      .mockResolvedValue([]);
-    jest
-      .mocked(ffzService.getSanitisedChannelBadges)
-      .mockResolvedValue([badge('ffz-channel-badge-new')]);
-    jest
-      .mocked(ffzService.getSanitisedGlobalBadges)
-      .mockResolvedValue([badge('ffz-global-badge-new')]);
-    jest.mocked(chatterinoService.listSanitisedBadges).mockReturnValue([]);
+      ),
+    );
+    mockGet7tvUserId.mockResolvedValue('');
+    mockSendPresence.mockResolvedValue(undefined);
+    mockGetChannelEmotes.mockResolvedValue(
+      asProviderEmotes<typeof twitchEmoteService.getChannelEmotes>([
+        emote('twitch-channel-new'),
+      ]),
+    );
+    mockGetGlobalEmotes.mockResolvedValue(
+      asProviderEmotes<typeof twitchEmoteService.getGlobalEmotes>([
+        emote('twitch-global-new'),
+      ]),
+    );
+    mockGetSubscriberEmotes.mockResolvedValue([]);
+    mockGetBttvGlobalEmotes.mockResolvedValue(
+      asProviderEmotes<typeof bttvEmoteService.getSanitisedGlobalEmotes>([
+        emote('bttv-global-new'),
+      ]),
+    );
+    mockGetBttvChannelEmotes.mockResolvedValue(
+      asProviderEmotes<typeof bttvEmoteService.getSanitisedChannelEmotes>([
+        emote('bttv-channel-new'),
+      ]),
+    );
+    mockGetFfzChannelEmotes.mockResolvedValue(
+      asProviderEmotes<typeof ffzService.getSanitisedChannelEmotes>([
+        emote('ffz-channel-new'),
+      ]),
+    );
+    mockGetFfzGlobalEmotes.mockResolvedValue(
+      asProviderEmotes<typeof ffzService.getSanitisedGlobalEmotes>([
+        emote('ffz-global-new'),
+      ]),
+    );
+    mockListTwitchChannelBadges.mockResolvedValue([]);
+    mockListTwitchGlobalBadges.mockResolvedValue([]);
+    mockGetFfzChannelBadges.mockResolvedValue([badge('ffz-channel-badge-new')]);
+    mockGetFfzGlobalBadges.mockResolvedValue([badge('ffz-global-badge-new')]);
+    mockListChatterinoBadges.mockReturnValue([]);
   });
 
   afterEach(() => {
@@ -251,38 +264,22 @@ describe('loadChannelResources cache fallback', () => {
       },
     });
 
-    jest
-      .mocked(sevenTvService.getEmoteSetId)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(sevenTvService.getSanitisedEmoteSet)
-      .mockImplementation(id =>
-        id === 'cached-seven-set'
-          ? Promise.reject(new Error('TimeoutError'))
-          : Promise.resolve(
-              asProviderEmotes<typeof sevenTvService.getSanitisedEmoteSet>([
-                emote(`seven-${id}-new`),
-              ]),
-            ),
-      );
-    jest
-      .mocked(bttvEmoteService.getSanitisedGlobalEmotes)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(bttvEmoteService.getSanitisedChannelEmotes)
-      .mockResolvedValue([]);
-    jest
-      .mocked(ffzService.getSanitisedChannelEmotes)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(ffzService.getSanitisedGlobalEmotes)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(ffzService.getSanitisedChannelBadges)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(ffzService.getSanitisedGlobalBadges)
-      .mockRejectedValue(new Error('TimeoutError'));
+    mockGetEmoteSetId.mockRejectedValue(new Error('TimeoutError'));
+    mockGetSanitisedEmoteSet.mockImplementation(id =>
+      id === 'cached-seven-set'
+        ? Promise.reject(new Error('TimeoutError'))
+        : Promise.resolve(
+            asProviderEmotes<typeof sevenTvService.getSanitisedEmoteSet>([
+              emote(`seven-${id}-new`),
+            ]),
+          ),
+    );
+    mockGetBttvGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetBttvChannelEmotes.mockResolvedValue([]);
+    mockGetFfzChannelEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzChannelBadges.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
 
     await expect(
       loadChannelResources({ channelId, forceRefresh: true, twitchUserId }),
@@ -320,9 +317,7 @@ describe('loadChannelResources cache fallback', () => {
       },
     });
 
-    jest
-      .mocked(ffzService.getSanitisedGlobalBadges)
-      .mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
 
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
 
@@ -336,30 +331,14 @@ describe('loadChannelResources cache fallback', () => {
   });
 
   test('uses empty provider slices without crashing when provider requests reject with no cache', async () => {
-    jest
-      .mocked(sevenTvService.getEmoteSetId)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(sevenTvService.getSanitisedEmoteSet)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(bttvEmoteService.getSanitisedGlobalEmotes)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(bttvEmoteService.getSanitisedChannelEmotes)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(ffzService.getSanitisedChannelEmotes)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(ffzService.getSanitisedGlobalEmotes)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(ffzService.getSanitisedChannelBadges)
-      .mockRejectedValue(new Error('TimeoutError'));
-    jest
-      .mocked(ffzService.getSanitisedGlobalBadges)
-      .mockRejectedValue(new Error('TimeoutError'));
+    mockGetEmoteSetId.mockRejectedValue(new Error('TimeoutError'));
+    mockGetSanitisedEmoteSet.mockRejectedValue(new Error('TimeoutError'));
+    mockGetBttvGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetBttvChannelEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzChannelEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzChannelBadges.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
 
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
 

@@ -7,9 +7,11 @@ export function OTASection() {
       <Form.Text hint={Updates.runtimeVersion}>Runtime version</Form.Text>
       <Form.Text hint={`${Updates.channel || 'unknown'}`}>Channel</Form.Text>
       <Form.Text
-        hint={(Updates.createdAt ?? new Date()).toLocaleString('en-US', {
-          timeZoneName: 'short',
-        })}
+        hint={
+          Updates.createdAt?.toLocaleString('en-US', {
+            timeZoneName: 'short',
+          }) ?? 'Unknown'
+        }
       >
         Created
       </Form.Text>

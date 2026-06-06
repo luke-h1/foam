@@ -9,7 +9,7 @@ import {
   moderateMessagesByLogin,
   removeMessageById,
   restoreRecentMessagesForChannel,
-  updateMessage,
+  updateMessages,
 } from '../messages';
 import { chatStore$ } from '../state';
 
@@ -109,9 +109,13 @@ describe('chatStore messages', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'first'));
     const before = chatStore$.messages.peek();
 
-    updateMessage('msg-1', 'nonce-1', {
-      message: [{ type: 'text', content: 'updated' }],
-    });
+    updateMessages([
+      {
+        messageId: 'msg-1',
+        messageNonce: 'nonce-1',
+        updates: { message: [{ type: 'text', content: 'updated' }] },
+      },
+    ]);
 
     expect(chatStore$.messages.peek()).not.toBe(before);
     expect(getMessageById('msg-1')?.message).toEqual([
@@ -275,9 +279,15 @@ describe('chatStore messages', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'first'));
     chatStore$.currentChannelId.set('channel-1');
 
-    updateMessage('msg-1', 'nonce-1', {
-      message: [{ type: 'text', content: 'hydrated' }],
-    });
+    updateMessages([
+      {
+        messageId: 'msg-1',
+        messageNonce: 'nonce-1',
+        updates: {
+          message: [{ type: 'text', content: 'hydrated' }],
+        },
+      },
+    ]);
 
     expect(getMessageById('msg-1')?.message).toEqual([
       { type: 'text', content: 'hydrated' },
@@ -343,9 +353,13 @@ describe('chatStore messages', () => {
       ],
     });
 
-    updateMessage('msg-1', 'nonce-1', {
-      message: [{ type: 'text', content: 'updated' }],
-    });
+    updateMessages([
+      {
+        messageId: 'msg-1',
+        messageNonce: 'nonce-1',
+        updates: { message: [{ type: 'text', content: 'updated' }] },
+      },
+    ]);
 
     expect(warnSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('Multiple elements in array have the same ID'),

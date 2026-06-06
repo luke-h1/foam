@@ -1,9 +1,8 @@
+import { useCallback } from 'react';
+import type { RefObject } from 'react';
 import type { ChatMessageType } from '@app/store/chatStore/constants';
 import { getMessageById } from '@app/store/chatStore/messages';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { useCallback, type RefObject } from 'react';
-
 import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type {
   BadgePressData,
@@ -38,9 +37,9 @@ export function useChatInteractionHandlers({
         username: message.sender,
         message: messageText,
         replyParentUserLogin: message.userstate.username || '',
-        parentMessage: replaceEmotesWithText(
-          parentMessage?.message as ParsedPart[],
-        ),
+        parentMessage: parentMessage
+          ? replaceEmotesWithText(parentMessage.message)
+          : '',
         color: message.userstate.color,
         userId: twitchUserId || undefined,
       });

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { useMountedRef } from './useMountedRef';
+import { useUnmountCallback } from './useUnmountCallback';
 
 export type UseDebouncedCallbackReturn<Args extends unknown[]> = [
   (...args: Args) => Promise<void>,
@@ -25,25 +26,21 @@ export function useDebouncedCallback<Args extends unknown[] = []>(
 
   callbackRef.current = callback;
 
-  const run = useCallback(
-    async (...args: Args) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+  const run = async (...args: Args) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
-      return new Promise<void>(resolve => {
-        timeoutRef.current = setTimeout(() => {
-          if (mountedRef.current) {
-            callbackRef.current(...args);
-            timeoutRef.current = undefined;
-          }
-          resolve();
-        }, timeout);
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [timeout],
-  );
+    return new Promise<void>(resolve => {
+      timeoutRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          callbackRef.current(...args);
+          timeoutRef.current = undefined;
+        }
+        resolve();
+      }, timeout);
+    });
+  };
 
   const cancel = useCallback(() => {
     if (timeoutRef.current) {
@@ -52,9 +49,7 @@ export function useDebouncedCallback<Args extends unknown[] = []>(
     }
   }, []);
 
-  useEffect(() => {
-    return cancel;
-  }, [cancel, run]);
+  useUnmountCallback(cancel);
 
   return [run, cancel];
 }

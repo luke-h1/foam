@@ -1,11 +1,55 @@
+import { memo } from 'react';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { SymbolView } from 'expo-symbols';
-import { memo, ReactNode } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
+
+import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
+import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
+import { styles as chatStyles } from '../ChatMessage/RichChatMessage.styles';
+import { buildSubscriptionNoticeDescription } from './buildSubscriptionNoticeDescription';
+import { getSubscriptionTierDisplay } from './subscriptionNoticeTier';
+import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
+
+function getMessagePartKey(part: ParsedPart, occurrence: number): string {
+  switch (part.type) {
+    case 'emote':
+      return `emote:${part.url ?? part.content}:${occurrence}`;
+    case 'text':
+      return `text:${part.content}:${occurrence}`;
+    default:
+      return `${part.type}:${occurrence}`;
+  }
+}
+
+function renderMessagePart(messagePart: ParsedPart, occurrence: number) {
+  const key = getMessagePartKey(messagePart, occurrence);
+
+  switch (messagePart.type) {
+    case 'text':
+      return (
+        <Text key={key} style={styles.messageText}>
+          {messagePart.content}
+        </Text>
+      );
+    case 'emote':
+      return (
+        <Image
+          key={key}
+          useNitro
+          trackLoadTime
+          trackLoadContext='chat.subscription-notice-emote'
+          source={messagePart.url}
+          cacheVariant='emote'
+          style={styles.emote}
+          transition={0}
+        />
+      );
+    default:
+      return null;
+  }
+}
 
 interface SubscriptionNoticeProps {
   part: ParsedPart<
@@ -15,6 +59,7 @@ interface SubscriptionNoticeProps {
     | 'anongift'
     | 'submysterygift'
     | 'giftpaidupgrade'
+    | 'primepaidupgrade'
   >;
   notice_tags?: UserNoticeTags;
   parsedMessage?: ParsedPart[];
@@ -22,394 +67,96 @@ interface SubscriptionNoticeProps {
 
 function SubscriptionNoticeComponent({
   part,
-  notice_tags: _,
   parsedMessage,
 }: SubscriptionNoticeProps) {
   const { subscriptionEvent } = part;
   const { msgId, displayName, message } = subscriptionEvent;
-
-  const renderMessagePart = (messagePart: ParsedPart, index: number) => {
-    switch (messagePart.type) {
-      case 'text':
-        return (
-          <Text key={index} style={styles.messageText}>
-            {messagePart.content}
-          </Text>
-        );
-      case 'emote':
-        return (
-          <Image
-            key={index}
-            useNitro
-            trackLoadTime
-            trackLoadContext='chat.subscription-notice-emote'
-            source={messagePart.url}
-            cacheVariant='emote'
-            style={styles.emote}
-            transition={0}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  const cumulativeMonths =
-    'months' in subscriptionEvent ? subscriptionEvent.months : undefined;
-
-  const streakMonths =
-    'streakMonths' in subscriptionEvent
-      ? subscriptionEvent.streakMonths
-      : undefined;
-
-  const shouldShareStreak =
-    'shouldShareStreak' in subscriptionEvent
-      ? subscriptionEvent.shouldShareStreak
-      : undefined;
-
-  const giftMonths =
-    'giftMonths' in subscriptionEvent
-      ? subscriptionEvent.giftMonths
-      : undefined;
-
-  const recipientDisplayName =
-    'recipientDisplayName' in subscriptionEvent
-      ? subscriptionEvent.recipientDisplayName
-      : undefined;
-
-  const promoName =
-    'promoName' in subscriptionEvent ? subscriptionEvent.promoName : undefined;
-
-  const promoGiftTotal =
-    'promoGiftTotal' in subscriptionEvent
-      ? subscriptionEvent.promoGiftTotal
-      : undefined;
-  const massGiftCount =
-    'massGiftCount' in subscriptionEvent
-      ? subscriptionEvent.massGiftCount
-      : undefined;
-  const senderCount =
-    'senderCount' in subscriptionEvent
-      ? subscriptionEvent.senderCount
-      : undefined;
-  const senderName =
-    'senderName' in subscriptionEvent
-      ? subscriptionEvent.senderName
-      : undefined;
-
-  const getTierDisplay = () => {
-    if ('plan' in subscriptionEvent && subscriptionEvent.plan) {
-      switch (subscriptionEvent.plan) {
-        case '1000':
-        case 'Prime':
-          return 'Prime';
-        case '2000':
-          return 'Tier 1';
-        case '3000':
-          return 'Tier 2';
-        case '3001':
-          return 'Tier 3';
-        default:
-          return 'Tier 1';
-      }
-    }
-    if ('planName' in subscriptionEvent && subscriptionEvent.planName) {
-      return subscriptionEvent.planName;
-    }
-    return 'Tier 1';
-  };
-
-  const tierDisplay = getTierDisplay();
+  const tierDisplay = getSubscriptionTierDisplay({
+    plan: 'plan' in subscriptionEvent ? subscriptionEvent.plan : undefined,
+    planName:
+      'planName' in subscriptionEvent ? subscriptionEvent.planName : undefined,
+  });
   const isPrime = tierDisplay === 'Prime';
 
-  const buildDescription = () => {
-    const parts: ReactNode[] = [];
+  const description = buildSubscriptionNoticeDescription({
+    msgId,
+    isPrime,
+    tierDisplay,
+    cumulativeMonths:
+      'months' in subscriptionEvent ? subscriptionEvent.months : undefined,
+    streakMonths:
+      'streakMonths' in subscriptionEvent
+        ? subscriptionEvent.streakMonths
+        : undefined,
+    shouldShareStreak:
+      'shouldShareStreak' in subscriptionEvent
+        ? subscriptionEvent.shouldShareStreak
+        : undefined,
+    giftMonths:
+      'giftMonths' in subscriptionEvent
+        ? subscriptionEvent.giftMonths
+        : undefined,
+    recipientDisplayName:
+      'recipientDisplayName' in subscriptionEvent
+        ? subscriptionEvent.recipientDisplayName
+        : undefined,
+    promoName:
+      'promoName' in subscriptionEvent
+        ? subscriptionEvent.promoName
+        : undefined,
+    promoGiftTotal:
+      'promoGiftTotal' in subscriptionEvent
+        ? Number(subscriptionEvent.promoGiftTotal) || undefined
+        : undefined,
+    massGiftCount:
+      'massGiftCount' in subscriptionEvent
+        ? subscriptionEvent.massGiftCount
+        : undefined,
+    senderCount:
+      'senderCount' in subscriptionEvent
+        ? subscriptionEvent.senderCount
+        : undefined,
+    senderName:
+      'senderName' in subscriptionEvent
+        ? subscriptionEvent.senderName
+        : undefined,
+  });
 
-    switch (msgId) {
-      case 'sub': {
-        parts.push(
-          <Text key='action' style={styles.descriptionText}>
-            Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
-          </Text>,
-        );
-        break;
-      }
-      case 'resub': {
-        const hasMonths =
-          cumulativeMonths !== undefined && cumulativeMonths > 0;
-
-        parts.push(
-          <Text key='action' style={styles.descriptionText}>
-            Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
-          </Text>,
-        );
-
-        if (hasMonths) {
-          parts.push(
-            <Text key='months' style={styles.descriptionText}>
-              {' '}
-              They&apos;ve subscribed for{' '}
-            </Text>,
-          );
-          parts.push(
-            <Text key='monthsCount' style={styles.monthsHighlight}>
-              {cumulativeMonths} month{cumulativeMonths > 1 ? 's' : ''}
-            </Text>,
-          );
-
-          if (
-            streakMonths !== undefined &&
-            streakMonths > 0 &&
-            shouldShareStreak
-          ) {
-            parts.push(
-              <Text key='streak' style={styles.descriptionText}>
-                , {streakMonths} month{streakMonths > 1 ? 's' : ''} in a row
-              </Text>,
-            );
-          }
-
-          parts.push(
-            <Text key='period' style={styles.descriptionText}>
-              .
-            </Text>,
-          );
-        }
-        break;
-      }
-      case 'subgift': {
-        if (recipientDisplayName) {
-          parts.push(
-            <Text key='action' style={styles.descriptionText}>
-              Gifted a {tierDisplay} subscription to{' '}
-            </Text>,
-          );
-          parts.push(
-            <Text key='recipient' style={styles.recipientName}>
-              {recipientDisplayName}
-            </Text>,
-          );
-        } else {
-          parts.push(
-            <Text key='action' style={styles.descriptionText}>
-              Gifted a {tierDisplay} subscription
-            </Text>,
-          );
-        }
-        if (giftMonths !== undefined && giftMonths > 1) {
-          parts.push(
-            <Text key='giftMonths' style={styles.descriptionText}>
-              {' '}
-              ({giftMonths} months)
-            </Text>,
-          );
-        }
-        parts.push(
-          <Text key='period' style={styles.descriptionText}>
-            .
-          </Text>,
-        );
-        break;
-      }
-      case 'anongiftpaidupgrade': {
-        parts.push(
-          <Text key='action' style={styles.descriptionText}>
-            Continuing their gift subscription
-          </Text>,
-        );
-        if (promoName) {
-          parts.push(
-            <Text key='promo' style={styles.descriptionText}>
-              {' '}
-              ({promoName}
-              {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
-            </Text>,
-          );
-        }
-        parts.push(
-          <Text key='period' style={styles.descriptionText}>
-            .
-          </Text>,
-        );
-        break;
-      }
-      case 'submysterygift': {
-        parts.push(
-          <Text key='action' style={styles.descriptionText}>
-            Gifted{' '}
-          </Text>,
-        );
-        parts.push(
-          <Text key='count' style={styles.monthsHighlight}>
-            {massGiftCount ?? 0}
-          </Text>,
-        );
-        parts.push(
-          <Text key='tail' style={styles.descriptionText}>
-            {' '}
-            {tierDisplay} subscription{massGiftCount === 1 ? '' : 's'} to the
-            community
-          </Text>,
-        );
-        if (senderCount !== undefined && senderCount > 0) {
-          parts.push(
-            <Text key='senderCount' style={styles.descriptionText}>
-              . They&apos;ve gifted {senderCount} in the channel
-            </Text>,
-          );
-        }
-        parts.push(
-          <Text key='period' style={styles.descriptionText}>
-            .
-          </Text>,
-        );
-        break;
-      }
-      case 'giftpaidupgrade': {
-        parts.push(
-          <Text key='action' style={styles.descriptionText}>
-            Continuing the gift sub
-          </Text>,
-        );
-        if (senderName) {
-          parts.push(
-            <Text key='from' style={styles.descriptionText}>
-              {' '}
-              from{' '}
-            </Text>,
-          );
-          parts.push(
-            <Text key='sender' style={styles.recipientName}>
-              {senderName}
-            </Text>,
-          );
-        }
-        if (promoName) {
-          parts.push(
-            <Text key='promo' style={styles.descriptionText}>
-              {' '}
-              ({promoName}
-              {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
-            </Text>,
-          );
-        }
-        parts.push(
-          <Text key='period' style={styles.descriptionText}>
-            .
-          </Text>,
-        );
-        break;
-      }
-      default:
-        parts.push(
-          <Text key='action' style={styles.descriptionText}>
-            Subscription event.
-          </Text>,
-        );
-    }
-
-    return parts;
-  };
+  const renderedParsedMessageParts =
+    parsedMessage && parsedMessage.length > 0
+      ? (() => {
+          const partKeyCounts = new Map<string, number>();
+          return parsedMessage.map(partItem => {
+            const baseKey = getMessagePartKey(partItem, 0).replace(/:\d+$/, '');
+            const occurrence = partKeyCounts.get(baseKey) ?? 0;
+            partKeyCounts.set(baseKey, occurrence + 1);
+            return renderMessagePart(partItem, occurrence);
+          });
+        })()
+      : null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.noticeRow}>
-        <View style={styles.starColumn}>
-          <SymbolView
-            name='star.fill'
-            size={14}
-            tintColor='#FFD700'
-            style={styles.starIcon}
-          />
+    <View style={chatStyles.subscriptionNoticeColumn}>
+      <ChatNoticeMetaRow
+        icon='star.fill'
+        labelColor={CHAT_NOTICE_ACCENTS.subscription}
+      >
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.username}>{displayName}</Text>
+          {description}
         </View>
-        <View style={styles.bodyColumn}>
-          <View style={styles.headerLine}>
-            <Text style={styles.username}>{displayName}</Text>
-            <View style={styles.descriptionContainer}>
-              {buildDescription()}
-            </View>
-          </View>
-          {(parsedMessage && parsedMessage.length > 0) || message ? (
-            <View style={styles.messageContainer}>
-              {parsedMessage && parsedMessage.length > 0
-                ? parsedMessage.map(renderMessagePart)
-                : message && (
-                    <Text style={styles.messageText}>{message.trim()}</Text>
-                  )}
-            </View>
+      </ChatNoticeMetaRow>
+      {(parsedMessage && parsedMessage.length > 0) || message ? (
+        <View style={styles.messageContainer}>
+          {renderedParsedMessageParts ? (
+            renderedParsedMessageParts
+          ) : message ? (
+            <Text style={styles.messageText}>{message.trim()}</Text>
           ) : null}
         </View>
-      </View>
+      ) : null}
     </View>
   );
 }
 
 export const SubscriptionNotice = memo(SubscriptionNoticeComponent);
-
-const styles = StyleSheet.create({
-  bodyColumn: {
-    flex: 1,
-    minWidth: 0,
-  },
-  container: {
-    paddingVertical: theme.space8,
-    width: '100%',
-  },
-  descriptionContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    flex: 1,
-  },
-  descriptionText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-  },
-  emote: {
-    height: 24,
-    marginHorizontal: 2,
-    width: 24,
-  },
-  headerLine: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  messageContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: theme.space8,
-  },
-  messageText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    fontStyle: 'italic',
-  },
-  monthsHighlight: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    fontWeight: '700',
-  },
-  noticeRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    width: '100%',
-  },
-  recipientName: {
-    color: theme.colorViolet,
-    fontSize: theme.fontSize14,
-    fontWeight: '600',
-  },
-  starColumn: {
-    marginRight: theme.space12,
-  },
-  starIcon: {
-    alignItems: 'center',
-  },
-  username: {
-    color: theme.colorViolet,
-    fontWeight: '600',
-    marginRight: theme.space8,
-  },
-});

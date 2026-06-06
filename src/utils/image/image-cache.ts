@@ -165,10 +165,6 @@ async function ensureCacheDirectoryAsync(): Promise<Directory> {
   return cacheDir;
 }
 
-function ensureCacheDirectory(): Directory {
-  return new Directory(Paths.cache, CACHE_DIR_NAME);
-}
-
 function getCachedFile(cacheDir: Directory, key: string, url: string): File {
   return new File(cacheDir, `${key}.${getFileExtensionFromUrl(url)}`);
 }
@@ -300,17 +296,6 @@ function validateManifestSoon(): void {
   }, 1000);
 }
 
-export function cacheBase64Image(
-  base64: string,
-  ext: 'png' | 'jpg' = 'png',
-): string {
-  const cacheDir = ensureCacheDirectory();
-  const key = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const file = new File(cacheDir, `${key}.${ext}`);
-  file.write(base64);
-  return file.uri;
-}
-
 export async function cacheImageFromUrl(
   url: string,
   options: CacheImageOptions = {},
@@ -390,37 +375,6 @@ export function getCachedImageUri(
   return record ? touchRecord(record) : null;
 }
 
-export async function getCachedImageAsBase64(fileUri: string): Promise<string> {
-  const file = new File(fileUri);
-  const base64 = await file.base64();
-  return `data:image/png;base64,${base64}`;
-}
-
-export function deleteCachedImageByUrl(
-  url?: string,
-  options: Pick<CacheImageOptions, 'variant'> = {},
-): void {
-  hydrateManifest();
-  if (!url) {
-    return;
-  }
-  removeRecord(getCacheKey(url, options.variant));
-}
-
-export function deleteCachedImage(fileUri?: string): void {
-  hydrateManifest();
-  if (!fileUri) {
-    return;
-  }
-
-  const record = Array.from(manifest.values()).find(
-    item => item.uri === fileUri,
-  );
-  if (record) {
-    removeRecord(record.key);
-  }
-}
-
 export function clearSessionCache(): void {
   hydrateManifest();
   taskQueue.length = 0;
@@ -452,10 +406,13 @@ export function warmImageCache(
   options: CacheImageOptions = {},
 ): void {
   hydrateManifest();
-  urls
-    .filter(isCacheableUri)
-    .filter(url => !getCachedImageUri(url, { variant: options.variant }))
-    .forEach(url => {
-      void cacheImageFromUrl(url, options);
-    });
+  for (const url of urls) {
+    if (!isCacheableUri(url)) {
+      continue;
+    }
+    if (getCachedImageUri(url, { variant: options.variant })) {
+      continue;
+    }
+    void cacheImageFromUrl(url, options);
+  }
 }

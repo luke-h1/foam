@@ -1,3 +1,5 @@
+const viewCountFormatter = new Intl.NumberFormat('en-US');
+
 /**
  * Format viewer count for display.
  * Safely handles string/number from API and invalid values.
@@ -9,5 +11,5 @@ export function formatViewCount(
   if (!Number.isFinite(n) || n < 0) {
     return '0';
   }
-  return new Intl.NumberFormat('en-US').format(Math.floor(n));
+  return viewCountFormatter.format(Math.floor(n));
 }

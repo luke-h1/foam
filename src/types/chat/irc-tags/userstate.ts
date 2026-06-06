@@ -39,6 +39,7 @@ export interface UserStateTags {
   'first-msg'?: string;
 
   'room-id'?: string;
+  'msg-id'?: string;
   'custom-reward-id'?: string;
   'msg-param-custom-reward-title'?: string;
   'msg-param-reward-title'?: string;

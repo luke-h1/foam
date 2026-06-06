@@ -1,22 +1,25 @@
-import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
-import * as Form from '@app/components/Form/Form';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
+import { FOAM_FAQ_URL } from '@app/constants/links';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BuildStatus } from './components/BuildStatus';
+
+function handleSendFeedback() {
+  showFeedbackWidget();
+}
 
 export function SettingsIndexScreen() {
   const { user } = useAuthContext();
@@ -31,43 +34,31 @@ export function SettingsIndexScreen() {
   useScrollToTop(scrollRef);
 
   const { statusPageUrl, websiteUrl } = config;
-  const handleSendFeedback = () => {
-    showFeedbackWidget();
-  };
-
   if (Platform.OS === 'ios') {
     return (
-      <View style={styles.container}>
-        <BodyScrollView contentContainerStyle={styles.iosContent}>
-          <ScreenHeader
-            title='Settings'
-            subtitle='Streaming controls'
-            size='medium'
-          />
-
-          <Form.Section title='Stream Experience'>
-            <Form.Link
+      <Host style={styles.iosHost}>
+        <Form>
+          <Section title='Stream Experience'>
+            <Button
+              label='Chat'
               systemImage='bubble.left.and.bubble.right'
               onPress={() => router.push('/tabs/settings/chat-preferences')}
-            >
-              Chat
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='Cache'
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
-            >
-              Cache
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='Appearance'
               systemImage='paintpalette'
               onPress={() => router.push('/tabs/settings/appearance')}
-            >
-              Appearance
-            </Form.Link>
-          </Form.Section>
+            />
+          </Section>
 
-          <Form.Section title='Account'>
-            <Form.Link
+          <Section title='Account'>
+            <Button
+              label={user ? 'Profile' : 'Sign In'}
               systemImage='person.circle'
               onPress={() => {
                 if (user) {
@@ -77,59 +68,53 @@ export function SettingsIndexScreen() {
 
                 router.push('/auth-sheet');
               }}
-            >
-              {user ? 'Profile' : 'Sign In'}
-            </Form.Link>
-          </Form.Section>
+            />
+          </Section>
 
-          <Form.Section title='Support & Feedback'>
-            <Form.Link
+          <Section title='Support & Feedback'>
+            <Button
+              label='About Foam'
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
-            >
-              About Foam
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='FAQ'
               systemImage='questionmark.circle'
-              onPress={() => router.push('/tabs/settings/faq')}
-            >
-              FAQ
-            </Form.Link>
-            <Form.Link systemImage='paperplane' onPress={handleSendFeedback}>
-              Send Feedback
-            </Form.Link>
-            <Form.Link
+              onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+            />
+            <Button
+              label='Send Feedback'
+              systemImage='paperplane'
+              onPress={handleSendFeedback}
+            />
+            <Button
+              label='Status'
               systemImage='checkmark.shield'
               onPress={() => openLinkInBrowser(statusPageUrl.value)}
-            >
-              Status
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='Website'
               systemImage='globe'
               onPress={() => openLinkInBrowser(websiteUrl.value)}
-            >
-              Website
-            </Form.Link>
-          </Form.Section>
+            />
+          </Section>
 
-          <Form.Section title={shouldShowDevTools ? 'Developer' : 'More'}>
+          <Section title={shouldShowDevTools ? 'Developer' : 'More'}>
             {shouldShowDevTools ? (
-              <Form.Link
+              <Button
+                label='Dev Tools'
                 systemImage='hammer'
                 onPress={() => router.push('/tabs/settings/dev-tools')}
-              >
-                Dev Tools
-              </Form.Link>
+              />
             ) : null}
-            <Form.Link
+            <Button
+              label='Other'
               systemImage='ellipsis.circle'
               onPress={() => router.push('/tabs/settings/other')}
-            >
-              Other
-            </Form.Link>
-          </Form.Section>
-        </BodyScrollView>
-      </View>
+            />
+          </Section>
+        </Form>
+      </Host>
     );
   }
 
@@ -144,12 +129,6 @@ export function SettingsIndexScreen() {
           { paddingBottom: insets.bottom + theme.space56 },
         ]}
       >
-        <ScreenHeader
-          title='Settings'
-          subtitle='Streaming controls, account tools, support, and diagnostics.'
-          size='medium'
-        />
-
         <SettingsSection title='Stream Experience'>
           <SettingsLinkRow
             title='Chat'
@@ -163,7 +142,7 @@ export function SettingsIndexScreen() {
           <SettingsLinkRow
             title='Cache'
             subtitle='Clear local app data, emotes, badges, and media'
-            icon={{ icon: 'externaldrive', color: theme.colorGreen }}
+            icon={{ icon: 'externaldrive', color: theme.colorPrimary }}
             onPress={() => router.push('/tabs/settings/cache')}
           />
           <SettingsLinkRow
@@ -204,8 +183,8 @@ export function SettingsIndexScreen() {
           <SettingsLinkRow
             title='FAQ'
             subtitle='Common questions and help information'
-            icon={{ icon: 'questionmark.circle', color: theme.colorGreen }}
-            onPress={() => router.push('/tabs/settings/faq')}
+            icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
+            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
           />
           <SettingsLinkRow
             title='Send Feedback'
@@ -273,8 +252,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingTop: theme.space16,
   },
-  iosContent: {
-    paddingBottom: theme.space56,
-    paddingTop: theme.space12,
+  iosHost: {
+    flex: 1,
   },
 });

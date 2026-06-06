@@ -1,3 +1,4 @@
+import { DeferUntilFocused } from '@app/components/DeferUntilFocused/DeferUntilFocused';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import { router } from 'expo-router';
@@ -30,7 +31,7 @@ export default function FollowingRoute() {
           </>
         ) : (
           <>
-            <ActivityIndicator size='large' color={theme.colorGreen} />
+            <ActivityIndicator size='large' color={theme.colorPrimary} />
             <Text
               type='sm'
               color='gray.textLow'
@@ -45,7 +46,11 @@ export default function FollowingRoute() {
     );
   }
 
-  return <FollowingScreen />;
+  return (
+    <DeferUntilFocused>
+      <FollowingScreen />
+    </DeferUntilFocused>
+  );
 }
 
 const styles = StyleSheet.create({

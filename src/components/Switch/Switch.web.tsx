@@ -1,6 +1,6 @@
 import { theme } from '@app/styles/themes';
 import { useObservable, useSelector } from '@legendapp/state/react';
-import { memo, useCallback, useEffect } from 'react';
+import { useEffect, memo } from 'react';
 import {
   StyleSheet,
   Switch as NativeSwitch,
@@ -23,13 +23,10 @@ export const Switch = memo(function Switch({
     displayValue$.set(Boolean(value));
   }, [displayValue$, value]);
 
-  const handleValueChange = useCallback(
-    (nextValue: boolean) => {
-      displayValue$.set(nextValue);
-      void onValueChange?.(nextValue);
-    },
-    [displayValue$, onValueChange],
-  );
+  const handleValueChange = (nextValue: boolean) => {
+    displayValue$.set(nextValue);
+    void onValueChange?.(nextValue);
+  };
 
   return (
     <NativeSwitch
@@ -48,7 +45,7 @@ export const Switch = memo(function Switch({
       trackColor={
         trackColor ?? {
           false: theme.color.backgroundTertiary.dark,
-          true: theme.colorDarkGreen,
+          true: theme.colorPrimary,
         }
       }
       value={displayValue}

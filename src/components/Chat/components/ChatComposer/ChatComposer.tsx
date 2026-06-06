@@ -1,249 +1,160 @@
-import type { ChatUser } from '@app/store/chatStore/constants';
+import { useAccentColor } from '@app/context/AccentColorContext';
+import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
-import type {
-  InputRef,
-  InputSelection,
-  ThemedInputProps,
-} from '@app/components/ui/Input/Input';
+import { SymbolView } from 'expo-symbols';
+import { PressableScale } from 'pressto';
+import { memo, useCallback, useRef, type Ref } from 'react';
+import { TextInput, type TextInput as TextInputType, View } from 'react-native';
+import { EmoteSuggestionRail } from './EmoteSuggestionRail';
+import { UserSuggestionRail } from './UserSuggestionRail';
+import { chatComposerStyles as styles } from './chatComposerStyles';
 import {
-  forwardRef,
-  memo,
-  useCallback,
-  useMemo,
-  useState,
-  useDeferredValue,
-} from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ChatInput } from './components/ChatInput';
-import { EmoteSuggestions } from './components/EmoteSuggestions';
-import { UserSuggestions } from './components/UserSuggestions';
-import { useEmoteSuggestions } from './hooks/useEmoteSuggestions';
-import { useSuggestionAnimations } from './hooks/useSuggestionAnimations';
-import { useUserSuggestions } from './hooks/useUserSuggestions';
-import { useWordInfo } from './hooks/useWordInfo';
+  useChatComposerController,
+  type ChatComposerHandle,
+} from './useChatComposerController';
 
+export type { ChatComposerHandle };
 export type SuggestionType = 'emote' | 'user';
 
-interface ChatComposerProps extends ThemedInputProps {
+export interface ChatComposerProps {
+  onChangeText?: (text: string) => void;
+  onSubmit?: () => void;
+  onPressAdd?: () => void;
   onEmoteSelect?: (emote: SanitisedEmote) => void;
   maxSuggestions?: number;
   prioritizeChannelEmotes?: boolean;
   placeholder?: string;
+  editable?: boolean;
+  canSend?: boolean;
+  ref?: Ref<ChatComposerHandle>;
 }
 
-interface EmoteSuggestionRailProps {
-  handleEmotePress: (emote: SanitisedEmote) => void;
-  maxSuggestions: number;
-  prioritizeChannelEmotes: boolean;
-  searchTerm: string;
-}
+function ChatComposerComponent({
+  onChangeText,
+  onSubmit,
+  onPressAdd,
+  onEmoteSelect,
+  maxSuggestions = 50,
+  prioritizeChannelEmotes = true,
+  placeholder = 'Send a message...',
+  editable = true,
+  canSend,
+  ref,
+}: ChatComposerProps) {
+  const inputRef = useRef<TextInputType>(null);
+  const { accentHex } = useAccentColor();
 
-const EmoteSuggestionRail = memo(function EmoteSuggestionRail({
-  handleEmotePress,
-  maxSuggestions,
-  prioritizeChannelEmotes,
-  searchTerm,
-}: EmoteSuggestionRailProps) {
-  const deferredEmoteSearchTerm = useDeferredValue(searchTerm);
-  const { filteredEmotes } = useEmoteSuggestions({
-    searchTerm: deferredEmoteSearchTerm,
-    maxSuggestions,
-    prioritizeChannelEmotes,
-  });
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
 
-  const { opacity, scale, translateY } = useSuggestionAnimations({
-    shouldShow: filteredEmotes.length > 0,
-  });
+  const blurInput = useCallback(() => {
+    inputRef.current?.blur();
+  }, []);
 
-  if (filteredEmotes.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={styles.suggestionRail}>
-      <EmoteSuggestions
-        emotes={filteredEmotes}
-        handleEmotePress={handleEmotePress}
-        suggestionOpacity={opacity}
-        suggestionScale={scale}
-        suggestionTranslateY={translateY}
-      />
-    </View>
-  );
-});
-
-interface UserSuggestionRailProps {
-  handleUserSelect: (user: ChatUser) => void;
-  maxSuggestions: number;
-  searchTerm: string;
-}
-
-const UserSuggestionRail = memo(function UserSuggestionRail({
-  handleUserSelect,
-  maxSuggestions,
-  searchTerm,
-}: UserSuggestionRailProps) {
-  const deferredMentionWord = useDeferredValue(searchTerm);
-  const { filteredUsers } = useUserSuggestions({
-    searchTerm: deferredMentionWord,
-    enabled: true,
-    maxSuggestions,
-  });
-
-  const validUsers = useMemo(
-    () =>
-      filteredUsers.filter((user): user is typeof user => user !== undefined),
-    [filteredUsers],
-  );
-
-  if (validUsers.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={styles.suggestionRail}>
-      <UserSuggestions
-        users={validUsers}
-        showUserSuggestions
-        handleUserSelect={handleUserSelect}
-      />
-    </View>
-  );
-});
-
-const ChatComposerComponent = forwardRef<InputRef, ChatComposerProps>(
-  (
-    {
-      onEmoteSelect,
-      onChangeText,
-      maxSuggestions = 50,
-      prioritizeChannelEmotes = true,
-      value = '',
-      placeholder = 'Search emotes...',
-      ...textFieldProps
-    },
+  const {
+    text,
+    selection,
+    setSelection,
+    setIsFocused,
+    showUserRail,
+    showEmoteRail,
+    wordInfo,
+    submitEnabled,
+    handleChangeText,
+    handleSelectionChange,
+    handleSubmit,
+    handleEmotePress,
+    handleUserSelect,
+  } = useChatComposerController({
+    onChangeText,
+    onSubmit,
+    onEmoteSelect,
+    canSend,
     ref,
-  ) => {
-    const [isFocused, setIsFocused] = useState(false);
-    const [cursorPosition, setCursorPosition] = useState(0);
+    focusInput,
+    blurInput,
+    applyCursor: cursor => {
+      setSelection({ start: cursor, end: cursor });
+    },
+  });
 
-    const { wordInfo, isUserMention, isEmoteSearch } = useWordInfo({
-      text: value,
-      cursorPosition,
-    });
+  return (
+    <View style={styles.mainContainer}>
+      {showEmoteRail ? (
+        <EmoteSuggestionRail
+          handleEmotePress={handleEmotePress}
+          maxSuggestions={maxSuggestions}
+          prioritizeChannelEmotes={prioritizeChannelEmotes}
+          searchTerm={wordInfo.searchTerm}
+        />
+      ) : null}
+      {showUserRail ? (
+        <UserSuggestionRail
+          handleUserSelect={handleUserSelect}
+          maxSuggestions={maxSuggestions}
+          searchTerm={wordInfo.word}
+        />
+      ) : null}
 
-    const shouldShowUserSuggestions =
-      isFocused && isUserMention && wordInfo.word.length > 1;
-    const shouldSearchEmoteSuggestions =
-      isFocused && isEmoteSearch && wordInfo.word.length > 0;
-
-    const handleTextChange = useCallback(
-      (text: string) => {
-        onChangeText?.(text);
-      },
-      [onChangeText],
-    );
-
-    const handleSelectionChange = useCallback((selection: InputSelection) => {
-      setCursorPosition(selection.start);
-    }, []);
-
-    const handleFocus = useCallback(() => {
-      setIsFocused(true);
-    }, []);
-
-    const handleBlur = useCallback(() => {
-      setIsFocused(false);
-    }, []);
-
-    const handleEmotePress = useCallback(
-      (emote: SanitisedEmote) => {
-        const beforeWord = value.substring(0, wordInfo.start);
-        const afterWord = value.substring(wordInfo.end);
-        const newText = `${beforeWord}${emote.name}${afterWord}`;
-        const newCursorPosition = wordInfo.start + emote.name.length;
-
-        onEmoteSelect?.(emote);
-        onChangeText?.(newText);
-
-        setTimeout(() => {
-          setCursorPosition(newCursorPosition);
-        }, 10);
-      },
-      [value, wordInfo, onEmoteSelect, onChangeText],
-    );
-
-    const handleUserSelect = useCallback(
-      (user: ChatUser) => {
-        const beforeWord = value.substring(0, wordInfo.start);
-        const afterWord = value.substring(wordInfo.end);
-        const newText = `${beforeWord}${user.name} ${afterWord}`;
-        const newCursorPosition = wordInfo.start + user.name.length + 1;
-
-        onChangeText?.(newText);
-
-        setTimeout(() => {
-          setCursorPosition(newCursorPosition);
-        }, 10);
-      },
-      [value, wordInfo, onChangeText],
-    );
-
-    return (
-      <View style={styles.mainContainer}>
-        {shouldSearchEmoteSuggestions ? (
-          <EmoteSuggestionRail
-            handleEmotePress={handleEmotePress}
-            maxSuggestions={maxSuggestions}
-            prioritizeChannelEmotes={prioritizeChannelEmotes}
-            searchTerm={wordInfo.searchTerm}
-          />
+      <View style={styles.row}>
+        {onPressAdd ? (
+          <PressableScale style={styles.addButton} onPress={onPressAdd}>
+            <SymbolView
+              name='face.smiling'
+              size={22}
+              tintColor={theme.colorGreyHoverAlpha}
+            />
+          </PressableScale>
         ) : null}
-        {shouldShowUserSuggestions ? (
-          <UserSuggestionRail
-            handleUserSelect={handleUserSelect}
-            maxSuggestions={maxSuggestions}
-            searchTerm={wordInfo.word}
-          />
+
+        <TextInput
+          ref={inputRef}
+          autoCapitalize='none'
+          autoComplete='off'
+          autoCorrect={false}
+          blurOnSubmit
+          editable={editable}
+          multiline
+          onChangeText={handleChangeText}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onSelectionChange={event =>
+            handleSelectionChange(event.nativeEvent.selection.start)
+          }
+          onSubmitEditing={handleSubmit}
+          selection={selection}
+          value={text}
+          placeholder={placeholder}
+          placeholderTextColor='#8E8E93'
+          returnKeyType='send'
+          selectionColor={theme.color.text.dark}
+          style={styles.input}
+          submitBehavior='blurAndSubmit'
+        />
+
+        {onSubmit ? (
+          <PressableScale
+            style={[
+              styles.submitButton,
+              {
+                backgroundColor: submitEnabled
+                  ? accentHex
+                  : theme.darkActiveContent,
+              },
+            ]}
+            onPress={handleSubmit}
+          >
+            <SymbolView
+              name='arrow.up'
+              size={20}
+              tintColor={submitEnabled ? '#fff' : theme.colorGreyHoverAlpha}
+            />
+          </PressableScale>
         ) : null}
-        <View style={styles.inputWrapper}>
-          <ChatInput
-            ref={ref}
-            value={value}
-            placeholder={placeholder}
-            onChangeText={handleTextChange}
-            onSelectionChange={handleSelectionChange}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            {...textFieldProps}
-          />
-        </View>
       </View>
-    );
-  },
-);
-
-ChatComposerComponent.displayName = 'ChatComposer';
+    </View>
+  );
+}
 
 export const ChatComposer = memo(ChatComposerComponent);
-
-ChatComposer.displayName = 'ChatComposer';
-
-const styles = StyleSheet.create({
-  inputWrapper: {
-    width: '100%',
-    zIndex: 1,
-  },
-  mainContainer: {
-    position: 'relative',
-    width: '100%',
-  },
-  suggestionRail: {
-    bottom: '100%',
-    left: 0,
-    paddingBottom: 6,
-    position: 'absolute',
-    right: 0,
-    zIndex: 2,
-  },
-});

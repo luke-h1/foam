@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import {
   BottomSheet,
@@ -6,19 +7,22 @@ import {
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { memo, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
+import type {
+  ChatModerationAccessFlags,
+  UserActionVisibilityFlags,
+} from '@app/components/Chat/types/chatUiFlags';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from './chatSheetSurface';
 
 interface UserActionSheetProps {
-  isHidden: boolean;
-  isHighlighted: boolean;
   login?: string;
+  moderation: ChatModerationAccessFlags;
+  visibility: UserActionVisibilityFlags;
   onClose: () => void;
   onCopyUsername: () => void;
   onHideUser: () => void;
@@ -27,9 +31,6 @@ interface UserActionSheetProps {
   onTimeoutUser?: () => void;
   onBanUser?: () => void;
   username: string;
-  visible: boolean;
-  canModerateChat?: boolean;
-  canModerateUser?: boolean;
 }
 
 type UserActionItem = {
@@ -41,9 +42,9 @@ type UserActionItem = {
 };
 
 function UserActionSheetComponent({
-  isHidden,
-  isHighlighted,
   login,
+  moderation,
+  visibility,
   onClose,
   onCopyUsername,
   onHideUser,
@@ -52,10 +53,9 @@ function UserActionSheetComponent({
   onTimeoutUser,
   onBanUser,
   username,
-  visible,
-  canModerateChat,
-  canModerateUser,
 }: UserActionSheetProps) {
+  const { canModerateChat, canModerateUser } = moderation;
+  const { isHidden, isHighlighted, visible } = visibility;
   const actionRows: UserActionItem[] = [
     {
       icon: 'at',
@@ -115,24 +115,15 @@ function UserActionSheetComponent({
     Math.round(windowHeight * 0.72),
     144 + actionRows.length * 52 + (isHidden || isHighlighted ? 34 : 0),
   );
-  const snapPoints = useMemo<SnapPoint[]>(
-    () => [{ height: sheetHeight }, 'full'],
-    [sheetHeight],
-  );
-  const wrapperStyle = useMemo(
-    () => [
-      styles.wrapper,
-      {
-        maxHeight: sheetHeight - theme.space16,
-        width: sheetWidth,
-      },
-    ],
-    [sheetHeight, sheetWidth],
-  );
-  const scrollStyle = useMemo(
-    () => [styles.scroll, { maxHeight: maxScrollHeight }],
-    [maxScrollHeight],
-  );
+  const snapPoints: SnapPoint[] = [{ height: sheetHeight }, 'full'];
+  const wrapperStyle = [
+    styles.wrapper,
+    {
+      maxHeight: sheetHeight - theme.space16,
+      width: sheetWidth,
+    },
+  ];
+  const scrollStyle = [styles.scroll, { maxHeight: maxScrollHeight }];
 
   return (
     <BottomSheet
@@ -218,7 +209,7 @@ function UserActionSheetComponent({
                         : action.tone === 'warning'
                           ? theme.colorAmber
                           : action.tone === 'accent'
-                            ? theme.colorGreen
+                            ? theme.colorPrimary
                             : '#b7bdc9'
                     }
                   />
@@ -273,8 +264,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   actionIconAccent: {
-    backgroundColor: 'rgba(74, 222, 128, 0.12)',
-    borderColor: 'rgba(74, 222, 128, 0.18)',
+    backgroundColor: 'rgba(26, 201, 162, 0.12)',
+    borderColor: 'rgba(26, 201, 162, 0.18)',
   },
   actionIconDanger: {
     backgroundColor: theme.colorRedSurface,
@@ -375,10 +366,10 @@ const styles = StyleSheet.create({
   },
   statePillAccent: {
     backgroundColor: theme.colorAccentSurface,
-    borderColor: 'rgba(74, 222, 128, 0.24)',
+    borderColor: 'rgba(26, 201, 162, 0.24)',
   },
   statePillAccentText: {
-    color: theme.colorGreen,
+    color: theme.colorPrimary,
     fontSize: theme.fontSize11,
   },
   statePills: {

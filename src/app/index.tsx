@@ -3,13 +3,25 @@ import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { Redirect, router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
 
   if (!ready) {
-    return null;
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size='large' color={theme.colorPrimary} />
+        <Text
+          type='sm'
+          color='gray.textLow'
+          align='center'
+          style={styles.message}
+        >
+          Starting Foam...
+        </Text>
+      </View>
+    );
   }
 
   if (!authState) {
@@ -45,6 +57,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space28,
   },
   message: {
-    marginBottom: theme.space16,
+    marginTop: theme.space16,
   },
 });
