@@ -151,7 +151,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           });
         }
       };
-    }, [isStreamEnabled]),
+    }, [dispatchUi, isStreamEnabled]),
   );
 
   useEffect(() => {
@@ -209,7 +209,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           return;
       }
     },
-    [],
+    [dispatchUi],
   );
 
   const canToggleChat = useCallback(() => {

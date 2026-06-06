@@ -19,31 +19,66 @@ jest.mock('@legendapp/list', () => {
 
   type MockLegendListProps = {
     data?: unknown;
+    drawDistance?: unknown;
+    estimatedItemSize?: unknown;
     extraData?: unknown;
+    initialContainerPoolRatio?: unknown;
     keyExtractor?: unknown;
+    maintainScrollAtEnd?: unknown;
     renderItem?: unknown;
   };
 
+  const MOCK_VIEWPORT_HEIGHT = 680;
+  const MOCK_FALLBACK_ROW_HEIGHT = 34;
+
+  function getVirtualizedWindow(items: unknown[], props: MockLegendListProps) {
+    const estimatedItemSize =
+      typeof props.estimatedItemSize === 'number'
+        ? props.estimatedItemSize
+        : MOCK_FALLBACK_ROW_HEIGHT;
+    const drawDistance =
+      typeof props.drawDistance === 'number' ? props.drawDistance : 0;
+    const initialContainerPoolRatio =
+      typeof props.initialContainerPoolRatio === 'number'
+        ? Math.max(1, props.initialContainerPoolRatio)
+        : 1;
+    const windowHeight = MOCK_VIEWPORT_HEIGHT * initialContainerPoolRatio;
+    const rowCount = Math.ceil(
+      (windowHeight + drawDistance * 2) / estimatedItemSize,
+    );
+    const count = Math.min(items.length, Math.max(1, rowCount));
+    const startIndex = props.maintainScrollAtEnd
+      ? Math.max(0, items.length - count)
+      : 0;
+
+    return {
+      items: items.slice(startIndex, startIndex + count),
+      startIndex,
+    };
+  }
+
   return {
     LegendList: React.forwardRef((props: unknown, ref: unknown) => {
-      const { data, extraData, keyExtractor, renderItem } =
-        props as MockLegendListProps;
+      const typedProps = props as MockLegendListProps;
+      const { data, extraData, keyExtractor, renderItem } = typedProps;
       const items = Array.isArray(data) ? data : [];
       const renderRow = typeof renderItem === 'function' ? renderItem : null;
       const getKey = typeof keyExtractor === 'function' ? keyExtractor : null;
+      const virtualizedWindow = getVirtualizedWindow(items, typedProps);
 
       return React.createElement(
         MockView,
         { ref },
-        items.map((item, index) =>
-          React.createElement(
+        virtualizedWindow.items.map((item, index) => {
+          const dataIndex = virtualizedWindow.startIndex + index;
+          return React.createElement(
             React.Fragment,
-            { key: getKey ? getKey(item, index) : String(index) },
+            { key: getKey ? getKey(item, dataIndex) : String(dataIndex) },
             renderRow
-              ? renderRow({ extraData, index, item, target: 'Cell' })
+              ? renderRow({ extraData, index: dataIndex, item, target: 'Cell' })
               : null,
-          ),
-        ),
+          );
+        }),
       );
     }),
   };
@@ -132,6 +167,8 @@ const chatWindow = Array.from({ length: 600 }, (_, index) =>
   createChatMessage(index),
 );
 const visibleRows = chatWindow.slice(-120);
+const virtualizedVisibleRowCount = Math.ceil((680 + 96 * 2) / 34);
+const virtualizedRows = visibleRows.slice(-virtualizedVisibleRowCount);
 
 function isStandardUsernoticeMessage(
   message: AnyChatMessageType,
@@ -165,7 +202,7 @@ function ChatListPerfFixture() {
         showTimestamps: true,
       }}
       listRef={listRef}
-      shouldMaintainScrollAtEnd={false}
+      shouldMaintainScrollAtEnd
       handleScroll={jest.fn()}
       handleScrollBeginDrag={jest.fn()}
       handleScrollEndDrag={jest.fn()}
@@ -183,7 +220,7 @@ function ChatListPerfFixture() {
 function RichMessageRowsPerfFixture() {
   return (
     <View>
-      {visibleRows.map(message => (
+      {virtualizedRows.map(message => (
         <RichChatMessage
           key={message.id}
           {...message}
@@ -203,7 +240,7 @@ function RichMessageRowsMountFixture({
 }) {
   return (
     <View>
-      {visibleRows.map(message => (
+      {virtualizedRows.map(message => (
         <TrackedRichChatMessage
           key={message.id}
           message={message}
@@ -258,7 +295,7 @@ describe('chat performance', () => {
 
   test('estimates plain chat row heights with pretext', async () => {
     await measureFunction(() => {
-      for (const message of visibleRows) {
+      for (const message of virtualizedRows) {
         estimateChatMessageHeightWithPretext(message, {
           containerWidth: 390,
           density: 'compact',
@@ -281,7 +318,7 @@ describe('chat performance', () => {
       </Profiler>,
     );
 
-    expect(onRowMount).toHaveBeenCalledTimes(visibleRows.length);
+    expect(onRowMount).toHaveBeenCalledTimes(virtualizedRows.length);
     expect(onRender.mock.calls.map(([, phase]) => phase)).toEqual(['mount']);
 
     rerender(
@@ -290,7 +327,7 @@ describe('chat performance', () => {
       </Profiler>,
     );
 
-    expect(onRowMount).toHaveBeenCalledTimes(visibleRows.length);
+    expect(onRowMount).toHaveBeenCalledTimes(virtualizedRows.length);
     expect(onRender.mock.calls.map(([, phase]) => phase)).toEqual([
       'mount',
       'update',
