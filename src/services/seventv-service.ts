@@ -1,6 +1,14 @@
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import {
+  EmoteQueryDocument,
+  type EmoteQueryQuery,
+  type EmoteQueryQueryVariables,
+  EmoteSetCustomDocument,
+  type EmoteSetCustomQuery,
+  type EmoteSetCustomQueryVariables,
   EmoteSetKind,
+  GlobalEmoteSetDocument,
+  type GlobalEmoteSetQuery,
   type Image,
   Platform,
   PaintsQueryDocument,
@@ -146,28 +154,13 @@ interface StvChannelEmotesResponse {
   };
 }
 
-export interface StvEmote {
+export interface SevenTvEmotePreview {
   id: string;
   name: string;
-  flags: number;
-  tags: string[];
-  lifecycle: number;
-  state: string[];
-  listed: boolean;
-  animated: boolean;
-  host: SevenTvHost;
-  versions: {
-    id: string;
-    name: string;
-    description?: string;
-    lifecycle: number;
-    state: string[];
-    listed: boolean;
-    animated: boolean;
-    host: SevenTvHost;
-  }[];
-  createdAt: number;
-  owner: StvUser;
+  owner: {
+    display_name: string;
+    username: string;
+  } | null;
 }
 
 export interface UserCosmeticsInfo {
@@ -229,62 +222,6 @@ export const clearSevenTvUserIdCache = () => {
   storageService.clearNamespace(SEVEN_TV_CACHE_NAMESPACE, 'sevenTvUserId_');
 };
 
-/**
- * Pick the best file from a v3 REST host.files array.
- * Prefers 4x AVIF > 3x AVIF > 2x AVIF > 1x AVIF, then any available.
- */
-function pickBestV3File(files: SevenTvFile[]): SevenTvFile | undefined {
-  return (
-    files.find(file => file.name === '4x.avif') ||
-    files.find(file => file.name === '3x.avif') ||
-    files.find(file => file.name === '2x.avif') ||
-    files.find(file => file.name === '1x.avif') ||
-    files[0]
-  );
-}
-
-function fileScale(file: SevenTvFile): '1x' | '2x' | '3x' | '4x' | null {
-  const match = /^([1-4])x\./.exec(file.name);
-  if (!match?.[1]) {
-    return null;
-  }
-  return `${match[1]}x` as '1x' | '2x' | '3x' | '4x';
-}
-
-function buildV3ImageVariants(
-  emoteId: string,
-  files: SevenTvFile[],
-): EmoteImageVariants {
-  const variants = files.reduce<{
-    animated: EmoteImageVariantSet;
-    static: EmoteImageVariantSet;
-  }>(
-    (variants, file) => {
-      const scale = fileScale(file);
-      if (!scale) {
-        return variants;
-      }
-
-      const url = `https://cdn.7tv.app/emote/${emoteId}/${file.name}`;
-      if (file.frame_count > 1) {
-        variants.animated[scale] = url;
-      } else {
-        variants.static[scale] = url;
-      }
-
-      if (file.static_name) {
-        variants.static[scale] =
-          `https://cdn.7tv.app/emote/${emoteId}/${file.static_name}`;
-      }
-
-      return variants;
-    },
-    { animated: {}, static: {} },
-  );
-
-  return createEmoteImageVariants(variants);
-}
-
 function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
   const variants = images.reduce<{
     animated: EmoteImageVariantSet;
@@ -326,6 +263,53 @@ function pickBestStaticImage(images: readonly Image[]): Image | undefined {
     const staticImages = atScale.filter(img => img.frameCount <= 1);
     return staticImages.length > 0 ? pickBestFormat(staticImages) : undefined;
   }, undefined);
+}
+
+type V4EmoteSet = NonNullable<EmoteSetCustomQuery['emoteSets']['emoteSet']>;
+
+function sanitiseV4EmoteSet(
+  emoteSet: V4EmoteSet,
+  site: '7TV Channel' | '7TV Global',
+): SevenTvSanitisedEmote[] {
+  const setMetadata: SevenTvEmoteSetMetadata = {
+    setId: emoteSet.id,
+    setName: emoteSet.name,
+    capacity: emoteSet.capacity ?? null,
+    ownerId: emoteSet.ownerId ?? null,
+    kind: emoteSet.kind,
+    updatedAt: emoteSet.updatedAt,
+    totalCount: emoteSet.emotes.totalCount,
+  };
+
+  return emoteSet.emotes.items.map(item => {
+    const { emote } = item;
+    const bestImage = pickBestImage(emote.images);
+    const bestStaticImage = pickBestStaticImage(emote.images);
+    const imageVariants = buildV4ImageVariants(emote.images);
+    const width = bestImage?.width ?? 0;
+    const height = bestImage?.height ?? 0;
+    const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
+
+    return {
+      name: item.alias,
+      id: emote.id,
+      url: bestImage?.url ?? '',
+      static_url: bestStaticImage?.url,
+      image_variants: imageVariants,
+      flags: zeroWidth ? 256 : 0,
+      original_name: emote.defaultName,
+      creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+      emote_link: `https://7tv.app/emotes/${emote.id}`,
+      site,
+      frame_count: bestImage?.frameCount ?? 1,
+      format: bestImage?.mime?.replace('image/', '') ?? 'webp',
+      aspect_ratio: height > 0 ? width / height : 1,
+      zero_width: zeroWidth,
+      width,
+      height,
+      set_metadata: setMetadata,
+    };
+  });
 }
 
 export const sevenTvService = {
@@ -407,60 +391,79 @@ export const sevenTvService = {
   getSanitisedEmoteSet: async (
     emoteSetId: string,
   ): Promise<SevenTvSanitisedEmote[]> => {
-    const result = await sevenTvApi.get<StvEmoteSet>(
-      `/emote-sets/${emoteSetId}`,
-    );
+    if (emoteSetId === 'global') {
+      const { data, error } = await sevenTvV4Client.query<GlobalEmoteSetQuery>({
+        query: GlobalEmoteSetDocument,
+        fetchPolicy: 'network-only',
+      });
 
-    const site = emoteSetId === 'global' ? '7TV Global' : '7TV Channel';
+      if (error) {
+        throw error;
+      }
 
-    const setMetadata: SevenTvEmoteSetMetadata = {
-      setId: result.id,
-      setName: result.name,
-      capacity: result.capacity,
-      ownerId: result.owner?.id ?? null,
-      kind: EmoteSetKind.Normal,
-      updatedAt: '',
-      totalCount: result.emote_count,
-    };
+      if (!data) {
+        return [];
+      }
 
-    return result.emotes.map(emote => {
-      const { owner } = emote.data;
-      const bestFile = pickBestV3File(emote.data.host.files);
-      const imageVariants = buildV3ImageVariants(
-        emote.id,
-        emote.data.host.files,
-      );
+      return sanitiseV4EmoteSet(data.emoteSets.global, '7TV Global');
+    }
 
-      return {
-        name: emote.name,
-        id: emote.id,
-        url: `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '2x.avif'}`,
-        static_url: bestFile?.static_name
-          ? `https://cdn.7tv.app/emote/${emote.id}/${bestFile.static_name}`
-          : undefined,
-        image_variants: imageVariants,
-        flags: emote.data.flags,
-        original_name: emote.data.name,
-        creator: (owner?.display_name || owner?.username) ?? null,
-        emote_link: `https://7tv.app/emotes/${emote.id}`,
-        site,
-        frame_count: bestFile?.frame_count ?? 1,
-        format: bestFile?.format ?? 'avif',
-        aspect_ratio:
-          bestFile && bestFile.height > 0
-            ? bestFile.width / bestFile.height
-            : 1,
-        // eslint-disable-next-line no-bitwise
-        zero_width: Boolean(emote.data.flags & 256),
-        width: bestFile?.width ?? 0,
-        height: bestFile?.height ?? 0,
-        set_metadata: setMetadata,
-      };
+    const { data, error } = await sevenTvV4Client.query<
+      EmoteSetCustomQuery,
+      EmoteSetCustomQueryVariables
+    >({
+      query: EmoteSetCustomDocument,
+      variables: { id: emoteSetId },
+      fetchPolicy: 'network-only',
     });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data) {
+      return [];
+    }
+
+    const emoteSet = data.emoteSets.emoteSet;
+    if (!emoteSet) {
+      return [];
+    }
+
+    return sanitiseV4EmoteSet(emoteSet, '7TV Channel');
   },
 
-  getEmote: async (emoteId: string) => {
-    return sevenTvApi.get<StvEmote>(`/emotes/${emoteId}`);
+  getEmote: async (emoteId: string): Promise<SevenTvEmotePreview | null> => {
+    const { data, error } = await sevenTvV4Client.query<
+      EmoteQueryQuery,
+      EmoteQueryQueryVariables
+    >({
+      query: EmoteQueryDocument,
+      variables: { id: emoteId },
+      fetchPolicy: 'network-only',
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const emote = data?.emotes.emote;
+    if (!emote) {
+      return null;
+    }
+
+    const displayName = emote.owner?.mainConnection?.platformDisplayName;
+
+    return {
+      id: emote.id,
+      name: emote.defaultName,
+      owner: displayName
+        ? {
+            display_name: displayName,
+            username: displayName,
+          }
+        : null,
+    };
   },
 
   sendPresence: async (channelId: string, userId: string) => {
