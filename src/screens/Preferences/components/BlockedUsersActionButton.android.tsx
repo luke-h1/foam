@@ -33,7 +33,7 @@ export function BlockedUsersActionButton({
         colors={{
           containerColor: isDestructive
             ? theme.colorRedSurface
-            : theme.colorDarkGreen,
+            : theme.colorPrimary,
           contentColor: isDestructive ? theme.colorRed : theme.colorBlack,
         }}
         contentPadding={{ start: 12, top: 6, end: 12, bottom: 6 }}

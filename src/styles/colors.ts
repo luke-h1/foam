@@ -1,7 +1,7 @@
 import { Color } from './pallete';
 
 const tintColorLight = Color.violet[600];
-const tintColorDark = Color.green[500];
+const tintColorDark = '#1AC9A2';
 const lightText = Color.zinc[950];
 const darkText = Color.zinc[50];
 const lightBackground = Color.zinc[50];
@@ -16,9 +16,7 @@ export type ThemeColor =
   | 'amber'
   | 'black'
   | 'blue'
-  | 'grass'
   | 'gray'
-  | 'green'
   | 'orange'
   | 'plum'
   | 'red'

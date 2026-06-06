@@ -8,7 +8,7 @@ import type { EmoteMenuIcon as EmoteMenuIconType } from './emoteMenuData';
 const PROVIDER_ACCENT_COLORS: Partial<Record<EmoteMenuIconType, string>> = {
   twitch: theme.colorPlum,
   stv: '#ffffff',
-  ffz: theme.colorGreen,
+  ffz: theme.colorPrimary,
   bttv: theme.colorOrange,
 };
 
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   ffzTextIcon: {
-    color: theme.colorGreen,
+    color: theme.colorPrimary,
   },
   ffzTextIconActive: {
     color: theme.color.text.dark,

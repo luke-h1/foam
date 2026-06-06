@@ -19,7 +19,9 @@ function getBucket(bucket: SessionCacheBucket) {
   return chatStore$.sessionCaches[bucket];
 }
 
-function readBucket(bucket: SessionCacheBucket): Record<string, TimedStringEntry> {
+function readBucket(
+  bucket: SessionCacheBucket,
+): Record<string, TimedStringEntry> {
   return getBucket(bucket).peek() ?? {};
 }
 
@@ -33,7 +35,9 @@ export function getSessionCacheString(
   }
 
   if (entry.expiresAt <= Date.now()) {
-    getBucket(bucket)[key].delete();
+    const next = { ...readBucket(bucket) };
+    delete next[key];
+    getBucket(bucket).set(next);
     return undefined;
   }
 
@@ -45,9 +49,12 @@ export function setSessionCacheString(
   key: string,
   value: string,
 ): void {
-  getBucket(bucket)[key].set({
-    value,
-    expiresAt: Date.now() + CHAT_SESSION_CACHE_TTL_MS,
+  getBucket(bucket).set({
+    ...readBucket(bucket),
+    [key]: {
+      value,
+      expiresAt: Date.now() + CHAT_SESSION_CACHE_TTL_MS,
+    },
   });
   pruneSessionCache(bucket);
 }

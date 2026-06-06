@@ -1,5 +1,8 @@
 import type { AnyChatMessageType } from '@app/store/chatStore/constants';
-import { addMessages } from '@app/store/chatStore/messages';
+import {
+  addMessages,
+  getUserMessageColor,
+} from '@app/store/chatStore/messages';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { useLazyRef } from '@app/hooks/useLazyRef';
@@ -159,7 +162,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     const messageWithCachedColor = {
       ...newMessage,
-      cachedSenderColor: resolveCachedSenderColor(newMessage),
+      cachedSenderColor: resolveCachedSenderColor(
+        newMessage,
+        getUserMessageColor,
+      ),
     };
 
     const existingIndex = messageBufferIndexRef.current.get(key);

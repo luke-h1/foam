@@ -2,9 +2,24 @@ import {
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
+import { theme } from '@app/styles/themes';
+import type { AndroidSymbol } from 'expo-symbols';
+import type { SFSymbol } from 'sf-symbols-typescript';
 import type { ReactNode } from 'react';
 
 type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
+
+const PROVIDER_COLORS: Record<PreviewProvider, string> = {
+  '7tv': theme.colorPlum,
+  bttv: theme.colorOrange,
+  ffz: theme.colorBlue,
+  twitch: theme.colorViolet,
+};
+
+const EMOTES_ICON: SFSymbol = 'face.smiling';
+const EMOTES_ANDROID_ICON: AndroidSymbol = 'sentiment_satisfied';
+const BADGES_ICON: SFSymbol = 'rosette';
+const BADGES_ANDROID_ICON: AndroidSymbol = 'military_tech';
 
 type ProviderPreviewKey =
   | 'show7TvEmotes'
@@ -91,32 +106,49 @@ export function ChatProviderPreferenceSections({
 }) {
   return (
     <>
-      {PROVIDER_PREFERENCE_SECTIONS.map(section => (
-        <SettingsSection key={section.title} title={section.title}>
-          <SettingsToggleRow
-            title='Emotes'
-            subtitle={section.emotes.subtitle}
-            value={previewProviders[section.emotes.key]}
-            onValueChange={value => onProviderToggle(section.emotes.key, value)}
-          />
-          <ProviderPreviewItem
-            enabled={previewProviders[section.emotes.key]}
-            provider={section.provider}
-            variant='emotes'
-          />
-          <SettingsToggleRow
-            title='Badges'
-            subtitle={section.badges.subtitle}
-            value={previewProviders[section.badges.key]}
-            onValueChange={value => onProviderToggle(section.badges.key, value)}
-          />
-          <ProviderPreviewItem
-            enabled={previewProviders[section.badges.key]}
-            provider={section.provider}
-            variant='badges'
-          />
-        </SettingsSection>
-      ))}
+      {PROVIDER_PREFERENCE_SECTIONS.map(section => {
+        const tint = PROVIDER_COLORS[section.provider];
+        return (
+          <SettingsSection key={section.title} title={section.title}>
+            <SettingsToggleRow
+              title='Emotes'
+              subtitle={section.emotes.subtitle}
+              icon={{
+                icon: EMOTES_ICON,
+                androidIcon: EMOTES_ANDROID_ICON,
+                color: tint,
+              }}
+              value={previewProviders[section.emotes.key]}
+              onValueChange={value =>
+                onProviderToggle(section.emotes.key, value)
+              }
+            />
+            <ProviderPreviewItem
+              enabled={previewProviders[section.emotes.key]}
+              provider={section.provider}
+              variant='emotes'
+            />
+            <SettingsToggleRow
+              title='Badges'
+              subtitle={section.badges.subtitle}
+              icon={{
+                icon: BADGES_ICON,
+                androidIcon: BADGES_ANDROID_ICON,
+                color: tint,
+              }}
+              value={previewProviders[section.badges.key]}
+              onValueChange={value =>
+                onProviderToggle(section.badges.key, value)
+              }
+            />
+            <ProviderPreviewItem
+              enabled={previewProviders[section.badges.key]}
+              provider={section.provider}
+              variant='badges'
+            />
+          </SettingsSection>
+        );
+      })}
     </>
   );
 }

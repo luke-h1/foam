@@ -209,7 +209,7 @@ function UserActionSheetComponent({
                         : action.tone === 'warning'
                           ? theme.colorAmber
                           : action.tone === 'accent'
-                            ? theme.colorGreen
+                            ? theme.colorPrimary
                             : '#b7bdc9'
                     }
                   />
@@ -264,8 +264,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   actionIconAccent: {
-    backgroundColor: 'rgba(74, 222, 128, 0.12)',
-    borderColor: 'rgba(74, 222, 128, 0.18)',
+    backgroundColor: 'rgba(26, 201, 162, 0.12)',
+    borderColor: 'rgba(26, 201, 162, 0.18)',
   },
   actionIconDanger: {
     backgroundColor: theme.colorRedSurface,
@@ -366,10 +366,10 @@ const styles = StyleSheet.create({
   },
   statePillAccent: {
     backgroundColor: theme.colorAccentSurface,
-    borderColor: 'rgba(74, 222, 128, 0.24)',
+    borderColor: 'rgba(26, 201, 162, 0.24)',
   },
   statePillAccentText: {
-    color: theme.colorGreen,
+    color: theme.colorPrimary,
     fontSize: theme.fontSize11,
   },
   statePills: {

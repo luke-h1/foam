@@ -1,10 +1,7 @@
-import { AnimatedInputBar } from '@app/components/AnimatedInputBar/AnimatedInputBar';
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
-import { SymbolView } from 'expo-symbols';
 import { Image } from '@app/components/Image/Image';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { SearchHistoryV2 } from '@app/components/ui/SearchHistory/SearchHistoryV2';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
@@ -17,19 +14,69 @@ import {
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { startTransition, useEffect, useReducer, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { StreamerCard } from './components/StreamerCard';
-import { SearchQuickActionsRail } from './SearchQuickActionsRail';
 import {
-  initialSearchScreenState,
-  searchScreenReducer,
-  type SearchHistoryItem,
-} from './searchScreenReducer';
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import {
+  View,
+  StyleSheet,
+  type NativeSyntheticEvent,
+  type TextInputFocusEventData,
+} from 'react-native';
+import type { SearchBarCommands } from 'react-native-screens';
+import { StreamerCard } from './components/StreamerCard';
+
+interface SearchHistoryItem {
+  query: string;
+  date: string;
+}
+
+type SearchFilter = 'channels' | 'categories';
+
+const SEARCH_HISTORY_STORAGE_KEY = 'previous_searches';
+
+const SEARCH_QUICK_ACTIONS = [
+  {
+    title: 'Just Chatting',
+    subtitle: 'Jump into the busiest live conversations',
+    query: 'just chatting',
+  },
+  {
+    title: 'Valorant',
+    subtitle: 'Check competitive streams and ranked grinders',
+    query: 'valorant',
+  },
+  {
+    title: 'League',
+    subtitle: 'See top solo queue and pro-watch channels',
+    query: 'league of legends',
+  },
+];
 
 type SearchItem = SearchChannelResponse | Category;
+type SearchQuickAction = (typeof SEARCH_QUICK_ACTIONS)[number];
+
+type SearchState = {
+  query: string;
+  selectedFilter: SearchFilter;
+  searchResults: SearchChannelResponse[];
+  categoryResults: Category[];
+};
+
+const SEARCH_INITIAL_STATE: SearchState = {
+  query: '',
+  selectedFilter: 'channels',
+  searchResults: [],
+  categoryResults: [],
+};
 
 function isSearchChannelItem(item: SearchItem): item is SearchChannelResponse {
   return 'broadcaster_login' in item;
@@ -41,57 +88,115 @@ function getSearchResultKey(item: SearchItem) {
     : `category-${item.id}`;
 }
 
-/**
- * Search screen with large title header style (like Settings)
- */
-export function SearchScreen() {
-  const [state, dispatch] = useReducer(
-    searchScreenReducer,
-    initialSearchScreenState,
+function getQuickActionKey(item: SearchQuickAction) {
+  return item.query;
+}
+
+function sortSearchHistory(history: SearchHistoryItem[]) {
+  const sortedHistory: SearchHistoryItem[] = [];
+
+  for (const item of history) {
+    sortedHistory.push(item);
+  }
+
+  sortedHistory.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
-  const {
-    categoryResults,
-    query,
-    searchHistory,
-    searchResults,
-    selectedFilter,
-  } = state;
-  const listRef = useRef<FlashListRef<SearchChannelResponse | Category>>(null);
+
+  return sortedHistory;
+}
+
+function getStoredSearchHistory() {
+  return (
+    storageService.getString<SearchHistoryItem[]>(SEARCH_HISTORY_STORAGE_KEY) ??
+    []
+  );
+}
+
+function getSearchHistorySnapshot() {
+  return JSON.stringify(getStoredSearchHistory());
+}
+
+function subscribeToSearchHistory(onStoreChange: () => void) {
+  const handleStorageChange = (key: string) => {
+    if (key === SEARCH_HISTORY_STORAGE_KEY || key === 'all') {
+      onStoreChange();
+    }
+  };
+
+  storageService.events.on('storageChange', handleStorageChange);
+
+  return () => {
+    storageService.events.off('storageChange', handleStorageChange);
+  };
+}
+
+function writeSearchHistoryQuery(query: string) {
+  const previousSearches = getStoredSearchHistory();
+  const updatedAt = new Date().toISOString();
+  const nextSearches: SearchHistoryItem[] = [];
+  let hasExistingQuery = false;
+
+  for (const item of previousSearches) {
+    if (item.query === query) {
+      nextSearches.push({ query: item.query, date: updatedAt });
+      hasExistingQuery = true;
+      continue;
+    }
+
+    nextSearches.push(item);
+  }
+
+  if (!hasExistingQuery) {
+    nextSearches.push({ query, date: updatedAt });
+  }
+
+  storageService.set(
+    SEARCH_HISTORY_STORAGE_KEY,
+    sortSearchHistory(nextSearches),
+  );
+}
+
+export function SearchScreen() {
+  const [{ query, selectedFilter, searchResults, categoryResults }, setState] =
+    useState<SearchState>(SEARCH_INITIAL_STATE);
+  const listRef = useRef<FlashListRef<SearchItem>>(null);
+  const searchBarRef = useRef<SearchBarCommands | null>(null);
 
   useScrollToTop(listRef);
 
-  const fetchSearchHistory = () => {
-    const history =
-      storageService.getString<SearchHistoryItem[]>('previous_searches');
-
-    if (history) {
-      const sortedHistory = history
-        .slice()
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-        );
-      startTransition(() => {
-        dispatch({ type: 'setHistory', searchHistory: sortedHistory });
-      });
-      return;
-    }
-    startTransition(() => {
-      dispatch({ type: 'setHistory', searchHistory: [] });
-    });
-  };
+  const searchHistorySnapshot = useSyncExternalStore(
+    subscribeToSearchHistory,
+    getSearchHistorySnapshot,
+    getSearchHistorySnapshot,
+  );
+  const searchHistory = useMemo(
+    () =>
+      sortSearchHistory(
+        JSON.parse(searchHistorySnapshot) as SearchHistoryItem[],
+      ),
+    [searchHistorySnapshot],
+  );
+  const searchHistoryQueries = useMemo(
+    () => searchHistory.map(item => item.query),
+    [searchHistory],
+  );
 
   useEffect(() => {
     void ScreenOrientation.lockAsync(
       ScreenOrientation.OrientationLock.PORTRAIT_UP,
     );
-    void fetchSearchHistory();
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
       startTransition(() => {
-        dispatch({ type: 'clearResults' });
+        setState(state => ({
+          ...state,
+          searchResults: [],
+          categoryResults: [],
+        }));
       });
       return;
     }
@@ -102,195 +207,278 @@ export function SearchScreen() {
     ]);
 
     startTransition(() => {
-      dispatch({
-        type: 'setResults',
+      setState(state => ({
+        ...state,
         searchResults: channelResults,
         categoryResults: categories.data.slice(0, 10),
-      });
+      }));
     });
 
-    const prevSearches =
-      storageService.getString<SearchHistoryItem[]>('previous_searches') ?? [];
-
-    /**
-     * Check to see if we have an existing search term
-     */
-    const existingQuery = prevSearches.findIndex(item => item.query === value);
-
-    if (existingQuery === -1) {
-      /**
-       * New query - add it to the list of results
-       */
-      prevSearches.push({
-        query: value,
-        date: new Date().toISOString(),
-      });
-    } else {
-      /**
-       * If we have an existing query
-       * update the date so we can order it
-       */
-      if (prevSearches[existingQuery]) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        prevSearches[existingQuery].date = new Date().toISOString();
-      }
-    }
-
-    storageService.set('previous_searches', prevSearches);
-    startTransition(() => {
-      dispatch({ type: 'setHistory', searchHistory: prevSearches });
-    });
+    writeSearchHistoryQuery(value);
   }, 400);
 
-  const handleClearSearch = () => {
+  const handleClearSearch = useCallback(() => {
+    searchBarRef.current?.clearText();
     startTransition(() => {
-      dispatch({ type: 'clearSearch' });
+      setState(state => ({
+        ...state,
+        query: '',
+        searchResults: [],
+        categoryResults: [],
+      }));
     });
-  };
+  }, []);
 
-  const handleQuerySearch = async (searchQuery: string) => {
-    await search(searchQuery);
-  };
+  const handleCategoryPress = useCallback((categoryId: string) => {
+    router.push(`/category/${categoryId}`);
+  }, []);
 
-  const handleTextChange = (text: string) => {
-    dispatch({ type: 'setQuery', query: text });
-    if (text.length > 2) {
-      void handleQuerySearch(text);
-    } else if (text.length === 0) {
-      startTransition(() => {
-        dispatch({ type: 'clearResults' });
-      });
-    }
-  };
+  const handleQuerySearch = useCallback(
+    async (searchQuery: string) => {
+      await search(searchQuery);
+    },
+    [search],
+  );
 
-  const handleSearchHistorySelect = (historyQuery: string) => {
-    dispatch({ type: 'setQuery', query: historyQuery });
-    void handleQuerySearch(historyQuery);
-  };
+  const handleTextChange = useCallback(
+    (text: string) => {
+      setState(state => ({ ...state, query: text }));
+      if (text.length > 2) {
+        void handleQuerySearch(text);
+      } else if (text.length === 0) {
+        startTransition(() => {
+          setState(state => ({
+            ...state,
+            searchResults: [],
+            categoryResults: [],
+          }));
+        });
+      }
+    },
+    [handleQuerySearch],
+  );
 
-  const handleSearchHistoryClearAll = () => {
-    dispatch({ type: 'setHistory', searchHistory: [] });
-    storageService.remove('previous_searches');
-  };
+  const handleNativeSearchTextChange = useCallback(
+    (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+      handleTextChange(event.nativeEvent.text);
+    },
+    [handleTextChange],
+  );
 
-  const handleSearchHistoryClearItem = (historyQuery: string) => {
-    const newHistory = searchHistory.filter(
-      item => item.query !== historyQuery,
-    );
-    dispatch({ type: 'setHistory', searchHistory: newHistory });
-    storageService.set('previous_searches', newHistory);
-  };
+  const handleNativeSearchSubmit = useCallback(
+    (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+      const searchText = event.nativeEvent.text.trim();
+      if (searchText.length > 0) {
+        void handleQuerySearch(searchText);
+      }
+    },
+    [handleQuerySearch],
+  );
 
-  const handleFilterChange = (index: number) => {
+  const handleSearchHistorySelect = useCallback(
+    (historyQuery: string) => {
+      searchBarRef.current?.setText(historyQuery);
+      setState(state => ({ ...state, query: historyQuery }));
+      void handleQuerySearch(historyQuery);
+    },
+    [handleQuerySearch],
+  );
+
+  const handleSearchHistoryClearAll = useCallback(() => {
+    storageService.remove(SEARCH_HISTORY_STORAGE_KEY);
+  }, []);
+
+  const handleSearchHistoryClearItem = useCallback(
+    (historyQuery: string) => {
+      const newHistory = searchHistory.filter(
+        item => item.query !== historyQuery,
+      );
+      storageService.set(SEARCH_HISTORY_STORAGE_KEY, newHistory);
+    },
+    [searchHistory],
+  );
+
+  const handleFilterChange = useCallback((index: number) => {
     startTransition(() => {
-      dispatch({
-        type: 'setFilter',
+      setState(state => ({
+        ...state,
         selectedFilter: index === 0 ? 'channels' : 'categories',
-      });
+      }));
     });
-  };
+  }, []);
 
-  const handleQuickActionPress = (actionQuery: string) => {
-    dispatch({ type: 'setQuery', query: actionQuery });
-    void handleQuerySearch(actionQuery);
-  };
+  const handleQuickActionPress = useCallback(
+    (actionQuery: string) => {
+      searchBarRef.current?.setText(actionQuery);
+      setState(state => ({ ...state, query: actionQuery }));
+      void handleQuerySearch(actionQuery);
+    },
+    [handleQuerySearch],
+  );
 
-  const showRecentSearches = query.length === 0 && searchHistory.length > 0;
   const activeResults =
     selectedFilter === 'channels' ? searchResults : categoryResults;
 
-  const recentSearchesSection = showRecentSearches ? (
-    <SearchHistoryV2
-      history={searchHistory.map(item => item.query)}
-      onClearAll={handleSearchHistoryClearAll}
-      onClearItem={handleSearchHistoryClearItem}
-      onSelectItem={handleSearchHistorySelect}
-    />
-  ) : null;
+  const historySection =
+    searchResults.length === 0 && searchHistoryQueries.length > 0 ? (
+      <SearchHistoryV2
+        history={searchHistoryQueries}
+        onClearAll={handleSearchHistoryClearAll}
+        onSelectItem={handleSearchHistorySelect}
+        onClearItem={handleSearchHistoryClearItem}
+      />
+    ) : null;
 
-  const ListHeaderComponent = (
-    <View style={styles.header}>
-      <Text type='4xl' weight='bold' style={styles.title}>
-        Search
-      </Text>
-      <Text type='sm' color='gray.textLow' style={styles.subtitle}>
-        Discover channels, categories, and live rooms.
-      </Text>
-      <View style={styles.searchBarContainer}>
-        <View style={styles.searchBar}>
-          <SymbolView
-            name='magnifyingglass'
-            size={16}
-            tintColor={theme.colorGreyHoverAlpha}
-            style={styles.searchIcon}
-          />
-          <AnimatedInputBar
-            containerStyle={styles.searchInputShell}
-            inputStyle={styles.searchInput}
-            inputWrapperStyle={styles.searchInputWrapper}
-            placeholderStyle={styles.searchPlaceholder}
-            placeholders={['Search channels, games, or categories']}
-            testID='search-input'
-            value={query}
-            onChangeText={handleTextChange}
-            autoCapitalize='none'
-            autoCorrect={false}
-            returnKeyType='search'
-          />
-          {query.length > 0 && (
-            <PressableArea
-              onPress={handleClearSearch}
-              style={styles.clearButton}
-            >
-              <View style={styles.clearIcon}>
-                <SymbolView
-                  name='xmark'
-                  size={10}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-              </View>
-            </PressableArea>
-          )}
-        </View>
-      </View>
+  const renderItem: ListRenderItem<SearchChannelResponse> = useCallback(
+    ({ item }) => {
+      return (
+        <Button
+          onPress={() => {
+            router.push(`/streams/live-stream/${item.broadcaster_login}`);
+          }}
+          style={styles.resultItem}
+        >
+          <StreamerCard stream={item} />
+        </Button>
+      );
+    },
+    [],
+  );
 
-      {recentSearchesSection}
+  const renderCategoryItem: ListRenderItem<Category> = useCallback(
+    ({ item }) => {
+      const imageUrl =
+        item.box_art_url
+          ?.replace('{width}', '220')
+          ?.replace('{height}', '294') ?? '';
 
-      <View style={styles.filterBar}>
-        <SegmentedControl
-          currentIndex={selectedFilter === 'channels' ? 0 : 1}
-          onChange={handleFilterChange}
-          items={[{ label: 'Channels' }, { label: 'Categories' }]}
-        />
-      </View>
+      return (
+        <Button
+          onPress={() => handleCategoryPress(item.id)}
+          style={styles.categoryResultItem}
+        >
+          <Image source={imageUrl} style={styles.categoryResultImage} />
+          <View style={styles.categoryResultInfo}>
+            <Text type='sm' weight='semibold' numberOfLines={1}>
+              {item.name}
+            </Text>
+            <Text type='xs' color='gray.textLow' numberOfLines={1}>
+              Open category
+            </Text>
+          </View>
+        </Button>
+      );
+    },
+    [handleCategoryPress],
+  );
 
-      {query.length === 0 && searchResults.length === 0 ? (
-        <SearchQuickActionsRail onQuickActionPress={handleQuickActionPress} />
-      ) : null}
-
-      {query.length > 1 && activeResults.length > 0 && (
-        <View style={styles.sectionHeader}>
+  const renderQuickActionItem: ListRenderItem<SearchQuickAction> = useCallback(
+    ({ item }) => {
+      return (
+        <Button
+          style={styles.quickActionCard}
+          onPress={() => handleQuickActionPress(item.query)}
+        >
+          <Text type='sm' weight='semibold' style={styles.quickActionTitle}>
+            {item.title}
+          </Text>
           <Text
             type='xs'
-            weight='semibold'
             color='gray.textLow'
-            style={styles.sectionTitle}
+            style={styles.quickActionSubtitle}
           >
-            {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
+            {item.subtitle}
           </Text>
-          <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
-            {selectedFilter === 'channels'
-              ? 'Matching channels'
-              : 'Matching categories'}
-          </Text>
+        </Button>
+      );
+    },
+    [handleQuickActionPress],
+  );
+
+  const headerContent = useMemo(
+    () => (
+      <View style={styles.header}>
+        <View style={styles.filterBar}>
+          <SegmentedControl
+            currentIndex={selectedFilter === 'channels' ? 0 : 1}
+            onChange={handleFilterChange}
+            items={[{ label: 'Channels' }, { label: 'Categories' }]}
+          />
         </View>
-      )}
-    </View>
+
+        {query.length === 0 && searchResults.length === 0 && (
+          <View style={styles.quickActionsSection}>
+            <View style={styles.sectionHeader}>
+              <Text
+                type='xs'
+                weight='semibold'
+                color='gray.textLow'
+                style={styles.sectionTitle}
+              >
+                START WITH
+              </Text>
+              <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
+                Quick routes
+              </Text>
+            </View>
+            <FlashList
+              horizontal
+              data={SEARCH_QUICK_ACTIONS}
+              keyExtractor={getQuickActionKey}
+              renderItem={renderQuickActionItem}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickActionsRail}
+              style={styles.quickActionsList}
+            />
+          </View>
+        )}
+
+        {query.length > 1 && activeResults.length > 0 && (
+          <View style={styles.sectionHeader}>
+            <Text
+              type='xs'
+              weight='semibold'
+              color='gray.textLow'
+              style={styles.sectionTitle}
+            >
+              {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
+            </Text>
+            <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
+              {selectedFilter === 'channels'
+                ? 'Matching channels'
+                : 'Matching categories'}
+            </Text>
+          </View>
+        )}
+      </View>
+    ),
+    [
+      query,
+      selectedFilter,
+      activeResults.length,
+      searchResults.length,
+      handleFilterChange,
+      renderQuickActionItem,
+    ],
   );
 
   return (
     <View style={styles.container}>
+      <Stack.SearchBar
+        ref={searchBarRef}
+        autoCapitalize='none'
+        hideWhenScrolling={false}
+        onCancelButtonPress={handleClearSearch}
+        onChangeText={handleNativeSearchTextChange}
+        onClose={handleClearSearch}
+        onSearchButtonPress={handleNativeSearchSubmit}
+        placeholder='Search channels, games, or categories'
+        placement='automatic'
+      />
+      {headerContent}
+      {historySection ? (
+        <View style={styles.historyContainer}>{historySection}</View>
+      ) : null}
       <FlashList
         ref={listRef}
         getItemType={item =>
@@ -302,17 +490,15 @@ export function SearchScreen() {
         data={activeResults}
         keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
-        ListHeaderComponent={ListHeaderComponent}
         renderItem={
           selectedFilter === 'channels'
-            ? (renderSearchChannelItem as ListRenderItem<
-                SearchChannelResponse | Category
-              >)
-            : (renderSearchCategoryItem as ListRenderItem<
+            ? (renderItem as ListRenderItem<SearchChannelResponse | Category>)
+            : (renderCategoryItem as ListRenderItem<
                 SearchChannelResponse | Category
               >)
         }
         keyExtractor={getSearchResultKey}
+        style={styles.resultsList}
       />
     </View>
   );
@@ -339,17 +525,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingVertical: 6,
   },
-  clearButton: {
-    padding: theme.space8,
-  },
-  clearIcon: {
-    alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderRadius: theme.borderRadius999,
-    height: 18,
-    justifyContent: 'center',
-    width: 18,
-  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
@@ -362,6 +537,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingBottom: theme.space20,
     paddingTop: theme.space20,
+  },
+  historyContainer: {
+    paddingHorizontal: theme.space20,
   },
   quickActionCard: {
     backgroundColor: theme.color.background.darkAlt,
@@ -384,6 +562,9 @@ const styles = StyleSheet.create({
   quickActionsRail: {
     paddingHorizontal: 0,
   },
+  quickActionsList: {
+    height: 104,
+  },
   quickActionsSection: {
     marginTop: theme.space20,
   },
@@ -392,42 +573,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingVertical: 6,
   },
-  searchBar: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: 14,
-    borderWidth: 1,
-    flexDirection: 'row',
-    minHeight: 44,
-    paddingHorizontal: theme.space16,
-  },
-  searchBarContainer: {
-    alignSelf: 'stretch',
-  },
-  searchIcon: {
-    marginRight: theme.space8,
-    opacity: 0.55,
-  },
-  searchInput: {
-    color: theme.color.text.dark,
+  resultsList: {
     flex: 1,
-    fontSize: 16,
-    paddingVertical: 0,
-  },
-  searchInputShell: {
-    flex: 1,
-    marginVertical: 0,
-  },
-  searchInputWrapper: {
-    minHeight: 44,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-  searchPlaceholder: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 15,
   },
   sectionHeader: {
     gap: 2,
@@ -440,52 +587,4 @@ const styles = StyleSheet.create({
   sectionTitle: {
     letterSpacing: 1,
   },
-  subtitle: {
-    marginBottom: theme.space16,
-    maxWidth: 300,
-  },
-  title: {
-    lineHeight: 44,
-    marginBottom: 4,
-  },
 });
-
-function navigateToSearchCategory(categoryId: string) {
-  router.push(`/category/${categoryId}`);
-}
-
-const renderSearchChannelItem: ListRenderItem<SearchChannelResponse> = ({
-  item,
-}) => (
-  <Button
-    onPress={() => {
-      router.push(`/streams/live-stream/${item.broadcaster_login}`);
-    }}
-    style={styles.resultItem}
-  >
-    <StreamerCard stream={item} />
-  </Button>
-);
-
-const renderSearchCategoryItem: ListRenderItem<Category> = ({ item }) => {
-  const imageUrl =
-    item.box_art_url?.replace('{width}', '220')?.replace('{height}', '294') ??
-    '';
-
-  return (
-    <Button
-      onPress={() => navigateToSearchCategory(item.id)}
-      style={styles.categoryResultItem}
-    >
-      <Image source={imageUrl} style={styles.categoryResultImage} />
-      <View style={styles.categoryResultInfo}>
-        <Text type='sm' weight='semibold' numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text type='xs' color='gray.textLow' numberOfLines={1}>
-          Open category
-        </Text>
-      </View>
-    </Button>
-  );
-};

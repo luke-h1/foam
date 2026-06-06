@@ -1,4 +1,3 @@
-
 import {
   buildRawTwitchPlayerBootstrapScript,
   buildRawTwitchPlayerUrl,
@@ -9,7 +8,6 @@ import {
 } from '../twitchPlayerSource';
 
 describe('twitchPlayerSource', () => {
-
   test('allows only Twitch and parent navigation targets', () => {
     expect(isAllowedTwitchPlayerNavigation('', 'www.twitch.tv')).toBe(false);
     expect(

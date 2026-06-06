@@ -343,7 +343,7 @@ function ActionSheetComponent(props: Props) {
                           : action.tone === 'warning'
                             ? theme.colorAmber
                             : action.tone === 'accent'
-                              ? theme.colorGreen
+                              ? theme.colorPrimary
                               : '#b7bdc9'
                       }
                       weight='regular'
@@ -407,8 +407,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   actionIconAccent: {
-    backgroundColor: 'rgba(74, 222, 128, 0.12)',
-    borderColor: 'rgba(74, 222, 128, 0.18)',
+    backgroundColor: 'rgba(26, 201, 162, 0.12)',
+    borderColor: 'rgba(26, 201, 162, 0.18)',
   },
   actionIconDanger: {
     backgroundColor: theme.colorRedSurface,

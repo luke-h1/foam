@@ -209,7 +209,7 @@ export const ffzService = {
             id: 'mod_badge',
             url: maxUrl,
             title: 'Moderator',
-            color: '#00ff00',
+            color: '#1ac9a2',
             owner_username: channelId,
             set: 'mod',
             type: 'FFZ channel badge',

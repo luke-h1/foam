@@ -411,7 +411,7 @@ describe('Chat recent messages', () => {
       {
         channel: '',
         id: 'notice-1',
-        message_id: 'resub',
+        message_id: 'notice-1',
         options: { countUnread: false },
         sender: '',
       },

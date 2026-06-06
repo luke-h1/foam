@@ -1,4 +1,4 @@
-import { addMessage } from '@app/store/chatStore/messages';
+import { addMessage, clearMessages } from '@app/store/chatStore/messages';
 import { renderHook, act } from '@testing-library/react-native';
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 
@@ -22,20 +22,26 @@ jest.mock('@app/utils/logger', () => ({
 }));
 
 const mockAddMessage = jest.mocked(addMessage);
+const mockClearMessages = jest.mocked(clearMessages);
 
 function renderIrcHandlers({
   isLoadingRecentMessages = false,
+  isMounted = true,
   messageCount = 0,
+  clearLocalMessages = jest.fn(),
 }: {
   isLoadingRecentMessages?: boolean;
+  isMounted?: boolean;
   messageCount?: number;
+  clearLocalMessages?: jest.Mock;
 } = {}) {
   return renderHook(() =>
     useChatIrcHandlers({
       channelId: 'channel-1',
       channelName: 'foam',
-      clearLocalMessages: jest.fn(),
+      clearLocalMessages,
       handleNewMessage: jest.fn(),
+      isMountedRef: { current: isMounted },
       isLoadingRecentMessagesRef: { current: isLoadingRecentMessages },
       listRef: { current: null },
       messages$: {
@@ -93,5 +99,32 @@ describe('useChatIrcHandlers', () => {
       content: "Connected to foam's room",
       sender: 'System',
     });
+  });
+
+  test('does not clear rendered messages when part fires after chat unmounts', () => {
+    const clearLocalMessages = jest.fn();
+    const { result } = renderIrcHandlers({
+      clearLocalMessages,
+      isMounted: false,
+    });
+
+    act(() => {
+      result.current.onPart();
+    });
+
+    expect(mockClearMessages).not.toHaveBeenCalled();
+    expect(clearLocalMessages).not.toHaveBeenCalled();
+  });
+
+  test('clears rendered messages when part fires while chat is still mounted', () => {
+    const clearLocalMessages = jest.fn();
+    const { result } = renderIrcHandlers({ clearLocalMessages });
+
+    act(() => {
+      result.current.onPart();
+    });
+
+    expect(mockClearMessages).toHaveBeenCalledTimes(1);
+    expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 });

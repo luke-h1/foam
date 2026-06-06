@@ -45,6 +45,7 @@ interface UseChatIrcHandlersOptions {
     message: AnyChatMessageType,
     options?: { countUnread?: boolean },
   ) => void;
+  isMountedRef?: RefObject<boolean>;
   listRef: RefObject<ChatListRef | null>;
   isLoadingRecentMessagesRef?: RefObject<boolean>;
   messages$: { peek: () => AnyChatMessageType[] };
@@ -65,6 +66,7 @@ export function useChatIrcHandlers({
   channelName,
   clearLocalMessages,
   handleNewMessage,
+  isMountedRef,
   isLoadingRecentMessagesRef,
   listRef,
   messages$,
@@ -279,10 +281,14 @@ export function useChatIrcHandlers({
 
   const onPart = useCallback(() => {
     logger.chat.info('Parted from channel:', channelName);
+    roomStateRef.current = null;
+    if (isMountedRef?.current === false) {
+      return;
+    }
+
     clearMessages();
     clearLocalMessages();
-    roomStateRef.current = null;
-  }, [channelName, clearLocalMessages]);
+  }, [channelName, clearLocalMessages, isMountedRef]);
 
   const onNotice = useCallback(
     (_channel: string, tags: Record<string, string>, messageText: string) => {

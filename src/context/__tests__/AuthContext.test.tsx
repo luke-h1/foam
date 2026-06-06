@@ -45,11 +45,9 @@ describe('AuthContext', () => {
     jest.clearAllMocks();
     twitchService.getTopStreams.mockResolvedValue({
       data: [],
-      pagination: { cursor: null },
     });
     twitchService.getTopCategories.mockResolvedValue({
       data: [],
-      pagination: { cursor: null },
     });
     twitchService.getFollowedStreams.mockResolvedValue([]);
   });

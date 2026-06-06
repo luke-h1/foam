@@ -1,8 +1,24 @@
 export function parseCurrentRolloutPercentage(
   viewOutput: string,
 ): string | null {
-  const match = viewOutput.match(/^\s*Rollout Percentage\s+(\d+)%\s*$/m);
-  return match?.[1] ?? null;
+  for (const line of viewOutput.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('Rollout Percentage')) {
+      continue;
+    }
+
+    const value = trimmed.slice('Rollout Percentage'.length).trim();
+    if (!value.endsWith('%')) {
+      continue;
+    }
+
+    const percentage = value.slice(0, -1).trim();
+    if (/^\d+$/.test(percentage)) {
+      return percentage;
+    }
+  }
+
+  return null;
 }
 
 export function validateTargetPercentage(target: string): number {

@@ -7,6 +7,8 @@ export default function StreamsLayout() {
         name='live-stream/[id]'
         options={{
           headerShown: false,
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       />
       <Stack.Screen

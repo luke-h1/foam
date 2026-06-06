@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eyebrow: {
-    color: theme.colorDarkGreen,
+    color: theme.colorPrimary,
     letterSpacing: 0,
     textTransform: 'uppercase',
   },

@@ -77,6 +77,17 @@ const mockFetchAndCacheUserCosmetics = jest.fn().mockResolvedValue(undefined);
 const mockCanFetchCosmetics = jest.fn().mockReturnValue(true);
 const mockOnEmoteNotice = jest.fn();
 
+const paintInput = (overrides: {
+  id: string;
+  name: string;
+  color?: number | null;
+}) => ({
+  id: overrides.id,
+  name: overrides.name,
+  color: overrides.color ?? null,
+  function: 'LINEAR_GRADIENT' as const,
+});
+
 const defaultProps = {
   channelId: 'twitch-123',
   channelName: 'testchannel',
@@ -216,7 +227,7 @@ describe('useChatSevenTvCallbacks', () => {
       act(() => {
         result.current.onCosmeticCreate({
           kind: 'BADGE',
-          cosmetic: { object: { data: badgeData } },
+          cosmetic: { object: { kind: 'BADGE', data: badgeData } },
         } as never);
       });
 
@@ -232,7 +243,13 @@ describe('useChatSevenTvCallbacks', () => {
     });
 
     test('does not add badge when getBadge already returns truthy', () => {
-      mockGetBadge.mockReturnValue({ id: 'badge-id' });
+      mockGetBadge.mockReturnValue({
+        id: 'badge-id',
+        set: 'badge-id',
+        title: 'Badge',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/badge/badge-id/4x.webp',
+      });
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
@@ -245,7 +262,7 @@ describe('useChatSevenTvCallbacks', () => {
       act(() => {
         result.current.onCosmeticCreate({
           kind: 'BADGE',
-          cosmetic: { object: { data: badgeData } },
+          cosmetic: { object: { kind: 'BADGE', data: badgeData } },
         } as never);
       });
 
@@ -256,23 +273,21 @@ describe('useChatSevenTvCallbacks', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
-      const paintData = {
+      const paintData = paintInput({
         id: 'paint-id',
         name: 'Paint',
         color: 0xff0000ff,
-      };
+      });
 
       act(() => {
         result.current.onCosmeticCreate({
           kind: 'PAINT',
-          cosmetic: { object: { data: paintData } },
+          cosmetic: { object: { kind: 'PAINT', data: paintData } },
         } as never);
       });
 
       expect(getPaint).toHaveBeenCalled();
-      expect(mockAddPaint.mock.calls[0]?.[0]).toEqual(
-        toPaintWithId(paintData),
-      );
+      expect(mockAddPaint.mock.calls[0]?.[0]).toEqual(toPaintWithId(paintData));
     });
   });
 
@@ -289,14 +304,21 @@ describe('useChatSevenTvCallbacks', () => {
             updated: [
               {
                 value: {
-                  object: { data: { id: 'paint-1', name: 'Updated Paint' } },
+                  object: {
+                    data: paintInput({
+                      id: 'paint-1',
+                      name: 'Updated Paint',
+                    }),
+                  },
                 },
               },
             ],
             pushed: [
               {
                 value: {
-                  object: { data: { id: 'paint-2', name: 'Added Paint' } },
+                  object: {
+                    data: paintInput({ id: 'paint-2', name: 'Added Paint' }),
+                  },
                 },
               },
             ],
@@ -305,10 +327,10 @@ describe('useChatSevenTvCallbacks', () => {
       });
 
       expect(updatePaint).toHaveBeenCalledWith(
-        toPaintWithId({ id: 'paint-1', name: 'Updated Paint' }),
+        toPaintWithId(paintInput({ id: 'paint-1', name: 'Updated Paint' })),
       );
       expect(addPaint).toHaveBeenCalledWith(
-        toPaintWithId({ id: 'paint-2', name: 'Added Paint' }),
+        toPaintWithId(paintInput({ id: 'paint-2', name: 'Added Paint' })),
       );
       expect(mockCountMetric.mock.calls[0]).toEqual([
         'seven_tv.cosmetic_update.applied',

@@ -90,7 +90,7 @@ function getTwitchConnectionId(
  *
  * @example
  * // Fully opaque red: 0xFF0000FF
- * // Fully opaque green: 0x00FF00FF
+ * // Fully opaque teal: 0x00FF00FF
  * // Semi-transparent blue: 0x0000FF80
  */
 export type SevenTvColor = number;
@@ -154,7 +154,7 @@ export interface PaintStop {
  * bitwise operations convert to 32-bit signed integers.
  *
  * @param color - The packed RGBA color as a 32-bit signed integer.
- * @returns An object containing the red, green, blue, and alpha channel values (0-255).
+ * @returns An object containing the red, middle, blue, and alpha channel values (0-255).
  *
  * @example
  * ```typescript

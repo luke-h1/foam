@@ -1,5 +1,4 @@
 import { FlashList } from '@app/components/FlashList/FlashList';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
@@ -368,11 +367,6 @@ export function BlockedUsersScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader
-        title='Blocked Users'
-        subtitle='Moderation'
-        size='compact'
-      />
       <BlockedUsersList
         data={data?.data}
         isLoading={isLoading}

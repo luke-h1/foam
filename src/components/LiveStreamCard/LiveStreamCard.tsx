@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   liveBadge: {
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
     left: theme.space12,

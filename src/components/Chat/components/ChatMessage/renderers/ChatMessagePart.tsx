@@ -42,6 +42,10 @@ export function ChatMessagePart({
     const isRaidNotice =
       noticeTags?.['msg-id'] === 'raid' || noticeTags?.['msg-id'] === 'unraid';
 
+    if (!part.content.trim()) {
+      return null;
+    }
+
     return (
       <Text
         key={getPartKey(part, index)}
@@ -57,6 +61,10 @@ export function ChatMessagePart({
 
   switch (part.type) {
     case 'text':
+      if (!part.content.trim()) {
+        return null;
+      }
+
       return (
         <Text
           key={getPartKey(part, index)}
@@ -72,6 +80,10 @@ export function ChatMessagePart({
       );
 
     case 'stvEmote':
+      if (!part.content.trim()) {
+        return null;
+      }
+
       return (
         <MediaLinkCard
           key={getPartKey(part, index)}
@@ -82,6 +94,10 @@ export function ChatMessagePart({
       );
 
     case 'twitchClip':
+      if (!part.content.trim()) {
+        return null;
+      }
+
       return (
         <MediaLinkCard
           key={getPartKey(part, index)}
@@ -91,6 +107,10 @@ export function ChatMessagePart({
       );
 
     case 'link':
+      if (!part.content.trim()) {
+        return null;
+      }
+
       return (
         <Text
           key={getPartKey(part, index)}
@@ -123,6 +143,10 @@ export function ChatMessagePart({
 
     case 'mention': {
       const mentionContent = formatMentionContent(part.content);
+      if (!mentionContent.trim()) {
+        return null;
+      }
+
       const mentionedUsername = mentionContent.replace(/^@/, '').trim();
       const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
       const isReplyTargetMention = Boolean(

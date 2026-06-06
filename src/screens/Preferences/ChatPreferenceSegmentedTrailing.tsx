@@ -34,7 +34,7 @@ export function ChatPreferenceSegmentedTrailing({
       style={
         variant === 'ios' ? styles.iosSegmentedControl : styles.segmentedControl
       }
-      tintColor={theme.colorDarkGreen}
+      tintColor={theme.colorPrimary}
       values={[...values]}
     />
   );

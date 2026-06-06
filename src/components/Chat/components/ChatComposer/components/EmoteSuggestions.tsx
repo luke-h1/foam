@@ -17,7 +17,9 @@ interface EmoteSuggestionsProps {
   suggestionTranslateY: number;
 }
 
-function createRenderEmoteSuggestionItem(onPress: (emote: SanitisedEmote) => void) {
+function createRenderEmoteSuggestionItem(
+  onPress: (emote: SanitisedEmote) => void,
+) {
   return function RenderEmoteSuggestionItem({
     item,
   }: LegendListRenderItemProps<SanitisedEmote>) {

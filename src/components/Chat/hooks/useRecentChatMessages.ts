@@ -88,5 +88,5 @@ export function useRecentChatMessages({
       abortController.abort();
       isLoadingRecentMessagesRef.current = false;
     };
-  }, [channelName, isLoadingRecentMessagesRef]);
+  }, [channelName, isLoadingRecentMessagesRef, showRecentMessages]);
 }

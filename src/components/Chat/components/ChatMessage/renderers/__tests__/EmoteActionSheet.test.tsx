@@ -47,6 +47,17 @@ const part = {
   },
 } satisfies ParsedPart<'emote'>;
 
+const partWithoutStructuredVariants = {
+  type: 'emote',
+  content: 'Kappa',
+  name: 'Kappa',
+  original_name: 'Kappa',
+  creator: 'twitch',
+  site: 'Twitch Global',
+  url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
+  static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/static/dark/1.0',
+} satisfies ParsedPart<'emote'>;
+
 describe('EmoteActionSheet', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -89,6 +100,27 @@ describe('EmoteActionSheet', () => {
     await waitFor(() => {
       expect(clipboardSetStringAsyncMock).toHaveBeenCalledWith(
         'https://example.com/static-4x.webp',
+      );
+    });
+  });
+
+  test('derives scaled copy actions from known emote CDN URLs', async () => {
+    const { getByText } = render(
+      <EmoteActionSheet part={partWithoutStructuredVariants}>
+        <Text>Kappa trigger</Text>
+      </EmoteActionSheet>,
+    );
+
+    fireEvent(getByText('Kappa trigger'), 'longPress', {
+      preventDefault: jest.fn(),
+    });
+
+    expect(getByText('Copy 2x image URL')).toBeOnTheScreen();
+    fireEvent.press(getByText('Copy 4x image URL'));
+
+    await waitFor(() => {
+      expect(clipboardSetStringAsyncMock).toHaveBeenCalledWith(
+        'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
       );
     });
   });

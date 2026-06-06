@@ -46,6 +46,7 @@ export const useChatScroll = ({
     typeof setTimeout
   > | null>(null);
   const shouldAnchorBottomOnContentChangeRef = useRef(false);
+  const shouldMaintainScrollAtEndRef = useRef(true);
   const lastAtBottomRef = useRef<boolean | null>(null);
   const lastContentHeightRef = useRef(0);
   const lastViewHeightRef = useRef(0);
@@ -82,22 +83,8 @@ export const useChatScroll = ({
       return;
     }
 
-    const list = listRef.current;
-    if (!list) {
-      return;
-    }
-
-    list.scrollToEnd?.({ animated: false });
-    const newestIndex = getMessagesLength() - 1;
-    if (newestIndex < 0) {
-      return;
-    }
-    void list.scrollToIndex?.({
-      animated: false,
-      index: newestIndex,
-      viewPosition: 1,
-    });
-  }, [getMessagesLength, listRef]);
+    listRef.current?.scrollToEnd?.({ animated: false });
+  }, [listRef]);
 
   const handleScrollBeginDrag = (
     e: NativeSyntheticEvent<NativeScrollEvent>,
@@ -107,6 +94,7 @@ export const useChatScroll = ({
     isDraggingRef.current = true;
     isScrollingToBottomRef.current = false;
     setIsScrollingToBottom(false);
+    shouldMaintainScrollAtEndRef.current = false;
     setShouldMaintainScrollAtEnd(false);
     lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
   };
@@ -114,6 +102,7 @@ export const useChatScroll = ({
   const handleScrollEndDrag = useCallback(() => {
     isDraggingRef.current = false;
     if (isAtBottomRef.current) {
+      shouldMaintainScrollAtEndRef.current = true;
       setShouldMaintainScrollAtEnd(true);
     }
   }, []);
@@ -121,6 +110,7 @@ export const useChatScroll = ({
   const handleMomentumScrollEnd = useCallback(() => {
     isDraggingRef.current = false;
     if (isAtBottomRef.current) {
+      shouldMaintainScrollAtEndRef.current = true;
       setShouldMaintainScrollAtEnd(true);
     }
   }, []);
@@ -129,6 +119,7 @@ export const useChatScroll = ({
     isAtBottomRef.current = true;
     lastAtBottomRef.current = true;
     hasUserScrollIntentRef.current = false;
+    shouldMaintainScrollAtEndRef.current = true;
     setShouldMaintainScrollAtEnd(true);
 
     if (scrollThrottleRef.current) {
@@ -210,6 +201,7 @@ export const useChatScroll = ({
           clearTimeout(scrollThrottleRef.current);
           scrollThrottleRef.current = null;
         }
+        shouldMaintainScrollAtEndRef.current = false;
         setShouldMaintainScrollAtEnd(false);
         setIsAtBottom(false);
         return;
@@ -225,6 +217,8 @@ export const useChatScroll = ({
         setIsAtBottom(current);
         if (current) {
           hasUserScrollIntentRef.current = false;
+          shouldMaintainScrollAtEndRef.current = true;
+          setShouldMaintainScrollAtEnd(true);
           setUnreadCount(0);
         }
       }, SCROLL_THROTTLE_MS);
@@ -243,21 +237,7 @@ export const useChatScroll = ({
     markAtBottom();
 
     const scrollToEnd = () => {
-      const list = listRef.current;
-      if (!list) {
-        return;
-      }
-
-      list.scrollToEnd?.({ animated: false });
-      const newestIndex = getMessagesLength() - 1;
-      if (newestIndex < 0) {
-        return;
-      }
-      void list.scrollToIndex?.({
-        animated: false,
-        index: newestIndex,
-        viewPosition: 1,
-      });
+      listRef.current?.scrollToEnd?.({ animated: false });
     };
 
     scrollToEnd();
@@ -277,6 +257,12 @@ export const useChatScroll = ({
 
   const maintainBottomAfterContentChange = useCallback(() => {
     if (getMessagesLength() === 0 || !isAtBottomRef.current) {
+      return;
+    }
+    if (
+      shouldMaintainScrollAtEndRef.current &&
+      !isScrollingToBottomRef.current
+    ) {
       return;
     }
     if (shouldAnchorBottomOnContentChangeRef.current) {
@@ -304,7 +290,11 @@ export const useChatScroll = ({
   }, [getMessagesLength, markAtBottom, scrollToLatestOnce]);
 
   const handleContentSizeChange = useCallback(() => {
-    if (!shouldAnchorBottomOnContentChangeRef.current) {
+    if (
+      (shouldMaintainScrollAtEndRef.current &&
+        !isScrollingToBottomRef.current) ||
+      !shouldAnchorBottomOnContentChangeRef.current
+    ) {
       return;
     }
 

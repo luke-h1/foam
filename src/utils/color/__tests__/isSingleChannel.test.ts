@@ -5,7 +5,7 @@ describe('isSingleChannel', () => {
     expect(isSingleChannel(255, 0, 0)).toBe(true);
   });
 
-  test('should return true when only green channel is non-zero', () => {
+  test('should return true when only middle channel is non-zero', () => {
     expect(isSingleChannel(0, 255, 0)).toBe(true);
   });
 

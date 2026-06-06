@@ -45,7 +45,7 @@ export const Switch = memo(function Switch({
       trackColor={
         trackColor ?? {
           false: theme.color.backgroundTertiary.dark,
-          true: theme.colorDarkGreen,
+          true: theme.colorPrimary,
         }
       }
       value={displayValue}

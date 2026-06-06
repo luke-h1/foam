@@ -21,6 +21,7 @@ const HEIGHT_CACHE_LIMIT = 2000;
 const COMPACT_EMOTE_SIZE = 26;
 const COMFORTABLE_EMOTE_SIZE = 30;
 const REPLY_CONTEXT_GAP = 2;
+const ZERO_WIDTH_EMOTE_REMAINING_WIDTH_RATIO = 0.28;
 
 const heightCache = new Map<string, number>();
 
@@ -171,7 +172,9 @@ function measureChatMessageHeight(
         text: NON_BREAKING_SPACE,
         style: textStyle,
         atomic: true,
-        extraWidth: part.zero_width ? 0 : width,
+        extraWidth: part.zero_width
+          ? Math.round(width * ZERO_WIDTH_EMOTE_REMAINING_WIDTH_RATIO)
+          : width,
       });
       continue;
     }

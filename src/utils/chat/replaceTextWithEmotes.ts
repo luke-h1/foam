@@ -2,8 +2,16 @@ import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '../logger';
+import {
+  findEmotesInText,
+  getSortedEmoteNames,
+  type FindEmotesInTextReturn,
+} from './findEmotesInText';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
+
+export type { FindEmotesInTextReturn };
+export { findEmotesInText, getSortedEmoteNames };
 
 export type TwitchNotices =
   /**
@@ -239,145 +247,6 @@ function decodeEmojiToUnified(emoji: string): string {
     .join('-');
 }
 
-export interface FindEmotesInTextReturn {
-  emote: SanitisedEmote;
-  start: number;
-  end: number;
-}
-
-const DELIMITER_REGEX = /[\s,.!?()[\]{}<>:;'"\\]/;
-
-export function findEmotesInText(
-  text: string,
-  emoteMap: Map<string, SanitisedEmote>,
-  sortedEmoteNames = getSortedEmoteNames(emoteMap),
-): FindEmotesInTextReturn[] {
-  const foundEmotes: {
-    emote: SanitisedEmote;
-    start: number;
-    end: number;
-  }[] = [];
-
-  let currentIndex = 0;
-
-  function isDelimiter(char: string): boolean {
-    return DELIMITER_REGEX.test(char);
-  }
-
-  // Pre-scan text for URL-like ranges to avoid per-character regex
-  const urlRanges: { start: number; end: number }[] = [];
-  const urlPattern = /https?:\/\/[^\s]+/gi;
-  let urlMatch: RegExpExecArray | null;
-  // eslint-disable-next-line no-cond-assign
-  while ((urlMatch = urlPattern.exec(text)) !== null) {
-    urlRanges.push({
-      start: urlMatch.index,
-      end: urlMatch.index + urlMatch[0].length,
-    });
-  }
-
-  function isWithinUrl(index: number): boolean {
-    return urlRanges.some(range => index >= range.start && index < range.end);
-  }
-
-  function isValidEmotePosition(
-    index: number,
-    emoteName: string,
-    isTwitchEmote: boolean,
-  ): boolean {
-    // For URLs, never match emotes
-    if (isWithinUrl(index)) {
-      return false;
-    }
-
-    /**
-     * For Twitch emotes that are pure special characters (like <3), need word boundaries
-     */
-    if (isTwitchEmote && /^[^a-zA-Z0-9]+$/.test(emoteName)) {
-      const hasValidStart =
-        index === 0 || (index > 0 && isDelimiter(text.charAt(index - 1)));
-
-      const endIndex = index + emoteName.length;
-      const hasValidEnd =
-        endIndex === text.length || isDelimiter(text.charAt(endIndex));
-      return hasValidStart && hasValidEnd;
-    }
-
-    /**
-     * For normal emotes and alphanumeric Twitch emotes, check word boundaries
-     */
-    const hasValidStart =
-      index === 0 || (index > 0 && isDelimiter(text.charAt(index - 1)));
-    const endIndex = index + emoteName.length;
-    const hasValidEnd =
-      endIndex === text.length || isDelimiter(text.charAt(endIndex));
-
-    // For Twitch emotes, be more lenient with boundaries
-    if (isTwitchEmote) {
-      return hasValidStart || hasValidEnd;
-    }
-
-    return hasValidStart && hasValidEnd;
-  }
-
-  while (currentIndex < text.length) {
-    let found = false;
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const emoteName of sortedEmoteNames) {
-      const emote = emoteMap.get(emoteName);
-      if (emote) {
-        const isTwitchEmote =
-          emote.site === 'Twitch Global' ||
-          emote.site === 'Twitch Channel' ||
-          emote.site === 'Twitch Subscriber';
-
-        if (isTwitchEmote) {
-          const exactMatch = text.slice(currentIndex).startsWith(emoteName);
-          if (
-            exactMatch &&
-            isValidEmotePosition(currentIndex, emoteName, true)
-          ) {
-            foundEmotes.push({
-              emote,
-              start: currentIndex,
-              end: currentIndex + emoteName.length,
-            });
-            currentIndex += emoteName.length;
-            found = true;
-            break;
-          }
-        } else {
-          const startIndex = text.indexOf(emoteName, currentIndex);
-          if (
-            startIndex !== -1 &&
-            isValidEmotePosition(startIndex, emoteName, false)
-          ) {
-            foundEmotes.push({
-              emote,
-              start: startIndex,
-              end: startIndex + emoteName.length,
-            });
-            currentIndex = startIndex + emoteName.length;
-            found = true;
-            break;
-          }
-        }
-      }
-    }
-
-    if (!found) {
-      currentIndex += 1;
-    }
-  }
-
-  return foundEmotes;
-}
-
-function getSortedEmoteNames(emoteMap: Map<string, SanitisedEmote>): string[] {
-  return Array.from(emoteMap.keys()).sort((a, b) => b.length - a.length);
-}
-
 export const SEVENTV_EMOTE_LINK_REGEX =
   /https?:\/\/(?:www\.)?7tv\.app\/emotes\/([a-zA-Z0-9]+)/i;
 const TWITCH_CLIP_REGEX =
@@ -394,15 +263,30 @@ export function getTwitchClipIdFromUrl(url: string): string | null {
 }
 
 const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
+const TRAILING_URL_PUNCTUATION = new Set('.,!?;:\'"\\)]}>'.split(''));
+
+function splitTrailingUrlPunctuation(word: string): {
+  urlCandidate: string;
+  trailing: string;
+} {
+  let end = word.length;
+
+  while (end > 0 && TRAILING_URL_PUNCTUATION.has(word[end - 1] ?? '')) {
+    end -= 1;
+  }
+
+  return {
+    urlCandidate: word.slice(0, end),
+    trailing: word.slice(end),
+  };
+}
 
 export function parseWordLinkParts(word: string): ParsedPart[] | null {
   if (!word || /\s+/.test(word)) {
     return null;
   }
 
-  const punctMatch = word.match(/^(https?:\/\/[^\s]+?)([.,!?;:'")\]}>]*)$/i);
-  const urlCandidate = punctMatch?.[1] ?? word;
-  const trailing = punctMatch?.[2] ?? '';
+  const { urlCandidate, trailing } = splitTrailingUrlPunctuation(word);
 
   if (!GENERIC_HTTP_URL_REGEX.test(urlCandidate)) {
     return null;

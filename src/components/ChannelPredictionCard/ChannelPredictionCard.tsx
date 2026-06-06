@@ -104,7 +104,7 @@ function ChannelPredictionCardComponent({
                   {outcome.title}
                 </Text>
                 {outcome.isWinner ? (
-                  <Badge color='green' size='sm' variant='soft'>
+                  <Badge color='teal' size='sm' variant='soft'>
                     <Text type='xs' weight='semibold'>
                       Won
                     </Text>

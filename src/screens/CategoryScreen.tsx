@@ -4,7 +4,6 @@ import {
   FlashListRef,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import { IconButton } from '@app/components/IconButton/IconButton';
 import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
@@ -12,7 +11,11 @@ import { Text } from '@app/components/ui/Text/Text';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { TwitchStream, twitchService } from '@app/services/twitch-service';
+import {
+  Category,
+  TwitchStream,
+  twitchService,
+} from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import {
@@ -22,12 +25,58 @@ import {
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { FC, useRef } from 'react';
+import { FC, memo, useRef } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
 
 const renderCategoryStreamItem: ListRenderItem<TwitchStream> = ({ item }) => (
   <MemoizedLiveStreamCard stream={item} />
 );
+
+interface CategoryStreamsHeaderProps {
+  category: Category;
+  totalViewers: number;
+}
+
+const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
+  category,
+  totalViewers,
+}: CategoryStreamsHeaderProps) {
+  return (
+    <ScreenHeader
+      size='hero'
+      title={category.name}
+      subtitle={`${formatViewCount(totalViewers)} viewers`}
+      backgroundImage={
+        category.box_art_url
+          ?.replace('{width}', '600')
+          ?.replace('{height}', '800') ?? ''
+      }
+      featuredImage={
+        category.box_art_url
+          ?.replace('{width}', '300')
+          ?.replace('{height}', '400') ?? ''
+      }
+      onBack={() => router.back()}
+      safeArea={false}
+      share={{
+        label: `Share ${category.name}`,
+        onPress: () => {
+          void shareDeepLink({
+            kind: 'category',
+            id: category.id,
+            name: category.name,
+          });
+        },
+      }}
+    >
+      <View style={styles.sectionHeader}>
+        <Text type='sm' weight='semibold' color='gray.textLow'>
+          Live Channels
+        </Text>
+      </View>
+    </ScreenHeader>
+  );
+});
 
 interface CategoryScreenProps {
   id: string;
@@ -76,48 +125,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     0,
   );
 
-  const renderHeader = (
-    <ScreenHeader
-      size='hero'
-      title={category?.name ?? ''}
-      subtitle={`${formatViewCount(totalViewers)} viewers`}
-      backgroundImage={
-        category?.box_art_url
-          ?.replace('{width}', '600')
-          ?.replace('{height}', '800') ?? ''
-      }
-      featuredImage={
-        category?.box_art_url
-          ?.replace('{width}', '300')
-          ?.replace('{height}', '400') ?? ''
-      }
-      onBack={() => router.back()}
-      safeArea={false}
-      trailing={
-        category ? (
-          <IconButton
-            icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
-            label={`Share ${category.name}`}
-            onPress={() => {
-              void shareDeepLink({
-                kind: 'category',
-                id: category.id,
-                name: category.name,
-              });
-            }}
-            size='2xl'
-          />
-        ) : undefined
-      }
-    >
-      <View style={styles.sectionHeader}>
-        <Text type='sm' weight='semibold' color='gray.textLow'>
-          Live Channels
-        </Text>
-      </View>
-    </ScreenHeader>
-  );
-
   if (isCategoryLoading || isLoadingStreams) {
     return <LoadingState />;
   }
@@ -137,7 +144,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     return <LoadingState />;
   }
 
-  if (allStreams.length === 0) {
+  if (allStreams.length === 0 || !category) {
     return <EmptyState content='No Top Streams found' />;
   }
 
@@ -152,7 +159,12 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
         getItemType={() => 'category-stream'}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={
+          <CategoryStreamsHeader
+            category={category}
+            totalViewers={totalViewers}
+          />
+        }
         onEndReachedThreshold={0.3}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}

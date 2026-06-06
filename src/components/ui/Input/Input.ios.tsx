@@ -8,7 +8,6 @@ import {
   UIRadius,
   UISize,
 } from '@app/styles/ui';
-import { useLayoutEffect } from 'react';
 import {
   GlassEffectContainer,
   Host,
@@ -46,7 +45,14 @@ import {
   type ViewModifier,
 } from '@expo/ui/swift-ui/modifiers';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import { useImperativeHandle, useRef, useState, type Ref } from 'react';
+import {
+  useId,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type Ref,
+} from 'react';
 
 import {
   StyleSheet,
@@ -60,6 +66,22 @@ import {
 import { scheduleOnRN } from 'react-native-worklets';
 
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
+
+const iosInputSubmitHandlers = new Map<string, () => void>();
+const iosInputSubmitInvokers = new Map<string, () => void>();
+
+function getIosInputSubmitInvoker(instanceId: string) {
+  const existingInvoker = iosInputSubmitInvokers.get(instanceId);
+  if (existingInvoker) {
+    return existingInvoker;
+  }
+
+  const invoker = () => {
+    iosInputSubmitHandlers.get(instanceId)?.();
+  };
+  iosInputSubmitInvokers.set(instanceId, invoker);
+  return invoker;
+}
 export type InputRef = TextFieldRef;
 export type InputSelection = { start: number; end: number };
 
@@ -240,7 +262,7 @@ export type ThemedInputProps = Omit<
   ref?: Ref<InputRef>;
 };
 
-export function Input({
+function useIosInputField({
   autoCapitalize,
   autoComplete,
   autoCorrect,
@@ -284,7 +306,7 @@ export function Input({
   'use no memo';
   const colorScheme = useColorScheme();
   const { accentHex } = useAccentColor();
-  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const scheme: 'light' | 'dark' = colorScheme === 'light' ? 'light' : 'dark';
   const textFieldRef = useRef<TextFieldRef>(null);
   const secureFieldRef = useRef<SecureFieldRef>(null);
   const [initial] = useState(() => valueOrDefault(value, defaultValue));
@@ -352,18 +374,53 @@ export function Input({
     cursorColor ?? selectionColor ?? variantConfig.textColor,
   );
   const disabled = editable === false || readOnly === true;
-  const handleSubmit = () => {
-    const submittedText = nativeText.value;
-    latestText.current = submittedText;
-    onSubmitEditing!(submittedText);
-    if (shouldBlurOnSubmit({ blurOnSubmit, multiline, submitBehavior })) {
-      void currentInputRef({
-        secureTextEntry,
-        secureFieldRef,
-        textFieldRef,
-      })?.blur();
+  const onSubmitEditingRef = useRef(onSubmitEditing);
+  const blurOnSubmitRef = useRef(blurOnSubmit);
+  const multilineRef = useRef(multiline);
+  const submitBehaviorRef = useRef(submitBehavior);
+  const secureTextEntryRef = useRef(secureTextEntry);
+
+  useLayoutEffect(() => {
+    onSubmitEditingRef.current = onSubmitEditing;
+    blurOnSubmitRef.current = blurOnSubmit;
+    multilineRef.current = multiline;
+    submitBehaviorRef.current = submitBehavior;
+    secureTextEntryRef.current = secureTextEntry;
+  });
+
+  const inputInstanceId = useId();
+  const stableSubmitHandler = getIosInputSubmitInvoker(inputInstanceId);
+
+  useLayoutEffect(() => {
+    if (onSubmitEditing) {
+      iosInputSubmitHandlers.set(inputInstanceId, () => {
+        const submittedText = nativeText.value;
+        latestText.current = submittedText;
+        onSubmitEditingRef.current?.(submittedText);
+        if (
+          shouldBlurOnSubmit({
+            blurOnSubmit: blurOnSubmitRef.current,
+            multiline: multilineRef.current,
+            submitBehavior: submitBehaviorRef.current,
+          })
+        ) {
+          void currentInputRef({
+            secureTextEntry: secureTextEntryRef.current,
+            secureFieldRef,
+            textFieldRef,
+          })?.blur();
+        }
+      });
+    } else {
+      iosInputSubmitHandlers.delete(inputInstanceId);
     }
-  };
+
+    return () => {
+      iosInputSubmitHandlers.delete(inputInstanceId);
+      iosInputSubmitInvokers.delete(inputInstanceId);
+    };
+  }, [inputInstanceId, nativeText, onSubmitEditing]);
+
   const textFieldModifiers = buildTextFieldModifiers({
     autoCapitalize,
     autoComplete,
@@ -374,6 +431,7 @@ export function Input({
     keyboardType,
     multiline,
     numberOfLines,
+    onSubmit: onSubmitEditing ? stableSubmitHandler : undefined,
     returnKeyType,
     style: flattenedStyle,
     textAlign,
@@ -381,9 +439,6 @@ export function Input({
     textContentType,
     tintColor: resolvedCursorColor,
   });
-  if (onSubmitEditing) {
-    textFieldModifiers.push(onSubmit(handleSubmit));
-  }
   const containerModifiers = buildContainerModifiers({
     backgroundColor: resolvedBackgroundColor,
     borderColor: resolvedBorderColor,
@@ -505,6 +560,52 @@ export function Input({
       selection.end ?? selection.start,
     );
   }, [selection, secureTextEntry]);
+
+  return {
+    autoFocusProps,
+    containerModifiers,
+    handleFocusChange,
+    handleTextChange,
+    hostStyle,
+    maxLength,
+    multiline,
+    nativeSelection,
+    nativeText,
+    onContentSizeChange,
+    onSelectionChange,
+    placeholder,
+    placeholderNode,
+    scheme,
+    secureFieldRef,
+    securePlaceholderNode,
+    secureTextEntry,
+    textFieldModifiers,
+    textFieldRef,
+  };
+}
+
+export function Input(props: ThemedInputProps) {
+  const {
+    autoFocusProps,
+    containerModifiers,
+    handleFocusChange,
+    handleTextChange,
+    hostStyle,
+    maxLength,
+    multiline,
+    nativeSelection,
+    nativeText,
+    onContentSizeChange,
+    onSelectionChange,
+    placeholder,
+    placeholderNode,
+    scheme,
+    secureFieldRef,
+    securePlaceholderNode,
+    secureTextEntry,
+    textFieldModifiers,
+    textFieldRef,
+  } = useIosInputField(props);
 
   return (
     <Host

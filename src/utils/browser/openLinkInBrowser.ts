@@ -1,7 +1,16 @@
+import { theme } from '@app/styles/themes';
+import * as WebBrowser from 'expo-web-browser';
 import { Linking } from 'react-native';
 
 export function openLinkInBrowser(url: string) {
-  void Linking.canOpenURL(url).then(canOpen =>
-    canOpen ? Linking.openURL(url) : Linking.openURL(url),
-  );
+  void WebBrowser.openBrowserAsync(url, {
+    controlsColor: theme.colorPrimary,
+    createTask: false,
+    dismissButtonStyle: 'close',
+    enableBarCollapsing: true,
+    showTitle: true,
+    toolbarColor: theme.color.background.dark,
+  }).catch(() => {
+    void Linking.openURL(url);
+  });
 }

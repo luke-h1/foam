@@ -3,6 +3,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { View } from 'react-native';
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { ChatInlineImage } from './ChatInlineImage';
 
@@ -37,14 +38,28 @@ export const EmoteRenderer = memo(
     });
 
     if (!displayUrl) {
+      const fallbackLabel = part.content || part.name;
+
+      if (!fallbackLabel) {
+        return (
+          <ChatMessagePressable
+            onLongPress={() => handleEmoteLongPress?.(part)}
+            style={getButtonStyle(width, shouldOverlayPrevious)}
+          >
+            <View
+              style={getEmoteContainerStyle(width, height)}
+              testID='chat-emote-placeholder'
+            />
+          </ChatMessagePressable>
+        );
+      }
+
       return (
         <ChatMessagePressable
           onLongPress={() => handleEmoteLongPress?.(part)}
           style={getButtonStyle(width, shouldOverlayPrevious)}
         >
-          <Text style={getNameStyle(width, height)}>
-            {part.content || part.name || '?'}
-          </Text>
+          <Text style={getNameStyle(width, height)}>{fallbackLabel}</Text>
         </ChatMessagePressable>
       );
     }

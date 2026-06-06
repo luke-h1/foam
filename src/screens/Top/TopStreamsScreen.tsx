@@ -243,7 +243,7 @@ export function TopStreamsScreen({
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       if (scrollY) {
-        scrollY.value = event.contentOffset.y;
+        scrollY.set(event.contentOffset.y);
       }
     },
   });
@@ -281,8 +281,7 @@ export function TopStreamsScreen({
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refetch]);
 
   const renderItem: ListRenderItem<TwitchStream> = ({ item }) => {
     return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;

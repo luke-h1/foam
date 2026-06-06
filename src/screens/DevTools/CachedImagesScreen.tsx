@@ -5,7 +5,6 @@ import {
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
@@ -23,7 +22,7 @@ import {
 } from '@app/utils/image/image-cache';
 import { useSelector } from '@legendapp/state/react';
 import { useRef, useState, useCallback, type RefObject } from 'react';
-import { Alert, Platform, View, StyleSheet } from 'react-native';
+import { Alert, View, StyleSheet } from 'react-native';
 
 type TabType = 'images' | 'badges' | 'paints';
 
@@ -141,30 +140,9 @@ export function CachedImagesScreen() {
     );
   }, [paintList.length]);
 
-  const getSubtitle = () => {
-    switch (activeTab) {
-      case 'images':
-        return `${images.length} images • ${formatBytes(totalSize)}`;
-      case 'badges':
-        return `${badgeList.length} badges`;
-      case 'paints':
-        return `${paintList.length} paints`;
-      default:
-        return '';
-    }
-  };
-
   return (
     <View style={styles.screenContainer}>
       <View style={styles.container}>
-        {Platform.OS === 'ios' ? null : (
-          <ScreenHeader
-            title='Cache Manager'
-            subtitle={getSubtitle()}
-            size='medium'
-          />
-        )}
-
         <CachedImagesListHeader
           activeTab={activeTab}
           badgeList={badgeList}

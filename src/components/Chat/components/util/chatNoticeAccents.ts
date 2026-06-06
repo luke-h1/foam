@@ -11,7 +11,7 @@ export const CHAT_NOTICE_ACCENTS = {
   viewerMilestone: theme.colorViolet,
   raid: theme.colorOrange,
   replyToYou: '#EB0400',
-  stvAdded: theme.colorGreen,
+  stvAdded: theme.colorPrimary,
   stvRemoved: '#EB0400',
 } as const;
 

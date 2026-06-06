@@ -1,4 +1,5 @@
 import { chatStore$ } from '@app/store/chatStore/state';
+import { getUserMessageColor } from '@app/store/chatStore/messages';
 import {
   getSessionCacheString,
   setSessionCacheString,
@@ -9,7 +10,7 @@ import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { useRef, useCallback, useMemo } from 'react';
+import { useRef, useCallback, useMemo, useLayoutEffect } from 'react';
 import type { RefObject } from 'react';
 
 import type { ChatListRef } from '../components/ChatList';
@@ -119,7 +120,10 @@ const ChatMessageRow = function ChatMessageRow({
       message={msg.message}
       userstate={msg.userstate}
       badges={msg.badges}
-      cachedSenderColor={msg.cachedSenderColor ?? resolveCachedSenderColor(msg)}
+      cachedSenderColor={
+        msg.cachedSenderColor ??
+        resolveCachedSenderColor(msg, getUserMessageColor)
+      }
       message_id={msg.message_id}
       message_nonce={msg.message_nonce}
       sender={msg.sender}
@@ -230,10 +234,6 @@ export function useChatRowRenderer({
   const onEmotePressRef = useRef(onEmotePress);
   const onMessageLongPressRef = useRef(onMessageLongPress);
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
-  onBadgePressRef.current = onBadgePress;
-  onEmotePressRef.current = onEmotePress;
-  onMessageLongPressRef.current = onMessageLongPress;
-  parseTextForEmotesRef.current = parseTextForEmotes;
 
   const highlightedUserSet = useMemo(
     () =>
@@ -325,7 +325,14 @@ export function useChatRowRenderer({
     ],
   );
   const handleReplyContextPressRef = useRef(handleReplyContextPress);
-  handleReplyContextPressRef.current = handleReplyContextPress;
+
+  useLayoutEffect(() => {
+    onBadgePressRef.current = onBadgePress;
+    onEmotePressRef.current = onEmotePress;
+    onMessageLongPressRef.current = onMessageLongPress;
+    parseTextForEmotesRef.current = parseTextForEmotes;
+    handleReplyContextPressRef.current = handleReplyContextPress;
+  });
 
   const getItemType = useCallback(
     (item: AnyChatMessageType) =>

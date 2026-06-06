@@ -31,6 +31,7 @@ import { PinnedMessageBanner } from './PinnedMessageBanner';
 const CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT = 34;
 const CHAT_ESTIMATED_COMPACT_ROW_HEIGHT = 24;
 const CHAT_LIST_HORIZONTAL_INSET = 32;
+const CHAT_ROW_HORIZONTAL_INSET = 12;
 const CHAT_MIN_PRETEXT_WIDTH = 80;
 
 export interface ChatMessagePaneProps {
@@ -108,7 +109,7 @@ export const ChatMessagePane = memo(
     const pretextMeasureWidth = Math.max(
       CHAT_MIN_PRETEXT_WIDTH,
       messagePaneWidth > CHAT_MIN_PRETEXT_WIDTH
-        ? messagePaneWidth
+        ? messagePaneWidth - CHAT_ROW_HORIZONTAL_INSET
         : Math.round(windowWidth - CHAT_LIST_HORIZONTAL_INSET),
     );
     const hasEverHadMessagesRef = useRef(false);

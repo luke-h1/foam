@@ -1,5 +1,7 @@
 import { useAuthContext } from '@app/context/AuthContext';
-import TwitchWsService from '@app/services/twitch-ws-service';
+import TwitchWsService, {
+  type TwitchEventSubCallback,
+} from '@app/services/twitch-ws-service';
 import { cacheChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import {
   eventSubEventFromMessage,
@@ -8,17 +10,12 @@ import {
 import { logger } from '@app/utils/logger';
 import { useEffect } from 'react';
 
-interface EventSubMessage {
-  event?: Record<string, unknown>;
-  payload?: { event?: Record<string, unknown> };
-}
-
 const CUSTOM_REWARD_REDEMPTION_EVENT =
   'channel.channel_points_custom_reward_redemption.add';
 const AUTOMATIC_REWARD_REDEMPTION_EVENT =
   'channel.channel_points_automatic_reward_redemption.add';
 
-function handleChannelPointsRedemption(message: EventSubMessage): void {
+const handleChannelPointsRedemption: TwitchEventSubCallback = message => {
   const event = eventSubEventFromMessage(message);
   if (!event) {
     return;
@@ -38,7 +35,7 @@ function handleChannelPointsRedemption(message: EventSubMessage): void {
     rewardId: redemption.rewardId,
     title: redemption.title,
   });
-}
+};
 
 export function useTwitchChannelPointsEventSub(channelId: string | undefined) {
   const { authState } = useAuthContext();

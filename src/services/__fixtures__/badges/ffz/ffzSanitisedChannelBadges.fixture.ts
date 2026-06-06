@@ -14,7 +14,7 @@ export const ffzSanitiisedChannelBadges: SanitisedBadgeSet[] = [
     id: 'mod_badge',
     url: 'https://cdn.frankerfacez.com/room-badge/mod/id/12943173/v/56d3bfcd/4',
     title: 'Moderator',
-    color: '#00ff00',
+    color: '#1ac9a2',
     owner_username: '12943173',
     set: 'mod',
     type: 'FFZ channel badge',

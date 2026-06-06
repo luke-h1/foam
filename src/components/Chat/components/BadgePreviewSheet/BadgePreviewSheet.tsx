@@ -172,7 +172,7 @@ function BadgePreviewSheetComponent(props: Props) {
                 <View style={styles.actionIconFrame}>
                   <SymbolView
                     name={action.icon}
-                    tintColor={theme.colorGreen}
+                    tintColor={theme.colorPrimary}
                     size={18}
                   />
                 </View>
@@ -223,8 +223,8 @@ const styles = StyleSheet.create({
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(74, 222, 128, 0.12)',
-    borderColor: 'rgba(74, 222, 128, 0.18)',
+    backgroundColor: 'rgba(26, 201, 162, 0.12)',
+    borderColor: 'rgba(26, 201, 162, 0.18)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,
     borderWidth: 1,
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   previewPill: {
     alignSelf: 'flex-start',
     backgroundColor: theme.colorAccentSurface,
-    borderColor: 'rgba(74, 222, 128, 0.22)',
+    borderColor: 'rgba(26, 201, 162, 0.22)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   previewPillText: {
-    color: theme.colorGreen,
+    color: theme.colorPrimary,
     fontSize: theme.fontSize11,
   },
   scroll: {

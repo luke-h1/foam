@@ -51,7 +51,7 @@ export function TopCategoriesScreen({
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: event => {
       if (scrollY) {
-        scrollY.value = event.contentOffset.y;
+        scrollY.set(event.contentOffset.y);
       }
     },
   });

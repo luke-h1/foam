@@ -200,7 +200,7 @@ describe('messageHandlers', () => {
         'display-name': 'MilestoneUser',
         login: 'milestoneuser',
         'system-msg': 'MilestoneUser watched 5 consecutive streams',
-        color: '#00FF00',
+        color: '#1AC9A2',
         badges: '',
         'badge-info': '',
         emotes: '',

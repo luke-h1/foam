@@ -165,7 +165,7 @@ const loggingConfig = {
   },
   stv: {
     enabled: true,
-    color: 'green',
+    color: 'cyan',
   },
   bttv: {
     enabled: true,
@@ -193,11 +193,11 @@ const loggingConfig = {
   },
   cache: {
     enabled: true,
-    color: 'green',
+    color: 'cyan',
   },
   cachedPhotos: {
     enabled: true,
-    color: 'green',
+    color: 'cyan',
   },
   filesystem: {
     enabled: true,
@@ -209,7 +209,7 @@ const loggingConfig = {
    */
   twitchWs: {
     enabled: true,
-    color: 'green',
+    color: 'blueBright',
   },
   stvWs: {
     enabled: true,
@@ -227,7 +227,6 @@ const loggingConfig = {
       | 'default'
       | 'black'
       | 'red'
-      | 'green'
       | 'yellow'
       | 'blue'
       | 'magenta'
@@ -235,7 +234,6 @@ const loggingConfig = {
       | 'white'
       | 'grey'
       | 'redBright'
-      | 'greenBright'
       | 'yellowBright'
       | 'blueBright'
       | 'magentaBright'

@@ -1,7 +1,6 @@
 import { Button } from '@app/components/Button/Button';
 import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { theme } from '@app/styles/themes';
 import {
   channel,
@@ -81,12 +80,6 @@ export function ChannelSurfingScreen() {
         contentInsetAdjustmentBehavior='automatic'
         contentContainerStyle={styles.content}
       >
-        <ScreenHeader
-          title='Channel Surfing'
-          subtitle='Load an EAS Update from a different channel or PR branch without rebuilding.'
-          size='medium'
-        />
-
         <View style={styles.info}>
           <Row label='Current channel' value={channel || 'unknown'} />
           <Row label='Runtime version' value={runtimeVersion ?? 'unknown'} />
@@ -94,8 +87,8 @@ export function ChannelSurfingScreen() {
         </View>
 
         <Text color='gray.textLow' style={styles.hint} type='sm'>
-          Enter the channel (or branch mapped to a channel) you want to load. For PR
-          previews this is typically pr-&lt;number&gt;.
+          Enter the channel (or branch mapped to a channel) you want to load.
+          For PR previews this is typically pr-&lt;number&gt;.
         </Text>
 
         <Input
@@ -121,9 +114,9 @@ export function ChannelSurfingScreen() {
         </View>
 
         <Text color='gray.textLow' style={styles.footnote} type='xs'>
-          A bad update on the chosen channel can leave the app unable to start. If that
-          happens, force-quit and reopen — the build channel is restored on next launch
-          via the embedded bundle.
+          A bad update on the chosen channel can leave the app unable to start.
+          If that happens, force-quit and reopen — the build channel is restored
+          on next launch via the embedded bundle.
         </Text>
       </ScrollView>
     </View>

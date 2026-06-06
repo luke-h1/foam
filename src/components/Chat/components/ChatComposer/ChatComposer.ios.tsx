@@ -1,34 +1,21 @@
 import { useAccentColor } from '@app/context/AccentColorContext';
-import type { ChatUser } from '@app/store/chatStore/constants';
+import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { SymbolView } from 'expo-symbols';
 import { PressableScale } from 'pressto';
-import {
-  memo,
-  useCallback,
-  useImperativeHandle,
-  useRef,
-  useState,
-  type Ref,
-} from 'react';
+import { memo, useCallback, useRef, type Ref } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
-import {
-  COMPOSER_CONTROL_RADIUS,
-  COMPOSER_CONTROL_SIZE,
-  COMPOSER_INPUT_MIN_HEIGHT,
-  COMPOSER_ROW_GAP,
-} from '../composerSizing';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import { UserSuggestionRail } from './UserSuggestionRail';
-import { useWordInfo } from './hooks/useWordInfo';
+import { COMPOSER_INPUT_MIN_HEIGHT } from '../composerSizing';
+import { chatComposerStyles } from './chatComposerStyles';
+import {
+  useChatComposerController,
+  type ChatComposerHandle,
+} from './useChatComposerController';
 
-export interface ChatComposerHandle {
-  focus: () => void;
-  blur: () => void;
-  setText: (text: string) => void;
-}
+export type { ChatComposerHandle };
 
 export interface ChatComposerProps {
   onChangeText?: (text: string) => void;
@@ -56,92 +43,43 @@ function ChatComposerComponent({
   ref,
 }: ChatComposerProps) {
   const inputRef = useRef<InputRef>(null);
-  const [text, setTextState] = useState('');
-  const [cursorPosition, setCursorPosition] = useState(0);
-  const [isFocused, setIsFocused] = useState(false);
   const { accentHex } = useAccentColor();
 
-  const hasText = text.length > 0;
-  const submitEnabled = canSend ?? hasText;
+  const focusInput = useCallback(() => {
+    void inputRef.current?.focus();
+  }, []);
 
-  const { wordInfo, isUserMention, isEmoteSearch } = useWordInfo({
+  const blurInput = useCallback(() => {
+    void inputRef.current?.blur();
+  }, []);
+
+  const {
     text,
-    cursorPosition,
+    setIsFocused,
+    showUserRail,
+    showEmoteRail,
+    wordInfo,
+    submitEnabled,
+    handleChangeText,
+    handleSelectionChange,
+    handleSubmit,
+    handleEmotePress,
+    handleUserSelect,
+  } = useChatComposerController({
+    onChangeText,
+    onSubmit,
+    onEmoteSelect,
+    canSend,
+    ref,
+    focusInput,
+    blurInput,
+    applyCursor: cursor => {
+      void inputRef.current?.setSelection(cursor, cursor);
+    },
   });
 
-  const showUserRail = isFocused && isUserMention && wordInfo.word.length > 1;
-  const showEmoteRail = isFocused && isEmoteSearch && wordInfo.word.length > 0;
-
-  const writeText = useCallback(
-    (next: string, nextCursor?: number) => {
-      setTextState(next);
-      const cursor = nextCursor ?? next.length;
-      setCursorPosition(cursor);
-      if (nextCursor !== undefined) {
-        void inputRef.current?.setSelection(nextCursor, nextCursor);
-      }
-      onChangeText?.(next);
-    },
-    [onChangeText],
-  );
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      focus: () => {
-        void inputRef.current?.focus();
-      },
-      blur: () => {
-        void inputRef.current?.blur();
-      },
-      setText: (next: string) => {
-        writeText(next);
-      },
-    }),
-    [writeText],
-  );
-
-  const handleChangeText = useCallback(
-    (next: string) => {
-      setTextState(next);
-      onChangeText?.(next);
-    },
-    [onChangeText],
-  );
-
-  const handleSubmit = useCallback(() => {
-    if (!submitEnabled) {
-      return;
-    }
-    onSubmit?.();
-    void inputRef.current?.blur();
-  }, [onSubmit, submitEnabled]);
-
-  const handleEmotePress = useCallback(
-    (emote: SanitisedEmote) => {
-      const beforeWord = text.substring(0, wordInfo.start);
-      const afterWord = text.substring(wordInfo.end);
-      const newText = `${beforeWord}${emote.name}${afterWord}`;
-      const newCursor = wordInfo.start + emote.name.length;
-      onEmoteSelect?.(emote);
-      writeText(newText, newCursor);
-    },
-    [onEmoteSelect, text, wordInfo.end, wordInfo.start, writeText],
-  );
-
-  const handleUserSelect = useCallback(
-    (user: ChatUser) => {
-      const beforeWord = text.substring(0, wordInfo.start);
-      const afterWord = text.substring(wordInfo.end);
-      const newText = `${beforeWord}${user.name} ${afterWord}`;
-      const newCursor = wordInfo.start + user.name.length + 1;
-      writeText(newText, newCursor);
-    },
-    [text, wordInfo.end, wordInfo.start, writeText],
-  );
-
   return (
-    <View style={styles.mainContainer}>
+    <View style={chatComposerStyles.mainContainer}>
       {showEmoteRail ? (
         <EmoteSuggestionRail
           handleEmotePress={handleEmotePress}
@@ -158,9 +96,12 @@ function ChatComposerComponent({
         />
       ) : null}
 
-      <View style={styles.row}>
+      <View style={chatComposerStyles.row}>
         {onPressAdd ? (
-          <PressableScale style={styles.addButton} onPress={onPressAdd}>
+          <PressableScale
+            style={chatComposerStyles.addButton}
+            onPress={onPressAdd}
+          >
             <SymbolView
               name='face.smiling'
               size={22}
@@ -176,14 +117,15 @@ function ChatComposerComponent({
             autoComplete='off'
             autoCorrect={false}
             blurOnSubmit
-            color='white'
             editable={editable}
             value={text}
             multiline
             onBlur={() => setIsFocused(false)}
             onChangeText={handleChangeText}
             onFocus={() => setIsFocused(true)}
-            onSelectionChange={selection => setCursorPosition(selection.start)}
+            onSelectionChange={selection =>
+              handleSelectionChange(selection.start)
+            }
             onSubmitEditing={handleSubmit}
             placeholder={placeholder}
             placeholderTextColor='rgba(255,255,255,0.46)'
@@ -198,7 +140,7 @@ function ChatComposerComponent({
         {onSubmit ? (
           <PressableScale
             style={[
-              styles.submitButton,
+              chatComposerStyles.submitButton,
               {
                 backgroundColor: submitEnabled
                   ? accentHex
@@ -223,30 +165,6 @@ export const ChatComposer = memo(ChatComposerComponent);
 export type { ChatComposerHandle as InputRef };
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    position: 'relative',
-    width: '100%',
-  },
-  row: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
-    gap: COMPOSER_ROW_GAP,
-  },
-  addButton: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderRadius: COMPOSER_CONTROL_RADIUS,
-    height: COMPOSER_CONTROL_SIZE,
-    justifyContent: 'center',
-    width: COMPOSER_CONTROL_SIZE,
-  },
-  submitButton: {
-    alignItems: 'center',
-    borderRadius: COMPOSER_CONTROL_RADIUS,
-    height: COMPOSER_CONTROL_SIZE,
-    justifyContent: 'center',
-    width: COMPOSER_CONTROL_SIZE,
-  },
   inputWrapper: {
     flex: 1,
     minWidth: 0,

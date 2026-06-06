@@ -583,9 +583,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPlay={handlePlayerLoaded}
             onPlaybackLatencyChange={handlePlaybackLatencyChange}
             onReady={handlePlayerLoaded}
-            onSharePress={
-              resolvedChannelLogin ? handleSharePress : undefined
-            }
+            onSharePress={resolvedChannelLogin ? handleSharePress : undefined}
             onVideoAreaPress={isLandscape ? cycleLandscapeChatMode : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             onWebViewLoaded={handlePlayerLoaded}

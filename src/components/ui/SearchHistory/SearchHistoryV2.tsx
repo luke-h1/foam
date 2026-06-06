@@ -1,77 +1,145 @@
+import { theme } from '@app/styles/themes';
+import { SymbolView } from 'expo-symbols';
 import { useCallback } from 'react';
 import { Alert, View, StyleSheet } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { SymbolView } from 'expo-symbols';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
 
-const DELETE_ACTION_WIDTH = 80;
+const SWIPE_THRESHOLD = -80;
+const DELETE_THRESHOLD = -150;
+const HISTORY_ROW_HEIGHT = 56;
 
-interface SearchHistoryRowProps {
+interface SwipeableHistoryItemProps {
   query: string;
-  isLast: boolean;
-  onPress: () => void;
-  onRemove: () => void;
+  onSelect: () => void;
+  onDelete: () => void;
 }
 
-function SearchHistoryRow({
+function SwipeableHistoryItem({
   query,
-  isLast,
-  onPress,
-  onRemove,
-}: SearchHistoryRowProps) {
-  const renderRightActions = () => (
-    <PressableArea
-      accessibilityLabel={`Delete ${query}`}
-      accessibilityRole='button'
-      onPress={onRemove}
-      style={styles.deleteAction}
-    >
-      <Text style={styles.deleteLabel} weight='semibold'>
-        Delete
-      </Text>
-    </PressableArea>
-  );
+  onSelect,
+  onDelete,
+}: SwipeableHistoryItemProps) {
+  const translateX = useSharedValue(0);
+  const itemHeight = useSharedValue(HISTORY_ROW_HEIGHT);
+  const opacity = useSharedValue(1);
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .onUpdate(event => {
+      // Only allow left swipe
+      if (event.translationX < 0) {
+        translateX.value = event.translationX;
+      }
+    })
+    .onEnd(event => {
+      if (event.translationX < DELETE_THRESHOLD) {
+        // Full swipe - delete
+        translateX.value = withTiming(-400, { duration: 200 });
+        itemHeight.value = withTiming(0, { duration: 200 });
+        opacity.value = withTiming(0, { duration: 200 }, finished => {
+          if (finished) {
+            scheduleOnRN(onDelete);
+          }
+        });
+      } else if (event.translationX < SWIPE_THRESHOLD) {
+        // Partial swipe - show delete button
+        translateX.value = withSpring(-80, {
+          damping: 20,
+          stiffness: 200,
+          mass: 4,
+        });
+      } else {
+        // Snap back
+        translateX.value = withSpring(0, {
+          damping: 20,
+          stiffness: 200,
+          mass: 4,
+        });
+      }
+    });
+
+  const tapGesture = Gesture.Tap().onEnd(() => {
+    if (translateX.value < -40) {
+      // If swiped, tap snaps back
+      translateX.value = withSpring(0, {
+        damping: 20,
+        stiffness: 200,
+        mass: 4,
+      });
+    } else {
+      scheduleOnRN(onSelect);
+    }
+  });
+
+  const composedGesture = Gesture.Race(panGesture, tapGesture);
+
+  const animatedRowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    height: itemHeight.value,
+    opacity: opacity.value,
+    overflow: 'hidden',
+  }));
+
+  const animatedDeleteStyle = useAnimatedStyle(() => {
+    const deleteOpacity = interpolate(
+      translateX.value,
+      [0, -40, -80],
+      [0, 0.5, 1],
+      Extrapolation.CLAMP,
+    );
+    return {
+      opacity: deleteOpacity,
+    };
+  });
 
   return (
-    <ReanimatedSwipeable
-      friction={2}
-      overshootRight={false}
-      renderRightActions={renderRightActions}
-      rightThreshold={DELETE_ACTION_WIDTH / 2}
-    >
-      <View style={[styles.row, isLast ? styles.rowLast : null]}>
-        <PressableArea
-          accessibilityLabel={`Search for ${query}`}
-          accessibilityRole='button'
-          onPress={onPress}
-          style={styles.rowPressable}
-        >
-          <SymbolView
-            name='clock'
-            size={17}
-            tintColor={theme.colorGreyHoverAlpha}
-          />
-          <Text style={styles.query} numberOfLines={1}>
-            {query}
-          </Text>
-        </PressableArea>
-        <PressableArea
-          accessibilityLabel={`Remove ${query} from recent searches`}
-          accessibilityRole='button'
-          hitSlop={8}
-          onPress={onRemove}
-          style={styles.removeButton}
-        >
-          <SymbolView
-            name='xmark.circle.fill'
-            size={18}
-            tintColor={theme.colorGreyHoverAlpha}
-          />
-        </PressableArea>
+    <Animated.View style={animatedContainerStyle}>
+      <View style={styles.itemContainer}>
+        {/* Delete action background */}
+        <Animated.View style={[styles.deleteAction, animatedDeleteStyle]}>
+          <PressableArea
+            onPress={onDelete}
+            style={styles.deleteActionButton}
+            hitSlop={8}
+          >
+            <SymbolView name='trash' size={20} tintColor='#fff' />
+          </PressableArea>
+        </Animated.View>
+
+        {/* Swipeable row */}
+        <GestureDetector gesture={composedGesture}>
+          <Animated.View style={[styles.historyItem, animatedRowStyle]}>
+            <SymbolView
+              name='clock'
+              tintColor={theme.color.textSecondary.dark}
+              size={16}
+            />
+            <Text style={styles.query} numberOfLines={1}>
+              {query}
+            </Text>
+            <SymbolView
+              name='arrow.up.left'
+              tintColor={theme.color.textSecondary.dark}
+              size={16}
+            />
+          </Animated.View>
+        </GestureDetector>
       </View>
-    </ReanimatedSwipeable>
+    </Animated.View>
   );
 }
 
@@ -90,15 +158,15 @@ export function SearchHistoryV2({
 }: SearchHistoryV2Props) {
   const handleClearAll = useCallback(() => {
     Alert.alert(
-      'Clear Recent Searches?',
-      'This removes your recent search history from this device.',
+      'Clear Search History',
+      'Are you sure you want to clear all your recent searches?',
       [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Clear Recents',
+          text: 'Clear All',
           style: 'destructive',
           onPress: onClearAll,
         },
@@ -111,95 +179,95 @@ export function SearchHistoryV2({
   }
 
   return (
-    <View style={styles.section}>
+    <View style={styles.wrapper}>
       <View style={styles.headerRow}>
-        <Text type='sm' weight='semibold' color='gray.textLow'>
-          Recent Searches
-        </Text>
-        <PressableArea
-          accessibilityLabel='Clear recent searches'
-          accessibilityRole='button'
-          hitSlop={8}
-          onPress={handleClearAll}
+        <Text
+          type='xs'
+          weight='semibold'
+          color='gray.textLow'
+          style={styles.sectionTitle}
         >
-          <Text type='sm' color='red.accent'>
-            Clear
+          RECENT SEARCHES
+        </Text>
+        <PressableArea onPress={handleClearAll} hitSlop={8}>
+          <Text type='xs' color='red.accent'>
+            Clear All
           </Text>
         </PressableArea>
       </View>
 
-      <View style={styles.card}>
-        {history.map((query, index) => (
-          <SearchHistoryRow
+      <View style={styles.historyList}>
+        {history.map(query => (
+          <SwipeableHistoryItem
             key={query}
-            isLast={index === history.length - 1}
             query={query}
-            onPress={() => onSelectItem(query)}
-            onRemove={() => onClearItem(query)}
+            onSelect={() => onSelectItem(query)}
+            onDelete={() => onClearItem(query)}
           />
         ))}
       </View>
+
+      <Text type='xxs' color='gray.textLow' style={styles.hint}>
+        Swipe left to delete
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    overflow: 'hidden',
-  },
   deleteAction: {
     alignItems: 'center',
     backgroundColor: theme.colorRed,
+    bottom: 0,
     justifyContent: 'center',
-    width: DELETE_ACTION_WIDTH,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 80,
   },
-  deleteLabel: {
-    color: theme.colorWhite,
-    fontSize: 15,
+  deleteActionButton: {
+    alignItems: 'center',
+    height: '100%',
+    justifyContent: 'center',
+    width: '100%',
   },
   headerRow: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: theme.space12,
     paddingHorizontal: theme.space16,
+  },
+  hint: {
+    marginTop: theme.space16,
+    opacity: 0.6,
+    textAlign: 'center',
+  },
+  historyItem: {
+    alignItems: 'center',
+    backgroundColor: theme.color.background.dark,
+    flexDirection: 'row',
+    gap: theme.space16,
+    minHeight: HISTORY_ROW_HEIGHT,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space8,
+  },
+  historyList: {
+    gap: 1,
+  },
+  itemContainer: {
+    overflow: 'hidden',
+    position: 'relative',
   },
   query: {
     color: theme.color.text.dark,
     flex: 1,
-    fontSize: 17,
+    minWidth: 0,
   },
-  removeButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-    minWidth: 44,
+  sectionTitle: {
+    letterSpacing: 0.5,
   },
-  row: {
-    alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    minHeight: 44,
-    paddingLeft: theme.space16,
-    paddingRight: theme.space8,
-  },
-  rowLast: {
-    borderBottomWidth: 0,
-  },
-  rowPressable: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: 44,
-    paddingRight: theme.space8,
-  },
-  section: {
-    gap: theme.space8,
-    marginTop: theme.space16,
+  wrapper: {
+    paddingTop: theme.space20,
   },
 });

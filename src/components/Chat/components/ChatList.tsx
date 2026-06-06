@@ -4,7 +4,14 @@ import {
   type LegendListRef,
   type LegendListRenderItemProps,
 } from '@legendapp/list';
-import { RefObject, useCallback, useEffect, useRef, memo } from 'react';
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  memo,
+} from 'react';
 import type { ReactElement } from 'react';
 import {
   NativeSyntheticEvent,
@@ -37,9 +44,10 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
     <View style={styles.skeletonRow} testID='chat-row-skeleton'>
-      <Skeleton style={styles.skeletonBadge} />
-      <Skeleton style={styles.skeletonUsername} />
+      <Skeleton shimmer={false} style={styles.skeletonBadge} />
+      <Skeleton shimmer={false} style={styles.skeletonUsername} />
       <Skeleton
+        shimmer={false}
         style={
           index % 3 === 0
             ? styles.skeletonBodyShort
@@ -109,7 +117,10 @@ export const ChatList = memo(
   }: ChatListProps) => {
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
     const lastViewableMessageKeysRef = useRef('');
-    onViewableMessagesChangeRef.current = onViewableMessagesChange;
+
+    useLayoutEffect(() => {
+      onViewableMessagesChangeRef.current = onViewableMessagesChange;
+    });
 
     useEffect(() => {
       lastViewableMessageKeysRef.current = '';
@@ -167,7 +178,7 @@ export const ChatList = memo(
         keyExtractor={keyExtractor}
         getItemType={getItemType}
         getEstimatedItemSize={getEstimatedItemSize}
-        maintainVisibleContentPosition
+        maintainVisibleContentPosition={!shouldMaintainScrollAtEnd}
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }

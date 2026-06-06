@@ -1,12 +1,12 @@
-import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import * as Form from '@app/components/Form/Form';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
+import { FOAM_FAQ_URL } from '@app/constants/links';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
@@ -18,41 +18,34 @@ export function SettingsOtherScreen() {
 
   if (Platform.OS === 'ios') {
     return (
-      <View style={styles.container}>
-        <BodyScrollView
-          contentInsetAdjustmentBehavior='automatic'
-          contentContainerStyle={styles.iosContent}
-        >
-          <Form.Section title='Support & Feedback'>
-            <Form.Link
+      <Host style={styles.iosHost}>
+        <Form>
+          <Section title='Support & Feedback'>
+            <Button
+              label='About Foam'
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
-            >
-              <Form.Text>About Foam</Form.Text>
-            </Form.Link>
-            <Form.Link
+            />
+            <Button
+              label='FAQ'
               systemImage='questionmark.circle'
-              onPress={() => router.push('/tabs/settings/faq')}
-            >
-              <Form.Text>FAQ</Form.Text>
-            </Form.Link>
-            <Form.Link
+              onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+            />
+            <Button
+              label='Changelog'
               systemImage='clock'
               onPress={() => router.push('/tabs/settings/changelog')}
-            >
-              <Form.Text>Changelog</Form.Text>
-            </Form.Link>
-          </Form.Section>
-          <Form.Section title='Legal'>
-            <Form.Link
+            />
+          </Section>
+          <Section title='Legal'>
+            <Button
+              label='OSS Licenses'
               systemImage='doc.text'
               onPress={() => router.push('/tabs/settings/licenses')}
-            >
-              <Form.Text>OSS Licenses</Form.Text>
-            </Form.Link>
-          </Form.Section>
-        </BodyScrollView>
-      </View>
+            />
+          </Section>
+        </Form>
+      </Host>
     );
   }
 
@@ -64,12 +57,6 @@ export function SettingsOtherScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <ScreenHeader
-          title='Other'
-          subtitle='Support, release notes, and legal information for Foam.'
-          size='medium'
-        />
-
         <SettingsSection title='Support & Feedback'>
           <SettingsLinkRow
             title='About Foam'
@@ -80,8 +67,8 @@ export function SettingsOtherScreen() {
           <SettingsLinkRow
             title='FAQ'
             subtitle='Common questions and product guidance'
-            icon={{ icon: 'questionmark.circle', color: theme.colorGreen }}
-            onPress={() => router.push('/tabs/settings/faq')}
+            icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
+            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
           />
           <SettingsLinkRow
             title='Changelog'
@@ -114,7 +101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingTop: theme.space16,
   },
-  iosContent: {
-    paddingBottom: theme.space56,
+  iosHost: {
+    flex: 1,
   },
 });

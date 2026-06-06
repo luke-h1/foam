@@ -82,8 +82,8 @@ function MediaLinkCardComponent({
     if (isPending) {
       return (
         <View style={styles.inlineChip}>
-          <Skeleton style={styles.inlineThumbnail} />
-          <Skeleton style={styles.inlineTitleSkeleton} />
+          <Skeleton shimmer={false} style={styles.inlineThumbnail} />
+          <Skeleton shimmer={false} style={styles.inlineTitleSkeleton} />
         </View>
       );
     }
@@ -127,13 +127,13 @@ function MediaLinkCardComponent({
     return (
       <View style={styles.container}>
         <View style={styles.card}>
-          <Skeleton style={styles.thumbnail} />
+          <Skeleton shimmer={false} style={styles.thumbnail} />
           <View style={styles.info}>
             <View style={styles.titleRow}>
-              <Skeleton style={styles.brandIconSkeleton} />
-              <Skeleton style={styles.titleSkeleton} />
+              <Skeleton shimmer={false} style={styles.brandIconSkeleton} />
+              <Skeleton shimmer={false} style={styles.titleSkeleton} />
             </View>
-            <Skeleton style={styles.createdBySkeleton} />
+            <Skeleton shimmer={false} style={styles.createdBySkeleton} />
           </View>
         </View>
       </View>

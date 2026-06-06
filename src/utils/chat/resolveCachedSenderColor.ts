@@ -1,5 +1,3 @@
-import type { ChatMessageType } from '@app/store/chatStore/constants';
-import { getUserMessageColor } from '@app/store/chatStore/messages';
 import {
   getSessionCacheString,
   setSessionCacheString,
@@ -7,10 +5,17 @@ import {
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
-type SenderColorMessage = Pick<
-  ChatMessageType<never>,
-  'cachedSenderColor' | 'sender' | 'userstate'
->;
+type SenderColorMessage = {
+  cachedSenderColor?: string;
+  sender: string;
+  userstate?: {
+    color?: string;
+    login?: string;
+    username?: string;
+  };
+};
+
+type SenderColorLookup = (username: string) => string | undefined;
 
 export function cachedLighten(color: string): string {
   const cached = getSessionCacheString('lightenedColors', color);
@@ -25,6 +30,7 @@ export function cachedLighten(color: string): string {
 
 export function resolveCachedSenderColor(
   message: SenderColorMessage,
+  getIndexedSenderColor?: SenderColorLookup,
 ): string | undefined {
   if (message.cachedSenderColor) {
     return message.cachedSenderColor;
@@ -36,7 +42,7 @@ export function resolveCachedSenderColor(
   }
 
   const login = message.userstate?.login ?? message.sender;
-  const indexedColor = login ? getUserMessageColor(login) : undefined;
+  const indexedColor = login ? getIndexedSenderColor?.(login) : undefined;
   if (indexedColor) {
     return cachedLighten(indexedColor);
   }

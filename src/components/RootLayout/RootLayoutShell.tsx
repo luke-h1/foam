@@ -27,11 +27,9 @@ import {
 import { useObserveEffect } from '@legendapp/state/react';
 import { useObserve } from 'expo-observe';
 import * as Font from 'expo-font';
-import { useObservable, useSelector } from '@legendapp/state/react';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useEffect, useRef } from 'react';
 import { InteractionManager, LogBox } from 'react-native';
-import BootSplash from 'react-native-bootsplash';
 import { RootLayoutNav } from './RootLayoutNav';
 
 const criticalFontMap = {
@@ -56,48 +54,10 @@ const deferredFontMap = {
   Montserrat_900Black_Italic,
 };
 
-const fontLoadTimeoutMs = 1200;
-
 export function RootLayoutShell() {
-  const fontsLoaded$ = useObservable(false);
-  const hasFontTimeoutElapsed$ = useObservable(false);
-  const fontsLoaded = useSelector(fontsLoaded$);
-  const hasFontTimeoutElapsed = useSelector(hasFontTimeoutElapsed$);
   const { markInteractive } = useObserve();
-  const didHideSplash = useRef(false);
   const didMarkInteractive = useRef(false);
   const didScheduleExtraFontLoad = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    void Font.loadAsync(criticalFontMap)
-      .then(() => {
-        if (!cancelled) {
-          fontsLoaded$.set(true);
-        }
-      })
-      .catch(error => {
-        logger.main.warn('Failed to load critical fonts', error);
-        if (!cancelled) {
-          fontsLoaded$.set(true);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [fontsLoaded$]);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      hasFontTimeoutElapsed$.set(true);
-    }, fontLoadTimeoutMs);
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [hasFontTimeoutElapsed$]);
 
   useEffect(() => {
     if (__DEV__) {
@@ -107,25 +67,29 @@ export function RootLayoutShell() {
   }, []);
 
   useEffect(() => {
-    const shouldRenderNow = fontsLoaded || hasFontTimeoutElapsed;
-    if (!shouldRenderNow) {
+    if (didMarkInteractive.current) {
       return;
     }
 
-    const markAppInteractive = () => {
-      if (!didMarkInteractive.current) {
-        didMarkInteractive.current = true;
-        markInteractive();
+    didMarkInteractive.current = true;
+    markInteractive();
+  }, [markInteractive]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Font.loadAsync(criticalFontMap).catch(error => {
+      if (!cancelled) {
+        logger.main.warn('Failed to load critical fonts', error);
       }
+    });
+
+    return () => {
+      cancelled = true;
     };
+  }, []);
 
-    if (!didHideSplash.current) {
-      didHideSplash.current = true;
-      void BootSplash.hide({ fade: true }).finally(markAppInteractive);
-    } else {
-      markAppInteractive();
-    }
-
+  useEffect(() => {
     if (
       didScheduleExtraFontLoad.current ||
       Object.keys(deferredFontMap).length === 0
@@ -143,7 +107,7 @@ export function RootLayoutShell() {
     return () => {
       task.cancel();
     };
-  }, [fontsLoaded, hasFontTimeoutElapsed, markInteractive]);
+  }, []);
 
   useObserveEffect(
     () => preferences$.emojiStyle.get(),
@@ -153,10 +117,6 @@ export function RootLayoutShell() {
       );
     },
   );
-
-  if (!fontsLoaded && !hasFontTimeoutElapsed) {
-    return null;
-  }
 
   return <RootLayoutNav />;
 }

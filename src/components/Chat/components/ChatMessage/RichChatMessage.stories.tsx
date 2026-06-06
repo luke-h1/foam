@@ -161,7 +161,7 @@ export const WithMentions: Story = {
           content: ', check this out!',
         },
       ],
-      { color: '#00FF00' },
+      { color: '#1AC9A2' },
     ),
     onReply: () => {},
   },
@@ -400,8 +400,8 @@ export const DifferentColors: Story = {
       />
       <RichChatMessage
         {...createBaseMessage(
-          [{ type: 'text', content: 'Green user message' }],
-          { username: 'GreenUser', color: '#00FF00' },
+          [{ type: 'text', content: 'Teal user message' }],
+          { username: 'TealUser', color: '#1AC9A2' },
         )}
         onReply={() => {}}
       />

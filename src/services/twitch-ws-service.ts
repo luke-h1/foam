@@ -46,7 +46,9 @@ interface EventSubMessage {
   event?: Record<string, unknown>;
 }
 
-type EventCallback = (data: EventSubMessage) => void;
+export type TwitchEventSubCallback = (data: EventSubMessage) => void;
+
+type EventCallback = TwitchEventSubCallback;
 
 type EventSubscriptionSummary = {
   id: string;

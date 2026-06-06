@@ -1,6 +1,12 @@
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import {
+  clearMessageColorIndexes,
+  getMessageColor as getIndexedMessageColor,
+  getUserMessageColor,
+  indexMessageColor,
+} from './messageColorIndex';
+import {
   clearMentionLoginIndex,
   registerMentionChatter,
   registerMentionLogin,
@@ -14,8 +20,6 @@ const messageKeySet = new Set<string>();
 const messageKeyOrder: string[] = [];
 const messageIdToIndex = new Map<string, number>();
 const messageKeyToIndex = new Map<string, number>();
-const messageColorIndex = new Map<string, string>();
-const senderColorIndex = new Map<string, string>();
 const MAX_CHAT_MESSAGES = 600;
 const MAX_RECENT_MESSAGES = 80;
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
@@ -80,7 +84,10 @@ const prepareMessageForStore = (
   message: AnyChatMessageType,
 ): AnyChatMessageType => {
   const messageKey = getMessageKey(message.message_id, message.message_nonce);
-  const cachedSenderColor = resolveCachedSenderColor(message);
+  const cachedSenderColor = resolveCachedSenderColor(
+    message,
+    getUserMessageColor,
+  );
   return {
     ...message,
     id: messageKey,
@@ -117,11 +124,6 @@ const isValidChatMessage = (
   return Boolean(message?.message_id && message.message_nonce);
 };
 
-const normaliseIndexKey = (value?: string): string | null => {
-  const normalised = value?.trim().toLowerCase();
-  return normalised || null;
-};
-
 const indexMessage = (message: AnyChatMessageType, index: number) => {
   const key = getMessageKey(message.message_id, message.message_nonce);
   messageKeyToIndex.set(key, index);
@@ -130,31 +132,7 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
     messageIdToIndex.set(message.message_id, index);
   }
 
-  if (message.userstate?.color && message.message_id) {
-    messageColorIndex.set(message.message_id, message.userstate.color);
-  }
-
-  const color = message.userstate?.color;
-  if (!color) {
-    return;
-  }
-
-  const senderKeys = [
-    normaliseIndexKey(message.sender),
-    normaliseIndexKey(message.userstate?.username),
-    normaliseIndexKey(message.userstate?.login),
-    normaliseIndexKey(
-      typeof message.userstate?.['display-name'] === 'string'
-        ? message.userstate['display-name']
-        : undefined,
-    ),
-  ];
-
-  senderKeys.forEach(senderKey => {
-    if (senderKey) {
-      senderColorIndex.set(senderKey, color);
-    }
-  });
+  indexMessageColor(message);
 
   registerMentionChatter({
     login: message.userstate?.login ?? message.sender,
@@ -174,8 +152,7 @@ const rebuildMessageIndexes = (
 ) => {
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
-  messageColorIndex.clear();
-  senderColorIndex.clear();
+  clearMessageColorIndexes();
 
   messages.forEach((message, index) => {
     if (isValidChatMessage(message)) {
@@ -439,9 +416,7 @@ export const addMessage = (message?: AnyChatMessageType) => {
   syncRecentMessagesForCurrentChannel(nextMessages);
 };
 
-export const addMessages = (
-  messages: (AnyChatMessageType | undefined)[],
-) => {
+export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
   if (messages.length === 0) {
     return;
   }
@@ -641,8 +616,7 @@ export const clearMessages = () => {
   messageKeyOrder.length = 0;
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
-  messageColorIndex.clear();
-  senderColorIndex.clear();
+  clearMessageColorIndexes();
   clearMentionLoginIndex();
   chatStore$.messages.set([]);
 };
@@ -661,8 +635,7 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
   messageKeyOrder.length = 0;
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
-  messageColorIndex.clear();
-  senderColorIndex.clear();
+  clearMessageColorIndexes();
   clearMentionLoginIndex();
 
   recentMessages.forEach(message => {
@@ -679,12 +652,9 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
 };
 
 export const getMessageColor = (messageId: string): string | undefined =>
-  messageColorIndex.get(messageId);
+  getIndexedMessageColor(messageId);
 
-export const getUserMessageColor = (username: string): string | undefined => {
-  const key = normaliseIndexKey(username);
-  return key ? senderColorIndex.get(key) : undefined;
-};
+export { getUserMessageColor } from './messageColorIndex';
 
 export const clearTtvUsers = () => {
   chatStore$.ttvUsers.set([]);

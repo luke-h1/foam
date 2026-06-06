@@ -12,7 +12,7 @@ export function BuildStatus() {
     <View style={styles.buildContainer}>
       <ProgressRing
         progress={updateProgress}
-        progressColor={theme.colorDarkGreen}
+        progressColor={theme.colorPrimary}
         size={28}
         strokeWidth={3}
         trackColor={theme.darkActiveContent}

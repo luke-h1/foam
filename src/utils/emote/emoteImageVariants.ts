@@ -130,7 +130,7 @@ export function withResolvedEmoteImageVariants<T extends SanitisedEmote>(
     return cached as T;
   }
 
-  const imageVariants = deriveEmoteImageVariants(emote);
+  const imageVariants = deriveEmoteImageVariantsFromUrl(emote.url);
   if (!imageVariants) {
     return emote;
   }
@@ -152,10 +152,14 @@ export function withResolvedEmoteImageVariants<T extends SanitisedEmote>(
   return resolvedEmote;
 }
 
-function deriveEmoteImageVariants(
-  emote: SanitisedEmote,
+export function deriveEmoteImageVariantsFromUrl(
+  url?: string | null,
 ): EmoteImageVariants | null {
-  const bttvMatch = bttvCdnUrlPattern.exec(emote.url);
+  if (!url) {
+    return null;
+  }
+
+  const bttvMatch = bttvCdnUrlPattern.exec(url);
   if (bttvMatch?.[1]) {
     const id = bttvMatch[1];
     return createEmoteImageVariants({
@@ -170,7 +174,7 @@ function deriveEmoteImageVariants(
     });
   }
 
-  const ffzMatch = ffzCdnUrlPattern.exec(emote.url);
+  const ffzMatch = ffzCdnUrlPattern.exec(url);
   if (ffzMatch?.[1]) {
     const id = ffzMatch[1];
     return createEmoteImageVariants({
@@ -185,7 +189,7 @@ function deriveEmoteImageVariants(
     });
   }
 
-  const sevenTvMatch = sevenTvCdnUrlPattern.exec(emote.url);
+  const sevenTvMatch = sevenTvCdnUrlPattern.exec(url);
   if (sevenTvMatch?.[1] && sevenTvMatch[3]) {
     const id = sevenTvMatch[1];
     const extension = sevenTvMatch[3];
@@ -201,7 +205,7 @@ function deriveEmoteImageVariants(
     });
   }
 
-  const twitchMatch = twitchCdnUrlPattern.exec(emote.url);
+  const twitchMatch = twitchCdnUrlPattern.exec(url);
   if (twitchMatch?.[1]) {
     const id = twitchMatch[1];
     return createEmoteImageVariants({

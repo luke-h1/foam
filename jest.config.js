@@ -14,8 +14,6 @@ const jestConfig = {
     '\\.otf$': '<rootDir>/__mocks__/fileMock.js',
     '^@bacons/apple-colors$': '<rootDir>/__mocks__/@bacons/apple-colors.ts',
     '^react-native-legal$': '<rootDir>/__mocks__/react-native-legal.ts',
-    '^react-native-bootsplash$':
-      '<rootDir>/__mocks__/react-native-bootsplash.ts',
     '^(\\./|\\.\\./)*\\.rnstorybook/storybook\\.requires(\\.(ts|tsx|js|jsx))?$':
       '<rootDir>/__mocks__/.rnstorybook/storybook.requires.tsx',
     '^(\\./|\\.\\./)*\\.rnstorybook/index(\\.(ts|tsx|js|jsx))?$':

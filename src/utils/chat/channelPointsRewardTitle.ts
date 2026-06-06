@@ -43,9 +43,15 @@ export function channelPointsRewardTitleFromSystemMsg(
   systemMsg: string,
 ): string | undefined {
   const line = unescapeIrcTag(systemMsg).trim();
-  const match = /\bredeemed\s+(.+)$/i.exec(line);
+  const redeemedMarker = 'redeemed ';
+  const redeemedIndex = line.toLowerCase().indexOf(redeemedMarker);
 
-  return match?.[1]?.trim() || undefined;
+  if (redeemedIndex === -1) {
+    return undefined;
+  }
+
+  const title = line.slice(redeemedIndex + redeemedMarker.length).trim();
+  return title || undefined;
 }
 
 export function channelPointsRewardTitleFromTags(
@@ -75,7 +81,9 @@ export function channelPointsRewardTitleFromTags(
 export function channelPointsRewardTitleFromUserstate(
   userstate: UserStateTags,
 ): string | undefined {
-  return channelPointsRewardTitleFromTags(rewardTitleFieldsFromUserstate(userstate));
+  return channelPointsRewardTitleFromTags(
+    rewardTitleFieldsFromUserstate(userstate),
+  );
 }
 
 export function channelPointsRewardTitleFieldsFromUserstate(

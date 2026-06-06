@@ -125,7 +125,7 @@ export const emoteSheetStyles = StyleSheet.create({
     letterSpacing: 0,
   },
   ffzTextIcon: {
-    color: theme.colorGreen,
+    color: theme.colorPrimary,
     letterSpacing: 0,
   },
   ffzTextIconActive: {

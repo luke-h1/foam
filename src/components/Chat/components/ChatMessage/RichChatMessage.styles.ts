@@ -1,4 +1,7 @@
-import { CHAT_NOTICE_ACCENTS, noticeSurfaceTint } from '../util/chatNoticeAccents';
+import {
+  CHAT_NOTICE_ACCENTS,
+  noticeSurfaceTint,
+} from '../util/chatNoticeAccents';
 import { theme } from '@app/styles/themes';
 import { StyleSheet } from 'react-native';
 
@@ -196,6 +199,16 @@ export const styles = StyleSheet.create({
   },
   messageTextCompact: {
     ...chatLineMetrics.compact,
+  },
+  messageTextPlaceholder: {
+    borderRadius: 4,
+    height: 12,
+    marginHorizontal: 2,
+    width: 96,
+  },
+  messageTextPlaceholderCompact: {
+    height: 10,
+    width: 78,
   },
   moderatedMessageText: {
     color: 'rgba(214, 214, 217, 0.72)',

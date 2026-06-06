@@ -166,14 +166,14 @@ Config lives in [`app.config.ts`](app.config.ts) under `expo.experiments.buildCa
 
 ## PR previews & channel surfing
 
-Every pull request gets an EAS Update published to a `pr-<N>` branch on the `development` channel (see [`.github/workflows/preview-ota-pr.yml`](.github/workflows/preview-ota-pr.yml)). The workflow posts a QR code as a comment on the PR.
+Comment `!surf-deploy` on a pull request to publish an EAS Update to a `pr-<N>` branch on the `development` channel (see [`.github/workflows/ota-surf.yml`](.github/workflows/ota-surf.yml)). The workflow posts a QR code as a comment on the PR.
 
 To preview a PR on a device that already has the internal/dev client installed:
 
 1. **Scan the QR** posted on the PR — it opens the dev client directly into that PR's JS bundle.
 2. **Or surf in the launcher:** open the dev client → Extensions → EAS Update → pick branch `pr-<N>`. Any branch in the project is loadable as long as the runtime version matches the installed build (we use `policy: 'appVersion'`).
 
-Fork PRs are skipped (no access to `EXPO_TOKEN`).
+Re-running surf on the same PR updates the existing QR comment. Fork PRs are skipped (no access to `EXPO_TOKEN`).
 
 ## Storybook
 

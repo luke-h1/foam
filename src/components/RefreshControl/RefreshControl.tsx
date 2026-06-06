@@ -13,7 +13,7 @@ export function RefreshControl({ onRefresh, offset }: Props) {
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
 
-  const tintColor = theme.colorGrass;
+  const tintColor = theme.colorPrimary;
 
   const refresh = useCallback(async () => {
     if (Platform.OS !== 'web') {

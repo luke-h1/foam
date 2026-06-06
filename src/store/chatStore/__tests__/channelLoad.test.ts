@@ -111,19 +111,25 @@ jest.mock('@app/services/twitch-emote-service', () => ({
 }));
 
 const mockGetEmoteSetId = jest.mocked(sevenTvService.getEmoteSetId);
-const mockGetSanitisedEmoteSet = jest.mocked(sevenTvService.getSanitisedEmoteSet);
+const mockGetSanitisedEmoteSet = jest.mocked(
+  sevenTvService.getSanitisedEmoteSet,
+);
 const mockGet7tvUserId = jest.mocked(sevenTvService.get7tvUserId);
 const mockSendPresence = jest.mocked(sevenTvService.sendPresence);
 const mockGetChannelEmotes = jest.mocked(twitchEmoteService.getChannelEmotes);
 const mockGetGlobalEmotes = jest.mocked(twitchEmoteService.getGlobalEmotes);
-const mockGetSubscriberEmotes = jest.mocked(twitchEmoteService.getSubscriberEmotes);
+const mockGetSubscriberEmotes = jest.mocked(
+  twitchEmoteService.getSubscriberEmotes,
+);
 const mockGetBttvGlobalEmotes = jest.mocked(
   bttvEmoteService.getSanitisedGlobalEmotes,
 );
 const mockGetBttvChannelEmotes = jest.mocked(
   bttvEmoteService.getSanitisedChannelEmotes,
 );
-const mockGetFfzChannelEmotes = jest.mocked(ffzService.getSanitisedChannelEmotes);
+const mockGetFfzChannelEmotes = jest.mocked(
+  ffzService.getSanitisedChannelEmotes,
+);
 const mockGetFfzGlobalEmotes = jest.mocked(ffzService.getSanitisedGlobalEmotes);
 const mockListTwitchChannelBadges = jest.mocked(
   twitchBadgeService.listSanitisedChannelBadges,
@@ -131,7 +137,9 @@ const mockListTwitchChannelBadges = jest.mocked(
 const mockListTwitchGlobalBadges = jest.mocked(
   twitchBadgeService.listSanitisedGlobalBadges,
 );
-const mockGetFfzChannelBadges = jest.mocked(ffzService.getSanitisedChannelBadges);
+const mockGetFfzChannelBadges = jest.mocked(
+  ffzService.getSanitisedChannelBadges,
+);
 const mockGetFfzGlobalBadges = jest.mocked(ffzService.getSanitisedGlobalBadges);
 const mockListChatterinoBadges = jest.mocked(
   chatterinoService.listSanitisedBadges,

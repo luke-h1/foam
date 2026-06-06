@@ -6,7 +6,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants';
+import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import {
@@ -87,8 +87,29 @@ function EmoteActionSheetComponent({
       width: sheetWidth,
     },
   ];
+  const resolvedImageVariants = useMemo(
+    () => part.image_variants ?? deriveEmoteImageVariantsFromUrl(part.url),
+    [part.image_variants, part.url],
+  );
+  const preferredVariantKind = disableAnimations ? 'static' : 'animated';
+  const scaledImageUrls = useMemo(() => {
+    const alternateVariantKind =
+      preferredVariantKind === 'static' ? 'animated' : 'static';
+
+    return COPY_IMAGE_VARIANT_ACTIONS.reduce<
+      Partial<Record<EmoteImageScale, string>>
+    >((result, action) => {
+      const url =
+        resolvedImageVariants?.[preferredVariantKind]?.[action.scale] ??
+        resolvedImageVariants?.[alternateVariantKind]?.[action.scale];
+      if (url) {
+        result[action.scale] = url;
+      }
+      return result;
+    }, {});
+  }, [preferredVariantKind, resolvedImageVariants]);
   const displayUrl = getDisplayEmoteUrl({
-    image_variants: part.image_variants,
+    image_variants: resolvedImageVariants,
     url: part.url,
     static_url: part.static_url,
     disableAnimations,
@@ -147,12 +168,7 @@ function EmoteActionSheetComponent({
   const copyScaledImageUrl = useCallback(
     (scale: EmoteImageScale) => {
       closeSheet();
-      const url = pickEmoteVariantUrl({
-        fallbackUrl: displayUrl,
-        imageVariants: part.image_variants,
-        preferredKind: disableAnimations ? 'static' : 'animated',
-        preferredScale: scale,
-      });
+      const url = scaledImageUrls[scale];
       if (!url) {
         return;
       }
@@ -160,7 +176,7 @@ function EmoteActionSheetComponent({
         toast.success(`${scale} emote URL copied to clipboard`);
       });
     },
-    [closeSheet, disableAnimations, displayUrl, part.image_variants],
+    [closeSheet, scaledImageUrls],
   );
 
   const handlePreview = useCallback(() => {
@@ -185,7 +201,7 @@ function EmoteActionSheetComponent({
       id: action.id,
       label: action.label,
       onPress: () => copyScaledImageUrl(action.scale),
-      visible: Boolean(part.image_variants),
+      visible: Boolean(scaledImageUrls[action.scale]),
     })),
     {
       id: 'preview' as const,

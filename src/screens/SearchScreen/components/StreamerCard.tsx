@@ -1,8 +1,8 @@
-import { memo } from 'react';
 import { LiveStreamImage } from '@app/components/LiveStreamImage/LiveStreamImage';
 import { Text } from '@app/components/ui/Text/Text';
 import { SearchChannelResponse } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { memo } from 'react';
 import { View, StyleSheet } from 'react-native';
 
 interface Props {
@@ -41,6 +41,8 @@ export const StreamerCard = memo(function StreamerCard({ stream }: Props) {
     </View>
   );
 });
+
+StreamerCard.displayName = 'StreamerCard';
 
 const styles = StyleSheet.create({
   container: {

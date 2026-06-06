@@ -39,6 +39,13 @@ export interface ScreenHeaderProps {
    */
   trailing?: ReactNode;
   /**
+   * Optional share action rendered as a trailing icon button
+   */
+  share?: {
+    label: string;
+    onPress: () => void;
+  };
+  /**
    * Optional content to render below the title/subtitle
    * For hero variant: use for badges/stats
    * For standard variant: use for any additional content
@@ -46,7 +53,7 @@ export interface ScreenHeaderProps {
   children?: ReactNode;
   /**
    * Size variant for the header (Text-like API)
-   * - large/medium: ai-tattoo-style bold title block
+   * - large/medium: primary bold title block
    * - compact: Small inline title in nav row
    * - hero: Hero-style header with background
    */
@@ -80,6 +87,7 @@ export function ScreenHeader({
   back = true,
   onBack,
   trailing,
+  share,
   children,
   size = 'large',
   type,
@@ -140,8 +148,18 @@ export function ScreenHeader({
   const titleColorValue = color;
   const subtitleTypeValue = getSubtitleType();
 
+  const shareButton = share ? (
+    <IconButton
+      icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
+      label={share.label}
+      onPress={share.onPress}
+      size='2xl'
+    />
+  ) : null;
+  const navTrailing = shareButton ?? trailing;
+
   // Only show nav row if there's something to display (back button, inline title, or trailing)
-  const showNavRow = back || isInline || trailing;
+  const showNavRow = back || isInline || navTrailing;
 
   if (isHero) {
     return (
@@ -161,7 +179,7 @@ export function ScreenHeader({
           </View>
         )}
 
-        {(back || trailing) && (
+        {(back || navTrailing) && (
           <View
             style={[
               styles.navRow,
@@ -178,7 +196,7 @@ export function ScreenHeader({
               />
             )}
             <View style={styles.navSpacer} />
-            {trailing}
+            {navTrailing}
           </View>
         )}
 
@@ -260,7 +278,7 @@ export function ScreenHeader({
             <View style={styles.navSpacer} />
           )}
 
-          {trailing}
+          {navTrailing}
         </View>
       )}
 

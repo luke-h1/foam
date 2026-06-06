@@ -122,7 +122,7 @@ describe('PaintedUsername', () => {
         <PaintedUsername
           username='EmptyStops'
           paint={emptyStopsPaint}
-          fallbackColor='#00FF00'
+          fallbackColor='#1AC9A2'
         />,
       );
 

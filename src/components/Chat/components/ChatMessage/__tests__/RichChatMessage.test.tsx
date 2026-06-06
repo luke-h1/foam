@@ -107,6 +107,32 @@ describe('RichChatMessage', () => {
     expect(queryByText('world')).toBeNull();
   });
 
+  test('reserves blank badge slots without rendering blank text bars', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: '' }],
+      {},
+      {
+        badges: [
+          {
+            id: 'cold-badge',
+            owner_username: 'testuser',
+            set: 'cold',
+            title: 'Cold Badge',
+            type: 'badge',
+            url: '',
+          },
+        ],
+      },
+    );
+
+    const { getByTestId, queryByTestId } = render(
+      <RichChatMessage {...message} />,
+    );
+
+    expect(getByTestId('chat-badge-placeholder')).toBeOnTheScreen();
+    expect(queryByTestId('chat-text-placeholder')).toBeNull();
+  });
+
   describe('Long Press Reply', () => {
     test('should call onReply when message is long pressed (regular messages)', () => {
       const message = createMockMessage([
@@ -563,7 +589,7 @@ describe('RichChatMessage', () => {
     test('should pass correct data to onReply callback when long pressed', () => {
       const message = createMockMessage(
         [{ type: 'text', content: 'Test message' }],
-        { username: 'TestUser', color: '#00FF00' },
+        { username: 'TestUser', color: '#1AC9A2' },
         {
           message_id: 'unique-msg-id',
           channel: 'test-channel',
@@ -588,7 +614,7 @@ describe('RichChatMessage', () => {
         username: replyMessage?.userstate.username,
       }).toEqual({
         channel: 'test-channel',
-        color: '#00FF00',
+        color: '#1AC9A2',
         id: 'string',
         message: [{ type: 'text', content: 'Test message' }],
         message_id: 'unique-msg-id',

@@ -79,7 +79,7 @@ export function RefreshIndicator({
     opacity: refreshProgress.get(),
   }));
 
-  const accentColor = theme.colorGrass;
+  const accentColor = theme.colorPrimary;
 
   return (
     <Animated.View style={[styles.container, containerStyle]}>

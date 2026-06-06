@@ -38,71 +38,76 @@ export function ErrorDetails(props: ErrorDetailsProps) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
+      contentInsetAdjustmentBehavior='automatic'
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.topSection}>
-        <View style={styles.iconContainer}>
-          <SymbolView
-            name='exclamationmark.circle'
-            size={48}
-            tintColor={theme.colorGreyHoverAlpha}
-          />
-        </View>
-        <Text type='xl' weight='semibold' style={styles.heading} align='center'>
+      <View style={styles.card}>
+        <SymbolView
+          name={{ ios: 'exclamationmark.triangle', android: 'warning' }}
+          size={36}
+          tintColor={theme.color.textSecondary.dark}
+        />
+
+        <Text type='lg' weight='semibold' align='center'>
           Something went wrong
         </Text>
-        <Text type='md' color='gray' align='center' style={styles.description}>
-          Try resetting or restarting the app & see if that helps. If not, feel
-          free to click the 'send feedback' button to report the issue to the
-          developers.
-        </Text>
-      </View>
 
-      <View style={styles.buttonContainer}>
+        <Text
+          type='sm'
+          color='gray.textLow'
+          align='center'
+          style={styles.description}
+        >
+          Try resetting or restarting the app. If the issue persists, send
+          feedback so we can look into it.
+        </Text>
+
+        <View style={styles.actionRow}>
+          <Button
+            style={styles.primaryButton}
+            onPress={() => openLinkInBrowser(githubURL)}
+          >
+            <Text
+              type='sm'
+              weight='semibold'
+              color='accent'
+              contrast
+              align='center'
+            >
+              GitHub
+            </Text>
+          </Button>
+
+          <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
+            <Text type='sm' weight='semibold' color='gray' align='center'>
+              Send Feedback
+            </Text>
+          </Button>
+        </View>
+
         <Button
-          style={styles.primaryButton}
-          onPress={() => openLinkInBrowser(githubURL)}
+          style={styles.linkButton}
+          onPress={() => showStackTrace$.set(value => !value)}
         >
           <Text
-            type='md'
-            weight='semibold'
-            color='blue'
-            contrast
+            type='sm'
+            color='gray.textLow'
             align='center'
+            style={styles.linkText}
           >
-            GitHub
-          </Text>
-        </Button>
-        <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
-          <Text
-            type='md'
-            weight='semibold'
-            color='gray'
-            contrast
-            align='center'
-          >
-            Send Feedback
+            {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
           </Text>
         </Button>
       </View>
 
-      <Button
-        style={styles.toggleButton}
-        onPress={() => showStackTrace$.set(value => !value)}
-      >
-        <Text type='sm' color='blue' align='center' style={styles.toggleText}>
-          {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
-        </Text>
-      </Button>
-
-      {showStackTrace && (
+      {showStackTrace ? (
         <View style={styles.errorCard}>
           <ScrollView
             style={styles.errorScrollView}
             contentContainerStyle={styles.errorContentContainer}
             showsVerticalScrollIndicator
           >
-            {error?.message && (
+            {error?.message ? (
               <Text
                 type='sm'
                 weight='semibold'
@@ -111,23 +116,23 @@ export function ErrorDetails(props: ErrorDetailsProps) {
               >
                 {error.message.trim()}
               </Text>
-            )}
-            {errorInfo?.componentStack && (
+            ) : null}
+            {errorInfo?.componentStack ? (
               <Text
                 selectable
                 type='xs'
-                color='gray'
+                color='gray.textLow'
                 style={styles.errorBackTrace}
               >
                 {errorInfo.componentStack.trim()}
               </Text>
-            )}
+            ) : null}
           </ScrollView>
         </View>
-      )}
+      ) : null}
 
       <Button style={styles.resetButton} onPress={onReset}>
-        <Text type='md' weight='semibold' color='red' contrast align='center'>
+        <Text type='sm' weight='semibold' color='gray' contrast align='center'>
           Reset App
         </Text>
       </Button>
@@ -136,36 +141,50 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
+  actionRow: {
     flexDirection: 'row',
-    gap: theme.space16,
-    marginBottom: theme.space20,
+    gap: theme.space12,
+    marginTop: theme.space8,
+    width: '100%',
+  },
+  card: {
+    alignItems: 'center',
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius16,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: theme.space12,
+    padding: theme.space24,
+    width: '100%',
   },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   contentContainer: {
+    flexGrow: 1,
+    gap: theme.space16,
+    justifyContent: 'center',
     paddingBottom: theme.space44,
-    paddingHorizontal: theme.space36,
+    paddingHorizontal: theme.space24,
     paddingTop: theme.space56,
   },
   description: {
     lineHeight: theme.fontSize16 * 1.5,
-    paddingHorizontal: theme.space16,
   },
   errorBackTrace: {
     fontFamily: 'monospace',
     lineHeight: theme.fontSize12 * 1.5,
   },
   errorCard: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorGreyAlpha,
+    backgroundColor: theme.color.backgroundSecondary.dark,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.space16,
-    borderWidth: 1,
-    marginBottom: theme.space28,
+    borderRadius: theme.borderRadius16,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
+    width: '100%',
   },
   errorContentContainer: {
     padding: theme.space20,
@@ -177,57 +196,45 @@ const styles = StyleSheet.create({
   errorScrollView: {
     maxHeight: 300,
   },
-  heading: {
-    marginBottom: theme.space16,
+  linkButton: {
+    paddingVertical: theme.space4,
   },
-  iconContainer: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorRed,
-    borderCurve: 'continuous',
-    borderRadius: theme.space36,
-    borderWidth: 2,
-    marginBottom: theme.space28,
-    padding: theme.space20,
+  linkText: {
+    textDecorationLine: 'underline',
   },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlue,
+    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
-    borderRadius: theme.space16,
+    borderRadius: theme.borderRadius16,
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space16,
+    minHeight: 48,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
   },
   resetButton: {
     alignItems: 'center',
     backgroundColor: theme.colorRed,
     borderCurve: 'continuous',
-    borderRadius: theme.space16,
+    borderRadius: theme.borderRadius16,
     justifyContent: 'center',
-    marginTop: theme.space16,
-    paddingHorizontal: theme.space36,
+    minHeight: 52,
+    paddingHorizontal: theme.space24,
     paddingVertical: theme.space16,
+    width: '100%',
   },
   secondaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorGrey,
+    backgroundColor: theme.color.backgroundTertiary.dark,
+    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.space16,
+    borderRadius: theme.borderRadius16,
+    borderWidth: StyleSheet.hairlineWidth,
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space16,
-  },
-  toggleButton: {
-    marginBottom: theme.space20,
+    minHeight: 48,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
-  },
-  toggleText: {
-    textDecorationLine: 'underline',
-  },
-  topSection: {
-    alignItems: 'center',
-    marginBottom: theme.space44,
   },
 });

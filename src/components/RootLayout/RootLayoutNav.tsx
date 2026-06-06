@@ -4,6 +4,7 @@ import { Providers } from '@app/Providers/Providers';
 import { theme } from '@app/styles/themes';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { SystemBars } from 'react-native-edge-to-edge';
 import { RouterEffects } from './RouterEffects';
 
 const rootStackScreens = [
@@ -29,12 +30,13 @@ export function RootLayoutNav() {
           background: theme.color.background.dark,
           border: theme.color.border.dark,
           card: theme.color.background.dark,
-          primary: theme.colorDarkGreen,
+          primary: theme.colorPrimary,
           text: theme.color.text.dark,
         },
       }}
     >
       <Providers>
+        <SystemBars style='light' />
         <RouterEffects />
         <ForceUpdateModal />
         <Stack

@@ -133,7 +133,7 @@ export default function FollowingScreen() {
 
   if (showLoadingSkeleton) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerEyebrow} />
         </View>
@@ -172,7 +172,7 @@ export default function FollowingScreen() {
 
   if (!streams) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         {Array.from({ length: 5 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
@@ -205,12 +205,12 @@ export default function FollowingScreen() {
         ref={listRef}
         data={streamsArray}
         keyExtractor={item => item.id}
-        contentInsetAdjustmentBehavior='never'
+        contentInsetAdjustmentBehavior='automatic'
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
         getItemType={() => 'stream-card'}
         ListHeaderComponent={
           <View>
-            <EditorialSectionHeader eyebrow='For you' title='Following' />
+            <EditorialSectionHeader eyebrow='For you' />
             <View style={styles.layoutToggleRow}>
               <Button
                 onPress={handleSetCompactLayout}
@@ -307,7 +307,6 @@ export default function FollowingScreen() {
           styles.listContent,
           {
             paddingBottom: tabBarOverflow + theme.space20,
-            paddingTop: insets.top + theme.space20,
           },
         ]}
         renderItem={renderItem}
@@ -332,7 +331,7 @@ const styles = StyleSheet.create({
     minHeight: theme.space12,
   },
   headerEyebrow: {
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 6,

@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
     borderRadius: 36,
     height: 72,
     justifyContent: 'center' as const,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   updateButton: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colorDarkGreen,
+    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     justifyContent: 'center' as const,

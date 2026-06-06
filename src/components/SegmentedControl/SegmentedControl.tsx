@@ -35,7 +35,7 @@ export function SegmentedControl({
       onChange={handleChange}
       selectedIndex={currentIndex}
       style={styles.container}
-      tintColor={theme.colorDarkGreen}
+      tintColor={theme.colorPrimary}
       values={values}
     />
   );

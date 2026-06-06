@@ -21,7 +21,7 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
   backgroundColor: theme.color.background.dark,
   fade: true,
   spinner: {
-    color: theme.colorGreen,
+    color: theme.colorPrimary,
     size: 'large' as const,
   },
 };

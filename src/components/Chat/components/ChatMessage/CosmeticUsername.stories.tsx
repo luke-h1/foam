@@ -94,11 +94,7 @@ function AllPaintsFromApiGallery() {
           <Text color='gray.textLow' type='xs'>
             {paint.name}
           </Text>
-          <PaintedUsername
-            paint={paint}
-            showColon={false}
-            username='Preview'
-          />
+          <PaintedUsername paint={paint} showColon={false} username='Preview' />
         </View>
       ))}
     </ScrollView>

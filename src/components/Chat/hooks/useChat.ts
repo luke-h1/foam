@@ -74,6 +74,7 @@ export function useChat(channelId: string, channelName: string) {
   const inputShellRef = useRef<ChatInputShellHandle>(null);
   const overlayControllerRef = useRef<ChatOverlayControllerHandle>(null);
   const isLoadingRecentMessagesRef = useRef(false);
+  const isChatMountedRef = useRef(true);
 
   const { canFetchCosmetics, fetchedCosmeticsUsersRef, fetchUserCosmetics } =
     useChatCosmetics({
@@ -201,6 +202,7 @@ export function useChat(channelId: string, channelName: string) {
     channelName,
     clearLocalMessages,
     handleNewMessage,
+    isMountedRef: isChatMountedRef,
     isLoadingRecentMessagesRef,
     listRef,
     messages$,
@@ -241,6 +243,7 @@ export function useChat(channelId: string, channelName: string) {
     cleanupMessages,
     cancelEmoteLoad,
     fetchedCosmeticsUsersRef,
+    isMountedRef: isChatMountedRef,
     processedMessageIdsRef,
   });
 

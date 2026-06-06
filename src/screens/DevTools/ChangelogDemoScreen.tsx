@@ -1,5 +1,4 @@
 import { Button } from '@app/components/Button/Button';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import {
@@ -21,7 +20,7 @@ type ChangelogState = {
 
 const demoOptions: ChangelogPresentOptions = {
   configuration: {
-    accentColorHex: '#37D67A',
+    accentColorHex: '#1AC9A2',
     doneButtonLabel: 'Done',
     nextButtonLabel: 'Next',
   },
@@ -134,8 +133,6 @@ export function ChangelogDemoScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader title='Changelog Demo' size='medium' />
-
         <View style={styles.section}>
           <Text weight='semibold'>Module state</Text>
           <View style={styles.stateCard}>
@@ -233,6 +230,6 @@ const styles = StyleSheet.create({
     gap: theme.space4,
   },
   stateValue: {
-    color: theme.colorGrass,
+    color: theme.colorPrimary,
   },
 });

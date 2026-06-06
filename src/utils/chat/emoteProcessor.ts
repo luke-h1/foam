@@ -371,7 +371,7 @@ export const processEmotesWorklet = (
         id: emote.id,
         name: emote.name,
         type: 'emote',
-        content: emote.site === 'Emoji' && !word.startsWith(':') ? word : word,
+        content: word,
         creator: emote.creator || '',
         emote_link: emote.emote_link || '',
         original_name:

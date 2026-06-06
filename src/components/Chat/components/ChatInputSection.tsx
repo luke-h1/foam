@@ -2,7 +2,6 @@ import { Button } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
-import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
@@ -11,66 +10,24 @@ import {
   createHorizontalHitslop,
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
-import type {
-  ChatConnectionFlags,
-  ChatPinFlags,
-} from '@app/components/Chat/types/chatUiFlags';
-import { RefObject, memo } from 'react';
+import { memo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import {
-  Directions,
-  Gesture,
-  GestureDetector,
-} from 'react-native-gesture-handler';
-import { KeyboardController } from 'react-native-keyboard-controller';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { scheduleOnRN } from 'react-native-worklets';
-
-function dismissComposer() {
-  void KeyboardController.dismiss();
-}
 import {
   COMPOSER_CONTROL_RADIUS,
   COMPOSER_CONTROL_SIZE,
   COMPOSER_ROW_GAP,
 } from './composerSizing';
 import { ChatComposer } from './ChatComposer/ChatComposer';
+import type {
+  ChatInputSectionProps,
+  ReplyToData,
+} from './chatInputSectionTypes';
+import { useComposerDismissGesture } from './useComposerDismissGesture';
 
-const COMPOSER_DISMISS_DRAG_DISTANCE = 34;
-const COMPOSER_DISMISS_VELOCITY = 520;
-const COMPOSER_DRAG_LIMIT = 64;
-
-export interface ReplyToData {
-  messageId: string;
-  username: string;
-  message: string;
-  replyParentUserLogin: string;
-  parentMessage: string;
-  color?: string;
-  /**
-   * Twitch user-id for 7TV paint lookup in the reply preview
-   */
-  userId?: string;
-}
-
-interface ChatInputSectionProps {
-  connection: ChatConnectionFlags;
-  messageInput: string;
-  onChangeText: (text: string) => void;
-  onEmoteSelect: (emote: SanitisedEmote) => void;
-  onSubmit: () => void;
-  onOpenEmoteSheet: () => void;
-  onOpenSettingsSheet: () => void;
-  replyTo: ReplyToData | null;
-  onClearReply: () => void;
-  pin?: ChatPinFlags;
-  inputRef?: RefObject<ChatComposerHandle | null>;
-}
+export type { ReplyToData };
 
 export const ChatInputSection = memo(
   ({
@@ -90,7 +47,8 @@ export const ChatInputSection = memo(
     const { canPinNextMessage, onTogglePinNextMessage, pinNextMessage } =
       pin ?? {};
     const insets = useSafeAreaInsets();
-    const composerDragOffset = useSharedValue(0);
+    const { composerAnimatedStyle, composerGesture } =
+      useComposerDismissGesture();
 
     const handleEmoteSelect = (emote: SanitisedEmote) => {
       onEmoteSelect(emote);
@@ -105,47 +63,6 @@ export const ChatInputSection = memo(
       : replyTo !== null
         ? `Reply to ${replyTo.username}...`
         : 'Send a message...';
-
-    const composerAnimatedStyle = useAnimatedStyle(() => ({
-      transform: [{ translateY: composerDragOffset.get() }],
-    }));
-
-    const composerPanGesture = Gesture.Pan()
-      .activeOffsetY(4)
-      .failOffsetX([-40, 40])
-      .onUpdate(event => {
-        composerDragOffset.set(
-          Math.max(0, Math.min(event.translationY, COMPOSER_DRAG_LIMIT)),
-        );
-      })
-      .onEnd(event => {
-        const shouldDismiss =
-          event.translationY > COMPOSER_DISMISS_DRAG_DISTANCE ||
-          event.velocityY > COMPOSER_DISMISS_VELOCITY;
-
-        if (shouldDismiss) {
-          scheduleOnRN(dismissComposer);
-        }
-      })
-      .onFinalize(() => {
-        composerDragOffset.set(
-          withSpring(0, {
-            damping: 18,
-            stiffness: 220,
-          }),
-        );
-      });
-
-    const composerFlingGesture = Gesture.Fling()
-      .direction(Directions.DOWN)
-      .onEnd(() => {
-        scheduleOnRN(dismissComposer);
-      });
-
-    const composerGesture = Gesture.Simultaneous(
-      composerPanGesture,
-      composerFlingGesture,
-    );
 
     return (
       <View style={styles.wrapper}>

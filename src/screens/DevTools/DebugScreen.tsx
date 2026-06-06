@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     padding: theme.space16,
   },
   codeText: {
-    color: theme.colorGrass,
+    color: theme.colorPrimary,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
   },
   content: {

@@ -1,8 +1,8 @@
 name: OTA Surf
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
 
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -13,29 +13,59 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: preview-ota-pr-${{ github.event.pull_request.number }}
+  group: ota-surf-pr-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 jobs:
-  preview:
-    name: 📱 Publish PR Preview Update
+  surf:
+    name: 🏄 Surf PR update
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '!surf-deploy')
     steps:
+      - name: 🔎 Resolve PR
+        id: pr
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1f3791c5f9
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            const shouldRun =
+              pr.data.head.repo.full_name === `${context.repo.owner}/${context.repo.repo}`;
+
+            core.setOutput('number', String(pr.data.number));
+            core.setOutput('title', pr.data.title);
+            core.setOutput('head_sha', pr.data.head.sha);
+            core.setOutput('should_run', String(shouldRun));
+
+            if (!shouldRun) {
+              core.info(`Skipping fork PR from ${pr.data.head.repo.full_name}`);
+            }
+
       - name: 🏗 Checkout
+        if: steps.pr.outputs.should_run == 'true'
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          ref: ${{ steps.pr.outputs.head_sha }}
           persist-credentials: false
 
       - name: 🥟 Setup Bun
+        if: steps.pr.outputs.should_run == 'true'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version-file: '.bun-version'
 
       - name: 📦 Install dependencies
+        if: steps.pr.outputs.should_run == 'true'
         run: bun install --frozen-lockfile
 
       - name: Λ Setup EAS
+        if: steps.pr.outputs.should_run == 'true'
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
         with:
           eas-version: latest
@@ -43,28 +73,72 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
-      - name: 🚀 Publish preview update & comment QR on PR
+      - name: 🚀 Surf PR update
+        id: surf
+        if: steps.pr.outputs.should_run == 'true'
         uses: expo/expo-github-action/preview@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
         with:
           command: >
             eas update
-            --branch pr-${{ github.event.pull_request.number }}
+            --branch pr-${{ steps.pr.outputs.number }}
             --channel development
             --platform all
-            --message "PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
+            --message "PR #${{ steps.pr.outputs.number }}: ${{ steps.pr.outputs.title }}"
             --non-interactive
-          comment: true
-          qr-target: dev-build
+          comment: false
+          comment-id: surf-pr-${{ steps.pr.outputs.number }}
           working-directory: ${{ github.workspace }}
 
+      - name: 💬 Comment surf QR on PR
+        if: steps.pr.outputs.should_run == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1f3791c5f9
+        env:
+          SURF_COMMENT: ${{ steps.surf.outputs.comment }}
+          SURF_COMMENT_ID: surf-pr-${{ steps.pr.outputs.number }}
+        with:
+          script: |
+            const commentId = process.env.SURF_COMMENT_ID;
+            const body = `<!-- ${commentId} -->\n${process.env.SURF_COMMENT}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const existing = comments.find(comment =>
+              comment.body?.includes(`<!-- ${commentId} -->`),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
       - name: 📊 Summary
+        if: steps.pr.outputs.should_run == 'true'
+        env:
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
-          echo "## 📱 PR Preview Update Published" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch:** \`pr-${{ github.event.pull_request.number }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Channel:** \`development\` (dev client)" >> $GITHUB_STEP_SUMMARY
-          echo "- **PR:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Channel surf this PR** from the internal/dev client:" >> $GITHUB_STEP_SUMMARY
-          echo "1. Scan the QR posted on the PR, **or**" >> $GITHUB_STEP_SUMMARY
-          echo "2. Open the dev launcher → Extensions → EAS Update → pick branch \`pr-${{ github.event.pull_request.number }}\`." >> $GITHUB_STEP_SUMMARY
+          echo "## 🏄 Surf update published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Branch:** \`pr-${PR_NUMBER}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Channel:** \`development\` (dev client)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **PR:** #${PR_NUMBER}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Channel surf this PR** from the internal/dev client:" >> "$GITHUB_STEP_SUMMARY"
+          echo "1. Scan the QR posted on the PR, **or**" >> "$GITHUB_STEP_SUMMARY"
+          echo "2. Open the dev launcher → Extensions → EAS Update → pick branch \`pr-${PR_NUMBER}\`." >> "$GITHUB_STEP_SUMMARY"

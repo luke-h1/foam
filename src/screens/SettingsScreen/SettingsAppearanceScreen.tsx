@@ -1,18 +1,29 @@
-import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
-import * as Form from '@app/components/Form/Form';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Form as NativeForm,
+  Host,
+  LabeledContent,
+  Picker,
+  Section,
+  Text as NativeText,
+} from '@expo/ui/swift-ui';
+import { tag } from '@expo/ui/swift-ui/modifiers';
 import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+
+const THEME_OPTIONS = ['foam-dark'] as const;
+const THEME_LABELS: Record<(typeof THEME_OPTIONS)[number], string> = {
+  'foam-dark': 'Foam Dark',
+};
 
 export function SettingsAppearanceScreen() {
   const selectedTheme = usePreference('theme');
@@ -23,22 +34,34 @@ export function SettingsAppearanceScreen() {
 
   if (Platform.OS === 'ios') {
     return (
-      <View style={styles.container}>
-        <BodyScrollView
-          contentInsetAdjustmentBehavior='automatic'
-          contentContainerStyle={styles.iosContent}
-        >
-          <Form.Section title='Theme'>
-            <Form.Link
-              systemImage='moon'
-              hint='Foam Dark'
-              onPress={() => update({ theme: 'foam-dark' })}
+      <Host style={styles.iosHost}>
+        <NativeForm>
+          <Section
+            title='Theme'
+            footer={
+              <NativeText>
+                Foam currently ships with one canonical visual mode. Additional
+                themes will appear here as they become available.
+              </NativeText>
+            }
+          >
+            <Picker
+              label='Theme'
+              selection={selectedTheme}
+              onSelectionChange={value => update({ theme: value as Theme })}
             >
-              <Form.Text>Theme</Form.Text>
-            </Form.Link>
-          </Form.Section>
-        </BodyScrollView>
-      </View>
+              {THEME_OPTIONS.map(opt => (
+                <NativeText key={opt} modifiers={[tag(opt)]}>
+                  {THEME_LABELS[opt]}
+                </NativeText>
+              ))}
+            </Picker>
+            <LabeledContent label='Mode'>
+              <NativeText>Dark</NativeText>
+            </LabeledContent>
+          </Section>
+        </NativeForm>
+      </Host>
     );
   }
 
@@ -50,12 +73,6 @@ export function SettingsAppearanceScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <ScreenHeader
-          title='Appearance'
-          subtitle='Visual mode.'
-          size='medium'
-        />
-
         <SettingsSection title='Theme'>
           <SettingsLinkRow
             title='Theme'
@@ -72,6 +89,8 @@ export function SettingsAppearanceScreen() {
   );
 }
 
+type Theme = (typeof THEME_OPTIONS)[number];
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
@@ -82,7 +101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingTop: theme.space16,
   },
-  iosContent: {
-    paddingBottom: theme.space56,
+  iosHost: {
+    flex: 1,
   },
 });

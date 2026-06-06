@@ -19,9 +19,7 @@ import {
   isSharedChatDuplicatedNotice,
   isSubscriptionUserNotice,
 } from '@app/utils/chat/userNoticeMsgIds';
-import {
-  isHighlightMyMessageTags,
-} from '@app/utils/chat/channelPointsRewardTitle';
+import { isHighlightMyMessageTags } from '@app/utils/chat/channelPointsRewardTitle';
 import {
   enrichChannelPointPrivmsgTags,
   ingestChannelPointRewardTags,
@@ -62,9 +60,7 @@ function createChatTimestamp(date: Date | number = Date.now()): string {
   return formatDate(date, 'HH:mm');
 }
 
-function createChatTimestampFromTags(tags: {
-  'tmi-sent-ts'?: string;
-}): string {
+function createChatTimestampFromTags(tags: { 'tmi-sent-ts'?: string }): string {
   const sentTs = tags['tmi-sent-ts'];
   if (sentTs) {
     const parsed = Number.parseInt(sentTs, 10);

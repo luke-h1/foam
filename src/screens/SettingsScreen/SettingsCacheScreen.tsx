@@ -1,8 +1,4 @@
-import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import * as Form from '@app/components/Form/Form';
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -14,8 +10,15 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { queryClient } from '@app/utils/react-query/queryClient';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { Platform, ScrollView, StyleSheet, View, Alert } from 'react-native';
+import {
+  Button,
+  Form,
+  Host,
+  Section,
+  Text as NativeText,
+} from '@expo/ui/swift-ui';
+import { tint } from '@expo/ui/swift-ui/modifiers';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
 import { toast } from 'sonner-native';
 import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
@@ -86,36 +89,42 @@ export function SettingsCacheScreen() {
 
   if (Platform.OS === 'ios') {
     return (
-      <View style={styles.container}>
-        <BodyScrollView
-          contentInsetAdjustmentBehavior='automatic'
-          contentContainerStyle={styles.iosContent}
-        >
-          <Form.Section footer='Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.'>
-            <CacheActionRow
-              custom
-              icon='externaldrive'
-              title='Clear Local Data'
-              subtitle='Signs you out, clears stored app data, and forces fresh stream fetches next time.'
+      <Host style={styles.iosHost}>
+        <Form>
+          <Section
+            title='Danger Zone'
+            footer={
+              <NativeText>
+                Use these when stream metadata, badges, emotes, or downloaded
+                chat media need a hard refresh.
+              </NativeText>
+            }
+            modifiers={[tint('red')]}
+          >
+            <Button
+              label='Clear Local Data'
+              systemImage='externaldrive'
+              // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+              role='destructive'
               onPress={handleClearData}
             />
-            <CacheActionRow
-              custom
-              icon='trash'
-              title='Clear Chat Media Cache'
-              subtitle='Removes downloaded emotes, badges, cosmetics, and image cache entries from this device.'
+            <Button
+              label='Clear Chat Media Cache'
+              systemImage='trash'
+              // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+              role='destructive'
               onPress={handleClearChatCache}
             />
-            <CacheActionRow
-              custom
-              icon='sparkles'
-              title='Clear 7TV Cosmetic Cache'
-              subtitle='Removes cached 7TV paints and badges for chat users.'
+            <Button
+              label='Clear 7TV Cosmetic Cache'
+              systemImage='sparkles'
+              // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+              role='destructive'
               onPress={handleClearSevenTvCosmeticsCache}
             />
-          </Form.Section>
-        </BodyScrollView>
-      </View>
+          </Section>
+        </Form>
+      </Host>
     );
   }
 
@@ -127,12 +136,6 @@ export function SettingsCacheScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <ScreenHeader
-          title='Cache'
-          subtitle='Reset cached app data when streams, badges, or emotes need a clean refresh.'
-          size='medium'
-        />
-
         <SettingsSection
           title='Danger Zone'
           footer={
@@ -169,42 +172,6 @@ export function SettingsCacheScreen() {
   );
 }
 
-function CacheActionRow({
-  custom: _custom,
-  icon,
-  title,
-  subtitle,
-  onPress,
-}: {
-  custom?: true;
-  icon: SymbolViewProps['name'];
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-}) {
-  return (
-    <PressableArea
-      accessibilityLabel={title}
-      accessibilityRole='button'
-      onPress={onPress}
-    >
-      <View style={styles.iosActionRow}>
-        <View style={styles.iosActionIcon}>
-          <SymbolView name={icon} tintColor={theme.colorRed} size={18} />
-        </View>
-        <View style={styles.iosActionCopy}>
-          <Text color='gray' weight='semibold'>
-            {title}
-          </Text>
-          <Text color='gray.textLow' type='xs'>
-            {subtitle}
-          </Text>
-        </View>
-      </View>
-    </PressableArea>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
@@ -215,27 +182,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingTop: theme.space16,
   },
-  iosContent: {
-    paddingBottom: theme.space56,
-  },
-  iosActionRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: 68,
-    paddingHorizontal: 20,
-    paddingVertical: theme.space12,
-  },
-  iosActionIcon: {
-    alignItems: 'center',
-    height: 24,
-    justifyContent: 'center',
-    marginTop: 2,
-    width: 24,
-  },
-  iosActionCopy: {
+  iosHost: {
     flex: 1,
-    gap: theme.space4,
-    minWidth: 0,
   },
 });

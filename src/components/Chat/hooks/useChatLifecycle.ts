@@ -27,6 +27,7 @@ export function useChatLifecycle({
   cleanupMessages,
   cancelEmoteLoad,
   fetchedCosmeticsUsersRef,
+  isMountedRef,
   processedMessageIdsRef,
 }: {
   navigation: NavigationLike;
@@ -38,11 +39,11 @@ export function useChatLifecycle({
   cleanupMessages: () => void;
   cancelEmoteLoad: () => void;
   fetchedCosmeticsUsersRef: MutableRefObject<Set<string>>;
+  isMountedRef: MutableRefObject<boolean>;
   processedMessageIdsRef: MutableRefObject<Set<string>>;
 }) {
   const hasPartedRef = useRef(false);
   const initializedChannelRef = useRef<string | null>(null);
-  const isMountedRef = useRef(true);
   const currentEmoteSetIdRef = useRef<string | null>(null);
   const lifecycleRef = useSyncRef({
     channelName,
@@ -68,7 +69,6 @@ export function useChatLifecycle({
         lifecycle.partChannel(lifecycle.channelName);
       }
 
-      clearMessages();
       clearMentionSessionCaches();
       lifecycle.clearLocalMessages();
       initializedChannelRef.current = null;
@@ -78,7 +78,7 @@ export function useChatLifecycle({
     return () => {
       unsubscribe();
     };
-  }, [navigation, lifecycleRef]);
+  }, [navigation, lifecycleRef, isMountedRef]);
 
   useUnmountCallback(() => {
     const lifecycle = lifecycleRef.current;
@@ -92,7 +92,6 @@ export function useChatLifecycle({
     clearPersonalEmotesCache();
     lifecycle.fetchedCosmeticsUsersRef.current.clear();
     lifecycle.processedMessageIdsRef.current.clear();
-    clearMessages();
     clearMentionSessionCaches();
     resetMentionLoginResolver();
     lifecycle.clearLocalMessages();
@@ -136,6 +135,7 @@ export function useChatLifecycle({
     cleanupScroll,
     cleanupMessages,
     processedMessageIdsRef,
+    isMountedRef,
   ]);
 
   return {
